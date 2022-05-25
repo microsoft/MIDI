@@ -1,6 +1,6 @@
 # Windows MIDI Services
 
-This project is the next-generation MIDI API for Windows, including MIDI 1.0, MIDI CI, and MIDI 2.0
+This project is the next-generation MIDI API for Windows, including MIDI 1.0, MIDI CI, and [MIDI 2.0](https://www.midi.org/specifications/midi-2-0-specifications)
 features, enhancements, a new driver, and an ecosystem of essential tools.
 
 > The open source driver has been generously donated by [AMEI](https://www.amei.or.jp/),
@@ -14,7 +14,8 @@ API may be called from a variety of langauges, including [C++/WinRT](https://doc
 from desktop apps and more.
 
 Although this API will coexist with the existing MIDI 1.0 WinMM API, for backwards-compatibility
-reasons, the intent is to have everyone converted to this new API going forward.
+reasons, the intent is to have everyone converted to this new API going forward and to eventually
+deprecate the WinMM API, as it doesn't support many of the features in demand today.
 
 ## Philosophy
 
@@ -26,7 +27,7 @@ source everything that we can, and inviting both internal teams and the communit
 to MIDI as implemented on Windows. We also love the idea of others learning from this source
 code to implement MIDI 2.0 on embedded devices and other operating systems as they need.
 
-### Short-term project goals
+### Short-term project features
 
 * A new combined multi-client MIDI 1.0, MIDI CI, and MIDI 2.0 USB class driver
 * A new combined multi-client MIDI 1.0, MIDI CI, MIDI 2.0 API based on the Universal MIDI Packet (UMP)
@@ -36,25 +37,34 @@ Mapper used to provide, new transports and much more, all without requiring, in 
 code.
 * Additional API and enumeration information to allow for richer information about ports, as well
 as for end-user aliasing (renaming without eliminating the original name) of ports
-* Bluetooth MIDI 1.0
+* Bluetooth MIDI 1.0 (currently supported in WinRT MIDI only)
 
-### Long-term project goals
+### Long-term project features
 
 * Virtual / App-to-App MIDI
 * New MIDI transport standards (Bluetooth, network, etc.) as they are adopted by the MIDI Association
 * A full suite of MIDI utility, debugging, configuration, and diagnostic tools both visual and
-command-line.
+command-line. Examples:
+  * command-line tools for enumerating devices, and performing typical automatable tasks
+  * A friendly user interface for managing MIDI devices and their configuration on the PC
+  * A MIDI monitor
+  * Sysex transfer and librarian tools
+* MIDI processor plug-ins
+  * Remap MIDI notes, velocity curves, and more
+  * Reroute MIDI messages
+  * Filter out certain MIDI messages for a specific port
 
-For the long-term goals, we will be partnering with the community of developers to help ensure we
-have the right tools and utilities to meet your support needs and everyone's customers' needs.
+For these long-term goals, we will be partnering with the community of developers to help ensure we
+have the right tools and utilities to meet your support needs and everyone's customers' needs, all
+available as part of a single standard installation.
 
-### Distribution
+## Releases
 
 To keep the project agile, we are currently planning to distibute all of the released and
 signed end-user components through the Microsoft Store on Windows. This may evolve over time
 as the project stabilizes or as the developer and musician community provide feedback.
 
-## Meet the Core Team
+## Meet the Core Team for 1.0
 
 This is the core development team for the initial release. There are others involved who come in and
 out as needed, and many more contributors to this project including those playing non-development
