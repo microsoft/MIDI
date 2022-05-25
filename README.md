@@ -62,10 +62,10 @@ roles.
 
 | Team Member | Company | Role |
 | ---------------|---------|--------------------------------|
-| Pete Brown | Microsoft | Overall Project and OSS Lead |
+| [Pete Brown](https://github.com/Psychlist1972) | Microsoft | Overall Project and OSS Lead |
 | Jay DiFuria | Microsoft | Microsoft PM |
-| Gary Daniels | Microsoft | Developer |
-| Julia DZmura | Microsoft | Developer |
+| [Gary Daniels](https://github.com/garydan42) | Microsoft | Developer |
+| [Julia DZmura](https://github.com/judzmura) | Microsoft | Developer |
 | Ben Israel | Yamaha | AMEI Project Lead |
 | Mike Kent | AmeNote | Driver Developer |
 | Michael Loh | AmeNote | Driver Developer |
