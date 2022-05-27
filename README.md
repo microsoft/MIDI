@@ -40,8 +40,11 @@ accessible to, at a minimum, C++ and C# applications.
 * Infrastructure to provide for future implementations of virtual MIDI, MIDI processing like the MIDI
 Mapper used to provide, new transports and much more, all without requiring, in most cases, new driver
 code.
-* Additional API and enumeration information to allow for richer information about ports, as well
-as for end-user aliasing (renaming without eliminating the original name) of ports
+* Additional API and enumeration information
+  * End-user renaming/aliasing of ports / groups while also keeping the driver-supplied name accessible
+  * More detailed information about devices (driver details, manufacturer info, etc.)
+  * Transport information so apps know how the device is connected (USB, BLE, Network, etc.)
+  * more
 * Bluetooth MIDI 1.0 (currently supported in WinRT MIDI only)
 
 The majority of this infrastructure development will be done by the core team, mentioned below. We
@@ -50,17 +53,19 @@ certainly encourage you to participate in testing and in pull requests as you ha
 ### Long-term project features
 
 * Virtual / App-to-App MIDI
-* New MIDI transport standards (Bluetooth, network, etc.) as they are adopted by the MIDI Association
+* New MIDI 2 transport standards (Bluetooth, network, etc.) as they are adopted by the MIDI Association
 * A full suite of MIDI utility, debugging, configuration, and diagnostic tools both visual and
-command-line. Examples:
+command-line. Including:
   * command-line tools for enumerating devices, and performing typical automatable tasks
   * A friendly user interface for managing MIDI devices and their configuration on the PC
   * A MIDI monitor
   * Sysex transfer and librarian tools
+  * Possible musician performance-focused tools like patch switching, controllers, etc.
 * MIDI processor plug-ins
   * Remap MIDI notes, velocity curves, and more
   * Reroute MIDI messages
   * Filter out certain MIDI messages for a specific port
+  * more
 
 For these long-term goals, we will be partnering with the community of developers to help ensure we
 have the right tools and utilities to meet your support needs and everyone's customers' needs, all
