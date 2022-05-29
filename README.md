@@ -1,7 +1,7 @@
 # Windows MIDI Services
 
 This project is the next-generation MIDI API for Windows, including MIDI 1.0, MIDI CI, and [MIDI 2.0](https://www.midi.org/specifications/midi-2-0-specifications)
-features, enhancements, a new driver, and an ecosystem of essential tools.
+features, enhancements, a new driver, and an ecosystem of essential tools. It builds upon the work we did for WinRT MIDI, adds many enhancements and bug fixes to our MIDI 1.0 support, and importantly adds support for MIDI CI and MIDI 2.0.
 
 > The open source driver has been generously donated by [AMEI](https://www.amei.or.jp/),
 > the Association of Musical Electronics Industry, and developed by AmeNote. Please see
