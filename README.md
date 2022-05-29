@@ -17,9 +17,11 @@ Although this API will coexist with the existing MIDI 1.0 WinMM API, for backwar
 reasons, the intent is to have everyone converted to this new API going forward and to eventually
 deprecate the WinMM API, as it doesn't support many of the features in demand today.
 
-> Join the Discussion!
+> **Join the Discussion!**
+> 
 > Our official community server for this project is on Discord here: 
 > https://aka.ms/MidiDiscord
+> 
 > Please keep bug and feature requests in the issues here, but other discussion, live streams, 
 > Q&A, and more can happen on Discord. Additionally, we know that not everyone who uses MIDI
 > has access to GitHub, so we welcome additional suggestions, reports, etc. there for those
@@ -41,7 +43,16 @@ code to implement MIDI 2.0 on embedded devices and other operating systems as th
 This is a living and growing API. The first phase is to release a complete and working MIDI 1.0
 and MIDI 2.0 system that includes all the necessary infrastructure for us to continue to build upon.
 
-### Short-term project "1.0" features
+Proposed Features
+https://github.com/microsoft/MIDI/labels/feature%20proposal
+
+Approved Features
+https://github.com/microsoft/MIDI/labels/feature
+
+Known Tracked Bugs
+https://github.com/microsoft/MIDI/labels/bug
+
+### Short-term project big "1.0" features
 
 * A new combined multi-client MIDI 1.0, MIDI CI, and [MIDI 2.0 USB class driver](https://www.midi.org/specifications/midi-transports-specifications/usb/usb-midi-2-0-2)
 * A new combined multi-client MIDI 1.0, MIDI CI, and MIDI 2.0 API based on the Universal MIDI Packet (UMP)
