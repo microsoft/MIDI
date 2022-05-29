@@ -27,16 +27,25 @@ deprecate the WinMM API, as it doesn't support many of the features in demand to
 > has access to GitHub, so we welcome additional suggestions, reports, etc. there for those
 > members of the community.
 
+## Philosophy - why is this Open Source?
 
-## Philosophy
+At Microsoft, we believe in the musician and music technology communities. We also know that
+the musician community is a small but highly motivated and interested community, including
+those who are both musicians and developers.
 
-At Microsoft, we believe in the musician and music technology communities. We know that
-standards like MIDI are living standards, with new transports and add-on capabilities
-added over time. The best way to maintain an API which keeps up with the evolving standards
-and offers early adopters an opportunity to try them out, test, and contribute, is to open
-source everything that we can, and inviting both internal teams and the community to contribute
-to MIDI as implemented on Windows. We also love the idea of others learning from this source
-code to implement MIDI 2.0 on embedded devices and other operating systems as they need.
+We recognize that standards like MIDI are living standards, with new transports and add-on 
+capabilities added over time and that in the past, we haven't been quick to adopt those in
+released of Windows. 
+
+We propose that the best way to maintain an API which keeps up with the evolving standards
+and offers early adopters in this community an opportunity to try them out, test, and contribute, 
+is to open source everything that we can, and inviting both internal teams and the community to 
+contribute to MIDI as implemented on Windows. We also love the idea of others learning from this 
+source code to implement MIDI 2.0 on embedded devices and other operating systems as they need.
+
+In short, we believe this project is the best way to continue to develop MIDI on Windows, and to
+give back to the whole MIDI developer community, regardless of which operating system they 
+prefer.
 
 ## Feature Set
 
