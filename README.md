@@ -150,7 +150,9 @@ Any use of third-party trademarks or logos are subject to those third-party's po
 
 ## Relevant specifications
 
-[MIDI 2.0](https://www.midi.org/specifications/midi-2-0-specifications)
-[USB MIDI 2.0](https://www.midi.org/specifications/midi-transports-specifications/usb/usb-midi-2-0-2)
-[MIDI 1.0](https://www.midi.org/specifications/midi1-specifications)
-[USB MIDI 1.0](https://www.midi.org/specifications/midi-transports-specifications/usb/usb-midi-1-0-2)
+These are the specifications which apply to this project today.
+
+* [MIDI 2.0](https://www.midi.org/specifications/midi-2-0-specifications)
+* [USB MIDI 2.0](https://www.midi.org/specifications/midi-transports-specifications/usb/usb-midi-2-0-2)
+* [MIDI 1.0](https://www.midi.org/specifications/midi1-specifications)
+* [USB MIDI 1.0](https://www.midi.org/specifications/midi-transports-specifications/usb/usb-midi-1-0-2)
