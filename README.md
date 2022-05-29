@@ -17,6 +17,15 @@ Although this API will coexist with the existing MIDI 1.0 WinMM API, for backwar
 reasons, the intent is to have everyone converted to this new API going forward and to eventually
 deprecate the WinMM API, as it doesn't support many of the features in demand today.
 
+> Join the Discussion!
+> Our official community server for this project is on Discord here: 
+> https://aka.ms/MidiDiscord
+> Please keep bug and feature requests in the issues here, but other discussion, live streams, 
+> Q&A, and more can happen on Discord. Additionally, we know that not everyone who uses MIDI
+> has access to GitHub, so we welcome additional suggestions, reports, etc. there for those
+> members of the community.
+
+
 ## Philosophy
 
 At Microsoft, we believe in the musician and music technology communities. We know that
