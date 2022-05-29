@@ -43,14 +43,17 @@ code to implement MIDI 2.0 on embedded devices and other operating systems as th
 This is a living and growing API. The first phase is to release a complete and working MIDI 1.0
 and MIDI 2.0 system that includes all the necessary infrastructure for us to continue to build upon.
 
-Proposed Features
-https://github.com/microsoft/MIDI/labels/feature%20proposal
-
-Approved Features
-https://github.com/microsoft/MIDI/labels/feature
-
-Known Tracked Bugs
-https://github.com/microsoft/MIDI/labels/bug
+> Some big features are called out in this readme. Beyond that, specific detailed features may be found in 
+> the issues list by using the following labels:
+>
+> Proposed Features
+> https://github.com/microsoft/MIDI/labels/feature%20proposal
+> 
+> Approved Features
+> https://github.com/microsoft/MIDI/labels/feature
+> 
+> Known Tracked Bugs
+> https://github.com/microsoft/MIDI/labels/bug
 
 ### Short-term project big "1.0" features
 
