@@ -30,5 +30,7 @@ If applicable, add screenshots to help explain your problem. This is especially 
  - OS: [e.g. Windows 11]
  - OS Build from Settings > System > About: [e.g. 22538.1000]
 
+**Do you wish to contribute a fix for this problem?**
+
 **Additional context**
 Add any other context about the problem here.
