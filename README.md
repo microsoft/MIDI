@@ -72,11 +72,13 @@ accessible to, at a minimum, C++ and C# applications.
 * Infrastructure to provide for future implementations of virtual MIDI, MIDI processing like the MIDI
 Mapper used to provide, new transports and much more, all without requiring, in most cases, new driver
 code.
+* Infrastructure for a JSON-based configuration system for MIDI system profiles.
 * Additional API and enumeration information
   * End-user renaming/aliasing of ports / groups while also keeping the driver-supplied name accessible
   * More detailed information about devices (driver details, manufacturer info, etc.)
   * Transport information so apps know how the device is connected (USB, BLE, Network, etc.)
   * more
+  * For more details, see https://github.com/microsoft/MIDI/issues/4
 * Bluetooth MIDI 1.0 (currently supported in WinRT MIDI only)
 
 The majority of this infrastructure development will be done by the core team, mentioned below. We
