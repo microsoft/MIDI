@@ -30,8 +30,8 @@ deprecate the WinMM API, as it doesn't support many of the features in demand to
 ## Philosophy - why is this Open Source?
 
 At Microsoft, we believe in the musician and music technology communities. We also know that
-the musician community is a small but highly motivated and interested community, including
-those who are both musicians and developers.
+the music creation tech community is a highly motivated and interested community, including
+those who are both musicians and developers who are working to move music technology forward.
 
 We recognize that standards like MIDI are living standards, with new transports and add-on 
 capabilities added over time and that in the past, we haven't been quick to adopt those in
