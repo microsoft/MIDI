@@ -1,0 +1,10 @@
+﻿{
+    "profiles": {
+      "MidiSettings (Package)": {
+        "commandName": "MsixPackage"
+      },
+      "MidiSettings (Unpackaged)": {
+        "commandName": "Project"
+      }
+    }
+}
