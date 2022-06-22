@@ -1,0 +1,37 @@
+// TODO: Include UMP
+
+
+namespace Windows.Devices.Midi
+{
+    delegate void MidiMessageReceivedHandler()
+
+
+    [default_interface]
+    runtimeclass MidiSession
+    {
+        boolean HasMessages;                    // true if there are waiting messages
+        boolean RaiseEventOnMessageReceived;    // if true, raise event on each incoming message
+
+        static MidiSession CreateSession(string appName, string disambiguator);
+
+        event MidiMessageReceivedHandler MessageReceived;
+
+        // TODO: A readmessages method to return a buffer/stream of 32 bit words
+        // Offer a utility to convert the buffer/stream to a collection of UMPs
+        // and/or a MidiMessageReader class which processes the buffer/stream
+
+
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+}
