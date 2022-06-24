@@ -12,15 +12,15 @@ namespace MidiSettings.ViewModels;
 public class EndpointViewModel : ObservableRecipient, INavigationAware
 {
     private readonly ISampleDataService _sampleDataService;
-    private SampleOrder _selected;
+    private SampleMidiDevice _selected;
 
-    public SampleOrder Selected
+    public SampleMidiDevice Selected
     {
         get => _selected;
         set => SetProperty(ref _selected, value);
     }
 
-    public ObservableCollection<SampleOrder> SampleItems { get; private set; } = new ObservableCollection<SampleOrder>();
+    public ObservableCollection<SampleMidiDevice> SampleItems { get; private set; } = new ObservableCollection<SampleMidiDevice>();
 
     public EndpointViewModel(ISampleDataService sampleDataService)
     {
@@ -32,7 +32,7 @@ public class EndpointViewModel : ObservableRecipient, INavigationAware
         SampleItems.Clear();
 
         // TODO: Replace with real data.
-        var data = await _sampleDataService.GetListDetailsDataAsync();
+        var data = await _sampleDataService.GetDeviceListDetailsDataAsync();
 
         foreach (var item in data)
         {

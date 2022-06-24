@@ -11,32 +11,53 @@
     behaviors:NavigationViewHeaderBehavior.HeaderMode="Never"
     mc:Ignorable="d">
     <Page.Resources>
-        <DataTemplate x:Key="ItemTemplate" x:DataType="models:SampleOrder">
-            <Grid Height="60">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <FontIcon
-                    Grid.Column="0"
-                    VerticalAlignment="Center"
-                    FontSize="32"
-                    Glyph="{x:Bind Symbol}"
-                    AutomationProperties.Name="{x:Bind SymbolName}" />
-                <StackPanel
-                    Grid.Column="1"
-                    Margin="{StaticResource SmallLeftMargin}"
-                    VerticalAlignment="Center">
-                    <TextBlock Text="{x:Bind Company}" Style="{StaticResource ListTitleStyle}" />
-                    <TextBlock Text="{x:Bind Status}" Style="{StaticResource ListSubTitleStyle}" />
-                </StackPanel>
-            </Grid>
-        </DataTemplate>
+        <DataTemplate x:Key="ItemTemplate" x:DataType="models:SampleMidiDevice">
 
-        <DataTemplate x:Key="DetailsTemplate">
-            <Grid>
-                <views:DeviceDetailControl ListDetailsMenuItem="{Binding}" />
-            </Grid>
+            <!-- TODO: This is design prototype only. Change this into a templated control with style 
+                    and respect light/dark mode etc and actually look like the settings app. 
+                    Mica would be nice if it gets added.
+            -->
+
+            <Border CornerRadius="5" Padding="10" BorderBrush="Gray" Background="White" Width="220" Height="220">
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="35" />
+                        <RowDefinition Height="50" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Transport type icon at top left -->
+
+                    <!-- Device icon in upper third, centered -->
+
+
+                    <!-- Device Names just below center -->
+                    <StackPanel Orientation="Vertical" Grid.Row="2">
+                        <TextBlock Text="{x:Bind Name, Mode=OneWay}" FontWeight="Bold" TextWrapping="WrapWholeWords" HorizontalAlignment="Center" TextAlignment="Center"/>
+                        <TextBlock Text="{x:Bind DeviceSuppliedDisplayName, Mode=OneWay}" TextWrapping="WrapWholeWords" HorizontalAlignment="Center" TextAlignment="Center"/>
+                    </StackPanel>
+
+
+                    <!-- Menu ellipses at top right -->
+                    <Button Content="..." VerticalAlignment="Top" HorizontalAlignment="Right">
+                        <Button.Flyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem Text="View/Edit Details" />
+                                <MenuFlyoutSeparator/>
+                                <MenuFlyoutItem Text="Monitor Traffic" />
+                                <MenuFlyoutSeparator/>
+                                <MenuFlyoutItem Text="Disable" />
+                                <MenuFlyoutItem Text="MIDI Panic" />
+                            </MenuFlyout>
+                        </Button.Flyout>
+                    </Button>
+
+
+                </Grid>
+
+            </Border>
         </DataTemplate>
 
         <DataTemplate x:Key="NoSelectionContentTemplate">
@@ -83,18 +104,16 @@
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-        <controls:ListDetailsView
+
+        <GridView
             x:Uid="Device"
             x:Name="ListDetailsViewControl"
-            BackButtonBehavior="Manual"
             Background="Transparent"
             BorderBrush="Transparent"
-            DetailsTemplate="{StaticResource DetailsTemplate}"
             ItemsSource="{x:Bind ViewModel.SampleItems}"
             ItemTemplate="{StaticResource ItemTemplate}"
-            ListHeaderTemplate="{StaticResource MinimalListHeaderTemplate}"
-            NoSelectionContentTemplate="{StaticResource NoSelectionContentTemplate}"
             SelectedItem="{x:Bind ViewModel.Selected, Mode=TwoWay}"
-            ViewStateChanged="OnViewStateChanged"/>
+            >
+        </GridView>
     </Grid>
 </Page>
