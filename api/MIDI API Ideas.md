@@ -14,6 +14,14 @@ These are not final designs, but rather are brainstorming design ideas. All code
 * We will implement and require features which give the user more visibility into the state of MIDI on the machine, even if those features aren't of obvious use to the applications themselves.
 * Unless otherwise stated, all Ids are GUIDs
 
+To level-set, here are some of the main objects/classes we're dealing with with messages. It's especially important to understand the relationship between devices, streams, and endpoints as this is different from the MIDI 1.0 APIs.
+
+* Device: A MIDI device connected to the PC through a transport like USB, RTP, BLE, Virtual, etc.
+* Endpoint: An addressible MIDI "port" on the device. In the case of MIDI 2.0. In the case of MIDI 1.0, these are uni-directional.
+* Stream: An input or output buffer or stream of data coming from or going out of the endpoint. In MIDI 1.0, these were just bytes. But in MIDI 2.0, and all UMP-wrapped MIDI 1.0 messages, these are chunks of words as defined in the MIDI 2.0 specs. A stream has further subdivisions in it for channels and group/function blocks. However, the API does not do any processing at that level and instead leaves it up to applications to address different groups and channels.
+
+![Main API Objects](img/main-api-objects.png)
+
 ## Session Management
 
 Sessions are the entrypoint into the API. In addition to this, they provide the required user-facing diagnostic data of which app is has which sessions and endpoints open
