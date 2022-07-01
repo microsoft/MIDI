@@ -45,16 +45,35 @@ public partial class App : Application
             services.AddSingleton<IFileService, FileService>();
 
             // Views and ViewModels
+            services.AddTransient<DevicesViewModel>();
+            services.AddTransient<DevicesPage>();
+
+            services.AddTransient<PluginsDeviceViewModel>();
+            services.AddTransient<PluginsDevicePage>();
+
+            services.AddTransient<PluginsProcessingViewModel>();
+            services.AddTransient<PluginsProcessingPage>();
+
+            services.AddTransient<ToolsConsoleViewModel>();
+            services.AddTransient<ToolsConsolePage>();
+
+            services.AddTransient<ToolsMonitorViewModel>();
+            services.AddTransient<ToolsMonitorPage>();
+
+            services.AddTransient<ToolsSysExViewModel>();
+            services.AddTransient<ToolsSysExPage>();
+
+            services.AddTransient<ToolsTestViewModel>();
+            services.AddTransient<ToolsTestPage>();
+
+
             services.AddTransient<SettingsViewModel>();
             services.AddTransient<SettingsPage>();
-            services.AddTransient<EndpointViewModel>();
-            services.AddTransient<EndpointPage>();
-            services.AddTransient<DeviceViewModel>();
-            services.AddTransient<DevicePage>();
-            services.AddTransient<MainViewModel>();
-            services.AddTransient<MainPage>();
+            
             services.AddTransient<ShellPage>();
             services.AddTransient<ShellViewModel>();
+
+
 
             // Configuration
             services.Configure<LocalSettingsOptions>(context.Configuration.GetSection(nameof(LocalSettingsOptions)));

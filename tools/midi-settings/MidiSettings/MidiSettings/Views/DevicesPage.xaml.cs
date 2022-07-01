@@ -6,16 +6,16 @@ using MidiSettings.ViewModels;
 
 namespace MidiSettings.Views;
 
-public sealed partial class DevicePage : Page
+public sealed partial class DevicesPage : Page
 {
-    public DeviceViewModel ViewModel
+    public DevicesViewModel ViewModel
     {
         get;
     }
 
-    public DevicePage()
+    public DevicesPage()
     {
-        ViewModel = App.GetService<DeviceViewModel>();
+        ViewModel = App.GetService<DevicesViewModel>();
         InitializeComponent();
     }
 

@@ -36,6 +36,7 @@
             AlwaysShowHeader="True"
             ExpandedModeThresholdWidth="800"
             DisplayModeChanged="NavigationViewControl_DisplayModeChanged"
+            
             Header="{x:Bind ((ContentControl)ViewModel.Selected).Content, Mode=OneWay}">
 
             <NavigationView.AutoSuggestBox>
@@ -63,22 +64,60 @@
                 TODO: Update item icons by updating FontIcon.Glyph properties.
                 https://docs.microsoft.com/windows/apps/design/style/segoe-fluent-icons-font#icon-list
                 -->
-                <NavigationViewItem x:Uid="Shell_Main" helpers:NavigationHelper.NavigateTo="MidiSettings.ViewModels.MainViewModel">
+
+                <NavigationViewItemHeader x:Uid="Shell_SetupNavHeader"/>
+
+                <NavigationViewItem x:Uid="Shell_Setup" helpers:NavigationHelper.NavigateTo="MidiSettings.ViewModels.SetupViewModel">
                     <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe7c3;"/>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe838;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem x:Uid="Shell_Device" helpers:NavigationHelper.NavigateTo="MidiSettings.ViewModels.DeviceViewModel">
+                <NavigationViewItem x:Uid="Shell_Devices" helpers:NavigationHelper.NavigateTo="MidiSettings.ViewModels.DevicesViewModel">
                     <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xea37;"/>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe88e;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem x:Uid="Shell_Endpoint" helpers:NavigationHelper.NavigateTo="MidiSettings.ViewModels.EndpointViewModel">
+
+                <NavigationViewItemHeader x:Uid="Shell_ToolsNavHeader"/>
+
+                <NavigationViewItem x:Uid="Shell_ToolsSysEx" helpers:NavigationHelper.NavigateTo="MidiSettings.ViewModels.ToolsSysExViewModel">
                     <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xea37;"/>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe9f5;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem x:Uid="Shell_ToolsTest" helpers:NavigationHelper.NavigateTo="MidiSettings.ViewModels.ToolsTestViewModel">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe9d9;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Uid="Shell_ToolsMonitor" helpers:NavigationHelper.NavigateTo="MidiSettings.ViewModels.ToolsMonitorViewModel">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe7b3;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Uid="Shell_ToolsConsole" helpers:NavigationHelper.NavigateTo="MidiSettings.ViewModels.ToolsConsoleViewModel">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe756;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+                <NavigationViewItemHeader x:Uid="Shell_PluginsNavHeader"/>
+
+                <NavigationViewItem x:Uid="Shell_PluginsDevice" helpers:NavigationHelper.NavigateTo="MidiSettings.ViewModels.PluginsDeviceViewModel">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe912;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Uid="Shell_PluginsProcessing" helpers:NavigationHelper.NavigateTo="MidiSettings.ViewModels.PluginsProcessingViewModel">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe912;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
             </NavigationView.MenuItems>
+            
+            
+            
             <NavigationView.HeaderTemplate>
                 <DataTemplate>
                     <Grid>
@@ -102,8 +141,8 @@
                     </behaviors:NavigationViewHeaderBehavior.DefaultHeaderTemplate>
                 </behaviors:NavigationViewHeaderBehavior>
             </i:Interaction.Behaviors>
-            
-            
+
+
             
             <Grid Margin="{StaticResource NavigationViewPageContentMargin}">
                 <Frame x:Name="NavigationFrame" />

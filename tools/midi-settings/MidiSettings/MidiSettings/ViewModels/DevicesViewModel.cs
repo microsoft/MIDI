@@ -9,7 +9,7 @@ using MidiSettings.Core.Models;
 
 namespace MidiSettings.ViewModels;
 
-public class DeviceViewModel : ObservableRecipient, INavigationAware
+public class DevicesViewModel : ObservableRecipient, INavigationAware
 {
     private readonly ISampleDataService _sampleDataService;
     private SampleMidiDevice _selected;
@@ -20,9 +20,10 @@ public class DeviceViewModel : ObservableRecipient, INavigationAware
         set => SetProperty(ref _selected, value);
     }
 
-    public ObservableCollection<SampleMidiDevice> SampleItems { get; private set; } = new ObservableCollection<SampleMidiDevice>();
+    public ObservableCollection<SampleMidiDevice> SampleItems { get; private set; } = 
+        new ObservableCollection<SampleMidiDevice>();
 
-    public DeviceViewModel(ISampleDataService sampleDataService)
+    public DevicesViewModel(ISampleDataService sampleDataService)
     {
         _sampleDataService = sampleDataService;
     }

@@ -18,10 +18,16 @@ public class PageService : IPageService
 
     public PageService()
     {
-        Configure<MainViewModel, MainPage>();
-        Configure<DeviceViewModel, DevicePage>();
-        Configure<EndpointViewModel, EndpointPage>();
+        Configure<DevicesViewModel, DevicesPage>();
+        Configure<PluginsDeviceViewModel, PluginsDevicePage>();
+        Configure<PluginsProcessingViewModel, PluginsProcessingPage>();
         Configure<SettingsViewModel, SettingsPage>();
+        Configure<SetupViewModel, SetupPage>();
+        Configure<ToolsConsoleViewModel, ToolsConsolePage>();
+        Configure<ToolsMonitorViewModel, ToolsMonitorPage>();
+        Configure<ToolsSysExViewModel, ToolsSysExPage>();
+        Configure<ToolsTestViewModel, ToolsTestPage>();
+
     }
 
     public Type GetPageType(string key)

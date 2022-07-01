@@ -39,8 +39,9 @@ public class SampleDataService : ISampleDataService
             {
                 Id = "{9d7debbc-c85d-11d1-9eb4-006008c3a19a}",
                 Name = "iContoso StudioPort 8 (Above Display)",
-                IconPath = "",
+                IconPath = "/RuntimeData/Icons/1U Rack Unit 3.png",
                 TransportType = "USB",
+                TransportGlyph = "\xe88e",
 
                 DeviceLocationInformation = "0000.0014.0000.003.003.001.000.000.000",
                 DeviceManufacturer = "iContoso",
@@ -113,6 +114,232 @@ public class SampleDataService : ISampleDataService
                     },
 
 
+                }
+            },
+            new SampleMidiDevice()
+            {
+                Id = "{9d7debbc-c85d-11d1-9eb4-006008c3a19a}",
+                Name = "Lead Synth",
+                IconPath = "/RuntimeData/Icons/Keyboard Knobby.png",
+                TransportType = "USB",
+                TransportGlyph = "\xe88e",
+
+                DeviceLocationInformation = "0000.0014.0000.003.003.001.000.000.000",
+                DeviceManufacturer = "Yamaha",
+                DeviceSuppliedDisplayName = "Yamaha ABC123",
+                DeviceInstancePath = "USB\\VID_1C75&PID_0288&MI_00\\A&118C224F&0&0000",
+
+                DriverDate = DateTime.Parse("2022-04-28"),
+                DriverDescription = "USB Audio Device",
+                DriverProvider = "Microsoft",
+                DriverVersion = "10.0.22000.653",
+                ParentDevice = "USB\\VID_1C75&PID_0288\\00000000001A",
+
+                MidiEndpoints=new List<SampleMidiEndpoint>()
+                {
+                    new SampleMidiEndpoint()
+                    {
+                        Id="",
+                        Name="Yamaha ABC123",
+                        ProtocolVersion="2.0",
+                        DeviceSuppliedDisplayName="Yamaha ABC123",
+                    },
+                }
+            },
+            new SampleMidiDevice()
+            {
+                Id = "{9d7debbc-c85d-11d1-9eb4-006008c3a19a}",
+                Name = "Korg Foo Bar",
+                IconPath = "/RuntimeData/Icons/Keyboard with Screen.png",
+                TransportType = "USB",
+                TransportGlyph = "\xe88e",
+
+                DeviceLocationInformation = "0000.0014.0000.003.003.001.000.000.000",
+                DeviceManufacturer = "Korg",
+                DeviceSuppliedDisplayName = "Korg Foo Bar",
+                DeviceInstancePath = "USB\\VID_1C75&PID_0288&MI_00\\A&118C224F&0&0000",
+
+                DriverDate = DateTime.Parse("2022-04-28"),
+                DriverDescription = "USB Audio Device",
+                DriverProvider = "Microsoft",
+                DriverVersion = "10.0.22000.653",
+                ParentDevice = "USB\\VID_1C75&PID_0288\\00000000001A",
+
+                MidiEndpoints=new List<SampleMidiEndpoint>()
+                {
+                    new SampleMidiEndpoint()
+                    {
+                        Id="",
+                        Name="Korg Foo Bar",
+                        ProtocolVersion="2.0",
+                        DeviceSuppliedDisplayName="Korg Foo Bar",
+                    },
+                    new SampleMidiEndpoint()
+                    {
+                        Id="",
+                        Name="DIN 1",
+                        ProtocolVersion="2.0",
+                        DeviceSuppliedDisplayName="DIN 1",
+                    },
+                }
+            },
+            new SampleMidiDevice()
+            {
+                Id = "{9d7debbc-c85d-11d1-9eb4-006008c3a19a}",
+                Name = "BLE Synth",
+                IconPath = "/RuntimeData/Icons/Rack or Desktop Unit 6.png",
+                TransportType = "BLE",
+                TransportGlyph = "\xe702",
+
+                DeviceLocationInformation = "0000.0014.0000.003.003.001.000.000.000",
+                DeviceManufacturer = "iContoso",
+                DeviceSuppliedDisplayName = "iContoso BLE01",
+                DeviceInstancePath = "USB\\VID_1C75&PID_0288&MI_00\\A&118C224F&0&0000",
+
+                DriverDate = DateTime.Parse("2022-04-28"),
+                DriverDescription = "BLE Audio Device",
+                DriverProvider = "Microsoft",
+                DriverVersion = "10.0.22000.653",
+                ParentDevice = "USB\\VID_1C75&PID_0288\\00000000001A",
+
+                MidiEndpoints=new List<SampleMidiEndpoint>()
+                {
+                    new SampleMidiEndpoint()
+                    {
+                        Id="",
+                        Name="iContoso BLE01",
+                        ProtocolVersion="2.0",
+                        DeviceSuppliedDisplayName="iContoso BLE01",
+                    },
+                }
+            },
+            new SampleMidiDevice()
+            {
+                Id = "{9d7debbc-c85d-11d1-9eb4-006008c3a19a}",
+                Name = "Remote Synth",
+                IconPath = "/RuntimeData/Icons/Rack Unit 1.png",
+                TransportType = "RTP",
+                TransportGlyph = "\xe701",
+
+                DeviceLocationInformation = "0000.0014.0000.003.003.001.000.000.000",
+                DeviceManufacturer = "iContoso",
+                DeviceSuppliedDisplayName = "iContoso RTP Synth",
+                DeviceInstancePath = "USB\\VID_1C75&PID_0288&MI_00\\A&118C224F&0&0000",
+
+
+                MidiEndpoints=new List<SampleMidiEndpoint>()
+                {
+                    new SampleMidiEndpoint()
+                    {
+                        Id="",
+                        Name="iContoso BLE01",
+                        ProtocolVersion="2.0",
+                        DeviceSuppliedDisplayName="iContoso BLE01",
+                    },
+                }
+            },
+            new SampleMidiDevice()
+            {
+                Id = "{9d7debbc-c85d-11d1-9eb4-006008c3a19a}",
+                Name = "3rd Rack MIDIPort",
+                IconPath = "/RuntimeData/Icons/1U Rack Unit 1.png",
+                TransportType = "USB",
+                TransportGlyph = "\xe88e",
+
+                DeviceLocationInformation = "0000.0014.0000.003.003.001.000.000.000",
+                DeviceManufacturer = "iContoso",
+                DeviceSuppliedDisplayName = "iContoso MIDIPort 4",
+                DeviceInstancePath = "USB\\VID_1C75&PID_0288&MI_00\\A&118C224F&0&0000",
+
+                DriverDate = DateTime.Parse("2022-04-28"),
+                DriverDescription = "USB Audio Device",
+                DriverProvider = "Microsoft",
+                DriverVersion = "10.0.22000.653",
+                ParentDevice = "USB\\VID_1C75&PID_0288\\00000000001A",
+
+                MidiEndpoints=new List<SampleMidiEndpoint>()
+                {
+                    new SampleMidiEndpoint()
+                    {
+                        Id="",
+                        Name="MT-32",
+                        ProtocolVersion="1.0",
+                        DeviceSuppliedDisplayName="DIN MIDI 1",
+                    },
+                    new SampleMidiEndpoint()
+                    {
+                        Id="",
+                        Name="Minimoog",
+                        ProtocolVersion="1.0",
+                        DeviceSuppliedDisplayName="DIN MIDI 2",
+                    },
+                    new SampleMidiEndpoint()
+                    {
+                        Id="",
+                        Name="Spectral Audio ProTone",
+                        ProtocolVersion="1.0",
+                        DeviceSuppliedDisplayName="DIN MIDI 3",
+                    },
+                    new SampleMidiEndpoint()
+                    {
+                        Id="",
+                        Name="Analog Solutions Foo X",
+                        ProtocolVersion="1.0",
+                        DeviceSuppliedDisplayName="DIN MIDI 4",
+                    },
+
+
+
+                }
+            },
+            new SampleMidiDevice()
+            {
+                Id = "{9d7debbc-c85d-11d1-9eb4-006008c3a19a}",
+                Name = "Bass Synth",
+                IconPath = "/RuntimeData/Icons/Keyboard with Sliders.png",
+                TransportType = "Virtual",
+                TransportGlyph = "\xecaa",
+
+                DeviceLocationInformation = "0000.0014.0000.003.003.001.000.000.000",
+                DeviceManufacturer = "Foo",
+                DeviceSuppliedDisplayName = "My Synth App",
+                DeviceInstancePath = "USB\\VID_1C75&PID_0288&MI_00\\A&118C224F&0&0000",
+
+
+                MidiEndpoints=new List<SampleMidiEndpoint>()
+                {
+                    new SampleMidiEndpoint()
+                    {
+                        Id="",
+                        Name="My Synth App",
+                        ProtocolVersion="2.0",
+                        DeviceSuppliedDisplayName="My Synth App",
+                    },
+                }
+            },
+            new SampleMidiDevice()
+            {
+                Id = "{9d7debbc-c85d-11d1-9eb4-006008c3a19a}",
+                Name = "Drums",
+                IconPath = "/RuntimeData/Icons/Drum Machine 2.png",
+                TransportType = "Virtual",
+                TransportGlyph = "\xecaa",
+
+                DeviceLocationInformation = "0000.0014.0000.003.003.001.000.000.000",
+                DeviceManufacturer = "Foo",
+                DeviceSuppliedDisplayName = "Virtual Drums App",
+                DeviceInstancePath = "USB\\VID_1C75&PID_0288&MI_00\\A&118C224F&0&0000",
+
+
+                MidiEndpoints=new List<SampleMidiEndpoint>()
+                {
+                    new SampleMidiEndpoint()
+                    {
+                        Id="",
+                        Name="Virtual Drums App",
+                        ProtocolVersion="2.0",
+                        DeviceSuppliedDisplayName="Virtual Drums App",
+                    },
                 }
             },
         };

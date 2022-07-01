@@ -72,10 +72,15 @@ public class SampleMidiDevice
         get; set;
     }
 
+    public string TransportGlyph
+    {
+        get; set;
+    }
+
     public ICollection<SampleMidiEndpoint> MidiEndpoints
     {
         get; set;
     }
 
-
+    public override string ToString() => $"{Name}";
 }

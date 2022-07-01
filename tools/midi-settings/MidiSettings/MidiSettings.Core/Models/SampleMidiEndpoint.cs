@@ -31,7 +31,7 @@ public class SampleMidiEndpoint
 
 
 
-    // todo: groups and function blocks
+    // todo: groups and function blocks?
 
     
 }
