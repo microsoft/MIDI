@@ -1,0 +1,209 @@
+# API ideas
+
+These are not final designs, but rather are brainstorming design ideas. All code is pseudo-c code with just enough syntax to get the point across. You will notice a real lack of semicolons, for example. :)
+
+## General Philosophy
+
+* We always provide first-class access to raw data
+  * We always provide classes to process that data into friendly formats, but do not require their use
+* Entry point into API functionality is always the session
+  * An app may have as many sessions open as it needs
+* Everything is multi-client and all devices in the session are available all the time
+  * Only endpoints need to be opened, and that's really only to wire up handling for incoming messages
+  * Device enumeration is detailed, flexible, and supports our device/transport plugin approach
+* We will implement and require features which give the user more visibility into the state of MIDI on the machine, even if those features aren't of obvious use to the applications themselves.
+* Unless otherwise stated, all Ids are GUIDs
+
+## Session Management
+
+Sessions are the entrypoint into the API. In addition to this, they provide the required user-facing diagnostic data of which app is has which sessions and endpoints open
+
+```cpp
+
+// MidiSessionSettings is where we can set flags and other session-global
+// settings. For example, we may decide to have flags to control the way
+// messages are received (polling, events, etc.)
+MidiSessionSettings settings
+
+// session name can be a project in the DAW, a tab in a browser, etc.
+// The process name / id etc. is also captured behind the scenes
+_session = MidiSession.Create("My song", settings)
+
+// do stuff with session in here
+...
+
+// closing the session closes all the open endpoints/devices
+// Good practice, but should also happen automatically if session goes out of scope
+_session.Close()
+
+```
+
+## Message Handling
+
+We've had requests for both centralized message receiving as well as WinRT MIDI-style
+port (endpoint)-based receiving. This API will provide both.
+
+### Open endpoint, send message, close
+
+We require opening the endpoint for sending messages so that there's an explicit action
+that is also user-visible through diagnostic tools. Opening the endpoint is also
+required for receiving messages.
+
+```cpp
+MidiEndpointOpenOptions options
+MidiMessageSendOptions messageOptions
+
+_endpoint = _device.OpenEndpoint(deviceId, endpointId, options)
+
+if (_endpoint)
+{
+    // there will be variations on this for larger buffers, 
+    // timestamp options, etc.
+    // Fails with an exception if endpoint has not been opened
+    _endpoint.SendMessage(singleUumpMessageWithGroupAndChannelInIt, messageOptions)
+    _endpoint.SendMessages(bunchOfCompleteUmpMessageStructs, messageOptions)
+    _endpoint.SendMessages(arrayOrBufferOfWords, messageOptions)
+}
+
+_endpoint.Close()
+```
+
+TODO: As we decide on how much to offer at the session level, we should consider if
+it makes sense to have SendMessage(s) functionality there, passing in either an
+endpointId or an actual endpoint object. The latter isn't super useful because you
+already have the instance, but the former may be.
+
+### Receive messages at the endpoint-level
+
+This is more WinRT-MIDI style where the messages show up at the endpoint in a delegate/event
+
+```cpp
+MidiEndpointOpenOptions options
+
+_endpoint1 = _device.OpenEndpoint(deviceID1, endpointID1, options)
+_endpoint2 = _device.OpenEndpoint(deviceID1, endpointID2, options)
+
+// centralized message handling for all open input endpoints
+_endpoint1.MessageReceived += OnMessageReceived
+
+void OnMessageReceived(session, endpoint, messageReceivedArgs)
+{
+    foreach msg in MidiMessageParser.GetTypedMessages(messageReceivedArgs.Endpoint.InputStream)
+    {
+        ...
+    }
+}
+```
+
+TODO: Should we require the endpoint opening function be at the device level, or should it be
+at the session level? This is a recurring theme throughout where some things may simply be
+easier to manage if centralized, but that also means any given program ends up with either
+a lot of parameter passing, or globals they may not want. It also makes cleaning up somewhat
+more difficult when objects go out of scope.
+
+### Receive messages at the session level
+
+This has been requested by some of the developers so that they can centralize their own message processing
+
+```cpp
+_endpoint1 = _session.OpenEndpoint(deviceID1, endpointID1)
+
+// centralized message handling for all open input endpoints
+_endpoint1.MessageReceived += OnMessageReceived
+
+void OnMessageReceived(session, messageReceivedArgs)
+{
+    foreach endpoint in (messageReceivedArgs.Endpoints)
+    {
+        foreach msg in MessageParser.GetTypedMessages(endpoint.InputStream)
+        {
+            ...
+        }
+    }
+}
+```
+
+TODO: Polling? This has been requested, but need to see if event/delegate approach
+is workable for them. Also need to sort out how often these events are raised, and
+how many messages they are likely to contain.
+
+## Enumeration
+
+This is a different approach from Windows.Devices.Enumeration today. Reasons why:
+
+1. We should just have all MIDI devices available all the time. There's no reason not to, and we have to have them available to listen for certain types of changes.
+2. More easily support virtual and other locally-known MIDI devices that don't fit into PNP without creating custom drivers
+3. Make more data available without messing with the lower-fidelity DeviceInformation structure in WinRT
+4. Doesn't tie us to UWP enumeration code
+
+### Enumerate devices
+
+Devices are always available when connected. In some cases, we may need to track device changes (user renames the device in the settings app, or we receive a MIDI CI or other message which may impact device configuration)
+
+```cpp
+_session.DeviceRemoved += OnDeviceRemoved
+_session.DeviceAdded += OnDeviceAdded
+_session.DeviceChanged += OnDeviceChanged   // this is where UMP change messages come through, too
+
+// devices are always available as soon as the session is open
+foreach device in _session.Devices
+{
+    ...
+}
+```
+
+### Enumerate endpoints
+
+Endpoints hang off devices and provide the actual MIDI IO.
+
+```cpp
+_device.EndpointRemoved += OnEndpointRemoved   // especially true for virtual endpoints
+_device.EndpointAdded += OnEndpointAdded       // ditto
+_device.EndpointChanged += OnEndpointChanged   // this is where UMP change messages come through, too
+
+foreach endpoint in _device.Endpoints
+{
+
+}
+
+```
+
+TODO: Should we also surface the endpoint events at the session level?
+
+TODO: Should we also surface a collection of all enpoints at the session level, rather than require drilling down by device? Or maybe we provide a few WinUI controls or dialogs for device / endpoint picking?
+
+## Virtual Devices
+
+### Adding a virtual device
+
+The API won't know about the plugins types, so API functions will work off of interfaces. The client
+code can reference the plugin types through a metadata file
+
+The user can create virtual devices and endpoints through the setings app (and facilitate automatic 
+routing between them), but apps also need the ability to expose themselves as an endpoint at any time.
+
+```cpp
+// code-created virtual devices are scoped to the session, and disappear
+// when the session is closed or goes out of scope.
+
+MidiVirtualDeviceSettings deviceSettings		// type Supplied by plugin
+
+_device = _session.AddDevice(guidOfVirtualDevicePlugin, nameOfDevice, (IMidiDeviceSettings)deviceSettings)
+
+
+// VirtualEndpointSettings will contain things such as toggles for InputEnabled
+// OutputEnabled, etc.
+
+MidiVirtualEndpointSettings endpointSettings	// type Supplied by plugin
+
+_endpoint = _device.AddEndpoint((IMidiEndpointSettings)endpointSettings)
+
+```
+
+## Setups
+
+Setups are saved JSON configurations created by the user in the settings app. They contain custom
+device and endpoint names, virtual ports, routing, plugin settings and more. Creating or changing
+them via code was considered, but rejected due to end-user control and potential security concerns.
+
+We will revisit if new requirements arise.
