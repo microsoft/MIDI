@@ -29,13 +29,13 @@ deprecate the WinMM API, as it doesn't support many of the features in demand to
 
 ## Philosophy - why is this Open Source?
 
-At Microsoft, we believe in the musician and music technology communities. We also know that
+We believe in the musician and music technology communities. We also know that
 the music creation tech community is a highly motivated and interested community, including
 those who are both musicians and developers who are working to move music technology forward.
 
 We recognize that standards like MIDI are living standards, with new transports and add-on 
 capabilities added over time and that in the past, we haven't been quick to adopt those in
-released of Windows. 
+released of Windows.
 
 We propose that the best way to maintain an API which keeps up with the evolving standards
 and offers early adopters in this community an opportunity to try them out, test, and contribute, 
@@ -74,11 +74,10 @@ Mapper used to provide, new transports and much more, all without requiring, in 
 code.
 * Infrastructure for a JSON-based configuration system for MIDI system profiles.
 * Additional API and enumeration information
-  * End-user renaming/aliasing of ports / groups while also keeping the driver-supplied name accessible
+  * End-user renaming/aliasing of devices / endpoints while also keeping the driver-supplied name accessible
   * More detailed information about devices (driver details, manufacturer info, etc.)
   * Transport information so apps know how the device is connected (USB, BLE, Network, etc.)
   * more
-  * For more details, see https://github.com/microsoft/MIDI/issues/4
 * Bluetooth MIDI 1.0 (currently supported in WinRT MIDI only)
 
 The majority of this infrastructure development will be done by the core team, mentioned below. We
@@ -90,15 +89,15 @@ certainly encourage you to participate in testing and in pull requests as you ha
 * New MIDI 2 transport standards (Bluetooth, network, etc.) as they are adopted by the MIDI Association
 * A full suite of MIDI utility, debugging, configuration, and diagnostic tools both visual and
 command-line. Including:
-  * command-line tools for enumerating devices, and performing typical automatable tasks
   * A friendly user interface for managing MIDI devices and their configuration on the PC
+  * command-line tools for enumerating devices, and performing typical automatable tasks
   * A MIDI monitor
   * Sysex transfer and librarian tools
   * Possible musician performance-focused tools like patch switching, controllers, etc.
-* MIDI processor plug-ins
+* MIDI message processor plug-ins
   * Remap MIDI notes, velocity curves, and more
   * Reroute MIDI messages
-  * Filter out certain MIDI messages for a specific port
+  * Filter out certain MIDI messages for a specific endpoint
   * more
 
 For these long-term goals, we will be partnering with the community of developers to help ensure we
@@ -108,8 +107,22 @@ available as part of a single standard installation.
 ## Releases
 
 To keep the project agile, we are currently planning to distibute all of the released and
-signed end-user components through the Microsoft Store on Windows. This may evolve over time
-as the project stabilizes or as the developer and musician community provide feedback.
+signed end-user components, as much as possible, through the Microsoft Store on Windows. This may evolve over time as the project stabilizes or as the developer and musician community provide feedback. Additionally, some components may need to be distributed through Windows Update. TBD as we get into releases.
+
+**There are no end-user releases yet. We expect to start seeing those as we head into 2023.**
+
+## Client code compatibility
+
+The APIs will be created as components usable by as many different languages as possible. Any language which can talk to WinRT ("modern COM") interfaces will be able to use the API. That includes but is not limited to
+C++/WinRT, .NET and others.
+
+As this approaches maturity, we'll also work with browser teams to enable WebMIDI to use the new APIs.
+
+## Older APIs
+
+What happens to the older APIs like WinMM, DirectMusic, WinRT MIDI, and more? Our intention is to deprecate those when this API meets the requirements for use and a critical mass of adoption. Initially, we didn't want to create yet another API to add to the list, but existing APIs were heavily tied to models which don't move well into MIDI 2.0 and a more open ecosystem of transports.
+
+Deprecate doesn't mean those APIs go away immediately, but it does tell developers that we have an intention to eventually remove or otherwise stop supporting them. An example is DirectMusic. That was deprecated many years ago but is still shipped with Windows, but does not receive enhancements or other changes. We'll make our intentions clear to developers and encourage them to adopt the new APIs.
 
 ## Meet the Core Team for 1.0
 
