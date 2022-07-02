@@ -1,0 +1,164 @@
+﻿<Page
+    x:Class="MidiSettings.Views.DevicesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
+    xmlns:models="using:MidiSettings.Core.Models"
+    xmlns:views="using:MidiSettings.Views"
+    xmlns:behaviors="using:MidiSettings.Behaviors"
+    behaviors:NavigationViewHeaderBehavior.HeaderMode="Always"
+    mc:Ignorable="d">
+    <Page.Resources>
+        <DataTemplate x:Key="ItemTemplate" x:DataType="models:SampleMidiDevice">
+
+            <!-- TODO: This is design prototype only. Change this into a templated control with style 
+                    and respect light/dark mode etc and actually look like the settings app. 
+                    Mica would be nice if it gets added.
+            -->
+            
+            <!-- TODO It would be nice to offer at least two views here: compact and the big icon view -->
+
+            <Border CornerRadius="5" Padding="10" 
+                    BorderBrush="DarkGray" Background="White" 
+                    Width="220" Height="220">
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="35" />
+                        <RowDefinition Height="100" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Transport type icon at top left -->
+                    <FontIcon HorizontalAlignment="Left" VerticalAlignment="Top" 
+                              FontFamily="{StaticResource SymbolThemeFontFamily}" 
+                              Glyph="{x:Bind TransportGlyph, Mode=OneWay}"
+                              ToolTipService.ToolTip="{x:Bind TransportType, Mode=OneWay}">
+                    </FontIcon>
+
+
+                    <!-- Device icon in upper third, centered -->
+                    <Image HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Source="{x:Bind IconPath, Mode=OneWay}"
+                           Grid.Row="1">
+                    </Image>
+
+
+                    <!-- Device Names just below center -->
+                    <StackPanel Orientation="Vertical" Grid.Row="2">
+                        <TextBlock Text="{x:Bind Name, Mode=OneWay}" FontWeight="Bold" TextWrapping="WrapWholeWords" HorizontalAlignment="Center" TextAlignment="Center"/>
+                        <TextBlock Text="{x:Bind DeviceSuppliedDisplayName, Mode=OneWay}" TextWrapping="WrapWholeWords" HorizontalAlignment="Center" TextAlignment="Center"/>
+                    </StackPanel>
+
+
+                    <!-- Menu ellipses at top right -->
+                    <Button Content=". . ."
+                            BorderBrush="Transparent"
+                            Background="Transparent"
+                            FontWeight="ExtraBold"
+                            VerticalAlignment="Top" HorizontalAlignment="Right">
+                        <Button.Flyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem Text="View/Edit Details">
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon HorizontalAlignment="Left" VerticalAlignment="Top" 
+                                                  FontFamily="{StaticResource SymbolThemeFontFamily}" 
+                                                  Glyph="&#xe70f;"/>
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutSeparator/>
+                                <MenuFlyoutItem Text="Monitor Traffic">
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon HorizontalAlignment="Left" VerticalAlignment="Top" 
+                                                  FontFamily="{StaticResource SymbolThemeFontFamily}" 
+                                                  Glyph="&#xe9d9;"/>
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutSeparator/>
+                                <MenuFlyoutItem Text="Disable">
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon HorizontalAlignment="Left" VerticalAlignment="Top" 
+                                                  FontFamily="{StaticResource SymbolThemeFontFamily}" 
+                                                  Glyph="&#xe7e8;"/>
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem Text="MIDI Panic">
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon HorizontalAlignment="Left" VerticalAlignment="Top" 
+                                                  FontFamily="{StaticResource SymbolThemeFontFamily}" 
+                                                  Glyph="&#xe783;"/>
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                            </MenuFlyout>
+                        </Button.Flyout>
+                    </Button>
+
+
+                </Grid>
+
+            </Border>
+        </DataTemplate>
+
+        <DataTemplate x:Key="NoSelectionContentTemplate">
+            <Grid>
+                <TextBlock
+                    x:Uid="Device_NoSelection"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    TextAlignment="Center"
+                    Style="{ThemeResource SubtitleTextBlockStyle}" />
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="ListHeaderTemplate">
+            <Grid Height="40">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Style="{StaticResource ListTitleStyle}"
+                    Text="{Binding}" />
+            </Grid>
+        </DataTemplate>
+        <DataTemplate x:Key="MinimalListHeaderTemplate">
+            <Grid Height="40">
+                <TextBlock
+                    Margin="96,0,0,0"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource ListTitleStyle}"
+                    Text="{Binding}" />
+            </Grid>
+        </DataTemplate>
+    </Page.Resources>
+
+    <Grid x:Name="ContentArea">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <!--641 is the default CompactModeThresholdWidth in NavigationView -->
+                        <AdaptiveTrigger MinWindowWidth="641" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="ListDetailsViewControl.ListHeaderTemplate" 
+                                Value="{StaticResource ListHeaderTemplate}" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+        <GridView
+            x:Uid="Device"
+            x:Name="ListDetailsViewControl"
+            Background="Transparent"
+            BorderBrush="Transparent"
+            ItemsSource="{x:Bind ViewModel.SampleItems}"
+            ItemTemplate="{StaticResource ItemTemplate}"
+            SelectedItem="{x:Bind ViewModel.Selected, Mode=TwoWay}"
+            >
+        </GridView>
+
+
+    </Grid>
+</Page>
