@@ -40,142 +40,142 @@
     <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\1U Rack Unit 1.png">
+    <None Update="RuntimeData\Icons\Light\1U Rack Unit 1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\1U Rack Unit 2.png">
+    <None Update="RuntimeData\Icons\Light\1U Rack Unit 2.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\1U Rack Unit 3.png">
+    <None Update="RuntimeData\Icons\Light\1U Rack Unit 3.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\1U Rack Unit 4.png">
+    <None Update="RuntimeData\Icons\Light\1U Rack Unit 4.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\1U Rack Unit 5.png">
+    <None Update="RuntimeData\Icons\Light\1U Rack Unit 5.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\1U Rack Unit 6.png">
+    <None Update="RuntimeData\Icons\Light\1U Rack Unit 6.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Camera 1.png">
+    <None Update="RuntimeData\Icons\Light\Camera 1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Camera 2.png">
+    <None Update="RuntimeData\Icons\Light\Camera 2.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Desktop Interface 1.png">
+    <None Update="RuntimeData\Icons\Light\Desktop Interface 1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Desktop Interface 2.png">
+    <None Update="RuntimeData\Icons\Light\Desktop Interface 2.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Drone 1.png">
+    <None Update="RuntimeData\Icons\Light\Drone 1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Drum Machine 1.png">
+    <None Update="RuntimeData\Icons\Light\Drum Machine 1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Drum Machine 2.png">
+    <None Update="RuntimeData\Icons\Light\Drum Machine 2.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Drums 1.png">
+    <None Update="RuntimeData\Icons\Light\Drums 1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Guitar 1.png">
+    <None Update="RuntimeData\Icons\Light\Guitar 1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Keyboard Digital.png">
+    <None Update="RuntimeData\Icons\Light\Keyboard Digital.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Keyboard Knobby.png">
+    <None Update="RuntimeData\Icons\Light\Keyboard Knobby.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Keyboard Minimal.png">
+    <None Update="RuntimeData\Icons\Light\Keyboard Minimal.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Keyboard Small.png">
+    <None Update="RuntimeData\Icons\Light\Keyboard Small.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Keyboard with Pads.png">
+    <None Update="RuntimeData\Icons\Light\Keyboard with Pads.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Keyboard with Screen.png">
+    <None Update="RuntimeData\Icons\Light\Keyboard with Screen.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Keyboard with Sliders.png">
+    <None Update="RuntimeData\Icons\Light\Keyboard with Sliders.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Keyboard.png">
+    <None Update="RuntimeData\Icons\Light\Keyboard.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Knob or Button Controller 1.png">
+    <None Update="RuntimeData\Icons\Light\Knob or Button Controller 1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Mixer or Fader Controller 1.png">
+    <None Update="RuntimeData\Icons\Light\Mixer or Fader Controller 1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Mixer or Fader Controller 2.png">
+    <None Update="RuntimeData\Icons\Light\Mixer or Fader Controller 2.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Mixer or Fader Controller 3.png">
+    <None Update="RuntimeData\Icons\Light\Mixer or Fader Controller 3.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Modular 1.png">
+    <None Update="RuntimeData\Icons\Light\Modular 1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Modular 2.png">
+    <None Update="RuntimeData\Icons\Light\Modular 2.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Pad Controller 2.png">
+    <None Update="RuntimeData\Icons\Light\Pad Controller 2.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Pad Controller 3.png">
+    <None Update="RuntimeData\Icons\Light\Pad Controller 3.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Pad Controller 4.png">
+    <None Update="RuntimeData\Icons\Light\Pad Controller 4.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Pad Controller.png">
+    <None Update="RuntimeData\Icons\Light\Pad Controller.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Rack or Desktop Unit 5.png">
+    <None Update="RuntimeData\Icons\Light\Rack or Desktop Unit 5.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Rack or Desktop Unit 6.png">
+    <None Update="RuntimeData\Icons\Light\Rack or Desktop Unit 6.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Rack or Desktop Unit 7.png">
+    <None Update="RuntimeData\Icons\Light\Rack or Desktop Unit 7.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Rack Unit 1.png">
+    <None Update="RuntimeData\Icons\Light\Rack Unit 1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Rack Unit 2.png">
+    <None Update="RuntimeData\Icons\Light\Rack Unit 2.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Rack Unit 3.png">
+    <None Update="RuntimeData\Icons\Light\Rack Unit 3.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Rack Unit 4.png">
+    <None Update="RuntimeData\Icons\Light\Rack Unit 4.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Sax.png">
+    <None Update="RuntimeData\Icons\Light\Sax.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Semi-Modular Keyboard Knobby.png">
+    <None Update="RuntimeData\Icons\Light\Semi-Modular Keyboard Knobby.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Turntables 1.png">
+    <None Update="RuntimeData\Icons\Light\Turntables 1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Turntables 2.png">
+    <None Update="RuntimeData\Icons\Light\Turntables 2.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\USB MIDI 1.png">
+    <None Update="RuntimeData\Icons\Light\USB MIDI 1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="RuntimeData\Icons\Violin.png">
+    <None Update="RuntimeData\Icons\Light\Violin.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
@@ -212,6 +212,10 @@
     <Page Update="Views\PluginsDevicePage.xaml">
       <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
     </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="RuntimeData\Icons\Dark\" />
   </ItemGroup>
   
   <PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">

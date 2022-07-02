@@ -3,6 +3,8 @@
 This project is the next-generation MIDI API for Windows, including MIDI 1.0, MIDI CI, and [MIDI 2.0](https://www.midi.org/specifications/midi-2-0-specifications)
 features, enhancements, a new driver, and an ecosystem of essential tools. It builds upon the work we did for WinRT MIDI, adds many enhancements and bug fixes to our MIDI 1.0 support, and importantly adds support for MIDI CI and MIDI 2.0.
 
+This is an official Microsoft project.
+
 > The open source driver has been generously donated by [AMEI](https://www.amei.or.jp/),
 > the Association of Musical Electronics Industry, and developed by AmeNote. Please see
 > the file headers for any additional copyright notices. A huge thank you to AMEI and its
@@ -123,6 +125,14 @@ As this approaches maturity, we'll also work with browser teams to enable WebMID
 What happens to the older APIs like WinMM, DirectMusic, WinRT MIDI, and more? Our intention is to deprecate those when this API meets the requirements for use and a critical mass of adoption. Initially, we didn't want to create yet another API to add to the list, but existing APIs were heavily tied to models which don't move well into MIDI 2.0 and a more open ecosystem of transports.
 
 Deprecate doesn't mean those APIs go away immediately, but it does tell developers that we have an intention to eventually remove or otherwise stop supporting them. An example is DirectMusic. That was deprecated many years ago but is still shipped with Windows, but does not receive enhancements or other changes. We'll make our intentions clear to developers and encourage them to adopt the new APIs.
+
+### Can older APIs use new features?
+
+The new class driver replaces the existing MIDI 1.0 class driver delivered with Windows. As a result, existing APIs may gain some minor features, such as multi-client. However, the older APIs will not gain new transports or MIDI 2.0 functionality.
+
+### What about additions like the GS Synth in Windows?
+
+We're evaluating functionality for this. Intent is to make sure it works, at least with the existing APIs today, but that will depend on a number of factors in driver and API design. Additionally, going forward, in-box Virtual MIDI will provide more options for MIDI playback under the new API.
 
 ## Meet the Core Team for 1.0
 

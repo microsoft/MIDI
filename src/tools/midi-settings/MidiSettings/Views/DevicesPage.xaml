@@ -20,6 +20,8 @@
             
             <!-- TODO It would be nice to offer at least two views here: compact and the big icon view -->
 
+            <!-- TODO: Need a clean way to have an "add device" button as last tile. May just have a separate button -->
+            
             <Border CornerRadius="5" Padding="10" 
                     BorderBrush="DarkGray" Background="White" 
                     Width="220" Height="220">

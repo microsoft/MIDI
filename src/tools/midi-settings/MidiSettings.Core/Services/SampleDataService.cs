@@ -39,7 +39,7 @@ public class SampleDataService : ISampleDataService
             {
                 Id = "{9d7debbc-c85d-11d1-9eb4-006008c3a19a}",
                 Name = "iContoso StudioPort 8 (Above Display)",
-                IconPath = "/RuntimeData/Icons/1U Rack Unit 3.png",
+                IconPath = "/RuntimeData/Icons/Light/1U Rack Unit 3.png",
                 TransportType = "USB",
                 TransportGlyph = "\xe88e",
 
@@ -120,7 +120,7 @@ public class SampleDataService : ISampleDataService
             {
                 Id = "{9d7debbc-c85d-11d1-9eb4-006008c3a19a}",
                 Name = "Lead Synth",
-                IconPath = "/RuntimeData/Icons/Keyboard Knobby.png",
+                IconPath = "/RuntimeData/Icons/Light/Keyboard Knobby.png",
                 TransportType = "USB",
                 TransportGlyph = "\xe88e",
 
@@ -150,7 +150,7 @@ public class SampleDataService : ISampleDataService
             {
                 Id = "{9d7debbc-c85d-11d1-9eb4-006008c3a19a}",
                 Name = "Korg Foo Bar",
-                IconPath = "/RuntimeData/Icons/Keyboard with Screen.png",
+                IconPath = "/RuntimeData/Icons/Light/Keyboard with Screen.png",
                 TransportType = "USB",
                 TransportGlyph = "\xe88e",
 
@@ -187,7 +187,7 @@ public class SampleDataService : ISampleDataService
             {
                 Id = "{9d7debbc-c85d-11d1-9eb4-006008c3a19a}",
                 Name = "BLE Synth",
-                IconPath = "/RuntimeData/Icons/Rack or Desktop Unit 6.png",
+                IconPath = "/RuntimeData/Icons/Light/Rack or Desktop Unit 6.png",
                 TransportType = "BLE",
                 TransportGlyph = "\xe702",
 
@@ -217,7 +217,7 @@ public class SampleDataService : ISampleDataService
             {
                 Id = "{9d7debbc-c85d-11d1-9eb4-006008c3a19a}",
                 Name = "Remote Synth",
-                IconPath = "/RuntimeData/Icons/Rack Unit 1.png",
+                IconPath = "/RuntimeData/Icons/Light/Rack Unit 1.png",
                 TransportType = "RTP",
                 TransportGlyph = "\xe701",
 
@@ -242,7 +242,7 @@ public class SampleDataService : ISampleDataService
             {
                 Id = "{9d7debbc-c85d-11d1-9eb4-006008c3a19a}",
                 Name = "3rd Rack MIDIPort",
-                IconPath = "/RuntimeData/Icons/1U Rack Unit 1.png",
+                IconPath = "/RuntimeData/Icons/Light/1U Rack Unit 1.png",
                 TransportType = "USB",
                 TransportGlyph = "\xe88e",
 
@@ -296,7 +296,7 @@ public class SampleDataService : ISampleDataService
             {
                 Id = "{9d7debbc-c85d-11d1-9eb4-006008c3a19a}",
                 Name = "Bass Synth",
-                IconPath = "/RuntimeData/Icons/Keyboard with Sliders.png",
+                IconPath = "/RuntimeData/Icons/Light/Keyboard with Sliders.png",
                 TransportType = "Virtual",
                 TransportGlyph = "\xecaa",
 
@@ -321,7 +321,7 @@ public class SampleDataService : ISampleDataService
             {
                 Id = "{9d7debbc-c85d-11d1-9eb4-006008c3a19a}",
                 Name = "Drums",
-                IconPath = "/RuntimeData/Icons/Drum Machine 2.png",
+                IconPath = "/RuntimeData/Icons/Light/Drum Machine 2.png",
                 TransportType = "Virtual",
                 TransportGlyph = "\xecaa",
 
