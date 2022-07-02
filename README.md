@@ -98,7 +98,7 @@ command-line. Including:
   * Remap MIDI notes, velocity curves, and more
   * Reroute MIDI messages
   * Filter out certain MIDI messages for a specific endpoint
-  * more
+  * more as proposed and/or contributed by the community
 
 For these long-term goals, we will be partnering with the community of developers to help ensure we
 have the right tools and utilities to meet your support needs and everyone's customers' needs, all
