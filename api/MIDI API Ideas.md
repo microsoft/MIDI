@@ -14,10 +14,10 @@ These are not final designs, but rather are brainstorming design ideas. All code
   * Only endpoints need to be opened, and that's really only to wire up handling for incoming messages
   * Device enumeration is detailed, flexible, and supports our device/transport plugin approach
 * The user is in control
-    * The user can override certain settings for endpoints, like disabling protocol negotiation, for example, and also setting the name to whatever they want, so that they are in control of the setup
-    * We will implement and require features which give the user more visibility into the state of MIDI on the machine, even if those features aren't of obvious use to the applications themselves.
-    * The user must explicitly enable any plugins
-    * The configuration (setup) files are human-readable JSON, and easily accessible for viewing, editing, copying, or backup
+  * The user can override certain settings for endpoints, like disabling protocol negotiation, for example, and also setting the name to whatever they want, so that they are in control of the setup
+  * We will implement and require features which give the user more visibility into the state of MIDI on the machine, even if those features aren't of obvious use to the applications themselves.
+  * The user must explicitly enable any plugins
+  * The configuration (setup) files are human-readable JSON, and easily accessible for viewing, editing, copying, or backup
 * Unless otherwise stated, all API-level Ids are GUIDs
 * All end-user accessible device, endpoint, etc. names support full unicode
 * All API-consumed or delivered messages will be packaged in UMP, including MIDI 1.0
@@ -116,6 +116,8 @@ at the session level? This is a recurring theme throughout where some things may
 easier to manage if centralized, but that also means any given program ends up with either
 a lot of parameter passing, or globals they may not want. It also makes cleaning up somewhat
 more difficult when objects go out of scope.
+
+TODO: Should endpoints in the API be 1:1 with group terminals in the driver? We go back and forth on this, but the USB MIDI Spec would seem to indicate that we really do need to in order to make sense of the devices and endpoints, and to surface them to applications which will want to address specific ports on the devices. But the groups are also contained in the UMP, which would be redundant if that were the case and would require the API to process each packet and route it to the correct API object. (see Section 3 of USB MIDI Class Driver spec)
 
 ### Receive messages at the session level
 
