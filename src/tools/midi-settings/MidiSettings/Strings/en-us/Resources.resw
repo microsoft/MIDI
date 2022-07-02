@@ -177,19 +177,25 @@
   <data name="Shell_ToolsConsole.Content" xml:space="preserve">
     <value>Console</value>
   </data>
-  <data name="Shell_ToolsMonitor.Content" xml:space="preserve">
-    <value>MIDI Monitor</value>
+  <data name="Shell_ManagementMonitor.Content" xml:space="preserve">
+    <value>Traffic Monitor</value>
   </data>
   <data name="Shell_ToolsNavHeader.Content" xml:space="preserve">
     <value>Tools</value>
   </data>
   <data name="Shell_ToolsSysEx.Content" xml:space="preserve">
-    <value>SysEx Manager</value>
+    <value>SysEx Transfer</value>
   </data>
   <data name="Shell_ToolsTest.Content" xml:space="preserve">
     <value>Device Test</value>
   </data>
   <data name="Settings_ThemeSubhead.Text" xml:space="preserve">
     <value>Select which app theme to display</value>
+  </data>
+  <data name="Shell_ManagementNavHeader.Content" xml:space="preserve">
+    <value>Management</value>
+  </data>
+  <data name="Shell_ManagementSessions.Content" xml:space="preserve">
+    <value>Active Sessions</value>
   </data>
 </root>

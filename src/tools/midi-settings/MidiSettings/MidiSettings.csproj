@@ -12,11 +12,16 @@
     <EnableMsixTooling>true</EnableMsixTooling>
   </PropertyGroup>
   <ItemGroup>
+    <Content Remove="Assets\DIN.png" />
+    <Content Remove="Assets\DIN_color.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Views\ManagementMonitorPage.xaml" />
+    <None Remove="Views\ManagementSessionsPage.xaml" />
     <None Remove="Views\PluginsDevicePage.xaml" />
     <None Remove="Views\PluginsProcessingPage.xaml" />
     <None Remove="Views\SetupPage.xaml" />
     <None Remove="Views\ToolsConsolePage.xaml" />
-    <None Remove="Views\ToolsMonitorPage.xaml" />
     <None Remove="Views\ToolsSysExPage.xaml" />
     <None Remove="Views\ToolsTestPage.xaml" />
   </ItemGroup>
@@ -185,6 +190,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Page Update="Views\ManagementSessionsPage.xaml">
+      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Views\ToolsTestPage.xaml">
       <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
       <SubType>Designer</SubType>
@@ -193,7 +202,7 @@
       <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="Views\ToolsMonitorPage.xaml">
+    <Page Update="Views\ManagementMonitorPage.xaml">
       <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
       <SubType>Designer</SubType>
     </Page>

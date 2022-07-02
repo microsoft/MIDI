@@ -24,7 +24,8 @@ public class PageService : IPageService
         Configure<SettingsViewModel, SettingsPage>();
         Configure<SetupViewModel, SetupPage>();
         Configure<ToolsConsoleViewModel, ToolsConsolePage>();
-        Configure<ToolsMonitorViewModel, ToolsMonitorPage>();
+        Configure<ManagementMonitorViewModel, ManagementMonitorPage>();
+        Configure<ManagementSessionsViewModel, ManagementSessionsPage>();
         Configure<ToolsSysExViewModel, ToolsSysExPage>();
         Configure<ToolsTestViewModel, ToolsTestPage>();
 

@@ -6,16 +6,16 @@ using MidiSettings.ViewModels;
 
 namespace MidiSettings.Views;
 
-public sealed partial class ToolsMonitorPage : Page
+public sealed partial class ManagementMonitorPage : Page
 {
-    public ToolsMonitorViewModel ViewModel
+    public ManagementMonitorViewModel ViewModel
     {
         get;
     }
 
-    public ToolsMonitorPage()
+    public ManagementMonitorPage()
     {
-        ViewModel = App.GetService<ToolsMonitorViewModel>();
+        ViewModel = App.GetService<ManagementMonitorViewModel>();
         InitializeComponent();
     }
 

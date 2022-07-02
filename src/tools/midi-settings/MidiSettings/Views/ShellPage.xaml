@@ -16,7 +16,7 @@
               Height="{Binding ElementName=NavigationViewControl, Path=CompactPaneLength}"
               IsHitTestVisible="True"
               VerticalAlignment="Top">
-            <Image Source="/Assets/WindowIcon.png"
+            <Image Source="/Assets/DIN.png"
                    HorizontalAlignment="Left"
                    Width="16"
                    Height="16" />
@@ -78,6 +78,21 @@
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
 
+                <NavigationViewItemHeader x:Uid="Shell_ManagementNavHeader"/>
+
+
+                <NavigationViewItem x:Uid="Shell_ManagementSessions" helpers:NavigationHelper.NavigateTo="MidiSettings.ViewModels.ToolsMonitorViewModel">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xeda3;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Uid="Shell_ManagementMonitor" helpers:NavigationHelper.NavigateTo="MidiSettings.ViewModels.ToolsMonitorViewModel">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe7b3;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+
                 <NavigationViewItemHeader x:Uid="Shell_ToolsNavHeader"/>
 
                 <NavigationViewItem x:Uid="Shell_ToolsSysEx" helpers:NavigationHelper.NavigateTo="MidiSettings.ViewModels.ToolsSysExViewModel">
@@ -88,11 +103,6 @@
                 <NavigationViewItem x:Uid="Shell_ToolsTest" helpers:NavigationHelper.NavigateTo="MidiSettings.ViewModels.ToolsTestViewModel">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe9d9;"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItem x:Uid="Shell_ToolsMonitor" helpers:NavigationHelper.NavigateTo="MidiSettings.ViewModels.ToolsMonitorViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe7b3;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
                 <NavigationViewItem x:Uid="Shell_ToolsConsole" helpers:NavigationHelper.NavigateTo="MidiSettings.ViewModels.ToolsConsoleViewModel">

@@ -7,13 +7,14 @@ namespace MidiSettings.Views;
 
 public sealed partial class EndpointDetailControl : UserControl
 {
-    public SampleOrder ListDetailsMenuItem
+    public SampleMidiEndpoint ListDetailsMenuItem
     {
-        get => GetValue(ListDetailsMenuItemProperty) as SampleOrder;
+        get => GetValue(ListDetailsMenuItemProperty) as SampleMidiEndpoint;
         set => SetValue(ListDetailsMenuItemProperty, value);
     }
 
-    public static readonly DependencyProperty ListDetailsMenuItemProperty = DependencyProperty.Register("ListDetailsMenuItem", typeof(SampleOrder), typeof(EndpointDetailControl), new PropertyMetadata(null, OnListDetailsMenuItemPropertyChanged));
+    public static readonly DependencyProperty ListDetailsMenuItemProperty = 
+        DependencyProperty.Register("ListDetailsMenuItem", typeof(SampleMidiEndpoint), typeof(EndpointDetailControl), new PropertyMetadata(null, OnListDetailsMenuItemPropertyChanged));
 
     public EndpointDetailControl()
     {

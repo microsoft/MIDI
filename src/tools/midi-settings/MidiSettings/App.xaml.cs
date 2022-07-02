@@ -57,8 +57,11 @@ public partial class App : Application
             services.AddTransient<ToolsConsoleViewModel>();
             services.AddTransient<ToolsConsolePage>();
 
-            services.AddTransient<ToolsMonitorViewModel>();
-            services.AddTransient<ToolsMonitorPage>();
+            services.AddTransient<ManagementMonitorViewModel>();
+            services.AddTransient<ManagementMonitorPage>();
+
+            services.AddTransient<ManagementSessionsViewModel>();
+            services.AddTransient<ManagementSessionsPage>();
 
             services.AddTransient<ToolsSysExViewModel>();
             services.AddTransient<ToolsSysExPage>();
