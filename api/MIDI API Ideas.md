@@ -2,17 +2,27 @@
 
 These are not final designs, but rather are brainstorming design ideas. All code is pseudo-c code with just enough syntax to get the point across. You will notice a real lack of semicolons, for example. :)
 
-## General Philosophy
+## General Approach
 
 * We always provide first-class access to raw data
   * We always provide classes to process that data into friendly formats, but do not require their use
+  * Core API is meant to stay lean and fast, with addtional features added as helper classes, as long as performance is not negatively impacted
+* One exception to raw data is the required Discovery and Protocol Negotiation for MIDI-CI. We provide the final results, but the transaction itself is handled by the MIDI Services.
 * Entry point into API functionality is always the session
   * An app may have as many sessions open as it needs
 * Everything is multi-client and all devices in the session are available all the time
   * Only endpoints need to be opened, and that's really only to wire up handling for incoming messages
   * Device enumeration is detailed, flexible, and supports our device/transport plugin approach
-* We will implement and require features which give the user more visibility into the state of MIDI on the machine, even if those features aren't of obvious use to the applications themselves.
-* Unless otherwise stated, all Ids are GUIDs
+* The user is in control
+    * The user can override certain settings for endpoints, like disabling protocol negotiation, for example, and also setting the name to whatever they want, so that they are in control of the setup
+    * We will implement and require features which give the user more visibility into the state of MIDI on the machine, even if those features aren't of obvious use to the applications themselves.
+    * The user must explicitly enable any plugins
+    * The configuration (setup) files are human-readable JSON, and easily accessible for viewing, editing, copying, or backup
+* Unless otherwise stated, all API-level Ids are GUIDs
+* All end-user accessible device, endpoint, etc. names support full unicode
+* All API-consumed or delivered messages will be packaged in UMP, including MIDI 1.0
+  * Helper classes will be provided to parse out strongly typed MIDI 1.0/2.0 messages
+  * Helper classes will be provided to build a UMP from MIDI 1.0 or MIDI 2.0 strongly-typed messages
 
 To level-set, here are some of the main objects/classes we're dealing with with messages. It's especially important to understand the relationship between devices, streams, and endpoints as this is different from the MIDI 1.0 APIs.
 
@@ -26,7 +36,7 @@ To level-set, here are some of the main objects/classes we're dealing with with 
 
 Sessions are the entrypoint into the API. In addition to this, they provide the required user-facing diagnostic data of which apps have which sessions and endpoints open.
 
-```csharp
+```cpp
 // MidiSessionSettings is where we can set flags and other session-global
 // settings. For example, we may decide to have flags to control the way
 // messages are received (polling, events, etc.)
@@ -55,7 +65,7 @@ We require opening the endpoint for sending messages so that there's an explicit
 that is also user-visible through diagnostic tools. Opening the endpoint is also
 required for receiving messages.
 
-```csharp
+```cpp
 MidiEndpointOpenOptions options
 MidiMessageSendOptions messageOptions
 
@@ -83,7 +93,7 @@ already have the instance, but the former may be.
 
 This is more WinRT-MIDI style where the messages show up at the endpoint in a delegate/event
 
-```csharp
+```cpp
 MidiEndpointOpenOptions options
 
 _endpoint1 = _device.OpenEndpoint(deviceID1, endpointID1, options)
@@ -111,7 +121,7 @@ more difficult when objects go out of scope.
 
 This has been requested by some of the developers so that they can centralize their own message processing
 
-```csharp
+```cpp
 _endpoint1 = _session.OpenEndpoint(deviceID1, endpointID1)
 
 // centralized message handling for all open input endpoints
@@ -146,7 +156,7 @@ This is a different approach from Windows.Devices.Enumeration today. Reasons why
 
 Devices are always available when connected. In some cases, we may need to track device changes (user renames the device in the settings app, or we receive a MIDI CI or other message which may impact device configuration)
 
-```csharp
+```cpp
 _session.DeviceRemoved += OnDeviceRemoved
 _session.DeviceAdded += OnDeviceAdded
 _session.DeviceChanged += OnDeviceChanged   // this is where any UMP change messages come through, too
@@ -162,7 +172,7 @@ foreach device in _session.Devices
 
 Endpoints hang off devices and provide the actual MIDI IO. Additions/removals/changes to endpoints do not raise the DeviceChanged notification for the device they are part of.
 
-```csharp
+```cpp
 _device.EndpointRemoved += OnEndpointRemoved   // especially required for virtual endpoints
 _device.EndpointAdded += OnEndpointAdded       // ditto
 _device.EndpointChanged += OnEndpointChanged   // this is any where UMP change messages come through, too
@@ -189,7 +199,7 @@ code can reference the plugin types through a metadata file
 The user can create virtual devices and endpoints through the setings app (and facilitate automatic 
 routing between them), but apps also need the ability to expose themselves as an endpoint at any time.
 
-```csharp
+```cpp
 // code-created virtual devices are scoped to the session, and disappear
 // when the session is closed or goes out of scope.
 
@@ -205,6 +215,61 @@ MidiVirtualEndpointSettings endpointSettings    // type Supplied by plugin
 _endpoint = _device.AddEndpoint((IMidiEndpointSettings)endpointSettings)
 ```
 
+## MIDI-CI
+
+TODO
+
+### Discovery and Protocol Negotiation
+
+Endpoint instances have a user-settable flag to enable/disable protocol negotiation. This is there in case the user knows the endpoint will never support MIDI 2.0, or in case protocol negotiation somehow breaks an existing device, or takes too long to start up, or just in case the user only wants that device to be visible to Windows as a MIDI 1.0 device.
+
+MIDI CI discovery and protocol negotiation will only be attempted on Bi-directional endpoints.
+
+Authority level of MIDI CI messages initiatied by the API/driver shall default to the highest level (0x60-0x6F)
+* This should be end-user configurable in the settings app, just in case
+
+TODO: Decide when all this happens. For the user, on startup could be ideal, except that could greatly delay startup, which is against Windows implementation guidelines. It could happen on the first time any app uses the MIDI API, but that will create a delay at that point. It could also be something which happens as a delayed startup in Windows, but that's not ideal in case the user goes right into their DAW.
+
+Discovery and protocol negotiation are implemented internally, so need no API other than exposing which protocol was negotiated
+
+```cpp
+
+// no application-level APIs for discovery or protocol negotiation
+// however, properties are exposed
+if (_endpoint.ProtocolType == 1)
+    // MIDI 1.0
+else if (_endpoint.ProtocolType == 2)
+    // MIDI 2.0
+
+```
+
+There are other properties set by CI which will be useful for the endpoints. It may be that the endpoint itself contains only the raw capability inquiry bitmap, and that the flags are interpreted by a helper class, like what we're doing for message parsing. This keeps the core API lean.
+
+```cpp
+if (_endpoint.ProtocolNegotiationSupported)     // useful only for debugging.
+if (_endpoint.ProfileConfigurationSupported)    // will be used by apps. Set by discovery/capability inquiry.
+if (_endpoint.PropertyExchangeSupported)        // will be used by apps. Set by discovery/capability inquiry.
+
+_endpoint.RawCapabilityInquiryResult            // the raw result
+```
+
+### Property Exchange
+
+We won't store or otherwise deal with properties in the OS, but we can provide code to handle the transaction. We may also provide helper classes to parse property information. TBD.
+
+TODO: Also need to provide a way to deal with subscriptions to property changes through MIDI CI 8.12
+
+### Profiles
+
+We won't store or otherwise deal with profiles in the OS, but we can provide code to handle the transaction. We may also provide helper classes to parse the results. TBD.
+
+### Other messages not handled within the API
+
+These are messages which will be handled by the code interfacing with the API (DAW, plugin, etc.)
+
+(properties etc.)
+
+
 ## Setups
 
 Setups are saved JSON configurations created by the user in the settings app. They contain custom
@@ -215,9 +280,9 @@ We will revisit if new requirements arise.
 
 ## Device/Transport plugins
 
-TODO. This section isn't quite thought through yet. Intent is to allow transports to be defined as plugins so RTP, BLE, and more can be implemented from user code in the simplest possible way, without the ceremony required of a full driver.
+TODO. **This section isn't quite thought through yet and so may change significantly**. Intent is to allow transports to be defined as plugins so RTP, BLE, and more can be implemented from user code in the simplest possible way, without the ceremony required of a full driver.
 
-```csharp
+```cpp
 
 interface IMidiTransport
 {
@@ -250,6 +315,8 @@ interface IMidiEndpoint
 {
     string Id
     string Name
+    uint ProtocolType               // 1 or 2 See MIDI CI protocol negotiation spec
+    uint ProtocolVersion            // 0x00 in all cases so far. See MIDI CI protocol negotiation spec
 }
 
 interface IMidiInputEndpoint : IMidiEndpoint
@@ -260,12 +327,18 @@ interface IMidiInputEndpoint : IMidiEndpoint
 interface IMidiOutputEndpoint : IMidiEndpoint
 {  
     MidiStream OutputStream
+
+    uint SizeOfPacket                   // see protocol negotiation spec. This is a protocol extension
+    bool UseJitterReductionTimeStamps   // ditto
 }
 
 interface IMidiBiDirectionalEndpoint : IMidiEndpoint
 {
     MidiStream InputStream
     MidiStream OutputStream
+
+    uint SizeOfPacket                   // see protocol negotiation spec. This is a protocol extension
+    bool UseJitterReductionTimeStamps   // ditto
 }
 
 
@@ -276,6 +349,9 @@ interface IMidiDeviceSettings
 
 interface IMidiEndpointSettings
 {
+    uint ProtocolVersionMajor
+    uint ProtocolVersionMinor
+
     string GetUIJson()
 }
 ```
@@ -284,9 +360,9 @@ interface IMidiEndpointSettings
 
 ## Processing plugins
 
-TODO: Plugins for message processing
+TODO: Plugins for message processing. Also not thought through yet.
 
-```csharp
+```cpp
 interface IMidiProcessor
 {
 
