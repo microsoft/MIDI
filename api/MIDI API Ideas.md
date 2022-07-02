@@ -26,7 +26,7 @@ To level-set, here are some of the main objects/classes we're dealing with with 
 
 Sessions are the entrypoint into the API. In addition to this, they provide the required user-facing diagnostic data of which apps have which sessions and endpoints open.
 
-```cpp
+```csharp
 // MidiSessionSettings is where we can set flags and other session-global
 // settings. For example, we may decide to have flags to control the way
 // messages are received (polling, events, etc.)
@@ -55,7 +55,7 @@ We require opening the endpoint for sending messages so that there's an explicit
 that is also user-visible through diagnostic tools. Opening the endpoint is also
 required for receiving messages.
 
-```cpp
+```csharp
 MidiEndpointOpenOptions options
 MidiMessageSendOptions messageOptions
 
@@ -83,7 +83,7 @@ already have the instance, but the former may be.
 
 This is more WinRT-MIDI style where the messages show up at the endpoint in a delegate/event
 
-```cpp
+```csharp
 MidiEndpointOpenOptions options
 
 _endpoint1 = _device.OpenEndpoint(deviceID1, endpointID1, options)
@@ -111,7 +111,7 @@ more difficult when objects go out of scope.
 
 This has been requested by some of the developers so that they can centralize their own message processing
 
-```cpp
+```csharp
 _endpoint1 = _session.OpenEndpoint(deviceID1, endpointID1)
 
 // centralized message handling for all open input endpoints
@@ -146,10 +146,10 @@ This is a different approach from Windows.Devices.Enumeration today. Reasons why
 
 Devices are always available when connected. In some cases, we may need to track device changes (user renames the device in the settings app, or we receive a MIDI CI or other message which may impact device configuration)
 
-```cpp
+```csharp
 _session.DeviceRemoved += OnDeviceRemoved
 _session.DeviceAdded += OnDeviceAdded
-_session.DeviceChanged += OnDeviceChanged   // this is where UMP change messages come through, too
+_session.DeviceChanged += OnDeviceChanged   // this is where any UMP change messages come through, too
 
 // devices are always available as soon as the session is open
 foreach device in _session.Devices
@@ -160,12 +160,12 @@ foreach device in _session.Devices
 
 ### Enumerate endpoints
 
-Endpoints hang off devices and provide the actual MIDI IO.
+Endpoints hang off devices and provide the actual MIDI IO. Additions/removals/changes to endpoints do not raise the DeviceChanged notification for the device they are part of.
 
-```cpp
-_device.EndpointRemoved += OnEndpointRemoved   // especially true for virtual endpoints
+```csharp
+_device.EndpointRemoved += OnEndpointRemoved   // especially required for virtual endpoints
 _device.EndpointAdded += OnEndpointAdded       // ditto
-_device.EndpointChanged += OnEndpointChanged   // this is where UMP change messages come through, too
+_device.EndpointChanged += OnEndpointChanged   // this is any where UMP change messages come through, too
 
 foreach endpoint in _device.Endpoints
 {
@@ -179,6 +179,8 @@ TODO: Should we also surface a collection of all enpoints at the session level, 
 
 ## Virtual Devices
 
+Virtual devices are unlike hardware devices in that they can be added at runtime by code. The implementation for virtual devices is through a device/transport plugin, not in the core API itself. This is consistent with how other device/transports will be implemented.
+
 ### Adding a virtual device
 
 The API won't know about the plugins types, so API functions will work off of interfaces. The client
@@ -187,18 +189,18 @@ code can reference the plugin types through a metadata file
 The user can create virtual devices and endpoints through the setings app (and facilitate automatic 
 routing between them), but apps also need the ability to expose themselves as an endpoint at any time.
 
-```cpp
+```csharp
 // code-created virtual devices are scoped to the session, and disappear
 // when the session is closed or goes out of scope.
 
-MidiVirtualDeviceSettings deviceSettings		// type Supplied by plugin
+MidiVirtualDeviceSettings deviceSettings        // type Supplied by plugin
 
 _device = _session.AddDevice(guidOfVirtualDevicePlugin, nameOfDevice, (IMidiDeviceSettings)deviceSettings)
 
 // VirtualEndpointSettings will contain things such as toggles for InputEnabled
 // OutputEnabled, etc.
 
-MidiVirtualEndpointSettings endpointSettings	// type Supplied by plugin
+MidiVirtualEndpointSettings endpointSettings    // type Supplied by plugin
 
 _endpoint = _device.AddEndpoint((IMidiEndpointSettings)endpointSettings)
 ```
@@ -210,3 +212,83 @@ device and endpoint names, virtual ports, routing, plugin settings and more. Cre
 them via code was considered, but rejected due to end-user control and potential security concerns.
 
 We will revisit if new requirements arise.
+
+## Device/Transport plugins
+
+TODO. This section isn't quite thought through yet. Intent is to allow transports to be defined as plugins so RTP, BLE, and more can be implemented from user code in the simplest possible way, without the ceremony required of a full driver.
+
+```csharp
+
+interface IMidiTransport
+{
+    string TransportType                // BLE, RTP, Virtual, etc.
+    string TransportGlyph               // glyph for the type of transport like BLE, RTP, Virtual, etc.
+
+    // TODO: Actual sending implementation?
+}
+
+interface IMidiDevice
+{
+    string Id
+    string Name
+    string IconPath
+    string DeviceSuppliedDisplayName
+    string DriverDescription
+    string DriverProvider
+    string DriverVersion
+    string DriverDate
+    string DeviceLocationInformation
+    string DeviceManufacturer
+    string DeviceInstancePath
+
+    IMidiTransport Transport
+
+    List<IMidiEndpoint> Endpoints
+} 
+
+interface IMidiEndpoint
+{
+    string Id
+    string Name
+}
+
+interface IMidiInputEndpoint : IMidiEndpoint
+{  
+    MidiStream InputStream
+}
+
+interface IMidiOutputEndpoint : IMidiEndpoint
+{  
+    MidiStream OutputStream
+}
+
+interface IMidiBiDirectionalEndpoint : IMidiEndpoint
+{
+    MidiStream InputStream
+    MidiStream OutputStream
+}
+
+
+interface IMidiDeviceSettings
+{
+    string GetUIJson()
+}
+
+interface IMidiEndpointSettings
+{
+    string GetUIJson()
+}
+```
+
+
+
+## Processing plugins
+
+TODO: Plugins for message processing
+
+```csharp
+interface IMidiProcessor
+{
+
+}
+```
