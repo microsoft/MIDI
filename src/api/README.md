@@ -54,6 +54,10 @@ _session = MidiSession.Create("My song", settings)
 _session.Close()
 ```
 
+TODO: We want the user to be in control. So we may allow them the ability to terminate a session using the settings tool (with appropriate warnings). If we do that, there will be a session terminated notification sent to the app which owns the session.
+
+For regular applications, only the app owning the session can terminate it. We will not have a public API endpoint for apps to terminate other sessions.
+
 ## Message Handling
 
 We've had requests for both centralized message receiving as well as WinRT MIDI-style
