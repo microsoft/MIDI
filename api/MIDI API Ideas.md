@@ -24,10 +24,9 @@ To level-set, here are some of the main objects/classes we're dealing with with 
 
 ## Session Management
 
-Sessions are the entrypoint into the API. In addition to this, they provide the required user-facing diagnostic data of which app is has which sessions and endpoints open
+Sessions are the entrypoint into the API. In addition to this, they provide the required user-facing diagnostic data of which apps have which sessions and endpoints open.
 
 ```cpp
-
 // MidiSessionSettings is where we can set flags and other session-global
 // settings. For example, we may decide to have flags to control the way
 // messages are received (polling, events, etc.)
@@ -43,7 +42,6 @@ _session = MidiSession.Create("My song", settings)
 // closing the session closes all the open endpoints/devices
 // Good practice, but should also happen automatically if session goes out of scope
 _session.Close()
-
 ```
 
 ## Message Handling
@@ -173,7 +171,6 @@ foreach endpoint in _device.Endpoints
 {
 
 }
-
 ```
 
 TODO: Should we also surface the endpoint events at the session level?
@@ -198,14 +195,12 @@ MidiVirtualDeviceSettings deviceSettings		// type Supplied by plugin
 
 _device = _session.AddDevice(guidOfVirtualDevicePlugin, nameOfDevice, (IMidiDeviceSettings)deviceSettings)
 
-
 // VirtualEndpointSettings will contain things such as toggles for InputEnabled
 // OutputEnabled, etc.
 
 MidiVirtualEndpointSettings endpointSettings	// type Supplied by plugin
 
 _endpoint = _device.AddEndpoint((IMidiEndpointSettings)endpointSettings)
-
 ```
 
 ## Setups
