@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿//using System;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.UI.Xaml;
 
@@ -90,6 +91,7 @@ public partial class App : Application
     }
 
     public static Window MainWindow { get; set; } = new Window() { Title = "AppDisplayName".GetLocalized() };
+    //public static WinUIEx.WindowEx MainWindow { get; set; } = new WinUIEx.WindowEx() { Title = "AppDisplayName".GetLocalized() };
 
     public App()
     {
@@ -106,7 +108,23 @@ public partial class App : Application
     protected async override void OnLaunched(LaunchActivatedEventArgs args)
     {
         base.OnLaunched(args);
+
+        SetWindowSize();
+
         var activationService = App.GetService<IActivationService>();
         await activationService.ActivateAsync(args);
     }
+
+    // eventually need to remove this and make sure that app opens at last size and location
+    // But right now, during development, the default size is super annoying, and resets
+    // with every launch
+    private void SetWindowSize()
+    {
+        System.IntPtr hWnd = WinRT.Interop.WindowNative.GetWindowHandle(MainWindow);
+        var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hWnd);
+        var appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
+
+        appWindow.Resize(new Windows.Graphics.SizeInt32 { Width = 1600, Height = 950 });
+    }
+
 }

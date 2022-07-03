@@ -25,6 +25,11 @@
                        TextWrapping="NoWrap"
                        Style="{StaticResource CaptionTextBlockStyle}"
                        Margin="28,0,0,0"/>
+            
+            <!-- This needs to move to be interactive-->
+            <Button Content="MIDI Panic" Background="DarkRed" Foreground="White"
+                    HorizontalAlignment="Right" Margin="10,10,150,10" Padding="5"/>
+            
         </Grid>
         <NavigationView
             x:Name="NavigationViewControl"
@@ -137,6 +142,7 @@
                     </Grid>
                 </DataTemplate>
             </NavigationView.HeaderTemplate>
+            
             <i:Interaction.Behaviors>
                 <behaviors:NavigationViewHeaderBehavior
                     DefaultHeader="{x:Bind ((ContentControl)ViewModel.Selected).Content, Mode=OneWay}">
@@ -151,7 +157,6 @@
                     </behaviors:NavigationViewHeaderBehavior.DefaultHeaderTemplate>
                 </behaviors:NavigationViewHeaderBehavior>
             </i:Interaction.Behaviors>
-
 
             
             <Grid Margin="{StaticResource NavigationViewPageContentMargin}">

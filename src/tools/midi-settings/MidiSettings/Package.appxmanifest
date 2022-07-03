@@ -14,7 +14,7 @@
 
   <Properties>
     <DisplayName>MidiSettings</DisplayName>
-    <PublisherDisplayName>peteb</PublisherDisplayName>
+    <PublisherDisplayName>Microsoft</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 

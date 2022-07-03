@@ -30,6 +30,7 @@ public sealed partial class ShellPage : Page
         // TODO: Set the title bar icon by updating /Assets/WindowIcon.png.
         // A custom title bar is required for full window theme and Mica support.
         // https://docs.microsoft.com/windows/apps/develop/title-bar?tabs=winui3#full-customization
+
         App.MainWindow.ExtendsContentIntoTitleBar = true;
         App.MainWindow.SetTitleBar(AppTitleBar);
         App.MainWindow.Activated += MainWindow_Activated;
