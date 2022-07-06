@@ -216,3 +216,4 @@ These are the specifications which apply to this project today.
 ## Learn more about MIDI 2.0
 
 [![NAMM 2022 MIDI 2.0 Update](https://img.youtube.com/vi/69hzeBFOPfo/default.jpg)](https://www.youtube.com/watch?v=69hzeBFOPfo)
+[![Mike Kent on MIDI 2.0 Protocol Messages and UMP](https://img.youtube.com/vi/Kky1nlwz8-8/default.jpg)](https://www.youtube.com/watch?v=Kky1nlwz8-8)
