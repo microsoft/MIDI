@@ -142,15 +142,15 @@ roles.
 
 | Team Member | Company | Role in this Project |
 | ---------------|---------|--------------------------------|
-| [Pete Brown](https://github.com/Psychlist1972) | Microsoft | Overall Project and OSS Lead |
-| Jay DiFuria | Microsoft | Microsoft PM |
-| Edward Sumanaseni | Microsoft | Developer Lead |
-| [Gary Daniels](https://github.com/garydan42) | Microsoft | Developer |
-| [Julia DZmura](https://github.com/judzmura) | Microsoft | Developer |
+| [Pete Brown](https://github.com/Psychlist1972) | Microsoft | Overall Project and OSS Lead, Tools & API Engineer |
+| Jay DiFuria | Microsoft | Microsoft API PM |
+| Edward Sumanaseni | Microsoft | API Engineeringr Lead |
+| [Gary Daniels](https://github.com/garydan42) | Microsoft | API Engineer  |
+| [Julia DZmura](https://github.com/judzmura) | Microsoft | API Engineer |
 | Ben Israel | Yamaha | AMEI Project Lead |
 | [Mike Kent](AmeNote-MikeKent) | AmeNote | Driver Developer |
 | [Michael Loh](AmeNote-Michael) | AmeNote | Driver Developer |
-| [Andrew Mee](starfishmod) | | Consultant |
+| [Andrew Mee](starfishmod) | | MIDI Consultant |
 
 ## Contributing
 
