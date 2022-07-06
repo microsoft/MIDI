@@ -154,7 +154,7 @@ roles.
 
 ## Contributing
 
-See [contributing.md](contributing.md)
+See [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Trademarks
 
