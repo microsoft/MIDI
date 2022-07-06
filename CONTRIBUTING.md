@@ -32,11 +32,12 @@ Projects are intended to be compiled on Windows, typically the latest release of
 We'd love to have your help on this project, no matter what kind it is.
 
 * Bug fixes
-* Features
-* Transport plug-ins
-* Processing plug-ins
+* Features you want to see implemented
+* Transport plug-ins for new or even experimental transports
+* Processing plug-ins for MIDI Mapper and similar types of message processing
 * Testing and bug reports (especially with different MIDI 1.0 and MIDI 2.0 hardware and software)
-* Documentation
+* API and user Documentation
+* Samples
 * Localization to a language you are fluent in
 
 Testing and bug reports are the most critical, as everyone's setup is different. We want to ensure the project is as bug free and as performant as possible, with a large variety of PCs and peripherals.
