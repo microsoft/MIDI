@@ -148,8 +148,9 @@ roles.
 | [Gary Daniels](https://github.com/garydan42) | Microsoft | Developer |
 | [Julia DZmura](https://github.com/judzmura) | Microsoft | Developer |
 | Ben Israel | Yamaha | AMEI Project Lead |
-| Mike Kent | AmeNote | Driver Developer |
+| [Mike Kent](AmeNote-MikeKent) | AmeNote | Driver Developer |
 | Michael Loh | AmeNote | Driver Developer |
+| [Andrew Mee](starfishmod) | | Consultant |
 
 ## Contributing
 
