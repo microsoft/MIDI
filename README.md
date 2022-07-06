@@ -212,3 +212,7 @@ These are the specifications which apply to this project today.
 * [USB MIDI 2.0](https://www.midi.org/specifications/midi-transports-specifications/usb/usb-midi-2-0-2)
 * [MIDI 1.0](https://www.midi.org/specifications/midi1-specifications)
 * [USB MIDI 1.0](https://www.midi.org/specifications/midi-transports-specifications/usb/usb-midi-1-0-2)
+
+## Learn more about MIDI 2.0
+
+[![NAMM 2022 MIDI 2.0 Update](https://img.youtube.com/vi/69hzeBFOPfo/default.jpg)](https://www.youtube.com/watch?v=69hzeBFOPfo)
