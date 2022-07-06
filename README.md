@@ -165,6 +165,36 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
+### Dev Setup
+
+Projects generally use the most recent recent versions of Visual Studio, C++/WinRT, Windows 10/11 SDKs, Windows App SDK,
+and .NET available at the time of authoring. Specific build requirements will be available in the readme for each
+sub project.
+
+### Pull Requests and Forks
+
+We're excited to have others contribute to the APIs, tools, plug-ins, drivers and more! We generally recommend that
+contributors fork the project they are interested in, and then submit pull requests from their
+own forks. We'll review the PRs on a regular basis, and accept/decline or request additional information.
+
+### Forks for other platforms
+
+You may fork these projects as per the license. However, we highly recommend you consider contributing to the main
+project rather than spin off a separate and incompatible or competing project targeting Windows. In the end, we
+want to do what's right for musicians, music creation app / plug-in developers, and music hardware developers.
+
+Forking to support other operating systems (including direct hardware devices) is also allowed and encouraged.
+However, in that case, we again encourage you to consider what we can do together in the primary repo to support the
+requirements for these other platforms so that we can keep feature level, tool, and API parity, especially as the
+specifications evolve, or we fix bugs.
+
+### Contributing Images / Icons / etc.
+
+Any images submitted must have clear license for use that is compatible with the Windows MIDI Services project. We 
+cannot accept icons generated from other work without clear license, including images and fonts. Preference is given
+to icons/images created specifically for use in this project. Please adhere to the Contributor License Agreement
+when contributing. If there's any ambiguity, we will not be able to accept the contribution.
+
 ## Trademarks
 
 This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft
