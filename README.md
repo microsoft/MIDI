@@ -142,28 +142,19 @@ roles.
 
 | Team Member | Company | Role in this Project |
 | ---------------|---------|--------------------------------|
-| [Pete Brown](https://github.com/Psychlist1972) | Microsoft | Overall Project and OSS Lead |
-| Jay DiFuria | Microsoft | Microsoft PM |
-| Edward Sumanaseni | Microsoft | Developer Lead |
-| [Gary Daniels](https://github.com/garydan42) | Microsoft | Developer |
-| [Julia DZmura](https://github.com/judzmura) | Microsoft | Developer |
+| [Pete Brown](https://github.com/Psychlist1972) | Microsoft | Overall Project and OSS Lead, Tools & API Engineer |
+| Jay DiFuria | Microsoft | Microsoft API PM |
+| Edward Sumanaseni | Microsoft | API Engineeringr Lead |
+| [Gary Daniels](https://github.com/garydan42) | Microsoft | API Engineer  |
+| [Julia DZmura](https://github.com/judzmura) | Microsoft | API Engineer |
 | Ben Israel | Yamaha | AMEI Project Lead |
-| Mike Kent | AmeNote | Driver Developer |
-| Michael Loh | AmeNote | Driver Developer |
+| [Mike Kent](AmeNote-MikeKent) | AmeNote | Driver Developer |
+| [Michael Loh](AmeNote-Michael) | AmeNote | Driver Developer |
+| [Andrew Mee](starfishmod) | | MIDI Consultant |
 
 ## Contributing
 
-This project welcomes contributions and suggestions. Most contributions require you to agree to a
-Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
-
-When you submit a pull request, a CLA bot will automatically determine whether you need to provide
-a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions
-provided by the bot. You will only need to do this once across all repos using our CLA.
-
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
-contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+See [contributing.md](contributing.md)
 
 ## Trademarks
 
@@ -181,3 +172,8 @@ These are the specifications which apply to this project today.
 * [USB MIDI 2.0](https://www.midi.org/specifications/midi-transports-specifications/usb/usb-midi-2-0-2)
 * [MIDI 1.0](https://www.midi.org/specifications/midi1-specifications)
 * [USB MIDI 1.0](https://www.midi.org/specifications/midi-transports-specifications/usb/usb-midi-1-0-2)
+
+## Learn more about MIDI 2.0
+
+[![NAMM 2022 MIDI 2.0 Update](https://img.youtube.com/vi/69hzeBFOPfo/mqdefault.jpg)](https://www.youtube.com/watch?v=69hzeBFOPfo)
+[![Mike Kent on MIDI 2.0 Protocol Messages and UMP](https://img.youtube.com/vi/Kky1nlwz8-8/mqdefault.jpg)](https://www.youtube.com/watch?v=Kky1nlwz8-8)
