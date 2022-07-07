@@ -67,7 +67,8 @@ port (endpoint)-based receiving. This API will provide both.
 
 We require opening the endpoint for sending messages so that there's an explicit action
 that is also user-visible through diagnostic tools. Opening the endpoint is also
-required for receiving messages.
+required for receiving messages. Finally, some protocols (like RTP MIDI 1.0 and presumably
+the 2.0 version) need to take specific actions when an endpoint is opened or closed.
 
 ```cpp
 MidiEndpointOpenOptions options
