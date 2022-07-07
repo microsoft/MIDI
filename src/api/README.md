@@ -81,9 +81,9 @@ if (_endpoint)
     // there will be variations on this for larger buffers, 
     // timestamp options, etc.
     // Fails with an exception if endpoint has not been opened
-    _endpoint.SendMessage(singleUumpMessageWithGroupAndChannelInIt, messageOptions)
+    _endpoint.SendMessage(singleUmpMessageWithGroupAndChannelInIt, messageOptions)
     _endpoint.SendMessages(bunchOfCompleteUmpMessageStructs, messageOptions)
-    _endpoint.SendMessages(arrayOrBufferOfWords, messageOptions)
+    _endpoint.SendMessages(arrayOrBufferOfUmpCompatibleWords, messageOptions)
 }
 
 _endpoint.Close()
@@ -375,3 +375,7 @@ interface IMidiProcessor
 
 }
 ```
+
+## Routing
+
+TBD. It may be more scalable to handle this through virtual MIDI endpoints.
