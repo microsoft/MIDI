@@ -276,7 +276,6 @@ These are messages which will be handled by the code interfacing with the API (D
 
 (properties etc.)
 
-
 ## Setups
 
 Setups are saved JSON configurations created by the user in the settings app. They contain custom
@@ -285,12 +284,25 @@ them via code was considered, but rejected due to end-user control and potential
 
 We will revisit if new requirements arise.
 
-## Device/Transport plugins
-
-TODO. **This section isn't quite thought through yet and so may change significantly**. Intent is to allow transports to be defined as plugins so RTP, BLE, and more can be implemented from user code in the simplest possible way, without the ceremony required of a full driver.
+## Plug-ins
 
 ```cpp
+// interface supported by all plug-ins
+interface IMidiPlugin
+{
+    string PluginName       // Name of the plug-in
+    string PluginProvider   // Name of the provider for this plug-in
+    string Version          // version string for this plug-in
+    //TODO: Icon resource/image
+}
+```
 
+### Device/Transport
+
+TODO. **This section isn't quite thought through yet and so may change significantly**. Intent is to allow transports to be defined as plugins so Network, BLE, and more can be implemented from user code in the simplest possible way, without the ceremony required of a full driver. USB is also built using this, with the driver behind it.
+
+```cpp
+// Transport vs Device is still being sorted out. Logically, they are the same thing.
 interface IMidiTransport
 {
     string TransportType                // BLE, RTP, Virtual, etc.
@@ -302,13 +314,16 @@ interface IMidiTransport
 interface IMidiDevice
 {
     string Id
-    string Name
+    string Name                         // Name of the device provided by the user
+    string DeviceSuppliedName           // name of the device provided by the device
+    string Serial                       // for devices which have a serial number
     string IconPath
-    string DeviceSuppliedDisplayName
-    string DriverDescription
-    string DriverProvider
-    string DriverVersion
+
+    string DriverDescription            // driver won't apply to most devices. Reconsider
+    string DriverProvider               // ways to provide this information when available
+    string DriverVersion                // and ideally strongly typed (not a prop bag)
     string DriverDate
+
     string DeviceLocationInformation
     string DeviceManufacturer
     string DeviceInstancePath
@@ -318,19 +333,21 @@ interface IMidiDevice
     List<IMidiEndpoint> Endpoints
 } 
 
+// base for all endpoint types
 interface IMidiEndpoint
 {
-    string Id
-    string Name
-    uint ProtocolType               // 1 or 2 See MIDI CI protocol negotiation spec
-    uint ProtocolVersion            // 0x00 in all cases so far. See MIDI CI protocol negotiation spec
+    string Id                   // GUID
+    string Name                 // Name of the endpoint provided by the user
+    string DeviceSuppliedName   // name of the enpoint provided by the device
 }
 
+// unidirectional endpoints end up being MIDI 1.0 only
 interface IMidiInputEndpoint : IMidiEndpoint
 {  
     MidiStream InputStream
 }
 
+// unidirectional endpoints end up being MIDI 1.0 only
 interface IMidiOutputEndpoint : IMidiEndpoint
 {  
     MidiStream OutputStream
@@ -339,8 +356,15 @@ interface IMidiOutputEndpoint : IMidiEndpoint
     bool UseJitterReductionTimeStamps   // ditto
 }
 
+// Bi-directional endpoints could be MIDI 1.0 or MIDI 2.0
 interface IMidiBiDirectionalEndpoint : IMidiEndpoint
 {
+    bool SupportsCIDiscovery            // TBD if we need flags here, but not all transports will 
+    bool SupportsCIProtocolNegotiation  // support these, and users can turn off some features through
+                                        // the settings app
+    uint ProtocolType                   // 1 or 2 See MIDI CI protocol negotiation spec
+    uint ProtocolVersion                // 0x00 in all cases so far. See MIDI CI protocol negotiation spec
+
     MidiStream InputStream
     MidiStream OutputStream
 
@@ -363,19 +387,28 @@ interface IMidiEndpointSettings
 }
 ```
 
+### Processing
 
-
-## Processing plugins
-
-TODO: Plugins for message processing. Also not thought through yet.
+TODO: Plug-ins for message processing. Also not thought through yet.
 
 ```cpp
-interface IMidiProcessor
-{
 
+// for processing a single message. We may need to provide
+// an interface which supports processing multiple messages
+// or a stream, or supports transforming the number of
+// messages so that it is more or less than what was passed
+// in. Those may require jsut passing in a stream reference
+// instead, which has some threading implications
+interface IMidiMessageProcessor
+{
+    void ProcessMessage(Ump32* messageToProcess)
+    void ProcessMessage(Ump64* messageToProcess)
+    void ProcessMessage(Ump96* messageToProcess)
+    void ProcessMessage(Ump128* messageToProcess)
 }
+
 ```
 
-## Routing
+### Routing
 
 TBD. It may be more scalable to handle this through virtual MIDI endpoints.
