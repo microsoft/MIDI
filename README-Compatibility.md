@@ -32,3 +32,17 @@ We're evaluating how to best support these drivers, which include device-specifi
 
 There's currently no plan to support devices with custom USB MIDI 2.0 drivers. These devices should all
 use the new class driver.
+
+## Taking a dependency on this API in your own apps
+
+Windows MIDI Services will not be installed on all PCs but instead will need to be installed by customers who want the functionality it provides. Apps which require this API and driver should indicate as much in the product itself, and include any minimum version. Example:
+
+> Requires Windows MIDI Services 1.1 available here (link to release).
+
+### Checking for Windows MIDI Services on a PC
+
+TODO: Guidance on how to tell if Windows MIDI Services is currently installed, and which version it is
+
+### Linking to the installer
+
+TODO: Guidance on linking to the installer from your own apps and/or app installers.
