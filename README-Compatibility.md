@@ -35,6 +35,8 @@ use the new class driver.
 
 ## Taking a dependency on this API in your own apps
 
+This information will eventually be in the docs.
+
 Windows MIDI Services will not be installed on all PCs but instead will need to be installed by customers who want the functionality it provides. Apps which require this API and driver should indicate as much in the product itself, and include any minimum version. Example:
 
 > Requires Windows MIDI Services 1.1 available here (link to release).
