@@ -1,12 +1,11 @@
 # Windows MIDI Services
 
-This project is the next-generation MIDI API for Windows, including MIDI 1.0, MIDI CI, and [MIDI 2.0](https://www.midi.org/specifications/midi-2-0-specifications)
-features, enhancements, a new driver, and an ecosystem of essential tools. It builds upon the work we did for WinRT MIDI, adds many enhancements and bug fixes to our MIDI 1.0 support, and importantly adds support for MIDI CI and MIDI 2.0.
+This project is the next-generation MIDI API for Windows, including MIDI 1.0, MIDI CI, and [MIDI 2.0](https://www.midi.org/specifications/midi-2-0-specifications) features, enhancements, a new driver, and an ecosystem of essential tools. It builds upon the work we did for WinRT MIDI, adds many enhancements and bug fixes to our MIDI 1.0 support, and importantly adds support for MIDI CI and MIDI 2.0.
 
 This is an official Microsoft project.
 
 > The open source driver has been generously donated by [AMEI](https://www.amei.or.jp/),
-> the Association of Musical Electronics Industry, and developed by AmeNote. Please see
+> the **Association of Musical Electronics Industry, and developed by AmeNote**. Please see
 > the file headers for any additional copyright notices. A huge thank you to AMEI and its
 > member companies for making this happen!
 
@@ -66,10 +65,9 @@ Note that any internal changes made to the OS to support the driver or MIDI API 
 
 ## Feature Set
 
-This is a living and growing API. The first phase is to release a complete and working MIDI 1.0
-and MIDI 2.0 system that includes all the necessary infrastructure for us to continue to build upon.
+This is a living and growing API. The first phase is to release a complete and working MIDI 1.0 and MIDI 2.0 system that includes all the necessary infrastructure for us to continue to build upon.
 
-> Some big features are called out in this readme. Beyond that, specific detailed features may be found in 
+> Some big features are called out in this readme. Beyond that, specific detailed features may be found in
 > the issues list by using the following labels:
 >
 > Proposed Features
@@ -88,9 +86,7 @@ Here are some selected big rocks intended for the first release. Our top priorit
 * A new combined multi-client MIDI 1.0, MIDI CI, and [MIDI 2.0 USB class driver](https://www.midi.org/specifications/midi-transports-specifications/usb/usb-midi-2-0-2)
 * A new combined multi-client MIDI 1.0, MIDI CI, and MIDI 2.0 API based on the Universal MIDI Packet (UMP)
 accessible to, at a minimum, C++ and C# applications.
-* Infrastructure to provide for future implementations of virtual MIDI, MIDI processing like the MIDI
-Mapper used to provide, new transports and much more, all without requiring, in most cases, new driver
-code.
+* Infrastructure to provide for future implementations of virtual MIDI, MIDI processing like the MIDI Mapper used to provide, new transports and much more, all without requiring, in most cases, new driver code.
 * Infrastructure for a JSON-based configuration system for MIDI system profiles.
 * Additional API and enumeration information
   * End-user renaming / aliasing of devices / endpoints while also keeping the driver-supplied name accessible
@@ -121,22 +117,17 @@ command-line. Including:
   * Filter out certain MIDI messages for a specific endpoint
   * more as proposed and/or contributed by the community
 
-For these long-term goals, we will be partnering with the community of developers to help ensure we
-have the right tools and utilities to meet your support needs and everyone's customers' needs, all
-available as part of a single standard installation.
+For these long-term goals, we will be partnering with the community of developers to help ensure we have the right tools and utilities to meet your support needs and everyone's customers' needs, all available as part of a single standard installation.
 
 ## Releases
 
-To keep the project agile, we are currently planning to distibute all of the released and
-signed end-user components, as much as possible, through the Microsoft Store on Windows. This may evolve over time as the project stabilizes or as the developer and musician community provide feedback. Additionally, some components may need to be distributed through Windows Update. TBD as we get into releases.
+To keep the project agile, we are currently planning to distibute all of the released and signed end-user components, as much as possible, through the Microsoft Store on Windows. This may evolve over time as the project stabilizes or as the developer and musician community provide feedback. Additionally, some components may need to be distributed through Windows Update or other common mechanisms. TBD as we get into releases.
 
 **There are no end-user releases yet. We expect to start seeing those as we head into 2023.**
 
 ## Meet the Core Team for Release 1.0
 
-This is the core development team for the initial release. There are others involved who come in and
-out as needed, and many more contributors to this project including those playing non-development
-roles.
+This is the core development team for the initial release. There are others involved who come in and out as needed, and many more contributors to this project including those playing non-development roles.
 
 | Team Member | Company | Role in this Project |
 | ---------------|---------|--------------------------------|
@@ -158,13 +149,14 @@ See See [README-Compatibility.md](README-Compatibility.md)
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)
 
+## Security
+
+See [SECURITY.md](SECURITY.md)
+
 ## Trademarks
 
-This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft
-trademarks or logos is subject to and must follow 
-[Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
-Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
-Any use of third-party trademarks or logos are subject to those third-party's policies.
+This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft trademarks or logos is subject to and must follow
+[Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general). Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship. Any use of third-party trademarks or logos are subject to those third-party's policies.
 
 ## Relevant specifications
 
