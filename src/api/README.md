@@ -390,7 +390,7 @@ interface IMidiEndpointSettings
 
 ### Processing Plug-ins
 
-TODO: Plug-ins for message processing. Also not thought through yet.
+TODO: Plug-ins for message processing. Also not fully thought through yet.
 
 ```cpp
 
@@ -440,6 +440,8 @@ Possible outgoiing messages workflow:
 * Service sends stream to endpoints
 
 TBD: Who is responsible for adding anti-jitter timestamps? Presumably the service will need to do this, but that requires inserting a number of messages into a copy of the stream
+
+TBD: This model won't support time-based continuous processing, like an arpeggiator MIDI effect and similar. The overhead of something like that as a plug-in may be too high. It may be better as an app on a virtual endpoint, or simply left to dedicted DAWs and performance effects.
 
 ### Routing Plug-ins
 
