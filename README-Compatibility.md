@@ -1,8 +1,6 @@
 # Compatibility
 
-Although this API will coexist with the existing MIDI 1.0 WinMM API, for backwards-compatibility
-reasons, the intent is to have everyone converted to this new API going forward and to eventually
-deprecate the WinMM API, as it doesn't support many of the features in demand today.
+Although this API will coexist with the existing MIDI 1.0 WinMM API, for backwards-compatibility reasons, the intent is to have everyone converted to this new API going forward and to eventually deprecate the WinMM API, as it doesn't support many of the features in demand today.
 
 ## Client code compatibility
 
@@ -23,14 +21,14 @@ The new class driver replaces the existing MIDI 1.0 class driver delivered with 
 
 ### What about additions like the GS Synth in Windows?
 
-We're evaluating functionality for this. Intent is to make sure it works, at least with the existing APIs today, but that will depend on a number of factors in driver and API design. Additionally, going forward, in-box Virtual MIDI will provide more options for MIDI playback under the new API.
+We're evaluating functionality for this. Intent is to make sure it works for as long as it is supported in Windows, at least with the existing APIs today, but that will depend on a number of factors in driver and API design. Additionally, going forward, in-box Virtual MIDI will provide more options for MIDI playback under the new API.
+
+We know some folks love the GS synth, but it has high latency, and very little flexibility. The sounds are
+also quite old at this point. But it's still useful for MIDI file playback.
 
 ### What about third-party MIDI 1.0 drivers?
 
-We're evaluating how to best support these drivers, which include device-specific drivers as well as
-drivers for features like BLE MID and others. The intent here is to maintain compatibility for apps using
-the old WinMM API, but also to find a way to enable the use of these devices alongside the class driver
-in the new MIDI 2.0 API.
+We're evaluating how to best support these drivers, which include device-specific drivers for enhanced devices, or non-class-compliant devices, as well as drivers for features like BLE MIDI and others. The intent here is to maintain compatibility for apps using the old WinMM API, but also to find a way to enable the use of these devices alongside the class driver in the new MIDI 2.0 API.
 
 There's currently no plan to support devices with custom USB MIDI 2.0 drivers. These devices should all
 use the new class driver.
