@@ -359,9 +359,10 @@ interface IMidiOutputEndpoint : IMidiEndpoint
 // Bi-directional endpoints could be MIDI 1.0 or MIDI 2.0
 interface IMidiBiDirectionalEndpoint : IMidiEndpoint
 {
-    bool SupportsCIDiscovery            // TBD if we need flags here, but not all transports will 
-    bool SupportsCIProtocolNegotiation  // support these, and users can turn off some features through
-                                        // the settings app
+    bool ProtocolNegotiationSupported     // can be overridden by user in configuration settings for this endpoint
+    bool ProfileConfigurationSupported    // will be used by apps. Set by discovery/capability inquiry or overridden by user.
+    bool PropertyExchangeSupported        // will be used by apps. Set by discovery/capability inquiry or overridden by user.
+
     uint ProtocolType                   // 1 or 2 See MIDI CI protocol negotiation spec
     uint ProtocolVersion                // 0x00 in all cases so far. See MIDI CI protocol negotiation spec
 
@@ -418,7 +419,6 @@ interface IMidiOutgoingMessageProcessor
     bool ProcessMessage(Ump96* messageToProcess)
     bool ProcessMessage(Ump128* messageToProcess)
 }
-
 
 ```
 
