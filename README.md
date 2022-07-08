@@ -49,6 +49,21 @@ In short, we believe this project is the best way to continue to develop MIDI on
 give back to the whole MIDI developer community, regardless of which operating system they 
 prefer.
 
+## Repo Structure
+
+| Location         | Description |
+| -----------------|----------------------------------------------------------|
+| /                | Project root, including main README |
+| /docs            | Developer and user documentation |
+| /samples         | Developer samples for using the API |
+| /src             | Main source (non-documentation/sample) root |
+| /src/api         | MIDI API for Windows |
+| /src/plug-ins    | Processing, transport, and other plug-ins |
+| /src/shared      | Non-developer-facing shared components used by tools, API, etc. Example: logging, config |
+| /src/tools       | End-user tools like the settings app and command-line interface |
+| /src/ui          | Reuisable WinUI3-compatible UI components related to the MIDI API |
+| /src/usb-driver  | Windows USB MIDI 2.0 and 1.0 Class driver source |
+
 ## Feature Set
 
 This is a living and growing API. The first phase is to release a complete and working MIDI 1.0
