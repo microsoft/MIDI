@@ -12,12 +12,7 @@ This is an official Microsoft project.
 
 Building upon the work we did with WinRT MIDI, we're making some big enhancements and also
 addressing areas where we could do better with that API. Like the existing WinRT API, this
-API may be called from a variety of langauges, including [C++/WinRT](https://docs.microsoft.com/windows/uwp/cpp-and-winrt-apis/),
-from desktop apps and more.
-
-Although this API will coexist with the existing MIDI 1.0 WinMM API, for backwards-compatibility
-reasons, the intent is to have everyone converted to this new API going forward and to eventually
-deprecate the WinMM API, as it doesn't support many of the features in demand today.
+API may be called from a variety of langauges, including [C++/WinRT](https://docs.microsoft.com/windows/uwp/cpp-and-winrt-apis/), from desktop apps and more.
 
 > **Join the Discussion!**
 > 
@@ -35,18 +30,18 @@ We believe in the musician and music technology communities. We also know that
 the music creation tech community is a highly motivated and interested community, including
 those who are both musicians and developers who are working to move music technology forward.
 
-We recognize that standards like MIDI are living standards, with new transports and add-on 
+We recognize that standards like MIDI are living standards, with new transports and add-on
 capabilities added over time and that in the past, we haven't been quick to adopt those in
-released of Windows.
+released of Windows, and we want to change that.
 
 We propose that the best way to maintain an API which keeps up with the evolving standards
-and offers early adopters in this community an opportunity to try them out, test, and contribute, 
-is to open source everything that we can, and inviting both internal teams and the community to 
-contribute to MIDI as implemented on Windows. We also love the idea of others learning from this 
+and offers early adopters in this community an opportunity to try them out, test, and contribute,
+is to open source everything that we can, and inviting both internal teams and the community to
+contribute to MIDI as implemented on Windows. We also love the idea of others learning from this
 source code to implement MIDI 2.0 on embedded devices and other operating systems as they need.
 
 In short, we believe this project is the best way to continue to develop MIDI on Windows, and to
-give back to the whole MIDI developer community, regardless of which operating system they 
+give back to the whole MIDI developer community, regardless of which operating system they
 prefer.
 
 ## Repo Structure
@@ -88,6 +83,8 @@ and MIDI 2.0 system that includes all the necessary infrastructure for us to con
 
 ### Short-term project big "1.0" features
 
+Here are some selected big rocks intended for the first release. Our top priority for the first release is a fully functional MIDI 2.0, 1.0, and MIDI-CI driver and API, usable with third-party applications and devices.
+
 * A new combined multi-client MIDI 1.0, MIDI CI, and [MIDI 2.0 USB class driver](https://www.midi.org/specifications/midi-transports-specifications/usb/usb-midi-2-0-2)
 * A new combined multi-client MIDI 1.0, MIDI CI, and MIDI 2.0 API based on the Universal MIDI Packet (UMP)
 accessible to, at a minimum, C++ and C# applications.
@@ -96,16 +93,18 @@ Mapper used to provide, new transports and much more, all without requiring, in 
 code.
 * Infrastructure for a JSON-based configuration system for MIDI system profiles.
 * Additional API and enumeration information
-  * End-user renaming/aliasing of devices / endpoints while also keeping the driver-supplied name accessible
+  * End-user renaming / aliasing of devices / endpoints while also keeping the driver-supplied name accessible
   * More detailed information about devices (driver details, manufacturer info, etc.)
   * Transport information so apps know how the device is connected (USB, BLE, Network, etc.)
   * more
-* Bluetooth MIDI 1.0 (currently supported in WinRT MIDI only)
+* Bluetooth MIDI 1.0 (currently supported in WinRT MIDI or through third-party drivers)
 
 The majority of this infrastructure development will be done by the core team, mentioned below. We
 certainly encourage you to participate in testing and in pull requests as you have suggestions.
 
 ### Long-term project features
+
+Here are some other features that are more long-term. Some may make it into the first release, but we will not block on them for 1.0. This is what we intend to do, but is not a commitment at this point.
 
 * Virtual / App-to-App MIDI
 * New MIDI 2 transport standards (Bluetooth, network, etc.) as they are adopted by the MIDI Association
@@ -133,28 +132,7 @@ signed end-user components, as much as possible, through the Microsoft Store on 
 
 **There are no end-user releases yet. We expect to start seeing those as we head into 2023.**
 
-## Client code compatibility
-
-The APIs will be created as components usable by as many different languages as possible. Any language which can talk to WinRT ("modern COM") interfaces will be able to use the API. That includes but is not limited to
-C++/WinRT, .NET and others.
-
-As this approaches maturity, we'll also work with browser teams to enable WebMIDI to use the new APIs.
-
-## Older APIs
-
-What happens to the older APIs like WinMM, DirectMusic, WinRT MIDI, and more? Our intention is to deprecate those when this API meets the requirements for use and a critical mass of adoption. Initially, we didn't want to create yet another API to add to the list, but existing APIs were heavily tied to models which don't move well into MIDI 2.0 and a more open ecosystem of transports.
-
-Deprecate doesn't mean those APIs go away immediately, but it does tell developers that we have an intention to eventually remove or otherwise stop supporting them. An example is DirectMusic. That was deprecated many years ago but is still shipped with Windows, but does not receive enhancements or other changes. We'll make our intentions clear to developers and encourage them to adopt the new APIs.
-
-### Can older APIs use new features?
-
-The new class driver replaces the existing MIDI 1.0 class driver delivered with Windows. As a result, existing APIs may gain some minor features, such as multi-client. However, the older APIs will not gain new transports or MIDI 2.0 functionality.
-
-### What about additions like the GS Synth in Windows?
-
-We're evaluating functionality for this. Intent is to make sure it works, at least with the existing APIs today, but that will depend on a number of factors in driver and API design. Additionally, going forward, in-box Virtual MIDI will provide more options for MIDI playback under the new API.
-
-## Meet the Core Team for 1.0
+## Meet the Core Team for Release 1.0
 
 This is the core development team for the initial release. There are others involved who come in and
 out as needed, and many more contributors to this project including those playing non-development
@@ -162,7 +140,7 @@ roles.
 
 | Team Member | Company | Role in this Project |
 | ---------------|---------|--------------------------------|
-| [Pete Brown](https://github.com/Psychlist1972) | Microsoft | Overall Project and OSS Lead, Tools & API Engineer |
+| [Pete Brown](https://github.com/Psychlist1972) | Microsoft | Overall Project and OSS Lead, Tools & API Engineer, MIDI Association Executive Board member |
 | Jay DiFuria | Microsoft | Microsoft API PM |
 | Edward Sumanaseni | Microsoft | API Engineeringr Lead |
 | [Gary Daniels](https://github.com/garydan42) | Microsoft | API Engineer  |
@@ -171,6 +149,10 @@ roles.
 | [Mike Kent](AmeNote-MikeKent) | AmeNote | Driver Developer |
 | [Michael Loh](AmeNote-Michael) | AmeNote | Driver Developer |
 | [Andrew Mee](starfishmod) | | MIDI Consultant |
+
+## Device, Programming Language, and API Compatibility
+
+See See [README-Compatibility.md](README-Compatibility.md)
 
 ## Contributing
 
