@@ -1,6 +1,8 @@
 # Routing plug-ins
 
-Plug-ins for message routing. These need access to more data (endpoints, specifically) than processing plug-ins, so they will likely be a separate plug-in interface. TBD. It may be better to simply bake this type of functionality into the virtual MIDI devices and endpoints
+Plug-ins for message routing. These need access to more data (endpoints, specifically) than processing plug-ins, so they will likely be a separate plug-in interface. 
+
+TBD. It is likely that we'll simply bake this type of functionality into the virtual MIDI devices and endpoints instead of a plug-in approach
 
 Examples of routing plug-ins
 
