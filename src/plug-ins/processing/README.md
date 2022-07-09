@@ -1,17 +1,18 @@
 # Processing plug-ins
 
-These are plug-ins which process and translate messages, doing a lot of what the old MIDI Mapper used to be used for in Windows. Implementations may include:
+These are plug-ins which process and translate messages, doing a lot of what the [MIDI Mapper](https://docs.microsoft.com/windows/win32/multimedia/the-midi-mapper) used to be (and sometimes still is) used for in Windows. Implementations may include:
 
-Top Priority
+Priority
 
 * Change channel number / remap channels
 * Change MIDI 2.0 group number / remap groups / functions
 * Read note value, and change the channel or group based on a configured virtual split point/range
+* CC controller number remapping
+* Note remapping, for a drum machine, for example
 
 Additional
 
 * Note transposition
-* Note remapping, for a drum machine, for example
 * Note quantizing to a configured key
 * Velocity curve remapping
 * Aftertouch curve remapping
