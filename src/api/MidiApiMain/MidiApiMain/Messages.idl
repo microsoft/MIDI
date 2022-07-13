@@ -1,0 +1,7 @@
+
+
+//namespace Windows.Devices.Midi
+//{
+//    delegate void MidiMessageReceivedHandler(Boolean tempFoo);
+//
+//};

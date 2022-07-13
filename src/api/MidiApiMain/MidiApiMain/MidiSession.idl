@@ -1,0 +1,41 @@
+import "IMidiDevice.idl";
+import "IMidiEndpoint.idl";
+
+import "MidiEndpointSettings.idl";
+import "MidiSessionSettings.idl";
+
+namespace Windows.Devices.Midi
+{
+
+    runtimeclass MidiSession
+    {
+        // properties ------------------------------------------
+
+        String Id{ get; };
+        String Name{ get; };
+        String ProcessName{ get; };
+        UInt32 ProcessId{ get; };   // same as ProcessDiagnosticInfo.ProcessId property
+        Windows.Foundation.DateTime OpenedAt{ get; };
+
+
+        // Lifetime functions ----------------------------------
+
+        static MidiSession Create(String name, MidiSessionSettings settings);
+        static MidiSession Create(String name);
+
+        void Close();
+
+        // endpoints
+
+        IMidiEndpoint OpenEndpoint(String deviceId, String endpointId, MidiEndpointSettings settings);
+
+
+
+        // utility functions -----------------------------------
+
+        void Panic();
+
+
+
+    }
+}

@@ -1,0 +1,44 @@
+import "IMidiEndpoint.idl";
+
+namespace Windows.Devices.Midi
+{
+
+    // The device. This can be a USB device, BLE device, etc. Implementation
+    // classes are defined in the device plugins
+    interface IMidiDevice
+    {
+        // Basic information about the device
+
+        String Id{ get; };                          // GUID for this device
+        String Name{ get; set; };                   // User-supplied name. Defaults to device-supplied name
+        String DeviceSuppliedName{ get; };          // Name of the device as supplied by the device itself
+        String Serial{ get; };                      // For devices which support this (like some USB), the unique HW ID
+        String IconFileName{ get; };                // File name of the icon for this device. Not full path, just file name.
+        String Description{ get; };                 // Description of the device. Supplied by user.
+
+        // The main reason the device exists
+
+        IVector<IMidiEndpoint> Endpoints{ get; };   // All the in/out endpoints attached to this device
+
+        // for devices which are backed by a system-level driver, like USB MIDI 2.0
+        // May be better to do this as a nullable DriverInformation property and stick
+        // to a single IMidiDevice interface type
+
+        String DriverDescription{ get; };           
+        String DriverProvider{ get; };
+        String DriverVersion{ get; };
+        String DriverDate{ get; };
+        String DeviceLocationInformation{ get; };
+        String DeviceInstancePath{ get; };
+
+        // Information about the transport (BLE, USB, RTP, Virtual, etc.)
+        // yes, this gets duplicated across multiple devices with same transport
+
+        String TransportIconFileName{ get; };       // name of the icon for the type of transport implemented here. Not full path.
+        String TransportType{ get; };               // BLE, USB, Network, Virtual, etc.
+        String TransportDescription{ get; };        
+    };
+
+
+
+}

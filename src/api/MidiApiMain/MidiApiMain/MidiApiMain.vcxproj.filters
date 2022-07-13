@@ -8,18 +8,72 @@
     <Filter Include="Generated Files">
       <UniqueIdentifier>{926ab91d-31b4-48c3-b9a4-e681349f27f0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Api">
+      <UniqueIdentifier>{9d637a76-9b8f-4b30-81db-90ca734465a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Api\Plug-ins">
+      <UniqueIdentifier>{22845e45-d1a4-41e7-bd7c-2a441d5d730e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Api\Helpers">
+      <UniqueIdentifier>{68ab0deb-7561-4586-a6ae-17b03ea7aff0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Api\Helpers\Messages">
+      <UniqueIdentifier>{a4e28bc9-93cd-4458-9fd3-2828bd7ff922}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="Class.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="Session.idl" />
-    <Midl Include="ump.idl" />
+    <Midl Include="MidiSession.idl">
+      <Filter>Api</Filter>
+    </Midl>
+    <Midl Include="IMidiDevice.idl">
+      <Filter>Api</Filter>
+    </Midl>
+    <Midl Include="IMidiEndpoint.idl">
+      <Filter>Api</Filter>
+    </Midl>
+    <Midl Include="MidiStream.idl">
+      <Filter>Api</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointSettings.idl">
+      <Filter>Api</Filter>
+    </Midl>
+    <Midl Include="MidiSessionSettings.idl">
+      <Filter>Api</Filter>
+    </Midl>
+    <Midl Include="Ump64.idl">
+      <Filter>Api</Filter>
+    </Midl>
+    <Midl Include="Ump32.idl">
+      <Filter>Api</Filter>
+    </Midl>
+    <Midl Include="Ump96.idl">
+      <Filter>Api</Filter>
+    </Midl>
+    <Midl Include="Ump128.idl">
+      <Filter>Api</Filter>
+    </Midl>
+    <Midl Include="IMidiIncomingMessageProcessor.idl">
+      <Filter>Api\Plug-ins</Filter>
+    </Midl>
+    <Midl Include="IMidiOutgoingMessageProcessor.idl">
+      <Filter>Api\Plug-ins</Filter>
+    </Midl>
+    <Midl Include="IMidiPlugin.idl">
+      <Filter>Api\Plug-ins</Filter>
+    </Midl>
+    <Midl Include="MidiMessageParser.idl">
+      <Filter>Api\Helpers\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiMessage.idl">
+      <Filter>Api\Helpers\Messages</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="MidiApiMain.def" />

@@ -1,0 +1,19 @@
+import "Ump32.idl";
+import "Ump64.idl";
+import "Ump96.idl";
+import "Ump128.idl";
+import "MidiStream.idl";
+
+
+namespace Windows.Devices.Midi
+{
+
+
+    runtimeclass MidiMessageParser
+    {
+        // TODO: change Boolean to the message base class
+        static IVector<Boolean> GetTypedMessagesFromStream(MidiStream stream);
+
+
+    };
+}

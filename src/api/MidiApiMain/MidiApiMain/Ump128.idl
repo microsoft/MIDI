@@ -1,0 +1,13 @@
+namespace Windows.Devices.Midi
+{
+
+    struct Ump128
+    {
+        UInt32 Word1;
+        UInt32 Word2;
+        UInt32 Word3;
+        UInt32 Word4;
+    };
+
+
+}

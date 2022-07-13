@@ -1,0 +1,14 @@
+
+
+namespace Windows.Devices.Midi
+{
+    runtimeclass MidiStream
+    {
+        MidiStream();
+
+        // TODO   
+        String TempFoo{ get; };
+    };
+
+
+}

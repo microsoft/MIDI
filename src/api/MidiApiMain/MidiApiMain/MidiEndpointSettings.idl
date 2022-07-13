@@ -1,0 +1,10 @@
+namespace Windows.Devices.Midi
+{
+    runtimeclass MidiEndpointSettings
+    {
+     //   MidiEndpointSettings();
+
+        // TODO   
+        String TempFoo{ get; };
+    };
+}
