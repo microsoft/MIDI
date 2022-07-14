@@ -55,5 +55,6 @@ namespace Windows.Devices.Midi
         MidiStream OutputStream{ get; };                    // where messages are sent to
     };
 
-
+    // Maybe the endpoint contains an vector of protocol information by group rather
+    // than hold that information at the endpoint level
 }
