@@ -2,7 +2,6 @@
 #include "MidiSessionSettings.h"
 #include "MidiSessionSettings.g.cpp"
 
-
 namespace winrt::Windows::Devices::Midi::implementation
 {
     hstring MidiSessionSettings::TempFoo()

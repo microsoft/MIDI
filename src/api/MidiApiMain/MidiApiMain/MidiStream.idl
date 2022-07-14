@@ -2,9 +2,9 @@
 
 namespace Windows.Devices.Midi
 {
+    [default_interface]
     runtimeclass MidiStream
     {
-        MidiStream();
 
         // TODO   
         String TempFoo{ get; };

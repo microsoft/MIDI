@@ -1,10 +1,9 @@
 
 namespace Windows.Devices.Midi
 {
+    [default_interface]
     runtimeclass MidiSessionSettings
     {
-       // MidiSessionSettings();
-
         // TODO   
         String TempFoo{ get; };
 

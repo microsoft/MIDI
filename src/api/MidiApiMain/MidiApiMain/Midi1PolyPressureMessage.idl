@@ -1,0 +1,13 @@
+import "MidiMessage.idl";
+import "Midi1ChannelVoiceMessage.idl";
+
+namespace Windows.Devices.Midi
+{
+    runtimeclass Midi1PolyPressureMessage : Midi1ChannelVoiceMessage
+    {
+        UInt8 NoteNumber{ get; };
+        UInt8 Data{ get; };
+    };
+}
+
+

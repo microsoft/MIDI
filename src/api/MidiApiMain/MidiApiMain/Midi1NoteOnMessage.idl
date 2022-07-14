@@ -1,0 +1,14 @@
+import "MidiMessage.idl";
+import "Midi1ChannelVoiceMessage.idl";
+
+namespace Windows.Devices.Midi
+{
+    runtimeclass Midi1NoteOnMessage : Midi1ChannelVoiceMessage
+    {
+        UInt8 NoteNumber{ get; };
+        UInt8 Velocity{ get; };
+    };
+}
+
+
+

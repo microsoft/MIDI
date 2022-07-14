@@ -1,0 +1,14 @@
+import "MidiMessage.idl";
+import "Midi2ChannelVoiceMessage.idl";
+
+namespace Windows.Devices.Midi
+{
+    runtimeclass Midi2PerNoteManagementMessage : Midi2ChannelVoiceMessage
+    {
+        UInt8 NoteNumber{ get; };
+        Boolean DetachPerNoteControllers{ get; };
+        Boolean ResetPerNoteControllers{ get; };
+    };
+}
+
+

@@ -1,0 +1,12 @@
+import "MidiMessage.idl";
+
+namespace Windows.Devices.Midi
+{
+	// this needs to be an abstract class
+	unsealed runtimeclass Midi2UtilityMessage : MidiMessage
+	{
+
+	};
+}
+
+

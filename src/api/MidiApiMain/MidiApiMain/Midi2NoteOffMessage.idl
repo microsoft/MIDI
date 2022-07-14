@@ -1,0 +1,16 @@
+import "MidiMessage.idl";
+import "Midi2ChannelVoiceMessage.idl";
+
+namespace Windows.Devices.Midi
+{
+
+    runtimeclass Midi2NoteOffMessage : Midi2ChannelVoiceMessage
+    {
+        UInt8 NoteNumber{ get; };
+        UInt8 AttributeType{ get; };
+        UInt16 Velocity{ get; };
+        UInt16 AttributeData{ get; };
+    };
+}
+
+

@@ -3,9 +3,6 @@ import "MidiStream.idl";
 
 namespace Windows.Devices.Midi
 {
-
-
-
     // No inheritance allowed here in WinRT, so this has both input and output and properties which aren't 
     // always usable. Could refactor this a bit, but it gets super messy when used from C++ apps if you do
 
@@ -28,8 +25,6 @@ namespace Windows.Devices.Midi
     interface IMidiOutputEndpoint requires IMidiEndpoint
     {
         MidiStream OutputStream{ get; };                    // where messages are sent to
-
-
 
     };
 

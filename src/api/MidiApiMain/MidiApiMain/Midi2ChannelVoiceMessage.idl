@@ -1,0 +1,13 @@
+import "MidiMessage.idl";
+
+namespace Windows.Devices.Midi
+{
+	unsealed runtimeclass Midi2ChannelVoiceMessage : MidiMessage
+	{
+		UInt8 Channel { get; };
+	};
+}
+
+
+
+

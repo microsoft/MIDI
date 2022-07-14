@@ -1,0 +1,12 @@
+import "MidiMessage.idl";
+import "Midi2UtilityMessage.idl";
+
+namespace Windows.Devices.Midi
+{
+
+	runtimeclass Midi2JitterReductionClockMessage : Midi2UtilityMessage
+	{
+		UInt16 SenderClockTime { get; };
+	};
+}
+

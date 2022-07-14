@@ -6,14 +6,8 @@ namespace winrt::Windows::Devices::Midi::implementation
 {
     struct MidiEndpointSettings : MidiEndpointSettingsT<MidiEndpointSettings>
     {
-        //MidiEndpointSettings() = default;
+        MidiEndpointSettings() = default;
 
         hstring TempFoo();
-    };
-}
-namespace winrt::Windows::Devices::Midi::factory_implementation
-{
-    struct MidiEndpointSettings : MidiEndpointSettingsT<MidiEndpointSettings, implementation::MidiEndpointSettings>
-    {
     };
 }

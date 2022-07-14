@@ -10,9 +10,3 @@ namespace winrt::Windows::Devices::Midi::implementation
         hstring TempFoo();
     };
 }
-namespace winrt::Windows::Devices::Midi::factory_implementation
-{
-    struct MidiStream : MidiStreamT<MidiStream, implementation::MidiStream>
-    {
-    };
-}

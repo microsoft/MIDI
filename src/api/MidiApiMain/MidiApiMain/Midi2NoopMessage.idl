@@ -1,0 +1,12 @@
+import "MidiMessage.idl";
+import "Midi2UtilityMessage.idl";
+
+namespace Windows.Devices.Midi
+{
+
+	runtimeclass Midi2NoopMessage : Midi2UtilityMessage
+	{
+		// Message does nothing, but is valid
+	};
+}
+

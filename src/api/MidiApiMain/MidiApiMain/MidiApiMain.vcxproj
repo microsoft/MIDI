@@ -114,7 +114,95 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
+
   <ItemGroup>
+    <ClInclude Include="Midi1ChannelPressureMessage.h">
+      <DependentUpon>Midi1ChannelPressureMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi1ChannelVoiceMessage.h">
+      <DependentUpon>Midi1ChannelVoiceMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi1ControlChangeMessage.h">
+      <DependentUpon>Midi1ControlChangeMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi1NoteOffMessage.h">
+      <DependentUpon>Midi1NoteOffMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi1NoteOnMessage.h">
+      <DependentUpon>Midi1NoteOnMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi1PitchBendMessage.h">
+      <DependentUpon>Midi1PitchBendMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi1PolyPressureMessage.h">
+      <DependentUpon>Midi1PolyPressureMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi1ProgramChangeMessage.h">
+      <DependentUpon>Midi1ProgramChangeMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi2AssignableControllerMessage.h">
+      <DependentUpon>Midi2AssignableControllerMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi2AssignablePerNoteControllerMessage.h">
+      <DependentUpon>Midi2AssignablePerNoteControllerMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi2ChannelPressureMessage.h">
+      <DependentUpon>Midi2ChannelPressureMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi2ChannelVoiceMessage.h">
+      <DependentUpon>Midi2ChannelVoiceMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi2ControlChangeMessage.h">
+      <DependentUpon>Midi2ControlChangeMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi2JitterReductionClockMessage.h">
+      <DependentUpon>Midi2JitterReductionClockMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi2JitterReductionTimestampMessage.h">
+      <DependentUpon>Midi2JitterReductionTimestampMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi2NoopMessage.h">
+      <DependentUpon>Midi2NoopMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi2NoteOffMessage.h">
+      <DependentUpon>Midi2NoteOffMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi2PerNoteManagementMessage.h">
+      <DependentUpon>Midi2PerNoteManagementMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi2PerNotePitchBendMessage.h">
+      <DependentUpon>Midi2PerNotePitchBendMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi2PitchBendMessage.h">
+      <DependentUpon>Midi2PitchBendMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi2PolyPressureMessage.h">
+      <DependentUpon>Midi2PolyPressureMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi2ProgramChangeMessage.h">
+      <DependentUpon>Midi2ProgramChangeMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi2RegisteredControllerMessage.h">
+      <DependentUpon>Midi2RegisteredControllerMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi2RegisteredPerNoteControllerMessage.h">
+      <DependentUpon>Midi2RegisteredPerNoteControllerMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi2RelativeAssignableControllerMessage.h">
+      <DependentUpon>Midi2RelativeAssignableControllerMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi2RelativeRegisteredControllerMessage.h">
+      <DependentUpon>Midi2RelativeRegisteredControllerMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="Midi2UtilityMessage.h">
+      <DependentUpon>Midi2UtilityMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiMessage.h">
+      <DependentUpon>MidiMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiMessageParser.h">
+      <DependentUpon>MidiMessageParser.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="pch.h" />
     <ClInclude Include="IMidiDevice.h">
       <DependentUpon>IMidiDevice.idl</DependentUpon>
@@ -136,6 +224,93 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Midi1ChannelPressureMessage.cpp">
+      <DependentUpon>Midi1ChannelPressureMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi1ChannelVoiceMessage.cpp">
+      <DependentUpon>Midi1ChannelVoiceMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi1ControlChangeMessage.cpp">
+      <DependentUpon>Midi1ControlChangeMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi1NoteOffMessage.cpp">
+      <DependentUpon>Midi1NoteOffMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi1NoteOnMessage.cpp">
+      <DependentUpon>Midi1NoteOnMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi1PitchBendMessage.cpp">
+      <DependentUpon>Midi1PitchBendMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi1PolyPressureMessage.cpp">
+      <DependentUpon>Midi1PolyPressureMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi1ProgramChangeMessage.cpp">
+      <DependentUpon>Midi1ProgramChangeMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi2AssignableControllerMessage.cpp">
+      <DependentUpon>Midi2AssignableControllerMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi2AssignablePerNoteControllerMessage.cpp">
+      <DependentUpon>Midi2AssignablePerNoteControllerMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi2ChannelPressureMessage.cpp">
+      <DependentUpon>Midi2ChannelPressureMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi2ChannelVoiceMessage.cpp">
+      <DependentUpon>Midi2ChannelVoiceMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi2ControlChangeMessage.cpp">
+      <DependentUpon>Midi2ControlChangeMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi2JitterReductionClockMessage.cpp">
+      <DependentUpon>Midi2JitterReductionClockMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi2JitterReductionTimestampMessage.cpp">
+      <DependentUpon>Midi2JitterReductionTimestampMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi2NoopMessage.cpp">
+      <DependentUpon>Midi2NoopMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi2NoteOffMessage.cpp">
+      <DependentUpon>Midi2NoteOffMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi2PerNoteManagementMessage.cpp">
+      <DependentUpon>Midi2PerNoteManagementMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi2PerNotePitchBendMessage.cpp">
+      <DependentUpon>Midi2PerNotePitchBendMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi2PitchBendMessage.cpp">
+      <DependentUpon>Midi2PitchBendMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi2PolyPressureMessage.cpp">
+      <DependentUpon>Midi2PolyPressureMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi2ProgramChangeMessage.cpp">
+      <DependentUpon>Midi2ProgramChangeMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi2RegisteredControllerMessage.cpp">
+      <DependentUpon>Midi2RegisteredControllerMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi2RegisteredPerNoteControllerMessage.cpp">
+      <DependentUpon>Midi2RegisteredPerNoteControllerMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi2RelativeAssignableControllerMessage.cpp">
+      <DependentUpon>Midi2RelativeAssignableControllerMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi2RelativeRegisteredControllerMessage.cpp">
+      <DependentUpon>Midi2RelativeRegisteredControllerMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Midi2UtilityMessage.cpp">
+      <DependentUpon>Midi2UtilityMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiMessage.cpp">
+      <DependentUpon>MidiMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiMessageParser.cpp">
+      <DependentUpon>MidiMessageParser.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -152,12 +327,12 @@
     <ClCompile Include="MidiStream.cpp">
       <DependentUpon>MidiStream.idl</DependentUpon>
     </ClCompile>
-    <ClInclude Include="MidiSessionSettings.cpp">
+    <ClCompile Include="MidiSessionSettings.cpp">
       <DependentUpon>MidiSessionSettings.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiEndpointSettings.cpp">
+    </ClCompile>
+    <ClCompile Include="MidiEndpointSettings.cpp">
       <DependentUpon>MidiEndpointSettings.idl</DependentUpon>
-    </ClInclude>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="IMidiDevice.idl" />
@@ -165,6 +340,33 @@
     <Midl Include="IMidiIncomingMessageProcessor.idl" />
     <Midl Include="IMidiOutgoingMessageProcessor.idl" />
     <Midl Include="IMidiPlugin.idl" />
+    <Midl Include="Midi1ChannelPressureMessage.idl" />
+    <Midl Include="Midi1ChannelVoiceMessage.idl" />
+    <Midl Include="Midi1ControlChangeMessage.idl" />
+    <Midl Include="Midi1NoteOffMessage.idl" />
+    <Midl Include="Midi1NoteOnMessage.idl" />
+    <Midl Include="Midi1PitchBendMessage.idl" />
+    <Midl Include="Midi1PolyPressureMessage.idl" />
+    <Midl Include="Midi1ProgramChangeMessage.idl" />
+    <Midl Include="Midi2AssignableControllerMessage.idl" />
+    <Midl Include="Midi2AssignablePerNoteControllerMessage.idl" />
+    <Midl Include="Midi2ChannelPressureMessage.idl" />
+    <Midl Include="Midi2ChannelVoiceMessage.idl" />
+    <Midl Include="Midi2ControlChangeMessage.idl" />
+    <Midl Include="Midi2JitterReductionClockMessage.idl" />
+    <Midl Include="Midi2JitterReductionTimestampMessage.idl" />
+    <Midl Include="Midi2NoopMessage.idl" />
+    <Midl Include="Midi2NoteOffMessage.idl" />
+    <Midl Include="Midi2PerNoteManagementMessage.idl" />
+    <Midl Include="Midi2PerNotePitchBendMessage.idl" />
+    <Midl Include="Midi2PitchBendMessage.idl" />
+    <Midl Include="Midi2PolyPressureMessage.idl" />
+    <Midl Include="Midi2ProgramChangeMessage.idl" />
+    <Midl Include="Midi2RegisteredControllerMessage.idl" />
+    <Midl Include="Midi2RegisteredPerNoteControllerMessage.idl" />
+    <Midl Include="Midi2RelativeAssignableControllerMessage.idl" />
+    <Midl Include="Midi2RelativeRegisteredControllerMessage.idl" />
+    <Midl Include="Midi2UtilityMessage.idl" />
     <Midl Include="MidiEndpointSettings.idl" />
     <Midl Include="MidiMessage.idl" />
     <Midl Include="MidiMessageParser.idl" />

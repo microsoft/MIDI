@@ -1,0 +1,13 @@
+import "MidiMessage.idl";
+import "Midi2ChannelVoiceMessage.idl";
+
+namespace Windows.Devices.Midi
+{
+    runtimeclass Midi2RelativeRegisteredControllerMessage : Midi2ChannelVoiceMessage
+    {
+        UInt8 Bank{ get; };
+        UInt8 Index{ get; };
+        UInt32 Data{ get; };
+    };
+}
+

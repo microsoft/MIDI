@@ -1,0 +1,10 @@
+import "MidiMessage.idl";
+import "Midi1ChannelVoiceMessage.idl";
+
+namespace Windows.Devices.Midi
+{
+	unsealed runtimeclass Midi1ChannelPressureMessage : Midi1ChannelVoiceMessage
+	{
+		UInt8 Data{ get; };
+	};
+}

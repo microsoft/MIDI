@@ -20,45 +20,54 @@
     <Filter Include="Api\Helpers\Messages">
       <UniqueIdentifier>{a4e28bc9-93cd-4458-9fd3-2828bd7ff922}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Api\Helpers\Messages\Midi1">
+      <UniqueIdentifier>{d952ba2e-d4e4-4667-8ab0-5281bdbcb358}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Api\Helpers\Messages\Midi2">
+      <UniqueIdentifier>{9c7fb102-1497-42ab-aac0-d7fad091e2ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Api\Helpers\Messages\Midi2\Channel Voice">
+      <UniqueIdentifier>{cd31f7ce-1a6a-420d-abbb-912a18ed347b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Api\Helpers\Messages\Midi2\Utility">
+      <UniqueIdentifier>{6c1ea738-cda9-47aa-b589-fe2f95e39abb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Api\Helpers\Messages\Midi2\Sysex">
+      <UniqueIdentifier>{11a13655-2362-4867-986e-60d3b8b83f5f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Api\Helpers\Messages\Midi1\Channel Voice">
+      <UniqueIdentifier>{72ac4b30-0711-4859-9320-36f10c285f7b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Api\Helpers\Messages\Midi1\Sysex">
+      <UniqueIdentifier>{1301e946-5bca-4695-a038-ce8bf52ccc00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Api\Devices">
+      <UniqueIdentifier>{dbe3f2a3-edc8-4918-96d6-bb53052e8732}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Api\Session">
+      <UniqueIdentifier>{a7674539-8a99-4c4c-a20a-d80d6380e341}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
+    <ClCompile Include="MidiMessage.cpp">
+      <Filter>Api\Helpers\Messages</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessageParser.cpp">
+      <Filter>Api\Helpers\Messages</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
+    <ClInclude Include="MidiMessage.h">
+      <Filter>Api\Helpers\Messages</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessageParser.h">
+      <Filter>Api\Helpers\Messages</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="MidiSession.idl">
-      <Filter>Api</Filter>
-    </Midl>
-    <Midl Include="IMidiDevice.idl">
-      <Filter>Api</Filter>
-    </Midl>
-    <Midl Include="IMidiEndpoint.idl">
-      <Filter>Api</Filter>
-    </Midl>
-    <Midl Include="MidiStream.idl">
-      <Filter>Api</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointSettings.idl">
-      <Filter>Api</Filter>
-    </Midl>
-    <Midl Include="MidiSessionSettings.idl">
-      <Filter>Api</Filter>
-    </Midl>
-    <Midl Include="Ump64.idl">
-      <Filter>Api</Filter>
-    </Midl>
-    <Midl Include="Ump32.idl">
-      <Filter>Api</Filter>
-    </Midl>
-    <Midl Include="Ump96.idl">
-      <Filter>Api</Filter>
-    </Midl>
-    <Midl Include="Ump128.idl">
-      <Filter>Api</Filter>
-    </Midl>
     <Midl Include="IMidiIncomingMessageProcessor.idl">
       <Filter>Api\Plug-ins</Filter>
     </Midl>
@@ -73,6 +82,117 @@
     </Midl>
     <Midl Include="MidiMessage.idl">
       <Filter>Api\Helpers\Messages</Filter>
+    </Midl>
+    <Midl Include="Midi2AssignableControllerMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi2\Channel Voice</Filter>
+    </Midl>
+    <Midl Include="Midi2AssignablePerNoteControllerMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi2\Channel Voice</Filter>
+    </Midl>
+    <Midl Include="Midi2ChannelPressureMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi2\Channel Voice</Filter>
+    </Midl>
+    <Midl Include="Midi2ChannelVoiceMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi2\Channel Voice</Filter>
+    </Midl>
+    <Midl Include="Midi2ControlChangeMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi2\Channel Voice</Filter>
+    </Midl>
+    <Midl Include="Midi2JitterReductionClockMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi2\Utility</Filter>
+    </Midl>
+    <Midl Include="Midi2JitterReductionTimestampMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi2\Utility</Filter>
+    </Midl>
+    <Midl Include="Midi2NoopMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi2\Utility</Filter>
+    </Midl>
+    <Midl Include="Midi2NoteOffMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi2\Channel Voice</Filter>
+    </Midl>
+    <Midl Include="Midi2PerNoteManagementMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi2\Channel Voice</Filter>
+    </Midl>
+    <Midl Include="Midi2PerNotePitchBendMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi2\Channel Voice</Filter>
+    </Midl>
+    <Midl Include="Midi2PitchBendMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi2\Channel Voice</Filter>
+    </Midl>
+    <Midl Include="Midi2PolyPressureMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi2\Channel Voice</Filter>
+    </Midl>
+    <Midl Include="Midi2ProgramChangeMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi2\Channel Voice</Filter>
+    </Midl>
+    <Midl Include="Midi2RegisteredControllerMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi2\Channel Voice</Filter>
+    </Midl>
+    <Midl Include="Midi2RegisteredPerNoteControllerMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi2\Channel Voice</Filter>
+    </Midl>
+    <Midl Include="Midi2RelativeAssignableControllerMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi2\Channel Voice</Filter>
+    </Midl>
+    <Midl Include="Midi2RelativeRegisteredControllerMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi2\Channel Voice</Filter>
+    </Midl>
+    <Midl Include="Midi2UtilityMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi2\Utility</Filter>
+    </Midl>
+    <Midl Include="Midi1ChannelPressureMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi1\Channel Voice</Filter>
+    </Midl>
+    <Midl Include="Midi1ChannelVoiceMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi1\Channel Voice</Filter>
+    </Midl>
+    <Midl Include="Midi1ControlChangeMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi1\Channel Voice</Filter>
+    </Midl>
+    <Midl Include="Midi1NoteOffMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi1\Channel Voice</Filter>
+    </Midl>
+    <Midl Include="Midi1NoteOnMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi1\Channel Voice</Filter>
+    </Midl>
+    <Midl Include="Midi1PitchBendMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi1\Channel Voice</Filter>
+    </Midl>
+    <Midl Include="Midi1PolyPressureMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi1\Channel Voice</Filter>
+    </Midl>
+    <Midl Include="Midi1ProgramChangeMessage.idl">
+      <Filter>Api\Helpers\Messages\Midi1\Channel Voice</Filter>
+    </Midl>
+    <Midl Include="IMidiDevice.idl">
+      <Filter>Api\Devices</Filter>
+    </Midl>
+    <Midl Include="IMidiEndpoint.idl">
+      <Filter>Api\Devices</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointSettings.idl">
+      <Filter>Api\Devices</Filter>
+    </Midl>
+    <Midl Include="MidiStream.idl">
+      <Filter>Api\Devices</Filter>
+    </Midl>
+    <Midl Include="MidiSession.idl">
+      <Filter>Api\Session</Filter>
+    </Midl>
+    <Midl Include="MidiSessionSettings.idl">
+      <Filter>Api\Session</Filter>
+    </Midl>
+    <Midl Include="Ump32.idl">
+      <Filter>Api\Devices</Filter>
+    </Midl>
+    <Midl Include="Ump64.idl">
+      <Filter>Api\Devices</Filter>
+    </Midl>
+    <Midl Include="Ump96.idl">
+      <Filter>Api\Devices</Filter>
+    </Midl>
+    <Midl Include="Ump128.idl">
+      <Filter>Api\Devices</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

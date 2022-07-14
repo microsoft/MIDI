@@ -7,8 +7,6 @@ import "MidiStream.idl";
 
 namespace Windows.Devices.Midi
 {
-
-
     runtimeclass MidiMessageParser
     {
         // TODO: change Boolean to the message base class
