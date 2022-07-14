@@ -1,16 +1,18 @@
-# API Specifications
+# API Specifications: Virtual MIDI Plug-in
 
 These are not final designs, but rather are brainstorming design ideas. All code is pseudo-c code with just enough syntax to get the point across. You will notice a real lack of semicolons, for example. :)
 
-
-
-## Virtual Devices
+Virtual MIDI is implemented as another Device + Endpoint combination.
 
 Virtual devices are unlike hardware devices in that they can be added at runtime by code. The implementation for virtual devices is through a device/transport plugin, not in the core API itself. This is consistent with how other device/transports will be implemented.
 
-### Adding a virtual device
+## Using a virtual device
 
-The API won't know about the plugins types, so API functions will work off of interfaces. The client
+API functions work off of interfaces. To use a virtual device, the client code does not need to know the device/endpoints are virtual. Instead, they are used like any other device/endpoint.
+
+## Adding a virtual device from code
+
+The API won't know about the plugin types, so API functions will work off of interfaces. The client
 code can reference the plugin types through a metadata file
 
 The user can create virtual devices and endpoints through the setings app (and facilitate automatic 
@@ -31,3 +33,25 @@ MidiVirtualEndpointSettings endpointSettings    // type Supplied by plugin
 
 _endpoint = _device.AddEndpoint((IMidiEndpointSettings)endpointSettings)
 ```
+
+The settings for the endpoint are particularly important here.
+
+```cpp
+// TODO 
+class MidiVirtualEndpointSettings
+{
+    // TODO: Protocol support
+    // TODO: Groups
+    // TODO: MIDI CI information
+    // TODO: Endpoint name
+    // TODO: Type of streams (in, out, both)
+    // TODO: Id
+    // etc.
+}
+```
+
+TODO
+
+## Adding a virtual device through the settings app
+
+TODO: UI specs

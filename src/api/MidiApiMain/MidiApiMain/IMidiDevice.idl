@@ -37,7 +37,13 @@ namespace Windows.Devices.Midi
         String TransportIconFileName{ get; };       // name of the icon for the type of transport implemented here. Not full path.
         String TransportType{ get; };               // BLE, USB, Network, Virtual, etc.
         String TransportDescription{ get; };        
-    };
+
+        // only for endpoints which can be added at runtime, like virtual
+        IMidiEndpoint AddEndpoint(IMidiEndpointSettings settings);
+        
+
+
+};
 
 
 

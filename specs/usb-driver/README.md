@@ -1,12 +1,7 @@
-# Specifications
+# USB MIDI 2.0 Driver Specs
 
-## USB Driver Specs
+TODO
 
-[Start here for the USB MIDI 2.0 driver specs](usb-driver/usb-driver-spec-main.md)
+# Compatibility with WinMM MIDI (Win32 MIDI)
 
-
-## API Specs
-
-[Start here for the API](api/api-spec-main.md)
-
-## 
+TODO
