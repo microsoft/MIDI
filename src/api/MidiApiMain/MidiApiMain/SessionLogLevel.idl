@@ -1,0 +1,15 @@
+
+
+namespace Windows.Devices.Midi
+{
+	enum SessionLogLevel
+	{
+		None,					// log nothing. Default production setting with best perf.
+		Errors,					// log only errors
+		Infrastructure,			// log infrastructure stuff like adding/enumerating devices, etc.
+		IncomingMessages,		// log only incoming messages
+		OutgoingMessages,		// log only outgoing messages
+		AllMessages,			// log all messages
+		All						// log everything possible
+	};
+}

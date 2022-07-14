@@ -19,12 +19,12 @@ The user can create virtual devices and endpoints through the setings app (and f
 routing between them), but apps also need the ability to expose themselves as an endpoint at any time.
 
 ```cpp
-// code-created virtual devices are scoped to the session, and disappear
-// when the session is closed or goes out of scope.
+// code-created virtual devices are scoped to the session, and 
+// disappear when the session is closed or goes out of scope.
 
 MidiVirtualDeviceSettings deviceSettings        // type Supplied by plugin
 
-_device = _session.AddDevice(guidOfVirtualDevicePlugin, nameOfDevice, (IMidiDeviceSettings)deviceSettings)
+_device = _session.AddDevice(typeOfPlugin, (IMidiDeviceSettings)deviceSettings)
 
 // VirtualEndpointSettings will contain things such as toggles for InputEnabled
 // OutputEnabled, etc.
@@ -37,7 +37,7 @@ _endpoint = _device.AddEndpoint((IMidiEndpointSettings)endpointSettings)
 The settings for the endpoint are particularly important here.
 
 ```cpp
-// TODO 
+// TODO: Settings the app will need to provide when creating the endpoint
 class MidiVirtualEndpointSettings
 {
     // TODO: Protocol support
@@ -45,8 +45,18 @@ class MidiVirtualEndpointSettings
     // TODO: MIDI CI information
     // TODO: Endpoint name
     // TODO: Type of streams (in, out, both)
-    // TODO: Id
     // etc.
+}
+```
+
+Device settings
+
+```cpp
+// TODO: Settings the app will need to provide when creating the device
+class MidiVirtualDeviceSettings
+{
+    // TODO: Device name
+    // TODO: ANy other metadata
 }
 ```
 

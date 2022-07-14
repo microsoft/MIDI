@@ -1,12 +1,12 @@
+import "SessionLogLevel.idl";
 
 namespace Windows.Devices.Midi
 {
+
     [default_interface]
     runtimeclass MidiSessionSettings
     {
-        // TODO   
-        String TempFoo{ get; };
-
+        SessionLogLevel LogLevel{ get; set; };
     };
 
 }

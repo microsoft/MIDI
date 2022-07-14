@@ -57,4 +57,7 @@ namespace Windows.Devices.Midi
 
     // Maybe the endpoint contains an vector of protocol information by group rather
     // than hold that information at the endpoint level
+
+    // Rethink the streams. All send/receive will happen at session level
+    // But this needs to support that session-level sending through a public interface
 }

@@ -114,7 +114,6 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
-
   <ItemGroup>
     <ClInclude Include="Midi1ChannelPressureMessage.h">
       <DependentUpon>Midi1ChannelPressureMessage.idl</DependentUpon>
@@ -373,6 +372,7 @@
     <Midl Include="MidiSessionSettings.idl" />
     <Midl Include="MidiSession.idl" />
     <Midl Include="MidiStream.idl" />
+    <Midl Include="SessionLogLevel.idl" />
     <Midl Include="Ump128.idl" />
     <Midl Include="Ump32.idl" />
     <Midl Include="Ump64.idl" />

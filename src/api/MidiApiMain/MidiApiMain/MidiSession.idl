@@ -4,19 +4,22 @@ import "IMidiEndpoint.idl";
 import "MidiEndpointSettings.idl";
 import "MidiSessionSettings.idl";
 
+import "SessionLogLevel.idl";
+
 namespace Windows.Devices.Midi
 {
+    using Windows.Foundation;
 
     runtimeclass MidiSession
     {
         // properties ------------------------------------------
 
-        String Id{ get; };
-        String Name{ get; };
-        String ProcessName{ get; };
-        UInt32 ProcessId{ get; };   // same as ProcessDiagnosticInfo.ProcessId property
-        Windows.Foundation.DateTime OpenedAt{ get; };
-
+        String Id{ get; };                      // Generated GUID for this session
+        String Name{ get; set; };               // Name provided by the app opening the session
+        String ProcessName{ get; };             // name of the Windows process
+        UInt32 ProcessId{ get; };               // same as ProcessDiagnosticInfo.ProcessId property
+        DateTime CreatedTime{ get; };           // Date/time of when this session was created
+        SessionLogLevel LogLevel{ get; set; };  // Log level for the session
 
         // Lifetime functions ----------------------------------
 
@@ -25,16 +28,48 @@ namespace Windows.Devices.Midi
 
         void Close();
 
-        // endpoints
 
-        IMidiEndpoint OpenEndpoint(String deviceId, String endpointId, MidiEndpointSettings settings);
+        // Devices and endpoints -------------------------------
+
+        // only for devices and endpoints which can be added at runtime, like virtual
+        IMidiDevice AddDevice(IMidiDeviceSettings settings);
+        IMidiEndpoint AddEndpoint(String deviceId, IMidiEndpointSettings settings);
+
+        IMidiDevice RemoveDevice(String deviceId);
+        IMidiEndpoint RemoveEndpoint(String deviceId, String endpointId);
+
+        // device and endpoint access / enumeration ------------
+        IMidiDevice GetDevice(String deviceId);
+        IMidiDevice GetEndpoint(String deviceId, String endpointId);
+
+        IVector<IMidiDevice> GetAllDevices();
+        IVector<IMidiEndpoint> GetAllEndpoints();
+
+        IVector<IMidiEndpoint> GetDeviceEndpoints(String deviceId);
+
+        // TODO: Enumeration change callbacks
+        // TODO: CI-triggered change callbacks?
+
+
+        // Open / close an endpoint ----------------------------
+
+        IMidiEndpoint OpenEndpoint(String deviceId, String endpointId, IMidiEndpointSettings settings);
+        void CloseEndpoint(String deviceId, String endpointId);
+
+
+
+
+
+        // TODO: message receive callbacks, message send functions, etc.
+
 
 
 
         // utility functions -----------------------------------
 
-        void Panic();
-
+        void Panic();                                       // panic all devices/endpoints
+        void Panic(String deviceId);                        // panic single device and its endpoints
+        void Panic(String deviceId, string endpointId);     // panic single endpoint
 
 
     }

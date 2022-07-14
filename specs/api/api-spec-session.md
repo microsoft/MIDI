@@ -4,7 +4,7 @@ These are not final designs, but rather are brainstorming design ideas. All code
 
 ## Session Management
 
-Sessions are the entrypoint into the API. In addition to this, they provide the required user-facing diagnostic data of which apps have which sessions and endpoints open.
+Sessions are the entrypoint into the API. In addition to this, they capture the required user-facing diagnostic data of which apps have which sessions and endpoints open.
 
 ```cpp
 // MidiSessionSettings is where we can set flags and other session-global
@@ -22,6 +22,13 @@ _session = MidiSession.Create("My song", settings)
 // closing the session closes all the open endpoints/devices
 // Good practice, but should also happen automatically if session goes out of scope
 _session.Close()
+```
+
+```cpp
+class MidiSessionSettings
+{
+    // TODO: options for how to get messages, what to handle, etc
+}
 ```
 
 TODO: We want the user to be in control. So we may allow them the ability to terminate a session using the settings tool (with appropriate warnings). If we do that, there will be a session terminated notification sent to the app which owns the session.

@@ -40,6 +40,7 @@ namespace Windows.Devices.Midi
 
         // only for endpoints which can be added at runtime, like virtual
         IMidiEndpoint AddEndpoint(IMidiEndpointSettings settings);
+
         
 
 

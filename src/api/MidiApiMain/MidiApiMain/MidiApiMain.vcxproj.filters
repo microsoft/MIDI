@@ -194,6 +194,9 @@
     <Midl Include="Ump128.idl">
       <Filter>Api\Devices</Filter>
     </Midl>
+    <Midl Include="SessionLogLevel.idl">
+      <Filter>Api\Session</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="MidiApiMain.def" />
