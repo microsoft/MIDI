@@ -61,6 +61,7 @@ namespace Windows.Devices.Midi
 
 
 
+
         // utility functions -----------------------------------
 
         void Panic();                                       // panic all devices/endpoints
