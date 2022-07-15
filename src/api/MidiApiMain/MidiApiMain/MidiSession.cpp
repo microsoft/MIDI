@@ -5,7 +5,7 @@
 
 namespace winrt::Windows::Devices::Midi::implementation
 {
-    winrt::Windows::Devices::Midi::MidiSession MidiSession::Create(hstring const& name, winrt::Windows::Devices::Midi::MidiSessionSettings const& settings)
+    winrt::Windows::Devices::Midi::MidiSession MidiSession::Create(hstring const& name, winrt::Windows::Devices::Midi::MidiSessionCreateSettings const& settings)
     {
         throw hresult_not_implemented();
     }
@@ -45,51 +45,47 @@ namespace winrt::Windows::Devices::Midi::implementation
     {
         throw hresult_not_implemented();
     }
+    winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi::IMidiDevice> MidiSession::Devices()
+    {
+        throw hresult_not_implemented();
+    }
     void MidiSession::Close()
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Devices::Midi::IMidiDevice MidiSession::AddDevice(winrt::Windows::Devices::Midi::IMidiDeviceSettings const& settings)
+    winrt::Windows::Devices::Midi::IMidiDevice MidiSession::CreateDevice(winrt::Windows::Devices::Midi::IMidiDeviceCreateSettings const& settings)
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Devices::Midi::IMidiEndpoint MidiSession::AddEndpoint(hstring const& deviceId, winrt::Windows::Devices::Midi::IMidiEndpointSettings const& settings)
+    winrt::Windows::Devices::Midi::IMidiDevice MidiSession::DestroyDevice(hstring const& deviceId)
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Devices::Midi::IMidiDevice MidiSession::RemoveDevice(hstring const& deviceId)
+    winrt::Windows::Devices::Midi::IMidiEndpoint MidiSession::OpenDevice(hstring const& deviceId, winrt::Windows::Devices::Midi::IMidiDeviceOpenSettings const& settings)
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Devices::Midi::IMidiEndpoint MidiSession::RemoveEndpoint(hstring const& deviceId, hstring const& endpointId)
+    void MidiSession::CloseDevice(hstring const& deviceId, hstring const& endpointId)
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Devices::Midi::IMidiDevice MidiSession::GetDevice(hstring const& deviceId)
+    winrt::Windows::Devices::Midi::IMidiEndpoint MidiSession::CreateEndpoint(hstring const& deviceId, winrt::Windows::Devices::Midi::IMidiEndpointCreateSettings const& settings)
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Devices::Midi::IMidiDevice MidiSession::GetEndpoint(hstring const& deviceId, hstring const& endpointId)
+    winrt::Windows::Devices::Midi::IMidiEndpoint MidiSession::DestroyEndpoint(hstring const& deviceId, hstring const& endpointId)
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi::IMidiDevice> MidiSession::GetAllDevices()
-    {
-        throw hresult_not_implemented();
-    }
-    winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi::IMidiEndpoint> MidiSession::GetAllEndpoints()
-    {
-        throw hresult_not_implemented();
-    }
-    winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi::IMidiEndpoint> MidiSession::GetDeviceEndpoints(hstring const& deviceId)
-    {
-        throw hresult_not_implemented();
-    }
-    winrt::Windows::Devices::Midi::IMidiEndpoint MidiSession::OpenEndpoint(hstring const& deviceId, hstring const& endpointId, winrt::Windows::Devices::Midi::IMidiEndpointSettings const& settings)
+    winrt::Windows::Devices::Midi::IMidiEndpoint MidiSession::OpenEndpoint(hstring const& deviceId, hstring const& endpointId, winrt::Windows::Devices::Midi::IMidiEndpointOpenSettings const& settings)
     {
         throw hresult_not_implemented();
     }
     void MidiSession::CloseEndpoint(hstring const& deviceId, hstring const& endpointId)
+    {
+        throw hresult_not_implemented();
+    }
+    winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi::IMidiEndpoint> MidiSession::GetAllEndpoints()
     {
         throw hresult_not_implemented();
     }

@@ -60,6 +60,12 @@
     <ClCompile Include="IMidiDeviceSettings.cpp">
       <Filter>Api\Devices</Filter>
     </ClCompile>
+    <ClCompile Include="Generated Files\sources\IMidiDeviceOpenSettings.cpp">
+      <Filter>Api\Devices</Filter>
+    </ClCompile>
+    <ClCompile Include="Generated Files\sources\IMidiEndpointCreateSettings.cpp">
+      <Filter>Api\Devices</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -70,6 +76,12 @@
       <Filter>Api\Helpers\Messages</Filter>
     </ClInclude>
     <ClInclude Include="IMidiDeviceSettings.h">
+      <Filter>Api\Devices</Filter>
+    </ClInclude>
+    <ClInclude Include="Generated Files\sources\IMidiDeviceOpenSettings.h">
+      <Filter>Api\Devices</Filter>
+    </ClInclude>
+    <ClInclude Include="Generated Files\sources\IMidiEndpointCreateSettings.h">
       <Filter>Api\Devices</Filter>
     </ClInclude>
   </ItemGroup>
@@ -176,7 +188,7 @@
     <Midl Include="IMidiEndpoint.idl">
       <Filter>Api\Devices</Filter>
     </Midl>
-    <Midl Include="IMidiEndpointSettings.idl">
+    <Midl Include="IMidiEndpointOpenSettings.idl">
       <Filter>Api\Devices</Filter>
     </Midl>
     <Midl Include="MidiStream.idl">
@@ -185,7 +197,7 @@
     <Midl Include="MidiSession.idl">
       <Filter>Api\Session</Filter>
     </Midl>
-    <Midl Include="MidiSessionSettings.idl">
+    <Midl Include="MidiSessionCreateSettings.idl">
       <Filter>Api\Session</Filter>
     </Midl>
     <Midl Include="Ump32.idl">
@@ -203,7 +215,13 @@
     <Midl Include="MidiSessionLogLevel.idl">
       <Filter>Api\Session</Filter>
     </Midl>
-    <Midl Include="IMidiDeviceSettings.idl">
+    <Midl Include="IMidiDeviceCreateSettings.idl">
+      <Filter>Api\Devices</Filter>
+    </Midl>
+    <Midl Include="IMidiDeviceOpenSettings.idl">
+      <Filter>Api\Devices</Filter>
+    </Midl>
+    <Midl Include="IMidiEndpointCreateSettings.idl">
       <Filter>Api\Devices</Filter>
     </Midl>
   </ItemGroup>

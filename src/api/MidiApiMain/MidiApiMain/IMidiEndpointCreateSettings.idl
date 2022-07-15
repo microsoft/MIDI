@@ -1,7 +1,7 @@
 namespace Windows.Devices.Midi
 {
     [default_interface]
-    runtimeclass IMidiEndpointSettings
+    runtimeclass IMidiEndpointCreateSettings
     {
 
         // TODO   

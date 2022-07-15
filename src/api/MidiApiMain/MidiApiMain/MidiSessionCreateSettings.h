@@ -1,11 +1,12 @@
 #pragma once
-#include "MidiSessionSettings.g.h"
+#include "MidiSessionCreateSettings.g.h"
+
 
 namespace winrt::Windows::Devices::Midi::implementation
 {
-    struct MidiSessionSettings : MidiSessionSettingsT<MidiSessionSettings>
+    struct MidiSessionCreateSettings : MidiSessionCreateSettingsT<MidiSessionCreateSettings>
     {
-        MidiSessionSettings() = default;
+        MidiSessionCreateSettings() = default;
 
         winrt::Windows::Devices::Midi::MidiSessionLogLevel LogLevel();
         void LogLevel(winrt::Windows::Devices::Midi::MidiSessionLogLevel const& value);

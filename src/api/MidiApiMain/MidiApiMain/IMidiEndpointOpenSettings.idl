@@ -1,0 +1,10 @@
+namespace Windows.Devices.Midi
+{
+    [default_interface]
+    runtimeclass IMidiEndpointOpenSettings
+    {
+
+        // TODO   
+        String TempFoo{ get; };
+    };
+}

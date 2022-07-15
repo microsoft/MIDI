@@ -1,9 +1,13 @@
 import "IMidiDevice.idl";
 import "IMidiEndpoint.idl";
 
-import "IMidiDeviceSettings.idl";
-import "IMidiEndpointSettings.idl";
-import "MidiSessionSettings.idl";
+import "IMidiDeviceOpenSettings.idl";
+import "IMidiDeviceCreateSettings.idl";
+
+import "IMidiEndpointOpenSettings.idl";
+import "IMidiEndpointCreateSettings.idl";
+
+import "MidiSessionCreateSettings.idl";
 
 import "MidiSessionLogLevel.idl";
 
@@ -18,48 +22,41 @@ namespace Windows.Devices.Midi
         String ProcessName{ get; };                         // name of the Windows process
         UInt32 ProcessId{ get; };                           // same as ProcessDiagnosticInfo.ProcessId property
         Windows.Foundation.DateTime CreatedTime{ get; };    // Date/time of when this session was created
-        MidiSessionLogLevel LogLevel{ get; set; };              // Log level for the session
+        MidiSessionLogLevel LogLevel{ get; set; };          // Log level for the session
+
+        IVector<IMidiDevice> Devices{ get; };               // vector containing all active devices. Auto-populated when session created
 
         // Lifetime functions ----------------------------------
 
-        static MidiSession Create(String name, MidiSessionSettings settings);
+        // Create: Creates a new session object, and registers the ID and key info
+        // with the server. Populates the session with all available MIDI devices.
+        static MidiSession Create(String name, MidiSessionCreateSettings settings);
         static MidiSession Create(String name);
-
         void Close();
 
 
-        // Devices and endpoints -------------------------------
+        // Device and endpoint lifetime ------------------------
+       
+        IMidiDevice CreateDevice(IMidiDeviceCreateSettings settings);    // only for devices and endpoints which can be added at runtime, like virtual
+        IMidiDevice DestroyDevice(String deviceId);                  // only for devices and endpoints which can be added at runtime, like virtual
+        IMidiEndpoint OpenDevice(String deviceId, IMidiDeviceOpenSettings settings);    // preps device, populates its endpoints
+        void CloseDevice(String deviceId, String endpointId);
 
-        // only for devices and endpoints which can be added at runtime, like virtual
-        IMidiDevice AddDevice(IMidiDeviceSettings settings);
-        IMidiEndpoint AddEndpoint(String deviceId, IMidiEndpointSettings settings);
-
-        IMidiDevice RemoveDevice(String deviceId);
-        IMidiEndpoint RemoveEndpoint(String deviceId, String endpointId);
-
-        // device and endpoint access / enumeration ------------
-        IMidiDevice GetDevice(String deviceId);
-        IMidiDevice GetEndpoint(String deviceId, String endpointId);
-
-        IVector<IMidiDevice> GetAllDevices();
-        IVector<IMidiEndpoint> GetAllEndpoints();
-
-        IVector<IMidiEndpoint> GetDeviceEndpoints(String deviceId);
-
-        // TODO: Enumeration change callbacks
-        // TODO: CI-triggered change callbacks?
-
-
-        // Open / close an endpoint ----------------------------
-
-        IMidiEndpoint OpenEndpoint(String deviceId, String endpointId, IMidiEndpointSettings settings);
+        IMidiEndpoint CreateEndpoint(String deviceId, IMidiEndpointCreateSettings settings); // only for devices and endpoints which can be added at runtime, like virtual
+        IMidiEndpoint DestroyEndpoint(String deviceId, String endpointId);           // only for devices and endpoints which can be added at runtime, like virtual
+        IMidiEndpoint OpenEndpoint(String deviceId, String endpointId, IMidiEndpointOpenSettings settings);
         void CloseEndpoint(String deviceId, String endpointId);
 
 
+        // TODO: Device Add/Remove/Change notification events
+        // TODO: Endpoint Add/Remove/Change notification events
+
+        IVector<IMidiEndpoint> GetAllEndpoints();       // helper function to get a flat list of endpoints
+
+        // TODO: CI-triggered change callbacks?
 
 
-
-        // TODO: message receive callbacks, message send functions, etc.
+        // TODO: message receive callbacks, message send functions, CI functions, etc.
 
 
 

@@ -1,6 +1,7 @@
 import "IMidiEndpoint.idl";
 import "IMidiPlugin.idl";
-import "IMidiEndpointSettings.idl";
+import "IMidiEndpointCreateSettings.idl";
+import "IMidiEndpointOpenSettings.idl";
 
 namespace Windows.Devices.Midi
 {
@@ -18,9 +19,6 @@ namespace Windows.Devices.Midi
         String IconFileName{ get; };                // File name of the icon for this device. Not full path, just file name.
         String Description{ get; };                 // Description of the device. Supplied by user.
 
-        // The main reason the device exists
-
-        IVector<IMidiEndpoint> Endpoints{ get; };   // All the in/out endpoints attached to this device
 
         // for devices which are backed by a system-level driver, like USB MIDI 2.0
         // May be better to do this as a nullable DriverInformation property and stick
@@ -40,11 +38,16 @@ namespace Windows.Devices.Midi
         String TransportType{ get; };               // BLE, USB, Network, Virtual, etc.
         String TransportDescription{ get; };        
 
-        // only for endpoints which can be added at runtime, like virtual
-        IMidiEndpoint AddEndpoint(IMidiEndpointSettings settings);
 
-        
+        // The main reason the device exists
 
+        IVector<IMidiEndpoint> Endpoints{ get; };   // All the in/out/both endpoints attached to this device
+
+        // Endpoint lifetime (this is also what is called from the session)
+        IMidiEndpoint CreateEndpoint(IMidiEndpointCreateSettings settings);        // only for devices and endpoints which can be added at runtime, like virtual
+        IMidiEndpoint DestroyEndpoint(String endpointId);                       // only for devices and endpoints which can be added at runtime, like virtual
+        IMidiEndpoint OpenEndpoint(String endpointId, IMidiEndpointOpenSettings settings);
+        void CloseEndpoint(String endpointId);
 
 };
 
