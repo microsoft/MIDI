@@ -1,4 +1,4 @@
-import "SessionLogLevel.idl";
+import "MidiSessionLogLevel.idl";
 
 namespace Windows.Devices.Midi
 {
@@ -6,7 +6,7 @@ namespace Windows.Devices.Midi
     [default_interface]
     runtimeclass MidiSessionSettings
     {
-        SessionLogLevel LogLevel{ get; set; };
+        MidiSessionLogLevel LogLevel{ get; set; };
     };
 
 }

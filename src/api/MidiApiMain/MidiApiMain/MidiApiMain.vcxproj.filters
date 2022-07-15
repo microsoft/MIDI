@@ -57,6 +57,9 @@
     <ClCompile Include="MidiMessageParser.cpp">
       <Filter>Api\Helpers\Messages</Filter>
     </ClCompile>
+    <ClCompile Include="IMidiDeviceSettings.cpp">
+      <Filter>Api\Devices</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -65,6 +68,9 @@
     </ClInclude>
     <ClInclude Include="MidiMessageParser.h">
       <Filter>Api\Helpers\Messages</Filter>
+    </ClInclude>
+    <ClInclude Include="IMidiDeviceSettings.h">
+      <Filter>Api\Devices</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -170,7 +176,7 @@
     <Midl Include="IMidiEndpoint.idl">
       <Filter>Api\Devices</Filter>
     </Midl>
-    <Midl Include="MidiEndpointSettings.idl">
+    <Midl Include="IMidiEndpointSettings.idl">
       <Filter>Api\Devices</Filter>
     </Midl>
     <Midl Include="MidiStream.idl">
@@ -194,8 +200,11 @@
     <Midl Include="Ump128.idl">
       <Filter>Api\Devices</Filter>
     </Midl>
-    <Midl Include="SessionLogLevel.idl">
+    <Midl Include="MidiSessionLogLevel.idl">
       <Filter>Api\Session</Filter>
+    </Midl>
+    <Midl Include="IMidiDeviceSettings.idl">
+      <Filter>Api\Devices</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

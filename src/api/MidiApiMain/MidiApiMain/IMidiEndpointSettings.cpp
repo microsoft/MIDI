@@ -1,10 +1,10 @@
 #include "pch.h"
-#include "MidiEndpointSettings.h"
-#include "MidiEndpointSettings.g.cpp"
+#include "IMidiEndpointSettings.h"
+#include "IMidiEndpointSettings.g.cpp"
 
 namespace winrt::Windows::Devices::Midi::implementation
 {
-    hstring MidiEndpointSettings::TempFoo()
+    hstring IMidiEndpointSettings::TempFoo()
     {
         throw hresult_not_implemented();
     }

@@ -1,25 +1,24 @@
 import "IMidiDevice.idl";
 import "IMidiEndpoint.idl";
 
-import "MidiEndpointSettings.idl";
+import "IMidiDeviceSettings.idl";
+import "IMidiEndpointSettings.idl";
 import "MidiSessionSettings.idl";
 
-import "SessionLogLevel.idl";
+import "MidiSessionLogLevel.idl";
 
 namespace Windows.Devices.Midi
 {
-    using Windows.Foundation;
-
     runtimeclass MidiSession
     {
         // properties ------------------------------------------
 
-        String Id{ get; };                      // Generated GUID for this session
-        String Name{ get; set; };               // Name provided by the app opening the session
-        String ProcessName{ get; };             // name of the Windows process
-        UInt32 ProcessId{ get; };               // same as ProcessDiagnosticInfo.ProcessId property
-        DateTime CreatedTime{ get; };           // Date/time of when this session was created
-        SessionLogLevel LogLevel{ get; set; };  // Log level for the session
+        String Id{ get; };                                  // Generated GUID for this session
+        String Name{ get; set; };                           // Name provided by the app opening the session
+        String ProcessName{ get; };                         // name of the Windows process
+        UInt32 ProcessId{ get; };                           // same as ProcessDiagnosticInfo.ProcessId property
+        Windows.Foundation.DateTime CreatedTime{ get; };    // Date/time of when this session was created
+        MidiSessionLogLevel LogLevel{ get; set; };              // Log level for the session
 
         // Lifetime functions ----------------------------------
 
@@ -69,7 +68,7 @@ namespace Windows.Devices.Midi
 
         void Panic();                                       // panic all devices/endpoints
         void Panic(String deviceId);                        // panic single device and its endpoints
-        void Panic(String deviceId, string endpointId);     // panic single endpoint
+        void Panic(String deviceId, String endpointId);     // panic single endpoint
 
 
     }

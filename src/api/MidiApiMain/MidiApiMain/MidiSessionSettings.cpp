@@ -4,7 +4,11 @@
 
 namespace winrt::Windows::Devices::Midi::implementation
 {
-    hstring MidiSessionSettings::TempFoo()
+    winrt::Windows::Devices::Midi::MidiSessionLogLevel MidiSessionSettings::LogLevel()
+    {
+        throw hresult_not_implemented();
+    }
+    void MidiSessionSettings::LogLevel(winrt::Windows::Devices::Midi::MidiSessionLogLevel const& value)
     {
         throw hresult_not_implemented();
     }

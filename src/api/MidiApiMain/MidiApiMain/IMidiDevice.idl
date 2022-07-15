@@ -1,4 +1,6 @@
 import "IMidiEndpoint.idl";
+import "IMidiPlugin.idl";
+import "IMidiEndpointSettings.idl";
 
 namespace Windows.Devices.Midi
 {

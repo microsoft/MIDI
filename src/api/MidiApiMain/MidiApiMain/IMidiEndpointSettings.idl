@@ -1,9 +1,8 @@
 namespace Windows.Devices.Midi
 {
     [default_interface]
-    runtimeclass MidiEndpointSettings
+    runtimeclass IMidiEndpointSettings
     {
-     //   MidiEndpointSettings();
 
         // TODO   
         String TempFoo{ get; };

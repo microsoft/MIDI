@@ -115,6 +115,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="IMidiDeviceSettings.h" />
     <ClInclude Include="Midi1ChannelPressureMessage.h">
       <DependentUpon>Midi1ChannelPressureMessage.idl</DependentUpon>
     </ClInclude>
@@ -218,11 +219,12 @@
     <ClInclude Include="MidiSessionSettings.h">
       <DependentUpon>MidiSessionSettings.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiEndpointSettings.h">
-      <DependentUpon>MidiEndpointSettings.idl</DependentUpon>
+    <ClInclude Include="IMidiEndpointSettings.h">
+      <DependentUpon>IMidiEndpointSettings.idl</DependentUpon>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="IMidiDeviceSettings.cpp" />
     <ClCompile Include="Midi1ChannelPressureMessage.cpp">
       <DependentUpon>Midi1ChannelPressureMessage.idl</DependentUpon>
     </ClCompile>
@@ -329,12 +331,13 @@
     <ClCompile Include="MidiSessionSettings.cpp">
       <DependentUpon>MidiSessionSettings.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiEndpointSettings.cpp">
-      <DependentUpon>MidiEndpointSettings.idl</DependentUpon>
+    <ClCompile Include="IMidiEndpointSettings.cpp">
+      <DependentUpon>IMidiEndpointSettings.idl</DependentUpon>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="IMidiDevice.idl" />
+    <Midl Include="IMidiDeviceSettings.idl" />
     <Midl Include="IMidiEndpoint.idl" />
     <Midl Include="IMidiIncomingMessageProcessor.idl" />
     <Midl Include="IMidiOutgoingMessageProcessor.idl" />
@@ -366,13 +369,13 @@
     <Midl Include="Midi2RelativeAssignableControllerMessage.idl" />
     <Midl Include="Midi2RelativeRegisteredControllerMessage.idl" />
     <Midl Include="Midi2UtilityMessage.idl" />
-    <Midl Include="MidiEndpointSettings.idl" />
+    <Midl Include="IMidiEndpointSettings.idl" />
     <Midl Include="MidiMessage.idl" />
     <Midl Include="MidiMessageParser.idl" />
     <Midl Include="MidiSessionSettings.idl" />
     <Midl Include="MidiSession.idl" />
     <Midl Include="MidiStream.idl" />
-    <Midl Include="SessionLogLevel.idl" />
+    <Midl Include="MidiSessionLogLevel.idl" />
     <Midl Include="Ump128.idl" />
     <Midl Include="Ump32.idl" />
     <Midl Include="Ump64.idl" />
