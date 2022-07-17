@@ -9,7 +9,8 @@ This is an official Microsoft project.
 > the file headers for any additional copyright notices. A huge thank you to AMEI and its
 > member companies for making this happen!
 
-Building upon the work we did with WinRT MIDI, we're making some big enhancements and also
+Building upon the work we did with WinRT MIDI, and taking cues from the flatter approach
+offered by the WinMM/Win32 API today, we're making some big enhancements and also
 addressing areas where we could do better with that API. Like the existing WinRT API, this
 API may be called from a variety of langauges, including [C++/WinRT](https://docs.microsoft.com/windows/uwp/cpp-and-winrt-apis/), from desktop apps and more.
 
