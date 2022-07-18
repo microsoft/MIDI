@@ -1,6 +1,6 @@
+
 namespace Windows.Devices.Midi
 {
-
     struct Ump128
     {
         UInt32 Word1;
@@ -8,6 +8,4 @@ namespace Windows.Devices.Midi
         UInt32 Word3;
         UInt32 Word4;
     };
-
-
 }

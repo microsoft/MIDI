@@ -390,6 +390,7 @@
     <Midl Include="IMidiEndpointOpenSettings.idl" />
     <Midl Include="MidiMessage.idl" />
     <Midl Include="MidiMessageParser.idl" />
+    <Midl Include="MidiMessageReceivedEventArgs.idl" />
     <Midl Include="MidiSessionCreateSettings.idl" />
     <Midl Include="MidiSession.idl" />
     <Midl Include="MidiStream.idl" />

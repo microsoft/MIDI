@@ -11,6 +11,8 @@ import "MidiSessionCreateSettings.idl";
 
 import "MidiSessionLogLevel.idl";
 
+import "MidiMessageReceivedEventArgs.idl";
+
 namespace Windows.Devices.Midi
 {
     runtimeclass MidiSession

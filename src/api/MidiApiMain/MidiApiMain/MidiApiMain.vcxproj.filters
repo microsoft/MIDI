@@ -57,15 +57,6 @@
     <ClCompile Include="MidiMessageParser.cpp">
       <Filter>Api\Helpers\Messages</Filter>
     </ClCompile>
-    <ClCompile Include="IMidiDeviceSettings.cpp">
-      <Filter>Api\Devices</Filter>
-    </ClCompile>
-    <ClCompile Include="Generated Files\sources\IMidiDeviceOpenSettings.cpp">
-      <Filter>Api\Devices</Filter>
-    </ClCompile>
-    <ClCompile Include="Generated Files\sources\IMidiEndpointCreateSettings.cpp">
-      <Filter>Api\Devices</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -74,15 +65,6 @@
     </ClInclude>
     <ClInclude Include="MidiMessageParser.h">
       <Filter>Api\Helpers\Messages</Filter>
-    </ClInclude>
-    <ClInclude Include="IMidiDeviceSettings.h">
-      <Filter>Api\Devices</Filter>
-    </ClInclude>
-    <ClInclude Include="Generated Files\sources\IMidiDeviceOpenSettings.h">
-      <Filter>Api\Devices</Filter>
-    </ClInclude>
-    <ClInclude Include="Generated Files\sources\IMidiEndpointCreateSettings.h">
-      <Filter>Api\Devices</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -223,6 +205,9 @@
     </Midl>
     <Midl Include="IMidiEndpointCreateSettings.idl">
       <Filter>Api\Devices</Filter>
+    </Midl>
+    <Midl Include="MidiMessageReceivedEventArgs.idl">
+      <Filter>Api</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

@@ -1,3 +1,4 @@
+
 namespace Windows.Devices.Midi
 {
     struct Ump32
