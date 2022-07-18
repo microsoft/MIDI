@@ -54,6 +54,7 @@ The repo contains many different projects and stand-alone files which make up Wi
 | /get-started         | Root for all samples and documentation |
 | /get-started/docs    | Developer and user documentation |
 | /get-started/samples | Developer samples for using the API |
+| /specs               | Specifications, when needed |
 | /src                 | Main source (non-documentation/sample) root |
 | /src/api             | MIDI API for Windows |
 | /src/plug-ins        | Processing, transport, and other plug-ins |
@@ -80,7 +81,7 @@ This is a living and growing API. The first phase is to release a complete and w
 > Known Tracked Bugs
 > https://github.com/microsoft/MIDI/labels/bug
 
-### Short-term project big "1.0" features
+### Minimum 1.0 release features
 
 Here are some selected big rocks intended for the first release. Our top priority for the first release is a fully functional MIDI 2.0, 1.0, and MIDI-CI driver and API, usable with third-party applications and devices.
 
@@ -94,16 +95,22 @@ accessible to, at a minimum, C++ and C# applications.
   * More detailed information about devices (driver details, manufacturer info, etc.)
   * Transport information so apps know how the device is connected (USB, BLE, Network, etc.)
   * more
+
+### Additional Short-term project big "1.0" features
+
+Time and resources permitting, these will also be part of 1.0 release. If they don't make it in there, they will be in a subsequent release
+
 * Bluetooth MIDI 1.0 (currently supported in WinRT MIDI or through third-party drivers)
+* Virtual / App-to-App MIDI
+* Basic end-user settings app
 
 The majority of this infrastructure development will be done by the core team, mentioned below. We
 certainly encourage you to participate in testing and in pull requests as you have suggestions.
 
-### Long-term project features
+### Longer-term project features
 
 Here are some other features that are more long-term. Some may make it into the first release, but we will not block on them for 1.0. This is what we intend to do, but is not a commitment at this point.
 
-* Virtual / App-to-App MIDI
 * New MIDI 2 transport standards (Bluetooth, network, etc.) as they are adopted by the MIDI Association
 * A full suite of MIDI utility, debugging, configuration, and diagnostic tools both visual and
 command-line. Including:
@@ -132,9 +139,9 @@ This is the core development team for the initial release. There are others invo
 
 | Team Member | Company | Role in this Project |
 | ---------------|---------|--------------------------------|
-| [Pete Brown](https://github.com/Psychlist1972) | Microsoft | Overall Project and OSS Lead, Tools & API Engineer, MIDI Association Executive Board member |
+| [Pete Brown](https://github.com/Psychlist1972) | Microsoft | Overall Project and OSS Lead Engineer |
 | Jay DiFuria | Microsoft | Microsoft API PM |
-| Edward Sumanaseni | Microsoft | API Engineeringr Lead |
+| Edward Sumanaseni | Microsoft | API Engineer |
 | [Gary Daniels](https://github.com/garydan42) | Microsoft | API Engineer  |
 | [Julia DZmura](https://github.com/judzmura) | Microsoft | API Engineer |
 | Ben Israel | Yamaha | AMEI Project Lead |
