@@ -10,5 +10,9 @@ namespace winrt::Windows::Devices::Midi::implementation
 
         winrt::Windows::Devices::Midi::MidiSessionLogLevel LogLevel();
         void LogLevel(winrt::Windows::Devices::Midi::MidiSessionLogLevel const& value);
+
+        bool MessageProcessorsEnabled();
+        void MessageProcessorsEnabled(bool const& value);
+
     };
 }

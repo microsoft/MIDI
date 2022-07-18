@@ -13,4 +13,16 @@ namespace winrt::Windows::Devices::Midi::implementation
     {
         throw hresult_not_implemented();
     }
+
+
+    bool MidiSessionCreateSettings::MessageProcessorsEnabled()
+    {
+        throw hresult_not_implemented();
+    }
+    void MidiSessionCreateSettings::MessageProcessorsEnabled(bool const& value)
+    {
+        throw hresult_not_implemented();
+    }
+
+
 }

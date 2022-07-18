@@ -47,6 +47,9 @@
     <Filter Include="Api\Session">
       <UniqueIdentifier>{a7674539-8a99-4c4c-a20a-d80d6380e341}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Communication">
+      <UniqueIdentifier>{8231f118-5552-47e3-981e-b69b47eceb5b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />

@@ -24,12 +24,12 @@ namespace Windows.Devices.Midi
         // May be better to do this as a nullable DriverInformation property and stick
         // to a single IMidiDevice interface type
 
-        String DriverDescription{ get; };           
-        String DriverProvider{ get; };
-        String DriverVersion{ get; };
-        String DriverDate{ get; };
-        String DeviceLocationInformation{ get; };
-        String DeviceInstancePath{ get; };
+        //String DriverDescription{ get; };           
+        //String DriverProvider{ get; };
+        //String DriverVersion{ get; };
+        //String DriverDate{ get; };
+        //String DeviceLocationInformation{ get; };
+        //String DeviceInstancePath{ get; };
 
         // Information about the transport (BLE, USB, RTP, Virtual, etc.)
         // yes, this gets duplicated across multiple devices with same transport

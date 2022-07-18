@@ -9,9 +9,10 @@ namespace Windows.Devices.Midi
     interface IMidiEndpoint
     {
         String Id{ get; };                          // GUID for this device
+        String ParentDeviceId{ get; };              // GUID of parent device
         String Name{ get; set; };                   // User-supplied name. Defaults to device-supplied name
         String DeviceSuppliedName{ get; };          // Name of the endpoint as supplied by the device itself
-        String Serial{ get; };                      // For devices which support this the unique HW ID
+        //String Serial{ get; };                      // For devices which support this the unique HW ID
         String IconFileName{ get; };                // File name of the icon for this endpoint. Not full path, just file name.
         String Description{ get; };                 // Description of the device. Supplied by user.
 
