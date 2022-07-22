@@ -1,3 +1,2 @@
-# API ideas
+# MIDI Service and API
 
-API specs and ideas have been moved to /specs/api/README.md
