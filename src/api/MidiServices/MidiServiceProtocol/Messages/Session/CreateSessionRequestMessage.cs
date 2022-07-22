@@ -1,0 +1,34 @@
+﻿
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Xml.Linq;
+
+
+namespace MidiService.Protocol.Messages.Session
+{
+    [ProtoContract]
+    public class CreateSessionRequestMessage : ProtocolMessage
+    {
+        [ProtoMember(100)]
+        public RequestMessageHeader Header;
+
+        [ProtoMember(101)]
+        public int ProcessId;
+
+        [ProtoMember(102)]
+        public string ProcessName;
+
+        [ProtoMember(103)]
+        public string Name;
+
+        // TODO: Log level
+    }
+
+
+
+
+}

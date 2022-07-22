@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0-windows10.0.20348.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>MidiService.Protocol</AssemblyName>
+    <RootNamespace>MidiService.Protocol</RootNamespace>
+    <Platforms>AnyCPU;x64</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="protobuf-net" Version="3.1.17" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Messages\Management\" />
+  </ItemGroup>
+
+</Project>

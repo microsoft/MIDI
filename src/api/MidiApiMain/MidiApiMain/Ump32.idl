@@ -1,8 +1,0 @@
-
-namespace Windows.Devices.Midi
-{
-    struct Ump32
-    {
-        UInt32 Word1;
-    };
-}

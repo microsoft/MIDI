@@ -1,0 +1,25 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace MidiService.Model
+{
+    internal struct MidiSessionState
+    {
+        internal Guid HeaderClientId;       // the id used when communicating on shared channels
+
+        internal Guid Id;                   // server-generated GUID for the session
+        internal Version ClientVersion;     // Client API version
+        //internal int LogLevel;              // TODO: requested log level for this session
+
+        internal string SessionChannelName;     // name of the IPC (pipes, etc.) channel for this session
+        internal DateTime CreatedTime;      // server-provided date/time for when session was created
+
+        internal long ProcessId;            // Id of the client process that requested the session
+        internal string ProcessName;        // Name of the client process that requested the session
+
+        internal string Name;               // custom name provided by the client process (tab, project, etc.)
+    }
+}
