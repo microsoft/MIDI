@@ -69,6 +69,19 @@ sc stop "MIDI Services Dev"
 sc delete "MIDI Services Dev"
 ```
 
+### Using the PowerShell Scripts
+
+All of the above steps are rolled up into the following PowerShell scripts:
+
+| Script | Function
+| ----------------------- | -------------------------------------------------------- |
+| .\delete-service.ps1 | Stop and delete the service. This can take a few minutes to actually happen after the script has been run. |
+| .\start-service.ps1 | Create and start the service |
+| .\list-midi-pipes.ps1 | Output a list of all the MIDI named pipes that are currently open |
+| .\Constants.ps1 | This is where you set the service path for your own machine |
+
+Do not check in your own versions of Constants.ps1.
+
 ## Named Pipes
 
 This server uses named pipes to communicate with the clients.
