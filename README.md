@@ -55,13 +55,7 @@ The repo contains many different projects and stand-alone files which make up Wi
 | /get-started/docs    | Developer and user documentation |
 | /get-started/samples | Developer samples for using the API |
 | /specs               | Specifications, when needed |
-| /src                 | Main source (non-documentation/sample) root |
-| /src/api             | MIDI API for Windows |
-| /src/plug-ins        | Processing, transport, and other plug-ins |
-| /src/shared          | Non-developer-facing shared components used by tools, API, etc. e.g logging, config |
-| /src/tools           | End-user tools like the settings app and command-line interface |
-| /src/ui              | Reusable WinUI3-compatible UI components related to the MIDI API |
-| /src/usb-driver      | Windows USB MIDI 2.0 and 1.0 Class driver source |
+| /src                 | Main source (non-documentation/sample) root. See folder for details |
 
 Note that any internal changes made to the OS to support the driver or MIDI API are not contained in this repo.
 

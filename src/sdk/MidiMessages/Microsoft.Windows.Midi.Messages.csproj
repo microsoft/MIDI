@@ -4,11 +4,10 @@
     <TargetFramework>net7.0-windows10.0.20348.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Platforms>AnyCPU;x64</Platforms>
-  </PropertyGroup>
+	  <CsWinRTComponent>true</CsWinRTComponent>
+	  <CsWinRTWindowsMetadata>10.0.20348.0</CsWinRTWindowsMetadata>
+	  <Platforms>AnyCPU;x64</Platforms>
 
-  <ItemGroup>
-    <ProjectReference Include="..\MidiServiceData\MidiService.Data.csproj" />
-  </ItemGroup>
+  </PropertyGroup>
 
 </Project>

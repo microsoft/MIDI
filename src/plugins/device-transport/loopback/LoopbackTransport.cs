@@ -26,25 +26,37 @@ namespace LoopbackPlugin
 
 
 
+        // TODO: These need to use a type that C++ plugin devs will ahve access
+        // to, like am IBuffer or something. .NET Streams aren't likely the
+        // best choice here. Also need to eval how the USB driver will work before
+        // settling on this interface. Don't want to use C++/CLI, but WinRT types
+        // and other COM-known types are an option.
 
-        /// <summary>
-        /// MIDI Out (from apps, to device)
-        /// </summary>
-        /// <param name="sourceStream"></param>
-        /// <param name="endpointId"></param>
-        /// <exception cref="NotImplementedException"></exception>
-        public void WriteDataFromStream(Stream sourceStream, Guid endpointId)
+        ///// <summary>
+        ///// MIDI Out (from apps, to device)
+        ///// </summary>
+        //public void WriteDataFromStream(Stream sourceStream, Guid endpointId)
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        ///// <summary>
+        ///// MIDI In (from device, to apps)
+        ///// </summary>
+        //public void ReadDataFromStream(Stream sourceStream, Guid endpointId)
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+
+        // TODO: Test performance and move to one of a number of shared memory approaches
+        // if performance here isn't what it needs to be
+        public void WriteToDevice(Guid endpointId, IEnumerable<Ump> messageBuffer)
         {
             throw new NotImplementedException();
         }
 
-        /// <summary>
-        /// MIDI In (from device, to apps)
-        /// </summary>
-        /// <param name="sourceStream"></param>
-        /// <param name="endpointId"></param>
-        /// <exception cref="NotImplementedException"></exception>
-        public void ReadDataFromStream(Stream sourceStream, Guid endpointId)
+        public void ReadFromDevice(Guid endpointId, IEnumerable<Ump> messageBuffer)
         {
             throw new NotImplementedException();
         }

@@ -1,5 +1,9 @@
 # API Specifications
 
+=======================================================
+TODO: This needs to be updated after the SDK changes
+=======================================================
+
 These are not final designs, but rather are brainstorming design ideas. All code is pseudo-c code with just enough syntax to get the point across. You will notice a real lack of semicolons, for example. :)
 
 ## General Approach

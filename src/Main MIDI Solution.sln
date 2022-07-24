@@ -3,50 +3,46 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.3.32708.82
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MidiService", "MidiService\MidiService.csproj", "{E3C7D9A8-CBA2-4E49-BA8D-0F38ED7AAB05}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MidiService", "service\MidiService\MidiService.csproj", "{E3C7D9A8-CBA2-4E49-BA8D-0F38ED7AAB05}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MidiService.Protocol", "MidiServiceProtocol\MidiService.Protocol.csproj", "{7F3CD6C3-CEA8-4CB4-802B-2DC0449941D6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MidiService.Protocol", "shared\plumbing\MidiServiceProtocol\MidiService.Protocol.csproj", "{7F3CD6C3-CEA8-4CB4-802B-2DC0449941D6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MidiService.Data", "MidiServiceData\MidiService.Data.csproj", "{75ABE3E3-583E-4634-B3ED-174D8D8C868B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MidiService.Data", "shared\plumbing\MidiServiceData\MidiService.Data.csproj", "{75ABE3E3-583E-4634-B3ED-174D8D8C868B}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1E909C14-D20C-4541-9446-7433252C60C7}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "00 Solution Items", "00 Solution Items", "{1E909C14-D20C-4541-9446-7433252C60C7}"
 	ProjectSection(SolutionItems) = preProject
-		Constants.ps1 = Constants.ps1
-		delete-service.ps1 = delete-service.ps1
-		list-midi-pipes.ps1 = list-midi-pipes.ps1
 		README.md = README.md
-		Service Icon.ico = Service Icon.ico
-		Service Icon.png = Service Icon.png
-		start-service.ps1 = start-service.ps1
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProtocolTests", "ServiceTests\ProtocolTests.csproj", "{6B496566-879B-471A-87FD-0D3770D801FB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProtocolTests", "service\tests\ProtocolTests.csproj", "{6B496566-879B-471A-87FD-0D3770D801FB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Windows.Midi", "API-Midi\Microsoft.Windows.Midi.csproj", "{188581AE-24FF-42E1-900C-EE1843CAE9C6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Windows.Midi", "sdk\MidiMain\Microsoft.Windows.Midi.csproj", "{188581AE-24FF-42E1-900C-EE1843CAE9C6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Windows.Midi.Management", "API-Management\Microsoft.Windows.Midi.Management.csproj", "{F1A1F83A-7493-4521-8DD6-E02834F25FE0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Windows.Midi.Management", "sdk\Management\Microsoft.Windows.Midi.Management.csproj", "{F1A1F83A-7493-4521-8DD6-E02834F25FE0}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "API", "API", "{103446DA-D85F-491B-AF1F-F90A81B0D866}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SDK", "SDK", "{103446DA-D85F-491B-AF1F-F90A81B0D866}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Service", "Service", "{773EAC35-13BD-4E08-AB43-9A6B20BCE56D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{EA8B53E2-8FEC-47AA-9C2B-785F5C1DF734}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Windows.Midi.PluginModel", "Microsoft.Windows.Midi.PluginModel\Microsoft.Windows.Midi.PluginModel.csproj", "{F6A70BB8-36FD-485B-9C1E-DE07F6C4BD1D}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MidiLoopbackPlugin", "..\plug-ins\device-transport\loopback\MidiLoopbackPlugin.csproj", "{623C1985-02FD-4DD0-912B-B1BDEF18E126}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Windows.Midi.PluginModel", "sdk\PluginModel\Microsoft.Windows.Midi.PluginModel.csproj", "{F6A70BB8-36FD-485B-9C1E-DE07F6C4BD1D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{6B5E10B7-EB57-47A9-9CD1-36393259F92B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MidiSetup", "..\shared\setup\MidiSetup.csproj", "{FDC75DD2-D95C-4829-9EB1-8F1864B55EF9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MidiSetup", "shared\setup\MidiSetup.csproj", "{FDC75DD2-D95C-4829-9EB1-8F1864B55EF9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MidiConfig", "..\shared\config\MidiConfig.csproj", "{4C20CC34-E785-43E1-B7BA-897B0B17FC40}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MidiConfig", "shared\config\MidiConfig.csproj", "{4C20CC34-E785-43E1-B7BA-897B0B17FC40}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharedLibraryTests", "..\shared\SharedLibraryTests\SharedLibraryTests.csproj", "{8732C5BB-7516-4356-9520-BBCDADA5BC51}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharedLibraryTests", "shared\tests\SharedLibraryTests.csproj", "{8732C5BB-7516-4356-9520-BBCDADA5BC51}"
 EndProject
-Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "MidiServicesSetup", "..\installers\MidiServicesSetup\MidiServicesSetup.wixproj", "{B6DBF7A0-F6EB-458E-BF1A-1BDD7C60494A}"
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "MidiServicesSetup", "installers\MidiServicesSetup\MidiServicesSetup.wixproj", "{B6DBF7A0-F6EB-458E-BF1A-1BDD7C60494A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{783C16E2-65B7-4DFE-906E-0378CF2D7223}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MidiLoopbackPlugin", "plugins\device-transport\loopback\MidiLoopbackPlugin.csproj", "{5FECA8F0-8EA6-4009-A053-FD8DE6F32942}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Windows.Midi.Messages", "sdk\MidiMessages\Microsoft.Windows.Midi.Messages.csproj", "{88EB09E2-C702-4BF8-BF7F-EDFDF944F3A0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -142,18 +138,6 @@ Global
 		{F6A70BB8-36FD-485B-9C1E-DE07F6C4BD1D}.Release|x64.Build.0 = Release|x64
 		{F6A70BB8-36FD-485B-9C1E-DE07F6C4BD1D}.Release|x86.ActiveCfg = Release|Any CPU
 		{F6A70BB8-36FD-485B-9C1E-DE07F6C4BD1D}.Release|x86.Build.0 = Release|Any CPU
-		{623C1985-02FD-4DD0-912B-B1BDEF18E126}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{623C1985-02FD-4DD0-912B-B1BDEF18E126}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{623C1985-02FD-4DD0-912B-B1BDEF18E126}.Debug|x64.ActiveCfg = Debug|x64
-		{623C1985-02FD-4DD0-912B-B1BDEF18E126}.Debug|x64.Build.0 = Debug|x64
-		{623C1985-02FD-4DD0-912B-B1BDEF18E126}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{623C1985-02FD-4DD0-912B-B1BDEF18E126}.Debug|x86.Build.0 = Debug|Any CPU
-		{623C1985-02FD-4DD0-912B-B1BDEF18E126}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{623C1985-02FD-4DD0-912B-B1BDEF18E126}.Release|Any CPU.Build.0 = Release|Any CPU
-		{623C1985-02FD-4DD0-912B-B1BDEF18E126}.Release|x64.ActiveCfg = Release|x64
-		{623C1985-02FD-4DD0-912B-B1BDEF18E126}.Release|x64.Build.0 = Release|x64
-		{623C1985-02FD-4DD0-912B-B1BDEF18E126}.Release|x86.ActiveCfg = Release|Any CPU
-		{623C1985-02FD-4DD0-912B-B1BDEF18E126}.Release|x86.Build.0 = Release|Any CPU
 		{FDC75DD2-D95C-4829-9EB1-8F1864B55EF9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{FDC75DD2-D95C-4829-9EB1-8F1864B55EF9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FDC75DD2-D95C-4829-9EB1-8F1864B55EF9}.Debug|x64.ActiveCfg = Debug|x64
@@ -202,6 +186,30 @@ Global
 		{B6DBF7A0-F6EB-458E-BF1A-1BDD7C60494A}.Release|x64.Build.0 = Release|x86
 		{B6DBF7A0-F6EB-458E-BF1A-1BDD7C60494A}.Release|x86.ActiveCfg = Release|x86
 		{B6DBF7A0-F6EB-458E-BF1A-1BDD7C60494A}.Release|x86.Build.0 = Release|x86
+		{5FECA8F0-8EA6-4009-A053-FD8DE6F32942}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5FECA8F0-8EA6-4009-A053-FD8DE6F32942}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5FECA8F0-8EA6-4009-A053-FD8DE6F32942}.Debug|x64.ActiveCfg = Debug|x64
+		{5FECA8F0-8EA6-4009-A053-FD8DE6F32942}.Debug|x64.Build.0 = Debug|x64
+		{5FECA8F0-8EA6-4009-A053-FD8DE6F32942}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5FECA8F0-8EA6-4009-A053-FD8DE6F32942}.Debug|x86.Build.0 = Debug|Any CPU
+		{5FECA8F0-8EA6-4009-A053-FD8DE6F32942}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5FECA8F0-8EA6-4009-A053-FD8DE6F32942}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5FECA8F0-8EA6-4009-A053-FD8DE6F32942}.Release|x64.ActiveCfg = Release|x64
+		{5FECA8F0-8EA6-4009-A053-FD8DE6F32942}.Release|x64.Build.0 = Release|x64
+		{5FECA8F0-8EA6-4009-A053-FD8DE6F32942}.Release|x86.ActiveCfg = Release|Any CPU
+		{5FECA8F0-8EA6-4009-A053-FD8DE6F32942}.Release|x86.Build.0 = Release|Any CPU
+		{88EB09E2-C702-4BF8-BF7F-EDFDF944F3A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88EB09E2-C702-4BF8-BF7F-EDFDF944F3A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88EB09E2-C702-4BF8-BF7F-EDFDF944F3A0}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{88EB09E2-C702-4BF8-BF7F-EDFDF944F3A0}.Debug|x64.Build.0 = Debug|Any CPU
+		{88EB09E2-C702-4BF8-BF7F-EDFDF944F3A0}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{88EB09E2-C702-4BF8-BF7F-EDFDF944F3A0}.Debug|x86.Build.0 = Debug|Any CPU
+		{88EB09E2-C702-4BF8-BF7F-EDFDF944F3A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88EB09E2-C702-4BF8-BF7F-EDFDF944F3A0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88EB09E2-C702-4BF8-BF7F-EDFDF944F3A0}.Release|x64.ActiveCfg = Release|Any CPU
+		{88EB09E2-C702-4BF8-BF7F-EDFDF944F3A0}.Release|x64.Build.0 = Release|Any CPU
+		{88EB09E2-C702-4BF8-BF7F-EDFDF944F3A0}.Release|x86.ActiveCfg = Release|Any CPU
+		{88EB09E2-C702-4BF8-BF7F-EDFDF944F3A0}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -214,10 +222,11 @@ Global
 		{188581AE-24FF-42E1-900C-EE1843CAE9C6} = {103446DA-D85F-491B-AF1F-F90A81B0D866}
 		{F1A1F83A-7493-4521-8DD6-E02834F25FE0} = {103446DA-D85F-491B-AF1F-F90A81B0D866}
 		{F6A70BB8-36FD-485B-9C1E-DE07F6C4BD1D} = {103446DA-D85F-491B-AF1F-F90A81B0D866}
-		{623C1985-02FD-4DD0-912B-B1BDEF18E126} = {773EAC35-13BD-4E08-AB43-9A6B20BCE56D}
 		{FDC75DD2-D95C-4829-9EB1-8F1864B55EF9} = {6B5E10B7-EB57-47A9-9CD1-36393259F92B}
 		{4C20CC34-E785-43E1-B7BA-897B0B17FC40} = {6B5E10B7-EB57-47A9-9CD1-36393259F92B}
 		{8732C5BB-7516-4356-9520-BBCDADA5BC51} = {EA8B53E2-8FEC-47AA-9C2B-785F5C1DF734}
+		{5FECA8F0-8EA6-4009-A053-FD8DE6F32942} = {783C16E2-65B7-4DFE-906E-0378CF2D7223}
+		{88EB09E2-C702-4BF8-BF7F-EDFDF944F3A0} = {103446DA-D85F-491B-AF1F-F90A81B0D866}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {474FE20C-14C2-44B9-9A01-332ED5A0EDD8}
