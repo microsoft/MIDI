@@ -46,6 +46,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharedLibraryTests", "..\sh
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "MidiServicesSetup", "..\installers\MidiServicesSetup\MidiServicesSetup.wixproj", "{B6DBF7A0-F6EB-458E-BF1A-1BDD7C60494A}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{783C16E2-65B7-4DFE-906E-0378CF2D7223}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

@@ -27,12 +27,27 @@ namespace LoopbackPlugin
 
 
 
-
+        /// <summary>
+        /// MIDI Out (from apps, to device)
+        /// </summary>
+        /// <param name="sourceStream"></param>
+        /// <param name="endpointId"></param>
+        /// <exception cref="NotImplementedException"></exception>
         public void WriteDataFromStream(Stream sourceStream, Guid endpointId)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// MIDI In (from device, to apps)
+        /// </summary>
+        /// <param name="sourceStream"></param>
+        /// <param name="endpointId"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        public void ReadDataFromStream(Stream sourceStream, Guid endpointId)
+        {
+            throw new NotImplementedException();
+        }
 
 
     }
