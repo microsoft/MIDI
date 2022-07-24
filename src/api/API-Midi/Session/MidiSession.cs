@@ -1,7 +1,4 @@
-﻿using MidiService.Protocol.Messages.Base;
-using MidiService.Protocol.Messages.Session;
-using MidiService.Protocol.Serialization;
-using MidiService.Protocol;
+﻿
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,6 +6,8 @@ using System.IO.Pipes;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+using Microsoft.Windows.Midi.Enumeration;
 
 namespace Microsoft.Windows.Midi.Session
 {
@@ -59,16 +58,16 @@ namespace Microsoft.Windows.Midi.Session
                 ))
             {
                 // get the serializer ready
-                MidiStreamSerializer serializer = new MidiStreamSerializer(sessionPipe);
+                var serializer = new MidiStreamSerializer(sessionPipe);
 
                 // connect to pipe. This could take a while if pipe is busy
                 sessionPipe.Connect();
 
-                // send request message
+                // send request message. This happens automatically because Serialize writes to stream
                 serializer.Serialize(request);
 
                 // wait for response (reading blocks until data arrives)
-                CreateSessionResponseMessage response = serializer.Deserialize<CreateSessionResponseMessage>();
+                var response = serializer.Deserialize<CreateSessionResponseMessage>();
 
                 // TODO: Check ClientRequestId values match
 
@@ -86,9 +85,11 @@ namespace Microsoft.Windows.Midi.Session
 
                     // TODO: Open the session-specific pipe 
 
-                    if (!options.DeferDeviceEnumeration)
+                    if (!options.SkipDeviceEnumeration)
                     {
-                        // TODO: enumerate devices and endpoints
+                        // TODO: enumerate devices and endpoints using the static enumerator
+                        MidiEnumerator.GetDevices();
+                        MidiEnumerator.GetEndpoints();
                     }
 
 
@@ -158,14 +159,8 @@ namespace Microsoft.Windows.Midi.Session
 
         #endregion
 
-        // ================================================================================
-        #region Device Enumeration
 
 
-
-
-
-        #endregion
 
         // ================================================================================
         // ================================================================================
@@ -187,11 +182,19 @@ namespace Microsoft.Windows.Midi.Session
         // TODO: Device and endpoint lifetime / CRUD
 
 
-        // TODO: Enumeration of devices and endpoints
-
-
         // TODO: Utility functions
 
+
+
+        public void SendUmp(Guid deviceId, Guid endpointId, object message)
+        {
+
+        }
+
+        public void SendStream(Guid deviceId, Guid endpointId, Stream words)
+        {
+
+        }
 
     }
 }

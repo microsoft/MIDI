@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" 
+	 xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+	<Product Id="*" Name="MidiServicesSetup" 
+			 Language="1033" 
+			 Version="0.1.0.0" 
+			 Manufacturer="Microsoft" 
+			 UpgradeCode="e067dbc1-9805-42de-a309-9792b1f6dd1b">
+		
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" 
+				 Platform="x64"/>
+
+		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+		<MediaTemplate />
+
+		<Feature Id="CoreFeatures" Title="Windows MIDI Services" 
+				 Level="1" Description="Windows MIDI Service and API" >
+			<ComponentGroupRef Id="WindowsService" />
+			<ComponentGroupRef Id="DataFolders" />
+			<ComponentGroupRef Id="PluginFolder" />
+		</Feature>
+		<Feature Id="SDK" Title="Developer SDK" Level="1">
+			<ComponentGroupRef Id="DeveloperSDK" />
+		</Feature>
+		<Feature Id="SettingsTools" Title="MIDI Settings Tools" Level="1">
+			<ComponentGroupRef Id="SettingsTools" />
+		</Feature>
+		
+	</Product>
+
+	<Fragment>
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="ProgramFiles64Folder">
+				<Directory Id="ServiceExeFolder" Name="Microsoft Windows MIDI" />
+			</Directory>
+
+			<Directory Id="CommonFiles64Folder">
+				<Directory Id="PluginFolder" Name="Windows MIDI Plugins" />
+			</Directory>
+
+			<Directory Id="CommonAppDataFolder">
+				<Directory Id="RootDataFolder" Name="Microsoft Windows MIDI">
+					<Directory Id="IconFolder" Name="Icons" />
+					<Directory Id="SetupsFolder" Name="Setups" />
+				</Directory>
+			</Directory>
+		</Directory>
+	</Fragment>
+
+
+
+
+	<Fragment>
+		<ComponentGroup Id="DeveloperSDK">
+			<!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->
+			<!-- <Component Id="ProductComponent"> -->
+			<!-- TODO: Insert files, registry keys, and other resources here. -->
+			<!-- </Component> -->
+		</ComponentGroup>
+		
+		<ComponentGroup Id="SettingsTools">
+			<!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->
+			<!-- <Component Id="ProductComponent"> -->
+			<!-- TODO: Insert files, registry keys, and other resources here. -->
+			<!-- </Component> -->
+		</ComponentGroup>
+		
+		<ComponentGroup Id="WindowsService">
+			<!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->
+			<!-- <Component Id="ProductComponent"> -->
+			<!-- TODO: Insert files, registry keys, and other resources here. -->
+			<!-- </Component> -->
+
+			
+			<!-- TODO: These hard-coded paths suck. But Wix was not picking up the published
+					files, just other build artifacts. Need to change this. -->
+			
+			<Component Id="ServiceConfig" Directory="ServiceExeFolder">
+				<File Id="ServiceAppConfig"
+					  Name="appsettings.json"
+					  Source="D:\peteb\Documents\GitHub\microsoft\midi\src\api\MidiService\bin\Release\net7.0-windows10.0.20348.0\win-x64\publish\appsettings.json"  />
+			</Component>
+
+			<Component Id="InstallService" Directory="ServiceExeFolder" >
+				<File Id="ServiceExe" 
+					  Name="MidiService.exe" 
+					  Source="D:\peteb\Documents\GitHub\microsoft\midi\src\api\MidiService\bin\Release\net7.0-windows10.0.20348.0\win-x64\publish\MidiService.exe"  />
+				<ServiceInstall Id="ServiceInstaller" 
+								Type="ownProcess" 
+								Name="MIDI Service"
+								DisplayName="Microsoft Windows MIDI Service"
+								Description="Microsoft session, device, and endpoint services for MIDI (Musical Instrument Digital Interface) routing." 
+								Start="auto" Interactive="no" Vital="yes"
+								Account="LocalSystem" ErrorControl="normal" />
+				<ServiceControl Id="StartService"
+								Start="install"
+								Stop="both"
+								Remove="uninstall"
+								Name="MIDI Service"
+								Wait="yes" />
+			</Component>
+
+
+		</ComponentGroup>
+
+		<ComponentGroup Id="DataFolders" >
+			<Component Id="CreateDataFolder" Directory="RootDataFolder" Guid="22538463-172d-41c8-be2a-b51b3114c72b">
+				<CreateFolder>
+					<util:PermissionEx User="NT AUTHORITY\System" GenericAll="yes" />
+					<util:PermissionEx User="NT AUTHORITY\Authenticated Users" GenericAll="yes" />
+				</CreateFolder>
+			</Component>
+
+			<Component Id="CreateIconFolder" Directory="IconFolder" Guid="c2ec105f-ea4f-4e9f-a054-ae13e514b80b">
+				<CreateFolder>
+					<util:PermissionEx User="NT AUTHORITY\System" GenericAll="yes" />
+					<util:PermissionEx User="NT AUTHORITY\Authenticated Users" GenericAll="yes" />
+				</CreateFolder>
+			</Component>
+
+			<Component Id="CreateSetupsFolder" Directory="SetupsFolder" Guid="71c36503-be4c-45a8-a27f-a97d2ec9fede">
+				<CreateFolder>
+					<util:PermissionEx User="NT AUTHORITY\System" GenericAll="yes" />
+					<util:PermissionEx User="NT AUTHORITY\Authenticated Users" GenericAll="yes" />
+				</CreateFolder>
+			</Component>		
+		</ComponentGroup>
+
+		<ComponentGroup Id="PluginFolder" >
+			<Component Id="CreatePluginsFolder" Directory="PluginFolder" Guid="3bff88d5-3549-40c5-8643-3f3d6aaa81ad">
+				<CreateFolder/>
+			</Component>
+		</ComponentGroup>
+
+		<!-- TODO: Install icons -->
+		
+	</Fragment>
+
+
+
+</Wix>

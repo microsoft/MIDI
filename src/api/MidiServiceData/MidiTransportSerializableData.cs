@@ -4,12 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Microsoft.Windows.Midi.Devices
+namespace MidiService.Data
 {
-    public sealed class MidiDevice
+    public struct MidiTransportSerializableData
     {
-
-
-
     }
 }

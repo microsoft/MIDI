@@ -20,8 +20,10 @@ namespace Microsoft.Windows.Midi.Session
 
         /// <summary>
         /// Set to true if you want to defer device enumeration to an explicit call later, 
-        /// rather than return the session with a complete device graph
+        /// rather than return the session with a complete device graph. Also a good idea
+        /// to do this when you open multiple concurrent sessions from a single app. In that
+        /// case, you only want to enumerate devices once to help limit server traffic.
         /// </summary>
-        public bool DeferDeviceEnumeration { get; set; } = false;
+        public bool SkipDeviceEnumeration { get; set; } = false;
     }
 }

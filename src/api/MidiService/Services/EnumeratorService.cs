@@ -4,12 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Microsoft.Windows.Midi.Devices
+namespace MidiService.Services
 {
-    public sealed class MidiDevice
+    internal class EnumeratorService
     {
-
-
-
     }
 }

@@ -6,12 +6,12 @@ Write-Host ""
 Write-Host "Stopping service, if present ".PadRight($Padding, '-') -ForegroundColor Yellow
 Write-Host ""
 
-sc stop $ServiceName
+sc.exe stop $ServiceName
 
 Write-Host "Deleting service entry, if present ".PadRight($Padding, '-') -ForegroundColor Yellow
 Write-Host ""
 
-sc delete $ServiceName
+sc.exe delete $ServiceName
 
 
 

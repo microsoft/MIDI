@@ -8,13 +8,9 @@ namespace MidiService.Protocol
         private const string PipePrefix = "midi.";
 
         public const string InitialConnectionPipeName = PipePrefix + "Connect";
+        public const string EnumerationServicePipePrefix = PipePrefix + "Enumerator";
+
         public const string SessionServicePipePrefix = PipePrefix + "Session";  // this gets an ID added to it
-
-        //public const string LoggerCategoryName = "MIDI.Service";
-
-        //public const Guid GlobalSessionMessageClient = Guid.Empty;
-
-
 
 
 

@@ -34,6 +34,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Microsoft.Windows.Midi.PluginModel\Microsoft.Windows.Midi.PluginModel.csproj" />
     <ProjectReference Include="..\MidiServiceData\MidiService.Data.csproj" />
     <ProjectReference Include="..\MidiServiceProtocol\MidiService.Protocol.csproj" />
   </ItemGroup>

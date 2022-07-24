@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Windows.Midi.PluginModel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,10 +19,17 @@ namespace MidiService.Model
     //
     public class DeviceGraph
     {
+        // All loaded device transports
+        private Dictionary<Guid, IMidiTransport> _transports =
+            new Dictionary<Guid, IMidiTransport>();
+
+
+        // All the devices
         // Key is device ID
         private Dictionary<Guid, MidiDeviceSerializableData> _devices = 
             new Dictionary<Guid, MidiDeviceSerializableData>();
         
+        // All the endpoints
         // key is Tuple<DeviceID, EndpointID>
         // may want to simplify to just EndpointID
         private Dictionary<Tuple<Guid, Guid>, MidiEndpointSerializableData> _endpoints = 

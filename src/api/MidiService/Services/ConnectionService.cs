@@ -65,7 +65,7 @@ namespace MidiService
             }
             catch (Exception ex)
             {
-                _logger.LogInformation("Could not create ConnectionService pipe. " + ex.Message);
+                _logger.LogError("Could not create ConnectionService pipe. " + ex.Message);
             }
 
             return null;
