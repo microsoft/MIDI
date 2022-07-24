@@ -56,6 +56,19 @@
 			<!-- <Component Id="ProductComponent"> -->
 			<!-- TODO: Insert files, registry keys, and other resources here. -->
 			<!-- </Component> -->
+			
+			<!-- See this URL for paths for extension SDKs. Change below to follow that path.
+			https://docs.microsoft.com/en-us/visualstudio/extensibility/creating-a-software-development-kit?view=vs-2022
+			-->
+
+			<Component Id ="SDKInstallers" Directory="ServiceExeFolder" Guid="2f82c8b8-612f-49a4-ab4d-ff0ba164b5fb">
+				<File Id="APIMain"
+					  Name="Microsoft.Windows.Midi"
+					  Source="D:\peteb\Documents\GitHub\microsoft\midi\src\api\API-Midi\bin\Release\net7.0-windows10.0.20348.0\Microsoft.Windows.Midi.dll"  />
+				<File Id="APIMamagement"
+					  Name="Microsoft.Windows.Midi.Management"
+					  Source="D:\peteb\Documents\GitHub\microsoft\midi\src\api\API-Management\bin\x64\Release\net7.0-windows10.0.20348.0\Microsoft.Windows.Midi.Management.dll" />
+			</Component>
 		</ComponentGroup>
 		
 		<ComponentGroup Id="SettingsTools">
@@ -64,7 +77,7 @@
 			<!-- TODO: Insert files, registry keys, and other resources here. -->
 			<!-- </Component> -->
 		</ComponentGroup>
-		
+
 		<ComponentGroup Id="WindowsService">
 			<!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->
 			<!-- <Component Id="ProductComponent"> -->
