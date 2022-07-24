@@ -8,7 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\api\Microsoft.Windows.Midi.PluginModel\Microsoft.Windows.Midi.PluginModel.csproj" />
+    <ProjectReference Include="..\..\..\sdk\MidiMessages\Microsoft.Windows.Midi.Messages.csproj" />
+    <ProjectReference Include="..\..\..\sdk\PluginModel\Microsoft.Windows.Midi.PluginModel.csproj" />
   </ItemGroup>
 
 </Project>

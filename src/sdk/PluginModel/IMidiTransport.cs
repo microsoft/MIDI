@@ -36,7 +36,7 @@ namespace Microsoft.Windows.Midi.PluginModel
         /// </summary>
         string Description { get; }
 
-        void WriteDataFromStream(Stream sourceStream, Guid endpointId);
+        //void WriteDataFromStream(Stream sourceStream, Guid endpointId);
 
 
         // Devices will aggregate an instance of this transport, and use the functions in it

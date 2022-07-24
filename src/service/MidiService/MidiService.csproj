@@ -34,12 +34,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Microsoft.Windows.Midi.PluginModel\Microsoft.Windows.Midi.PluginModel.csproj" />
-    <ProjectReference Include="..\MidiServiceData\MidiService.Data.csproj" />
-    <ProjectReference Include="..\MidiServiceProtocol\MidiService.Protocol.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -56,5 +50,14 @@
 
   <ItemGroup>
     <Folder Include="Properties\PublishProfiles\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\sdk\MidiMessages\Microsoft.Windows.Midi.Messages.csproj" />
+    <ProjectReference Include="..\..\sdk\PluginModel\Microsoft.Windows.Midi.PluginModel.csproj" />
+    <ProjectReference Include="..\..\shared\config\MidiConfig.csproj" />
+    <ProjectReference Include="..\..\shared\plumbing\MidiServiceData\MidiService.Data.csproj" />
+    <ProjectReference Include="..\..\shared\plumbing\MidiServiceProtocol\MidiService.Protocol.csproj" />
+    <ProjectReference Include="..\..\shared\setup\MidiSetup.csproj" />
   </ItemGroup>
 </Project>

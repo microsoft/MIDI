@@ -21,8 +21,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MidiServiceData\MidiService.Data.csproj" />
-    <ProjectReference Include="..\MidiServiceProtocol\MidiService.Protocol.csproj" />
+    <ProjectReference Include="..\..\shared\plumbing\MidiServiceData\MidiService.Data.csproj" />
+    <ProjectReference Include="..\..\shared\plumbing\MidiServiceProtocol\MidiService.Protocol.csproj" />
   </ItemGroup>
 
 </Project>

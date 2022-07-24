@@ -62,12 +62,13 @@
 			-->
 
 			<Component Id ="SDKInstallers" Directory="ServiceExeFolder" Guid="2f82c8b8-612f-49a4-ab4d-ff0ba164b5fb">
-				<File Id="APIMain"
+<!--				<File Id="APIMain"
 					  Name="Microsoft.Windows.Midi"
-					  Source="D:\peteb\Documents\GitHub\microsoft\midi\src\api\API-Midi\bin\Release\net7.0-windows10.0.20348.0\Microsoft.Windows.Midi.dll"  />
+					  Source="D:\peteb\Documents\GitHub\microsoft\midi\src\sdk\MidiMain\bin\x64\Release\net7.0-windows10.0.20348.0\Microsoft.Windows.Midi.winmd"  />
 				<File Id="APIMamagement"
 					  Name="Microsoft.Windows.Midi.Management"
 					  Source="D:\peteb\Documents\GitHub\microsoft\midi\src\api\API-Management\bin\x64\Release\net7.0-windows10.0.20348.0\Microsoft.Windows.Midi.Management.dll" />
+-->					  
 			</Component>
 		</ComponentGroup>
 		
@@ -91,13 +92,13 @@
 			<Component Id="ServiceConfig" Directory="ServiceExeFolder">
 				<File Id="ServiceAppConfig"
 					  Name="appsettings.json"
-					  Source="D:\peteb\Documents\GitHub\microsoft\midi\src\api\MidiService\bin\Release\net7.0-windows10.0.20348.0\win-x64\publish\appsettings.json"  />
+					  Source="D:\peteb\Documents\GitHub\microsoft\midi\src\service\MidiService\bin\Release\net7.0-windows10.0.20348.0\win-x64\publish\appsettings.json"  />
 			</Component>
 
 			<Component Id="InstallService" Directory="ServiceExeFolder" >
 				<File Id="ServiceExe" 
 					  Name="MidiService.exe" 
-					  Source="D:\peteb\Documents\GitHub\microsoft\midi\src\api\MidiService\bin\Release\net7.0-windows10.0.20348.0\win-x64\publish\MidiService.exe"  />
+					  Source="D:\peteb\Documents\GitHub\microsoft\midi\src\service\MidiService\bin\Release\net7.0-windows10.0.20348.0\win-x64\publish\MidiService.exe"  />
 				<ServiceInstall Id="ServiceInstaller" 
 								Type="ownProcess" 
 								Name="MIDI Service"

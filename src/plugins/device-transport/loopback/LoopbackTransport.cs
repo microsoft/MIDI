@@ -1,4 +1,5 @@
-﻿using Microsoft.Windows.Midi.PluginModel;
+﻿using Microsoft.Windows.Midi.Messages;
+using Microsoft.Windows.Midi.PluginModel;
 
 namespace LoopbackPlugin
 {
