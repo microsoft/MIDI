@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" 
 	 xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
-	<Product Id="*" Name="MidiServicesSetup" 
+	<Product Id="*" Name="Microsoft Windows MIDI Services" 
 			 Language="1033" 
 			 Version="0.1.0.0" 
 			 Manufacturer="Microsoft" 
@@ -88,6 +88,8 @@
 			
 			<!-- TODO: These hard-coded paths suck. But Wix was not picking up the published
 					files, just other build artifacts. Need to change this. -->
+			
+			<!-- YOU MUST PUBLISH THE SERVICE FOR THE NEW VERSION TO BE PICKED UP -->
 			
 			<Component Id="ServiceConfig" Directory="ServiceExeFolder">
 				<File Id="ServiceAppConfig"

@@ -19,6 +19,8 @@ namespace MidiService.Model
     //
     public class DeviceGraph
     {
+        private readonly ILogger<DeviceGraph> _logger;
+
         // All loaded device transports
         private Dictionary<Guid, IMidiTransport> _transports =
             new Dictionary<Guid, IMidiTransport>();
@@ -34,6 +36,12 @@ namespace MidiService.Model
         // may want to simplify to just EndpointID
         private Dictionary<Tuple<Guid, Guid>, MidiEndpointSerializableData> _endpoints = 
             new Dictionary<Tuple<Guid, Guid>, MidiEndpointSerializableData>();
+
+
+        public DeviceGraph(ILogger<DeviceGraph> logger)
+        {
+            _logger = logger;
+        }
 
 
         private void PublishGraph()

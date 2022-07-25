@@ -14,6 +14,14 @@ namespace MidiService.Model
         private Dictionary<Guid, MidiSessionState> _sessions =
             new Dictionary<Guid, MidiSessionState>();
 
+        private readonly ILogger _logger;
+         
+
+        public SessionGraph(ILogger<ConnectionService> logger)
+        {
+            _logger = logger;
+        }
+
 
 
         private void PublishGraph()

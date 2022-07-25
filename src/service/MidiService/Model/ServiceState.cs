@@ -6,15 +6,25 @@ using System.Threading.Tasks;
 
 using System.Collections;
 using System.Reflection;
+using MidiConfig;
 
 namespace MidiService.Model
 {
     public class ServiceState
     {
-        // TODO: Store PID of settings app so we can verify that only
-        // the settings app or the console can destroy someone else's 
-        // session? Not really secure, though, and easy to spoof.
+        private readonly ILogger _logger;
+        private readonly MidiServicesConfig _config;
 
+        public ServiceState(ILogger<ConnectionService> logger, MidiServicesConfig config)
+        {
+            _logger = logger;
+            _config = config;
+
+            _logger.LogDebug("DEBUG: ServiceState constructor");
+
+            // not keen on this being in the constructor, but easier to deal with the DI this way
+            _config.Load();
+        }
 
         //private DeviceGraph _deviceGraph = new DeviceGraph();
 
@@ -25,6 +35,8 @@ namespace MidiService.Model
         }
 
         public Statistics Statistics { get; } = new Statistics();
+
+        //public MidiServicesConfig Config { get; set; }
 
 
     }

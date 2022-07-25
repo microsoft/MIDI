@@ -2,6 +2,8 @@ using MidiService;
 
 using Microsoft.Extensions.Logging.EventLog;
 using Microsoft.Extensions.Logging.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using MidiConfig;
 
 
 // need to set the working directory to load the config files
@@ -15,13 +17,18 @@ IHost host = Host.CreateDefaultBuilder(args)
     .UseWindowsService(options =>
     {
         options.ServiceName = "MIDI Services";
-        
+
     })
     .ConfigureServices(services =>
     {
         LoggerProviderOptions.RegisterProviderOptions<EventLogSettings, EventLogLoggerProvider>(services);
 
+        services.AddLogging();
+
+        services.AddSingleton<MidiServicesConfig>();
+
         services.AddSingleton<ServiceState>();
+
         services.AddSingleton<DeviceGraph>();
         services.AddSingleton<SessionGraph>();
 

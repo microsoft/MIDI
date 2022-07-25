@@ -7,6 +7,8 @@ namespace MidiService.Protocol
     {
         private const string PipePrefix = "midi.";
 
+        // May want to make this something which can be set in the config file
+
         public const string InitialConnectionPipeName = PipePrefix + "Connect";
         public const string EnumerationServicePipePrefix = PipePrefix + "Enumerator";
 

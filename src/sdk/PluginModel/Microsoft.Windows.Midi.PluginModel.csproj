@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\shared\plumbing\MidiServiceData\MidiService.Data.csproj" />
+    <ProjectReference Include="..\MidiMessages\Microsoft.Windows.Midi.Messages.csproj" />
   </ItemGroup>
 
 </Project>

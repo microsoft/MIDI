@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <Folder Include="Helpers\Messages\" />
+    <Folder Include="Transport\" />
   </ItemGroup>
 
   <ItemGroup>

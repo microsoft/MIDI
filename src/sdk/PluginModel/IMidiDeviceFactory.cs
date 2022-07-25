@@ -13,7 +13,7 @@ namespace Microsoft.Windows.Midi.PluginModel
     public interface IMidiDeviceFactory
     {
 
-        public IMidiDevice CreateDevice(IMidiDeviceCreateOptions options);
+       // public IMidiDevice CreateDevice(IMidiDeviceCreateOptions options);
 
     }
 }

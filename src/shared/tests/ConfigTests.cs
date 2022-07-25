@@ -20,24 +20,24 @@ namespace SharedLibraryTests
         //}
 
 
-        [TestMethod]
-        public void TestCreateConfigFile()
-        {
-            MidiServicesConfig config = new MidiServicesConfig();
+        //[TestMethod]
+        //public void TestCreateConfigFile()
+        //{
+        //    MidiServicesConfig config = new MidiServicesConfig();
 
-            config.LoadDefaults();
+        //    config.LoadDefaults();
 
-            config.Save();
-        }
+        //    config.Save();
+        //}
 
 
-        [TestMethod]
-        public void TestLoadConfigFile()
-        {
-            MidiServicesConfig config = new MidiServicesConfig();
+        //[TestMethod]
+        //public void TestLoadConfigFile()
+        //{
+        //    MidiServicesConfig config = new MidiServicesConfig();
 
-            config.Load();
-        }
+        //    config.Load();
+        //}
 
 
     }

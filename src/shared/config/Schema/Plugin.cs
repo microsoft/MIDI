@@ -10,7 +10,8 @@ namespace MidiConfig.Schema
     {
         public Guid Id { get; set; }
 
-        public string Path { get; set; }
+        // just the filename in the trusted plugins subfolder. Can't load from anywhere else
+        public string FileName { get; set; }
 
         // TODO: Any other metadata we need? Version info? something else?
 

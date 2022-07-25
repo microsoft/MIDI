@@ -8,7 +8,7 @@ namespace Microsoft.Windows.Midi.PluginModel
 {
     public interface IMidiEndpointFactory
     {
-        public IMidiEndpoint CreateEndpoint(IMidiDevice parentDevice, IMidiEndpointCreateOptions options);
+//        public IMidiEndpoint CreateEndpoint(IMidiDevice parentDevice, IMidiEndpointCreateOptions options);
 
     }
 }
