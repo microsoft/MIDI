@@ -47,7 +47,7 @@ namespace MidiConfig
 
             FileManager.LoadDefaults();
 
-           CreateConfigFile(true);
+            CreateConfigFile(true);
 
         }
 
