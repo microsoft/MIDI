@@ -163,7 +163,8 @@ namespace MidiConfig
         {
             get
             {
-                return Path.Combine(AppDataFolder, DefaultSetupFileNameWithoutPath);
+                //return Path.Combine(AppDataFolder, DefaultSetupFileNameWithoutPath);
+                return DefaultSetupFileNameWithoutPath;
             }
         }
 

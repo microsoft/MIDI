@@ -22,44 +22,69 @@ namespace MidiConfig
         {
             _logger = logger;
 
-            _logger.LogInformation("DEBUG: MidiServicesConfig constructor");
+            // _logger.LogInformation("DEBUG: MidiServicesConfig constructor");
 
-
-            CurrentSetupFileName = FileManager.DefaultSetupFileName;
+            MidiConfig = new Config();
+            LoadDefaults();
         }
 
-        public Header Header { get; set; } = new Header(); 
-
-
-        public Locations Locations { get; set; } = new Locations();
-
-
-        public List<Plugin> TrustedPlugins { get; set; } = new List<Plugin>();
-
-        public string CurrentSetupFileName { get; set; }
+        public Config MidiConfig { get; set; }
 
         public void LoadDefaults()
         {
+ 
             _logger.LogDebug("MidiServicesConfig : Loading Defaults");
 
             // TODO: We need to get this schema version from someplace else
-            Header.SchemaVersion = new Version(1, 0, 0);
+            MidiConfig.Header.SchemaVersion = new Version(1, 0, 0);
 
-            Locations.MainAppFolder = FileManager.AppDataFolder;
-            Locations.SetupsFolder = FileManager.DefaultSetupsFolder;
-            Locations.PluginsFolder = FileManager.DefaultPluginsFolder;
-            Locations.IconsFolder = FileManager.DefaultIconsFolder;
+            MidiConfig.Locations.MainAppFolder = FileManager.AppDataFolder;
+            MidiConfig.Locations.SetupsFolder = FileManager.DefaultSetupsFolder;
+            MidiConfig.Locations.PluginsFolder = FileManager.DefaultPluginsFolder;
+            MidiConfig.Locations.IconsFolder = FileManager.DefaultIconsFolder;
 
-            CurrentSetupFileName = FileManager.DefaultSetupFileName;
+            MidiConfig.CurrentSetupFileNameWithoutPath = FileManager.DefaultSetupFileName;
 
             FileManager.LoadDefaults();
+
+           CreateConfigFile(true);
+
         }
 
         public void Load()
         {
-            // Get file path
+            _logger.LogDebug("MidiServicesConfig : Loading Config File");
 
-            // deserialize
+            string fullPath = FileManager.ConfigFileName;
+
+            if (!Directory.Exists(FileManager.ConfigFileFolder))
+            {
+                throw new Exception($"Config folder does not exist or is inaccessible. {FileManager.ConfigFileFolder}.");
+            }
+
+            if (!File.Exists(fullPath))
+            {
+                throw new Exception($"Config file does not exist or is inaccessible. {fullPath}.");
+            }
+
+            // Now we can load it up
+
+            JsonSerializerOptions options = GetSerializerOptions();
+
+            Config? config;
+
+            using (FileStream stream = File.OpenRead(fullPath))
+            {
+                config = JsonSerializer.Deserialize<Config>(stream, options);
+
+                if (config == null)
+                {
+                    // bad file
+                    throw new Exception($"Config file could not deserialize. Corrupted? {fullPath}.");
+                }
+            }
+
+            MidiConfig = config;
         }
 
 
@@ -71,57 +96,51 @@ namespace MidiConfig
         }
 
 
-        private void LoadConfigFile()
+        private void CreateConfigFile(bool onlyIfMissing = false)
         {
-            _logger.LogDebug("MidiServicesConfig : LoadConfigFile");
-
-            string fileName = FileManager.ConfigFileName;
-
-            if (File.Exists(fileName))
+            try
             {
-                // TODO
+                _logger.LogDebug("DEBUG: MidiServicesConfig : CreateConfigFile");
+
+                string fileName = FileManager.ConfigFileName;
+
+                _logger.LogDebug($"DEBUG: MainConfigFileLocation = {fileName}");
+
+                string configDirectory = FileManager.ConfigFileFolder;
+
+                if (!Directory.Exists(configDirectory))
+                {
+                    throw new Exception($"Configuration directory is missing. {configDirectory}");
+                }
+
+                // If the config file already exists, back it up
+
+                if (File.Exists(fileName))
+                {
+                    //System.Diagnostics.Debug.WriteLine("MainConfigFile exists}");
+
+                    if (onlyIfMissing)
+                    {
+                        return;
+                    }
+
+                    FileManager.MoveFileToBackup(fileName, FileType.ConfigFile);
+                }
+
+                // write new file
+                JsonSerializerOptions options = GetSerializerOptions();
+
+                using (FileStream stream = File.Create(fileName))
+                {
+                    JsonSerializer.Serialize<Config>(stream, MidiConfig, options);
+                }
+
+                _logger.LogDebug("DEBUG: MidiServicesConfig : CreateConfigFile completed");
+
             }
-            else
+            catch (Exception ex)
             {
-                // file does not exist
-
-                //LoadDefaults();
-
-                CreateConfigFile();
-            }
-
-        }
-
-
-
-        private void CreateConfigFile()
-        {
-            string fileName = FileManager.ConfigFileName;
-
-            System.Diagnostics.Debug.WriteLine($"MainConfigFileLocation = {fileName}");
-
-            string configDirectory = FileManager.ConfigFileFolder;
-
-            if (!Directory.Exists(configDirectory))
-            {
-                throw new Exception($"Configuration directory is missing. {configDirectory}");
-            }
-
-            // If the config file already exists, back it up
-
-            if (File.Exists(fileName))
-            {
-                System.Diagnostics.Debug.WriteLine("MainConfigFile exists}");
-
-                FileManager.MoveFileToBackup(fileName, FileType.ConfigFile);
-            }
-
-            // write file
-            JsonSerializerOptions options = GetSerializerOptions();            
-
-            using (FileStream stream = File.Create(fileName))
-            {
-                JsonSerializer.Serialize<MidiServicesConfig>(stream, this, options);
+                _logger.LogError("Exception creating config file. " + ex.ToString());
             }
         }
 
@@ -135,40 +154,6 @@ namespace MidiConfig
             };
         }
 
-
-        //private string GetMainConfigFileLocation()
-        //{
-        //    string path = Environment.ExpandEnvironmentVariables(FileLocations.GetOrCreateConfigFileEntryInRegistry());
-
-        //    return path;
-        //}
-
-        //private string GetAndValidateMainConfigFileLocation()
-        //{
-
-        //    if (Directory.Exists(path))
-        //    {
-        //        // file is there. We're good
-        //        return path;
-        //    }
-        //    else
-        //    {
-        //        // file is missing. Try to create it. It's possible we don't have permissions
-        //        // so be sure to pass along any exception
-
-        //        try
-        //        {
-        //            File.Create(path);
-
-        //            return path;
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            throw new Exception($"Could not create main config file {path}", ex);
-        //        }
-
-        //    }
-        //}
 
 
 

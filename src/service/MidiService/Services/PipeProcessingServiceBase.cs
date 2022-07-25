@@ -30,7 +30,7 @@ namespace MidiService.Services
 
         private void CreatePipe()
         {
-            _logger.LogDebug($"DEBUG: Creating pipe {PipeName}");
+//            _logger.LogDebug($"DEBUG: Creating pipe {PipeName}");
 
             try
             {
@@ -53,7 +53,7 @@ namespace MidiService.Services
                             2048, 2048,
                             security);
 
-                _logger.LogDebug($"DEBUG: Created pipe server stream {PipeName}");
+ //               _logger.LogDebug($"DEBUG: Created pipe server stream {PipeName}");
             }
             catch (InvalidOperationException ex)
             {
@@ -62,7 +62,7 @@ namespace MidiService.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Could not create pipe. {PipeName} " + ex.Message);
+                _logger.LogError($"Could not create pipe {PipeName}. This is sometimes because of a quick restart when Windows hasn't yet removed the old pipe instance. Exception: " + ex.Message);
                 throw;
             }
         }
@@ -83,7 +83,7 @@ namespace MidiService.Services
                     {
                         try
                         {
-                            _logger.LogDebug($"DEBUG: Waiting for connection on pipe {PipeName} (non async).");
+                            _logger.LogInformation($"Waiting for connection on pipe {PipeName}.");
 
                             // This will throw TaskCanceledException if service is shut down
                             // It will throw IOException if the client disconnected (this is normal)
@@ -91,7 +91,7 @@ namespace MidiService.Services
                             //await _pipe.WaitForConnectionAsync(stoppingToken);
                             _pipe.WaitForConnection();
 
-                            _logger.LogDebug($"DEBUG: Connection established on pipe {PipeName}. Returning from WaitForPipeConnection");
+                            //_logger.LogDebug($"DEBUG: Connection established on pipe {PipeName}. Returning from WaitForPipeConnection");
 
                             return;
 
@@ -100,19 +100,19 @@ namespace MidiService.Services
                         {
                             // client disconnected. This is normal. Restart the loop to wait
                             // for the next client to connect
-                            _logger.LogDebug("Client disconnected. Restarting loop.");
+                            //_logger.LogDebug("Client disconnected. Restarting loop.");
 
                             _pipe.Disconnect();
                             continue;       // restart the loop. Hey, it's almost as good as a GOTO
                         }
                     }
 
-                    _logger.LogDebug("DEBUG: Exited loop. Returning from WaitForPipeConnection.");
+                    //_logger.LogDebug("DEBUG: Exited loop. Returning from WaitForPipeConnection.");
 
                 }
                 catch (TaskCanceledException)
                 {
-                    _logger.LogDebug("DEBUG: WaitForPipeConnection. Task Canceled.");
+                    _logger.LogInformation("Task Canceled: WaitForPipeConnection.");
 
                     if (_pipe != null && _pipe.IsConnected)
                     {
@@ -133,14 +133,14 @@ namespace MidiService.Services
 
         public override Task StartAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("DEBUG: StartAsync");
+            //_logger.LogInformation("DEBUG: StartAsync");
 
             return base.StartAsync(cancellationToken);
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("DEBUG: StopAsync");
+           // _logger.LogInformation("DEBUG: StopAsync");
 
             if (_pipe != null)
             {
@@ -167,7 +167,7 @@ namespace MidiService.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("DEBUG: ExecuteAsync");
+            //_logger.LogInformation("DEBUG: ExecuteAsync");
 
             // I wanted to do this in StartAsync, but ExecuteAsync can start before StartAsync completes.
             CreatePipe();

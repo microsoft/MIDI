@@ -20,7 +20,7 @@ namespace MidiService.Model
             _logger = logger;
             _config = config;
 
-            _logger.LogDebug("DEBUG: ServiceState constructor");
+            //_logger.LogDebug("DEBUG: ServiceState constructor");
 
             // not keen on this being in the constructor, but easier to deal with the DI this way
             _config.Load();
