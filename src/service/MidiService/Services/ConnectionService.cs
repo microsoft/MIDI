@@ -4,9 +4,11 @@
 
 
 using MidiService.Services;
+using ProtoBuf;
 using System.IO.Pipes;
 using System.Security.AccessControl;
 using System.Security.Principal;
+using System.Text.Json;
 using System.Threading;
 
 
@@ -29,6 +31,8 @@ namespace MidiService
             DeviceGraph deviceGraph): base(logger, lifetime)
 
         {
+            _logger.LogDebug("DEBUG: ConnectionService Constructor");
+
             _serviceState = serviceState;
             _sessionGraph = sessionGraph;
             _deviceGraph = deviceGraph;
@@ -36,7 +40,7 @@ namespace MidiService
             PipeName = MidiServiceConstants.InitialConnectionPipeName;
         }
 
-        private MidiSessionState SpinUpNewSession(CreateSessionRequestMessage request)
+        private MidiSessionState SpinUpNewMidiSession(CreateSessionRequestMessage request)
         {
             _logger.LogDebug("Creating new session.");
 
@@ -115,6 +119,8 @@ namespace MidiService
         //private MidiStreamSerializer _serializer;
 
 
+
+
         protected override void OnConnectionEstablished(CancellationToken stoppingToken)
         {
             var serializer = new MidiStreamSerializer(_pipe);
@@ -123,57 +129,65 @@ namespace MidiService
 
             // deserialize message. We're only expecting one kind of message
             // on this communications channel
-            CreateSessionRequestMessage request =
-                serializer.Deserialize<CreateSessionRequestMessage>();
+            CreateSessionRequestMessage? request = 
+                WaitForIncomingMessage<CreateSessionRequestMessage>(serializer);
 
-            _logger.LogInformation("Session create request received:\n"
-                + "\nProcessName: " + request.ProcessName
-                + "\nProcessId: " + request.ProcessId
-                + "\nSessionName: " + request.Name
-                + "\nClientVersion: " + request.Header.ClientVersion
-                + "\nClientRequestId: " + request.Header.ClientRequestId
-                + "\n");
+            if (request != null)
+            {
+                _logger.LogInformation("Session create request received:\n"
+                    + "\nProcessName: " + request.ProcessName
+                    + "\nProcessId: " + request.ProcessId
+                    + "\nSessionName: " + request.Name
+                    + "\nClientVersion: " + request.Header.ClientVersion
+                    + "\nClientRequestId: " + request.Header.ClientRequestId
+                    + "\n");
 
-            //_serviceState.Statistics.SessionServiceIncomingMessagesStatistics<CreateSessionRequestMessage.GetType()>
+                //_serviceState.Statistics.SessionServiceIncomingMessagesStatistics<CreateSessionRequestMessage.GetType()>
 
-            _logger.LogDebug("Spinning up new session.");
+                _logger.LogDebug("Spinning up new session.");
 
-            var sessionState = SpinUpNewSession(request);
+                var sessionState = SpinUpNewMidiSession(request);
 
-            _logger.LogDebug("Responding to client.");
+                _logger.LogDebug("Responding to client.");
 
-            // Respond back to client with the session details
-            // there's a potential race condition here with getting
-            // the pipe spun up before client tries to connect to it
-            CreateSessionResponseMessage response =
-                new CreateSessionResponseMessage()
-                {
-                    Header = new ResponseMessageHeader()
+                // Respond back to client with the session details
+                // there's a potential race condition here with getting
+                // the pipe spun up before client tries to connect to it
+                CreateSessionResponseMessage response =
+                    new CreateSessionResponseMessage()
                     {
-                        ClientId = sessionState.HeaderClientId,
-                        ClientRequestId = request.Header.ClientRequestId,
-                        ResponseCode = ResponseCode.Success,
-                        ServerVersion = _serviceState.GetServiceVersion().ToString(),
-                    },
+                        Header = new ResponseMessageHeader()
+                        {
+                            ClientId = sessionState.HeaderClientId,
+                            ClientRequestId = request.Header.ClientRequestId,
+                            ResponseCode = ResponseCode.Success,
+                            ServerVersion = _serviceState.GetServiceVersion().ToString(),
+                        },
 
-                    CreatedTime = sessionState.CreatedTime,
-                    NewSessionId = sessionState.Id,
-                    SessionChannelName = sessionState.SessionChannelName,
-                };
+                        CreatedTime = sessionState.CreatedTime,
+                        NewSessionId = sessionState.Id,
+                        SessionChannelName = sessionState.SessionChannelName,
+                    };
 
-            _logger.LogDebug("About to serialize response");
+                _logger.LogDebug("About to serialize response");
 
-            try
-            {
-                // send the reply message
-                serializer.Serialize<CreateSessionResponseMessage>(response);
+                try
+                {
+                    // send the reply message
+                    serializer.Serialize<CreateSessionResponseMessage>(response);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError("Exception serializing response. " + ex.Message);
+                }
+
+                _logger.LogDebug("Response complete.");
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogError("Exception serializing response. " + ex.Message);
+                // message is null, so not something we expected. Already logged
+                // so just continue onwards.
             }
-
-            _logger.LogDebug("Response complete.");
 
         }
     }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MidiService.Protocol.Messages.Management;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,11 @@ namespace MidiService.Protocol.Messages.Base
     [ProtoContract]
     [ProtoInclude(11, typeof(CreateSessionRequestMessage))]
     [ProtoInclude(12, typeof(CreateSessionResponseMessage))]
+
+    [ProtoInclude(13, typeof(ServicePingMessage))]
+    [ProtoInclude(14, typeof(ServicePingResponseMessage))]
+
+
     public abstract class ProtocolMessage
     {
         //[ProtoMember(1)]

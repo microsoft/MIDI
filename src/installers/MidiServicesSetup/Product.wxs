@@ -89,7 +89,7 @@
 			<!-- TODO: These hard-coded paths suck. But Wix was not picking up the published
 					files, just other build artifacts. Need to change this. -->
 			
-			<!-- YOU MUST PUBLISH THE SERVICE FOR THE NEW VERSION TO BE PICKED UP -->
+			<!-- YOU MUST PUBLISH THE SERVICE FOR THE NEW VERSION TO BE PICKED UP BY THE INSTALLER -->
 			
 			<Component Id="ServiceConfig" Directory="ServiceExeFolder">
 				<File Id="ServiceAppConfig"

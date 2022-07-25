@@ -5,18 +5,18 @@ using MidiService.Protocol.Messages.Session;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Runtime.Serialization;
+using MidiService.Protocol.Messages.Management;
 
 namespace ServiceTests
 {
     [TestClass]
     public class SessionRawProtocolTests
     {
-    //    private NamedPipeClientStream _sessionPipe;
         private Guid _clientId = Guid.NewGuid();
         private Version _clientVersion = new Version(1, 0, 0);
 
         [TestMethod]
-        public void TestOpeningPipe()
+        public void TestOpeningConnectionPipe()
         {
             using (NamedPipeClientStream sessionPipe = new NamedPipeClientStream(
                 ".", // local machine
@@ -86,10 +86,9 @@ namespace ServiceTests
         {
             Console.WriteLine("Session Connection request");
             Console.WriteLine(" + Header ---------- ");
-            //Console.WriteLine(" - Opcode:           " + msg.Opcode);
             Console.WriteLine(" - Client Id:        " + msg.Header.ClientId);
             Console.WriteLine(" - Request Id:       " + msg.Header.ClientRequestId);
-            Console.WriteLine(" - Server Version:   " + msg.Header.ClientVersion);
+            Console.WriteLine(" - Client Version:   " + msg.Header.ClientVersion);
             Console.WriteLine(" + Session --------- ");
             Console.WriteLine(" - Session Name:     " + msg.Name);
             Console.WriteLine(" - Process Name:     " + msg.ProcessName);
@@ -110,6 +109,7 @@ namespace ServiceTests
             Console.WriteLine(" - Session Pipe:     " + msg.SessionChannelName);
             Console.WriteLine(" - Created At:       " + msg.CreatedTime);
         }
+
 
 
 

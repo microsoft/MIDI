@@ -8,6 +8,7 @@ using System.Linq.Expressions;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace MidiService.Services
@@ -133,9 +134,14 @@ namespace MidiService.Services
 
         public override Task StartAsync(CancellationToken cancellationToken)
         {
-            //_logger.LogInformation("DEBUG: StartAsync");
+            // doing this here because ExecuteAsync blocks, despite its name
+            // even when you return a task from it. Maybe I was doing something
+            // dumb, but recommendation to have multiple background services in
+            // a single Windows Service is to do this.
 
-            return base.StartAsync(cancellationToken);
+            Task.Run(() => MainLoop(cancellationToken));
+
+            return Task.CompletedTask;
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)
@@ -159,25 +165,45 @@ namespace MidiService.Services
                 _logger.LogInformation("Stopping service. Pipe was not open.");
             }
 
-            return base.StopAsync(cancellationToken);
+            return Task.CompletedTask;
         }
 
-
+        // This is where the derived class does most of the work
         protected abstract void OnConnectionEstablished(CancellationToken stoppingToken);
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        // Helper method to wait for a specific message type and only that message type
+        // on this pipe. Good only for pipes with a single request/response pairing.
+        protected T? WaitForIncomingMessage<T>(MidiStreamSerializer serializer) where T : ProtocolMessage
         {
-            //_logger.LogInformation("DEBUG: ExecuteAsync");
+            _logger.LogDebug($"WaitForIncomingMessage '{typeof(T)}'");
 
-            // I wanted to do this in StartAsync, but ExecuteAsync can start before StartAsync completes.
+            try
+            {
+                T message = serializer.Deserialize<T>();
+                return message;
+            }
+            catch (JsonException)
+            {
+                // unexpected message type
+                _logger.LogError($"Unexpected or invalid message received on '{PipeName}'. Expected '{typeof(T)}'");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                // other random error
+                _logger.LogError($"Error deserializing '{PipeName}'. Expected '{typeof(T)}' Error: " + ex.ToString());
+                return null;
+            }
+        }
+
+        protected void MainLoop(CancellationToken stoppingToken)
+        {
             CreatePipe();
 
             if (_pipe == null)
             {
                 throw new Exception("Could not start service. Pipe is null.");
             }
-
-
 
             try
             {
@@ -192,7 +218,8 @@ namespace MidiService.Services
                     // a 50ms delay in THIS loop is not the end of the world. We 
                     // wouldn't want anything like this in the MIDI message processing
                     // loops, however.
-                    await Task.Delay(50);
+                    //await Task.Delay(50);
+                    Thread.Sleep(50);
                 }
             }
             catch (TaskCanceledException)
@@ -210,6 +237,11 @@ namespace MidiService.Services
 
                 _lifetime.StopApplication();
             }
+
+        }
+
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
         }
     }
 }

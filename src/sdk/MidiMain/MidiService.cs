@@ -27,18 +27,6 @@ namespace Microsoft.Windows.Midi
             throw new NotImplementedException();
         }
 
-
-        /// <summary>
-        /// Checks to see if the MIDI service is running
-        /// </summary>
-        /// <returns>True if it is running</returns>
-        /// <exception cref="NotImplementedException"></exception>
-        public static bool IsMidiServiceRunning()
-        {
-            // checks to see if the MIDI service is running
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         /// If the MIDI service is installed but running, this will start it
         /// </summary>
@@ -48,22 +36,24 @@ namespace Microsoft.Windows.Midi
             throw new NotImplementedException();
         }
 
-
         /// <summary>
-        /// Returns the version of the currently installed service
+        /// Checks to see if the MIDI service is running
         /// </summary>
-        /// <returns></returns>
-        public static Version GetInstalledServiceVersion()
+        /// <returns>Version of the running service</returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public static Version PingService()
         {
+            // checks to see if the MIDI service is running
             throw new NotImplementedException();
         }
+
 
         /// <summary>
         /// Gets the URI for the service installer for the API version currently in use
         /// </summary>
         /// <returns>URL to the installer package</returns>
         /// <exception cref="NotImplementedException"></exception>
-        public static Uri GetInstallerUri()
+        public static Uri GetServicesInstallerUri()
         {
             throw new NotImplementedException();
         }

@@ -47,44 +47,63 @@ namespace MidiConfig
 
             FileManager.LoadDefaults();
 
-            CreateConfigFile(true);
+  //          CreateConfigFile(true);
 
         }
 
-        public void Load()
+        public bool Load()
         {
-            _logger.LogDebug("MidiServicesConfig : Loading Config File");
-
             string fullPath = FileManager.ConfigFileName;
+
+            _logger.LogDebug($"MidiServicesConfig : Loading Config File (checking for existing file at {fullPath})");
 
             if (!Directory.Exists(FileManager.ConfigFileFolder))
             {
-                throw new Exception($"Config folder does not exist or is inaccessible. {FileManager.ConfigFileFolder}.");
+                _logger.LogError($"Config folder does not exist or is inaccessible. {FileManager.ConfigFileFolder}.");
+
+                return false;
+                //throw new FileNotFoundException($"Config folder does not exist or is inaccessible. {FileManager.ConfigFileFolder}.");
             }
 
             if (!File.Exists(fullPath))
             {
-                throw new Exception($"Config file does not exist or is inaccessible. {fullPath}.");
+                _logger.LogError($"Config file does not exist or is inaccessible. {fullPath}.");
+
+                return false;
+                //throw new FileNotFoundException($"Config file does not exist or is inaccessible. {fullPath}.");
             }
 
-            // Now we can load it up
-
-            JsonSerializerOptions options = GetSerializerOptions();
-
-            Config? config;
-
-            using (FileStream stream = File.OpenRead(fullPath))
+            try
             {
-                config = JsonSerializer.Deserialize<Config>(stream, options);
+                _logger.LogDebug($"MidiServicesConfig : Opening file and deserializing");
 
-                if (config == null)
+                // Now we can load it up
+
+                JsonSerializerOptions options = GetSerializerOptions();
+
+                Config? config;
+
+                using (FileStream stream = File.OpenRead(fullPath))
                 {
-                    // bad file
-                    throw new Exception($"Config file could not deserialize. Corrupted? {fullPath}.");
+                    config = JsonSerializer.Deserialize<Config>(stream, options);
+
+                    if (config == null)
+                    {
+                        // bad file
+                        throw new Exception($"Config file could not deserialize. Corrupted? {fullPath}.");
+                    }
                 }
+
+                MidiConfig = config;
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to load config file {fullPath}. Is the file corrupted? " + ex.ToString());
+                throw;
             }
 
-            MidiConfig = config;
         }
 
 

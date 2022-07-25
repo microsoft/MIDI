@@ -9,10 +9,13 @@ namespace MidiService.Protocol
 
         // May want to make this something which can be set in the config file
 
-        public const string InitialConnectionPipeName = PipePrefix + "Connect";
-        public const string EnumerationServicePipePrefix = PipePrefix + "Enumerator";
+        public const string InitialConnectionPipeName = PipePrefix + "connect";
+        public const string PingPipeName = PipePrefix + "ping";
 
-        public const string SessionServicePipePrefix = PipePrefix + "Session";  // this gets an ID added to it
+
+        public const string EnumerationServicePipePrefix = PipePrefix + "enumerator";
+
+        public const string SessionServicePipePrefix = PipePrefix + "session";  // this gets an ID added to it
 
 
 
