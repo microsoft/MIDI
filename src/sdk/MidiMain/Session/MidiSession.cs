@@ -58,7 +58,7 @@ namespace Microsoft.Windows.Midi.Session
                 ))
             {
                 // get the serializer ready
-                var serializer = new MidiStreamSerializer(sessionPipe);
+                var serializer = new MidiServiceProtocolSerializer(sessionPipe);
 
                 // connect to pipe. This could take a while if pipe is busy
                 sessionPipe.Connect();

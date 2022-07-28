@@ -173,7 +173,7 @@ namespace MidiService.Services
 
         // Helper method to wait for a specific message type and only that message type
         // on this pipe. Good only for pipes with a single request/response pairing.
-        protected T? WaitForIncomingMessage<T>(MidiStreamSerializer serializer) where T : ProtocolMessage
+        protected T? WaitForIncomingMessage<T>(MidiServiceProtocolSerializer serializer) where T : ProtocolMessage
         {
             _logger.LogDebug($"WaitForIncomingMessage '{typeof(T)}'");
 

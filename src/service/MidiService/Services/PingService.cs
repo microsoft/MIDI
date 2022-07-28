@@ -26,7 +26,7 @@ namespace MidiService
 
         protected override void OnConnectionEstablished(CancellationToken stoppingToken)
         {
-            var serializer = new MidiStreamSerializer(_pipe);
+            var serializer = new MidiServiceProtocolSerializer(_pipe);
 
             _logger.LogDebug("Connection established. Deserializing request message");
 
