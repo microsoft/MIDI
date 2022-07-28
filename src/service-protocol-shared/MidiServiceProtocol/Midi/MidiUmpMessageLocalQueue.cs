@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MidiService.Protocol.Midi
 {
-    public class MidiMessageLocalQueue : IMidiMessageQueue, IDisposable
+    public class MidiUmpMessageLocalQueue : IMidiUmpMessageQueue, IDisposable
     { 
         // if needed, this can be optimized to work on a block of
         // local memory. Using the .NET queue for prototying for now
@@ -166,6 +166,11 @@ namespace MidiService.Protocol.Midi
         }
 
         public bool IsFull()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IsEmpty()
         {
             throw new NotImplementedException();
         }

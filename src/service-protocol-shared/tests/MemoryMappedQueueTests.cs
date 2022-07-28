@@ -19,21 +19,21 @@ namespace ProtocolTests
             int queueSize = 1000;
             Guid id = Guid.NewGuid();
 
-            using (IMidiMessageQueue _queue =
-                new MidiMessageSharedMemoryQueue(queueSize, id, MidiMessageSharedMemoryQueue.ResizeMode.None))
+            using (IMidiUmpMessageQueue _queue =
+                new MidiUmpMessageSharedQueue(queueSize, id))
             {
                 // nothing to do here
             }
         }
 
-        [TestMethod]
-        public void EnqueueAndDequeueInQueueOfJustOneElement()
+        [TestMethod(), Timeout(3000)]
+        public void WordEnqueueAndDequeueSingleElement()
         {
             int queueSize = 10;
             Guid id = Guid.NewGuid();
 
-            using (IMidiMessageQueue _queue =
-                new MidiMessageSharedMemoryQueue(queueSize, id, MidiMessageSharedMemoryQueue.ResizeMode.None))
+            using (IMidiUmpMessageQueue _queue =
+                new MidiUmpMessageSharedQueue(queueSize, id))
             {
                 uint writtenValue = 4206942;
                 uint count = 10;
@@ -52,46 +52,83 @@ namespace ProtocolTests
             }
         }
 
-
-
-        [TestMethod]
-        public void EnqueueAndDequeue()
+        [TestMethod(), Timeout(3000)]
+        public void WordDequeueFromEmptyQueue()
         {
-            int queueSize = 1000;
+            int queueSize = 10;
             Guid id = Guid.NewGuid();
 
-            using (IMidiMessageQueue _queue =
-                new MidiMessageSharedMemoryQueue(queueSize, id, MidiMessageSharedMemoryQueue.ResizeMode.None))
+            using (IMidiUmpMessageQueue _queue =
+                new MidiUmpMessageSharedQueue(queueSize, id))
             {
-                uint startValue = 4206942;
-                uint count = 10;
+                System.Diagnostics.Debug.WriteLine("about to dequeue from an empty queue");
 
-                System.Diagnostics.Debug.WriteLine("about to enqueue");
+                uint word;
+
+                Assert.IsFalse(_queue.Dequeue(out word));
+            }
+        }
+
+        [TestMethod(), Timeout(3000)]
+        public void Ump128DequeueFromEmptyQueue()
+        {
+            int queueSize = 10;
+            Guid id = Guid.NewGuid();
+
+            using (IMidiUmpMessageQueue _queue =
+                new MidiUmpMessageSharedQueue(queueSize, id))
+            {
+                System.Diagnostics.Debug.WriteLine("about to dequeue from an empty queue");
+
+                Ump128 ump;
+
+                Assert.IsFalse(_queue.Dequeue(out ump));
+            }
+        }
+
+
+        [TestMethod(), Timeout(3000)]
+        public void WordEnqueueAndDequeue()
+        {
+            int queueSize = 12;
+            Guid id = Guid.NewGuid();
+
+            using (IMidiUmpMessageQueue _queue =
+                new MidiUmpMessageSharedQueue(queueSize, id))
+            {
+                int startValue = 4206942;
+                int count = queueSize;
+
+                System.Diagnostics.Debug.WriteLine($"About to enqueue {count} words in queue with capacity {queueSize}");
 
                 // this is the most expensive way to add items to the
                 // queue and so should take the most time.
-                for (uint i = startValue; i < startValue + count; i++)
+                for (int i = 0; i < count; i++)
                 {
-                    Assert.IsTrue(_queue.Enqueue(i), "Failed to enqueue");
+                    System.Diagnostics.Debug.Write(i + " ");
+
+                    Assert.IsTrue(_queue.Enqueue((uint)(i + startValue)), "Failed to enqueue");
                 }
 
-                System.Diagnostics.Debug.WriteLine("about to dequeue");
+                System.Diagnostics.Debug.WriteLine($"\n\nAbout to dequeue {count} words");
 
                 // Dequeue and verify same values are there
-                for (uint i = startValue; i < startValue + count; i++)
+                for (int i = 0; i < count; i++)
                 {
                     uint word;
 
+                    System.Diagnostics.Debug.Write(i + " ");
+
                     Assert.IsTrue(_queue.Dequeue(out word), "Failed to dequeue");
 
-                    Assert.AreEqual(i, word);
+                    Assert.AreEqual((uint)(i + startValue), word);
                 }
             }
         }
 
 
-        [TestMethod]
-        public void OverCapacityWord()
+        [TestMethod(), Timeout(3000)]
+        public void WordEnqueueOverCapacity()
         {
             int loopCount = 11;
             int queueStructCount = 10;
@@ -107,8 +144,8 @@ namespace ProtocolTests
 
             Guid id = Guid.NewGuid();
 
-            using (IMidiMessageQueue _queue =
-                new MidiMessageSharedMemoryQueue(queueSizeInWords, id, MidiMessageSharedMemoryQueue.ResizeMode.None))
+            using (IMidiUmpMessageQueue _queue =
+                new MidiUmpMessageSharedQueue(queueSizeInWords, id))
             {
                 System.Diagnostics.Debug.WriteLine("about to enqueue");
 
@@ -130,8 +167,8 @@ namespace ProtocolTests
         }
 
 
-        [TestMethod]
-        public void OverCapacityUmp128()
+        [TestMethod(), Timeout(3000)]
+        public void Ump128EnqueueOverCapacity()
         {
             int loopCount = 11;
             int queueStructCount = 10;
@@ -147,8 +184,8 @@ namespace ProtocolTests
 
             Guid id = Guid.NewGuid();
 
-            using (IMidiMessageQueue _queue =
-                new MidiMessageSharedMemoryQueue(queueSizeInWords, id, MidiMessageSharedMemoryQueue.ResizeMode.None))
+            using (IMidiUmpMessageQueue _queue =
+                new MidiUmpMessageSharedQueue(queueSizeInWords, id))
             {
                 System.Diagnostics.Debug.WriteLine("about to enqueue");
 
@@ -173,8 +210,8 @@ namespace ProtocolTests
         }
 
 
-        [TestMethod]
-        public void EnqueueAndDequeue128()
+        [TestMethod(), Timeout(3000)]
+        public void Ump128EnqueueAndDequeueMultiple()
         {
             int loopCount = 1000;
 
@@ -190,8 +227,8 @@ namespace ProtocolTests
 
             Guid id = Guid.NewGuid();
 
-            using (IMidiMessageQueue _queue =
-                new MidiMessageSharedMemoryQueue(queueSize, id, MidiMessageSharedMemoryQueue.ResizeMode.None))
+            using (IMidiUmpMessageQueue _queue =
+                new MidiUmpMessageSharedQueue(queueSize, id))
             {
                 uint startValue = 4206942;
 
@@ -280,15 +317,15 @@ namespace ProtocolTests
 
 
 
-        [TestMethod]
-        public void EnqueueAndDequeueMixed()
+        [TestMethod(), Timeout(3000)]
+        public void UmpMixedEnqueueRandomAndDequeue()
         {
-            int queueSize = 20;
+            int queueSize = 15;
 
             Guid id = Guid.NewGuid();
 
-            using (IMidiMessageQueue queue =
-                new MidiMessageSharedMemoryQueue(queueSize, id, MidiMessageSharedMemoryQueue.ResizeMode.None))
+            using (IMidiUmpMessageQueue queue =
+                new MidiUmpMessageSharedQueue(queueSize, id))
             {
                 System.Diagnostics.Debug.WriteLine("\nNot a performance test.");
                 System.Diagnostics.Debug.WriteLine("This tests writing messages with a valid UMP message type, ");
@@ -393,7 +430,7 @@ namespace ProtocolTests
                 int j = 0;
                 bool dequeueResult = true;
 
-                while (dequeueResult)
+                while (dequeueResult && !queue.IsEmpty())
                 {
                     System.Diagnostics.Debug.Write(String.Format("{0:0#} : ", j + 1));
 
@@ -467,21 +504,153 @@ namespace ProtocolTests
                     j++;
                 }
 
-                System.Diagnostics.Debug.WriteLine($"Read {messagesRead} structures to the queue comprised of {wordsRead} words in total.\n");
+                System.Diagnostics.Debug.WriteLine($"Read {messagesRead} structures from the queue comprised of {wordsRead} words in total.\n");
 
 
 
             }
         }
 
+        Random _random = new Random();
 
-        //[TestMethod]
-        //public void MemoryMappedQueueCapacity()
-        //{
+        private bool EnqueueRandomUmp(IMidiUmpMessageQueue q, uint data)
+        {
+            switch (_random.Next(0, 3))
+            {
+                case 1:
+                    System.Diagnostics.Debug.WriteLine($"Enqueuing Ump64 with value {data}");
+                    return q.Enqueue(BuildSemiValidUmp64(data));
+                case 2:
+                    System.Diagnostics.Debug.WriteLine($"Enqueuing Ump96 with value {data}");
+                    return q.Enqueue(BuildSemiValidUmp96(data));
+                case 3:
+                    System.Diagnostics.Debug.WriteLine($"Enqueuing Ump128 with value {data}");
+                    return q.Enqueue(BuildSemiValidUmp128(data));
+                default:
+                    System.Diagnostics.Debug.WriteLine($"Enqueuing Ump32 with value {data}");
+                    return q.Enqueue(BuildSemiValidUmp32(data));
+            }
+        }
 
-        //}
+        private bool DequeueNextUmp(IMidiUmpMessageQueue q)
+        {
+            bool dequeueResult = false;
+
+            switch (q.PeekNextMessageWordCount())
+            {
+                case 1:
+                    Ump32 ump32 = default;
+                    dequeueResult = q.Dequeue(out ump32);
+                    if (!dequeueResult)
+                    {
+                        System.Diagnostics.Debug.WriteLine("Unable to read Ump32 (1 word)");
+                        return false;
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("Dequeued Ump32");
+                        return true;
+                    }
+                case 2:
+                    Ump64 ump64 = default;
+                    dequeueResult = q.Dequeue(out ump64);
+                    if (!dequeueResult)
+                    {
+                        System.Diagnostics.Debug.WriteLine("Unable to read Ump64 (2 words)");
+                        return false;
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("Ump64 (2 words)");
+                        return true;
+                    }
+                case 3:
+                    Ump96 ump96 = default;
+                    dequeueResult = q.Dequeue(out ump96);
+                    if (!dequeueResult)
+                    {
+                        System.Diagnostics.Debug.WriteLine("Unable to read Ump96 (3 words)");
+                        return false;
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("Ump96 (3 words)");
+                        return true;
+                    }
+                case 4:
+                    Ump128 ump128 = default;
+                    dequeueResult = q.Dequeue(out ump128);
+                    if (!dequeueResult)
+                    {
+                        System.Diagnostics.Debug.WriteLine("Unable to read Ump128 (4 words)");
+                        return false;
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("Ump128 (4 words)");
+                        return true;
+                    }
+                default:
+                    System.Diagnostics.Debug.WriteLine("Peek returned an unexpected result.");
+                    return false;
+            }
+        }
 
 
+
+        // What this test does:
+        // - adds and removes items to cause the queue pointers to move and wrap. 
+        //   It's really just testing if it's truly circular.
+        // what this test doesn't do
+        // - validate that the data is accurate
+
+        [TestMethod(), Timeout(3000)]
+        public void UmpLoopedMixedEnqueueRandomAndDequeue()
+        {
+            int queueSize = 20;
+
+            Guid id = Guid.NewGuid();
+
+            using (IMidiUmpMessageQueue queue =
+                new MidiUmpMessageSharedQueue(queueSize, id))
+            {
+                System.Diagnostics.Debug.WriteLine("\nNot a performance test.");
+                System.Diagnostics.Debug.WriteLine("This tests interleaved reading/writing messages with a valid UMP message type, ");
+
+                System.Diagnostics.Debug.WriteLine($"About to enqueue random structures. Capacity is {queueSize} words.\n");
+
+                int iterations = 1000;
+
+                for (int i = 1; i <= iterations; i++)
+                {
+                    // queue 4 random messages
+                    for (int j = 0; j < 4; j++)
+                    {
+                        EnqueueRandomUmp(queue, (uint)(j * i * 2));
+                    }
+
+                    // dequeue 3 random messages
+                    for (int j = 0; j < 3; j++)
+                    {
+                        DequeueNextUmp(queue);
+                    }
+
+                    // queue 3 random messages
+                    for (int j = 0; j < 3; j++)
+                    {
+                        EnqueueRandomUmp(queue, (uint)(j * i * 4));
+                    }
+
+                    // dequeue 4 random messages. This should drain the queue
+                    for (int j = 0; j < 4; j++)
+                    {
+                        DequeueNextUmp(queue);
+                    }
+
+                    Assert.IsTrue(queue.IsEmpty(), "Queue should have been empty");
+                }
+            }
+        }
 
 
 

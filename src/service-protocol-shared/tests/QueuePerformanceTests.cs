@@ -12,7 +12,7 @@ namespace ProtocolTests
     public class QueuePerformanceTests
     {
 
-        [TestMethod]
+        [TestMethod(), Timeout(5000)]
         public void PerfProfileUmp128Enqueue()
         {
             int loopCount = 10000;
@@ -23,8 +23,8 @@ namespace ProtocolTests
 
             Guid id = Guid.NewGuid();
 
-            using (IMidiMessageQueue _queue =
-                new MidiMessageSharedMemoryQueue(queueSize, id, MidiMessageSharedMemoryQueue.ResizeMode.None))
+            using (IMidiUmpMessageQueue _queue =
+                new MidiUmpMessageSharedQueue(queueSize, id))
             {
                 System.Diagnostics.Debug.WriteLine($"About to enqueue {queueSize} words in a per-128-bit message mode.\n");
 
@@ -64,14 +64,14 @@ namespace ProtocolTests
 
 
 
-        [TestMethod]
+        [TestMethod(), Timeout(5000)]
         public void PerfProfileSingleWordEnqueue()
         {
             int queueSize = 100000;    // in words
             Guid id = Guid.NewGuid();
 
-            using (IMidiMessageQueue _queue =
-                new MidiMessageSharedMemoryQueue(queueSize, id, MidiMessageSharedMemoryQueue.ResizeMode.None))
+            using (IMidiUmpMessageQueue _queue =
+                new MidiUmpMessageSharedQueue(queueSize, id))
             {
                 System.Diagnostics.Debug.WriteLine($"About to enqueue {queueSize} words in the least efficient way allowable.\n");
 

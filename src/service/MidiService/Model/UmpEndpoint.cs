@@ -8,20 +8,23 @@ using System.Threading.Tasks;
 
 namespace MidiService.Model
 {
-    public class Endpoint
+
+    // TODO: Need to have a version of this for MIDI 1.0 as well
+
+    public class UmpEndpoint
     {
         public Guid Id { get; set; }
 
         /// <summary>
         /// Messages going out to the device
         /// </summary>
-        public IMidiMessageQueue OutgoingMessages { get; set; }
+        public IMidiUmpMessageQueue OutgoingMessages { get; set; }
         
         
         /// <summary>
         /// Messages coming in from the device
         /// </summary>
-        public IMidiMessageQueue IncomingMessages { get; set; }
+        public IMidiUmpMessageQueue IncomingMessages { get; set; }
 
 
 

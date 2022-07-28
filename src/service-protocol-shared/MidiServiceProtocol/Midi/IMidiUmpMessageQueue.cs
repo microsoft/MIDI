@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MidiService.Protocol.Midi
 {
-    public interface IMidiMessageQueue : IDisposable
+    public interface IMidiUmpMessageQueue : IDisposable
     {
         //int Count { get; }
 
@@ -14,6 +14,8 @@ namespace MidiService.Protocol.Midi
         //bool HasMessages();
 
         bool IsFull();
+
+        bool IsEmpty();
 
 
 
