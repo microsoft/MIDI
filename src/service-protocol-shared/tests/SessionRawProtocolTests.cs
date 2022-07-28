@@ -61,7 +61,7 @@ namespace ServiceTests
                 ))
             {
                 // get the serializer ready
-                MidiStreamSerializer serializer = new MidiStreamSerializer(sessionPipe);
+                MidiServiceProtocolSerializer serializer = new MidiServiceProtocolSerializer(sessionPipe);
 
                 // connect to pipe. This could take a while if pipe is busy
                 sessionPipe.Connect();

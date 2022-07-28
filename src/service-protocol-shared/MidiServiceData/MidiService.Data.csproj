@@ -10,4 +10,12 @@
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Aliases.cs" Link="Global\Aliases.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Global\" />
+  </ItemGroup>
+
 </Project>

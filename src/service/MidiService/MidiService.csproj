@@ -18,6 +18,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\..\service-protocol-shared\Aliases.cs" Link="Global\Aliases.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="Service Icon.ico" />
   </ItemGroup>
 
@@ -53,11 +57,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\sdk\MidiMessages\Microsoft.Windows.Midi.Messages.csproj" />
     <ProjectReference Include="..\..\sdk\PluginModel\Microsoft.Windows.Midi.PluginModel.csproj" />
+    <ProjectReference Include="..\..\service-protocol-shared\MidiServiceData\MidiService.Data.csproj" />
+    <ProjectReference Include="..\..\service-protocol-shared\MidiServiceProtocol\MidiService.Protocol.csproj" />
     <ProjectReference Include="..\..\shared\config\MidiConfig.csproj" />
-    <ProjectReference Include="..\..\shared\plumbing\MidiServiceData\MidiService.Data.csproj" />
-    <ProjectReference Include="..\..\shared\plumbing\MidiServiceProtocol\MidiService.Protocol.csproj" />
     <ProjectReference Include="..\..\shared\setup\MidiSetup.csproj" />
   </ItemGroup>
 </Project>

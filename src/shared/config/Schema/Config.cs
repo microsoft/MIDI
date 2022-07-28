@@ -15,10 +15,9 @@ namespace MidiConfig.Schema
 
         public string CurrentSetupFileNameWithoutPath { get; set; }
 
+        public Settings Settings { get; set; } = new Settings();
 
         public List<Plugin> TrustedPlugins { get; set; } = new List<Plugin>();
-
-
 
     }
 }

@@ -27,8 +27,6 @@ Enumerate Devices
 
 * Client sends Device Enumeration message to dedicated session pipe
 
-
-
 ## Install and Management
 
 During dev, you'll need to manually stop/start/install/uninstall the MIDI services. You'll need to publish the exe first, and then use the path to that exe in the steps below.
@@ -36,6 +34,8 @@ During dev, you'll need to manually stop/start/install/uninstall the MIDI servic
 The below steps work from an Administrator command prompt or Administrator PowerShell. I recommend the Windows Terminal app.
 
 ### Manual Install
+
+I recommend using the installer for at least the first install. It creates the required folders and sets permissions on them so the service can access the required data.
 
 ```
 sc create "MIDI Service" binpath="f:\ull\path\to\MidiService.exe"
@@ -104,12 +104,14 @@ Look for the ones with the name in the Constants.cs file here.
 
 ### More info
 
-Info anyone working on the server may find useful
+Info anyone working on the server may find useful information about pipes
 
 * [General Win32 Named Pipes info](https://docs.microsoft.com/windows/win32/ipc/pipes)
 * [System.IO.Pipes Namespace for .NET 7](https://docs.microsoft.com/dotnet/api/system.io.pipes?view=net-7.0)
 * [Win32 Multithreaded Pipe Server example](https://docs.microsoft.com/windows/win32/ipc/multithreaded-pipe-server)
 * [Win32 Named Pipe Client example](https://docs.microsoft.com/windows/win32/ipc/named-pipe-client?redirectedfrom=MSDN)
+
+And these references on shared memory and memory-mapped files
 
 
 ## Serialization

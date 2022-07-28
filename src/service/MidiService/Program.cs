@@ -32,6 +32,7 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<DeviceGraph>();
         services.AddSingleton<SessionGraph>();
 
+
         services.AddHostedService<PingService>();
         services.AddHostedService<ConnectionService>();
         services.AddHostedService<ManagementService>();

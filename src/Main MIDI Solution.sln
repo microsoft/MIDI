@@ -5,16 +5,13 @@ VisualStudioVersion = 17.3.32708.82
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MidiService", "service\MidiService\MidiService.csproj", "{E3C7D9A8-CBA2-4E49-BA8D-0F38ED7AAB05}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MidiService.Protocol", "shared\plumbing\MidiServiceProtocol\MidiService.Protocol.csproj", "{7F3CD6C3-CEA8-4CB4-802B-2DC0449941D6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MidiService.Protocol", "service-protocol-shared\MidiServiceProtocol\MidiService.Protocol.csproj", "{7F3CD6C3-CEA8-4CB4-802B-2DC0449941D6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MidiService.Data", "shared\plumbing\MidiServiceData\MidiService.Data.csproj", "{75ABE3E3-583E-4634-B3ED-174D8D8C868B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MidiService.Data", "service-protocol-shared\MidiServiceData\MidiService.Data.csproj", "{75ABE3E3-583E-4634-B3ED-174D8D8C868B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "00 Solution Items", "00 Solution Items", "{1E909C14-D20C-4541-9446-7433252C60C7}"
-	ProjectSection(SolutionItems) = preProject
-		README.md = README.md
-	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProtocolTests", "service\tests\ProtocolTests.csproj", "{6B496566-879B-471A-87FD-0D3770D801FB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProtocolTests", "service-protocol-shared\tests\ProtocolTests.csproj", "{6B496566-879B-471A-87FD-0D3770D801FB}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Windows.Midi", "sdk\MidiMain\Microsoft.Windows.Midi.csproj", "{188581AE-24FF-42E1-900C-EE1843CAE9C6}"
 EndProject
@@ -23,12 +20,15 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SDK", "SDK", "{103446DA-D85F-491B-AF1F-F90A81B0D866}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Service", "Service", "{773EAC35-13BD-4E08-AB43-9A6B20BCE56D}"
+	ProjectSection(SolutionItems) = preProject
+		service\MIDI Message Routing.md = service\MIDI Message Routing.md
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{EA8B53E2-8FEC-47AA-9C2B-785F5C1DF734}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Windows.Midi.PluginModel", "sdk\PluginModel\Microsoft.Windows.Midi.PluginModel.csproj", "{F6A70BB8-36FD-485B-9C1E-DE07F6C4BD1D}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{6B5E10B7-EB57-47A9-9CD1-36393259F92B}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared with Tools", "Shared with Tools", "{6B5E10B7-EB57-47A9-9CD1-36393259F92B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MidiSetup", "shared\setup\MidiSetup.csproj", "{FDC75DD2-D95C-4829-9EB1-8F1864B55EF9}"
 EndProject
@@ -43,6 +43,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MidiLoopbackPlugin", "plugins\device-transport\loopback\MidiLoopbackPlugin.csproj", "{5FECA8F0-8EA6-4009-A053-FD8DE6F32942}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Windows.Midi.Messages", "sdk\MidiMessages\Microsoft.Windows.Midi.Messages.csproj", "{88EB09E2-C702-4BF8-BF7F-EDFDF944F3A0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Service Protocol Shared", "Service Protocol Shared", "{B96A414C-DCAA-443E-B004-84F223C6118E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -177,7 +179,6 @@ Global
 		{B6DBF7A0-F6EB-458E-BF1A-1BDD7C60494A}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{B6DBF7A0-F6EB-458E-BF1A-1BDD7C60494A}.Debug|Any CPU.Build.0 = Debug|x86
 		{B6DBF7A0-F6EB-458E-BF1A-1BDD7C60494A}.Debug|x64.ActiveCfg = Debug|x86
-		{B6DBF7A0-F6EB-458E-BF1A-1BDD7C60494A}.Debug|x64.Build.0 = Debug|x86
 		{B6DBF7A0-F6EB-458E-BF1A-1BDD7C60494A}.Debug|x86.ActiveCfg = Debug|x86
 		{B6DBF7A0-F6EB-458E-BF1A-1BDD7C60494A}.Debug|x86.Build.0 = Debug|x86
 		{B6DBF7A0-F6EB-458E-BF1A-1BDD7C60494A}.Release|Any CPU.ActiveCfg = Release|x86
@@ -215,8 +216,8 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{E3C7D9A8-CBA2-4E49-BA8D-0F38ED7AAB05} = {773EAC35-13BD-4E08-AB43-9A6B20BCE56D}
-		{7F3CD6C3-CEA8-4CB4-802B-2DC0449941D6} = {773EAC35-13BD-4E08-AB43-9A6B20BCE56D}
-		{75ABE3E3-583E-4634-B3ED-174D8D8C868B} = {773EAC35-13BD-4E08-AB43-9A6B20BCE56D}
+		{7F3CD6C3-CEA8-4CB4-802B-2DC0449941D6} = {B96A414C-DCAA-443E-B004-84F223C6118E}
+		{75ABE3E3-583E-4634-B3ED-174D8D8C868B} = {B96A414C-DCAA-443E-B004-84F223C6118E}
 		{6B496566-879B-471A-87FD-0D3770D801FB} = {EA8B53E2-8FEC-47AA-9C2B-785F5C1DF734}
 		{188581AE-24FF-42E1-900C-EE1843CAE9C6} = {103446DA-D85F-491B-AF1F-F90A81B0D866}
 		{F1A1F83A-7493-4521-8DD6-E02834F25FE0} = {103446DA-D85F-491B-AF1F-F90A81B0D866}
