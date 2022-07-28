@@ -10,8 +10,12 @@ namespace MidiService.Protocol.Midi
     {
         //int Count { get; }
 
-        uint GetRemainingCapacityInWords();
-        bool HasMessages();
+        //uint GetRemainingCapacityInWords();
+        //bool HasMessages();
+
+        bool IsFull();
+
+
 
        // void Initialize(int maxMidiWords, Guid id);
 

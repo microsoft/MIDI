@@ -164,5 +164,10 @@ namespace MidiService.Protocol.Midi
         {
             throw new NotImplementedException();
         }
+
+        public bool IsFull()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -15,29 +15,29 @@ namespace ProtocolTests
         [TestMethod]
         public void PerfProfileUmp128Enqueue()
         {
-            uint loopCount = 10000;
+            int loopCount = 10000;
 
-            uint step = 4;
+            int step = 4;
             // in words
-            uint queueSize = (uint)(loopCount * Marshal.SizeOf(typeof(Ump128)) / sizeof(uint));
+            int queueSize = loopCount * Marshal.SizeOf(typeof(Ump128)) / sizeof(uint);
 
             Guid id = Guid.NewGuid();
 
             using (IMidiMessageQueue _queue =
-                new MidiMessageSharedMemoryQueue(queueSize, id))
+                new MidiMessageSharedMemoryQueue(queueSize, id, MidiMessageSharedMemoryQueue.ResizeMode.None))
             {
                 System.Diagnostics.Debug.WriteLine($"About to enqueue {queueSize} words in a per-128-bit message mode.\n");
 
-                uint startValue = 4206942;
+                int startValue = 4206942;
 
                 long startTicks = DateTime.Now.Ticks;
-                for (uint i = startValue; i < startValue + loopCount; i += step)
+                for (int i = startValue; i < startValue + loopCount; i += step)
                 {
                     Ump128 ump;
-                    ump.Word1 = i;
-                    ump.Word2 = i + 1;
-                    ump.Word3 = i + 2;
-                    ump.Word4 = i + 3;
+                    ump.Word1 = (uint)i;
+                    ump.Word2 = (uint)i + 1;
+                    ump.Word3 = (uint)i + 2;
+                    ump.Word4 = (uint)i + 3;
 
                     _queue.Enqueue(ump);
                 }
@@ -67,11 +67,11 @@ namespace ProtocolTests
         [TestMethod]
         public void PerfProfileSingleWordEnqueue()
         {
-            uint queueSize = 100000;    // in words
+            int queueSize = 100000;    // in words
             Guid id = Guid.NewGuid();
 
             using (IMidiMessageQueue _queue =
-                new MidiMessageSharedMemoryQueue(queueSize, id))
+                new MidiMessageSharedMemoryQueue(queueSize, id, MidiMessageSharedMemoryQueue.ResizeMode.None))
             {
                 System.Diagnostics.Debug.WriteLine($"About to enqueue {queueSize} words in the least efficient way allowable.\n");
 
