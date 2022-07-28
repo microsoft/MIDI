@@ -25,6 +25,10 @@ namespace MidiService.Protocol.Midi
     //    the number of times we lock/read/unlock and lock/write/unlock the file, so larger atomic
     //    operations are preferred.
 
+    // ---------------------------------------------
+    // TODO: Auto-resizing is not yet implemented
+    // ---------------------------------------------
+
     public class MidiUmpMessageSharedQueue : IMidiUmpMessageQueue, IDisposable
     {
         [StructLayout(LayoutKind.Explicit, Size = 20)]
@@ -41,6 +45,8 @@ namespace MidiService.Protocol.Midi
             [FieldOffset(16)]
             internal int IndexOfLastUsedWordInFile;      // we only write contigous messages, and will sometimes end up with some unused words at the bottom of the file.
         }
+
+        // TODO: This queue does not yet support resizing
 
         public enum ResizeMode
         {
