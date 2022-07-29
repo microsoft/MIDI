@@ -28,10 +28,9 @@ namespace MidiService.Services
             (_logger, _lifetime) = (logger, lifetime);
 
 
-
-        private void CreatePipe()
+        protected NamedPipeServerStream CreatePipe(string pipeName)
         {
-//            _logger.LogDebug($"DEBUG: Creating pipe {PipeName}");
+            NamedPipeServerStream pipe;
 
             try
             {
@@ -45,8 +44,8 @@ namespace MidiService.Services
 
                 security.AddAccessRule(accessRule);
 
-                _pipe = NamedPipeServerStreamAcl.Create(
-                            PipeName,
+                pipe = NamedPipeServerStreamAcl.Create(
+                            pipeName,
                             PipeDirection.InOut,
                             1,
                             PipeTransmissionMode.Message,
@@ -54,18 +53,26 @@ namespace MidiService.Services
                             2048, 2048,
                             security);
 
- //               _logger.LogDebug($"DEBUG: Created pipe server stream {PipeName}");
+                return pipe;
             }
             catch (InvalidOperationException ex)
             {
                 // already established
                 _logger.LogError($"{PipeName} Pipe already established. " + ex.Message);
+                throw;
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Could not create pipe {PipeName}. This is sometimes because of a quick restart when Windows hasn't yet removed the old pipe instance. Exception: " + ex.Message);
                 throw;
             }
+        }
+
+
+        private void CreateMainClassPipe()
+        {
+            _pipe = CreatePipe(PipeName);
+
         }
 
 
@@ -198,7 +205,7 @@ namespace MidiService.Services
 
         protected void MainLoop(CancellationToken stoppingToken)
         {
-            CreatePipe();
+            CreateMainClassPipe();
 
             if (_pipe == null)
             {

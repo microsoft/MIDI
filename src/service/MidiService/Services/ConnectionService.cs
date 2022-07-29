@@ -74,45 +74,54 @@ namespace MidiService
         }
 
 
+
+
         private void SessionThreadProc(object? data)
         {
-            //if (data != null)
-            //{
-            //    var state = (MidiSessionState)data;
+            if (data != null)
+            {
+                var state = (MidiSessionState)data;
 
-            //    NamedPipeServerStream pipe = CreatePipe(state.SessionChannelName);
+                NamedPipeServerStream pipe = CreatePipe(state.SessionChannelName);
 
-            //    _logger.LogDebug("Created session pipe server stream.");
+                _logger.LogDebug("Created session pipe server stream.");
 
-            //    bool sessionActive = true;
+                bool sessionActive = true;
 
-            //    while (sessionActive)
-            //    {
-            //        try
-            //        {
-            //            pipe.WaitForConnection();
-            //        }
-            //        catch (IOException)
-            //        {
-            //            pipe.Disconnect();
-            //            continue;
-            //        }
-
-
-            //        // TODO: Process incoming messages
+                while (sessionActive)
+                {
+                    try
+                    {
+                        pipe.WaitForConnection();
+                    }
+                    catch (IOException)
+                    {
+                        pipe.Disconnect();
+                        continue;
+                    }
 
 
+                    // TODO: Process incoming messages
 
-            //        // TEMP
-            //        Thread.Sleep(10);
-            //    }
-            //}
-            //else
-            //{
-            //    // no session state sent over. Log error
-            //    _logger.LogError("MIDI Session state null in SessionThreadProc.");
+                    // Messages:
+                    // - Update session properties
+                    // - Destroy Session
+                    // - Open Endpoint
+                    // - Close Endpoint
 
-            //}
+
+
+
+                    // TEMP
+                    Thread.Sleep(50);
+                }
+            }
+            else
+            {
+                // no session state sent over. Log error
+                _logger.LogError("MIDI Session state null in SessionThreadProc.");
+
+            }
 
         }
 
