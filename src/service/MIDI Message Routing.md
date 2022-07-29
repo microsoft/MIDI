@@ -6,8 +6,7 @@ MIDI messages are handled differently from service connection, control, and mana
 
 1. Meet all the functionality goals, including supporting message processors which can modify messages, remove messages, break messages out into new messages, change messages from MIDI 1.0 to MIDI 2.0, etc. and also virtual endpoints which can send messages back to other endpoints in a 1:1 or 1:n way.
 2. Make it as easy and fast as possible to copy data from one location to another, without having to remove any metadata or tags
-3. Minimize the number of times any block of data is copies
-
+3. Minimize the number of times any block of data is copied
 
 ## Queues
 

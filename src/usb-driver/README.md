@@ -1,8 +1,6 @@
-# USB MIDI 2.0 Class Driver
+# USB MIDI 2.0 Class and Device Driver
 
-Full implementation of MIDI 2.0 class driver for Windows.
-Backwards compatible with MIDI 1.0 to allow replacement of existing class driver
-
+See driver requirements spec in /specs for details.
 
 ## Potentially Helpful References
 
