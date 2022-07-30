@@ -11,8 +11,19 @@ using MidiConfig;
 
 namespace Microsoft.Windows.Midi
 {
-    public sealed class MidiService
+
+    public enum MidiServicePingResponse
     {
+        Pong,
+        TimeOut,
+        Error
+    }
+
+    public sealed class MidiServiceClient
+    {
+        private const int PingTimeoutMilliseconds = 2000;
+
+
 
         public static string ApiVersion
         {
@@ -40,15 +51,14 @@ namespace Microsoft.Windows.Midi
             throw new NotImplementedException();
         }
 
+
+
         /// <summary>
         /// Checks to see if the MIDI service is running
-        /// TODO: ***************** This needs a timeout, of course
         /// </summary>
         /// <returns>Version of the running service</returns>
-        public static bool PingService()
+        public static MidiServicePingResponse Ping(out string serverVersionReported)
         {
-            return true;
-
 
             // checks to see if the MIDI service is running
 
@@ -74,12 +84,17 @@ namespace Microsoft.Windows.Midi
                 try
                 {
                     // connect to pipe. This could take a while if pipe is busy
-                    sessionPipe.Connect();
-
+                    sessionPipe.Connect(PingTimeoutMilliseconds);
                 }
                 catch (InvalidOperationException)
                 {
                     // already connected. Weird, but ok
+                }
+                catch (TimeoutException)
+                {
+                    // ping timed out
+                    serverVersionReported = string.Empty;
+                    return MidiServicePingResponse.TimeOut;
                 }
 
                 // send request message
@@ -88,21 +103,20 @@ namespace Microsoft.Windows.Midi
                 // wait for response (reading blocks until data arrives)
                 ServicePingResponseMessage response = serializer.Deserialize<ServicePingResponseMessage>();
 
+                // TODO: WinRT doesn't allow O
                 Version version = Version.Parse(response.Header.ServerVersion);
 
                 if (version != null)
                 {
-                   // serverVersionReported = version.ToString();
-                    return true;
+                    serverVersionReported = version.ToString();
+                    return MidiServicePingResponse.Pong;
                 }
                 else
                 {
-                   // serverVersionReported = string.Empty;
-                    return false;
+                    serverVersionReported = string.Empty;
+                    return MidiServicePingResponse.Error;
                 }
-
             }
-
         }
 
 

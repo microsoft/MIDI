@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net7.0-windows10.0.20348.0</TargetFramework>
@@ -6,10 +6,9 @@
     <Nullable>enable</Nullable>
 
     <IsPackable>false</IsPackable>
+	  <PlatformTarget>x64</PlatformTarget>
 
-    <PlatformTarget>x64</PlatformTarget>
-
-    <Platforms>AnyCPU;x64</Platforms>
+	  <Platforms>x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,8 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MidiServiceData\MidiService.Data.csproj" />
-    <ProjectReference Include="..\MidiServiceProtocol\MidiService.Protocol.csproj" />
+    <ProjectReference Include="..\Management\Microsoft.Windows.Midi.Management.csproj" />
+    <ProjectReference Include="..\MidiMain\Microsoft.Windows.Midi.csproj" />
   </ItemGroup>
 
 </Project>

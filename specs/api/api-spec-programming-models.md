@@ -1,8 +1,8 @@
-# API Specifications: Supported developer platforms
+# API Specifications: Supported developer frameworks/languages
 
-Supported developer platforms.
+Supported developer frameworks/languages.
 
-The primary focus of this API is to support desktop apps on Windows.
+The primary focus of this API is to support desktop apps on Windows. The majority of those are in C++, but some are C#/.NET, Java, Pascal, etc.
 
 Currently, the API is authored in .NET 7 (not to be confused with the older .NET Framework). If it continues with that path, .NET support is free. .NET has advantages and disadvantages, but three of the biggest advantages are:
 
