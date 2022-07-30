@@ -1,11 +1,5 @@
 # API Specifications
 
-=======================================================
-TODO: This needs to be updated after the SDK changes
-=======================================================
-
-These are not final designs, but rather are brainstorming design ideas. All code is pseudo-c code with just enough syntax to get the point across. You will notice a real lack of semicolons, for example. :)
-
 ## Setups
 
 Setups are saved JSON configurations created by the user in the settings app. They contain custom
@@ -16,7 +10,8 @@ We will revisit if new requirements arise.
 
 ## Config files location
 
-(HKLM reg key)
+The configuration file is always in a known location. This is the one file which cannot be moved to a different location. Other paths are stored in this file.
+
+Note that any path referenced in the file needs to have full read/write/delete permissions for the Local System account (for the service) and for the user (settings apps). The installer takes care of this.
 
 ## File format
-

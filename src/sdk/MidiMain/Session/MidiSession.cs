@@ -20,7 +20,7 @@ namespace Microsoft.Windows.Midi.Session
         public Guid Id => _data.Id; 
         public string Name { get => _data.Name; set => _data.Name = value; }
         
-        public DateTime CreatedTime { get => _data.CreatedTime; internal set => _data.CreatedTime = value; }
+  //      public DateTime CreatedTime { get => _data.CreatedTime; internal set => _data.CreatedTime = value; }
 
         // TODO: Log level
 
@@ -191,10 +191,10 @@ namespace Microsoft.Windows.Midi.Session
 
         }
 
-        public void SendStream(Guid deviceId, Guid endpointId, Stream words)
-        {
+        //public void SendStream(Guid deviceId, Guid endpointId, Stream words)
+        //{
 
-        }
+        //}
 
     }
 }

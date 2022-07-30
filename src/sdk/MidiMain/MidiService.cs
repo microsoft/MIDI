@@ -1,18 +1,22 @@
-﻿using System;
+﻿using MidiService.Protocol.Messages.Management;
+using System;
 using System.Collections.Generic;
+using System.IO.Pipes;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+
+using MidiConfig;
 
 namespace Microsoft.Windows.Midi
 {
     public sealed class MidiService
     {
 
-        public static Version? ApiVersion
+        public static string ApiVersion
         {
-            get { return Assembly.GetExecutingAssembly().GetName().Version; }
+            get { return ClientState.ApiVersion.ToString(); }
         }
 
         /// <summary>
@@ -38,13 +42,67 @@ namespace Microsoft.Windows.Midi
 
         /// <summary>
         /// Checks to see if the MIDI service is running
+        /// TODO: ***************** This needs a timeout, of course
         /// </summary>
         /// <returns>Version of the running service</returns>
-        /// <exception cref="NotImplementedException"></exception>
-        public static Version PingService()
+        public static bool PingService()
         {
+            return true;
+
+
             // checks to see if the MIDI service is running
-            throw new NotImplementedException();
+
+            var request = new ServicePingMessage()
+            {
+                Header = new RequestMessageHeader()
+                {
+                    ClientId = ClientState.ClientId,
+                    ClientRequestId = Guid.NewGuid(),
+                    ClientVersion = ApiVersion,
+                },
+            };
+
+            using (NamedPipeClientStream sessionPipe = new NamedPipeClientStream(
+                ".", // local machine
+                MidiServiceConstants.PingPipeName,
+                PipeDirection.InOut, PipeOptions.None
+                ))
+            {
+                // get the serializer ready
+                MidiServiceProtocolSerializer serializer = new MidiServiceProtocolSerializer(sessionPipe);
+
+                try
+                {
+                    // connect to pipe. This could take a while if pipe is busy
+                    sessionPipe.Connect();
+
+                }
+                catch (InvalidOperationException)
+                {
+                    // already connected. Weird, but ok
+                }
+
+                // send request message
+                serializer.Serialize(request);
+
+                // wait for response (reading blocks until data arrives)
+                ServicePingResponseMessage response = serializer.Deserialize<ServicePingResponseMessage>();
+
+                Version version = Version.Parse(response.Header.ServerVersion);
+
+                if (version != null)
+                {
+                   // serverVersionReported = version.ToString();
+                    return true;
+                }
+                else
+                {
+                   // serverVersionReported = string.Empty;
+                    return false;
+                }
+
+            }
+
         }
 
 
@@ -53,7 +111,7 @@ namespace Microsoft.Windows.Midi
         /// </summary>
         /// <returns>URL to the installer package</returns>
         /// <exception cref="NotImplementedException"></exception>
-        public static Uri GetServicesInstallerUri()
+        public static string GetServicesInstallerUri()
         {
             throw new NotImplementedException();
         }
@@ -61,8 +119,19 @@ namespace Microsoft.Windows.Midi
 
         public static void InstallCompatibleMidiService()
         {
-
+            throw new NotImplementedException();
         }
+
+
+        //public static Path ConfigurationFileLocation
+        //{
+        //    get
+        //    {
+        //        return MidiServicesConfig.Current.ConfigurationFileFullPath;
+        //    }
+        //}
+
+
 
 
         // TODO: Maybe a function to get a collection of versions for all

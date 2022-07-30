@@ -1,13 +1,25 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net7.0-windows10.0.20348.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-	  <CsWinRTComponent>true</CsWinRTComponent>
-	  <CsWinRTWindowsMetadata>10.0.20348.0</CsWinRTWindowsMetadata>
-	  <Platforms>AnyCPU;x64</Platforms>
+	<Platforms>x64</Platforms>
+	  <Version>0.1.0</Version>
 
   </PropertyGroup>
+
+	<PropertyGroup>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageOutputPath>..\..\publish\x64\sdk</PackageOutputPath>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<CsWinRTWindowsMetadata>10.0.20348.0</CsWinRTWindowsMetadata>
+		<CsWinRTEnableLogging>true</CsWinRTEnableLogging>
+		<CsWinRTComponent>true</CsWinRTComponent>
+		<CsWinRTIncludes>Microsoft.Windows.Midi</CsWinRTIncludes>
+		<AssemblyName>$(MSBuildProjectName)</AssemblyName>
+	</PropertyGroup>
 
 </Project>
