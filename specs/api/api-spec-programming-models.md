@@ -4,9 +4,9 @@ Supported developer platforms.
 
 The primary focus of this API is to support desktop apps on Windows.
 
-Currently, the API is authored in .NET 7 (not to be confused with the older .NET Framework). If it continues with that path, .NET support is free. .NET has advantages and disadvantages, but two of the biggest advantages are:
+Currently, the API is authored in .NET 7 (not to be confused with the older .NET Framework). If it continues with that path, .NET support is free. .NET has advantages and disadvantages, but three of the biggest advantages are:
 
-* Tools, languages, and libraries make it easier to quickly author safe code for the platform
+* Tools, languages, and libraries make it easier to quickly author and debug safe code for the platform
 * The .NET developer community is full of developers who can contribute to these projects.
 * .NET Runs on Windows, macOS, and Linux making it easier to port code should anyone want to reuse the library on those platforms.
 
