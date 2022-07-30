@@ -1,4 +1,4 @@
-﻿using MidiService.Model;
+﻿
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -11,7 +11,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace MidiService.Services
+namespace Microsoft.Windows.Midi.Internal.Service.Services
 {
     public abstract class PipeProcessingServiceBase : BackgroundService
     {

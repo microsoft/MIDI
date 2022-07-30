@@ -1,4 +1,4 @@
-﻿using MidiService.Protocol.Midi;
+﻿using Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -36,7 +36,6 @@ namespace ProtocolTests
                 new MidiUmpMessageSharedQueue(queueSize, id))
             {
                 uint writtenValue = 4206942;
-                uint count = 10;
 
                 System.Diagnostics.Debug.WriteLine("about to enqueue just 1");
 

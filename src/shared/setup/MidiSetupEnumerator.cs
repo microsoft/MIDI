@@ -1,11 +1,10 @@
-﻿using MidiConfig;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MidiSetup
+namespace Microsoft.Windows.Midi.Internal.Setup
 {
     public class MidiSetupEnumerator
     {

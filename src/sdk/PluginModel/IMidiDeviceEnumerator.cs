@@ -1,4 +1,5 @@
-﻿using MidiService.Data;
+﻿
+using Microsoft.Windows.Midi.Internal.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;

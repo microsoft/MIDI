@@ -1,12 +1,11 @@
-﻿using MidiService.Protocol.Midi;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 
-namespace MidiService.Routing
+namespace Microsoft.Windows.Midi.Internal.Service.Routing
 {
     internal class MidiMessageRouter
     {

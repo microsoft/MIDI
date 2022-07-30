@@ -1,9 +1,11 @@
-using MidiService;
+using Microsoft.Windows.Midi.Internal.Service;
+using Microsoft.Windows.Midi.Internal.Service.Services;
 
 using Microsoft.Extensions.Logging.EventLog;
 using Microsoft.Extensions.Logging.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using MidiConfig;
+using Microsoft.Windows.Midi.Internal.Service.Model;
+using Microsoft.Windows.Midi.Internal.Config;
 
 
 // need to set the working directory to load the config files

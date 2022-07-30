@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MidiService.Plugins
+namespace Microsoft.Windows.Midi.Internal.Service.Plugins
 {
     internal class TransportPluginFactory
     {

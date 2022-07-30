@@ -1,11 +1,12 @@
 ﻿
+using Microsoft.Windows.Midi.Internal.Service.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MidiService
+namespace Microsoft.Windows.Midi.Internal.Service.Services
 {
     public sealed class ManagementService : BackgroundService
     {

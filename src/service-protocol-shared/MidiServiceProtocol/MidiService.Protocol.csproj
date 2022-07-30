@@ -4,9 +4,9 @@
     <TargetFramework>net7.0-windows10.0.20348.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AssemblyName>MidiService.Protocol</AssemblyName>
-    <RootNamespace>MidiService.Protocol</RootNamespace>
-    <Platforms>AnyCPU;x64</Platforms>
+    <AssemblyName>Midi.Internal.ServiceProtocol</AssemblyName>
+    <RootNamespace>Microsoft.Windows.Midi.Internal.ServiceProtocol</RootNamespace>
+    <Platforms>x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>

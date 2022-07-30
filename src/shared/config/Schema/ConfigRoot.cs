@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MidiConfig.Schema
+namespace Microsoft.Windows.Midi.Internal.Config.Schema
 {
-    public class Config
+    public class ConfigRoot
     {
 
-        public Header Header { get; set; } = new Header();
+        public ConfigHeader Header { get; set; } = new ConfigHeader();
 
         public Locations Locations { get; set; } = new Locations();
 

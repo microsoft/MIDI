@@ -5,15 +5,15 @@ using System.Text;
 using System.Threading.Tasks;
 
 //using System.Text.Json;
-using MidiConfig.Schema;
 using System.Text.Json.Serialization;
 using System.Text.Json;
 using System.Security.AccessControl;
 using System.Security.Principal;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Windows.Midi.Internal.Config.Schema;
 
-namespace MidiConfig
+namespace Microsoft.Windows.Midi.Internal.Config
 {
     public class MidiServicesConfig
     {
@@ -24,11 +24,11 @@ namespace MidiConfig
 
             // _logger.LogInformation("DEBUG: MidiServicesConfig constructor");
 
-            MidiConfig = new Config();
+            MidiConfig = new ConfigRoot();
             LoadDefaults();
         }
 
-        public Config MidiConfig { get; set; }
+        public ConfigRoot MidiConfig { get; set; }
 
         public void LoadDefaults()
         {
@@ -81,11 +81,11 @@ namespace MidiConfig
 
                 JsonSerializerOptions options = GetSerializerOptions();
 
-                Config? config;
+                ConfigRoot? config;
 
                 using (FileStream stream = File.OpenRead(fullPath))
                 {
-                    config = JsonSerializer.Deserialize<Config>(stream, options);
+                    config = JsonSerializer.Deserialize<ConfigRoot>(stream, options);
 
                     if (config == null)
                     {
@@ -151,7 +151,7 @@ namespace MidiConfig
 
                 using (FileStream stream = File.Create(fileName))
                 {
-                    JsonSerializer.Serialize<Config>(stream, MidiConfig, options);
+                    JsonSerializer.Serialize<ConfigRoot>(stream, MidiConfig, options);
                 }
 
                 _logger.LogDebug("DEBUG: MidiServicesConfig : CreateConfigFile completed");

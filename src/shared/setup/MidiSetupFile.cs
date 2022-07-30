@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MidiSetup
+namespace Microsoft.Windows.Midi.Internal.Setup
 {
     public class MidiSetupFile
     {
         string FileName { get; set; }
 
-        Schema.Header Header { get; set; }
+        Schema.SetupHeader Header { get; set; }
     }
 }

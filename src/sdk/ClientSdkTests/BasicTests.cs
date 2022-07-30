@@ -14,7 +14,7 @@ namespace ClientSdkTests
         {
             string reportedVersion;
 
-            MidiServicePingResponse response = MidiServiceClient.Ping(out reportedVersion);
+            MidiServicePingResponse response = MidiService.Ping(out reportedVersion);
 
             switch (response)
             {

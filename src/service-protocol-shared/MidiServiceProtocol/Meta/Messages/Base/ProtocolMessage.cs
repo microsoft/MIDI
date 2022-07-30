@@ -1,11 +1,12 @@
-﻿using MidiService.Protocol.Messages.Management;
+﻿using Microsoft.Windows.Midi.Internal.ServiceProtocol.Messages.Management;
+using Microsoft.Windows.Midi.Internal.ServiceProtocol.Messages.Session;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MidiService.Protocol.Messages.Base
+namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Messages.Base
 {
 
     [ProtoContract]

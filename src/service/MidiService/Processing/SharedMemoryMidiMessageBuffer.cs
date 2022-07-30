@@ -9,9 +9,11 @@ using System.Text;
 using System.Threading.Tasks;
 
 
-namespace MidiService.Processing
+namespace Microsoft.Windows.Midi.Internal.Service.Processing
 {
-    
+    // TODO: Move this to an external library
+
+
     // Buffer to use in the service when communicating between the service code
     // and transports.
     // The data is a contiguous chunk of memory containing UMP messages. UMP

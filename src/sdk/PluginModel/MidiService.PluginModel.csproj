@@ -6,7 +6,9 @@
     <Nullable>enable</Nullable>
 	  <CsWinRTComponent>true</CsWinRTComponent>
 	  <CsWinRTWindowsMetadata>10.0.20348.0</CsWinRTWindowsMetadata>
-	  <Platforms>AnyCPU;x64</Platforms>
+	  <Platforms>x64</Platforms>
+	  <AssemblyName>Microsoft.Windows.Midi.PluginModel</AssemblyName>
+	  <RootNamespace>Microsoft.Windows.Midi.PluginModel</RootNamespace>
 
   </PropertyGroup>
 

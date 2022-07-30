@@ -1,11 +1,12 @@
-﻿using MidiService.Model;
+﻿using Microsoft.Windows.Midi.Internal.Service.Model;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MidiService.Services
+namespace Microsoft.Windows.Midi.Internal.Service.Services
 {
     public class MidiRouterService : BackgroundService
     {

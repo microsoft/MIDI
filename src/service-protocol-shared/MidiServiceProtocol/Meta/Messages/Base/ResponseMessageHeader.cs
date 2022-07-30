@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MidiService.Protocol.Messages.Base
+namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Messages.Base
 {
     [ProtoContract]
     public struct ResponseMessageHeader

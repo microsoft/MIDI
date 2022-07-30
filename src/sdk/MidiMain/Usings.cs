@@ -1,7 +1,6 @@
-﻿global using MidiService.Data;
-
-global using MidiService.Protocol.Messages.Base;
-global using MidiService.Protocol.Messages.Session;
-global using MidiService.Protocol.Serialization;
-global using MidiService.Protocol;
+﻿
+global using Microsoft.Windows.Midi.Internal.ServiceProtocol;
+global using Microsoft.Windows.Midi.Internal.ServiceProtocol.Messages;
+global using Microsoft.Windows.Midi.Internal.ServiceProtocol.Messages.Base;
+global using Microsoft.Windows.Midi.Internal.ServiceProtocol.Messages.Session;
 

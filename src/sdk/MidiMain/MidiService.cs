@@ -1,5 +1,4 @@
-﻿using MidiService.Protocol.Messages.Management;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO.Pipes;
 using System.Linq;
@@ -7,7 +6,9 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-using MidiConfig;
+using Microsoft.Windows.Midi.Internal.ServiceProtocol.Messages;
+using Microsoft.Windows.Midi.Internal.ServiceProtocol.Messages.Management;
+using Microsoft.Windows.Midi.Internal.ServiceProtocol.Serialization;
 
 namespace Microsoft.Windows.Midi
 {
@@ -19,7 +20,7 @@ namespace Microsoft.Windows.Midi
         Error
     }
 
-    public sealed class MidiServiceClient
+    public sealed class MidiService
     {
         private const int PingTimeoutMilliseconds = 2000;
 
@@ -36,7 +37,7 @@ namespace Microsoft.Windows.Midi
         /// </summary>
         /// <returns>True if the MIDI services are installed</returns>
         /// <exception cref="NotImplementedException"></exception>
-        public static bool IsMidiServiceInstalled()
+        public static bool IsInstalled()
         {
             // does a check to see if services are installed
             throw new NotImplementedException();
@@ -46,7 +47,7 @@ namespace Microsoft.Windows.Midi
         /// If the MIDI service is installed but running, this will start it
         /// </summary>
         /// <exception cref="NotImplementedException"></exception>
-        public static void StartMidiService()
+        public static void Start()
         {
             throw new NotImplementedException();
         }

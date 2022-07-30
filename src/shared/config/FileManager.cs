@@ -9,7 +9,7 @@ using System.Security;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MidiConfig
+namespace Microsoft.Windows.Midi.Internal.Config
 {
     public enum FileType
     {

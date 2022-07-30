@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.Windows.Midi.Enumeration;
+using Microsoft.Windows.Midi.Internal.Data;
+using Microsoft.Windows.Midi.Internal.ServiceProtocol.Serialization;
 
 namespace Microsoft.Windows.Midi.Session
 {

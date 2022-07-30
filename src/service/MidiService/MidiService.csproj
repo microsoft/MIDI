@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>dotnet-MidiService-25DD3AF4-CC99-4447-BF4C-D995C574E734</UserSecretsId>
-    <RootNamespace>$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
+    <RootNamespace>Microsoft.Windows.Midi.Internal.Service</RootNamespace>
 	  <OutputType>exe</OutputType>
 	  <PublishSingleFile Condition="'$(Configuration)' == 'Release'">true</PublishSingleFile>
 	  <RuntimeIdentifier>win-x64</RuntimeIdentifier>

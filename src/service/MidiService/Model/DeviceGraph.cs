@@ -1,11 +1,12 @@
 ﻿using Microsoft.Windows.Midi.PluginModel;
+using Microsoft.Windows.Midi.Internal.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MidiService.Model
+namespace Microsoft.Windows.Midi.Internal.Service.Model
 {
     // May want to keep a device and endpoint table in shared memory
     // using memory-mapped file, and keep it updated in one single place

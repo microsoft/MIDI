@@ -1,10 +1,11 @@
-﻿using System;
+﻿using Microsoft.Windows.Midi.Internal.ServiceProtocol.Messages.Base;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MidiService.Protocol.Messages.Management
+namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Messages.Management
 {
     [ProtoContract]
     public class ServicePingMessage : ProtocolMessage

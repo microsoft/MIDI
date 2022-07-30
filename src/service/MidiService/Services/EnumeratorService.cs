@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MidiService.Services
+namespace Microsoft.Windows.Midi.Internal.Service.Services
 {
     internal class EnumeratorService
     {

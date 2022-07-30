@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MidiService.Protocol.Serialization
+namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Serialization
 {
     public class MidiMessageSerializer
     {

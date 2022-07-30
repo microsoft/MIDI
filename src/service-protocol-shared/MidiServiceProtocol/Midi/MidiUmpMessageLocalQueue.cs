@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MidiService.Protocol.Midi
+namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
 {
     public class MidiUmpMessageLocalQueue : IMidiUmpMessageQueue, IDisposable
     { 

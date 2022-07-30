@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
 
-namespace MidiService.Protocol
+namespace Microsoft.Windows.Midi.Internal.ServiceProtocol
 {
     public class MidiServiceConstants
     {

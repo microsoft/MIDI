@@ -1,11 +1,12 @@
-﻿using System;
+﻿using Microsoft.Windows.Midi.Internal.ServiceProtocol.Messages.Base;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MidiService.Protocol.Messages.Session
+namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Messages.Session
 {
     public class SessionDestroyRequestMessage : ProtocolMessage
     {

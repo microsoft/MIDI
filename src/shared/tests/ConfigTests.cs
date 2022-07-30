@@ -1,4 +1,3 @@
-using MidiConfig;
 
 namespace SharedLibraryTests
 {

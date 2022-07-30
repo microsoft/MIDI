@@ -5,8 +5,9 @@ using System.Text;
 using System.Xml.Serialization;
 using System.Threading.Tasks;
 using System.Text.Json;
+using Microsoft.Windows.Midi.Internal.ServiceProtocol.Messages.Base;
 
-namespace MidiService.Protocol.Serialization
+namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Serialization
 {
     // Uses Google Protobuf.
     // Note that I tried the JsonSerializer as well. But that doesn't work well

@@ -1,6 +1,5 @@
-﻿using MidiService.Protocol.Messages.Base;
-using MidiService.Protocol.Messages.Management;
-using MidiService.Protocol.Serialization;
+﻿
+using Microsoft.Windows.Midi.Internal.ServiceProtocol;
 using System;
 using System.Collections.Generic;
 using System.IO.Pipes;

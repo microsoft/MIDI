@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 using System.Collections;
 using System.Reflection;
-using MidiConfig;
+using Microsoft.Windows.Midi.Internal.Service.Services;
+using Microsoft.Windows.Midi.Internal.Config;
 
-namespace MidiService.Model
+namespace Microsoft.Windows.Midi.Internal.Service.Model
 {
     public class ServiceState
     {

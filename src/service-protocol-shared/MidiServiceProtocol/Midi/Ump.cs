@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MidiService.Protocol.Midi
+namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
 {
     // NOTE! This makes an assumption that MidiWord will remain a 32 bit integer
     // The layout here is necessary for sharing with other languages and also

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MidiService.Services
+namespace Microsoft.Windows.Midi.Internal.Service.Services
 {
     // this is a placeholder class right now.
     // considering if we want to have a master clock which can 

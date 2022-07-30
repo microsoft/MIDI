@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.Windows.Midi.Internal.ServiceProtocol.Messages.Base;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 
 
-namespace MidiService.Protocol.Messages.Session
+namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Messages.Session
 {
     [ProtoContract]
     public class CreateSessionRequestMessage : ProtocolMessage

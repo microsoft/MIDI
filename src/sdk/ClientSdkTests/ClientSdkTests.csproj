@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Management\Microsoft.Windows.Midi.Management.csproj" />
     <ProjectReference Include="..\MidiMain\Microsoft.Windows.Midi.csproj" />
+    <ProjectReference Include="..\MidiMessages\Microsoft.Windows.Midi.Messages.csproj" />
   </ItemGroup>
 
 </Project>

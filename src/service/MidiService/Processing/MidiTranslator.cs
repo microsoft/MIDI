@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MidiService.Processing
+namespace Microsoft.Windows.Midi.Internal.Service.Processing
 {
     public class MidiTranslator
     {

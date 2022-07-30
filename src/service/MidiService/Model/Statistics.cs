@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MidiService.Model
+namespace Microsoft.Windows.Midi.Internal.Service.Model
 {
     public class Statistics
     {

@@ -1,10 +1,11 @@
-﻿using System;
+﻿using Microsoft.Windows.Midi.Internal.Service.Services;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MidiService.Model
+namespace Microsoft.Windows.Midi.Internal.Service.Model
 {
     // This graph gets written out to shared memory so the management service
     // can inspect it and see all open sessions

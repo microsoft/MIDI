@@ -1,9 +1,11 @@
 // disable x-plat warnings as we're dealing with ACL etc here.
 #pragma warning disable CA1416
 
-using MidiService.Services;
 
-namespace MidiService
+
+using Microsoft.Windows.Midi.Internal.Service.Model;
+
+namespace Microsoft.Windows.Midi.Internal.Service.Services
 {
     // This service is designed to be super fast, with very little traffic. It's a single
     // pipe, so clients will queue when creating sessions. 

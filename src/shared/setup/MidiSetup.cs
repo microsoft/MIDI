@@ -1,14 +1,14 @@
-﻿using MidiConfig;
-using MidiSetup.Schema;
+﻿using Microsoft.Windows.Midi.Internal.Config;
+using Microsoft.Windows.Midi.Internal.Setup.Schema;
 using System.IO;
 using System.Text.Json;
 
-namespace MidiSetup
+namespace Microsoft.Windows.Midi.Internal.Setup
 {
     public class MidiSetup
     {
         // header
-        public Header Header { get; set; }
+        public SetupHeader Header { get; set; }
 
 
         // transports

@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MidiService.Protocol.Midi
+namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
 {
     // Even without the memory-mapped file and resizing support, this queue ended up more
     // complex than the typical ring buffer/queue implementation.

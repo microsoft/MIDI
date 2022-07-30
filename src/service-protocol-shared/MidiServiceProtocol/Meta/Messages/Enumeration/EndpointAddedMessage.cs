@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MidiService.Protocol.Messages.Enumeration
+namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Messages.Enumeration
 {
     //public class EndpointAddedMessage : IMidiServiceProtocolMessage
     //{

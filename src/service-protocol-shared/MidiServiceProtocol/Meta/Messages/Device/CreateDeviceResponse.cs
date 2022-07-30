@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MidiService.Protocol.Messages.Device
+namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Messages.Device
 {
     internal class CreateDeviceResponse
     {

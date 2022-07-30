@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MidiSetup.Schema
+namespace Microsoft.Windows.Midi.Internal.Setup.Schema
 {
-    public struct Header
+    public struct SetupHeader
     {
         Guid Id { get; set; }
         string Name { get; set; }

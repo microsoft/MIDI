@@ -1,11 +1,10 @@
-using MidiService.Protocol;
-using MidiService.Protocol.Messages.Base;
-using MidiService.Protocol.Serialization;
-using MidiService.Protocol.Messages.Session;
+
+using Microsoft.Windows.Midi.Internal.ServiceProtocol;
+using Microsoft.Windows.Midi.Internal.ServiceProtocol.Messages.Session;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Runtime.Serialization;
-using MidiService.Protocol.Messages.Management;
+
 
 namespace ServiceTests
 {

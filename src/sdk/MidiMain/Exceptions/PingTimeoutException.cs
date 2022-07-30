@@ -4,9 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Microsoft.Windows.Midi.Internal.Data
+namespace Microsoft.Windows.Midi.Exceptions
 {
-    public struct MidiTransportSerializableData
-    {
-    }
+    //public sealed class PingTimeoutException : Exception
+    //{
+
+
+    //}
 }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MidiConfig.Schema
+namespace Microsoft.Windows.Midi.Internal.Config.Schema
 {
     public class Plugin
     {

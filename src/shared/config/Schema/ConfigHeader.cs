@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 using System.Text.Json.Serialization;
 
-namespace MidiConfig.Schema
+namespace Microsoft.Windows.Midi.Internal.Config.Schema
 {
-    public class Header
+    public class ConfigHeader
     {
         [JsonInclude]
         private const string ThisFileType = "MIDI Configuration";

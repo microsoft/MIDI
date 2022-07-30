@@ -1,12 +1,12 @@
-﻿using Microsoft.Windows.Midi.PluginModel;
-using MidiService.Protocol.Midi;
+﻿using Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi;
+using Microsoft.Windows.Midi.PluginModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MidiService.Model
+namespace Microsoft.Windows.Midi.Internal.Service.Model
 {
 
     // TODO: Need to have a version of this for MIDI 1.0 as well
