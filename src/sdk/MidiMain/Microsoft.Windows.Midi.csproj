@@ -33,6 +33,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\service-protocol-shared\MidiServiceData\MidiService.Data.csproj" />
+    <ProjectReference Include="..\..\service-protocol-shared\MidiServiceManagement\MidiServiceControlManagement.csproj" />
     <ProjectReference Include="..\..\service-protocol-shared\MidiServiceProtocol\MidiService.Protocol.csproj" />
     <ProjectReference Include="..\..\shared\config\MidiConfig.csproj" />
     <ProjectReference Include="..\..\shared\setup\MidiSetup.csproj" />

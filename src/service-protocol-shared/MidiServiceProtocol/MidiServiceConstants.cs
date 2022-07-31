@@ -5,6 +5,7 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol
 {
     public class MidiServiceConstants
     {
+
         private const string PipePrefix = "midi.";
 
         // May want to make this something which can be set in the config file
@@ -16,7 +17,6 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol
         public const string EnumerationServicePipePrefix = PipePrefix + "enumerator";
 
         public const string SessionServicePipePrefix = PipePrefix + "session";  // this gets an ID added to it
-
 
 
 

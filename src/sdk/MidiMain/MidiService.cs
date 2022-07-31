@@ -10,6 +10,10 @@ using Microsoft.Windows.Midi.Internal.ServiceProtocol.Messages;
 using Microsoft.Windows.Midi.Internal.ServiceProtocol.Messages.Management;
 using Microsoft.Windows.Midi.Internal.ServiceProtocol.Serialization;
 
+using Microsoft.Windows.Midi.Internal.ServiceControl;
+using System.Security.Principal;
+using System.Security;
+
 namespace Microsoft.Windows.Midi
 {
 
@@ -24,7 +28,16 @@ namespace Microsoft.Windows.Midi
     {
         private const int PingTimeoutMilliseconds = 2000;
 
+        public static bool CallerHasAdministrativeRight
+        {
+            get
+            {
+                WindowsPrincipal pricipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+                bool hasAdministrativeRight = pricipal.IsInRole(WindowsBuiltInRole.Administrator);
 
+                return hasAdministrativeRight;
+            }
+        }
 
         public static string ApiVersion
         {
@@ -32,35 +45,73 @@ namespace Microsoft.Windows.Midi
         }
 
         /// <summary>
-        /// Checks to see if the MIDI services are installed. If they are not installed, 
-        /// the app should provide the download and install URL
+        /// Checks to see if the MIDI service is installed (by checking to see if it
+        /// exists in any state in the registered services. If it is not installed, 
+        /// the app should provide the download and install URL.
         /// </summary>
-        /// <returns>True if the MIDI services are installed</returns>
-        /// <exception cref="NotImplementedException"></exception>
+        /// <returns>True if the MIDI service itself is installed</returns>
         public static bool IsInstalled()
         {
-            // does a check to see if services are installed
-            throw new NotImplementedException();
+            return MidiServiceControlManager.DoesServiceExist();
+            
         }
 
         /// <summary>
-        /// If the MIDI service is installed but running, this will start it
+        /// Checks with Windows to see if the service is running. This is not a ping
+        /// to ensure the service hasn't locked up, but just a basic check.
         /// </summary>
-        /// <exception cref="NotImplementedException"></exception>
-        public static void Start()
+        /// <returns>True if the service control manager reports the service as
+        /// being in a running state</returns>
+        public static bool IsRunning()
         {
-            throw new NotImplementedException();
+            return MidiServiceControlManager.IsServiceRunning();
+
+        }
+
+        /// <summary>
+        /// If the MIDI service is installed but running, this will attempt 
+        /// to start it. Requires admin rights for the calling user.
+        /// </summary>
+        /// <returns>True if it succeeds, false if it times out or otherwise fails</returns>
+        public static bool Start()
+        {
+            if (CallerHasAdministrativeRight)
+            {
+                return MidiServiceControlManager.StartService();
+            }
+            else
+            {
+                throw new SecurityException("Starting the service requires administrative rights.");
+            }
+        }
+
+        /// <summary>
+        /// Attempts to stop the MIDI service
+        /// </summary>
+        /// <returns>True if it succeeds, false if it times out or otherwise fails</returns>
+        public static bool Stop()
+        {
+            if (CallerHasAdministrativeRight)
+            {
+                return MidiServiceControlManager.StopService();
+            }
+            else
+            {
+                throw new SecurityException("Stopping the service requires administrative rights.");
+            }
         }
 
 
-
         /// <summary>
-        /// Checks to see if the MIDI service is running
+        /// Checks to see if the MIDI service is responding. This is doing an 
+        /// actual check against a known endpoint on the service. This doesn't mean
+        /// a queue isn't blocked or some other issue, but does indicate that the
+        /// service itself is responding.
         /// </summary>
-        /// <returns>Version of the running service</returns>
+        /// <returns>Version of the running service as well as whether or not
+        /// the ping was responded to.</returns>
         public static MidiServicePingResponse Ping(out string serverVersionReported)
         {
-
             // checks to see if the MIDI service is running
 
             var request = new ServicePingMessage()
@@ -125,7 +176,6 @@ namespace Microsoft.Windows.Midi
         /// Gets the URI for the service installer for the API version currently in use
         /// </summary>
         /// <returns>URL to the installer package</returns>
-        /// <exception cref="NotImplementedException"></exception>
         public static string GetServicesInstallerUri()
         {
             throw new NotImplementedException();
