@@ -1,4 +1,5 @@
-﻿using Microsoft.Windows.Midi.PluginModel;
+﻿using Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi;
+using Microsoft.Windows.Midi.PluginModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +21,26 @@ namespace LoopbackPlugin
         public string IconFileName => throw new NotImplementedException();
 
         public string Description { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        public void Close()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Open()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetIncomingUmpMessageQueue(Guid endpointId, IMidiUmpMessageQueue incomingMessageQueue)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetOutgoingUmpMessageQueue(Guid endpointId, IMidiUmpMessageQueue outgoingMessageQueue)
+        {
+            throw new NotImplementedException();
+        }
     }
 
 

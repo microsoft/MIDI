@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -39,7 +40,14 @@ namespace Microsoft.Windows.Midi.PluginModel
         /// </summary>
         string Description { get; set; }
 
+        void Open();
 
-        // TODO: One-way and bidirectional endpoints
+        void Close();
+
+        void SetOutgoingUmpMessageQueue(Guid endpointId, IMidiUmpMessageQueue outgoingMessageQueue);
+
+        void SetIncomingUmpMessageQueue(Guid endpointId, IMidiUmpMessageQueue incomingMessageQueue);
+
+
     }
 }

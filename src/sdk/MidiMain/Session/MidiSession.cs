@@ -9,7 +9,9 @@ using System.Threading.Tasks;
 
 using Microsoft.Windows.Midi.Enumeration;
 using Microsoft.Windows.Midi.Internal.Data;
+using Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi;
 using Microsoft.Windows.Midi.Internal.ServiceProtocol.Serialization;
+using Windows.Foundation.Metadata;
 
 namespace Microsoft.Windows.Midi.Session
 {
@@ -20,11 +22,13 @@ namespace Microsoft.Windows.Midi.Session
         private bool disposedValue;
 
         public Guid Id => _data.Id; 
-        public string Name { get => _data.Name; set => _data.Name = value; }
-        
-  //      public DateTime CreatedTime { get => _data.CreatedTime; internal set => _data.CreatedTime = value; }
 
-        // TODO: Log level
+        // TODO: Updating name here needs to change it on the server
+        public string Name 
+        { get => _data.Name; set => _data.Name = value; }
+        
+        public DateTime CreatedTime { get => _data.CreatedTime; internal set => _data.CreatedTime = value; }
+
 
         // ================================================================================
         #region Session lifetime
@@ -33,7 +37,7 @@ namespace Microsoft.Windows.Midi.Session
         {
             MidiSessionSerializableData data = new MidiSessionSerializableData();
 
-            data.ClientId = Guid.NewGuid();
+            data.ClientId = ClientState.ClientId;
             data.ProcessName = Process.GetCurrentProcess().ProcessName;
             data.ProcessId = Process.GetCurrentProcess().Id;
 
@@ -45,7 +49,7 @@ namespace Microsoft.Windows.Midi.Session
                 {
                     ClientId = data.ClientId,
                     ClientRequestId = Guid.NewGuid(),
-                //TODO    ClientVersion = _clientVersion.ToString(),
+                    ClientVersion = ClientState.ApiVersion.ToString(),
                 },
 
                 Name = name,
@@ -90,8 +94,8 @@ namespace Microsoft.Windows.Midi.Session
                     if (!options.SkipDeviceEnumeration)
                     {
                         // TODO: enumerate devices and endpoints using the static enumerator
-                        MidiEnumerator.GetDevices();
-                        MidiEnumerator.GetEndpoints();
+             //           MidiEnumerator.GetDevices();
+             //           MidiEnumerator.GetEndpoints();
                     }
 
 
@@ -188,15 +192,33 @@ namespace Microsoft.Windows.Midi.Session
 
 
 
-        public void SendUmp(Guid deviceId, Guid endpointId, object message)
+
+
+        [DefaultOverload]
+        public void SendUmp(Guid deviceId, Guid endpointId, Ump32 message)
         {
 
         }
 
-        //public void SendStream(Guid deviceId, Guid endpointId, Stream words)
-        //{
+        public void SendUmp(Guid deviceId, Guid endpointId, Ump64 message)
+        {
 
-        //}
+        }
+
+        public void SendUmp(Guid deviceId, Guid endpointId, Ump96 message)
+        {
+
+        }
+
+        public void SendUmp(Guid deviceId, Guid endpointId, Ump128 message)
+        {
+
+        }
+
+        // TODO: method to send a buffer of words
+
+
+
 
     }
 }

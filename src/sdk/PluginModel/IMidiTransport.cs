@@ -48,15 +48,10 @@ namespace Microsoft.Windows.Midi.PluginModel
 
         //}
 
-        ///// <summary>
-        ///// Blocking read
-        ///// </summary>
-        ///// <exception cref="NotImplementedException"></exception>
-        //void ReadFromDevice(Guid endpointId, IList<Ump> messageBuffer)
-        //{
-        //}
 
         // TODO: methods to create endpoints etc.
+
+
 
 
     }
