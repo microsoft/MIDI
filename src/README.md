@@ -8,7 +8,8 @@ The main source tree.
 | plugins | Transport, processing, and other plugins |
 | sdk | App developer SDKs for MIDI |
 | service | The Windows Service   |
-| shared | Libraries that aren't part of the SDK, but are internally shared in the projects   |
+| service-protocol-shared | Internal communications libraries between SDK and service |
+| shared | Libraries that aren't part of the SDK, but are internally shared in the projects |
 | tools | End-user tools like settings and the CLI   |
 | usb-driver | USB MIDI 2.0 driver |
 
