@@ -53,19 +53,19 @@ The below steps work from an Administrator command prompt or Administrator Power
 
 I recommend using the installer for at least the first install. It creates the required folders and sets permissions on them so the service can access the required data. After that, you can use sc.exe.
 
-```
+```PowerShell
 sc.exe create "MIDI Service" binpath="f:\ull\path\to\MidiService.exe"
 ```
 
 example:
 
-```
+```PowerShell
 sc.exe create "MIDI Service" binpath="D:\peteb\Documents\GitHub\microsoft\midi\src\api\MidiServices\MidiService\bin\Release\net7.0-windows10.0.20348.0\win-x64\publish\MidiService.exe"
 ```
 
 Optional step
 
-```
+```PowerShell
 sc.exe description "MIDI Service" "In-development version of Windows MIDI Services"
 ```
 
@@ -73,7 +73,7 @@ sc.exe description "MIDI Service" "In-development version of Windows MIDI Servic
 
 You can use the Services snap-in, or handle via PowerShell / CMD. You need to make sure you stop the service before overwriting its exe.
 
-```
+```PowerShell
 sc.exe start "MIDI Service"
 
 sc.exe stop "MIDI Service"
@@ -81,7 +81,7 @@ sc.exe stop "MIDI Service"
 
 ### Manual Removal
 
-```
+```PowerShell
 sc.exe delete "MIDI Service"
 ```
 
@@ -108,13 +108,13 @@ For pipes, serialization is handled using Protobuf.net. This may change, but the
 
 To see all the open named pipes in the system, open PowerShell and type:
 
-```
+```PowerShell
 [System.IO.Directory]::GetFiles("\\.\\pipe\\")
 ```
 
 To scope to just the ones for MIDI, use a wildcard search for the prefix defined in the MidiServiceConstants file in the Protocol project.
 
-```
+```PowerShell
 [System.IO.Directory]::GetFiles("\\.\\pipe\\", "midi*")
 ```
 
