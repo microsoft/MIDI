@@ -148,7 +148,6 @@ This is the core development team for the initial release. There are others invo
 | [Michael Loh](AmeNote-Michael) | AmeNote | Driver Developer |
 | [Andrew Mee](starfishmod) | | MIDI Consultant |
 
-
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)
