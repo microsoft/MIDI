@@ -27,6 +27,22 @@ Enumerate Devices
 
 * Client sends Device Enumeration message to dedicated session pipe
 
+Sending Messages
+
+* Client uses session to open endpoint (this should be kept open for as long as the application may need to use the endpoint, as opening/closing are more expensive operations)
+* Client sends MIDI messages using SDK
+* SDK sends the messages using cross-process shared memory queues
+* Service processes messages and routes to correct endpoint
+* Client optionally disconnects from endpoint
+
+Receiving Messages
+
+* As per above, client opens endpoint
+* Endpoint sends messages to service using local memory
+* Service copies messages to all listening client queues
+* Client is notified that there are new messages waiting
+* Client processes messages
+
 ## Install and Management
 
 During dev, you'll need to manually stop/start/install/uninstall the MIDI services. You'll need to publish the exe first, and then use the path to that exe in the steps below.
@@ -35,22 +51,22 @@ The below steps work from an Administrator command prompt or Administrator Power
 
 ### Manual Install
 
-I recommend using the installer for at least the first install. It creates the required folders and sets permissions on them so the service can access the required data.
+I recommend using the installer for at least the first install. It creates the required folders and sets permissions on them so the service can access the required data. After that, you can use sc.exe.
 
 ```
-sc create "MIDI Service" binpath="f:\ull\path\to\MidiService.exe"
+sc.exe create "MIDI Service" binpath="f:\ull\path\to\MidiService.exe"
 ```
 
 example:
 
 ```
-sc create "MIDI Service" binpath="D:\peteb\Documents\GitHub\microsoft\midi\src\api\MidiServices\MidiService\bin\Release\net7.0-windows10.0.20348.0\win-x64\publish\MidiService.exe"
+sc.exe create "MIDI Service" binpath="D:\peteb\Documents\GitHub\microsoft\midi\src\api\MidiServices\MidiService\bin\Release\net7.0-windows10.0.20348.0\win-x64\publish\MidiService.exe"
 ```
 
 Optional step
 
 ```
-sc description "MIDI Service" "In-development version of Windows MIDI Services"
+sc.exe description "MIDI Service" "In-development version of Windows MIDI Services"
 ```
 
 ### Manual Start and Stop
@@ -58,15 +74,15 @@ sc description "MIDI Service" "In-development version of Windows MIDI Services"
 You can use the Services snap-in, or handle via PowerShell / CMD. You need to make sure you stop the service before overwriting its exe.
 
 ```
-sc start "MIDI Service"
+sc.exe start "MIDI Service"
 
-sc stop "MIDI Service"
+sc.exe stop "MIDI Service"
 ```
 
 ### Manual Removal
 
 ```
-sc delete "MIDI Service"
+sc.exe delete "MIDI Service"
 ```
 
 ### Using the PowerShell Scripts
@@ -75,16 +91,16 @@ All of the above steps are rolled up into the following PowerShell scripts:
 
 | Script | Function
 | ----------------------- | -------------------------------------------------------- |
-| .\delete-service.ps1 | Stop and delete the service. This can take a few minutes to actually happen after the script has been run. |
+| .\delete-service.ps1 | Stop and delete the service. This can take a few moments to actually happen after the script has been run. If it takes too long, it may be that the service has code in a tight loop, and needs to be manually killed in task manager. The tight loop then needs to be fixed. |
 | .\start-service.ps1 | Create and start the service |
 | .\list-midi-pipes.ps1 | Output a list of all the MIDI named pipes that are currently open |
 | .\Constants.ps1 | This is where you set the service path for your own machine |
 
-Do not check in your own versions of Constants.ps1.
+**Do not check in your own versions of Constants.ps1.**
 
-## Named Pipes
+## Named Pipes and Memory-mapped Files
 
-This server uses named pipes to communicate with the clients.
+This server uses named pipes and memory-mapped files to communicate with the clients. The initial connections are done via pipes which are easier to manage, but are slower. All MIDI messages transfers, and enumeration, are done via memory-mapped files which require more code to manage, but are quite a bit faster.
 
 ### Debugging named pipes
 
@@ -94,13 +110,11 @@ To see all the open named pipes in the system, open PowerShell and type:
 [System.IO.Directory]::GetFiles("\\.\\pipe\\")
 ```
 
-To scope to just the ones for MIDI, use a wildcard search for the prefix defined in the MidiServiceConstants file.
+To scope to just the ones for MIDI, use a wildcard search for the prefix defined in the MidiServiceConstants file in the Protocol project.
 
 ```
 [System.IO.Directory]::GetFiles("\\.\\pipe\\", "midi*")
 ```
-
-Look for the ones with the name in the Constants.cs file here.
 
 ### More info
 
@@ -113,6 +127,7 @@ Info anyone working on the server may find useful information about pipes
 
 And these references on shared memory and memory-mapped files
 
+* [Memory-mapped files](https://docs.microsoft.com/dotnet/standard/io/memory-mapped-files)
 
 ## Serialization
 
