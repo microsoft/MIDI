@@ -12,12 +12,11 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
         // if needed, this can be optimized to work on a block of
         // local memory. Using the .NET queue for prototying for now
 
-        private Queue<MidiWord>? _queue;
+        private Queue<MidiWord> _queue = new Queue<MidiWord>();
         private bool disposedValue;
 
         private readonly object _readLock = new object();
         private readonly object _writeLock = new object();
-
 
 
         public bool Enqueue(MidiWord word)
@@ -90,54 +89,132 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
             GC.SuppressFinalize(this);
         }
 
-        public bool Enqueue(Ump32 ump)
+        public bool IsFull()
         {
-            throw new NotImplementedException();
+            return false;   // this can't be full
         }
 
-        public bool Enqueue(Ump64 ump)
+        public bool IsEmpty()
         {
-            throw new NotImplementedException();
+            return _queue.Count == 0;
         }
 
-        public bool Enqueue(Ump96 ump)
+
+
+        public bool Enqueue(ref Ump32 ump)
         {
-            throw new NotImplementedException();
+            _queue.Enqueue(ump.Word1);
+
+            return true;
         }
 
-        public bool Enqueue(Ump128 ump)
+        public bool Enqueue(ref Ump64 ump)
         {
-            throw new NotImplementedException();
+            _queue.Enqueue(ump.Word1);
+            _queue.Enqueue(ump.Word2);
+
+            return true;
         }
 
-        public int EnqueueMany(Stream sourceStream, int count)
+        public bool Enqueue(ref Ump96 ump)
         {
-            throw new NotImplementedException();
+            _queue.Enqueue(ump.Word1);
+            _queue.Enqueue(ump.Word2);
+            _queue.Enqueue(ump.Word3);
+
+            return true;
         }
+
+        public bool Enqueue(ref Ump128 ump)
+        {
+            _queue.Enqueue(ump.Word1);
+            _queue.Enqueue(ump.Word2);
+            _queue.Enqueue(ump.Word3);
+            _queue.Enqueue(ump.Word4);
+
+            return true;
+        }
+
+
 
         public bool Dequeue(out uint word)
         {
-            throw new NotImplementedException();
+            try
+            {
+                word = _queue.Dequeue();
+                return true;
+            }
+            catch (InvalidOperationException)
+            {
+                word = default;
+                return false;
+            }
         }
 
         public bool Dequeue(out Ump32 ump)
         {
-            throw new NotImplementedException();
+            try
+            {
+                ump.Word1 = _queue.Dequeue();
+
+                return true;
+            }
+            catch (InvalidOperationException)
+            {
+                ump = default;
+                return false;
+            }
         }
 
         public bool Dequeue(out Ump64 ump)
         {
-            throw new NotImplementedException();
+            try
+            {
+                ump.Word1 = _queue.Dequeue();
+                ump.Word2 = _queue.Dequeue();
+
+                return true;
+            }
+            catch (InvalidOperationException)
+            {
+                ump = default;
+                return false;
+            }
         }
 
         public bool Dequeue(out Ump96 ump)
         {
-            throw new NotImplementedException();
+            try
+            {
+                ump.Word1 = _queue.Dequeue();
+                ump.Word2 = _queue.Dequeue();
+                ump.Word3 = _queue.Dequeue();
+
+                return true;
+            }
+            catch (InvalidOperationException)
+            {
+                ump = default;
+                return false;
+            }
         }
 
         public bool Dequeue(out Ump128 ump)
         {
-            throw new NotImplementedException();
+            try
+            {
+                ump.Word1 = _queue.Dequeue();
+                ump.Word2 = _queue.Dequeue();
+                ump.Word3 = _queue.Dequeue();
+                ump.Word4 = _queue.Dequeue();
+
+                return true;
+            }
+            catch (InvalidOperationException)
+            {
+                ump = default;
+                return false;
+            }
         }
 
         public bool Dequeue(Stream destinationStream, out int wordCount)
@@ -145,34 +222,31 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
             throw new NotImplementedException();
         }
 
-        public bool Dequeue(Span<uint> words, out int wordCount)
+        public bool Dequeue(ref Span<uint> words, out int wordCount)
         {
             throw new NotImplementedException();
         }
 
         public int PeekNextMessageWordCount()
         {
-            throw new NotImplementedException();
+            var word = _queue.Peek();
+
+            return MidiMessageUtility.UmpLengthFromFirstWord(word);
+
         }
 
-        public uint GetRemainingCapacityInWords()
-        {
-            throw new NotImplementedException();
-        }
 
-        public bool HasMessages()
+        public bool Enqueue(ref Span<uint> words)
         {
-            throw new NotImplementedException();
-        }
+            int i = 0;
 
-        public bool IsFull()
-        {
-            throw new NotImplementedException();
-        }
+            foreach (MidiWord word in words)
+            {
+                _queue.Enqueue(word);
+                i++;
+            }
 
-        public bool IsEmpty()
-        {
-            throw new NotImplementedException();
+            return true;
         }
     }
 }

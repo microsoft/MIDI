@@ -24,19 +24,21 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
         // ump32, or just single words
         bool Enqueue(MidiWord word);
 
-        bool Enqueue(Ump32 ump);
+        bool Enqueue(ref Ump32 ump);
 
         // ump64, or any two words
-        bool Enqueue(Ump64 ump);
+        bool Enqueue(ref Ump64 ump);
 
         // ump96, or any three words
-        bool Enqueue(Ump96 ump);
+        bool Enqueue(ref Ump96 ump);
 
         // ump128 or any four words
-        bool Enqueue(Ump128 ump);
+        bool Enqueue(ref Ump128 ump);
 
 
-        int EnqueueMany(Stream sourceStream, int count);
+        //bool EnqueueMany(Stream sourceStream);
+
+        bool Enqueue(ref Span<MidiWord> words);
 
 
         bool Dequeue(out MidiWord word);
@@ -46,9 +48,9 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
         bool Dequeue(out Ump96 ump);
         bool Dequeue(out Ump128 ump);
 
-        bool Dequeue(Stream destinationStream, out int wordCount);
+        //bool Dequeue(Stream destinationStream, out int wordCount);
 
-        bool Dequeue(Span<MidiWord> words, out int wordCount);
+        bool Dequeue(ref Span<MidiWord> words, out int wordCount);
 
 
         // method to help with removing a full message

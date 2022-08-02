@@ -10,6 +10,8 @@
     <PlatformTarget>x64</PlatformTarget>
 
     <Platforms>AnyCPU;x64</Platforms>
+
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

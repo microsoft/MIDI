@@ -1,48 +1,52 @@
 # Windows MIDI Services
 
-This project is the next-generation MIDI API for Windows, including MIDI 1.0, MIDI CI, and [MIDI 2.0](https://www.midi.org/specifications/midi-2-0-specifications) features, enhancements, a new driver, and an ecosystem of essential tools. It builds upon the work we did for WinRT MIDI, adds many enhancements and bug fixes to our MIDI 1.0 support, and importantly adds support for MIDI CI and MIDI 2.0.
-
-This is an official Microsoft project.
+This project is the next-generation MIDI API for Windows, including MIDI 1.0, MIDI CI, and [MIDI 2.0](https://www.midi.org/specifications/midi-2-0-specifications) features, enhancements, a new driver, and an ecosystem of essential tools. It adds many enhancements and bug fixes to our MIDI 1.0 support, and importantly adds support for MIDI CI and MIDI 2.0.
 
 > The open source driver has been generously donated by [AMEI](https://www.amei.or.jp/),
 > the **Association of Musical Electronics Industry, and developed by AmeNote**. Please see
 > the file headers for any additional copyright notices. A huge thank you to AMEI and its
 > member companies for making this happen!
 
-Building upon the work we did with WinRT MIDI, and taking cues from the flatter approach
-offered by the WinMM/Win32 API today, we're making some big enhancements and also
-addressing areas where we could do better with that API. Like the existing WinRT API, this
-API may be called from a variety of langauges, including [C++/WinRT](https://docs.microsoft.com/windows/uwp/cpp-and-winrt-apis/), from desktop apps and more.
+This is an official Microsoft project.
+
+![High-level view of the MIDI stack](img/high-level-view.png)
 
 > **Join the Discussion!**
-> 
-> Our official community server for this project is on Discord here: 
+>
+> Our official community server for this project is on Discord here:
 > https://aka.ms/MidiDiscord
-> 
-> Please keep bug and feature requests in the issues here, but other discussion, live streams, 
+>
+> Please keep bug and feature requests in the issues here, but other discussion, live streams,
 > Q&A, and more can happen on Discord. Additionally, we know that not everyone who uses MIDI
 > has access to GitHub, so we welcome additional suggestions, reports, etc. there for those
 > members of the community.
 
+## Device, Programming Language, and API Compatibility
+
+See See [README-Compatibility.md](README-Compatibility.md)
+
 ## Philosophy - why is this Open Source?
 
-We believe in the musician and music technology communities. We also know that
-the music creation tech community is a highly motivated and interested community, including
-those who are both musicians and developers who are working to move music technology forward.
+We believe in the musician and music technology communities. We also know that the music creation tech community is a highly motivated and interested community, including those who are both musicians and developers who are working to move music technology forward.
 
-We recognize that standards like MIDI are living standards, with new transports and add-on
-capabilities added over time and that in the past, we haven't been quick to adopt those in
-released of Windows, and we want to change that.
+We recognize that standards like MIDI 2.0 are living standards, with new transports and add-on capabilities added over time, and that in the past, we haven't been quick to adopt those in released of Windows. We want to change that.
 
-We propose that the best way to maintain an API which keeps up with the evolving standards
-and offers early adopters in this community an opportunity to try them out, test, and contribute,
-is to open source everything that we can, and inviting both internal teams and the community to
-contribute to MIDI as implemented on Windows. We also love the idea of others learning from this
-source code to implement MIDI 2.0 on embedded devices and other operating systems as they need.
+We proposed that the best way to maintain an API which keeps up with the evolving standards and offers early adopters in this community an opportunity to try them out, test, and contribute, is to open source everything that we can, and invite both internal teams and the community to contribute to MIDI as implemented on Windows. We also love the idea of others learning from this source code to implement MIDI 2.0 on embedded devices and other operating systems as they need.
 
-In short, we believe this project is the best way to continue to develop MIDI on Windows, and to
-give back to the whole MIDI developer community, regardless of which operating system they
+In short, we believe this project is the best way to continue to develop MIDI on Windows in the long-term, and to give back to the whole MIDI developer community, regardless of which operating system they
 prefer.
+
+## Yet another API?
+
+Wait, is this just yet another "API to rule them all", so we end up with n+1 APIs to deal with?
+
+Yes and no. Part of the reason this is open source is to make everything as visible as possible, and to allow much-needed input from app developers. The long-term intention is to discourage use of the older APIs through eventual deprecation, and to encourage use of this new API by adding in all the features and capabilities that users and app authors want. We simply couldn't do that with any of the older APIs, which were tied heavily to an older driver model, and so we've ended up with a new one that we can grow to support the features and the evolution of the standards.
+
+## What else does this provide for developers?
+
+MIDI 2.0 is a standard that allows for many different types of physical transport layers. Developers often want to experienment with new or novel approaches for getting MIDI information from one device to another. In the past, that has required either creating a MIDI stack from scratch (which was not difficult with the simpler MIDI 1.0), or writing a Windows driver.
+
+We want to encourage experimentation. By adopting a pluggable transport model for the Windows MIDI Services, it's possible for a developer to much more quickly prototype an idea, or an evolving standard, and see how it performs in action, all without climbing the driver development hill.
 
 ## Repo Structure
 
@@ -55,9 +59,9 @@ The repo contains many different projects and stand-alone files which make up Wi
 | /get-started/docs    | Developer and user documentation |
 | /get-started/samples | Developer samples for using the API |
 | /specs               | Specifications, when needed |
-| /src                 | Main source (non-documentation/sample) root. See folder for details |
+| /src                 | Main source (non-documentation/sample) root. See folder for more details |
 
-Note that any internal changes made to the OS to support the driver or MIDI API are not contained in this repo.
+Note that any internal changes made to Windows to support the driver or MIDI API are not contained in this repo.
 
 ## Feature Set
 
@@ -82,7 +86,8 @@ Here are some selected big rocks intended for the first release. Our top priorit
 * A new combined multi-client MIDI 1.0, MIDI CI, and [MIDI 2.0 USB class driver](https://www.midi.org/specifications/midi-transports-specifications/usb/usb-midi-2-0-2)
 * A new combined multi-client MIDI 1.0, MIDI CI, and MIDI 2.0 API based on the Universal MIDI Packet (UMP)
 accessible to, at a minimum, C++ and C# applications.
-* Infrastructure to provide for future implementations of virtual MIDI, MIDI processing like the MIDI Mapper used to provide, new transports and much more, all without requiring, in most cases, new driver code.
+* A MIDI 2.0-capable loopback test transport
+* Infrastructure to provide for future implementations of MIDI processing like the MIDI Mapper used to provide, new transports and much more, all without requiring, in most cases, new driver code.
 * Infrastructure for a JSON-based configuration system for MIDI system profiles.
 * Additional API and enumeration information
   * End-user renaming / aliasing of devices / endpoints while also keeping the driver-supplied name accessible
@@ -98,8 +103,8 @@ Time and resources permitting, these will also be part of 1.0 release. If they d
 * Virtual / App-to-App MIDI
 * Basic end-user settings app
 
-The majority of this infrastructure development will be done by the core team, mentioned below. We
-certainly encourage you to participate in testing and in pull requests as you have suggestions.
+The majority of this infrastructure development will be done by the core team. We
+certainly encourage you to participate in testing and in contributing pull requests as you have suggestions. See [CONTRIBUTING.md](CONTRIBUTING.md) for how to contribute.
 
 ### Longer-term project features
 
@@ -133,19 +138,16 @@ This is the core development team for the initial release. There are others invo
 
 | Team Member | Company | Role in this Project |
 | ---------------|---------|--------------------------------|
-| [Pete Brown](https://github.com/Psychlist1972) | Microsoft | Overall Project and OSS Lead Engineer |
+| [Pete Brown](https://github.com/Psychlist1972) | Microsoft | Overall Project and OSS Lead API Engineer |
 | Jay DiFuria | Microsoft | Microsoft API PM |
-| Edward Sumanaseni | Microsoft | API Engineer |
-| [Gary Daniels](https://github.com/garydan42) | Microsoft | API Engineer  |
-| [Julia DZmura](https://github.com/judzmura) | Microsoft | API Engineer |
+| Edward Sumanaseni | Microsoft | Engineer |
+| [Gary Daniels](https://github.com/garydan42) | Microsoft | Engineer  |
+| [Julia DZmura](https://github.com/judzmura) | Microsoft | Engineer |
 | Ben Israel | Yamaha | AMEI Project Lead |
 | [Mike Kent](AmeNote-MikeKent) | AmeNote | Driver Developer |
 | [Michael Loh](AmeNote-Michael) | AmeNote | Driver Developer |
 | [Andrew Mee](starfishmod) | | MIDI Consultant |
 
-## Device, Programming Language, and API Compatibility
-
-See See [README-Compatibility.md](README-Compatibility.md)
 
 ## Contributing
 

@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -142,8 +144,6 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
 
             PutFileHeader(ref header);
         }
-
-
 
 
 
@@ -353,51 +353,7 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
         }
 
 
-        private int GetUmpMessageSizeFromFirstWord(MidiWord word)
-        {
-            // See section 2.1.4 of the UMP protocol specification
-            // message type is the first 4 most significant bits of the first word
-            //
-            // TODO: Move this out to a common class that is available
-            // everywhere
-            byte messageType = (byte)((word >> 28) & 0x0F); // the mask isn't necessary, but it makes me feel better inside
-
-            switch (messageType)
-            {
-                case 0x0:   // Utility message
-                case 0x1:   // system real time and system common
-                case 0x2:   // MIDI 1.0 channel voice
-                    return 1;
-
-                case 0x3:   // data message
-                case 0x4:   // MIDI 2.0 channel voice
-                    return 2;
-
-                case 0x5:   // Data
-                    return 4;
-
-
-                // future reserved message types --------
-
-                case 0x6:   // reserved
-                case 0x7:   // reserved
-                    return 1;
-                case 0x8:   // reserved
-                case 0x9:   // reserved
-                case 0xA:   // reserved
-                    return 2;
-                case 0xB:   // reserved
-                case 0xC:   // reserved
-                    return 3;
-                case 0xD:   // reserved
-                case 0xE:   // reserved
-                case 0xF:   // reserved
-                    return 4;
-                default:
-                    throw new InvalidDataException($"Next word contains invalid messageType {messageType}");
-            }
-
-        }
+ 
 
 
         public int PeekNextMessageWordCount()
@@ -412,7 +368,7 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
                 accessor.Read<MidiWord>(CalculateByteOffset(header.FrontMessageIndex), out word);
             }
 
-            return GetUmpMessageSizeFromFirstWord(word);
+            return MidiMessageUtility.UmpLengthFromFirstWord(word);
         }
 
 
@@ -444,7 +400,7 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
         // certain data types. We don't want to allow adding just 
         // anything to the queue. But there are some assumptions in
         // her about MIDI messages being composed of words, for example
-        private bool Enqueue<T>(T t) where T: struct
+        private bool Enqueue<T>(ref T t) where T: struct
         {
             if (!LockQueue())
             {
@@ -515,17 +471,11 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
             return success;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool DequeueWillDrainQueue(ref Header header, int messageSizeInWords)
         {
             // this check doesn't account for wrapping
-            if (header.FrontMessageIndex == header.RearMessageIndex)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return (header.FrontMessageIndex == header.RearMessageIndex);
         }
 
 
@@ -612,18 +562,97 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
 
 
 
-
-        public int EnqueueMany(Stream sourceStream, int count)
+        private bool EnqueueMany<T>(ref Span<T> messages) where T:struct
         {
-            throw new NotImplementedException();
+            if (!LockQueue())
+            {
+                return false;
+            }
+
+            var header = GetFileHeader();
+
+            var messageSizeInWords = Marshal.SizeOf(typeof(T)) / MidiWordSizeInBytes;
+
+            //System.Diagnostics.Debug.WriteLine($"EnqueueMany: messageSizeInWords={messageSizeInWords}");
+
+            bool success = true;
+
+            using (var accessor = _file.CreateViewAccessor())
+            {
+                // not using a foreach here because those can't be used
+                // in ref calls, meaning they get copied anyway. See CS1657
+                int i = 0;
+                while (success && i < messages.Length)
+                {
+                    //System.Diagnostics.Debug.WriteLine($"EnqueueMany: i={i}");
+
+                    T t = messages[i];
+
+                    int index;
+                    if (GetEnqueueIndex(ref header, messageSizeInWords, out index))
+                    {
+                        // get rear of queue
+                        var offset = CalculateByteOffset(index);
+
+                        // System.Diagnostics.Debug.WriteLine($"Enqueue");
+                        //System.Diagnostics.Debug.WriteLine($" - Capacity:            {header.TotalCapacityInWords}");
+                        //System.Diagnostics.Debug.WriteLine($" - Front Message index: {header.FrontMessageIndex}");
+                        //System.Diagnostics.Debug.WriteLine($" - Rear Message index:  {header.RearMessageIndex}");
+                        //System.Diagnostics.Debug.WriteLine($" - Rear Message size:   {header.RearMessageSize}");
+                        //System.Diagnostics.Debug.WriteLine($" - Last used word:      {header.IndexOfLastUsedWordInFile}");
+                        //System.Diagnostics.Debug.WriteLine($" - Enqueue Index:       {index}");
+                        //System.Diagnostics.Debug.WriteLine($" - Message size words:  {messageSizeInWords}");
+                        //System.Diagnostics.Debug.WriteLine($" - Byte offset:         {offset}");
+
+                        accessor.Write<T>(offset, ref t);
+
+                        // queue no longer empty
+                        if (header.FrontMessageIndex == -1)
+                            header.FrontMessageIndex = 0;
+
+                        header.RearMessageIndex = index;
+                        header.RearMessageSize = messageSizeInWords;
+
+                        header.IndexOfLastUsedWordInFile =
+                            Math.Max(header.IndexOfLastUsedWordInFile,
+                                        header.RearMessageIndex + header.RearMessageSize - 1);
+
+                        //System.Diagnostics.Debug.WriteLine($" - Added {messageSizeInWords} words at index {index}");
+
+                        //System.Diagnostics.Debug.WriteLine($" - New Rear Message index:  {header.RearMessageIndex}");
+                        //System.Diagnostics.Debug.WriteLine($" - New Rear Message size:   {header.RearMessageSize}");
+                        //System.Diagnostics.Debug.WriteLine($" - New Last used word:      {header.IndexOfLastUsedWordInFile}");
+
+                        success = true;
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Enqueue span: Could not get enqueue index for element {i}. Queue may be full. ");
+                        success = false;
+                        break;
+                    }
+
+                    i++;
+
+                }
+            }
+
+            // write updated header data
+            PutFileHeader(ref header);
+
+            ReleaseQueueLock();
+
+            return success;
+
         }
 
-        public bool Dequeue(Stream destinationStream, out int count)
+
+        public bool Enqueue(ref Span<MidiWord> words)
         {
-            throw new NotImplementedException();
+            return EnqueueMany<MidiWord>(ref words);
         }
 
-        public bool Dequeue(Span<uint> words, out int wordCount)
+        public bool Dequeue(ref Span<uint> words, out int wordCount)
         {
             throw new NotImplementedException();
         }
@@ -631,54 +660,63 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
 
         #region Individual UMP types
 
-        // writing one word at a time is the most expensive way to 
-        // enqueue items
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Enqueue(MidiWord word)
         {
-            return Enqueue<MidiWord>(word);
+            return Enqueue<MidiWord>(ref word);
         }
 
-        public bool Enqueue(Ump128 ump)
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Enqueue(ref Ump128 ump)
         {
-            return Enqueue<Ump128>(ump);
+            return Enqueue<Ump128>(ref ump);
         }
 
-        public bool Enqueue(Ump96 ump)
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Enqueue(ref Ump96 ump)
         {
-            return Enqueue<Ump96>(ump);
+            return Enqueue<Ump96>(ref ump);
         }
 
-        public bool Enqueue(Ump64 ump)
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Enqueue(ref Ump64 ump)
         {
-            return Enqueue<Ump64>(ump);
+            return Enqueue<Ump64>(ref ump);
         }
 
-        public bool Enqueue(Ump32 ump)
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Enqueue(ref Ump32 ump)
         {
-            return Enqueue<Ump32>(ump);
+            return Enqueue<Ump32>(ref ump);
         }
 
 
+
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Dequeue(out Ump128 ump)
         {
             return Dequeue<Ump128>(out ump);
         }
 
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Dequeue(out Ump96 ump)
         {
             return Dequeue<Ump96>(out ump);
         }
 
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Dequeue(out Ump64 ump)
         {
             return Dequeue<Ump64>(out ump);
         }
 
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Dequeue(out Ump32 ump)
         {
             return Dequeue<Ump32>(out ump);
         }
 
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Dequeue(out MidiWord word)
         {
             return Dequeue<MidiWord>(out word);
@@ -718,10 +756,6 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
-
- 
-
-
 
 
     }
