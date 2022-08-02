@@ -2,8 +2,8 @@
 
 This project is the next-generation MIDI API for Windows, including MIDI 1.0, MIDI CI, and [MIDI 2.0](https://www.midi.org/specifications/midi-2-0-specifications) features, enhancements, a new driver, and an ecosystem of essential tools. It adds many enhancements and bug fixes to our MIDI 1.0 support, and importantly adds support for MIDI CI and MIDI 2.0.
 
-> The open source driver has been generously donated by [AMEI](https://www.amei.or.jp/),
-> the **Association of Musical Electronics Industry, and developed by AmeNote**. Please see
+> The open source USB MIDI 2.0 driver has been generously donated by [AMEI](https://www.amei.or.jp/),
+> the **Association of Musical Electronics Industry**, and developed by AmeNote. Please see
 > the file headers for any additional copyright notices. A huge thank you to AMEI and its
 > member companies for making this happen!
 
@@ -131,22 +131,6 @@ For these long-term goals, we will be partnering with the community of developer
 To keep the project agile, we are currently planning to distibute all of the released and signed end-user components, as much as possible, through the Microsoft Store on Windows. This may evolve over time as the project stabilizes or as the developer and musician community provide feedback. Additionally, some components may need to be distributed through Windows Update or other common mechanisms. TBD as we get into releases.
 
 **There are no end-user releases yet. We expect to start seeing those as we head into 2023.**
-
-## Meet the Core Team for Release 1.0
-
-This is the core development team for the initial release. There are others involved who come in and out as needed, and many more contributors to this project including those playing non-development roles.
-
-| Team Member | Company | Role in this Project |
-| ---------------|---------|--------------------------------|
-| [Pete Brown](https://github.com/Psychlist1972) | Microsoft | Overall Project and OSS Lead API Engineer |
-| Jay DiFuria | Microsoft | Microsoft API PM |
-| Edward Sumanaseni | Microsoft | Engineer |
-| [Gary Daniels](https://github.com/garydan42) | Microsoft | Engineer  |
-| [Julia DZmura](https://github.com/judzmura) | Microsoft | Engineer |
-| Ben Israel | Yamaha | AMEI Project Lead |
-| [Mike Kent](AmeNote-MikeKent) | AmeNote | Driver Developer |
-| [Michael Loh](AmeNote-Michael) | AmeNote | Driver Developer |
-| [Andrew Mee](starfishmod) | | MIDI Consultant |
 
 ## Contributing
 
