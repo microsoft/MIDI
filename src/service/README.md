@@ -102,6 +102,8 @@ All of the above steps are rolled up into the following PowerShell scripts:
 
 This server uses named pipes and memory-mapped files to communicate with the clients. The initial connections are done via pipes which are easier to manage, but are slower. All MIDI messages transfers, and enumeration, are done via memory-mapped files which require more code to manage, but are quite a bit faster.
 
+For pipes, serialization is handled using Protobuf.net. This may change, but there's additional complexity when using System.Text.Json, and the BinaryFormatter/Serializer is no longer recommended for new projects. If the number of messages stays small, it will be reasonable to implement custom serialization and eliminate the dependency.
+
 ### Debugging named pipes
 
 To see all the open named pipes in the system, open PowerShell and type:
