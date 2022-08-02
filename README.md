@@ -7,7 +7,7 @@ This project is the next-generation MIDI API for Windows, including MIDI 1.0, MI
 > the file headers for any additional copyright notices. A huge thank you to AMEI and its
 > member companies for making this happen!
 
-This is an official Microsoft project.
+**This is an official Microsoft project**. Although Microsoft is an active member of the MIDI Association, and Pete is the chair of the MIDI Association Excutive Board, this project is not affiliated with the MIDI Association other than as a consumer of and contributor to the standards. Affiliation with AMEI is disclosed above.
 
 ![High-level view of the MIDI stack](img/high-level-view.png)
 
