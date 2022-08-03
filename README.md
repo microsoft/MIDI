@@ -7,7 +7,7 @@ This project is the next-generation MIDI API for Windows, including MIDI 1.0, MI
 > the file headers for any additional copyright notices. A huge thank you to AMEI and its
 > member companies for making this happen!
 
-**This is an official Microsoft project**. Although Microsoft is an active member of the MIDI Association, and Pete is the chair of the MIDI Association Excutive Board, this project is not affiliated with the MIDI Association other than as a consumer of and contributor to the standards. Affiliation with AMEI is disclosed above.
+**This is an official Microsoft project**. Although Microsoft is an active member of the MIDI Association, and Pete is the chair of the MIDI Association Excutive Board and other contributors are on standards boards, this project is not affiliated with the MIDI Association other than as a consumer of and contributor to the standards. Affiliation with AMEI is disclosed above.
 
 ![High-level view of the MIDI stack](img/high-level-view.png)
 
@@ -20,10 +20,6 @@ This project is the next-generation MIDI API for Windows, including MIDI 1.0, MI
 > Q&A, and more can happen on Discord. Additionally, we know that not everyone who uses MIDI
 > has access to GitHub, so we welcome additional suggestions, reports, etc. there for those
 > members of the community.
-
-## Device, Programming Language, and API Compatibility
-
-See See [README-Compatibility.md](README-Compatibility.md)
 
 ## Philosophy - why is this Open Source?
 
@@ -139,6 +135,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md)
 ## Security
 
 See [SECURITY.md](SECURITY.md)
+
+## Device, Programming Language, and API Compatibility
+
+See [README-Compatibility.md](README-Compatibility.md)
+
+## Component Redistribution
+
+See [README-Redistribution.md](README-Redistribution.md)
 
 ## Trademarks
 
