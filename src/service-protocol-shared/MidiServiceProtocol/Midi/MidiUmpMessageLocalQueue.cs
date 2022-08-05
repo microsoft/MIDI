@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
+using System;
 using System.Collections.Generic;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
@@ -217,13 +220,10 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
             }
         }
 
-        public bool Dequeue(Stream destinationStream, out int wordCount)
-        {
-            throw new NotImplementedException();
-        }
-
         public bool Dequeue(ref Span<uint> words, out int wordCount)
         {
+            // TODO: Dequeue with Span
+
             throw new NotImplementedException();
         }
 

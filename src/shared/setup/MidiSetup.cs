@@ -1,4 +1,7 @@
-﻿using Microsoft.Windows.Midi.Internal.Config;
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
+using Microsoft.Windows.Midi.Internal.Config;
 using Microsoft.Windows.Midi.Internal.Setup.Schema;
 using System.IO;
 using System.Text.Json;

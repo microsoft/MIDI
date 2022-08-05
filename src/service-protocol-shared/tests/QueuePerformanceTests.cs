@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -95,11 +98,7 @@ namespace ProtocolTests
                 System.Diagnostics.Debug.WriteLine($" In Milliseconds:       {TimeSpan.FromTicks(elapsedTicks / loopCount / step).TotalMilliseconds}");
                 System.Diagnostics.Debug.WriteLine($" In Microseconds:       {TimeSpan.FromTicks(elapsedTicks / loopCount / step).TotalMicroseconds}");
                 System.Diagnostics.Debug.WriteLine($" In Nanoseconds:        {TimeSpan.FromTicks(elapsedTicks / loopCount / step).TotalNanoseconds}");
-
-
             }
-
-
         }
 
 
@@ -190,9 +189,11 @@ namespace ProtocolTests
             Span<Ump128> messageSpan;
             Span<uint> wordSpan;
 
+            IntPtr nativeMemory;
+
             unsafe
             {
-                var nativeMemory = Marshal.AllocHGlobal((int)(spanMessageCount * Marshal.SizeOf(typeof(Ump128))));
+                nativeMemory = Marshal.AllocHGlobal((int)(spanMessageCount * Marshal.SizeOf(typeof(Ump128))));
 
                 messageSpan = new Span<Ump128>(nativeMemory.ToPointer(), spanMessageCount);
                 wordSpan = new Span<uint>(nativeMemory.ToPointer(), queueSize);

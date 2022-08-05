@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,7 +19,7 @@ namespace Microsoft.Windows.Midi.Enumeration
             throw new NotImplementedException();
         }
 
-        public static IEnumerable<MidiDevice> GetDevices()
+        public static IEnumerable<MidiDeviceInformation> GetDevices()
         {
             throw new NotImplementedException();
         }
@@ -25,7 +28,7 @@ namespace Microsoft.Windows.Midi.Enumeration
         /// <summary>
         /// List all endpoints
         /// </summary>
-        public static IEnumerable<MidiEndpoint> GetEndpoints()
+        public static IEnumerable<MidiEndpointInformation> GetEndpoints()
         {
             throw new NotImplementedException();
         }
@@ -35,7 +38,7 @@ namespace Microsoft.Windows.Midi.Enumeration
         /// List all endpoints for a specific device
         /// </summary>
         /// <param name="deviceId"></param>
-        public static IEnumerable<MidiEndpoint> GetEndpoints(Guid deviceId)
+        public static IEnumerable<MidiEndpointInformation> GetEndpoints(Guid deviceId)
         {
             throw new NotImplementedException();
         }

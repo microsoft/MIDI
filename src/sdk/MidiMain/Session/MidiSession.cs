@@ -1,6 +1,9 @@
 ﻿
 using System;
 using System.Collections.Generic;
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Linq;
@@ -16,7 +19,7 @@ using Windows.Foundation.Metadata;
 namespace Microsoft.Windows.Midi.Session
 {
 
-    public sealed class MidiSession : IDisposable
+    public sealed partial class MidiSession : IDisposable
     {
         private MidiSessionSerializableData _data;
         private bool disposedValue;
@@ -174,13 +177,6 @@ namespace Microsoft.Windows.Midi.Session
 
 
 
-
-
-        // TODO: Consider making a partial class to break out API surface area from
-        // internal comms
-
-
-
         // todo: Method to save local property changes to server
         // Do this instead of per-property to make the change
         // use as few messages as possible
@@ -189,33 +185,6 @@ namespace Microsoft.Windows.Midi.Session
 
 
         // TODO: Utility functions
-
-
-
-
-
-        [DefaultOverload]
-        public void SendUmp(Guid deviceId, Guid endpointId, Ump32 message)
-        {
-
-        }
-
-        public void SendUmp(Guid deviceId, Guid endpointId, Ump64 message)
-        {
-
-        }
-
-        public void SendUmp(Guid deviceId, Guid endpointId, Ump96 message)
-        {
-
-        }
-
-        public void SendUmp(Guid deviceId, Guid endpointId, Ump128 message)
-        {
-
-        }
-
-        // TODO: method to send a buffer of words
 
 
 

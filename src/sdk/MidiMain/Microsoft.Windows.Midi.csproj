@@ -37,6 +37,7 @@
     <ProjectReference Include="..\..\service-protocol-shared\MidiServiceProtocol\MidiService.Protocol.csproj" />
     <ProjectReference Include="..\..\shared\config\MidiConfig.csproj" />
     <ProjectReference Include="..\..\shared\setup\MidiSetup.csproj" />
+    <ProjectReference Include="..\MidiMessages\Microsoft.Windows.Midi.Messages.csproj" />
   </ItemGroup>
 
   <ItemGroup>

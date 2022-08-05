@@ -1,4 +1,7 @@
-﻿using Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi;
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
+using Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,6 +42,8 @@ namespace Microsoft.Windows.Midi.PluginModel
         /// Description of the device. Supplied by user.
         /// </summary>
         string Description { get; set; }
+
+
 
         void Open();
 

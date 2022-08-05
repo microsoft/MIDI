@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -36,8 +39,6 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
         bool Enqueue(ref Ump128 ump);
 
 
-        //bool EnqueueMany(Stream sourceStream);
-
         bool Enqueue(ref Span<MidiWord> words);
 
 
@@ -48,13 +49,16 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
         bool Dequeue(out Ump96 ump);
         bool Dequeue(out Ump128 ump);
 
-        //bool Dequeue(Stream destinationStream, out int wordCount);
-
         bool Dequeue(ref Span<MidiWord> words, out int wordCount);
 
 
         // method to help with removing a full message
         int PeekNextMessageWordCount();
+
+
+        // TODO: Add methods for waiting on new messages
+        // internally using WaitForSingleObject or similar
+
 
 
 
@@ -65,7 +69,8 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
         // TODO: Provide a DequeueWholeMessage which will pull a message out using the 
         // message type to figure out how many words to read.
 
-        // TODO: Provide an EnqueueWholeMessage which will write a full message
+
+
 
 
     }
