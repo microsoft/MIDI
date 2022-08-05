@@ -36,6 +36,10 @@ Run the installer. It will install the service, and importantly, create the requ
 
 TODO
 
+## SDK
+
+TODO
+
 ## Tools
 
 TODO
