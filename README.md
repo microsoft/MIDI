@@ -92,6 +92,8 @@ To keep the project agile, we are currently planning to distibute all of the rel
 
 **There are no end-user releases yet. We expect to start seeing those as we head into 2023.**
 
+[Developer Installation Instructions](./README-Installing.md)
+
 ## Philosophy - why is this Open Source?
 
 We believe in the musician and music technology communities. We also know that the music creation tech community is a highly motivated and interested community, including those who are both musicians and developers who are working to move music technology forward.
