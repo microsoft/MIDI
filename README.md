@@ -21,6 +21,77 @@ This project is the next-generation MIDI API for Windows, including MIDI 1.0, MI
 > has access to GitHub, so we welcome additional suggestions, reports, etc. there for those
 > members of the community.
 
+## Feature Set
+
+This is a living and growing API. The first phase is to release a complete and working MIDI 1.0 and MIDI 2.0 system that includes all the necessary infrastructure for us to continue to build upon.
+
+> Some big features are called out in this readme. Beyond that, specific detailed features may be found in
+> the issues list by using the following labels:
+>
+> Proposed Features
+> https://github.com/microsoft/MIDI/labels/feature%20proposal
+> 
+> Approved Features
+> https://github.com/microsoft/MIDI/labels/feature
+> 
+> Known Tracked Bugs
+> https://github.com/microsoft/MIDI/labels/bug
+
+### Minimum 1.0 release features
+
+Here are some selected big rocks intended for the first release. Our top priority for the first release is a fully functional MIDI 2.0, 1.0, and MIDI-CI USB driver and API, usable with third-party applications and devices.
+
+* A new combined multi-client MIDI 1.0, MIDI CI, and [MIDI 2.0 USB class driver](https://www.midi.org/specifications/midi-transports-specifications/usb/usb-midi-2-0-2)
+* A new combined multi-client MIDI 1.0, MIDI CI, and MIDI 2.0 API based on the Universal MIDI Packet (UMP)
+accessible to, at a minimum, C++ and C# applications.
+* A MIDI 2.0-capable loopback test transport
+* Infrastructure to provide for future implementations of MIDI processing like the MIDI Mapper used to provide, new transports and much more, all without requiring, in most cases, new driver code.
+* Infrastructure for a JSON-based configuration system for MIDI system profiles.
+* Additional API and enumeration information
+  * End-user renaming / aliasing of devices / endpoints while also keeping the driver-supplied name accessible
+  * More detailed information about devices (driver details, manufacturer info, etc.)
+  * Transport information so apps know how the device is connected (USB, BLE, Network, etc.)
+  * more
+* Basic developer documentation
+
+### Additional Short-term project big "1.0" features
+
+Time and resources permitting, these will also be part of 1.0 release. If they don't make it in there, they will be in a subsequent release
+
+* Bluetooth MIDI 1.0 (currently supported in WinRT MIDI or through third-party drivers)
+* Virtual / App-to-App MIDI
+* Basic end-user settings app
+
+The majority of this infrastructure development will be done by the core team. We
+certainly encourage you to participate in testing and in contributing pull requests as you have suggestions. See [CONTRIBUTING.md](CONTRIBUTING.md) for how to contribute.
+
+### Longer-term project features
+
+Here are some other features that are more long-term. Some may make it into the first release, but we will not block on them for 1.0. This is what we intend to do, but is not a commitment at this point.
+
+* MIDI 1.0 RTP MIDI
+* New MIDI 2 transport standards (Bluetooth, network, etc.) as they are adopted by the MIDI Association
+* A full suite of MIDI utility, debugging, configuration, and diagnostic tools both visual and
+command-line. Including:
+  * A friendly user interface for managing MIDI devices and their configuration on the PC
+  * command-line tools for enumerating devices, and performing typical automatable tasks
+  * A MIDI monitor
+  * Sysex transfer and librarian tools
+  * Possible musician performance-focused tools like patch switching, controllers, etc.
+* MIDI message processor plug-ins
+  * Remap MIDI notes, velocity curves, and more
+  * Reroute MIDI messages
+  * Filter out certain MIDI messages for a specific endpoint
+  * more as proposed and/or contributed by the community
+
+For these long-term goals, we will be partnering with the community of developers to help ensure we have the right tools and utilities to meet your support needs and everyone's customers' needs, all available as part of a single standard installation.
+
+## Releases
+
+To keep the project agile, we are currently planning to distibute all of the released and signed end-user components, as much as possible, through the Microsoft Store on Windows. This may evolve over time as the project stabilizes or as the developer and musician community provide feedback. Additionally, some components may need to be distributed through Windows Update or other common mechanisms. TBD as we get into releases.
+
+**There are no end-user releases yet. We expect to start seeing those as we head into 2023.**
+
 ## Philosophy - why is this Open Source?
 
 We believe in the musician and music technology communities. We also know that the music creation tech community is a highly motivated and interested community, including those who are both musicians and developers who are working to move music technology forward.
@@ -59,74 +130,6 @@ The repo contains many different projects and stand-alone files which make up Wi
 
 Note that any internal changes made to Windows to support the driver or MIDI API are not contained in this repo.
 
-## Feature Set
-
-This is a living and growing API. The first phase is to release a complete and working MIDI 1.0 and MIDI 2.0 system that includes all the necessary infrastructure for us to continue to build upon.
-
-> Some big features are called out in this readme. Beyond that, specific detailed features may be found in
-> the issues list by using the following labels:
->
-> Proposed Features
-> https://github.com/microsoft/MIDI/labels/feature%20proposal
-> 
-> Approved Features
-> https://github.com/microsoft/MIDI/labels/feature
-> 
-> Known Tracked Bugs
-> https://github.com/microsoft/MIDI/labels/bug
-
-### Minimum 1.0 release features
-
-Here are some selected big rocks intended for the first release. Our top priority for the first release is a fully functional MIDI 2.0, 1.0, and MIDI-CI driver and API, usable with third-party applications and devices.
-
-* A new combined multi-client MIDI 1.0, MIDI CI, and [MIDI 2.0 USB class driver](https://www.midi.org/specifications/midi-transports-specifications/usb/usb-midi-2-0-2)
-* A new combined multi-client MIDI 1.0, MIDI CI, and MIDI 2.0 API based on the Universal MIDI Packet (UMP)
-accessible to, at a minimum, C++ and C# applications.
-* A MIDI 2.0-capable loopback test transport
-* Infrastructure to provide for future implementations of MIDI processing like the MIDI Mapper used to provide, new transports and much more, all without requiring, in most cases, new driver code.
-* Infrastructure for a JSON-based configuration system for MIDI system profiles.
-* Additional API and enumeration information
-  * End-user renaming / aliasing of devices / endpoints while also keeping the driver-supplied name accessible
-  * More detailed information about devices (driver details, manufacturer info, etc.)
-  * Transport information so apps know how the device is connected (USB, BLE, Network, etc.)
-  * more
-
-### Additional Short-term project big "1.0" features
-
-Time and resources permitting, these will also be part of 1.0 release. If they don't make it in there, they will be in a subsequent release
-
-* Bluetooth MIDI 1.0 (currently supported in WinRT MIDI or through third-party drivers)
-* Virtual / App-to-App MIDI
-* Basic end-user settings app
-
-The majority of this infrastructure development will be done by the core team. We
-certainly encourage you to participate in testing and in contributing pull requests as you have suggestions. See [CONTRIBUTING.md](CONTRIBUTING.md) for how to contribute.
-
-### Longer-term project features
-
-Here are some other features that are more long-term. Some may make it into the first release, but we will not block on them for 1.0. This is what we intend to do, but is not a commitment at this point.
-
-* New MIDI 2 transport standards (Bluetooth, network, etc.) as they are adopted by the MIDI Association
-* A full suite of MIDI utility, debugging, configuration, and diagnostic tools both visual and
-command-line. Including:
-  * A friendly user interface for managing MIDI devices and their configuration on the PC
-  * command-line tools for enumerating devices, and performing typical automatable tasks
-  * A MIDI monitor
-  * Sysex transfer and librarian tools
-  * Possible musician performance-focused tools like patch switching, controllers, etc.
-* MIDI message processor plug-ins
-  * Remap MIDI notes, velocity curves, and more
-  * Reroute MIDI messages
-  * Filter out certain MIDI messages for a specific endpoint
-  * more as proposed and/or contributed by the community
-
-For these long-term goals, we will be partnering with the community of developers to help ensure we have the right tools and utilities to meet your support needs and everyone's customers' needs, all available as part of a single standard installation.
-
-## Releases
-
-To keep the project agile, we are currently planning to distibute all of the released and signed end-user components, as much as possible, through the Microsoft Store on Windows. This may evolve over time as the project stabilizes or as the developer and musician community provide feedback. Additionally, some components may need to be distributed through Windows Update or other common mechanisms. TBD as we get into releases.
-
-**There are no end-user releases yet. We expect to start seeing those as we head into 2023.**
 
 ## Contributing
 
