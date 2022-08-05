@@ -118,6 +118,10 @@ To scope to just the ones for MIDI, use a wildcard search for the prefix defined
 [System.IO.Directory]::GetFiles("\\.\\pipe\\", "midi*")
 ```
 
+### Viewing all memory-mapped files
+
+Use [Process Explorer](https://docs.microsoft.com/sysinternals/downloads/process-explorer) to view processes and their open memory-mapped files. To do this, run Process Explorer, and then select View > Show Loweer Pane and then View > Lower Pane View > Handles
+
 ### More info
 
 Info anyone working on the server may find useful information about pipes
@@ -146,3 +150,8 @@ For end-user editing, for example the setup/config files, we use System.Text.Jso
 For the Google implementations, just for reference. We don't use this version here.
 
 * [Protobuf C#](https://github.com/protocolbuffers/protobuf/tree/main/csharp)
+
+## Genaral service info
+
+The MIDI Service creates a named event log "MIDI Service" under the Applications and Services Logs branch of the Windows event log. You'll find all application-generated events there. SCM, abends, and other events will still show up in the main Windows Logs > Application event log.
+
