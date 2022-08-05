@@ -23,7 +23,7 @@ Any images submitted must have clear license for use that is compatible with the
 
 # What do I need to get started?
 
-Projects generally use the most recent recent versions of [Visual Studio](https://visualstudio.microsoft.com/), [C++/WinRT](https://docs.microsoft.com/windows/uwp/cpp-and-winrt-apis/), Windows 10/11 SDKs, [Windows App SDK](https://github.com/microsoft/WindowsAppSDK), [Windows Community Toolkit](https://github.com/CommunityToolkit/WindowsCommunityToolkit) and [.NET](https://dotnet.microsoft.com/) available at the time of authoring. Specific build requirements will be available in the readme for each sub project.
+Projects generally use the most recent recent versions of [Visual Studio](https://visualstudio.microsoft.com/), [C++/WinRT](https://docs.microsoft.com/windows/uwp/cpp-and-winrt-apis/), Windows 10/11 SDKs, [Windows App SDK](https://github.com/microsoft/WindowsAppSDK), [Windows Community Toolkit](https://github.com/CommunityToolkit/WindowsCommunityToolkit) and [.NET 7 Preview](https://dotnet.microsoft.com/) available at the time of authoring. Specific build requirements will be available in the readme for each sub project.
 
 Projects are intended to be compiled on Windows, typically the latest release of Windows 11. Cross-compiling from another platform may be appropriate for some forks, but not necessaily for the main API, driver, and other components. Additionally, using toolchains other than Visual Studio are currently not supported for targeting Windows. When in doubt, ask.
 

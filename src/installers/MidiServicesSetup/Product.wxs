@@ -94,13 +94,13 @@
 			<Component Id="ServiceConfig" Directory="ServiceExeFolder">
 				<File Id="ServiceAppConfig"
 					  Name="appsettings.json"
-					  Source="D:\peteb\Documents\GitHub\microsoft\midi\src\service\MidiService\bin\Release\net7.0-windows10.0.20348.0\win-x64\publish\appsettings.json"  />
+					  Source="D:\peteb\Documents\GitHub\microsoft\midi\src\publish\x64\service\appsettings.json"  />
 			</Component>
 
 			<Component Id="InstallService" Directory="ServiceExeFolder" >
 				<File Id="ServiceExe" 
 					  Name="MidiService.exe" 
-					  Source="D:\peteb\Documents\GitHub\microsoft\midi\src\service\MidiService\bin\Release\net7.0-windows10.0.20348.0\win-x64\publish\MidiService.exe"  />
+					  Source="D:\peteb\Documents\GitHub\microsoft\midi\src\publish\x64\service\MidiService.exe"  />
 
 				<!-- Don't change the service name here unless you also change it in the MidiServiceCOntroLManager-->
 				<ServiceInstall Id="ServiceInstaller" 
