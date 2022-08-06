@@ -42,6 +42,7 @@ This is a living and growing API. The first phase is to release a complete and w
 Here are some selected big rocks intended for the first release. Our top priority for the first release is a fully functional MIDI 2.0, 1.0, and MIDI-CI USB driver and API, usable with third-party applications and devices.
 
 * A new combined multi-client MIDI 1.0, MIDI CI, and [MIDI 2.0 USB class driver](https://www.midi.org/specifications/midi-transports-specifications/usb/usb-midi-2-0-2)
+  * Primarily designed for MIDI 2.0, but replaces the existing Windows MIDI 1.0 class driver with a new multi-client driver usable with existing MIDI 1.0 WinRT MIDI and WinMM MIDI APIs on Windows
 * A new combined multi-client MIDI 1.0, MIDI CI, and MIDI 2.0 API based on the Universal MIDI Packet (UMP)
 accessible to, at a minimum, C++ and C# applications.
 * A MIDI 2.0-capable loopback test transport
