@@ -8,5 +8,14 @@ namespace Microsoft.Windows.Midi.Messages
     {
         UInt32 Word1;
         UInt32 Word2;
+
+        public Ump64() { }
+
+        public Ump64(UInt32 word1, UInt32 word2)
+        {
+            Word1 = word1;
+            Word2 = word2;
+        }
+
     }
 }

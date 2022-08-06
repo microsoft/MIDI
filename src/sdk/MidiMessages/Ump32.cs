@@ -6,5 +6,13 @@ namespace Microsoft.Windows.Midi.Messages
     public sealed class Ump32 : Ump
     {
         UInt32 Word1;
+
+        public Ump32() { }
+
+        public Ump32(UInt32 word1)
+        {
+            Word1 = word1;
+        }
+
     }
 }

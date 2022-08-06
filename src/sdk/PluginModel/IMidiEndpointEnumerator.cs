@@ -16,6 +16,5 @@ namespace Microsoft.Windows.Midi.PluginModel
         
         IEnumerable<MidiEndpointSerializableData> GetEndpoints();
 
-
     }
 }

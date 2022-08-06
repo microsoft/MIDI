@@ -17,31 +17,6 @@ namespace Microsoft.Windows.Midi.PluginModel
         /// </summary>
         Guid Id { get; }
 
-        /// <summary>
-        /// GUID / Id of the parent device which owns the endpoint. The full identifier
-        /// for an endpoint is the combination of the endpoint Id and parent device id
-        /// </summary>
-        Guid ParentDeviceId { get; }
-
-        /// <summary>
-        /// User-supplied name. Defaults to the device-supplied name
-        /// </summary>
-        string Name { get; set; }
-
-        /// <summary>
-        /// Name of the endpoint as supplied by the device itself
-        /// </summary>
-        string DeviceSuppliedName { get; }
-
-        /// <summary>
-        /// File name of the icon for this endpoint. Not full path, just file name.
-        /// </summary>
-        string IconFileName { get; }
-
-        /// <summary>
-        /// Description of the device. Supplied by user.
-        /// </summary>
-        string Description { get; set; }
 
 
 

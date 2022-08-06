@@ -14,12 +14,28 @@ namespace Microsoft.Windows.Midi.Enumeration
     public sealed class MidiEnumerator
     {
 
+        // TODO: added/removed/changed events for each object type
+
+        /// <summary>
+        /// Refresh the local copy of the enumeration graph
+        /// </summary>
         public static void Refresh()
         {
             throw new NotImplementedException();
         }
 
-        public static IEnumerable<MidiDeviceInformation> GetDevices()
+        /// <summary>
+        /// List all available transport providers (BLE, USB, etc.)
+        /// </summary>
+        public static IList<MidiTransportInformation> GetTransports()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// List all the available device endpoints
+        /// </summary>
+        public static IList<MidiDeviceInformation> GetDevices()
         {
             throw new NotImplementedException();
         }
@@ -28,7 +44,7 @@ namespace Microsoft.Windows.Midi.Enumeration
         /// <summary>
         /// List all endpoints
         /// </summary>
-        public static IEnumerable<MidiEndpointInformation> GetEndpoints()
+        public static IList<MidiEndpointInformation> GetEndpoints()
         {
             throw new NotImplementedException();
         }
@@ -37,8 +53,8 @@ namespace Microsoft.Windows.Midi.Enumeration
         /// <summary>
         /// List all endpoints for a specific device
         /// </summary>
-        /// <param name="deviceId"></param>
-        public static IEnumerable<MidiEndpointInformation> GetEndpoints(Guid deviceId)
+        /// <param name="deviceId">Id of the parent device</param>
+        public static IList<MidiEndpointInformation> GetEndpoints(Guid deviceId)
         {
             throw new NotImplementedException();
         }

@@ -11,5 +11,9 @@ namespace Microsoft.Windows.Midi.Internal.Data
 {
     public struct MidiTransportSerializableData
     {
+        public Guid Id;
+        public string Name;
+        public string IconFileName;
+        public string Description;
     }
 }

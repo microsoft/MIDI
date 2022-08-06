@@ -19,9 +19,7 @@ namespace Microsoft.Windows.Midi.Internal.Data
         public string Description;
 
         public Guid TransportId;
-        //public string TransportIconFileName;
-        //public string TransportType;
-        //public string TransportDescription;
+
 
     }
 }
