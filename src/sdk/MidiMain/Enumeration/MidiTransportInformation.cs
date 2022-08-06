@@ -14,10 +14,24 @@ namespace Microsoft.Windows.Midi.Enumeration
     {
         private MidiTransportSerializableData _transportData;
 
+        /// <summary>
+        /// Unique Id for the transport type
+        /// </summary>
         public Guid Id { get => _transportData.Id; }
 
+        /// <summary>
+        /// Short name of the transport, like "BLE MIDI 1.0"
+        /// </summary>
         public string Name { get => _transportData.Name; }
+
+        /// <summary>
+        /// Name of the icon used to represent the transport
+        /// </summary>
         public string IconFileName { get => _transportData.IconFileName; }
+
+        /// <summary>
+        /// Long name or description of the transport
+        /// </summary>
         public string Description { get => _transportData.Description; }
 
     }

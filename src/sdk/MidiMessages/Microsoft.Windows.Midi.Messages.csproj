@@ -22,4 +22,8 @@
 		<AssemblyName>$(MSBuildProjectName)</AssemblyName>
 	</PropertyGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\..\service-protocol-shared\MidiServiceProtocol\MidiService.Protocol.csproj" />
+	</ItemGroup>
+
 </Project>

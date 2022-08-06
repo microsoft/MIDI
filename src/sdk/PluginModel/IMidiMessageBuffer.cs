@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using Microsoft.Windows.Midi.Messages;
+using Microsoft.Windows.Midi.Messages.Packet;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Windows.Midi.PluginModel
 {
-     public interface IMidiMessageBuffer : IDisposable
+    public interface IMidiMessageBuffer : IDisposable
     {
         void SetSharedMemory(IntPtr pointerToAllocatedBuffer, int bufferSizeIn32BitWords);
 
