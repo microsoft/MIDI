@@ -670,53 +670,53 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
         }
 
         //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Enqueue(ref Ump128 ump)
+        public bool Enqueue(ref InternalUmp128 ump)
         {
-            return Enqueue<Ump128>(ref ump);
+            return Enqueue<InternalUmp128>(ref ump);
         }
 
         //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Enqueue(ref Ump96 ump)
+        public bool Enqueue(ref InternalUmp96 ump)
         {
-            return Enqueue<Ump96>(ref ump);
+            return Enqueue<InternalUmp96>(ref ump);
         }
 
         //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Enqueue(ref Ump64 ump)
+        public bool Enqueue(ref InternalUmp64 ump)
         {
-            return Enqueue<Ump64>(ref ump);
+            return Enqueue<InternalUmp64>(ref ump);
         }
 
         //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Enqueue(ref Ump32 ump)
+        public bool Enqueue(ref InternalUmp32 ump)
         {
-            return Enqueue<Ump32>(ref ump);
+            return Enqueue<InternalUmp32>(ref ump);
         }
 
 
 
         //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Dequeue(out Ump128 ump)
+        public bool Dequeue(out InternalUmp128 ump)
         {
-            return Dequeue<Ump128>(out ump);
+            return Dequeue<InternalUmp128>(out ump);
         }
 
         //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Dequeue(out Ump96 ump)
+        public bool Dequeue(out InternalUmp96 ump)
         {
-            return Dequeue<Ump96>(out ump);
+            return Dequeue<InternalUmp96>(out ump);
         }
 
         //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Dequeue(out Ump64 ump)
+        public bool Dequeue(out InternalUmp64 ump)
         {
-            return Dequeue<Ump64>(out ump);
+            return Dequeue<InternalUmp64>(out ump);
         }
 
         //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Dequeue(out Ump32 ump)
+        public bool Dequeue(out InternalUmp32 ump)
         {
-            return Dequeue<Ump32>(out ump);
+            return Dequeue<InternalUmp32>(out ump);
         }
 
         //[MethodImpl(MethodImplOptions.AggressiveInlining)]

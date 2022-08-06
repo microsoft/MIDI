@@ -27,16 +27,16 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
         // ump32, or just single words
         bool Enqueue(MidiWord word);
 
-        bool Enqueue(ref Ump32 ump);
+        bool Enqueue(ref InternalUmp32 ump);
 
         // ump64, or any two words
-        bool Enqueue(ref Ump64 ump);
+        bool Enqueue(ref InternalUmp64 ump);
 
         // ump96, or any three words
-        bool Enqueue(ref Ump96 ump);
+        bool Enqueue(ref InternalUmp96 ump);
 
         // ump128 or any four words
-        bool Enqueue(ref Ump128 ump);
+        bool Enqueue(ref InternalUmp128 ump);
 
 
         bool Enqueue(ref Span<MidiWord> words);
@@ -44,10 +44,10 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
 
         bool Dequeue(out MidiWord word);
 
-        bool Dequeue(out Ump32 ump);
-        bool Dequeue(out Ump64 ump);
-        bool Dequeue(out Ump96 ump);
-        bool Dequeue(out Ump128 ump);
+        bool Dequeue(out InternalUmp32 ump);
+        bool Dequeue(out InternalUmp64 ump);
+        bool Dequeue(out InternalUmp96 ump);
+        bool Dequeue(out InternalUmp128 ump);
 
         bool Dequeue(ref Span<MidiWord> words, out int wordCount);
 

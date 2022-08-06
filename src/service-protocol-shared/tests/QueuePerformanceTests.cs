@@ -21,7 +21,7 @@ namespace ProtocolTests
 
             int step = 4;
             // in words
-            int queueSize = loopCount * Marshal.SizeOf(typeof(Ump128)) / sizeof(uint);
+            int queueSize = loopCount * Marshal.SizeOf(typeof(InternalUmp128)) / sizeof(uint);
 
             Guid id = Guid.NewGuid();
 
@@ -35,7 +35,7 @@ namespace ProtocolTests
                 long startTicks = DateTime.Now.Ticks;
                 for (int i = startValue; i < startValue + loopCount; i += step)
                 {
-                    Ump128 ump;
+                    InternalUmp128 ump;
                     ump.Word1 = (uint)i;
                     ump.Word2 = (uint)i + 1;
                     ump.Word3 = (uint)i + 2;
@@ -74,7 +74,7 @@ namespace ProtocolTests
                 long startTicks = DateTime.Now.Ticks;
                 for (int i = startValue; i < startValue + loopCount; i += step)
                 {
-                    Ump128 ump;
+                    InternalUmp128 ump;
                     ump.Word1 = (uint)i;
                     ump.Word2 = (uint)i + 1;
                     ump.Word3 = (uint)i + 2;
@@ -180,22 +180,22 @@ namespace ProtocolTests
 
             int spanMessageCount = 25;
             // in words
-            int queueSize = queueMessageCount * Marshal.SizeOf(typeof(Ump128)) / sizeof(uint);
+            int queueSize = queueMessageCount * Marshal.SizeOf(typeof(InternalUmp128)) / sizeof(uint);
 
             Guid id = Guid.NewGuid();
 
             // we're going to reuse the same memory block each time, much like native code would
             
-            Span<Ump128> messageSpan;
+            Span<InternalUmp128> messageSpan;
             Span<uint> wordSpan;
 
             IntPtr nativeMemory;
 
             unsafe
             {
-                nativeMemory = Marshal.AllocHGlobal((int)(spanMessageCount * Marshal.SizeOf(typeof(Ump128))));
+                nativeMemory = Marshal.AllocHGlobal((int)(spanMessageCount * Marshal.SizeOf(typeof(InternalUmp128))));
 
-                messageSpan = new Span<Ump128>(nativeMemory.ToPointer(), spanMessageCount);
+                messageSpan = new Span<InternalUmp128>(nativeMemory.ToPointer(), spanMessageCount);
                 wordSpan = new Span<uint>(nativeMemory.ToPointer(), queueSize);
             }
 
@@ -215,7 +215,7 @@ namespace ProtocolTests
                 {
                     for (int j = 0; j < spanMessageCount; j++)
                     {
-                        Ump128 ump;
+                        InternalUmp128 ump;
 
                         ump.Word1 = (uint)(startValue + wordCount++);
                         ump.Word2 = (uint)(startValue + wordCount++);

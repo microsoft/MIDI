@@ -82,7 +82,7 @@ namespace ProtocolTests
             {
                 System.Diagnostics.Debug.WriteLine("about to dequeue from an empty queue");
 
-                Ump128 ump;
+                InternalUmp128 ump;
 
                 Assert.IsFalse(_queue.Dequeue(out ump));
             }
@@ -219,7 +219,7 @@ namespace ProtocolTests
 
             uint step = 4;
             // in words
-            int structSize = Marshal.SizeOf(typeof(Ump128));
+            int structSize = Marshal.SizeOf(typeof(InternalUmp128));
             int structSizeInWords = structSize / sizeof(uint);
             int queueSize = loopCount * structSizeInWords;
 
@@ -238,7 +238,7 @@ namespace ProtocolTests
 
                 for (uint i = startValue; i < startValue + loopCount; i += step)
                 {
-                    Ump128 ump;
+                    InternalUmp128 ump;
                     ump.Word1 = i;
                     ump.Word2 = i + 1;
                     ump.Word3 = i + 2;
@@ -253,7 +253,7 @@ namespace ProtocolTests
                 // Dequeue and verify same values are there
                 for (uint i = startValue; i < startValue + loopCount; i += step)
                 {
-                    Ump128 ump;
+                    InternalUmp128 ump;
 
                     Assert.IsTrue(_queue.Dequeue(out ump));
 
@@ -277,27 +277,27 @@ namespace ProtocolTests
         private const uint UmpMessageType96 = (uint)0xC << 28;
         private const uint UmpMessageType128 = (uint)0x5 << 28;
 
-        private Ump32 BuildSemiValidUmp32(uint seedData)
+        private InternalUmp32 BuildSemiValidUmp32(uint seedData)
         {
-            Ump32 ump = default;
+            InternalUmp32 ump = default;
 
             ump.Word1 = UmpMessageType32;
 
             return ump;
         }
 
-        private Ump64 BuildSemiValidUmp64(uint seedData)
+        private InternalUmp64 BuildSemiValidUmp64(uint seedData)
         {
-            Ump64 ump = default;
+            InternalUmp64 ump = default;
 
             ump.Word1 = UmpMessageType64;
             ump.Word2 = seedData;
 
             return ump;
         }
-        private Ump96 BuildSemiValidUmp96(uint seedData)
+        private InternalUmp96 BuildSemiValidUmp96(uint seedData)
         {
-            Ump96 ump = default;
+            InternalUmp96 ump = default;
 
             ump.Word1 = UmpMessageType96;
             ump.Word2 = seedData;
@@ -305,9 +305,9 @@ namespace ProtocolTests
 
             return ump;
         }
-        private Ump128 BuildSemiValidUmp128(uint seedData)
+        private InternalUmp128 BuildSemiValidUmp128(uint seedData)
         {
-            Ump128 ump = default;
+            InternalUmp128 ump = default;
 
             ump.Word1 = UmpMessageType128;
             ump.Word2 = seedData;
@@ -432,7 +432,7 @@ namespace ProtocolTests
                     switch (queue.PeekNextMessageWordCount())
                     {
                         case 1:
-                            Ump32 ump32 = default;
+                            InternalUmp32 ump32 = default;
                             dequeueResult = queue.Dequeue(out ump32);
                             if (!dequeueResult)
                             {
@@ -447,7 +447,7 @@ namespace ProtocolTests
                             }
                             break;
                         case 2:
-                            Ump64 ump64 = default;
+                            InternalUmp64 ump64 = default;
                             dequeueResult = queue.Dequeue(out ump64);
                             if (!dequeueResult)
                             {
@@ -462,7 +462,7 @@ namespace ProtocolTests
                             }
                             break;
                         case 3:
-                            Ump96 ump96 = default;
+                            InternalUmp96 ump96 = default;
                             dequeueResult = queue.Dequeue(out ump96);
                             if (!dequeueResult)
                             {
@@ -477,7 +477,7 @@ namespace ProtocolTests
                             }
                             break;
                         case 4:
-                            Ump128 ump128 = default;
+                            InternalUmp128 ump128 = default;
                             dequeueResult = queue.Dequeue(out ump128);
                             if (!dequeueResult)
                             {
@@ -538,7 +538,7 @@ namespace ProtocolTests
             switch (q.PeekNextMessageWordCount())
             {
                 case 1:
-                    Ump32 ump32 = default;
+                    InternalUmp32 ump32 = default;
                     dequeueResult = q.Dequeue(out ump32);
                     if (!dequeueResult)
                     {
@@ -551,7 +551,7 @@ namespace ProtocolTests
                         return true;
                     }
                 case 2:
-                    Ump64 ump64 = default;
+                    InternalUmp64 ump64 = default;
                     dequeueResult = q.Dequeue(out ump64);
                     if (!dequeueResult)
                     {
@@ -564,7 +564,7 @@ namespace ProtocolTests
                         return true;
                     }
                 case 3:
-                    Ump96 ump96 = default;
+                    InternalUmp96 ump96 = default;
                     dequeueResult = q.Dequeue(out ump96);
                     if (!dequeueResult)
                     {
@@ -577,7 +577,7 @@ namespace ProtocolTests
                         return true;
                     }
                 case 4:
-                    Ump128 ump128 = default;
+                    InternalUmp128 ump128 = default;
                     dequeueResult = q.Dequeue(out ump128);
                     if (!dequeueResult)
                     {

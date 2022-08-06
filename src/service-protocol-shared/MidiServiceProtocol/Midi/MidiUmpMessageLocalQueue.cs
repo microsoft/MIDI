@@ -104,14 +104,14 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
 
 
 
-        public bool Enqueue(ref Ump32 ump)
+        public bool Enqueue(ref InternalUmp32 ump)
         {
             _queue.Enqueue(ump.Word1);
 
             return true;
         }
 
-        public bool Enqueue(ref Ump64 ump)
+        public bool Enqueue(ref InternalUmp64 ump)
         {
             _queue.Enqueue(ump.Word1);
             _queue.Enqueue(ump.Word2);
@@ -119,7 +119,7 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
             return true;
         }
 
-        public bool Enqueue(ref Ump96 ump)
+        public bool Enqueue(ref InternalUmp96 ump)
         {
             _queue.Enqueue(ump.Word1);
             _queue.Enqueue(ump.Word2);
@@ -128,7 +128,7 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
             return true;
         }
 
-        public bool Enqueue(ref Ump128 ump)
+        public bool Enqueue(ref InternalUmp128 ump)
         {
             _queue.Enqueue(ump.Word1);
             _queue.Enqueue(ump.Word2);
@@ -154,7 +154,7 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
             }
         }
 
-        public bool Dequeue(out Ump32 ump)
+        public bool Dequeue(out InternalUmp32 ump)
         {
             try
             {
@@ -169,7 +169,7 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
             }
         }
 
-        public bool Dequeue(out Ump64 ump)
+        public bool Dequeue(out InternalUmp64 ump)
         {
             try
             {
@@ -185,7 +185,7 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
             }
         }
 
-        public bool Dequeue(out Ump96 ump)
+        public bool Dequeue(out InternalUmp96 ump)
         {
             try
             {
@@ -202,7 +202,7 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
             }
         }
 
-        public bool Dequeue(out Ump128 ump)
+        public bool Dequeue(out InternalUmp128 ump)
         {
             try
             {

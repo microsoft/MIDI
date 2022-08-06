@@ -15,14 +15,14 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
     // for use in memory mapped files
 
     [StructLayout(LayoutKind.Explicit, Size = 4)]
-    public struct Ump32
+    public struct InternalUmp32
     {
         [FieldOffset(0)]
         public MidiWord Word1;
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 8)]
-    public struct Ump64
+    public struct InternalUmp64
     {
         [FieldOffset(0)]
         public MidiWord Word1;
@@ -31,7 +31,7 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 12)]
-    public struct Ump96
+    public struct InternalUmp96
     {
         [FieldOffset(0)]
         public MidiWord Word1;
@@ -42,7 +42,7 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 16)]
-    public struct Ump128
+    public struct InternalUmp128
     {
         [FieldOffset(0)]
         public MidiWord Word1;
