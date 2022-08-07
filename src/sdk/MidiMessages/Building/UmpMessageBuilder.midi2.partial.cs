@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Windows.Midi.Messages.Packet;
 using Windows.Foundation.Metadata;
-using Microsoft.Windows.Midi.Messages.Midi1ChannelVoice;
+using Microsoft.Windows.Midi.Messages.Types.ChannelVoice;
 
 namespace Microsoft.Windows.Midi.Messages
 {

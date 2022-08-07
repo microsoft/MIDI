@@ -371,7 +371,7 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
                 accessor.Read<MidiWord>(CalculateByteOffset(header.FrontMessageIndex), out word);
             }
 
-            return MidiMessageUtility.UmpLengthFromFirstWord(word);
+            return MidiMessageUtilityInternal.UmpLengthFromFirstWord(word);
         }
 
 

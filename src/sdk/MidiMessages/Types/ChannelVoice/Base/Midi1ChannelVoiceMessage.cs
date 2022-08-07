@@ -15,6 +15,5 @@ namespace Microsoft.Windows.Midi.Messages.Types.ChannelVoice
         public byte Status { get; set; }
         public byte Channel { get; set; }
 
-
     }
 }

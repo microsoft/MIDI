@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Windows.Midi.Internal.ServiceProtocol
 {
-    public class MidiMessageUtility
+    public class MidiMessageUtilityInternal
     {
 
         /// <summary>

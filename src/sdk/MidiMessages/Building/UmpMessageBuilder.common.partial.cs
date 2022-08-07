@@ -13,6 +13,9 @@ namespace Microsoft.Windows.Midi.Messages
 {
     public sealed partial class UmpMessageBuilder
     {
+
+
+
         /// <summary>
         /// You can safely cast the return value to an int to get the number of words
         /// in the UMP, based on the message type
@@ -20,7 +23,7 @@ namespace Microsoft.Windows.Midi.Messages
         /// <param name="firstWord">The first word in the UMP, including the message type nibble</param>
         public static UmpType GetUmpLengthFromFirstWord(UInt32 firstWord)
         {
-            switch (MidiMessageUtility.UmpLengthFromFirstWord(firstWord))
+            switch (MidiMessageUtilityInternal.UmpLengthFromFirstWord(firstWord))
             {
                 case 1: return UmpType.Ump32;
                 case 2: return UmpType.Ump64;
@@ -28,26 +31,6 @@ namespace Microsoft.Windows.Midi.Messages
                 case 4: return UmpType.Ump128;
                 default: return UmpType.Unknown;
             }
-        }
-
-        /// <summary>
-        /// Builds a status byte by shifting the status nibble to the left 4 digits and then 
-        /// adding in the channel nibble to the lower 4 digits
-        /// </summary>
-        public static byte BuildStatusByte(byte statusNibble, byte channelNibble)
-        {
-            return (byte)((statusNibble << 4) | (channelNibble & 0x0F));
-        }
-
-        public static byte BuildMessageTypeByte(MidiMessageType messageType, byte groupNibble)
-        {
-            return BuildMessageTypeByte((byte)messageType, groupNibble);
-        }
-
-        [DefaultOverload]
-        public static byte BuildMessageTypeByte(byte messageTypeNibble, byte groupNibble)
-        {
-            return (byte)((messageTypeNibble << 4) | (groupNibble & 0x0F));
         }
 
 

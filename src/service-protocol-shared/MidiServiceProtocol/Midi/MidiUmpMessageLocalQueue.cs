@@ -231,7 +231,7 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol.Midi
         {
             var word = _queue.Peek();
 
-            return MidiMessageUtility.UmpLengthFromFirstWord(word);
+            return MidiMessageUtilityInternal.UmpLengthFromFirstWord(word);
 
         }
 
