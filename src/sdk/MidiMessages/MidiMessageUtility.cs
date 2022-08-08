@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,12 +15,12 @@ namespace Microsoft.Windows.Midi.Messages
     {
         public static short Combine7BitMsbAnd7BitLsb(byte msb, byte lsb)
         {
-            return (short)(msb << 8 | lsb);
+            return (short)((msb << 8) | lsb);
         }
 
         public static byte GetMsb(short value)
         {
-            return (byte)(value >> 8 & 0x7F);
+            return (byte)((value >> 8) & 0x7F);
         }
 
         public static byte GetLsb(short value)

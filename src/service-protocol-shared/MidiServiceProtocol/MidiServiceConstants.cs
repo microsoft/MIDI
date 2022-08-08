@@ -15,6 +15,7 @@ namespace Microsoft.Windows.Midi.Internal.ServiceProtocol
 
         public const string InitialConnectionPipeName = PipePrefix + "connect";
         public const string PingPipeName = PipePrefix + "ping";
+        public const string EnumerationPipeName = PipePrefix + "enumeration";
 
 
         public const string EnumerationServicePipePrefix = PipePrefix + "enumerator";

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Windows.Midi.Internal.Data
 {
+
     public struct MidiEndpointSerializableData
     {
         public Guid Id;
@@ -19,5 +20,8 @@ namespace Microsoft.Windows.Midi.Internal.Data
         public string DeviceSuppliedName;
         public string IconFileName;
         public string Description;
+
+        
+        
     }
 }
