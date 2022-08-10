@@ -84,6 +84,10 @@ command-line. Including:
   * Reroute MIDI messages
   * Filter out certain MIDI messages for a specific endpoint
   * more as proposed and/or contributed by the community
+* On-screen macro buttons
+* StreamDeck and similar macros
+* Easy integration of MIDI-unaware devices like sensors, joysticks, etc.
+* Scripting
 
 For these long-term goals, we will be partnering with the community of developers to help ensure we have the right tools and utilities to meet your support needs and everyone's customers' needs, all available as part of a single standard installation.
 
