@@ -4,8 +4,9 @@ Although this API will coexist with the existing MIDI 1.0 WinMM API, for backwar
 
 ## Client code compatibility
 
-The APIs will be created as components usable by as many different languages as possible. Any language which can talk to WinRT ("modern COM") interfaces will be able to use the API. That includes but is not limited to
-C++/WinRT, .NET and others.
+The APIs will be created as components usable by as many different languages as possible. Any language which can talk to WinRT ("modern COM") interfaces will be able to use the API. That includes but is not limited to C++/WinRT, .NET and others.
+
+> NOTE: The initial rev of this API uses C#/.NET on the client for the SDK. Please see the note in the SDK folder for how and why that will change.
 
 As this approaches maturity, we'll also work with browser teams to enable WebMIDI to use the new APIs.
 
