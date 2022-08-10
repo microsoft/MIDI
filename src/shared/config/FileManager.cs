@@ -34,11 +34,13 @@ namespace Microsoft.Windows.Midi.Internal.Config
         private const string SetupFileExtension = "midisetup.json";
         private const string ConfigFileExtension = "midiconfig.json";
 
-        private const string SetupFileBackupExtensionFormat = "backup.{0:0000}";
-        private const string SetupFileBackupExtensionSearchPattern = "midisetup.backup.????";
+        private const string SetupFileBackupExtensionFormat = "backup.{0:00000}";
+        //private const string SetupFileBackupExtensionSearchPattern = "backup.?????";
+        private const string SetupFileBackupExtensionSearchPattern = "backup.*";            // support wrapping over 100k
 
-        private const string ConfigFileBackupExtensionFormat = "backup.{0:0000}";
-        private const string ConfigFileBackupExtensionSearchPattern = "midiconfig.backup.????";
+        private const string ConfigFileBackupExtensionFormat = "backup.{0:00000}";
+        //private const string ConfigFileBackupExtensionSearchPattern = "backup.?????";
+        private const string ConfigFileBackupExtensionSearchPattern = "backup.*";           // support wrapping over 100k
 
         private const string DefaultSetupFileNameWithoutPath = "Default." + SetupFileExtension;
 
@@ -204,7 +206,7 @@ namespace Microsoft.Windows.Midi.Internal.Config
         {
             string fileName = rootFileName + "." + string.Format(GetBackupFormatForFileType(fileType), index);
 
-            System.Diagnostics.Debug.WriteLine($"BackupConfigFileName = {fileName}");
+         //   System.Diagnostics.Debug.WriteLine($"BackupConfigFileName = {fileName}");
 
             return fileName;
         }
@@ -263,47 +265,26 @@ namespace Microsoft.Windows.Midi.Internal.Config
         }
 
 
+
+
         private static int GetHighestFileBackupIndex(string rootFileName, FileType fileType)
         {
             string directory = GetDirectoryForFileType(fileType);
-
-            var files = Directory.GetFiles(directory, rootFileName + "." + GetBackupSearchPatternForFileType(fileType)).OrderBy(path => Path.GetExtension(path));
-
-            string highest = "0000";
-
-            if (files.Count<string>() > 0)
+            string searchPattern = rootFileName + "." + GetBackupSearchPatternForFileType(fileType);          
+            
+            try
             {
-                highest = files.Last();
+                var highest = Directory.GetFiles(directory, searchPattern)
+                        .Max(path => int.Parse(Path.GetExtension(path).Substring(1)));
+
+                return highest;
+
             }
-
-
-            if (highest != null && highest != string.Empty)
+            catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Highest = {highest}");
-
-                var extension = Path.GetExtension(highest);
-
-                if (extension != null && extension != string.Empty)
-                {
-                    int index = 0;
-
-                    if (int.TryParse(extension, out index))
-                    {
-                        return index;
-                    }
-                    else
-                    {
-                        // not an integer. Not sure what's up here. 
-                        throw new Exception($"Unable to get highest file backup index. int.TryParse failed with file extension {extension}");
-                    }
-                }
+                // problem with a bad file extension in the search results
+                return 0;
             }
-            else
-            {
-                //System.Diagnostics.Debug.WriteLine("Highest is null or empty");
-            }
-
-            return 0;
         }
 
         public static void MoveFileToBackup(string fileName, FileType fileType)
@@ -328,14 +309,14 @@ namespace Microsoft.Windows.Midi.Internal.Config
                 {
                     string backupFileName = BuildBackupFileName(i, rootFileName, fileType);
 
-                    System.Diagnostics.Debug.WriteLine($"Attempting to rename file to {backupFileName}");
+                //    System.Diagnostics.Debug.WriteLine($"Attempting to rename file to {backupFileName}");
 
                     try
                     {
                         File.Move(fileName, Path.Combine(directory, backupFileName));
 
                         // no error? Get out of the loop
-                        System.Diagnostics.Debug.WriteLine($"Moved file.");
+                     //   System.Diagnostics.Debug.WriteLine($"Moved file.");
                         break;
                     }
                     catch (IOException ex)

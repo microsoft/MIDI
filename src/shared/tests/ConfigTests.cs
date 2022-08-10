@@ -80,5 +80,83 @@ namespace SharedLibraryTests
         }
 
 
+
+        // THis test creates a lot of files. Don't run it as part of normal testing
+        //[TestMethod]
+        public void TestConfigFileSaveAndRenaming100k()
+        {
+            System.Diagnostics.Debug.WriteLine("Testing save/rename 100,000 times");
+
+            using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+            var logger = loggerFactory.CreateLogger("Unit Test");
+
+            MidiServicesConfig config = new MidiServicesConfig(logger);
+
+            // first run
+            if (!config.Load())
+            {
+                // create new config
+                System.Diagnostics.Debug.WriteLine("Creating new config file");
+
+                config.LoadDefaults();
+                config.Save();
+            }
+
+            // If the number of digits in the backup extension is increased, change this number
+            // to exercise them. At the time of this writing, it is a 4 digit number.
+            for (int i = 0; i < 100000; i++)
+            {
+                if (i % 100 == 0)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Loop {i}");
+                }
+
+                config.Save();
+            }
+
+
+            // made it here with no exceptions? We're good.
+
+        }
+
+
+
+        [TestMethod]
+        public void TestConfigFileSaveAndRenaming100()
+        {
+            System.Diagnostics.Debug.WriteLine("Testing save/rename 100 times");
+
+            using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+            var logger = loggerFactory.CreateLogger("Unit Test");
+
+            MidiServicesConfig config = new MidiServicesConfig(logger);
+
+            // first run
+            if (!config.Load())
+            {
+                // create new config
+                System.Diagnostics.Debug.WriteLine("Creating new config file");
+
+                config.LoadDefaults();
+                config.Save();
+            }
+
+            for (int i = 0; i < 100; i++)
+            {
+                if (i % 10 == 0)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Loop {i}");
+                }
+
+                config.Save();
+            }
+
+            // made it here with no exceptions? We're good.
+
+        }
     }
+
+
+
+
 }
