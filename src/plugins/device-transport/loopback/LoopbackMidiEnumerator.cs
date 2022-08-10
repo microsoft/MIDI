@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License. See LICENSE in the project root for license information.
+
+using Microsoft.Extensions.Logging;
 using Microsoft.Windows.Midi.Internal.Data;
 using Microsoft.Windows.Midi.Internal.Service.DeviceGraph;
 using Microsoft.Windows.Midi.PluginModel.Device;
