@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\sdk\MidiMessages\Microsoft.Windows.Midi.Messages.csproj" />
-    <ProjectReference Include="..\..\..\sdk\PluginModel\MidiService.PluginModel.csproj" />
+    <ProjectReference Include="..\..\..\sdk-plugin\MidiDevicePlugin\MidiService.DevicePluginModel.csproj" />
+    <ProjectReference Include="..\..\..\sdk-plugin\MidiPluginCommon\MidiService.PluginModel.csproj" />
   </ItemGroup>
 
 </Project>

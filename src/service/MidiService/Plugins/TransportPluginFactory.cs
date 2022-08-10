@@ -13,10 +13,10 @@ namespace Microsoft.Windows.Midi.Internal.Service.Plugins
     internal class TransportPluginFactory
     {
         private ILogger _logger;
-        private DeviceGraph _deviceGraph;
+        private MidiDeviceGraph _deviceGraph;
         private MidiServicesConfig _config;
 
-        public TransportPluginFactory(ILogger logger, DeviceGraph graph)
+        public TransportPluginFactory(ILogger logger, MidiDeviceGraph graph)
         {
 
         }
@@ -32,6 +32,11 @@ namespace Microsoft.Windows.Midi.Internal.Service.Plugins
             // Try to load each plugin.
             //  - Test each plugin to see if it implements the required transport interface
             //  - Log any failures
+
+
+            //_config.
+
+
         }
     }
 }

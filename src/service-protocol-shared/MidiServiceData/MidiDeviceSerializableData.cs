@@ -11,14 +11,14 @@ namespace Microsoft.Windows.Midi.Internal.Data
 {
     public struct MidiDeviceSerializableData
     {
+        public Guid DevicePluginId;
+
         public Guid Id;
         public string Name;
         public string DeviceSuppliedName;
         public string Serial;
         public string IconFileName;
         public string Description;
-
-        public Guid TransportId;
 
 
     }

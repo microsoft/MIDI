@@ -26,9 +26,9 @@ namespace Microsoft.Windows.Midi.Internal.Config
 
 
         private const string AppDataSubfolder = "Microsoft Windows MIDI";
+        private const string CommonProgramFilesSubfolder = "Microsoft Windows MIDI";
 
         public const string DefaultSetupsSubFolder = "Setups";
-        public const string DefaultPluginsSubFolder = "Plugins"; // This is in a different path
         public const string DefaultIconsSubFolder = "Icons";
 
         private const string SetupFileExtension = "midisetup.json";
@@ -43,27 +43,53 @@ namespace Microsoft.Windows.Midi.Internal.Config
         private const string DefaultSetupFileNameWithoutPath = "Default." + SetupFileExtension;
 
 
+        public const string DefaultPluginsSubFolder = "Plugins";
+        public const string DefaultPluginsDeviceSubFolder = "Device";
+        public const string DefaultPluginsProcessingSubFolder = "Processing";
+
+
         private const string ConfigFileNameWithoutPath = "MainConfig." + ConfigFileExtension;
         
+
+        // Note that CommonApplicationData is not the same as %APPDATA%. It's usually
+        // something like c:\ProgramData. Storing here because it is for all users on
+        // the machine, not just a single user.
         public static string AppDataFolder
         {
             get
             {
-                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), AppDataSubfolder);
+                return Path.Combine(
+                    Environment.GetFolderPath(
+                        Environment.SpecialFolder.CommonApplicationData, 
+                        Environment.SpecialFolderOption.DoNotVerify), 
+                    AppDataSubfolder);
             }
         }
+
+        public static string DefaultPluginsRootFolder
+        {
+            get
+            {
+                return Path.Combine(
+                    Environment.GetFolderPath(
+                        Environment.SpecialFolder.CommonProgramFiles,
+                        Environment.SpecialFolderOption.DoNotVerify),
+                    CommonProgramFilesSubfolder,
+                    DefaultPluginsSubFolder);
+            }
+        }
+
 
 
         public static string DefaultConfigFolder => AppDataFolder;
         public static string DefaultSetupsFolder => Path.Combine(AppDataFolder, DefaultSetupsSubFolder);
         public static string DefaultIconsFolder => Path.Combine(AppDataFolder, DefaultIconsSubFolder);
-        public static string DefaultPluginsFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles), DefaultPluginsSubFolder);
 
 
 
 
 
-        private static string? _setupsFolder;
+        private static string? _setupsFolder = null;
         public static string SetupsFolder
         {
             get
@@ -81,12 +107,12 @@ namespace Microsoft.Windows.Midi.Internal.Config
             }
         }
 
-        private static string? _configFileFolder;
+        private static string? _configFileFolder = null;
         public static string ConfigFileFolder
         {
             get
             {
-                if (_configFileFolder == null || ConfigFileFolder == string.Empty)
+                if (_configFileFolder == null || _configFileFolder == string.Empty)
                 {
                     _configFileFolder = AppDataFolder;
                 }
@@ -99,7 +125,7 @@ namespace Microsoft.Windows.Midi.Internal.Config
             }
         }
 
-        private static string? _iconsFolder;
+        private static string? _iconsFolder = null;
         public static string IconsFolder
         {
             get
@@ -118,13 +144,13 @@ namespace Microsoft.Windows.Midi.Internal.Config
         }
 
         private static string? _pluginsFolder;
-        public static string PluginsFolder
+        public static string PluginsRootFolder
         {
             get
             {
                 if (_pluginsFolder == null || _pluginsFolder == string.Empty)
                 {
-                    _pluginsFolder = DefaultPluginsFolder;
+                    _pluginsFolder = DefaultPluginsRootFolder;
                 }
 
                 return _pluginsFolder;
@@ -137,12 +163,12 @@ namespace Microsoft.Windows.Midi.Internal.Config
 
 
 
-        public static void LoadDefaults()
-        {
-            SetupsFolder = DefaultSetupsFolder;
-            IconsFolder = DefaultIconsFolder;
-            PluginsFolder = DefaultPluginsFolder;
-        }
+        //public static void LoadDefaults()
+        //{
+        //    SetupsFolder = DefaultSetupsFolder;
+        //    IconsFolder = DefaultIconsFolder;
+        //    PluginsRootFolder = DefaultPluginsRootFolder;
+        //}
 
 
 
@@ -152,7 +178,7 @@ namespace Microsoft.Windows.Midi.Internal.Config
 
 
 
-        public static string ConfigFileName
+        public static string ConfigFileFullNameWithPath
         {
             get
             {
@@ -306,12 +332,13 @@ namespace Microsoft.Windows.Midi.Internal.Config
 
                     try
                     {
-                        File.Move(fileName, backupFileName);
+                        File.Move(fileName, Path.Combine(directory, backupFileName));
 
                         // no error? Get out of the loop
+                        System.Diagnostics.Debug.WriteLine($"Moved file.");
                         break;
                     }
-                    catch (IOException)
+                    catch (IOException ex)
                     {
                         // File already exists. This may be because another process
                         // is doing the backup. Not a great scenario at all, but we don't
@@ -320,6 +347,8 @@ namespace Microsoft.Windows.Midi.Internal.Config
                         // and reload from an updated config, but that's not happening.
                         //
                         // Pause for a moment and then keep trying
+
+                  //      System.Diagnostics.Debug.WriteLine($"IO Exception {ex.ToString()}");
 
                         Thread.Sleep(50);
 

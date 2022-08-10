@@ -21,7 +21,7 @@
 				 Level="1" Description="Windows MIDI Service and API" >
 			<ComponentGroupRef Id="WindowsService" />
 			<ComponentGroupRef Id="DataFolders" />
-			<ComponentGroupRef Id="PluginFolder" />
+			<ComponentGroupRef Id="PluginFolders" />
 		</Feature>
 		<Feature Id="SDK" Title="Developer SDK" Level="1">
 			<ComponentGroupRef Id="DeveloperSDK" />
@@ -39,9 +39,15 @@
 			</Directory>
 
 			<Directory Id="CommonFiles64Folder">
-				<Directory Id="PluginFolder" Name="Windows MIDI Plugins" />
+				<Directory Id="PluginRootFolder" Name="Microsoft Windows MIDI">
+					<Directory Id="Plugins" Name="Plugins">
+						<Directory Id="DevicePluginsFolder" Name="Device" />
+						<Directory Id="ProcessingPluginsFolder" Name="Processing" />
+					</Directory>
+				</Directory>
 			</Directory>
 
+			<!-- Note that the data folder is the common app data folder, not the per-user app data folder -->
 			<Directory Id="CommonAppDataFolder">
 				<Directory Id="RootDataFolder" Name="Microsoft Windows MIDI">
 					<Directory Id="IconFolder" Name="Icons" />
@@ -52,7 +58,7 @@
 	</Fragment>
 
 
-
+	<!-- TODO: Install .NET 7 once it has been released -->
 
 	<Fragment>
 		<ComponentGroup Id="DeveloperSDK">
@@ -99,14 +105,15 @@
 				<File Id="ServiceAppConfig"
 					  Name="appsettings.json"
 					  Source="D:\peteb\Documents\GitHub\microsoft\midi\src\publish\x64\service\appsettings.json"  />
-			</Component>
+			</Component>			
+			
+			<!-- Don't change the service name here unless you also change it in the MidiServiceCOntroLManager-->
 
 			<Component Id="InstallService" Directory="ServiceExeFolder" >
 				<File Id="ServiceExe" 
 					  Name="MidiService.exe" 
 					  Source="D:\peteb\Documents\GitHub\microsoft\midi\src\publish\x64\service\MidiService.exe"  />
 
-				<!-- Don't change the service name here unless you also change it in the MidiServiceCOntroLManager-->
 				<ServiceInstall Id="ServiceInstaller" 
 								Type="ownProcess" 
 								Name="MIDI Service"
@@ -121,8 +128,6 @@
 								Name="MIDI Service"
 								Wait="yes" />
 			</Component>
-
-
 		</ComponentGroup>
 
 		<ComponentGroup Id="DataFolders" >
@@ -148,8 +153,11 @@
 			</Component>		
 		</ComponentGroup>
 
-		<ComponentGroup Id="PluginFolder" >
-			<Component Id="CreatePluginsFolder" Directory="PluginFolder" Guid="3bff88d5-3549-40c5-8643-3f3d6aaa81ad">
+		<ComponentGroup Id="PluginFolders" >
+			<Component Id="CreateDevicePluginsFolder" Directory="DevicePluginsFolder" Guid="3bff88d5-3549-40c5-8643-3f3d6aaa81ad">
+				<CreateFolder/>
+			</Component>
+			<Component Id="CreateProcessingPluginsFolder" Directory="ProcessingPluginsFolder" Guid="2bff88d5-3549-40c5-8643-3f3d6aaa81ac">
 				<CreateFolder/>
 			</Component>
 		</ComponentGroup>

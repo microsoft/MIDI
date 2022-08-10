@@ -20,12 +20,13 @@ namespace Microsoft.Windows.Midi.Internal.Config
 {
     public class MidiServicesConfig
     {
-        private readonly ILogger<MidiServicesConfig> _logger;
-        public MidiServicesConfig(ILogger<MidiServicesConfig> logger)
+        private readonly ILogger _logger;
+        //public MidiServicesConfig(ILogger<MidiServicesConfig> logger)
+        public MidiServicesConfig(ILogger logger)
         {
             _logger = logger;
 
-            // _logger.LogInformation("DEBUG: MidiServicesConfig constructor");
+             _logger.LogDebug("DEBUG: MidiServicesConfig constructor");
 
             MidiConfig = new ConfigRoot();
             LoadDefaults();
@@ -41,22 +42,25 @@ namespace Microsoft.Windows.Midi.Internal.Config
             // TODO: We need to get this schema version from someplace else
             MidiConfig.Header.SchemaVersion = new Version(1, 0, 0);
 
-            MidiConfig.Locations.MainAppFolder = FileManager.AppDataFolder;
-            MidiConfig.Locations.SetupsFolder = FileManager.DefaultSetupsFolder;
-            MidiConfig.Locations.PluginsFolder = FileManager.DefaultPluginsFolder;
-            MidiConfig.Locations.IconsFolder = FileManager.DefaultIconsFolder;
+            MidiConfig.DataLocations.MainAppFolder = FileManager.AppDataFolder;
+            MidiConfig.DataLocations.SetupsFolder = FileManager.DefaultSetupsFolder;
+            MidiConfig.DataLocations.IconsFolder = FileManager.DefaultIconsFolder;
+
+            MidiConfig.PluginsLocations.PluginsRootFolder = FileManager.DefaultPluginsRootFolder;
+            MidiConfig.PluginsLocations.DevicePluginsSubFolder = FileManager.DefaultPluginsDeviceSubFolder;
+            MidiConfig.PluginsLocations.ProcessingPluginsSubFolder = FileManager.DefaultPluginsProcessingSubFolder;
 
             MidiConfig.CurrentSetupFileNameWithoutPath = FileManager.DefaultSetupFileName;
 
-            FileManager.LoadDefaults();
+            //FileManager.LoadDefaults();
 
-  //          CreateConfigFile(true);
+            //CreateConfigFile(true);
 
         }
 
         public bool Load()
         {
-            string fullPath = FileManager.ConfigFileName;
+            string fullPath = FileManager.ConfigFileFullNameWithPath;
 
             _logger.LogDebug($"MidiServicesConfig : Loading Config File (checking for existing file at {fullPath})");
 
@@ -124,7 +128,7 @@ namespace Microsoft.Windows.Midi.Internal.Config
             {
                 _logger.LogDebug("DEBUG: MidiServicesConfig : CreateConfigFile");
 
-                string fileName = FileManager.ConfigFileName;
+                string fileName = FileManager.ConfigFileFullNameWithPath;
 
                 _logger.LogDebug($"DEBUG: MainConfigFileLocation = {fileName}");
 
@@ -139,8 +143,6 @@ namespace Microsoft.Windows.Midi.Internal.Config
 
                 if (File.Exists(fileName))
                 {
-                    //System.Diagnostics.Debug.WriteLine("MainConfigFile exists}");
-
                     if (onlyIfMissing)
                     {
                         return;
@@ -164,7 +166,7 @@ namespace Microsoft.Windows.Midi.Internal.Config
             {
                 _logger.LogError("Exception creating config file. " + ex.ToString());
             }
-        }
+}
 
 
         private JsonSerializerOptions GetSerializerOptions()

@@ -9,35 +9,35 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Windows.Midi.Internal.Service.Services
 {
-    public class EnumerationService : PipeProcessingServiceBase
-    {
-        private readonly ServiceState _serviceState;
-        private readonly DeviceGraph _deviceGraph;
-        private readonly SessionGraph _sessionGraph;
+    //public class EnumerationService : PipeProcessingServiceBase
+    //{
+    //    private readonly ServiceState _serviceState;
+    //    private readonly DeviceGraph _deviceGraph;
+    //    private readonly SessionGraph _sessionGraph;
 
-        public EnumerationService(
-            ILogger<EnumerationService> logger,
-            IHostApplicationLifetime lifetime,
-            ServiceState serviceState,
-            SessionGraph sessionGraph,
-            DeviceGraph deviceGraph) : base(logger, lifetime)
+    //    public EnumerationService(
+    //        ILogger<EnumerationService> logger,
+    //        IHostApplicationLifetime lifetime,
+    //        ServiceState serviceState,
+    //        SessionGraph sessionGraph,
+    //        DeviceGraph deviceGraph) : base(logger, lifetime)
 
-        {
-            _logger.LogDebug("DEBUG: ConnectionService Constructor");
+    //    {
+    //        _logger.LogDebug("DEBUG: ConnectionService Constructor");
 
-            _serviceState = serviceState;
-            _sessionGraph = sessionGraph;
-            _deviceGraph = deviceGraph;
+    //        _serviceState = serviceState;
+    //        _sessionGraph = sessionGraph;
+    //        _deviceGraph = deviceGraph;
 
-            PipeName = MidiServiceConstants.EnumerationPipeName;
-        }
-
-
+    //        PipeName = MidiServiceConstants.EnumerationPipeName;
+    //    }
 
 
 
 
 
 
-    }
+
+
+    //}
 }

@@ -59,7 +59,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\sdk\PluginModel\MidiService.PluginModel.csproj" />
+    <ProjectReference Include="..\..\sdk-plugin\MidiDevicePlugin\MidiService.DevicePluginModel.csproj" />
+    <ProjectReference Include="..\..\sdk-plugin\MidiMessageProcessorPlugin\MidiService.MessageProcessorPluginModel.csproj" />
+    <ProjectReference Include="..\..\sdk-plugin\MidiPluginLoader\MidiService.PluginLoader.csproj" />
     <ProjectReference Include="..\..\service-protocol-shared\MidiServiceData\MidiService.Data.csproj" />
     <ProjectReference Include="..\..\service-protocol-shared\MidiServiceProtocol\MidiService.Protocol.csproj" />
     <ProjectReference Include="..\..\shared\config\MidiConfig.csproj" />

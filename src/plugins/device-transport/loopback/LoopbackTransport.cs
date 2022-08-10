@@ -1,32 +1,34 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using Microsoft.Windows.Midi.Messages.Packet;
-using Microsoft.Windows.Midi.PluginModel;
+//using Microsoft.Windows.Midi.Messages.Packet;
+using Microsoft.Windows.Midi.PluginModel.Device;
+using Microsoft.Windows.Midi.PluginModel.Plugin;
 
 namespace LoopbackPlugin
 {
-    public class LoopbackTransport : IMidiPlugin, IMidiTransport
+    public class LoopbackTransport : IMidiDevicePlugin
     {
-        public MidiPluginType PluginType => throw new NotImplementedException();
+        public MidiPluginMetadata PluginMetadata => throw new NotImplementedException();
 
-        public string PluginAuthor => throw new NotImplementedException();
+        public IMidiDeviceEnumerator GetDeviceEnumerator()
+        {
+            throw new NotImplementedException();
+        }
 
-        public string PluginIconFileName => throw new NotImplementedException();
+        public IMidiDeviceFactory GetDeviceFactory()
+        {
+            throw new NotImplementedException();
+        }
 
-        public string PluginDescription => throw new NotImplementedException();
 
-        public Version PluginVersion => throw new NotImplementedException();
 
-        public Guid Id { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-        public string ShortName => throw new NotImplementedException();
 
-        public string FullName => throw new NotImplementedException();
 
-        public string IconFileName => throw new NotImplementedException();
 
-        public string Description => throw new NotImplementedException();
+
+
 
 
 
@@ -56,15 +58,15 @@ namespace LoopbackPlugin
 
         // TODO: Test performance and move to one of a number of shared memory approaches
         // if performance here isn't what it needs to be
-        public void WriteToDevice(Guid endpointId, IList<Ump> messageBufferToWrite)
-        {
-            throw new NotImplementedException();
-        }
+        //public void WriteToDevice(Guid endpointId, IList<Ump> messageBufferToWrite)
+        //{
+        //    throw new NotImplementedException();
+        //}
 
-        public void ReadFromDevice(Guid endpointId, IList<Ump> messageBufferToFill)
-        {
-            throw new NotImplementedException();
-        }
+        //public void ReadFromDevice(Guid endpointId, IList<Ump> messageBufferToFill)
+        //{
+        //    throw new NotImplementedException();
+        //}
 
 
         //public void WriteToDevice(Guid endpointId, Ump messageToWrite)
@@ -76,7 +78,6 @@ namespace LoopbackPlugin
         //{
         //    throw new NotImplementedException();
         //}
-
 
     }
 }

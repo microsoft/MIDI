@@ -14,7 +14,9 @@ namespace Microsoft.Windows.Midi.Internal.Config.Schema
 
         public ConfigHeader Header { get; set; } = new ConfigHeader();
 
-        public Locations Locations { get; set; } = new Locations();
+        public DataLocations DataLocations { get; set; } = new DataLocations();
+
+        public PluginsLocations PluginsLocations { get; set; } = new PluginsLocations();
 
         public string CurrentSetupFileNameWithoutPath { get; set; }
 

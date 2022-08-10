@@ -14,12 +14,12 @@ namespace Microsoft.Windows.Midi.Internal.Service.Services
     {
         private readonly ILogger<ManagementService> _logger;
         private readonly ServiceState _serviceState;
-        private readonly DeviceGraph _deviceGraph;
+        private readonly MidiDeviceGraph _deviceGraph;
         private readonly SessionGraph _sessionGraph;
 
         public ManagementService(
             ILogger<ManagementService> logger, ServiceState serviceState,
-            SessionGraph sessionGraph, DeviceGraph deviceGraph) =>
+            SessionGraph sessionGraph, MidiDeviceGraph deviceGraph) =>
             (_logger, _serviceState, _sessionGraph, _deviceGraph) =
             (logger, serviceState, sessionGraph, deviceGraph);
 

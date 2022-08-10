@@ -29,33 +29,49 @@
     </WixExtension>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\sdk\Management\Microsoft.Windows.Midi.Management.csproj">
-      <Name>Microsoft.Windows.Midi.Management</Name>
-      <Project>{f1a1f83a-7493-4521-8dd6-e02834f25fe0}</Project>
+    <ProjectReference Include="..\..\sdk-plugin\MidiDevicePlugin\MidiService.DevicePluginModel.csproj">
+      <Name>MidiService.DevicePluginModel</Name>
+      <Project>{a285d2f6-46ba-4486-a367-4826a0a4b166}</Project>
       <Private>True</Private>
       <DoNotHarvest>True</DoNotHarvest>
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
       <RefTargetDir>INSTALLFOLDER</RefTargetDir>
     </ProjectReference>
-    <ProjectReference Include="..\..\sdk\MidiMain\Microsoft.Windows.Midi.csproj">
-      <Name>Microsoft.Windows.Midi</Name>
-      <Project>{188581ae-24ff-42e1-900c-ee1843cae9c6}</Project>
+    <ProjectReference Include="..\..\sdk-plugin\MidiMessageProcessorPlugin\MidiService.MessageProcessorPluginModel.csproj">
+      <Name>MidiService.MessageProcessorPluginModel</Name>
+      <Project>{70954fce-a41a-4b16-b06c-9e15a5557b1a}</Project>
       <Private>True</Private>
       <DoNotHarvest>True</DoNotHarvest>
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
       <RefTargetDir>INSTALLFOLDER</RefTargetDir>
     </ProjectReference>
-    <ProjectReference Include="..\..\sdk\MidiMessages\Microsoft.Windows.Midi.Messages.csproj">
-      <Name>Microsoft.Windows.Midi.Messages</Name>
-      <Project>{88eb09e2-c702-4bf8-bf7f-edfdf944f3a0}</Project>
-      <Private>True</Private>
-      <DoNotHarvest>True</DoNotHarvest>
-      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
-    </ProjectReference>
-    <ProjectReference Include="..\..\sdk\PluginModel\MidiService.PluginModel.csproj">
+    <ProjectReference Include="..\..\sdk-plugin\MidiPluginCommon\MidiService.PluginModel.csproj">
       <Name>MidiService.PluginModel</Name>
-      <Project>{f6a70bb8-36fd-485b-9c1e-de07f6c4bd1d}</Project>
+      <Project>{eea77c69-d3d5-42b7-9b68-68b3b6868130}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\..\sdk-plugin\MidiPluginLoader\MidiService.PluginLoader.csproj">
+      <Name>MidiService.PluginLoader</Name>
+      <Project>{98a7354b-006c-4c49-957a-9e044f713936}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\..\service-protocol-shared\MidiServiceData\MidiService.Data.csproj">
+      <Name>MidiService.Data</Name>
+      <Project>{75abe3e3-583e-4634-b3ed-174d8d8c868b}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\..\service-protocol-shared\MidiServiceProtocol\MidiService.Protocol.csproj">
+      <Name>MidiService.Protocol</Name>
+      <Project>{7f3cd6c3-cea8-4cb4-802b-2dc0449941d6}</Project>
       <Private>True</Private>
       <DoNotHarvest>True</DoNotHarvest>
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
@@ -72,22 +88,6 @@
     <ProjectReference Include="..\..\shared\config\MidiConfig.csproj">
       <Name>MidiConfig</Name>
       <Project>{4c20cc34-e785-43e1-b7ba-897b0b17fc40}</Project>
-      <Private>True</Private>
-      <DoNotHarvest>True</DoNotHarvest>
-      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
-    </ProjectReference>
-    <ProjectReference Include="..\..\shared\plumbing\MidiServiceData\MidiService.Data.csproj">
-      <Name>MidiService.Data</Name>
-      <Project>{75abe3e3-583e-4634-b3ed-174d8d8c868b}</Project>
-      <Private>True</Private>
-      <DoNotHarvest>True</DoNotHarvest>
-      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
-    </ProjectReference>
-    <ProjectReference Include="..\..\shared\plumbing\MidiServiceProtocol\MidiService.Protocol.csproj">
-      <Name>MidiService.Protocol</Name>
-      <Project>{7f3cd6c3-cea8-4cb4-802b-2dc0449941d6}</Project>
       <Private>True</Private>
       <DoNotHarvest>True</DoNotHarvest>
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>

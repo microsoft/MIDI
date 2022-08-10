@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using Microsoft.Windows.Midi.Internal.Service.Model;
+
 
 using System;
 using System.Collections.Generic;
@@ -17,7 +17,7 @@ namespace Microsoft.Windows.Midi.Internal.Service.Services
         private readonly IHostApplicationLifetime _lifetime;
 
         private readonly ServiceState _serviceState;
-        private readonly DeviceGraph _deviceGraph;
+        private readonly MidiDeviceGraph _deviceGraph;
         private readonly SessionGraph _sessionGraph;
 
         public MidiRouterService(
@@ -25,7 +25,7 @@ namespace Microsoft.Windows.Midi.Internal.Service.Services
             IHostApplicationLifetime lifetime,
             ServiceState serviceState,
             SessionGraph sessionGraph, 
-            DeviceGraph deviceGraph) =>
+            MidiDeviceGraph deviceGraph) =>
                 (_logger, _lifetime, _serviceState, _sessionGraph, _deviceGraph) =
                 (logger, lifetime, serviceState, sessionGraph, deviceGraph);
 

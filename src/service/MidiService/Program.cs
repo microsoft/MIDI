@@ -34,7 +34,7 @@ IHost host = Host.CreateDefaultBuilder(args)
 
         services.AddSingleton<ServiceState>();
 
-        services.AddSingleton<DeviceGraph>();
+        services.AddSingleton<MidiDeviceGraph>();
         services.AddSingleton<SessionGraph>();
 
 

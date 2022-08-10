@@ -22,7 +22,7 @@ namespace Microsoft.Windows.Midi.Internal.Service.Services
     {
 
         private readonly ServiceState _serviceState;
-        private readonly DeviceGraph _deviceGraph;
+        private readonly MidiDeviceGraph _deviceGraph;
         private readonly SessionGraph _sessionGraph;
 
         public ConnectionService(
@@ -30,7 +30,7 @@ namespace Microsoft.Windows.Midi.Internal.Service.Services
             IHostApplicationLifetime lifetime, 
             ServiceState serviceState, 
             SessionGraph sessionGraph, 
-            DeviceGraph deviceGraph): base(logger, lifetime)
+            MidiDeviceGraph deviceGraph): base(logger, lifetime)
 
         {
             _logger.LogDebug("DEBUG: ConnectionService Constructor");

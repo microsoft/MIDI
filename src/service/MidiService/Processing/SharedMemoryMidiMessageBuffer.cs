@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using Microsoft.Windows.Midi.Messages.Packet;
+//using Microsoft.Windows.Midi.Messages.Packet;
 using Microsoft.Windows.Midi.PluginModel;
 using System;
 using System.Collections;
@@ -31,61 +31,61 @@ namespace Microsoft.Windows.Midi.Internal.Service.Processing
     //
     // For drivers:
     // https://docs.microsoft.com/en-us/windows-hardware/drivers/kernel/managing-memory-for-drivers
-    public class SharedMemoryMidiMessageBuffer : IMidiMessageBuffer
-    {
-        //   private Memory<UInt32> _messageBuffer;
+    //public class SharedMemoryMidiMessageBuffer : IMidiMessageBuffer
+    //{
+    //    //   private Memory<UInt32> _messageBuffer;
 
-        // TODO: If this is a circular buffer, we'll do it this way. Not sure how to 
-        // reasonably sync that with teh driver,. though
-        //private IntPtr _head;
-        //private IntPtr _tail;
+    //    // TODO: If this is a circular buffer, we'll do it this way. Not sure how to 
+    //    // reasonably sync that with teh driver,. though
+    //    //private IntPtr _head;
+    //    //private IntPtr _tail;
 
-        // TODO: Implement an IEnumerator to go through the buffer
+    //    // TODO: Implement an IEnumerator to go through the buffer
 
-        // This is a pointer to the memory. In the case of driver-based
-        // transports, it's shared with the kernel driver. In the case
-        // of all user-code transports, it's a bit of overkill, but we'll
-        // use the same data sharing pattern
-        private IntPtr _memoryBufferPointer;
-        private int _bufferSizeIn32BitWords; 
+    //    // This is a pointer to the memory. In the case of driver-based
+    //    // transports, it's shared with the kernel driver. In the case
+    //    // of all user-code transports, it's a bit of overkill, but we'll
+    //    // use the same data sharing pattern
+    //    private IntPtr _memoryBufferPointer;
+    //    private int _bufferSizeIn32BitWords; 
 
-        // True if we're responsible for freeing this memory
-        private bool _ownMemory;
+    //    // True if we're responsible for freeing this memory
+    //    private bool _ownMemory;
 
-        public nint MemoryPointer => _memoryBufferPointer;
+    //    public nint MemoryPointer => _memoryBufferPointer;
 
-        public int BufferSizeIn32BitWords => _bufferSizeIn32BitWords;
+    //    public int BufferSizeIn32BitWords => _bufferSizeIn32BitWords;
 
 
-        public void Dispose()
-        {
-            if (_ownMemory && _memoryBufferPointer != IntPtr.Zero)
-            {
-                Marshal.FreeHGlobal(_memoryBufferPointer);
-            }
+    //    public void Dispose()
+    //    {
+    //        if (_ownMemory && _memoryBufferPointer != IntPtr.Zero)
+    //        {
+    //            Marshal.FreeHGlobal(_memoryBufferPointer);
+    //        }
 
-            _memoryBufferPointer = IntPtr.Zero;
-        }
+    //        _memoryBufferPointer = IntPtr.Zero;
+    //    }
 
-        public void SetSharedMemory(nint pointerToAllocatedBuffer, int bufferSizeIn32BitWords)
-        {
-            throw new NotImplementedException();
-        }
+    //    public void SetSharedMemory(nint pointerToAllocatedBuffer, int bufferSizeIn32BitWords)
+    //    {
+    //        throw new NotImplementedException();
+    //    }
 
-        // Need to experiment a bit to figure out sizes here. May want to make
-        // them configurable in the settings
-        public void AllocateOwnedBuffer(int bufferSizeIn32BitWords)
-        {
-            int bufferSizeInBytes = sizeof(UInt32) * bufferSizeIn32BitWords;
+    //    // Need to experiment a bit to figure out sizes here. May want to make
+    //    // them configurable in the settings
+    //    public void AllocateOwnedBuffer(int bufferSizeIn32BitWords)
+    //    {
+    //        int bufferSizeInBytes = sizeof(UInt32) * bufferSizeIn32BitWords;
 
-            _memoryBufferPointer = Marshal.AllocHGlobal(bufferSizeInBytes);
-            _bufferSizeIn32BitWords = bufferSizeIn32BitWords;
-            _ownMemory = true;
-        }
+    //        _memoryBufferPointer = Marshal.AllocHGlobal(bufferSizeInBytes);
+    //        _bufferSizeIn32BitWords = bufferSizeIn32BitWords;
+    //        _ownMemory = true;
+    //    }
 
-        public Ump GetNextMessage()
-        {
-            throw new NotImplementedException();
-        }
-    }
+    //    public Ump GetNextMessage()
+    //    {
+    //        throw new NotImplementedException();
+    //    }
+    //}
 }
