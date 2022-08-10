@@ -39,23 +39,32 @@ namespace SharedLibraryTests
 
             MidiServicesConfig config = new MidiServicesConfig(logger);
 
-            config.LoadDefaults();
-            //config.Save();
+            // first run
+            if (!config.Load())
+            {
+                // create new config
+                System.Diagnostics.Debug.WriteLine("Creating new config file");
 
+                config.LoadDefaults();
+                config.Save();
+            }
+
+
+            // test loading a file we now know exists for sure
 
             if (config.Load())
             {
-                Plugin plug = new Plugin();
+                TrustedDevicePlugin plug = new TrustedDevicePlugin();
                 plug.Id = Guid.Parse("4b7abed2-0184-43c5-a3ce-b5b05c67f81d"); // guid is defined in the plugin
                 plug.SubFolder = "Loopback";
                 plug.PluginClassName = "MidiLoopbackPlugin.LoopbackMidiPlugin";
                 plug.FileName = "MidiLoopbackPlugin.dll";
 
-                var existing = config.MidiConfig.TrustedPlugins.Where<Plugin>(x => x.Id == plug.Id);
+                var existing = config.MidiConfig.TrustedDevicePlugins.Where<TrustedDevicePlugin>(x => x.Id == plug.Id);
 
                 if (existing != null && existing.Count() == 0)
                 {
-                    config.MidiConfig.TrustedPlugins.Add(plug);
+                    config.MidiConfig.TrustedDevicePlugins.Add(plug);
                     config.Save();
                 }
                 else
@@ -65,7 +74,8 @@ namespace SharedLibraryTests
             }
             else
             {
-                Assert.Fail("Could not load config file.");
+                Assert.Fail("Could not load config file");
+
             }
         }
 

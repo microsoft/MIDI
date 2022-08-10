@@ -52,6 +52,11 @@ namespace Microsoft.Windows.Midi.Internal.Config
 
             MidiConfig.CurrentSetupFileNameWithoutPath = FileManager.DefaultSetupFileName;
 
+            MidiConfig.Settings.QueueWordCapacityEndpointIncoming = 5000;
+            MidiConfig.Settings.QueueWordCapacityEndpointOutgoing = 5000;
+            MidiConfig.Settings.QueueWordCapacitySessionEndpointIncoming = 5000;
+            MidiConfig.Settings.QueueWordCapacitySessionEndpointOutgoing = 5000;
+
             //FileManager.LoadDefaults();
 
             //CreateConfigFile(true);

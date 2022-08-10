@@ -22,7 +22,8 @@ namespace Microsoft.Windows.Midi.Internal.Config.Schema
 
         public Settings Settings { get; set; } = new Settings();
 
-        public List<Plugin> TrustedPlugins { get; set; } = new List<Plugin>();
+        public List<TrustedDevicePlugin> TrustedDevicePlugins { get; set; } = new List<TrustedDevicePlugin>();
+        public List<TrustedProcessingPlugin> TrustedProcessingPlugins { get; set; } = new List<TrustedProcessingPlugin>();
 
     }
 }
