@@ -14,6 +14,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProtocolTests", "service-protocol-shared\tests\ProtocolTests.csproj", "{6B496566-879B-471A-87FD-0D3770D801FB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SDK-Client", "SDK-Client", "{103446DA-D85F-491B-AF1F-F90A81B0D866}"
+	ProjectSection(SolutionItems) = preProject
+		sdk-client\README.md = sdk-client\README.md
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Service", "Service", "{773EAC35-13BD-4E08-AB43-9A6B20BCE56D}"
 	ProjectSection(SolutionItems) = preProject
