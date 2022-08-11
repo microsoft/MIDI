@@ -6,11 +6,12 @@ The main source tree.
 | -------------------- | ----------------------------------------------------- |
 | installers |  End-user and developer installers for service, sdk, tools, etc.  |
 | plugins | Transport, processing, and other plugins |
-| sdk | App developer SDKs for MIDI |
-| service | The Windows Service   |
+| sdk-client | App developer API/SDKs for MIDI. Currently C#, but will be C++ in final version |
+| sdk-plugins | Service plugin developer API/SDKs |
+| service | The Windows Service |
 | service-protocol-shared | Internal communications libraries between SDK and service |
 | shared | Libraries that aren't part of the SDK, but are internally shared in the projects |
-| tools | End-user tools like settings and the CLI   |
+| tools | End-user tools like settings and the CLI |
 | usb-driver | USB MIDI 2.0 driver |
 
 The Main MIDI Solution.sln file includes the service, shared libraries, SDK, etc. It does not
