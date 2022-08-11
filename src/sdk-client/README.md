@@ -10,5 +10,5 @@ will not be impacted.
 **Note that because this version is written in C#/.NET, any .NET app using this SDK must use the same
 CLR version that we are using.** You cannot have multiple CLR versions loaded into the same process.
 
-C#/.NET is fast enough for what we're doing. It's really only the CLR load complexity and lack of
-Arm64EC support which will drive this change.
+C#/.NET is fast enough for what we're doing. It's really only the other concerns which will drive
+this change.
