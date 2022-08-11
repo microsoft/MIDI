@@ -26,7 +26,7 @@ namespace Microsoft.Windows.Midi.Internal.Config
         {
             _logger = logger;
 
-             _logger.LogDebug("DEBUG: MidiServicesConfig constructor");
+             //_logger.LogDebug("DEBUG: MidiServicesConfig constructor");
 
             MidiConfig = new ConfigRoot();
             LoadDefaults();
@@ -36,7 +36,6 @@ namespace Microsoft.Windows.Midi.Internal.Config
 
         public void LoadDefaults()
         {
- 
             _logger.LogDebug("MidiServicesConfig : Loading Defaults");
 
             // TODO: We need to get this schema version from someplace else
