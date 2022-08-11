@@ -12,3 +12,9 @@ CLR version that we are using.** You cannot have multiple CLR versions loaded in
 
 C#/.NET is fast enough for what we're doing. It's really only the other concerns which will drive
 this change.
+
+## Communication
+
+Currently, the client communicates with the server using a combination of named pipes and memory-
+mapped files. In the C++ version, it will be similar/same under the covers, but will use
+boost.interprocess rather than the current implementation.
