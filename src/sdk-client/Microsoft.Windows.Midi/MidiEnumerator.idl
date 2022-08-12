@@ -1,0 +1,10 @@
+
+namespace Microsoft.Windows.Midi.Enumeration
+{
+
+    [default_interface]
+    runtimeclass MidiEnumerator
+    {
+
+    };
+}

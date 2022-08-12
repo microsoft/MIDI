@@ -1,0 +1,4 @@
+#pragma once
+
+#define MAX_SESSION_NAME_LENGTH 100
+#define MAX_PROCESS_NAME_LENGTH 100

@@ -1,0 +1,12 @@
+
+namespace Microsoft.Windows.Midi.Session
+{
+
+    [default_interface]
+    runtimeclass MidiSessionCreateOptions
+    {
+
+    };
+}
+
+

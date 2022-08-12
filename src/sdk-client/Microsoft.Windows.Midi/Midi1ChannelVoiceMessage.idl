@@ -1,0 +1,18 @@
+import "Ump32.idl";
+
+namespace Microsoft.Windows.Midi.Messages.ChannelVoice
+{
+    [default_interface]
+    unsealed runtimeclass Midi1ChannelVoiceMessage
+    {
+        UInt8 Group;
+        UInt8 Opcode;
+        UInt8 Channel;
+        
+        [default_overload]
+        static Microsoft.Windows.Midi.Messages.Ump32 ToUmp();
+        static void ToUmp(out Microsoft.Windows.Midi.Messages.Ump32 ump);
+
+    };
+
+}

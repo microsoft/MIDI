@@ -1,0 +1,10 @@
+import "MidiDeviceInformation.idl";
+
+namespace Microsoft.Windows.Midi.Devices
+{
+    [default_interface]
+    runtimeclass MidiDevice
+    {
+        Microsoft.Windows.Midi.Enumeration.MidiDeviceInformation Information {get;};
+    };
+}

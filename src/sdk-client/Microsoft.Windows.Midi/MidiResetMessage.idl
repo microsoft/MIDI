@@ -1,0 +1,9 @@
+import "MidiSystemMessage.idl";
+
+namespace Microsoft.Windows.Midi.Messages.System
+{
+    [default_interface]
+    runtimeclass MidiResetMessage : MidiSystemMessage
+    {
+    };
+}

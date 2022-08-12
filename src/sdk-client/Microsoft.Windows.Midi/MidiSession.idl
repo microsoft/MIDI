@@ -1,0 +1,79 @@
+import "MidiSessionCreateOptions.idl";
+import "MidiDevice.idl";
+import "MidiEndpoint.idl";
+import "MidiMessageReceivedEventArgs.idl";
+import "MidiDeviceInformation.idl";
+import "MidiEndpointInformation.idl";
+import "Ump.idl";
+
+
+namespace Microsoft.Windows.Midi.Session
+{
+
+    [default_interface]
+    runtimeclass MidiSession
+    {
+        Guid Id {get;};
+        String Name {get;};
+        Windows.Foundation.DateTime CreateTime{get;};
+
+        // TODO: List/hash of open endpoints/devices in this session
+
+
+
+        static MidiSession Create(String name, MidiSessionCreateOptions options);
+        static MidiSession Create(String name);
+
+        void Close();
+
+        // device and endpoint functions
+
+        // when you open an endpoint from the session, its incoming messages
+        // get received to the session
+        // if you open the endpoint from the endpoint itself, the messages
+        // get received at that endpoint object.
+        // this supports both a flat model and the WinRT MIDI style model
+        [default_overload]
+        Microsoft.Windows.Midi.Devices.MidiEndpoint OpenEndpoint(Microsoft.Windows.Midi.Enumeration.MidiEndpointInformation information);
+        Microsoft.Windows.Midi.Devices.MidiEndpoint OpenEndpoint(Guid deviceId, Guid endpointId);
+
+        event Windows.Foundation.EventHandler<Microsoft.Windows.Midi.MidiMessageReceivedEventArgs> MessageReceived;
+
+
+        // message sending
+        void SendUmp(Microsoft.Windows.Midi.Enumeration.MidiEndpointInformation information, Microsoft.Windows.Midi.Messages.Ump message);
+        [default_overload]
+        void SendUmp(Guid deviceId, Guid endpointId, Microsoft.Windows.Midi.Messages.Ump message);
+        void SendUmp(Guid deviceId, Guid endpointId, UInt32 word0);
+        void SendUmp(Guid deviceId, Guid endpointId, UInt32 word0, UInt32 word1);
+        void SendUmp(Guid deviceId, Guid endpointId, UInt32 word0, UInt32 word1, UInt32 word2);
+        void SendUmp(Guid deviceId, Guid endpointId, UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
+        // TODO: Send a buffer/array of UMPs
+
+
+        void SendUmpWithJRTimestamp(Microsoft.Windows.Midi.Enumeration.MidiEndpointInformation information, Microsoft.Windows.Midi.Messages.Ump message);
+        [default_overload]
+        void SendUmpWithJRTimestamp(Guid deviceId, Guid endpointId, Microsoft.Windows.Midi.Messages.Ump message);
+        void SendUmpWithJRTimestamp(Guid deviceId, Guid endpointId, UInt32 word0);
+        void SendUmpWithJRTimestamp(Guid deviceId, Guid endpointId, UInt32 word0, UInt32 word1);
+        void SendUmpWithJRTimestamp(Guid deviceId, Guid endpointId, UInt32 word0, UInt32 word1, UInt32 word2);
+        void SendUmpWithJRTimestamp(Guid deviceId, Guid endpointId, UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
+        // TODO: Send a buffer/array of UMPs
+
+
+
+
+
+
+
+
+
+
+
+
+        // makes a server call, so prefer not to have in a property
+        Boolean UpdateName(String newName);
+
+
+    };
+}
