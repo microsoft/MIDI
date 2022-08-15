@@ -183,7 +183,7 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 		const uint8_t MessageType = 0x4;
 
-		const uint8_t getChannel() { return Utility::MostSignificantNibble(Word[0]); };
+		const uint8_t getChannel();
 		void setChannel(const uint8_t value);
 	};
 

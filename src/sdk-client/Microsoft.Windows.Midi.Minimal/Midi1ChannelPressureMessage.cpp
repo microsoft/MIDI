@@ -5,7 +5,8 @@
 
 #define WINDOWSMIDISERVICES_EXPORTS
 
-#include "WindowsMidiServicesClient.h"
+#include "WindowsMidiServicesUtility.h"
+#include "WindowsMidiServicesMessages.h"
 
 namespace Microsoft::Windows::Midi::Messages
 {
@@ -18,11 +19,11 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 	}
 
-	static Midi1ChannelPressureMessage Midi1ChannelPressureMessage::FromMidi1Bytes(const uint8_t group, const uint8_t statusByte, const uint8_t dataByte);
+	Midi1ChannelPressureMessage Midi1ChannelPressureMessage::FromMidi1Bytes(const uint8_t group, const uint8_t statusByte, const uint8_t dataByte)
 	{
 	}
 
-	static Midi1ChannelPressureMessage Midi1ChannelPressureMessage::FromValues(const uint8_t group, const uint8_t channel, const uint8_t data)
+	Midi1ChannelPressureMessage Midi1ChannelPressureMessage::FromValues(const uint8_t group, const uint8_t channel, const uint8_t data)
 	{
 	}
 

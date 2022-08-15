@@ -42,8 +42,8 @@ namespace Microsoft::Windows::Midi::Utility
 	constexpr uint8_t MostSignificantNibble(uint8_t b) { return (b & 0xF0) >> 4; }
 	constexpr uint8_t LeastSignificantNibble(uint8_t b) { return b & 0x0F; }
 
-	constexpr void SetLeastSignificantNibble(uint8_t& b, uint8_t nibbleValue) { b = ((b & 0xF0) | (nibbleValue & 0x0F)); }
-	constexpr void SetMostSignificantNibble(uint8_t& b, uint8_t nibbleValue) { b = ((b & 0x0F) | (nibbleValue << 4)); }
+	constexpr void SetLeastSignificantNibble(uint8_t& b, const uint8_t nibbleValue) { b = ((b & 0xF0) | (nibbleValue & 0x0F)); }
+	constexpr void SetMostSignificantNibble(uint8_t& b, const uint8_t nibbleValue) { b = ((b & 0x0F) | (nibbleValue << 4)); }
 
 
 }

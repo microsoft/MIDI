@@ -5,7 +5,8 @@
 
 #define WINDOWSMIDISERVICES_EXPORTS
 
-#include "WindowsMidiServicesClient.h"
+#include "WindowsMidiServicesUtility.h"
+#include "WindowsMidiServicesMessages.h"
 
 namespace Microsoft::Windows::Midi::Messages
 {

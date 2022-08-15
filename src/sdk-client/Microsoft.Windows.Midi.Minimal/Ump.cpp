@@ -6,78 +6,79 @@
 
 #define WINDOWSMIDISERVICES_EXPORTS
 
-#include "WindowsMidiServicesClient.h"
+#include "WindowsMidiServicesUmp.h"
+#include "WindowsMidiServicesUtility.h"
 
-namespace Microsoft::Windows::Midi::Native
+namespace Microsoft::Windows::Midi
 {
 
 	// Ump32 --------------------------------------------------------------------------------------------------
 
-	virtual const uint8_t Ump32::getMessageType(const uint8_t value)
+	const uint8_t Ump32::getMessageType()
 	{
 		return Utility::MostSignificantNibble(Byte[0]);
 	}
 
-	virtual const uint8_t Ump32::getGroup(const uint8_t value)
+	const uint8_t Ump32::getGroup()
 	{
 		return Utility::LeastSignificantNibble(Byte[0]);
 	}
 
-	virtual void Ump32::setGroup(const uint8_t value)
+	void Ump32::setGroup(const uint8_t value)
 	{
-		SetLeastSignificantNibble(&Byte[0], value);
+		Utility::SetLeastSignificantNibble(Byte[0], value);
 	}
 
 	// Ump64 --------------------------------------------------------------------------------------------------
 
-	virtual const uint8_t Ump64::getMessageType(const uint8_t value)
+	const uint8_t Ump64::getMessageType()
 	{
 		return Utility::MostSignificantNibble(Byte[0]);
 	}
 
-	virtual const uint8_t Ump64::getGroup(const uint8_t value)
+	const uint8_t Ump64::getGroup()
 	{
 		return Utility::LeastSignificantNibble(Byte[0]);
 	}
 
-	virtual void Ump64::setGroup(const uint8_t value)
+	void Ump64::setGroup(const uint8_t value)
 	{
-		SetLeastSignificantNibble(&Byte[0], value);
+		Utility::SetLeastSignificantNibble(Byte[0], value);
 	}
 
 	// Ump96 --------------------------------------------------------------------------------------------------
 
-	virtual const uint8_t Ump96::getMessageType(const uint8_t value)
+	const uint8_t Ump96::getMessageType()
 	{
 		return Utility::MostSignificantNibble(Byte[0]);
 	}
 
-	virtual const uint8_t Ump96::getGroup(const uint8_t value)
+	const uint8_t Ump96::getGroup()
 	{
 		return Utility::LeastSignificantNibble(Byte[0]);
 	}
 
-	virtual void Ump96::setGroup(const uint8_t value)
+	void Ump96::setGroup(const uint8_t value)
 	{
-		SetLeastSignificantNibble(&Byte[0], value);
+		Utility::SetLeastSignificantNibble(Byte[0], value);
 	}
 
 
 	// Ump128 --------------------------------------------------------------------------------------------------
 
-	virtual const uint8_t Ump128::getMessageType(const uint8_t value)
+	const uint8_t Ump128::getMessageType()
 	{
 		return Utility::MostSignificantNibble(Byte[0]);
 	}
 
-	virtual const uint8_t Ump128::getGroup(const uint8_t value)
+	const uint8_t Ump128::getGroup()
 	{
 		return Utility::LeastSignificantNibble(Byte[0]);
 	}
 
-	virtual void Ump128::setGroup(const uint8_t value)
+	void Ump128::setGroup(const uint8_t value)
 	{
-		SetLeastSignificantNibble(&Byte[0], value);
+		Utility::SetLeastSignificantNibble(Byte[0], value);
 	}
 
 }

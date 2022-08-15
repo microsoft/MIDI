@@ -5,11 +5,11 @@
 
 #define WINDOWSMIDISERVICES_EXPORTS
 
-#include "WindowsMidiServicesClient.h"
+#include "WindowsMidiServicesUtility.h"
+#include "WindowsMidiServicesMessages.h"
 
 namespace Microsoft::Windows::Midi::Messages
 {
-
 	const uint8_t Midi1PolyPressureMessage::getData()
 	{
 	}
@@ -18,18 +18,20 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 	}
 
-	// Protocol spec 4.1.3. MIDI 1.0 polyphonic pressure (aftertouch) message
-	struct WINDOWSMIDISERVICES_API Midi1PolyPressureMessage final : public Midi1ChannelVoiceMessage
+	const uint8_t Midi1PolyPressureMessage::getNoteNumber()
 	{
-		const uint8_t Opcode = 0xA;
+	}
 
-		const uint8_t getNoteNumber();
-		void setNoteNumber(const uint8_t value);
+	void Midi1PolyPressureMessage::setNoteNumber(const uint8_t value)
+	{
+	}
 
-		const uint8_t getData();
-		void setData(const uint8_t value);
+	Midi1PolyPressureMessage Midi1PolyPressureMessage::FromMidi1Bytes(const uint8_t group, const uint8_t statusByte, const uint8_t noteNumberByte, const uint8_t dataByte)
+	{
+	}
 
-		static Midi1PolyPressureMessage FromMidi1Bytes(const uint8_t group, const uint8_t statusByte, const uint8_t noteNumberByte, const uint8_t dataByte);
-		static Midi1PolyPressureMessage FromValues(const uint8_t group, const uint8_t channel, const uint8_t noteNumber, const uint8_t data);
-	};
+	Midi1PolyPressureMessage Midi1PolyPressureMessage::FromValues(const uint8_t group, const uint8_t channel, const uint8_t noteNumber, const uint8_t data)
+	{
+	}
+
 }

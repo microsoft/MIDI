@@ -46,7 +46,7 @@
 namespace Microsoft::Windows::Midi
 {
 
-// Base message structure
+	// Base message structure
 	struct WINDOWSMIDISERVICES_API Ump
 	{
 		virtual const uint8_t getMessageType() = 0;

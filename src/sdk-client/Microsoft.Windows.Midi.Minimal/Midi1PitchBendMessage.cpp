@@ -5,29 +5,46 @@
 
 #define WINDOWSMIDISERVICES_EXPORTS
 
-#include "WindowsMidiServicesClient.h"
+#include "WindowsMidiServicesUtility.h"
+#include "WindowsMidiServicesMessages.h"
 
 namespace Microsoft::Windows::Midi::Messages
 {
 
-
-
-	// Protocol spec 4.1.7. MIDI 1.0 pitch bend message
-	struct WINDOWSMIDISERVICES_API Midi1PitchBendMessage final : public Midi1ChannelVoiceMessage
+	const uint8_t Midi1PitchBendMessage::getDataLsb()
 	{
-		const uint8_t Opcode = 0xE;
+	}
 
-		const uint8_t getDataLsb();
-		void setDataLsb(const uint8_t value);
+	void Midi1PitchBendMessage::setDataLsb(const uint8_t value)
+	{
+	}
 
-		const uint8_t getDataMsb();
-		void setDataMsb(const uint8_t value);
+	const uint8_t Midi1PitchBendMessage::getDataMsb()
+	{
+	}
 
-		const uint16_t getDataCombined();
-		void setDataCombined(const uint16_t value);
+	void Midi1PitchBendMessage::setDataMsb(const uint8_t value)
+	{
+	}
 
-		static Midi1PitchBendMessage FromMidi1Bytes(const uint8_t group, const uint8_t statusByte, const uint8_t lsbDataByte, const uint8_t msbDataByte);
-		static Midi1PitchBendMessage FromValues(const uint8_t group, const uint8_t channel, const uint8_t dataLsb, const uint8_t dataMsb);
-		static Midi1PitchBendMessage FromValues(const uint8_t group, const uint8_t channel, const uint16_t data);
-	};
+	const uint16_t Midi1PitchBendMessage::getDataCombined()
+	{
+	}
+
+	void Midi1PitchBendMessage::setDataCombined(const uint16_t value)
+	{
+	}
+
+	Midi1PitchBendMessage Midi1PitchBendMessage::FromMidi1Bytes(const uint8_t group, const uint8_t statusByte, const uint8_t lsbDataByte, const uint8_t msbDataByte)
+	{
+	}
+
+	Midi1PitchBendMessage Midi1PitchBendMessage::FromValues(const uint8_t group, const uint8_t channel, const uint8_t dataLsb, const uint8_t dataMsb)
+	{
+	}
+
+	Midi1PitchBendMessage Midi1PitchBendMessage::FromValues(const uint8_t group, const uint8_t channel, const uint16_t data)
+	{
+	}
+
 }
