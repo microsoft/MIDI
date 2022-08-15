@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\Messages">
+      <UniqueIdentifier>{b0b3cfec-5479-461d-9f5c-699e48e61eb6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Messages\ChannelVoice">
+      <UniqueIdentifier>{691992df-63ca-4504-8a5e-52ce924765ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Messages\ChannelVoice\midi1">
+      <UniqueIdentifier>{d8a26a8c-42c5-404f-b3a1-b03b9481d6e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Messages\ChannelVoice\midi2">
+      <UniqueIdentifier>{640200b0-ab57-4074-82cd-bf586d793b63}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="framework.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsMidiServicesClient.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEnumeration.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiService.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiSession.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Ump.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi2ChannelVoiceMessages.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi1ChannelVoiceMessage.cpp">
+      <Filter>Source Files\Messages\ChannelVoice\midi1</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi1NoteOffMessage.cpp">
+      <Filter>Source Files\Messages\ChannelVoice\midi1</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi1NoteOnMessage.cpp">
+      <Filter>Source Files\Messages\ChannelVoice\midi1</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi1PolyPressureMessage.cpp">
+      <Filter>Source Files\Messages\ChannelVoice\midi1</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi1ControlChangeMessage.cpp">
+      <Filter>Source Files\Messages\ChannelVoice\midi1</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi1ProgramChangeMessage.cpp">
+      <Filter>Source Files\Messages\ChannelVoice\midi1</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi1ChannelPressureMessage.cpp">
+      <Filter>Source Files\Messages\ChannelVoice\midi1</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi1PitchBendMessage.cpp">
+      <Filter>Source Files\Messages\ChannelVoice\midi1</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

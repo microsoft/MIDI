@@ -62,6 +62,9 @@
     <ClCompile Include="Microsoft.Windows.Midi.MidiMessageReceivedEventArgs.cpp" />
     <ClCompile Include="Microsoft.Windows.Midi.Session.MidiSession.cpp" />
     <ClCompile Include="Microsoft.Windows.Midi.Session.MidiSessionCreateOptions.cpp" />
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.System.MidiTuningRequestMessage.cpp">
+      <Filter>api\Messages\System</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -124,9 +127,11 @@
     <ClInclude Include="Microsoft.Windows.Midi.MidiMessageReceivedEventArgs.h" />
     <ClInclude Include="Microsoft.Windows.Midi.Session.MidiSession.h" />
     <ClInclude Include="Microsoft.Windows.Midi.Session.MidiSessionCreateOptions.h" />
+    <ClInclude Include="Microsoft.Windows.Midi.Messages.System.MidiTuningRequestMessage.h">
+      <Filter>api\Messages\System</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="Class.idl" />
     <Midl Include="MidiSession.idl">
       <Filter>api\Session</Filter>
     </Midl>
@@ -271,7 +276,7 @@
     <Midl Include="MidiSongSelectMessage.idl">
       <Filter>api\Messages\System</Filter>
     </Midl>
-    <Midl Include="MidiTuneRequestMessage.idl">
+    <Midl Include="MidiTuningRequestMessage.idl">
       <Filter>api\Messages\System</Filter>
     </Midl>
     <Midl Include="MidiTimingClockMessage.idl">
@@ -319,14 +324,14 @@
     <Midl Include="UmpType.idl">
       <Filter>api\Messages</Filter>
     </Midl>
+    <Midl Include="MidiService.idl">
+      <Filter>api</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="Microsoft_Windows_Midi.def" />
     <None Include="PropertySheet.props" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="readme.txt" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="api">

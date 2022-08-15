@@ -3,8 +3,8 @@ namespace Microsoft.Windows.Midi.Enumeration
 
     enum MidiEndpointType
     {
-        MidiOut,
-        MidiIn,
-        Bidirectional
+        MidiOut = 0,
+        MidiIn = 1,
+        Bidirectional = 2
     };
 }

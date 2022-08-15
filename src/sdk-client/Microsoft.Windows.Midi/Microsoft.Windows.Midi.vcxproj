@@ -103,6 +103,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
     <ClCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard_C Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdc17</LanguageStandard_C>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp20</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
@@ -117,359 +119,356 @@
   <ItemGroup>
     <ClInclude Include="Microsoft.Windows.Midi.Devices.MidiDevice.h">
       <DependentUpon>MidiDevice.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Devices.MidiEndpoint.h">
       <DependentUpon>MidiEndpoint.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Enumeration.MidiDeviceInformation.h">
       <DependentUpon>MidiDeviceInformation.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Enumeration.MidiEndpointInformation.h">
       <DependentUpon>MidiEndpointInformation.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Enumeration.MidiEnumerator.h">
       <DependentUpon>MidiEnumerator.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Enumeration.MidiTransportInformation.h">
       <DependentUpon>MidiTransportInformation.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Helpers.MidiMixedDataSetHelper.h">
       <DependentUpon>MidiMixedDataSetHelper.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Helpers.MidiSystemExclusiveHelper.h">
       <DependentUpon>MidiSystemExclusiveHelper.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi1ChannelPressureMessage.h">
       <DependentUpon>Midi1ChannelPressureMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi1ChannelVoiceMessage.h">
       <DependentUpon>Midi1ChannelVoiceMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi1ControlChangeMessage.h">
       <DependentUpon>Midi1ControlChangeMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi1NoteOffMessage.h">
       <DependentUpon>Midi1NoteOffMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi1NoteOnMessage.h">
       <DependentUpon>Midi1NoteOnMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi1PitchBendMessage.h">
       <DependentUpon>Midi1PitchBendMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi1PolyPressureMessage.h">
       <DependentUpon>Midi1PolyPressureMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi1ProgramChangeMessage.h">
       <DependentUpon>Midi1ProgramChangeMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2AssignableControllerMessage.h">
       <DependentUpon>Midi2AssignableControllerMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2AssignablePerNoteControllerMessage.h">
       <DependentUpon>Midi2AssignablePerNoteControllerMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2ChannelPressureMessage.h">
       <DependentUpon>Midi2ChannelPressureMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2ChannelVoiceMessage.h">
       <DependentUpon>Midi2ChannelVoiceMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2ControlChangeMessage.h">
       <DependentUpon>Midi2ControlChangeMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2NoteOffMessage.h">
       <DependentUpon>Midi2NoteOffMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2NoteOnMessage.h">
       <DependentUpon>Midi2NoteOnMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2PerNoteManagementMessage.h">
       <DependentUpon>Midi2PerNoteManagementMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2PerNotePitchBendMessage.h">
       <DependentUpon>Midi2PerNotePitchBendMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2PitchBendMessage.h">
       <DependentUpon>Midi2PitchBendMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2PolyPressureMessage.h">
       <DependentUpon>Midi2PolyPressureMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2ProgramChangeMessage.h">
       <DependentUpon>Midi2ProgramChangeMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2RegisteredControllerMessage.h">
       <DependentUpon>Midi2RegisteredControllerMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2RegisteredPerNoteControllerMessage.h">
       <DependentUpon>Midi2RegisteredPerNoteControllerMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2RelativeAssignableControllerMessage.h">
       <DependentUpon>Midi2RelativeAssignableControllerMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2RelativeRegisteredControllerMessage.h">
       <DependentUpon>Midi2RelativeRegisteredControllerMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.Data.Midi2SystemExclusive8BitMessage.h">
       <DependentUpon>Midi2SystemExclusive8BitMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.Data.MidiMixedDataSetHeaderMessage.h">
       <DependentUpon>MidiMixedDataSetHeaderMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.Data.MidiMixedDataSetPayloadMessage.h">
       <DependentUpon>MidiMixedDataSetPayloadMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.Data.MidiSystemExclusive7BitMessage.h">
       <DependentUpon>MidiSystemExclusive7BitMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.System.MidiActiveSensingMessage.h">
       <DependentUpon>MidiActiveSensingMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.System.MidiContinueMessage.h">
       <DependentUpon>MidiContinueMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.System.MidiResetMessage.h">
       <DependentUpon>MidiResetMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.System.MidiSongPositionPointerMessage.h">
       <DependentUpon>MidiSongPositionPointerMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.System.MidiSongSelectMessage.h">
       <DependentUpon>MidiSongSelectMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.System.MidiStartMessage.h">
       <DependentUpon>MidiStartMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.System.MidiStopMessage.h">
       <DependentUpon>MidiStopMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.System.MidiSystemMessage.h">
       <DependentUpon>MidiSystemMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.System.MidiTimeCodeMessage.h">
       <DependentUpon>MidiTimeCodeMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.System.MidiTimingClockMessage.h">
       <DependentUpon>MidiTimingClockMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.System.MidiTuningRequestMessage.h">
       <DependentUpon>MidiTuningRequestMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.Ump.h">
       <DependentUpon>Ump.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.Ump32.h">
       <DependentUpon>Ump32.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.Ump64.h">
       <DependentUpon>Ump64.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.Ump96.h">
       <DependentUpon>Ump96.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.Ump128.h">
       <DependentUpon>Ump128.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.Utility.Midi2JitterReductionClockMessage.h">
       <DependentUpon>Midi2JitterReductionClockMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.Utility.Midi2JitterReductionTimestampMessage.h">
       <DependentUpon>Midi2JitterReductionTimestampMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.Utility.Midi2NoopMessage.h">
       <DependentUpon>Midi2NoopMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Messages.Utility.Midi2UtilityMessage.h">
       <DependentUpon>Midi2UtilityMessage.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.MidiMessageReceivedEventArgs.h">
       <DependentUpon>MidiMessageReceivedEventArgs.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Session.MidiSession.h">
       <DependentUpon>MidiSession.idl</DependentUpon>
-	 </ClInclude>
+    </ClInclude>
     <ClInclude Include="Microsoft.Windows.Midi.Session.MidiSessionCreateOptions.h">
       <DependentUpon>MidiSessionCreateOptions.idl</DependentUpon>
-	 </ClInclude>
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="Class.h">
-      <DependentUpon>Class.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Microsoft.Windows.Midi.Devices.MidiDevice.cpp">
       <DependentUpon>MidiDevice.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Devices.MidiEndpoint.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Devices.MidiEndpoint.cpp">
       <DependentUpon>MidiEndpoint.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Enumeration.MidiDeviceInformation.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Enumeration.MidiDeviceInformation.cpp">
       <DependentUpon>MidiDeviceInformation.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Enumeration.MidiEndpointInformation.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Enumeration.MidiEndpointInformation.cpp">
       <DependentUpon>MidiEndpointInformation.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Enumeration.MidiEnumerator.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Enumeration.MidiEnumerator.cpp">
       <DependentUpon>MidiEnumerator.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Enumeration.MidiTransportInformation.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Enumeration.MidiTransportInformation.cpp">
       <DependentUpon>MidiTransportInformation.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Helpers.MidiMixedDataSetHelper.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Helpers.MidiMixedDataSetHelper.cpp">
       <DependentUpon>MidiMixedDataSetHelper.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Helpers.MidiSystemExclusiveHelper.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Helpers.MidiSystemExclusiveHelper.cpp">
       <DependentUpon>MidiSystemExclusiveHelper.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi1ChannelPressureMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi1ChannelPressureMessage.cpp">
       <DependentUpon>Midi1ChannelPressureMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi1ChannelVoiceMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi1ChannelVoiceMessage.cpp">
       <DependentUpon>Midi1ChannelVoiceMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi1ControlChangeMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi1ControlChangeMessage.cpp">
       <DependentUpon>Midi1ControlChangeMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi1NoteOffMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi1NoteOffMessage.cpp">
       <DependentUpon>Midi1NoteOffMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi1NoteOnMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi1NoteOnMessage.cpp">
       <DependentUpon>Midi1NoteOnMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi1PitchBendMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi1PitchBendMessage.cpp">
       <DependentUpon>Midi1PitchBendMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi1PolyPressureMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi1PolyPressureMessage.cpp">
       <DependentUpon>Midi1PolyPressureMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi1ProgramChangeMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi1ProgramChangeMessage.cpp">
       <DependentUpon>Midi1ProgramChangeMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2AssignableControllerMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2AssignableControllerMessage.cpp">
       <DependentUpon>Midi2AssignableControllerMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2AssignablePerNoteControllerMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2AssignablePerNoteControllerMessage.cpp">
       <DependentUpon>Midi2AssignablePerNoteControllerMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2ChannelPressureMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2ChannelPressureMessage.cpp">
       <DependentUpon>Midi2ChannelPressureMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2ChannelVoiceMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2ChannelVoiceMessage.cpp">
       <DependentUpon>Midi2ChannelVoiceMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2ControlChangeMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2ControlChangeMessage.cpp">
       <DependentUpon>Midi2ControlChangeMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2NoteOffMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2NoteOffMessage.cpp">
       <DependentUpon>Midi2NoteOffMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2NoteOnMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2NoteOnMessage.cpp">
       <DependentUpon>Midi2NoteOnMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2PerNoteManagementMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2PerNoteManagementMessage.cpp">
       <DependentUpon>Midi2PerNoteManagementMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2PerNotePitchBendMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2PerNotePitchBendMessage.cpp">
       <DependentUpon>Midi2PerNotePitchBendMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2PitchBendMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2PitchBendMessage.cpp">
       <DependentUpon>Midi2PitchBendMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2PolyPressureMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2PolyPressureMessage.cpp">
       <DependentUpon>Midi2PolyPressureMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2ProgramChangeMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2ProgramChangeMessage.cpp">
       <DependentUpon>Midi2ProgramChangeMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2RegisteredControllerMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2RegisteredControllerMessage.cpp">
       <DependentUpon>Midi2RegisteredControllerMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2RegisteredPerNoteControllerMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2RegisteredPerNoteControllerMessage.cpp">
       <DependentUpon>Midi2RegisteredPerNoteControllerMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2RelativeAssignableControllerMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2RelativeAssignableControllerMessage.cpp">
       <DependentUpon>Midi2RelativeAssignableControllerMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2RelativeRegisteredControllerMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.ChannelVoice.Midi2RelativeRegisteredControllerMessage.cpp">
       <DependentUpon>Midi2RelativeRegisteredControllerMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.Data.Midi2SystemExclusive8BitMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.Data.Midi2SystemExclusive8BitMessage.cpp">
       <DependentUpon>Midi2SystemExclusive8BitMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.Data.MidiMixedDataSetHeaderMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.Data.MidiMixedDataSetHeaderMessage.cpp">
       <DependentUpon>MidiMixedDataSetHeaderMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.Data.MidiMixedDataSetPayloadMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.Data.MidiMixedDataSetPayloadMessage.cpp">
       <DependentUpon>MidiMixedDataSetPayloadMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.Data.MidiSystemExclusive7BitMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.Data.MidiSystemExclusive7BitMessage.cpp">
       <DependentUpon>MidiSystemExclusive7BitMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.System.MidiActiveSensingMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.System.MidiActiveSensingMessage.cpp">
       <DependentUpon>MidiActiveSensingMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.System.MidiContinueMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.System.MidiContinueMessage.cpp">
       <DependentUpon>MidiContinueMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.System.MidiResetMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.System.MidiResetMessage.cpp">
       <DependentUpon>MidiResetMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.System.MidiSongPositionPointerMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.System.MidiSongPositionPointerMessage.cpp">
       <DependentUpon>MidiSongPositionPointerMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.System.MidiSongSelectMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.System.MidiSongSelectMessage.cpp">
       <DependentUpon>MidiSongSelectMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.System.MidiStartMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.System.MidiStartMessage.cpp">
       <DependentUpon>MidiStartMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.System.MidiStopMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.System.MidiStopMessage.cpp">
       <DependentUpon>MidiStopMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.System.MidiSystemMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.System.MidiSystemMessage.cpp">
       <DependentUpon>MidiSystemMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.System.MidiTimeCodeMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.System.MidiTimeCodeMessage.cpp">
       <DependentUpon>MidiTimeCodeMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.System.MidiTimingClockMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.System.MidiTimingClockMessage.cpp">
       <DependentUpon>MidiTimingClockMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.System.MidiTuningRequestMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.System.MidiTuningRequestMessage.cpp">
       <DependentUpon>MidiTuningRequestMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.Ump.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.Ump.cpp">
       <DependentUpon>Ump.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.Ump128.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.Ump128.cpp">
       <DependentUpon>Ump128.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.Ump32.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.Ump32.cpp">
       <DependentUpon>Ump32.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.Ump64.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.Ump64.cpp">
       <DependentUpon>Ump64.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.Ump96.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.Ump96.cpp">
       <DependentUpon>Ump96.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.Utility.Midi2JitterReductionClockMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.Utility.Midi2JitterReductionClockMessage.cpp">
       <DependentUpon>Midi2JitterReductionClockMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.Utility.Midi2JitterReductionTimestampMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.Utility.Midi2JitterReductionTimestampMessage.cpp">
       <DependentUpon>Midi2JitterReductionTimestampMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.Utility.Midi2NoopMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.Utility.Midi2NoopMessage.cpp">
       <DependentUpon>Midi2NoopMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Messages.Utility.Midi2UtilityMessage.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Messages.Utility.Midi2UtilityMessage.cpp">
       <DependentUpon>Midi2UtilityMessage.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.MidiMessageReceivedEventArgs.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.MidiMessageReceivedEventArgs.cpp">
       <DependentUpon>MidiMessageReceivedEventArgs.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Microsoft.Windows.Midi.Session.MidiSession.cpp" >
+    <ClCompile Include="Microsoft.Windows.Midi.Session.MidiSession.cpp">
       <DependentUpon>MidiSession.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="Microsoft.Windows.Midi.Session.MidiSessionCreateOptions.cpp">
@@ -477,9 +476,6 @@
     </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="Class.cpp">
-      <DependentUpon>Class.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
@@ -520,6 +516,7 @@
     <Midl Include="MidiMixedDataSetMessageStatus.idl" />
     <Midl Include="MidiMixedDataSetPayloadMessage.idl" />
     <Midl Include="MidiResetMessage.idl" />
+    <Midl Include="MidiService.idl" />
     <Midl Include="MidiSongPositionPointerMessage.idl" />
     <Midl Include="MidiSongSelectMessage.idl" />
     <Midl Include="MidiStartMessage.idl" />
@@ -530,14 +527,13 @@
     <Midl Include="MidiSystemMessage.idl" />
     <Midl Include="MidiTimeCodeMessage.idl" />
     <Midl Include="MidiTimingClockMessage.idl" />
-    <Midl Include="MidiTuneRequestMessage.idl" />
+    <Midl Include="MidiTuningRequestMessage.idl" />
     <Midl Include="Ump.idl" />
     <Midl Include="Ump128.idl" />
     <Midl Include="Ump32.idl" />
     <Midl Include="Ump64.idl" />
     <Midl Include="Ump96.idl" />
     <Midl Include="UmpType.idl" />
-    <Midl Include="Class.idl" />
     <Midl Include="MidiDevice.idl" />
     <Midl Include="MidiDeviceInformation.idl" />
     <Midl Include="MidiEndpoint.idl" />
@@ -556,9 +552,6 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="PropertySheet.props" />
-    <Text Include="readme.txt">
-      <DeploymentContent>false</DeploymentContent>
-    </Text>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

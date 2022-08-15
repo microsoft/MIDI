@@ -16,6 +16,12 @@
     <Filter Include="Messages">
       <UniqueIdentifier>{72dbb123-91f8-4c11-9a3b-33ed372af9d1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Exported">
+      <UniqueIdentifier>{8ac15aaa-58c1-4c7f-b94f-46eb253d0443}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Internal">
+      <UniqueIdentifier>{58feabc9-2db8-4111-b3d8-f93f308bf98b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -36,13 +42,25 @@
     <ClInclude Include="ProtocolConstants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ProcessInfo.h">
+      <Filter>Header Files\Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="ServiceMessageQueue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessageQueue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Midi.Internal.ServiceProtocol.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ServiceMessageQueue.cpp">
+      <Filter>Exported</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessageQueue.cpp">
+      <Filter>Exported</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

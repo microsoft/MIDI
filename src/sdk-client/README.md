@@ -4,11 +4,15 @@ C++ / WinRT client SDK.
 
 ## Building and Tools
 
+Use latest Visual Studio 2022.
+
 The C++ code in this solution uses boost (currently boost 1.80.0) for a number of types . My BOOST_ROOT is C:\Program Files\boost\boost_1_80_0. I set a system environment variable so I could use it in Visual Studio in the include and lib locations.
 
 ![BOOST_ROOT Environment Variable](img/boost-path.png)
 
 ![BOOST_ROOT Environment Variable in Visual Studio](img/boost-include-and-lib-in-visual-studio.png)
+
+The C++ code also uses the latest accepted language spec (C++ 20) and latest standard library functions.
 
 ### Building
 

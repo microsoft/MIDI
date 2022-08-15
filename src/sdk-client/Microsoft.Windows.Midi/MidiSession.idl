@@ -21,8 +21,8 @@ namespace Microsoft.Windows.Midi.Session
 
 
 
-        static MidiSession Create(String name, MidiSessionCreateOptions options);
-        static MidiSession Create(String name);
+        static MidiSession Create(String name, String appName, MidiSessionCreateOptions options);
+        static MidiSession Create(String name, String appName);
 
         void Close();
 
@@ -41,23 +41,17 @@ namespace Microsoft.Windows.Midi.Session
 
 
         // message sending
-        void SendUmp(Microsoft.Windows.Midi.Enumeration.MidiEndpointInformation information, Microsoft.Windows.Midi.Messages.Ump message);
         [default_overload]
+        void SendUmp(Microsoft.Windows.Midi.Enumeration.MidiEndpointInformation information, Microsoft.Windows.Midi.Messages.Ump message);
         void SendUmp(Guid deviceId, Guid endpointId, Microsoft.Windows.Midi.Messages.Ump message);
-        void SendUmp(Guid deviceId, Guid endpointId, UInt32 word0);
-        void SendUmp(Guid deviceId, Guid endpointId, UInt32 word0, UInt32 word1);
-        void SendUmp(Guid deviceId, Guid endpointId, UInt32 word0, UInt32 word1, UInt32 word2);
-        void SendUmp(Guid deviceId, Guid endpointId, UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
+
         // TODO: Send a buffer/array of UMPs
 
 
-        void SendUmpWithJRTimestamp(Microsoft.Windows.Midi.Enumeration.MidiEndpointInformation information, Microsoft.Windows.Midi.Messages.Ump message);
         [default_overload]
-        void SendUmpWithJRTimestamp(Guid deviceId, Guid endpointId, Microsoft.Windows.Midi.Messages.Ump message);
-        void SendUmpWithJRTimestamp(Guid deviceId, Guid endpointId, UInt32 word0);
-        void SendUmpWithJRTimestamp(Guid deviceId, Guid endpointId, UInt32 word0, UInt32 word1);
-        void SendUmpWithJRTimestamp(Guid deviceId, Guid endpointId, UInt32 word0, UInt32 word1, UInt32 word2);
-        void SendUmpWithJRTimestamp(Guid deviceId, Guid endpointId, UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
+        void SendUmpWithJRTimestamp(Microsoft.Windows.Midi.Enumeration.MidiEndpointInformation information, MidiJitterReductionTimestampMessage timestamp, Microsoft.Windows.Midi.Messages.Ump message);
+        void SendUmpWithJRTimestamp(Guid deviceId, Guid endpointId, MidiJitterReductionTimestampMessage timestamp, Microsoft.Windows.Midi.Messages.Ump message);
+
         // TODO: Send a buffer/array of UMPs
 
 

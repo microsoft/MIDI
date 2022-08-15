@@ -1,21 +1,7 @@
 #pragma once
 
 #include "pch.h"
-
-// TODO: Use Boost::uuid
-struct ProtocolGuid
-{
-	uint32_t Part1;
-	uint16_t Part2;
-	uint8_t Byte1;
-	uint8_t Byte2;
-	uint8_t Byte3;
-	uint8_t Byte4;
-	uint8_t Byte5;
-	uint8_t Byte6;
-	uint8_t Byte7;
-	uint8_t Byte8;
-};
+#include <Windows.h>
 
 // can be easily translated to .NET version class
 struct ServiceProtocolVersion
@@ -39,16 +25,16 @@ enum ResponseCode : uint8_t
 
 struct RequestMessageHeader
 {
-	ProtocolGuid ClientId;
-	ProtocolGuid ClientRequestId;
+	GUID ClientId;
+	GUID ClientRequestId;
 
 	ServiceProtocolVersion ClientVersion;
 };
 
 struct ResponseMessageHeader
 {
-	ProtocolGuid ClientId;
-	ProtocolGuid ClientRequestId;
+	GUID ClientId;
+	GUID ClientRequestId;
 
 	ServiceProtocolVersion ServerVersion;
 

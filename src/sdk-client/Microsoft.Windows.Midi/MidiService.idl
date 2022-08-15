@@ -1,0 +1,22 @@
+namespace Microsoft.Windows.Midi
+{
+
+    [default_interface]
+    runtimeclass MidiService
+    {
+        static String ClientApiVersion {get;};
+
+        static Boolean IsInstalled {get;};
+
+        static Boolean IsRunning {get;};
+
+        static Boolean Start();
+        static Boolean Stop();
+
+        static MidiServicePingResponse Ping(out String serverVersionReported);
+
+        static Windows.Foundation.Uri GetServicesInstallerUri();
+
+
+    }
+}

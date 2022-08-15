@@ -25,6 +25,14 @@ namespace Microsoft.Windows.Midi.Devices
         // offer a method to refresh that?
 
 
+        // TODO: Ability to lock an endpoint (or maybe just a group/channel)
+        // for MIDI CI negotiation. Need to think about concurrency in a
+        // multi-client setup there. May need to generalize to Sysex, but the
+        // locking there is unidirectional. CI is bidirectional
+        // if we lock by group/channel, we'll need to inspect every packet
+        // before sending it out. That can be made fairly efficient, however, by
+        // just setting up some bitmasks to compare to.
+
         [default_overload]
         static MidiEndpoint Open(Microsoft.Windows.Midi.Enumeration.MidiEndpointInformation information);
         static MidiEndpoint Open(Guid deviceId, Guid endpointId);
@@ -42,18 +50,18 @@ namespace Microsoft.Windows.Midi.Devices
         // message sending
         [default_overload]
         void SendUmp(Microsoft.Windows.Midi.Messages.Ump message);
-        void SendUmp(UInt32 word0);
-        void SendUmp(UInt32 word0, UInt32 word1);
-        void SendUmp(UInt32 word0, UInt32 word1, UInt32 word2);
-        void SendUmp(UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
+        //void SendUmp(UInt32 word0);
+        //void SendUmp(UInt32 word0, UInt32 word1);
+        //void SendUmp(UInt32 word0, UInt32 word1, UInt32 word2);
+        //void SendUmp(UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
         // TODO: Send a buffer/array of UMPs
 
         [default_overload]
-        void SendUmpWithJRTimestamp(Microsoft.Windows.Midi.Messages.Ump message);
-        void SendUmpWithJRTimestamp(UInt32 word0);
-        void SendUmpWithJRTimestamp(UInt32 word0, UInt32 word1);
-        void SendUmpWithJRTimestamp(UInt32 word0, UInt32 word1, UInt32 word2);
-        void SendUmpWithJRTimestamp(UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
+        void SendUmpWithJRTimestamp(MidiJitterReductionTimestampMessage timestamp, Microsoft.Windows.Midi.Messages.Ump message);
+        //void SendUmpWithJRTimestamp(UInt32 word0);
+        //void SendUmpWithJRTimestamp(UInt32 word0, UInt32 word1);
+        //void SendUmpWithJRTimestamp(UInt32 word0, UInt32 word1, UInt32 word2);
+        //void SendUmpWithJRTimestamp(UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
         // TODO: Send a buffer/array of UMPs
        
 
