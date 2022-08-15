@@ -1,4 +1,9 @@
 
+// ------------------------------------------------------------------------------------------------
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License. See LICENSE in the GitHub project root for license information.
+// ------------------------------------------------------------------------------------------------
+
 #define WINDOWSMIDISERVICES_EXPORTS
 
 #include "WindowsMidiServicesClient.h"
@@ -20,8 +25,7 @@ namespace Microsoft::Windows::Midi::Native
 
 	virtual void Ump32::setGroup(const uint8_t value)
 	{
-		Byte[0] &= 0xF0;
-		Byte[0] |= Utility::LeastSignificantNibble(value);
+		SetLeastSignificantNibble(&Byte[0], value);
 	}
 
 	// Ump64 --------------------------------------------------------------------------------------------------
@@ -38,8 +42,7 @@ namespace Microsoft::Windows::Midi::Native
 
 	virtual void Ump64::setGroup(const uint8_t value)
 	{
-		Byte[0] &= 0xF0;
-		Byte[0] |= Utility::LeastSignificantNibble(value);
+		SetLeastSignificantNibble(&Byte[0], value);
 	}
 
 	// Ump96 --------------------------------------------------------------------------------------------------
@@ -56,8 +59,7 @@ namespace Microsoft::Windows::Midi::Native
 
 	virtual void Ump96::setGroup(const uint8_t value)
 	{
-		Byte[0] &= 0xF0;
-		Byte[0] |= Utility::LeastSignificantNibble(value);
+		SetLeastSignificantNibble(&Byte[0], value);
 	}
 
 
@@ -75,8 +77,7 @@ namespace Microsoft::Windows::Midi::Native
 
 	virtual void Ump128::setGroup(const uint8_t value)
 	{
-		Byte[0] &= 0xF0;
-		Byte[0] |= Utility::LeastSignificantNibble(value);
+		SetLeastSignificantNibble(&Byte[0], value);
 	}
 
 }

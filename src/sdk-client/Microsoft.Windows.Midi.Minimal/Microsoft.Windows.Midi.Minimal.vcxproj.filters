@@ -36,6 +36,15 @@
     <ClInclude Include="WindowsMidiServicesClient.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="WindowsMidiServicesMessages.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsMidiServicesUmp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsMidiServicesUtility.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -51,9 +60,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MidiSession.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Ump.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Midi2ChannelVoiceMessages.cpp">
@@ -82,6 +88,9 @@
     </ClCompile>
     <ClCompile Include="Midi1PitchBendMessage.cpp">
       <Filter>Source Files\Messages\ChannelVoice\midi1</Filter>
+    </ClCompile>
+    <ClCompile Include="Ump.cpp">
+      <Filter>Source Files\Messages</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
