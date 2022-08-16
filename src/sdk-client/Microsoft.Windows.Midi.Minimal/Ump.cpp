@@ -10,7 +10,7 @@
 #include "WindowsMidiServicesUmp.h"
 #include "WindowsMidiServicesUtility.h"
 
-namespace Microsoft::Windows::Midi
+namespace Microsoft::Windows::Midi::Messages
 {
 
 	// Ump32 --------------------------------------------------------------------------------------------------

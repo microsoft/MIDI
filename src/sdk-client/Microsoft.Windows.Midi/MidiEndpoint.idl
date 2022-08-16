@@ -5,7 +5,7 @@ import "Ump.idl";
 // TODO: Needs to have CI data about groups & channels, including whether or not to 
 // send JR clock messages every 250ms or so
 
-namespace Microsoft.Windows.Midi.Devices
+namespace Microsoft.Windows.Midi
 {
     [default_interface]
     runtimeclass MidiEndpoint

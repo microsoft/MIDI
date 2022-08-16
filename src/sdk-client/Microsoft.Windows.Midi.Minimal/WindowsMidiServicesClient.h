@@ -104,11 +104,16 @@ namespace Microsoft::Windows::Midi
 		{
 		private:
 			struct impl;
+			impl* _pimpl;
+
+			//explicit MidiTransportInformation();
+			MidiTransportInformation(const MidiTransportInformation& info);	// don't copy
 		public:
-			MidiObjectId getId();				// Unique Id of the type of transport. Referenced by the device
-			char* getName();					// Name, like BLE, RTP, USB etc.
-			char* getLongName();				// Longer name like Bluetooth Low Energy MIDI 1.0
-			char* getIconFileName();			// Name, without path, of the image used to represent this type of transport
+			~MidiTransportInformation();
+			const MidiObjectId getId();				// Unique Id of the type of transport. Referenced by the device
+			const char8_t* getName();					// Name, like BLE, RTP, USB etc.
+			const char8_t* getLongName();				// Longer name like Bluetooth Low Energy MIDI 1.0
+			const wchar_t* getIconFileName();			// Name, without path, of the image used to represent this type of transport
 		};
 
 		// examples: Some synth, some controller
@@ -116,14 +121,18 @@ namespace Microsoft::Windows::Midi
 		{
 		private:
 			struct impl;
+			impl* _pimpl;
+
+			MidiDeviceInformation(const MidiDeviceInformation& info);	// don't copy
 		public:
+			~MidiDeviceInformation();
 			MidiObjectId getId();				// Unique Id of the device. Used in most MIDI messaging
 			MidiObjectId getTransportId();		// Uinque Id of the transport used by the device. For displaying appropriate name/icons
-			char* getName();					// Device name. May have been changed by the user through config tools
-			char* getDeviceSuppliedName();		// Device name as supplied by the device plug-in or driver
-			char* getSerial();					// If there's a unique serial number for the device, we track it here.
-			char* getIconFileName();			// Name, without path, of the image used to represent this specific device
-			char* getDescription();				// user-supplied long text description
+			const char8_t* getName();					// Device name. May have been changed by the user through config tools
+			const char8_t* getDeviceSuppliedName();		// Device name as supplied by the device plug-in or driver
+			const char8_t* getSerial();					// If there's a unique serial number for the device, we track it here.
+			const wchar_t* getIconFileName();			// Name, without path, of the image used to represent this specific device
+			const wchar_t* getDescription();			// user-supplied long text description
 		};
 
 		enum WINDOWSMIDISERVICES_API MidiEndpointType
@@ -141,14 +150,18 @@ namespace Microsoft::Windows::Midi
 		{
 		private:
 			struct impl;
+			impl* _pimpl;
+
+			MidiEndpointInformation(const MidiEndpointInformation& info);	// don't copy
 		public:
-			MidiObjectId getId();				// Unique Id of the endpoint. Used in most MIDI messaging
-			MidiObjectId getParentDeviceId();	// Unique Id of the parent device which owns this endpoint.
-			MidiEndpointType getEndpointType();	// Type of endpoint. Mostly used to differentiate unidirectional (like DIN) from bidirectional streams
-			char* getName();					// Name of this endpoint. May have been changed by the user through config tools.
-			char* getDeviceSuppliedName();		// Endpoint name as supplied by the device plug-in or driver
-			char* getIconFileName();			// Name, without path, of the image used to represent this specific endpoint
-			char* getDescription();				// Text description of the endpoint.
+			~MidiEndpointInformation();
+			const MidiObjectId getId();				// Unique Id of the endpoint. Used in most MIDI messaging
+			const MidiObjectId getParentDeviceId();	// Unique Id of the parent device which owns this endpoint.
+			const MidiEndpointType getEndpointType();	// Type of endpoint. Mostly used to differentiate unidirectional (like DIN) from bidirectional streams
+			const char8_t* getName();					// Name of this endpoint. May have been changed by the user through config tools.
+			const char8_t* getDeviceSuppliedName();		// Endpoint name as supplied by the device plug-in or driver
+			const wchar_t* getIconFileName();			// Name, without path, of the image used to represent this specific endpoint
+			const wchar_t* getDescription();				// Text description of the endpoint.
 		};
 
 		// ----------------------------------------------------------------------------
@@ -207,8 +220,12 @@ namespace Microsoft::Windows::Midi
 		{
 		private:
 			struct impl;
+			impl* _pimpl;
 
+			MidiEnumerator(const MidiEnumerator& info);	// don't copy
 		public:
+			~MidiEnumerator();
+
 			void Load();
 
 			const MidiTransportInformation& GetTransportInformation(MidiObjectId transportId);
@@ -234,11 +251,16 @@ namespace Microsoft::Windows::Midi
 	{
 	private:
 		struct impl;
+		impl* _pimpl;
+
+		MidiMessageReader(const MidiMessageReader& info);	// don't copy
 	public:
+		~MidiMessageReader();
+
 		bool eof();
-		int GetNextUmpWordCount();		// get the word count for the next message in the queue
-		Ump GetNextMessage();			// reads appropriate number of words from the queue
-		Ump PeekNextMessage();			// returns the next message but does not remove it
+		int GetNextUmpWordCount();			// get the word count for the next message in the queue
+		Messages::Ump GetNextMessage();		// reads appropriate number of words from the queue
+		Messages::Ump PeekNextMessage();	// returns the next message but does not remove it
 	};
 	
 	typedef WINDOWSMIDISERVICES_API void(*MidiMessagesReceivedCallback)(
@@ -277,7 +299,11 @@ namespace Microsoft::Windows::Midi
 	{
 	private:
 		struct impl;
+		impl* _pimpl;
+
+		MidiEndpoint(const MidiEndpoint& info);	// don't copy
 	public:
+		~MidiEndpoint();
 
 		const Enumeration::MidiEndpointInformation getInformation();
 
@@ -294,7 +320,12 @@ namespace Microsoft::Windows::Midi
 	{
 	private:
 		struct impl;
+		impl* _pimpl;
+
+		MidiDevice(const MidiDevice& info);	// don't copy
 	public:
+		~MidiDevice();
+
 		const Enumeration::MidiDeviceInformation getInformation();
 		//const std::vector<MidiEndpoint> getAllOpenEndpoints();
 		const MidiEndpoint getOpenEndpoint(const MidiObjectId& endpointId);
@@ -311,8 +342,8 @@ namespace Microsoft::Windows::Midi
 		MidiEndpoint OpenEndpoint(const MidiObjectId& endpointId, const MidiEndpointOpenOptions options);
 
 		// maybe these should live in the endpoint class instead of here
-		bool SendUmp(const Enumeration::MidiEndpointInformation& information, const Ump& message);
-		bool SendUmp(const MidiObjectId& endpointId, const Ump& message);
+		bool SendUmp(const Enumeration::MidiEndpointInformation& information, const Messages::Ump& message);
+		bool SendUmp(const MidiObjectId& endpointId, const Messages::Ump& message);
 
 		friend class MidiSession;	// TBD if this is necessary. Want to construct devices only through session class
 	};
@@ -331,19 +362,25 @@ namespace Microsoft::Windows::Midi
 	{
 	private:
 		struct impl;
-	public:
-		MidiObjectId GetId();
-		SYSTEMTIME GetCreatedDateTime();
+		impl* _pimpl ;
 
-		const char* GetName();
-		void UpdateName(const char* newName);		// this makes a server call
+		MidiSession();								// use the Create method to construct objects
+		MidiSession(const MidiSession& session);	// not copyable
+	public:
+		~MidiSession();
+
+		const MidiObjectId getId();
+		const SYSTEMTIME getCreatedDateTime();
+
+		const wchar_t* getName();
+		void UpdateName(const wchar_t* newName);		// this makes a server call
 
 
 		static MidiSession Create(const std::string& name, const std::string& appName, const MidiSessionCreateOptions& options);
 		static MidiSession Create(const std::string& name, const std::string& appName);
 
-		const std::vector<MidiDevice> getAllOpenDevices();
-		const MidiDevice getOpenDevice(MidiObjectId id);
+		//const std::vector<MidiDevice> getAllOpenDevices();
+		const MidiDevice GetOpenDevice(const MidiObjectId id);
 
 
 		MidiDevice OpenDevice(const MidiObjectId& deviceId, const MidiDeviceOpenOptions& options);
@@ -386,24 +423,24 @@ namespace Microsoft::Windows::Midi
 		static MidiServicesComponentVersion getClientApiVersion;
 
 		// returns true if the Windows MIDI Services service is installed
-		static bool getIsInstalled();
+		static const bool getIsInstalled();
 
 		// returns true if the SCM reports that the services are running
 		// It doesn't tell you if it's functioning properly
-		static bool getIsRunning();
+		static const bool getIsRunning();
 
 		// start the MIDI Service if it's not running. Should be unnecessary in most cases
-		static bool Start();		
+		static const bool Start();		
 
 		// pings the service. This will tell you if it is processing messages.
-		static MidiServicePingResponse Ping(MidiServicesComponentVersion& serverVersionReported);
+		static const MidiServicePingResponse Ping(MidiServicesComponentVersion& serverVersionReported);
 
-		static const char* getServicesInstallerUri();
+		static const char8_t* getServicesInstallerUri();
 
 		// Returns the full file name, including the path, for an icon. Useful
 		// for apps which want to show the icon in the app
-		static const char* BuildFullPathDeviceIconFilename(const char* iconFileName);
-		static const char* BuildFullPathEndpointIconFilename(const char* iconFileName);
-		static const char* BuildFullPathTransportIconFilename(const char* iconFileName);
+		static const wchar_t* BuildFullPathDeviceIconFilename(const wchar_t* iconFileName);
+		static const wchar_t* BuildFullPathEndpointIconFilename(const wchar_t* iconFileName);
+		static const wchar_t* BuildFullPathTransportIconFilename(const wchar_t* iconFileName);
 	};
 }

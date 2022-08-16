@@ -31,6 +31,12 @@
     <Filter Include="Source Files\Session">
       <UniqueIdentifier>{354d9856-fc0f-4b5e-92c8-a7faa41ae440}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Messages\Data">
+      <UniqueIdentifier>{aec7763f-ba3c-40bf-b357-04530e90bc62}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Messages\System">
+      <UniqueIdentifier>{a12afc1d-c7a1-42b2-ab28-3d819cbcac2d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">

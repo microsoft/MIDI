@@ -12,12 +12,63 @@ namespace Microsoft::Windows::Midi
 {
 	struct MidiSession::impl
 	{
-		MidiObjectId _id;
-		std::string _name;
-		SYSTEMTIME _createdDateTime;
+		MidiObjectId Id;
+		std::wstring Name;
+		SYSTEMTIME CreatedDateTime;
 
-		std::vector<MidiDevice> _openDevices;
+		std::map<MidiObjectId, MidiDevice> _openDevices;
+
+
 	};
+
+
+	const MidiObjectId MidiSession::getId()
+	{
+		return _pimpl->Id;
+	}
+
+	const SYSTEMTIME MidiSession::getCreatedDateTime()
+	{
+		return _pimpl->CreatedDateTime;
+	}
+
+	const wchar_t* MidiSession::getName()
+	{
+		return _pimpl->Name.c_str();
+	}
+
+	void MidiSession::UpdateName(const wchar_t* newName)
+	{
+		// TODO: Service call
+	}
+
+	const MidiDevice MidiSession::GetOpenDevice(MidiObjectId id)
+	{
+		// TODO: get device from the internal map
+
+	}
+
+	MidiDevice MidiSession::OpenDevice(const MidiObjectId& deviceId, const MidiDeviceOpenOptions& options)
+	{
+		// TODO: Service call
+
+	}
+
+	MidiDevice MidiSession::OpenDevice(const MidiObjectId& deviceId)
+	{
+		// TODO: Service call
+
+	}
+
+	MidiSession::MidiSession()
+	{
+		_pimpl = new impl;
+	}
+
+	MidiSession::~MidiSession()
+	{
+		delete _pimpl;
+	}
 
 
 

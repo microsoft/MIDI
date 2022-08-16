@@ -43,7 +43,7 @@
 #define WINDOWSMIDISERVICES_API __declspec(dllimport)
 #endif
 
-namespace Microsoft::Windows::Midi
+namespace Microsoft::Windows::Midi::Messages
 {
 
 	// Base message structure

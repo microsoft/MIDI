@@ -1,6 +1,6 @@
 import "MidiDeviceInformation.idl";
 
-namespace Microsoft.Windows.Midi.Devices
+namespace Microsoft.Windows.Midi
 {
     [default_interface]
     runtimeclass MidiDevice

@@ -135,12 +135,6 @@
     <Midl Include="MidiSession.idl">
       <Filter>api\Session</Filter>
     </Midl>
-    <Midl Include="MidiDevice.idl">
-      <Filter>api\Devices</Filter>
-    </Midl>
-    <Midl Include="MidiEndpoint.idl">
-      <Filter>api\Devices</Filter>
-    </Midl>
     <Midl Include="MidiSessionCreateOptions.idl">
       <Filter>api\Session</Filter>
     </Midl>
@@ -327,6 +321,12 @@
     <Midl Include="MidiService.idl">
       <Filter>api</Filter>
     </Midl>
+    <Midl Include="MidiDevice.idl">
+      <Filter>api\Session</Filter>
+    </Midl>
+    <Midl Include="MidiEndpoint.idl">
+      <Filter>api\Session</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="Microsoft_Windows_Midi.def" />
@@ -336,9 +336,6 @@
   <ItemGroup>
     <Filter Include="api">
       <UniqueIdentifier>{5b5e23b6-6bcf-4975-933f-12234453aee0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="api\Devices">
-      <UniqueIdentifier>{b467db02-a842-4f96-bf6a-2fb8f9f5f3ab}</UniqueIdentifier>
     </Filter>
     <Filter Include="api\Enumeration">
       <UniqueIdentifier>{7ac9693a-fe4a-44c1-a2f4-828bb67d13ed}</UniqueIdentifier>
