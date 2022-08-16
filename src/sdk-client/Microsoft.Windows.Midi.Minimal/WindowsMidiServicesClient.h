@@ -80,159 +80,172 @@
 #define WINDOWSMIDISERVICES_API __declspec(dllimport)
 #endif
 
-#include "WindowsMidiServicesUmp.h";
+#include "WindowsMidiServicesUmp.h"
 
 // TODO: May need to differentiate this namespace from the WinRT namespace
 namespace Microsoft::Windows::Midi
 {
-	// ----------------------------------------------------------------------------
-	// Enumeration
-	// ----------------------------------------------------------------------------
-
 	// GUIDs are used for IDs. If porting this to another platform, consider
 	// usig something like CrossGuid, taking an API dependency on boost, or
 	// simply redefining as necessary
 	// https://github.com/graeme-hill/crossguid
 
-	using MidiObjectId = GUID ;
+	using MidiObjectId = GUID;
 
-	// examples: USB, BLE, RTP
-	struct WINDOWSMIDISERVICES_API MidiTransportInformation
+
+	namespace Enumeration
 	{
-		MidiObjectId Id;					// Unique Id of the type of transport. Referenced by the device
-		std::string Name;					// Name, like BLE, RTP, USB etc.
-		std::string LongName;				// Longer name like Bluetooth Low Energy MIDI 1.0
-		std::string IconFileName;			// Name, without path, of the image used to represent this type of transport
-		std::string Description;			// Text description of the transport. 
-	};
+		// ----------------------------------------------------------------------------
+		// Enumeration
+		// ----------------------------------------------------------------------------
 
-	// examples: Some synth, some controller
-	struct WINDOWSMIDISERVICES_API MidiDeviceInformation
-	{
-		MidiObjectId Id;					// Unique Id of the device. Used in most MIDI messaging
-		MidiObjectId TransportId;			// Uinque Id of the transport used by the device. For displaying appropriate name/icons
-		std::string Name;					// Device name. May have been changed by the user through config tools
-		std::string DeviceSuppliedName;		// Device name as supplied by the device plug-in or driver
-		std::string Serial;					// If there's a unique serial number for the device, we track it here.
-		std::string IconFileName;			// Name, without path, of the image used to represent this specific device
-		std::string Description;			// Text description of the device. 
-	};
+		// examples: USB, BLE, RTP
+		class WINDOWSMIDISERVICES_API MidiTransportInformation
+		{
+		private:
+			struct impl;
+		public:
+			MidiObjectId getId();				// Unique Id of the type of transport. Referenced by the device
+			char* getName();					// Name, like BLE, RTP, USB etc.
+			char* getLongName();				// Longer name like Bluetooth Low Energy MIDI 1.0
+			char* getIconFileName();			// Name, without path, of the image used to represent this type of transport
+		};
 
-	enum WINDOWSMIDISERVICES_API MidiEndpointType
-	{
-		MidiOut = 0,
-		MidiIn = 1,
-		Bidirectional = 2
-	};
+		// examples: Some synth, some controller
+		class WINDOWSMIDISERVICES_API MidiDeviceInformation
+		{
+		private:
+			struct impl;
+		public:
+			MidiObjectId getId();				// Unique Id of the device. Used in most MIDI messaging
+			MidiObjectId getTransportId();		// Uinque Id of the transport used by the device. For displaying appropriate name/icons
+			char* getName();					// Device name. May have been changed by the user through config tools
+			char* getDeviceSuppliedName();		// Device name as supplied by the device plug-in or driver
+			char* getSerial();					// If there's a unique serial number for the device, we track it here.
+			char* getIconFileName();			// Name, without path, of the image used to represent this specific device
+			char* getDescription();				// user-supplied long text description
+		};
 
-	// for USB-connected single devices, an endpoint is typically synonomous
-	// with the device but for devices which provide other endpoints (like a
-	// synth with multiple DIN MIDI ports, or other USB or network ports), 
-	// device:endpoint relationship is a 1:1 to 1:many relationship
-	struct WINDOWSMIDISERVICES_API MidiEndpointInformation final
-	{
-		MidiObjectId Id;					// Unique Id of the endpoint. Used in most MIDI messaging
-		MidiObjectId ParentDeviceId;		// Unique Id of the parent device which owns this endpoint.
-		MidiEndpointType EndpointType;		// Type of endpoint. Mostly used to differentiate unidirectional (like DIN) from bidirectional streams
-		std::string Name;					// Name of this endpoint. May have been changed by the user through config tools.
-		std::string DeviceSuppliedName;		// Endpoint name as supplied by the device plug-in or driver
-		std::string IconFileName;			// Name, without path, of the image used to represent this specific endpoint
-		std::string Description;			// Text description of the endpoint.
-	};
+		enum WINDOWSMIDISERVICES_API MidiEndpointType
+		{
+			MidiEndpointTypeOutput = 0,
+			MidiEndpointTypeInput = 1,
+			MidiEndpointTypeBidirectional = 2
+		};
 
-	// ----------------------------------------------------------------------------
-	// Enumeration change callbacks / delegates
-	// ----------------------------------------
-	// In previous versions of Windows MIDI APIs, like WinMM or WinRT MIDI, devices
-	// and ports could be added or removed, but generally did not otherwise change. 
-	// In this version, and in MIDI 2.0 in general, devices, endpoints, and more
-	// can change properties at any time. Those changes may be due to MIDI CI
-	// notifications, or user action. 
-	// 
-	// We encourage developers to track when devices/endpoints are added or removed, 
-	// or when properties of those devices/endpoints/etc change. 
-	// 
-	// The API objects themselves will be automatically updated as a result of 
-	// these change notifications.
-	// ----------------------------------------------------------------------------
+		// for USB-connected single devices, an endpoint is typically synonomous
+		// with the device but for devices which provide other endpoints (like a
+		// synth with multiple DIN MIDI ports, or other USB or network ports), 
+		// device:endpoint relationship is a 1:1 to 1:many relationship
+		class WINDOWSMIDISERVICES_API MidiEndpointInformation final
+		{
+		private:
+			struct impl;
+		public:
+			MidiObjectId getId();				// Unique Id of the endpoint. Used in most MIDI messaging
+			MidiObjectId getParentDeviceId();	// Unique Id of the parent device which owns this endpoint.
+			MidiEndpointType getEndpointType();	// Type of endpoint. Mostly used to differentiate unidirectional (like DIN) from bidirectional streams
+			char* getName();					// Name of this endpoint. May have been changed by the user through config tools.
+			char* getDeviceSuppliedName();		// Endpoint name as supplied by the device plug-in or driver
+			char* getIconFileName();			// Name, without path, of the image used to represent this specific endpoint
+			char* getDescription();				// Text description of the endpoint.
+		};
 
-	typedef WINDOWSMIDISERVICES_API std::function<void(
-		const MidiTransportInformation& information)> MidiTransportAddedCallback;
+		// ----------------------------------------------------------------------------
+		// Enumeration change callbacks / delegates
+		// ----------------------------------------
+		// In previous versions of Windows MIDI APIs, like WinMM or WinRT MIDI, devices
+		// and ports could be added or removed, but generally did not otherwise change. 
+		// In this version, and in MIDI 2.0 in general, devices, endpoints, and more
+		// can change properties at any time. Those changes may be due to MIDI CI
+		// notifications, or user action. 
+		// 
+		// We encourage developers to track when devices/endpoints are added or removed, 
+		// or when properties of those devices/endpoints/etc change. 
+		// 
+		// The API objects themselves will be automatically updated as a result of 
+		// these change notifications.
+		// ----------------------------------------------------------------------------
 
-	typedef WINDOWSMIDISERVICES_API std::function<void(
-		const MidiTransportInformation& information)> MidiTransportRemovedCallback;
+		typedef WINDOWSMIDISERVICES_API std::function<void(
+			const MidiTransportInformation& information)> MidiTransportAddedCallback;
 
-	typedef WINDOWSMIDISERVICES_API std::function<void(
-		const MidiTransportInformation& oldInformation,
-		const MidiTransportInformation& newInformation)> MidiTransportChangedCallback;
+		typedef WINDOWSMIDISERVICES_API std::function<void(
+			const MidiTransportInformation& information)> MidiTransportRemovedCallback;
 
-
-	typedef WINDOWSMIDISERVICES_API std::function<void(
-		const MidiDeviceInformation& information)> MidiDeviceAddedCallback;
-
-	typedef WINDOWSMIDISERVICES_API std::function<void(
-		const MidiDeviceInformation& information)> MidiDeviceRemovedCallback;
-
-	typedef WINDOWSMIDISERVICES_API std::function<void(
-		const MidiDeviceInformation& oldInformation,
-		const MidiDeviceInformation& newInformation)> MidiDeviceChangedCallback;
-
-
-	typedef WINDOWSMIDISERVICES_API std::function<void(
-		const MidiEndpointInformation& fnformation)> MidiEndpointAddedCallback;
-
-	typedef WINDOWSMIDISERVICES_API std::function<void(
-		const MidiEndpointInformation& information)> MidiEndpointRemovedCallback;
-
-	typedef WINDOWSMIDISERVICES_API std::function<void(
-		const MidiEndpointInformation& oldInformation,
-		const MidiEndpointInformation& newInformation)> MidiEndpointChangedCallback;
+		typedef WINDOWSMIDISERVICES_API std::function<void(
+			const MidiTransportInformation& oldInformation,
+			const MidiTransportInformation& newInformation)> MidiTransportChangedCallback;
 
 
+		typedef WINDOWSMIDISERVICES_API std::function<void(
+			const MidiDeviceInformation& information)> MidiDeviceAddedCallback;
 
-	// Enumerator class. Responsible for exposing information about every device
-	// and endpoint known to the system.
-	class WINDOWSMIDISERVICES_API MidiEnumerator final
-	{
-	private:
-		// device id, device info
-		std::map<MidiObjectId, MidiTransportInformation> _transports;
+		typedef WINDOWSMIDISERVICES_API std::function<void(
+			const MidiDeviceInformation& information)> MidiDeviceRemovedCallback;
 
-		// device id, device info
-		std::map<MidiObjectId, MidiDeviceInformation> _devices;
-
-		// device id, endpoint id, endpoint info
-		std::map<std::pair<MidiObjectId, MidiObjectId>, MidiEndpointInformation> _endpoints;
-
-		// TODO: Will need to provide a hash function for the above. 
-		// Could use boost hash_combine or hash_value for std::pair
-		// old example: https://stackoverflow.com/questions/32685540/why-cant-i-compile-an-unordered-map-with-a-pair-as-key
-
-	public:
-		void Load();
-
-		const MidiTransportInformation& GetTransportInformation(MidiObjectId transportId);
-		const MidiDeviceInformation& GetDeviceInformation(MidiObjectId deviceId);
-		const MidiDeviceInformation& GetEndpointInformation(MidiObjectId deviceId, MidiObjectId endpointId);
+		typedef WINDOWSMIDISERVICES_API std::function<void(
+			const MidiDeviceInformation& oldInformation,
+			const MidiDeviceInformation& newInformation)> MidiDeviceChangedCallback;
 
 
-		void SubscribeToTransportChangeNotifications(const MidiTransportAddedCallback& addedCallback, const MidiTransportRemovedCallback& removedCallback, const MidiTransportChangedCallback& changedCallback);
-		void SubscribeToDeviceChangeNotifications(const MidiDeviceAddedCallback& addedCallback, const MidiDeviceRemovedCallback& removedCallback, const MidiDeviceChangedCallback& changedCallback);
-		void SubscribeToEndpointChangeNotifications(const MidiEndpointAddedCallback& addedCallback, const MidiEndpointRemovedCallback& removedCallback, const MidiEndpointChangedCallback& changedCallback);
-	};
+		typedef WINDOWSMIDISERVICES_API std::function<void(
+			const MidiEndpointInformation& information)> MidiEndpointAddedCallback;
+
+		typedef WINDOWSMIDISERVICES_API std::function<void(
+			const MidiEndpointInformation& information)> MidiEndpointRemovedCallback;
+
+		typedef WINDOWSMIDISERVICES_API std::function<void(
+			const MidiEndpointInformation& oldInformation,
+			const MidiEndpointInformation& newInformation)> MidiEndpointChangedCallback;
+
+
+
+		// Enumerator class. Responsible for exposing information about every device
+		// and endpoint known to the system.
+		class WINDOWSMIDISERVICES_API MidiEnumerator final
+		{
+		private:
+			struct impl;
+
+		public:
+			void Load();
+
+			const MidiTransportInformation& GetTransportInformation(MidiObjectId transportId);
+			const MidiDeviceInformation& GetDeviceInformation(MidiObjectId deviceId);
+			const MidiDeviceInformation& GetEndpointInformation(MidiObjectId deviceId, MidiObjectId endpointId);
+
+			// TODO: Provide functions that return all of the transports/etc. for proper enumeration (without exporting STL types)
+
+
+			void SubscribeToTransportChangeNotifications(const MidiTransportAddedCallback& addedCallback, const MidiTransportRemovedCallback& removedCallback, const MidiTransportChangedCallback& changedCallback);
+			void SubscribeToDeviceChangeNotifications(const MidiDeviceAddedCallback& addedCallback, const MidiDeviceRemovedCallback& removedCallback, const MidiDeviceChangedCallback& changedCallback);
+			void SubscribeToEndpointChangeNotifications(const MidiEndpointAddedCallback& addedCallback, const MidiEndpointRemovedCallback& removedCallback, const MidiEndpointChangedCallback& changedCallback);
+		};
+
+	}
 
 
 	// ----------------------------------------------------------------------------
 	// MIDI Message received callback / delegate
 	// ----------------------------------------------------------------------------
 
-	// We may try a few different approaches here with the message buffer, to try to reduce
-	// data copies and maximize performance
-	typedef WINDOWSMIDISERVICES_API std::function<void(
+	class WINDOWSMIDISERVICES_API MidiMessageReader
+	{
+	private:
+		struct impl;
+	public:
+		bool eof();
+		int GetNextUmpWordCount();		// get the word count for the next message in the queue
+		Ump GetNextMessage();			// reads appropriate number of words from the queue
+		Ump PeekNextMessage();			// returns the next message but does not remove it
+	};
+	
+	typedef WINDOWSMIDISERVICES_API void(*MidiMessagesReceivedCallback)(
 						const MidiObjectId& sessionId,
 						const MidiObjectId& deviceId,
 						const MidiObjectId& endpointId,
-						std::vector<Ump> messages)> MidiMessagesReceivedCallback;
+						const MidiMessageReader& reader) ;
 
 
 	// ----------------------------------------------------------------------------
@@ -263,17 +276,10 @@ namespace Microsoft::Windows::Midi
 	class WINDOWSMIDISERVICES_API MidiEndpoint final
 	{
 	private:
-		MidiEndpointInformation Information;
-		MidiMessagesReceivedCallback _messagesReceivedCallback;
-
-		MidiEndpoint(const MidiEndpointInformation& information, const MidiMessagesReceivedCallback& messagesReceivedCallback);
-		MidiEndpoint(const MidiEndpointInformation& information);
-
-		// TODO: Vector of groups / channels / function blocks / protocol versions / other MIDI CI information
-
+		struct impl;
 	public:
 
-		const MidiEndpointInformation getInformation();
+		const Enumeration::MidiEndpointInformation getInformation();
 
 		friend class MidiDevice;	// TBD if this is necessary. Want to construct endpoints only through device class
 
@@ -287,15 +293,10 @@ namespace Microsoft::Windows::Midi
 	class WINDOWSMIDISERVICES_API MidiDevice final
 	{
 	private:
-		MidiDeviceInformation Information;
-
-		std::vector<MidiEndpoint> _openEndpoints;
-
-		MidiDevice(MidiDeviceInformation information);
-
+		struct impl;
 	public:
-		const MidiDeviceInformation getInformation();
-		const std::vector<MidiEndpoint> getAllOpenEndpoints();
+		const Enumeration::MidiDeviceInformation getInformation();
+		//const std::vector<MidiEndpoint> getAllOpenEndpoints();
 		const MidiEndpoint getOpenEndpoint(const MidiObjectId& endpointId);
 
 		// session sets these when you open the device
@@ -303,14 +304,14 @@ namespace Microsoft::Windows::Midi
 		void setParentSessionID(const MidiObjectId sessionId);
 
 
-		MidiEndpoint OpenEndpoint(const MidiEndpointInformation& endpointInformation, const MidiEndpointOpenOptions options, const MidiMessagesReceivedCallback& messagesReceivedCallback);
-		MidiEndpoint OpenEndpoint(const MidiEndpointInformation& endpointInformation, const MidiEndpointOpenOptions options);
+		MidiEndpoint OpenEndpoint(const Enumeration::MidiEndpointInformation& endpointInformation, const MidiEndpointOpenOptions options, const MidiMessagesReceivedCallback& messagesReceivedCallback);
+		MidiEndpoint OpenEndpoint(const Enumeration::MidiEndpointInformation& endpointInformation, const MidiEndpointOpenOptions options);
 
 		MidiEndpoint OpenEndpoint(const MidiObjectId& endpointId, const MidiEndpointOpenOptions options, const MidiMessagesReceivedCallback& messagesReceivedCallback);
 		MidiEndpoint OpenEndpoint(const MidiObjectId& endpointId, const MidiEndpointOpenOptions options);
 
 		// maybe these should live in the endpoint class instead of here
-		bool SendUmp(const MidiEndpointInformation& information, const Ump& message);
+		bool SendUmp(const Enumeration::MidiEndpointInformation& information, const Ump& message);
 		bool SendUmp(const MidiObjectId& endpointId, const Ump& message);
 
 		friend class MidiSession;	// TBD if this is necessary. Want to construct devices only through session class
@@ -329,13 +330,15 @@ namespace Microsoft::Windows::Midi
 	class WINDOWSMIDISERVICES_API MidiSession final
 	{
 	private:
-		MidiObjectId _id;
-		std::string _name;
-		SYSTEMTIME _createdDateTime;
-
-		std::vector<MidiDevice> _openDevices;
-
+		struct impl;
 	public:
+		MidiObjectId GetId();
+		SYSTEMTIME GetCreatedDateTime();
+
+		const char* GetName();
+		void UpdateName(const char* newName);		// this makes a server call
+
+
 		static MidiSession Create(const std::string& name, const std::string& appName, const MidiSessionCreateOptions& options);
 		static MidiSession Create(const std::string& name, const std::string& appName);
 
@@ -346,21 +349,10 @@ namespace Microsoft::Windows::Midi
 		MidiDevice OpenDevice(const MidiObjectId& deviceId, const MidiDeviceOpenOptions& options);
 		MidiDevice OpenDevice(const MidiObjectId& deviceId);
 
-
 		// TODO: Events/callbacks for message receive
 
-		// TODO: vector of open devices/endpoints
+		// TODO: enumerator for open devices/endpoints
 
-		// TODO: Need to decide if the JR timestamps are handled internally and 
-		// automatically. Needs CI negotiation and the right clock source.
-	//	void SendUmpWithJRTimestamp(MidiEndpointInformation information, MidiJitterReductionTimestampMessage timestamp, Ump message);
-	//	void SendUmpWithJRTimestamp(GUID deviceId, GUID endpointId, MidiJitterReductionTimestampMessage timestamp, Ump message);
-
-		MidiObjectId GetId();
-		SYSTEMTIME GetCreatedDateTime();
-
-		const std::string GetName();
-		void UpdateName(const std::string& newName);		// this makes a server call
 	};
 
 
@@ -371,9 +363,9 @@ namespace Microsoft::Windows::Midi
 
 	enum WINDOWSMIDISERVICES_API MidiServicePingResponse
 	{
-		Pong,
-		TimeOut,
-		Error
+		MidiServicePingPong,
+		MidiServicePingTimeOut,
+		MidiServicePingError
 	};
 
 
@@ -406,12 +398,12 @@ namespace Microsoft::Windows::Midi
 		// pings the service. This will tell you if it is processing messages.
 		static MidiServicePingResponse Ping(MidiServicesComponentVersion& serverVersionReported);
 
-		static const std::string getServicesInstallerUri();
+		static const char* getServicesInstallerUri();
 
 		// Returns the full file name, including the path, for an icon. Useful
 		// for apps which want to show the icon in the app
-		static const std::filesystem::path BuildFullPathDeviceIconFilename(const std::string& iconFileName);
-		static const std::filesystem::path BuildFullPathEndpointIconFilename(const std::string& iconFileName);
-		static const std::filesystem::path BuildFullPathTransportIconFilename(const std::string& iconFileName);
+		static const char* BuildFullPathDeviceIconFilename(const char* iconFileName);
+		static const char* BuildFullPathEndpointIconFilename(const char* iconFileName);
+		static const char* BuildFullPathTransportIconFilename(const char* iconFileName);
 	};
 }

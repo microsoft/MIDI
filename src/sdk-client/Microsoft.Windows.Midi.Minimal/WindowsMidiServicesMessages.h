@@ -30,7 +30,7 @@
 #define WINDOWSMIDISERVICES_API __declspec(dllimport)
 #endif
 
-#include "WindowsMidiServicesUmp.h";
+#include "WindowsMidiServicesUmp.h"
 
 namespace Microsoft::Windows::Midi::Messages
 {
@@ -183,8 +183,11 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 		const uint8_t MessageType = 0x4;
 
+		const uint8_t getOpcode();
+
 		const uint8_t getChannel();
 		void setChannel(const uint8_t value);
+
 	};
 
 	// Protocol spec 4.2.1. MIDI 2.0 note off message. See notes on MIDI 2.0 note attributes
@@ -196,11 +199,21 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 		const uint8_t Opcode = 0x8;
 
-	//conversion method. Uses MIDI 1.0 rules
-	static Midi2NoteOffMessage FromMidi1Bytes(const uint8_t group, const uint8_t statusByte, const uint8_t noteNumberByte, const uint8_t velocityByte);
-	static Midi2NoteOffMessage FromValues(const uint8_t group, const uint8_t channel, const uint8_t noteNumber, const uint8_t attributeType, const uint16_t velocity, const uint16_t attributeData);
+		const uint8_t getNoteNumber();
+		void setNoteNumber(const uint8_t value);
 
-	// TODO fill this out
+		const uint8_t getAttributeType();
+		void setAttributeType(const uint8_t value);
+
+		const uint16_t getVelocity();
+		void setVelocity(const uint16_t value);
+
+		const uint16_t getAttributeData();
+		void setAttributeData(const uint16_t value);
+
+		//conversion method. Uses MIDI 1.0 rules
+		static Midi2NoteOffMessage FromMidi1Bytes(const uint8_t group, const uint8_t statusByte, const uint8_t noteNumberByte, const uint8_t velocityByte);
+		static Midi2NoteOffMessage FromValues(const uint8_t group, const uint8_t channel, const uint8_t noteNumber, const uint8_t attributeType, const uint16_t velocity, const uint16_t attributeData);
 	};
 
 	// Protocol spec 4.2.2. MIDI 2.0 note on message. See notes on MIDI 2.0 note attributes
@@ -212,11 +225,21 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 		const uint8_t Opcode = 0x9;
 
-	//conversion method. Uses MIDI 1.0 rules
-	static Midi2NoteOnMessage FromMidi1Bytes(const uint8_t group, const uint8_t statusByte, const uint8_t noteNumberByte, const uint8_t velocityByte);
-	static Midi2NoteOnMessage FromValues(const uint8_t group, const uint8_t channel, const uint8_t noteNumber, const uint8_t attributeType, const uint16_t velocity, const uint16_t attributeData);
+		const uint8_t getNoteNumber();
+		void setNoteNumber(const uint8_t value);
 
-	// TODO fill this out
+		const uint8_t getAttributeType();
+		void setAttributeType(const uint8_t value);
+
+		const uint16_t getVelocity();
+		void setVelocity(const uint16_t value);
+
+		const uint16_t getAttributeData();
+		void setAttributeData(const uint16_t value);
+
+		//conversion method. Uses MIDI 1.0 rules
+		static Midi2NoteOnMessage FromMidi1Bytes(const uint8_t group, const uint8_t statusByte, const uint8_t noteNumberByte, const uint8_t velocityByte);
+		static Midi2NoteOnMessage FromValues(const uint8_t group, const uint8_t channel, const uint8_t noteNumber, const uint8_t attributeType, const uint16_t velocity, const uint16_t attributeData);
 	};
 
 	// Protocol spec 4.2.3. MIDI 2.0 polyphonic pressure (aftertouch) message.
@@ -227,10 +250,14 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 		const uint8_t Opcode = 0xA;
 
+		const uint8_t getNoteNumber();
+		void setNoteNumber(const uint8_t value);
+
+		const uint32_t getData();
+		void setData(const uint32_t value);
+
+
 		static Midi2PolyPressureMessage FromValues(const uint8_t group, const uint8_t channel, const uint8_t noteNumber, const uint32_t data);
-
-
-		// TODO fill this out
 	};
 
 	// Protocol spec 4.2.4. MIDI 2.0 registered per-note controller message.
@@ -241,9 +268,16 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 		const uint8_t Opcode = 0x0;
 
-		static Midi2RegisteredPerNoteControllerMessage FromValues(const uint8_t group, const uint8_t channel, const uint8_t noteNumber, const uint8_t index, const uint32_t data);
+		const uint8_t getNoteNumber();
+		void setNoteNumber(const uint8_t value);
 
-		// TODO fill this out
+		const uint8_t getIndex();
+		void setIndex(const uint8_t value);
+
+		const uint32_t getData();
+		void setData(const uint32_t value);
+
+		static Midi2RegisteredPerNoteControllerMessage FromValues(const uint8_t group, const uint8_t channel, const uint8_t noteNumber, const uint8_t index, const uint32_t data);
 	};
 
 	// Protocol spec 4.2.4. MIDI 2.0 assignable per-note controller message.
@@ -254,9 +288,17 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 		const uint8_t Opcode = 0x1;
 
-		static Midi2AssignablePerNoteControllerMessage FromValues(const uint8_t group, const uint8_t channel, const uint8_t noteNumber, const uint8_t index, const uint32_t data);
+		const uint8_t getNoteNumber();
+		void setNoteNumber(const uint8_t value);
 
-		// TODO fill this out
+		const uint8_t getIndex();
+		void setIndex(const uint8_t value);
+
+		const uint32_t getData();
+		void setData(const uint32_t value);
+
+
+		static Midi2AssignablePerNoteControllerMessage FromValues(const uint8_t group, const uint8_t channel, const uint8_t noteNumber, const uint8_t index, const uint32_t data);
 	};
 
 	// Protocol spec 4.2.5. MIDI 2.0 per-note management message.
@@ -267,10 +309,14 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 		const uint8_t Opcode = 0xF;
 
-		static Midi2AssignablePerNoteControllerMessage FromValues(const uint8_t group, const uint8_t channel, const uint8_t noteNumber, const uint8_t optionFlags);
+		const uint8_t getNoteNumber();
+		void setNoteNumber(const uint8_t value);
 
+		const uint8_t getOptionFlags();
+		void setOptionFlags(const uint8_t value);
 
-		// TODO fill this out
+	
+		static Midi2PerNoteManagementMessage FromValues(const uint8_t group, const uint8_t channel, const uint8_t noteNumber, const uint8_t optionFlags);
 	};
 
 	// Protocol spec 4.2.6. MIDI 2.0 control change message.
@@ -281,10 +327,13 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 		const uint8_t Opcode = 0xB;
 
+		const uint8_t getIndex();
+		void setIndex(const uint8_t value);
+
+		const uint32_t getData();
+		void setData(const uint32_t value);
+
 		static Midi2ControlChangeMessage FromValues(const uint8_t group, const uint8_t channel, const uint8_t index, const uint32_t data);
-
-
-		// TODO fill this out
 	};
 
 	// Protocol spec 4.2.7. MIDI 2.0 registered (RPN) controller message.
@@ -295,10 +344,16 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 		const uint8_t Opcode = 0x2;
 
+		const uint8_t getBank();
+		void setBank(const uint8_t value);
+
+		const uint8_t getIndex();
+		void setIndex(const uint8_t value);
+
+		const uint32_t getData();
+		void setData(const uint32_t value);
+	
 		static Midi2RegisteredControllerMessage FromValues(const uint8_t group, const uint8_t channel, const uint8_t bank, const uint8_t index, const uint32_t data);
-
-
-		// TODO fill this out
 	};
 
 	// Protocol spec 4.2.7. MIDI 2.0 assignable (NRPN) controller message.
@@ -309,10 +364,16 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 		const uint8_t Opcode = 0x3;
 
+		const uint8_t getBank();
+		void setBank(const uint8_t value);
+
+		const uint8_t getIndex();
+		void setIndex(const uint8_t value);
+
+		const uint32_t getData();
+		void setData(const uint32_t value);
+
 		static Midi2AssignableControllerMessage FromValues(const uint8_t group, const uint8_t channel, const uint8_t bank, const uint8_t index, const uint32_t data);
-
-
-		// TODO fill this out
 	};
 
 	// Protocol spec 4.2.8. MIDI 2.0 relative registered (R-RPN) controller message.
@@ -323,10 +384,16 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 		const uint8_t Opcode = 0x4;
 
+		const uint8_t getBank();
+		void setBank(const uint8_t value);
+
+		const uint8_t getIndex();
+		void setIndex(const uint8_t value);
+
+		const uint32_t getData();
+		void setData(const uint32_t value);
+
 		static Midi2RelativeRegisteredControllerMessage FromValues(const uint8_t group, const uint8_t channel, const uint8_t bank, const uint8_t index, const uint32_t data);
-
-
-		// TODO fill this out
 	};
 
 	// Protocol spec 4.2.8. MIDI 2.0 relative assignable (R-NRPN) controller message.
@@ -337,10 +404,16 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 		const uint8_t Opcode = 0x5;
 
+		const uint8_t getBank();
+		void setBank(const uint8_t value);
+
+		const uint8_t getIndex();
+		void setIndex(const uint8_t value);
+
+		const uint32_t getData();
+		void setData(const uint32_t value);
+	
 		static Midi2RelativeAssignableControllerMessage FromValues(const uint8_t group, const uint8_t channel, const uint8_t bank, const uint8_t index, const uint32_t data);
-
-
-		// TODO fill this out
 	};
 
 	// Protocol spec 4.2.9. MIDI 2.0 program change message.
@@ -354,9 +427,20 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 		const uint8_t Opcode = 0xC;
 
-		static Midi2ProgramChangeMessage FromValues(const uint8_t group, const uint8_t channel, const uint8_t optionFlags, const uint8_t program, const uint8_t bankMsb, const uint8_t bankLsb);
+		const uint8_t getOptionFlags();
+		void setOptionFlags(const uint8_t value);
 
-		// TODO fill this out
+		const uint8_t getProgram();
+		void setProgram(const uint8_t value);
+
+		const uint8_t getBankMsb();
+		void setBankMsb(const uint8_t value);
+
+		const uint8_t getBankLsb();
+		void setBankLsb(const uint8_t value);
+
+
+		static Midi2ProgramChangeMessage FromValues(const uint8_t group, const uint8_t channel, const uint8_t optionFlags, const uint8_t program, const uint8_t bankMsb, const uint8_t bankLsb);
 	};
 
 	// Protocol spec 4.2.10. MIDI 2.0 channel pressure (aftertouch) message.
@@ -367,9 +451,10 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 		const uint8_t Opcode = 0xD;
 
+		const uint32_t getData();
+		void setData(const uint32_t value);
+	
 		static Midi2ChannelPressureMessage FromValues(const uint8_t group, const uint8_t channel, const uint32_t data);
-
-		// TODO fill this out
 	};
 
 	// Protocol spec 4.2.11. MIDI 2.0 channel pitch bend message.
@@ -380,9 +465,10 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 		const uint8_t Opcode = 0xE;
 
+		const uint32_t getData();
+		void setData(const uint32_t value);
+	
 		static Midi2PitchBendMessage FromValues(const uint8_t group, const uint8_t channel, const uint32_t data);
-
-		// TODO fill this out
 	};
 
 	// Protocol spec 4.2.12. MIDI 2.0 per-note pitch bend message.
@@ -393,9 +479,13 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 		const uint8_t Opcode = 0x6;
 
-		static Midi2PerNotePitchBendMessage FromValues(const uint8_t group, const uint8_t channel, const uint8_t noteNumber, const uint32_t data);
+		const uint8_t getNoteNumber();
+		void setNoteNumber(const uint8_t value);
 
-		// TODO fill this out
+		const uint32_t getData();
+		void setData(const uint32_t value);
+	
+		static Midi2PerNotePitchBendMessage FromValues(const uint8_t group, const uint8_t channel, const uint8_t noteNumber, const uint32_t data);
 	};
 
 
@@ -407,10 +497,10 @@ namespace Microsoft::Windows::Midi::Messages
 	// Status nibble for a 7 bit sysex message
 	enum WINDOWSMIDISERVICES_API SystemExclusive7MessageStatus
 	{
-		CompleteInOneUmp = 0x0,
-		StartUmp = 0x1,
-		ContinueUmp = 0x2,
-		EndUmp = 0x3
+		SysEx7CompleteInOneUmp = 0x0,
+		SysEx7StartUmp = 0x1,
+		SysEx7ContinueUmp = 0x2,
+		SysEx7EndUmp = 0x3
 	};
 
 
@@ -432,10 +522,10 @@ namespace Microsoft::Windows::Midi::Messages
 	// Status nibble for an 8 bit sysex message
 	enum WINDOWSMIDISERVICES_API SystemExclusive8MessageStatus
 	{
-		CompleteInOneUmp = 0x0,
-		StartUmp = 0x1,
-		ContinueUmp = 0x2,
-		EndUmp = 0x3
+		SysEx8CompleteInOneUmp = 0x0,
+		SysEx8StartUmp = 0x1,
+		SysEx8ContinueUmp = 0x2,
+		SysEx8EndUmp = 0x3
 	};
 
 	// MIDI 2 8-bit system exclusive message. Recommended for new implementations

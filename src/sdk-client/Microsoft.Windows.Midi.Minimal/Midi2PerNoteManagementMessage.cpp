@@ -10,25 +10,30 @@
 
 namespace Microsoft::Windows::Midi::Messages
 {
-	const uint8_t Midi1ProgramChangeMessage::getProgram()
+	const uint8_t Midi2PerNoteManagementMessage::getNoteNumber()
 	{
 		return 0;
 	}
 
-	void Midi1ProgramChangeMessage::setProgram(const uint8_t value)
+	void Midi2PerNoteManagementMessage::setNoteNumber(const uint8_t value)
 	{
 	}
 
-	Midi1ProgramChangeMessage Midi1ProgramChangeMessage::FromMidi1Bytes(const uint8_t group, const uint8_t statusByte, const uint8_t programByte)
+	const uint8_t Midi2PerNoteManagementMessage::getOptionFlags()
 	{
-		Midi1ProgramChangeMessage msg;
+		return 0;
+	}
+
+	void Midi2PerNoteManagementMessage::setOptionFlags(const uint8_t value)
+	{
+	}
+
+	Midi2PerNoteManagementMessage Midi2PerNoteManagementMessage::FromValues(const uint8_t group, const uint8_t channel, const uint8_t noteNumber, const uint8_t optionFlags)
+	{
+		Midi2PerNoteManagementMessage msg;
 		return msg;
-
 	}
 
-	Midi1ProgramChangeMessage Midi1ProgramChangeMessage::FromValues(const uint8_t group, const uint8_t channel, const uint8_t program)
-	{
-		Midi1ProgramChangeMessage msg;
-		return msg;
-	}
+
+
 }

@@ -10,25 +10,31 @@
 
 namespace Microsoft::Windows::Midi::Messages
 {
-	const uint8_t Midi1ProgramChangeMessage::getProgram()
+
+	const uint8_t Midi2ChannelVoiceMessage::getOpcode()
 	{
-		return 0;
+		return Utility::MostSignificantNibble(Byte[1]);
 	}
 
-	void Midi1ProgramChangeMessage::setProgram(const uint8_t value)
+	const uint8_t Midi2ChannelVoiceMessage::getChannel()
 	{
+		return Utility::LeastSignificantNibble(Byte[1]);
 	}
 
-	Midi1ProgramChangeMessage Midi1ProgramChangeMessage::FromMidi1Bytes(const uint8_t group, const uint8_t statusByte, const uint8_t programByte)
+	void Midi2ChannelVoiceMessage::setChannel(const uint8_t value)
 	{
-		Midi1ProgramChangeMessage msg;
-		return msg;
-
+		Utility::SetLeastSignificantNibble(Byte[1], value);
 	}
 
-	Midi1ProgramChangeMessage Midi1ProgramChangeMessage::FromValues(const uint8_t group, const uint8_t channel, const uint8_t program)
-	{
-		Midi1ProgramChangeMessage msg;
-		return msg;
-	}
+
 }
+
+
+
+
+
+
+
+
+
+

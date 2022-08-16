@@ -13,6 +13,7 @@ namespace Microsoft::Windows::Midi::Messages
 
 	const uint8_t Midi1PitchBendMessage::getDataLsb()
 	{
+		return 0;
 	}
 
 	void Midi1PitchBendMessage::setDataLsb(const uint8_t value)
@@ -21,6 +22,7 @@ namespace Microsoft::Windows::Midi::Messages
 
 	const uint8_t Midi1PitchBendMessage::getDataMsb()
 	{
+		return 0;
 	}
 
 	void Midi1PitchBendMessage::setDataMsb(const uint8_t value)
@@ -29,6 +31,7 @@ namespace Microsoft::Windows::Midi::Messages
 
 	const uint16_t Midi1PitchBendMessage::getDataCombined()
 	{
+		return 0;
 	}
 
 	void Midi1PitchBendMessage::setDataCombined(const uint16_t value)
@@ -37,14 +40,21 @@ namespace Microsoft::Windows::Midi::Messages
 
 	Midi1PitchBendMessage Midi1PitchBendMessage::FromMidi1Bytes(const uint8_t group, const uint8_t statusByte, const uint8_t lsbDataByte, const uint8_t msbDataByte)
 	{
+		Midi1PitchBendMessage msg;
+		return msg;
+
 	}
 
 	Midi1PitchBendMessage Midi1PitchBendMessage::FromValues(const uint8_t group, const uint8_t channel, const uint8_t dataLsb, const uint8_t dataMsb)
 	{
+		Midi1PitchBendMessage msg;
+		return msg;
 	}
 
 	Midi1PitchBendMessage Midi1PitchBendMessage::FromValues(const uint8_t group, const uint8_t channel, const uint16_t data)
 	{
+		Midi1PitchBendMessage msg;
+		return msg;
 	}
 
 }

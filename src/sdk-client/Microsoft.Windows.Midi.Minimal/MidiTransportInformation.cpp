@@ -8,17 +8,12 @@
 
 #include "WindowsMidiServicesClient.h"
 
-namespace Microsoft::Windows::Midi
+namespace Microsoft::Windows::Midi::Enumeration
 {
-	struct MidiSession::impl
+
+	struct MidiTransportInformation::impl
 	{
-		MidiObjectId _id;
-		std::string _name;
-		SYSTEMTIME _createdDateTime;
 
-		std::vector<MidiDevice> _openDevices;
 	};
-
-
 
 }

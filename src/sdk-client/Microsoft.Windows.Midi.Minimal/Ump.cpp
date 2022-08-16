@@ -6,6 +6,7 @@
 
 #define WINDOWSMIDISERVICES_EXPORTS
 
+
 #include "WindowsMidiServicesUmp.h"
 #include "WindowsMidiServicesUtility.h"
 

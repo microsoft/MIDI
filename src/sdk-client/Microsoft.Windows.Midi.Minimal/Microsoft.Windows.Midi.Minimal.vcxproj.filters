@@ -25,12 +25,15 @@
     <Filter Include="Source Files\Messages\ChannelVoice\midi2">
       <UniqueIdentifier>{640200b0-ab57-4074-82cd-bf586d793b63}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Enumeration">
+      <UniqueIdentifier>{7f1cb29e-497a-42db-857c-04df4dfd9976}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Session">
+      <UniqueIdentifier>{354d9856-fc0f-4b5e-92c8-a7faa41ae440}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="WindowsMidiServicesClient.h">
@@ -50,19 +53,7 @@
     <ClCompile Include="dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="pch.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiEnumeration.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MidiService.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiSession.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Midi2ChannelVoiceMessages.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Midi1ChannelVoiceMessage.cpp">
@@ -91,6 +82,78 @@
     </ClCompile>
     <ClCompile Include="Ump.cpp">
       <Filter>Source Files\Messages</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi2ChannelVoiceMessage.cpp">
+      <Filter>Source Files\Messages\ChannelVoice\midi2</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi2NoteOffMessage.cpp">
+      <Filter>Source Files\Messages\ChannelVoice\midi2</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi2NoteOnMessage.cpp">
+      <Filter>Source Files\Messages\ChannelVoice\midi2</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi2PolyPressureMessage.cpp">
+      <Filter>Source Files\Messages\ChannelVoice\midi2</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi2RegisteredPerNoteControllerMessage.cpp">
+      <Filter>Source Files\Messages\ChannelVoice\midi2</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi2AssignablePerNoteControllerMessage.cpp">
+      <Filter>Source Files\Messages\ChannelVoice\midi2</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi2PerNoteManagementMessage.cpp">
+      <Filter>Source Files\Messages\ChannelVoice\midi2</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi2ControlChangeMessage.cpp">
+      <Filter>Source Files\Messages\ChannelVoice\midi2</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi2RegisteredControllerMessage.cpp">
+      <Filter>Source Files\Messages\ChannelVoice\midi2</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi2AssignableControllerMessage.cpp">
+      <Filter>Source Files\Messages\ChannelVoice\midi2</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi2RelativeRegisteredControllerMessage.cpp">
+      <Filter>Source Files\Messages\ChannelVoice\midi2</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi2RelativeAssignableControllerMessage.cpp">
+      <Filter>Source Files\Messages\ChannelVoice\midi2</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi2ProgramChangeMessage.cpp">
+      <Filter>Source Files\Messages\ChannelVoice\midi2</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi2ChannelPressureMessage.cpp">
+      <Filter>Source Files\Messages\ChannelVoice\midi2</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi2PitchBendMessage.cpp">
+      <Filter>Source Files\Messages\ChannelVoice\midi2</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi2PerNotePitchBendMessage.cpp">
+      <Filter>Source Files\Messages\ChannelVoice\midi2</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEnumerator.cpp">
+      <Filter>Source Files\Enumeration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiSession.cpp">
+      <Filter>Source Files\Session</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpoint.cpp">
+      <Filter>Source Files\Session</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiDevice.cpp">
+      <Filter>Source Files\Session</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiTransportInformation.cpp">
+      <Filter>Source Files\Enumeration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiDeviceInformation.cpp">
+      <Filter>Source Files\Enumeration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointInformation.cpp">
+      <Filter>Source Files\Enumeration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessageReader.cpp">
+      <Filter>Source Files\Session</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

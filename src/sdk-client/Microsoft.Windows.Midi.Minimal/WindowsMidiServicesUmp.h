@@ -59,7 +59,7 @@ namespace Microsoft::Windows::Midi
 	{
 		union
 		{
-			uint32_t Word[1];
+			uint32_t Word[1] = {};
 			uint16_t Short[2];
 			uint8_t Byte[4];
 		};
@@ -74,7 +74,7 @@ namespace Microsoft::Windows::Midi
 	{
 		union
 		{
-			uint32_t Word[2];
+			uint32_t Word[2] = {};
 			uint16_t Short[4];
 			uint8_t Byte[8];
 		};
@@ -89,7 +89,7 @@ namespace Microsoft::Windows::Midi
 	{
 		union
 		{
-			uint32_t Word[3];
+			uint32_t Word[3] = {};
 			uint16_t Short[6];
 			uint8_t Byte[12];
 		};
@@ -105,7 +105,7 @@ namespace Microsoft::Windows::Midi
 	{
 		union
 		{
-			uint32_t Word[4];
+			uint32_t Word[4] = {};
 			uint16_t Short[8];
 			uint8_t Byte[16];
 		};

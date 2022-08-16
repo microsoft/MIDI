@@ -10,15 +10,15 @@
 
 namespace Microsoft::Windows::Midi
 {
-	struct MidiSession::impl
+	struct MidiEndpoint::impl
 	{
-		MidiObjectId _id;
-		std::string _name;
-		SYSTEMTIME _createdDateTime;
+		Enumeration::MidiEndpointInformation Information;
+		MidiMessagesReceivedCallback _messagesReceivedCallback;
 
-		std::vector<MidiDevice> _openDevices;
+		//MidiEndpoint(const Enumeration::MidiEndpointInformation& information, const MidiMessagesReceivedCallback& messagesReceivedCallback);
+		//MidiEndpoint(const Enumeration::MidiEndpointInformation& information);
+
+		// TODO: Vector of groups / channels / protocol versions / other MIDI CI information
 	};
-
-
 
 }

@@ -12,6 +12,7 @@ namespace Microsoft::Windows::Midi::Messages
 {
 	const uint8_t Midi1NoteOnMessage::getNoteNumber()
 	{
+		return 0;
 	}
 
 	void Midi1NoteOnMessage::setNoteNumber(const uint8_t value)
@@ -20,6 +21,7 @@ namespace Microsoft::Windows::Midi::Messages
 
 	const uint8_t Midi1NoteOnMessage::getVelocity()
 	{
+		return 0;
 	}
 
 	void Midi1NoteOnMessage::setVelocity(const uint8_t value)
@@ -29,9 +31,14 @@ namespace Microsoft::Windows::Midi::Messages
 
 	Midi1NoteOnMessage Midi1NoteOnMessage::FromMidi1Bytes(const uint8_t group, const uint8_t statusByte, const uint8_t noteNumberByte, const uint8_t velocityByte)
 	{
+		Midi1NoteOnMessage msg;
+		return msg;
+
 	}
 
 	Midi1NoteOnMessage Midi1NoteOnMessage::FromValues(const uint8_t group, const uint8_t channel, const uint8_t noteNumber, const uint8_t velocity)
 	{
+		Midi1NoteOnMessage msg;
+		return msg;
 	}
 }

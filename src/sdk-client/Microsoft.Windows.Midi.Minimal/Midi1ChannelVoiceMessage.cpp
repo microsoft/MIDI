@@ -23,7 +23,7 @@ namespace Microsoft::Windows::Midi::Messages
 
 	void Midi1ChannelVoiceMessage::setChannel(const uint8_t value)
 	{
-		Utility::SetLeastSignificantNibble(&Byte[1], value);
+		Utility::SetLeastSignificantNibble(Byte[1], value);
 	}
 
 
