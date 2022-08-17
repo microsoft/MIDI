@@ -143,8 +143,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
-    <ClInclude Include="WindowsMidiServicesClient.h" />
+    <ClInclude Include="WindowsMidiServicesApi.h" />
+    <ClInclude Include="WindowsMidiServicesSession.h" />
+    <ClInclude Include="WindowsMidiServicesEnumeration.h" />
     <ClInclude Include="WindowsMidiServicesMessages.h" />
+    <ClInclude Include="WindowsMidiServicesServiceControl.h" />
     <ClInclude Include="WindowsMidiServicesUmp.h" />
     <ClInclude Include="WindowsMidiServicesUtility.h" />
   </ItemGroup>
@@ -176,8 +179,8 @@
     <ClCompile Include="Midi2RelativeRegisteredControllerMessage.cpp" />
     <ClCompile Include="MidiDevice.cpp" />
     <ClCompile Include="MidiDeviceInformation.cpp" />
-    <ClCompile Include="MidiEndpoint.cpp" />
-    <ClCompile Include="MidiEndpointInformation.cpp" />
+    <ClCompile Include="MidiStream.cpp" />
+    <ClCompile Include="MidiStreamInformation.cpp" />
     <ClCompile Include="MidiEnumerator.cpp" />
     <ClCompile Include="MidiMessageReader.cpp" />
     <ClCompile Include="MidiService.cpp" />

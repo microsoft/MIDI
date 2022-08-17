@@ -5,20 +5,40 @@
 
 #define WINDOWSMIDISERVICES_EXPORTS
 
+#include <string>
+#include <filesystem>
+#include <functional>
+#include <map>
 
 #include "WindowsMidiServicesClient.h"
 
 namespace Microsoft::Windows::Midi
 {
-	struct MidiEndpoint::impl
+	struct MidiStream::impl
 	{
-		Enumeration::MidiEndpointInformation Information;
+		Enumeration::MidiStreamInformation Information;
 		MidiMessagesReceivedCallback _messagesReceivedCallback;
 
-		//MidiEndpoint(const Enumeration::MidiEndpointInformation& information, const MidiMessagesReceivedCallback& messagesReceivedCallback);
-		//MidiEndpoint(const Enumeration::MidiEndpointInformation& information);
+		//MidiStream(const Enumeration::MidiStreamInformation& information, const MidiMessagesReceivedCallback& messagesReceivedCallback);
+		//MidiStream(const Enumeration::MidiStreamInformation& information);
 
 		// TODO: Vector of groups / channels / protocol versions / other MIDI CI information
 	};
 
+
+
+
+
+
+
+
+	bool MidiStream::SendUmp(const Messages::Ump& message)
+	{
+
+	}
+
+	void MidiStream::Close()
+	{
+
+	}
 }

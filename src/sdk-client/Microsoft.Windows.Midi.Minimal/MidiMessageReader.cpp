@@ -5,6 +5,10 @@
 
 #define WINDOWSMIDISERVICES_EXPORTS
 
+#include <string>
+#include <filesystem>
+#include <functional>
+#include <map>
 
 #include "WindowsMidiServicesClient.h"
 

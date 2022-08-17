@@ -23,6 +23,10 @@ protected:
 
 
 public:
+	// TODO: May need to prepend a send/receive timestamp to incoming and outgoing
+	// messages, adding to the overall size. This is not MIDI protocol, but is
+	// internal implementation. second or third most important request from
+	// app devs is service-side scheduling of message sending
 
 	// TODO: Methods for sending, receiving, processing messages, etc.
 	// This queue may work on complete messages instead of words, depending

@@ -42,7 +42,7 @@
     <ClInclude Include="framework.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="WindowsMidiServicesClient.h">
+    <ClInclude Include="WindowsMidiServicesSession.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="WindowsMidiServicesMessages.h">
@@ -52,6 +52,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="WindowsMidiServicesUtility.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsMidiServicesServiceControl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsMidiServicesApi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsMidiServicesEnumeration.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -143,7 +152,7 @@
     <ClCompile Include="MidiSession.cpp">
       <Filter>Source Files\Session</Filter>
     </ClCompile>
-    <ClCompile Include="MidiEndpoint.cpp">
+    <ClCompile Include="MidiStream.cpp">
       <Filter>Source Files\Session</Filter>
     </ClCompile>
     <ClCompile Include="MidiDevice.cpp">
@@ -155,7 +164,7 @@
     <ClCompile Include="MidiDeviceInformation.cpp">
       <Filter>Source Files\Enumeration</Filter>
     </ClCompile>
-    <ClCompile Include="MidiEndpointInformation.cpp">
+    <ClCompile Include="MidiStreamInformation.cpp">
       <Filter>Source Files\Enumeration</Filter>
     </ClCompile>
     <ClCompile Include="MidiMessageReader.cpp">

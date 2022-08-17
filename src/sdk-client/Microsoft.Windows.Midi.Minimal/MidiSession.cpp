@@ -5,6 +5,10 @@
 
 #define WINDOWSMIDISERVICES_EXPORTS
 
+#include <string>
+#include <filesystem>
+#include <functional>
+#include <map>
 
 #include "WindowsMidiServicesClient.h"
 
@@ -17,8 +21,6 @@ namespace Microsoft::Windows::Midi
 		SYSTEMTIME CreatedDateTime;
 
 		std::map<MidiObjectId, MidiDevice> _openDevices;
-
-
 	};
 
 
