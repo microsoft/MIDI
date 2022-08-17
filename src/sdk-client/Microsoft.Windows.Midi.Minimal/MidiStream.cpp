@@ -10,7 +10,8 @@
 #include <functional>
 #include <map>
 
-#include "WindowsMidiServicesClient.h"
+#include "WindowsMidiServicesSession.h"
+#include "WindowsMidiServicesEnumeration.h"
 
 namespace Microsoft::Windows::Midi
 {
@@ -32,10 +33,10 @@ namespace Microsoft::Windows::Midi
 
 
 
-	bool MidiStream::SendUmp(const Messages::Ump& message)
-	{
+	//bool MidiStream::SendUmp(const Messages::Ump& message)
+	//{
 
-	}
+	//}
 
 	void MidiStream::Close()
 	{

@@ -10,7 +10,7 @@
 #include <functional>
 #include <map>
 
-#include "WindowsMidiServicesClient.h"
+#include "WindowsMidiServicesEnumeration.h"
 
 namespace Microsoft::Windows::Midi::Enumeration
 {

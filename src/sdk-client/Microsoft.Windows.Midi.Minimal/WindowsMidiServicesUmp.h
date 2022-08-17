@@ -35,7 +35,6 @@
 
 #pragma once
 
-#include <stdint.h>
 
 #ifdef WINDOWSMIDISERVICES_EXPORTS
 #define WINDOWSMIDISERVICES_API __declspec(dllexport)
@@ -43,15 +42,17 @@
 #define WINDOWSMIDISERVICES_API __declspec(dllimport)
 #endif
 
+#include "WindowsMidiServicesBase.h"
+
 namespace Microsoft::Windows::Midi::Messages
 {
 
 	// Base message structure
 	struct WINDOWSMIDISERVICES_API Ump
 	{
-		virtual const uint8_t getMessageType() = 0;
-		virtual const uint8_t getGroup() = 0;
-		virtual void setGroup(const uint8_t value) = 0;
+		virtual const MidiByte8 getMessageType() = 0;
+		virtual const MidiNibble4 getGroup() = 0;
+		virtual void setGroup(const MidiNibble4 value) = 0;
 	};
 
 	// 32 bit (1 word) MIDI message. Used for all MIDI 1.0 messages, utility messages, and more
@@ -59,14 +60,14 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 		union
 		{
-			uint32_t Word[1] = {};
-			uint16_t Short[2];
-			uint8_t Byte[4];
+			MidiWord32		Word[1] = {};
+			MidiShort16		Short[2];
+			MidiByte8		Byte[4];
 		};
 
-		virtual const uint8_t getMessageType();
-		virtual const uint8_t getGroup();
-		virtual void setGroup(const uint8_t value);
+		virtual const MidiNibble4 getMessageType();
+		virtual const MidiNibble4 getGroup();
+		virtual void setGroup(const MidiNibble4 value);
 	};
 
 	// 64 bit (2 words) MIDI message. Used for MIDI 2.0 channel voice, SysEx7, and more
@@ -74,14 +75,14 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 		union
 		{
-			uint32_t Word[2] = {};
-			uint16_t Short[4];
-			uint8_t Byte[8];
+			MidiWord32		Word[2] = {};
+			MidiShort16		Short[4];
+			MidiByte8		Byte[8];
 		};
 
-		virtual const uint8_t getMessageType();
-		virtual const uint8_t getGroup();
-		virtual void setGroup(const uint8_t value);
+		virtual const MidiNibble4 getMessageType();
+		virtual const MidiNibble4 getGroup();
+		virtual void setGroup(const MidiNibble4 value);
 	};
 
 	// 96 bit (3 words) MIDI message. Not currently used for any types of MIDI messages
@@ -89,14 +90,14 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 		union
 		{
-			uint32_t Word[3] = {};
-			uint16_t Short[6];
-			uint8_t Byte[12];
+			MidiWord32		Word[3] = {};
+			MidiShort16		Short[6];
+			MidiByte8		Byte[12];
 		};
 
-		virtual const uint8_t getMessageType();
-		virtual const uint8_t getGroup();
-		virtual void setGroup(const uint8_t value);
+		virtual const MidiNibble4 getMessageType();
+		virtual const MidiNibble4 getGroup();
+		virtual void setGroup(const MidiNibble4 value);
 
 	};
 
@@ -105,14 +106,14 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 		union
 		{
-			uint32_t Word[4] = {};
-			uint16_t Short[8];
-			uint8_t Byte[16];
+			MidiWord32		Word[4] = {};
+			MidiShort16		Short[8];
+			MidiByte8		Byte[16];
 		};
 
-		virtual const uint8_t getMessageType();
-		virtual const uint8_t getGroup();
-		virtual void setGroup(const uint8_t value);
+		virtual const MidiNibble4 getMessageType();
+		virtual const MidiNibble4 getGroup();
+		virtual void setGroup(const MidiNibble4 value);
 	};
 
 

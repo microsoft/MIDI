@@ -10,7 +10,7 @@
 #include <functional>
 #include <map>
 
-#include "WindowsMidiServicesClient.h"
+#include "WindowsMidiServicesEnumeration.h"
 
 namespace Microsoft::Windows::Midi::Enumeration
 {
@@ -25,7 +25,7 @@ namespace Microsoft::Windows::Midi::Enumeration
 		std::map<MidiObjectId, MidiDeviceInformation> _devices;
 
 		// device id, endpoint id, endpoint info
-		std::map<std::pair<MidiObjectId, MidiObjectId>, MidiEndpointInformation> _endpoints;
+		std::map<std::pair<MidiObjectId, MidiObjectId>, MidiStreamInformation> _streams;
 
 		// TODO: Will need to provide a hash function for the above. 
 		// Could use boost hash_combine or hash_value for std::pair

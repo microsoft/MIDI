@@ -10,14 +10,11 @@
 #include <functional>
 #include <map>
 
+#include "WindowsMidiServicesSession.h"
 #include "WindowsMidiServicesEnumeration.h"
 
-namespace Microsoft::Windows::Midi::Enumeration
+namespace Microsoft::Windows::Midi
 {
 
-	struct MidiStreamInformation::impl
-	{
-
-	};
 
 }

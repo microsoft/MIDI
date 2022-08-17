@@ -10,7 +10,8 @@
 #include <functional>
 #include <map>
 
-#include "WindowsMidiServicesClient.h"
+#include "WindowsMidiServicesSession.h"
+#include "WindowsMidiServicesEnumeration.h"
 
 namespace Microsoft::Windows::Midi
 {
@@ -21,7 +22,7 @@ namespace Microsoft::Windows::Midi
 		Enumeration::MidiDeviceInformation Information;
 
 		// key is endpoint ID.
-		std::map<MidiObjectId, MidiEndpoint> _openEndpoints;
+		std::map<MidiObjectId, MidiStream> _openStreams;
 
 		//MidiDevice(Enumeration::MidiDeviceInformation information);
 
@@ -33,7 +34,7 @@ namespace Microsoft::Windows::Midi
 
 	}
 
-	const bool MidiDevice::getOpenEndpoint(const MidiObjectId& endpointId, MidiEndpoint& endpoint)
+	const bool MidiDevice::getOpenStream(const MidiObjectId& streamId, MidiStream& stream)
 	{
 
 	}
@@ -45,32 +46,32 @@ namespace Microsoft::Windows::Midi
 	}
 
 
-	MidiEndpoint MidiDevice::OpenEndpoint(const Enumeration::MidiEndpointInformation& endpointInformation, const MidiEndpointOpenOptions options, const MidiMessagesReceivedCallback& messagesReceivedCallback)
+	MidiStreamOpenResult MidiDevice::OpenStream(const Enumeration::MidiStreamInformation& streamInformation, const MidiStreamOpenOptions options, const MidiMessagesReceivedCallback& messagesReceivedCallback)
 	{
 
 	}
 
-	MidiEndpoint MidiDevice::OpenEndpoint(const Enumeration::MidiEndpointInformation& endpointInformation, const MidiEndpointOpenOptions options)
+	MidiStreamOpenResult MidiDevice::OpenStream(const Enumeration::MidiStreamInformation& streamInformation, const MidiStreamOpenOptions options)
 	{
 
 	}
 
-	MidiEndpoint MidiDevice::OpenEndpoint(const MidiObjectId& endpointId, const MidiEndpointOpenOptions options, const MidiMessagesReceivedCallback& messagesReceivedCallback)
+	MidiStreamOpenResult MidiDevice::OpenStream(const MidiObjectId& streamId, const MidiStreamOpenOptions options, const MidiMessagesReceivedCallback& messagesReceivedCallback)
 	{
 
 	}
 
-	MidiEndpoint MidiDevice::OpenEndpoint(const MidiObjectId& endpointId, const MidiEndpointOpenOptions options)
+	MidiStreamOpenResult MidiDevice::OpenStream(const MidiObjectId& streamId, const MidiStreamOpenOptions options)
 	{
 
 	}
 
-	bool MidiDevice::SendUmp(const Enumeration::MidiEndpointInformation& information, const Messages::Ump& message)
+	bool MidiDevice::SendUmp(const Enumeration::MidiStreamInformation& information, const Messages::Ump& message)
 	{
 
 	}
 
-	bool MidiDevice::SendUmp(const MidiObjectId& endpointId, const Messages::Ump& message)
+	bool MidiDevice::SendUmp(const MidiObjectId& streamId, const Messages::Ump& message)
 	{
 
 	}

@@ -10,7 +10,8 @@
 #include <functional>
 #include <map>
 
-#include "WindowsMidiServicesClient.h"
+#include "WindowsMidiServicesSession.h"
+#include "WindowsMidiServicesEnumeration.h"
 
 namespace Microsoft::Windows::Midi
 {
@@ -44,19 +45,19 @@ namespace Microsoft::Windows::Midi
 		// TODO: Service call
 	}
 
-	const MidiDevice MidiSession::GetOpenDevice(MidiObjectId id)
+	const MidiDevice* MidiSession::GetOpenDevice(MidiObjectId id)
 	{
 		// TODO: get device from the internal map
 
 	}
 
-	MidiDevice MidiSession::OpenDevice(const MidiObjectId& deviceId, const MidiDeviceOpenOptions& options)
+	MidiDeviceOpenResult MidiSession::OpenDevice(const MidiObjectId& deviceId, const MidiDeviceOpenOptions& options)
 	{
 		// TODO: Service call
 
 	}
 
-	MidiDevice MidiSession::OpenDevice(const MidiObjectId& deviceId)
+	MidiDeviceOpenResult MidiSession::OpenDevice(const MidiObjectId& deviceId)
 	{
 		// TODO: Service call
 

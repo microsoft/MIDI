@@ -37,31 +37,37 @@
     <Filter Include="Source Files\Messages\System">
       <UniqueIdentifier>{a12afc1d-c7a1-42b2-ab28-3d819cbcac2d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\API Redist">
+      <UniqueIdentifier>{58fd8899-a1a6-4d59-836d-57c4d4090ee0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="WindowsMidiServicesSession.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WindowsMidiServicesMessages.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WindowsMidiServicesUmp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WindowsMidiServicesUtility.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WindowsMidiServicesServiceControl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="WindowsMidiServicesApi.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\API Redist</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsMidiServicesBase.h">
+      <Filter>Header Files\API Redist</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsMidiServicesSession.h">
+      <Filter>Header Files\API Redist</Filter>
     </ClInclude>
     <ClInclude Include="WindowsMidiServicesEnumeration.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\API Redist</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsMidiServicesMessages.h">
+      <Filter>Header Files\API Redist</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsMidiServicesServiceControl.h">
+      <Filter>Header Files\API Redist</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsMidiServicesUmp.h">
+      <Filter>Header Files\API Redist</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsMidiServicesUtility.h">
+      <Filter>Header Files\API Redist</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -168,6 +174,12 @@
       <Filter>Source Files\Enumeration</Filter>
     </ClCompile>
     <ClCompile Include="MidiMessageReader.cpp">
+      <Filter>Source Files\Session</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiImmediateStream.cpp">
+      <Filter>Source Files\Session</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiScheduledStream.cpp">
       <Filter>Source Files\Session</Filter>
     </ClCompile>
   </ItemGroup>

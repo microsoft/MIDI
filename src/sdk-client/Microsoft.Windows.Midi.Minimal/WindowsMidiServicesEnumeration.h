@@ -1,3 +1,13 @@
+// ------------------------------------------------------------------------------------------------
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License. See LICENSE in the GitHub project root for license information.
+// ------------------------------------------------------------------------------------------------
+
+// ====================================================================
+// PRE-RELEASE VERSION. BREAKING CHANGES LIKELY. NOT FOR PRODUCTION USE.
+// For more information, please see https://github.com/microsoft/midi
+// ====================================================================
+
 #pragma once
 
 #include <Windows.h>
@@ -20,8 +30,6 @@ namespace Microsoft::Windows::Midi::Enumeration
 	// usig something like CrossGuid, taking an API dependency on boost, or
 	// simply redefining as necessary
 	// https://github.com/graeme-hill/crossguid
-
-	using MidiObjectId = GUID;
 
 
 	// examples: USB, BLE, RTP
