@@ -50,9 +50,9 @@ namespace Microsoft::Windows::Midi::Messages
 	// Base message structure
 	struct WINDOWSMIDISERVICES_API Ump
 	{
-		virtual const MidiByte8 getMessageType() = 0;
-		virtual const MidiNibble4 getGroup() = 0;
-		virtual void setGroup(const MidiNibble4 value) = 0;
+		virtual const MidiMessageType getMessageType() = 0;
+		virtual const MidiGroup getGroup() = 0;
+		virtual void setGroup(const MidiGroup value) = 0;
 	};
 
 	// 32 bit (1 word) MIDI message. Used for all MIDI 1.0 messages, utility messages, and more
@@ -65,9 +65,9 @@ namespace Microsoft::Windows::Midi::Messages
 			MidiByte8		Byte[4];
 		};
 
-		virtual const MidiNibble4 getMessageType();
-		virtual const MidiNibble4 getGroup();
-		virtual void setGroup(const MidiNibble4 value);
+		virtual const MidiMessageType getMessageType();
+		virtual const MidiGroup getGroup();
+		virtual void setGroup(const MidiGroup value);
 	};
 
 	// 64 bit (2 words) MIDI message. Used for MIDI 2.0 channel voice, SysEx7, and more
@@ -80,9 +80,9 @@ namespace Microsoft::Windows::Midi::Messages
 			MidiByte8		Byte[8];
 		};
 
-		virtual const MidiNibble4 getMessageType();
-		virtual const MidiNibble4 getGroup();
-		virtual void setGroup(const MidiNibble4 value);
+		virtual const MidiMessageType getMessageType();
+		virtual const MidiGroup getGroup();
+		virtual void setGroup(const MidiGroup value);
 	};
 
 	// 96 bit (3 words) MIDI message. Not currently used for any types of MIDI messages
@@ -95,9 +95,9 @@ namespace Microsoft::Windows::Midi::Messages
 			MidiByte8		Byte[12];
 		};
 
-		virtual const MidiNibble4 getMessageType();
-		virtual const MidiNibble4 getGroup();
-		virtual void setGroup(const MidiNibble4 value);
+		virtual const MidiMessageType getMessageType();
+		virtual const MidiGroup getGroup();
+		virtual void setGroup(const MidiGroup value);
 
 	};
 
@@ -111,9 +111,9 @@ namespace Microsoft::Windows::Midi::Messages
 			MidiByte8		Byte[16];
 		};
 
-		virtual const MidiNibble4 getMessageType();
-		virtual const MidiNibble4 getGroup();
-		virtual void setGroup(const MidiNibble4 value);
+		virtual const MidiMessageType getMessageType();
+		virtual const MidiGroup getGroup();
+		virtual void setGroup(const MidiGroup value);
 	};
 
 

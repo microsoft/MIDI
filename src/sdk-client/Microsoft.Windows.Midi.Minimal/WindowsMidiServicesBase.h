@@ -24,14 +24,61 @@ namespace Microsoft::Windows::Midi
 	using MidiObjectId = GUID;
 
 	// these are generally there to signify intent
+	// Didn't create bitfield structs or anything because
+	// that's overkill, and makes using them a pain.
 
-	using MidiWord32 = uint32_t;
-	using MidiShort16 = uint16_t;
-	using MidiShort14 = uint16_t;
-	using MidiByte8 = uint8_t;
-	using MidiByte7 = uint8_t;
-	using MidiNibble4 = uint8_t;
+	using MidiWord32 = uint32_t;		// 32 bit MIDI word
+	using MidiShort16 = uint16_t;		// 16 bit half-word
+	using MidiShort14 = uint16_t;		// 14 bits of data in a 16 bit half-word
+	using MidiByte8 = uint8_t;			// 8 bits of data
+	using MidiByte7 = uint8_t;			// 7 bits of data, common with MIDI 1.0 and anything there for compatibility with 1.0
+	using MidiNibble4 = uint8_t;		// 4 bits. Half a byte. Very common in MIDI messages for message type/group/channel/opcode
+	using MidiNibble3 = uint8_t;		// 3 bits. MIDI Time Code Quarter Frame and some others
 
+
+	// this is here to enforce 0-15 numbering for folks who
+	// may be unfamiliar with it, and to avoid ambiguity
+	// those who are familiar can just cast the value to this type
+	enum WINDOWSMIDISERVICES_API MidiChannel : MidiNibble4
+	{
+		MidiChannel01 = 0,
+		MidiChannel02 = 1,
+		MidiChannel03 = 2,
+		MidiChannel04 = 3,
+		MidiChannel05 = 4,
+		MidiChannel06 = 5,
+		MidiChannel07 = 6,
+		MidiChannel08 = 7,
+		MidiChannel09 = 8,
+		MidiChannel10 = 9,
+		MidiChannel11 = 10,
+		MidiChannel12 = 11,
+		MidiChannel13 = 12,
+		MidiChannel14 = 13,
+		MidiChannel15 = 14,
+		MidiChannel16 = 15
+	};
+
+
+	enum WINDOWSMIDISERVICES_API MidiGroup : MidiNibble4
+	{
+		MidiGroup01 = 0,
+		MidiGroup02 = 1,
+		MidiGroup03 = 2,
+		MidiGroup04 = 3,
+		MidiGroup05 = 4,
+		MidiGroup06 = 5,
+		MidiGroup07 = 6,
+		MidiGroup08 = 7,
+		MidiGroup09 = 8,
+		MidiGroup10 = 9,
+		MidiGroup11 = 10,
+		MidiGroup12 = 11,
+		MidiGroup13 = 12,
+		MidiGroup14 = 13,
+		MidiGroup15 = 14,
+		MidiGroup16 = 15
+	};
 
 
 	enum WINDOWSMIDISERVICES_API MidiMessageType : MidiNibble4
@@ -41,8 +88,7 @@ namespace Microsoft::Windows::Midi
 		MidiMessageTypeMidi1ChannelVoice = 0x2,
 		MidiMessageTypeSystemExclusive7Bit = 0x3,
 		MidiMessageTypeMidi2ChannelVoice = 0x4,
-		MidiMessageTypeSystemExclusive8Bit = 0x5,
-
+		MidiMessageTypeMidi2Data = 0x5
 	};
 
 	enum WINDOWSMIDISERVICES_API Midi1ChannelVoiceOpcode : MidiNibble4
@@ -75,24 +121,48 @@ namespace Microsoft::Windows::Midi
 		Midi2ChannelVoiceOpcodePerNotePitchBend = 0x6
 	};
 
-	// Status nibble for a 7 bit sysex message
-	enum WINDOWSMIDISERVICES_API SystemExclusive7MessageStatus : MidiNibble4
+
+	enum WINDOWSMIDISERVICES_API Midi2NoteOnOffAttributeType : MidiByte8
 	{
-		SysEx7CompleteInOneUmp = 0x0,
-		SysEx7StartUmp = 0x1,
-		SysEx7ContinueUmp = 0x2,
-		SysEx7EndUmp = 0x3
+		Midi2NoteOnOffAttributeTypeNoData = 0x00,
+		Midi2NoteOnOffAttributeTypeManufacturerSpecific = 0x01,
+		Midi2NoteOnOffAttributeTypeProfileSpecific = 0x02,
+		Midi2NoteOnOffAttributeTypePitchSevenDotNine = 0x03
+	};
+
+
+	enum WINDOWSMIDISERVICES_API Midi2ProgramChangeOptionFlags : MidiByte8
+	{
+		Midi2ProgramChangeNoOptions = 0,
+		Midi2ProgramChangeBankValid = 1
+	};
+
+
+
+	// Status nibble for a 7 bit sysex message
+	enum WINDOWSMIDISERVICES_API MidiSystemExclusive7MessageStatus : MidiNibble4
+	{
+		MidiSysEx7CompleteInOneUmp = 0x0,
+		MidiSysEx7StartUmp = 0x1,
+		MidiSysEx7ContinueUmp = 0x2,
+		MidiSysEx7EndUmp = 0x3
 	};
 
 	// Status nibble for an 8 bit sysex message
-	enum WINDOWSMIDISERVICES_API SystemExclusive8MessageStatus : MidiNibble4
+	enum WINDOWSMIDISERVICES_API MidiSystemExclusive8MessageStatus : MidiNibble4
 	{
-		SysEx8CompleteInOneUmp = 0x0,
-		SysEx8StartUmp = 0x1,
-		SysEx8ContinueUmp = 0x2,
-		SysEx8EndUmp = 0x3
+		MidiSysEx8CompleteInOneUmp = 0x0,
+		MidiSysEx8StartUmp = 0x1,
+		MidiSysEx8ContinueUmp = 0x2,
+		MidiSysEx8EndUmp = 0x3
 	};
 
 
+
+	enum WINDOWSMIDISERVICES_API Midi2MixedMessageStatus : MidiNibble4
+	{
+		Midi2MixedDataStatusHeader = 0x8,
+		Midi2MixedDataStatusPayload = 0x9
+	};
 }
 

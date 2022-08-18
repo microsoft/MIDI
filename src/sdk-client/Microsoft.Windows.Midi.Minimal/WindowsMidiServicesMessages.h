@@ -38,6 +38,8 @@ namespace Microsoft::Windows::Midi::Messages
 
 	// ----------------------------------------------------------------------------
 	// Strongly-typed messages : MIDI 1.0 Channel Voice
+	// For details of the values in MIDI 1.0 messages, please see:
+	// https://www.midi.org/specifications-old/item/table-1-summary-of-midi-message
 	// ----------------------------------------------------------------------------
 
 	// Protocol spec 4.1. Base MIDI 1.0 channel voice message
@@ -49,8 +51,8 @@ namespace Microsoft::Windows::Midi::Messages
 
 		const MidiNibble4 getOpcode();
 
-		const MidiNibble4 getChannel();
-		void setChannel(const MidiNibble4 value);
+		const MidiChannel getChannel();
+		void setChannel(const MidiChannel value);
 
 	};
 
@@ -67,8 +69,19 @@ namespace Microsoft::Windows::Midi::Messages
 		const MidiByte7 getVelocity();
 		void setVelocity(const MidiByte7 value);
 
-		static Midi1NoteOffMessage FromMidi1Bytes(const MidiNibble4 group, const uint8_t statusByte, const MidiByte7 noteNumberByte, const MidiByte7 velocityByte);
-		static Midi1NoteOffMessage FromValues(const MidiNibble4 group, const MidiNibble4 channel, const MidiByte7 noteNumber, const MidiByte7 velocity);
+		// Conversion method. Uses MIDI 1.0 rules and data
+		static Midi1NoteOffMessage FromMidi1Bytes(
+			const MidiGroup group, 
+			const MidiByte8 statusByte, 
+			const MidiByte7 noteNumberByte, 
+			const MidiByte7 velocityByte);
+
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi1NoteOffMessage FromValues(
+			const MidiGroup group, 
+			const MidiChannel channel, 
+			const MidiByte7 noteNumber, 
+			const MidiByte7 velocity);
 	};
 
 	// Protocol spec 4.1.2. MIDI 1.0 note on message
@@ -84,8 +97,19 @@ namespace Microsoft::Windows::Midi::Messages
 		const MidiByte7 getVelocity();
 		void setVelocity(const MidiByte7 value);
 
-		static Midi1NoteOnMessage FromMidi1Bytes(const MidiNibble4 group, const uint8_t statusByte, const MidiByte7 noteNumberByte, const MidiByte7 velocityByte);
-		static Midi1NoteOnMessage FromValues(const MidiNibble4 group, const MidiNibble4 channel, const MidiByte7 noteNumber, const MidiByte7 velocity);
+		// Conversion method. Uses MIDI 1.0 rules and data
+		static Midi1NoteOnMessage FromMidi1Bytes(
+			const MidiGroup group, 
+			const MidiByte8 statusByte, 
+			const MidiByte7 noteNumberByte, 
+			const MidiByte7 velocityByte);
+
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi1NoteOnMessage FromValues(
+			const MidiGroup group, 
+			const MidiChannel channel, 
+			const MidiByte7 noteNumber, 
+			const MidiByte7 velocity);
 	};
 
 	// Protocol spec 4.1.3. MIDI 1.0 polyphonic pressure (aftertouch) message
@@ -101,8 +125,19 @@ namespace Microsoft::Windows::Midi::Messages
 		const MidiByte7 getData();
 		void setData(const MidiByte7 value);
 
-		static Midi1PolyPressureMessage FromMidi1Bytes(const MidiNibble4 group, const uint8_t statusByte, const MidiByte7 noteNumberByte, const MidiByte7 dataByte);
-		static Midi1PolyPressureMessage FromValues(const MidiNibble4 group, const MidiNibble4 channel, const MidiByte7 noteNumber, const MidiByte7 data);
+		// Conversion method. Uses MIDI 1.0 rules and data
+		static Midi1PolyPressureMessage FromMidi1Bytes(
+			const MidiGroup group, 
+			const MidiByte8 statusByte, 
+			const MidiByte7 noteNumberByte, 
+			const MidiByte7 dataByte);
+
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi1PolyPressureMessage FromValues(
+			const MidiGroup group, 
+			const MidiChannel channel, 
+			const MidiByte7 noteNumber, 
+			const MidiByte7 data);
 	};
 
 	// Protocol spec 4.1.4. MIDI 1.0 control change message
@@ -118,8 +153,19 @@ namespace Microsoft::Windows::Midi::Messages
 		const MidiByte7 getData();
 		void setData(const MidiByte7 value);
 
-		static Midi1ControlChangeMessage FromMidi1Bytes(const MidiNibble4 group, const uint8_t statusByte, const MidiByte7 indexByte, const MidiByte7 dataByte);
-		static Midi1ControlChangeMessage FromValues(const MidiNibble4 group, const MidiNibble4 channel, const MidiByte7 index, const MidiByte7 data);
+		// Conversion method. Uses MIDI 1.0 rules and data
+		static Midi1ControlChangeMessage FromMidi1Bytes(
+			const MidiGroup group, 
+			const MidiByte8 statusByte, 
+			const MidiByte7 indexByte, 
+			const MidiByte7 dataByte);
+
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi1ControlChangeMessage FromValues(
+			const MidiGroup group, 
+			const MidiChannel channel, 
+			const MidiByte7 index, 
+			const MidiByte7 data);
 	};
 
 	// Protocol spec 4.1.5. MIDI 1.0 program change message
@@ -132,8 +178,17 @@ namespace Microsoft::Windows::Midi::Messages
 		const MidiByte7 getProgram();
 		void setProgram(const MidiByte7 value);
 
-		static Midi1ProgramChangeMessage FromMidi1Bytes(const MidiNibble4 group, const uint8_t statusByte, const MidiByte7 programByte);
-		static Midi1ProgramChangeMessage FromValues(const MidiNibble4 group, const MidiNibble4 channel, const MidiByte7 program);
+		// Conversion method. Uses MIDI 1.0 rules and data
+		static Midi1ProgramChangeMessage FromMidi1Bytes(
+			const MidiGroup group, 
+			const MidiByte8 statusByte, 
+			const MidiByte7 programByte);
+
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi1ProgramChangeMessage FromValues(
+			const MidiGroup group, 
+			const MidiChannel channel, 
+			const MidiByte7 program);
 	};
 
 	// Protocol spec 4.1.6. MIDI 1.0 channel pressure (aftertouch) message
@@ -146,8 +201,17 @@ namespace Microsoft::Windows::Midi::Messages
 		const MidiByte7 getData();
 		void setData(const MidiByte7 value);
 
-		static Midi1ChannelPressureMessage FromMidi1Bytes(const MidiNibble4 group, const uint8_t statusByte, const MidiByte7 dataByte);
-		static Midi1ChannelPressureMessage FromValues(const MidiNibble4 group, const MidiNibble4 channel, const MidiByte7 data);
+		// Conversion method. Uses MIDI 1.0 rules and data
+		static Midi1ChannelPressureMessage FromMidi1Bytes(
+			const MidiGroup group, 
+			const MidiByte8 statusByte, 
+			const MidiByte7 dataByte);
+
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi1ChannelPressureMessage FromValues(
+			const MidiGroup group, 
+			const MidiChannel channel, 
+			const MidiByte7 data);
 	};
 
 	// Protocol spec 4.1.7. MIDI 1.0 pitch bend message
@@ -166,9 +230,25 @@ namespace Microsoft::Windows::Midi::Messages
 		const MidiShort14 getDataCombined();
 		void setDataCombined(const MidiShort14 value);
 
-		static Midi1PitchBendMessage FromMidi1Bytes(const MidiNibble4 group, const uint8_t statusByte, const MidiByte7 lsbDataByte, const MidiByte7 msbDataByte);
-		static Midi1PitchBendMessage FromValues(const MidiNibble4 group, const MidiNibble4 channel, const MidiByte7 dataLsb, const MidiByte7 dataMsb);
-		static Midi1PitchBendMessage FromValues(const MidiNibble4 group, const MidiNibble4 channel, const uint16_t data);
+		// Conversion method. Uses MIDI 1.0 rules and data
+		static Midi1PitchBendMessage FromMidi1Bytes(
+			const MidiGroup group, 
+			const MidiByte8 statusByte, 
+			const MidiByte7 lsbDataByte, 
+			const MidiByte7 msbDataByte);
+
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi1PitchBendMessage FromValues(
+			const MidiGroup group, 
+			const MidiChannel channel, 
+			const MidiByte7 dataLsb, 
+			const MidiByte7 dataMsb);
+
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi1PitchBendMessage FromValues(
+			const MidiGroup group, 
+			const MidiChannel channel, 
+			const uint16_t data);
 	};
 
 
@@ -186,10 +266,12 @@ namespace Microsoft::Windows::Midi::Messages
 
 		const MidiNibble4 getOpcode();
 
-		const MidiNibble4 getChannel();
-		void setChannel(const MidiNibble4 value);
+		const MidiChannel getChannel();
+		void setChannel(const MidiChannel value);
 
 	};
+
+
 
 	// Protocol spec 4.2.1. MIDI 2.0 note off message. See notes on MIDI 2.0 note attributes
 	// Byte[2] : Note Number (7 bits)
@@ -203,18 +285,33 @@ namespace Microsoft::Windows::Midi::Messages
 		const MidiByte7 getNoteNumber();
 		void setNoteNumber(const MidiByte7 value);
 
-		const uint8_t getAttributeType();
-		void setAttributeType(const uint8_t value);
+		// we have an enum for attribute type, but other attribute types may 
+		// be set in the MIDI CI profile, so we don't restrict
+		// See protocol spec 4.2.13 and 4.2.14 for attributes and pitch
+		const MidiByte8 getAttributeType();
+		void setAttributeType(const MidiByte8 value);
 
-		const uint16_t getVelocity();
-		void setVelocity(const uint16_t value);
+		const MidiShort16 getVelocity();
+		void setVelocity(const MidiShort16 value);
 
-		const uint16_t getAttributeData();
-		void setAttributeData(const uint16_t value);
+		const MidiShort16 getAttributeData();
+		void setAttributeData(const MidiShort16 value);
 
-		//conversion method. Uses MIDI 1.0 rules
-		static Midi2NoteOffMessage FromMidi1Bytes(const MidiNibble4 group, const uint8_t statusByte, const MidiByte7 noteNumberByte, const MidiByte7 velocityByte);
-		static Midi2NoteOffMessage FromValues(const MidiNibble4 group, const MidiNibble4 channel, const uint8_t noteNumber, const uint8_t attributeType, const uint16_t velocity, const uint16_t attributeData);
+		//Conversion method. Uses MIDI 1.0 rules and data
+		static Midi2NoteOffMessage FromMidi1Bytes(
+			const MidiGroup group, 
+			const MidiByte8 statusByte, 
+			const MidiByte7 noteNumberByte, 
+			const MidiByte7 velocityByte);
+
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi2NoteOffMessage FromValues(
+			const MidiGroup group, 
+			const MidiChannel channel, 
+			const MidiByte7 noteNumber, 
+			const Midi2NoteOnOffAttributeType attributeType,
+			const MidiShort16 velocity, 
+			const MidiShort16 attributeData);
 	};
 
 	// Protocol spec 4.2.2. MIDI 2.0 note on message. See notes on MIDI 2.0 note attributes
@@ -229,18 +326,34 @@ namespace Microsoft::Windows::Midi::Messages
 		const MidiByte7 getNoteNumber();
 		void setNoteNumber(const MidiByte7 value);
 
-		const uint8_t getAttributeType();
-		void setAttributeType(const uint8_t value);
+		// we have an enum for attribute type, but other attribute types may 
+		// be set in the MIDI CI profile, so we don't restrict
+		// See protocol spec 4.2.13 and 4.2.14 for attributes and pitch
+		const MidiByte8 getAttributeType();
+		void setAttributeType(const MidiByte8 value);
 
-		const uint16_t getVelocity();
-		void setVelocity(const uint16_t value);
 
-		const uint16_t getAttributeData();
-		void setAttributeData(const uint16_t value);
+		const MidiShort16 getVelocity();
+		void setVelocity(const MidiShort16 value);
 
-		//conversion method. Uses MIDI 1.0 rules
-		static Midi2NoteOnMessage FromMidi1Bytes(const MidiNibble4 group, const uint8_t statusByte, const MidiByte7 noteNumberByte, const MidiByte7 velocityByte);
-		static Midi2NoteOnMessage FromValues(const MidiNibble4 group, const MidiNibble4 channel, const MidiByte7 noteNumber, const uint8_t attributeType, const uint16_t velocity, const uint16_t attributeData);
+		const MidiShort16 getAttributeData();
+		void setAttributeData(const MidiShort16 value);
+
+		// Conversion method. Uses MIDI 1.0 rules and data
+		static Midi2NoteOnMessage FromMidi1Bytes(
+			const MidiGroup group, 
+			const MidiByte8 statusByte, 
+			const MidiByte7 noteNumberByte, 
+			const MidiByte7 velocityByte);
+
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi2NoteOnMessage FromValues(
+			const MidiGroup group, 
+			const MidiChannel channel, 
+			const MidiByte7 noteNumber, 
+			const Midi2NoteOnOffAttributeType attributeType,
+			const MidiShort16 velocity, 
+			const MidiShort16 attributeData);
 	};
 
 	// Protocol spec 4.2.3. MIDI 2.0 polyphonic pressure (aftertouch) message.
@@ -254,11 +367,16 @@ namespace Microsoft::Windows::Midi::Messages
 		const MidiByte7 getNoteNumber();
 		void setNoteNumber(const MidiByte7 value);
 
-		const uint32_t getData();
-		void setData(const uint32_t value);
+		const MidiWord32 getData();
+		void setData(const MidiWord32 value);
 
 
-		static Midi2PolyPressureMessage FromValues(const MidiNibble4 group, const MidiNibble4 channel, const uint8_t noteNumber, const uint32_t data);
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi2PolyPressureMessage FromValues(
+			const MidiGroup group, 
+			const MidiChannel channel, 
+			const MidiByte7 noteNumber, 
+			const MidiWord32 data);
 	};
 
 	// Protocol spec 4.2.4. MIDI 2.0 registered per-note controller message.
@@ -272,13 +390,19 @@ namespace Microsoft::Windows::Midi::Messages
 		const MidiByte7 getNoteNumber();
 		void setNoteNumber(const MidiByte7 value);
 
-		const uint8_t getIndex();
-		void setIndex(const uint8_t value);
+		const MidiByte8 getIndex();
+		void setIndex(const MidiByte8 value);
 
-		const uint32_t getData();
-		void setData(const uint32_t value);
+		const MidiWord32 getData();
+		void setData(const MidiWord32 value);
 
-		static Midi2RegisteredPerNoteControllerMessage FromValues(const MidiNibble4 group, const MidiNibble4 channel, const uint8_t noteNumber, const uint8_t index, const uint32_t data);
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi2RegisteredPerNoteControllerMessage FromValues(
+			const MidiGroup group, 
+			const MidiChannel channel, 
+			const MidiByte7 noteNumber, 
+			const MidiByte8 index, 
+			const MidiWord32 data);
 	};
 
 	// Protocol spec 4.2.4. MIDI 2.0 assignable per-note controller message.
@@ -295,11 +419,17 @@ namespace Microsoft::Windows::Midi::Messages
 		const MidiByte8 getIndex();
 		void setIndex(const MidiByte8 value);
 
-		const uint32_t getData();
-		void setData(const uint32_t value);
+		const MidiWord32 getData();
+		void setData(const MidiWord32 value);
 
 
-		static Midi2AssignablePerNoteControllerMessage FromValues(const MidiNibble4 group, const MidiNibble4 channel, const uint8_t noteNumber, const uint8_t index, const uint32_t data);
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi2AssignablePerNoteControllerMessage FromValues(
+			const MidiGroup group, 
+			const MidiChannel channel, 
+			const MidiByte7 noteNumber, 
+			const MidiByte8 index, 
+			const MidiWord32 data);
 	};
 
 	// Protocol spec 4.2.5. MIDI 2.0 per-note management message.
@@ -313,11 +443,16 @@ namespace Microsoft::Windows::Midi::Messages
 		const MidiByte7 getNoteNumber();
 		void setNoteNumber(const MidiByte7 value);
 
-		const uint8_t getOptionFlags();
-		void setOptionFlags(const uint8_t value);
+		const MidiByte8 getOptionFlags();
+		void setOptionFlags(const MidiByte8 value);
 
 	
-		static Midi2PerNoteManagementMessage FromValues(const MidiNibble4 group, const MidiNibble4 channel, const uint8_t noteNumber, const uint8_t optionFlags);
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi2PerNoteManagementMessage FromValues(
+			const MidiGroup group, 
+			const MidiChannel channel, 
+			const MidiByte7 noteNumber, 
+			const MidiByte8 optionFlags);
 	};
 
 	// Protocol spec 4.2.6. MIDI 2.0 control change message.
@@ -331,10 +466,15 @@ namespace Microsoft::Windows::Midi::Messages
 		const MidiByte7 getIndex();
 		void setIndex(const MidiByte7 value);
 
-		const uint32_t getData();
-		void setData(const uint32_t value);
+		const MidiWord32 getData();
+		void setData(const MidiWord32 value);
 
-		static Midi2ControlChangeMessage FromValues(const MidiNibble4 group, const MidiNibble4 channel, const uint8_t index, const uint32_t data);
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi2ControlChangeMessage FromValues(
+			const MidiGroup group, 
+			const MidiChannel channel, 
+			const MidiByte7 index, 
+			const MidiWord32 data);
 	};
 
 	// Protocol spec 4.2.7. MIDI 2.0 registered (RPN) controller message.
@@ -351,10 +491,16 @@ namespace Microsoft::Windows::Midi::Messages
 		const MidiByte7 getIndex();
 		void setIndex(const MidiByte7 value);
 
-		const uint32_t getData();
-		void setData(const uint32_t value);
+		const MidiWord32 getData();
+		void setData(const MidiWord32 value);
 	
-		static Midi2RegisteredControllerMessage FromValues(const MidiNibble4 group, const MidiNibble4 channel, const uint8_t bank, const uint8_t index, const uint32_t data);
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi2RegisteredControllerMessage FromValues(
+			const MidiGroup group, 
+			const MidiChannel channel, 
+			const MidiByte7 bank, 
+			const MidiByte7 index, 
+			const MidiWord32 data);
 	};
 
 	// Protocol spec 4.2.7. MIDI 2.0 assignable (NRPN) controller message.
@@ -371,10 +517,16 @@ namespace Microsoft::Windows::Midi::Messages
 		const MidiByte7 getIndex();
 		void setIndex(const MidiByte7 value);
 
-		const uint32_t getData();
-		void setData(const uint32_t value);
+		const MidiWord32 getData();
+		void setData(const MidiWord32 value);
 
-		static Midi2AssignableControllerMessage FromValues(const MidiNibble4 group, const MidiNibble4 channel, const uint8_t bank, const uint8_t index, const uint32_t data);
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi2AssignableControllerMessage FromValues(
+			const MidiGroup group, 
+			const MidiChannel channel, 
+			const MidiByte7 bank, 
+			const MidiByte7 index, 
+			const MidiWord32 data);
 	};
 
 	// Protocol spec 4.2.8. MIDI 2.0 relative registered (R-RPN) controller message.
@@ -391,10 +543,16 @@ namespace Microsoft::Windows::Midi::Messages
 		const MidiByte7 getIndex();
 		void setIndex(const MidiByte7 value);
 
-		const uint32_t getData();
-		void setData(const uint32_t value);
+		const MidiWord32 getData();
+		void setData(const MidiWord32 value);
 
-		static Midi2RelativeRegisteredControllerMessage FromValues(const MidiNibble4 group, const MidiNibble4 channel, const uint8_t bank, const uint8_t index, const uint32_t data);
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi2RelativeRegisteredControllerMessage FromValues(
+			const MidiGroup group, 
+			const MidiChannel channel, 
+			const MidiByte7 bank, 
+			const MidiByte7 index, 
+			const MidiWord32 data);
 	};
 
 	// Protocol spec 4.2.8. MIDI 2.0 relative assignable (R-NRPN) controller message.
@@ -411,10 +569,16 @@ namespace Microsoft::Windows::Midi::Messages
 		const MidiByte7 getIndex();
 		void setIndex(const MidiByte7 value);
 
-		const uint32_t getData();
-		void setData(const uint32_t value);
+		const MidiWord32 getData();
+		void setData(const MidiWord32 value);
 	
-		static Midi2RelativeAssignableControllerMessage FromValues(const MidiNibble4 group, const MidiNibble4 channel, const uint8_t bank, const uint8_t index, const uint32_t data);
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi2RelativeAssignableControllerMessage FromValues(
+			const MidiGroup group, 
+			const MidiChannel channel, 
+			const MidiByte7 bank, 
+			const MidiByte7 index, 
+			const MidiWord32 data);
 	};
 
 	// Protocol spec 4.2.9. MIDI 2.0 program change message.
@@ -428,8 +592,8 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 		const Midi2ChannelVoiceOpcode Opcode = Midi2ChannelVoiceOpcodeProgramChange;
 
-		const MidiByte8 getOptionFlags();
-		void setOptionFlags(const MidiByte8 value);
+		const Midi2ProgramChangeOptionFlags getOptionFlags();
+		void setOptionFlags(const Midi2ProgramChangeOptionFlags value);
 
 		const MidiByte7 getProgram();
 		void setProgram(const MidiByte7 value);
@@ -441,7 +605,14 @@ namespace Microsoft::Windows::Midi::Messages
 		void setBankLsb(const MidiByte7 value);
 
 
-		static Midi2ProgramChangeMessage FromValues(const MidiNibble4 group, const MidiNibble4 channel, const uint8_t optionFlags, const uint8_t program, const uint8_t bankMsb, const uint8_t bankLsb);
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi2ProgramChangeMessage FromValues(
+			const MidiGroup group, 
+			const MidiChannel channel, 
+			const Midi2ProgramChangeOptionFlags optionFlags,
+			const MidiByte7 program, 
+			const MidiByte7 bankMsb, 
+			const MidiByte7 bankLsb);
 	};
 
 	// Protocol spec 4.2.10. MIDI 2.0 channel pressure (aftertouch) message.
@@ -452,10 +623,14 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 		const Midi2ChannelVoiceOpcode Opcode = Midi2ChannelVoiceOpcodeChannelPressure;
 
-		const uint32_t getData();
-		void setData(const uint32_t value);
+		const MidiWord32 getData();
+		void setData(const MidiWord32 value);
 	
-		static Midi2ChannelPressureMessage FromValues(const MidiNibble4 group, const MidiNibble4 channel, const uint32_t data);
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi2ChannelPressureMessage FromValues(
+			const MidiGroup group, 
+			const MidiChannel channel, 
+			const MidiWord32 data);
 	};
 
 	// Protocol spec 4.2.11. MIDI 2.0 channel pitch bend message.
@@ -466,10 +641,14 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 		const Midi2ChannelVoiceOpcode Opcode = Midi2ChannelVoiceOpcodePitchBend;
 
-		const uint32_t getData();
-		void setData(const uint32_t value);
+		const MidiWord32 getData();
+		void setData(const MidiWord32 value);
 	
-		static Midi2PitchBendMessage FromValues(const MidiNibble4 group, const MidiNibble4 channel, const uint32_t data);
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi2PitchBendMessage FromValues(
+			const MidiGroup group, 
+			const MidiChannel channel, 
+			const MidiWord32 data);
 	};
 
 	// Protocol spec 4.2.12. MIDI 2.0 per-note pitch bend message.
@@ -483,10 +662,15 @@ namespace Microsoft::Windows::Midi::Messages
 		const MidiByte7 getNoteNumber();
 		void setNoteNumber(const MidiByte7 value);
 
-		const uint32_t getData();
-		void setData(const uint32_t value);
+		const MidiWord32 getData();
+		void setData(const MidiWord32 value);
 	
-		static Midi2PerNotePitchBendMessage FromValues(const MidiNibble4 group, const MidiNibble4 channel, const uint8_t noteNumber, const uint32_t data);
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi2PerNotePitchBendMessage FromValues(
+			const MidiGroup group, 
+			const MidiChannel channel, 
+			const MidiByte7 noteNumber, 
+			const MidiWord32 data);
 	};
 
 
@@ -495,35 +679,43 @@ namespace Microsoft::Windows::Midi::Messages
 	// ----------------------------------------------------------------------------
 
 
-
-
-
-	// MIDI 7-bit MIDI 1.0-data-compatible System Exclusive message
+	// Protocol spec 4.4. MIDI 7-bit MIDI 1.0-data-compatible System Exclusive message
+	// Byte[1]   : High Nibble: Status, Low Nibble # bytes (8 bits total)
+	// Byte[2-7] : Data (7 bits each)
 	// See notes in spec as this is not identical to a MIDI 1.0 sysex stream
-	struct WINDOWSMIDISERVICES_API MidiSystemExclusive7BitMessage final : public Ump64
+	struct WINDOWSMIDISERVICES_API MidiSystemExclusive7Message final : public Ump64
 	{
 		const MidiMessageType MessageType = MidiMessageTypeSystemExclusive7Bit;
 
-		const SystemExclusive7MessageStatus getStatus();
-		void setStatus(const SystemExclusive7MessageStatus value);
+		const MidiSystemExclusive7MessageStatus getStatus();
+		void setStatus(const MidiSystemExclusive7MessageStatus value);
 
-		const uint8_t getNumBytes();
-		void setNumBytes(const uint8_t value);
+		const MidiNibble4 getNumDataBytes();
+		void setNumDataBytes(const MidiNibble4 value);
 
-		// TODO methods to get and set up to 6 bytes of data and also factory methods
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static MidiSystemExclusive7Message FromValues(
+			const MidiGroup group, 
+			const MidiSystemExclusive7MessageStatus status, 
+			const MidiNibble4 numDataBytes, 
+			const byte bytes[]);
 	};
 
 
 
-	// MIDI 2 8-bit system exclusive message. Recommended for new implementations
-	// which don't require 7-bit MIDI 1.0 compatibility. Using this message can
-	// cut down on total bytes transferred by using all 8 bits of each data byte.
+	// Protocol spec 4.5. MIDI 2 8-bit system exclusive message.
+	// Recommended for new implementations which don't require 7-bit MIDI 1.0 
+	// compatibility. Using this message can cut down on total bytes transferred 
+	// by using all 8 bits of each data byte.
+	// Byte[1]	  : High Nibble: Status, Low Nibble # data bytes (8 bits total)
+	// Byte[2]    : Stream Id
+	// Byte[3-15] : Data (8 bits each)
 	struct WINDOWSMIDISERVICES_API Midi2SystemExclusive8BitMessage final : public Ump128
 	{
-		const MidiMessageType MessageType = MidiMessageTypeSystemExclusive8Bit;
+		const MidiMessageType MessageType = MidiMessageTypeMidi2Data;
 
-		const SystemExclusive8MessageStatus getStatus();
-		void setStatus(const SystemExclusive8MessageStatus value);
+		const MidiSystemExclusive8MessageStatus getStatus();
+		void setStatus(const MidiSystemExclusive8MessageStatus value);
 
 		const uint8_t getNumBytes();
 		void setNumBytes(const uint8_t value);
@@ -531,19 +723,103 @@ namespace Microsoft::Windows::Midi::Messages
 		const uint8_t getStreamId();
 		void setStreamId(const uint8_t value);
 
-		// TODO methods to get and set up to 13 bytes of data and also factory methods
+		// TODO data get/set methods
+
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static MidiSystemExclusive7Message FromValues(
+			const MidiGroup group, 
+			const MidiSystemExclusive8MessageStatus status, 
+			const MidiNibble4 numDataBytes, 
+			const MidiByte8 streamId, 
+			const byte bytes[]);
 	};
 
-	// MIDI 2.0 mixed data set header message. 
-	struct WINDOWSMIDISERVICES_API MidiMixedDataSetHeaderMessage final : public Ump128
+
+
+	// Protocol spec 4.6. MIDI 2.0 mixed data set header message. 
+	// Recommended for new implementations which don't require 7-bit MIDI 1.0 
+	// compatibility. Using this message can cut down on total bytes transferred 
+	// by using all 8 bits of each data byte.
+	// Byte[1]	  : High Nibble: Status, Low Nibble MDS Id (8 bits total)
+	// Short[1]   : Number of valid bytes in this chunk (including header)
+	// Short[2]   : Number of chunks in mixed data set
+	// Short[3]   : Number of this chunk (1-based)
+	// Short[4]   : Manufacturer Id
+	// Short[5]   : Device Id
+	// Short[6]   : Sub Id 1
+	// Short[7]   : Sub Id 2
+	struct WINDOWSMIDISERVICES_API Midi2MixedDataSetHeaderMessage final : public Ump128
 	{
+		const MidiMessageType MessageType = MidiMessageTypeMidi2Data;
+		const Midi2MixedMessageStatus Status = Midi2MixedDataStatusHeader;
+
 		// TODO fill this out
+
+		const MidiNibble4 getMdsId();
+		void setMdsId(const MidiNibble4 value);
+
+		const MidiShort16 getNumberOfValidBytesInChunk();
+		void setNumberOfValidBytesInChunk(const MidiShort16 value);
+
+		const MidiShort16 getNumberOfChunks();
+		void setNumberOfChunks(const MidiShort16 value);
+
+		const MidiShort16 getChunkNumber();
+		void setChunkNumber(const MidiShort16 value);
+
+		const MidiShort16 getManufacturerId();
+		void setManufacturerId(const MidiShort16 value);
+
+		const MidiShort16 getDeviceId();
+		void setDeviceId(const MidiShort16 value);
+
+		const MidiShort16 getSubId1();
+		void setSubId1(const MidiShort16 value);
+
+		const MidiShort16 getSubId2();
+		void setSubId2(const MidiShort16 value);
+
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi2MixedDataSetHeaderMessage FromValues(
+			const MidiGroup group, 
+			const MidiNibble4 mdsId,
+			const MidiShort16 numberOfValidBytesInChunk,
+			const MidiShort16 numberOfChunks,
+			const MidiShort16 chunkNumber,
+			const MidiShort16 manufacturerId,
+			const MidiShort16 deviceId,
+			const MidiShort16 subId1,
+			const MidiShort16 subId2);
+
 	};
 
-	// MIDI 2.0 mixed data set payload message. 
-	struct WINDOWSMIDISERVICES_API MidiMixedDataSetPayloadMessage final : public Ump128
+	// Protocol spec 4.6. MIDI 2.0 mixed data set payload message. 
+	// Recommended for new implementations which don't require 7-bit MIDI 1.0 
+	// compatibility. Using this message can cut down on total bytes transferred 
+	// by using all 8 bits of each data byte.
+	// Byte[1]	  : High Nibble: Status, Low Nibble MDS Id (8 bits total)
+	// Byte[2-15] : Data (can be bytes, shorts, etc.)
+	struct WINDOWSMIDISERVICES_API Midi2MixedDataSetPayloadMessage final : public Ump128
 	{
-		// TODO fill this out
+		const MidiMessageType MessageType = MidiMessageTypeMidi2Data;
+		const Midi2MixedMessageStatus Status = Midi2MixedDataStatusPayload;
+
+		const MidiNibble4 getMdsId();
+		void setMdsId(const MidiNibble4 value);
+
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi2MixedDataSetPayloadMessage FromValues(
+			const MidiGroup group, 
+			const MidiNibble4 mdsId, 
+			const MidiByte8 array14bytes[]);
+
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi2MixedDataSetPayloadMessage FromValues(
+			const MidiGroup group, 
+			const MidiNibble4 mdsId, 
+			const MidiShort16 array7Shorts[]);
+
+		// TODO data get/set methods
 	};
 
 
@@ -557,86 +833,143 @@ namespace Microsoft::Windows::Midi::Messages
 		const MidiMessageType MessageType = MidiMessageTypeSystem;
 	};
 
+	// Protocol spec 4.3. System MIDI Time Code quarter frame message.
+	// Byte[2] : High 3 bits message type, low 4 bits value (7 bits)
+	// Byte[3] : (unused. Set to zero) (8 bits)
 	struct WINDOWSMIDISERVICES_API MidiTimeCodeMessage final : public MidiSystemMessage
 	{
-		const uint8_t Status = 0xF1;
+		const MidiByte8 Status = 0xF1;
 
-		static MidiTimeCodeMessage FromValues(const MidiNibble4 group, const uint8_t timecodeByte);
+		const MidiNibble3 getTimeCodeMessageType();
+		void setTimeCodeMessageType(const MidiNibble3 value);
+
+		const MidiNibble4 getTimeCodeValue();
+		void setTimeCodeValue(const MidiNibble4 value);
+
+
+		// Conversion method. Uses MIDI 1.0 rules and data
+		static MidiTimeCodeMessage FromMidi1Bytes(
+			const MidiGroup group, 
+			const MidiByte7 timecodeByte);
+
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static MidiTimeCodeMessage FromValues(
+			const MidiGroup group, 
+			const MidiNibble3 timeCodeMessageType, 
+			const MidiNibble4 timeCodeValue);
 	};
 
+	// Protocol spec 4.3. System MIDI Song Position Pointer message.
+	// Byte[2] : Data LSB (7 bits) note: lsb is before msb per MIDI 1.0
+	// Byte[3] : Data MSB (7 bits)
 	struct WINDOWSMIDISERVICES_API MidiSongPositionPointerMessage final : public MidiSystemMessage
 	{
-		const uint8_t Status = 0xF2;
+		const MidiByte8 Status = 0xF2;
 
-		// note: lsb is before msb per MIDI 1.0
+		const MidiByte7 getDataLsb();
+		void setDataLsb(const MidiByte7 value);
 
-		const uint8_t getDataLsb();
-		void setDataLsb(const uint8_t value);
-
-		const uint8_t getDataMsb();
+		const MidiByte7 getDataMsb();
 		void setDataMsb(const uint8_t value);
 
-
-		static MidiSongPositionPointerMessage FromValues(const MidiNibble4 group, const uint8_t positionLsbByte, const uint8_t positionMsbByte);
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static MidiSongPositionPointerMessage FromValues(
+			const MidiGroup group, 
+			const MidiByte7 positionLsbByte, 
+			const MidiByte7 positionMsbByte);
 	};
 
+	// Protocol spec 4.3. System MIDI Song Select message.
+	// Byte[2] : Song (7 bits)
+	// Byte[3] : (unused. Set to zero) (8 bits)
 	struct WINDOWSMIDISERVICES_API MidiSongSelectMessage final : public MidiSystemMessage
 	{
-		const uint8_t Status = 0xF3;
+		const MidiByte8 Status = 0xF3;
 
-		const uint8_t getSong();
-		void setSong(const uint8_t value);
+		const MidiByte7 getSong();
+		void setSong(const MidiByte7 value);
 
-		static MidiSongSelectMessage FromValues(const MidiNibble4 group, const uint8_t songByte);
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static MidiSongSelectMessage FromValues(
+			const MidiGroup group, 
+			const MidiByte7 songByte);
 	};
 
+	// Protocol spec 4.3. System MIDI Tune Request message.
+	// Byte[2] : (unused. Set to zero) (8 bits)
+	// Byte[3] : (unused. Set to zero) (8 bits)
 	struct WINDOWSMIDISERVICES_API MidiTuneRequestMessage final : public MidiSystemMessage
 	{
-		const uint8_t Status = 0xF6;
+		const MidiByte8 Status = 0xF6;
 
-		static MidiTuneRequestMessage FromValues(const MidiNibble4 group);
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static MidiTuneRequestMessage FromValues(const MidiGroup group);
 	};
 
+	// Protocol spec 4.3. System MIDI Timing Clock message.
+	// Byte[2] : (unused. Set to zero) (8 bits)
+	// Byte[3] : (unused. Set to zero) (8 bits)
 	struct WINDOWSMIDISERVICES_API MidiTimingClockMessage final : public MidiSystemMessage
 	{
-		const uint8_t Status = 0xF8;
+		const MidiByte8 Status = 0xF8;
 
-		static MidiTimingClockMessage FromValues(const MidiNibble4 group);
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static MidiTimingClockMessage FromValues(const MidiGroup group);
 	};
 
+	// Protocol spec 4.3. System MIDI Start message.
+	// Byte[2] : (unused. Set to zero) (8 bits)
+	// Byte[3] : (unused. Set to zero) (8 bits)
 	struct WINDOWSMIDISERVICES_API MidiStartMessage final : public MidiSystemMessage
 	{
-		const uint8_t Status = 0xFA;
+		const MidiByte8 Status = 0xFA;
 
-		static MidiStartMessage FromValues(const MidiNibble4 group);
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static MidiStartMessage FromValues(const MidiGroup group);
 	};
 
+	// Protocol spec 4.3. System MIDI Continue message.
+	// Byte[2] : (unused. Set to zero) (8 bits)
+	// Byte[3] : (unused. Set to zero) (8 bits)
 	struct WINDOWSMIDISERVICES_API MidiContinueMessage final : public MidiSystemMessage
 	{
-		const uint8_t Status = 0xFB;
+		const MidiByte8 Status = 0xFB;
 
-		static MidiContinueMessage FromValues(const MidiNibble4 group);
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static MidiContinueMessage FromValues(const MidiGroup group);
 	};
 
+	// Protocol spec 4.3. System MIDI Stop message.
+	// Byte[2] : (unused. Set to zero) (8 bits)
+	// Byte[3] : (unused. Set to zero) (8 bits)
 	struct WINDOWSMIDISERVICES_API MidiStopMessage final : public MidiSystemMessage
 	{
-		const uint8_t Status = 0xFC;
+		const MidiByte8 Status = 0xFC;
 
-		static MidiStopMessage FromMidi1Bytes(const MidiNibble4 group);
+		// Conversion method. Uses MIDI 1.0 rules and data
+		static MidiStopMessage FromMidi1Bytes(const MidiGroup group);
 	};
 
+	// Protocol spec 4.3. System MIDI Active Sensing message.
+	// Byte[2] : (unused. Set to zero) (8 bits)
+	// Byte[3] : (unused. Set to zero) (8 bits)
 	struct WINDOWSMIDISERVICES_API MidiActiveSensingMessage final : public MidiSystemMessage
 	{
-		const uint8_t Status = 0xFE;
+		const MidiByte8 Status = 0xFE;
 
-		static MidiActiveSensingMessage FromMidi1Bytes(const MidiNibble4 group);
+		// Conversion method. Uses MIDI 1.0 rules and data
+		static MidiActiveSensingMessage FromMidi1Bytes(const MidiGroup group);
 	};
 
+	// Protocol spec 4.3. System MIDI Reset message.
+	// Byte[2] : (unused. Set to zero) (8 bits)
+	// Byte[3] : (unused. Set to zero) (8 bits)
 	struct WINDOWSMIDISERVICES_API MidiResetMessage final : public MidiSystemMessage
 	{
-		const uint8_t Status = 0xFF;
+		const MidiByte8 Status = 0xFF;
 
-		static MidiResetMessage FromMidi1Bytes(const MidiNibble4 group);
+		// Conversion method. Uses MIDI 1.0 rules and data
+		static MidiResetMessage FromMidi1Bytes(const MidiGroup group);
 	};
 
 
@@ -645,11 +978,19 @@ namespace Microsoft::Windows::Midi::Messages
 	// ----------------------------------------------------------------------------
 
 
+	// Protocol spec 4.8. Utility messages
 	struct WINDOWSMIDISERVICES_API Midi2UtilityMessage : public Ump32
 	{
 		const MidiMessageType MessageType = MidiMessageTypeUtility;
 	};
 
+	// Protocol spec 4.8.1 Utility - No Operation message
+	struct WINDOWSMIDISERVICES_API Midi2NoopMessage final : public Midi2UtilityMessage
+	{
+		// TODO fill this out
+	};
+
+	// Protocol spec 4.8.5 Utility - JR Clock Message
 	struct WINDOWSMIDISERVICES_API Midi2JitterReductionClockMessage final : public Midi2UtilityMessage
 	{
 		const uint8_t Status = 0x01;
@@ -657,11 +998,15 @@ namespace Microsoft::Windows::Midi::Messages
 		const uint16_t getClockTime();
 		void setClockTime(const uint16_t value);
 
-		static Midi2JitterReductionClockMessage FromValues(const MidiNibble4 group, const MidiShort16 clockTime);
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi2JitterReductionClockMessage FromValues(
+			const MidiGroup group, 
+			const MidiShort16 clockTime);
 
 		// TODO fill this out
 	};
 
+	// Protocol spec 4.8.5 Utility - JR Timestamp Message
 	struct WINDOWSMIDISERVICES_API Midi2JitterReductionTimestampMessage final : public Midi2UtilityMessage
 	{
 		const uint8_t Status = 0x02;
@@ -669,13 +1014,11 @@ namespace Microsoft::Windows::Midi::Messages
 		const uint16_t getTimestamp();
 		void setTimestamp(const uint16_t value);
 
-		static Midi2JitterReductionTimestampMessage FromValues(const MidiNibble4 group, const MidiShort16 timestamp);
+		// Factory method. Includes data cleanup. To avoid that, use the direct data members (Byte[], Short[], Word[]).
+		static Midi2JitterReductionTimestampMessage FromValues(
+			const MidiGroup group, 
+			const MidiShort16 timestamp);
 
-		// TODO fill this out
-	};
-
-	struct WINDOWSMIDISERVICES_API Midi2NoopMessage final : public Midi2UtilityMessage
-	{
 		// TODO fill this out
 	};
 
