@@ -71,6 +71,10 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>$(BOOST_ROOT);$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>$(BOOST_ROOT)\stage\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -143,6 +147,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
+    <ClInclude Include="MidiMessageQueue.h" />
     <ClInclude Include="WindowsMidiServicesApi.h" />
     <ClInclude Include="WindowsMidiServicesBase.h" />
     <ClInclude Include="WindowsMidiServicesSession.h" />
@@ -181,6 +186,7 @@
     <ClCompile Include="MidiDevice.cpp" />
     <ClCompile Include="MidiDeviceInformation.cpp" />
     <ClCompile Include="MidiImmediateStream.cpp" />
+    <ClCompile Include="MidiMessageQueue.cpp" />
     <ClCompile Include="MidiScheduledStream.cpp" />
     <ClCompile Include="MidiStream.cpp" />
     <ClCompile Include="MidiStreamInformation.cpp" />

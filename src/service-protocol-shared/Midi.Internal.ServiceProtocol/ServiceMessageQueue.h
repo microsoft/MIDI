@@ -1,3 +1,8 @@
+// ------------------------------------------------------------------------------------------------
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License. See LICENSE in the GitHub project root for license information.
+// ------------------------------------------------------------------------------------------------
+
 #pragma once
 
 #include <boost/interprocess/ipc/message_queue.hpp>

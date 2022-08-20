@@ -9,7 +9,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi.Internal.ServiceProtoc
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi.Internal.ServiceProtocolManaged", "..\service-protocol-shared\Midi.Internal.ServiceProtocolManaged\Midi.Internal.ServiceProtocolManaged.vcxproj", "{A8B7E56B-1058-467A-B8CD-5281BD127760}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Windows.Midi.Minimal", "Microsoft.Windows.Midi.Minimal\Microsoft.Windows.Midi.Minimal.vcxproj", "{E16085AC-29EA-4454-89C5-F5D9FFFE0E96}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Windows.Midi.Native", "Microsoft.Windows.Midi.Native\Microsoft.Windows.Midi.Native.vcxproj", "{E16085AC-29EA-4454-89C5-F5D9FFFE0E96}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

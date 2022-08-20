@@ -30,15 +30,15 @@
 //    on this PC.
 //		- If not installed, use the included functions to prompt the user to install
 //		- If installed, you may optionally use the ping function to get the version
-//        of the service running.
+//        of the service running and check that it is responding.
 // 2. Create a new session
 //		- you can have more than one session per app. Think of them as projects, 
 //        tabs, etc.)
 //		- Open devices/streams are scoped to the session and so have dedicated 
-//        Send/Receive queues per endpoint per session
+//        Send/Receive queues per stream per session
 //		- Terminating the session cleans up all the open resources
 // 3. Enumerate devices and streams
-//		- Enumeration is not scoped to the session, but is global to the process
+//		- Enumeration is not scoped to the session, but is global to the system
 //		- Be sure to wire up callbacks for change notifications as well
 // 4. Using the returned enumeration information, open one or more devices
 //		- A device is what is connected to the PC. Devices expose one or more
@@ -50,7 +50,8 @@
 // 5. Open one or more streams on those devices
 //		- Device streams in MIDI 2.0 are bi-directional
 //		- Device streams can also be configured as bi-directional (two actual
-//		  ports tied together as a logical bi-directional stream)
+//		  MIDI 1.0 ports tied together as a logical bi-directional stream to support
+//		  MIDI CI)
 // 6. Send/receive messages using base UMPs or their strongly-typed derived types
 //		- The strongly-typed classes are optional, but helpful
 //

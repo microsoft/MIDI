@@ -146,7 +146,7 @@
   <ItemGroup>
     <ClInclude Include="framework.h" />
     <ClInclude Include="MidiCIMessages.h" />
-    <ClInclude Include="MidiMessageQueue.h" />
+    <ClInclude Include="MidiMessageRouting.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="MessageHeaders.h" />
     <ClInclude Include="ProcessInfo.h" />
@@ -156,7 +156,6 @@
     <ClInclude Include="SessionMessages.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MidiMessageQueue.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

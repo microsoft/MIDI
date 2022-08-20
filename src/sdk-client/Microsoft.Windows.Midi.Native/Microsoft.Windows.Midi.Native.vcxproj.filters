@@ -40,6 +40,12 @@
     <Filter Include="Header Files\API Redist">
       <UniqueIdentifier>{58fd8899-a1a6-4d59-836d-57c4d4090ee0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Internal">
+      <UniqueIdentifier>{5b44d8c4-20cd-4119-911b-3da168a99a8c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Internal">
+      <UniqueIdentifier>{58fbee7c-b03a-4b78-9218-f7aaf0473943}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -68,6 +74,9 @@
     </ClInclude>
     <ClInclude Include="WindowsMidiServicesUtility.h">
       <Filter>Header Files\API Redist</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessageQueue.h">
+      <Filter>Header Files\Internal</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -181,6 +190,9 @@
     </ClCompile>
     <ClCompile Include="MidiScheduledStream.cpp">
       <Filter>Source Files\Session</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessageQueue.cpp">
+      <Filter>Source Files\Internal</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
