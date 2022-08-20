@@ -1,0 +1,12 @@
+import "Midi2UtilityMessage.idl";
+
+namespace Microsoft.Windows.Midi.Messages.Utility
+{
+    [default_interface]
+    runtimeclass Midi2NoopMessage : Midi2UtilityMessage
+    {
+
+    };
+
+
+}

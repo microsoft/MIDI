@@ -1,0 +1,20 @@
+
+namespace Microsoft.Windows.Midi.Enumeration
+{
+
+    [default_interface]
+    runtimeclass MidiDeviceInformation
+    {
+        Guid Id {get;};
+
+        Guid TransportId {get;};
+
+        String Name;
+        String DeviceSuppliedName {get;};
+        String Serial{get;};
+        String IconFileName{get;};
+        String Description{get;set;};
+
+
+    };
+}

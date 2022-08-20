@@ -1,0 +1,69 @@
+import "MidiMessageReceivedEventArgs.idl";
+import "MidiEndpointInformation.idl";
+import "Ump.idl";
+
+// TODO: Needs to have CI data about groups & channels, including whether or not to 
+// send JR clock messages every 250ms or so
+
+namespace Microsoft.Windows.Midi
+{
+    [default_interface]
+    runtimeclass MidiEndpoint
+    {
+        Microsoft.Windows.Midi.Enumeration.MidiEndpointInformation Information{get;};
+
+        // when you open an endpoint from the session, its incoming messages
+        // get received at the session
+        // if you open the endpoint from the endpoint itself, the messages
+        // get received at the endpoint object.
+        // this supports both a flat model and the WinRT MIDI style model
+
+
+        // TODO: Maintain a vector of MIDI CI properties that we need to 
+        // know about by group/channel for this endpoint
+        // needs to be kept up to date by subscribing
+        // offer a method to refresh that?
+
+
+        // TODO: Ability to lock an endpoint (or maybe just a group/channel)
+        // for MIDI CI negotiation. Need to think about concurrency in a
+        // multi-client setup there. May need to generalize to Sysex, but the
+        // locking there is unidirectional. CI is bidirectional
+        // if we lock by group/channel, we'll need to inspect every packet
+        // before sending it out. That can be made fairly efficient, however, by
+        // just setting up some bitmasks to compare to.
+
+        [default_overload]
+        static MidiEndpoint Open(Microsoft.Windows.Midi.Enumeration.MidiEndpointInformation information);
+        static MidiEndpoint Open(Guid deviceId, Guid endpointId);
+
+        event Windows.Foundation.EventHandler<Microsoft.Windows.Midi.MidiMessageReceivedEventArgs> MessageReceived;
+
+        void Close();
+
+        // the clock is managed in the service. This just tells the service to do it
+        // TBD if we have this here when it needs to be MIDI CI negotiated...
+        void StartSendingJRClock(UInt8 group, UInt8 channel);
+        void StopSendingJRClock(UInt8 group, UInt8 channel);
+
+
+        // message sending
+        [default_overload]
+        void SendUmp(Microsoft.Windows.Midi.Messages.Ump message);
+        //void SendUmp(UInt32 word0);
+        //void SendUmp(UInt32 word0, UInt32 word1);
+        //void SendUmp(UInt32 word0, UInt32 word1, UInt32 word2);
+        //void SendUmp(UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
+        // TODO: Send a buffer/array of UMPs
+
+        [default_overload]
+        void SendUmpWithJRTimestamp(MidiJitterReductionTimestampMessage timestamp, Microsoft.Windows.Midi.Messages.Ump message);
+        //void SendUmpWithJRTimestamp(UInt32 word0);
+        //void SendUmpWithJRTimestamp(UInt32 word0, UInt32 word1);
+        //void SendUmpWithJRTimestamp(UInt32 word0, UInt32 word1, UInt32 word2);
+        //void SendUmpWithJRTimestamp(UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
+        // TODO: Send a buffer/array of UMPs
+       
+
+    };
+}

@@ -1,0 +1,25 @@
+import "Ump64.idl";
+import "Midi2ChannelVoiceMessage.idl";
+
+
+namespace Microsoft.Windows.Midi.Messages.ChannelVoice
+{
+    [default_interface]
+    runtimeclass Midi2ProgramChangeMessage : Midi2ChannelVoiceMessage
+    {
+        UInt8 NoteNumber;
+        Boolean OptionFlagBankValid;
+        UInt8 Program;
+        UInt8 BankMsb;
+        UInt8 BankLsb;
+
+        Midi2ProgramChangeMessage();
+
+        static Midi2ProgramChangeMessage FromUmp(Microsoft.Windows.Midi.Messages.Ump64 ump);
+        static Midi2ProgramChangeMessage FromWords(UInt32 word0, UInt32 word1);
+        static Midi2ProgramChangeMessage FromFields(UInt8 group, UInt8 channel, UInt8 noteNumber, UInt8 program);
+        static Midi2ProgramChangeMessage FromFields(UInt8 group, UInt8 channel, UInt8 noteNumber, Boolean optionFlagBankValid, UInt8 program, UInt8 bankMsb, UInt8 bankLsb);
+        static Midi2ProgramChangeMessage FromFields(UInt8 group, UInt8 channel, UInt8 noteNumber, Boolean optionFlagBankValid, UInt8 program, UInt16 bank);
+    };
+
+}

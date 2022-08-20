@@ -1,0 +1,239 @@
+import "Ump64.idl";
+
+namespace Microsoft.Windows.Midi.Messages.Types.ChannelVoice
+{
+    enum Midi2NoteOnOffAttributeType
+    {
+        NoAttributeData = 0x00,
+        ManufacturerSpecific = 0x01,
+        ProfileSpecific = 0x02,
+        PitchSevenDotNine = 0x03
+    };
+
+
+    [default_interface]
+    unsealed runtimeclass Midi2ChannelVoiceMessage
+    {
+        UInt8 Group;
+        UInt8 Opcode;
+        UInt8 Channel;
+
+        [default_overload]
+        static Microsoft.Windows.Midi.Messages.Packet.Ump64 ToUmp();
+        static void ToUmp(out Microsoft.Windows.Midi.Messages.Packet.Ump64 ump);
+    };
+
+    [default_interface]
+    runtimeclass Midi2NoteOffMessage : Midi2ChannelVoiceMessage
+    {
+        UInt8 NoteNumber;
+        Midi2NoteOnOffAttributeType AttributeType;
+        UInt16 Velocity;
+        UInt16 AttributeData;
+
+        Midi2NoteOffMessage();
+
+        static Midi2NoteOffMessage FromUmp(Microsoft.Windows.Midi.Messages.Packet.Ump64 ump);
+        static Midi2NoteOffMessage FromWords(UInt32 word0, UInt32 word1);
+        static Midi2NoteOffMessage FromFields(UInt8 group, UInt8 channel, Midi2NoteOnOffAttributeType attributeType, UInt16 velocity, UInt16 attributeData);
+    };
+
+    [default_interface]
+    runtimeclass Midi2NoteOnMessage : Midi2ChannelVoiceMessage
+    {
+        UInt8 NoteNumber;
+        Midi2NoteOnOffAttributeType AttributeType;
+        UInt16 Velocity;
+        UInt16 AttributeData;
+
+        Midi2NoteOnMessage();
+
+        [default_overload]
+        static Midi2NoteOnMessage FromUmp(Microsoft.Windows.Midi.Messages.Packet.Ump64 ump);
+        static Midi2NoteOnMessage FromWords(UInt32 word0, UInt32 word1);
+        static Midi2NoteOnMessage FromFields(UInt8 group, UInt8 channel, Midi2NoteOnOffAttributeType attributeType, UInt16 velocity, UInt16 attributeData);
+    };
+
+    [default_interface]
+    runtimeclass Midi2PolyPressureMessage : Midi2ChannelVoiceMessage
+    {
+        UInt8 NoteNumber;
+        UInt8 Index;
+        UInt32 Data;
+
+        Midi2PolyPressureMessage();
+
+        static Midi2PolyPressureMessage FromUmp(Microsoft.Windows.Midi.Messages.Packet.Ump64 ump);
+        static Midi2PolyPressureMessage FromWords(UInt32 word0, UInt32 word1);
+        static Midi2PolyPressureMessage FromFields(UInt8 group, UInt8 channel, UInt8 noteNumber, UInt8 index, UInt32 data);
+    };
+
+    [default_interface]
+    runtimeclass Midi2RegisteredPerNoteControllerMessage : Midi2ChannelVoiceMessage
+    {
+        UInt8 NoteNumber;
+        UInt8 Index;
+        UInt32 Data;
+
+        Midi2RegisteredPerNoteControllerMessage();
+
+        static Midi2RegisteredPerNoteControllerMessage FromUmp(Microsoft.Windows.Midi.Messages.Packet.Ump64 ump);
+        static Midi2RegisteredPerNoteControllerMessage FromWords(UInt32 word0, UInt32 word1);
+        static Midi2RegisteredPerNoteControllerMessage FromFields(UInt8 group, UInt8 channel, UInt8 noteNumber, UInt8 index, UInt32 data);
+    };
+
+    [default_interface]
+    runtimeclass Midi2AssignablePerNoteControllerMessage : Midi2ChannelVoiceMessage
+    {
+        UInt8 NoteNumber;
+        UInt8 Index;
+        UInt32 Data;
+
+        Midi2AssignablePerNoteControllerMessage();
+
+        static Midi2AssignablePerNoteControllerMessage FromUmp(Microsoft.Windows.Midi.Messages.Packet.Ump64 ump);
+        static Midi2AssignablePerNoteControllerMessage FromWords(UInt32 word0, UInt32 word1);
+        static Midi2AssignablePerNoteControllerMessage FromFields(UInt8 group, UInt8 channel, UInt8 noteNumber, UInt8 index, UInt32 data);
+    };
+
+    [default_interface]
+    runtimeclass Midi2PerNoteManagementMessage : Midi2ChannelVoiceMessage
+    {
+        UInt8 NoteNumber;
+        Boolean OptionFlagDetachPerNoteControllers;
+        Boolean OptionFlagResetPerNoteControllers;
+
+        Midi2PerNoteManagementMessage();
+
+        static Midi2PerNoteManagementMessage FromUmp(Microsoft.Windows.Midi.Messages.Packet.Ump64 ump);
+        static Midi2PerNoteManagementMessage FromWords(UInt32 word0, UInt32 word1);
+        static Midi2PerNoteManagementMessage FromFields(UInt8 group, UInt8 channel, UInt8 noteNumber, Boolean optionFlagDetachPerNoteControllers, Boolean optionFlagResetPerNoteControllers);
+    };
+
+    [default_interface]
+    runtimeclass Midi2ControlChangeMessage : Midi2ChannelVoiceMessage
+    {
+        UInt8 Index;
+        UInt32 Data;
+
+        Midi2ControlChangeMessage();
+
+        static Midi2ControlChangeMessage FromUmp(Microsoft.Windows.Midi.Messages.Packet.Ump64 ump);
+        static Midi2ControlChangeMessage FromWords(UInt32 word0, UInt32 word1);
+        static Midi2ControlChangeMessage FromFields(UInt8 group, UInt8 channel, UInt8 index, UInt32 data);
+    };
+
+    [default_interface]
+    runtimeclass Midi2RegisteredControllerMessage : Midi2ChannelVoiceMessage
+    {
+        UInt8 Bank;     // RPN MSB
+        UInt8 Index;    // RPN LSB
+        UInt32 Data;
+
+        Midi2RegisteredControllerMessage();
+
+        static Midi2RegisteredControllerMessage FromUmp(Microsoft.Windows.Midi.Messages.Packet.Ump64 ump);
+        static Midi2RegisteredControllerMessage FromWords(UInt32 word0, UInt32 word1);
+        static Midi2RegisteredControllerMessage FromFields(UInt8 group, UInt8 channel, UInt8 bank, UInt8 index, UInt32 data);
+    };
+
+    [default_interface]
+    runtimeclass Midi2AssignableControllerMessage : Midi2ChannelVoiceMessage
+    {
+        UInt8 Bank;     // NRPN MSB
+        UInt8 Index;    // NRPN LSB
+        UInt32 Data;
+
+        Midi2AssignableControllerMessage();
+
+        static Midi2AssignableControllerMessage FromUmp(Microsoft.Windows.Midi.Messages.Packet.Ump64 ump);
+        static Midi2AssignableControllerMessage FromWords(UInt32 word0, UInt32 word1);
+        static Midi2AssignableControllerMessage FromFields(UInt8 group, UInt8 channel, UInt8 bank, UInt8 index, UInt32 data);
+    };
+
+    [default_interface]
+    runtimeclass Midi2RelativeRegisteredControllerMessage : Midi2ChannelVoiceMessage
+    {
+        UInt8 Bank;  
+        UInt8 Index; 
+        UInt32 Data;
+
+        Midi2RelativeRegisteredControllerMessage();
+
+        static Midi2RelativeRegisteredControllerMessage FromUmp(Microsoft.Windows.Midi.Messages.Packet.Ump64 ump);
+        static Midi2RelativeRegisteredControllerMessage FromWords(UInt32 word0, UInt32 word1);
+        static Midi2RelativeRegisteredControllerMessage FromFields(UInt8 group, UInt8 channel, UInt8 bank, UInt8 index, UInt32 data);
+    };
+
+    [default_interface]
+    runtimeclass Midi2RelativeAssignableControllerMessage : Midi2ChannelVoiceMessage
+    {
+        UInt8 Bank;
+        UInt8 Index;
+        UInt32 Data;
+
+        Midi2RelativeAssignableControllerMessage();
+
+        static Midi2RelativeAssignableControllerMessage FromUmp(Microsoft.Windows.Midi.Messages.Packet.Ump64 ump);
+        static Midi2RelativeAssignableControllerMessage FromWords(UInt32 word0, UInt32 word1);
+        static Midi2RelativeAssignableControllerMessage FromFields(UInt8 group, UInt8 channel, UInt8 bank, UInt8 index, UInt32 data);
+    };
+
+    [default_interface]
+    runtimeclass Midi2ProgramChangeMessage : Midi2ChannelVoiceMessage
+    {
+        UInt8 NoteNumber;
+        Boolean OptionFlagBankValid;
+        UInt8 Program;
+        UInt8 BankMsb;
+        UInt8 BankLsb;
+
+        Midi2ProgramChangeMessage();
+
+        static Midi2ProgramChangeMessage FromUmp(Microsoft.Windows.Midi.Messages.Packet.Ump64 ump);
+        static Midi2ProgramChangeMessage FromWords(UInt32 word0, UInt32 word1);
+        static Midi2ProgramChangeMessage FromFields(UInt8 group, UInt8 channel, UInt8 noteNumber, UInt8 program);
+        static Midi2ProgramChangeMessage FromFields(UInt8 group, UInt8 channel, UInt8 noteNumber, Boolean optionFlagBankValid, UInt8 program, UInt8 bankMsb, UInt8 bankLsb);
+        static Midi2ProgramChangeMessage FromFields(UInt8 group, UInt8 channel, UInt8 noteNumber, Boolean optionFlagBankValid, UInt8 program, UInt16 bank);
+    };
+
+    [default_interface]
+    runtimeclass Midi2ChannelPressureMessage : Midi2ChannelVoiceMessage
+    {
+        UInt32 Data;
+
+        Midi2ChannelPressureMessage();
+
+        static Midi2ChannelPressureMessage FromUmp(Microsoft.Windows.Midi.Messages.Packet.Ump64 ump);
+        static Midi2ChannelPressureMessage FromWords(UInt32 word0, UInt32 word1);
+        static Midi2ChannelPressureMessage FromFields(UInt8 group, UInt8 channel, UInt32 data);
+    };
+
+    [default_interface]
+    runtimeclass Midi2PitchBendMessage : Midi2ChannelVoiceMessage
+    {
+        UInt32 Data;
+
+        Midi2PitchBendMessage();
+
+        static Midi2PitchBendMessage FromUmp(Microsoft.Windows.Midi.Messages.Packet.Ump64 ump);
+        static Midi2PitchBendMessage FromWords(UInt32 word0, UInt32 word1);
+        static Midi2PitchBendMessage FromFields(UInt8 group, UInt8 channel, UInt32 data);
+
+    };
+
+    [default_interface]
+    runtimeclass Midi2PerNotePitchBendMessage : Midi2ChannelVoiceMessage
+    {
+        UInt8 NoteNumber;
+        UInt32 Data;
+
+        Midi2PerNotePitchBendMessage();
+
+        static Midi2PerNotePitchBendMessage FromUmp(Microsoft.Windows.Midi.Messages.Packet.Ump64 ump);
+        static Midi2PerNotePitchBendMessage FromWords(UInt32 word0, UInt32 word1);
+        static Midi2PerNotePitchBendMessage FromFields(UInt8 group, UInt8 channel, UInt8 noteNumber, UInt32 data);
+    };
+
+
+}

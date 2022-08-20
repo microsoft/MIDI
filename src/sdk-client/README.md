@@ -1,20 +1,36 @@
 # Client SDK
 
-The prototype and initial rev of this client-side SDK is written in C#/WinRT. We will change to
-C++/WinRT or C++/COM as we look at specific implementation use-cases and the results of the MIDI
-questionnaire sent out in August. This is only for the client side and shared libraties to eliminate
-any extra overhead in apps, and compatibility issues with other CLR versions, to ensure no CLR
-loading in the app processes, and to allow for Arm64EC support. The service, tools, and other code 
-will not be impacted.
+C++ client SDK.
 
-**Note that because this version is written in C#/.NET, any .NET app using this SDK must use the same
-CLR version that we are using.** You cannot have multiple CLR versions loaded into the same process.
+## Timer Utility
 
-C#/.NET is fast enough for what we're doing. It's really only the other concerns which will drive
-this change.
+Scheduled MIDI message sending uses the high-resolution system counters provided by QueryPerformanceCounter. The resolution of this counter varies by system, as does the call latency. In modern Windows 10 and 11 systems, this is generally not an issue. However, to be sure, you can run the TimerInfoUtility command-line tool to inspect your own system. (We'll likely put similar functionality into the settings app in the future.)
 
-## Communication
+![Timer Information](img/timer-info-utility.png)
 
-Currently, the client communicates with the server using a combination of named pipes and memory-
-mapped files. In the C++ version, it will be similar/same under the covers, but will use
-boost.interprocess rather than the current implementation.
+## Building and Tools
+
+Use latest Visual Studio 2022.
+
+The C++ code in this solution uses boost (currently boost 1.80.0) for a number of types . My BOOST_ROOT is C:\Program Files\boost\boost_1_80_0. I set a system environment variable so I could use it in Visual Studio in the include and lib locations.
+
+![BOOST_ROOT Environment Variable](img/boost-path.png)
+
+![BOOST_ROOT Environment Variable in Visual Studio](img/boost-include-and-lib-in-visual-studio.png)
+
+The C++ code also uses the latest accepted language spec (C++ 20) and latest standard library functions.
+
+### Building
+
+TODO
+
+### Boost
+
+TODO
+
+### Visual Studio Add-in
+
+If you end up editing MIDL at all, be sure to download this extension from the Visual Studio marketplace. MIDL 3.0 editing is pretty frustrating without it: [WinRT Tools for C++ by Mads Kristensen](https://marketplace.visualstudio.com/items?itemName=MadsKristensen.MIDL)
+
+While you're at it, if you are updating any of the readme files in Visual Studio, grab the [Markdown Editor v2](https://marketplace.visualstudio.com/items?itemName=MadsKristensen.MarkdownEditor2) VSIX.
+

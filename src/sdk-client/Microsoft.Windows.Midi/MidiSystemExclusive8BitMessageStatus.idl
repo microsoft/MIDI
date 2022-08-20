@@ -1,0 +1,13 @@
+
+namespace Microsoft.Windows.Midi.Messages.Data
+{
+    enum MidiSystemExclusive8BitMessageStatus
+    {
+        CompleteInOneUmp = 0x0,
+        SystemExclusiveStartUmp = 0x1,
+        SystemExclusiveContinueUmp = 0x2,
+        SystemExclusiveEndUmp = 0x3
+    };
+
+
+}
