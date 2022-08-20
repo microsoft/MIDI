@@ -1,0 +1,18 @@
+
+namespace Microsoft.Windows.Midi
+{
+    [default_interface]
+    runtimeclass MidiMessageReceivedEventArgs
+    {
+        Guid DeviceId {get;};
+        Guid EndpointId {get;};
+
+        // TODO: list of words that can be processed
+        // using the MIDI message parser. May be multiple messages at once
+
+        // May very well just be a pointer to the incoming message queue
+        // so it can be drained. This would minimize copies
+        // implement a MidiMessageQueueReader for this
+
+    };
+}

@@ -1,0 +1,12 @@
+namespace Microsoft.Windows.Midi.Messages
+{
+    // You can cast this to an int to get the number of words in the UMP
+    enum UmpType
+    {
+        Unknown = 0,
+        Ump32 = 1,
+        Ump64 = 2,
+        Ump96 = 3,
+        Ump128 = 4
+    };
+}

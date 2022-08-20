@@ -1,0 +1,22 @@
+import "MidiEndpointType.idl";
+
+namespace Microsoft.Windows.Midi.Enumeration
+{
+
+    [default_interface]
+    runtimeclass MidiEndpointInformation
+    {
+        Guid Id {get;};
+        Guid ParentDeviceId {get;};
+
+        String Name;
+        String DeviceSuppliedName {get;};
+
+        String IconFileName{get;};
+        String Description{get;};
+
+        MidiEndpointType EndpointType{get;};
+
+
+    };
+}
