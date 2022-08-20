@@ -16,6 +16,8 @@ Driver Frameworks
 * [What's new for WDF in Windows 10](https://docs.microsoft.com/windows-hardware/drivers/wdf/)
 * [UMDF vs KMDF](https://docs.microsoft.com/windows-hardware/drivers/wdf/comparing-umdf-2-0-functionality-to-kmdf)
 * [Sample KMDF Drivers](https://docs.microsoft.com/windows-hardware/drivers/wdf/sample-kmdf-drivers)
+* [Enumerating the Devices on a Bus](https://docs.microsoft.com/windows-hardware/drivers/wdf/enumerating-the-devices-on-a-bus)
+* [Dynamic Enumeration](https://docs.microsoft.com/windows-hardware/drivers/wdf/dynamic-enumeration)
 
 USB Drivers
 
@@ -23,6 +25,8 @@ USB Drivers
 * [USB Driver Development](https://docs.microsoft.com/windows-hardware/drivers/usbcon/getting-started-with-usb-client-driver-development)
 * [Write a USB client driver (KMDF)](https://docs.microsoft.com/windows-hardware/drivers/usbcon/tutorial--write-your-first-usb-client-driver--kmdf-)
 * [USB Driver Samples](https://docs.microsoft.com/windows-hardware/drivers/usbcon/usb-driver-samples-in-wdk)
+* [Advantages of Writing UMDF Drivers](https://docs.microsoft.com/windows-hardware/drivers/wdf/advantages-of-writing-umdf-drivers)
+* [USB I/O Targets](https://docs.microsoft.com/windows-hardware/drivers/wdf/usb-i-o-targets)
 
 Memory and Buffer Sharing
 
