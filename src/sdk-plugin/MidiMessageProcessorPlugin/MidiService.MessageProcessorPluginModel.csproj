@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0-windows10.0.20348.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Microsoft.Windows.Midi.Service.MessageProcessorPluginModel</AssemblyName>
+    <RootNamespace>Microsoft.Windows.Midi.Service.MessageProcessorPluginModel</RootNamespace>
+    <Platforms>x64</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MidiPluginCommon\MidiService.PluginModel.csproj" />
+  </ItemGroup>
+
+</Project>

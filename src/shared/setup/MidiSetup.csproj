@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0-windows10.0.20348.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Platforms>x64</Platforms>
+    <AssemblyName>Midi.Internal.Setup</AssemblyName>
+    <RootNamespace>Microsoft.Windows.Midi.Internal.Setup</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\config\MidiConfig.csproj" />
+  </ItemGroup>
+
+</Project>

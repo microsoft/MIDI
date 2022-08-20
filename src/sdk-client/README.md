@@ -1,6 +1,6 @@
 # Client SDK
 
-C++ / WinRT client SDK.
+C++ client SDK.
 
 ## Timer Utility
 
@@ -33,3 +33,4 @@ TODO
 If you end up editing MIDL at all, be sure to download this extension from the Visual Studio marketplace. MIDL 3.0 editing is pretty frustrating without it: [WinRT Tools for C++ by Mads Kristensen](https://marketplace.visualstudio.com/items?itemName=MadsKristensen.MIDL)
 
 While you're at it, if you are updating any of the readme files in Visual Studio, grab the [Markdown Editor v2](https://marketplace.visualstudio.com/items?itemName=MadsKristensen.MarkdownEditor2) VSIX.
+
