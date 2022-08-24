@@ -134,7 +134,7 @@ namespace Microsoft::Windows::Midi::Enumeration
 	// and ports could be added or removed, but generally did not otherwise change. 
 	// In this version, and in MIDI 2.0 in general, devices, streams, and more
 	// can change properties at any time. Those changes may be due to MIDI CI
-	// notifications, or user action. 
+	// notifications, programmatic virtual ports, or user action in settings apps. 
 	// 
 	// We encourage developers to track when devices/streams are added or removed, 
 	// or when properties of those devices/streams/etc change. 
@@ -144,36 +144,36 @@ namespace Microsoft::Windows::Midi::Enumeration
 	// ----------------------------------------------------------------------------
 
 	typedef WINDOWSMIDISERVICES_API void (*MidiTransportAddedCallback)(
-		const MidiTransportInformation& information);
+		const MidiObjectId transportId);
 
 	typedef WINDOWSMIDISERVICES_API void(*MidiTransportRemovedCallback)(
-		const MidiTransportInformation& information) ;
+		const MidiObjectId transportId) ;
 
 	typedef WINDOWSMIDISERVICES_API void(*MidiTransportChangedCallback)(
-		const MidiTransportInformation& oldInformation,
-		const MidiTransportInformation& newInformation) ;
+		const MidiObjectId transportId) ;
 
 
 	typedef WINDOWSMIDISERVICES_API void(*MidiDeviceAddedCallback)(
-		const MidiDeviceInformation& information) ;
+		const MidiObjectId deviceId) ;
 
 	typedef WINDOWSMIDISERVICES_API void(*MidiDeviceRemovedCallback)(
-		const MidiDeviceInformation& information) ;
+		const MidiObjectId deviceId);
 
 	typedef WINDOWSMIDISERVICES_API void(*MidiDeviceChangedCallback)(
-		const MidiDeviceInformation& oldInformation,
-		const MidiDeviceInformation& newInformation) ;
+		const MidiObjectId deviceId);
 
 
 	typedef WINDOWSMIDISERVICES_API void(*MidiStreamAddedCallback)(
-		const MidiStreamInformation& information) ;
+		const MidiObjectId deviceId,
+		const MidiObjectId streamId);
 
 	typedef WINDOWSMIDISERVICES_API void(*MidiStreamRemovedCallback)(
-		const MidiStreamInformation& information) ;
+		const MidiObjectId deviceId,
+		const MidiObjectId streamId);
 
 	typedef WINDOWSMIDISERVICES_API void(*MidiStreamChangedCallback)(
-		const MidiStreamInformation& oldInformation,
-		const MidiStreamInformation& newInformation) ;
+		const MidiObjectId deviceId,
+		const MidiObjectId streamId);
 
 
 
@@ -190,6 +190,7 @@ namespace Microsoft::Windows::Midi::Enumeration
 		MidiStreamCreateResultErrorDetail ErrorDetail;	// Additional error information
 		MidiStreamInformation* StreamInformation;
 	};
+
 
 	enum WINDOWSMIDISERVICES_API MidiDeviceCreateResultErrorDetail
 	{
@@ -223,11 +224,27 @@ namespace Microsoft::Windows::Midi::Enumeration
 
 		void Load();
 
-		const MidiTransportInformation* GetTransportInformation(MidiObjectId transportId);
-		const MidiDeviceInformation* GetDeviceInformation(MidiObjectId deviceId);
-		const MidiStreamInformation* GetStreamInformation(MidiObjectId deviceId, MidiObjectId streamId);
+		// these return copies of the objects rather than pointers into the tree, to
+		// help eliminate potential memory leaks or information changing while you
+		// have the references.
+		const MidiTransportInformation GetTransportInformation(
+			MidiObjectId transportId);
+
+		const MidiDeviceInformation GetDeviceInformation(
+			MidiObjectId deviceId);
+
+		const MidiStreamInformation GetStreamInformation(
+			MidiObjectId deviceId, 
+			MidiObjectId streamId);
+
 
 		// TODO: Provide functions that return all of the transports/etc. for proper enumeration (without exporting STL types)
+
+		// These return arrays of IDs instead of pointers because the underlying objects
+		// could be destroyed by the time they are accessed by the API's client
+
+
+
 
 
 		void SubscribeToTransportChangeNotifications(
