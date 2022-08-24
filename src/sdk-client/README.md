@@ -2,6 +2,8 @@
 
 C++ client SDK.
 
+WinRT and other client SDKs coming. C++ is first.
+
 ## Timer Utility
 
 Scheduled MIDI message sending uses the high-resolution system counters provided by QueryPerformanceCounter. The resolution of this counter varies by system, as does the call latency. In modern Windows 10 and 11 systems, this is generally not an issue. However, to be sure, you can run the TimerInfoUtility command-line tool to inspect your own system. (We'll likely put similar functionality into the settings app in the future.)
