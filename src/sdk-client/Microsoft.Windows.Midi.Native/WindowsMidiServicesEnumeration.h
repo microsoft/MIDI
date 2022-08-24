@@ -207,6 +207,22 @@ namespace Microsoft::Windows::Midi::Enumeration
 	};
 
 
+	struct WINDOWSMIDISERVICES_API MidiTransportInformationCollection final
+	{
+		// TODO
+	};
+
+	struct WINDOWSMIDISERVICES_API MidiDeviceInformationCollection final
+	{
+		// TODO
+
+	};
+
+	struct WINDOWSMIDISERVICES_API MidiStreamInformationCollection final
+	{
+		// TODO
+
+	};
 
 	// Enumerator class. Responsible for exposing information about every device
 	// and stream known to the system. Service-side, the first time enumeration 
@@ -222,29 +238,28 @@ namespace Microsoft::Windows::Midi::Enumeration
 	public:
 		~MidiEnumerator();
 
-		void Load();
+		static MidiEnumerator Create();
 
 		// these return copies of the objects rather than pointers into the tree, to
 		// help eliminate potential memory leaks or information changing while you
 		// have the references.
-		const MidiTransportInformation GetTransportInformation(
+		const MidiTransportInformation GetTransportInformationFromId(
 			MidiObjectId transportId);
 
-		const MidiDeviceInformation GetDeviceInformation(
+		const MidiDeviceInformation GetDeviceInformationFromId(
 			MidiObjectId deviceId);
 
-		const MidiStreamInformation GetStreamInformation(
+		const MidiStreamInformation GetStreamInformationFromId(
 			MidiObjectId deviceId, 
 			MidiObjectId streamId);
-
-
-		// TODO: Provide functions that return all of the transports/etc. for proper enumeration (without exporting STL types)
 
 		// These return arrays of IDs instead of pointers because the underlying objects
 		// could be destroyed by the time they are accessed by the API's client
 
-
-
+		const MidiTransportInformationCollection GetTransportIds();
+		const MidiTransportInformationCollection GetDeviceIds();
+		const MidiTransportInformationCollection GetStreamIds();
+		const MidiTransportInformationCollection GetStreamIds(MidiObjectId deviceId);
 
 
 		void SubscribeToTransportChangeNotifications(
