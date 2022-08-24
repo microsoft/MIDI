@@ -224,6 +224,22 @@ namespace Microsoft::Windows::Midi::Enumeration
 
 	};
 
+
+	enum WINDOWSMIDISERVICES_API MidiEnumeratorCreateResultErrorDetail
+	{
+		MidiEnumeratorCreateErrorCommunication,		
+		MidiEnumeratorCreateErrorOther
+	};
+
+	struct WINDOWSMIDISERVICES_API MidiEnumeratorCreateResult
+	{
+		bool Success;
+		MidiEnumeratorCreateResultErrorDetail ErrorDetail;	// Additional error information
+		MidiEnumerator* Enumerator;
+	};
+
+
+
 	// Enumerator class. Responsible for exposing information about every device
 	// and stream known to the system. Service-side, the first time enumeration 
 	// happens it causes MIDI CI calls to be made to negotiate properties of 
@@ -239,7 +255,7 @@ namespace Microsoft::Windows::Midi::Enumeration
 	public:
 		~MidiEnumerator();
 
-		static MidiEnumerator Create();
+		static MidiEnumeratorCreateResult Create();
 
 		// these return copies of the objects rather than pointers into the tree, to
 		// help eliminate potential memory leaks or information changing while you
