@@ -43,7 +43,7 @@ namespace Microsoft::Windows::Midi::Enumeration
 		MidiTransportInformation(const MidiTransportInformation& info);	// don't copy
 	public:
 		~MidiTransportInformation();
-		const MidiObjectId getId();						// Unique Id of the type of transport. Referenced by the device
+		const MidiObjectId getId();						// Unique Id of the type of transport. Referenced by the device. Created by plugin and retained across reboots
 		const char8_t* getName();						// Name, like BLE, RTP, USB etc.
 		const char8_t* getLongName();					// Longer name like Bluetooth Low Energy MIDI 1.0
 		const wchar_t* getIconFileName();				// Name, without path, of the image used to represent this type of transport
@@ -177,58 +177,44 @@ namespace Microsoft::Windows::Midi::Enumeration
 
 
 
-	enum WINDOWSMIDISERVICES_API MidiStreamCreateResultErrorDetail
+
+	class WINDOWSMIDISERVICES_API MidiTransportInformationCollection final
 	{
-		MidiStreamCreateErrorUnrecognizedDevice,		// bad device ID
-		MidiStreamCreateErrorNotSupported,				// the device/transport doesn't allow creating devices
-		MidiStreamCreateErrorOther
+	private:
+		struct impl;
+		impl* _pimpl;
+	public:
+
+		// TODO. Implement C++ iterator-like pattern here without exposting std::
 	};
 
-	struct WINDOWSMIDISERVICES_API MidiStreamCreateResult
+	class WINDOWSMIDISERVICES_API MidiDeviceInformationCollection final
 	{
-		bool Success;
-		MidiStreamCreateResultErrorDetail ErrorDetail;	// Additional error information
-		MidiStreamInformation* StreamInformation;
-	};
+	private:
+		struct impl;
+		impl* _pimpl;
+	public:
 
-
-	enum WINDOWSMIDISERVICES_API MidiDeviceCreateResultErrorDetail
-	{
-		MidiDeviceCreateErrorUnrecognizedTransport,		// bad transport ID
-		MidiDeviceCreateErrorNotSupported,				// the transport doesn't allow creating devices
-		MidiDeviceCreateErrorOther
-	};
-
-	struct WINDOWSMIDISERVICES_API MidiDeviceCreateResult
-	{
-		bool Success;
-		MidiDeviceCreateResultErrorDetail ErrorDetail;	// Additional error information
-		MidiDeviceInformation* DeviceInformation;
-	};
-
-
-	struct WINDOWSMIDISERVICES_API MidiTransportInformationCollection final
-	{
-		// TODO
-	};
-
-	struct WINDOWSMIDISERVICES_API MidiDeviceInformationCollection final
-	{
-		// TODO
+		// TODO. Implement C++ iterator-like pattern here without exposting std::
 
 	};
 
-	struct WINDOWSMIDISERVICES_API MidiStreamInformationCollection final
+	class WINDOWSMIDISERVICES_API MidiStreamInformationCollection final
 	{
-		// TODO
+	private:
+		struct impl;
+		impl* _pimpl;
+	public:
+
+		// TODO. Implement C++ iterator-like pattern here without exposting std::
 
 	};
 
 
 	enum WINDOWSMIDISERVICES_API MidiEnumeratorCreateResultErrorDetail
 	{
-		MidiEnumeratorCreateErrorCommunication,		
-		MidiEnumeratorCreateErrorOther
+		MidiEnumeratorCreateErrorCommunication = 999,		
+		MidiEnumeratorCreateErrorOther = 1000
 	};
 
 	struct WINDOWSMIDISERVICES_API MidiEnumeratorCreateResult
@@ -255,7 +241,14 @@ namespace Microsoft::Windows::Midi::Enumeration
 	public:
 		~MidiEnumerator();
 
-		static MidiEnumeratorCreateResult Create();
+		// creates the enumerator and returns when enumeration has been completed
+		// if enumeration is skipped (good if you want to create a bunch of virtual
+		// devices up-front), call Load when you are ready to enumerate
+		static MidiEnumeratorCreateResult Create(bool skipEnumeration);
+
+		// loads all the tree info. Call this if you skipped enumeration in the factory method.
+		// TODO: Eval having this return a struct result like other calls? Really just need to know if it succeeded and what errors (if any)
+		bool Load();
 
 		// these return copies of the objects rather than pointers into the tree, to
 		// help eliminate potential memory leaks or information changing while you
@@ -270,13 +263,21 @@ namespace Microsoft::Windows::Midi::Enumeration
 			MidiObjectId deviceId, 
 			MidiObjectId streamId);
 
-		// These return arrays of IDs instead of pointers because the underlying objects
+		// These return copies instead of pointers because the underlying objects
 		// could be destroyed by the time they are accessed by the API's client
+		// Recommended only for presenting a list to the user or similar. Do not 
+		// hold on to these objects as they will not receive change notifications
 
-		const MidiTransportInformationCollection GetTransportIds();
-		const MidiDeviceInformationCollection GetDeviceIds();
-		const MidiStreamInformationCollection GetStreamIds();
-		const MidiStreamInformationCollection GetStreamIds(MidiObjectId deviceId);
+		const MidiTransportInformationCollection GetStaticTransportList();
+
+		const MidiDeviceInformationCollection GetStaticDeviceList();
+		const MidiDeviceInformationCollection GetStaticDeviceList(wchar_t* deviceSuppliedDeviceName);
+
+		const MidiStreamInformationCollection GetStaticStreamList();
+		const MidiStreamInformationCollection GetStaticStreamList(MidiObjectId deviceId);
+		const MidiStreamInformationCollection GetStaticStreamList(wchar_t* deviceSuppliedStreamName);
+
+
 
 
 		void SubscribeToTransportChangeNotifications(
@@ -294,25 +295,6 @@ namespace Microsoft::Windows::Midi::Enumeration
 			const MidiStreamRemovedCallback& removedCallback, 
 			const MidiStreamChangedCallback& changedCallback);
 
-
-		// Virtual devices and streams are used in so many places, and creating them is a standard
-		// thing for apps to want to do, so we include functions for them here. 
-
-		const MidiDeviceCreateResult AddDevice(
-			const MidiObjectId deviceId, 
-			const MidiObjectId transportId, 
-			const wchar_t* deviceSuppliedName);
-
-		bool RemoveDevice(const MidiObjectId deviceId);
-
-
-		const MidiStreamCreateResult AddStream(
-			const MidiObjectId parentDeviceId, 
-			const MidiObjectId streamId, 
-			MidiStreamType streamType, 
-			const wchar_t* deviceSuppliedStreamName);
-		
-		bool RemoveStream(const MidiObjectId deviceId);
 
 	};
 

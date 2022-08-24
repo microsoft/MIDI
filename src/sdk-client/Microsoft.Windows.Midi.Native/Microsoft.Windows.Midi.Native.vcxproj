@@ -150,12 +150,14 @@
     <ClInclude Include="MidiMessageQueue.h" />
     <ClInclude Include="WindowsMidiServicesApi.h" />
     <ClInclude Include="WindowsMidiServicesBase.h" />
+    <ClInclude Include="WindowsMidiServicesRouting.h" />
     <ClInclude Include="WindowsMidiServicesSession.h" />
     <ClInclude Include="WindowsMidiServicesEnumeration.h" />
     <ClInclude Include="WindowsMidiServicesMessages.h" />
     <ClInclude Include="WindowsMidiServicesServiceControl.h" />
     <ClInclude Include="WindowsMidiServicesUmp.h" />
     <ClInclude Include="WindowsMidiServicesUtility.h" />
+    <ClInclude Include="WindowsMidiServicesVirtual.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />

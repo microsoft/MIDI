@@ -13,6 +13,8 @@
 // - WindowsMidiServicesBase.h				: Required. Base simple types and enums
 // - WindowsMidiServicesSession.h			: Required. Sessions, Devices, Streams.
 // - WindowsMidiServicesEnumeration.h		: Required. Enumerate streams and devices
+// - WindowsMidiServicesRoutes.h			: Optional. For app-created message routes
+// - WindowsMidiServicesVirtual.h			: Optional. For app-created virtual devices/streams
 // - WindowsMidiServicesUmp.h				: Required. Base Universal MIDI Packet definitions
 // - WindowsMidiServicesMessages.h			: Optional. Strongly-typed messages
 // - WindowsMidiServicesUtility.h			: Optional. MIDI bit manipulation and other methods
@@ -87,13 +89,16 @@
 #endif
 
 // This is just a convenience file so you don't need to include all of these
-// in each file you have referencing the API
+// in each file you have referencing the API. Just make sure you have the 
+// include paths set up properly so these files can be found
 
 #include "WindowsMidiServicesBase.h"
 #include "WindowsMidiServicesUmp.h"
 #include "WindowsMidiServicesMessages.h"
 #include "WindowsMidiServicesUtility.h"
 #include "WindowsMidiServicesEnumeration.h"
+#include "WindowsMidiServicesRoutes.h"
+#include "WindowsMidiServicesVirtual.h"
 #include "WindowsMidiServicesSession.h"
 #include "WindowsMidiServicesServiceControl.h"
 

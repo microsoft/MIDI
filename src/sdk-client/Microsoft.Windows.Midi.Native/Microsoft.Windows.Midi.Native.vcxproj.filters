@@ -78,6 +78,12 @@
     <ClInclude Include="MidiMessageQueue.h">
       <Filter>Header Files\Internal</Filter>
     </ClInclude>
+    <ClInclude Include="WindowsMidiServicesRouting.h">
+      <Filter>Header Files\API Redist</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsMidiServicesVirtual.h">
+      <Filter>Header Files\API Redist</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
