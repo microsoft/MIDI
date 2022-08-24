@@ -43,11 +43,14 @@ namespace Microsoft::Windows::Midi::Enumeration
 		MidiTransportInformation(const MidiTransportInformation& info);	// don't copy
 	public:
 		~MidiTransportInformation();
-		const MidiObjectId getId();					// Unique Id of the type of transport. Referenced by the device
-		const char8_t* getName();					// Name, like BLE, RTP, USB etc.
-		const char8_t* getLongName();				// Longer name like Bluetooth Low Energy MIDI 1.0
-		const wchar_t* getIconFileName();			// Name, without path, of the image used to represent this type of transport
+		const MidiObjectId getId();						// Unique Id of the type of transport. Referenced by the device
+		const char8_t* getName();						// Name, like BLE, RTP, USB etc.
+		const char8_t* getLongName();					// Longer name like Bluetooth Low Energy MIDI 1.0
+		const wchar_t* getIconFileName();				// Name, without path, of the image used to represent this type of transport
+		const bool getSupportsRuntimeDeviceCreation();	// true if this supports creating virtual devices/streams
 	};
+
+
 
 	// MIDI Device
 	// ----------------------------------
@@ -74,6 +77,11 @@ namespace Microsoft::Windows::Midi::Enumeration
 		const char8_t* getSerial();					// If there's a unique serial number for the device, we track it here.
 		const wchar_t* getIconFileName();			// Name, without path, of the image used to represent this specific device
 		const wchar_t* getDescription();			// user-supplied long text description
+
+		const bool getIsRuntimeCreated();						// true if this was created at runtime
+		const uint16_t getOwningProcessIdIfRuntimeCreated();	// owning process ID.
+		// TODO: Do we need to check on something 
+
 	};
 
 	enum WINDOWSMIDISERVICES_API MidiStreamType
@@ -169,6 +177,36 @@ namespace Microsoft::Windows::Midi::Enumeration
 
 
 
+	enum WINDOWSMIDISERVICES_API MidiStreamCreateResultErrorDetail
+	{
+		MidiStreamCreateErrorUnrecognizedDevice,		// bad device ID
+		MidiStreamCreateErrorNotSupported,				// the device/transport doesn't allow creating devices
+		MidiStreamCreateErrorOther
+	};
+
+	struct WINDOWSMIDISERVICES_API MidiStreamCreateResult
+	{
+		bool Success;
+		MidiStreamCreateResultErrorDetail ErrorDetail;	// Additional error information
+		MidiStreamInformation* StreamInformation;
+	};
+
+	enum WINDOWSMIDISERVICES_API MidiDeviceCreateResultErrorDetail
+	{
+		MidiDeviceCreateErrorUnrecognizedTransport,		// bad transport ID
+		MidiDeviceCreateErrorNotSupported,				// the transport doesn't allow creating devices
+		MidiDeviceCreateErrorOther
+	};
+
+	struct WINDOWSMIDISERVICES_API MidiDeviceCreateResult
+	{
+		bool Success;
+		MidiDeviceCreateResultErrorDetail ErrorDetail;	// Additional error information
+		MidiDeviceInformation* DeviceInformation;
+	};
+
+
+
 	// Enumerator class. Responsible for exposing information about every device
 	// and stream known to the system. Service-side, the first time enumeration 
 	// happens it causes MIDI CI calls to be made to negotiate properties of 
@@ -185,16 +223,53 @@ namespace Microsoft::Windows::Midi::Enumeration
 
 		void Load();
 
-		const MidiTransportInformation& GetTransportInformation(MidiObjectId transportId);
-		const MidiDeviceInformation& GetDeviceInformation(MidiObjectId deviceId);
-		const MidiStreamInformation& GetStreamInformation(MidiObjectId deviceId, MidiObjectId streamId);
+		const MidiTransportInformation* GetTransportInformation(MidiObjectId transportId);
+		const MidiDeviceInformation* GetDeviceInformation(MidiObjectId deviceId);
+		const MidiStreamInformation* GetStreamInformation(MidiObjectId deviceId, MidiObjectId streamId);
 
 		// TODO: Provide functions that return all of the transports/etc. for proper enumeration (without exporting STL types)
 
 
-		void SubscribeToTransportChangeNotifications(const MidiTransportAddedCallback& addedCallback, const MidiTransportRemovedCallback& removedCallback, const MidiTransportChangedCallback& changedCallback);
-		void SubscribeToDeviceChangeNotifications(const MidiDeviceAddedCallback& addedCallback, const MidiDeviceRemovedCallback& removedCallback, const MidiDeviceChangedCallback& changedCallback);
-		void SubscribeToEndpointChangeNotifications(const MidiStreamAddedCallback& addedCallback, const MidiStreamRemovedCallback& removedCallback, const MidiStreamChangedCallback& changedCallback);
+		void SubscribeToTransportChangeNotifications(
+			const MidiTransportAddedCallback& addedCallback, 
+			const MidiTransportRemovedCallback& removedCallback, 
+			const MidiTransportChangedCallback& changedCallback);
+
+		void SubscribeToDeviceChangeNotifications(
+			const MidiDeviceAddedCallback& addedCallback, 
+			const MidiDeviceRemovedCallback& removedCallback, 
+			const MidiDeviceChangedCallback& changedCallback);
+
+		void SubscribeToEndpointChangeNotifications(
+			const MidiStreamAddedCallback& addedCallback, 
+			const MidiStreamRemovedCallback& removedCallback, 
+			const MidiStreamChangedCallback& changedCallback);
+
+
+		// Virtual devices and streams are used in so many places, and creating them is a standard
+		// thing for apps to want to do, so we include functions for them here. 
+
+		const MidiDeviceCreateResult CreateDevice(
+			const MidiObjectId deviceId, 
+			const MidiObjectId transportId, 
+			const wchar_t* deviceSuppliedName);
+
+		bool DestroyDevice(const MidiObjectId deviceId);
+
+
+		const MidiStreamCreateResult CreateStream(
+			const MidiObjectId parentDeviceId, 
+			const MidiObjectId streamId, 
+			MidiStreamType streamType, 
+			const wchar_t* deviceSuppliedStreamName);
+		
+		bool DestroyStream(const MidiObjectId deviceId);
+
+
+
+
+
+
 	};
 
 }

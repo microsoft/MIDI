@@ -222,7 +222,19 @@ namespace Microsoft::Windows::Midi
 
 	};
 
-		class WINDOWSMIDISERVICES_API MidiSession final
+	enum WINDOWSMIDISERVICES_API MidiSessionCreateResultErrorDetail
+	{
+		MidiSessionCreateErrorOther
+	};
+
+	struct WINDOWSMIDISERVICES_API MidiSessionCreateResult
+	{
+		bool Success;
+		MidiSessionCreateResultErrorDetail ErrorDetail;	// Additional error information
+		MidiSession* Session;		
+	};
+
+	class WINDOWSMIDISERVICES_API MidiSession final
 	{
 	private:
 		struct impl;
@@ -240,19 +252,21 @@ namespace Microsoft::Windows::Midi
 		void UpdateName(const wchar_t* newName);		// this makes a server call
 
 
-		static MidiSession Create(const wchar_t* name, const wchar_t* appName, const MidiSessionCreateOptions& options);
-		static MidiSession Create(const wchar_t* name, const wchar_t* appName);
+		// TODO: may want to consider changing this to similar pattern as others, with a 
+		// result class and an instance of the new session.
+		static MidiSessionCreateResult Create(const wchar_t* name, const wchar_t* appName, const MidiSessionCreateOptions& options);
+		static MidiSessionCreateResult Create(const wchar_t* name, const wchar_t* appName);
+		void Close();
 
 		//const std::vector<MidiDevice> getAllOpenDevices();
 		const MidiDevice* GetOpenDevice(const MidiObjectId id);
-
-
 		MidiDeviceOpenResult OpenDevice(const MidiObjectId& deviceId, const MidiDeviceOpenOptions& options);
 		MidiDeviceOpenResult OpenDevice(const MidiObjectId& deviceId);
+
+
+
 
 		// TODO: enumerator for open devices/streams
 
 	};
-
-
 }
