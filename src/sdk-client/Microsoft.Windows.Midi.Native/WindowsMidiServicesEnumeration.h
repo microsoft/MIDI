@@ -235,6 +235,7 @@ namespace Microsoft::Windows::Midi::Enumeration
 		impl* _pimpl;
 
 		MidiEnumerator(const MidiEnumerator& info);	// don't copy
+		MidiEnumerator();
 	public:
 		~MidiEnumerator();
 
@@ -257,9 +258,9 @@ namespace Microsoft::Windows::Midi::Enumeration
 		// could be destroyed by the time they are accessed by the API's client
 
 		const MidiTransportInformationCollection GetTransportIds();
-		const MidiTransportInformationCollection GetDeviceIds();
-		const MidiTransportInformationCollection GetStreamIds();
-		const MidiTransportInformationCollection GetStreamIds(MidiObjectId deviceId);
+		const MidiDeviceInformationCollection GetDeviceIds();
+		const MidiStreamInformationCollection GetStreamIds();
+		const MidiStreamInformationCollection GetStreamIds(MidiObjectId deviceId);
 
 
 		void SubscribeToTransportChangeNotifications(
@@ -281,26 +282,21 @@ namespace Microsoft::Windows::Midi::Enumeration
 		// Virtual devices and streams are used in so many places, and creating them is a standard
 		// thing for apps to want to do, so we include functions for them here. 
 
-		const MidiDeviceCreateResult CreateDevice(
+		const MidiDeviceCreateResult AddDevice(
 			const MidiObjectId deviceId, 
 			const MidiObjectId transportId, 
 			const wchar_t* deviceSuppliedName);
 
-		bool DestroyDevice(const MidiObjectId deviceId);
+		bool RemoveDevice(const MidiObjectId deviceId);
 
 
-		const MidiStreamCreateResult CreateStream(
+		const MidiStreamCreateResult AddStream(
 			const MidiObjectId parentDeviceId, 
 			const MidiObjectId streamId, 
 			MidiStreamType streamType, 
 			const wchar_t* deviceSuppliedStreamName);
 		
-		bool DestroyStream(const MidiObjectId deviceId);
-
-
-
-
-
+		bool RemoveStream(const MidiObjectId deviceId);
 
 	};
 

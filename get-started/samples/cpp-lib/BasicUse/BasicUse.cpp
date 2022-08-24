@@ -41,7 +41,7 @@ int main()
         // Next, enumerate devices. This doesn't cause a re-enumeration if the devices
         // have already been enumerated by another application, or earlier in this
         // application.
-
+        MidiEnumerator enumerator = MidiEnumerator::Create();
 
 
         // Open a device
