@@ -19,6 +19,14 @@ Driver Frameworks
 * [Enumerating the Devices on a Bus](https://docs.microsoft.com/windows-hardware/drivers/wdf/enumerating-the-devices-on-a-bus)
 * [Dynamic Enumeration](https://docs.microsoft.com/windows-hardware/drivers/wdf/dynamic-enumeration)
 
+Audio and MIDI Specific
+
+* [Kernel Streaming](https://docs.microsoft.com/windows-hardware/drivers/stream/)
+* [AV/C kernel-streaming interface and kernel-streaming proxy plug-in](https://docs.microsoft.com/windows-hardware/drivers/stream/av-c-kernel-streaming-interface-and-kernel-streaming-proxy-plug-ins)
+* [Introduction to Port Class](https://docs.microsoft.com/windows-hardware/drivers/audio/introduction-to-port-class)
+* [IMiniportMidi interface overview](https://docs.microsoft.com/windows-hardware/drivers/ddi/portcls/nn-portcls-iminiportmidi)
+* [IMiniportMidiStream interface](https://docs.microsoft.com/windows-hardware/drivers/ddi/portcls/nn-portcls-iminiportmidistream)
+
 USB Drivers
 
 * [Choosing a driver model for USB devices](https://docs.microsoft.com/windows-hardware/drivers/usbcon/winusb-considerations)
@@ -32,8 +40,8 @@ Memory and Buffer Sharing
 
 * [Memory management for drivers](https://docs.microsoft.com/windows-hardware/drivers/kernel/managing-memory-for-drivers)
 * [Methods for accessing data buffers](https://docs.microsoft.com/windows-hardware/drivers/kernel/methods-for-accessing-data-buffers)
-    * [Using Buffered I/O](https://docs.microsoft.com/windows-hardware/drivers/kernel/using-buffered-i-o)
-    * [Using DIrect I/O](https://docs.microsoft.com/windows-hardware/drivers/kernel/using-direct-i-o)
+  * [Using Buffered I/O](https://docs.microsoft.com/windows-hardware/drivers/kernel/using-buffered-i-o)
+  * [Using DIrect I/O](https://docs.microsoft.com/windows-hardware/drivers/kernel/using-direct-i-o)
 
 Installation
 
