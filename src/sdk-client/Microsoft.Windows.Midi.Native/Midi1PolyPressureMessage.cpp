@@ -28,14 +28,14 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 	}
 
-	Midi1PolyPressureMessage Midi1PolyPressureMessage::FromMidi1Bytes(const uint8_t group, const uint8_t statusByte, const uint8_t noteNumberByte, const uint8_t dataByte)
+	Midi1PolyPressureMessage Midi1PolyPressureMessage::FromMidi1Bytes(const MidiGroup group, const uint8_t statusByte, const uint8_t noteNumberByte, const uint8_t dataByte)
 	{
 		Midi1PolyPressureMessage msg;
 		return msg;
 
 	}
 
-	Midi1PolyPressureMessage Midi1PolyPressureMessage::FromValues(const uint8_t group, const uint8_t channel, const uint8_t noteNumber, const uint8_t data)
+	Midi1PolyPressureMessage Midi1PolyPressureMessage::FromValues(const MidiGroup group, const MidiChannel channel, const uint8_t noteNumber, const uint8_t data)
 	{
 		Midi1PolyPressureMessage msg;
 		return msg;

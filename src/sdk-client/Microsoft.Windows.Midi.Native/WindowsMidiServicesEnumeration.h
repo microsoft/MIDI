@@ -40,14 +40,17 @@ namespace Microsoft::Windows::Midi::Enumeration
 		impl* _pimpl;
 
 		//explicit MidiTransportInformation();
-		MidiTransportInformation(const MidiTransportInformation& info);	// don't copy
+		MidiTransportInformation(const MidiTransportInformation& info);// don't copy
 	public:
+		MidiTransportInformation();
 		~MidiTransportInformation();
 		const MidiObjectId getId();						// Unique Id of the type of transport. Referenced by the device. Created by plugin and retained across reboots
 		const char8_t* getName();						// Name, like BLE, RTP, USB etc.
 		const char8_t* getLongName();					// Longer name like Bluetooth Low Energy MIDI 1.0
 		const wchar_t* getIconFileName();				// Name, without path, of the image used to represent this type of transport
 		const bool getSupportsRuntimeDeviceCreation();	// true if this supports creating virtual devices/streams
+
+		friend class MidiEnumerator;
 	};
 
 
@@ -69,6 +72,7 @@ namespace Microsoft::Windows::Midi::Enumeration
 
 		MidiDeviceInformation(const MidiDeviceInformation& info);	// don't copy
 	public:
+		MidiDeviceInformation();
 		~MidiDeviceInformation();
 		MidiObjectId getId();						// Unique Id of the device. Used in most MIDI messaging
 		MidiObjectId getTransportId();				// Uinque Id of the transport used by the device. For displaying appropriate name/icons
@@ -80,8 +84,8 @@ namespace Microsoft::Windows::Midi::Enumeration
 
 		const bool getIsRuntimeCreated();						// true if this was created at runtime
 		const uint16_t getOwningProcessIdIfRuntimeCreated();	// owning process ID.
-		// TODO: Do we need to check on something 
 
+		friend class MidiEnumerator;
 	};
 
 	enum WINDOWSMIDISERVICES_API MidiStreamType
@@ -111,6 +115,7 @@ namespace Microsoft::Windows::Midi::Enumeration
 
 		MidiStreamInformation(const MidiStreamInformation& info);	// don't copy
 	public:
+		MidiStreamInformation();
 		~MidiStreamInformation();
 		const MidiObjectId getId();					// Unique Id of the stream. Used in most MIDI messaging
 		const MidiObjectId getParentDeviceId();		// Unique Id of the parent device which owns this stream.
@@ -124,6 +129,8 @@ namespace Microsoft::Windows::Midi::Enumeration
 		// For example, bandwidth, protocol, etc.
 		// Note that entire API is UMP, so translation to/from byte stream happens
 		// either in the driver (example: USB) or in the device/transport plugin
+
+		friend class MidiEnumerator;
 
 	};
 
@@ -183,9 +190,14 @@ namespace Microsoft::Windows::Midi::Enumeration
 	private:
 		struct impl;
 		impl* _pimpl;
+
+		MidiTransportInformationCollection();
 	public:
+		~MidiTransportInformationCollection();
 
 		// TODO. Implement C++ iterator-like pattern here without exposting std::
+
+		friend class MidiEnumerator;
 	};
 
 	class WINDOWSMIDISERVICES_API MidiDeviceInformationCollection final
@@ -193,10 +205,14 @@ namespace Microsoft::Windows::Midi::Enumeration
 	private:
 		struct impl;
 		impl* _pimpl;
+
+		MidiDeviceInformationCollection();
 	public:
+		~MidiDeviceInformationCollection();
 
 		// TODO. Implement C++ iterator-like pattern here without exposting std::
 
+		friend class MidiEnumerator;
 	};
 
 	class WINDOWSMIDISERVICES_API MidiStreamInformationCollection final
@@ -204,10 +220,14 @@ namespace Microsoft::Windows::Midi::Enumeration
 	private:
 		struct impl;
 		impl* _pimpl;
+
+		MidiStreamInformationCollection();
 	public:
+		~MidiStreamInformationCollection();
 
 		// TODO. Implement C++ iterator-like pattern here without exposting std::
 
+		friend class MidiEnumerator;
 	};
 
 
@@ -253,15 +273,18 @@ namespace Microsoft::Windows::Midi::Enumeration
 		// these return copies of the objects rather than pointers into the tree, to
 		// help eliminate potential memory leaks or information changing while you
 		// have the references.
-		const MidiTransportInformation GetTransportInformationFromId(
-			MidiObjectId transportId);
+		const bool GetTransportInformationFromId(
+			MidiObjectId transportId,
+			MidiTransportInformation& info);
 
-		const MidiDeviceInformation GetDeviceInformationFromId(
-			MidiObjectId deviceId);
+		const bool GetDeviceInformationFromId(
+			MidiObjectId deviceId,
+			MidiDeviceInformation& info);
 
-		const MidiStreamInformation GetStreamInformationFromId(
+		const bool GetStreamInformationFromId(
 			MidiObjectId deviceId, 
-			MidiObjectId streamId);
+			MidiObjectId streamId,
+			MidiStreamInformation& info);
 
 		// These return copies instead of pointers because the underlying objects
 		// could be destroyed by the time they are accessed by the API's client
@@ -271,13 +294,13 @@ namespace Microsoft::Windows::Midi::Enumeration
 		const MidiTransportInformationCollection GetStaticTransportList();
 
 		const MidiDeviceInformationCollection GetStaticDeviceList();
-		const MidiDeviceInformationCollection GetStaticDeviceList(wchar_t* deviceSuppliedDeviceName);
+		const MidiDeviceInformationCollection GetStaticDeviceListByName(wchar_t* name);
+		const MidiDeviceInformationCollection GetStaticDeviceListByDeviceSuppliedName(wchar_t* deviceSuppliedDeviceName);
 
 		const MidiStreamInformationCollection GetStaticStreamList();
 		const MidiStreamInformationCollection GetStaticStreamList(MidiObjectId deviceId);
-		const MidiStreamInformationCollection GetStaticStreamList(wchar_t* deviceSuppliedStreamName);
-
-
+		const MidiStreamInformationCollection GetStaticStreamListByName(wchar_t* name);
+		const MidiStreamInformationCollection GetStaticStreamListByDeviceSuppliedName(wchar_t* deviceSuppliedStreamName);
 
 
 		void SubscribeToTransportChangeNotifications(

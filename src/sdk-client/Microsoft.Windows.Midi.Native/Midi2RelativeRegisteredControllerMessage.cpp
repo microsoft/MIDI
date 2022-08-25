@@ -37,7 +37,7 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 	}
 
-	Midi2RelativeRegisteredControllerMessage Midi2RelativeRegisteredControllerMessage::FromValues(const uint8_t group, const uint8_t channel, const uint8_t bank, const uint8_t index, const uint32_t data)
+	Midi2RelativeRegisteredControllerMessage Midi2RelativeRegisteredControllerMessage::FromValues(const MidiGroup group, const MidiChannel channel, const uint8_t bank, const uint8_t index, const uint32_t data)
 	{
 		Midi2RelativeRegisteredControllerMessage msg;
 		return msg;

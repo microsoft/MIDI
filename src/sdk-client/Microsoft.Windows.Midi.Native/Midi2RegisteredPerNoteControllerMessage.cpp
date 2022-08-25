@@ -37,7 +37,7 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 	}
 
-	Midi2RegisteredPerNoteControllerMessage Midi2RegisteredPerNoteControllerMessage::FromValues(const uint8_t group, const uint8_t channel, const uint8_t noteNumber, const uint8_t index, const uint32_t data)
+	Midi2RegisteredPerNoteControllerMessage Midi2RegisteredPerNoteControllerMessage::FromValues(const MidiGroup group, const MidiChannel channel, const uint8_t noteNumber, const uint8_t index, const uint32_t data)
 	{
 		Midi2RegisteredPerNoteControllerMessage msg;
 		return msg;

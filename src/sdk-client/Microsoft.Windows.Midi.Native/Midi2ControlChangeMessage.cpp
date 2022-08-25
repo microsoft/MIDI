@@ -28,7 +28,7 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 	}
 
-	Midi2ControlChangeMessage Midi2ControlChangeMessage::FromValues(const uint8_t group, const uint8_t channel, const uint8_t index, const uint32_t data)
+	Midi2ControlChangeMessage Midi2ControlChangeMessage::FromValues(const MidiGroup group, const MidiChannel channel, const uint8_t index, const uint32_t data)
 	{
 		Midi2ControlChangeMessage msg;
 		return msg;

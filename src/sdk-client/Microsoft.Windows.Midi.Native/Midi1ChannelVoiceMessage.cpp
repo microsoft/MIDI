@@ -16,12 +16,12 @@ namespace Microsoft::Windows::Midi::Messages
 		return Utility::MostSignificantNibble(Byte[1]);
 	}
 
-	const uint8_t Midi1ChannelVoiceMessage::getChannel()
+	const MidiChannel Midi1ChannelVoiceMessage::getChannel()
 	{
-		return Utility::LeastSignificantNibble(Byte[1]);
+		return (MidiChannel)Utility::LeastSignificantNibble(Byte[1]);
 	}
 
-	void Midi1ChannelVoiceMessage::setChannel(const uint8_t value)
+	void Midi1ChannelVoiceMessage::setChannel(const MidiChannel value)
 	{
 		Utility::SetLeastSignificantNibble(Byte[1], value);
 	}

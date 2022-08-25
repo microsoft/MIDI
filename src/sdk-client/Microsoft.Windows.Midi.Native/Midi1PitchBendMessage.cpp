@@ -38,20 +38,20 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 	}
 
-	Midi1PitchBendMessage Midi1PitchBendMessage::FromMidi1Bytes(const uint8_t group, const uint8_t statusByte, const uint8_t lsbDataByte, const uint8_t msbDataByte)
+	Midi1PitchBendMessage Midi1PitchBendMessage::FromMidi1Bytes(const MidiGroup group, const uint8_t statusByte, const uint8_t lsbDataByte, const uint8_t msbDataByte)
 	{
 		Midi1PitchBendMessage msg;
 		return msg;
 
 	}
 
-	Midi1PitchBendMessage Midi1PitchBendMessage::FromValues(const uint8_t group, const uint8_t channel, const uint8_t dataLsb, const uint8_t dataMsb)
+	Midi1PitchBendMessage Midi1PitchBendMessage::FromValues(const MidiGroup group, const MidiChannel channel, const uint8_t dataLsb, const uint8_t dataMsb)
 	{
 		Midi1PitchBendMessage msg;
 		return msg;
 	}
 
-	Midi1PitchBendMessage Midi1PitchBendMessage::FromValues(const uint8_t group, const uint8_t channel, const uint16_t data)
+	Midi1PitchBendMessage Midi1PitchBendMessage::FromValues(const MidiGroup group, const MidiChannel channel, const uint16_t data)
 	{
 		Midi1PitchBendMessage msg;
 		return msg;

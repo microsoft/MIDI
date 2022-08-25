@@ -19,7 +19,7 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 	}
 
-	Midi2ChannelPressureMessage Midi2ChannelPressureMessage::FromValues(const uint8_t group, const uint8_t channel, const uint32_t data)
+	Midi2ChannelPressureMessage Midi2ChannelPressureMessage::FromValues(const MidiGroup group, const MidiChannel channel, const uint32_t data)
 	{
 		Midi2ChannelPressureMessage msg;
 		return msg;

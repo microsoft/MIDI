@@ -169,6 +169,7 @@ namespace Microsoft::Windows::Midi
 		impl* _pimpl;
 
 		MidiDevice(const MidiDevice& info);	// don't copy
+		MidiDevice();
 	public:
 		~MidiDevice();
 

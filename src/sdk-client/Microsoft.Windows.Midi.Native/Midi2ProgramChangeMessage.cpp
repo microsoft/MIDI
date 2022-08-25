@@ -10,12 +10,12 @@
 
 namespace Microsoft::Windows::Midi::Messages
 {
-	const uint8_t Midi2ProgramChangeMessage::getOptionFlags()
+	const Midi2ProgramChangeOptionFlags Midi2ProgramChangeMessage::getOptionFlags()
 	{
-		return 0;
+		return (Midi2ProgramChangeOptionFlags)0;
 	}
 
-	void Midi2ProgramChangeMessage::setOptionFlags(const uint8_t value)
+	void Midi2ProgramChangeMessage::setOptionFlags(const Midi2ProgramChangeOptionFlags value)
 	{
 	}
 
@@ -46,7 +46,7 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 	}
 
-	Midi2ProgramChangeMessage Midi2ProgramChangeMessage::FromValues(const uint8_t group, const uint8_t channel, const uint8_t optionFlags, const uint8_t program, const uint8_t bankMsb, const uint8_t bankLsb)
+	Midi2ProgramChangeMessage Midi2ProgramChangeMessage::FromValues(const MidiGroup group, const MidiChannel channel, const Midi2ProgramChangeOptionFlags optionFlags, const uint8_t program, const uint8_t bankMsb, const uint8_t bankLsb)
 	{
 		Midi2ProgramChangeMessage msg;
 		return msg;

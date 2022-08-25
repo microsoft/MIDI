@@ -30,13 +30,13 @@ namespace Microsoft::Windows::Midi::Messages
 	}
 
 
-	Midi1ControlChangeMessage Midi1ControlChangeMessage::FromMidi1Bytes(const uint8_t group, const uint8_t statusByte, const uint8_t indexByte, const uint8_t dataByte)
+	Midi1ControlChangeMessage Midi1ControlChangeMessage::FromMidi1Bytes(const MidiGroup group, const uint8_t statusByte, const uint8_t indexByte, const uint8_t dataByte)
 	{
 		Midi1ControlChangeMessage msg;
 		return msg;
 	}
 
-	Midi1ControlChangeMessage Midi1ControlChangeMessage::FromValues(const uint8_t group, const uint8_t channel, const uint8_t index, const uint8_t data)
+	Midi1ControlChangeMessage Midi1ControlChangeMessage::FromValues(const MidiGroup group, const MidiChannel channel, const uint8_t index, const uint8_t data)
 	{
 		Midi1ControlChangeMessage msg;
 		return msg;

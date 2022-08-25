@@ -28,7 +28,7 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 	}
 
-	Midi2PerNotePitchBendMessage Midi2PerNotePitchBendMessage::FromValues(const uint8_t group, const uint8_t channel, const uint8_t noteNumber, const uint32_t data)
+	Midi2PerNotePitchBendMessage Midi2PerNotePitchBendMessage::FromValues(const MidiGroup group, const MidiChannel channel, const uint8_t noteNumber, const uint32_t data)
 	{
 		Midi2PerNotePitchBendMessage msg;
 		return msg;

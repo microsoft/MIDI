@@ -11,20 +11,20 @@
 namespace Microsoft::Windows::Midi::Messages
 {
 
-	const uint8_t Midi2ChannelVoiceMessage::getOpcode()
-	{
-		return Utility::MostSignificantNibble(Byte[1]);
-	}
+	//const uint8_t Midi2ChannelVoiceMessage::getOpcode()
+	//{
+	//	return Utility::MostSignificantNibble(Byte[1]);
+	//}
 
-	const uint8_t Midi2ChannelVoiceMessage::getChannel()
-	{
-		return Utility::LeastSignificantNibble(Byte[1]);
-	}
+	//const MidiChannel Midi2ChannelVoiceMessage::getChannel()
+	//{
+	//	return (MidiChannel)Utility::LeastSignificantNibble(Byte[1]);
+	//}
 
-	void Midi2ChannelVoiceMessage::setChannel(const uint8_t value)
-	{
-		Utility::SetLeastSignificantNibble(Byte[1], value);
-	}
+	//void Midi2ChannelVoiceMessage::setChannel(const MidiChannel value)
+	//{
+	//	Utility::SetLeastSignificantNibble(Byte[1], value);
+	//}
 
 
 }

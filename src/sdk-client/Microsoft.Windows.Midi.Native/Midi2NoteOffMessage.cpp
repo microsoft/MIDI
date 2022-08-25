@@ -48,13 +48,13 @@ namespace Microsoft::Windows::Midi::Messages
 
 
 
-	Midi2NoteOffMessage Midi2NoteOffMessage::FromMidi1Bytes(const uint8_t group, const uint8_t statusByte, const uint8_t noteNumberByte, const uint8_t velocityByte)
+	Midi2NoteOffMessage Midi2NoteOffMessage::FromMidi1Bytes(const MidiGroup group, const uint8_t statusByte, const uint8_t noteNumberByte, const uint8_t velocityByte)
 	{
 		Midi2NoteOffMessage msg;
 		return msg;
 	}
 
-	Midi2NoteOffMessage Midi2NoteOffMessage::FromValues(const uint8_t group, const uint8_t channel, const uint8_t noteNumber, const uint8_t attributeType, const uint16_t velocity, const uint16_t attributeData)
+	Midi2NoteOffMessage Midi2NoteOffMessage::FromValues(const MidiGroup group, const MidiChannel channel, const uint8_t noteNumber, const Midi2NoteOnOffAttributeType attributeType, const uint16_t velocity, const uint16_t attributeData)
 	{
 		Midi2NoteOffMessage msg;
 		return msg;

@@ -22,7 +22,19 @@ namespace Microsoft::Windows::Midi
 		SYSTEMTIME CreatedDateTime;
 
 		std::map<MidiObjectId, MidiDevice> _openDevices;
+
+		friend class MidiSession;
 	};
+
+	MidiSession::MidiSession()
+	{
+		_pimpl = new impl;
+	}
+
+	MidiSession::~MidiSession()
+	{
+		delete _pimpl;
+	}
 
 
 	const MidiObjectId MidiSession::getId()
@@ -48,30 +60,22 @@ namespace Microsoft::Windows::Midi
 	const MidiDevice* MidiSession::GetOpenDevice(MidiObjectId id)
 	{
 		// TODO: get device from the internal map
-
+		return nullptr;
 	}
 
 	MidiDeviceOpenResult MidiSession::OpenDevice(const MidiObjectId& deviceId, const MidiDeviceOpenOptions& options)
 	{
 		// TODO: Service call
-
+		return MidiDeviceOpenResult{};
 	}
 
 	MidiDeviceOpenResult MidiSession::OpenDevice(const MidiObjectId& deviceId)
 	{
 		// TODO: Service call
 
+		return MidiDeviceOpenResult{};
 	}
 
-	MidiSession::MidiSession()
-	{
-		_pimpl = new impl;
-	}
-
-	MidiSession::~MidiSession()
-	{
-		delete _pimpl;
-	}
 
 
 

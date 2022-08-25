@@ -13,41 +13,51 @@ namespace Windows::Devices::Midi::Internal
 	// TODO: Need to see if size is in messages or bytes. 
 
 
-	std::unique_ptr<MidiStreamCrossProcessMessageQueue> MidiStreamCrossProcessMessageQueue::CreateNew(const GUID sessionId, const GUID deviceId, const GUID streamId, const MidiMessageQueueType type, const wchar_t* name, const int capacityInMidiWords)
+	std::unique_ptr<MidiStreamCrossProcessMessageQueue> MidiStreamCrossProcessMessageQueue::CreateNew(
+		const GUID sessionId, 
+		const GUID deviceId, 
+		const GUID streamId, 
+		const MidiMessageQueueType type, 
+		const int capacityInMidiWords)
 	{
-		assert(name != nullptr);
 		assert(capacityInMidiWords > 0);
+
+		std::wstring queueName(L"TODO BUILD THE NAME");
 
 		auto q = std::make_unique<MidiStreamCrossProcessMessageQueue>();
 
 		// Create the new queue
 		q->_queue = std::make_unique<boost::interprocess::message_queue>(
 			boost::interprocess::create_only,
-			name,
+			queueName.c_str(),
 			capacityInMidiWords,
 			sizeof uint32_t);
 
 		std::wstring mutexName(L"midi_mtx_");
-		mutexName.append(name);
+		mutexName.append(queueName);
 
-		// create the cross-process synchronization mechanism
-		q->_mutex = std::make_unique<boost::interprocess::named_mutex>(
-			mutexName.c_str(),
-			boost::interprocess::create_only
-			);
+		//// create the cross-process synchronization mechanism
+		//q->_mutex = std::make_unique<boost::interprocess::named_mutex>(
+		//	mutexName.c_str(),
+		//	boost::interprocess::create_only
+		//	);
 
 		return q;
 	}
 
-	std::unique_ptr<MidiStreamCrossProcessMessageQueue> MidiStreamCrossProcessMessageQueue::OpenExisting(const GUID sessionId, const GUID deviceId, const GUID streamId, const MidiMessageQueueType type)
+	std::unique_ptr<MidiStreamCrossProcessMessageQueue> MidiStreamCrossProcessMessageQueue::OpenExisting(
+		const GUID sessionId, 
+		const GUID deviceId, 
+		const GUID streamId, 
+		const MidiMessageQueueType type)
 	{
-		assert(name != nullptr);
+		std::wstring queueName(L"TODO BUILD THE NAME");
 
 		auto q = std::make_unique<MidiStreamCrossProcessMessageQueue>();
 
 		q->_queue = std::make_unique<boost::interprocess::message_queue>(
 			boost::interprocess::open_only,
-			name);
+			queueName.c_str());
 
 		return q;
 	}
@@ -59,7 +69,7 @@ namespace Windows::Devices::Midi::Internal
 	{
 		assert(_queue != nullptr);
 
-		return _queue->get_num_msg() == 0;
+		return (bool)(_queue->get_num_msg() == 0);
 	}
 
 	// returns true if the queue is full
@@ -67,13 +77,13 @@ namespace Windows::Devices::Midi::Internal
 	{
 		assert(_queue != nullptr);
 
-		return _queue->get_max_msg() == _queue->get_num_msg();
+		return (bool)(_queue->get_max_msg() == _queue->get_num_msg());
 	}
 
 
 
 	// returns the number of words currently in the queue
-	const uint16_t MidiStreamCrossProcessMessageQueue::getCountWords()
+	const uint64_t MidiStreamCrossProcessMessageQueue::getCountWords()
 	{
 		assert(_queue != nullptr);
 
@@ -81,7 +91,7 @@ namespace Windows::Devices::Midi::Internal
 	}
 
 	// returns the current max capacity
-	const uint16_t MidiStreamCrossProcessMessageQueue::getMaxCapacityInWords()
+	const uint64_t MidiStreamCrossProcessMessageQueue::getMaxCapacityInWords()
 	{
 		assert(_queue != nullptr);
 
@@ -95,7 +105,7 @@ namespace Windows::Devices::Midi::Internal
 	bool MidiStreamCrossProcessMessageQueue::BeginWrite()
 	{
 		assert(_queue != nullptr);
-		assert(_mutex != nullptr);
+	//	assert(_mutex != nullptr);
 		assert(!_inWrite);
 
 
@@ -104,7 +114,7 @@ namespace Windows::Devices::Midi::Internal
 		// TODO: Lock queue. Pause sending updates
 
 
-		_mutex->lock();
+//		_mutex->lock();
 
 
 	}	
@@ -113,7 +123,7 @@ namespace Windows::Devices::Midi::Internal
 	void MidiStreamCrossProcessMessageQueue::EndWrite()
 	{
 		assert(_queue != nullptr);
-		assert(_mutex != nullptr);
+	//	assert(_mutex != nullptr);
 		assert(_inWrite);
 
 		// TODO: Unlock queue. Send notifications
@@ -130,6 +140,8 @@ namespace Windows::Devices::Midi::Internal
 		assert(_inWrite);
 
 		_queue->send(wordsBuffer, count, MidiStreamCrossProcessMessageQueue::DefaultPriority);
+
+		return true;
 	}
 
 
@@ -140,7 +152,9 @@ namespace Windows::Devices::Midi::Internal
 		assert(wordsBuffer != nullptr);
 		assert(count > 0);
 
-		_queue->receive(wordsBuffer, count, )
+		//_queue->receive(wordsBuffer, count, )
+
+		return true;
 	}
 
 	// gets the first word but doesn't remove it.
@@ -148,6 +162,7 @@ namespace Windows::Devices::Midi::Internal
 	{
 		assert(_queue != nullptr);
 
+		return true;
 	}
 
 };

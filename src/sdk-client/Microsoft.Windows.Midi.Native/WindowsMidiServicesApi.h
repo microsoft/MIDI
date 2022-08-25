@@ -97,7 +97,7 @@
 #include "WindowsMidiServicesMessages.h"
 #include "WindowsMidiServicesUtility.h"
 #include "WindowsMidiServicesEnumeration.h"
-#include "WindowsMidiServicesRoutes.h"
+#include "WindowsMidiServicesRouting.h"
 #include "WindowsMidiServicesVirtual.h"
 #include "WindowsMidiServicesSession.h"
 #include "WindowsMidiServicesServiceControl.h"

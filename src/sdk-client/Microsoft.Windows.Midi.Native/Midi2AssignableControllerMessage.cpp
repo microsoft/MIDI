@@ -37,7 +37,7 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 	}
 
-	Midi2AssignableControllerMessage Midi2AssignableControllerMessage::FromValues(const uint8_t group, const uint8_t channel, const uint8_t bank, const uint8_t index, const uint32_t data)
+	Midi2AssignableControllerMessage Midi2AssignableControllerMessage::FromValues(const MidiGroup group, const MidiChannel channel, const uint8_t bank, const uint8_t index, const uint32_t data)
 	{
 		Midi2AssignableControllerMessage msg;
 		return msg;

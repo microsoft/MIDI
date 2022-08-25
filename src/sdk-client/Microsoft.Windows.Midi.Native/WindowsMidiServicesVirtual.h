@@ -66,7 +66,11 @@ namespace Microsoft::Windows::Midi
 		struct impl;
 		impl* _pimpl;
 
+		MidiVirtualDeviceManager(MidiObjectId owningSessionId);
 	public:
+		~MidiVirtualDeviceManager();
+
+		static MidiVirtualDeviceManager Create(MidiObjectId owningSessionId);
 
 		const MidiDeviceCreateResult AddDevice(
 			const MidiObjectId deviceId,

@@ -200,5 +200,14 @@
     <ClCompile Include="MidiStreamCrossProcessMessageQueue.cpp">
       <Filter>Source Files\Internal</Filter>
     </ClCompile>
+    <ClCompile Include="MidiStreamInformationCollection.cpp">
+      <Filter>Source Files\Enumeration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiDeviceInformationCollection.cpp">
+      <Filter>Source Files\Enumeration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiTransportInformationCollection.cpp">
+      <Filter>Source Files\Enumeration</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -28,7 +28,10 @@ namespace Microsoft::Windows::Midi
 
 
 
+	MidiStream::MidiStream(MidiStreamOpenOptions options)
+	{
 
+	}
 
 
 

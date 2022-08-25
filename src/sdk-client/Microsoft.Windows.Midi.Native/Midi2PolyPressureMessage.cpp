@@ -29,7 +29,7 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 	}
 
-	Midi2PolyPressureMessage Midi2PolyPressureMessage::FromValues(const uint8_t group, const uint8_t channel, const uint8_t noteNumber, const uint32_t data)
+	Midi2PolyPressureMessage Midi2PolyPressureMessage::FromValues(const MidiGroup group, const MidiChannel channel, const uint8_t noteNumber, const uint32_t data)
 	{
 		Midi2PolyPressureMessage msg;
 		return msg;

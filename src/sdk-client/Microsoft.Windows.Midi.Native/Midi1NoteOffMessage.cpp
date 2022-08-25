@@ -30,14 +30,14 @@ namespace Microsoft::Windows::Midi::Messages
 	}
 
 
-	Midi1NoteOffMessage Midi1NoteOffMessage::FromMidi1Bytes(const uint8_t group, const uint8_t statusByte, const uint8_t noteNumberByte, const uint8_t velocityByte)
+	Midi1NoteOffMessage Midi1NoteOffMessage::FromMidi1Bytes(const MidiGroup group, const uint8_t statusByte, const uint8_t noteNumberByte, const uint8_t velocityByte)
 	{
 		Midi1NoteOffMessage msg;
 		return msg;
 
 	}
 
-	Midi1NoteOffMessage Midi1NoteOffMessage::FromValues(const uint8_t group, const uint8_t channel, const uint8_t noteNumber, const uint8_t velocity)
+	Midi1NoteOffMessage Midi1NoteOffMessage::FromValues(const MidiGroup group, const MidiChannel channel, const uint8_t noteNumber, const uint8_t velocity)
 	{
 		Midi1NoteOffMessage msg;
 		return msg;

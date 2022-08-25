@@ -187,7 +187,9 @@
     <ClCompile Include="Midi2RelativeRegisteredControllerMessage.cpp" />
     <ClCompile Include="MidiDevice.cpp" />
     <ClCompile Include="MidiDeviceInformation.cpp" />
+    <ClCompile Include="MidiDeviceInformationCollection.cpp" />
     <ClCompile Include="MidiImmediateStream.cpp" />
+    <ClCompile Include="MidiStreamInformationCollection.cpp" />
     <ClCompile Include="MidiStreamCrossProcessMessageQueue.cpp" />
     <ClCompile Include="MidiScheduledStream.cpp" />
     <ClCompile Include="MidiStream.cpp" />
@@ -197,6 +199,7 @@
     <ClCompile Include="MidiService.cpp" />
     <ClCompile Include="MidiSession.cpp" />
     <ClCompile Include="MidiTransportInformation.cpp" />
+    <ClCompile Include="MidiTransportInformationCollection.cpp" />
     <ClCompile Include="Ump.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

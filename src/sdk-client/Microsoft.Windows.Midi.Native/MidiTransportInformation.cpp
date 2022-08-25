@@ -20,4 +20,48 @@ namespace Microsoft::Windows::Midi::Enumeration
 
 	};
 
+
+	MidiTransportInformation::MidiTransportInformation()
+	{
+		_pimpl = new impl;
+	}
+
+	MidiTransportInformation::~MidiTransportInformation()
+	{
+		delete _pimpl;
+	}
+
+	MidiTransportInformation::MidiTransportInformation(const MidiTransportInformation& info)
+	{
+		_pimpl = nullptr;
+	}
+
+
+	const MidiObjectId MidiTransportInformation::getId()
+	{
+		return MidiObjectId{};
+	}
+
+	const char8_t* MidiTransportInformation::getName()
+	{
+		return nullptr;
+	}
+
+	const char8_t* MidiTransportInformation::getLongName()
+	{
+		return nullptr;
+
+	}
+
+	const wchar_t* MidiTransportInformation::getIconFileName()
+	{
+		return nullptr;
+	}
+
+	const bool MidiTransportInformation::getSupportsRuntimeDeviceCreation()
+	{
+		return false;
+	}
+
+
 }

@@ -27,7 +27,9 @@ namespace Microsoft::Windows::Midi
 {
 	enum WINDOWSMIDISERVICES_API MidiRouteType
 	{
-
+		MidiRouteTypeStraightThrough = 10,
+		MidiRouteTypeSplitPoint = 20,
+		MidiRouteTypePolyChain = 30
 	};
 
 
@@ -39,19 +41,10 @@ namespace Microsoft::Windows::Midi
 
 		MidiRouteInformation(const MidiRouteInformation& info);	// don't copy
 	public:
+		MidiRouteInformation();
 		~MidiRouteInformation();
 		const MidiObjectId getId();					// Unique Id of the route. Needed when you want to remove it
 		const MidiRouteType getType();				// Type of stream. Mostly used to differentiate unidirectional (like DIN) from bidirectional streams
-		const char8_t* getName();					// Name of this stream. May have been changed by the user through config tools.
-		const char8_t* getDeviceSuppliedName();		// Endpoint name as supplied by the device plug-in or driver
-		const wchar_t* getIconFileName();			// Name, without path, of the image used to represent this specific endpoint
-		const wchar_t* getDescription();			// Text description of the stream.
-
-		// TODO: Expose appropriate MIDI CI information per group/channel as negotiated by service
-		// For example, bandwidth, protocol, etc.
-		// Note that entire API is UMP, so translation to/from byte stream happens
-		// either in the driver (example: USB) or in the device/transport plugin
-
 	};
 
 
@@ -133,32 +126,48 @@ namespace Microsoft::Windows::Midi
 		MidiRouteInformation* RouteInformation;
 	};
 
-	// TODO: This could be in the device enumeration class. Revisit.
-	class WINDOWSMIDISERVICES_API MidiRouter
+	// Routes created in code are global to the entire MIDI system. If
+	// they are not creates as persistent, they have the lifetime of the 
+	// associated session.
+	class WINDOWSMIDISERVICES_API MidiRoutingManager
 	{
 	private:
 		struct impl;
 		impl* _pimpl;
 
+		MidiRoutingManager(const MidiRoutingManager& m);		// no copying
+		
+		MidiRoutingManager(MidiObjectId ownerSessionId);
 	public:
+		static MidiRoutingManager Create(MidiObjectId ownerSessionId);
+
+		// Creates a standard device stream -> device stream route
+		// If both streams are the same stream, it must be bidirectional 
+		// and will be routed from read queue to write queue in the stream
+		// Lots of options here for additional filtering. 
 		MidiRouteCreateResult CreateStraightThroughRoute(
 			const MidiRouteSource& source,
 			const MidiRouteDestination& destination,
 			const bool persistent);
 
 
+		// Creates a route which is based on split points on the instrument
 		MidiRouteCreateResult CreateSplitPointRoute(
 			const MidiRouteSource& source,
 			const MidiRouteSplitDestination* destinations,
 			const int destinationCount,
 			const bool persistent);
 
+		// Creates a route which can treat multiple tone generators/synths/etc.
+		// as a single logical polyphonic instrument. Most useful when you want
+		// to treat a number of mono or bi-timbral synths as a single big synth
 		MidiRouteCreateResult CreatePolyChainRoute(
 			const MidiRouteSource& source,
 			const MidiRoutePolyChainDestination* destinations,
 			const int destinationCount,
 			const bool persistent);
 
+		// Removes the created route. Use only against routes you've created.
 		bool RemoveRoute(const MidiObjectId routeId);
 
 		// TODO: Methods to list all routes. Mostly for user visibility / debugging

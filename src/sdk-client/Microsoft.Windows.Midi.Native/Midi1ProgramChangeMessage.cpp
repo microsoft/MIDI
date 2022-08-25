@@ -19,14 +19,14 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 	}
 
-	Midi1ProgramChangeMessage Midi1ProgramChangeMessage::FromMidi1Bytes(const uint8_t group, const uint8_t statusByte, const uint8_t programByte)
+	Midi1ProgramChangeMessage Midi1ProgramChangeMessage::FromMidi1Bytes(const MidiGroup group, const uint8_t statusByte, const uint8_t programByte)
 	{
 		Midi1ProgramChangeMessage msg;
 		return msg;
 
 	}
 
-	Midi1ProgramChangeMessage Midi1ProgramChangeMessage::FromValues(const uint8_t group, const uint8_t channel, const uint8_t program)
+	Midi1ProgramChangeMessage Midi1ProgramChangeMessage::FromValues(const MidiGroup group, const MidiChannel channel, const uint8_t program)
 	{
 		Midi1ProgramChangeMessage msg;
 		return msg;

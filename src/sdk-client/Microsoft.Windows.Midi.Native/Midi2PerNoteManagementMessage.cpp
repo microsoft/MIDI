@@ -28,7 +28,7 @@ namespace Microsoft::Windows::Midi::Messages
 	{
 	}
 
-	Midi2PerNoteManagementMessage Midi2PerNoteManagementMessage::FromValues(const uint8_t group, const uint8_t channel, const uint8_t noteNumber, const uint8_t optionFlags)
+	Midi2PerNoteManagementMessage Midi2PerNoteManagementMessage::FromValues(const MidiGroup group, const MidiChannel channel, const uint8_t noteNumber, const uint8_t optionFlags)
 	{
 		Midi2PerNoteManagementMessage msg;
 		return msg;

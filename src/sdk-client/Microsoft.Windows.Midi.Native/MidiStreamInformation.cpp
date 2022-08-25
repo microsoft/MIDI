@@ -20,4 +20,57 @@ namespace Microsoft::Windows::Midi::Enumeration
 
 	};
 
+	MidiStreamInformation::MidiStreamInformation()
+	{
+		_pimpl = new impl;
+	}
+
+	MidiStreamInformation::~MidiStreamInformation()
+	{
+		delete _pimpl;
+	}
+
+	MidiStreamInformation::MidiStreamInformation(const MidiStreamInformation& info)
+	{
+		_pimpl = nullptr;
+	}
+
+
+
+	const MidiObjectId MidiStreamInformation::getId()
+	{
+		return MidiObjectId{};
+	}
+
+	const MidiObjectId MidiStreamInformation::getParentDeviceId()
+	{
+		return MidiObjectId{};
+	}
+
+	const MidiStreamType MidiStreamInformation::getStreamType()
+	{
+		return MidiStreamType::MidiStreamTypeBidirectional; // todo
+	}
+
+	const char8_t* MidiStreamInformation::getName()
+	{
+		return nullptr;
+	}
+
+	const char8_t* MidiStreamInformation::getDeviceSuppliedName()
+	{
+		return nullptr;
+	}
+
+	const wchar_t* MidiStreamInformation::getIconFileName()
+	{
+		return nullptr;
+	}
+
+	const wchar_t* MidiStreamInformation::getDescription()
+	{
+		return nullptr;
+	}
+
 }
+

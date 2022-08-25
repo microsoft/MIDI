@@ -46,6 +46,7 @@ namespace Microsoft::Windows::Midi
 	const MidiServicePingResponse MidiService::Ping(MidiServicesComponentVersion& serverVersionReported)
 	{
 		// send a ping message to the service to verify it's working
+		return MidiServicePingResponse::MidiServicePingTimeOut;
 	}
 
 	const char8_t* MidiService::getServicesInstallerUri()

@@ -41,16 +41,47 @@ int main()
         // Next, enumerate devices. This doesn't cause a re-enumeration if the devices
         // have already been enumerated by another application, or earlier in this
         // application.
-        MidiEnumerator enumerator = MidiEnumerator::Create();
+
+        const bool skipEnumeration = false;
+
+        MidiEnumeratorCreateResult enumResult = MidiEnumerator::Create(skipEnumeration);
+
+        if (enumResult.Success)
+        {
+            std::unique_ptr<MidiEnumerator> enumerator = std::make_unique<MidiEnumerator>(enumResult.Enumerator);
+
+            std::wstring deviceName = L"Foo Synth 2000";
+
+            // find the device we're interested in. Can list all, or find by
+            // either the device-supplied original name or the user-updatable name. 
+            // Can also directly access a single device by its ID. Typically
+            // code would present the user with a list of all devices and their 
+            // streams.
+            // It's possible to have multiple devices with the same name, so the
+            // non-ID accessors return a collection of results.
+
+            //auto devices = enumerator->GetStaticDeviceList();
+            auto deviceList = enumerator->GetStaticDeviceListByDeviceSuppliedName(deviceName.c_str());
+
+            if (deviceList.Count() > 0)
+            {
+
+                // Open a device
+                auto deviceOpenResult = session->OpenDevice(deviceList[0].DeviceId);
 
 
-        // Open a device
 
-        // Open a stream on that device, and listen for incoming messages
+                // Open a stream on that device, and listen for incoming messages
 
 
-        // Send a MIDI message to the device
+                // Send a MIDI message to the device
 
+
+
+
+            }
+
+        }
 
 
         // when the app or other scope closes, it's good practice to close the session.

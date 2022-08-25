@@ -10,56 +10,58 @@
 #include "WindowsMidiServicesUmp.h"
 #include "WindowsMidiServicesUtility.h"
 
+#include <memory>
+
 namespace Microsoft::Windows::Midi::Messages
 {
 
 	// Ump32 --------------------------------------------------------------------------------------------------
 
-	const uint8_t Ump32::getMessageType()
+	const MidiMessageType Ump32::getMessageType()
 	{
-		return Utility::MostSignificantNibble(Byte[0]);
+		return (MidiMessageType)Utility::MostSignificantNibble(Byte[0]);
 	}
 
-	const uint8_t Ump32::getGroup()
+	const MidiGroup Ump32::getGroup()
 	{
-		return Utility::LeastSignificantNibble(Byte[0]);
+		return (MidiGroup)Utility::LeastSignificantNibble(Byte[0]);
 	}
 
-	void Ump32::setGroup(const uint8_t value)
+	void Ump32::setGroup(const MidiGroup value)
 	{
 		Utility::SetLeastSignificantNibble(Byte[0], value);
 	}
 
 	// Ump64 --------------------------------------------------------------------------------------------------
 
-	const uint8_t Ump64::getMessageType()
+	const MidiMessageType Ump64::getMessageType()
 	{
-		return Utility::MostSignificantNibble(Byte[0]);
+		return (MidiMessageType)Utility::MostSignificantNibble(Byte[0]);
 	}
 
-	const uint8_t Ump64::getGroup()
+	const MidiGroup Ump64::getGroup()
 	{
-		return Utility::LeastSignificantNibble(Byte[0]);
+		return (MidiGroup)Utility::LeastSignificantNibble(Byte[0]);
 	}
 
-	void Ump64::setGroup(const uint8_t value)
+	void Ump64::setGroup(const MidiGroup value)
 	{
 		Utility::SetLeastSignificantNibble(Byte[0], value);
 	}
 
 	// Ump96 --------------------------------------------------------------------------------------------------
 
-	const uint8_t Ump96::getMessageType()
+	const MidiMessageType Ump96::getMessageType()
 	{
-		return Utility::MostSignificantNibble(Byte[0]);
+		return (MidiMessageType)Utility::MostSignificantNibble(Byte[0]);
 	}
 
-	const uint8_t Ump96::getGroup()
+	const MidiGroup Ump96::getGroup()
 	{
-		return Utility::LeastSignificantNibble(Byte[0]);
+		return (MidiGroup)Utility::LeastSignificantNibble(Byte[0]);
 	}
 
-	void Ump96::setGroup(const uint8_t value)
+	void Ump96::setGroup(const MidiGroup value)
 	{
 		Utility::SetLeastSignificantNibble(Byte[0], value);
 	}
@@ -67,17 +69,17 @@ namespace Microsoft::Windows::Midi::Messages
 
 	// Ump128 --------------------------------------------------------------------------------------------------
 
-	const uint8_t Ump128::getMessageType()
+	const MidiMessageType Ump128::getMessageType()
 	{
-		return Utility::MostSignificantNibble(Byte[0]);
+		return (MidiMessageType)Utility::MostSignificantNibble(Byte[0]);
 	}
 
-	const uint8_t Ump128::getGroup()
+	const MidiGroup Ump128::getGroup()
 	{
-		return Utility::LeastSignificantNibble(Byte[0]);
+		return (MidiGroup)Utility::LeastSignificantNibble(Byte[0]);
 	}
 
-	void Ump128::setGroup(const uint8_t value)
+	void Ump128::setGroup(const MidiGroup value)
 	{
 		Utility::SetLeastSignificantNibble(Byte[0], value);
 	}

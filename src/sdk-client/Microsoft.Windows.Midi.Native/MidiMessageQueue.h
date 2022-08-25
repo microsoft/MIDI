@@ -44,8 +44,8 @@ namespace Windows::Devices::Midi::Internal
 
 		virtual const bool IsEmpty() = 0;											// returns true if the queue is empty
 		virtual const bool IsFull() = 0;											// returns true if the queue is empty
-		virtual const uint16_t getCountWords() = 0;									// returns the number of words currently in the queue
-		virtual const uint16_t getMaxCapacityInWords() = 0;							// returns the current max capacity
+		virtual const uint64_t getCountWords() = 0;									// returns the number of words currently in the queue
+		virtual const uint64_t getMaxCapacityInWords() = 0;							// returns the current max capacity
 		//virtual bool Resize(uint16_t newCapacityInWords) = 0;						// resizes queue while keeping contents
 
 		virtual bool BeginWrite() = 0;												// for beginning a transaction / message. Locks the queue for writing.
@@ -105,7 +105,7 @@ namespace Windows::Devices::Midi::Internal
 	{
 	private:
 		std::unique_ptr<boost::interprocess::message_queue> _queue;
-		std::unique_ptr<boost::interprocess::named_mutex> _mutex;
+//		std::unique_ptr<boost::interprocess::named_mutex> _mutex;
 
 		int DefaultPriority = 0;
 
@@ -123,8 +123,8 @@ namespace Windows::Devices::Midi::Internal
 
 		virtual const bool IsEmpty();												// returns true if the queue is empty
 		virtual const bool IsFull();												// returns true if the queue is full
-		virtual const uint16_t getCountWords();									// returns the number of words currently in the queue
-		virtual const uint16_t getMaxCapacityInWords();							// returns the current max capacity
+		virtual const uint64_t getCountWords();									// returns the number of words currently in the queue
+		virtual const uint64_t getMaxCapacityInWords();							// returns the current max capacity
 		//virtual bool Resize(uint16_t newCapacityInWords);					// resizes queue while keeping contents
 
 
