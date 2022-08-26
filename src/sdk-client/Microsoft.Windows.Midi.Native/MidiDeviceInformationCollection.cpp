@@ -9,14 +9,14 @@
 namespace Microsoft::Windows::Midi::Enumeration
 {
 
-	struct MidiDeviceInformationCollection::impl
+	struct MidiDeviceInformationCollection::implMidiDeviceInformationCollection
 	{
 		int TODO;
 	};
 
 	MidiDeviceInformationCollection::MidiDeviceInformationCollection()
 	{
-		_pimpl = new impl;
+		_pimpl = new implMidiDeviceInformationCollection;
 	}
 
 	MidiDeviceInformationCollection::~MidiDeviceInformationCollection()

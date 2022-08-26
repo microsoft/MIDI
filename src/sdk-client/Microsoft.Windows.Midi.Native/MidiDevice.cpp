@@ -9,6 +9,8 @@
 #include <filesystem>
 #include <functional>
 #include <map>
+#include <memory>
+#include <assert.h>
 
 #include "WindowsMidiServicesSession.h"
 #include "WindowsMidiServicesEnumeration.h"
@@ -16,22 +18,28 @@
 namespace Microsoft::Windows::Midi
 {
 
-	struct MidiDevice::impl
+	struct MidiDevice::implMidiDevice
 	{
+	public:
+
 		MidiObjectId ParentSessionId;
-		Enumeration::MidiDeviceInformation Information{};
+		MidiObjectId DeviceId;
 
 		// key is endpoint ID.
 		std::map<MidiObjectId, MidiStream> _openStreams{};
 
 		//MidiDevice(Enumeration::MidiDeviceInformation information);
 
-		friend class MidiDevice;
+		implMidiDevice(MidiObjectId deviceId, MidiObjectId& parentSessionId)
+		{
+			DeviceId = deviceId;
+			ParentSessionId = parentSessionId;
+		}
 	};
 
-	MidiDevice::MidiDevice()
+	MidiDevice::MidiDevice(MidiObjectId deviceId, MidiObjectId& parentSessionId)
 	{
-		_pimpl = new impl;
+		_pimpl = new implMidiDevice(deviceId, parentSessionId);
 	}
 
 	MidiDevice::~MidiDevice()
@@ -40,14 +48,7 @@ namespace Microsoft::Windows::Midi
 	}
 
 
-
-
-	const Enumeration::MidiDeviceInformation MidiDevice::getInformation()
-	{
-		return _pimpl->Information;
-	}
-
-	const bool MidiDevice::getOpenStream(const MidiObjectId& streamId, MidiStream& stream)
+	const bool MidiDevice::getOpenedStream(const MidiObjectId& streamId, MidiStream& stream)
 	{
 		return false;
 	}
@@ -59,15 +60,6 @@ namespace Microsoft::Windows::Midi
 	}
 
 
-	MidiStreamOpenResult MidiDevice::OpenStream(const Enumeration::MidiStreamInformation& streamInformation, const MidiStreamOpenOptions options, const MidiMessagesReceivedCallback& messagesReceivedCallback)
-	{
-		return MidiStreamOpenResult{};
-	}
-
-	MidiStreamOpenResult MidiDevice::OpenStream(const Enumeration::MidiStreamInformation& streamInformation, const MidiStreamOpenOptions options)
-	{
-		return MidiStreamOpenResult{};
-	}
 
 	MidiStreamOpenResult MidiDevice::OpenStream(const MidiObjectId& streamId, const MidiStreamOpenOptions options, const MidiMessagesReceivedCallback& messagesReceivedCallback)
 	{
@@ -77,16 +69,6 @@ namespace Microsoft::Windows::Midi
 	MidiStreamOpenResult MidiDevice::OpenStream(const MidiObjectId& streamId, const MidiStreamOpenOptions options)
 	{
 		return MidiStreamOpenResult{};
-	}
-
-	bool MidiDevice::SendUmp(const Enumeration::MidiStreamInformation& information, const Messages::Ump& message)
-	{
-		return false;
-	}
-
-	bool MidiDevice::SendUmp(const MidiObjectId& streamId, const Messages::Ump& message)
-	{
-		return false;
 	}
 
 	void MidiDevice::Close()

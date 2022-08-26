@@ -6,14 +6,14 @@
 namespace Microsoft::Windows::Midi::Enumeration
 {
 
-	struct MidiTransportInformationCollection::impl
+	struct MidiTransportInformationCollection::implMidiTransportInformationCollection
 	{
 		int TODO;
 	};
 
 	MidiTransportInformationCollection::MidiTransportInformationCollection()
 	{
-		_pimpl = new impl;
+		_pimpl = new implMidiTransportInformationCollection;
 	}
 
 	MidiTransportInformationCollection::~MidiTransportInformationCollection()

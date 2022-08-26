@@ -7,14 +7,14 @@ namespace Microsoft::Windows::Midi::Enumeration
 {
 
 
-	struct MidiStreamInformationCollection::impl
+	struct MidiStreamInformationCollection::implMidiStreamInformationCollection
 	{
 		int TODO;
 	};
 
 	MidiStreamInformationCollection::MidiStreamInformationCollection()
 	{
-		_pimpl = new impl;
+		_pimpl = new implMidiStreamInformationCollection;
 	}
 
 	MidiStreamInformationCollection::~MidiStreamInformationCollection()

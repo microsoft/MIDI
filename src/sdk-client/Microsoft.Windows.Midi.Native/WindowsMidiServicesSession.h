@@ -22,7 +22,7 @@
 #include "WindowsMidiServicesEnumeration.h"
 
 // TODO: May need to differentiate this namespace from the WinRT namespace
-namespace Microsoft::Windows::Midi
+namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 {
 	// ----------------------------------------------------------------------------
 	// MIDI Message received callback / delegate
@@ -31,8 +31,8 @@ namespace Microsoft::Windows::Midi
 	class WINDOWSMIDISERVICES_API MidiMessageReader
 	{
 	private:
-		struct impl;
-		impl* _pimpl;
+		struct implMidiMessageReader;
+		implMidiMessageReader* _pimpl;
 
 		MidiMessageReader(const MidiMessageReader& info);	// don't copy
 	public:
@@ -43,12 +43,12 @@ namespace Microsoft::Windows::Midi
 		Messages::Ump GetNextMessage();		// reads appropriate number of words from the queue
 		Messages::Ump PeekNextMessage();	// returns the next message but does not remove it
 	};
-	
+
 	typedef WINDOWSMIDISERVICES_API void(*MidiMessagesReceivedCallback)(
-						const MidiObjectId& sessionId,
-						const MidiObjectId& deviceId,
-						const MidiObjectId& streamId,
-						const MidiMessageReader& reader) ;
+		const MidiObjectId& sessionId,
+		const MidiObjectId& deviceId,
+		const MidiObjectId& streamId,
+		const MidiMessageReader& reader);
 
 
 	// ----------------------------------------------------------------------------
@@ -96,58 +96,40 @@ namespace Microsoft::Windows::Midi
 		static const uint64_t getCurrent();				// system call to get the current counter value
 		static const uint64_t getFrequency();				// frequency of counts in khz. Won't change until reboot.
 	};
+
 	// Info on hardware timers and QPC in Windows: 
 	// https://docs.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps#hardware-timer-info
+
 
 
 	class WINDOWSMIDISERVICES_API MidiStream
 	{
 	protected:
-		struct impl;
-		impl* _pimpl;
+		struct implMidiStream;
+		implMidiStream* _pimpl;
 
-		MidiStream(const MidiStream& info);				// don't copy
-		MidiStream(MidiStreamOpenOptions options);
+		//MidiStream(const MidiStream& info);				// don't copy
+		MidiStream(MidiObjectId streamId, MidiObjectId parentDeviceId, MidiStreamOpenOptions options);
 	public:
 		~MidiStream();
-		virtual void Close() = 0;
+		void Close();
 
-		const virtual Enumeration::MidiStreamInformation getInformation();
+		const MidiObjectId getStreamInformationId();
+		const MidiObjectId getParentDeviceInformationId();
 
-		friend class MidiDevice;	// TBD if this is necessary. Want to construct streams only through device class
+		// send a UMP with no scheduling. 
+		bool SendUmp(const Messages::Ump& message);
+
+		// send a UMP with scheduling. Only works if the stream was created with that option
+		bool SendUmp(MidiMessageTimestamp sendTimestamp, const Messages::Ump& message);
+
+
+		friend class MidiDevice;	// Want to construct streams only through device class
 
 		// TODO: MIDI CI Profile Support
 		// TODO: MIDI CI Property Exchange Support
 	};
 
-	// stream which handles messages that are immediately sent
-	class WINDOWSMIDISERVICES_API MidiImmediateStream final : MidiStream
-	{
-	private:
-		MidiImmediateStream(const MidiImmediateStream& info);	// don't copy
-	public:
-		~MidiImmediateStream();
-		virtual void Close();
-
-		bool SendUmp(const Messages::Ump& message);
-
-		friend class MidiDevice;	// TBD if this is necessary. Want to construct streams only through device class
-	};
-
-	// stream which handles timestamped messages. This uses a different
-	// type of queue behind the scenes, so different class
-	class WINDOWSMIDISERVICES_API MidiScheduledStream final : MidiStream
-	{
-	private:
-		MidiScheduledStream(const MidiScheduledStream& info);	// don't copy
-	public:
-		~MidiScheduledStream();
-		virtual void Close();
-
-		bool SendUmp(MidiMessageTimestamp sendTimestamp, const Messages::Ump& message);
-
-		friend class MidiDevice;	// TBD if this is necessary. Want to construct streams only through device class
-	};
 
 	struct WINDOWSMIDISERVICES_API MidiStreamOpenResult
 	{
@@ -157,7 +139,7 @@ namespace Microsoft::Windows::Midi
 	};
 
 
-	struct WINDOWSMIDISERVICES_API MidiDeviceOpenOptions 
+	struct WINDOWSMIDISERVICES_API MidiDeviceOpenOptions
 	{
 		// TODO
 	};
@@ -165,32 +147,24 @@ namespace Microsoft::Windows::Midi
 	class WINDOWSMIDISERVICES_API MidiDevice final
 	{
 	private:
-		struct impl;
-		impl* _pimpl;
+		struct implMidiDevice;
+		implMidiDevice* _pimpl;
 
 		MidiDevice(const MidiDevice& info);	// don't copy
-		MidiDevice();
+		MidiDevice(MidiObjectId deviceId, MidiObjectId& parentSessionId);
 	public:
 		~MidiDevice();
 
-		const Enumeration::MidiDeviceInformation getInformation();
+		const MidiObjectId getDeviceInformationId();
 
-		const bool getOpenStream(const MidiObjectId& streamId, MidiStream& stream);
+		const bool getOpenedStream(const MidiObjectId& streamId, MidiStream& stream);
 		// todo: method to get all open streams. Or maybe just a custom collection type
 
 		// session sets these when you open the device
 		const MidiObjectId getParentSessionID();
 
-
-		MidiStreamOpenResult OpenStream(const Enumeration::MidiStreamInformation& streamInformation, const MidiStreamOpenOptions options, const MidiMessagesReceivedCallback& messagesReceivedCallback);
-		MidiStreamOpenResult OpenStream(const Enumeration::MidiStreamInformation& streamInformation, const MidiStreamOpenOptions options);
-
 		MidiStreamOpenResult OpenStream(const MidiObjectId& streamId, const MidiStreamOpenOptions options, const MidiMessagesReceivedCallback& messagesReceivedCallback);
 		MidiStreamOpenResult OpenStream(const MidiObjectId& streamId, const MidiStreamOpenOptions options);
-
-		// maybe these should live in the stream class instead of here
-		bool SendUmp(const Enumeration::MidiStreamInformation& information, const Messages::Ump& message);
-		bool SendUmp(const MidiObjectId& streamId, const Messages::Ump& message);
 
 		// close this device connection and any open stream connections
 		void Close();
@@ -232,14 +206,14 @@ namespace Microsoft::Windows::Midi
 	{
 		bool Success;
 		MidiSessionCreateResultErrorDetail ErrorDetail;	// Additional error information
-		MidiSession* Session;		
+		MidiSession* Session;
 	};
 
 	class WINDOWSMIDISERVICES_API MidiSession final
 	{
 	private:
-		struct impl;
-		impl* _pimpl ;
+		struct implMidiSession;
+		implMidiSession* _pimpl;
 
 		MidiSession();								// use the Create method to construct objects
 		MidiSession(const MidiSession& session);	// not copyable
@@ -263,9 +237,6 @@ namespace Microsoft::Windows::Midi
 		const MidiDevice* GetOpenDevice(const MidiObjectId id);
 		MidiDeviceOpenResult OpenDevice(const MidiObjectId& deviceId, const MidiDeviceOpenOptions& options);
 		MidiDeviceOpenResult OpenDevice(const MidiObjectId& deviceId);
-
-
-
 
 		// TODO: enumerator for open devices/streams
 

@@ -15,14 +15,28 @@
 namespace Microsoft::Windows::Midi::Enumeration
 {
 
-	struct MidiStreamInformation::impl
+	struct MidiStreamInformation::implMidiStreamInformation
 	{
+	public:
+		MidiObjectId _id;
+		MidiObjectId _parentDeviceId;
+		MidiStreamType _streamType;
+		std::unique_ptr<std::wstring> Name;
+		std::unique_ptr<std::wstring> DeviceSuppliedName;
+		std::unique_ptr<std::wstring> IconFileName;
+		std::unique_ptr<std::wstring> Description;
 
+		implMidiStreamInformation(MidiObjectId id, MidiObjectId parentDeviceId, MidiStreamType streamType)
+		{
+			_id = id;
+			_parentDeviceId = parentDeviceId;
+			_streamType = streamType;
+		}
 	};
 
-	MidiStreamInformation::MidiStreamInformation()
+	MidiStreamInformation::MidiStreamInformation(MidiObjectId id, MidiObjectId parentDeviceId, MidiStreamType streamType)
 	{
-		_pimpl = new impl;
+		_pimpl = new implMidiStreamInformation(id, parentDeviceId, streamType);
 	}
 
 	MidiStreamInformation::~MidiStreamInformation()
@@ -52,12 +66,12 @@ namespace Microsoft::Windows::Midi::Enumeration
 		return MidiStreamType::MidiStreamTypeBidirectional; // todo
 	}
 
-	const char8_t* MidiStreamInformation::getName()
+	const wchar_t* MidiStreamInformation::getName()
 	{
 		return nullptr;
 	}
 
-	const char8_t* MidiStreamInformation::getDeviceSuppliedName()
+	const wchar_t* MidiStreamInformation::getDeviceSuppliedName()
 	{
 		return nullptr;
 	}

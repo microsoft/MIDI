@@ -15,9 +15,9 @@
 namespace Microsoft::Windows::Midi::Enumeration
 {
 
-	struct MidiEnumerator::impl
+	struct MidiEnumerator::implMidiEnumerator
 	{
-
+	public:
 		// device id, device info
 		std::map<MidiObjectId, MidiTransportInformation> _transports{};
 
@@ -30,15 +30,13 @@ namespace Microsoft::Windows::Midi::Enumeration
 		// TODO: Will need to provide a hash function for the above. 
 		// Could use boost hash_combine or hash_value for std::pair
 		// old example: https://stackoverflow.com/questions/32685540/why-cant-i-compile-an-unordered-map-with-a-pair-as-key
-
-		friend class MidiEnumerator;
 	};
 
 
 
 	MidiEnumerator::MidiEnumerator()
 	{
-		_pimpl = new impl;
+		_pimpl = new implMidiEnumerator;
 	}
 
 	MidiEnumerator::~MidiEnumerator()

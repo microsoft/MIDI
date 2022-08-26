@@ -16,5 +16,23 @@
 namespace Microsoft::Windows::Midi
 {
 
+	class MidiImmediateStream::implMidiImmediateStream
+	{
+	public:
+		Enumeration::MidiStreamInformation Information;
+		MidiMessagesReceivedCallback _messagesReceivedCallback;
+
+		//MidiStream(const Enumeration::MidiStreamInformation& information, const MidiMessagesReceivedCallback& messagesReceivedCallback);
+		//MidiStream(const Enumeration::MidiStreamInformation& information);
+
+		// TODO: Vector of groups / channels / protocol versions / other MIDI CI information
+	};
+
+
+
+
+
+
+
 
 }

@@ -44,9 +44,8 @@
 
 #include "WindowsMidiServicesBase.h"
 
-namespace Microsoft::Windows::Midi::Messages
+namespace Microsoft::Windows::Midi::Messages //::inline v0_1_0_pre
 {
-
 	// Base message structure
 	struct WINDOWSMIDISERVICES_API Ump
 	{
@@ -115,6 +114,5 @@ namespace Microsoft::Windows::Midi::Messages
 		virtual const MidiGroup getGroup();
 		virtual void setGroup(const MidiGroup value);
 	};
-
 
 }

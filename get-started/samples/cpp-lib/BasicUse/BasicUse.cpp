@@ -48,6 +48,7 @@ int main()
 
         if (enumResult.Success)
         {
+            // in Create factory methods, the calling code (this code) owns the pointer
             std::unique_ptr<MidiEnumerator> enumerator = std::make_unique<MidiEnumerator>(enumResult.Enumerator);
 
             std::wstring deviceName = L"Foo Synth 2000";
@@ -60,18 +61,23 @@ int main()
             // It's possible to have multiple devices with the same name, so the
             // non-ID accessors return a collection of results.
 
-            //auto devices = enumerator->GetStaticDeviceList();
+            //auto deviceList = enumerator->GetStaticDeviceList();
             auto deviceList = enumerator->GetStaticDeviceListByDeviceSuppliedName(deviceName.c_str());
 
             if (deviceList.Count() > 0)
             {
-
-                // Open a device
                 auto deviceOpenResult = session->OpenDevice(deviceList[0].DeviceId);
 
+                // Open a device. In Open methods, the container owns the pointers, not
+                // the calling code. So don't delete the devices or streams :)
 
 
                 // Open a stream on that device, and listen for incoming messages
+                MidiObjectId streamId{};
+
+                deviceOpenResult.Device->OpenStream(streamId, 
+                    MidiStreamOpenOptions::MidiStreamOpenBidirectional |
+                    MidiStreamOpenOptions::MidiStreamOpenUseSendTimestamps);
 
 
                 // Send a MIDI message to the device

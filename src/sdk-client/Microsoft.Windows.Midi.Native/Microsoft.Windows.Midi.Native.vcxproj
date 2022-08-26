@@ -188,10 +188,8 @@
     <ClCompile Include="MidiDevice.cpp" />
     <ClCompile Include="MidiDeviceInformation.cpp" />
     <ClCompile Include="MidiDeviceInformationCollection.cpp" />
-    <ClCompile Include="MidiImmediateStream.cpp" />
     <ClCompile Include="MidiStreamInformationCollection.cpp" />
     <ClCompile Include="MidiStreamCrossProcessMessageQueue.cpp" />
-    <ClCompile Include="MidiScheduledStream.cpp" />
     <ClCompile Include="MidiStream.cpp" />
     <ClCompile Include="MidiStreamInformation.cpp" />
     <ClCompile Include="MidiEnumerator.cpp" />

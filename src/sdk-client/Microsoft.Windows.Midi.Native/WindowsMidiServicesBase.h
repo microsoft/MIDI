@@ -19,7 +19,7 @@
 #include <cstdint>
 #include <Windows.h>
 
-namespace Microsoft::Windows::Midi
+namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 {
 	using MidiObjectId = GUID;
 

@@ -9,26 +9,26 @@
 #include <filesystem>
 #include <functional>
 #include <map>
+#include <memory>
 
 #include "WindowsMidiServicesSession.h"
 #include "WindowsMidiServicesEnumeration.h"
 
 namespace Microsoft::Windows::Midi
 {
-	struct MidiSession::impl
+	struct MidiSession::implMidiSession
 	{
+	public:
 		MidiObjectId Id;
-		std::wstring Name;
+		std::unique_ptr<std::wstring> Name;
 		SYSTEMTIME CreatedDateTime;
 
 		std::map<MidiObjectId, MidiDevice> _openDevices;
-
-		friend class MidiSession;
 	};
 
 	MidiSession::MidiSession()
 	{
-		_pimpl = new impl;
+		_pimpl = new implMidiSession;
 	}
 
 	MidiSession::~MidiSession()
@@ -49,7 +49,7 @@ namespace Microsoft::Windows::Midi
 
 	const wchar_t* MidiSession::getName()
 	{
-		return _pimpl->Name.c_str();
+		return _pimpl->Name->c_str();
 	}
 
 	void MidiSession::UpdateName(const wchar_t* newName)

@@ -9,40 +9,80 @@
 #include <filesystem>
 #include <functional>
 #include <map>
+#include <assert.h>
 
 #include "WindowsMidiServicesSession.h"
 #include "WindowsMidiServicesEnumeration.h"
 
 namespace Microsoft::Windows::Midi
 {
-	struct MidiStream::impl
+	struct MidiStream::implMidiStream
 	{
-		Enumeration::MidiStreamInformation Information;
-		MidiMessagesReceivedCallback _messagesReceivedCallback;
+	public:
+		MidiObjectId StreamInformationId;
+		MidiObjectId ParentDeviceInformationId;
+		MidiStreamOpenOptions Options;
 
-		//MidiStream(const Enumeration::MidiStreamInformation& information, const MidiMessagesReceivedCallback& messagesReceivedCallback);
-		//MidiStream(const Enumeration::MidiStreamInformation& information);
+		bool SchedulingEnabled = false;
+		bool HasReadQueue = false;
+		bool HasWriteQueue = false;
 
-		// TODO: Vector of groups / channels / protocol versions / other MIDI CI information
+		MidiMessagesReceivedCallback _messagesReceivedCallback = nullptr;
+
+		implMidiStream(MidiObjectId streamId, MidiObjectId parentDeviceId, MidiStreamOpenOptions options)
+		{
+			StreamInformationId = streamId;
+			ParentDeviceInformationId = parentDeviceId;
+			Options = options;
+		}
 	};
 
 
 
-	MidiStream::MidiStream(MidiStreamOpenOptions options)
+	MidiStream::MidiStream(MidiObjectId streamId, MidiObjectId parentDeviceId, MidiStreamOpenOptions options)
 	{
+		_pimpl = new implMidiStream(streamId, parentDeviceId, options);
 
+		// TODO: set flags based on options
 	}
 
+	MidiStream::~MidiStream()
+	{
+		delete _pimpl;
+	}
 
-
-
-	//bool MidiStream::SendUmp(const Messages::Ump& message)
-	//{
-
-	//}
 
 	void MidiStream::Close()
 	{
+		// TODO: clean up
 
 	}
+
+	const MidiObjectId MidiStream::getStreamInformationId()
+	{
+		assert(_pimpl != nullptr);
+
+		return _pimpl->StreamInformationId;
+	}
+
+	const MidiObjectId MidiStream::getParentDeviceInformationId()
+	{
+		assert(_pimpl != nullptr);
+
+		return _pimpl->ParentDeviceInformationId;
+	}
+
+		// send a UMP with no scheduling. 
+	bool MidiStream::SendUmp(const Messages::Ump& message)
+	{
+		return false;
+	}
+
+		// send a UMP with scheduling. Only works if the stream was created with that option
+	bool MidiStream::SendUmp(MidiMessageTimestamp sendTimestamp, const Messages::Ump& message)
+	{
+		return false;
+	}
+
+
 }

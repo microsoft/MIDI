@@ -191,12 +191,6 @@
     <ClCompile Include="MidiMessageReader.cpp">
       <Filter>Source Files\Session</Filter>
     </ClCompile>
-    <ClCompile Include="MidiImmediateStream.cpp">
-      <Filter>Source Files\Session</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiScheduledStream.cpp">
-      <Filter>Source Files\Session</Filter>
-    </ClCompile>
     <ClCompile Include="MidiStreamCrossProcessMessageQueue.cpp">
       <Filter>Source Files\Internal</Filter>
     </ClCompile>

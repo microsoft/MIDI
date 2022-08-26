@@ -15,15 +15,26 @@
 namespace Microsoft::Windows::Midi::Enumeration
 {
 
-	struct MidiTransportInformation::impl
+	struct MidiTransportInformation::implMidiTransportInformation
 	{
+	public:
+		MidiObjectId Id;
+		std::unique_ptr<std::wstring> Name;
+		std::unique_ptr<std::wstring> LongName;
+		std::unique_ptr<std::wstring> IconFileName;
+		
+		bool SupportsRuntimeDeviceCreation;
 
+		implMidiTransportInformation(MidiObjectId id)
+		{
+			this->Id = id;
+		}
 	};
 
 
-	MidiTransportInformation::MidiTransportInformation()
+	MidiTransportInformation::MidiTransportInformation(MidiObjectId id)
 	{
-		_pimpl = new impl;
+		_pimpl = new implMidiTransportInformation(id);
 	}
 
 	MidiTransportInformation::~MidiTransportInformation()
@@ -42,12 +53,12 @@ namespace Microsoft::Windows::Midi::Enumeration
 		return MidiObjectId{};
 	}
 
-	const char8_t* MidiTransportInformation::getName()
+	const wchar_t* MidiTransportInformation::getName()
 	{
 		return nullptr;
 	}
 
-	const char8_t* MidiTransportInformation::getLongName()
+	const wchar_t* MidiTransportInformation::getLongName()
 	{
 		return nullptr;
 

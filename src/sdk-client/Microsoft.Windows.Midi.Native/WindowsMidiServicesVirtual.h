@@ -25,7 +25,7 @@
 
 using namespace Microsoft::Windows::Midi::Enumeration;
 
-namespace Microsoft::Windows::Midi
+namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 {
 	enum WINDOWSMIDISERVICES_API MidiStreamCreateResultErrorDetail
 	{
@@ -89,6 +89,4 @@ namespace Microsoft::Windows::Midi
 		bool RemoveStream(const MidiObjectId deviceId);
 	};
 }
-
-
 

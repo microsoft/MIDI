@@ -23,7 +23,7 @@
 #include "WindowsMidiServicesEnumeration.h"
 using namespace Microsoft::Windows::Midi::Enumeration;
 
-namespace Microsoft::Windows::Midi
+namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 {
 	enum WINDOWSMIDISERVICES_API MidiRouteType
 	{
@@ -59,7 +59,7 @@ namespace Microsoft::Windows::Midi
 		// Group is array (0-based)
 		// Channels are bits and are 1-based. Bit 1 high for channel 1, bit 2 high for channel 2... bit 16 for channel 16
 		// if AllIncomingGroups is set to true, reads only the first element of this array
-		uint16_t IncomingChannelsPerGroup[16];			
+		uint16_t IncomingChannelsPerGroup[16];
 	};
 
 	struct WINDOWSMIDISERVICES_API MidiRouteDestination
@@ -136,7 +136,7 @@ namespace Microsoft::Windows::Midi
 		impl* _pimpl;
 
 		MidiRoutingManager(const MidiRoutingManager& m);		// no copying
-		
+
 		MidiRoutingManager(MidiObjectId ownerSessionId);
 	public:
 		static MidiRoutingManager Create(MidiObjectId ownerSessionId);

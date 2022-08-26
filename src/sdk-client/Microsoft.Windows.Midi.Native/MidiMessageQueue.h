@@ -109,7 +109,7 @@ namespace Windows::Devices::Midi::Internal
 
 		int DefaultPriority = 0;
 
-		MidiStreamCrossProcessMessageQueue() {}		// create or open through factory only
+		//MidiStreamCrossProcessMessageQueue() {}		// create or open through factory only
 
 		// TODO: mutex
 

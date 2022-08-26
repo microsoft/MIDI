@@ -16,14 +16,27 @@
 namespace Microsoft::Windows::Midi::Enumeration
 {
 
-	struct MidiDeviceInformation::impl
+	struct MidiDeviceInformation::implMidiDeviceInformation
 	{
-		int TODO;
+	public:
+		MidiObjectId Id;
+		MidiObjectId TransportId;
+		std::unique_ptr<std::wstring> Name;
+		std::unique_ptr<std::wstring> DeviceSuppliedName;
+		std::unique_ptr<std::string>  Serial;
+		std::unique_ptr<std::wstring> IconFileName;
+		std::unique_ptr<std::wstring> Description;
+
+		implMidiDeviceInformation(MidiObjectId id, MidiObjectId transportId)
+		{
+			Id = id;
+			TransportId = transportId;
+		}
 	};
 
-	MidiDeviceInformation::MidiDeviceInformation()
+	MidiDeviceInformation::MidiDeviceInformation(MidiObjectId id, MidiObjectId transportId)
 	{
-		_pimpl = new impl;
+		_pimpl = new implMidiDeviceInformation(id, transportId);
 	}
 
 	MidiDeviceInformation::~MidiDeviceInformation()
@@ -47,12 +60,12 @@ namespace Microsoft::Windows::Midi::Enumeration
 		return MidiObjectId{};
 	}
 
-	const char8_t* MidiDeviceInformation::getName()
+	const wchar_t* MidiDeviceInformation::getName()
 	{
 		return nullptr;
 	}
 
-	const char8_t* MidiDeviceInformation::getDeviceSuppliedName()
+	const wchar_t* MidiDeviceInformation::getDeviceSuppliedName()
 	{
 		return nullptr;
 	}
@@ -77,7 +90,7 @@ namespace Microsoft::Windows::Midi::Enumeration
 		return false;
 	}
 
-	const uint16_t MidiDeviceInformation::getOwningProcessIdIfRuntimeCreated()
+	const uint32_t MidiDeviceInformation::getOwningProcessIdIfRuntimeCreated()
 	{
 		return 0;
 	}

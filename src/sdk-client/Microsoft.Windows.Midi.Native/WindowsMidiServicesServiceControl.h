@@ -19,9 +19,8 @@
 #define WINDOWSMIDISERVICES_API __declspec(dllimport)
 #endif
 
-namespace Microsoft::Windows::Midi
+namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 {
-
 	// ----------------------------------------------------------------------------
 	// Service-specific information and configuration
 	// ----------------------------------------------------------------------------
@@ -75,4 +74,5 @@ namespace Microsoft::Windows::Midi
 		static const wchar_t* BuildFullPathEndpointIconFilename(const wchar_t* iconFileName);
 		static const wchar_t* BuildFullPathTransportIconFilename(const wchar_t* iconFileName);
 	};
+
 }

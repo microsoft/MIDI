@@ -26,7 +26,7 @@
 // ----------------------------------------------------------------------------
 
 
-namespace Microsoft::Windows::Midi::Utility
+namespace Microsoft::Windows::Midi::Utility //::inline v0_1_0_pre
 {
 	// Need some unit tests for these on both x64 and Arm64
 	constexpr MidiByte7 Make7BitByte(uint8_t b) { return b & 0x7F; }
@@ -47,6 +47,5 @@ namespace Microsoft::Windows::Midi::Utility
 
 	constexpr void SetLeastSignificantNibble(MidiByte8& b, const MidiNibble4 nibbleValue) { b = ((b & 0xF0) | (nibbleValue & 0x0F)); }
 	constexpr void SetMostSignificantNibble(MidiByte8& b, const MidiNibble4 nibbleValue) { b = ((b & 0x0F) | (nibbleValue << 4)); }
-
 
 }

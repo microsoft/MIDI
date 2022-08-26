@@ -16,7 +16,7 @@
 namespace Microsoft::Windows::Midi
 {
 
-	struct MidiMessageReader::impl
+	struct MidiMessageReader::implMidiMessageReader
 	{
 
 	};

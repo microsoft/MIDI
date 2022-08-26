@@ -24,29 +24,28 @@
 // Enumeration
 // ----------------------------------------------------------------------------
 
-namespace Microsoft::Windows::Midi::Enumeration
+namespace Microsoft::Windows::Midi::Enumeration //::inline v0_1_0_pre
 {
 	// GUIDs are used for IDs. If porting this to another platform, consider
 	// usig something like CrossGuid, taking an API dependency on boost, or
 	// simply redefining as necessary
 	// https://github.com/graeme-hill/crossguid
 
-
-	// examples: USB, BLE, RTP
-	class WINDOWSMIDISERVICES_API MidiTransportInformation
+		// examples: USB, BLE, RTP
+	struct WINDOWSMIDISERVICES_API MidiTransportInformation
 	{
 	private:
-		struct impl;
-		impl* _pimpl;
+		struct implMidiTransportInformation;
+		implMidiTransportInformation* _pimpl;
 
-		//explicit MidiTransportInformation();
+
 		MidiTransportInformation(const MidiTransportInformation& info);// don't copy
 	public:
-		MidiTransportInformation();
+		MidiTransportInformation(MidiObjectId id);
 		~MidiTransportInformation();
 		const MidiObjectId getId();						// Unique Id of the type of transport. Referenced by the device. Created by plugin and retained across reboots
-		const char8_t* getName();						// Name, like BLE, RTP, USB etc.
-		const char8_t* getLongName();					// Longer name like Bluetooth Low Energy MIDI 1.0
+		const wchar_t* getName();						// Name, like BLE, RTP, USB etc.
+		const wchar_t* getLongName();					// Longer name like Bluetooth Low Energy MIDI 1.0
 		const wchar_t* getIconFileName();				// Name, without path, of the image used to represent this type of transport
 		const bool getSupportsRuntimeDeviceCreation();	// true if this supports creating virtual devices/streams
 
@@ -64,26 +63,27 @@ namespace Microsoft::Windows::Midi::Enumeration
 	// In the protocol specs, a device is anything connected to MIDI, which
 	// includes any of the 256 possible things connected via groups/channels
 	// on a single transport
-	class WINDOWSMIDISERVICES_API MidiDeviceInformation
+	struct WINDOWSMIDISERVICES_API MidiDeviceInformation
 	{
 	private:
-		struct impl;
-		impl* _pimpl;
+		struct implMidiDeviceInformation;
+		implMidiDeviceInformation* _pimpl;
+
 
 		MidiDeviceInformation(const MidiDeviceInformation& info);	// don't copy
 	public:
-		MidiDeviceInformation();
+		MidiDeviceInformation(MidiObjectId id, MidiObjectId transportId);
 		~MidiDeviceInformation();
 		MidiObjectId getId();						// Unique Id of the device. Used in most MIDI messaging
 		MidiObjectId getTransportId();				// Uinque Id of the transport used by the device. For displaying appropriate name/icons
-		const char8_t* getName();					// Device name. May have been changed by the user through config tools
-		const char8_t* getDeviceSuppliedName();		// Device name as supplied by the device plug-in or driver
+		const wchar_t* getName();					// Device name. May have been changed by the user through config tools
+		const wchar_t* getDeviceSuppliedName();		// Device name as supplied by the device plug-in or driver
 		const char8_t* getSerial();					// If there's a unique serial number for the device, we track it here.
 		const wchar_t* getIconFileName();			// Name, without path, of the image used to represent this specific device
 		const wchar_t* getDescription();			// user-supplied long text description
 
 		const bool getIsRuntimeCreated();						// true if this was created at runtime
-		const uint16_t getOwningProcessIdIfRuntimeCreated();	// owning process ID.
+		const uint32_t getOwningProcessIdIfRuntimeCreated();	// owning process ID.
 
 		friend class MidiEnumerator;
 	};
@@ -107,21 +107,22 @@ namespace Microsoft::Windows::Midi::Enumeration
 	// In addition to true bi-directional streams (like network, USB, etc.)
 	// Endpoints also encapsulate any negotiated bi-directional communications,
 	// involving pairing of discrete ports, for purposes of MIDI CI. 
-	class WINDOWSMIDISERVICES_API MidiStreamInformation final
+	struct WINDOWSMIDISERVICES_API MidiStreamInformation final
 	{
 	private:
-		struct impl;
-		impl* _pimpl;
+		struct implMidiStreamInformation;
+		implMidiStreamInformation* _pimpl;
+
 
 		MidiStreamInformation(const MidiStreamInformation& info);	// don't copy
 	public:
-		MidiStreamInformation();
+		MidiStreamInformation(MidiObjectId id, MidiObjectId parentDeviceId, MidiStreamType streamType);
 		~MidiStreamInformation();
 		const MidiObjectId getId();					// Unique Id of the stream. Used in most MIDI messaging
 		const MidiObjectId getParentDeviceId();		// Unique Id of the parent device which owns this stream.
 		const MidiStreamType getStreamType();		// Type of stream. Mostly used to differentiate unidirectional (like DIN) from bidirectional streams
-		const char8_t* getName();					// Name of this stream. May have been changed by the user through config tools.
-		const char8_t* getDeviceSuppliedName();		// Endpoint name as supplied by the device plug-in or driver
+		const wchar_t* getName();					// Name of this stream. May have been changed by the user through config tools.
+		const wchar_t* getDeviceSuppliedName();		// Endpoint name as supplied by the device plug-in or driver
 		const wchar_t* getIconFileName();			// Name, without path, of the image used to represent this specific endpoint
 		const wchar_t* getDescription();			// Text description of the stream.
 
@@ -154,14 +155,14 @@ namespace Microsoft::Windows::Midi::Enumeration
 		const MidiObjectId transportId);
 
 	typedef WINDOWSMIDISERVICES_API void(*MidiTransportRemovedCallback)(
-		const MidiObjectId transportId) ;
+		const MidiObjectId transportId);
 
 	typedef WINDOWSMIDISERVICES_API void(*MidiTransportChangedCallback)(
-		const MidiObjectId transportId) ;
+		const MidiObjectId transportId);
 
 
 	typedef WINDOWSMIDISERVICES_API void(*MidiDeviceAddedCallback)(
-		const MidiObjectId deviceId) ;
+		const MidiObjectId deviceId);
 
 	typedef WINDOWSMIDISERVICES_API void(*MidiDeviceRemovedCallback)(
 		const MidiObjectId deviceId);
@@ -188,8 +189,8 @@ namespace Microsoft::Windows::Midi::Enumeration
 	class WINDOWSMIDISERVICES_API MidiTransportInformationCollection final
 	{
 	private:
-		struct impl;
-		impl* _pimpl;
+		struct implMidiTransportInformationCollection;
+		implMidiTransportInformationCollection* _pimpl;
 
 		MidiTransportInformationCollection();
 	public:
@@ -203,8 +204,8 @@ namespace Microsoft::Windows::Midi::Enumeration
 	class WINDOWSMIDISERVICES_API MidiDeviceInformationCollection final
 	{
 	private:
-		struct impl;
-		impl* _pimpl;
+		struct implMidiDeviceInformationCollection;
+		implMidiDeviceInformationCollection* _pimpl;
 
 		MidiDeviceInformationCollection();
 	public:
@@ -218,8 +219,8 @@ namespace Microsoft::Windows::Midi::Enumeration
 	class WINDOWSMIDISERVICES_API MidiStreamInformationCollection final
 	{
 	private:
-		struct impl;
-		impl* _pimpl;
+		struct implMidiStreamInformationCollection;
+		implMidiStreamInformationCollection* _pimpl;
 
 		MidiStreamInformationCollection();
 	public:
@@ -233,7 +234,7 @@ namespace Microsoft::Windows::Midi::Enumeration
 
 	enum WINDOWSMIDISERVICES_API MidiEnumeratorCreateResultErrorDetail
 	{
-		MidiEnumeratorCreateErrorCommunication = 999,		
+		MidiEnumeratorCreateErrorCommunication = 999,
 		MidiEnumeratorCreateErrorOther = 1000
 	};
 
@@ -253,8 +254,8 @@ namespace Microsoft::Windows::Midi::Enumeration
 	class WINDOWSMIDISERVICES_API MidiEnumerator final
 	{
 	private:
-		struct impl;
-		impl* _pimpl;
+		struct implMidiEnumerator;
+		implMidiEnumerator* _pimpl;
 
 		MidiEnumerator(const MidiEnumerator& info);	// don't copy
 		MidiEnumerator();
@@ -282,7 +283,7 @@ namespace Microsoft::Windows::Midi::Enumeration
 			MidiDeviceInformation& info);
 
 		const bool GetStreamInformationFromId(
-			MidiObjectId deviceId, 
+			MidiObjectId deviceId,
 			MidiObjectId streamId,
 			MidiStreamInformation& info);
 
@@ -304,22 +305,21 @@ namespace Microsoft::Windows::Midi::Enumeration
 
 
 		void SubscribeToTransportChangeNotifications(
-			const MidiTransportAddedCallback& addedCallback, 
-			const MidiTransportRemovedCallback& removedCallback, 
+			const MidiTransportAddedCallback& addedCallback,
+			const MidiTransportRemovedCallback& removedCallback,
 			const MidiTransportChangedCallback& changedCallback);
 
 		void SubscribeToDeviceChangeNotifications(
-			const MidiDeviceAddedCallback& addedCallback, 
-			const MidiDeviceRemovedCallback& removedCallback, 
+			const MidiDeviceAddedCallback& addedCallback,
+			const MidiDeviceRemovedCallback& removedCallback,
 			const MidiDeviceChangedCallback& changedCallback);
 
 		void SubscribeToEndpointChangeNotifications(
-			const MidiStreamAddedCallback& addedCallback, 
-			const MidiStreamRemovedCallback& removedCallback, 
+			const MidiStreamAddedCallback& addedCallback,
+			const MidiStreamRemovedCallback& removedCallback,
 			const MidiStreamChangedCallback& changedCallback);
 
 
 	};
-
 }
 
