@@ -233,12 +233,13 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 		static MidiSessionCreateResult Create(const wchar_t* name, const wchar_t* appName);
 		void Close();
 
-		//const std::vector<MidiDevice> getAllOpenDevices();
-		const MidiDevice* GetOpenDevice(const MidiObjectId id);
+		const MidiDevice* GetOpenedDevice(const MidiObjectId id);
+
 		MidiDeviceOpenResult OpenDevice(const MidiObjectId& deviceId, const MidiDeviceOpenOptions& options);
 		MidiDeviceOpenResult OpenDevice(const MidiObjectId& deviceId);
 
 		// TODO: enumerator for open devices/streams
+		//const std::vector<MidiDevice> getAllOpenedDevices();
 
 	};
 }
