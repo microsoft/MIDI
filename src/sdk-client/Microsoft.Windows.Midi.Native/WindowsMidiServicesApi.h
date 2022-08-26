@@ -9,11 +9,12 @@
 // ====================================================================
 
 // This is the primary header file for the Windows MIDI Services API. API headers include:
-// - WindowsMidiServicesApi.h				: Optional. This file for convenience. References all the others.
+// - WindowsMidiServicesApi.h				: Optional. This file for convenience. References all the others
+//											  so you only need to include this one file.
 // - WindowsMidiServicesBase.h				: Required. Base simple types and enums
 // - WindowsMidiServicesSession.h			: Required. Sessions, Devices, Streams.
 // - WindowsMidiServicesEnumeration.h		: Required. Enumerate streams and devices
-// - WindowsMidiServicesRoutes.h			: Optional. For app-created message routes
+// - WindowsMidiServicesRouting.h			: Optional. For app-created message routes
 // - WindowsMidiServicesVirtual.h			: Optional. For app-created virtual devices/streams
 // - WindowsMidiServicesUmp.h				: Required. Base Universal MIDI Packet definitions
 // - WindowsMidiServicesMessages.h			: Optional. Strongly-typed messages
