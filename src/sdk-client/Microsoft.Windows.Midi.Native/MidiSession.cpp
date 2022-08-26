@@ -57,7 +57,7 @@ namespace Microsoft::Windows::Midi
 		// TODO: Service call
 	}
 
-	const MidiDevice* MidiSession::GetOpenDevice(MidiObjectId id)
+	const MidiDevice* MidiSession::GetOpenedDevice(MidiObjectId id)
 	{
 		// TODO: get device from the internal map
 		return nullptr;

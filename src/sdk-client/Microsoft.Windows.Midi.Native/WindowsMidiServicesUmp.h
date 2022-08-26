@@ -55,7 +55,7 @@ namespace Microsoft::Windows::Midi::Messages //::inline v0_1_0_pre
 	};
 
 	// 32 bit (1 word) MIDI message. Used for all MIDI 1.0 messages, utility messages, and more
-	struct WINDOWSMIDISERVICES_API Ump32 : public Ump
+	struct WINDOWSMIDISERVICES_API Ump32 : virtual public Ump
 	{
 		union
 		{
@@ -70,7 +70,7 @@ namespace Microsoft::Windows::Midi::Messages //::inline v0_1_0_pre
 	};
 
 	// 64 bit (2 words) MIDI message. Used for MIDI 2.0 channel voice, SysEx7, and more
-	struct WINDOWSMIDISERVICES_API Ump64 : public Ump
+	struct WINDOWSMIDISERVICES_API Ump64 : virtual public Ump
 	{
 		union
 		{
@@ -85,7 +85,7 @@ namespace Microsoft::Windows::Midi::Messages //::inline v0_1_0_pre
 	};
 
 	// 96 bit (3 words) MIDI message. Not currently used for any types of MIDI messages
-	struct WINDOWSMIDISERVICES_API Ump96 : public Ump
+	struct WINDOWSMIDISERVICES_API Ump96 : virtual public Ump
 	{
 		union
 		{
@@ -101,7 +101,7 @@ namespace Microsoft::Windows::Midi::Messages //::inline v0_1_0_pre
 	};
 
 	// 128 bit (4 words) MIDI message. Used for mixed data and 8-bit SysEx messages
-	struct WINDOWSMIDISERVICES_API Ump128 : public Ump
+	struct WINDOWSMIDISERVICES_API Ump128 : virtual public Ump
 	{
 		union
 		{

@@ -21,4 +21,47 @@ namespace Microsoft::Windows::Midi
 
 	};
 
+	MidiMessageReader::MidiMessageReader()
+	{
+		_pimpl = new implMidiMessageReader;
+	}
+
+	MidiMessageReader::~MidiMessageReader()
+	{
+		delete _pimpl;
+	}
+
+	bool MidiMessageReader::eof()
+	{
+
+	}
+
+	int MidiMessageReader::GetNextUmpWordCount()
+	{
+	}
+
+
+	bool ReadUmp32(Messages::Ump32& message, bool validate)
+	{
+		return false;
+	}
+
+	bool ReadUmp64(Messages::Ump64& message, bool validate)
+	{
+		return false;
+	}
+
+	bool ReadUmp96(Messages::Ump96& message, bool validate)
+	{
+		return false;
+
+	}
+
+	bool ReadUmp128(Messages::Ump128& message, bool validate)
+	{
+		return false;
+
+	}
+
+
 }

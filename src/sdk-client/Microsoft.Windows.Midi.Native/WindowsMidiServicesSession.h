@@ -11,6 +11,7 @@
 #pragma once
 
 #include <Windows.h>
+#include <winnt.h>		// for flags operator macro
 
 #ifdef WINDOWSMIDISERVICES_EXPORTS
 #define WINDOWSMIDISERVICES_API __declspec(dllexport)
@@ -34,14 +35,20 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 		struct implMidiMessageReader;
 		implMidiMessageReader* _pimpl;
 
-		MidiMessageReader(const MidiMessageReader& info);	// don't copy
+		MidiMessageReader(const MidiMessageReader& info) { _pimpl = nullptr; }	// don't copy
+		MidiMessageReader();
 	public:
 		~MidiMessageReader();
 
 		bool eof();
 		int GetNextUmpWordCount();			// get the word count for the next message in the queue
-		Messages::Ump GetNextMessage();		// reads appropriate number of words from the queue
-		Messages::Ump PeekNextMessage();	// returns the next message but does not remove it
+
+		bool ReadUmp32(Messages::Ump32& message, bool validate = true);
+		bool ReadUmp64(Messages::Ump64& message, bool validate = true);
+		bool ReadUmp96(Messages::Ump96& message, bool validate = true);
+		bool ReadUmp128(Messages::Ump128& message, bool validate = true);
+
+
 	};
 
 	typedef WINDOWSMIDISERVICES_API void(*MidiMessagesReceivedCallback)(
@@ -49,6 +56,8 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 		const MidiObjectId& deviceId,
 		const MidiObjectId& streamId,
 		const MidiMessageReader& reader);
+
+
 
 
 	// ----------------------------------------------------------------------------
@@ -76,10 +85,12 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 
 		MidiStreamOpenUseSendTimestamps = 8
 	};
-
+	DEFINE_ENUM_FLAG_OPERATORS(MidiStreamOpenOptions)
 
 	enum WINDOWSMIDISERVICES_API MidiStreamOpenResultErrorDetail
 	{
+		MidiStreamOpenResultErrorNone = 0,
+
 		MidiStreamOpenErrorAlreadyOpenInSession,
 		MidiStreamOpenErrorExclusiveElsewhere,
 		MidiStreamOpenErrorServiceTimeout,
@@ -99,7 +110,6 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 
 	// Info on hardware timers and QPC in Windows: 
 	// https://docs.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps#hardware-timer-info
-
 
 
 	class WINDOWSMIDISERVICES_API MidiStream
@@ -133,9 +143,9 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 
 	struct WINDOWSMIDISERVICES_API MidiStreamOpenResult
 	{
-		bool Success;
-		MidiStreamOpenResultErrorDetail ErrorDetail;	// Additional error information
-		MidiStream* Stream;								// pointer to stream in the internal collection
+		bool Success = false;
+		MidiStreamOpenResultErrorDetail ErrorDetail = MidiStreamOpenResultErrorDetail::MidiStreamOpenResultErrorNone;
+		MidiStream* StreamReference;						// pointer to stream in the internal collection
 	};
 
 
@@ -174,6 +184,8 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 
 	enum WINDOWSMIDISERVICES_API MidiDeviceOpenResultErrorDetail
 	{
+		MidiDeviceOpenErrorNone = 0,
+
 		MidiDeviceOpenErrorAlreadyOpenInSession,
 		MidiDeviceOpenErrorServiceTimeout,
 
@@ -183,8 +195,8 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 	struct WINDOWSMIDISERVICES_API MidiDeviceOpenResult
 	{
 		bool Success;
-		MidiDeviceOpenResultErrorDetail ErrorDetail;	// Additional error information
-		MidiDevice* Device;								// pointer to device in the internal collection
+		MidiDeviceOpenResultErrorDetail ErrorDetail = MidiDeviceOpenResultErrorDetail::MidiDeviceOpenErrorNone;	// Additional error information
+		MidiDevice* DeviceReference;					// pointer to device in the internal collection
 	};
 
 
@@ -199,14 +211,15 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 
 	enum WINDOWSMIDISERVICES_API MidiSessionCreateResultErrorDetail
 	{
+		MidiSessionCreateErrorNone = 0,
 		MidiSessionCreateErrorOther
 	};
 
 	struct WINDOWSMIDISERVICES_API MidiSessionCreateResult
 	{
-		bool Success;
-		MidiSessionCreateResultErrorDetail ErrorDetail;	// Additional error information
-		MidiSession* Session;
+		bool Success = false;
+		MidiSessionCreateResultErrorDetail ErrorDetail = MidiSessionCreateResultErrorDetail::MidiSessionCreateErrorNone;
+		MidiSession* Session = nullptr;
 	};
 
 	class WINDOWSMIDISERVICES_API MidiSession final
