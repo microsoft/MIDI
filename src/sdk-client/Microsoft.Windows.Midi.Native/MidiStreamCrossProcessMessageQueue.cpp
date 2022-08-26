@@ -8,8 +8,6 @@
 
 namespace Windows::Devices::Midi::Internal
 {
-
-
 	// TODO: Need to see if size is in messages or bytes. 
 
 
@@ -26,15 +24,15 @@ namespace Windows::Devices::Midi::Internal
 
 		auto q = std::make_unique<MidiStreamCrossProcessMessageQueue>();
 
-		//// Create the new queue
-		//q->_queue = std::make_unique<boost::interprocess::message_queue>(
-		//	boost::interprocess::create_only,
-		//	queueName.c_str(),
-		//	capacityInMidiWords,
-		//	sizeof uint32_t);
+		// Create the new queue
+		q->_queue = std::make_unique<boost::interprocess::message_queue>(
+			boost::interprocess::create_only,
+			queueName.c_str(),
+			capacityInMidiWords,
+			sizeof uint32_t);
 
-		//std::wstring mutexName(L"midi_mtx_");
-		//mutexName.append(queueName);
+		std::wstring mutexName(L"midi_mtx_");
+		mutexName.append(queueName);
 
 		//// create the cross-process synchronization mechanism
 		//q->_mutex = std::make_unique<boost::interprocess::named_mutex>(
@@ -55,9 +53,9 @@ namespace Windows::Devices::Midi::Internal
 
 		auto q = std::make_unique<MidiStreamCrossProcessMessageQueue>();
 
-		//q->_queue = std::make_unique<boost::interprocess::message_queue>(
-		//	boost::interprocess::open_only,
-		//	queueName.c_str());
+		q->_queue = std::make_unique<boost::interprocess::message_queue>(
+			boost::interprocess::open_only,
+			queueName.c_str());
 
 		return q;
 	}

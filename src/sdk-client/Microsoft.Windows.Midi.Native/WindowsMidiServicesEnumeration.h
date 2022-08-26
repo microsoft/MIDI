@@ -38,7 +38,6 @@ namespace Microsoft::Windows::Midi::Enumeration //::inline v0_1_0_pre
 		struct implMidiTransportInformation;
 		implMidiTransportInformation* _pimpl;
 
-
 		MidiTransportInformation(const MidiTransportInformation& info);// don't copy
 	public:
 		MidiTransportInformation(MidiObjectId id);
