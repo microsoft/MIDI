@@ -15,15 +15,7 @@
 
 namespace Microsoft::Windows::Midi::Messages
 {
-	// Ump
-	//enum WINDOWSMIDISERVICES_API UmpType
-	//{
-	//	UmpTypeInvalidOrUnknown = 0,
-	//	UmpType32 = 1,
-	//	UmpType64 = 2,
-	//	UmpType96 = 3,
-	//	UmpType128 = 4
-	//};
+
 	 
 	UmpType Ump::GetTypeFromFirstWord(MidiWord32 word)
 	{
@@ -88,7 +80,7 @@ namespace Microsoft::Windows::Midi::Messages
 
 	bool Ump32::setFromWords(MidiWord32* wordBuffer, bool validateFirst)
 	{
-
+		// TODO
 	}
 
 	// Ump64 --------------------------------------------------------------------------------------------------
@@ -110,7 +102,7 @@ namespace Microsoft::Windows::Midi::Messages
 
 	bool Ump64::setFromWords(MidiWord32* wordBuffer, bool validateFirst)
 	{
-
+		// TODO
 	}
 
 
@@ -133,7 +125,7 @@ namespace Microsoft::Windows::Midi::Messages
 
 	bool Ump96::setFromWords(MidiWord32* wordBuffer, bool validateFirst)
 	{
-
+		// TODO
 	}
 
 
@@ -156,7 +148,7 @@ namespace Microsoft::Windows::Midi::Messages
 
 	bool Ump128::setFromWords(MidiWord32* wordBuffer, bool validateFirst)
 	{
-
+		// TODO
 	}
 
 
