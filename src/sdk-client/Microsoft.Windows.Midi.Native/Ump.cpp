@@ -80,6 +80,7 @@ namespace Microsoft::Windows::Midi::Messages
 
 	bool Ump32::setFromWords(MidiWord32* wordBuffer, bool validateFirst)
 	{
+		// if validateFirst, get word count from first nibble and ensure it matches the Ump32 type
 		// TODO
 	}
 
@@ -102,6 +103,7 @@ namespace Microsoft::Windows::Midi::Messages
 
 	bool Ump64::setFromWords(MidiWord32* wordBuffer, bool validateFirst)
 	{
+		// if validateFirst, get word count from first nibble and ensure it matches the Ump64 type
 		// TODO
 	}
 
@@ -125,6 +127,7 @@ namespace Microsoft::Windows::Midi::Messages
 
 	bool Ump96::setFromWords(MidiWord32* wordBuffer, bool validateFirst)
 	{
+		// if validateFirst, get word count from first nibble and ensure it matches the Ump96 type
 		// TODO
 	}
 
@@ -148,6 +151,7 @@ namespace Microsoft::Windows::Midi::Messages
 
 	bool Ump128::setFromWords(MidiWord32* wordBuffer, bool validateFirst)
 	{
+		// if validateFirst, get word count from first nibble and ensure it matches the Ump128 type
 		// TODO
 	}
 

@@ -11,7 +11,7 @@
 
 #include <boost/interprocess/ipc/message_queue.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include "combaseapi.h"	// for GUID conversion
+//#include "combaseapi.h"	// for GUID conversion
 
 namespace Windows::Devices::Midi::Internal
 {
