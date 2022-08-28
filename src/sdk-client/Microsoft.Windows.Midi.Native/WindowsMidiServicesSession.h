@@ -22,6 +22,7 @@
 #include "WindowsMidiServicesUmp.h"
 #include "WindowsMidiServicesEnumeration.h"
 
+
 // TODO: May need to differentiate this namespace from the WinRT namespace
 namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 {
@@ -43,12 +44,21 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 		bool eof();
 		int GetNextUmpWordCount();			// get the word count for the next message in the queue
 
+		// reads a message from the queue. If valdate == true, will peek first to validate
+		// that the next message really is a Ump32, and fail without a read if the message
+		// type doesn't match the method used.
 		bool ReadUmp32(Messages::Ump32& message, bool validate = true);
 		bool ReadUmp64(Messages::Ump64& message, bool validate = true);
 		bool ReadUmp96(Messages::Ump96& message, bool validate = true);
 		bool ReadUmp128(Messages::Ump128& message, bool validate = true);
 
+		// requires that a buffer large enough for 4 32-bit words is supplied
+		// returns the number of words actually written to the buffer. The results
+		// can be used to initialize a UMP. Returns 0 on failure, including an
+		// incomplete next message in the queue.
+		uint8_t ReadNextSingleUmp(const MidiWord32* buffer);
 
+		friend class MidiStream;
 	};
 
 	typedef WINDOWSMIDISERVICES_API void(*MidiMessagesReceivedCallback)(
@@ -253,6 +263,7 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 
 		// TODO: enumerator for open devices/streams
 		//const std::vector<MidiDevice> getAllOpenedDevices();
+
 
 	};
 }

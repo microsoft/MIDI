@@ -81,6 +81,7 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 	};
 
 
+
 	enum WINDOWSMIDISERVICES_API MidiMessageType : MidiNibble4
 	{
 		MidiMessageTypeUtility = 0x0,

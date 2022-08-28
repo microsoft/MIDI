@@ -29,6 +29,8 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 {
 	enum WINDOWSMIDISERVICES_API MidiStreamCreateResultErrorDetail
 	{
+		MidiStreamCreateSuccess = 0,
+
 		MidiStreamCreateErrorUnrecognizedDevice,		// bad device ID
 		MidiStreamCreateErrorNotSupported,				// the device/transport doesn't allow creating devices
 		MidiStreamCreateErrorCommunication = 999,
@@ -45,6 +47,8 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 
 	enum WINDOWSMIDISERVICES_API MidiDeviceCreateResultErrorDetail
 	{
+		MidiDeviceCreateSuccess = 0,
+
 		MidiDeviceCreateErrorUnrecognizedTransport,		// bad transport ID
 		MidiDeviceCreateErrorNotSupported,				// the transport doesn't allow creating devices
 		MidiDeviceCreateErrorCommunication = 999,
@@ -70,7 +74,9 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 	public:
 		~MidiVirtualDeviceManager();
 
-		static MidiVirtualDeviceManager Create(MidiObjectId owningSessionId);
+
+		static MidiVirtualDeviceManager* Create(MidiObjectId owningSessionId);
+
 
 		const MidiDeviceCreateResult AddDevice(
 			const MidiObjectId deviceId,

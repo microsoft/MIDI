@@ -46,12 +46,26 @@
 
 namespace Microsoft::Windows::Midi::Messages //::inline v0_1_0_pre
 {
+	// cast this to an int to get number of words in the packet
+	enum WINDOWSMIDISERVICES_API UmpType
+	{
+		UmpTypeInvalidOrUnknown = 0,
+		UmpType32 = 1,
+		UmpType64 = 2,
+		UmpType96 = 3,
+		UmpType128 = 4
+	};
+
 	// Base message structure
 	struct WINDOWSMIDISERVICES_API Ump
 	{
 		virtual const MidiMessageType getMessageType() = 0;
 		virtual const MidiGroup getGroup() = 0;
 		virtual void setGroup(const MidiGroup value) = 0;
+
+		virtual bool setFromWords(MidiWord32* wordBuffer, bool validateFirst) = 0;
+
+		static UmpType GetTypeFromFirstWord(MidiWord32 word);
 	};
 
 	// 32 bit (1 word) MIDI message. Used for all MIDI 1.0 messages, utility messages, and more
@@ -67,6 +81,8 @@ namespace Microsoft::Windows::Midi::Messages //::inline v0_1_0_pre
 		virtual const MidiMessageType getMessageType();
 		virtual const MidiGroup getGroup();
 		virtual void setGroup(const MidiGroup value);
+
+		virtual bool setFromWords(MidiWord32* wordBuffer, bool validateFirst);
 	};
 
 	// 64 bit (2 words) MIDI message. Used for MIDI 2.0 channel voice, SysEx7, and more
@@ -82,6 +98,8 @@ namespace Microsoft::Windows::Midi::Messages //::inline v0_1_0_pre
 		virtual const MidiMessageType getMessageType();
 		virtual const MidiGroup getGroup();
 		virtual void setGroup(const MidiGroup value);
+
+		virtual bool setFromWords(MidiWord32* wordBuffer, bool validateFirst);
 	};
 
 	// 96 bit (3 words) MIDI message. Not currently used for any types of MIDI messages
@@ -98,6 +116,7 @@ namespace Microsoft::Windows::Midi::Messages //::inline v0_1_0_pre
 		virtual const MidiGroup getGroup();
 		virtual void setGroup(const MidiGroup value);
 
+		virtual bool setFromWords(MidiWord32* wordBuffer, bool validateFirst);
 	};
 
 	// 128 bit (4 words) MIDI message. Used for mixed data and 8-bit SysEx messages
@@ -113,6 +132,8 @@ namespace Microsoft::Windows::Midi::Messages //::inline v0_1_0_pre
 		virtual const MidiMessageType getMessageType();
 		virtual const MidiGroup getGroup();
 		virtual void setGroup(const MidiGroup value);
+
+		virtual bool setFromWords(MidiWord32* wordBuffer, bool validateFirst);
 	};
 
 }
