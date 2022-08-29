@@ -56,6 +56,10 @@ namespace Microsoft::Windows::Midi::Messages //::inline v0_1_0_pre
 		UmpType128 = 4
 	};
 
+
+	// *** TODO: Group field is no longer included in everything (type 0, type F) so need to consider moving
+	// it out to the other types and not the base Ump type ***
+
 	// Base message structure
 	struct WINDOWSMIDISERVICES_API Ump
 	{
