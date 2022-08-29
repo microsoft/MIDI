@@ -5,12 +5,8 @@
 
 #include "MidiMessageQueue.h"
 
-
 namespace Windows::Devices::Midi::Internal
 {
-	// TODO: Need to see if size is in messages or bytes. 
-
-
 	std::unique_ptr<MidiStreamCrossProcessMessageQueue> MidiStreamCrossProcessMessageQueue::CreateNew(
 		const GUID sessionId, 
 		const GUID deviceId, 
@@ -20,19 +16,17 @@ namespace Windows::Devices::Midi::Internal
 	{
 		assert(capacityInMidiWords > 0);
 
-		std::wstring queueName(L"TODO BUILD THE NAME");
-
 		auto q = std::make_unique<MidiStreamCrossProcessMessageQueue>();
 
 		// Create the new queue
 		q->_queue = std::make_unique<boost::interprocess::message_queue>(
 			boost::interprocess::create_only,
-			queueName.c_str(),
+			q->BuildQueueName(sessionId, deviceId, streamId).c_str(),
 			capacityInMidiWords,
 			sizeof uint32_t);
 
-		std::wstring mutexName(L"midi_mtx_");
-		mutexName.append(queueName);
+		//std::wstring mutexName(L"midi_mtx_");
+		//mutexName.append(queueName);
 
 		//// create the cross-process synchronization mechanism
 		//q->_mutex = std::make_unique<boost::interprocess::named_mutex>(
@@ -49,13 +43,11 @@ namespace Windows::Devices::Midi::Internal
 		const GUID streamId, 
 		const MidiMessageQueueType type)
 	{
-		std::wstring queueName(L"TODO BUILD THE NAME");
-
 		auto q = std::make_unique<MidiStreamCrossProcessMessageQueue>();
 
 		q->_queue = std::make_unique<boost::interprocess::message_queue>(
 			boost::interprocess::open_only,
-			queueName.c_str());
+			q->BuildQueueName(sessionId, deviceId, streamId).c_str());
 
 		return q;
 	}
@@ -67,6 +59,7 @@ namespace Windows::Devices::Midi::Internal
 
 		return _queue->get_max_msg();
 	}
+
 
 	// resizes queue while keeping contents
 	//virtual bool Resize(uint16_t newCapacityInWords);					
@@ -111,7 +104,10 @@ namespace Windows::Devices::Midi::Internal
 		assert(bufferSizeInWords > 0);
 		assert(_inWrite);
 
-		_queue->send(wordsBuffer, bufferSizeInWords*sizeof(uint32_t), MidiStreamCrossProcessMessageQueue::DefaultPriority);
+		_queue->send(
+			wordsBuffer, 
+			bufferSizeInWords*sizeof(uint32_t), 
+			MidiStreamCrossProcessMessageQueue::DefaultPriority);
 
 		return true;
 	}
