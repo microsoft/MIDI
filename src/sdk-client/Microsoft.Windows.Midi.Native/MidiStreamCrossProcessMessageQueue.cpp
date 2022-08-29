@@ -60,34 +60,6 @@ namespace Windows::Devices::Midi::Internal
 		return q;
 	}
 
-
-
-	// returns true if the queue is empty
-	const bool MidiStreamCrossProcessMessageQueue::IsEmpty()
-	{
-		assert(_queue != nullptr);
-
-		return (bool)(_queue->get_num_msg() == 0);
-	}
-
-	// returns true if the queue is full
-	const bool MidiStreamCrossProcessMessageQueue::IsFull()
-	{
-		assert(_queue != nullptr);
-
-		return (bool)(_queue->get_max_msg() == _queue->get_num_msg());
-	}
-
-
-
-	// returns the number of words currently in the queue
-	const uint64_t MidiStreamCrossProcessMessageQueue::getCountWords()
-	{
-		assert(_queue != nullptr);
-
-		return _queue->get_num_msg();
-	}
-
 	// returns the current max capacity
 	const uint64_t MidiStreamCrossProcessMessageQueue::getMaxCapacityInWords()
 	{
@@ -100,57 +72,70 @@ namespace Windows::Devices::Midi::Internal
 	//virtual bool Resize(uint16_t newCapacityInWords);					
 
 	// for beginning a transaction / message. Locks the queue for writing.
-	bool MidiStreamCrossProcessMessageQueue::BeginWrite()
-	{
-		assert(_queue != nullptr);
-	//	assert(_mutex != nullptr);
-		assert(!_inWrite);
-
-
-		this->_inWrite = true;
-
-		// TODO: Lock queue. Pause sending updates
-
-
-//		_mutex->lock();
-
-		return false;
-	}	
-	
-	// end the current set and notify listeners. Unlocks queue when done.
-	void MidiStreamCrossProcessMessageQueue::EndWrite()
-	{
-		assert(_queue != nullptr);
-	//	assert(_mutex != nullptr);
-		assert(_inWrite);
-
-		// TODO: Unlock queue. Send notifications
-
-		this->_inWrite = false;
-	}
+//	bool MidiStreamCrossProcessMessageQueue::BeginWrite()
+//	{
+//		assert(_queue != nullptr);
+//	//	assert(_mutex != nullptr);
+//		assert(!_inWrite);
+//
+//
+//		this->_inWrite = true;
+//
+//		// TODO: Lock queue. Pause sending updates
+//
+//
+////		_mutex->lock();
+//
+//		return false;
+//	}	
+//	
+//	// end the current set and notify listeners. Unlocks queue when done.
+//	void MidiStreamCrossProcessMessageQueue::EndWrite()
+//	{
+//		assert(_queue != nullptr);
+//	//	assert(_mutex != nullptr);
+//		assert(_inWrite);
+//
+//		// TODO: Unlock queue. Send notifications
+//
+//		this->_inWrite = false;
+//	}
 
 	// adds the number of words from the address
-	bool MidiStreamCrossProcessMessageQueue::WriteWords(const uint32_t* wordsBuffer, const int count)
+	bool MidiStreamCrossProcessMessageQueue::WriteWords(
+		const uint32_t* wordsBuffer, 
+		const int bufferSizeInWords)
 	{
 		assert(_queue != nullptr);
 		assert(wordsBuffer != nullptr);
-		assert(count > 0);
+		assert(bufferSizeInWords > 0);
 		assert(_inWrite);
 
-		_queue->send(wordsBuffer, count, MidiStreamCrossProcessMessageQueue::DefaultPriority);
+		_queue->send(wordsBuffer, bufferSizeInWords*sizeof(uint32_t), MidiStreamCrossProcessMessageQueue::DefaultPriority);
 
 		return true;
 	}
 
 
 	// updates word and count with the number actually ready
-	bool MidiStreamCrossProcessMessageQueue::ReadWords(uint32_t* wordsBuffer, int& count)
+	// buffer size needs to be at least 4 words
+	// returns false if no complete messagesd to read
+	bool MidiStreamCrossProcessMessageQueue::ReadWords(
+		uint32_t* wordsBuffer, 
+		int& bufferSizeInWords, 
+		int& countWordsRead
+		/* todo: timeout */)
 	{
 		assert(_queue != nullptr);
 		assert(wordsBuffer != nullptr);
-		assert(count > 0);
+		assert(bufferSizeInWords >= 4);
 
+
+		// this blocks until there's something to read or the timeout elapses.	
 		//_queue->receive(wordsBuffer, count, )
+
+
+
 
 		return true;
 	}

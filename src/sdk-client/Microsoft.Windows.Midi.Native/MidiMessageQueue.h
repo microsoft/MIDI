@@ -11,16 +11,9 @@
 
 #include <boost/interprocess/ipc/message_queue.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-//#include "combaseapi.h"	// for GUID conversion
 
 namespace Windows::Devices::Midi::Internal
 {
-
-
-
-
-
-
 	class MidiMessageQueue
 	{
 	protected:
@@ -55,18 +48,18 @@ namespace Windows::Devices::Midi::Internal
 
 	public:
 
-		virtual const bool IsEmpty() = 0;											// returns true if the queue is empty
-		virtual const bool IsFull() = 0;											// returns true if the queue is empty
-		virtual const uint64_t getCountWords() = 0;									// returns the number of words currently in the queue
+		//virtual const bool IsEmpty() = 0;											// returns true if the queue is empty
+		//virtual const bool IsFull() = 0;											// returns true if the queue is empty
+		//virtual const uint64_t getCountWords() = 0;									// returns the number of words currently in the queue
 		virtual const uint64_t getMaxCapacityInWords() = 0;							// returns the current max capacity
 		//virtual bool Resize(uint16_t newCapacityInWords) = 0;						// resizes queue while keeping contents
 
-		virtual bool BeginWrite() = 0;												// for beginning a transaction / message. Locks the queue for writing.
-		virtual void EndWrite() = 0;												// end the current set and notify listeners. Unlocks queue when done.
+		//virtual bool BeginWrite() = 0;												// for beginning a transaction / message. Locks the queue for writing.
+		//virtual void EndWrite() = 0;												// end the current set and notify listeners. Unlocks queue when done.
 
 
-		virtual bool WriteWords(const uint32_t* wordsBuffer, const int count) = 0;	// adds the number of words from the address
-		virtual bool ReadWords(uint32_t* wordsBuffer, int& count) = 0;				// updates word and count with the number actually ready
+		virtual bool WriteWords(const uint32_t* wordsBuffer, const int countWords) = 0;	// adds the number of words from the address
+		virtual bool ReadWords(uint32_t* wordsBuffer, int& bufferSizeInWords, int& countWordsRead) = 0;				// updates word and count with the number actually ready
 
 		virtual const bool PeekWord(uint32_t& word) = 0;							// gets the first word but doesn't remove it.
 	};
@@ -105,8 +98,8 @@ namespace Windows::Devices::Midi::Internal
 
 	enum MidiMessageQueueType
 	{
-		AppMidiInput = 0,
-		AppMidiOutput = 1,
+		AppMidiReadInput = 0,
+		AppMidiWriteOutput = 1,
 
 		// TODO: Other queue types? IPC needed to talk to drivers?
 	};
@@ -134,19 +127,16 @@ namespace Windows::Devices::Midi::Internal
 		static std::unique_ptr<MidiStreamCrossProcessMessageQueue> OpenExisting(const GUID sessionId, const GUID deviceId, const GUID streamId, const MidiMessageQueueType type);
 
 
-		virtual const bool IsEmpty();												// returns true if the queue is empty
-		virtual const bool IsFull();												// returns true if the queue is full
-		virtual const uint64_t getCountWords();									// returns the number of words currently in the queue
 		virtual const uint64_t getMaxCapacityInWords();							// returns the current max capacity
 		//virtual bool Resize(uint16_t newCapacityInWords);					// resizes queue while keeping contents
 
 
-		virtual bool BeginWrite();		// for beginning a transaction / message. Locks the queue for writing.
-		virtual void EndWrite();			// end the current set and notify listeners. Unlocks queue when done.
+		//virtual bool BeginWrite();			// for beginning a transaction / message. Locks the queue for writing.
+		//virtual void EndWrite();			// end the current set and notify listeners. Unlocks queue when done.
 
 
-		virtual bool WriteWords(const uint32_t* wordsBuffer, const int count);	// adds the number of words from the address
-		virtual bool ReadWords(uint32_t* wordsBuffer, int& count);			// updates word and count with the number actually ready
+		virtual bool WriteWords(const uint32_t* wordsBuffer, const int countWords);	// adds the number of words from the address
+		virtual bool ReadWords(uint32_t* wordsBuffer, int& bufferSizeInWords, int& countWordsRead);			// updates word and count with the number actually ready
 
 		virtual const bool PeekWord(uint32_t& word);							// gets the first word but doesn't remove it.
 
