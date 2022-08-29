@@ -50,6 +50,9 @@ namespace Microsoft::Windows::Midi::Messages //::inline v0_1_0_pre
 
 		const MidiNibble4 getOpcode();
 
+		const MidiGroup getGroup();
+		void setGroup(const MidiGroup value);
+
 		const MidiChannel getChannel();
 		void setChannel(const MidiChannel value);
 
@@ -264,6 +267,9 @@ namespace Microsoft::Windows::Midi::Messages //::inline v0_1_0_pre
 		const MidiMessageType MessageType = MidiMessageTypeMidi2ChannelVoice;
 
 		const MidiNibble4 getOpcode();
+
+		const MidiGroup getGroup();
+		void setGroup(const MidiGroup value);
 
 		const MidiChannel getChannel();
 		void setChannel(const MidiChannel value);
@@ -686,6 +692,9 @@ namespace Microsoft::Windows::Midi::Messages //::inline v0_1_0_pre
 	{
 		const MidiMessageType MessageType = MidiMessageTypeSystemExclusive7Bit;
 
+		const MidiGroup getGroup();
+		void setGroup(const MidiGroup value);
+	
 		const MidiSystemExclusive7MessageStatus getStatus();
 		void setStatus(const MidiSystemExclusive7MessageStatus value);
 
@@ -715,6 +724,9 @@ namespace Microsoft::Windows::Midi::Messages //::inline v0_1_0_pre
 
 		const MidiSystemExclusive8MessageStatus getStatus();
 		void setStatus(const MidiSystemExclusive8MessageStatus value);
+
+		const MidiGroup getGroup();
+		void setGroup(const MidiGroup value);
 
 		const uint8_t getNumBytes();
 		void setNumBytes(const uint8_t value);
@@ -752,7 +764,8 @@ namespace Microsoft::Windows::Midi::Messages //::inline v0_1_0_pre
 		const MidiMessageType MessageType = MidiMessageTypeMidi2Data;
 		const Midi2MixedMessageStatus Status = Midi2MixedDataStatusHeader;
 
-		// TODO fill this out
+		const MidiGroup getGroup();
+		void setGroup(const MidiGroup value);
 
 		const MidiNibble4 getMdsId();
 		void setMdsId(const MidiNibble4 value);
@@ -803,6 +816,9 @@ namespace Microsoft::Windows::Midi::Messages //::inline v0_1_0_pre
 		const MidiMessageType MessageType = MidiMessageTypeMidi2Data;
 		const Midi2MixedMessageStatus Status = Midi2MixedDataStatusPayload;
 
+		const MidiGroup getGroup();
+		void setGroup(const MidiGroup value);
+
 		const MidiNibble4 getMdsId();
 		void setMdsId(const MidiNibble4 value);
 
@@ -830,6 +846,10 @@ namespace Microsoft::Windows::Midi::Messages //::inline v0_1_0_pre
 	struct WINDOWSMIDISERVICES_API MidiSystemMessage : public Ump32
 	{
 		const MidiMessageType MessageType = MidiMessageTypeSystem;
+
+		const MidiGroup getGroup();
+		void setGroup(const MidiGroup value);
+
 	};
 
 	// Protocol spec 4.3. System MIDI Time Code quarter frame message.
@@ -981,6 +1001,10 @@ namespace Microsoft::Windows::Midi::Messages //::inline v0_1_0_pre
 	struct WINDOWSMIDISERVICES_API Midi2UtilityMessage : public Ump32
 	{
 		const MidiMessageType MessageType = MidiMessageTypeUtility;
+
+		const MidiGroup getGroup();
+		void setGroup(const MidiGroup value);
+
 	};
 
 	// Protocol spec 4.8.1 Utility - No Operation message

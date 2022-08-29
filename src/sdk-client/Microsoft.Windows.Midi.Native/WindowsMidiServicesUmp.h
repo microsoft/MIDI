@@ -63,9 +63,7 @@ namespace Microsoft::Windows::Midi::Messages //::inline v0_1_0_pre
 		virtual const MidiMessageType getMessageType() = 0;
 
 		// *** TODO: Group field is no longer included in everything (type 0, type F) 
-		// so need to consider moving it out to the other types and not the base Ump types ***		
-		virtual const MidiGroup getGroup() = 0;
-		virtual void setGroup(const MidiGroup value) = 0;
+		// So moved group out of thse types and into the strongly typed classes. Need to verify they are correct ***		
 
 		virtual bool setFromWords(MidiWord32* wordBuffer, bool validateFirst) = 0;
 
@@ -83,8 +81,7 @@ namespace Microsoft::Windows::Midi::Messages //::inline v0_1_0_pre
 		};
 
 		virtual const MidiMessageType getMessageType();
-		virtual const MidiGroup getGroup();
-		virtual void setGroup(const MidiGroup value);
+
 
 		virtual bool setFromWords(MidiWord32* wordBuffer, bool validateFirst);
 	};
@@ -100,8 +97,6 @@ namespace Microsoft::Windows::Midi::Messages //::inline v0_1_0_pre
 		};
 
 		virtual const MidiMessageType getMessageType();
-		virtual const MidiGroup getGroup();
-		virtual void setGroup(const MidiGroup value);
 
 		virtual bool setFromWords(MidiWord32* wordBuffer, bool validateFirst);
 	};
@@ -117,8 +112,6 @@ namespace Microsoft::Windows::Midi::Messages //::inline v0_1_0_pre
 		};
 
 		virtual const MidiMessageType getMessageType();
-		virtual const MidiGroup getGroup();
-		virtual void setGroup(const MidiGroup value);
 
 		virtual bool setFromWords(MidiWord32* wordBuffer, bool validateFirst);
 	};
@@ -134,8 +127,6 @@ namespace Microsoft::Windows::Midi::Messages //::inline v0_1_0_pre
 		};
 
 		virtual const MidiMessageType getMessageType();
-		virtual const MidiGroup getGroup();
-		virtual void setGroup(const MidiGroup value);
 
 		virtual bool setFromWords(MidiWord32* wordBuffer, bool validateFirst);
 	};
