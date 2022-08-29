@@ -57,13 +57,13 @@ namespace Microsoft::Windows::Midi::Messages //::inline v0_1_0_pre
 	};
 
 
-	// *** TODO: Group field is no longer included in everything (type 0, type F) so need to consider moving
-	// it out to the other types and not the base Ump type ***
-
 	// Base message structure
 	struct WINDOWSMIDISERVICES_API Ump
 	{
 		virtual const MidiMessageType getMessageType() = 0;
+
+		// *** TODO: Group field is no longer included in everything (type 0, type F) 
+		// so need to consider moving it out to the other types and not the base Ump types ***		
 		virtual const MidiGroup getGroup() = 0;
 		virtual void setGroup(const MidiGroup value) = 0;
 
