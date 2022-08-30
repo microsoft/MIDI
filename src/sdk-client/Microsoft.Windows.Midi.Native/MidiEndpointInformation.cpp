@@ -15,18 +15,18 @@
 namespace Microsoft::Windows::Midi::Enumeration
 {
 
-	struct MidiStreamInformation::implMidiStreamInformation
+	struct MidiStreamInformation::implMidiEndpointInformation
 	{
 	public:
 		MidiObjectId _id;
 		MidiObjectId _parentDeviceId;
-		MidiStreamType _streamType;
+		MidiEndpointType _endpointType;
 		std::unique_ptr<std::wstring> Name;
 		std::unique_ptr<std::wstring> DeviceSuppliedName;
 		std::unique_ptr<std::wstring> IconFileName;
 		std::unique_ptr<std::wstring> Description;
 
-		implMidiStreamInformation(MidiObjectId id, MidiObjectId parentDeviceId, MidiStreamType streamType)
+		implMidiEndpointInformation(MidiObjectId id, MidiObjectId parentDeviceId, MidiStreamType endpointType)
 		{
 			_id = id;
 			_parentDeviceId = parentDeviceId;
@@ -34,55 +34,62 @@ namespace Microsoft::Windows::Midi::Enumeration
 		}
 	};
 
-	MidiStreamInformation::MidiStreamInformation(MidiObjectId id, MidiObjectId parentDeviceId, MidiStreamType streamType)
+	MidiEndpointInformation::MidiEndpointInformation(MidiObjectId id, MidiObjectId parentDeviceId, MidiEndpointType endpointType)
 	{
-		_pimpl = new implMidiStreamInformation(id, parentDeviceId, streamType);
+		_pimpl = new implMidiEndpointInformation(id, parentDeviceId, endpointType);
 	}
 
-	MidiStreamInformation::~MidiStreamInformation()
+	MidiEndpointInformation::~MidiEndpointInformation()
 	{
 		delete _pimpl;
 	}
 
-	MidiStreamInformation::MidiStreamInformation(const MidiStreamInformation& info)
+	MidiEndpointInformation::MidiEndpointInformation(const MidiEndpointInformation& info)
 	{
 		_pimpl = nullptr;
 	}
 
 
 
-	const MidiObjectId MidiStreamInformation::getId()
+	const MidiObjectId MidiEndpointInformation::getId()
 	{
+		// TODO
 		return MidiObjectId{};
 	}
 
-	const MidiObjectId MidiStreamInformation::getParentDeviceId()
+	const MidiObjectId MidiEndpointInformation::getParentDeviceId()
 	{
+		// TODO
 		return MidiObjectId{};
 	}
 
-	const MidiStreamType MidiStreamInformation::getStreamType()
+	const MidiStreamType MidiEndpointInformation::getStreamType()
 	{
+		// TODO
 		return MidiStreamType::MidiStreamTypeBidirectional; // todo
 	}
 
-	const wchar_t* MidiStreamInformation::getName()
+	const wchar_t* MidiEndpointInformation::getName()
 	{
+		// TODO
 		return nullptr;
 	}
 
-	const wchar_t* MidiStreamInformation::getDeviceSuppliedName()
+	const wchar_t* MidiEndpointInformation::getDeviceSuppliedName()
 	{
+		// TODO
 		return nullptr;
 	}
 
-	const wchar_t* MidiStreamInformation::getIconFileName()
+	const wchar_t* MidiEndpointInformation::getIconFileName()
 	{
+		// TODO
 		return nullptr;
 	}
 
-	const wchar_t* MidiStreamInformation::getDescription()
+	const wchar_t* MidiEndpointInformation::getDescription()
 	{
+		// TODO
 		return nullptr;
 	}
 

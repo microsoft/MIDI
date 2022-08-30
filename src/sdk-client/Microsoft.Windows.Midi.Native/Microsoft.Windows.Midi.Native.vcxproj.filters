@@ -185,7 +185,7 @@
     <ClCompile Include="MidiDeviceInformation.cpp">
       <Filter>Source Files\Enumeration</Filter>
     </ClCompile>
-    <ClCompile Include="MidiStreamInformation.cpp">
+    <ClCompile Include="MidiEndpointInformation.cpp">
       <Filter>Source Files\Enumeration</Filter>
     </ClCompile>
     <ClCompile Include="MidiMessageReader.cpp">
@@ -194,7 +194,7 @@
     <ClCompile Include="MidiStreamCrossProcessMessageQueue.cpp">
       <Filter>Source Files\Internal</Filter>
     </ClCompile>
-    <ClCompile Include="MidiStreamInformationCollection.cpp">
+    <ClCompile Include="MidiEndpointInformationCollection.cpp">
       <Filter>Source Files\Enumeration</Filter>
     </ClCompile>
     <ClCompile Include="MidiDeviceInformationCollection.cpp">

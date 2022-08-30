@@ -94,30 +94,30 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 	// to enumerate devices connected to the PC (or virtual, or RTP, etc.) but the 
 	// individual Endpoints (port pairs, or however you want to think of them) will
 	// only be enumerated through MIDI messages.
-	// Start is to rename Stream to Endpoint and then go from there
+	// Start is to rename Stream to Endpoint and then go from there (I have started this)
 
 
-	enum WINDOWSMIDISERVICES_API MidiStreamOpenOptions
+	enum WINDOWSMIDISERVICES_API MidiEndpointOpenOptions
 	{
-		MidiStreamOpenOutput = 1,				// MIDI Out
-		MidiStreamOpenInput = 2,				// MIDI In, will need to wire up message received handler
-		MidiStreamOpenBidirectional = 3,		// Both. Will need to wire up message received handler
+		MidiEndpointOpenOutput = 1,				// MIDI Out
+		MidiEndpointOpenInput = 2,				// MIDI In, will need to wire up message received handler
+		MidiEndpointOpenBidirectional = 3,		// Both. Will need to wire up message received handler
 
-		MidiStreamOpenExclusive = 4,			// TBD if we also include Exclusive here.
+		MidiEndpointOpenExclusive = 4,			// TBD if we also include Exclusive here.
 
-		MidiStreamOpenUseSendTimestamps = 8
+		MidiEndpointOpenUseSendTimestamps = 8
 	};
-	DEFINE_ENUM_FLAG_OPERATORS(MidiStreamOpenOptions)
+	DEFINE_ENUM_FLAG_OPERATORS(MidiEndpointOpenOptions)
 
-	enum WINDOWSMIDISERVICES_API MidiStreamOpenResultErrorDetail
+	enum WINDOWSMIDISERVICES_API MidiEndpointOpenResultErrorDetail
 	{
-		MidiStreamOpenResultErrorNone = 0,
+		MidiEndpointOpenResultErrorNone = 0,
 
-		MidiStreamOpenErrorAlreadyOpenInSession,
-		MidiStreamOpenErrorExclusiveElsewhere,
-		MidiStreamOpenErrorServiceTimeout,
+		MidiEndpointOpenErrorAlreadyOpenInSession,
+		MidiEndpointOpenErrorExclusiveElsewhere,
+		MidiEndpointOpenErrorServiceTimeout,
 
-		MidiStreamOpenErrorOther
+		MidiEndpointOpenErrorOther
 	};
 
 	// timestamp for sending scheduled messages
@@ -134,29 +134,45 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 	// https://docs.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps#hardware-timer-info
 
 
-	// TODO: I strongly dislike the word "Stream", but there was ambiguout around "Endpoint". However
-	// this needs to be looked at a second time due to how group/function blocks should be represented
-	// as Endpoints themselves, based on the latest info (Also see Andrew Mee's whitepaper on MIDI 2.0
-	// API design for some more information)
-	class WINDOWSMIDISERVICES_API MidiStream
+	// A MIDI Endpoint is where MIDI messages are sent to or received from. It is not exactly
+	// 1:1 with a port in MIDI 1.0. Examples:
+	// - A MIDI 1.0 device with 16 virtual cables (8 in, 8 out) could have:
+	//		- 16 unidirectional endpoints
+	//		- Or any number (up to 8 in this case) bi-directional Endpoints (user-paired in/out ports)
+	// - A MIDI 2.0 device with 5 defined function blocks in the stream will have 5 Endpoints
+	// Notes:
+	// - Endpoints aren't necessarily PnP enumerated. they require MIDI CI calls to get groups/functions
+	// - EndpointInformation objects will contain additional data that the user supplies via the settings tools
+	class WINDOWSMIDISERVICES_API MidiEndpoint
 	{
 	protected:
-		struct implMidiStream;
-		implMidiStream* _pimpl;
+		struct implMidiEndpoint;
+		implMidiEndpoint* _pimpl;
 
 		//MidiStream(const MidiStream& info);				// don't copy
-		MidiStream(MidiObjectId streamId, MidiObjectId parentDeviceId, MidiStreamOpenOptions options);
+		MidiEndpoint(MidiObjectId endpointId, MidiObjectId parentDeviceId, MidiEndpointOpenOptions options);
 	public:
-		~MidiStream();
+		~MidiEndpoint();
 		void Close();
 
-		const MidiObjectId getStreamInformationId();
+		const MidiObjectId getEndpointInformationId();
 		const MidiObjectId getParentDeviceInformationId();
+
+		// tells the service we need to lock this endpoint to send sysex. This will have
+		// some sort of timeout logic in the service to automatically unlock after some
+		// number of seconds have passed without any sysex traffic. 
+		bool LockForSystemExclusiveUse();
+
+		// unlocks the endpoint.
+		bool ReleaseSystemExclusiveLock();
+
+		// Makes a service call to see if this session, or any other session, locked this endpoint
+		bool IsLockedForSystemExclusive();
 
 		// send a UMP with no scheduling. 
 		bool SendUmp(const Messages::Ump& message);
 
-		// send a UMP with scheduling. Only works if the stream was created with that option
+		// send a UMP with scheduling. Only works if the endpoint was created with that option
 		bool SendUmp(MidiMessageTimestamp sendTimestamp, const Messages::Ump& message);
 
 
@@ -167,11 +183,11 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 	};
 
 
-	struct WINDOWSMIDISERVICES_API MidiStreamOpenResult
+	struct WINDOWSMIDISERVICES_API MidiEndpointOpenResult
 	{
 		bool Success = false;
-		MidiStreamOpenResultErrorDetail ErrorDetail = MidiStreamOpenResultErrorDetail::MidiStreamOpenResultErrorNone;
-		MidiStream* StreamReference;						// pointer to stream in the internal collection
+		MidiEndpointOpenResultErrorDetail ErrorDetail = MidiEndpointOpenResultErrorDetail::MidiEndpointOpenResultErrorNone;
+		MidiEndpoint* StreamReference;						// pointer to stream in the internal collection
 	};
 
 
@@ -199,8 +215,8 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 		// session sets these when you open the device
 		const MidiObjectId getParentSessionID();
 
-		MidiStreamOpenResult OpenStream(const MidiObjectId& streamId, const MidiStreamOpenOptions options, const MidiMessagesReceivedCallback& messagesReceivedCallback);
-		MidiStreamOpenResult OpenStream(const MidiObjectId& streamId, const MidiStreamOpenOptions options);
+		MidiEndpointOpenResult OpenStream(const MidiObjectId& endpointId, const MidiEndpointOpenOptions options, const MidiMessagesReceivedCallback& messagesReceivedCallback);
+		MidiEndpointOpenResult OpenStream(const MidiObjectId& endpointId, const MidiEndpointOpenOptions options);
 
 		// close this device connection and any open stream connections
 		void Close();

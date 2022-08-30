@@ -87,46 +87,51 @@ namespace Microsoft::Windows::Midi::Enumeration //::inline v0_1_0_pre
 		friend class MidiEnumerator;
 	};
 
-	enum WINDOWSMIDISERVICES_API MidiStreamType
+	enum WINDOWSMIDISERVICES_API MidiEndpointType
 	{
-		MidiStreamTypeOutput = 0,
-		MidiStreamTypeInput = 1,
-		MidiStreamTypeBidirectional = 2			// either a negotiated port pair, or a true bidirectional stream
+		MidiEndpointTypeOutput = 0,
+		MidiEndpointTypeInput = 1,
+		MidiEndpointTypeBidirectional = 2			// either a negotiated port pair, or a true bidirectional stream
 	};
 
-	// MIDI Stream
-	// ----------------------------------
-	// A stream is what UMPs are sent to and received from. Similar to a 
-	// Port in MIDI 1.0
+
+
 	// 
-	// For USB-connected single devices, a stream is often 1:1
-	// with the device but for devices which provide other streams (like a
-	// synth with multiple DIN MIDI ports, or other USB or network ports), 
-	// device:stream relationship is a 1:1 to 1:many relationship
-	// In addition to true bi-directional streams (like network, USB, etc.)
-	// Endpoints also encapsulate any negotiated bi-directional communications,
-	// involving pairing of discrete ports, for purposes of MIDI CI. 
-	struct WINDOWSMIDISERVICES_API MidiStreamInformation final
+	struct WINDOWSMIDISERVICES_API MidiEndpointInformation final
 	{
 	private:
-		struct implMidiStreamInformation;
-		implMidiStreamInformation* _pimpl;
+		struct implMidiEndpointInformation;
+		implMidiEndpointInformation* _pimpl;
 
 
-		MidiStreamInformation(const MidiStreamInformation& info);	// don't copy
+		MidiEndpointInformation(const MidiEndpointInformation& info);	// don't copy
 	public:
-		MidiStreamInformation(MidiObjectId id, MidiObjectId parentDeviceId, MidiStreamType streamType);
-		~MidiStreamInformation();
-		const MidiObjectId getId();					// Unique Id of the stream. Used in most MIDI messaging
-		const MidiObjectId getParentDeviceId();		// Unique Id of the parent device which owns this stream.
-		const MidiStreamType getStreamType();		// Type of stream. Mostly used to differentiate unidirectional (like DIN) from bidirectional streams
-		const wchar_t* getName();					// Name of this stream. May have been changed by the user through config tools.
+		MidiEndpointInformation(MidiObjectId id, MidiObjectId parentDeviceId, MidiEndpointType endpointType);
+		~MidiEndpointInformation();
+		const MidiObjectId getId();					// Unique Id of the endpoint. Used in most MIDI messaging
+		const MidiObjectId getParentDeviceId();		// Unique Id of the parent device which owns this endpoint.
+		const MidiEndpointType getEndpointType();	// Type of stream. Mostly used to differentiate unidirectional (like DIN) from bidirectional endpoints
 		const wchar_t* getDeviceSuppliedName();		// Endpoint name as supplied by the device plug-in or driver
-		const wchar_t* getIconFileName();			// Name, without path, of the image used to represent this specific endpoint
-		const wchar_t* getDescription();			// Text description of the stream.
+		const MidiGroup getGroup();					// an endpoint is a single group. This is its number
 
-		// TODO: Expose appropriate MIDI CI information per group/channel as negotiated by service
+
+		// These settings are from MIDI CI and/or from what the user has supplied in the settings app.
+		// This kind of metadata has been requested by DAWs, and makes sense to centralize vs the current
+		// implementation where each DAW is maintaining its own database of this meta information. This
+		// Also gives the end user more control. Some CI properties should be able to be overridden by the
+		// user in the settings app to force certain behavior to optimize/control their system
+		const wchar_t* getName();						// Name of this stream. May have been changed by the user through config tools.
+		const wchar_t* getIconFileName();				// Name, without path, of the image used to represent this specific endpoint
+		const wchar_t* getDescription();				// Text description of the stream.
+		const bool getShouldSendMidiClock();			// flag provided by user saying this should normally be sent MIDI start/stop/clock messages
+		const bool getShouldSendMidiClockStart();		// flag provided by user saying this should get clock start (sequencer start) messages
+		const bool getMidiProtocolLevel();				// MIDI 1.0 or MIDI 2.0 for this endpoint. CI-provided
+		const bool getSupportsMpe();					// true if this supports MPE
+		const uint16_t getSupportedMidiChannelMask();	// bitmask of supported / enabled channels 1-16
+
+		// TODO: Expose appropriate MIDI CI information as negotiated by service
 		// For example, bandwidth, protocol, etc.
+		// Also information provided by user in the settings app
 		// Note that entire API is UMP, so translation to/from byte stream happens
 		// either in the driver (example: USB) or in the device/transport plugin
 
