@@ -175,17 +175,17 @@ namespace Microsoft::Windows::Midi::Enumeration //::inline v0_1_0_pre
 		const MidiObjectId deviceId);
 
 
-	typedef WINDOWSMIDISERVICES_API void(*MidiStreamAddedCallback)(
+	typedef WINDOWSMIDISERVICES_API void(*MidiEndpointAddedCallback)(
 		const MidiObjectId deviceId,
-		const MidiObjectId streamId);
+		const MidiObjectId endpointId);
 
-	typedef WINDOWSMIDISERVICES_API void(*MidiStreamRemovedCallback)(
+	typedef WINDOWSMIDISERVICES_API void(*MidiEndpointRemovedCallback)(
 		const MidiObjectId deviceId,
-		const MidiObjectId streamId);
+		const MidiObjectId endpointId);
 
-	typedef WINDOWSMIDISERVICES_API void(*MidiStreamChangedCallback)(
+	typedef WINDOWSMIDISERVICES_API void(*MidiEndpointChangedCallback)(
 		const MidiObjectId deviceId,
-		const MidiObjectId streamId);
+		const MidiObjectId endpointId);
 
 
 
@@ -220,15 +220,15 @@ namespace Microsoft::Windows::Midi::Enumeration //::inline v0_1_0_pre
 		friend class MidiEnumerator;
 	};
 
-	class WINDOWSMIDISERVICES_API MidiStreamInformationCollection final
+	class WINDOWSMIDISERVICES_API MidiEndpointInformationCollection final
 	{
 	private:
-		struct implMidiStreamInformationCollection;
-		implMidiStreamInformationCollection* _pimpl;
+		struct implMidiEndpointInformationCollection;
+		implMidiEndpointInformationCollection* _pimpl;
 
-		MidiStreamInformationCollection();
+		MidiEndpointInformationCollection();
 	public:
-		~MidiStreamInformationCollection();
+		~MidiEndpointInformationCollection();
 
 		// TODO. Implement C++ iterator-like pattern here without exposting std::
 
@@ -286,10 +286,10 @@ namespace Microsoft::Windows::Midi::Enumeration //::inline v0_1_0_pre
 			MidiObjectId deviceId,
 			MidiDeviceInformation& info);
 
-		const bool GetStreamInformationFromId(
+		const bool GetEndpointInformationFromId(
 			MidiObjectId deviceId,
 			MidiObjectId streamId,
-			MidiStreamInformation& info);
+			MidiEndpointInformation& info);
 
 		// These return copies instead of pointers because the underlying objects
 		// could be destroyed by the time they are accessed by the API's client
@@ -302,10 +302,9 @@ namespace Microsoft::Windows::Midi::Enumeration //::inline v0_1_0_pre
 		const MidiDeviceInformationCollection GetStaticDeviceListByName(wchar_t* name);
 		const MidiDeviceInformationCollection GetStaticDeviceListByDeviceSuppliedName(wchar_t* deviceSuppliedDeviceName);
 
-		const MidiStreamInformationCollection GetStaticStreamList();
-		const MidiStreamInformationCollection GetStaticStreamList(MidiObjectId deviceId);
-		const MidiStreamInformationCollection GetStaticStreamListByName(wchar_t* name);
-		const MidiStreamInformationCollection GetStaticStreamListByDeviceSuppliedName(wchar_t* deviceSuppliedStreamName);
+		const MidiEndpointInformationCollection GetStaticStreamList(MidiObjectId parentDeviceId);
+		const MidiEndpointInformationCollection GetStaticStreamListByName(wchar_t* name);
+		const MidiEndpointInformationCollection GetStaticStreamListByDeviceSuppliedName(wchar_t* deviceSuppliedStreamName);
 
 
 		void SubscribeToTransportChangeNotifications(
@@ -319,9 +318,9 @@ namespace Microsoft::Windows::Midi::Enumeration //::inline v0_1_0_pre
 			const MidiDeviceChangedCallback& changedCallback);
 
 		void SubscribeToEndpointChangeNotifications(
-			const MidiStreamAddedCallback& addedCallback,
-			const MidiStreamRemovedCallback& removedCallback,
-			const MidiStreamChangedCallback& changedCallback);
+			const MidiEndpointAddedCallback& addedCallback,
+			const MidiEndpointRemovedCallback& removedCallback,
+			const MidiEndpointChangedCallback& changedCallback);
 
 
 	};

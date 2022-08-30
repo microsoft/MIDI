@@ -71,10 +71,10 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 
 
 	// ----------------------------------------------------------------------------
-	// Devices and Streams (TODO: GO back to Devices and Endpoints)
+	// Devices and Endpoints
 	// ----------------------
-	// Not to be confused with StreamInformation and DeviceInformation, these
-	// are the actual interfaces to the devices and streams themselves.
+	// Not to be confused with EndpointInformation and DeviceInformation, these
+	// are the actual interfaces to the devices and endpoints themselves.
 	// ----------------------------------------------------------------------------
 
 
@@ -84,17 +84,6 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 	// app devs is service-side scheduling of message sending. Maybe include this
 	// in the options when opening so we can configure the message queue to include
 	// the timestamps
-
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// TODO: Based on conversation with Andrew Mee on Aug 29, 2022, will want to revisit
-	// the idea of streams vs endpoints. Current understanding (not captured in the code)
-	// Endpoint = Source or destination of MIDI messages. HOWEVER, that is not the same
-	// as a port, as a group/function block can be an Endpoint. You won't discover these
-	// through PnP, but only through the protocol. Therefore, PnP / driver will need
-	// to enumerate devices connected to the PC (or virtual, or RTP, etc.) but the 
-	// individual Endpoints (port pairs, or however you want to think of them) will
-	// only be enumerated through MIDI messages.
-	// Start is to rename Stream to Endpoint and then go from there (I have started this)
 
 
 	enum WINDOWSMIDISERVICES_API MidiEndpointOpenOptions
@@ -120,7 +109,8 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 		MidiEndpointOpenErrorOther
 	};
 
-	// timestamp for sending scheduled messages
+	// timestamp for sending scheduled messages. This is an internal
+	// Windows thing, not a MIDI protocol thing.
 	struct WINDOWSMIDISERVICES_API MidiMessageTimestamp
 	{
 		uint64_t Timestamp;							// when to send this message
@@ -134,6 +124,17 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 	// https://docs.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps#hardware-timer-info
 
 
+	// Change Note:
+	// ------------------------
+	// Based on conversation with Andrew Mee on Aug 29, 2022, we revisited the idea of 
+	// streams vs endpoints. New understanding: Endpoint = Source or destination of MIDI
+	// messages. HOWEVER, that is not the same as a MIDI port, as a group/function block
+	// can be/is an Endpoint. You won't discover these through PnP, but only through the
+	// protocol. Therefore, PnP / driver will need to enumerate devices connected to the
+	// PC (or virtual, or RTP, etc.) but the individual Endpoints (port pairs, or however
+	// you want to think of them) will only be enumerated through MIDI messages.
+
+
 	// A MIDI Endpoint is where MIDI messages are sent to or received from. It is not exactly
 	// 1:1 with a port in MIDI 1.0. Examples:
 	// - A MIDI 1.0 device with 16 virtual cables (8 in, 8 out) could have:
@@ -143,6 +144,13 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 	// Notes:
 	// - Endpoints aren't necessarily PnP enumerated. they require MIDI CI calls to get groups/functions
 	// - EndpointInformation objects will contain additional data that the user supplies via the settings tools
+
+
+	// NOTE: A case can be made for eliminating the MidiEndpoint class and having the Device be the only
+	// interface. An endpoint would just be informationational though EndpointInformation. What makes this
+	// worth considering is the ability for a connected device to rearrange its group/function blocks at
+	// runtime, which would then invalidate the endpoint classes being used here.
+
 	class WINDOWSMIDISERVICES_API MidiEndpoint
 	{
 	protected:
@@ -163,7 +171,7 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 		// number of seconds have passed without any sysex traffic. 
 		bool LockForSystemExclusiveUse();
 
-		// unlocks the endpoint.
+		// unlocks the endpoint for all sessions on the PC.
 		bool ReleaseSystemExclusiveLock();
 
 		// Makes a service call to see if this session, or any other session, locked this endpoint
