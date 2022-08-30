@@ -122,6 +122,10 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 	// https://docs.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps#hardware-timer-info
 
 
+	// TODO: I strongly dislike the word "Stream", but there was ambiguout around "Endpoint". However
+	// this needs to be looked at a second time due to how group/function blocks should be represented
+	// as Endpoints themselves, based on the latest info (Also see Andrew Mee's whitepaper on MIDI 2.0
+	// API design for some more information)
 	class WINDOWSMIDISERVICES_API MidiStream
 	{
 	protected:
