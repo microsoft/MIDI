@@ -71,7 +71,7 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 
 
 	// ----------------------------------------------------------------------------
-	// Devices and Streams
+	// Devices and Streams (TODO: GO back to Devices and Endpoints)
 	// ----------------------
 	// Not to be confused with StreamInformation and DeviceInformation, these
 	// are the actual interfaces to the devices and streams themselves.
