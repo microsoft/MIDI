@@ -78,12 +78,24 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 	// ----------------------------------------------------------------------------
 
 
-	// TODO: May need to prepend a send/receive timestamp to incoming and outgoing
+	// TODO: May need to prepend a receive timestamp to incoming
 	// messages, adding to the overall size. This is not MIDI protocol, but is
 	// internal implementation. second or third most important request from
 	// app devs is service-side scheduling of message sending. Maybe include this
 	// in the options when opening so we can configure the message queue to include
 	// the timestamps
+
+	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// TODO: Based on conversation with Andrew Mee on Aug 29, 2022, will want to revisit
+	// the idea of streams vs endpoints. Current understanding (not captured in the code)
+	// Endpoint = Source or destination of MIDI messages. HOWEVER, that is not the same
+	// as a port, as a group/function block can be an Endpoint. You won't discover these
+	// through PnP, but only through the protocol. Therefore, PnP / driver will need
+	// to enumerate devices connected to the PC (or virtual, or RTP, etc.) but the 
+	// individual Endpoints (port pairs, or however you want to think of them) will
+	// only be enumerated through MIDI messages.
+	// Start is to rename Stream to Endpoint and then go from there
+
 
 	enum WINDOWSMIDISERVICES_API MidiStreamOpenOptions
 	{
