@@ -94,7 +94,7 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 
 		MidiEndpointOpenExclusive = 4,			// TBD if we also include Exclusive here.
 
-		MidiEndpointOpenUseSendTimestamps = 8
+		MidiEndpointOpenUseSendTimestamps = 8	// this sets up a completely different message queue
 	};
 	DEFINE_ENUM_FLAG_OPERATORS(MidiEndpointOpenOptions)
 
@@ -122,6 +122,7 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 
 	// Info on hardware timers and QPC in Windows: 
 	// https://docs.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps#hardware-timer-info
+
 
 
 	// Change Note:
@@ -171,7 +172,9 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 		// number of seconds have passed without any sysex traffic. 
 		bool LockForSystemExclusiveUse();
 
-		// unlocks the endpoint for all sessions on the PC.
+		// unlocks the endpoint for all sessions on the PC. Note: in the management API we'll 
+		// also need to provide a way for the settings app to be able to release any sysex lock
+		// on any endpoint so the user can unblock in case of error.
 		bool ReleaseSystemExclusiveLock();
 
 		// Makes a service call to see if this session, or any other session, locked this endpoint
@@ -186,8 +189,24 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 
 		friend class MidiDevice;	// Want to construct streams only through device class
 
-		// TODO: MIDI CI Profile Support
-		// TODO: MIDI CI Property Exchange Support
+		// TODO: Need to go through profile spec to see what this should really look like
+		// Note that despite being here, these impact any session with this endpoint
+		// open, so may need a notification / synchronization method. Also note that
+		// these are more granular than an Endpoint (they go to channel) so recommend
+		// always requesting these from the endpoint instead of trying to cache the values
+		// here. Also note that we will probably want a way for the user to provide CI 
+		// profiles and properties for endpoints in the settings app, for endpoints which
+		// don't support that natively. This will provide a lot more flexibility for how
+		// the user works with CI-enabled apps on their PC.
+		// We (Windows) should provide APIs to interact with profiles and property exchange
+		// but otherwise should not get in the way here, or try to strongly type anything,
+		// or other than the user overrides, cache anything.
+		//bool SetCIProfileOn(todo todo);
+		//bool SetCIProfileOff(todo todo);
+		//someJSONstuff GetCIPropertyData(todo todo);
+		//bool SetCIPropertyData(someJSONstuff);
+		//bool SubscribeToPropertyData(foo bar, somecallback);
+
 	};
 
 

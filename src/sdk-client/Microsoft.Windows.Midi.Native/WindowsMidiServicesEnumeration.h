@@ -129,11 +129,19 @@ namespace Microsoft::Windows::Midi::Enumeration //::inline v0_1_0_pre
 		const bool getSupportsMpe();					// true if this supports MPE
 		const uint16_t getSupportedMidiChannelMask();	// bitmask of supported / enabled channels 1-16
 
+		const Messages::UmpType getMaxPacketType();		// through CI, the maximum size of packet supported
+
+		bool getShouldSendJitterReductionTimestamps();	// just informational for the client. This is handled in the service.
+		MidiByte8 getProtocolExtensionsBitmap();		// this also includes the JR info. Included here to support emerging standards
+
+
 		// TODO: Expose appropriate MIDI CI information as negotiated by service
 		// For example, bandwidth, protocol, etc.
 		// Also information provided by user in the settings app
 		// Note that entire API is UMP, so translation to/from byte stream happens
 		// either in the driver (example: USB) or in the device/transport plugin
+
+
 
 		friend class MidiEnumerator;
 
