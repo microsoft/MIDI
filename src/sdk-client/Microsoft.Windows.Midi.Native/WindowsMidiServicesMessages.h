@@ -18,6 +18,9 @@
 // performed.
 // ============================================================================
 
+// NOTE TO Team: If we break things up into in-box and out of box, this header file
+// and its related library could easily be a nuget package or out of band library 
+// which sits on top of the UMP definitions
 
 #pragma once
 
