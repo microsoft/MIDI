@@ -4,9 +4,7 @@ Although this API will coexist with the existing MIDI 1.0 WinMM API, for backwar
 
 ## Client code compatibility
 
-The APIs will be created as components usable by as many different languages as possible. Any language which can talk to WinRT ("modern COM") interfaces will be able to use the API. That includes but is not limited to C++/WinRT, .NET and others.
-
-> NOTE: The initial rev of this API uses C#/.NET on the client for the SDK. Please see the note in the SDK folder for how and why that will change.
+The APIs will be created as components usable by as many different languages as possible. Initially, the API targets C++ because that's what the majority of major DAWs are using. Beyond that, the intent is to release other versions like WinRT. Any language which can talk to WinRT ("modern COM") interfaces will be able to use the API. That includes but is not limited to C++/WinRT, .NET and others.
 
 As this approaches maturity, we'll also work with browser teams to enable WebMIDI to use the new APIs.
 
@@ -38,9 +36,11 @@ use the new class driver.
 
 This information will eventually be in the docs.
 
-Windows MIDI Services will not be installed on all PCs but instead will need to be installed by customers who want the functionality it provides. Apps which require this API and driver should indicate as much in the product itself, and include any minimum version. Example:
+At least initially, Windows MIDI Services will not be installed on all PCs but instead will need to be installed by customers who want the functionality it provides. Apps which require this API and driver should indicate as much in the product itself, and include any minimum version. Example:
 
 > Requires Windows MIDI Services 1.1 available here (link to release).
+
+The API also includes functions to check for the install and link to an installer.
 
 ### Checking for Windows MIDI Services on a PC
 
