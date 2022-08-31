@@ -4,9 +4,13 @@ C++ client SDK.
 
 WinRT and other client SDKs coming. C++ is first.
 
-Everything in here is subject to change. As of August 31, 2022, it does not yet include the new Function Block changes or other upcoming spec changes. Consider anything else work-in-progress or prototype.
+Everything in here is subject to change. As of August 31, 2022, it does not yet include the new Function Block changes (which are significant) or other upcoming spec changes. Consider anything else work-in-progress or prototype.
 
 Current "shape" of API can be found in the WindowsMidiServicesApi.h and the other WindowsMidi*.h files it references.
+
+> NOTE: These have not yet gone through any internal API reviews, nor have they been code reviewed internally. But they are good for getting an idea of where we're headed. This will all get more solid in September/October.
+
+What this is good for is to validate that we're taking an approach you find usable. We're hitting features at the right levels, etc. We're trying to strike a balance between exposing raw protocol information (which can be easily misinterpreted and can be challenging for apps to handle, especially in a multi-client setup) and too much handholding.
 
 ## Building and Tools
 
