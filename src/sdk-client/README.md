@@ -4,11 +4,9 @@ C++ client SDK.
 
 WinRT and other client SDKs coming. C++ is first.
 
-## Timer Utility
+Everything in here is subject to change. As of August 31, 2022, it does not yet include the new Function Block changes or other upcoming spec changes. Consider anything else work-in-progress or prototype.
 
-Scheduled MIDI message sending uses the high-resolution system counters provided by QueryPerformanceCounter. The resolution of this counter varies by system, as does the call latency. In modern Windows 10 and 11 systems, this is generally not an issue. However, to be sure, you can run the TimerInfoUtility command-line tool to inspect your own system. (We'll likely put similar functionality into the settings app in the future.)
-
-![Timer Information](img/timer-info-utility.png)
+Current "shape" of API can be found in the WindowsMidiServicesApi.h and the other WindowsMidi*.h files it references.
 
 ## Building and Tools
 

@@ -152,6 +152,8 @@ namespace Microsoft::Windows::Midi //::inline v0_1_0_pre
 	// worth considering is the ability for a connected device to rearrange its group/function blocks at
 	// runtime, which would then invalidate the endpoint classes being used here.
 
+	// NOTE: Aug 30, 2022: The new Function Block spec really does change this.
+
 	class WINDOWSMIDISERVICES_API MidiEndpoint
 	{
 	protected:
