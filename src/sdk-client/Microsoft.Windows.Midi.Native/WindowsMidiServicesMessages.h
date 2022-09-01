@@ -276,7 +276,6 @@ namespace Microsoft::Windows::Midi::Messages //::inline v0_1_0_pre
 
 		const MidiChannel getChannel();
 		void setChannel(const MidiChannel value);
-
 	};
 
 
