@@ -199,13 +199,19 @@ We will support both persistent (stored in the setup file) virtual devices, crea
 
 With the combination of virtual devices and MIDI routing, there are lots of possibilities for how to have devices, apps, and endpoints talk to each other.
 
+**Straight-through routing**
+
 Straight-through routing will be what's used most often, and so will be highly optimized.
 
 ![Straight-through routing](img/routing-straight-through.png)
 
+**App-to-app MIDI**
+
 When combining virtual internally-connected ports with routing, you can easily do app-to-app MIDI while continuing to support message processors, and using the same client API one would use to speak to any other device or endpoint.
 
 ![App-to-app](img/routing-app-to-app.png)
+
+**Client loopback for testing**
 
 Next are a couple types of routing which are really for testing. Users often want to test the performance of their own MIDI devices and client connections. I've done it myself with a little JUCE app and by connecting a DIN cable from MIDI out to MIDI in on one of my devices. App developers want to verify that what they are sending is what they think they are sending. Finally, anyone testing out a message processor will want to be able to see exactly what it does to messages. A client loopback helps make that happen.
 
@@ -214,6 +220,8 @@ Next are a couple types of routing which are really for testing. Users often wan
 Additionally, driver and device developers will want to be able to test their own code, and so have requested a loopback that is on the driver side, but uses the same send/receive code that will be used in production.
 
 ![Device or driver loopback](img/routing-device-or-driver-loopback.png)
+
+**Fan-out / Polychain routing**
 
 One that I'm personally interested in is the idea of poly-chaining of synthesizers (or other tone generators). Right now, this requires either support in the synthesizer, a plugin, or an external polychain box. This is relatively simple to do once you have different types of routing processors in the services.
 
