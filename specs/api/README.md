@@ -217,6 +217,8 @@ Next are a couple types of routing which are really for testing. Users often wan
 
 ![Client loopback](img/routing-virtual-loopback.png)
 
+**Device or driver loopback for testing**
+
 Additionally, driver and device developers will want to be able to test their own code, and so have requested a loopback that is on the driver side, but uses the same send/receive code that will be used in production.
 
 ![Device or driver loopback](img/routing-device-or-driver-loopback.png)
