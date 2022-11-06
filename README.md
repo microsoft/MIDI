@@ -1,12 +1,12 @@
 # Windows MIDI Services
 
-**While this project is closed to the public, everything in this repo is confidential. You have been invited to provide early feedback or contributions to what will eventually be a fully open source project. Please do not share or discuss outside of this repo and the associated Discord server.**
+**While this project is closed to the public, everything in this repo is confidential under MIDI Association / AMEI NDA. You have been invited to provide early feedback or contributions to what will eventually be a fully open source project. Please do not share or discuss outside of this repo and the associated Discord server.**
 
 Want to provide input to help shape early development of the API, tools, and more? Please complete this form while it is still open: https://forms.office.com/r/dGBRuTkncR
 
 --
 
-This project is the next-generation MIDI API for Windows, including MIDI 1.0, MIDI CI, and [MIDI 2.0](https://www.midi.org/specifications/midi-2-0-specifications) features, enhancements, a new driver, and an ecosystem of essential tools. It adds many enhancements and bug fixes to our MIDI 1.0 support, and importantly adds support for MIDI CI and MIDI 2.0.
+This project is the next-generation MIDI API for Windows, including MIDI 1.0, MIDI CI, and MIDI 2.0. It includes enhancements, a new USB class driver, and a suite of essential tools. The project adds many enhancements and bug fixes to our MIDI 1.0 support, and importantly adds support for the latest revisions to MIDI CI and MIDI 2.0.
 
 > The open source USB MIDI 2.0 driver has been generously donated by [AMEI](https://www.amei.or.jp/),
 > the **Association of Musical Electronics Industry**, and developed by [AmeNote<sup>TM</sup>](https://www.AmeNote.com/) in partnership with
