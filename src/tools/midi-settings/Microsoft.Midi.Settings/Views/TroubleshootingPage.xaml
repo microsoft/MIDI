@@ -1,0 +1,95 @@
+<!-- Copyright (c) Microsoft Corporation. All rights reserved. -->
+<!-- Licensed under the MIT License. See LICENSE in the project root for license information. -->
+
+<Page
+    x:Class="Microsoft.Midi.Settings.Views.TroubleshootingPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Microsoft.Midi.Settings.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:labs="using:CommunityToolkit.Labs.WinUI"
+    mc:Ignorable="d">
+
+    <Grid  x:Name="ContentArea">
+        <ScrollViewer >
+            <StackPanel Orientation="Vertical" Spacing="4">
+                <TextBlock TextWrapping="Wrap" 
+                           Margin="1,0,0,8" 
+                           Text="If you are running into problems with MIDI on your PC, the tools below may help you recover without requiring a reboot.">
+                </TextBlock>
+
+                <TextBlock Text="If you have a stuck note somewhere, and you're not sure where" FontWeight="Bold" Margin="1,16,0,0"/>
+
+                <labs:SettingsCard Header="System-wide MIDI Panic"
+                           Description="Send note-off and sequence stop messages to all directly connected devices and all channels. This can take several minutes to send out if you have many connected devices. Devices with a latched arpeggio which ignore the sequence stop command will continue to play.">
+                    <Button Content="MIDI Panic" Background="DarkRed" Foreground="White"
+                            HorizontalAlignment="Right" Padding="5"/>
+                </labs:SettingsCard>
+
+                <labs:SettingsExpander x:Name="TargetedAllNotesOffSettingsExpander"
+                                   Description="Select a MIDI endpoint, and optionally a group and channel, from the list and hit the button to send note-off messages."
+                                   Header="Targeted All Notes off and sequence stop messages"
+                                   IsExpanded="False"
+                                   IsEnabled="True" >
+                    <labs:SettingsExpander.HeaderIcon>
+                        <FontIcon Glyph="&#xE91B;" />
+                    </labs:SettingsExpander.HeaderIcon>
+
+                    <labs:SettingsExpander.Items>
+                        <labs:SettingsCard >
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <ComboBox Width="300" Header="Endpoint"/>
+                                <ComboBox Width="60" Header="Group"/>
+                                <ComboBox Width="60" Header="Channel"/>
+                                <Button Content="Send"/>
+                            </StackPanel>
+                        </labs:SettingsCard>
+                    </labs:SettingsExpander.Items>
+                </labs:SettingsExpander>
+
+
+                <TextBlock Text="If you are not sure that a device is working" FontWeight="Bold" Margin="1,16,0,0"/>
+
+
+                <labs:SettingsExpander x:Name="SendTestNotesSettingsExpander"
+                                   Description="Select a MIDI endpoint from the list and then a group and channel. Click the button to start sending note on and note off messages to that group. Most MIDI devices will have an indicator light or other visual way of showing you that it is receiving MIDI data."
+                                   Header="Send test notes in a loop"
+                                   IsExpanded="False"
+                                   IsEnabled="True" >
+                    <labs:SettingsExpander.HeaderIcon>
+                        <FontIcon Glyph="&#xE91B;" />
+                    </labs:SettingsExpander.HeaderIcon>
+
+                    <labs:SettingsExpander.Items>
+                        <labs:SettingsCard >
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <ComboBox Width="300" Header="Endpoint"/>
+                                <ComboBox Width="60" Header="Group"/>
+                                <ComboBox Width="60" Header="Channel"/>
+                                <Button Content="Start"/>
+                            </StackPanel>
+                        </labs:SettingsCard>
+                    </labs:SettingsExpander.Items>
+                </labs:SettingsExpander>
+
+
+                
+
+                <TextBlock Text="If you have an unknown issue" FontWeight="Bold" Margin="1,16,0,0"/>
+
+                <labs:SettingsCard Header="Restart Windows MIDI Services"
+                           Description="Hopefully it doesn't come to this, but if something is stuck in the service, you can restart it here.">
+                    <Button Content="Restart Service"/>
+                </labs:SettingsCard>
+
+                <TextBlock Text="If you've found a bug" FontWeight="Bold" Margin="1,16,0,0"/>
+
+                <labs:SettingsCard Header="Report a Bug to Microsoft"
+                                   Description="If you've run across something which may be a bug in Windows MIDI Services, you can report it here.">
+                    <Button Content="Open Feedback Hub"/>
+                </labs:SettingsCard>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>

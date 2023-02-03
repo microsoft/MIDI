@@ -1,0 +1,139 @@
+﻿<Page
+    x:Class="Microsoft.Midi.Settings.Views.ForDevelopersPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:labs="using:CommunityToolkit.Labs.WinUI"
+    mc:Ignorable="d">
+
+    <Grid  x:Name="ContentArea">
+        <ScrollViewer >
+            <StackPanel Orientation="Vertical" Spacing="4">
+                <TextBlock TextWrapping="Wrap" 
+                           Margin="1,0,0,8" >
+                    <Run Text="These settings are for development and prototyping purposes only. Changing the settings here may cause unexpected or undesirable behavior in applications and devices using Windows MIDI Services. Access to these settings is enabled by"/>
+                    <Hyperlink NavigateUri="ms-settings:developers"><Run Text="enabling Developer Mode in Windows Settings"/></Hyperlink>
+                    
+                </TextBlock>
+               
+
+                <TextBlock Text="Diagnostics" FontWeight="Bold" Margin="1,8,0,0"/>
+                
+                <labs:SettingsCard Header="Enable Verbose Debug Output"
+                                   Description="Normally off. Verbose debug output may slow down MIDI communication and other aspects of your system. This should only be used by developers debugging problems or prototyping new features. Use a tool like SysInternals Debug View to view the output."
+                                   IsEnabled="{x:Bind ViewModel.IsDeveloperModeEnabled}" >
+                    <ToggleSwitch IsOn="False" />
+                </labs:SettingsCard>
+
+                <TextBlock Text="Message Handling" FontWeight="Bold" Margin="1,8,0,0"/>
+
+                <labs:SettingsExpander x:Name="AutomaticMessageHandlingSettingsExpander"
+                                   Description="Windows normally handles infrastructure and metadata methods in order to update the state of the system and/or allow substitution of information and preferences provided by the user."
+                                   Header="Automatic Message Handling"
+                                   IsEnabled="{x:Bind ViewModel.IsDeveloperModeEnabled}"
+                                   IsExpanded="True">
+                    <labs:SettingsExpander.HeaderIcon>
+                        <FontIcon Glyph="&#xE91B;" />
+                    </labs:SettingsExpander.HeaderIcon>
+
+                    <labs:SettingsExpander.Items>
+                        <labs:SettingsCard Header="Handle MIDI CI Profile Messages"
+                                       Description="Normally on. Enable Windows to cache, and if specified by the user, substitute user-provided information for Profiles.">
+                            <ToggleSwitch IsOn="True" />
+                        </labs:SettingsCard>
+                        <labs:SettingsCard Header="Handle MIDI CI Property Exchange Messages"
+                                        Description="Normally on. Enable Windows to cache, and if specified by the user, substitute user-provided information for Properties.">
+                            <ToggleSwitch IsOn="True" />
+                        </labs:SettingsCard>
+                        <labs:SettingsCard Header="Handle UMP Endpoint Information Messages" 
+                                        Description="Normally on. Enable Windows to request and store the Endpoint information responses and present through the API.">
+                            <ToggleSwitch IsOn="True" />
+                        </labs:SettingsCard>
+                        <labs:SettingsCard Header="Handle UMP and MIDI CI Function Block Information Messages"
+                                        Description="Normally on. Enable Windows to request and store the Function Block information responses and present through the API.">
+                            <ToggleSwitch IsOn="True" />
+                        </labs:SettingsCard>
+                        <labs:SettingsCard Header="Handle UMP Jitter-Reduction Timestamp Messages" 
+                                        Description="Normally on. TBD. JR Timestamp Handling is currently being discussed by TMA OS API Working Group">
+                            <ToggleSwitch IsOn="True" />
+                        </labs:SettingsCard>
+                    </labs:SettingsExpander.Items>
+                </labs:SettingsExpander>
+
+
+                <labs:SettingsExpander x:Name="MessageTranslationSettingsExpander"
+                                   Description="Windows can translate UMP messages sent to endpoints. This applies only to UMP as any byte stream transformation is done at the driver level and is not affected by these settings. Note: these features require that Function Block and Endpoint messages are handled by Windows."
+                                   Header="Message Translation"
+                                   IsExpanded="True"
+                                   IsEnabled="{x:Bind ViewModel.IsDeveloperModeEnabled}" >
+                    <labs:SettingsExpander.HeaderIcon>
+                        <FontIcon Glyph="&#xE91B;" />
+                    </labs:SettingsExpander.HeaderIcon>
+
+                    <labs:SettingsExpander.Items>
+                        <labs:SettingsCard Header="Transform Outgoing MIDI 2.0 Protocol Messages to MIDI 1.0 for MIDI 1.0 Function Blocks"
+                                       Description="Normally on. Required by most MIDI 1.0 devices to make sense of the data.">
+                            <ToggleSwitch IsOn="True" />
+                        </labs:SettingsCard>
+                        <labs:SettingsCard Header="Transform Outgoing MIDI 1.0 Protocol Messages to MIDI 2.0 for MIDI 2.0 Function Blocks"
+                                        Description="Normally on. May be required by some MIDI 2.0 devices.">
+                            <ToggleSwitch IsOn="True" />
+                        </labs:SettingsCard>
+                    </labs:SettingsExpander.Items>
+                </labs:SettingsExpander>
+
+                <TextBlock Text="Multi-client" FontWeight="Bold" Margin="1,8,0,0"/>
+
+                <labs:SettingsCard Header="Prevent SysEx Collisions"
+                                   Description="Normally on. Prevent two apps from sending SysEx to the same Endpoint and Group at the same time. (TBD which approach the OS takes here. Could buffer, require lock, error, or something else)"
+                                   IsEnabled="{x:Bind ViewModel.IsDeveloperModeEnabled}" >
+
+                    <ToggleSwitch IsOn="True" />
+                </labs:SettingsCard>
+
+
+
+                <TextBlock Text="Related Developer Support" FontWeight="Bold" Margin="1,8,0,0"/>
+
+                <labs:SettingsCard Header="Reference Materials">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <HyperlinkButton Grid.Row="0" Grid.Column="0">Windows MIDI Services Documentation</HyperlinkButton>
+                        <HyperlinkButton Grid.Row="0" Grid.Column="1">Windows MIDI Services Discord Server</HyperlinkButton>
+                        <HyperlinkButton Grid.Row="1" Grid.Column="0">Windows MIDI Services GitHub Repo</HyperlinkButton>
+                    </Grid>
+                </labs:SettingsCard>
+
+                <labs:SettingsCard Header="Specifications">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <HyperlinkButton Grid.Row="0" Grid.Column="0">MIDI 2.0 Specifications at The MIDI Association</HyperlinkButton>
+                        <HyperlinkButton Grid.Row="0" Grid.Column="1">USB MIDI 2.0 Specification at the USB-IF</HyperlinkButton>
+                    </Grid>
+                </labs:SettingsCard>
+
+
+            </StackPanel>
+
+
+        </ScrollViewer>
+
+    </Grid>
+</Page>

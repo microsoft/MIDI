@@ -1,0 +1,10 @@
+﻿{
+    "profiles": {
+      "Microsoft.Midi.Settings (Package)": {
+        "commandName": "MsixPackage"
+      },
+      "Microsoft.Midi.Settings (Unpackaged)": {
+        "commandName": "Project"
+      }
+    }
+}
