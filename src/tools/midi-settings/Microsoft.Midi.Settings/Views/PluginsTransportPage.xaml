@@ -19,7 +19,7 @@
                            Text="These are the transport plugins available on the system. Additional transports may be available here TODO LINK TO WHERE USERS CAN GET PLUGINS / STORE ETC."/>
 
 
-                <TextBlock Text="Loaded and enabled" FontWeight="Bold" Margin="1,8,0,0"/>
+                <TextBlock Text="Loaded and enabled" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
 
                 <labs:SettingsExpander x:Name="UsbTransportPluginSettingsExpander"
                                    Header="USB MIDI 2.0 and 1.0 Transport"
@@ -87,7 +87,6 @@
                     </labs:SettingsExpander.Items>
                 </labs:SettingsExpander>
 
-
                 <labs:SettingsExpander x:Name="BluetoothTransportPluginSettingsExpander"
                                    Header="Bluetooth MIDI 1.0 Transport"
                                    Description="Bluetooth Low Energy (BLE) MIDI 1.0"
@@ -113,12 +112,7 @@
                         </labs:SettingsCard>
                     </labs:SettingsExpander.Items>
                 </labs:SettingsExpander>
-                
-        
-                <TextBlock Text="Others available on this system" FontWeight="Bold" Margin="1,8,0,0"/>
-
-
-
+                <TextBlock Text="Others available on this system" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
             </StackPanel>
         </ScrollViewer>
     </Grid>

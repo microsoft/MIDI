@@ -17,4 +17,12 @@
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
 
+    <!--  Style (inc. the correct spacing) of a section header  -->
+    <Style x:Key="SettingsSectionHeaderTextBlockStyle"
+               BasedOn="{StaticResource BodyStrongTextBlockStyle}"
+               TargetType="TextBlock">
+        <Style.Setters>
+            <Setter Property="Margin" Value="1,29,0,5" />
+        </Style.Setters>
+    </Style>
 </ResourceDictionary>
