@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Helpers;
+using Microsoft.Midi.Settings.Services;
 using Microsoft.UI.Xaml;
 
 using Windows.ApplicationModel;
@@ -15,8 +16,19 @@ namespace Microsoft.Midi.Settings.ViewModels;
 public class SettingsViewModel : ObservableRecipient
 {
     private readonly IThemeSelectorService _themeSelectorService;
+    private readonly ILocalSettingsService _localSettingsService;
+    private readonly IGeneralSettingsService _generalSettingsService;
     private ElementTheme _elementTheme;
     private string _versionDescription;
+
+
+    public bool IsDeveloperModeEnabled => WindowsDeveloperModeHelper.IsDeveloperModeEnabled;
+
+    public bool ShowDeveloperOptions
+    {
+        get => _generalSettingsService.ShowDeveloperOptions;
+        set => _generalSettingsService.ShowDeveloperOptions = value;
+    }
 
     public ElementTheme ElementTheme
     {
@@ -30,12 +42,15 @@ public class SettingsViewModel : ObservableRecipient
         set => SetProperty(ref _versionDescription, value);
     }
 
+
+
     public ICommand SwitchThemeCommand
     {
         get;
     }
 
-    public SettingsViewModel(IThemeSelectorService themeSelectorService)
+
+    public SettingsViewModel(IThemeSelectorService themeSelectorService, ILocalSettingsService localSettingsService, IGeneralSettingsService generalSettingsService)
     {
         _themeSelectorService = themeSelectorService;
         _elementTheme = _themeSelectorService.Theme;
@@ -50,6 +65,9 @@ public class SettingsViewModel : ObservableRecipient
                     await _themeSelectorService.SetThemeAsync(param);
                 }
             });
+
+        _localSettingsService = localSettingsService;
+        _generalSettingsService = generalSettingsService;
     }
 
     private static string GetVersionDescription()

@@ -15,6 +15,7 @@ using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
+using Microsoft.Midi.Settings.ViewModels;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -28,7 +29,18 @@ namespace Microsoft.Midi.Settings.Views
     {
         public ToolsMonitorPage()
         {
+            ViewModel = App.GetService<ToolsMonitorViewModel>();
             this.InitializeComponent();
+        }
+
+        public ToolsMonitorViewModel ViewModel
+        {
+            get;
+        }
+
+        private void ListView_ChoosingItemContainer(ListViewBase sender, ChoosingItemContainerEventArgs args)
+        {
+            
         }
     }
 }

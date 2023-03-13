@@ -15,4 +15,8 @@ public sealed partial class ForDevelopersPage : Page
         ViewModel = App.GetService<ForDevelopersViewModel>();
         InitializeComponent();
     }
+
+
+    // Note: This page can be directly navigated to even if dev options are off. So need to check that here and 
+    // throw up a "enable dev options in settings" type of message
 }

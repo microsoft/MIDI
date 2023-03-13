@@ -21,38 +21,38 @@ public class ContentGridViewModel : ObservableRecipient, INavigationAware
         get;
     }
 
-    public ObservableCollection<SampleOrder> Source { get; } = new ObservableCollection<SampleOrder>();
+    public ObservableCollection<DisplayFriendlyMidiMessage> Source { get; } = new ObservableCollection<DisplayFriendlyMidiMessage>();
 
     public ContentGridViewModel(INavigationService navigationService, ISampleDataService sampleDataService)
     {
         _navigationService = navigationService;
         _sampleDataService = sampleDataService;
 
-        ItemClickCommand = new RelayCommand<SampleOrder>(OnItemClick);
+//        ItemClickCommand = new RelayCommand<SampleOrder>(OnItemClick);
     }
 
     public async void OnNavigatedTo(object parameter)
     {
-        Source.Clear();
+        //Source.Clear();
 
-        // TODO: Replace with real data.
-        var data = await _sampleDataService.GetContentGridDataAsync();
-        foreach (var item in data)
-        {
-            Source.Add(item);
-        }
+        //// TODO: Replace with real data.
+        //var data = await _sampleDataService.GetContentGridDataAsync();
+        //foreach (var item in data)
+        //{
+        //    Source.Add(item);
+        //}
     }
 
     public void OnNavigatedFrom()
     {
     }
 
-    private void OnItemClick(SampleOrder? clickedItem)
-    {
-        if (clickedItem != null)
-        {
-            _navigationService.SetListDataItemForNextConnectedAnimation(clickedItem);
-            _navigationService.NavigateTo(typeof(ContentGridDetailViewModel).FullName!, clickedItem.OrderID);
-        }
-    }
+    //private void OnItemClick(SampleOrder? clickedItem)
+    //{
+    //    if (clickedItem != null)
+    //    {
+    //        _navigationService.SetListDataItemForNextConnectedAnimation(clickedItem);
+    //        _navigationService.NavigateTo(typeof(ContentGridDetailViewModel).FullName!, clickedItem.OrderID);
+    //    }
+    //}
 }

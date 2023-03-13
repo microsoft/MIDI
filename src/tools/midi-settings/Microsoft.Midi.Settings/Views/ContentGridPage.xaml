@@ -10,7 +10,7 @@
     mc:Ignorable="d">
 
     <Grid x:Name="ContentArea">
-        <controls:AdaptiveGridView
+        <!--<controls:AdaptiveGridView
             animations:Connected.ListItemElementName="itemThumbnail"
             animations:Connected.ListItemKey="animationKeyContentGrid"
             DesiredWidth="180"
@@ -38,6 +38,6 @@
                     </Grid>
                 </DataTemplate>
             </controls:AdaptiveGridView.ItemTemplate>
-        </controls:AdaptiveGridView>
+        </controls:AdaptiveGridView>-->
     </Grid>
 </Page>

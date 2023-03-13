@@ -64,7 +64,7 @@
                     <labs:SettingsExpander.Items>
                         <labs:SettingsCard >
                             <StackPanel Orientation="Horizontal" Spacing="4">
-                                <ComboBox Width="300" Header="Endpoint"/>
+                                <ComboBox Width="300" Header="UMP Endpoint"/>
                                 <ComboBox Width="60" Header="Group"/>
                                 <ComboBox Width="60" Header="Channel"/>
                                 <Button Content="Start"/>
@@ -82,6 +82,14 @@
                            Description="Hopefully it doesn't come to this, but if something is stuck in the service, you can restart it here.">
                     <Button Content="Restart Service"/>
                 </labs:SettingsCard>
+
+                <TextBlock Text="If you're working with support" FontWeight="Bold" Margin="1,16,0,0"/>
+
+                <labs:SettingsCard Header="Report MIDI System Information"
+                                   Description="If you're working with technical support for an app or piece of hardware, they may ask you to capture MIDI system information to a file and send it to them. You will be able to view the information captured before you send to your support contact.">
+                    <Button Content="Save MIDI System Information"/>
+                </labs:SettingsCard>
+
 
                 <TextBlock Text="If you've found a bug" FontWeight="Bold" Margin="1,16,0,0"/>
 

@@ -8,9 +8,199 @@
     xmlns:local="using:Microsoft.Midi.Settings.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:model="using:Microsoft.Midi.Settings.Core.Models"
+    xmlns:toolkit="using:CommunityToolkit.WinUI.UI.Controls"
+    xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
     mc:Ignorable="d">
 
-    <Grid>
+    <!-- hard-coded colors here need to be nuked. Prototype only -->
 
+    <Page.Resources>
+        <!-- Templates for full-width vertically-thin-item lists, like the MIDI monitor -->
+        <!-- The styles need dark mode versions as well, or maybe configurable colors -->
+
+
+
+        <!--<x:Double x:Key="ColumnWidth_MessageType">30</x:Double>
+        <x:Double x:Key="ColumnWidth_Group">30</x:Double>
+        <x:Double x:Key="ColumnWidth_Opcode">50</x:Double>
+        <x:Double x:Key="ColumnWidth_Channel">30</x:Double>
+        <x:Double x:Key="ColumnWidth_SingleDataByte">50</x:Double>-->
+
+        <x:Double x:Key="Margin_DataElement">2</x:Double>
+        <x:Double x:Key="Cell_FontSize">12</x:Double>
+
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <converters:StringFormatConverter x:Key="StringFormatConverter" />
+
+        <Style x:Key="DataDisplayTextBlockStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextStyle}">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="TextAlignment" Value="Left" />
+            <Setter Property="FontSize" Value="{StaticResource Cell_FontSize}" />
+            <Setter Property="FontWeight" Value="Normal" />
+            <Setter Property="Margin" Value="12,0,0,0" />
+        </Style>
+
+        <Style x:Key="AllDataBytesDisplayTextBlockStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextStyle}">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="TextAlignment" Value="Left" />
+            <Setter Property="FontSize" Value="{StaticResource Cell_FontSize}" />
+            <Setter Property="FontWeight" Value="Normal" />
+        </Style>
+        
+
+
+
+
+    </Page.Resources>
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Filters -->
+        <StackPanel Orientation="Horizontal" Spacing="4" Grid.Row="0" Margin="8" HorizontalAlignment="Left">
+            <ComboBox Header="From UMP Endpoint / Device" MinWidth="200" ItemsSource="{x:Bind ViewModel.UmpEndpointNames}" SelectedIndex="0"/>
+            <ComboBox Header="Groups" ItemsSource="{x:Bind ViewModel.AllGroups}" SelectedIndex="0"/>
+            <ComboBox Header="Channels"  ItemsSource="{x:Bind ViewModel.AllChannels}" SelectedIndex="0"/>
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" Spacing="4" Grid.Row="0" Margin="8" HorizontalAlignment="Right">
+            <Button Content="Monitor on Screen" VerticalAlignment="Bottom"/>
+            <Button Content="Capture to File..." VerticalAlignment="Bottom"/>
+        </StackPanel>
+
+
+
+        <!-- Color coding options -->
+        <StackPanel Orientation="Horizontal" Spacing="4" Grid.Row="1">
+            <!-- Set colors for the messages by group or by opcode Have icons by message type? -->
+        </StackPanel>
+        
+
+        <toolkit:DataGrid Grid.Row="2"
+                          ItemsSource="{x:Bind ViewModel.Messages,Mode=OneWay}"
+                          Margin="8"
+                          Padding="0"
+                          VerticalAlignment="Stretch"
+                          HorizontalAlignment="Stretch"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Auto"
+                          AutoGenerateColumns="False"
+                          AreRowDetailsFrozen="True"
+                          CanUserSortColumns="False"
+                          CanUserReorderColumns="True"
+                          CanUserResizeColumns="True"
+                          GridLinesVisibility="None"
+                          RowHeight="0"
+                          FocusVisualMargin="0"
+                          AlternatingRowBackground="Transparent"
+                          >
+
+            <toolkit:DataGrid.RowBackground>
+                <SolidColorBrush Color="{ThemeResource SystemFillColorNeutralBackground}" />
+            </toolkit:DataGrid.RowBackground>
+            
+            <toolkit:DataGrid.ContextFlyout>
+                <MenuFlyout>
+                    <!-- TODO: Will want to use our standard copy context menu item -->
+                    <MenuFlyoutItem Text="Copy" Icon="Copy" />
+                    <MenuFlyoutSeparator />
+                    <MenuFlyoutItem Text="View Message Details" Icon="ShowResults" />
+                    <MenuFlyoutSeparator />
+                    <MenuFlyoutItem Text="Filter to this MT and Opcode" Icon="Filter" />
+                    <MenuFlyoutItem Text="Filter to this MT" />
+                    <MenuFlyoutItem Text="Filter to this Opcode" />
+                    <MenuFlyoutSeparator />
+                    <MenuFlyoutItem Text="Clear Filters" Icon="Clear"/>
+                </MenuFlyout>
+            </toolkit:DataGrid.ContextFlyout>
+            
+            
+            <toolkit:DataGrid.Columns>
+                <toolkit:DataGridTextColumn Header="Timestamp" Binding="{Binding FormattedTimestamp}" FontSize="{StaticResource Cell_FontSize}" />
+                <!--<toolkit:DataGridTextColumn Header="Device" Binding="{Binding SourceDeviceName}"  FontSize="{StaticResource Cell_FontSize}" />-->
+                <toolkit:DataGridTextColumn Header="MT" Binding="{Binding FormattedMessageType}"  FontSize="{StaticResource Cell_FontSize}" />
+                
+                <toolkit:DataGridTemplateColumn Header="Op" Tag="Opcode" ToolTipService.ToolTip="Opcode when relevant">
+                    <toolkit:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding FormattedOpcode}" 
+                                       Style="{StaticResource DataDisplayTextBlockStyle}"
+                                       Margin="12,0,0,0"
+                                       Visibility="{Binding HasOpcode, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                        </DataTemplate>
+                    </toolkit:DataGridTemplateColumn.CellTemplate>
+                </toolkit:DataGridTemplateColumn>
+
+                <toolkit:DataGridTextColumn Header="Message" Binding="{Binding FormattedMessageTypeName}"  FontSize="{StaticResource Cell_FontSize}" />
+
+                <toolkit:DataGridTemplateColumn Header="Group" ToolTipService.ToolTip="Group when relevant, mapped 1-16">
+                    <toolkit:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding FormattedGroup}" 
+                                       Style="{StaticResource DataDisplayTextBlockStyle}"
+                                       Visibility="{Binding HasGroup, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                        </DataTemplate>
+                    </toolkit:DataGridTemplateColumn.CellTemplate>
+                </toolkit:DataGridTemplateColumn>
+
+                <toolkit:DataGridTemplateColumn Header="Chan" Tag="Channel" ToolTipService.ToolTip="Channel when relevant, mapped 1-16">
+                    <toolkit:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding FormattedChannel}" 
+                                       Style="{StaticResource DataDisplayTextBlockStyle}"
+                                       Visibility="{Binding HasChannel, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                        </DataTemplate>
+                    </toolkit:DataGridTemplateColumn.CellTemplate>
+                </toolkit:DataGridTemplateColumn>
+
+
+                <toolkit:DataGridTemplateColumn Header="Full UMP (hex bytes)" ToolTipService.ToolTip="Entire UMP in bytes">
+                    <toolkit:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ItemsControl ItemsSource="{Binding AllData}" VerticalContentAlignment="Center">
+
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+
+                                <!-- TODO: These theme brush selections are arbitrary and need to be normalized -->
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid HorizontalAlignment="Center" 
+                                              BorderBrush="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                              Background="{ThemeResource SubtleFillColorTertiaryBrush}"
+                                              CornerRadius="{StaticResource ControlCornerRadius}"
+                                              Width="25"
+                                              BorderThickness="1" 
+                                              Padding="2" Margin="2">
+                                            <TextBlock Text="{Binding Converter={StaticResource StringFormatConverter}, ConverterParameter='{}{0:X2}'}" 
+                                                Style="{StaticResource AllDataBytesDisplayTextBlockStyle}"
+                                                       />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            
+                        </DataTemplate>
+                    </toolkit:DataGridTemplateColumn.CellTemplate>
+                </toolkit:DataGridTemplateColumn>
+
+            </toolkit:DataGrid.Columns>
+            
+        </toolkit:DataGrid>
+        
+        <!--<Grid Grid.Row="3">
+            <Button Content="Save to File" />
+        </Grid>-->
+            
     </Grid>
 </Page>

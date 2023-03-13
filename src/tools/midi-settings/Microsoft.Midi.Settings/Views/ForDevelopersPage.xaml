@@ -7,55 +7,64 @@
         xmlns:labs="using:CommunityToolkit.Labs.WinUI"
     mc:Ignorable="d">
 
+    <Page.Resources>
+        <Style TargetType="labs:SettingsCard">
+            <Setter Property="Margin" Value="10, 2, 10, 2" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+        </Style>
+        <Style TargetType="labs:SettingsExpander">
+            <Setter Property="Margin" Value="10, 2, 10, 2" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+    </Page.Resources>
+    
+    
+    <!-- TODO: THese strings all need to be in the resources -->
+    
+    <!-- TODO: Nothing lines up properly when this renders. Fix it. -->
+    
+    
     <Grid  x:Name="ContentArea">
-        <ScrollViewer >
-            <StackPanel Orientation="Vertical" Spacing="4">
+        <ScrollViewer HorizontalAlignment="Left" VerticalScrollMode="Auto" HorizontalScrollMode="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+            <StackPanel Orientation="Vertical" Spacing="4" HorizontalAlignment="Left">
                 <TextBlock TextWrapping="Wrap" 
+                           HorizontalAlignment="Left"                           
                            Margin="1,0,0,8" >
-                    <Run Text="These settings are for development and prototyping purposes only. Changing the settings here may cause unexpected or undesirable behavior in applications and devices using Windows MIDI Services. Access to these settings is enabled by"/>
-                    <Hyperlink NavigateUri="ms-settings:developers"><Run Text="enabling Developer Mode in Windows Settings"/></Hyperlink>
-                    
+                    <Run Text="These settings are for development and prototyping purposes only. Changing the settings here may cause unexpected or undesirable behavior in applications and devices using Windows MIDI Services."/>
                 </TextBlock>
                
 
                 <TextBlock Text="Diagnostics" FontWeight="Bold" Margin="1,8,0,0"/>
-                
+
                 <labs:SettingsCard Header="Enable Verbose Debug Output"
                                    Description="Normally off. Verbose debug output may slow down MIDI communication and other aspects of your system. This should only be used by developers debugging problems or prototyping new features. Use a tool like SysInternals Debug View to view the output."
-                                   IsEnabled="{x:Bind ViewModel.IsDeveloperModeEnabled}" >
+                                   >
+                    <labs:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xe9d9;" />
+                    </labs:SettingsCard.HeaderIcon>
                     <ToggleSwitch IsOn="False" />
                 </labs:SettingsCard>
 
                 <TextBlock Text="Message Handling" FontWeight="Bold" Margin="1,8,0,0"/>
 
                 <labs:SettingsExpander x:Name="AutomaticMessageHandlingSettingsExpander"
-                                   Description="Windows normally handles infrastructure and metadata methods in order to update the state of the system and/or allow substitution of information and preferences provided by the user."
-                                   Header="Automatic Message Handling"
-                                   IsEnabled="{x:Bind ViewModel.IsDeveloperModeEnabled}"
-                                   IsExpanded="True">
+                                       Description="Windows normally handles some infrastructure and metadata messages in the service in order to update the state of the system and/or allow substitution of information and preferences provided by the user."
+                                       Header="Automatic Message Handling"
+                                       IsExpanded="True">
                     <labs:SettingsExpander.HeaderIcon>
-                        <FontIcon Glyph="&#xE91B;" />
+                        <FontIcon Glyph="&#xe713;" />
                     </labs:SettingsExpander.HeaderIcon>
 
                     <labs:SettingsExpander.Items>
-                        <labs:SettingsCard Header="Handle MIDI CI Profile Messages"
-                                       Description="Normally on. Enable Windows to cache, and if specified by the user, substitute user-provided information for Profiles.">
-                            <ToggleSwitch IsOn="True" />
-                        </labs:SettingsCard>
-                        <labs:SettingsCard Header="Handle MIDI CI Property Exchange Messages"
-                                        Description="Normally on. Enable Windows to cache, and if specified by the user, substitute user-provided information for Properties.">
-                            <ToggleSwitch IsOn="True" />
-                        </labs:SettingsCard>
                         <labs:SettingsCard Header="Handle UMP Endpoint Information Messages" 
-                                        Description="Normally on. Enable Windows to request and store the Endpoint information responses and present through the API.">
-                            <ToggleSwitch IsOn="True" />
-                        </labs:SettingsCard>
-                        <labs:SettingsCard Header="Handle UMP and MIDI CI Function Block Information Messages"
-                                        Description="Normally on. Enable Windows to request and store the Function Block information responses and present through the API.">
+                                           Description="Normally on. Enable Windows to request and store the UMP Endpoint information responses and present through the API."
+                                           >
                             <ToggleSwitch IsOn="True" />
                         </labs:SettingsCard>
                         <labs:SettingsCard Header="Handle UMP Jitter-Reduction Timestamp Messages" 
-                                        Description="Normally on. TBD. JR Timestamp Handling is currently being discussed by TMA OS API Working Group">
+                                           Description="Normally on. TBD. JR Timestamp Handling is currently being discussed by TMA OS API Working Group">
                             <ToggleSwitch IsOn="True" />
                         </labs:SettingsCard>
                     </labs:SettingsExpander.Items>
@@ -65,10 +74,9 @@
                 <labs:SettingsExpander x:Name="MessageTranslationSettingsExpander"
                                    Description="Windows can translate UMP messages sent to endpoints. This applies only to UMP as any byte stream transformation is done at the driver level and is not affected by these settings. Note: these features require that Function Block and Endpoint messages are handled by Windows."
                                    Header="Message Translation"
-                                   IsExpanded="True"
-                                   IsEnabled="{x:Bind ViewModel.IsDeveloperModeEnabled}" >
+                                   IsExpanded="True">
                     <labs:SettingsExpander.HeaderIcon>
-                        <FontIcon Glyph="&#xE91B;" />
+                        <FontIcon Glyph="&#xe713;" />
                     </labs:SettingsExpander.HeaderIcon>
 
                     <labs:SettingsExpander.Items>
@@ -83,12 +91,37 @@
                     </labs:SettingsExpander.Items>
                 </labs:SettingsExpander>
 
+                <labs:SettingsExpander x:Name="MessageProcessingSettingsExpander"
+                                   Description="The service runs a number of processing filters on incoming and outgoing messages. These filters perform transformations of groups, channels, remapping notes, etc. Some filters, like those which enable communication with MIDI 1.0 devices, cannot be turned off. Other processing and filters not happen in the SDK (Function Block handling, for example) and not in the service. To bypass those, use the SDK options available through the SDK."
+                                   Header="Message Filters"
+                                   IsExpanded="True">
+                    <labs:SettingsExpander.HeaderIcon>
+                        <FontIcon Glyph="&#xe713;" />
+                    </labs:SettingsExpander.HeaderIcon>
+
+                    <labs:SettingsExpander.Items>
+                        <labs:SettingsCard Header="Enable optional outgoing (from apps to the device) message processing"
+                                       Description="Normally on.">
+                            <ToggleSwitch IsOn="True" />
+                        </labs:SettingsCard>
+                        <labs:SettingsCard Header="Enable optional incoming (from device to apps) message processing"
+                                        Description="Normally on.">
+                            <ToggleSwitch IsOn="True" />
+                        </labs:SettingsCard>
+                    </labs:SettingsExpander.Items>
+                </labs:SettingsExpander>
+
+
+
                 <TextBlock Text="Multi-client" FontWeight="Bold" Margin="1,8,0,0"/>
 
                 <labs:SettingsCard Header="Prevent SysEx Collisions"
                                    Description="Normally on. Prevent two apps from sending SysEx to the same Endpoint and Group at the same time. (TBD which approach the OS takes here. Could buffer, require lock, error, or something else)"
-                                   IsEnabled="{x:Bind ViewModel.IsDeveloperModeEnabled}" >
-
+                                 >
+                    <labs:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xece4;" />
+                    </labs:SettingsCard.HeaderIcon>
+                    
                     <ToggleSwitch IsOn="True" />
                 </labs:SettingsCard>
 
@@ -97,6 +130,10 @@
                 <TextBlock Text="Related Developer Support" FontWeight="Bold" Margin="1,8,0,0"/>
 
                 <labs:SettingsCard Header="Reference Materials">
+                    <labs:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xe7be;" />
+                    </labs:SettingsCard.HeaderIcon>
+
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -114,6 +151,10 @@
                 </labs:SettingsCard>
 
                 <labs:SettingsCard Header="Specifications">
+                    <labs:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xe7be;" />
+                    </labs:SettingsCard.HeaderIcon>
+
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
