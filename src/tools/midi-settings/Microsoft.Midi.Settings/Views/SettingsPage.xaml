@@ -5,63 +5,141 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
+    xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
     xmlns:xaml="using:Microsoft.UI.Xaml"
+    xmlns:labs="using:CommunityToolkit.Labs.WinUI"
     mc:Ignorable="d">
     <Page.Resources>
         <helpers:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
     </Page.Resources>
     <Grid>
-        <StackPanel
-            x:Name="ContentArea">
-            <TextBlock x:Uid="Settings_Personalization" Style="{ThemeResource SubtitleTextBlockStyle}" />
-            <StackPanel Margin="{StaticResource SmallTopBottomMargin}">
-                <TextBlock x:Uid="Settings_Theme" />
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="320" />
+        </Grid.ColumnDefinitions>
+        
+        
+        <StackPanel Grid.Column="0" x:Name="ContentArea">
+            <labs:SettingsExpander x:Name="AppThemeSettingsExpander"
+                                   x:Uid="Settings_AppThemeExpander"
+                                   IsExpanded="True">
+                <labs:SettingsExpander.HeaderIcon>
+                    <FontIcon Glyph="&#xE790;" />
+                </labs:SettingsExpander.HeaderIcon>
 
-                <StackPanel Margin="{StaticResource XSmallTopMargin}">
-                    <RadioButton
-                        x:Uid="Settings_Theme_Light"
-                        Command="{x:Bind ViewModel.SwitchThemeCommand}"
-                        IsChecked="{x:Bind ViewModel.ElementTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Light, Mode=OneWay}"
-                        FontSize="15"
-                        GroupName="AppTheme">
-                        <RadioButton.CommandParameter>
-                            <xaml:ElementTheme>Light</xaml:ElementTheme>
-                        </RadioButton.CommandParameter>
-                    </RadioButton>
-                    <RadioButton
-                        x:Uid="Settings_Theme_Dark"
-                        Command="{x:Bind ViewModel.SwitchThemeCommand}"
-                        IsChecked="{x:Bind ViewModel.ElementTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Dark, Mode=OneWay}"
-                        FontSize="15"
-                        GroupName="AppTheme">
-                        <RadioButton.CommandParameter>
-                            <xaml:ElementTheme>Dark</xaml:ElementTheme>
-                        </RadioButton.CommandParameter>
-                    </RadioButton>
-                    <RadioButton
-                        x:Uid="Settings_Theme_Default"
-                        Command="{x:Bind ViewModel.SwitchThemeCommand}"
-                        IsChecked="{x:Bind ViewModel.ElementTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Default, Mode=OneWay}"
-                        FontSize="15"
-                        GroupName="AppTheme">
-                        <RadioButton.CommandParameter>
-                            <xaml:ElementTheme>Default</xaml:ElementTheme>
-                        </RadioButton.CommandParameter>
-                    </RadioButton>
-                </StackPanel>
-            </StackPanel>
+                <labs:SettingsExpander.Items>
+                    <StackPanel HorizontalAlignment="Left" 
+                                Orientation="Vertical"
+                                Margin="60,4,20,4">
+                        <RadioButton
+                            x:Uid="Settings_Theme_Light"
+                            Command="{x:Bind ViewModel.SwitchThemeCommand}"
+                            IsChecked="{x:Bind ViewModel.ElementTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Light, Mode=OneWay}"
+                            GroupName="AppTheme">
+                            <RadioButton.CommandParameter>
+                                <xaml:ElementTheme>Light</xaml:ElementTheme>
+                            </RadioButton.CommandParameter>
+                        </RadioButton>
+                        <RadioButton
+                            x:Uid="Settings_Theme_Dark"
+                            Command="{x:Bind ViewModel.SwitchThemeCommand}"
+                            IsChecked="{x:Bind ViewModel.ElementTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Dark, Mode=OneWay}"
+                            GroupName="AppTheme">
+                            <RadioButton.CommandParameter>
+                                <xaml:ElementTheme>Dark</xaml:ElementTheme>
+                            </RadioButton.CommandParameter>
+                        </RadioButton>
+                        <RadioButton
+                            x:Uid="Settings_Theme_Default"
+                            Command="{x:Bind ViewModel.SwitchThemeCommand}"
+                            IsChecked="{x:Bind ViewModel.ElementTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Default, Mode=OneWay}"
+                            GroupName="AppTheme">
+                            <RadioButton.CommandParameter>
+                                <xaml:ElementTheme>Default</xaml:ElementTheme>
+                            </RadioButton.CommandParameter>
+                        </RadioButton>
+                    </StackPanel>
+                </labs:SettingsExpander.Items>
+            </labs:SettingsExpander>
 
-            <TextBlock x:Uid="Settings_About" Style="{ThemeResource SubtitleTextBlockStyle}" />
+
+            <labs:SettingsExpander x:Name="DeveloperModeSettingsExpander"
+                                   x:Uid="SettingsPage_DeveloperModeExpander"
+                                   Margin="{StaticResource SmallTopBottomMargin}"
+                                   IsExpanded="True">
+                <labs:SettingsExpander.HeaderIcon>
+                    <FontIcon Glyph="&#xec7a;" />
+                </labs:SettingsExpander.HeaderIcon>
+
+                <labs:SettingsExpander.Items>
+                    <StackPanel HorizontalAlignment="Left" 
+                                Orientation="Vertical"
+                                Margin="60,4,20,4">
+
+                        <!-- Developer Mode is Enabled in Windows -->
+                        <TextBlock Style="{ThemeResource BodyTextBlockStyle}" 
+                                    Margin="{StaticResource XSmallTopMargin}"
+                                    Visibility="{x:Bind ViewModel.IsDeveloperModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}" 
+                                >
+                            <Run x:Uid="SettingsPage_DeveloperModeIsEnabledInfo"/>   
+
+                            <Hyperlink x:Uid="SettingsPage_DeveloperModeLink">
+                                <Run x:Uid="SettingsPage_DeveloperModeLinkText" />
+                            </Hyperlink>
+                        </TextBlock>
+
+                        <!-- Developer Mode is Disabled in Windows -->
+                        <TextBlock Style="{ThemeResource BodyTextBlockStyle}" 
+                                   Margin="{StaticResource XSmallTopMargin}"
+                                   Visibility="{x:Bind ViewModel.ShowHowToEnableDeveloperMode, Converter={StaticResource BoolToVisibilityConverter}}"
+                                   >
+                            <Run x:Uid="SettingsPage_DeveloperModeIsDisabledInfo"  />
+
+                            <Hyperlink x:Uid="SettingsPage_DeveloperModeLink">
+                                <Run x:Uid="SettingsPage_DeveloperModeLinkText" />
+                            </Hyperlink>
+                        </TextBlock>
+
+                        <ToggleSwitch x:Uid="Settings_ShowDeveloperOptions" 
+                                      Margin="{StaticResource XSmallTopMargin}" 
+                                      IsEnabled="{x:Bind ViewModel.IsDeveloperModeEnabled}"
+                                      IsOn="{x:Bind ViewModel.ShowDeveloperOptions, Mode=TwoWay}" />
+
+                    </StackPanel>
+                </labs:SettingsExpander.Items>
+            </labs:SettingsExpander>
+
+        </StackPanel>
+
+
+        <StackPanel Grid.Column="1" VerticalAlignment="Top" Margin="50,4,20,4">
+            <TextBlock x:Uid="Settings_About" FontWeight="Bold" />
 
             <StackPanel Margin="{StaticResource XSmallTopMargin}">
                 <TextBlock Text="{x:Bind ViewModel.VersionDescription, Mode=OneWay}" Style="{ThemeResource BodyTextBlockStyle}" />
-
                 <TextBlock
                     x:Uid="Settings_AboutDescription"
                     Margin="{StaticResource XSmallTopMargin}"
                     Style="{ThemeResource BodyTextBlockStyle}" />
+                <TextBlock
+                    x:Uid="Settings_AboutMidiDescription"
+                    Margin="{StaticResource XSmallTopMargin}"
+                    Style="{ThemeResource BodyTextBlockStyle}" />
+            </StackPanel>
+
+            <StackPanel Margin="{StaticResource SmallTopMargin}">
+                <HyperlinkButton x:Uid="SettingsPage_MidiRepoLink" Margin="{StaticResource SettingsPageHyperlinkButtonMargin}" />
+                <HyperlinkButton x:Uid="SettingsPage_DiscordLink" Margin="{StaticResource SettingsPageHyperlinkButtonMargin}" />
                 <HyperlinkButton x:Uid="SettingsPage_PrivacyTermsLink" Margin="{StaticResource SettingsPageHyperlinkButtonMargin}" />
             </StackPanel>
+
+            <!--<StackPanel Margin="{StaticResource SmallTopMargin}">
+                <Button x:Uid="SettingsPage_SendFeedbackButton" Margin="{StaticResource XSmallTopMargin}"/>
+                <Button x:Uid="SettingsPage_HelpButton" Margin="{StaticResource XSmallTopMargin}"/>
+            </StackPanel>-->
+
         </StackPanel>
+        
     </Grid>
 </Page>

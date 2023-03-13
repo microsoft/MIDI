@@ -1,0 +1,25 @@
+// Common structure for ALL device types in MIDI, regardless of transport
+namespace Windows.Devices.Enumeration
+{
+    [default_interface]
+    unsealed runtimeclass MidiFunctionBlockInformation
+    {
+        // TODO: Property bag with additional properties including
+
+        // From Function Block Discovery / Info Messages
+        // ========================================================================
+        // Number (unsigned byte, 0 to 31)
+        // Is Active (boolean)
+        // Topology Direction (unsigned byte, bitmap)
+        // MIDI 1.0 (unsigned byte, indicates if MIDI 1 and if we need to restrict to 31.25kbps)
+        // User Interface Hint (unsigned byte)
+        // First Group Number (0 to 15)
+        // Number of Groups Spanned (1 to 16)
+        // MIDI CI Message Version and Format (unsigned byte)
+        // Max Number of SysEx 8 Streams (unsigned byte)
+        // Name (98 bytes max, UTF8)
+
+
+    };
+}
+

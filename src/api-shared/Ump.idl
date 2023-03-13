@@ -1,0 +1,38 @@
+import "UmpType.idl";
+
+namespace Windows.Devices.Midi2.Messages
+{
+    [default_interface]
+    unsealed runtimeclass Ump
+    {
+ 
+        // Value from the MIDI Master Clock (IReferenceClock using 100ns units). 
+        // For incoming messages, set by the service immediately upon receive. 
+        // Needs to be set on each UMP by the service instead of a buffer of UMPs 
+        // because of how filtering and processing / routing can happen before the
+        // messages get to the client. Also set by the service instead of the driver
+        // for consistency across transports.
+        // For outgoing messages, this is set by the app. Currently, the service does
+        // not buffer outgoing messages to send them on a schedule but that may be 
+        // considered in the future.
+        UInt64 SystemTimestamp;     
+
+        // data for one UMP (0-4 words). This could also be an IBuffer but that seemed heavy for the use case.
+        UInt32[] Data;
+
+
+        Ump();
+        
+
+        // reads the packet type from the buffer. This enum also tells you how many words are in the data
+        UmpType GetPacketType();
+
+        // this will create a UMP and allocate the array/buffer based on the message type and then copy it over
+        // These strictly operate on the base UMP type. More message-specific helpers are available in the SDK.
+        static Ump Create(UInt64 Timestamp, UInt32[] dataWords);
+        static Ump Create(UInt64 Timestamp, UInt32 dataWord0);
+        static Ump Create(UInt64 Timestamp, UInt32 dataWord0, UInt32 dataWord1);
+        static Ump Create(UInt64 Timestamp, UInt32 dataWord0, UInt32 dataWord1, UInt32 dataWord2);
+        static Ump Create(UInt64 Timestamp, UInt32 dataWord0, UInt32 dataWord1, UInt32 dataWord2, UInt32 dataWord3);
+    };
+}

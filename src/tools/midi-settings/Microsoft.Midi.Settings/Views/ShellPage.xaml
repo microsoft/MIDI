@@ -7,8 +7,13 @@
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
     xmlns:behaviors="using:Microsoft.Midi.Settings.Behaviors"
     xmlns:i="using:Microsoft.Xaml.Interactivity"
+    xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
     Loaded="OnLoaded">
 
+    <Page.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+    </Page.Resources>
+    
     <Grid>
         <Grid x:Name="AppTitleBar"
               Canvas.ZIndex="1"
@@ -30,7 +35,7 @@
 
         <TextBlock Text="PROTOTYPE" FontSize="250" 
                    HorizontalAlignment="Center" VerticalAlignment="Center" 
-                   Foreground="Orange" Opacity=".25"
+                   Foreground="{ThemeResource SystemAccentColor}" Opacity=".10"
                    RenderTransformOrigin="0.5, 0.5">
             <TextBlock.RenderTransform>
                 <RotateTransform Angle="-35" />
@@ -130,12 +135,15 @@
 
                 <NavigationViewItem x:Uid="Shell_Troubleshooting" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.TroubleshootingViewModel">
                     <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe7c3;"/>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe7ba;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem x:Uid="Shell_ForDevelopers" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ForDevelopersViewModel">
+                
+                <NavigationViewItem x:Uid="Shell_ForDevelopers" 
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ForDevelopersViewModel"
+                                    Visibility="{x:Bind ViewModel.AreDeveloperOptionsEnabled, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
                     <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe7c3;"/>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xec7a;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
 

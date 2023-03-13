@@ -15,6 +15,7 @@
     <EnableMsixTooling>true</EnableMsixTooling>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="Styles\MessageTemplates.xaml" />
     <None Remove="Views\DevicesPage.xaml" />
     <None Remove="Views\ManagementSessionsPage.xaml" />
     <None Remove="Views\PluginsProcessingPage.xaml" />
@@ -49,6 +50,9 @@
     <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <Page Update="Styles\MessageTemplates.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="Views\TroubleshootingPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>

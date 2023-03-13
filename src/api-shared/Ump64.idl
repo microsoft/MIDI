@@ -1,0 +1,18 @@
+import "Ump.idl";
+
+namespace Windows.Devices.Midi2.Messages
+{
+
+    [default_interface]
+    runtimeclass Ump64 : Ump
+    {
+        UInt32 Word1;
+
+        Ump64();
+
+        static Ump64 FromWords(UInt32 word0, UInt32 word1);
+
+    };
+
+
+}

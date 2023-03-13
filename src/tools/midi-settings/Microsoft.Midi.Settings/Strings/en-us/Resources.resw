@@ -121,7 +121,7 @@
     <value>MIDI Settings PROTOTYPE</value>
   </data>
   <data name="AppDescription" xml:space="preserve">
-    <value>Configuration and monitoring of MIDI Services (MIDI 1.0 and MIDI 2.0) in Windows</value>
+    <value>Management, settings, and utility app for Windows MIDI Services. Features in the prototype do not necessarily represent committed features.</value>
   </data>
   <data name="Shell_Main.Content" xml:space="preserve">
     <value>Main</value>
@@ -133,7 +133,7 @@
     <value>Plugins</value>
   </data>
   <data name="Shell_PluginsProcessing.Content" xml:space="preserve">
-    <value>Processing Plugins</value>
+    <value>Processing &amp; Filtering</value>
   </data>
   <data name="Shell_Setup.Content" xml:space="preserve">
     <value>Setups</value>
@@ -148,7 +148,7 @@
     <value>Traffic Monitor</value>
   </data>
   <data name="Shell_ManagementSessions.Content" xml:space="preserve">
-    <value>Active Sessions</value>
+    <value>Session Monitor</value>
   </data>
   <data name="Shell_ToolsNavHeader.Content" xml:space="preserve">
     <value>Tools</value>
@@ -163,13 +163,13 @@
     <value>Device Test</value>
   </data>
   <data name="Shell_ForDevelopers.Content" xml:space="preserve">
-    <value>For developers</value>
+    <value>For Developers</value>
   </data>
   <data name="Settings_Personalization.Text" xml:space="preserve">
     <value>Personalization</value>
   </data>
-  <data name="Settings_Theme.Text" xml:space="preserve">
-    <value>Theme</value>
+  <data name="Settings_AppThemeExpander.Header" xml:space="preserve">
+    <value>App theme</value>
   </data>
   <data name="Settings_Theme_Light.Content" xml:space="preserve">
     <value>Light</value>
@@ -178,19 +178,19 @@
     <value>Dark</value>
   </data>
   <data name="Settings_Theme_Default.Content" xml:space="preserve">
-    <value>Default</value>
+    <value>Use system setting</value>
   </data>
   <data name="Settings_About.Text" xml:space="preserve">
-    <value>About this application</value>
+    <value>About this app</value>
   </data>
   <data name="Settings_AboutDescription.Text" xml:space="preserve">
-    <value>TODO: Replace with your app description.</value>
+    <value>Management, settings, and utility app for Windows MIDI Services. Features in the prototype do not necessarily represent committed features.</value>
   </data>
   <data name="SettingsPage_PrivacyTermsLink.Content" xml:space="preserve">
-    <value>Privacy Statement</value>
+    <value>Microsoft Privacy Statement</value>
   </data>
   <data name="SettingsPage_PrivacyTermsLink.NavigateUri" xml:space="preserve">
-    <value>https://YourPrivacyUrlGoesHere/</value>
+    <value>https://privacy.microsoft.com/privacystatement</value>
   </data>
   <data name="Shell_PluginsTransport.Content" xml:space="preserve">
     <value>Transports</value>
@@ -203,5 +203,47 @@
   </data>
   <data name="Shell_Troubleshooting.Content" xml:space="preserve">
     <value>Troubleshooting</value>
+  </data>
+  <data name="SettingsPage_DeveloperModeExpander.Description" xml:space="preserve">
+    <value>Normally off. Non-developer MIDI users do not need to use developer options as they may adversely impact the stability, capability, or performance of MIDI on your computer. Developer options require that the PC be placed into Developer Mode in Windows settings.</value>
+  </data>
+  <data name="SettingsPage_DeveloperModeExpander.Header" xml:space="preserve">
+    <value>Show developer options</value>
+  </data>
+  <data name="SettingsPage_DeveloperModeLink.NavigateUri" xml:space="preserve">
+    <value>ms-settings:developers</value>
+  </data>
+  <data name="SettingsPage_DeveloperModeLinkText.Text" xml:space="preserve">
+    <value>Windows Settings</value>
+  </data>
+  <data name="SettingsPage_DeveloperModeIsDisabledInfo.Text" xml:space="preserve">
+    <value>Developer mode is not enabled. Enable developer mode in</value>
+  </data>
+  <data name="SettingsPage_DiscordLink.Content" xml:space="preserve">
+    <value>Windows MIDI Services on Discord</value>
+  </data>
+  <data name="SettingsPage_DiscordLink.NavigateUri" xml:space="preserve">
+    <value>https://aka.ms/mididiscord</value>
+  </data>
+  <data name="SettingsPage_MidiRepoLink.Content" xml:space="preserve">
+    <value>Windows MIDI Services on Github</value>
+  </data>
+  <data name="SettingsPage_MidiRepoLink.NavigateUri" xml:space="preserve">
+    <value>https://aka.ms/midirepo</value>
+  </data>
+  <data name="SettingsPage_SendFeedbackButton.Content" xml:space="preserve">
+    <value>Send feedback</value>
+  </data>
+  <data name="Settings_AboutMidiDescription.Text" xml:space="preserve">
+    <value>MIDI® and the MIDI® Logo are registered trademarks of the MIDI® Association. Used with permission. Microsoft is an active MIDI® Association corporate member.</value>
+  </data>
+  <data name="Settings_AppThemeExpander.Description" xml:space="preserve">
+    <value>Select which app theme to display</value>
+  </data>
+  <data name="Settings_ShowDeveloperOptions.Header" xml:space="preserve">
+    <value>Show developer options for MIDI</value>
+  </data>
+  <data name="SettingsPage_DeveloperModeIsEnabledInfo.Text" xml:space="preserve">
+    <value>Developer mode is currently enabled on this PC. To turn it off, go to</value>
   </data>
 </root>

@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="Ump.idl">
+      <Filter>Messages</Filter>
+    </Midl>
+    <Midl Include="UmpType.idl">
+      <Filter>Messages</Filter>
+    </Midl>
+    <Midl Include="MidiMasterReferenceClock.idl">
+      <Filter>Clock</Filter>
+    </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Windows_Devices_Midi2_ApiShared.def" />
+    <None Include="PropertySheet.props" />
+    <None Include="README.md" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Messages">
+      <UniqueIdentifier>{94fd6100-3c65-43b0-92f3-8e402fa1e1e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Clock">
+      <UniqueIdentifier>{54492c8e-9c0a-4dec-91cb-6ebb6704866a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Session">
+      <UniqueIdentifier>{25d53aa8-ad01-49c2-b1b3-a45f21b980e6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

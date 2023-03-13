@@ -1,0 +1,17 @@
+import "Ump.idl";
+
+namespace Windows.Devices.Midi2.Messages
+{
+
+    [default_interface]
+    runtimeclass Ump32 : Ump
+    {
+        Ump32();
+        Ump32(UInt32 word0);
+
+        // Word 0 is in the base class. Hokey, but makes parsing easier
+
+        static Ump32 FromWord(UInt32 word0);
+
+    };
+}
