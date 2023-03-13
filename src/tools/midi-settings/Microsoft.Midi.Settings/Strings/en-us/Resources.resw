@@ -117,7 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AppDisplayName" xml:space="preserve">
+	<data name="AppDisplayName" xml:space="preserve">
     <value>MIDI Settings PROTOTYPE</value>
   </data>
   <data name="AppDescription" xml:space="preserve">
@@ -181,9 +181,9 @@
     <value>Use system setting</value>
   </data>
   <data name="Settings_About.Text" xml:space="preserve">
-    <value>About this app</value>
+    <value>About</value>
   </data>
-  <data name="Settings_AboutDescription.Text" xml:space="preserve">
+  <data name="Settings_AboutDescription.Header" xml:space="preserve">
     <value>Management, settings, and utility app for Windows MIDI Services. Features in the prototype do not necessarily represent committed features.</value>
   </data>
   <data name="SettingsPage_PrivacyTermsLink.Content" xml:space="preserve">
@@ -213,7 +213,7 @@
   <data name="SettingsPage_DeveloperModeLink.NavigateUri" xml:space="preserve">
     <value>ms-settings:developers</value>
   </data>
-  <data name="SettingsPage_DeveloperModeLinkText.Text" xml:space="preserve">
+  <data name="SettingsPage_DeveloperModeLink.Content" xml:space="preserve">
     <value>Windows Settings</value>
   </data>
   <data name="SettingsPage_DeveloperModeIsDisabledInfo.Text" xml:space="preserve">
@@ -234,7 +234,7 @@
   <data name="SettingsPage_SendFeedbackButton.Content" xml:space="preserve">
     <value>Send feedback</value>
   </data>
-  <data name="Settings_AboutMidiDescription.Text" xml:space="preserve">
+  <data name="Settings_AboutMidiDescription.Header" xml:space="preserve">
     <value>MIDI® and the MIDI® Logo are registered trademarks of the MIDI® Association. Used with permission. Microsoft is an active MIDI® Association corporate member.</value>
   </data>
   <data name="Settings_AppThemeExpander.Description" xml:space="preserve">
@@ -245,5 +245,11 @@
   </data>
   <data name="SettingsPage_DeveloperModeIsEnabledInfo.Text" xml:space="preserve">
     <value>Developer mode is currently enabled on this PC. To turn it off, go to</value>
+  </data>
+  <data name="SettingsPage_AboutCard.Header" xml:space="preserve">
+    <value>MIDI Settings</value>
+  </data>
+  <data name="SettingsPage_AboutCard.Description" xml:space="preserve">
+    <value>© 2023 Microsoft. All rights reserved.</value>
   </data>
 </root>
