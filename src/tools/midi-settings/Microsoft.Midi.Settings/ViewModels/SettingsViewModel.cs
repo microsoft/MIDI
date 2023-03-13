@@ -68,11 +68,6 @@ public class SettingsViewModel : ObservableRecipient
         _generalSettingsService = generalSettingsService;
     }
 
-    private static string GetAppName()
-    {
-        return "AppDisplayName".GetLocalized();
-    }
-
     private static string GetVersionDescription()
     {
         Version version;
