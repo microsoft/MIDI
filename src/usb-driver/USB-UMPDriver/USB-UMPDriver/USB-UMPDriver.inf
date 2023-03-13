@@ -1,0 +1,88 @@
+;
+; USB-UMPDriver.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=USBDevice
+ClassGuid={88BAE032-5A81-49f0-BC3D-A4FF138216D6}
+Provider=%ManufacturerName%
+CatalogFile=USB-UMPDriver.cat
+DriverVer=
+PnpLockDown=1
+
+[DestinationDirs]
+DefaultDestDir = 12
+USB-UMPDriver_Device_CoInstaller_CopyFiles = 11
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+USB-UMPDriver.sys  = 1,,
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with SourceDisksNames
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+%USB-UMPDriver.DeviceDesc%=USB-UMPDriver_Device, USB\VID_CAFE&PID_4001
+
+[USB-UMPDriver_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+USB-UMPDriver.sys
+
+[USB-UMPDriver_Device.NT.HW]
+AddReg=USB-UMPDriver_AddReg
+
+[USB-UMPDriver_AddReg]
+; By default, USBDevice class uses iProduct descriptor to name the device in
+; Device Manager on Windows 8 and higher.
+; Uncomment for this device to use %DeviceName% on Windows 8 and higher:
+;HKR,,FriendlyName,,%USB-UMPDriver.DeviceDesc%
+
+;-------------- Service installation
+[USB-UMPDriver_Device.NT.Services]
+AddService = USB-UMPDriver,%SPSVCINST_ASSOCSERVICE%, USB-UMPDriver_Service_Inst
+
+; -------------- USB-UMPDriver driver install sections
+[USB-UMPDriver_Service_Inst]
+DisplayName    = %USB-UMPDriver.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\USB-UMPDriver.sys
+
+;
+;--- USB-UMPDriver_Device Coinstaller installation ------
+;
+
+[USB-UMPDriver_Device.NT.CoInstallers]
+AddReg=USB-UMPDriver_Device_CoInstaller_AddReg
+CopyFiles=USB-UMPDriver_Device_CoInstaller_CopyFiles
+
+[USB-UMPDriver_Device_CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
+
+[USB-UMPDriver_Device_CoInstaller_CopyFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
+
+[USB-UMPDriver_Device.NT.Wdf]
+KmdfService =  USB-UMPDriver, USB-UMPDriver_wdfsect
+[USB-UMPDriver_wdfsect]
+KmdfLibraryVersion = $KMDFVERSION$
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="<Your manufacturer name>" ;TODO: Replace with your manufacturer name
+ClassName="Universal Serial Bus devices"
+DiskName = "USB-UMPDriver Installation Disk"
+USB-UMPDriver.DeviceDesc = "USB-UMPDriver Device"
+USB-UMPDriver.SVCDESC = "USB-UMPDriver Service"
+REG_MULTI_SZ = 0x00010000
