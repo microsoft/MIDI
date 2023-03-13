@@ -5,11 +5,13 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
+    xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
     xmlns:xaml="using:Microsoft.UI.Xaml"
     xmlns:labs="using:CommunityToolkit.Labs.WinUI"
     mc:Ignorable="d">
     <Page.Resources>
         <helpers:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
     </Page.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -75,8 +77,25 @@
                                 Orientation="Vertical"
                                 Margin="60,4,20,4">
 
-                        <TextBlock Style="{ThemeResource BodyTextBlockStyle}" Margin="{StaticResource XSmallTopMargin}">
-                            <Run x:Uid="SettingsPage_DeveloperModeSettingsInfo" />
+                        <!-- Developer Mode is Enabled in Windows -->
+                        <TextBlock Style="{ThemeResource BodyTextBlockStyle}" 
+                                    Margin="{StaticResource XSmallTopMargin}"
+                                    Visibility="{x:Bind ViewModel.IsDeveloperModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}" 
+                                >
+                            <Run x:Uid="SettingsPage_DeveloperModeIsEnabledInfo"/>   
+
+                            <Hyperlink x:Uid="SettingsPage_DeveloperModeLink">
+                                <Run x:Uid="SettingsPage_DeveloperModeLinkText" />
+                            </Hyperlink>
+                        </TextBlock>
+
+                        <!-- Developer Mode is Disabled in Windows -->
+                        <TextBlock Style="{ThemeResource BodyTextBlockStyle}" 
+                                   Margin="{StaticResource XSmallTopMargin}"
+                                   Visibility="{x:Bind ViewModel.ShowHowToEnableDeveloperMode, Converter={StaticResource BoolToVisibilityConverter}}"
+                                   >
+                            <Run x:Uid="SettingsPage_DeveloperModeIsDisabledInfo"  />
+
                             <Hyperlink x:Uid="SettingsPage_DeveloperModeLink">
                                 <Run x:Uid="SettingsPage_DeveloperModeLinkText" />
                             </Hyperlink>

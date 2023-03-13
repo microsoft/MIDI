@@ -24,6 +24,7 @@ public class SettingsViewModel : ObservableRecipient
 
     public bool IsDeveloperModeEnabled => WindowsDeveloperModeHelper.IsDeveloperModeEnabled;
 
+    public bool ShowHowToEnableDeveloperMode => !IsDeveloperModeEnabled;
     public bool ShowDeveloperOptions
     {
         get => _generalSettingsService.ShowDeveloperOptions;

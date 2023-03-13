@@ -216,8 +216,8 @@
   <data name="SettingsPage_DeveloperModeLinkText.Text" xml:space="preserve">
     <value>Windows Settings</value>
   </data>
-  <data name="SettingsPage_DeveloperModeSettingsInfo.Text" xml:space="preserve">
-    <value>Developer mode is enabled in</value>
+  <data name="SettingsPage_DeveloperModeIsDisabledInfo.Text" xml:space="preserve">
+    <value>Developer mode is not enabled. Enable developer mode in</value>
   </data>
   <data name="SettingsPage_DiscordLink.Content" xml:space="preserve">
     <value>Windows MIDI Services on Discord</value>
@@ -242,5 +242,8 @@
   </data>
   <data name="Settings_ShowDeveloperOptions.Header" xml:space="preserve">
     <value>Show developer options for MIDI</value>
+  </data>
+  <data name="SettingsPage_DeveloperModeIsEnabledInfo.Text" xml:space="preserve">
+    <value>Developer mode is currently enabled on this PC. To turn it off, go to</value>
   </data>
 </root>
