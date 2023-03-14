@@ -86,6 +86,7 @@ Return Value:
     PDEVICE_CONTEXT deviceContext;
     WDFDEVICE device;
     NTSTATUS status;
+    WDF_OBJECT_ATTRIBUTES memoryAttributes;
 
     PAGED_CODE();
 
@@ -132,6 +133,29 @@ Return Value:
             // Initialize the I/O Package and any Queues
             //
             status = USBUMPDriverQueueInitialize(device);
+        }
+
+        if (NT_SUCCESS(status)) {
+            //
+            // Create memory for Ring buffer
+            //
+            WDF_OBJECT_ATTRIBUTES_INIT(&memoryAttributes);
+            memoryAttributes.ParentObject = device;
+            status = WdfMemoryCreate(
+                &memoryAttributes,
+                NonPagedPool,
+                USBUMP_POOLTAG,
+                USBUMPDRIVER_RING_BUF_SIZE * sizeof(UINT32),
+                &deviceContext->ReadRingBuf.RingBufMemory,
+                NULL
+            );
+            deviceContext->ReadRingBuf.ringBufSize = USBUMPDRIVER_RING_BUF_SIZE;
+            if (!NT_SUCCESS(status))
+            {
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                    "WdfMemoryCreate failed for ring buffer.\n");
+                return status;
+            }
         }
     }
 
@@ -749,6 +773,14 @@ Return Value:
         // Confirm that there were bytes transferred
         if (NumBytesTransferred)
         {
+            if (NumBytesTransferred % sizeof(UINT32))
+            {
+                status = STATUS_SEVERITY_WARNING;
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                    "Warning, data received from USB device invalid size and will be dropped.\n");
+                goto ReadCompleteExit;
+            }
+
             // If Alt setting 0 then we need to process into URB packets for USB MIDI 1.0 to UMP
             if (!pDeviceContext->UsbMIDIStreamingAlt)
             {
@@ -827,15 +859,14 @@ Return Value:
                                 if (workingBufferIndex == workingBufferSize)
                                 {
                                     // Clear buffer by submitting read and reset
-                                    status = USBUMPDriverFillReadQueue(
-                                        pWorkingBuffer,
-                                        workingBufferSize,
-                                        Context
-                                    );
-                                    if (!NT_SUCCESS(status))
+                                    if ( !USBUMPDriverFillReadQueue(
+                                        (PUINT32)pWorkingBuffer,
+                                        workingBufferSize / sizeof(UINT32),
+                                        pDeviceContext
+                                    ))
                                     {
                                         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                                            "Error submitting to read queue.\n");
+                                            "Error submitting to read queue prep buffer.\n");
                                         goto ReadCompleteExit;
                                     }
                                     workingBufferIndex = 0; //reset index
@@ -859,15 +890,14 @@ Return Value:
                 // Make sure we submit any UMP not already sent
                 if (workingBufferIndex)
                 {
-                    status = USBUMPDriverFillReadQueue(
-                        pWorkingBuffer,
-                        workingBufferIndex,
-                        Context
-                    );
-                    if (!NT_SUCCESS(status))
+                    if ( !USBUMPDriverFillReadQueue(
+                        (PUINT32)pWorkingBuffer,
+                        workingBufferIndex / sizeof(UINT32),
+                        pDeviceContext
+                    ))
                     {
                         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                            "Error submitting to read queue.\n");
+                            "Error submitting to read queue prep buffer.\n");
                         goto ReadCompleteExit;
                     }
                 }
@@ -875,15 +905,14 @@ Return Value:
             else
             {
                 // Send Memory to Read Queue
-                status = USBUMPDriverFillReadQueue(
-                    pReceivedBuffer,
-                    NumBytesTransferred,
-                    Context
-                );
-                if (!NT_SUCCESS(status))
+                if ( !USBUMPDriverFillReadQueue(
+                    (PUINT32)pReceivedBuffer,
+                    NumBytesTransferred / sizeof(UINT32),
+                    pDeviceContext
+                ))
                 {
                     TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                        "Error submitting to read queue.\n");
+                        "Error submitting to read queue prep buffer.\n");
                     goto ReadCompleteExit;
                 }
             }
@@ -893,10 +922,11 @@ Return Value:
 ReadCompleteExit:
     if (workingBuffer)
     {
+        // if we created a working buffer, be sure to get rid of it
         WdfObjectDelete(workingBuffer);
     }
 
-    // The continuous reader takes care of completion of event
+    // The continuous reader takes care of completion of event and clearing buffer
 
     return;
 }
@@ -933,17 +963,16 @@ Return Value:
     return TRUE;
 }
 
-NTSTATUS USBUMPDriverFillReadQueue(
-    _In_    PUCHAR      pBuffer,
-    _In_    size_t      bufferSize,
-    _In_    WDFCONTEXT  Context
+BOOLEAN USBUMPDriverFillReadQueue(
+    _In_    PUINT32             pBuffer,
+    _In_    size_t              bufferSize,
+    _In_    PDEVICE_CONTEXT     pDeviceContext
 )
 /*++
 Routine Description:
 
-    Helper routine to create buffer and copy, placing onto read queue for device. If there is no
-    read queue indicated, then the buffer will be marked complete so memory
-    can be discarded.
+    Helper routine to fill ring buffer with new information to be picked up by
+    the IoEvtRead routine.
 
 Arguments:
 
@@ -953,138 +982,61 @@ Arguments:
 
 Return Value:
 
-    NTSTATUS indicating success of setting buffer.
+    true if successful
 
 --*/
 {
-    WDFREQUEST              request = NULL;;
-    NTSTATUS                status = STATUS_SUCCESS;
-    WDFMEMORY               newBuffer;
-    PDEVICE_CONTEXT         pDeviceContext;
-    WDFIOTARGET             target;
+    PREAD_RING_TYPE     pRing;
+    size_t              index;
+    size_t              ringRemain;
+    PUINT32             pRingBuffer;
 
-    // Need to add into context state that indicates if kernel streaming is
-    // running - otherwise do not process into queue to avoid filling unnecessary
+    // Check parameters passed
+    if (!pBuffer)
+        return false;
 
-    // First ensure that we are sending even UINT32 data to buffer
-    if (bufferSize % sizeof(UINT32) || !bufferSize)
+    // For convenience
+    pRing = &pDeviceContext->ReadRingBuf;
+    pRingBuffer = (PUINT32)WdfMemoryGetBuffer(pRing->RingBufMemory, NULL);
+    index = 0;
+
+    // Determine if currently processing read IO
+    // TODO: Need to figure out how to enable / disable this processing
+    if (true && bufferSize)
     {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-            "%!FUNC! Number of bytes read not even UINT32 at %d bytes.\n", bufferSize);
-        return STATUS_INSUFFICIENT_RESOURCES;
+        // Determine size of buffer remaining
+        ringRemain = (pRing->ringBufTail > pRing->ringBufHead)
+            ? pRing->ringBufTail - pRing->ringBufHead
+            : pRing->ringBufSize - pRing->ringBufHead + pRing->ringBufTail;
+
+        // Is there not enough room to add to buffer
+        if (bufferSize > ringRemain)
+        {
+            TraceEvents(TRACE_LEVEL_WARNING, TRACE_DEVICE,
+                "Warning, not enough room in ring buffer. Data lost.\n");
+            // TODO - go through the buffer and remove old data, making sure to not split up
+            // any UMP data making invalid data stream.
+            // this may require spin lock protection, TBD
+            // for now, just fail
+            return false;
+        }
+
+        // Place data into ring buffer
+        index = pRing->ringBufHead;
+        for (size_t count = 0; count < bufferSize; count++)
+        {
+            index = (index + 1) % pRing->ringBufSize;
+            pRingBuffer[index] = pBuffer[count];
+        }
+        pRing->ringBufHead = index;
     }
     else
     {
-        // Give info placing data in queue
-        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
-            "%!FUNC! placing %d bytes into read queue.\n", bufferSize);
+        // probably should clear the ring buffer if there is no
+        // IO needed.
     }
 
-    pDeviceContext = (PDEVICE_CONTEXT)Context;
-
-    // If there is no queue, then no reason to do anything
-    if (!pDeviceContext->UMPReadQueue)
-    {
-        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
-            "%!FUNC! no read queue.");
-        goto FillReadQueueExit;
-    }
-
-    // Get IOTARGET for convenience
-    target = WdfDeviceGetIoTarget(WdfIoQueueGetDevice(pDeviceContext->UMPReadQueue));
-    if (!target)
-    {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-            "%!FUNC! no target.\n");
-        goto FillReadQueueExit;
-    }
-
-    // Create memory
-    status = WdfMemoryCreate(
-        NULL,
-        NonPagedPool,
-        USBUMP_POOLTAG,
-        bufferSize,
-        &newBuffer,
-        NULL
-    );
-    if (!NT_SUCCESS(status))
-    {
-        return status;
-    }
-
-    // Copy in memory to place in queue
-    status = WdfMemoryCopyFromBuffer(
-        newBuffer,
-        NULL,
-        (PVOID)pBuffer,
-        bufferSize
-    );
-    if (!NT_SUCCESS(status))
-    {
-        goto FillReadQueueExit;
-    }
-
-    // Create request
-    status = WdfRequestCreate(
-        NULL,       // attributes
-        target,
-        &request    // retuest object
-    );
-    if (!NT_SUCCESS(status))
-    {
-        return status;
-    }
-
-    // Fill request
- /*   status = WdfIoTargetFormatRequestForRead(
-        target,
-        request,
-        newBuffer,
-        NULL,
-        NULL
-    );
-*/
-    status = WdfIoTargetFormatRequestForWrite(
-        target,
-        request,
-        newBuffer,
-        NULL,
-        NULL
-    );
-    if (!NT_SUCCESS(status))
-    {
-        goto FillReadQueueExit;
-    }
-    WdfRequestSetCompletionRoutine(
-        request,
-        USBUMPDriverReadQueueEvtCompletionRoutine,
-        NULL    // Context
-    );
-
-    // Sent the request
-    if (!WdfRequestSend(
-        request,
-        target,
-        NULL
-    ))
-    {
-        status = WdfRequestGetStatus(request);
-    }
-    else
-        status = STATUS_SUCCESS;
-
-FillReadQueueExit:
-    if (!NT_SUCCESS(status) && request)
-    {
-        WdfRequestCompleteWithInformation(
-            request,
-            status,
-            0
-        );
-    }
-
-    return status;
+    return true;
 }
 
 void USBUMPDriverReadQueueEvtCompletionRoutine(
@@ -1366,6 +1318,22 @@ Return Value:Amy
         //
         // UMP device, just pass along
         //
+        if (Length > pDeviceContext->MidiOutMaxSize)
+        {
+            // we need to split up the data as too big for single USB URB
+        }
+        else
+        {
+            if (!USBUMPDriverSendToUSB(
+                reqMemory,
+                pipe,
+                Length,
+                pDeviceContext
+            ))
+            {
+                goto DriverEvtIoWriteExit;
+            }
+        }
     }
 
 DriverEvtIoWriteExit:

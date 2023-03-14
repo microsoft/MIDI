@@ -54,6 +54,20 @@ typedef struct MIDI_STREAM_t
 } MIDI_STREAM_TYPE;
 
 //
+// Structure to buffer read data between USB continuous reader
+// and EvtIoRead callback from framework. Implements as a ring
+// buffer.
+//
+typedef struct READ_RING_t
+{
+    WDFMEMORY   RingBufMemory;
+    size_t      ringBufSize;
+    size_t      ringBufHead;
+    size_t      ringBufTail;
+} READ_RING_TYPE, *PREAD_RING_TYPE;
+#define USBUMPDRIVER_RING_BUF_SIZE 256  // twice size of HS USB buffer
+
+//
 // The device context performs the same job as
 // a WDM device extension in the driver frameworks
 //
@@ -74,9 +88,8 @@ typedef struct _DEVICE_CONTEXT
     WDF_USB_PIPE_TYPE           MidiOutPipeType;    // Bulk or Interrupt
     ULONG                       MidiOutMaxSize;     // maximum transfer size
 
-    // Queues
-    WDFQUEUE                    UMPReadQueue;
-    WDFQUEUE                    UMPWriteQueue;
+    // Read Ring Buffer
+    READ_RING_TYPE              ReadRingBuf;
 
     // Utility for converting MIDI 1.0 <-> MIDI 2.0
     // Currently part of MIDI Association protected materials, to be released to Public soon
@@ -164,10 +177,11 @@ USBUMPDriverEnumeratePipes(
 //
 // Function to fill and submit to read queue
 //
-NTSTATUS USBUMPDriverFillReadQueue(
-    _In_    PUCHAR      pBuffer,
-    _In_    size_t      bufferSize,
-    _In_    WDFCONTEXT Context
+BOOLEAN
+USBUMPDriverFillReadQueue(
+    _In_    PUINT32             pBuffer,
+    _In_    size_t              bufferSize,
+    _In_    PDEVICE_CONTEXT     pDeviceContext
 );
 
 //

@@ -139,10 +139,44 @@ Return Value:
             "WdfDeviceConfigureDispatching failed 0x%x\n", status);
         return status;
     }
-    pDeviceContext->UMPWriteQueue = queue;
 
-    // For now, setup to be loopback to device
-    pDeviceContext->UMPReadQueue = queue;
+/*
+//
+// Configure a read queue to queue to place read or converted UMP data
+// from USB device. This queue should be set to input of Kernel Streaming
+// driver.
+//
+    WDF_IO_QUEUE_CONFIG_INIT(
+        &queueConfig,
+        WdfIoQueueDispatchSequential
+    );
+//    queueConfig.EvtIoRead = USBUMPDriverEvtIoRead;
+    queueConfig.EvtIoStop = USBUMPDriverEvtIoStop;
+
+    status = WdfIoQueueCreate(
+        Device,
+        &queueConfig,
+        WDF_NO_OBJECT_ATTRIBUTES,
+        &queue
+    );
+
+    if (!NT_SUCCESS(status)) {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_QUEUE, "WdfIoQueueCreate failed %!STATUS!", status);
+        return status;
+    }
+
+    status = WdfDeviceConfigureRequestDispatching(
+        Device,
+        queue,
+        WdfRequestTypeRead
+    );
+    if (!NT_SUCCESS(status))
+    {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_QUEUE,
+            "WdfDeviceConfigureDispatching failed 0x%x\n", status);
+        return status;
+    }
+*/
 
     return status;
 }
