@@ -23,40 +23,19 @@ public enum MidiNativeDeviceDataFormat
     Ump
 }
 
-
-public class DisplayFriendlyFunctionBlock
+public enum MidiDeviceProtocolSupport
 {
-    public byte Number
-    {
-    get; set; 
-    }
-
-    public string DeviceSuppliedName
-    {
-        get; set;
-    }
-
-    public string UserSuppliedName
-    {
-        get; set;
-    }
-
-    public byte StartingGroupNumber
-    {
-        get; set;
-    }
-
-    public byte EndingGroupNumber
-    {
-        get; set; 
-    }
-
-    public IDictionary<string, string> AllProperties
-    {
-        get; set;
-    }
-
+    Midi1 = 1,
+    Midi2 = 2,
+    All = 3
 }
+
+public enum MidiDeviceConfiguredProtocol
+{
+    Midi1 = 1,
+    Midi2 = 2
+}
+
 
 // Device and UMP Endpoint are synonymous
 public class DisplayFriendlyMidiDevice
@@ -71,6 +50,59 @@ public class DisplayFriendlyMidiDevice
         get; set;
     }
 
+    public string Manufacturer
+    {
+        get; set;
+    }
+
+
+    public byte[] IdentityManufacturerSysExId
+    {
+        get; set; 
+    }
+
+    public byte[] IdentityDeviceFamily
+    {
+        get; set;
+    }
+
+    public byte[] IdentityDeviceFamilyModelNumber
+    {
+        get; set;
+    }
+
+    public byte[] SoftwareRevisionLevel
+    {
+        get; set;
+    }
+
+    public string ProductInstanceId
+    {
+        get; set;
+    }
+
+
+    public bool FunctionBlocksAreStatic
+    {
+        get; set;
+    }
+
+    public bool CanReceiveJRTimestamps
+    {
+        get; set;
+    }
+
+    public bool CanTransmitJRTimestamps
+    {
+        get; set;
+    }
+
+
+    public MidiDeviceProtocolSupport ProtocolSupport
+    {
+        get; set;
+    }
+
     public MidiNativeDeviceDataFormat NativeDataFormat
     {
         get; set; 
@@ -81,15 +113,23 @@ public class DisplayFriendlyMidiDevice
         get; set; 
     }
 
-    public IList<DisplayFriendlyFunctionBlock> FunctionBlocks
+    public IList<DisplayFriendlyMidiFunctionBlock> FunctionBlocks
     {
         get; set; 
+    }
+
+    public IList<DisplayFriendlyMidiGroup> ActiveGroups
+    {
+        get; set;
     }
 
     public IDictionary<string, string> AllProperties
     {
         get; set;
     }
+
+    // TODO: Sysex IDs
+    //
 
 
 }
