@@ -42,6 +42,15 @@ Environment:
 // Define an Interface Guid so that app can find the device and talk to it.
 //
 
+#include <initguid.h>
+
 DEFINE_GUID (GUID_DEVINTERFACE_USBUMPDriver,
     0x5d62a9ab,0xaa0d,0x4144,0xb0,0x83,0x1f,0x97,0x18,0xfa,0x94,0xb6);
 // {5d62a9ab-aa0d-4144-b083-1f9718fa94b6}
+
+#define IOCTL_INDEX             0x0000
+
+#define IOCTL_USBUMPDRIVER_GET_CONFIG_DESCRIPTOR CTL_CODE(FILE_DEVICE_UNKNOWN,     \
+                                                     IOCTL_INDEX,     \
+                                                     METHOD_BUFFERED,         \
+                                                     FILE_ANY_ACCESS)

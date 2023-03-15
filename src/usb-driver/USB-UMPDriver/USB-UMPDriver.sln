@@ -5,12 +5,16 @@ VisualStudioVersion = 17.4.33403.182
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "USB-UMPDriver", "USB-UMPDriver\USB-UMPDriver.vcxproj", "{FE5107EC-4528-4DD9-B0EF-9C590F09F0BD}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "USB-UMPDriverTest", "USB-UMPDriverTest\USB-UMPDriverTest.vcxproj", "{61BCEE2B-CADE-4645-A74E-9E9DEC29A1C2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
 		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
 		Release|ARM64 = Release|ARM64
 		Release|x64 = Release|x64
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{FE5107EC-4528-4DD9-B0EF-9C590F09F0BD}.Debug|ARM64.ActiveCfg = Debug|ARM64
@@ -19,12 +23,30 @@ Global
 		{FE5107EC-4528-4DD9-B0EF-9C590F09F0BD}.Debug|x64.ActiveCfg = Debug|x64
 		{FE5107EC-4528-4DD9-B0EF-9C590F09F0BD}.Debug|x64.Build.0 = Debug|x64
 		{FE5107EC-4528-4DD9-B0EF-9C590F09F0BD}.Debug|x64.Deploy.0 = Debug|x64
+		{FE5107EC-4528-4DD9-B0EF-9C590F09F0BD}.Debug|x86.ActiveCfg = Debug|x64
+		{FE5107EC-4528-4DD9-B0EF-9C590F09F0BD}.Debug|x86.Build.0 = Debug|x64
+		{FE5107EC-4528-4DD9-B0EF-9C590F09F0BD}.Debug|x86.Deploy.0 = Debug|x64
 		{FE5107EC-4528-4DD9-B0EF-9C590F09F0BD}.Release|ARM64.ActiveCfg = Release|ARM64
 		{FE5107EC-4528-4DD9-B0EF-9C590F09F0BD}.Release|ARM64.Build.0 = Release|ARM64
 		{FE5107EC-4528-4DD9-B0EF-9C590F09F0BD}.Release|ARM64.Deploy.0 = Release|ARM64
 		{FE5107EC-4528-4DD9-B0EF-9C590F09F0BD}.Release|x64.ActiveCfg = Release|x64
 		{FE5107EC-4528-4DD9-B0EF-9C590F09F0BD}.Release|x64.Build.0 = Release|x64
 		{FE5107EC-4528-4DD9-B0EF-9C590F09F0BD}.Release|x64.Deploy.0 = Release|x64
+		{FE5107EC-4528-4DD9-B0EF-9C590F09F0BD}.Release|x86.ActiveCfg = Release|x64
+		{FE5107EC-4528-4DD9-B0EF-9C590F09F0BD}.Release|x86.Build.0 = Release|x64
+		{FE5107EC-4528-4DD9-B0EF-9C590F09F0BD}.Release|x86.Deploy.0 = Release|x64
+		{61BCEE2B-CADE-4645-A74E-9E9DEC29A1C2}.Debug|ARM64.ActiveCfg = Debug|x64
+		{61BCEE2B-CADE-4645-A74E-9E9DEC29A1C2}.Debug|ARM64.Build.0 = Debug|x64
+		{61BCEE2B-CADE-4645-A74E-9E9DEC29A1C2}.Debug|x64.ActiveCfg = Debug|x64
+		{61BCEE2B-CADE-4645-A74E-9E9DEC29A1C2}.Debug|x64.Build.0 = Debug|x64
+		{61BCEE2B-CADE-4645-A74E-9E9DEC29A1C2}.Debug|x86.ActiveCfg = Debug|Win32
+		{61BCEE2B-CADE-4645-A74E-9E9DEC29A1C2}.Debug|x86.Build.0 = Debug|Win32
+		{61BCEE2B-CADE-4645-A74E-9E9DEC29A1C2}.Release|ARM64.ActiveCfg = Release|x64
+		{61BCEE2B-CADE-4645-A74E-9E9DEC29A1C2}.Release|ARM64.Build.0 = Release|x64
+		{61BCEE2B-CADE-4645-A74E-9E9DEC29A1C2}.Release|x64.ActiveCfg = Release|x64
+		{61BCEE2B-CADE-4645-A74E-9E9DEC29A1C2}.Release|x64.Build.0 = Release|x64
+		{61BCEE2B-CADE-4645-A74E-9E9DEC29A1C2}.Release|x86.ActiveCfg = Release|Win32
+		{61BCEE2B-CADE-4645-A74E-9E9DEC29A1C2}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
