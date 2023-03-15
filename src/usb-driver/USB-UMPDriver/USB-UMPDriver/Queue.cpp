@@ -140,7 +140,7 @@ Return Value:
         return status;
     }
 
-/*
+
 //
 // Configure a read queue to queue to place read or converted UMP data
 // from USB device. This queue should be set to input of Kernel Streaming
@@ -150,7 +150,7 @@ Return Value:
         &queueConfig,
         WdfIoQueueDispatchSequential
     );
-//    queueConfig.EvtIoRead = USBUMPDriverEvtIoRead;
+    queueConfig.EvtIoRead = USBUMPDriverEvtIoRead;
     queueConfig.EvtIoStop = USBUMPDriverEvtIoStop;
 
     status = WdfIoQueueCreate(
@@ -176,7 +176,7 @@ Return Value:
             "WdfDeviceConfigureDispatching failed 0x%x\n", status);
         return status;
     }
-*/
+
 
     return status;
 }

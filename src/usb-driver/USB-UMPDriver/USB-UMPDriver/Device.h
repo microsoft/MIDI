@@ -149,7 +149,7 @@ EVT_WDF_USB_READERS_FAILED              USBUMPDriverEvtReadFailed;
 //
 // Callbacks for read queue handling
 // 
-EVT_WDF_REQUEST_COMPLETION_ROUTINE      USBUMPDriverReadQueueEvtCompletionRoutine;
+EVT_WDF_IO_QUEUE_IO_WRITE               USBUMPDriverEvtIoRead;
 
 //
 // Callbacks to write to USB MIDI Stream

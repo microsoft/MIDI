@@ -52,7 +52,7 @@ Environment:
 #pragma alloc_text (PAGE, USBUMPDriverEvtReadComplete)
 #pragma alloc_text (PAGE, USBUMPDriverEvtReadFailed)
 #pragma alloc_text (PAGE, USBUMPDriverFillReadQueue)
-#pragma alloc_text (PAGE, USBUMPDriverReadQueueEvtCompletionRoutine)
+#pragma alloc_text (PAGE, USBUMPDriverEvtIoRead)
 #pragma alloc_text (PAGE, USBUMPDriverEvtIoWrite)
 #pragma alloc_text (PAGE, USBUMPDriverEvtRequestWriteCompletionRoutine)
 #pragma alloc_text (PAGE, USBUMPDriverSendToUSB)
@@ -1039,32 +1039,83 @@ Return Value:
     return true;
 }
 
-void USBUMPDriverReadQueueEvtCompletionRoutine(
-    _In_ WDFREQUEST Request,
-    _In_ WDFIOTARGET Target,
-    _In_ PWDF_REQUEST_COMPLETION_PARAMS Params,
-    _In_ WDFCONTEXT Context
+VOID
+USBUMPDriverEvtIoRead(
+    _In_ WDFQUEUE         Queue,
+    _In_ WDFREQUEST       Request,
+    _In_ size_t           Length
 )
 /*++
+
 Routine Description:
 
-    Callback routine to handle event completion of a request
-    to the read queue.
+    Called by the framework when it receives Read or Write requests.
 
 Arguments:
 
-    Request - handle to request object
-    Target - handle to I/O target that completed request
-    Params - structure of information about completed request
-    Context - device contect
+    Queue - Default queue handle
+    Request - Handle to the read/write request
+    Length - Length of the data buffer associated with the request.
+                 The default property of the queue is to not dispatch
+                 zero length read & write requests to the driver and
+                 complete is with status success. So we will never get
+                 a zero length request.
 
-Return Value:
+Return Value:Amy
 
-    None
 
 --*/
 {
-    WdfRequestCompleteWithInformation(Request, STATUS_SUCCESS, Params->Parameters.Read.Length);
+    NTSTATUS                    status;
+    PDEVICE_CONTEXT             pDeviceContext;
+    size_t                      requestSize;
+    size_t                      numCopied = 0;
+    PUINT32                     requestBuffer;
+    WDFMEMORY                   requestMemory;
+    PREAD_RING_TYPE             pRing;
+    PUINT32                     pRingBuf;
+
+    TraceEvents(TRACE_LEVEL_VERBOSE, TRACE_DEVICE, "-->USBUMPDriverEvtIoRead\n");
+
+    pDeviceContext = DeviceGetContext(WdfIoQueueGetDevice(Queue));
+    pRing = &pDeviceContext->ReadRingBuf;
+    pRingBuf = (PUINT32)WdfMemoryGetBuffer(pRing->RingBufMemory, NULL);
+
+    // First check passed parameters
+    requestSize = Length / sizeof(UINT32);
+    if (!requestSize)
+    {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+            "%!FUNC! parameter invalid. Insufficient Length %d.\n", Length);
+        status = STATUS_INVALID_PARAMETER;
+        goto IoEvtReadExit;
+    }
+
+    // Get request buffer to write into
+    status = WdfRequestRetrieveOutputMemory(Request, &requestMemory);
+    if (!NT_SUCCESS(status)) {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+            "WdfRequestRetrieveOutputMemory failed %!STATUS!\n", status);
+        goto IoEvtReadExit;
+    }
+    requestBuffer = (PUINT32)WdfMemoryGetBuffer(requestMemory, NULL);
+
+    // Transfer available data into available request buffer
+    while ((pRing->ringBufTail != pRing->ringBufHead) && (numCopied < requestSize))
+    {
+        requestBuffer[numCopied++] = pRingBuf[pRing->ringBufTail++];
+        pRing->ringBufTail %= pRing->ringBufSize;
+    }
+
+    IoEvtReadExit:
+    if (!NT_SUCCESS(status))
+    {
+        WdfRequestCompleteWithInformation(Request, status, 0);
+    }
+    else
+    {
+        WdfRequestCompleteWithInformation(Request, status, numCopied * sizeof(UINT32));
+    }
 
     return;
 }

@@ -31,6 +31,7 @@ WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with
 
 [Standard.NT$ARCH$]
 %USB-UMPDriver.DeviceDesc%=USB-UMPDriver_Device, USB\VID_CAFE&PID_4001
+%USB-UMPDriver.DeviceDesc%=USB-UMPDriver_Device, USB\VID_13B2&PID_0065
 
 [USB-UMPDriver_Device.NT]
 CopyFiles=Drivers_Dir
