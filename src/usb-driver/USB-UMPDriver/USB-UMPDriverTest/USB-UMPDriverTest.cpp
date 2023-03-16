@@ -1246,8 +1246,10 @@ Return Value:
                 // put some meaningful data in the output buffer
                 //
                 for (j = 0; j < numLongs; j++) {
-                    *(pOut + j) = (0x20 << 56) | (0x90 << 48) | ((0x30+j) << 40) | (0x40 << 32)
-                        | (0x20 << 24) | (0x80 << 16) | ((0x30+j) << 8) | 0x40;
+                    if (j % 2)
+                        *(pOut + j) = (0x20 << 24) | (0x90 << 16) | ((0x30 + j) << 8) | (0x40);
+                    else
+                        *(pOut + j) = (0x20 << 24) | (0x80 << 16) | ((0x30+j-1) << 8) | 0x40;
                 }
 
                 //
