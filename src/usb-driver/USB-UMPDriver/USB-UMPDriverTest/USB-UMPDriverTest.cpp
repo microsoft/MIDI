@@ -62,12 +62,14 @@ BOOL fDumpReadData = FALSE;
 BOOL fRead = FALSE;
 BOOL fWrite = FALSE;
 BOOL fCompareData = TRUE;
+BOOL fEcho = FALSE;
 
 int gDebugLevel = 1;      // higher == more verbose, default is 1, 0 turns off all
 
 ULONG IterationCount = 1; //count of iterations of the test we are to perform
 int WriteLen = 0;         // #bytes to write
 int ReadLen = 0;          // #bytes to read
+int EchoLen = 0;            // #bytes to echo
 
 // functions
 
@@ -431,13 +433,10 @@ Return Value:
 
     if (i) {
         printf("Usage for Read/Write test:\n");
-        printf("-r [n] where n is number of bytes to read\n");
-        printf("-w [n] where n is number of bytes to write\n");
-        printf("-c [n] where n is number of iterations (default = 1)\n");
-        printf("-i [s] where s is the input pipe\n");
-        printf("-o [s] where s is the output pipe\n");
+        printf("-r [n] where n is number of UMP (32bit) to read\n");
+        printf("-w [n] where n is number of UMP (32bit) to write - sends note on and note off incrementing note number.\n");
+        printf("-e [n] where n is number of UMP (32bit) to echo to device\n");
         printf("-v verbose -- dumps read data\n");
-        printf("-x to skip validation of read and write data\n");
 
         printf("\nUsage for USB and Endpoint info:\n");
         printf("-u to dump USB configuration and pipe info \n");
@@ -508,29 +507,19 @@ Return Value:
                 }
                 i++;
                 break;
-            case 'c':
-            case 'C':
+            case 'e':
+            case 'E':
                 if (i + 1 >= argc) {
                     usage();
                     exit(1);
                 }
                 else {
-                    IterationCount = atoi(&argv[i + 1][0]);
-                    if (IterationCount == 0) {
+                    EchoLen = atoi(&argv[i + 1][0]);
+                    if (EchoLen == 0) {
                         usage();
                         exit(1);
                     }
-                }
-                i++;
-                break;
-            case 'i':
-            case 'I':
-                if (i + 1 >= argc) {
-                    usage();
-                    exit(1);
-                }
-                else {
-                    (void)StringCchCopy(inPipe, MAX_LENGTH, &argv[i + 1][0]);
+                    fEcho = TRUE;
                 }
                 i++;
                 break;
@@ -542,11 +531,6 @@ Return Value:
             case 'v':
             case 'V':
                 fDumpReadData = TRUE;
-                i++;
-                break;
-            case 'x':
-            case 'X':
-                fCompareData = FALSE;
                 i++;
                 break;
             case 'o':
@@ -1201,10 +1185,24 @@ Return Value:
         dumpUsbConfig();
     }
 
+    // if echo selected, then cannot process read and write commands
+    if (fEcho)
+    {
+        fRead = false;
+        ReadLen = 0;    // we will read into output buffer
+        fWrite = false;
+        WriteLen = EchoLen;
+    }
+
+    // set lengths from UMP count to number of bytes
+    WriteLen *= sizeof(UINT32);
+    ReadLen *= sizeof(UINT32);
+    EchoLen *= sizeof(UINT32);
+
     // doing a read, write, or both test
     if ((fRead) || (fWrite)) {
 
-        if (fRead) {
+        if (fRead || fEcho) {
             //
             // open the output file
             //
@@ -1223,7 +1221,7 @@ Return Value:
 
         }
 
-        if (fWrite) {
+        if (fWrite || fEcho) {
             if (fDumpReadData) { // round size to sizeof ULONG for readable dumping
                 while (WriteLen % sizeof(ULONG)) {
                     WriteLen++;
@@ -1245,10 +1243,11 @@ Return Value:
                 ULONG  numLongs = WriteLen / sizeof(ULONG);
 
                 //
-                // put some data in the output buffer
+                // put some meaningful data in the output buffer
                 //
                 for (j = 0; j < numLongs; j++) {
-                    *(pOut + j) = j;
+                    *(pOut + j) = (0x20 << 56) | (0x90 << 48) | ((0x30+j) << 40) | (0x40 << 32)
+                        | (0x20 << 24) | (0x80 << 16) | ((0x30+j) << 8) | 0x40;
                 }
 
                 //
@@ -1294,7 +1293,40 @@ Return Value:
                         assert(ReadLen == WriteLen);
                         assert(nBytesRead == ReadLen);
                     }
+                    else
+                    {
+                        if (fDumpReadData) {
+                            printf("Dumping read buffer\n");
+                            dump((PUCHAR)pinBuf, nBytesRead);
+                        }
+                    }
                 }
+            }
+
+            if (fEcho && poutBuf)
+            {
+                printf("<%s> Echo to Device %d bytes.\n\n");
+
+                success = ReadFile(hRead, poutBuf, EchoLen, (PULONG)&nBytesRead, NULL);
+
+                if (success) {
+                    printf("<%s> R (%04.4u) : request %06.6d bytes -- %06.6d bytes read\n",
+                        inPipe, i, EchoLen, nBytesRead);
+                }
+
+                printf("\n");
+
+                if (fDumpReadData) {
+                    printf("Dumping read data\n");
+                    dump((PUCHAR)pinBuf, nBytesRead);
+                }
+
+                printf("\n");
+
+                WriteFile(hWrite, poutBuf, EchoLen, (PULONG)&nBytesWrite, NULL);
+
+                printf("<%s> W (%04.4u) : request %06.6d bytes -- %06.6d bytes written\n",
+                    outPipe, i, WriteLen, nBytesWrite);
             }
         }
 
