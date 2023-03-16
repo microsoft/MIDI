@@ -1200,7 +1200,7 @@ Return Value:
     EchoLen *= sizeof(UINT32);
 
     // doing a read, write, or both test
-    if ((fRead) || (fWrite)) {
+    if ((fRead) || (fWrite) || (fEcho)) {
 
         if (fRead || fEcho) {
             //
@@ -1320,7 +1320,7 @@ Return Value:
 
                 if (fDumpReadData) {
                     printf("Dumping read data\n");
-                    dump((PUCHAR)pinBuf, nBytesRead);
+                    dump((PUCHAR)poutBuf, nBytesRead);
                 }
 
                 printf("\n");

@@ -54,6 +54,7 @@ Environment:
 #pragma alloc_text (PAGE, USBUMPDriverFillReadQueue)
 #pragma alloc_text (PAGE, USBUMPDriverEvtIoRead)
 #pragma alloc_text (PAGE, USBUMPDriverEvtIoWrite)
+#pragma alloc_text (PAGE, USBUMPDriverEvtRequestWriteCompletionRoutineDelete)
 #pragma alloc_text (PAGE, USBUMPDriverEvtRequestWriteCompletionRoutine)
 #pragma alloc_text (PAGE, USBUMPDriverSendToUSB)
 #endif
@@ -1025,8 +1026,8 @@ Return Value:
         index = pRing->ringBufHead;
         for (size_t count = 0; count < bufferSize; count++)
         {
-            index = (index + 1) % pRing->ringBufSize;
             pRingBuffer[index] = pBuffer[count];
+            index = (index + 1) % pRing->ringBufSize;
         }
         pRing->ringBufHead = index;
     }
@@ -1156,6 +1157,8 @@ Return Value:Amy
     PUCHAR                      pWriteBuffer = NULL;
     size_t                      writeBufferIndex = 0;
     WDFMEMORY                   writeMemory = NULL;
+    WDF_OBJECT_ATTRIBUTES       writeMemoryAttributes;
+    WDFREQUEST                  usbRequest = NULL;
 
     TraceEvents(TRACE_LEVEL_VERBOSE, TRACE_DEVICE, "-->USBUMPDriverEvtIoWrite\n");
 
@@ -1295,9 +1298,25 @@ Return Value:Amy
                     // If currently no write buffer, create one
                     if (!pWriteBuffer)
                     {
+                        // Create Request
+                        status = WdfRequestCreate(
+                            NULL,       // attributes
+                            WdfUsbTargetPipeGetIoTarget(pipe),
+                            &usbRequest    // retuest object
+                        );
+                        if (!NT_SUCCESS(status))
+                        {
+                            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                                "%!FUNC! Error creating request for USB Write with status: 0x%x", status);
+                            goto DriverEvtIoWriteExit;
+                        }
+
+                        WDF_OBJECT_ATTRIBUTES_INIT(&writeMemoryAttributes);
+                        writeMemoryAttributes.ParentObject = usbRequest;
+
                         // Create Memory Object
                         status = WdfMemoryCreate(
-                            NULL,
+                            &writeMemoryAttributes,
                             NonPagedPool,
                             USBUMP_POOLTAG,
                             pDeviceContext->MidiOutMaxSize,
@@ -1322,10 +1341,12 @@ Return Value:Amy
                     {
                         // Write to buffer
                         if (!USBUMPDriverSendToUSB(
+                            usbRequest,
                             writeMemory,
                             pipe,
                             writeBufferIndex,
-                            pDeviceContext
+                            pDeviceContext,
+                            true    // delete this request when complete
                         ))
                         {
                             goto DriverEvtIoWriteExit;
@@ -1347,10 +1368,12 @@ Return Value:Amy
         {
             // Write to buffer
             if (!USBUMPDriverSendToUSB(
+                usbRequest,
                 writeMemory,
                 pipe,
                 writeBufferIndex,
-                pDeviceContext
+                pDeviceContext,
+                true    // delete this request when complete
             ))
             {
                 goto DriverEvtIoWriteExit;
@@ -1376,10 +1399,12 @@ Return Value:Amy
         else
         {
             if (!USBUMPDriverSendToUSB(
+                NULL,
                 reqMemory,
                 pipe,
                 Length,
-                pDeviceContext
+                pDeviceContext,
+                false   // Complete the request
             ))
             {
                 goto DriverEvtIoWriteExit;
@@ -1390,48 +1415,26 @@ Return Value:Amy
 DriverEvtIoWriteExit:
 
     // Make sure we do not have created memory sitting around
-    if (pWriteBuffer && writeMemory)
+    if (pWriteBuffer && writeMemory && usbRequest)
     {
-        WdfObjectDelete(writeMemory);
+        // delete the parent object
+        WdfObjectDelete(usbRequest);
     }
 
     return;
 }
 
 BOOLEAN USBUMPDriverSendToUSB(
+    _In_ WDFREQUEST         usbRequest,
     _In_ WDFMEMORY          reqMemory,
     _In_ WDFUSBPIPE         pipe,
     _In_ size_t             Length,
-    _In_ PDEVICE_CONTEXT    pDeviceContext
+    _In_ PDEVICE_CONTEXT    pDeviceContext,
+    _In_ BOOLEAN            deleteRequest
 )
 {
-    WDFREQUEST Request = NULL;
-
-    //
-    // First validate input parameters.
-    //
-    if (Length > pDeviceContext->MidiOutMaxSize) {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Transfer exceeds %d\n",
-            pDeviceContext->MidiOutMaxSize);
-        status = STATUS_INVALID_PARAMETER;
-        goto SendToUSBExit;
-    }
-
-    // Create Request
-    status = WdfRequestCreate(
-        NULL,       // attributes
-        WdfUsbTargetPipeGetIoTarget(pipe),
-        &Request    // retuest object
-    );
-    if (!NT_SUCCESS(status))
-    {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-            "%!FUNC! Error creating request for USB Write with status: 0x%x", status);
-        goto SendToUSBExit;
-    }
-
     status = WdfUsbTargetPipeFormatRequestForWrite(pipe,
-        Request,
+        usbRequest,
         reqMemory,
         NULL); // Offset
     if (!NT_SUCCESS(status)) {
@@ -1441,19 +1444,20 @@ BOOLEAN USBUMPDriverSendToUSB(
     }
 
     WdfRequestSetCompletionRoutine(
-        Request,
-        USBUMPDriverEvtRequestWriteCompletionRoutine,
+        usbRequest,
+        (deleteRequest) ? USBUMPDriverEvtRequestWriteCompletionRoutineDelete
+                        : USBUMPDriverEvtRequestWriteCompletionRoutine,
         pipe);
 
     //
     // Send the request asynchronously.
     //
-    if (WdfRequestSend(Request, WdfUsbTargetPipeGetIoTarget(pipe), WDF_NO_SEND_OPTIONS) == FALSE) {
+    if (WdfRequestSend(usbRequest, WdfUsbTargetPipeGetIoTarget(pipe), WDF_NO_SEND_OPTIONS) == FALSE) {
         //
         // Framework couldn't send the request for some reason.
         //
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "WdfRequestSend failed\n");
-        status = WdfRequestGetStatus(Request);
+        status = WdfRequestGetStatus(usbRequest);
         goto SendToUSBExit;
     }
 
@@ -1463,11 +1467,77 @@ SendToUSBExit:
     if (!NT_SUCCESS(status)) {
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
             "%!FUNC! write to USB error with status: 0x%x\n", status);
-        if ( Request ) WdfRequestCompleteWithInformation(Request, status, 0);
+        if (!deleteRequest)
+        {
+            WdfRequestCompleteWithInformation(usbRequest, status, 0);
+        }
+        // else object will be managed by calling function
+
         return(false);
     }
 
     return true;
+}
+
+VOID
+USBUMPDriverEvtRequestWriteCompletionRoutineDelete(
+    _In_ WDFREQUEST                  Request,
+    _In_ WDFIOTARGET                 Target,
+    _In_ PWDF_REQUEST_COMPLETION_PARAMS CompletionParams,
+    _In_ WDFCONTEXT                  Context
+)
+/*++
+
+Routine Description:
+
+    This is the completion routine for writes
+    If the irp completes with success, we check if we
+    need to recirculate this irp for another stage of
+    transfer.
+
+Arguments:
+
+    Context - Driver supplied context
+    Device - Device handle
+    Request - Request handle
+    Params - request completion params
+
+Return Value:
+    None
+
+--*/
+{
+    NTSTATUS    status;
+    size_t      bytesWritten = 0;
+    PWDF_USB_REQUEST_COMPLETION_PARAMS usbCompletionParams;
+
+    UNREFERENCED_PARAMETER(Target);
+    UNREFERENCED_PARAMETER(Context);
+
+    
+    status = CompletionParams->IoStatus.Status;
+
+    //
+    // For usb devices, we should look at the Usb.Completion param.
+    //
+    usbCompletionParams = CompletionParams->Parameters.Usb.Completion;
+
+    bytesWritten = usbCompletionParams->Parameters.PipeWrite.Length;
+
+    if (NT_SUCCESS(status)) {
+        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
+            "Number of bytes written: %I64d\n", (INT64)bytesWritten);
+    }
+    else {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+            "Write failed: request Status 0x%x UsbdStatus 0x%x\n",
+            status, usbCompletionParams->UsbdStatus);
+    }
+    
+    //WdfRequestCompleteWithInformation(Request, status, bytesWritten);
+    WdfObjectDelete(Request);
+
+    return;
 }
 
 VOID
@@ -1505,6 +1575,7 @@ Return Value:
     UNREFERENCED_PARAMETER(Target);
     UNREFERENCED_PARAMETER(Context);
 
+
     status = CompletionParams->IoStatus.Status;
 
     //
@@ -1525,6 +1596,7 @@ Return Value:
     }
 
     WdfRequestCompleteWithInformation(Request, status, bytesWritten);
+    //WdfObjectDelete(Request);
 
     return;
 }

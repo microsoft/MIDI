@@ -155,6 +155,7 @@ EVT_WDF_IO_QUEUE_IO_WRITE               USBUMPDriverEvtIoRead;
 // Callbacks to write to USB MIDI Stream
 //
 EVT_WDF_IO_QUEUE_IO_WRITE               USBUMPDriverEvtIoWrite;
+EVT_WDF_REQUEST_COMPLETION_ROUTINE      USBUMPDriverEvtRequestWriteCompletionRoutineDelete;
 EVT_WDF_REQUEST_COMPLETION_ROUTINE      USBUMPDriverEvtRequestWriteCompletionRoutine;
 
 // Forward Declartion of helper functions
@@ -188,10 +189,12 @@ USBUMPDriverFillReadQueue(
 // Function to write to USB through Out Pipe
 //
 BOOLEAN USBUMPDriverSendToUSB(
+    _In_ WDFREQUEST         usbRequest,
     _In_ WDFMEMORY          reqMemory,
     _In_ WDFUSBPIPE         pipe,
     _In_ size_t             Length,
-    _In_ PDEVICE_CONTEXT    pDeviceContext
+    _In_ PDEVICE_CONTEXT    pDeviceContext,
+    _In_ BOOLEAN            deleteRequest
 );
 
 EXTERN_C_END
