@@ -1399,7 +1399,7 @@ Return Value:Amy
         else
         {
             if (!USBUMPDriverSendToUSB(
-                NULL,
+                Request,
                 reqMemory,
                 pipe,
                 Length,
