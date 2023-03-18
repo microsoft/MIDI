@@ -49,14 +49,14 @@ Environment:
 #pragma alloc_text (PAGE, USBUMPDriverEvtDeviceD0Exit)
 #pragma alloc_text (PAGE, USBUMPDriverSelectInterface)
 #pragma alloc_text (PAGE, USBUMPDriverEnumeratePipes)
-#pragma alloc_text (PAGE, USBUMPDriverEvtReadComplete)
-#pragma alloc_text (PAGE, USBUMPDriverEvtReadFailed)
-#pragma alloc_text (PAGE, USBUMPDriverFillReadQueue)
-#pragma alloc_text (PAGE, USBUMPDriverEvtIoRead)
-#pragma alloc_text (PAGE, USBUMPDriverEvtIoWrite)
-#pragma alloc_text (PAGE, USBUMPDriverEvtRequestWriteCompletionRoutineDelete)
-#pragma alloc_text (PAGE, USBUMPDriverEvtRequestWriteCompletionRoutine)
-#pragma alloc_text (PAGE, USBUMPDriverSendToUSB)
+#pragma alloc_text (NONPAGE, USBUMPDriverEvtReadComplete)
+#pragma alloc_text (NONPAGE, USBUMPDriverEvtReadFailed)
+#pragma alloc_text (NONPAGE, USBUMPDriverFillReadQueue)
+#pragma alloc_text (NONPAGE, USBUMPDriverEvtIoRead)
+#pragma alloc_text (NONPAGE, USBUMPDriverEvtIoWrite)
+#pragma alloc_text (NONPAGE, USBUMPDriverEvtRequestWriteCompletionRoutineDelete)
+#pragma alloc_text (NONPAGE, USBUMPDriverEvtRequestWriteCompletionRoutine)
+#pragma alloc_text (NONPAGE, USBUMPDriverSendToUSB)
 #endif
 
 
