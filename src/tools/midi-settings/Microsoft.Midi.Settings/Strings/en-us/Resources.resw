@@ -181,9 +181,9 @@
     <value>Use system setting</value>
   </data>
   <data name="Settings_About.Text" xml:space="preserve">
-    <value>About this app</value>
+    <value>About</value>
   </data>
-  <data name="Settings_AboutDescription.Text" xml:space="preserve">
+  <data name="Settings_AboutDescription.Header" xml:space="preserve">
     <value>Management, settings, and utility app for Windows MIDI Services. Features in the prototype do not necessarily represent committed features.</value>
   </data>
   <data name="SettingsPage_PrivacyTermsLink.Content" xml:space="preserve">
@@ -208,16 +208,13 @@
     <value>Normally off. Non-developer MIDI users do not need to use developer options as they may adversely impact the stability, capability, or performance of MIDI on your computer. Developer options require that the PC be placed into Developer Mode in Windows settings.</value>
   </data>
   <data name="SettingsPage_DeveloperModeExpander.Header" xml:space="preserve">
-    <value>Show developer options</value>
+    <value>Show developer options for MIDI</value>
   </data>
-  <data name="SettingsPage_DeveloperModeLink.NavigateUri" xml:space="preserve">
-    <value>ms-settings:developers</value>
-  </data>
-  <data name="SettingsPage_DeveloperModeLinkText.Text" xml:space="preserve">
-    <value>Windows Settings</value>
+  <data name="SettingsPage_DeveloperModeLink.Content" xml:space="preserve">
+    <value>Open Windows Settings "For developers" page</value>
   </data>
   <data name="SettingsPage_DeveloperModeIsDisabledInfo.Text" xml:space="preserve">
-    <value>Developer mode is not enabled. Enable developer mode in</value>
+    <value>Developer Mode is not enabled. Enable developer mode in Windows Settings.</value>
   </data>
   <data name="SettingsPage_DiscordLink.Content" xml:space="preserve">
     <value>Windows MIDI Services on Discord</value>
@@ -234,8 +231,8 @@
   <data name="SettingsPage_SendFeedbackButton.Content" xml:space="preserve">
     <value>Send feedback</value>
   </data>
-  <data name="Settings_AboutMidiDescription.Text" xml:space="preserve">
-    <value>MIDI® and the MIDI® Logo are registered trademarks of the MIDI® Association. Used with permission. Microsoft is an active MIDI® Association corporate member.</value>
+  <data name="Settings_AboutMidiDescription.Header" xml:space="preserve">
+    <value>MIDI® and the MIDI® Logo are registered trademarks of the MIDI® Association. Used with permission. Microsoft is an active MIDI® Association corporate member. AMEI is the Japanese partner of the MIDI® Association and the author, in partnership with AmeNote, of the USB MIDI 2.0 driver on Windows.</value>
   </data>
   <data name="Settings_AppThemeExpander.Description" xml:space="preserve">
     <value>Select which app theme to display</value>
@@ -244,6 +241,36 @@
     <value>Show developer options for MIDI</value>
   </data>
   <data name="SettingsPage_DeveloperModeIsEnabledInfo.Text" xml:space="preserve">
-    <value>Developer mode is currently enabled on this PC. To turn it off, go to</value>
+    <value>Developer Mode is currently enabled on this PC. To turn it off, use Windows Settings.</value>
+  </data>
+  <data name="SettingsPage_AboutCard.Header" xml:space="preserve">
+    <value>MIDI Settings</value>
+  </data>
+  <data name="SettingsPage_AboutCard.Description" xml:space="preserve">
+    <value>© 2023 Microsoft. All rights reserved.</value>
+  </data>
+  <data name="Settings_AboutDescriptionMidiDiscordLinkCard.Description" xml:space="preserve">
+    <value>For non-developers, or anyone wishing to discuss Windows MIDI Services, we host a Discord server.</value>
+  </data>
+  <data name="Settings_AboutDescriptionMidiRepoLinkCard.Description" xml:space="preserve">
+    <value>Windows MIDI Services is an open source project hosted on GitHub. We encourage bug reports and pull requests.</value>
+  </data>
+  <data name="Settings_AboutDescriptionPrivacyLinkCard.Description" xml:space="preserve">
+    <value>Your privacy is important.</value>
+  </data>
+  <data name="SettingsPage_AmeiOrgLink.Content" xml:space="preserve">
+    <value>AMEI</value>
+  </data>
+  <data name="SettingsPage_AmeiOrgLink.NavigateUri" xml:space="preserve">
+    <value>https://www.amei.or.jp/</value>
+  </data>
+  <data name="SettingsPage_MidiOrgLink.Content" xml:space="preserve">
+    <value>The MIDI Association</value>
+  </data>
+  <data name="SettingsPage_MidiOrgLink.NavigateUri" xml:space="preserve">
+    <value>https://midi.org</value>
+  </data>
+  <data name="ShellPage_SettingsSearchBox.PlaceholderText" xml:space="preserve">
+    <value>Find a setting</value>
   </data>
 </root>

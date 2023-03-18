@@ -17,4 +17,14 @@ public sealed partial class SettingsPage : Page
 
         InitializeComponent();
     }
+
+    private void WindowsDeveloperSettingsHyperlinkButton_Click(object sender, UI.Xaml.RoutedEventArgs e)
+    {
+        var psi = new System.Diagnostics.ProcessStartInfo();
+
+        psi.FileName = "ms-settings:developers";
+        psi.UseShellExecute = true;
+
+        System.Diagnostics.Process.Start(psi);
+    }
 }

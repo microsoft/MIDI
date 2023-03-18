@@ -12,5 +12,25 @@
 
     <Grid>
 
-    </Grid>
+        <!-- Set of cards -->
+        
+        
+        <!-- Device Name -->
+        <!-- Device Manufacturer -->
+        <!-- Transport type icon -->
+        <!-- Device protocol format (MIDI 1, MIDI 2) icon -->
+        <!-- Device data format (UMP, Bytestream) -->
+        <!-- Button to refresh MIDI endpoint info, if a UMP device -->
+
+        
+        <!-- Groups Expander section ================================== -->
+        <!-- All groups with any FB info folded in -->
+        
+        <!-- Button or context menu option to see function blocks in detail (and save to file or clipboard) -->
+
+        <!-- Button or context menu option to see all properties in a big table (and save to file or clipboard) -->
+
+        <!-- Context menu shortcuts to go to Monitor with this pre-selected, SysEx transfer with same, etc. -->
+        
+     </Grid>
 </Page>

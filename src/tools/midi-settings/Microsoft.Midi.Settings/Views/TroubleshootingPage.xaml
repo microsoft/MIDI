@@ -19,7 +19,7 @@
                            Text="If you are running into problems with MIDI on your PC, the tools below may help you recover without requiring a reboot.">
                 </TextBlock>
 
-                <TextBlock Text="If you have a stuck note somewhere, and you're not sure where" FontWeight="Bold" Margin="1,16,0,0"/>
+                <TextBlock Text="If you have a stuck note somewhere, and you're not sure where" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
 
                 <labs:SettingsCard Header="System-wide MIDI Panic"
                            Description="Send note-off and sequence stop messages to all directly connected devices and all channels. This can take several minutes to send out if you have many connected devices. Devices with a latched arpeggio which ignore the sequence stop command will continue to play.">
@@ -49,7 +49,7 @@
                 </labs:SettingsExpander>
 
 
-                <TextBlock Text="If you are not sure that a device is working" FontWeight="Bold" Margin="1,16,0,0"/>
+                <TextBlock Text="If you are not sure that a device is working" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
 
 
                 <labs:SettingsExpander x:Name="SendTestNotesSettingsExpander"
@@ -74,16 +74,16 @@
                 </labs:SettingsExpander>
 
 
-                
 
-                <TextBlock Text="If you have an unknown issue" FontWeight="Bold" Margin="1,16,0,0"/>
+
+                <TextBlock Text="If you have an unknown issue" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
 
                 <labs:SettingsCard Header="Restart Windows MIDI Services"
                            Description="Hopefully it doesn't come to this, but if something is stuck in the service, you can restart it here.">
                     <Button Content="Restart Service"/>
                 </labs:SettingsCard>
 
-                <TextBlock Text="If you're working with support" FontWeight="Bold" Margin="1,16,0,0"/>
+                <TextBlock Text="If you're working with support" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
 
                 <labs:SettingsCard Header="Report MIDI System Information"
                                    Description="If you're working with technical support for an app or piece of hardware, they may ask you to capture MIDI system information to a file and send it to them. You will be able to view the information captured before you send to your support contact.">
@@ -91,7 +91,7 @@
                 </labs:SettingsCard>
 
 
-                <TextBlock Text="If you've found a bug" FontWeight="Bold" Margin="1,16,0,0"/>
+                <TextBlock Text="If you've found a bug" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
 
                 <labs:SettingsCard Header="Report a Bug to Microsoft"
                                    Description="If you've run across something which may be a bug in Windows MIDI Services, you can report it here.">

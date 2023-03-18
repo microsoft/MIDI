@@ -2,137 +2,130 @@
     x:Class="Microsoft.Midi.Settings.Views.SettingsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
     xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
-    xmlns:xaml="using:Microsoft.UI.Xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
     xmlns:labs="using:CommunityToolkit.Labs.WinUI"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:xaml="using:Microsoft.UI.Xaml"
     mc:Ignorable="d">
     <Page.Resources>
         <helpers:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
     </Page.Resources>
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="320" />
-        </Grid.ColumnDefinitions>
-        
-        
-        <StackPanel Grid.Column="0" x:Name="ContentArea">
+        <StackPanel
+            x:Name="ContentArea"
+            Grid.Column="0"
+            Spacing="4">
             <labs:SettingsExpander x:Name="AppThemeSettingsExpander"
-                                   x:Uid="Settings_AppThemeExpander"
-                                   IsExpanded="True">
+                                   x:Uid="Settings_AppThemeExpander">
                 <labs:SettingsExpander.HeaderIcon>
                     <FontIcon Glyph="&#xE790;" />
                 </labs:SettingsExpander.HeaderIcon>
-
                 <labs:SettingsExpander.Items>
-                    <StackPanel HorizontalAlignment="Left" 
-                                Orientation="Vertical"
-                                Margin="60,4,20,4">
-                        <RadioButton
-                            x:Uid="Settings_Theme_Light"
-                            Command="{x:Bind ViewModel.SwitchThemeCommand}"
-                            IsChecked="{x:Bind ViewModel.ElementTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Light, Mode=OneWay}"
-                            GroupName="AppTheme">
-                            <RadioButton.CommandParameter>
-                                <xaml:ElementTheme>Light</xaml:ElementTheme>
-                            </RadioButton.CommandParameter>
-                        </RadioButton>
-                        <RadioButton
-                            x:Uid="Settings_Theme_Dark"
-                            Command="{x:Bind ViewModel.SwitchThemeCommand}"
-                            IsChecked="{x:Bind ViewModel.ElementTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Dark, Mode=OneWay}"
-                            GroupName="AppTheme">
-                            <RadioButton.CommandParameter>
-                                <xaml:ElementTheme>Dark</xaml:ElementTheme>
-                            </RadioButton.CommandParameter>
-                        </RadioButton>
-                        <RadioButton
-                            x:Uid="Settings_Theme_Default"
-                            Command="{x:Bind ViewModel.SwitchThemeCommand}"
-                            IsChecked="{x:Bind ViewModel.ElementTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Default, Mode=OneWay}"
-                            GroupName="AppTheme">
-                            <RadioButton.CommandParameter>
-                                <xaml:ElementTheme>Default</xaml:ElementTheme>
-                            </RadioButton.CommandParameter>
-                        </RadioButton>
-                    </StackPanel>
+                    <labs:SettingsCard HorizontalContentAlignment="Left" ContentAlignment="Vertical">
+                        <StackPanel Margin="0,-12,0,0">
+                            <RadioButton x:Uid="Settings_Theme_Light"
+                                         Command="{x:Bind ViewModel.SwitchThemeCommand}"
+                                         GroupName="AppTheme"
+                                         IsChecked="{x:Bind ViewModel.ElementTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Light, Mode=OneWay}">
+                                <RadioButton.CommandParameter>
+                                    <xaml:ElementTheme>Light</xaml:ElementTheme>
+                                </RadioButton.CommandParameter>
+                            </RadioButton>
+                            <RadioButton x:Uid="Settings_Theme_Dark"
+                                         Command="{x:Bind ViewModel.SwitchThemeCommand}"
+                                         GroupName="AppTheme"
+                                         IsChecked="{x:Bind ViewModel.ElementTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Dark, Mode=OneWay}">
+                                <RadioButton.CommandParameter>
+                                    <xaml:ElementTheme>Dark</xaml:ElementTheme>
+                                </RadioButton.CommandParameter>
+                            </RadioButton>
+                            <RadioButton x:Uid="Settings_Theme_Default" 
+                                         Command="{x:Bind ViewModel.SwitchThemeCommand}"
+                                         GroupName="AppTheme"
+                                         IsChecked="{x:Bind ViewModel.ElementTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Default, Mode=OneWay}">
+                                <RadioButton.CommandParameter>
+                                    <xaml:ElementTheme>Default</xaml:ElementTheme>
+                                </RadioButton.CommandParameter>
+                            </RadioButton>
+                        </StackPanel>
+                    </labs:SettingsCard>
                 </labs:SettingsExpander.Items>
             </labs:SettingsExpander>
 
-
-            <labs:SettingsExpander x:Name="DeveloperModeSettingsExpander"
-                                   x:Uid="SettingsPage_DeveloperModeExpander"
-                                   Margin="{StaticResource SmallTopBottomMargin}"
-                                   IsExpanded="True">
+            <labs:SettingsExpander
+                x:Name="DeveloperModeSettingsExpander"
+                x:Uid="SettingsPage_DeveloperModeExpander"
+                IsExpanded="True">
                 <labs:SettingsExpander.HeaderIcon>
                     <FontIcon Glyph="&#xec7a;" />
                 </labs:SettingsExpander.HeaderIcon>
 
                 <labs:SettingsExpander.Items>
-                    <StackPanel HorizontalAlignment="Left" 
-                                Orientation="Vertical"
-                                Margin="60,4,20,4">
-
-                        <!-- Developer Mode is Enabled in Windows -->
-                        <TextBlock Style="{ThemeResource BodyTextBlockStyle}" 
-                                    Margin="{StaticResource XSmallTopMargin}"
-                                    Visibility="{x:Bind ViewModel.IsDeveloperModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}" 
-                                >
-                            <Run x:Uid="SettingsPage_DeveloperModeIsEnabledInfo"/>   
-
-                            <Hyperlink x:Uid="SettingsPage_DeveloperModeLink">
-                                <Run x:Uid="SettingsPage_DeveloperModeLinkText" />
-                            </Hyperlink>
-                        </TextBlock>
-
-                        <!-- Developer Mode is Disabled in Windows -->
-                        <TextBlock Style="{ThemeResource BodyTextBlockStyle}" 
-                                   Margin="{StaticResource XSmallTopMargin}"
-                                   Visibility="{x:Bind ViewModel.ShowHowToEnableDeveloperMode, Converter={StaticResource BoolToVisibilityConverter}}"
-                                   >
-                            <Run x:Uid="SettingsPage_DeveloperModeIsDisabledInfo"  />
-
-                            <Hyperlink x:Uid="SettingsPage_DeveloperModeLink">
-                                <Run x:Uid="SettingsPage_DeveloperModeLinkText" />
-                            </Hyperlink>
-                        </TextBlock>
-
-                        <ToggleSwitch x:Uid="Settings_ShowDeveloperOptions" 
-                                      Margin="{StaticResource XSmallTopMargin}" 
-                                      IsEnabled="{x:Bind ViewModel.IsDeveloperModeEnabled}"
-                                      IsOn="{x:Bind ViewModel.ShowDeveloperOptions, Mode=TwoWay}" />
-
-                    </StackPanel>
+                    <labs:SettingsCard>
+                        <labs:SettingsCard.Header>
+                            <Grid>
+                                <!--  Developer Mode is Enabled in Windows  -->
+                                <TextBlock x:Uid="SettingsPage_DeveloperModeIsEnabledInfo" Visibility="{x:Bind ViewModel.IsDeveloperModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <!--  Developer Mode is Disabled in Windows  -->
+                                <TextBlock x:Uid="SettingsPage_DeveloperModeIsDisabledInfo" Visibility="{x:Bind ViewModel.ShowHowToEnableDeveloperMode, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            </Grid>
+                        </labs:SettingsCard.Header>
+                        <labs:SettingsCard.Description>
+                            <HyperlinkButton x:Uid="SettingsPage_DeveloperModeLink" 
+                                             Style="{StaticResource DefaultHyperlinkButtonStyle}"
+                                             Margin="{StaticResource SettingsPageHyperlinkButtonMargin}"
+                                             Click="WindowsDeveloperSettingsHyperlinkButton_Click"/>
+                        </labs:SettingsCard.Description>
+                    </labs:SettingsCard>
+                    <labs:SettingsCard x:Uid="Settings_ShowDeveloperOptions" 
+                                       IsEnabled="{x:Bind ViewModel.IsDeveloperModeEnabled}">
+                        <ToggleSwitch IsOn="{x:Bind ViewModel.ShowDeveloperOptions, Mode=TwoWay}" />
+                    </labs:SettingsCard>
                 </labs:SettingsExpander.Items>
             </labs:SettingsExpander>
 
-        </StackPanel>
+            <TextBlock x:Uid="Settings_About" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" />
+            <labs:SettingsExpander x:Uid="SettingsPage_AboutCard">
+                <labs:SettingsExpander.HeaderIcon>
+                    <BitmapIcon UriSource="Assets/SmallTile.scale-100.png" ShowAsMonochrome="False" />
+                </labs:SettingsExpander.HeaderIcon>
+                <TextBlock IsTextSelectionEnabled="True" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind ViewModel.VersionDescription, Mode=OneWay}" />
+                <labs:SettingsExpander.Items>
+                    <labs:SettingsCard x:Uid="Settings_AboutDescription" />
+                    
+                    <labs:SettingsCard x:Uid="Settings_AboutMidiDescription">
+                        <StackPanel Orientation="Vertical">
+                            <HyperlinkButton x:Uid="SettingsPage_MidiOrgLink" 
+                                         Style="{StaticResource DefaultHyperlinkButtonStyle}"
+                                         Margin="{StaticResource SettingsPageHyperlinkButtonMargin}" />
+                            <HyperlinkButton x:Uid="SettingsPage_AmeiOrgLink" 
+                                         Style="{StaticResource DefaultHyperlinkButtonStyle}"
+                                         Margin="{StaticResource SettingsPageHyperlinkButtonMargin}" />
 
+                        </StackPanel>
+                    </labs:SettingsCard>
 
-        <StackPanel Grid.Column="1" VerticalAlignment="Top" Margin="50,4,20,4">
-            <TextBlock x:Uid="Settings_About" FontWeight="Bold" />
+                    <labs:SettingsCard x:Uid="Settings_AboutDescriptionMidiRepoLinkCard">
+                        <HyperlinkButton x:Uid="SettingsPage_MidiRepoLink" 
+                                         Style="{StaticResource DefaultHyperlinkButtonStyle}"
+                                         Margin="{StaticResource SettingsPageHyperlinkButtonMargin}" />
+                    </labs:SettingsCard>
+                    <labs:SettingsCard x:Uid="Settings_AboutDescriptionMidiDiscordLinkCard">
+                         <HyperlinkButton x:Uid="SettingsPage_DiscordLink" 
+                                          Style="{StaticResource DefaultHyperlinkButtonStyle}"
+                                          Margin="{StaticResource SettingsPageHyperlinkButtonMargin}" />
+                    </labs:SettingsCard>
+                    <labs:SettingsCard x:Uid="Settings_AboutDescriptionPrivacyLinkCard">
+                        <HyperlinkButton x:Uid="SettingsPage_PrivacyTermsLink" 
+                                         Style="{StaticResource DefaultHyperlinkButtonStyle}"
+                                         Margin="{StaticResource SettingsPageHyperlinkButtonMargin}" />
+                    </labs:SettingsCard>
 
-            <StackPanel Margin="{StaticResource XSmallTopMargin}">
-                <TextBlock Text="{x:Bind ViewModel.VersionDescription, Mode=OneWay}" Style="{ThemeResource BodyTextBlockStyle}" />
-                <TextBlock
-                    x:Uid="Settings_AboutDescription"
-                    Margin="{StaticResource XSmallTopMargin}"
-                    Style="{ThemeResource BodyTextBlockStyle}" />
-                <TextBlock
-                    x:Uid="Settings_AboutMidiDescription"
-                    Margin="{StaticResource XSmallTopMargin}"
-                    Style="{ThemeResource BodyTextBlockStyle}" />
-            </StackPanel>
-
-            <StackPanel Margin="{StaticResource SmallTopMargin}">
-                <HyperlinkButton x:Uid="SettingsPage_MidiRepoLink" Margin="{StaticResource SettingsPageHyperlinkButtonMargin}" />
-                <HyperlinkButton x:Uid="SettingsPage_DiscordLink" Margin="{StaticResource SettingsPageHyperlinkButtonMargin}" />
-                <HyperlinkButton x:Uid="SettingsPage_PrivacyTermsLink" Margin="{StaticResource SettingsPageHyperlinkButtonMargin}" />
-            </StackPanel>
+                </labs:SettingsExpander.Items>
+            </labs:SettingsExpander>
 
             <!--<StackPanel Margin="{StaticResource SmallTopMargin}">
                 <Button x:Uid="SettingsPage_SendFeedbackButton" Margin="{StaticResource XSmallTopMargin}"/>
@@ -140,6 +133,5 @@
             </StackPanel>-->
 
         </StackPanel>
-        
     </Grid>
 </Page>

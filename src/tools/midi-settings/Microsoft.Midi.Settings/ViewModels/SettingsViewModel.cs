@@ -21,7 +21,6 @@ public class SettingsViewModel : ObservableRecipient
     private ElementTheme _elementTheme;
     private string _versionDescription;
 
-
     public bool IsDeveloperModeEnabled => WindowsDeveloperModeHelper.IsDeveloperModeEnabled;
 
     public bool ShowHowToEnableDeveloperMode => !IsDeveloperModeEnabled;
@@ -42,8 +41,6 @@ public class SettingsViewModel : ObservableRecipient
         get => _versionDescription;
         set => SetProperty(ref _versionDescription, value);
     }
-
-
 
     public ICommand SwitchThemeCommand
     {
@@ -86,6 +83,6 @@ public class SettingsViewModel : ObservableRecipient
             version = Assembly.GetExecutingAssembly().GetName().Version!;
         }
 
-        return $"{"AppDisplayName".GetLocalized()} - {version.Major}.{version.Minor}.{version.Build}.{version.Revision}";
+        return $"{version.Major}.{version.Minor}.{version.Build}.{version.Revision}";
     }
 }

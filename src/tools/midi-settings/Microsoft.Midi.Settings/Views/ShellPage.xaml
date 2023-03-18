@@ -33,6 +33,7 @@
         </Grid>
 
 
+        <!-- Watermark -->
         <TextBlock Text="PROTOTYPE" FontSize="250" 
                    HorizontalAlignment="Center" VerticalAlignment="Center" 
                    Foreground="{ThemeResource SystemAccentColor}" Opacity=".10"
@@ -44,6 +45,8 @@
 
         <NavigationView
             x:Name="NavigationViewControl"
+            Background="Transparent"
+            BorderThickness="0"
             Canvas.ZIndex="0"
             IsBackButtonVisible="Visible"
             IsBackEnabled="{x:Bind ViewModel.IsBackEnabled, Mode=OneWay}"
@@ -54,12 +57,19 @@
             Header="{x:Bind ((ContentControl)ViewModel.Selected).Content, Mode=OneWay}">
 
 
+            <!-- Remove page background and border -->
+            <NavigationView.Resources>
+                <SolidColorBrush x:Key="NavigationViewContentBackground" Color="Transparent" />
+                <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="Transparent" />
+            </NavigationView.Resources>
+
+
             <NavigationView.AutoSuggestBox>
                 <AutoSuggestBox
                     x:Name="SettingsSearchBox"
+                    x:Uid="ShellPage_SettingsSearchBox"
                     VerticalAlignment="Center"
                     x:FieldModifier="public"
-                    PlaceholderText="Find a setting"
                     QueryIcon="Find"
                     MinWidth="200"
                     KeyboardAcceleratorPlacementMode="Hidden"
@@ -146,29 +156,9 @@
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xec7a;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-
-
-
-
-                <!--
-                TODO: Update item titles by updating <x:Uid>.Content entries in Strings/en-us/Resources.resw.
-                https://docs.microsoft.com/windows/uwp/app-resources/localize-strings-ui-manifest#refer-to-a-string-resource-identifier-from-xaml
-            
-                TODO: Update item icons by updating FontIcon.Glyph properties.
-                https://docs.microsoft.com/windows/apps/design/style/segoe-fluent-icons-font#icon-list
-                -->
-                <!--<NavigationViewItem x:Uid="Shell_Main" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.MainViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe7c3;"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItem x:Uid="Shell_ContentGrid" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ContentGridViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xf0e2;"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>-->
-
             </NavigationView.MenuItems>
+            
+            
             <NavigationView.HeaderTemplate>
                 <DataTemplate>
                     <Grid>
@@ -178,6 +168,8 @@
                     </Grid>
                 </DataTemplate>
             </NavigationView.HeaderTemplate>
+            
+           
             <i:Interaction.Behaviors>
                 <behaviors:NavigationViewHeaderBehavior
                     DefaultHeader="{x:Bind ((ContentControl)ViewModel.Selected).Content, Mode=OneWay}">
@@ -192,9 +184,22 @@
                     </behaviors:NavigationViewHeaderBehavior.DefaultHeaderTemplate>
                 </behaviors:NavigationViewHeaderBehavior>
             </i:Interaction.Behaviors>
+
+            <!--<NavigationView.ContentTemplate>
+                <DataTemplate>
+                    <Grid  Background="Transparent"
+                            BorderThickness="0"
+                            CornerRadius="0">
+                        <ContentPresenter/>
+                    </Grid>
+                </DataTemplate>
+            </NavigationView.ContentTemplate>-->
+            
             <Grid Margin="{StaticResource NavigationViewPageContentMargin}">
                 <Frame x:Name="NavigationFrame" />
             </Grid>
+            
+            
         </NavigationView>
     </Grid>
 </Page>
