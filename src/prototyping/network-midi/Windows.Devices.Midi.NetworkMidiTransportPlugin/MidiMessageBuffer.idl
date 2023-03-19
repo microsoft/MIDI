@@ -1,0 +1,16 @@
+namespace Windows.Devices.Midi.NetworkMidiTransportPlugin
+{
+    [default_interface]
+    runtimeclass MidiMessageBuffer
+    {
+        MidiMessageBuffer();
+
+        Boolean IsFull();
+        Boolean HasData();
+
+        UInt32 ReadWord();
+        void WriteWord(UInt32 word);
+
+        void Clear();
+    }
+}

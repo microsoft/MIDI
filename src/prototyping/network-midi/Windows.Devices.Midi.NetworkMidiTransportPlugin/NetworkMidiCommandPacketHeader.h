@@ -5,6 +5,10 @@
 
 #include "NetworkMidiCommandCode.h"
 
+// The order of elements in this is super important. It's
+// designed to fit the protocol as it is represented on an
+// incoming socket stream. Don't move anything around.
+
 union NetworkMidiCommandPacketHeader
 {
 	struct

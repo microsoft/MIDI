@@ -122,15 +122,21 @@
     <ClInclude Include="IMidiUmpEndpointFactory.h">
       <DependentUpon>IMidiUmpEndpointFactory.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiMessageBuffer.h">
+      <DependentUpon>MidiMessageBuffer.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="pch.h" />
     <ClInclude Include="IMidiUmpEndpoint.h">
       <DependentUpon>IMidiUmpEndpoint.idl</DependentUpon>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Generated Files\module.g.cpp" />
+    <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
     <ClCompile Include="IMidiUmpEndpointFactory.cpp">
       <DependentUpon>IMidiUmpEndpointFactory.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiMessageBuffer.cpp">
+      <DependentUpon>MidiMessageBuffer.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -142,6 +148,7 @@
   <ItemGroup>
     <Midl Include="IMidiUmpEndpoint.idl" />
     <Midl Include="IMidiUmpEndpointFactory.idl" />
+    <Midl Include="MidiMessageBuffer.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

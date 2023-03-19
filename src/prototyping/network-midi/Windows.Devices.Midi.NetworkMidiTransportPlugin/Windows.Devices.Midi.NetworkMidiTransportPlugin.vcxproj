@@ -16,11 +16,8 @@
     <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
     <WindowsTargetPlatformVersion Condition=" '$(WindowsTargetPlatformVersion)' == '' ">10.0.20348.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformMinVersion>10.0.20348.0</WindowsTargetPlatformMinVersion>
-    <CppWinRTModernIDL>
-    </CppWinRTModernIDL>
+    <CppWinRTModernIDL>true</CppWinRTModernIDL>
     <CppWinRTProjectLanguage>C++/WinRT</CppWinRTProjectLanguage>
-    <CppWinRTNamespaceMergeDepth>
-    </CppWinRTNamespaceMergeDepth>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <ItemGroup Label="ProjectConfigurations">
@@ -90,7 +87,9 @@
     <Import Project="PropertySheet.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>$(BOOST_ROOT);$(IncludePath)</IncludePath>
+  </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -122,6 +121,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="MidiMessageBuffer.h">
+      <DependentUpon>MidiMessageBuffer.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="NetworkHostAdvertiser.h" />
     <ClInclude Include="NetworkMidiClientUmpEndpoint.h">
       <DependentUpon>NetworkMidiClientUmpEndpoint.idl</DependentUpon>
@@ -144,6 +146,9 @@
     <ClInclude Include="SocketHelpers.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="MidiMessageBuffer.cpp">
+      <DependentUpon>MidiMessageBuffer.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="NetworkHostAdvertiser.cpp" />
     <ClCompile Include="NetworkMidiClientUmpEndpoint.cpp">
       <DependentUpon>NetworkMidiClientUmpEndpoint.idl</DependentUpon>
@@ -164,6 +169,7 @@
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Midl Include="MidiMessageBuffer.idl" />
     <Midl Include="NetworkMidiClientUmpEndpoint.idl" />
     <Midl Include="NetworkMidiClientUmpEndpointFactory.idl" />
     <Midl Include="NetworkMidiHostUmpEndpoint.idl" />
@@ -171,13 +177,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="README.md" />
     <None Include="Windows_Devices_Midi_NetworkMidiTransportPlugin.def" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PropertySheet.props" />
-    <Text Include="readme.txt">
-      <DeploymentContent>false</DeploymentContent>
-    </Text>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

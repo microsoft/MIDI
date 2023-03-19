@@ -12,14 +12,17 @@
     <ClCompile Include="NetworkMidiClientUmpEndpointFactory.cpp">
       <Filter>Endpoints</Filter>
     </ClCompile>
+    <ClCompile Include="NetworkMidiHostSession.cpp">
+      <Filter>Implementation\Session</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessageBuffer.cpp">
+      <Filter>ServiceContracts</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="NetworkHostAdvertiser.h">
       <Filter>Implementation\Advertising</Filter>
-    </ClInclude>
-    <ClInclude Include="NetworkMidiHostSession.h">
-      <Filter>Implementation</Filter>
     </ClInclude>
     <ClInclude Include="NetworkMidiCommandPacket.h">
       <Filter>Implementation\Protocol</Filter>
@@ -29,6 +32,24 @@
     </ClInclude>
     <ClInclude Include="NetworkMidiClientUmpEndpointFactory.h">
       <Filter>Endpoints</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkMidiCommandPacketHeader.h">
+      <Filter>Implementation\Protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkMidiCommandCode.h">
+      <Filter>Implementation\Protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkMidiOutOfBandNAKPacket.h">
+      <Filter>Implementation\Protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkMidiHostSession.h">
+      <Filter>Implementation\Session</Filter>
+    </ClInclude>
+    <ClInclude Include="SocketHelpers.h">
+      <Filter>Implementation\Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessageBuffer.h">
+      <Filter>ServiceContracts</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -44,14 +65,17 @@
     <Midl Include="NetworkMidiClientUmpEndpointFactory.idl">
       <Filter>Endpoints</Filter>
     </Midl>
+    <Midl Include="MidiMessageBuffer.idl">
+      <Filter>ServiceContracts</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="Windows_Devices_Midi_NetworkMidiTransportPlugin.def" />
     <None Include="PropertySheet.props" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="readme.txt" />
+    <None Include="README.md">
+      <Filter>ServiceContracts</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Endpoints">
@@ -65,6 +89,15 @@
     </Filter>
     <Filter Include="Implementation\Protocol">
       <UniqueIdentifier>{5bd1664b-01ad-43a0-b465-5fa3a58cfe9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Implementation\Session">
+      <UniqueIdentifier>{78818d66-7e6a-4a98-8da1-1226c7e34fa5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Implementation\Helpers">
+      <UniqueIdentifier>{ef38d84b-b66a-4b4c-b167-5a8db0306414}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ServiceContracts">
+      <UniqueIdentifier>{29e82425-18cf-45cf-9bd6-b2ee94d20815}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

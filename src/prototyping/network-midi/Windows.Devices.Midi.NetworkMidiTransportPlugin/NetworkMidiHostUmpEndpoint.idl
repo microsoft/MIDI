@@ -1,3 +1,5 @@
+import "MidiMessageBuffer.idl";
+
 namespace Windows.Devices.Midi.NetworkMidiTransportPlugin
 {
     [default_interface]
@@ -8,19 +10,20 @@ namespace Windows.Devices.Midi.NetworkMidiTransportPlugin
         // TODO: These need to be whatever buffer Gary has implemented
         // and they may be assigned in the constructor, not necessarily 
         // exposed in this way. This is prototype code only
-    //    IVector<UInt32> IncomingMessages { get; };
-    //    IVector<UInt32> OutgoingMessages { get; };
+        
+        // MIDI In
+        //Windows.Devices.Midi.ServiceContracts.MidiMessageBuffer IncomingMidiMessages {get; };
+        Windows.Devices.Midi.NetworkMidiTransportPlugin.MidiMessageBuffer IncomingMidiMessages {get; };
 
-            // MIDI In
-        Windows.Storage.Streams.IInputStream IncomingMessages {get; };
+        
+        // MIDI Out
+        //Windows.Devices.Midi.ServiceContracts.MidiMessageBuffer OutgoingMidiMessages {get; };
+        Windows.Devices.Midi.NetworkMidiTransportPlugin.MidiMessageBuffer OutgoingMidiMessages {get; };
 
-            // MIDI Out
-        Windows.Storage.Streams.IOutputStream OutgoingMessages {get; };
-
-        // TBD: do we need to break these out into a description class like 
+        // TBD: do we need to break these out into a DeviceInformation-type class like 
         // Windows.Devices.Enumeration does today?
         String Id { get; };
-        IMapView<String, Object> Properties { get; };
+        Windows.Foundation.Collections.PropertySet Properties { get; };
 
 
         // TODO: properties to hold the port, hostaddress, other properties, etc.
@@ -33,7 +36,7 @@ namespace Windows.Devices.Midi.NetworkMidiTransportPlugin
 
         // Not members of the UmpEndpoint interface contract. Just specific to Network impl
         // used by the factory which creates these endpoints. Derived from the json properties
-        Windows.Foundation.IAsyncAction StartAsync(String hostName, String port, String midiEndpointName, String productInstanceId, Boolean advertise, String serviceInstanceName);
+        Windows.Foundation.IAsyncAction StartAsync(String hostName, String port, String midiEndpointName, String midiProductInstanceId, Boolean advertise, String serviceInstanceName);
 
     }
 }

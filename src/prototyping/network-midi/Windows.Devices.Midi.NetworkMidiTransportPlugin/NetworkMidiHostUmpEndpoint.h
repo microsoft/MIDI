@@ -48,31 +48,38 @@ namespace winrt::Windows::Devices::Midi::NetworkMidiTransportPlugin::implementat
         void HandleOutOfBandPing(NetworkMidiOutOfBandIncomingCommandPacket packet);
         void HandleInvitation(NetworkMidiOutOfBandIncomingCommandPacket packet);
 
+        winrt::Windows::Foundation::IAsyncAction OnUdpPacketReceived(sock::DatagramSocket const& sender, sock::DatagramSocketMessageReceivedEventArgs const& args);
 
-        //winrt::Windows::Foundation::Collections::IVector<uint32_t> _incomingMessages;
+
+        //collections::IVector<uint32_t> _incomingMidiMessagesVect { winrt::single_threaded_vector<uint32_t>() };
         //winrt::Windows::Foundation::Collections::IVector<uint32_t> _outgoingMessages;
 
-        streams::InMemoryRandomAccessStream _incomingMidiMessages = streams::InMemoryRandomAccessStream();
-        streams::InMemoryRandomAccessStream _outgoingMidiMessages = streams::InMemoryRandomAccessStream();
+        winrt::Windows::Devices::Midi::NetworkMidiTransportPlugin::MidiMessageBuffer _incomingMidiMessages;
+        winrt::Windows::Devices::Midi::NetworkMidiTransportPlugin::MidiMessageBuffer _outgoingMidiMessages;
 
-        streams::DataWriter _incomingMidiMessagesWriter { _incomingMidiMessages };
-        streams::DataReader _outgoingMidiMessagesReader { _outgoingMidiMessages };
+        collections::PropertySet _properties = collections::PropertySet();
 
     public:
         NetworkMidiHostUmpEndpoint() = default;
 
-        //winrt::Windows::Foundation::Collections::IVector<uint32_t> IncomingMessages();
-        //winrt::Windows::Foundation::Collections::IVector<uint32_t> OutgoingMessages();
+        hstring Id();
+        collections::PropertySet Properties();
+
+
+        //collections::IVector<uint32_t> IncomingMidiMessagesVect();
+        //collections::IVector<uint32_t> OutgoingMessages();
 
                 
-        streams::IInputStream IncomingMessages();   // MIDI In
-        streams::IOutputStream OutgoingMessages(); // MIDI Out
-
-        hstring Id();
-        winrt::Windows::Foundation::Collections::IMapView<hstring, winrt::Windows::Foundation::IInspectable> Properties();
+        winrt::Windows::Devices::Midi::NetworkMidiTransportPlugin::MidiMessageBuffer IncomingMidiMessages();   // MIDI In
+        winrt::Windows::Devices::Midi::NetworkMidiTransportPlugin::MidiMessageBuffer OutgoingMidiMessages(); // MIDI Out
 
         winrt::Windows::Foundation::IAsyncAction StartAsync(
-            hstring hostName, hstring port, hstring midiEndpointName, hstring productInstanceId, bool advertise, hstring serviceInstanceName);
+            hstring hostName, 
+            hstring port, 
+            hstring midiEndpointName, 
+            hstring midiProductInstanceId, 
+            bool advertise, 
+            hstring serviceInstanceName);
     };
 }
 namespace winrt::Windows::Devices::Midi::NetworkMidiTransportPlugin::factory_implementation

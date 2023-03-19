@@ -21,10 +21,11 @@ namespace winrt::Windows::Devices::Midi::NetworkMidiTransportPlugin::implementat
 
         auto jsonProps = json::JsonValue::Parse(configurationJson);
 
-        // these should all be externalized into some constants file, strongly typed
-        // and serialized settings object or other way to ensure the client and the 
-        // plugin are always in sync while preserving the API contract
-
+        // WinRT can't expose constants, so maybe create a WinRT class with a bunch
+        // of property getters that represent the different property keys. That becomes
+        // part of the API contract, though, and so it can't be added to easily. So
+        // it may be that documentation (ugh) or some language-specific header files
+        // are the way to go.
         hstring connectionType = jsonProps.GetObject().GetNamedString(L"ConnectionType");
         hstring midiEndpointName = jsonProps.GetObject().GetNamedString(L"MidiEndpointName");
         hstring midiProductInstanceId = jsonProps.GetObject().GetNamedString(L"MidiProductInstanceId");

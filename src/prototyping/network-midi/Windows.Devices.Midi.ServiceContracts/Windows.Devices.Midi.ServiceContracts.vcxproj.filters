@@ -6,12 +6,14 @@
     <ClCompile Include="IMidiUmpEndpointFactory.cpp">
       <Filter>Endpoints</Filter>
     </ClCompile>
+    <ClCompile Include="MidiMessageBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="IMidiUmpEndpointFactory.h">
       <Filter>Endpoints</Filter>
     </ClInclude>
+    <ClInclude Include="MidiMessageBuffer.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="IMidiUmpEndpoint.idl">
@@ -19,6 +21,9 @@
     </Midl>
     <Midl Include="IMidiUmpEndpointFactory.idl">
       <Filter>Endpoints</Filter>
+    </Midl>
+    <Midl Include="MidiMessageBuffer.idl">
+      <Filter>Support</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
@@ -32,6 +37,9 @@
   <ItemGroup>
     <Filter Include="Endpoints">
       <UniqueIdentifier>{9e1436bf-eda2-4021-89c2-fc91a2134f23}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Support">
+      <UniqueIdentifier>{6dcc864e-1f4b-4c64-841d-e554376498c2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

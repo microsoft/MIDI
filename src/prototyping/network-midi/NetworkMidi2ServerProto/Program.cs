@@ -114,9 +114,9 @@ obj["Server_Port"] = Windows.Data.Json.JsonValue.CreateStringValue("13337"); // 
 
 string jsonParameters = obj.Stringify();
 
-System.Diagnostics.Debug.WriteLine("-----------------");
-System.Diagnostics.Debug.WriteLine(jsonParameters);
-System.Diagnostics.Debug.WriteLine("-----------------");
+AnsiConsole.MarkupLine("-----------------");
+AnsiConsole.MarkupLine(jsonParameters);
+AnsiConsole.MarkupLine("-----------------");
 
 
 
@@ -130,18 +130,19 @@ AnsiConsole.MarkupLine("[green]Starting listening for messages[/]");
 
 while (true)
 {
-    //AnsiConsole.MarkupLine("[green]Looping...[/]");
-
-    DataReader midiReader = new DataReader(endpoint.IncomingMessages);
-
-    if (midiReader.UnconsumedBufferLength >= sizeof(UInt32))
+    if (endpoint.IncomingMidiMessages.HasData())
     {
-        var word = midiReader.ReadUInt32();
+        var word = endpoint.IncomingMidiMessages.ReadWord();
 
         AnsiConsole.MarkupLine("[green]0x{0:X4}[/]", word);
+
+
+
+
     }
 
     Thread.Sleep(1000);
+
 }
 
 //Console.ReadKey(true);
