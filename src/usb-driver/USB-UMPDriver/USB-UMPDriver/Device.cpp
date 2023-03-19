@@ -382,10 +382,10 @@ Return Value:
     WDF_USB_DEVICE_INFORMATION              deviceInfo;
     ULONG                                   waitWakeEnable = 0;
     USB_DEVICE_DESCRIPTOR                   deviceDescriptor;
-    PUSB_CONFIGURATION_DESCRIPTOR           pConfigurationDescriptor = NULL;
+    //PUSB_CONFIGURATION_DESCRIPTOR           pConfigurationDescriptor = NULL;
     USHORT                                  configurationDescriptorSize = 0;
     WDF_OBJECT_ATTRIBUTES                   deviceConfigAttrib;
-    WDFMEMORY                               deviceConfigHndl = NULL;
+    //WDFMEMORY                               deviceConfigHndl = NULL;
     UCHAR                                   numInterfaces;
     USB_INTERFACE_DESCRIPTOR                interfaceDescriptor;
     UCHAR                                   numberConfiguredPipes;
@@ -463,6 +463,7 @@ Return Value:
     //
     // Get Config Descriptor
     //
+/*
     status = WdfUsbTargetDeviceRetrieveConfigDescriptor(
         pDeviceContext->UsbDevice,
         NULL,
@@ -501,7 +502,7 @@ Return Value:
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error loading configuration descriptor.\n");
         return(status);
     }
-
+*/
     //
     // Select target interfaces
     //
@@ -529,7 +530,8 @@ Return Value:
     {
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
             "Number of interfaces, %d, less than expected.\n", numInterfaces);
-        return(STATUS_SEVERITY_ERROR);
+        status = STATUS_SEVERITY_ERROR;
+        goto SelectExit;
     }
 
     // Load and configure pipes for first interface which should be the control interface
@@ -548,7 +550,8 @@ Return Value:
         || interfaceDescriptor.bInterfaceSubClass != 1 /*AUDIO_CONTROL*/)
     {
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Device detected does not have AUDIO_CONTROL interface as expected\n");
-        return(STATUS_SEVERITY_ERROR);
+        status = STATUS_SEVERITY_ERROR;
+        goto SelectExit;
     }
 
     // Setup setting pairs for control interface
@@ -575,7 +578,8 @@ Return Value:
         {
             TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
                 "Device Class/SubClass/Protocol not 1/3/0 as expected.\n");
-            return(STATUS_SEVERITY_ERROR);
+            status = STATUS_SEVERITY_ERROR;
+            goto SelectExit;
         }
         pDeviceContext->UsbMIDIStreamingAlt = 1;    // store that alternate interface
     }
@@ -594,7 +598,8 @@ Return Value:
         {
             TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
                 "Device Class/SubClass/Protocol not 1/3/0 as expected.\n");
-            return(STATUS_SEVERITY_ERROR);
+            status = STATUS_SEVERITY_ERROR;
+            goto SelectExit;
         }
         pDeviceContext->UsbMIDIStreamingAlt = 0;    // store that original interface
     }
@@ -619,10 +624,16 @@ Return Value:
     {
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
             "Error selecting USB Interfaces.\n");
-        return(status);
+        goto SelectExit;
     }
 
-    return STATUS_SEVERITY_SUCCESS;
+SelectExit:
+    if (pSettingPairs)
+    {
+        ExFreePoolWithTag(pSettingPairs, USBUMP_POOLTAG);
+    }
+
+    return status;
 }
 
 NTSTATUS
