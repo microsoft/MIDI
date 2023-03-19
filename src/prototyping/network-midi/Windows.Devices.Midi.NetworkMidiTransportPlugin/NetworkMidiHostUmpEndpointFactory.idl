@@ -1,0 +1,19 @@
+import "NetworkMidiHostUmpEndpoint.idl";
+
+namespace Windows.Devices.Midi.NetworkMidiTransportPlugin
+{
+    [default_interface]
+    runtimeclass NetworkMidiHostUmpEndpointFactory // : Windows.Devices.Midi.ServiceContracts.IMidiUmpEndpointFactory
+    {
+        NetworkMidiHostUmpEndpointFactory();
+        
+        Windows.Devices.Midi.NetworkMidiTransportPlugin.NetworkMidiHostUmpEndpoint GetExistingUmpEndpoint(String id);
+
+        Windows.Foundation.IAsyncOperation<Windows.Devices.Midi.NetworkMidiTransportPlugin.NetworkMidiHostUmpEndpoint> CreateNewUmpEndpoint(String configurationJson);
+
+        // TODO: Enumeration call, enumeration updates, etc.
+        // Or maybe these should just report to PnP which will allow existing tools to be used?
+
+
+    }
+}

@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
+    <ClCompile Include="NetworkHostAdvertiser.cpp">
+      <Filter>Implementation\Advertising</Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkMidiClientUmpEndpoint.cpp">
+      <Filter>Endpoints</Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkMidiClientUmpEndpointFactory.cpp">
+      <Filter>Endpoints</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="NetworkHostAdvertiser.h">
+      <Filter>Implementation\Advertising</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkMidiHostSession.h">
+      <Filter>Implementation</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkMidiCommandPacket.h">
+      <Filter>Implementation\Protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkMidiClientUmpEndpoint.h">
+      <Filter>Endpoints</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkMidiClientUmpEndpointFactory.h">
+      <Filter>Endpoints</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="NetworkMidiHostUmpEndpoint.idl">
+      <Filter>Endpoints</Filter>
+    </Midl>
+    <Midl Include="NetworkMidiHostUmpEndpointFactory.idl">
+      <Filter>Endpoints</Filter>
+    </Midl>
+    <Midl Include="NetworkMidiClientUmpEndpoint.idl">
+      <Filter>Endpoints</Filter>
+    </Midl>
+    <Midl Include="NetworkMidiClientUmpEndpointFactory.idl">
+      <Filter>Endpoints</Filter>
+    </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Windows_Devices_Midi_NetworkMidiTransportPlugin.def" />
+    <None Include="PropertySheet.props" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="readme.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Endpoints">
+      <UniqueIdentifier>{6f868486-b7ca-4768-98e0-a2c61f451817}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Implementation">
+      <UniqueIdentifier>{39feaa18-576d-42e7-bd6c-c99d675b49c5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Implementation\Advertising">
+      <UniqueIdentifier>{906e83a8-4bc5-4029-9fd0-4357b7f95b8d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Implementation\Protocol">
+      <UniqueIdentifier>{5bd1664b-01ad-43a0-b465-5fa3a58cfe9a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

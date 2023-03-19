@@ -1,0 +1,23 @@
+// this is all stuff that will be used by the service directly, NOT by the client
+// the client API talks to the service through the API and SDK, which are defined elsewhere
+
+// This becomes our plugin API (or will be adapted to fit what Gary has created)
+// Using WinRT here because it has a decent type system. If needs to be straight-up
+// COM, then we need to just adjust a few things.
+
+namespace Windows.Devices.Midi.ServiceContracts
+{
+    unsealed runtimeclass IMidiUmpEndpoint
+    {
+        // TODO: These need to be whatever buffer Gary has implemented
+        // and they may be assigned in the constructor, not necessarily 
+        // exposed in this way. This is prototype code only
+        overridable IVector<UInt32> IncomingMessages { get; };
+        overridable IVector<UInt32> OutgoingMessages { get; };
+
+        // TBD: do we need to break these out into a description class like 
+        // Windows.Devices.Enumeration does today?
+        overridable String Id { get; };
+        overridable IMapView<String, Object> Properties { get; };
+    }
+}

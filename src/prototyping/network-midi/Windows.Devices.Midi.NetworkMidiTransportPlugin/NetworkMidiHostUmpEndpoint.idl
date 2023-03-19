@@ -1,0 +1,40 @@
+namespace Windows.Devices.Midi.NetworkMidiTransportPlugin
+{
+    [default_interface]
+    runtimeclass NetworkMidiHostUmpEndpoint // : Windows.Devices.Midi.ServiceContracts.IMidiUmpEndpoint
+    {
+        NetworkMidiHostUmpEndpoint();
+
+        // TODO: These need to be whatever buffer Gary has implemented
+        // and they may be assigned in the constructor, not necessarily 
+        // exposed in this way. This is prototype code only
+    //    IVector<UInt32> IncomingMessages { get; };
+    //    IVector<UInt32> OutgoingMessages { get; };
+
+            // MIDI In
+        Windows.Storage.Streams.IInputStream IncomingMessages {get; };
+
+            // MIDI Out
+        Windows.Storage.Streams.IOutputStream OutgoingMessages {get; };
+
+        // TBD: do we need to break these out into a description class like 
+        // Windows.Devices.Enumeration does today?
+        String Id { get; };
+        IMapView<String, Object> Properties { get; };
+
+
+        // TODO: properties to hold the port, hostaddress, other properties, etc.
+        // Also, may want to differentiate between host and client endpoints? 
+        // Or just have a Role field? Most code will be similar, but order of ops
+        // is different as are the parameters
+
+
+
+
+        // Not members of the UmpEndpoint interface contract. Just specific to Network impl
+        // used by the factory which creates these endpoints. Derived from the json properties
+        Windows.Foundation.IAsyncAction StartAsync(String hostName, String port, String midiEndpointName, String productInstanceId, Boolean advertise, String serviceInstanceName);
+
+    }
+}
+

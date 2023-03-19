@@ -1,0 +1,475 @@
+#include "pch.h"
+#include "NetworkMidiHostUmpEndpoint.h"
+#include "NetworkMidiHostUmpEndpoint.g.cpp"
+
+#include "NetworkHostAdvertiser.h"
+
+#include <iostream>
+#include <iomanip>
+
+#include <chrono>
+#include <thread>
+
+#include <SocketHelpers.h>
+
+namespace winrt::Windows::Devices::Midi::NetworkMidiTransportPlugin::implementation
+{
+    //winrt::Windows::Foundation::Collections::IVector<uint32_t> NetworkMidiHostUmpEndpoint::IncomingMessages()
+    //{
+    //    return _incomingMessages;
+    //}
+    //winrt::Windows::Foundation::Collections::IVector<uint32_t> NetworkMidiHostUmpEndpoint::OutgoingMessages()
+    //{
+    //    return _outgoingMessages;
+    //}
+
+
+    streams::IInputStream NetworkMidiHostUmpEndpoint::IncomingMessages()
+    {
+        return _incomingMidiMessages;
+    }
+    streams::IOutputStream NetworkMidiHostUmpEndpoint::OutgoingMessages()
+    {
+        return _outgoingMidiMessages;
+    }
+
+
+    hstring NetworkMidiHostUmpEndpoint::Id()
+    {
+        return _id;
+    }
+    winrt::Windows::Foundation::Collections::IMapView<hstring, winrt::Windows::Foundation::IInspectable> NetworkMidiHostUmpEndpoint::Properties()
+    {
+        throw hresult_not_implemented();
+
+    }
+
+
+
+    winrt::Windows::Foundation::IAsyncAction NetworkMidiHostUmpEndpoint::StartAsync(
+        hstring hostName, hstring port, hstring midiEndpointName, hstring productInstanceId, bool advertise, hstring serviceInstanceName)
+    {
+        // pulled these numbers out of air. Will need to use real numbers
+        _incomingMidiMessages.Size(1000 * sizeof(uint32_t));
+        _outgoingMidiMessages.Size(1000 * sizeof(uint32_t));
+
+
+        // return from this function, but spin things off into a threadpool thread
+        co_await winrt::resume_background();
+
+
+
+        using namespace std::chrono_literals;   // for the temporary sleep
+
+        std::cout << "StartAsServer" << std::endl;
+
+        _midiEndpointName = midiEndpointName;
+
+        std::cout << "Generating Placeholder Id" << std::endl;
+
+        _id = GenerateEndpointDeviceId(L"HOSTSERVER", hostName, port, midiEndpointName, productInstanceId);
+
+        std::cout << winrt::to_string(_id) << std::endl;
+
+        // was a port specified? If not, figure out a port to host this.
+        
+        //if (port.empty())
+        //{
+            // TODO: Algorithm to find a free socket
+
+            //port = L"13337";
+        //}
+
+
+        // this should have error checking
+        auto portNumber = (uint16_t)std::stoi(winrt::to_string(port));
+         
+         
+        std::cout << "Binding Socket" << std::endl;
+        // create and bind the socket
+        auto socket = sock::DatagramSocket();
+        co_await socket.BindServiceNameAsync(port);
+
+        // set up the traffic handling
+
+
+        if (hostName.empty())
+        {
+            // todo: find the host name to use like I did in C#
+        }
+
+        // this should come from the consumer as a parameter
+        auto hostNameObject = networking::HostName(hostName);
+
+        std::cout << "Created HostName" << std::endl;
+
+
+        // if we should advertise, do so
+
+        if (advertise)
+        {
+            std::cout << "About to Advertise" << std::endl;
+
+            auto ad = NetworkHostAdvertiser();
+            if (!co_await ad.AdvertiseAsync(serviceInstanceName, hostNameObject, socket, portNumber, midiEndpointName, productInstanceId))
+            {
+                // failed to advertise
+                std::cout << "Failed to advertise" << std::endl;
+
+            }
+        }
+
+
+        // TODO: Need to create the listener, spin up thread to watch the socket, etc.
+
+        // There will be only one UMP Endpoint for the given host/port. It's multi-client, though so
+        // any number of apps can send to it or listen for new messages. It's like a USB device
+        // in that way. Where it's not like a USB device, is that any number of network clients
+        // can also connect to this, making it more of a hub/spoke model than a point to point or 
+        // a fan-out approach. We'll offer the ability to limit the number of network clients
+        // that connect, in case that's needed. The protocol has rejection messages built in.
+
+        std::cout << "About to connect DatagramSocket.MessageReceived event" << std::endl;
+        auto eventRevoker = socket.MessageReceived(winrt::auto_revoke, [this](sock::DatagramSocket const& sender, sock::DatagramSocketMessageReceivedEventArgs const& args)
+        {
+            std::cout << " - DatagramSocket.MessageReceived" << std::endl;
+
+            // Ffor each command packet. This needs to be super fast
+            // - If a ping, add a pong to the outgoing out-of-band queue, complete with address info
+            // - if an invite, add it to the incoming invite queue
+            // - if another recognized message
+            //   - if there's a session active, add the message to the session's incoming queue
+            //   - if there's no session for this address, add a NAK to the out-of-band queue
+            // - If it's some other garbage, discard the packet and move on
+
+            auto reader = args.GetDataReader();
+
+            if (reader.UnconsumedBufferLength() < sizeof(uint32_t))
+            {
+                // not a message we understand
+
+                std::cout << " - UDP Packet does not have the minimum amount of data." << std::endl;
+
+                return;
+            }
+
+            uint32_t udpHeader = reader.ReadUInt32();
+
+            if (udpHeader != RequiredUdpPayloadHeader)
+            {
+                // not a message we understand
+
+                std::cout << " - UDP Packet does not have MIDI header. Discard." << std::endl;
+
+                return;
+            }
+
+
+            // TODO: Socket read operations are blocking, so if there's bad data (command payload length not correct)
+            // then we need to be able to handle that here. Otherwise, it just waits. Recommend first checking 
+            // unconsumed buffer length before doing any set of reads for a command packet
+
+            while (reader.UnconsumedBufferLength() > 0)
+            {
+                // grab the MIDI command packet header
+                uint32_t commandHeaderWord = reader.ReadInt32();
+
+                //auto packet = NetworkMidiCommandPacket();
+
+                auto packetHeader = NetworkMidiCommandPacketHeader();
+                packetHeader.HeaderWord = commandHeaderWord;
+
+                std::cout << "Incoming Header: 0x" << std::hex << std::setw(8) << std::setfill('0') << commandHeaderWord;
+                std::cout << " | Code: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(packetHeader.HeaderData.CommandCode);
+                std::cout << " | Payload len: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(packetHeader.HeaderData.CommandPayloadLength);
+                std::cout << " | CommandSpecificData: 0x" << std::hex << std::setw(4) << std::setfill('0') << packetHeader.HeaderData.CommandSpecificData.AsUInt16;
+                std::cout << std::endl;
+
+                // shove the packet on the right queue
+
+                switch (packetHeader.HeaderData.CommandCode)
+                {
+                case 0x01:  // Invitation
+                {
+                    // Invitations are always handled centrally here.
+
+                    std::cout << "Enqueuing Incoming Invitation Message" << std::endl;
+
+                    NetworkMidiOutOfBandIncomingCommandPacket packet;
+                    packet.SourceHostName = args.RemoteAddress();
+                    packet.SourcePort = args.RemotePort();
+                    packet.Header = packetHeader;
+                    packet.SetMinimumBufferDataSizeAndAlign(packetHeader.HeaderData.CommandPayloadLength * sizeof(uint32_t));
+                    reader.ReadBytes(packet.DataBuffer);
+                    
+                    _incomingOutOfBandCommands.push(packet);
+                }
+                    break;
+
+                case 0xFF:  // MIDI
+                {
+                    // TODO: Going to need to handle incoming retransmits
+
+                    std::cout << "Command packet is UMP" << std::endl;
+
+                    if (SessionAlreadyExists(args.RemoteAddress(), args.RemotePort()))
+                    {
+                        auto sessionKey = CreateSessionMapKey(args.RemoteAddress(), args.RemotePort());
+
+                        _activeSessions[sessionKey].LastIncomingMessageTime = std::chrono::steady_clock::now();
+
+                        uint16_t wordsWritten = 0;
+
+                        if (SocketHelpers::CheckedSocketReadUInt32s(reader, packetHeader.HeaderData.CommandPayloadLength, _incomingMidiMessagesWriter, wordsWritten))
+                        {
+                            std::cout << ">> Wrote << " << std::dec << wordsWritten << " MIDI message words to MIDI input stream" << std::endl;
+                        }
+                        else
+                        {
+                            std::cout << ">> FAILED to write MIDI message words to MIDI input stream" << std::endl;
+                        }
+
+                        if (_incomingMidiMessagesWriter.UnstoredBufferLength() > 0)
+                        {
+                            std::cout << ">> StoreAsync()" << std::endl;
+                            _incomingMidiMessagesWriter.StoreAsync();
+                        }
+                    }
+                    else
+                    {
+                        // TODO: Send a NAK
+                        std::cout << " - No active session for this client." << std::endl;
+                    }
+
+
+                }
+                    break;
+                case 0x20:  // Ping
+                {
+                    std::cout << "Enqueuing Incoming Ping Message" << std::endl;
+
+                    // should check to see if in a session. If so, send it there to handle.
+                    NetworkMidiOutOfBandIncomingCommandPacket packet;
+                    packet.SourceHostName = args.RemoteAddress();
+                    packet.SourcePort = args.RemotePort();
+                    packet.Header = packetHeader;
+                    packet.SetMinimumBufferDataSizeAndAlign(packetHeader.HeaderData.CommandPayloadLength * sizeof(uint32_t));
+                    reader.ReadBytes(packet.DataBuffer);
+                    
+                    _incomingOutOfBandCommands.push(packet);
+                }
+                    break;
+
+                case 0x21:  // Pong
+                    // we need to handle these, likely at the session level
+                    break;
+                }
+
+
+            }
+        });
+
+
+        std::cout << "DatagramSocket.MessageReceived event connected" << std::endl;
+
+
+
+
+
+        while (true)
+        {
+            std::cout << ". ";
+
+            if (!_incomingOutOfBandCommands.empty())
+            {
+                std::cout << "- Processing incoming" << std::endl;
+
+                auto packet = _incomingOutOfBandCommands.front();
+                _incomingOutOfBandCommands.pop();
+
+                switch (packet.Header.HeaderData.CommandCode)
+                {
+                case 0x01:  // Invitation
+                    HandleInvitation(packet);
+                    break;
+                case 0x20:  // Ping
+                    // should check to see if in a session. If so, send it there to handle.
+                    HandleOutOfBandPing(packet);
+                    break;
+                default:
+                    // send a nak
+                    break;
+                }
+
+            }
+
+            if (!_outgoingOutOfBandCommands.empty())
+            {
+                std::cout << "- Sending outgoing" << std::endl;
+                // we send each as short packets because, in most cases, we're not going to 
+                // have batched traffic from the same endpoint
+
+                // TODO: need to lock the socket while writing to it.
+                // TODO: Need to lock hte queue while doing the front/pop
+
+                auto packet = _outgoingOutOfBandCommands.front();
+                _outgoingOutOfBandCommands.pop();
+
+                
+                std::cout << "Outgoing Header: 0x" << std::hex << std::setw(8) << std::setfill('0') << packet.Header.HeaderWord;
+                std::cout << " | Code: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(packet.Header.HeaderData.CommandCode);
+                std::cout << " | Payload Len: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(packet.Header.HeaderData.CommandPayloadLength);
+                std::cout << " | CommandSpecificData: 0x" << std::hex << std::setw(4) << std::setfill('0') << packet.Header.HeaderData.CommandSpecificData.AsUInt16;
+                std::cout << std::endl;
+
+                std::cout << "Destination HostName " << winrt::to_string(packet.DestinationHostName.ToString()) << std::endl;
+                std::cout << "Destination Port " << winrt::to_string(packet.DestinationPort) << std::endl;
+
+                auto ostream = co_await socket.GetOutputStreamAsync(packet.DestinationHostName, packet.DestinationPort);
+
+                auto writer = streams::DataWriter(ostream);
+
+                // UDP MIDI header
+                writer.WriteUInt32(RequiredUdpPayloadHeader);
+
+                // packet header
+                writer.WriteUInt32(packet.Header.HeaderWord);
+
+                // packet data
+                writer.WriteBytes(packet.DataBuffer);
+
+                co_await writer.StoreAsync();
+
+                //writer.Close();
+
+            }
+
+
+            // Loop Process incoming UDP packets
+            // 
+            // whenever there's a ping, look to see if there's an active session. 
+            // - If not, reply with the active session flag set to 0
+            // - if so, reply with the active session flag set to 1
+            // If there's an invite, spin up a new session and accept the invite
+            // If there's any other session message, but no active session with that ip/port, send NAK
+            // if there's a bye message, terminate the session (host server stays up)
+            // If there's a UMP packet, send it to the session to manage
+
+
+
+            // Is it an invite? If so, set up a new session
+
+
+            // Is it a ping? if so, queue up a pong, regardless if in or out of session
+
+
+            // Is it a MIDI message? if so enqueue on the incoming UMP 
+
+            // TODO: other types of messages
+
+
+
+            // Loop process outgoing UDP packets
+            // - For each outgoing queue, process outgoing messages up to one UDP packet in size
+            // - 
+
+            // each session has
+            // - host name for the other end
+            // - outgoing message queue for that session. Only for protocol messages
+            // All incoming packets are handled centrally
+            // All outgoing packets are handled centrally, but round-robin the outgoing queues in the session objects
+            //  plus the outgoing out-of-band messages
+
+
+            // for initial design, everything is going to happen in-line in a single loop.
+
+            // 10 receive incoming UDP packets
+            //socket.
+
+            // 20 check incoming MIDI messages
+
+            // 30 send outgoing MIDI messages
+
+            // 40 send outgoing UDP packets
+
+            // 50 temporary thread sleep. 
+            // This should instead just wait for some activity if all the queues are empty
+
+            std::this_thread::sleep_for(1000ms);
+        }
+
+        // disconnect event handler
+
+        co_return;
+    }
+
+    void NetworkMidiHostUmpEndpoint::HandleOutOfBandPing(NetworkMidiOutOfBandIncomingCommandPacket packet)
+    {
+        // return the ping with a matching pong
+
+        std::cout << "- Enqueuing Pong" << std::endl;
+
+        auto responsePacket = NetworkMidiOutOfBandOutgoingCommandPacket();
+
+        responsePacket.Header.HeaderData.CommandCode = NetworkMidiCommandCodePingReply;
+        responsePacket.Header.HeaderData.CommandSpecificData.AsBytes.Byte1 = 0; // out of band ping always says session is not active
+        responsePacket.Header.HeaderData.CommandSpecificData.AsBytes.Byte2 = 0;
+        responsePacket.DestinationHostName = packet.SourceHostName;
+        responsePacket.DestinationPort = packet.SourcePort;
+
+        //responsePacket.SetMinimumBufferDataSize(packet.DataBuffer.size());
+       
+        responsePacket.CopyInData(packet.DataBuffer);
+
+        _outgoingOutOfBandCommands.push(responsePacket);
+    }
+
+    void NetworkMidiHostUmpEndpoint::HandleInvitation(NetworkMidiOutOfBandIncomingCommandPacket packet)
+    {
+        std::string invitee(packet.DataBuffer.begin(), packet.DataBuffer.end()) ;
+
+        std::cout << "Handling invitation from '" << invitee << "'" << std::endl;
+
+        // We always accept here. Will want to change that to allow for limiting active sessions
+
+        std::string nameUtf8 = winrt::to_string(_midiEndpointName) + '\0';    // convert to utf-8
+
+        auto responsePacket = NetworkMidiOutOfBandOutgoingCommandPacket();
+
+        // copy our endpoint name into the data. It does the 32 bit alignment + null automatically
+        responsePacket.CopyInData(nameUtf8);
+
+        responsePacket.Header.HeaderData.CommandCode = NetworkMidiCommandCodeInvitationReplyAccepted;
+        responsePacket.Header.HeaderData.CommandSpecificData.AsUInt16 = 0;
+        responsePacket.DestinationHostName = packet.SourceHostName;
+        responsePacket.DestinationPort = packet.SourcePort;
+
+        std::cout << "Name length " << std::dec << nameUtf8.length() << std::endl;
+        std::cout << "Command Payload length (words) " << std::dec << static_cast<int>(responsePacket.Header.HeaderData.CommandPayloadLength) << std::endl;
+
+        // create the session
+
+        auto sessionKey = CreateSessionMapKey(packet.SourceHostName, packet.SourcePort);
+
+        if (_activeSessions.find(sessionKey) == _activeSessions.end())
+        {
+            // session doesn't exist, so we add it
+            std::cout << "(Session doesn't exist, so creating it)" << std::endl;
+
+            _activeSessions[sessionKey] = NetworkMidiHostSession();
+            _activeSessions[sessionKey].StartAsync(responsePacket.DestinationHostName, responsePacket.DestinationPort);
+        }
+        else
+        {
+            // session already exists. We still reply, but no other action needed
+            std::cout << "(Session already exists)" << std::endl;
+        }
+
+        std::cout << "- Enqueuing Invitation Accept: '" << nameUtf8 << "'" << std::endl;
+
+        _outgoingOutOfBandCommands.push(responsePacket);
+    }
+
+
+
+}
