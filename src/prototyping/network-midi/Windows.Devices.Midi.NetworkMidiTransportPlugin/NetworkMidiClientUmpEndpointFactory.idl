@@ -1,3 +1,8 @@
+// These are WinRT because that's closer to COM than what I started with
+// To be plugins to the service, these will need to change to COM DLLs
+// so they can be discovered and dynamically loaded. WinRT can't be
+// loaded in the same way.
+
 import "NetworkMidiClientUmpEndpoint.idl";
 
 namespace Windows.Devices.Midi.NetworkMidiTransportPlugin

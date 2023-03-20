@@ -9,6 +9,7 @@ using System.Security.Cryptography.X509Certificates;
 using Windows.Globalization.DateTimeFormatting;
 using Windows.Storage.Streams;
 using System.Text.Json.Nodes;
+using NetworkMidi2ServerProto.SdkProto;
 
 
 
@@ -128,21 +129,33 @@ var endpoint = await factory.CreateNewUmpEndpoint(jsonParameters);
 
 AnsiConsole.MarkupLine("[green]Starting listening for messages[/]");
 
+var umpFactory = new UmpFactory();
+
 while (true)
 {
     if (endpoint.IncomingMidiMessages.HasData())
     {
         var word = endpoint.IncomingMidiMessages.ReadWord();
 
-        AnsiConsole.MarkupLine("[green]0x{0:X4}[/]", word);
+        //AnsiConsole.MarkupLine("[green]0x{0:X8}[/]", word);
 
+        // TODO: process into messages. We're using the service API directly
+        // instead of the client API or SDK, so there's no message processing for
+        // us here.
 
+        umpFactory.AddMidiWord(word);
 
-
+        if (umpFactory.Umps.Count > 0)
+        {
+            var ump = umpFactory.Umps.Dequeue();
+            //AnsiConsole.WriteLine(ump.ToString());
+            AnsiConsole.MarkupLine("[teal]Received UMP[/] [olive]{0}[/]", ump.ToString());
+        }
     }
-
-    Thread.Sleep(1000);
-
+    else
+    {
+        Thread.Sleep(300);
+    }
 }
 
 //Console.ReadKey(true);

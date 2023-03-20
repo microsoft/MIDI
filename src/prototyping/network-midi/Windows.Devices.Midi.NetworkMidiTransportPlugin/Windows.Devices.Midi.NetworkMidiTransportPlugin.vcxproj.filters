@@ -51,6 +51,12 @@
     <ClInclude Include="MidiMessageBuffer.h">
       <Filter>ServiceContracts</Filter>
     </ClInclude>
+    <ClInclude Include="NetworkMidiCommandPacketHelper.h">
+      <Filter>Implementation\Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeHelpers.h">
+      <Filter>Implementation\Helpers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="NetworkMidiHostUmpEndpoint.idl">

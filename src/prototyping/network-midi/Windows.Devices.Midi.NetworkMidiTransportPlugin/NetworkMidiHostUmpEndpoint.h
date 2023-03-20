@@ -40,7 +40,7 @@ namespace winrt::Windows::Devices::Midi::NetworkMidiTransportPlugin::implementat
             // this will need to actually conform with how Windows does it today. For now,
             // it just kind of looks like it, if you squint a bit
 
-            return L"\\\\?\\SWD\\MMDEVAPI\\MIDI2_NETWORK_" + connectionType + L"\\" + hostName + L"_" + port + L"_" + midiEndpointName + L"_pii" + midiProductInstanceId;
+            return L"\\\\?\\SWD\\MMDEVAPI\\PROTOTYPE_MIDI2_NETWORK_" + connectionType + L"\\" + hostName + L"_" + port + L"_" + midiEndpointName + L"_" + midiProductInstanceId;
         }
 
         //void OnUdpMessageReceived(sock::DatagramSocket const& sender, sock::DatagramSocketMessageReceivedEventArgs const& args)

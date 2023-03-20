@@ -134,6 +134,7 @@
     <ClInclude Include="NetworkMidiCommandCode.h" />
     <ClInclude Include="NetworkMidiCommandPacket.h" />
     <ClInclude Include="NetworkMidiCommandPacketHeader.h" />
+    <ClInclude Include="NetworkMidiCommandPacketHelper.h" />
     <ClInclude Include="NetworkMidiHostSession.h" />
     <ClInclude Include="NetworkMidiHostUmpEndpoint.h">
       <DependentUpon>NetworkMidiHostUmpEndpoint.idl</DependentUpon>
@@ -144,6 +145,7 @@
     <ClInclude Include="NetworkMidiOutOfBandNAKPacket.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="SocketHelpers.h" />
+    <ClInclude Include="TimeHelpers.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MidiMessageBuffer.cpp">
