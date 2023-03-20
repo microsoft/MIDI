@@ -214,12 +214,175 @@ Return Value:
 
 --*/
 {
+    WDFDEVICE           Device;
+    PDEVICE_CONTEXT     pDeviceContext;
+    NTSTATUS            status = NULL;
+    size_t              length = 0;
+    size_t              requestLength = 0;
+    PVOID               pMemBuffer;
+    PVOID               ioBuffer;
+    size_t              bufLength;
+    UINT32              deviceType;
+
     TraceEvents(TRACE_LEVEL_INFORMATION, 
                 TRACE_QUEUE, 
                 "%!FUNC! Queue 0x%p, Request 0x%p OutputBufferLength %d InputBufferLength %d IoControlCode %d", 
                 Queue, Request, (int) OutputBufferLength, (int) InputBufferLength, IoControlCode);
 
-    WdfRequestComplete(Request, STATUS_SUCCESS);
+    //
+    // Initialize variables for use
+    //
+    Device = WdfIoQueueGetDevice(Queue);
+    pDeviceContext = DeviceGetContext(Device);
+    deviceType = (UINT32)pDeviceContext->UsbMIDIStreamingAlt;
+
+    //
+    // Perform requested action
+    //
+    switch (IoControlCode)
+    {
+    case IOCTL_USBUMPDRIVER_GET_CONFIG_DESCRIPTOR:
+        if (pDeviceContext->DeviceConfigDescriptorMemory) {
+
+            pMemBuffer = WdfMemoryGetBuffer(pDeviceContext->DeviceConfigDescriptorMemory, &length);
+
+            status = WdfRequestRetrieveOutputBuffer(Request, length, &ioBuffer, &bufLength);
+            if (!NT_SUCCESS(status)) {
+                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
+                    "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
+                break;
+            }
+
+            RtlCopyMemory(ioBuffer,
+                pMemBuffer,
+                length);
+
+            requestLength = length;
+            status = STATUS_SUCCESS;
+        }
+        else {
+            status = STATUS_INVALID_DEVICE_STATE;
+        }
+        break;
+
+    case IOCTL_USBUMPDRIVER_GET_MFGNAME:
+        if (pDeviceContext->DeviceManfMemory) {
+
+            pMemBuffer = WdfMemoryGetBuffer(pDeviceContext->DeviceManfMemory, &length);
+
+            status = WdfRequestRetrieveOutputBuffer(Request, length, &ioBuffer, &bufLength);
+            if (!NT_SUCCESS(status)) {
+                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
+                    "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
+                break;
+            }
+
+            RtlCopyMemory(ioBuffer,
+                pMemBuffer,
+                length);
+
+            requestLength = length;
+            status = STATUS_SUCCESS;
+        }
+        else {
+            status = STATUS_INVALID_DEVICE_STATE;
+        }
+        break;
+
+    case IOCTL_USBUMPDRIVER_GET_DEVICENAME:
+        if (pDeviceContext->DeviceNameMemory) {
+
+            pMemBuffer = WdfMemoryGetBuffer(pDeviceContext->DeviceNameMemory, &length);
+
+            status = WdfRequestRetrieveOutputBuffer(Request, length, &ioBuffer, &bufLength);
+            if (!NT_SUCCESS(status)) {
+                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
+                    "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
+                break;
+            }
+
+            RtlCopyMemory(ioBuffer,
+                pMemBuffer,
+                length);
+
+            requestLength = length;
+            status = STATUS_SUCCESS;
+        }
+        else {
+            status = STATUS_INVALID_DEVICE_STATE;
+        }
+        break;
+
+    case IOCTL_USBUMPDRIVER_GET_SERIALNUM:
+        if (pDeviceContext->DeviceSNMemory) {
+            pMemBuffer = WdfMemoryGetBuffer(pDeviceContext->DeviceSNMemory, &length);
+
+            status = WdfRequestRetrieveOutputBuffer(Request, length, &ioBuffer, &bufLength);
+            if (!NT_SUCCESS(status)) {
+                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
+                    "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
+                break;
+            }
+
+            RtlCopyMemory(ioBuffer,
+                pMemBuffer,
+                length);
+
+            requestLength = length;
+            status = STATUS_SUCCESS;
+        }
+        else {
+            status = STATUS_INVALID_DEVICE_STATE;
+        }
+        break;
+
+    case IOCTL_USBUMPDRIVER_GET_GTBDUMP:
+        status = WdfRequestRetrieveOutputBuffer(Request, length, &ioBuffer, &bufLength);
+        if (!NT_SUCCESS(status)) {
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
+                "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
+            break;
+        }
+
+        if (pDeviceContext->DeviceGTBMemory) {
+            pMemBuffer = WdfMemoryGetBuffer(pDeviceContext->DeviceGTBMemory, &length);
+            RtlCopyMemory(ioBuffer,
+                pMemBuffer,
+                length);
+
+            requestLength = length;
+            status = STATUS_SUCCESS;
+        }
+        else {
+            status = STATUS_INVALID_DEVICE_STATE;
+        }
+        break;
+
+    case IOCTL_USBUMPDRIVER_GET_DEVICETYPE:
+        pMemBuffer = (PVOID)&deviceType;
+        length = sizeof(UINT32);
+
+        status = WdfRequestRetrieveOutputBuffer(Request, length, &ioBuffer, &bufLength);
+        if (!NT_SUCCESS(status)) {
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
+                "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
+            break;
+        }
+
+        RtlCopyMemory(ioBuffer,
+            pMemBuffer,
+            length);
+
+        requestLength = length;
+        status = STATUS_SUCCESS;
+        break;
+
+    default:
+        status = STATUS_INVALID_DEVICE_REQUEST;
+        break;
+    }
+
+    WdfRequestCompleteWithInformation(Request, status, requestLength);
 
     return;
 }

@@ -100,16 +100,14 @@ typedef struct _DEVICE_CONTEXT
     MIDI_STREAM_TYPE            midi1UsbPkt;
 
     //
-    // The following fields are used during event logging to 
-    // report the events relative to this specific instance 
-    // of the device.
-    //
-
+    // The folloiwng fileds are used to store device configuration information
+    // relevant to the connected device.
+    // 
+    WDFMEMORY                       DeviceConfigDescriptorMemory;
+    WDFMEMORY                       DeviceManfMemory;
     WDFMEMORY                       DeviceNameMemory;
-    PCWSTR                          DeviceName;
-
-    WDFMEMORY                       LocationMemory;
-    PCWSTR                          Location;
+    WDFMEMORY                       DeviceSNMemory;
+    WDFMEMORY                       DeviceGTBMemory;
 
 } DEVICE_CONTEXT, *PDEVICE_CONTEXT;
 

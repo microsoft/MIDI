@@ -54,3 +54,28 @@ DEFINE_GUID (GUID_DEVINTERFACE_USBUMPDriver,
                                                      IOCTL_INDEX,     \
                                                      METHOD_BUFFERED,         \
                                                      FILE_ANY_ACCESS)
+
+#define IOCTL_USBUMPDRIVER_GET_MFGNAME         CTL_CODE(FILE_DEVICE_UNKNOWN,     \
+                                                     IOCTL_INDEX+1,     \
+                                                     METHOD_BUFFERED,         \
+                                                     FILE_ANY_ACCESS)
+
+#define IOCTL_USBUMPDRIVER_GET_DEVICENAME      CTL_CODE(FILE_DEVICE_UNKNOWN,     \
+                                                     IOCTL_INDEX+2,     \
+                                                     METHOD_BUFFERED,         \
+                                                     FILE_ANY_ACCESS)
+
+#define IOCTL_USBUMPDRIVER_GET_SERIALNUM       CTL_CODE(FILE_DEVICE_UNKNOWN,     \
+                                                     IOCTL_INDEX+3,     \
+                                                     METHOD_BUFFERED,         \
+                                                     FILE_ANY_ACCESS)
+
+#define IOCTL_USBUMPDRIVER_GET_GTBDUMP         CTL_CODE(FILE_DEVICE_UNKNOWN,     \
+                                                     IOCTL_INDEX+4,     \
+                                                     METHOD_BUFFERED,         \
+                                                     FILE_ANY_ACCESS)
+
+#define IOCTL_USBUMPDRIVER_GET_DEVICETYPE     CTL_CODE(FILE_DEVICE_UNKNOWN,     \
+                                                     IOCTL_INDEX+5,     \
+                                                     METHOD_BUFFERED,         \
+                                                     FILE_ANY_ACCESS)

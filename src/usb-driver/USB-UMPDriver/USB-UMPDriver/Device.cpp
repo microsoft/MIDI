@@ -382,10 +382,9 @@ Return Value:
     WDF_USB_DEVICE_INFORMATION              deviceInfo;
     ULONG                                   waitWakeEnable = 0;
     USB_DEVICE_DESCRIPTOR                   deviceDescriptor;
-    //PUSB_CONFIGURATION_DESCRIPTOR           pConfigurationDescriptor = NULL;
+    PUSB_CONFIGURATION_DESCRIPTOR           pConfigurationDescriptor = NULL;
     USHORT                                  configurationDescriptorSize = 0;
     WDF_OBJECT_ATTRIBUTES                   deviceConfigAttrib;
-    //WDFMEMORY                               deviceConfigHndl = NULL;
     UCHAR                                   numInterfaces;
     USB_INTERFACE_DESCRIPTOR                interfaceDescriptor;
     UCHAR                                   numberConfiguredPipes;
@@ -393,6 +392,16 @@ Return Value:
     WDF_USB_PIPE_INFORMATION                pipeInfo;
     PWDF_USB_INTERFACE_SETTING_PAIR         pSettingPairs = NULL;
     WDF_USB_DEVICE_SELECT_CONFIG_PARAMS     configParams;
+    WDF_OBJECT_ATTRIBUTES                   objectAttributes;
+    USB_STRING_DESCRIPTOR                   USD, * pFullUSD;
+    URB                                     urbRequest;
+    PUSB_STRING_DESCRIPTOR                  pSerialNumber = NULL;
+    WDFMEMORY                               tempMemory;
+    PVOID                                   pTempMemory;
+    UNICODE_STRING                          unicodeString;
+    size_t                                  tempMemorySize;
+    PCHAR                                   pAsciiMemory;
+    UTF8_STRING                             asciiString;
 
     pDeviceContext = DeviceGetContext(Device);
 
@@ -463,7 +472,7 @@ Return Value:
     //
     // Get Config Descriptor
     //
-/*
+
     status = WdfUsbTargetDeviceRetrieveConfigDescriptor(
         pDeviceContext->UsbDevice,
         NULL,
@@ -482,7 +491,7 @@ Return Value:
         NonPagedPool,
         USBUMP_POOLTAG,
         configurationDescriptorSize,
-        &deviceConfigHndl,
+        &pDeviceContext->DeviceConfigDescriptorMemory,
         (PVOID*)&pConfigurationDescriptor
     );
     if (!NT_SUCCESS(status))
@@ -502,7 +511,173 @@ Return Value:
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error loading configuration descriptor.\n");
         return(status);
     }
-*/
+
+    //
+    // Get other useful Driver descriptor information
+    // 
+    /*
+    // Get Serial Number string as not a current simple property to get
+    if (deviceDescriptor.iSerialNumber)
+    {
+        UsbBuildGetDescriptorRequest(
+            &urbRequest,
+            sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST),
+            USB_STRING_DESCRIPTOR_TYPE,
+            deviceDescriptor.iSerialNumber, // index of string descriptor
+            0, // language ID of string.
+            &USD, // points to a USB_STRING_DESCRIPTOR.
+            NULL,
+            sizeof(USB_STRING_DESCRIPTOR),
+            NULL
+        );
+        status = WdfUsbTargetDeviceSendUrbSynchronously(
+            pDeviceContext->UsbDevice,
+            NULL,
+            NULL,
+            &urbRequest
+        );
+        if (!NT_SUCCESS(status))
+        {
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Serial Number string.\n");
+            return(status);
+        }
+
+        WDF_OBJECT_ATTRIBUTES_INIT(&deviceConfigAttrib);
+        deviceConfigAttrib.ParentObject = pDeviceContext->UsbDevice;
+        status = WdfMemoryCreate(
+            &deviceConfigAttrib,
+            NonPagedPool,
+            USBUMP_POOLTAG,
+            USD.bLength,
+            &pDeviceContext->DeviceSNMemory,
+            (PVOID*)&pSerialNumber
+        );
+        if (!NT_SUCCESS(status))
+        {
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error allocating memory for Serial Number.\n");
+            return(status);
+        }
+        UsbBuildGetDescriptorRequest(
+            &urbRequest, // points to the URB to be filled in
+            sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST),
+            USB_STRING_DESCRIPTOR_TYPE,
+            deviceDescriptor.iSerialNumber, // index of string descriptor
+            0, // language ID of string
+            pSerialNumber,
+            NULL,
+            USD.bLength,
+            NULL
+        );
+    }
+    */
+
+    // Manufacturer name
+    WDF_OBJECT_ATTRIBUTES_INIT(&objectAttributes);
+    objectAttributes.ParentObject = Device;
+    status = WdfDeviceAllocAndQueryProperty(Device,
+        DevicePropertyManufacturer,
+        NonPagedPoolNx,
+        &objectAttributes,
+        &tempMemory);
+    if (NT_SUCCESS(status))
+    {
+        pTempMemory = (PVOID)WdfMemoryGetBuffer(tempMemory, &tempMemorySize);
+        if (tempMemorySize)
+        {
+            status = RtlUnicodeStringInitEx(
+                &unicodeString,
+                (NTSTRSAFE_PCWSTR)pTempMemory,
+                NULL
+            );
+            if (!NT_SUCCESS(status))
+            {
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error setting up UNICODE String.\n");
+                return(status);
+            }
+            WDF_OBJECT_ATTRIBUTES_INIT(&deviceConfigAttrib);
+            deviceConfigAttrib.ParentObject = pDeviceContext->UsbDevice;
+            status = WdfMemoryCreate(
+                &deviceConfigAttrib,
+                NonPagedPool,
+                USBUMP_POOLTAG,
+                tempMemorySize / 2,     // ascii half of UNICODE-16
+                &pDeviceContext->DeviceManfMemory,
+                (PVOID*)&pAsciiMemory
+            );
+            if (!NT_SUCCESS(status))
+            {
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error creating memory for Manufacturer String.\n");
+                return(status);
+            }
+            asciiString.Buffer = pAsciiMemory;
+            asciiString.MaximumLength = tempMemorySize / 2;
+            asciiString.Length = 0;
+
+            status = RtlUnicodeStringToUTF8String(
+                &asciiString,
+                &unicodeString,
+                false
+            );
+            if (!NT_SUCCESS(status))
+            {
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error converting UNICODE to ASCII.\n");
+                return(status);
+            }
+        }
+        WdfObjectDelete(tempMemory);
+    }
+
+    // Device name
+    WDF_OBJECT_ATTRIBUTES_INIT(&objectAttributes);
+    objectAttributes.ParentObject = Device;
+    status = WdfDeviceAllocAndQueryProperty(Device,
+        DevicePropertyFriendlyName,
+        NonPagedPoolNx,
+        &objectAttributes,
+        &tempMemory);
+    if (NT_SUCCESS(status))
+    {
+        pTempMemory = (PVOID)WdfMemoryGetBuffer(tempMemory, &tempMemorySize);
+        if (tempMemorySize)
+        {
+            status = RtlUnicodeStringInitEx(
+                &unicodeString,
+                (NTSTRSAFE_PCWSTR)pTempMemory,
+                NULL
+            );
+
+            WDF_OBJECT_ATTRIBUTES_INIT(&deviceConfigAttrib);
+            deviceConfigAttrib.ParentObject = pDeviceContext->UsbDevice;
+            status = WdfMemoryCreate(
+                &deviceConfigAttrib,
+                NonPagedPool,
+                USBUMP_POOLTAG,
+                tempMemorySize / 2,     // ascii half of UNICODE-16
+                &pDeviceContext->DeviceNameMemory,
+                (PVOID*)&pAsciiMemory
+            );
+            if (!NT_SUCCESS(status))
+            {
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error creating memory for Device Name String.\n");
+                return(status);
+            }
+            asciiString.Buffer = pAsciiMemory;
+            asciiString.MaximumLength = tempMemorySize / 2;
+            asciiString.Length = 0;
+
+            status = RtlUnicodeStringToUTF8String(
+                &asciiString,
+                &unicodeString,
+                false
+            );
+            if (!NT_SUCCESS(status))
+            {
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error converting UNICODE to ASCII.\n");
+                return(status);
+            }
+        }
+        WdfObjectDelete(tempMemory);
+    }
     //
     // Select target interfaces
     //

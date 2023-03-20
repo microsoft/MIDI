@@ -1022,7 +1022,7 @@ Return Value:
 {
     UINT success;
     int siz, nBytes;
-    UCHAR buf[256] = { 0 };
+    UCHAR buf[512] = { 0 };
     PUSB_COMMON_DESCRIPTOR    commonDesc = NULL;
     PUSB_CONFIGURATION_DESCRIPTOR cd;
     BOOL  displayUnknown;
@@ -1124,8 +1124,70 @@ Return Value:
 
         }
 
-    }
+        printf("\n\n--------------------Other Descriptor info---------------------------\n\n");
+        buf[0] = 0x00;
+        // Print out rest of information
+        success = DeviceIoControl(hDEV,
+            IOCTL_USBUMPDRIVER_GET_MFGNAME,
+            buf,
+            siz,
+            buf,
+            siz,
+            (PULONG)&nBytes,
+            NULL);
+        if (nBytes)
+        {
+            (nBytes < sizeof(buf)) ? buf[nBytes] = 0x00 : buf[sizeof(buf) - 1] = 0x00;
 
+            printf("Manufacturer: %s\n", buf);
+        }
+
+        buf[0] = 0x00;
+        success = DeviceIoControl(hDEV,
+            IOCTL_USBUMPDRIVER_GET_DEVICENAME,
+            buf,
+            siz,
+            buf,
+            siz,
+            (PULONG)&nBytes,
+            NULL);
+        if (nBytes)
+        {
+            (nBytes < sizeof(buf)) ? buf[nBytes] = 0x00 : buf[sizeof(buf) - 1] = 0x00;
+
+            printf("Device Name: %s\n", buf);
+        }
+
+        buf[0] = 0x00;
+        success = DeviceIoControl(hDEV,
+            IOCTL_USBUMPDRIVER_GET_SERIALNUM,
+            buf,
+            siz,
+            buf,
+            siz,
+            (PULONG)&nBytes,
+            NULL);
+        if (nBytes)
+        {
+            (nBytes < sizeof(buf)) ? buf[nBytes] = 0x00 : buf[sizeof(buf) - 1] = 0x00;
+
+            printf("Serial Number: %s\n", buf);
+        }
+
+        success = DeviceIoControl(hDEV,
+            IOCTL_USBUMPDRIVER_GET_DEVICETYPE,
+            buf,
+            siz,
+            buf,
+            siz,
+            (PULONG)&nBytes,
+            NULL);
+        if (nBytes == sizeof(UINT32))
+        {
+            printf("USB Device selected type: %s\n",
+                *(PUINT32)&buf ? "USB MIDI 2.0 (UMP)" : "USB MIDI 1.0");
+        }
+    }
     return;
 }
 
@@ -1327,7 +1389,7 @@ Return Value:
 
             if (fEcho && poutBuf)
             {
-                printf("<%s> Echo to Device %d bytes.\n\n");
+                printf("`Echo to Device %d bytes.\n\n", EchoLen);
 
                 success = ReadFile(hRead, poutBuf, EchoLen, (PULONG)&nBytesRead, NULL);
 
