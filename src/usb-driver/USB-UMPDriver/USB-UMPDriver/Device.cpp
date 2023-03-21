@@ -393,15 +393,9 @@ Return Value:
     PWDF_USB_INTERFACE_SETTING_PAIR         pSettingPairs = NULL;
     WDF_USB_DEVICE_SELECT_CONFIG_PARAMS     configParams;
     WDF_OBJECT_ATTRIBUTES                   objectAttributes;
-    USB_STRING_DESCRIPTOR                   USD, * pFullUSD;
-    URB                                     urbRequest;
-    PUSB_STRING_DESCRIPTOR                  pSerialNumber = NULL;
-    WDFMEMORY                               tempMemory;
-    PVOID                                   pTempMemory;
-    UNICODE_STRING                          unicodeString;
-    size_t                                  tempMemorySize;
-    PCHAR                                   pAsciiMemory;
-    UTF8_STRING                             asciiString;
+    PUSB_STRING_DESCRIPTOR                  pTempBuffer = NULL;
+    WDF_REQUEST_SEND_OPTIONS                reqOptions;
+    USHORT                                  numChars = 0;
 
     pDeviceContext = DeviceGetContext(Device);
 
@@ -515,30 +509,24 @@ Return Value:
     //
     // Get other useful Driver descriptor information
     // 
-    /*
     // Get Serial Number string as not a current simple property to get
     if (deviceDescriptor.iSerialNumber)
     {
-        UsbBuildGetDescriptorRequest(
-            &urbRequest,
-            sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST),
-            USB_STRING_DESCRIPTOR_TYPE,
-            deviceDescriptor.iSerialNumber, // index of string descriptor
-            0, // language ID of string.
-            &USD, // points to a USB_STRING_DESCRIPTOR.
-            NULL,
-            sizeof(USB_STRING_DESCRIPTOR),
-            NULL
-        );
-        status = WdfUsbTargetDeviceSendUrbSynchronously(
+        WDF_REQUEST_SEND_OPTIONS_INIT(&reqOptions, WDF_REQUEST_SEND_OPTION_SYNCHRONOUS);
+        WDF_REQUEST_SEND_OPTIONS_SET_TIMEOUT(&reqOptions, WDF_REL_TIMEOUT_IN_SEC(USB_REQ_TIMEOUT_SEC));
+
+        status = WdfUsbTargetDeviceQueryString(
             pDeviceContext->UsbDevice,
             NULL,
+            &reqOptions,
             NULL,
-            &urbRequest
+            &numChars,
+            deviceDescriptor.iSerialNumber,
+            MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
         );
         if (!NT_SUCCESS(status))
         {
-            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Serial Number string.\n");
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Serial Number string size.\n");
             return(status);
         }
 
@@ -546,85 +534,85 @@ Return Value:
         deviceConfigAttrib.ParentObject = pDeviceContext->UsbDevice;
         status = WdfMemoryCreate(
             &deviceConfigAttrib,
-            NonPagedPool,
+            PagedPool,
             USBUMP_POOLTAG,
-            USD.bLength,
+            (size_t)((numChars + 1) * sizeof(WCHAR)),
             &pDeviceContext->DeviceSNMemory,
-            (PVOID*)&pSerialNumber
+            (PVOID*)&pTempBuffer
         );
         if (!NT_SUCCESS(status))
         {
             TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error allocating memory for Serial Number.\n");
             return(status);
         }
-        UsbBuildGetDescriptorRequest(
-            &urbRequest, // points to the URB to be filled in
-            sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST),
-            USB_STRING_DESCRIPTOR_TYPE,
-            deviceDescriptor.iSerialNumber, // index of string descriptor
-            0, // language ID of string
-            pSerialNumber,
+        RtlZeroMemory(pTempBuffer, (size_t)((numChars + 1) * sizeof(WCHAR)));
+        status = WdfUsbTargetDeviceQueryString(
+            pDeviceContext->UsbDevice,
             NULL,
-            USD.bLength,
-            NULL
+            &reqOptions,
+            (PUSHORT)pTempBuffer,
+            &numChars,
+            deviceDescriptor.iSerialNumber,
+            MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
         );
-    }
-    */
-
-    // Manufacturer name
-    WDF_OBJECT_ATTRIBUTES_INIT(&objectAttributes);
-    objectAttributes.ParentObject = Device;
-    status = WdfDeviceAllocAndQueryProperty(Device,
-        DevicePropertyManufacturer,
-        NonPagedPoolNx,
-        &objectAttributes,
-        &tempMemory);
-    if (NT_SUCCESS(status))
-    {
-        pTempMemory = (PVOID)WdfMemoryGetBuffer(tempMemory, &tempMemorySize);
-        if (tempMemorySize)
+        if (!NT_SUCCESS(status))
         {
-            status = RtlUnicodeStringInitEx(
-                &unicodeString,
-                (NTSTRSAFE_PCWSTR)pTempMemory,
-                NULL
-            );
-            if (!NT_SUCCESS(status))
-            {
-                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error setting up UNICODE String.\n");
-                return(status);
-            }
-            WDF_OBJECT_ATTRIBUTES_INIT(&deviceConfigAttrib);
-            deviceConfigAttrib.ParentObject = pDeviceContext->UsbDevice;
-            status = WdfMemoryCreate(
-                &deviceConfigAttrib,
-                NonPagedPool,
-                USBUMP_POOLTAG,
-                tempMemorySize / 2,     // ascii half of UNICODE-16
-                &pDeviceContext->DeviceManfMemory,
-                (PVOID*)&pAsciiMemory
-            );
-            if (!NT_SUCCESS(status))
-            {
-                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error creating memory for Manufacturer String.\n");
-                return(status);
-            }
-            asciiString.Buffer = pAsciiMemory;
-            asciiString.MaximumLength = tempMemorySize / 2;
-            asciiString.Length = 0;
-
-            status = RtlUnicodeStringToUTF8String(
-                &asciiString,
-                &unicodeString,
-                false
-            );
-            if (!NT_SUCCESS(status))
-            {
-                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error converting UNICODE to ASCII.\n");
-                return(status);
-            }
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Serial Number string.\n");
+            return(status);
         }
-        WdfObjectDelete(tempMemory);
+    }
+
+    // Device manufacturer (as DevicePropertyManufacturer is driver manufacturer)
+    if (deviceDescriptor.iManufacturer)
+    {
+        WDF_REQUEST_SEND_OPTIONS_INIT(&reqOptions, WDF_REQUEST_SEND_OPTION_SYNCHRONOUS);
+        WDF_REQUEST_SEND_OPTIONS_SET_TIMEOUT(&reqOptions, WDF_REL_TIMEOUT_IN_SEC(USB_REQ_TIMEOUT_SEC));
+
+        status = WdfUsbTargetDeviceQueryString(
+            pDeviceContext->UsbDevice,
+            NULL,
+            &reqOptions,
+            NULL,
+            &numChars,
+            deviceDescriptor.iManufacturer,
+            MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
+        );
+        if (!NT_SUCCESS(status))
+        {
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Manufacturer string size.\n");
+            return(status);
+        }
+
+        WDF_OBJECT_ATTRIBUTES_INIT(&deviceConfigAttrib);
+        deviceConfigAttrib.ParentObject = pDeviceContext->UsbDevice;
+        status = WdfMemoryCreate(
+            &deviceConfigAttrib,
+            PagedPool,
+            USBUMP_POOLTAG,
+            (size_t)((numChars + 1) * sizeof(WCHAR)),
+            &pDeviceContext->DeviceManfMemory,
+            (PVOID*)&pTempBuffer
+        );
+        if (!NT_SUCCESS(status))
+        {
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error allocating memory for Manufacturer.\n");
+            return(status);
+        }
+        RtlZeroMemory(pTempBuffer, (size_t)((numChars + 1) * sizeof(WCHAR)));
+        status = WdfUsbTargetDeviceQueryString(
+            pDeviceContext->UsbDevice,
+            NULL,
+            &reqOptions,
+            (PUSHORT)pTempBuffer,
+            &numChars,
+            deviceDescriptor.iManufacturer,
+            MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
+        );
+        if (!NT_SUCCESS(status))
+        {
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Manufacturer string.\n");
+            return(status);
+        }
     }
 
     // Device name
@@ -634,50 +622,13 @@ Return Value:
         DevicePropertyFriendlyName,
         NonPagedPoolNx,
         &objectAttributes,
-        &tempMemory);
-    if (NT_SUCCESS(status))
+        &pDeviceContext->DeviceNameMemory);
+    if (!NT_SUCCESS(status))
     {
-        pTempMemory = (PVOID)WdfMemoryGetBuffer(tempMemory, &tempMemorySize);
-        if (tempMemorySize)
-        {
-            status = RtlUnicodeStringInitEx(
-                &unicodeString,
-                (NTSTRSAFE_PCWSTR)pTempMemory,
-                NULL
-            );
-
-            WDF_OBJECT_ATTRIBUTES_INIT(&deviceConfigAttrib);
-            deviceConfigAttrib.ParentObject = pDeviceContext->UsbDevice;
-            status = WdfMemoryCreate(
-                &deviceConfigAttrib,
-                NonPagedPool,
-                USBUMP_POOLTAG,
-                tempMemorySize / 2,     // ascii half of UNICODE-16
-                &pDeviceContext->DeviceNameMemory,
-                (PVOID*)&pAsciiMemory
-            );
-            if (!NT_SUCCESS(status))
-            {
-                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error creating memory for Device Name String.\n");
-                return(status);
-            }
-            asciiString.Buffer = pAsciiMemory;
-            asciiString.MaximumLength = tempMemorySize / 2;
-            asciiString.Length = 0;
-
-            status = RtlUnicodeStringToUTF8String(
-                &asciiString,
-                &unicodeString,
-                false
-            );
-            if (!NT_SUCCESS(status))
-            {
-                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error converting UNICODE to ASCII.\n");
-                return(status);
-            }
-        }
-        WdfObjectDelete(tempMemory);
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Device Name string.\n");
+        return(status);
     }
+
     //
     // Select target interfaces
     //

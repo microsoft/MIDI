@@ -52,6 +52,8 @@ Environment:
 
 #define USBUMP_POOLTAG 'UPMU'
 
+#define USB_REQ_TIMEOUT_SEC     7
+
 FORCEINLINE
 GUID
 DeviceToActivityId(

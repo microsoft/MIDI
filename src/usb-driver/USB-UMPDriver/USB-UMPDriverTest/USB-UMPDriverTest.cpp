@@ -1125,7 +1125,7 @@ Return Value:
         }
 
         printf("\n\n--------------------Other Descriptor info---------------------------\n\n");
-        buf[0] = 0x00;
+        memset(buf, 0x00, sizeof(buf));
         // Print out rest of information
         success = DeviceIoControl(hDEV,
             IOCTL_USBUMPDRIVER_GET_MFGNAME,
@@ -1137,12 +1137,10 @@ Return Value:
             NULL);
         if (nBytes)
         {
-            (nBytes < sizeof(buf)) ? buf[nBytes] = 0x00 : buf[sizeof(buf) - 1] = 0x00;
-
-            printf("Manufacturer: %s\n", buf);
+            wprintf(L"Manufacturer: %s\n", (wchar_t *)buf);
         }
 
-        buf[0] = 0x00;
+        memset(buf, 0x00, sizeof(buf));
         success = DeviceIoControl(hDEV,
             IOCTL_USBUMPDRIVER_GET_DEVICENAME,
             buf,
@@ -1153,12 +1151,10 @@ Return Value:
             NULL);
         if (nBytes)
         {
-            (nBytes < sizeof(buf)) ? buf[nBytes] = 0x00 : buf[sizeof(buf) - 1] = 0x00;
-
-            printf("Device Name: %s\n", buf);
+            wprintf(L"Device Name: %s\n", (wchar_t *)buf);
         }
 
-        buf[0] = 0x00;
+        memset(buf, 0x00, sizeof(buf));
         success = DeviceIoControl(hDEV,
             IOCTL_USBUMPDRIVER_GET_SERIALNUM,
             buf,
@@ -1169,9 +1165,7 @@ Return Value:
             NULL);
         if (nBytes)
         {
-            (nBytes < sizeof(buf)) ? buf[nBytes] = 0x00 : buf[sizeof(buf) - 1] = 0x00;
-
-            printf("Serial Number: %s\n", buf);
+            wprintf(L"Serial Number: %s\n", (wchar_t *)buf);
         }
 
         success = DeviceIoControl(hDEV,
