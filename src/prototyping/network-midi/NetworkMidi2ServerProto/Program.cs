@@ -2,13 +2,7 @@
 using NetworkMidi2ServerProto;
 using Windows.Networking.Connectivity;
 using Windows.Networking;
-using Windows.Networking.ServiceDiscovery.Dnssd;
-using Windows.Networking.Sockets;
 using Spectre.Console;
-using System.Security.Cryptography.X509Certificates;
-using Windows.Globalization.DateTimeFormatting;
-using Windows.Storage.Streams;
-using System.Text.Json.Nodes;
 using NetworkMidi2ServerProto.SdkProto;
 
 
@@ -139,7 +133,7 @@ while (true)
 
         //AnsiConsole.MarkupLine("[green]0x{0:X8}[/]", word);
 
-        // TODO: process into messages. We're using the service API directly
+        // process into messages. We're using the service API directly
         // instead of the client API or SDK, so there's no message processing for
         // us here.
 
