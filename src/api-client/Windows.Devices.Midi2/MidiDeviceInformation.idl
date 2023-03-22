@@ -1,0 +1,21 @@
+// Current level: Prototype
+
+
+namespace Windows.Devices.Midi2.Enumeration
+{
+	[default_interface]
+	runtimeclass MidiDeviceInformation
+	{
+		MidiDeviceInformation();
+
+		// unique identifier for the MIDI device
+		String Id{ get; };
+
+		// property bag of all properties. Recommended to use this instead
+		// of strongly-typed properties to allow growth without changing the
+		// API contract. Use the SDK for strongly-typed property information
+		Windows.Foundation.Collections.PropertySet Properties { get; };
+
+	//	static IAsyncOperation<MidiDeviceInformationCollection> FindAllAsync();
+	}
+}

@@ -1,0 +1,2 @@
+import "oaidl.idl";
+import "ocidl.idl";

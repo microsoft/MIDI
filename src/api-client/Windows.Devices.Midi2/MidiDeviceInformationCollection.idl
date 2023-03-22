@@ -1,0 +1,13 @@
+// Current level: Prototype
+
+
+namespace Windows.Devices.Midi2.Enumeration
+{
+	[default_interface]
+	runtimeclass MidiDeviceInformationCollection
+	{
+		MidiDeviceInformationCollection();
+
+		// TODO. Implement a collection here
+	}
+}
