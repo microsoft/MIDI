@@ -1,0 +1,17 @@
+// Current level: Prototype
+
+
+namespace Windows.Devices.Midi2.Enumeration
+{
+	[default_interface]
+	runtimeclass MidiDeviceWatcher
+	{
+		MidiDeviceWatcher();
+
+		void Start();
+
+		void Stop();
+
+		// TODO: events etc.
+	}
+}

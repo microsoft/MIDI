@@ -1,0 +1,21 @@
+// Current level: Prototype
+
+
+namespace Windows.Devices.Midi2.Enumeration
+{
+	[default_interface]
+	runtimeclass MidiDeviceManager
+	{
+		MidiDeviceManager();
+
+		// Create a device if there's a provider which allows for
+		// runtime creation (virtual MIDI, network MIDI, etc.)
+		// on success, returns the device ID of the created device
+		String CreateDevice(String providerId, String jsonProperties);
+				
+		// this enables you to destroy a device, if that device is runtime 
+		// created like network MIDI or virtual MIDI
+		Boolean DestroyDevice(String deviceId);
+
+	}
+}
