@@ -1,0 +1,15 @@
+namespace Windows.Devices.Midi.ServiceContracts
+{
+    runtimeclass MidiMessageBuffer
+    {
+        MidiMessageBuffer();
+
+        Boolean IsFull();
+        Boolean HasData();
+
+        UInt32 GetNextWord();
+        void AddWord(UInt32 word);
+
+        void Clear();
+    }
+}

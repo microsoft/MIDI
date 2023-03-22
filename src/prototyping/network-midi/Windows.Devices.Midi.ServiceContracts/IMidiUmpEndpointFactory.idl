@@ -1,0 +1,14 @@
+import "IMidiUmpEndpoint.idl";
+
+namespace Windows.Devices.Midi.ServiceContracts
+{
+    // classes implementing this are responsible for creating specific types of 
+    // UMP Endpoints, like the Network MIDI 2 UMP Endpoint, for example.
+    unsealed runtimeclass IMidiUmpEndpointFactory
+    {
+        overridable IMidiUmpEndpoint GetExistingUmpEndpoint(String id);
+
+        overridable IMidiUmpEndpoint CreateNewUmpEndpoint(String id, String configurationJson);
+    };
+
+}
