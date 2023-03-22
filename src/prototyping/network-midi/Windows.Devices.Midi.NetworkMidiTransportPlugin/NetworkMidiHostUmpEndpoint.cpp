@@ -114,6 +114,9 @@ namespace winrt::Windows::Devices::Midi::NetworkMidiTransportPlugin::implementat
             std::cout << " : " << winrt::to_string(args.RemotePort());
             std::cout << std::endl;
 
+
+            uint8_t payloadWordsToRead = packetHeader.HeaderData.CommandPayloadLength;
+
             // shove the packet on the right queue
 
             switch (packetHeader.HeaderData.CommandCode)
@@ -152,11 +155,12 @@ namespace winrt::Windows::Devices::Midi::NetworkMidiTransportPlugin::implementat
                     _activeSessions[sessionKey].LastIncomingMessageTime = std::chrono::steady_clock::now();
 
                     uint32_t midiWord;
-                    while (SocketHelpers::CheckedReadUInt32(reader, midiWord))
+                    while (payloadWordsToRead > 0 && SocketHelpers::CheckedReadUInt32(reader, midiWord))
                     {
                         // std::cout << ">> Wrote " << std::dec << wordsWritten << " MIDI message words to MIDI input stream" << std::endl;
                         
                         _incomingMidiMessages.WriteWord(midiWord);
+                        payloadWordsToRead--;
                     }
 
                     //if (newWriter.UnstoredBufferLength() > 0)
@@ -170,6 +174,7 @@ namespace winrt::Windows::Devices::Midi::NetworkMidiTransportPlugin::implementat
                 {
                     // TODO: Send a NAK
                     std::cout << "UMP received, but no active session for this client." << std::endl;
+                    reader.ReadBuffer(payloadWordsToRead * sizeof(uint32_t));
                 }
 
 
@@ -193,6 +198,13 @@ namespace winrt::Windows::Devices::Midi::NetworkMidiTransportPlugin::implementat
 
             case 0x21:  // Pong
                 // we need to handle these, likely at the session level
+                // skip payload
+                reader.ReadBuffer(payloadWordsToRead * sizeof(uint32_t));
+                break;
+
+            default:
+                // skip payload
+                reader.ReadBuffer(payloadWordsToRead * sizeof(uint32_t));
                 break;
             }
         }
