@@ -26,7 +26,7 @@ public:
 	NetworkMidiOutOfBandOutgoingNAKCommandPacket(NetworkMidiNAKReason reason, NetworkMidiCommandPacketHeader inResponseToHeader)
 	{
 		Header.HeaderData.CommandCode = NetworkMidiCommandCodeNAK;
-		Header.HeaderData.CommandSpecificData.AsBytes[0] = reason;
+		Header.HeaderData.CommandSpecificData.AsBytes.Byte1 = reason;
 
 		// TODO: set data bytes for the header
 	}

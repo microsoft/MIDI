@@ -59,7 +59,7 @@
 
 			// we're good to go
 
-			// add to our services map (if we decide to keep that tracking here)
+			// TODO: add to our services map (if we decide to keep that tracking here)
 
 			co_return true;
 		}
@@ -67,7 +67,7 @@
 		{
 			std::cout << "Registration failure" << std::endl;
 
-			// should log this failure
+			// TODO: should log this failure
 
 			co_return false;
 		}

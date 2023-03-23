@@ -62,6 +62,18 @@ namespace NetworkMidi2ServerProto.SdkProto
             Words = new UInt32[numberOfMidiWords];
         }
 
+        // this doesn't do any checking. It's assumed to be run only on channel voice messages
+        private byte GetOpcode()
+        {
+            return (byte)((Words[0] & 0x00F00000) >> 20);
+        }
+
+        // this doesn't do any checking. It's assumed to be run only on channel voice messages
+        private byte GetChannel()
+        {
+            return (byte)((Words[0] & 0x000F0000) >> 16);
+        }
+
 
         public string FormattedMessageTypeName
         {
@@ -76,63 +88,63 @@ namespace NetworkMidi2ServerProto.SdkProto
                     case 0x1:   // 32 bit System Real Time / Common
                         return "System common";
                     case 0x2:   // 32 bit MIDI 1.0 channel voice
-                        //switch (Opcode)
-                        //{
-                        //    case 0x8:
-                        //        return "MIDI 1 Note Off";
-                        //    case 0x9:
-                        //        return "MIDI 1 Note On";
-                        //    case 0xA:
-                        //        return "MIDI 1 Poly Pressure";
-                        //    case 0xB:
-                        //        return "MIDI 1 CC";
-                        //    case 0xC:
-                        //        return "MIDI 1 Program Change";
-                        //    case 0xD:
-                        //        return "MIDI 1 Channel Pressure";
-                        //    case 0xE:
-                        //        return "MIDI 1 Pitch Bend";
-                        //    default:
-                        //        return "MIDI 1 Channel Voice";
-                        //}
-                        return "MIDI 1 Channel Voice";
+                        switch (GetOpcode())
+                        {
+                            case 0x8:
+                                return "M1 Note Off";
+                            case 0x9:
+                                return "M1 Note On";
+                            case 0xA:
+                                return "M1 Poly Press";
+                            case 0xB:
+                                return "M1 CC";
+                            case 0xC:
+                                return "M1 Prog Change";
+                            case 0xD:
+                                return "M1 Chan Press";
+                            case 0xE:
+                                return "M1 Pitch Bend";
+                            default:
+                                return "M1 CV";
+                        }
+                        //return "MIDI 1 CV";
 
                     case 0x3:   // 64 bit Data messages including SysEx
                         return "Data message";
                     case 0x4:   // 64 bit MIDI 2.0 channel voice
-                        //switch (Opcode)
-                        //{
-                        //    case 0x0:
-                        //        return "MIDI 2 Reg Per-note CC";
-                        //    case 0x1:
-                        //        return "MIDI 2 Asgn Per-note CC";
-                        //    case 0x4:
-                        //        return "MIDI 2 RPN";
-                        //    case 0x5:
-                        //        return "MIDI 2 NRPN";
-                        //    case 0x6:
-                        //        return "MIDI 2 Per-note Bend";
-                        //    case 0x8:
-                        //        return "MIDI 2 Note Off";
-                        //    case 0x9:
-                        //        return "MIDI 2 Note On";
-                        //    case 0xA:
-                        //        return "MIDI 2 Poly Pressure";
-                        //    case 0xB:
-                        //        return "MIDI 2 CC";
-                        //    case 0xC:
-                        //        return "MIDI 2 Program Change";
-                        //    case 0xD:
-                        //        return "MIDI 2 Channel Pressure";
-                        //    case 0xE:
-                        //        return "MIDI 2 Pitch Bend";
-                        //    case 0xF:
-                        //        return "MIDI 2 Per-Note mgmt";
+                        switch (GetOpcode())
+                        {
+                            case 0x0:
+                                return "M2 Reg Per-note CC";
+                            case 0x1:
+                                return "M2 Asgn Per-note CC";
+                            case 0x4:
+                                return "M2 RPN";
+                            case 0x5:
+                                return "M2 NRPN";
+                            case 0x6:
+                                return "M2 Per-note Bend";
+                            case 0x8:
+                                return "M2 Note Off";
+                            case 0x9:
+                                return "M2 Note On";
+                            case 0xA:
+                                return "M2 Poly Press";
+                            case 0xB:
+                                return "M2 CC";
+                            case 0xC:
+                                return "M2 Prog Change";
+                            case 0xD:
+                                return "M2 Chan Press";
+                            case 0xE:
+                                return "M2 Pitch Bend";
+                            case 0xF:
+                                return "M2 Per-Note mgmt";
 
-                        //    default:
-                        //        return "MIDI 2 Channel Voice";
-                        //}
-                        return "MIDI 2 Channel Voice";
+                            default:
+                                return "MIDI 2 CV";
+                        }
+                        //return "MIDI 2 CV";
 
                     case 0x5:   // 128 bit Data messages
                         return "Data Message";

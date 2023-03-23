@@ -1,14 +1,13 @@
 #pragma once
 
 #include "NetworkMidiHostUmpEndpoint.h"
-
 #include "NetworkMidiHostUmpEndpointFactory.g.h"
 
 namespace winrt::Windows::Devices::Midi::NetworkMidiTransportPlugin::implementation
 {
     struct NetworkMidiHostUmpEndpointFactory : NetworkMidiHostUmpEndpointFactoryT<NetworkMidiHostUmpEndpointFactory>
     {
-        // TODO: List of endpoints
+        // TODO: keep List of endpoints that are exposed to enumeration system
     private:
 
 
