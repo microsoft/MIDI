@@ -9,9 +9,9 @@ class NetworkHostAdvertiser
 private:
 	const winrt::hstring _serviceInstanceNameSuffix = L"._midi2._udp.local";
 
+	// TODO: Keep a list of DnssdServiceInstance objects here, should we decide to track
 	//	std::unordered_map<winrt::hstring, winrt::hstring> _services;
 
-		// TODO: Keep a list of DnssdServiceInstance objects here
 
 	inline const winrt::hstring BuildFullServiceInstanceName(const winrt::hstring nameWithoutSuffix)
 	{

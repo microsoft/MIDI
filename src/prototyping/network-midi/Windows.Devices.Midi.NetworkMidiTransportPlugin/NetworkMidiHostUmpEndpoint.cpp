@@ -22,12 +22,6 @@
 
 namespace winrt::Windows::Devices::Midi::NetworkMidiTransportPlugin::implementation
 {
-    //collections::IVector<uint32_t> NetworkMidiHostUmpEndpoint::IncomingMidiMessagesVect()
-    //{
-    //    return _incomingMidiMessagesVect;
-    //}
-
-
     winrt::Windows::Devices::Midi::NetworkMidiTransportPlugin::MidiMessageBuffer NetworkMidiHostUmpEndpoint::IncomingMidiMessages()
     {
         return _incomingMidiMessages;
@@ -143,9 +137,7 @@ namespace winrt::Windows::Devices::Midi::NetworkMidiTransportPlugin::implementat
                 // TODO: Going to need to handle incoming retransmits
                 // TODO: need to make sure we get packets in sequence.
 
-                //auto stream = _incomingMidiMessages.GetOutputStreamAt(0);
-           //     auto newWriter = streams::DataWriter(_incomingMidiMessages);
-
+ 
               //  std::cout << "Command packet is UMP" << std::endl;
 
                 if (SessionAlreadyExists(args.RemoteAddress(), args.RemotePort()))
@@ -162,18 +154,13 @@ namespace winrt::Windows::Devices::Midi::NetworkMidiTransportPlugin::implementat
                         _incomingMidiMessages.WriteWord(midiWord);
                         payloadWordsToRead--;
                     }
-
-                    //if (newWriter.UnstoredBufferLength() > 0)
-                    //{
-                    //    //std::cout << ">> StoreAsync()" << std::endl;
-                    //    co_await newWriter.StoreAsync();
-                    //    // std::cout << ">> UnstoredBufferLength(): " << newWriter.UnstoredBufferLength() << ", Stream.Position: " << _incomingMidiMessages.Position()  << std::endl;
-                    //}
                 }
                 else
                 {
                     // TODO: Send a NAK
                     std::cout << "UMP received, but no active session for this client." << std::endl;
+
+                    // drain the buffer
                     reader.ReadBuffer(payloadWordsToRead * sizeof(uint32_t));
                 }
 

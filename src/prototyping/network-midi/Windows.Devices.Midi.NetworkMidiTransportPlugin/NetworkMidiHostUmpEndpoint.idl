@@ -17,12 +17,10 @@ namespace Windows.Devices.Midi.NetworkMidiTransportPlugin
         // exposed in this way. This is prototype code only
         
         // MIDI In
-        //Windows.Devices.Midi.ServiceContracts.MidiMessageBuffer IncomingMidiMessages {get; };
         Windows.Devices.Midi.NetworkMidiTransportPlugin.MidiMessageBuffer IncomingMidiMessages {get; };
 
         
         // MIDI Out
-        //Windows.Devices.Midi.ServiceContracts.MidiMessageBuffer OutgoingMidiMessages {get; };
         Windows.Devices.Midi.NetworkMidiTransportPlugin.MidiMessageBuffer OutgoingMidiMessages {get; };
 
         // TBD: do we need to break these out into a DeviceInformation-type class like 
