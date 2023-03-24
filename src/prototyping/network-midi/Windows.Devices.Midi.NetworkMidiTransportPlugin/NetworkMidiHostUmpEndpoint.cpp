@@ -442,8 +442,6 @@ namespace winrt::Windows::Devices::Midi::NetworkMidiTransportPlugin::implementat
             }
         }
 
-        // disconnect event handler
-
         co_return;
     }
 
