@@ -2,6 +2,7 @@
 using System.Threading.Channels;
 using Microsoft.Midi.Settings.Core.Contracts.Services;
 using Microsoft.Midi.Settings.Core.Models;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Microsoft.Midi.Settings.Core.Services;
 
@@ -15,7 +16,7 @@ namespace Microsoft.Midi.Settings.Core.Services;
 public class SampleDataService : ISampleDataService
 {
     private List<string> _allUmpEndpointNames;
-    private List<DisplayFriendlyMidiMessage> _allMessages;
+    private List<MidiMessageViewModel> _allMessages;
     private List<DisplayFriendlyMidiDevice> _allDevices;
 
 
@@ -25,103 +26,75 @@ public class SampleDataService : ISampleDataService
     }
 
 
-    private static DisplayFriendlyMidiMessage ConstructMidi2NoteOnMessage(long timestamp, string sourceDeviceName, byte group, byte channel, byte noteNumber, byte attributeType, UInt16 velocity, UInt16 attribute)
+    private static MidiMessageViewModel ConstructMidi2NoteOnMessage(long timestamp, string sourceDeviceName, byte group, byte channel, byte noteNumber, byte attributeType, UInt16 velocity, UInt16 attribute)
     {
         byte mt = 4;
         byte opcode = 9;
 
-        byte[] bytes = new byte[8];
+        var words = new UInt32[2];
 
-        bytes[0] = (byte)((mt << 4) | (group & 0xf));
-        bytes[1] = (byte)((opcode << 4) | (channel & 0xf));
-        bytes[2] = noteNumber;
-        bytes[3] = attributeType;
-        bytes[4] = (byte)((velocity & 0xF0) >> 8);
-        bytes[5] = (byte)(velocity & 0x0F);
-        bytes[6] = (byte)((attribute & 0xF0) >> 8);
-        bytes[7] = (byte)(attribute & 0x0F);
+        words[0] = (UInt32)(mt & 0xF) << 28 | ((UInt32)(group & 0xF) << 24) | ((UInt32)(opcode & 0x0F) << 20) | ((UInt32)(channel & 0x0F) << 16) | (UInt32)noteNumber << 8 | (UInt32)attributeType;
+        words[1] = (UInt32)(velocity & 0xFFFF) << 16 | (UInt32)(attribute & 0xFFFF);
 
-        return new DisplayFriendlyMidiMessage(timestamp, bytes, 8, sourceDeviceName);
+        return new MidiMessageViewModel(timestamp, words, sourceDeviceName);
     }
-    private static DisplayFriendlyMidiMessage ConstructMidi2NoteOffMessage(long timestamp, string sourceDeviceName, byte group, byte channel, byte noteNumber, byte attributeType, UInt16 velocity, UInt16 attribute)
+    private static MidiMessageViewModel ConstructMidi2NoteOffMessage(long timestamp, string sourceDeviceName, byte group, byte channel, byte noteNumber, byte attributeType, UInt16 velocity, UInt16 attribute)
     {
         byte mt = 4;
         byte opcode = 8;
 
-        byte[] bytes = new byte[8];
+        var words = new UInt32[2];
 
-        bytes[0] = (byte)((mt << 4) | (group & 0xf));
-        bytes[1] = (byte)((opcode << 4) | (channel & 0xf));
-        bytes[2] = noteNumber;
-        bytes[3] = attributeType;
-        bytes[4] = (byte)((velocity & 0xF0) >> 8);
-        bytes[5] = (byte)(velocity & 0x0F);
-        bytes[6] = (byte)((attribute & 0xF0) >> 8);
-        bytes[7] = (byte)(attribute & 0x0F);
+        words[0] = (UInt32)(mt & 0xF) << 28 | ((UInt32)(group & 0xF) << 24) | ((UInt32)(opcode & 0x0F) << 20) | ((UInt32)(channel & 0x0F) << 16) | (UInt32)noteNumber << 8 | (UInt32)attributeType;
+        words[1] = (UInt32)(velocity & 0xFFFF) << 16 | (UInt32)(attribute & 0xFFFF);
 
-        return new DisplayFriendlyMidiMessage(timestamp, bytes, 8, sourceDeviceName);
+        return new MidiMessageViewModel(timestamp, words, sourceDeviceName);
     }
-    private static DisplayFriendlyMidiMessage ConstructMidi1NoteOnMessage(long timestamp, string sourceDeviceName, byte group, byte channel, byte data1, byte data2)
+    private static MidiMessageViewModel ConstructMidi1NoteOnMessage(long timestamp, string sourceDeviceName, byte group, byte channel, byte data1, byte data2)
     {
         byte mt = 2;
         byte opcode = 9;
 
-        byte[] bytes = new byte[4];
+        var words = new UInt32[1];
 
-        bytes[0] = (byte)((mt << 4) | (group & 0xf));
-        bytes[1] = (byte)((opcode << 4) | (channel & 0xf));
-        bytes[2] = data1;
-        bytes[3] = data2;
+        words[0] = (UInt32)(mt & 0xF) << 28 | ((UInt32)(group & 0xF) << 24) | ((UInt32)(opcode & 0x0F ) << 20) | ((UInt32)(channel & 0x0F) << 16) | (UInt32)data1 << 8 | (UInt32)data2;
 
-        return new DisplayFriendlyMidiMessage(timestamp, bytes, 4, sourceDeviceName);
+        return new MidiMessageViewModel(timestamp, words, sourceDeviceName);
     }
-    private static DisplayFriendlyMidiMessage ConstructMidi1NoteOffMessage(long timestamp, string sourceDeviceName, byte group, byte channel, byte data1, byte data2)
+    private static MidiMessageViewModel ConstructMidi1NoteOffMessage(long timestamp, string sourceDeviceName, byte group, byte channel, byte data1, byte data2)
     {
         byte mt = 2;
         byte opcode = 8;
 
-        byte[] bytes = new byte[4];
+        var words = new UInt32[1];
 
-        bytes[0] = (byte)((mt << 4) | (group & 0xf));
-        bytes[1] = (byte)((opcode << 4) | (channel & 0xf));
-        bytes[2] = data1;
-        bytes[3] = data2;
+        words[0] = (UInt32)(mt & 0xF) << 28 | ((UInt32)(group & 0xF) << 24) | ((UInt32)(opcode << 4) & 0xF0) | ((UInt32)(channel) & 0x0F);
 
-        return new DisplayFriendlyMidiMessage(timestamp, bytes, 4, sourceDeviceName);
+        return new MidiMessageViewModel(timestamp, words, sourceDeviceName);
     }
-    private static DisplayFriendlyMidiMessage ConstructTypeFMessage(long timestamp, string sourceDeviceName, byte form, UInt16 status, UInt16 data1, UInt32 data2, UInt32 data3, UInt32 data4)
+    private static MidiMessageViewModel ConstructTypeFMessage(long timestamp, string sourceDeviceName, byte form, UInt16 status, UInt16 data1, UInt32 data2, UInt32 data3, UInt32 data4)
     {
         byte mt = 0xF;
 
-        byte[] bytes = new byte[16];
+        //byte[] bytes = new byte[16];
+
+        var words = new UInt32[4];
 
         // I should probably be publicly shamed for writing this this way.
         // C unions and bitfields would really help here
 
-        bytes[0] = (byte)((mt << 4) | ((form & 0x7) << 2) | ((status >> 8) & 0x3));
-        bytes[1] = (byte)(status & 0xFF);
-        bytes[2] = (byte)((data1 & 0xFF00) >> 8);
-        bytes[3] = (byte)(data1 & 0x00FF);
-        bytes[4] = (byte)((data2 & 0xFF000000) >> 24);
-        bytes[5] = (byte)((data2 & 0x00FF0000) >> 16);
-        bytes[6] = (byte)((data2 & 0x0000FF00) >> 8);
-        bytes[7] = (byte)((data2 & 0x000000FF));
-        bytes[8] = (byte)((data3 & 0xFF000000) >> 24);
-        bytes[9] = (byte)((data3 & 0x00FF0000) >> 16);
-        bytes[10] = (byte)((data3 & 0x0000FF00) >> 8);
-        bytes[11] = (byte)((data3 & 0x000000FF));
-        bytes[12] = (byte)((data4 & 0xFF000000) >> 24);
-        bytes[13] = (byte)((data4 & 0x00FF0000) >> 16);
-        bytes[14] = (byte)((data4 & 0x0000FF00) >> 8);
-        bytes[15] = (byte)((data4 & 0x000000FF));
+        words[0] = (UInt32)(mt & 0xF) << 28 | ((UInt32)(form & 0x7) << 26) | ((UInt32)(status >> 6) & 0x3) | data1;
+        words[1] = data2;
+        words[2] = data3;
+        words[3] = data4;
 
-        return new DisplayFriendlyMidiMessage(timestamp, bytes, 16, sourceDeviceName);
+        return new MidiMessageViewModel(timestamp, words, sourceDeviceName);
     }
 
     // the data in these is mostly garbage. Just for display. More detailed parsing could break.
-    private static IEnumerable<DisplayFriendlyMidiMessage> AllMessages()
+    private static IEnumerable<MidiMessageViewModel> AllMessages()
     {
-        var list = new List<DisplayFriendlyMidiMessage>();
+        var list = new List<MidiMessageViewModel>();
 
         Random rnd = new Random();
 
@@ -221,11 +194,11 @@ public class SampleDataService : ISampleDataService
     }
 
 
-    public async Task<IEnumerable<DisplayFriendlyMidiMessage>> GetUmpMonitorDataAsync()
+    public async Task<IEnumerable<MidiMessageViewModel>> GetUmpMonitorDataAsync()
     {
         if (_allMessages == null)
         {
-            _allMessages = new List<DisplayFriendlyMidiMessage>(AllMessages());
+            _allMessages = new List<MidiMessageViewModel>(AllMessages());
         }
 
         await Task.CompletedTask;

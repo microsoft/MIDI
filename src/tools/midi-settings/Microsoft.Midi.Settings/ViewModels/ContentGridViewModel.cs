@@ -21,7 +21,7 @@ public class ContentGridViewModel : ObservableRecipient, INavigationAware
         get;
     }
 
-    public ObservableCollection<DisplayFriendlyMidiMessage> Source { get; } = new ObservableCollection<DisplayFriendlyMidiMessage>();
+    public ObservableCollection<MidiMessageViewModel> Source { get; } = new ObservableCollection<MidiMessageViewModel>();
 
     public ContentGridViewModel(INavigationService navigationService, ISampleDataService sampleDataService)
     {

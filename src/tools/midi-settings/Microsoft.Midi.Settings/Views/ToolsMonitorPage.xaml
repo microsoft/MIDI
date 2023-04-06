@@ -11,6 +11,7 @@
     xmlns:model="using:Microsoft.Midi.Settings.Core.Models"
     xmlns:toolkit="using:CommunityToolkit.WinUI.UI.Controls"
     xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
+    xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
     mc:Ignorable="d">
 
     <!-- hard-coded colors here need to be nuked. Prototype only -->
@@ -48,10 +49,195 @@
             <Setter Property="FontSize" Value="{StaticResource Cell_FontSize}" />
             <Setter Property="FontWeight" Value="Normal" />
         </Style>
+
+
+        <Style x:Key="MidiMessageFieldTextStyle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Consolas, Courier" />
+            <!--<Setter Property="FontFamily" Value="Segoe" />-->
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="CharacterSpacing" Value="50" />
+        </Style>
+
+        <Style x:Key="MidiMessageFieldGridStyle" TargetType="Grid">
+            <Setter Property="Margin" Value="0,0,0,0" />
+            <Setter Property="Padding" Value="0,2,0,2" />
+        </Style>
+
+        <Style x:Key="MidiMessageFieldBackgroundRectangleStyle" TargetType="Rectangle">
+            <Setter Property="Opacity" Value="0.25" />
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="Stroke" Value="{ThemeResource ControlStrongStrokeColorDefaultBrush}" />
+            <Setter Property="RadiusX" Value="2" />
+            <Setter Property="RadiusY" Value="2" />
+        </Style>
+
+
+        <DataTemplate x:Key="Normal_MidiMessageFieldDataTemplateSelector" x:DataType="model:MidiMessageFieldViewModel">
+            <Grid Style="{StaticResource MidiMessageFieldGridStyle}">
+                <Rectangle Style="{StaticResource MidiMessageFieldBackgroundRectangleStyle}"
+                           Fill="{ThemeResource LayerFillColorDefaultBrush}" />
+                <TextBlock Grid.Row="0"
+                           Text="{x:Bind FormattedBinaryValue}" 
+                           Style="{StaticResource MidiMessageFieldTextStyle}"/>
+
+                <ToolTipService.ToolTip>
+                    <ToolTip>
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="Field" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind Description}" Margin="10,0,0,10"/>
+                            <TextBlock Text="Value" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind Interpretation}" Margin="10,0,0,10" />
+                        </StackPanel>
+                    </ToolTip>
+                </ToolTipService.ToolTip>
+            </Grid>
+        </DataTemplate>
+
         
+        <DataTemplate x:Key="Alternate_MidiMessageFieldDataTemplateSelector" x:DataType="model:MidiMessageFieldViewModel">
+            <Grid Style="{StaticResource MidiMessageFieldGridStyle}">
+                <Rectangle Style="{StaticResource MidiMessageFieldBackgroundRectangleStyle}"
+                           Fill="{ThemeResource AccentTextFillColorTertiaryBrush}" />
+                <TextBlock Grid.Row="0"
+                           Text="{x:Bind FormattedBinaryValue}" 
+                           Style="{StaticResource MidiMessageFieldTextStyle}"/>
 
+                <ToolTipService.ToolTip>
+                    <ToolTip>
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="Field" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind Description}" Margin="10,0,0,10"/>
+                            <TextBlock Text="Value" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind Interpretation}" Margin="10,0,0,10" />
+                        </StackPanel>
+                    </ToolTip>
+                </ToolTipService.ToolTip>
+            </Grid>
+        </DataTemplate>
+        
+        <DataTemplate x:Key="Reserved_MidiMessageFieldDataTemplateSelector" x:DataType="model:MidiMessageFieldViewModel">
+            <Grid Style="{StaticResource MidiMessageFieldGridStyle}"
+                  Opacity="0.5">
+                <Rectangle Style="{StaticResource MidiMessageFieldBackgroundRectangleStyle}"
+                           Fill="{ThemeResource AccentTextFillColorDisabledBrush}" />
+                <TextBlock Grid.Row="0"
+                           Text="{x:Bind FormattedBinaryValue}" 
+                           Foreground="{ThemeResource TextOnAccentFillColorDisabledBrush}"
+                           Style="{StaticResource MidiMessageFieldTextStyle}"/>
 
+                <ToolTipService.ToolTip>
+                    <ToolTip>
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="Field" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind Description}" Margin="10,0,0,10"/>
+                            <TextBlock Text="Value" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind Interpretation}" Margin="10,0,0,10" />
+                        </StackPanel>
+                    </ToolTip>
+                </ToolTipService.ToolTip>
+            </Grid>
+        </DataTemplate>
 
+        <DataTemplate x:Key="MessageType_MidiMessageFieldDataTemplateSelector" x:DataType="model:MidiMessageFieldViewModel">
+            <Grid Style="{StaticResource MidiMessageFieldGridStyle}">
+                <Rectangle Style="{StaticResource MidiMessageFieldBackgroundRectangleStyle}"
+                           Fill="Black" />
+                <TextBlock Grid.Row="0"
+                           Text="{x:Bind FormattedBinaryValue}" 
+                           Style="{StaticResource MidiMessageFieldTextStyle}"/>
+
+                <ToolTipService.ToolTip>
+                    <ToolTip>
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="Field" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind Description}" Margin="10,0,0,10"/>
+                            <TextBlock Text="Value" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind Interpretation}" Margin="10,0,0,10" />
+                        </StackPanel>
+                    </ToolTip>
+                </ToolTipService.ToolTip>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="Group_MidiMessageFieldDataTemplateSelector" x:DataType="model:MidiMessageFieldViewModel">
+            <Grid Style="{StaticResource MidiMessageFieldGridStyle}">
+                <Rectangle Style="{StaticResource MidiMessageFieldBackgroundRectangleStyle}"
+                           Fill="DarkOrange" />
+                <TextBlock Grid.Row="0"
+                           Text="{x:Bind FormattedBinaryValue}" 
+                           Style="{StaticResource MidiMessageFieldTextStyle}"/>
+
+                <ToolTipService.ToolTip>
+                    <ToolTip>
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="Field" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind Description}" Margin="10,0,0,10"/>
+                            <TextBlock Text="Value" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind Interpretation}" Margin="10,0,0,10" />
+                        </StackPanel>
+                    </ToolTip>
+                </ToolTipService.ToolTip>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="Opcode_MidiMessageFieldDataTemplateSelector" x:DataType="model:MidiMessageFieldViewModel">
+            <Grid Style="{StaticResource MidiMessageFieldGridStyle}">
+                <Rectangle Style="{StaticResource MidiMessageFieldBackgroundRectangleStyle}"
+                           Fill="DarkCyan" />
+                <TextBlock Grid.Row="0"
+                           Text="{x:Bind FormattedBinaryValue}" 
+                           Style="{StaticResource MidiMessageFieldTextStyle}"/>
+
+                <ToolTipService.ToolTip>
+                    <ToolTip>
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="Field" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind Description}" Margin="10,0,0,10"/>
+                            <TextBlock Text="Value" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind Interpretation}" Margin="10,0,0,10" />
+                        </StackPanel>
+                    </ToolTip>
+                </ToolTipService.ToolTip>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="Channel_MidiMessageFieldDataTemplateSelector" x:DataType="model:MidiMessageFieldViewModel">
+            <Grid Style="{StaticResource MidiMessageFieldGridStyle}">
+                <Rectangle Style="{StaticResource MidiMessageFieldBackgroundRectangleStyle}"
+                           Fill="Blue" />
+                <TextBlock Grid.Row="0"
+                           Text="{x:Bind FormattedBinaryValue}" 
+                           Style="{StaticResource MidiMessageFieldTextStyle}"/>
+
+                <ToolTipService.ToolTip>
+                    <ToolTip>
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="Field" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind Description}" Margin="10,0,0,10"/>
+                            <TextBlock Text="Value" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind Interpretation}" Margin="10,0,0,10" />
+                        </StackPanel>
+                    </ToolTip>
+                </ToolTipService.ToolTip>
+            </Grid>
+        </DataTemplate>
+
+        
+        <helpers:MidiMessageFieldDataTemplateSelector x:Key="MidiMessageFieldDataTemplateSelector"
+                                                      MessageType="{StaticResource MessageType_MidiMessageFieldDataTemplateSelector}"
+                                                      Group="{StaticResource Group_MidiMessageFieldDataTemplateSelector}"
+                                                      Opcode="{StaticResource Opcode_MidiMessageFieldDataTemplateSelector}"
+                                                      Channel="{StaticResource Channel_MidiMessageFieldDataTemplateSelector}"
+                                                      DataNormal="{StaticResource Normal_MidiMessageFieldDataTemplateSelector}"
+                                                      DataAlternate="{StaticResource Alternate_MidiMessageFieldDataTemplateSelector}"
+                                                      Reserved="{StaticResource Reserved_MidiMessageFieldDataTemplateSelector}"
+                                                      />
+        
+        <!-- TODO: Also have templates for the message type, group, and opcode fields -->
+
+        <StackLayout x:Name="VerticalStackLayout" Orientation="Vertical" Spacing="8"/>
+
+        <StackLayout x:Name="HorizontalFieldStackLayout" Orientation="Horizontal" Spacing="0"/>
 
     </Page.Resources>
     
@@ -81,9 +267,100 @@
         <StackPanel Orientation="Horizontal" Spacing="4" Grid.Row="1">
             <!-- Set colors for the messages by group or by opcode Have icons by message type? -->
         </StackPanel>
-        
 
-        <toolkit:DataGrid Grid.Row="2"
+
+        <ListView Grid.Row="2"
+                  ItemsSource="{x:Bind ViewModel.Messages,Mode=OneWay}"
+                  Margin="8"
+                  Padding="0">
+
+            <ListView.HeaderTemplate>
+                <DataTemplate>
+                    <Grid Margin="20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100" />    <!-- Timestamp -->
+                            <ColumnDefinition Width="150" />    <!-- Source Device Name -->
+                            <ColumnDefinition Width="175" />    <!-- Message Type Name -->
+                            <ColumnDefinition Width="250" />    <!-- Message Name -->
+                            <ColumnDefinition Width="100" />    <!-- Hex words -->
+                            <ColumnDefinition Width="*" />      <!-- Binary Fields -->
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" Text="Timestamp" />
+                        <TextBlock Grid.Column="1" Text="Source" />
+                        <TextBlock Grid.Column="2" Text="UMP Type" />
+                        <TextBlock Grid.Column="3" Text="Specific Message" />
+                        <TextBlock Grid.Column="4" Text="Data (Hex)" />
+                        <TextBlock Grid.Column="5" Text="Fields (Binary)" />
+                    </Grid>
+                </DataTemplate>
+
+            </ListView.HeaderTemplate>
+            
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="model:MidiMessageViewModel">
+                    <!-- Basics -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100" />    <!-- Timestamp -->
+                            <ColumnDefinition Width="150" />    <!-- Source Device Name -->
+                            <ColumnDefinition Width="175" />    <!-- Message Type Name -->
+                            <ColumnDefinition Width="250" />    <!-- Message Name -->
+                            <ColumnDefinition Width="100" />    <!-- Hex words -->
+                            <ColumnDefinition Width="*" />      <!-- Binary Fields -->
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" Text="{x:Bind Timestamp}" Margin="3"/>
+                        <TextBlock Grid.Column="1" Text="{x:Bind SourceDeviceName}" Margin="3" />
+                        <TextBlock Grid.Column="2" Text="{x:Bind MessageTypeName}" Margin="3" />
+                        <TextBlock Grid.Column="3" Text="{x:Bind MessageName}" Margin="3" />
+
+                        <!-- All data, in hex -->
+
+                        <ItemsControl Grid.Column="4" ItemsSource="{x:Bind AllData}" Margin="3">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Vertical" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <!-- TODO: Change settings to a style -->
+                                    <TextBlock Text="{Binding Converter={StaticResource StringFormatConverter}, ConverterParameter='0x{0:X8}'}" 
+                                               FontFamily="Consolas, Courier"
+                                               FontSize="14"
+                                               />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- List of Field Lists (each word has its own list of fields) -->
+
+                        <ItemsRepeater Grid.Column="5" ItemsSource="{x:Bind WordFields}" Margin="3">
+                            <!--<ItemsRepeater.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Vertical" VerticalAlignment="Top"/>
+                                </ItemsPanelTemplate>
+                            </ItemsRepeater.ItemsPanel>-->
+
+                             <!-- Each field in the word --> 
+
+                            <ItemsRepeater.ItemTemplate>
+                                <DataTemplate x:DataType="model:MidiMessageWordFieldsViewModel">
+                                    <ItemsRepeater ItemsSource="{x:Bind Fields}"
+                                                   ItemTemplate="{StaticResource MidiMessageFieldDataTemplateSelector}"
+                                                   Layout="{StaticResource HorizontalFieldStackLayout}"
+                                                  />
+                                </DataTemplate>
+                            </ItemsRepeater.ItemTemplate>
+                        </ItemsRepeater>
+                    </Grid>
+
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <!--<toolkit:DataGrid Grid.Row="2"
                           ItemsSource="{x:Bind ViewModel.Messages,Mode=OneWay}"
                           Margin="8"
                           Padding="0"
@@ -100,15 +377,11 @@
                           RowHeight="0"
                           FocusVisualMargin="0"
                           AlternatingRowBackground="Transparent"
-                          >
+                          >-->
 
-            <toolkit:DataGrid.RowBackground>
-                <SolidColorBrush Color="{ThemeResource SystemFillColorNeutralBackground}" />
-            </toolkit:DataGrid.RowBackground>
             
-            <toolkit:DataGrid.ContextFlyout>
+            <!--<toolkit:DataGrid.ContextFlyout>
                 <MenuFlyout>
-                    <!-- TODO: Will want to use our standard copy context menu item -->
                     <MenuFlyoutItem Text="Copy" Icon="Copy" />
                     <MenuFlyoutSeparator />
                     <MenuFlyoutItem Text="View Message Details" Icon="ShowResults" />
@@ -119,84 +392,8 @@
                     <MenuFlyoutSeparator />
                     <MenuFlyoutItem Text="Clear Filters" Icon="Clear"/>
                 </MenuFlyout>
-            </toolkit:DataGrid.ContextFlyout>
+            </toolkit:DataGrid.ContextFlyout>-->
             
-            
-            <toolkit:DataGrid.Columns>
-                <toolkit:DataGridTextColumn Header="Timestamp" Binding="{Binding FormattedTimestamp}" FontSize="{StaticResource Cell_FontSize}" />
-                <!--<toolkit:DataGridTextColumn Header="Device" Binding="{Binding SourceDeviceName}"  FontSize="{StaticResource Cell_FontSize}" />-->
-                <toolkit:DataGridTextColumn Header="MT" Binding="{Binding FormattedMessageType}"  FontSize="{StaticResource Cell_FontSize}" />
-                
-                <toolkit:DataGridTemplateColumn Header="Op" Tag="Opcode" ToolTipService.ToolTip="Opcode when relevant">
-                    <toolkit:DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding FormattedOpcode}" 
-                                       Style="{StaticResource DataDisplayTextBlockStyle}"
-                                       Margin="12,0,0,0"
-                                       Visibility="{Binding HasOpcode, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                        </DataTemplate>
-                    </toolkit:DataGridTemplateColumn.CellTemplate>
-                </toolkit:DataGridTemplateColumn>
-
-                <toolkit:DataGridTextColumn Header="Message" Binding="{Binding FormattedMessageTypeName}"  FontSize="{StaticResource Cell_FontSize}" />
-
-                <toolkit:DataGridTemplateColumn Header="Group" ToolTipService.ToolTip="Group when relevant, mapped 1-16">
-                    <toolkit:DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding FormattedGroup}" 
-                                       Style="{StaticResource DataDisplayTextBlockStyle}"
-                                       Visibility="{Binding HasGroup, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                        </DataTemplate>
-                    </toolkit:DataGridTemplateColumn.CellTemplate>
-                </toolkit:DataGridTemplateColumn>
-
-                <toolkit:DataGridTemplateColumn Header="Chan" Tag="Channel" ToolTipService.ToolTip="Channel when relevant, mapped 1-16">
-                    <toolkit:DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding FormattedChannel}" 
-                                       Style="{StaticResource DataDisplayTextBlockStyle}"
-                                       Visibility="{Binding HasChannel, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                        </DataTemplate>
-                    </toolkit:DataGridTemplateColumn.CellTemplate>
-                </toolkit:DataGridTemplateColumn>
-
-
-                <toolkit:DataGridTemplateColumn Header="Full UMP (hex bytes)" ToolTipService.ToolTip="Entire UMP in bytes">
-                    <toolkit:DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <ItemsControl ItemsSource="{Binding AllData}" VerticalContentAlignment="Center">
-
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-
-                                <!-- TODO: These theme brush selections are arbitrary and need to be normalized -->
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid HorizontalAlignment="Center" 
-                                              BorderBrush="{ThemeResource SubtleFillColorSecondaryBrush}"
-                                              Background="{ThemeResource SubtleFillColorTertiaryBrush}"
-                                              CornerRadius="{StaticResource ControlCornerRadius}"
-                                              Width="25"
-                                              BorderThickness="1" 
-                                              Padding="2" Margin="2">
-                                            <TextBlock Text="{Binding Converter={StaticResource StringFormatConverter}, ConverterParameter='{}{0:X2}'}" 
-                                                Style="{StaticResource AllDataBytesDisplayTextBlockStyle}"
-                                                       />
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                            
-                        </DataTemplate>
-                    </toolkit:DataGridTemplateColumn.CellTemplate>
-                </toolkit:DataGridTemplateColumn>
-
-            </toolkit:DataGrid.Columns>
-            
-        </toolkit:DataGrid>
         
         <!--<Grid Grid.Row="3">
             <Button Content="Save to File" />

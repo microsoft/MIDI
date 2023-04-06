@@ -19,7 +19,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         private readonly INavigationService _navigationService;
         private readonly ISampleDataService _sampleDataService;
 
-        public ObservableCollection<DisplayFriendlyMidiMessage> Messages { get; } = new ObservableCollection<DisplayFriendlyMidiMessage>();
+        public ObservableCollection<MidiMessageViewModel> Messages { get; } = new ObservableCollection<MidiMessageViewModel>();
         public ObservableCollection<string> UmpEndpointNames { get; } = new ObservableCollection<string>();
         public ObservableCollection<string> AllGroups { get; } = new ObservableCollection<string>();
         public ObservableCollection<string> AllChannels { get; } = new ObservableCollection<string>();

@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Midi.Settings.Core.Models;
 
+// TODO: Move these to the ViewModels/Data folder and base on VM base class
+// The model/data itself needs to come from the SDK. 
+
 public enum MidiFunctionBlockProtocol
 {
     Midi1,
