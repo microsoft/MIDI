@@ -21,17 +21,19 @@ namespace winrt::Windows::Devices::Midi::NetworkMidiTransportPlugin::implementat
 
         auto jsonProps = json::JsonValue::Parse(configurationJson);
 
+
         // WinRT can't expose constants, so the SDK will have strongly-typed
         // classes that handle all this cruft. We use json here so we can extend
         // this in the future, and add new transports, without breaking the API contract
-        hstring connectionType = jsonProps.GetObject().GetNamedString(L"ConnectionType");
-        hstring midiEndpointName = jsonProps.GetObject().GetNamedString(L"MidiEndpointName");
-        hstring midiProductInstanceId = jsonProps.GetObject().GetNamedString(L"MidiProductInstanceId");
+        hstring connectionType = jsonProps.GetObject().GetNamedString(PKEY_ConnectionType);
+        hstring midiEndpointName = jsonProps.GetObject().GetNamedString(PKEY_MidiEndpointName);
+        hstring midiProductInstanceId = jsonProps.GetObject().GetNamedString(PKEY_MidiProductInstanceId);
 
-        bool shouldAdvertise = jsonProps.GetObject().GetNamedBoolean(L"Server_Advertise");
-        hstring serviceInstanceName = jsonProps.GetObject().GetNamedString(L"Server_ServiceInstanceName");
-        hstring serverPort = jsonProps.GetObject().GetNamedString(L"Server_Port");
-        hstring serverHostName = jsonProps.GetObject().GetNamedString(L"Server_HostName");
+        bool shouldAdvertise = jsonProps.GetObject().GetNamedBoolean(PKEY_Server_Advertise);
+        hstring serviceInstanceName = jsonProps.GetObject().GetNamedString(PKEY_Server_ServiceInstanceName);
+        hstring serverPort = jsonProps.GetObject().GetNamedString(PKEY_Server_Port);
+        hstring serverHostName = jsonProps.GetObject().GetNamedString(PKEY_Server_HostName);
+
 
         std::cout << "about to start server" << std::endl;
 

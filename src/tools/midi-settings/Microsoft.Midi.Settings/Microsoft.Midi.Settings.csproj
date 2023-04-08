@@ -1,19 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
-    <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
-    <RootNamespace>Microsoft.Midi.Settings</RootNamespace>
-    <ApplicationIcon>Assets/WindowIcon.ico</ApplicationIcon>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Platforms>x86;x64;arm64</Platforms>
-    <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
-    <PublishProfile>Properties\PublishProfiles\win10-$(Platform).pubxml</PublishProfile>
-	<ImplicitUsings>enable</ImplicitUsings>
-	<Nullable>enable</Nullable>
-	<UseWinUI>true</UseWinUI>
-    <EnableMsixTooling>true</EnableMsixTooling>
-  </PropertyGroup>
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net8.0-windows10.0.20348.0</TargetFramework>
+        <TargetPlatformMinVersion>10.0.20348.0</TargetPlatformMinVersion>
+        <RootNamespace>Microsoft.Midi.Settings</RootNamespace>
+        <ApplicationIcon>Assets/WindowIcon.ico</ApplicationIcon>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
+        <Platforms>x86;x64;arm64</Platforms>
+        <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
+	    <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+	    <SupportedOSPlatformVersion>10.0.20348.0</SupportedOSPlatformVersion>
+
+	    <UseWinUI>true</UseWinUI>
+
+	    <EnableMsixTooling>true</EnableMsixTooling>
+	    <PublishProfile>Properties\PublishProfiles\win10-$(Platform).pubxml</PublishProfile>
+    </PropertyGroup>
+	
+	
   <ItemGroup>
     <None Remove="Styles\MessageTemplates.xaml" />
     <None Remove="Views\DevicesPage.xaml" />
@@ -44,6 +49,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Microsoft.Midi.Settings.ApiMock\Microsoft.Midi.Settings.SdkMock.csproj" />
     <ProjectReference Include="..\Microsoft.Midi.Settings.Core\Microsoft.Midi.Settings.Core.csproj" />
   </ItemGroup>
   <ItemGroup>

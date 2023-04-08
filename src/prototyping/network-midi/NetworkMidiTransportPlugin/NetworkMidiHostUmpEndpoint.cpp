@@ -37,6 +37,8 @@ namespace winrt::Windows::Devices::Midi::NetworkMidiTransportPlugin::implementat
     {
         return _id;
     }
+
+
     winrt::Windows::Foundation::Collections::PropertySet NetworkMidiHostUmpEndpoint::Properties()
     {
         return _properties;
@@ -244,13 +246,15 @@ namespace winrt::Windows::Devices::Midi::NetworkMidiTransportPlugin::implementat
         // part of the API contract, though, and so it can't be added to easily. So
         // it may be that documentation (ugh) or some language-specific header files
         // are the way to go.
-        _properties.Insert(L"Id", winrt::box_value(_id));
-        _properties.Insert(L"HostName", winrt::box_value(hostName));
-        _properties.Insert(L"Port", winrt::box_value(port));
-        _properties.Insert(L"ServiceInstanceName", winrt::box_value(serviceInstanceName));
-        _properties.Insert(L"MidiEndpointName", winrt::box_value(midiEndpointName));
-        _properties.Insert(L"MidiProductInstanceId", winrt::box_value(midiProductInstanceId));
+        _properties.Insert(PKEY_Id, winrt::box_value(_id));
+        _properties.Insert(PKEY_MidiEndpointName, winrt::box_value(midiEndpointName));
+        _properties.Insert(PKEY_MidiProductInstanceId, winrt::box_value(midiProductInstanceId));
+
+        _properties.Insert(PKEY_Server_ServiceInstanceName, winrt::box_value(serviceInstanceName));
+        _properties.Insert(PKEY_Server_HostName, winrt::box_value(hostName));
+        _properties.Insert(PKEY_Server_Port, winrt::box_value(port));
         // TEMP -----------------------------------------------
+
 
 
         // return from this function now, but spin everything else off into a threadpool thread

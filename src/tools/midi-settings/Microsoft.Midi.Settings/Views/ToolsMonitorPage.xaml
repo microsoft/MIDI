@@ -33,6 +33,9 @@
 
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <converters:StringFormatConverter x:Key="StringFormatConverter" />
+        <helpers:FieldUnsignedNumericBinaryFormatConverter x:Key="FieldUnsignedNumericBinaryFormatConverter" />
+        <helpers:FieldUnsignedNumericDecimalFormatConverter x:Key="FieldUnsignedNumericDecimalFormatConverter" />
+
 
         <Style x:Key="DataDisplayTextBlockStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextStyle}">
             <Setter Property="VerticalAlignment" Value="Center" />
@@ -72,21 +75,54 @@
         </Style>
 
 
+        <Style x:Key="MidiMessageFieldTipHeaderFieldNameStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Margin" Value="0,5,0,3" />
+            <Setter Property="Foreground" Value="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+        </Style>
+
+        <Style x:Key="MidiMessageFieldTipHeaderFieldDescriptionStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="Normal" />
+            <Setter Property="Margin" Value="0,0,0,5" />
+            <Setter Property="Foreground" Value="{ThemeResource AccentTextFillColorSecondaryBrush}" />
+        </Style>
+
+        <Style x:Key="MidiMessageFieldTipHeaderSeparatorStyle" TargetType="Rectangle">
+            <Setter Property="Height" Value="1" />
+            <Setter Property="StrokeThickness" Value="0.5" />
+            <Setter Property="Stroke" Value="{ThemeResource ControlStrongStrokeColorDefaultBrush}" />
+            <Setter Property="Margin" Value="5,5,5,5" />
+        </Style>
+
+            
         <DataTemplate x:Key="Normal_MidiMessageFieldDataTemplateSelector" x:DataType="model:MidiMessageFieldViewModel">
             <Grid Style="{StaticResource MidiMessageFieldGridStyle}">
                 <Rectangle Style="{StaticResource MidiMessageFieldBackgroundRectangleStyle}"
-                           Fill="{ThemeResource LayerFillColorDefaultBrush}" />
-                <TextBlock Grid.Row="0"
-                           Text="{x:Bind FormattedBinaryValue}" 
+                           Fill="#66DD99" />
+                <TextBlock Text="{x:Bind FormattedBinaryValue}" 
                            Style="{StaticResource MidiMessageFieldTextStyle}"/>
 
                 <ToolTipService.ToolTip>
                     <ToolTip>
                         <StackPanel Orientation="Vertical">
-                            <TextBlock Text="Field" FontWeight="Bold" />
-                            <TextBlock Text="{x:Bind Description}" Margin="10,0,0,10"/>
-                            <TextBlock Text="Value" FontWeight="Bold" />
-                            <TextBlock Text="{x:Bind Interpretation}" Margin="10,0,0,10" />
+                            <TextBlock Text="{x:Bind Name}" Style="{StaticResource MidiMessageFieldTipHeaderFieldNameStyle}"/>
+                            <TextBlock Text="{x:Bind Description}" Style="{StaticResource MidiMessageFieldTipHeaderFieldDescriptionStyle}"/>
+                            <Rectangle Style="{StaticResource MidiMessageFieldTipHeaderSeparatorStyle}"/>
+                            <TextBlock Text="Interpretation" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind Interpretation}" Margin="10,0,0,10" TextWrapping="WrapWholeWords" />
+                            <TextBlock Text="Raw Decimal Value" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind RawValue, Converter={StaticResource FieldUnsignedNumericDecimalFormatConverter}}" Margin="10,0,0,10" />
+                            <TextBlock Text="Raw Hex Value" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind RawValue, Converter={StaticResource StringFormatConverter}, ConverterParameter='0x{0:X}'}" Margin="10,0,0,10" />
+                            <Grid>
+                                <Rectangle Style="{StaticResource MidiMessageFieldBackgroundRectangleStyle}"
+                                           Fill="#66DD99" />
+                                <TextBlock Text="{x:Bind FormattedBinaryValue}" 
+                                           Margin="3"
+                                           Style="{StaticResource MidiMessageFieldTextStyle}"/>
+                            </Grid>
                         </StackPanel>
                     </ToolTip>
                 </ToolTipService.ToolTip>
@@ -97,18 +133,29 @@
         <DataTemplate x:Key="Alternate_MidiMessageFieldDataTemplateSelector" x:DataType="model:MidiMessageFieldViewModel">
             <Grid Style="{StaticResource MidiMessageFieldGridStyle}">
                 <Rectangle Style="{StaticResource MidiMessageFieldBackgroundRectangleStyle}"
-                           Fill="{ThemeResource AccentTextFillColorTertiaryBrush}" />
-                <TextBlock Grid.Row="0"
-                           Text="{x:Bind FormattedBinaryValue}" 
+                           Fill="#6699FF" />
+                <TextBlock Text="{x:Bind FormattedBinaryValue}" 
                            Style="{StaticResource MidiMessageFieldTextStyle}"/>
 
                 <ToolTipService.ToolTip>
                     <ToolTip>
                         <StackPanel Orientation="Vertical">
-                            <TextBlock Text="Field" FontWeight="Bold" />
-                            <TextBlock Text="{x:Bind Description}" Margin="10,0,0,10"/>
-                            <TextBlock Text="Value" FontWeight="Bold" />
-                            <TextBlock Text="{x:Bind Interpretation}" Margin="10,0,0,10" />
+                            <TextBlock Text="{x:Bind Name}" Style="{StaticResource MidiMessageFieldTipHeaderFieldNameStyle}"/>
+                            <TextBlock Text="{x:Bind Description}" Style="{StaticResource MidiMessageFieldTipHeaderFieldDescriptionStyle}"/>
+                            <Rectangle Style="{StaticResource MidiMessageFieldTipHeaderSeparatorStyle}"/>
+                            <TextBlock Text="Interpretation" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind Interpretation}" Margin="10,0,0,10" TextWrapping="WrapWholeWords" />
+                            <TextBlock Text="Raw Decimal Value" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind RawValue, Converter={StaticResource FieldUnsignedNumericDecimalFormatConverter}}" Margin="10,0,0,10" />
+                            <TextBlock Text="Raw Hex Value" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind RawValue, Converter={StaticResource StringFormatConverter}, ConverterParameter='0x{0:X}'}" Margin="10,0,0,10" />
+                            <Grid>
+                                <Rectangle Style="{StaticResource MidiMessageFieldBackgroundRectangleStyle}"
+                                           Fill="#6699FF" />
+                                <TextBlock Text="{x:Bind FormattedBinaryValue}" 
+                                           Margin="3"
+                                           Style="{StaticResource MidiMessageFieldTextStyle}"/>
+                            </Grid>
                         </StackPanel>
                     </ToolTip>
                 </ToolTipService.ToolTip>
@@ -120,18 +167,30 @@
                   Opacity="0.5">
                 <Rectangle Style="{StaticResource MidiMessageFieldBackgroundRectangleStyle}"
                            Fill="{ThemeResource AccentTextFillColorDisabledBrush}" />
-                <TextBlock Grid.Row="0"
-                           Text="{x:Bind FormattedBinaryValue}" 
+                <TextBlock Text="{x:Bind FormattedBinaryValue}" 
                            Foreground="{ThemeResource TextOnAccentFillColorDisabledBrush}"
                            Style="{StaticResource MidiMessageFieldTextStyle}"/>
 
                 <ToolTipService.ToolTip>
                     <ToolTip>
                         <StackPanel Orientation="Vertical">
-                            <TextBlock Text="Field" FontWeight="Bold" />
-                            <TextBlock Text="{x:Bind Description}" Margin="10,0,0,10"/>
-                            <TextBlock Text="Value" FontWeight="Bold" />
-                            <TextBlock Text="{x:Bind Interpretation}" Margin="10,0,0,10" />
+                            <TextBlock Text="{x:Bind Name}" Style="{StaticResource MidiMessageFieldTipHeaderFieldNameStyle}"/>
+                            <TextBlock Text="{x:Bind Description}" Style="{StaticResource MidiMessageFieldTipHeaderFieldDescriptionStyle}"/>
+                            <Rectangle Style="{StaticResource MidiMessageFieldTipHeaderSeparatorStyle}"/>
+                            <TextBlock Text="Interpretation" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind Interpretation}" Margin="10,0,0,10" TextWrapping="WrapWholeWords" />
+                            <TextBlock Text="Raw Decimal Value" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind RawValue, Converter={StaticResource FieldUnsignedNumericDecimalFormatConverter}}" Margin="10,0,0,10" />
+                            <TextBlock Text="Raw Hex Value" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind RawValue, Converter={StaticResource StringFormatConverter}, ConverterParameter='0x{0:X}'}" Margin="10,0,0,10" />
+                            <Grid>
+                                <Rectangle Style="{StaticResource MidiMessageFieldBackgroundRectangleStyle}"
+                                           Fill="{ThemeResource AccentTextFillColorDisabledBrush}" />
+                                <TextBlock Text="{x:Bind FormattedBinaryValue}" 
+                                           Foreground="{ThemeResource TextOnAccentFillColorDisabledBrush}"
+                                           Margin="3"
+                                           Style="{StaticResource MidiMessageFieldTextStyle}"/>
+                            </Grid>
                         </StackPanel>
                     </ToolTip>
                 </ToolTipService.ToolTip>
@@ -141,18 +200,29 @@
         <DataTemplate x:Key="MessageType_MidiMessageFieldDataTemplateSelector" x:DataType="model:MidiMessageFieldViewModel">
             <Grid Style="{StaticResource MidiMessageFieldGridStyle}">
                 <Rectangle Style="{StaticResource MidiMessageFieldBackgroundRectangleStyle}"
-                           Fill="Black" />
-                <TextBlock Grid.Row="0"
-                           Text="{x:Bind FormattedBinaryValue}" 
+                           Fill="#FF6655" />
+                <TextBlock Text="{x:Bind FormattedBinaryValue}" 
                            Style="{StaticResource MidiMessageFieldTextStyle}"/>
 
                 <ToolTipService.ToolTip>
                     <ToolTip>
                         <StackPanel Orientation="Vertical">
-                            <TextBlock Text="Field" FontWeight="Bold" />
-                            <TextBlock Text="{x:Bind Description}" Margin="10,0,0,10"/>
-                            <TextBlock Text="Value" FontWeight="Bold" />
-                            <TextBlock Text="{x:Bind Interpretation}" Margin="10,0,0,10" />
+                            <TextBlock Text="{x:Bind Name}" Style="{StaticResource MidiMessageFieldTipHeaderFieldNameStyle}"/>
+                            <TextBlock Text="{x:Bind Description}" Style="{StaticResource MidiMessageFieldTipHeaderFieldDescriptionStyle}"/>
+                            <Rectangle Style="{StaticResource MidiMessageFieldTipHeaderSeparatorStyle}"/>
+                            <TextBlock Text="Interpretation" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind Interpretation}" Margin="10,0,0,10" TextWrapping="WrapWholeWords" />
+                            <TextBlock Text="Raw Decimal Value" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind RawValue, Converter={StaticResource FieldUnsignedNumericDecimalFormatConverter}}" Margin="10,0,0,10" />
+                            <TextBlock Text="Raw Hex Value" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind RawValue, Converter={StaticResource StringFormatConverter}, ConverterParameter='0x{0:X}'}" Margin="10,0,0,10" />
+                            <Grid>
+                                <Rectangle Style="{StaticResource MidiMessageFieldBackgroundRectangleStyle}"
+                                           Fill="#FF6655" />
+                                <TextBlock Text="{x:Bind FormattedBinaryValue}" 
+                                           Margin="3"
+                                           Style="{StaticResource MidiMessageFieldTextStyle}"/>
+                            </Grid>
                         </StackPanel>
                     </ToolTip>
                 </ToolTipService.ToolTip>
@@ -162,18 +232,29 @@
         <DataTemplate x:Key="Group_MidiMessageFieldDataTemplateSelector" x:DataType="model:MidiMessageFieldViewModel">
             <Grid Style="{StaticResource MidiMessageFieldGridStyle}">
                 <Rectangle Style="{StaticResource MidiMessageFieldBackgroundRectangleStyle}"
-                           Fill="DarkOrange" />
-                <TextBlock Grid.Row="0"
-                           Text="{x:Bind FormattedBinaryValue}" 
+                           Fill="#338899" />
+                <TextBlock Text="{x:Bind FormattedBinaryValue}" 
                            Style="{StaticResource MidiMessageFieldTextStyle}"/>
 
                 <ToolTipService.ToolTip>
                     <ToolTip>
                         <StackPanel Orientation="Vertical">
-                            <TextBlock Text="Field" FontWeight="Bold" />
-                            <TextBlock Text="{x:Bind Description}" Margin="10,0,0,10"/>
-                            <TextBlock Text="Value" FontWeight="Bold" />
-                            <TextBlock Text="{x:Bind Interpretation}" Margin="10,0,0,10" />
+                            <TextBlock Text="{x:Bind Name}" Style="{StaticResource MidiMessageFieldTipHeaderFieldNameStyle}"/>
+                            <TextBlock Text="{x:Bind Description}" Style="{StaticResource MidiMessageFieldTipHeaderFieldDescriptionStyle}"/>
+                            <Rectangle Style="{StaticResource MidiMessageFieldTipHeaderSeparatorStyle}"/>
+                            <TextBlock Text="Interpretation" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind Interpretation}" Margin="10,0,0,10" TextWrapping="WrapWholeWords" />
+                            <TextBlock Text="Raw Decimal Value" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind RawValue, Converter={StaticResource FieldUnsignedNumericDecimalFormatConverter}}" Margin="10,0,0,10" />
+                            <TextBlock Text="Raw Hex Value" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind RawValue, Converter={StaticResource StringFormatConverter}, ConverterParameter='0x{0:X}'}" Margin="10,0,0,10" />
+                            <Grid>
+                                <Rectangle Style="{StaticResource MidiMessageFieldBackgroundRectangleStyle}"
+                                           Fill="#338899" />
+                                <TextBlock Text="{x:Bind FormattedBinaryValue}" 
+                                           Margin="3"
+                                           Style="{StaticResource MidiMessageFieldTextStyle}"/>
+                            </Grid>
                         </StackPanel>
                     </ToolTip>
                 </ToolTipService.ToolTip>
@@ -183,18 +264,29 @@
         <DataTemplate x:Key="Opcode_MidiMessageFieldDataTemplateSelector" x:DataType="model:MidiMessageFieldViewModel">
             <Grid Style="{StaticResource MidiMessageFieldGridStyle}">
                 <Rectangle Style="{StaticResource MidiMessageFieldBackgroundRectangleStyle}"
-                           Fill="DarkCyan" />
-                <TextBlock Grid.Row="0"
-                           Text="{x:Bind FormattedBinaryValue}" 
+                           Fill= "#661111"/>
+                <TextBlock Text="{x:Bind FormattedBinaryValue}" 
                            Style="{StaticResource MidiMessageFieldTextStyle}"/>
 
                 <ToolTipService.ToolTip>
                     <ToolTip>
                         <StackPanel Orientation="Vertical">
-                            <TextBlock Text="Field" FontWeight="Bold" />
-                            <TextBlock Text="{x:Bind Description}" Margin="10,0,0,10"/>
-                            <TextBlock Text="Value" FontWeight="Bold" />
-                            <TextBlock Text="{x:Bind Interpretation}" Margin="10,0,0,10" />
+                            <TextBlock Text="{x:Bind Name}" Style="{StaticResource MidiMessageFieldTipHeaderFieldNameStyle}"/>
+                            <TextBlock Text="{x:Bind Description}" Style="{StaticResource MidiMessageFieldTipHeaderFieldDescriptionStyle}"/>
+                            <Rectangle Style="{StaticResource MidiMessageFieldTipHeaderSeparatorStyle}"/>
+                            <TextBlock Text="Interpretation" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind Interpretation}" Margin="10,0,0,10" TextWrapping="WrapWholeWords" />
+                            <TextBlock Text="Raw Decimal Value" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind RawValue, Converter={StaticResource FieldUnsignedNumericDecimalFormatConverter}}" Margin="10,0,0,10" />
+                            <TextBlock Text="Raw Hex Value" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind RawValue, Converter={StaticResource StringFormatConverter}, ConverterParameter='0x{0:X}'}" Margin="10,0,0,10" />
+                            <Grid>
+                                <Rectangle Style="{StaticResource MidiMessageFieldBackgroundRectangleStyle}"
+                                           Fill= "#661111"/>
+                                <TextBlock Text="{x:Bind FormattedBinaryValue}" 
+                                           Margin="3"
+                                           Style="{StaticResource MidiMessageFieldTextStyle}"/>
+                            </Grid>
                         </StackPanel>
                     </ToolTip>
                 </ToolTipService.ToolTip>
@@ -205,17 +297,59 @@
             <Grid Style="{StaticResource MidiMessageFieldGridStyle}">
                 <Rectangle Style="{StaticResource MidiMessageFieldBackgroundRectangleStyle}"
                            Fill="Blue" />
-                <TextBlock Grid.Row="0"
-                           Text="{x:Bind FormattedBinaryValue}" 
+                <TextBlock Text="{x:Bind FormattedBinaryValue}" 
                            Style="{StaticResource MidiMessageFieldTextStyle}"/>
 
                 <ToolTipService.ToolTip>
                     <ToolTip>
                         <StackPanel Orientation="Vertical">
-                            <TextBlock Text="Field" FontWeight="Bold" />
-                            <TextBlock Text="{x:Bind Description}" Margin="10,0,0,10"/>
-                            <TextBlock Text="Value" FontWeight="Bold" />
-                            <TextBlock Text="{x:Bind Interpretation}" Margin="10,0,0,10" />
+                            <TextBlock Text="{x:Bind Name}" Style="{StaticResource MidiMessageFieldTipHeaderFieldNameStyle}"/>
+                            <TextBlock Text="{x:Bind Description}" Style="{StaticResource MidiMessageFieldTipHeaderFieldDescriptionStyle}"/>
+                            <Rectangle Style="{StaticResource MidiMessageFieldTipHeaderSeparatorStyle}"/>
+                            <TextBlock Text="Interpretation" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind Interpretation}" Margin="10,0,0,10" TextWrapping="WrapWholeWords" />
+                            <TextBlock Text="Raw Decimal Value" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind RawValue, Converter={StaticResource FieldUnsignedNumericDecimalFormatConverter}}" Margin="10,0,0,10" />
+                            <TextBlock Text="Raw Hex Value" FontWeight="Bold" />
+                            <TextBlock Text="{x:Bind RawValue, Converter={StaticResource StringFormatConverter}, ConverterParameter='0x{0:X}'}" Margin="10,0,0,10" />
+                            <Grid>
+                                <Rectangle Style="{StaticResource MidiMessageFieldBackgroundRectangleStyle}"
+                                           Fill="Blue" />
+                                <TextBlock Text="{x:Bind FormattedBinaryValue}" 
+                                           Margin="3"
+                                           Style="{StaticResource MidiMessageFieldTextStyle}"/>
+                            </Grid>
+                        </StackPanel>
+                    </ToolTip>
+                </ToolTipService.ToolTip>
+            </Grid>
+        </DataTemplate>
+
+            
+            
+        <DataTemplate x:Key="HexWordDisplayTemplate">
+            <Grid Style="{StaticResource MidiMessageFieldGridStyle}">
+                <Rectangle Style="{StaticResource MidiMessageFieldBackgroundRectangleStyle}"/>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="0x" 
+                               Style="{StaticResource MidiMessageFieldTextStyle}"
+                               Opacity="0.5"
+                           />
+
+                    <TextBlock Text="{Binding Converter={StaticResource StringFormatConverter}, ConverterParameter='{}{0:X8}'}" 
+                           Style="{StaticResource MidiMessageFieldTextStyle}"
+                           />
+                </StackPanel>
+
+                <ToolTipService.ToolTip>
+                    <ToolTip>
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="Hex Value" FontWeight="Bold" />
+                            <TextBlock Text="{Binding Converter={StaticResource StringFormatConverter}, ConverterParameter='0x{0:X8}'}" Margin="10,0,0,10" />
+                            <TextBlock Text="Decimal Value" FontWeight="Bold" />
+                            <TextBlock Text="{Binding Converter={StaticResource FieldUnsignedNumericDecimalFormatConverter}}" Margin="10,0,0,10" />
+                            <TextBlock Text="Binary Value" FontWeight="Bold" />
+                            <TextBlock Text="{Binding Converter={StaticResource FieldUnsignedNumericBinaryFormatConverter}, ConverterParameter='32'}" Margin="10,0,0,10" />
                         </StackPanel>
                     </ToolTip>
                 </ToolTipService.ToolTip>
@@ -257,7 +391,7 @@
         </StackPanel>
 
         <StackPanel Orientation="Horizontal" Spacing="4" Grid.Row="0" Margin="8" HorizontalAlignment="Right">
-            <Button Content="Monitor on Screen" VerticalAlignment="Bottom"/>
+            <Button Content="Monitor on Screen" VerticalAlignment="Bottom" Command="{x:Bind ViewModel.MonitorOnScreenCommand}"/>
             <Button Content="Capture to File..." VerticalAlignment="Bottom"/>
         </StackPanel>
 
@@ -286,12 +420,12 @@
                             <ColumnDefinition Width="*" />      <!-- Binary Fields -->
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Grid.Column="0" Text="Timestamp" />
-                        <TextBlock Grid.Column="1" Text="Source" />
-                        <TextBlock Grid.Column="2" Text="UMP Type" />
-                        <TextBlock Grid.Column="3" Text="Specific Message" />
-                        <TextBlock Grid.Column="4" Text="Data (Hex)" />
-                        <TextBlock Grid.Column="5" Text="Fields (Binary)" />
+                        <TextBlock Grid.Column="0" Text="Timestamp" FontWeight="Bold"/>
+                        <TextBlock Grid.Column="1" Text="Source" FontWeight="Bold" />
+                        <TextBlock Grid.Column="2" Text="Type" FontWeight="Bold" />
+                        <TextBlock Grid.Column="3" Text="Message" FontWeight="Bold" />
+                        <TextBlock Grid.Column="4" Text="Data (Hex)" FontWeight="Bold" />
+                        <TextBlock Grid.Column="5" Text="UMP Fields (Binary)" FontWeight="Bold" />
                     </Grid>
                 </DataTemplate>
 
@@ -311,27 +445,36 @@
                         </Grid.ColumnDefinitions>
 
                         <TextBlock Grid.Column="0" Text="{x:Bind Timestamp}" Margin="3"/>
-                        <TextBlock Grid.Column="1" Text="{x:Bind SourceDeviceName}" Margin="3" />
+
+                        <StackPanel Grid.Column="1" Orientation="Vertical">
+                            <TextBlock Text="{x:Bind SourceDeviceName}" Margin="3" />
+                            <TextBlock Text="{x:Bind SourceDeviceAddress}" Margin="3" FontSize="10" />
+                        </StackPanel>
+                        
                         <TextBlock Grid.Column="2" Text="{x:Bind MessageTypeName}" Margin="3" />
-                        <TextBlock Grid.Column="3" Text="{x:Bind MessageName}" Margin="3" />
+
+                        <TextBlock Grid.Column="3" Text="{x:Bind MessageName}" Margin="3">
+                            <ToolTipService.ToolTip>
+                                <ToolTip>
+                                    <StackPanel Orientation="Vertical">
+                                        <TextBlock Text="{x:Bind MessageName}" Style="{StaticResource MidiMessageFieldTipHeaderFieldNameStyle}"/>
+                                        <Rectangle Style="{StaticResource MidiMessageFieldTipHeaderSeparatorStyle}"/>
+                                        <TextBlock Text="Interpretation" FontWeight="Bold" />
+                                        <TextBlock Text="{x:Bind MessageInterpretation}" Margin="10,0,0,10" TextWrapping="WrapWholeWords" />
+                                    </StackPanel>
+                                </ToolTip>
+                            </ToolTipService.ToolTip>                            
+                        </TextBlock>
 
                         <!-- All data, in hex -->
 
-                        <ItemsControl Grid.Column="4" ItemsSource="{x:Bind AllData}" Margin="3">
+                        <ItemsControl Grid.Column="4" ItemsSource="{x:Bind AllData}" Margin="3"
+                                      ItemTemplate="{StaticResource HexWordDisplayTemplate}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <StackPanel Orientation="Vertical" />
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <!-- TODO: Change settings to a style -->
-                                    <TextBlock Text="{Binding Converter={StaticResource StringFormatConverter}, ConverterParameter='0x{0:X8}'}" 
-                                               FontFamily="Consolas, Courier"
-                                               FontSize="14"
-                                               />
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
                         </ItemsControl>
 
                         <!-- List of Field Lists (each word has its own list of fields) -->

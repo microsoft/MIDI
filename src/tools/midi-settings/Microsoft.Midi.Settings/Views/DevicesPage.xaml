@@ -12,6 +12,9 @@
 
     <Grid>
 
+        <Button x:Name="TempCreateNetworkEndpoint" Click="TempCreateNetworkEndpoint_Click" Content="Temp: Create Network Server Endpoint"
+                HorizontalAlignment="Left" VerticalAlignment="Top" Margin="20" 
+                />
         <!-- Set of cards -->
         
         

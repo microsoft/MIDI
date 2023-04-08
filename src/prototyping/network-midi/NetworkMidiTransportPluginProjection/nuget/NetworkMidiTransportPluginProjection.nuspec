@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+	<metadata>
+		<id>Windows.Devices.Midi.NetworkMidiTransportPlugin</id>
+		<version>0.1.4-prerelease</version>
+		<authors>Microsoft Corporation</authors>
+		<description>PROTOTYPE Network MIDI 2.0 transport</description>
+		<dependencies>
+			<group targetFramework="net8.0-windows10.0.20348.0" />
+		</dependencies>
+	</metadata>
+	<files>
+		<file src="..\..\_build\AnyCPU\Debug\NetworkMidiTransportPluginProjection\bin\NetworkMidiTransportPluginProjection.dll" target="lib\net8.0-windows10.0.20348.0\NetworkMidiTransportPluginProjection.dll" />
+
+		<!--<file src="..\..\_build\x64\Debug\Windows.Devices.Midi.NetworkMidiTransport\bin\Windows.Devices.Midi.NetworkMidiTransportPlugin\Windows.Devices.Midi.NetworkMidiTransportPlugin.winmd" target="lib\netcoreapp3.0\Windows.Devices.Midi.NetworkMidiTransport.winmd" /> -->
+		<!--<file src="..\..\_build\x64\Debug\Windows.Devices.Midi.NetworkMidiTransport\bin\Windows.Devices.Midi.NetworkMidiTransportPlugin\Windows.Devices.Midi.NetworkMidiTransportPlugin.winmd" target="lib\uap10.0\Windows.Devices.Midi.NetworkMidiTransport.winmd" /> -->
+		<!--<file src="..\..\_build\x64\Debug\Windows.Devices.Midi.NetworkMidiTransport\bin\Windows.Devices.Midi.NetworkMidiTransportPlugin\Windows.Devices.Midi.NetworkMidiTransportPlugin.winmd" target="lib\net46\Windows.Devices.Midi.NetworkMidiTransport.winmd" /> -->
+		
+		<!--Architecture-specific implementation DLLs should be copied into RID-relative folders-->
+		<file src="..\..\_build\x64\Debug\NetworkMidiTransportPlugin\bin\NetworkMidiTransportPlugin\NetworkMidiTransportPlugin.dll" target="runtimes\win10-x64\native\NetworkMidiTransportPlugin.dll" />
+		
+		<!--To support x86 and Arm64, build SimpleMathComponent for those other architectures and uncomment the entries below.-->
+		<!--<file src="..\..\_build\Win32\Release\SimpleMathComponent\bin\SimpleMathComponent\SimpleMathComponent.dll" target="runtimes\win10-x86\native\SimpleMathComponent.dll" />-->
+		<!--<file src="..\..\_build\arm64\Release\SimpleMathComponent\bin\SimpleMathComponent\SimpleMathComponent.dll" target="runtimes\win10-arm64\native\SimpleMathComponent.dll" />-->
+	</files>
+</package>

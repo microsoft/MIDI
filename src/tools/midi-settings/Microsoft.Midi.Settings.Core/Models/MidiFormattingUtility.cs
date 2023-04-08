@@ -93,4 +93,62 @@ public  class MidiFormattingUtility
 
     }
 
+    public static string Midi2StreamMessageNameFromStatus(UInt16 status)
+    {
+        switch (status)
+        {
+            case 0x00:
+                return "Endpoint Discovery";
+            case 0x01:
+                return "Endpoint Info Notification";
+            case 0x02:
+                return "Device Identity Notification";
+            case 0x03:
+                return "Endpoint Name Notification";
+            case 0x04:
+                return "Product Instance Id Notification";
+            case 0x05:
+                return "Stream Configuration Request";
+            case 0x06:
+                return "Stream Configuration Notification";
+            case 0x10:
+                return "Function Block Discovery";
+            case 0x11:
+                return "Function Block Info Notification";
+            case 0x12:
+                return "Function Block Name Notification";
+            case 0x20:
+                return "Start of Clip";
+            case 0x21:
+                return "End of Clip";
+            default:
+                return "Unknown";
+        }
+    }
+
+    public static string FormatGroup(byte groupIndex, string blockNames = "")
+    {
+        var suffix = string.Empty;
+
+        if (blockNames != null && blockNames.Trim() != string.Empty)
+        {
+            // TODO: Add block names, comma-separated and with parentheses around them
+        }
+
+        return "Group " + (groupIndex + 1) + suffix;
+    }
+
+    public static string FormatChannel(byte channelIndex, string channelNames = "")
+    {
+        var suffix = string.Empty;
+
+        if (channelNames != null && channelNames.Trim() != string.Empty)
+        {
+            // TODO: Add channel names, comma-separated and with parentheses around them
+        }
+
+        return "Channel " + (channelIndex + 1) + suffix;
+    }
+
+
 }

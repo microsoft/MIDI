@@ -29,6 +29,18 @@
     <Resource Language="x-generate"/>
   </Resources>
 
+	<!-- All the MIDI SDK and other WinRT Activatable classes need to be listed here -->
+	<Extensions>
+		<Extension Category="windows.activatableClass.inProcessServer">
+			<InProcessServer>
+				<Path>NetworkMidiTransportPlugin.dll</Path>
+				<ActivatableClass ActivatableClassId="Windows.Devices.Midi.NetworkMidiTransportPlugin.NetworkMidiHostUmpEndpoint" ThreadingModel="both" />
+				<ActivatableClass ActivatableClassId="Windows.Devices.Midi.NetworkMidiTransportPlugin.NetworkMidiHostUmpEndpointFactory" ThreadingModel="both" />
+			</InProcessServer>
+		</Extension>
+	</Extensions>
+	
+
   <Applications>
     <Application Id="App"
       Executable="$targetnametoken$.exe"

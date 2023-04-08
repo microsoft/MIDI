@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+      <TargetFramework>net8.0-windows10.0.20348.0</TargetFramework>
+	  <TargetPlatformMinVersion>10.0.20348.0</TargetPlatformMinVersion>
+	  <ImplicitUsings>enable</ImplicitUsings>
+      <Nullable>enable</Nullable>
+
+	  <Platforms>x86;x64;arm64</Platforms>
+	  <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
+	  <PlatformTarget>x64</PlatformTarget>
+
+  </PropertyGroup>
+
+	<PropertyGroup>
+		<RestoreSources>
+			https://api.nuget.org/v3/index.json;
+			../../../prototyping/network-midi/NetworkMidiTransportPluginProjection/nuget/
+		</RestoreSources>
+		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Windows.Devices.Midi.NetworkMidiTransportPlugin" Version="0.1.4-prerelease" />
+	</ItemGroup>	
+	
+	
+</Project>

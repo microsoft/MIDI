@@ -1,0 +1,45 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0-windows10.0.20348.0</TargetFramework>
+		<TargetPlatformMinVersion>10.0.20348.0</TargetPlatformMinVersion>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+
+		<PlatformTarget>AnyCPU</PlatformTarget>
+
+		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.2" />
+	</ItemGroup>
+
+	<PropertyGroup>
+		<CsWinRTIncludes>Windows.Devices.Midi.NetworkMidiTransportPlugin</CsWinRTIncludes>
+		<CsWinRTGeneratedFilesDir>$(OutDir)</CsWinRTGeneratedFilesDir>
+		<!--<CsWinRTExcludes></CsWinRTExcludes> -->
+		<!--<CsWinRTExcludesPrivate></CsWinRTExcludesPrivate> -->
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<GeneratedNugetDir>.\nuget\</GeneratedNugetDir>
+		<NuspecFile>$(GeneratedNugetDir)NetworkMidiTransportPluginProjection.nuspec</NuspecFile>
+		<OutputPath>$(GeneratedNugetDir)</OutputPath>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<!-- <PackageId>Windows.Devices.Midi.NetworkMidiTransportPlugin</PackageId> -->
+		<!-- <Version>0.1.0-prerelease</Version> -->
+		<!-- <Authors>Microsoft Corporation</Authors> -->
+		<!-- <Product>Windows.Devices.Midi.NetworkMidiTransportPlugin</Product> -->
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <None Include="nuget\NetworkMidiTransportPluginProjection.nuspec" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\NetworkMidiTransportPlugin\NetworkMidiTransportPlugin.vcxproj" />
+	</ItemGroup>
+	
+
+</Project>

@@ -76,12 +76,13 @@
     </Midl>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Windows_Devices_Midi_NetworkMidiTransportPlugin.def" />
     <None Include="PropertySheet.props" />
     <None Include="packages.config" />
     <None Include="README.md">
       <Filter>ServiceContracts</Filter>
     </None>
+    <None Include="Directory.Build.props" />
+    <None Include="NetworkMidiTransportPlugin.def" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Endpoints">
