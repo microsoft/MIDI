@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Microsoft.Midi.Settings.SdkMock;
 
 namespace Microsoft.Midi.Settings.Models;
+
+// TODO: Make this an injected singleton
 public class AppState
 {
     private static AppState? _current;

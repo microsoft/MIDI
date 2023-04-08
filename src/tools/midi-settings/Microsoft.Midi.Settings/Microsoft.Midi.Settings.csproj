@@ -16,6 +16,15 @@
 
 	    <EnableMsixTooling>true</EnableMsixTooling>
 	    <PublishProfile>Properties\PublishProfiles\win10-$(Platform).pubxml</PublishProfile>
+	    <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
+	    <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
+	    <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
+	    <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
+	    <AppxSymbolPackageEnabled>True</AppxSymbolPackageEnabled>
+	    <GenerateTestArtifacts>True</GenerateTestArtifacts>
+	    <AppxBundle>Never</AppxBundle>
+	    <PackageCertificateThumbprint>DAC77297934678914CC6B107CE26743135B68C64</PackageCertificateThumbprint>
+	    <PackageCertificateKeyFile>Microsoft.Midi.Settings_TemporaryKey.pfx</PackageCertificateKeyFile>
     </PropertyGroup>
 	
 	

@@ -30,7 +30,7 @@ public class MidiSession
         device.Id = endpoint.Id;
         device.Name = endpoint.Properties[NetworkMidiServerClientPlugin.PKEY_MidiEndpointName].ToString();
         device.Address = endpoint.Properties[NetworkMidiServerClientPlugin.PKEY_Server_HostName].ToString() + " : " + endpoint.Properties[NetworkMidiServerClientPlugin.PKEY_Server_Port].ToString();
-        device.TransportType = "Network MIDI 2.0";
+        device.TransportType = "Network MIDI 2.0 (Host)";
 
         Devices.Add(device);
 

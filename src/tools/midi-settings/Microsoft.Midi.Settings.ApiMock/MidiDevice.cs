@@ -33,6 +33,15 @@ public class MidiDevice
         get; set;
     }
 
+    private Dictionary<string, object> _properties = new();
+    public IDictionary<string, object> Properties
+    {
+        get
+        {
+            return _properties;
+        }
+    }
+
 
     // hard coded, but this would use an interface or base type
     public Windows.Devices.Midi.NetworkMidiTransportPlugin.NetworkMidiHostUmpEndpoint UmpEndpoint

@@ -11,12 +11,12 @@
 
   <Identity
     Name="AA85D041-F473-4AE8-978A-73F3C33CFFA2"
-    Publisher="CN=peteb"
+    Publisher="CN=pmbrown-test"
     Version="1.0.0.0" />
 
   <Properties>
     <DisplayName>Microsoft.Midi.Settings</DisplayName>
-    <PublisherDisplayName>peteb</PublisherDisplayName>
+    <PublisherDisplayName>pmbrown-test</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 

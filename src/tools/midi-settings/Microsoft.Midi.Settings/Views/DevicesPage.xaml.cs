@@ -56,6 +56,14 @@ namespace Microsoft.Midi.Settings.Views
 
                 var device = await AppState.Current.MidiSession.CreateNewUmpDeviceAsync("some_network2_class_identifier", jsonParameters);
 
+                // binding fails with the WinRT PropertySet type, so replicating
+                foreach (string key in device.UmpEndpoint.Properties.Keys)
+                {
+                    device.Properties.Add(key, device.UmpEndpoint.Properties[key]);
+                }
+
+
+
                 System.Diagnostics.Debug.WriteLine("Created UMP Device " + device.Id);
 
             }

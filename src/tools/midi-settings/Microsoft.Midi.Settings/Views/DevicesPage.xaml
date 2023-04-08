@@ -8,14 +8,65 @@
     xmlns:local="using:Microsoft.Midi.Settings.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:midi="using:Microsoft.Midi.Settings.SdkMock"
     mc:Ignorable="d">
 
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
-        <Button x:Name="TempCreateNetworkEndpoint" Click="TempCreateNetworkEndpoint_Click" Content="Temp: Create Network Server Endpoint"
+        <StackPanel Grid.Row="0" Orientation="Vertical">
+            <TextBlock TextWrapping="WrapWholeWords" Margin="3" Text="This is a developer prototype and is not necessarily indicative of how the production app will appear or operate." />
+            <TextBlock TextWrapping="WrapWholeWords" Margin="3" Text="Click the button below to create a single network UMP Endpoint. After you do that, go to the Traffic Monitor page and click the 'Monitor on Screen' button. At that point, start sending UMP messages from your Network MIDI 2.0 device to the advertised Windows MIDI Endpoint." />
+        </StackPanel>
+        
+        <Grid Grid.Row="1">
+            <Button x:Name="TempCreateNetworkEndpoint" Click="TempCreateNetworkEndpoint_Click" Content="Create Network MIDI 2.0 Server Host and Endpoint"
                 HorizontalAlignment="Left" VerticalAlignment="Top" Margin="20" 
                 />
+        </Grid>
+            
         <!-- Set of cards -->
+        <Grid Grid.Row="2" >
+            <ItemsRepeater ItemsSource="{x:Bind ViewModel.Devices}">
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="midi:MidiDevice">
+                        <Expander>
+                            <Expander.HeaderTemplate>
+                                <DataTemplate x:DataType="midi:MidiDevice">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{x:Bind Name}" Margin="3" />
+                                        <TextBlock Text="{x:Bind TransportType}" Margin="3" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </Expander.HeaderTemplate>
+
+                            <Expander.ContentTemplate>
+                                <DataTemplate x:DataType="midi:MidiDevice">
+                                    <ItemsRepeater ItemsSource="{x:Bind Properties}">
+                                        <ItemsRepeater.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="200" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding Path=Key}" Margin="3" FontWeight="Bold"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Path=Value}" Margin="3" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsRepeater.ItemTemplate>
+                                    </ItemsRepeater>
+                                </DataTemplate>
+                            </Expander.ContentTemplate>
+                        </Expander>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </Grid>
         
         
         <!-- Device Name -->
