@@ -2,6 +2,8 @@
 
 This is a prototype, not production code. The Protocol is not yet completed so please do not implement any application or device code based on what you see here.
 
+The NuGet package generated from this code is also used directly by the settings app, currently, to demonstrate Network MIDI through the MIDI Monitor. The production version of this transport will be loaded into the service process, not any client process.
+
 ## Intent
 
 The intent of Network MIDI 2.0 as a transport on Windows is to make it as transparent as possible to apps and users. Apps and users will be able to identify a device and endpoint as a Network MIDI 2.0 device or endpoint, but otherwise, they are treated like any other UMP Endpoint on Windows. That includes being multi-client, participating in filtering and routing in the service, and more.
