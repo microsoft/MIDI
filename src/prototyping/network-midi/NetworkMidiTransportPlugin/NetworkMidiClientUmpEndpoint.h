@@ -1,6 +1,10 @@
 #pragma once
 #include "NetworkMidiClientUmpEndpoint.g.h"
 
+
+#include "Properties.h"
+
+
 namespace winrt::Windows::Devices::Midi::NetworkMidiTransportPlugin::implementation
 {
     struct NetworkMidiClientUmpEndpoint : NetworkMidiClientUmpEndpointT<NetworkMidiClientUmpEndpoint>

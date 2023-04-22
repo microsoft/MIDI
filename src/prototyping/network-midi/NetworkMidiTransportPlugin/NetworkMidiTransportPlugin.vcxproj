@@ -144,7 +144,9 @@
       <DependentUpon>NetworkMidiHostUmpEndpointFactory.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="NetworkMidiOutOfBandNAKPacket.h" />
+    <ClInclude Include="NetworkPacketReader.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Properties.h" />
     <ClInclude Include="SocketHelpers.h" />
     <ClInclude Include="TimeHelpers.h" />
   </ItemGroup>
@@ -166,6 +168,7 @@
     <ClCompile Include="NetworkMidiHostUmpEndpointFactory.cpp">
       <DependentUpon>NetworkMidiHostUmpEndpointFactory.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="NetworkPacketReader.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -173,8 +176,10 @@
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiMessageBuffer.idl" />
+    <Midl Include="NetworkMidiClientDevice.idl" />
     <Midl Include="NetworkMidiClientUmpEndpoint.idl" />
     <Midl Include="NetworkMidiClientUmpEndpointFactory.idl" />
+    <Midl Include="NetworkMidiHostDevice.idl" />
     <Midl Include="NetworkMidiHostUmpEndpoint.idl" />
     <Midl Include="NetworkMidiHostUmpEndpointFactory.idl" />
   </ItemGroup>

@@ -1,0 +1,27 @@
+namespace Windows.Devices.Midi.NetworkMidiTransportPlugin
+{
+    [default_interface]
+    runtimeclass NetworkMidiHostDevice // : Windows.Devices.Midi.ServiceContracts.IMidiUmpEndpoint
+    {
+        NetworkMidiHostDevice();
+
+        // TBD: do we need to break these out into a DeviceInformation-type class like 
+        // Windows.Devices.Enumeration does today?
+        String Id{ get; };
+        Windows.Foundation.Collections.PropertySet Properties { get; };
+
+        
+        IObservableVector<NetworkMidiHostUmpEndpoint> Endpoints { get; };
+
+
+        // Not members of the UmpEndpoint interface contract. Just specific to Network impl
+        // used by the factory which creates these endpoints. Derived from the json properties
+        Windows.Foundation.IAsyncAction StartAsync(
+            String hostName, 
+            String port, String midiEndpointName, 
+            String midiProductInstanceId, 
+            Boolean advertise, 
+            String serviceInstanceName);
+
+    }
+}

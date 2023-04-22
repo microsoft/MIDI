@@ -32,9 +32,10 @@ public:
 	// (not command packets) when requested. Lots of ways to do that, but they'll 
 	// require a change in how the messages are buffered, or require an additional
 	// list of a certain size. Right now, this is not handled.
+	// perhaps a small boost circular queue of a fixed size that contains the last X UMPs with their sequence numbers?
 
 
-	// two threads. One for reading from network queue, one for writing to network queue
+	// TODO: two threads. One for reading from network queue, one for writing to network queue
 
 	winrt::Windows::Foundation::IAsyncAction StartAsync(networking::HostName connectedClient, winrt::hstring connectedPort);
 	void End();

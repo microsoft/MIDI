@@ -18,6 +18,9 @@
     <ClCompile Include="MidiMessageBuffer.cpp">
       <Filter>ServiceContracts</Filter>
     </ClCompile>
+    <ClCompile Include="NetworkPacketReader.cpp">
+      <Filter>Implementation\Protocol</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -57,6 +60,12 @@
     <ClInclude Include="TimeHelpers.h">
       <Filter>Implementation\Helpers</Filter>
     </ClInclude>
+    <ClInclude Include="Properties.h">
+      <Filter>Implementation\Properties</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkPacketReader.h">
+      <Filter>Implementation\Protocol</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="NetworkMidiHostUmpEndpoint.idl">
@@ -73,6 +82,12 @@
     </Midl>
     <Midl Include="MidiMessageBuffer.idl">
       <Filter>ServiceContracts</Filter>
+    </Midl>
+    <Midl Include="NetworkMidiClientDevice.idl">
+      <Filter>Endpoints</Filter>
+    </Midl>
+    <Midl Include="NetworkMidiHostDevice.idl">
+      <Filter>Endpoints</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
@@ -105,6 +120,9 @@
     </Filter>
     <Filter Include="ServiceContracts">
       <UniqueIdentifier>{29e82425-18cf-45cf-9bd6-b2ee94d20815}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Implementation\Properties">
+      <UniqueIdentifier>{d5380720-73d3-43f4-a37d-82bbb5d7ed08}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
