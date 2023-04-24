@@ -1,0 +1,11 @@
+
+namespace Microsoft.Devices.Midi2.Endpoints
+{
+    [default_interface]
+    runtimeclass MidiGroupTerminalBlock
+    {
+        MidiGroupTerminalBlock();
+
+
+    }
+}

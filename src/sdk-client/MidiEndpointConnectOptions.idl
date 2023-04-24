@@ -1,0 +1,14 @@
+
+namespace Microsoft.Devices.Midi2.Endpoints
+{
+    [default_interface]
+    runtimeclass MidiEndpointConnectOptions
+    {
+        MidiEndpointConnectOptions();
+
+        Boolean DisableProcessingFunctionBlockInformationMessages { get; set; };
+        Boolean DisableProcessingEndpointInformationMessages { get; set; };
+
+
+    }
+}

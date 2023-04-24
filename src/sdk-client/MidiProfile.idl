@@ -1,0 +1,17 @@
+// represents a MIDI 2.0 Profile
+
+namespace Microsoft.Devices.Midi2.Profiles
+{
+    [default_interface]
+    runtimeclass MidiProfile
+    {
+        MidiProfile();
+
+
+        String RawJson{ get; };
+
+
+
+
+    }
+}

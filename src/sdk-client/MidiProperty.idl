@@ -1,0 +1,17 @@
+// represents a MIDI 2.0 Property Exchange Property
+
+namespace Microsoft.Devices.Midi2.Properties
+{
+    [default_interface]
+    runtimeclass MidiProperty
+    {
+        MidiProperty();
+
+
+        String RawJson{ get; };
+
+
+
+
+    }
+}

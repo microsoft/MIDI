@@ -1,0 +1,8 @@
+namespace Microsoft.Devices.Midi2.Messages
+{
+    enum MidiMessageType
+    {
+        
+
+    }
+}

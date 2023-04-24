@@ -1,21 +1,2 @@
-namespace Windows.Devices.Midi2.Enumeration
-{
+// class that wraps the DeviceInformation class and provides better access to properties
 
-    [default_interface]
-    runtimeclass MidiDeviceInformation
-    {
-        Guid Id {get; };
-
-        Guid TransportId {get; };
-
-        String Name;
-        String DeviceSuppliedName {get; };
-        String Serial{get; };
-        String IconFileName{get; };
-        String Description{get; set; };
-
-        // TODO: Endpoints
-
-    };
-
-}

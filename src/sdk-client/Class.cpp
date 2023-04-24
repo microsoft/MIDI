@@ -2,7 +2,7 @@
 #include "Class.h"
 #include "Class.g.cpp"
 
-namespace winrt::Windows_Devices_Midi_Sdk::implementation
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     int32_t Class::MyProperty()
     {

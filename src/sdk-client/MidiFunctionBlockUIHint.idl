@@ -1,0 +1,10 @@
+namespace Microsoft.Devices.Midi2.Endpoints
+{
+    enum MidiFunctionBlockUIHint
+    {
+        FunctionBlockUIHintUnknown = 0x0,
+        FunctionBlockUIHintReceiver = 0x1,
+        FunctionBlockUIHintSender = 0x2,
+        FunctionBlockUIHintBidirectional = 0x3
+    }
+}

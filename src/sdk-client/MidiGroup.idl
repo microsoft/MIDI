@@ -1,0 +1,18 @@
+
+namespace Microsoft.Devices.Midi2.Endpoints
+{
+    [default_interface]
+    runtimeclass MidiGroup
+    {
+        MidiGroup();
+
+        UInt8 GroupIndex{ get; };       // 0-15, the number used in the UMPs
+        UInt8 GroupNumber{ get; };      // 1-16, the number displayed to users
+        
+        
+        
+        Boolean IsActive{ get; };
+        
+
+    }
+}

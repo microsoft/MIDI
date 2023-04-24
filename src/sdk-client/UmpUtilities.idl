@@ -1,0 +1,16 @@
+namespace Microsoft.Devices.Midi2.Messages
+{
+    [default_interface]
+    runtimeclass UmpUtilities
+    {
+        UmpUtilities();
+
+
+        static MidiMessageType GetMessageTypeFromFirstWord(UInt32 firstWord);
+
+        static Int16 GetUmpLengthInWordsFromFirstWord(UInt32 firstWord);
+
+
+
+    }
+}
