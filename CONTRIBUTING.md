@@ -14,7 +14,7 @@ We're excited to have others contribute to the APIs, tools, plug-ins, drivers an
 
 You may fork these projects as per the license. However, we highly recommend you consider contributing to the main project rather than spin off a separate and incompatible or competing project targeting Windows. In the end, we want to do what's right for musicians, music creation app / plug-in developers, and music hardware developers.
 
-Forking to support other operating systems (including direct hardware devices) is also allowed and encouraged.
+**Forking to support other operating systems (including hardware devices) is also allowed and encouraged.**
 However, in that case, we again encourage you to consider what we can do together in the primary repo to support the requirements for these other platforms so that we can keep feature level, tool, and API parity, especially as the specifications evolve, or we fix bugs.
 
 ## Contributing image assets
@@ -25,7 +25,9 @@ Any images submitted must have clear license for use that is compatible with the
 
 Projects generally use the most recent recent versions of [Visual Studio](https://visualstudio.microsoft.com/), [C++/WinRT](https://docs.microsoft.com/windows/uwp/cpp-and-winrt-apis/), Windows 10/11 SDKs, [Windows App SDK](https://github.com/microsoft/WindowsAppSDK), [Windows Community Toolkit](https://github.com/CommunityToolkit/WindowsCommunityToolkit) and [.NET 7 Preview](https://dotnet.microsoft.com/) available at the time of authoring. Specific build requirements will be available in the readme for each sub project.
 
-Projects are intended to be compiled on Windows, typically the latest release of Windows 11. Cross-compiling from another platform may be appropriate for some forks, but not necessaily for the main API, driver, and other components. Additionally, using toolchains other than Visual Studio are currently not supported for targeting Windows. When in doubt, ask.
+Projects are intended to be compiled on Windows, typically the latest release of Windows 11. Cross-compiling from another platform may be appropriate for some forks, but not necessarily for the main API, driver, and other components. Additionally, using toolchains other than Visual Studio are currently not supported for targeting Windows. When in doubt, ask.
+
+* [Specific Developer on-boarding details here](README-Developer-Onboarding.md)
 
 # What should I contribute?
 
