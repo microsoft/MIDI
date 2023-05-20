@@ -1,7 +1,5 @@
 # Windows MIDI Services
 
-**While this project is closed to the public, everything in this repo is confidential under MIDI Association / AMEI NDA. You have been invited to provide early feedback or contributions to what will eventually be a fully open source project. Please do not share or discuss outside of this repo and the associated Discord server.**
-
 This project is the next-generation MIDI API for Windows, including MIDI 1.0, MIDI CI, and MIDI 2.0. It includes enhancements, a new USB class driver, new transports, and a suite of essential tools. The project adds many enhancements and bug fixes to our MIDI 1.0 support, and importantly adds support for the latest revisions to MIDI CI and MIDI 2.0 as approved by The MIDI Association.
 
 > The open source USB MIDI 2.0 driver has been generously donated by [AMEI](https://www.amei.or.jp/), the **Association of Musical Electronics Industry**, and developed by [AmeNote :tm:](https://www.AmeNote.com/) in partnership with Microsoft. Please see the file headers for any additional copyright notices. A huge thank you to AMEI and its member companies for making this happen!
@@ -17,7 +15,6 @@ Here's a high-level view of the prototype. Details subject to change.
 > Our official community server for this project is on Discord here: https://aka.ms/MidiDiscord
 >
 > Please keep bug and feature requests in the issues here, but other discussion, live streams, Q&A, and more can happen on Discord. Additionally, we know that not everyone who uses MIDI has access to GitHub, so we welcome additional suggestions, reports, etc. there for those members of the community.
-
 
 ## Component parts
 
@@ -45,6 +42,8 @@ Here are the current plans for transports. In general, transports are implemente
 | RTP | No current plans for implementing RTP MIDI 1.0. That may change in the future if the need is there. We would, of course, accept contributions here if someone wishes to make an RTP network plugin. In the meantime, the existing RTP solutions should continue to work as they do today. |
 
 ## Releases
+
+We are in the process of setting up automated pipelines for building the component pieces of this project. This readme will be updated with build status information one that is in place.
 
 **There are no end-user preview releases yet.**
 
