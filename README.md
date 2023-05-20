@@ -26,12 +26,14 @@ Here is where we currently stand with planned backwards compatibility. Note this
 
 | API | What you should expect |
 | --------------- | ----------------------------------- |
-| Windows MIDI Services | This project. 100% of all features for MIDI 1.0 and MIDI 2.0, including multi-client. API/SDK uses UMP as its transport even for older devices. Transports and the service handle translation. |
-| WinMM (Win32 API most apps use) | Access to MIDI 1.0 and most MIDI 2.0 devices, at a MIDI 1.0 compatibility level only. It is possible we will add multi-client support here after our initial release. |
+| Windows MIDI Services | This project. 100% of all supported features for MIDI 1.0 and MIDI 2.0, including multi-client. API/SDK uses UMP as its internal data format even for MIDI 1.0 devices. Transports and the service handle translation. |
+| WinMM (Win32 API most apps use today) | Access to MIDI 1.0 and most MIDI 2.0 devices, at a MIDI 1.0 compatibility level only. It is possible we will add multi-client support here after our initial release. |
 | WinRT (MIDI API Introduced with Windows 10) | Access to MIDI 1.0 and most MIDI 2.0 devices, at a MIDI 1.0 compatibility level only. It is possible we will add multi-client support here after our initial release. |
 | DirectMusic | No compatibility planned. Not part of our testing. |
 
 Note that we are also investigating and experimenting with how to best incorporate the existing in-box Roland GS / General MIDI Synth into this architecture. It's likely we will handle it as an additional transport, but we need to test some of the MIDI file players today as many of them make assumptions about which synth index is the GS synth, so this compatibility may come after the initial release.
+
+> MIDI is used for many things from musical performances to [Black MIDI](https://en.wikipedia.org/wiki/Black_MIDI) to controlling lights and even quadcopters. For the initial releases, our primary user audience for Windows MIDI Services, and therefore our priority when deciding on features, is **musicians using typical musician workflows** to make music and perform, manage their devices, etc. Use cases outside of this are not necessarily in-scope for the first release, but may be certainly considered for subsequent releases. This is especially important as the MIDI community works to arrive at best practices around things like jitter reduction timestamps, which can generate a significant amount of traffic. We ask folks interested in those other uses to both provide feedback with us, and to be patient while we work through the priorities.
 
 ## Component parts
 
