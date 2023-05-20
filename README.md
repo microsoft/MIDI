@@ -50,6 +50,8 @@ Here are the current plans for transports. In general, transports are implemente
 
 **There are no developer preview releases yet.**
 
+**There are no prototype releases yet.**
+
 For maximum flexibility and compatibility, there are several release mechanisms for Windows MIDI Services components.
 
 | Component | Preview Release Mechanism | Production Release Mechanism |
