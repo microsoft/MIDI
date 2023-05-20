@@ -33,7 +33,7 @@ Here is where we currently stand with planned backwards compatibility. Note this
 
 Note that we are also investigating and experimenting with how to best incorporate the existing in-box Roland GS / General MIDI Synth into this architecture. It's likely we will handle it as an additional transport, but we need to test some of the MIDI file players today as many of them make assumptions about which synth index is the GS synth, so this compatibility may come after the initial release.
 
-> MIDI is used for many things from musical performances to [Black MIDI](https://en.wikipedia.org/wiki/Black_MIDI) to controlling lights and even quadcopters. For the initial releases, our primary user audience for Windows MIDI Services, and therefore our priority when deciding on features, is **musicians using typical musician workflows** to make music and perform, manage their devices, etc. Use cases outside of this are not necessarily in-scope for the first release, but may be certainly considered for subsequent releases. This is especially important as the MIDI community works to arrive at best practices around things like jitter reduction timestamps, which can generate a significant amount of traffic. We ask folks interested in those other uses to both provide feedback with us, and to be patient while we work through the priorities.
+> MIDI is used for many things from musical performances to [Black MIDI](https://en.wikipedia.org/wiki/Black_MIDI) to controlling lights and even quadcopters (something I did on stage once, even). For the initial releases, our primary user audience for Windows MIDI Services, and therefore our priority when deciding on features, is **musicians using typical musician workflows** to make music and perform, manage their devices, etc. Use cases outside of this are not necessarily in-scope for the first release, but may be certainly considered for subsequent releases. This is especially important as the MIDI community works to arrive at best practices around things like jitter reduction timestamps, which can generate a significant amount of traffic. We're not going to do anything specifically to prevent any other use of MIDI, but we ask folks interested in those other uses to both provide feedback to us through issues here or Discord so we know what you are looking for and we can keep it in mind, and to be patient while we work through the priorities.
 
 ## Component parts
 
@@ -81,7 +81,7 @@ For maximum flexibility and compatibility, there are several release mechanisms 
 | API | Github Install | In-box Windows with Windows Update updates |
 | SDK | Github Install | NuGet, Github Install, others TBD |
 | Settings and Related Tools | Github Install | Microsoft Store on Windows, WinGet |
-| Documentation and Samples | Github | Microsoft Learn |
+| Documentation and Samples | Github | Microsoft Learn / Docs |
 
 **When will components be considered "production"?** The bar in Windows is very high for any big changes (especially anything which may break compatibility) to an API that has shipped in-box, so we want to ensure the API and service are truly production-ready before including them in-box. This will be based on stability/readiness/performance, with input from stakeholders including AMEI, and not a specific timeline.
 
