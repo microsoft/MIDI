@@ -15,7 +15,7 @@ namespace Microsoft.Devices.Midi2.Endpoints
         IsMidi10Connection{ get; };
         IsBandwidthRestricted{ get; };      // true if the block is asking for 31.25kbps restriction
 
-        UInt8 FirstGroupIndex{ get; };
+        UInt8 FirstGroupIndex{ get; };      
         UInt8 GroupSpanCount{ get; };
 
         UInt8 MidiCIMessageVersionFormat{ get; };
