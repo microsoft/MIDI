@@ -114,5 +114,6 @@ This project supports both MIDI 1.0 and MIDI 2.0 through an updated modern API. 
 [![NAMM 2022 MIDI 2.0 Update](https://img.youtube.com/vi/69hzeBFOPfo/mqdefault.jpg)](https://www.youtube.com/watch?v=69hzeBFOPfo)
 [![Mike Kent on MIDI 2.0 Protocol Messages and UMP](https://img.youtube.com/vi/Kky1nlwz8-8/mqdefault.jpg)](https://www.youtube.com/watch?v=Kky1nlwz8-8)
 
+* [Windows MIDI and Music Dev Blog](https://devblogs.microsoft.com/windows-music-dev/)
 * [MIDI is about collaboration, not competition](https://midi.org/midi-articles/midi-is-about-collaboration-not-competition)
 * [MIDI @ 40 and the new Windows MIDI Services](https://devblogs.microsoft.com/windows-music-dev/midi-40-and-the-new-windows-midi-services/)
