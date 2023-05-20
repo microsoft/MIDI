@@ -1,5 +1,9 @@
-# .NET Samples
+# CSharp / .NET Samples
 
-Sample code showing how to use the API with .NET and C#. Typically assumes latest release of .NET.
+Using C# / WinRT and the latest versions of .NET to use the SDK and API.
 
-Note that this is .NET, not the older .NET Framework.
+## Building the Samples
+
+More information coming as the project progresses
+
+[C#/WinRT](https://learn.microsoft.com/windows/apps/develop/platform/csharp-winrt/)

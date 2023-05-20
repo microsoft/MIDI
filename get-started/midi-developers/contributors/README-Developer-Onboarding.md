@@ -1,4 +1,4 @@
-# Developer on-boarding
+# General Developer on-boarding
 
 NOTE: In the future, we may replace this with on-boarding scripts. For now, please use the information in this document. Find something missing or incorrect? Please open an issue.
 

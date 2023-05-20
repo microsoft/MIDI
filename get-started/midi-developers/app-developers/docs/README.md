@@ -1,6 +1,6 @@
 # Documentation
 
-API and other documentation which will eventually be used in either the Microsoft.com docs portal, or in a github site. Format is markdown. Work on the docs has not really started.
+API and other documentation which will eventually be used in either the Microsoft.com docs portal, or in a github site. Format is markdown. Work on the docs has not really started. We will lean heavily on the samples to help wth explanations.
 
 ## Some basics
 
