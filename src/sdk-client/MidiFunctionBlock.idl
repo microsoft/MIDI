@@ -1,5 +1,12 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
 
-namespace Microsoft.Devices.Midi2.Endpoints
+import "MidiFunctionBlockDirection.idl";
+import "MidiFunctionBlockUIHint.idl";
+
+namespace Microsoft.Devices.Midi2
 {
     [default_interface]
     runtimeclass MidiFunctionBlock
@@ -12,8 +19,8 @@ namespace Microsoft.Devices.Midi2.Endpoints
         MidiFunctionBlockDirection Direction{ get; };
         MidiFunctionBlockUIHint UIHint{ get; };
 
-        IsMidi10Connection{ get; };
-        IsBandwidthRestricted{ get; };      // true if the block is asking for 31.25kbps restriction
+        Boolean IsMidi10Connection{ get; };
+        Boolean IsBandwidthRestricted{ get; };      // true if the block is asking for 31.25kbps restriction
 
         UInt8 FirstGroupIndex{ get; };      
         UInt8 GroupSpanCount{ get; };

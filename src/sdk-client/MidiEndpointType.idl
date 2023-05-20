@@ -1,4 +1,9 @@
-namespace Microsoft.Devices.Midi2.Endpoints
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+namespace Microsoft.Devices.Midi2
 {
     // this is the direction as specified in the spec, so it is 
     // from the POV of the function block, not from the OS. IOW, 
@@ -6,7 +11,7 @@ namespace Microsoft.Devices.Midi2.Endpoints
     // are sent through Windows
     enum MidiEndpointType
     {
-        EndpointTypeNativeUmp,
-        EndpointTypeConvertedMidi10ByteStream
-    }
+        EndpointTypeNativeUmp = 1,
+        EndpointTypeConvertedMidi10ByteStream = 2
+    };
 }

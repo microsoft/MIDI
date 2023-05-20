@@ -1,4 +1,11 @@
-namespace Microsoft.Devices.Midi2.Messages
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+import "MidiMessageType.idl";
+
+namespace Microsoft.Devices.Midi2
 {
     [default_interface]
     unsealed runtimeclass Ump
@@ -8,11 +15,6 @@ namespace Microsoft.Devices.Midi2.Messages
 
         // TODO: Need to ensure unknown message types can still work for prototyping etc.
         MidiMessageType MessageType { get; set; };
-
-        
-        UInt8[] ToMidi1Bytes();
-
-
 
     }
 }

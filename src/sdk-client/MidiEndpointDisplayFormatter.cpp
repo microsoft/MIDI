@@ -1,0 +1,24 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+#include "pch.h"
+#include "MidiEndpointDisplayFormatter.h"
+#include "MidiEndpointDisplayFormatter.g.cpp"
+
+namespace winrt::Microsoft::Devices::Midi2::implementation
+{
+    hstring MidiEndpointDisplayFormatter::FormatGroupWithFunctionBlocks(winrt::Microsoft::Devices::Midi2::MidiGroup const& group, winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiFunctionBlock> const& blocks, bool abbreviatedVersion)
+    {
+        throw hresult_not_implemented();
+    }
+    hstring MidiEndpointDisplayFormatter::FormatAllGroupOptionWithFunctionBlocks(winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiFunctionBlock> const& blocks, bool abbreviatedVersion)
+    {
+        throw hresult_not_implemented();
+    }
+    hstring MidiEndpointDisplayFormatter::FormatChannel(winrt::Microsoft::Devices::Midi2::MidiChannel const& channel, bool abbreviatedVersion)
+    {
+        throw hresult_not_implemented();
+    }
+}

@@ -3,12 +3,11 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+#include "pch.h"
+#include "MidiGroupTerminalBlock.h"
+#include "MidiGroupTerminalBlock.g.cpp"
 
-namespace Microsoft.Devices.Midi2
+
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    enum MidiMessageType
-    {
-        foo
-
-    };
 }

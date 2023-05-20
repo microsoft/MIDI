@@ -1,4 +1,10 @@
-namespace Microsoft.Devices.Midi2.Endpoints
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+
+namespace Microsoft.Devices.Midi2
 {
     [default_interface]
     runtimeclass MidiEndpointInformation

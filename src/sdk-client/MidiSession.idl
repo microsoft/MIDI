@@ -1,3 +1,11 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+import "MidiEndpoint.idl";
+import "MidiEndpointConnectOptions.idl";
+
 namespace Microsoft.Devices.Midi2
 {
     [default_interface]
@@ -13,7 +21,7 @@ namespace Microsoft.Devices.Midi2
         static MidiSession CreateNewSession(String sessionName);
 
         // this really should be read-only to users of this class
-        IObservableVector<MidiEndpoint>ConnectedEndpoints() { get; };
+        IObservableVector<MidiEndpoint>ConnectedEndpoints { get; };
 
         // uses the enumeration information to connect to an endpoint
         // adds it to the list of connected endpoints. The boolean 
@@ -21,8 +29,12 @@ namespace Microsoft.Devices.Midi2
         // are handled here, or they are handled in the individual 
         // endpoint instances. It's one or the other to avoid replicating
         // messages.
-        ConnectToEndpoint(String midiEndpointId, Boolean routeIncomingMessagesToSession, MidiEndpointConnectOptions options);
-        DisconnectFromEndpoint(String midiEndpointId);
+        void ConnectToEndpoint(
+            String midiEndpointId, 
+            Boolean routeIncomingMessagesToSession, 
+            MidiEndpointConnectOptions options);
+
+        void DisconnectFromEndpoint(String midiEndpointId);
 
 
         void Close();

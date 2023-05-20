@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
 // represents a MIDI 2.0 Property Exchange Property
 
 namespace Microsoft.Devices.Midi2.Properties

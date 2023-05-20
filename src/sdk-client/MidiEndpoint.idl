@@ -1,6 +1,15 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
 
+import "MidiEndpointInformation.idl";
+import "MidiGroupTerminalBlock.idl";
+import "MidiFunctionBlock.idl";
+import "MidiEndpointType.idl";
+import "Ump.idl";
 
-namespace Microsoft.Devices.Midi2.Endpoints
+namespace Microsoft.Devices.Midi2
 {
     [default_interface]
     runtimeclass MidiEndpoint
@@ -19,12 +28,12 @@ namespace Microsoft.Devices.Midi2.Endpoints
         MidiEndpointType EndpointType{ get; };
 
         // Blocks which tell us how to treat the groups
-        IObservableVector<MidiFunctionBlock>FunctionBlocks() { get; };  // these are discovered in-protocol
-        IVector<MidiGroupTerminalBlock>GroupTerminalBlocks() { get; };  // these are USB-specific, created at enumeration time, and do not change
+        IObservableVector<MidiFunctionBlock>FunctionBlocks { get; };  // these are discovered in-protocol
+        IVector<MidiGroupTerminalBlock>GroupTerminalBlocks { get; };  // these are USB-specific, created at enumeration time, and do not change
 
 
         // Send a single strongly-typed UMP with a timestamp
-        void SendUmp(UInt64 timestamp, Ump ump);
+        void SendUmp(UInt64 timestamp, Microsoft.Devices.Midi2.Ump ump);
 
         // send multiple strongly-typed UMPs
         void SendMultipleUmps(UInt64 timestamp, IVector<Ump> umps);

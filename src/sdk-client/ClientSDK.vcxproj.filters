@@ -35,21 +35,25 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="Class.cpp" />
-    <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
+    <ClCompile Include="MidiChannel.cpp" />
+    <ClCompile Include="MidiGroup.cpp" />
+    <ClCompile Include="MidiSession.cpp" />
+    <ClCompile Include="Generated Files\module.g.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
+    <ClInclude Include="MidiChannel.h" />
+    <ClInclude Include="MidiGroup.h" />
+    <ClInclude Include="MidiSession.h" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="Class.idl" />
     <Midl Include="Ump.idl">
       <Filter>SDK\Messages</Filter>
     </Midl>
     <Midl Include="UmpUtilities.idl">
       <Filter>SDK\Messages</Filter>
     </Midl>
-    <Midl Include="MidiConverters.idl">
+    <Midl Include="MidiMessageTranslator.idl">
       <Filter>SDK\Messages</Filter>
     </Midl>
     <Midl Include="MidiMessageType.idl">
@@ -62,9 +66,6 @@
       <Filter>SDK\Endpoints</Filter>
     </Midl>
     <Midl Include="MidiFunctionBlock.idl">
-      <Filter>SDK\Endpoints</Filter>
-    </Midl>
-    <Midl Include="MidiGroup.idl">
       <Filter>SDK\Endpoints</Filter>
     </Midl>
     <Midl Include="MidiEndpointConnectOptions.idl">
@@ -100,6 +101,12 @@
     <Midl Include="MidiLocalizedStrings.idl">
       <Filter>SDK\Display</Filter>
     </Midl>
+    <Midl Include="MidiGroup.idl">
+      <Filter>SDK</Filter>
+    </Midl>
+    <Midl Include="MidiChannel.idl">
+      <Filter>SDK</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="ClientSDK.def" />
@@ -107,8 +114,5 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="PropertySheet.props" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="readme.txt" />
   </ItemGroup>
 </Project>

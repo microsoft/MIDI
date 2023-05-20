@@ -1,4 +1,9 @@
-namespace Microsoft.Devices.Midi2.Endpoints
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+namespace Microsoft.Devices.Midi2
 {
     enum MidiFunctionBlockUIHint
     {
@@ -6,5 +11,5 @@ namespace Microsoft.Devices.Midi2.Endpoints
         FunctionBlockUIHintReceiver = 0x1,
         FunctionBlockUIHintSender = 0x2,
         FunctionBlockUIHintBidirectional = 0x3
-    }
+    };
 }
