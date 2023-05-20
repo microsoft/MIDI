@@ -1,0 +1,37 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+
+
+// Most methods in here will proxy to MIDI Association conversion lib
+// These deliberately don't use UMP types so they will be useful even for
+// implementations which work directly with MIDI 2 words. The versions which
+// operate on or result in UMPs are built into the UMP types.
+
+namespace Microsoft.Devices.Midi2
+{
+    [default_interface]
+    runtimeclass MidiMessageTranslator
+    {
+        MidiMessageTranslator();
+
+        // main message translators
+        static UInt32[] TranslateMidi1ByteCVToMidi2UmpCV(UInt8[] midi1Bytes);
+        static UInt8[] TranslateMidi2UmpCVToMidi1ByteCV(UInt32[] midi2Words);
+
+        static UInt32[] TranslateMidi1UmpCVToMidi2UmpCV(UInt32 midi1CVUmp);
+        static UInt32 TranslateMidi2UmpCVToMidi1UmpCV(UInt32 midi2CVUmp);
+        // TODO: Convert SysEx
+
+
+        // field converters
+        static UInt16 Scale7BitValueto16BitValue(UInt8 sevenBitValue);
+        static UInt32 Scale14BitValueTo32BitValue(UInt16 fourteenBitValue);
+        static UInt32 Scale14BitValueTo32BitValue(UInt8 fourteenBitValueMSB, UInt8 fourteenBitValueLSB);
+
+        // TODO: Scale larger down to smaller
+
+    }
+}

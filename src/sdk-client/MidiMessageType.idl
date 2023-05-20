@@ -1,0 +1,14 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+
+namespace Microsoft.Devices.Midi2
+{
+    enum MidiMessageType
+    {
+        foo
+
+    };
+}

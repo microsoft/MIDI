@@ -1,0 +1,22 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+// represents a MIDI 2.0 Profile
+
+namespace Microsoft.Devices.Midi2.Profiles
+{
+    [default_interface]
+    runtimeclass MidiProfile
+    {
+        MidiProfile();
+
+
+        String RawJson{ get; };
+
+
+
+
+    }
+}

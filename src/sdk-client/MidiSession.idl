@@ -1,0 +1,44 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+import "MidiEndpoint.idl";
+import "MidiEndpointConnectOptions.idl";
+
+namespace Microsoft.Devices.Midi2
+{
+    [default_interface]
+    runtimeclass MidiSession
+    {
+        //MidiSession();
+
+
+        Boolean IsOpen { get; };
+
+
+        // captures the PID, app name, etc.
+        static MidiSession CreateNewSession(String sessionName);
+
+        // this really should be read-only to users of this class
+        IObservableVector<MidiEndpoint>ConnectedEndpoints { get; };
+
+        // uses the enumeration information to connect to an endpoint
+        // adds it to the list of connected endpoints. The boolean 
+        // option determines if all incoming messages from that endpoint
+        // are handled here, or they are handled in the individual 
+        // endpoint instances. It's one or the other to avoid replicating
+        // messages.
+        void ConnectToEndpoint(
+            String midiEndpointId, 
+            Boolean routeIncomingMessagesToSession, 
+            MidiEndpointConnectOptions options);
+
+        void DisconnectFromEndpoint(String midiEndpointId);
+
+
+        void Close();
+
+
+    }
+}

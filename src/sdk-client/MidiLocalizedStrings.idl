@@ -1,0 +1,42 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+
+// Designed to be stand-alone so can be used even without other strongly-typed classes
+
+// TODO: may want to rethink structure of this class. WinRT doesn't support constants so single func for labels isn't really possible
+
+// NOTE: This class is highly likely to change significantly
+
+import "MidiMessageType.idl";
+
+namespace Microsoft.Devices.Midi2
+{
+    [default_interface]
+    runtimeclass MidiLocalizedStrings
+    {
+        MidiLocalizedStrings();
+
+        static String LanguageCode {get; set; };                                   // pass in en-US or similar. (Defaults to language of the creating thread)
+   
+
+        static String GetMidiMessageTypeLabel(Boolean abbreviatedVersion);
+        static String FormatMessageTypeValue(MidiMessageType messageType, Boolean abbreviatedVersion);
+
+        static String GetGroupLabel(Boolean abbreviatedVersion);
+        static String FormatGroupValue(UInt8 groupIndex);
+
+        static String GetChannelLabel(Boolean abbreviatedVersion);          // "Channel" or "Ch"
+        static String FormatChannelValue(UInt8 channelIndex);
+
+        static String GetUmpEndpointLabel(Boolean abbreviatedVersion);      // "UMP Endpoint" or "EP"
+
+        static String GetAllGroupsValue(Boolean abbreviatedVersion);        // loc version of (All Groups) or (All)
+        static String GetAllChannelsValue(Boolean abbreviatedVersion);      // loc version of (All Channels) or (All)
+
+        // add more over time. Channel voice types etc. Use Settings app to help determine what to prioritize
+
+    }
+}

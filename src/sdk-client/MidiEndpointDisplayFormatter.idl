@@ -1,0 +1,37 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+import "MidiFunctionBlock.idl";
+import "MidiChannel.idl";
+import "MidiGroup.idl";
+
+namespace Microsoft.Devices.Midi2
+{
+    [default_interface]
+    runtimeclass MidiEndpointDisplayFormatter
+    {
+        MidiEndpointDisplayFormatter();
+
+        // TODO: Need to create a version of this for group blocks? Likely, but how do we advise apps about which one to use?
+        // we should be opinionated here. Maybe just have one call which takes both Function and Group blocks
+        // and then makes the right decisions?
+        static String FormatGroupWithFunctionBlocks(
+            MidiGroup group, 
+            IVector<MidiFunctionBlock> blocks, 
+            Boolean abbreviatedVersion);
+
+        // returns the "All Groups (FB name, FB name, FB name)" string
+        static String FormatAllGroupOptionWithFunctionBlocks(
+            IVector<MidiFunctionBlock> blocks, 
+            Boolean abbreviatedVersion);
+
+
+        // includes the channel name if provided
+        static String FormatChannel(
+            MidiChannel channel, 
+            Boolean abbreviatedVersion);
+
+    }
+}

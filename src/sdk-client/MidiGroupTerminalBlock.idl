@@ -3,13 +3,14 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-// class that wraps the DeviceInformation class and provides better access to properties
 
 namespace Microsoft.Devices.Midi2
 {
     [default_interface]
-    unsealed runtimeclass MidiDeviceInformation
+    runtimeclass MidiGroupTerminalBlock
     {
-        static MidiDeviceInformation FromDeviceInformation(Windows.Devices.Enumeration.DeviceInformation deviceInformation);
+        MidiGroupTerminalBlock();
+
+
     }
 }

@@ -3,13 +3,18 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-// class that wraps the DeviceInformation class and provides better access to properties
+import "MidiMessageType.idl";
 
 namespace Microsoft.Devices.Midi2
 {
     [default_interface]
-    unsealed runtimeclass MidiDeviceInformation
+    unsealed runtimeclass Ump
     {
-        static MidiDeviceInformation FromDeviceInformation(Windows.Devices.Enumeration.DeviceInformation deviceInformation);
+        Ump();
+
+
+        // TODO: Need to ensure unknown message types can still work for prototyping etc.
+        MidiMessageType MessageType { get; set; };
+
     }
 }

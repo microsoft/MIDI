@@ -1,0 +1,32 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+import "MidiFunctionBlockDirection.idl";
+import "MidiFunctionBlockUIHint.idl";
+
+namespace Microsoft.Devices.Midi2
+{
+    [default_interface]
+    runtimeclass MidiFunctionBlock
+    {
+        MidiFunctionBlock();
+
+        UInt8 Number{ get; };               // function block number: 0-31
+        String Name{ get; };
+
+        MidiFunctionBlockDirection Direction{ get; };
+        MidiFunctionBlockUIHint UIHint{ get; };
+
+        Boolean IsMidi10Connection{ get; };
+        Boolean IsBandwidthRestricted{ get; };      // true if the block is asking for 31.25kbps restriction
+
+        UInt8 FirstGroupIndex{ get; };      
+        UInt8 GroupSpanCount{ get; };
+
+        UInt8 MidiCIMessageVersionFormat{ get; };
+
+        UInt8 MaxSysEx8Streams{ get; };
+    }
+}

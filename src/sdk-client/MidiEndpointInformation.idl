@@ -1,0 +1,26 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+
+namespace Microsoft.Devices.Midi2
+{
+    [default_interface]
+    runtimeclass MidiEndpointInformation
+    {
+        MidiEndpointInformation();
+
+        // from Endpoint Info
+        String Name{ get; };
+        UInt8 UmpVersionMajor{ get; };
+        UInt8 UmpVersionMinor{ get; };
+        Boolean HasStaticFunctionBlocks{ get; };
+        UInt8 FunctionBlockCount{ get; };
+        String ProductInstanceId{ get; };
+        Boolean SupportsMidi10Protocol{ get; };
+        Boolean SupportsMidi20Protocol{ get; };
+        Boolean SupportsReceivingJRTimestamps{ get; };
+        Boolean SupportsSendingJRTimestamps{ get; };
+    }
+}
