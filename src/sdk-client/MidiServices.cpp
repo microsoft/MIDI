@@ -4,30 +4,32 @@
 // ============================================================================
 
 #include "pch.h"
-#include "MidiEndpointConnectOptions.h"
-#include "MidiEndpointConnectOptions.g.cpp"
-
+#include "MidiServices.h"
+#include "MidiServices.g.cpp"
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    winrt::Microsoft::Devices::Midi2::MidiEndpointConnectOptions MidiEndpointConnectOptions::Default()
+    bool MidiServices::CheckForWindowsMidiServices(winrt::Microsoft::Devices::Midi2::WindowsMidiServicesCheckError& errorResult)
     {
         throw hresult_not_implemented();
     }
-
-    bool MidiEndpointConnectOptions::DisableProcessingFunctionBlockInformationMessages()
+    hstring MidiServices::GetInstalledWindowsMidiServicesVersion()
     {
         throw hresult_not_implemented();
     }
-    void MidiEndpointConnectOptions::DisableProcessingFunctionBlockInformationMessages(bool value)
+    hstring MidiServices::SdkVersion()
     {
         throw hresult_not_implemented();
     }
-    bool MidiEndpointConnectOptions::DisableProcessingEndpointInformationMessages()
+    hstring MidiServices::MinimumCompatibleMidiServicesVersion()
     {
         throw hresult_not_implemented();
     }
-    void MidiEndpointConnectOptions::DisableProcessingEndpointInformationMessages(bool value)
+    winrt::Windows::Foundation::Uri MidiServices::LatestMidiServicesInstallUri()
+    {
+        throw hresult_not_implemented();
+    }
+    bool MidiServices::IsOpen()
     {
         throw hresult_not_implemented();
     }

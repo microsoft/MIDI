@@ -1,9 +1,9 @@
 #include "pch.h"
 #include "MidiProfile.h"
-#include "Profiles.MidiProfile.g.cpp"
+#include "MidiProfile.g.cpp"
 
 
-namespace winrt::Microsoft::Devices::Midi2::Profiles::implementation
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     hstring MidiProfile::RawJson()
     {

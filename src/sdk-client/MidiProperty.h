@@ -1,8 +1,8 @@
 #pragma once
-#include "Properties.MidiProperty.g.h"
+#include "MidiProperty.g.h"
 
 
-namespace winrt::Microsoft::Devices::Midi2::Properties::implementation
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     struct MidiProperty : MidiPropertyT<MidiProperty>
     {
@@ -11,7 +11,7 @@ namespace winrt::Microsoft::Devices::Midi2::Properties::implementation
         hstring RawJson();
     };
 }
-namespace winrt::Microsoft::Devices::Midi2::Properties::factory_implementation
+namespace winrt::Microsoft::Devices::Midi2::factory_implementation
 {
     struct MidiProperty : MidiPropertyT<MidiProperty, implementation::MidiProperty>
     {

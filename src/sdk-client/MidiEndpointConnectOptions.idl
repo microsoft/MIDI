@@ -11,9 +11,11 @@ namespace Microsoft.Devices.Midi2
     {
         MidiEndpointConnectOptions();
 
+        // TODO: Probably need options here to disable initial FB and other info queries upon connection?
+
         Boolean DisableProcessingFunctionBlockInformationMessages { get; set; };
         Boolean DisableProcessingEndpointInformationMessages { get; set; };
 
-
+        static MidiEndpointConnectOptions Default();
     }
 }

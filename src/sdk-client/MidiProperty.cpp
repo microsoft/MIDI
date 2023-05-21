@@ -1,9 +1,9 @@
 #include "pch.h"
 #include "MidiProperty.h"
-#include "Properties.MidiProperty.g.cpp"
+#include "MidiProperty.g.cpp"
 
 
-namespace winrt::Microsoft::Devices::Midi2::Properties::implementation
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     hstring MidiProperty::RawJson()
     {

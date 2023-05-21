@@ -11,5 +11,7 @@ namespace Microsoft.Devices.Midi2
     unsealed runtimeclass MidiDeviceInformation
     {
         static MidiDeviceInformation FromDeviceInformation(Windows.Devices.Enumeration.DeviceInformation deviceInformation);
+
+
     }
 }

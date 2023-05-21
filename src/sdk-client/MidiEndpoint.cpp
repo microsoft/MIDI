@@ -10,6 +10,10 @@
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
+    hstring MidiEndpoint::GetDeviceSelector()
+    {
+        throw hresult_not_implemented();
+    }
     hstring MidiEndpoint::DeviceId()
     {
         throw hresult_not_implemented();

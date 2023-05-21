@@ -11,11 +11,7 @@ namespace Microsoft.Devices.Midi2
     [default_interface]
     runtimeclass MidiSession
     {
-        //MidiSession();
-
-
         Boolean IsOpen { get; };
-
 
         // captures the PID, app name, etc.
         static MidiSession CreateNewSession(String sessionName);
@@ -29,16 +25,15 @@ namespace Microsoft.Devices.Midi2
         // are handled here, or they are handled in the individual 
         // endpoint instances. It's one or the other to avoid replicating
         // messages.
-        void ConnectToEndpoint(
+        MidiEndpoint ConnectToEndpoint(
             String midiEndpointId, 
             Boolean routeIncomingMessagesToSession, 
             MidiEndpointConnectOptions options);
 
         void DisconnectFromEndpoint(String midiEndpointId);
 
-
+        // close the session and release resources
         void Close();
-
 
     }
 }

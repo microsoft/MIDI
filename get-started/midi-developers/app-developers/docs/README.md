@@ -6,6 +6,10 @@ API and other documentation which will eventually be used in either the Microsof
 
 The API, SDK, tools, service, drivers, and more are being developed with some guidelines about how apps could/should interact with MIDI on Windows. In no specific order or organization, here's a high-level look at what we plan to do here. In most cases, the MIDI API provides raw, and not easily used information, but the MIDI SDK provides everything an application needs to use the API in a way compatible with the MIDI Association MIDI 2.0 Implementation Guide.
 
+Both the MIDI API and the SDK are Windows Runtime (WinRT) components.
+
+* [Using WinRT Components from Desktop Applications](https://blogs.windows.com/windowsdeveloper/2019/04/30/enhancing-non-packaged-desktop-apps-using-windows-runtime-components/)
+
 ### Enumeration
 
 MIDI 2.0 enumeration involves both physically connected devices discoverable through PnP, as well as in-protocol information.

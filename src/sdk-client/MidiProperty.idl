@@ -5,7 +5,7 @@
 
 // represents a MIDI 2.0 Property Exchange Property
 
-namespace Microsoft.Devices.Midi2.Properties
+namespace Microsoft.Devices.Midi2
 {
     [default_interface]
     runtimeclass MidiProperty
