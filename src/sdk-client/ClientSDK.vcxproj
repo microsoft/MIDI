@@ -139,6 +139,9 @@
     <ClInclude Include="MidiMessageTranslator.h">
       <DependentUpon>MidiMessageTranslator.idl</DependentUpon>
     </ClInclude>
+	  <ClInclude Include="MidiServices.h">
+		  <DependentUpon>MidiServices.idl</DependentUpon>
+	  </ClInclude>
     <ClInclude Include="Ump.h">
       <DependentUpon>Ump.idl</DependentUpon>
     </ClInclude>
@@ -191,7 +194,10 @@
     <ClCompile Include="MidiMessageTranslator.cpp">
       <DependentUpon>MidiMessageTranslator.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Ump.cpp">
+    <ClCompile Include="MidiServices.cpp">
+		<DependentUpon>MidiServices.idl</DependentUpon>
+	</ClCompile>
+	<ClCompile Include="Ump.cpp">
       <DependentUpon>Ump.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="UmpUtilities.cpp">
@@ -234,6 +240,7 @@
     <Midl Include="MidiMessageType.idl" />
     <Midl Include="MidiProfile.idl" />
     <Midl Include="MidiProperty.idl" />
+    <Midl Include="MidiServices.idl" />
     <Midl Include="MidiSession.idl" />
     <Midl Include="Ump.idl" />
     <Midl Include="UmpUtilities.idl" />

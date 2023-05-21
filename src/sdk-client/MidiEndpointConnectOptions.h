@@ -13,6 +13,8 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         MidiEndpointConnectOptions() = default;
 
+        static winrt::Microsoft::Devices::Midi2::MidiEndpointConnectOptions Default();
+
         bool DisableProcessingFunctionBlockInformationMessages();
         void DisableProcessingFunctionBlockInformationMessages(bool value);
         bool DisableProcessingEndpointInformationMessages();

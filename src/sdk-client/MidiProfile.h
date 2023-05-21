@@ -1,8 +1,8 @@
 #pragma once
-#include "Profiles.MidiProfile.g.h"
+#include "MidiProfile.g.h"
 
 
-namespace winrt::Microsoft::Devices::Midi2::Profiles::implementation
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     struct MidiProfile : MidiProfileT<MidiProfile>
     {
@@ -11,7 +11,7 @@ namespace winrt::Microsoft::Devices::Midi2::Profiles::implementation
         hstring RawJson();
     };
 }
-namespace winrt::Microsoft::Devices::Midi2::Profiles::factory_implementation
+namespace winrt::Microsoft::Devices::Midi2::factory_implementation
 {
     struct MidiProfile : MidiProfileT<MidiProfile, implementation::MidiProfile>
     {

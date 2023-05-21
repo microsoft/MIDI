@@ -39,12 +39,14 @@
     <ClCompile Include="MidiGroup.cpp" />
     <ClCompile Include="MidiSession.cpp" />
     <ClCompile Include="Generated Files\module.g.cpp" />
+    <ClCompile Include="MidiServices.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="MidiChannel.h" />
     <ClInclude Include="MidiGroup.h" />
     <ClInclude Include="MidiSession.h" />
+    <ClInclude Include="MidiServices.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Ump.idl">
@@ -105,6 +107,9 @@
       <Filter>SDK</Filter>
     </Midl>
     <Midl Include="MidiChannel.idl">
+      <Filter>SDK</Filter>
+    </Midl>
+    <Midl Include="MidiServices.idl">
       <Filter>SDK</Filter>
     </Midl>
   </ItemGroup>
