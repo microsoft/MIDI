@@ -1,7 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services Client SDK and should be used
+// in your Windows application via an official binary distribution.
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
+
 
 import "MidiEndpointInformation.idl";
 import "MidiGroupTerminalBlock.idl";
@@ -11,11 +15,11 @@ import "Ump.idl";
 
 namespace Microsoft.Devices.Midi2
 {
-    enum MidiDeviceSelectorProtocol
+    enum MidiDeviceSelectorMidiProtocol
     {
-        All = 0,
-        Midi10 = 100,
-        Midi20 = 200
+        All = 0,            // All MIDI protocols (currently only 1.0 and 2.0)
+        Midi10 = 100,       // UMP Endpoints that connect to a MIDI 1.0 device (remapped by the service, or specified by the endpoint)
+        Midi20 = 200        // MIDI 2.0 Endpoints (which may have group/function blocks that are MIDI 1.0)
     };
 
     [default_interface]
@@ -23,8 +27,11 @@ namespace Microsoft.Devices.Midi2
     {
         MidiEndpoint();
 
-        // returns the device selection string for Windows.Devices.Enumeration use
-        static String GetDeviceSelector(MidiDeviceSelectorProtocol midiProtocol);
+        // device selector for a device which implements a specific MIDI protocol
+        static String GetDeviceSelectorForMidiProtocolDevice(MidiDeviceSelectorMidiProtocol midiProtocol);
+
+        // device selector for all compatible devices
+        static String GetDeviceSelector();
 
         // Id from Windows
         String DeviceId{ get; };

@@ -32,12 +32,16 @@ int main()
 
         auto session = MidiSession::CreateNewSession(L"Sample Session");
 
-        hstring deviceSelector = MidiEndpoint::GetDeviceSelector();
+        // you can ask for MIDI 1.0 devices, MIDI 2.0 devices, or both. Note that Some MIDI 2.0
+        // endpoints may have MIDI 1.0 function blocks in them, so this is endpoint/device-level only.
+
+        hstring deviceSelector = MidiEndpoint::GetDeviceSelector(MidiDeviceSelectorMidiProtocol::Midi20);
 
         // Enumerate UMP endpoints. Note that per C++, main cannot be a co-routine,
-        // so we can't just co_await this async call. We may end up wrapping this enumeration
-        // code into another class to instantly transform to MidiDeviceInformation instances, 
-        // and to simplify calling code (reducing need for apps to incorporate async handling).
+        // so we can't just co_await this async call, but instead use the C++/WinRT Extension "get()". 
+        // We may end up wrapping this enumeration code into another class to instantly transform to 
+        // MidiDeviceInformation instances, and to simplify calling code (reducing need for apps to
+        // incorporate async handling).
 
         Windows::Foundation::IAsyncOperation<DeviceInformationCollection> op = DeviceInformation::FindAllAsync(deviceSelector);
         DeviceInformationCollection endpointDevices = op.get();
