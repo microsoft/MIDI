@@ -6,15 +6,20 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-
 // class that wraps the DeviceInformation class and provides better access to properties
+
+import "MidiEndpoint.idl";
 
 namespace Microsoft.Devices.Midi2
 {
     [default_interface]
-    unsealed runtimeclass MidiDeviceInformation
+    runtimeclass MidiDeviceInformation
     {
         static MidiDeviceInformation FromDeviceInformation(Windows.Devices.Enumeration.DeviceInformation deviceInformation);
+
+        static Windows.Devices.Enumeration.DeviceWatcher CreateWatcher();
+        static Windows.Devices.Enumeration.DeviceWatcher CreateWatcher(MidiDeviceSelectorMidiType midiDeviceType);
+
 
         // TODO:
         // Device names
@@ -22,7 +27,8 @@ namespace Microsoft.Devices.Midi2
         // Driver information if present
         // Transport information
         // Other device metadata
-        //
+        // Group blocks (json or binary struct packed into properties)
+
         
 
     }

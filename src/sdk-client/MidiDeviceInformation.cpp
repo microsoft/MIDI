@@ -16,4 +16,12 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
+    winrt::Windows::Devices::Enumeration::DeviceWatcher MidiDeviceInformation::CreateWatcher()
+    {
+        throw hresult_not_implemented();
+    }
+    winrt::Windows::Devices::Enumeration::DeviceWatcher MidiDeviceInformation::CreateWatcher(winrt::Microsoft::Devices::Midi2::MidiDeviceSelectorMidiType const& midiDeviceType)
+    {
+        throw hresult_not_implemented();
+    }
 }

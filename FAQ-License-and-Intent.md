@@ -54,3 +54,6 @@ A: We're happy to see you do this as long as you adhere to the terms of the lice
 
 **Q: Can I host the Windows MIDI Services components on my own site/server and distribute them from there.**
 A: Unless you are behind a firewall with no internet access, please point customers to the official distribution. Feel free to talk with us about exceptional circumstances.
+
+**Q: What about signing?**
+A: Only the official builds from this repo will be signed and distributed by Microsoft. This is especially important for driver signing.

@@ -18,6 +18,8 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         MidiEndpoint() = default;
 
         static hstring GetDeviceSelector();
+        static hstring GetDeviceSelector(winrt::Microsoft::Devices::Midi2::MidiDeviceSelectorMidiType const& midiDeviceType);
+
         hstring DeviceId();
         bool EndpointInformationValid();
         winrt::Microsoft::Devices::Midi2::MidiEndpointInformation EndpointInformation();

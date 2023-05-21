@@ -139,9 +139,9 @@
     <ClInclude Include="MidiMessageTranslator.h">
       <DependentUpon>MidiMessageTranslator.idl</DependentUpon>
     </ClInclude>
-	  <ClInclude Include="MidiServices.h">
-		  <DependentUpon>MidiServices.idl</DependentUpon>
-	  </ClInclude>
+    <ClInclude Include="MidiServices.h">
+      <DependentUpon>MidiServices.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="Ump.h">
       <DependentUpon>Ump.idl</DependentUpon>
     </ClInclude>
@@ -195,9 +195,9 @@
       <DependentUpon>MidiMessageTranslator.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiServices.cpp">
-		<DependentUpon>MidiServices.idl</DependentUpon>
-	</ClCompile>
-	<ClCompile Include="Ump.cpp">
+      <DependentUpon>MidiServices.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="Ump.cpp">
       <DependentUpon>Ump.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="UmpUtilities.cpp">

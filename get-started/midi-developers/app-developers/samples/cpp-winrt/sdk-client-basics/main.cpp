@@ -32,10 +32,12 @@ int main()
 
         auto session = MidiSession::CreateNewSession(L"Sample Session");
 
-        // you can ask for MIDI 1.0 devices, MIDI 2.0 devices, or both. Note that Some MIDI 2.0
+        // you can ask for MIDI 1.0 Byte Stream devices, MIDI 2.0 UMP devices, or both. Note that Some MIDI 2.0
         // endpoints may have MIDI 1.0 function blocks in them, so this is endpoint/device-level only.
+        // Note that every device uses UMP through this API, but it can be helpful to know when a device is
+        // a MIDI 1.0 device at the main interface level.
 
-        hstring deviceSelector = MidiEndpoint::GetDeviceSelector(MidiDeviceSelectorMidiProtocol::Midi20);
+        hstring deviceSelector = MidiEndpoint::GetDeviceSelector();
 
         // Enumerate UMP endpoints. Note that per C++, main cannot be a co-routine,
         // so we can't just co_await this async call, but instead use the C++/WinRT Extension "get()". 
