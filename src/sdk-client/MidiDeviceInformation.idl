@@ -12,6 +12,14 @@ namespace Microsoft.Devices.Midi2
     {
         static MidiDeviceInformation FromDeviceInformation(Windows.Devices.Enumeration.DeviceInformation deviceInformation);
 
+        // TODO:
+        // Device names
+        // Manufacturer information
+        // Driver information if present
+        // Transport information
+        // Other device metadata
+        //
+        
 
     }
 }

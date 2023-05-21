@@ -11,13 +11,20 @@ import "Ump.idl";
 
 namespace Microsoft.Devices.Midi2
 {
+    enum MidiDeviceSelectorProtocol
+    {
+        All = 0,
+        Midi10 = 100,
+        Midi20 = 200
+    };
+
     [default_interface]
     runtimeclass MidiEndpoint
     {
         MidiEndpoint();
 
         // returns the device selection string for Windows.Devices.Enumeration use
-        static String GetDeviceSelector();
+        static String GetDeviceSelector(MidiDeviceSelectorProtocol midiProtocol);
 
         // Id from Windows
         String DeviceId{ get; };
