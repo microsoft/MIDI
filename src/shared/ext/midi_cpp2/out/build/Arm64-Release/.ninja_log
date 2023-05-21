@@ -1,0 +1,10 @@
+# ninja log v5
+59	185	7064092479532412	CMakeFiles/midi2.dir/src/mcoded7.cpp.obj	2ca5ee6498fb3baf
+4	212	7064092479832459	CMakeFiles/midi2.dir/src/utils.cpp.obj	1746112cb3c08382
+18	247	7064092480167598	CMakeFiles/midi2.dir/src/umpToBytestream.cpp.obj	d894a52530fe0bb9
+12	257	7064092480267628	CMakeFiles/midi2.dir/src/bytestreamToUMP.cpp.obj	ebfded290abf593
+25	271	7064092480397625	CMakeFiles/midi2.dir/src/umpMessageCreate.cpp.obj	2883d3546729bead
+32	308	7064092480797714	CMakeFiles/midi2.dir/src/midiCIMessageCreate.cpp.obj	546e2cfb06c994e5
+49	566	7064092483383158	CMakeFiles/midi2.dir/src/umpProcessor.cpp.obj	870e4d5877d024bf
+40	771	7064092485423588	CMakeFiles/midi2.dir/src/midiCIProcessor.cpp.obj	805a7d95b364e71c
+771	905	7064092486178870	midi2.lib	d9dc622737478990

@@ -1,0 +1,3 @@
+D:/peteb/Documents/GitHub/microsoft/midi/src/shared/ext/midi_cpp2/out/build/x64-Release/CMakeFiles/midi2.dir
+D:/peteb/Documents/GitHub/microsoft/midi/src/shared/ext/midi_cpp2/out/build/x64-Release/CMakeFiles/edit_cache.dir
+D:/peteb/Documents/GitHub/microsoft/midi/src/shared/ext/midi_cpp2/out/build/x64-Release/CMakeFiles/rebuild_cache.dir

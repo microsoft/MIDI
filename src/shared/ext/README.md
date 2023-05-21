@@ -9,3 +9,11 @@ This is a set of code from The MIDI Association, usable under their license term
 Please see source for copyright information.
 
 We're friends with Andrew and members of the MIDI Association, and want to make MIDI better for everyone, so if you find any bugs here, please be sure to also notify Andrew (starfishmod) through the MIDI Association repo, if at all possible.
+
+## Building
+
+On Windows, open the folder from explorer (shift-right-click, open with Visual Studio, or open Visual Studio and select "Open a local folder") to load the cmake project. Build from within Visual Studio.
+
+This, and building, requires you have the CMake Tools for Windows workload installed with Visual Studio.
+
+* [CMake projects in Visual Studio](https://learn.microsoft.com/cpp/build/cmake-projects-in-visual-studio)
