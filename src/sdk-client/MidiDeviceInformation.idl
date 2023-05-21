@@ -1,17 +1,35 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services Client SDK and should be used
+// in your Windows application via an official binary distribution.
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
 // class that wraps the DeviceInformation class and provides better access to properties
 
+import "MidiEndpoint.idl";
+
 namespace Microsoft.Devices.Midi2
 {
     [default_interface]
-    unsealed runtimeclass MidiDeviceInformation
+    runtimeclass MidiDeviceInformation
     {
         static MidiDeviceInformation FromDeviceInformation(Windows.Devices.Enumeration.DeviceInformation deviceInformation);
 
+        static Windows.Devices.Enumeration.DeviceWatcher CreateWatcher();
+        static Windows.Devices.Enumeration.DeviceWatcher CreateWatcher(MidiDeviceSelectorMidiType midiDeviceType);
+
+
+        // TODO:
+        // Device names
+        // Manufacturer information
+        // Driver information if present
+        // Transport information
+        // Other device metadata
+        // Group blocks (json or binary struct packed into properties)
+
+        
 
     }
 }

@@ -85,17 +85,10 @@ For maximum flexibility and compatibility, there are several release mechanisms 
 
 **When will components be considered "production"?** The bar in Windows is very high for any big changes (especially anything which may break compatibility) to an API that has shipped in-box, so we want to ensure the API and service are truly production-ready before including them in-box. This will be based on stability/readiness/performance, with input from stakeholders including AMEI, and not a specific timeline.
 
-## Philosophy - why is this Open Source?
+## License
 
-We believe in the musician and music technology communities. We also know that the music creation tech community is a highly motivated and interested community, including those who are both musicians and developers who are working to move music technology forward.
-
-We recognize that standards like MIDI 2.0 are living standards, with new transports, messages, and add-on capabilities added over time. In the past, we haven't been quick to adopt those in releases of Windows, despite a more agile approach to Windows development. We want to change that.
-
-We proposed that the best way to maintain an API which keeps up with the evolving MIDI standards and offers early adopters in this community an opportunity to try them out, test, and contribute, is to open source everything that we can, and invite both internal teams and the community to contribute to MIDI. **We also love the idea of others learning from this source code to implement MIDI 2.0 on embedded devices and other operating systems as they need.**
-
-In short, we believe this project is the best way to continue to develop MIDI on Windows in the long-term, and to give back to the whole MIDI developer community, regardless of which operating system they prefer.
-
-> There are some pieces which require changes to core Windows for us to implement. For example, we have made some changes to our USB stack to enable detection of the new class driver without interfering with USB Audio 1.0 (USB Audio 1.0 and MIDI 1.0 are in the same driver, but in the new model, MIDI 1.0 and MIDI 2.0 are in the new driver, but Audio 1.0 stays in the old driver). We're also porting some driver model work, and may have some other shims which redirect MIDI 1.0 API calls to the new stack. Most or all of these pieces will not be open source because they are based on existing private Windows code. But, wherever we can be open, we are and will be. Our default approach for this project is open source.
+* See [LICENSE](LICENSE)
+* For a statement of intent and some other FAQs about forking and more, see [FAQ-License-and-Intent.md](FAQ-License-and-Intent.md)
 
 ## Contributing
 

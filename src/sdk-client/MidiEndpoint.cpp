@@ -1,7 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services Client SDK and should be used
+// in your Windows application via an official binary distribution.
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
+
 
 #include "pch.h"
 #include "MidiEndpoint.h"
@@ -11,6 +15,10 @@
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     hstring MidiEndpoint::GetDeviceSelector()
+    {
+        throw hresult_not_implemented();
+    }
+    hstring MidiEndpoint::GetDeviceSelector(winrt::Microsoft::Devices::Midi2::MidiDeviceSelectorMidiType const& midiDeviceType)
     {
         throw hresult_not_implemented();
     }

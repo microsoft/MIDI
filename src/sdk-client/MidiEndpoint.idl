@@ -1,7 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services Client SDK and should be used
+// in your Windows application via an official binary distribution.
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
+
 
 import "MidiEndpointInformation.idl";
 import "MidiGroupTerminalBlock.idl";
@@ -11,15 +15,26 @@ import "Ump.idl";
 
 namespace Microsoft.Devices.Midi2
 {
+    enum MidiDeviceSelectorMidiType
+    {
+        All = 0,                            // All MIDI protocols (currently only 1.0 and 2.0)
+        ConvertedMidi10ByteStream = 100,    // UMP Endpoints that connect to a byte stream MIDI 1.0 device (remapped by the service, or specified by the endpoint)
+        NativeMidi20Ump = 200               // MIDI 2.0 Endpoints (which may have group/function blocks that are MIDI 1.0)
+    };
+
     [default_interface]
     runtimeclass MidiEndpoint
     {
         MidiEndpoint();
 
+        // device selector for all compatible devices
         static String GetDeviceSelector();
+    
+        // device selector for a device which implements a specific MIDI transport/protocol
+        static String GetDeviceSelector(MidiDeviceSelectorMidiType midiDeviceType);
 
 
-        // Id from Windows
+        // Id from Windows. This can be used to retrieve the MidiDeviceInformation object
         String DeviceId{ get; };
 
         // TODO: the other types of names (user-provided, device-provided, etc.)
@@ -31,9 +46,8 @@ namespace Microsoft.Devices.Midi2
         MidiEndpointType EndpointType{ get; };
 
         // Blocks which tell us how to treat the groups
-        IObservableVector<MidiFunctionBlock>FunctionBlocks { get; };  // these are discovered in-protocol
+        IObservableVector<MidiFunctionBlock>FunctionBlocks { get; };  // these are discovered in-protocol. They can change within the rules in the spec
         IVector<MidiGroupTerminalBlock>GroupTerminalBlocks { get; };  // these are USB-specific, created at enumeration time, and do not change
-
 
         // Send a single strongly-typed UMP with a timestamp
         void SendUmp(UInt64 timestamp, Microsoft.Devices.Midi2.Ump ump);
@@ -52,6 +66,8 @@ namespace Microsoft.Devices.Midi2
         // more
         // We won't store the values here, as they are by endpoint, group, and channel, but will provide
         // functions to easily request the information
+
+        // TODO: Events etc. for receiving messages
 
     }
 }
