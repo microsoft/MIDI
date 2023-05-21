@@ -1,6 +1,13 @@
 # Using Windows MIDI Services from C++ / WinRT
 
-This is the primary way developers will use this API and SDK.
+It's expected that C++/WinRT is the primary way developers will use this API and SDK. Unlike the older C++/CX ir WRL, C++/WinRT is based on C++ 17 language standards and is implemented as NuGet packages and standard C++ headers.
+
+> From docs:
+>C++/WinRT is the recommended alternative to C++/CX. It is a new, standard C++17 language projection for Windows Runtime APIs, available in the latest Windows SDK from version 1803 (10.0.17134.0) onward. C++/WinRT is implemented entirely in header files, and designed to provide you with first-class access to the modern Windows API.
+>
+> With C++/WinRT, you can both consume and author Windows Runtime APIs using any standards-conformant C++17 compiler. C++/WinRT typically performs better and produces smaller binaries than any other language option for the Windows Runtime. We will continue to support C++/CX and WRL, but highly recommend that new applications use C++/WinRT. For more information, see C++/WinRT.
+
+For C++, Windows MIDI Services is only being tested with C++/WinRT, not CX or WRL, but those will likely still work.
 
 ## Samples
 
@@ -10,5 +17,5 @@ This is the primary way developers will use this API and SDK.
 
 ## Background information
 
-* [Get Started with C++/WinRT](https://learn.microsoft.com/windows/uwp/cpp-and-winrt-apis/)
+* [Get Started with C++/WinRT](https://learn.microsoft.com/windows/uwp/cpp-and-winrt-apis/get-started)
 * [Enhancing Non-packaged Desktop Apps using Windows Runtime Components](https://blogs.windows.com/windowsdeveloper/2019/04/30/enhancing-non-packaged-desktop-apps-using-windows-runtime-components/)

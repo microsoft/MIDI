@@ -16,8 +16,8 @@ namespace Microsoft.Devices.Midi2
     {
         MidiEndpoint();
 
+        // returns the device selection string for Windows.Devices.Enumeration use
         static String GetDeviceSelector();
-
 
         // Id from Windows
         String DeviceId{ get; };
