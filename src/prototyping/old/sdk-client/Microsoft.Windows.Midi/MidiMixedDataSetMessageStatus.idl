@@ -1,9 +1,0 @@
-
-namespace Microsoft.Windows.Midi.Messages.Data
-{
-    enum MidiMixedDataSetMessageStatus
-    {
-        Header = 0x8,
-        Payload = 0x9
-    };
-}

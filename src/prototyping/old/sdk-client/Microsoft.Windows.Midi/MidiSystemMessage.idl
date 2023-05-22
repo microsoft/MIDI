@@ -1,7 +1,0 @@
-namespace Microsoft.Windows.Midi.Messages.System
-{
-    [default_interface]
-    unsealed runtimeclass MidiSystemMessage
-    {
-    };
-}
