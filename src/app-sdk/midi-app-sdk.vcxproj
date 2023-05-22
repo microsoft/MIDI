@@ -10,7 +10,7 @@
     <CppWinRTLibs>true</CppWinRTLibs>
     <MinimalCoreWin>true</MinimalCoreWin>
     <ProjectGuid>{3aa50484-e4c1-41fb-9ae4-feea724e6077}</ProjectGuid>
-    <ProjectName>ClientSDK</ProjectName>
+    <ProjectName>midi-app-sdk</ProjectName>
     <RootNamespace>Microsoft.Devices.Midi2</RootNamespace>
     <DefaultLanguage>en-US</DefaultLanguage>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
@@ -80,7 +80,9 @@
     <Import Project="PropertySheet.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>..\shared\inc;$(IncludePath)</IncludePath>
+  </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -94,7 +96,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
-      <ModuleDefinitionFile>ClientSDK.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>midi-app-sdk.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
@@ -142,6 +144,7 @@
     <ClInclude Include="MidiServices.h">
       <DependentUpon>MidiServices.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiAppSdkVersion.h" />
     <ClInclude Include="Ump.h">
       <DependentUpon>Ump.idl</DependentUpon>
     </ClInclude>
@@ -246,7 +249,7 @@
     <Midl Include="UmpUtilities.idl" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="ClientSDK.def" />
+    <None Include="midi-app-sdk.def" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

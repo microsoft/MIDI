@@ -13,15 +13,23 @@ import "MidiEndpointConnectOptions.idl";
 namespace Microsoft.Devices.Midi2
 {
     [default_interface]
-    runtimeclass MidiSession
+    runtimeclass MidiSession : Windows.Foundation.IClosable
     {
-        Boolean IsOpen { get; };
+        // Session management ===================================================================
 
         // captures the PID, app name, etc.
         static MidiSession CreateNewSession(String sessionName);
 
+        Boolean IsOpen { get; };
+
+        // close the session and release resources
+        void Close();
+
+
+
+
         // this really should be read-only to users of this class
-        IObservableVector<MidiEndpoint>ConnectedEndpoints { get; };
+        Windows.Foundation.Collections.IObservableVector<MidiEndpoint> ConnectedEndpoints { get; };
 
         // uses the enumeration information to connect to an endpoint
         // adds it to the list of connected endpoints. The boolean 
@@ -36,8 +44,14 @@ namespace Microsoft.Devices.Midi2
 
         void DisconnectFromEndpoint(String midiEndpointId);
 
-        // close the session and release resources
-        void Close();
+
+        // utility methods =======================================================================
+
+        // gets the current MIDI timestamp
+        UInt64 GetMidiTimestamp();
+
+        // returns the units per second for the timestamp
+        UInt64 GetMidiTimestampFrequency();
 
     }
 }

@@ -32,6 +32,9 @@
     <Filter Include="SDK\CI\Profiles">
       <UniqueIdentifier>{9be63908-a776-4a04-a13b-9b8bcd617e32}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Internal">
+      <UniqueIdentifier>{6abb387d-1da9-403e-bb35-70e4359f1b00}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -47,6 +50,9 @@
     <ClInclude Include="MidiGroup.h" />
     <ClInclude Include="MidiSession.h" />
     <ClInclude Include="MidiServices.h" />
+    <ClInclude Include="MidiAppSdkVersion.h">
+      <Filter>Internal</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Ump.idl">
@@ -114,8 +120,8 @@
     </Midl>
   </ItemGroup>
   <ItemGroup>
-    <None Include="ClientSDK.def" />
     <None Include="packages.config" />
+    <None Include="midi-app-sdk.def" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PropertySheet.props" />

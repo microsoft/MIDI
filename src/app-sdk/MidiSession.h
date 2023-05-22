@@ -8,6 +8,10 @@
 
 
 #pragma once
+
+// this is a shared file in the repo. It defines what we're using for MIDI timestamps
+#include <midi_timestamp.h>
+
 #include "MidiSession.g.h"
 
 
@@ -23,6 +27,17 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         winrt::Microsoft::Devices::Midi2::MidiEndpoint ConnectToEndpoint(hstring const& midiEndpointId, bool routeIncomingMessagesToSession, winrt::Microsoft::Devices::Midi2::MidiEndpointConnectOptions const& options);
         void DisconnectFromEndpoint(hstring const& midiEndpointId);
         void Close();
+
+        uint64_t GetMidiTimestamp();
+        uint64_t GetMidiTimestampFrequency();
+
+
+
+    private:
+        bool _isOpen = false;
+        Windows::Foundation::Collections::IObservableVector<winrt::Microsoft::Devices::Midi2::MidiEndpoint> _connectedEndpoints;
+        
+
     };
 }
 namespace winrt::Microsoft::Devices::Midi2::factory_implementation
