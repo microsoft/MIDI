@@ -11,7 +11,7 @@
     <MinimalCoreWin>true</MinimalCoreWin>
     <ProjectGuid>{3c39f54e-4b0b-458b-97ef-d7cdb2940631}</ProjectGuid>
     <ProjectName>midi-app-api</ProjectName>
-    <RootNamespace>Microsoft.Devices.Midi2</RootNamespace>
+    <RootNamespace>Windows.Devices.Midi2</RootNamespace>
     <DefaultLanguage>en-US</DefaultLanguage>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <AppContainerApplication>true</AppContainerApplication>
@@ -109,10 +109,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="MidiMessageBuffer.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Placeholder.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="MidiMessageBuffer.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -127,6 +129,7 @@
     <None Include="PropertySheet.props" />
   </ItemGroup>
   <ItemGroup>
+    <Midl Include="MidiMessageBuffer.idl" />
     <Midl Include="Placeholder.idl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
