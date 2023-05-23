@@ -1,0 +1,27 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services Client SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+
+import "MidiMessageType.idl";
+
+namespace Microsoft.Devices.Midi2
+{
+    [default_interface]
+    unsealed runtimeclass Ump
+    {
+        Ump();
+
+        // revisit this? Vector? Few discrete words?
+        UInt32[] Words{ get; };
+        UInt8 WordCount{ get; };
+
+        // TODO: Need to ensure unknown message types can still work for prototyping etc.
+        MidiMessageType MessageType { get; set; };
+
+    }
+}
