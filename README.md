@@ -62,7 +62,7 @@ Here are the current plans for transports. In general, transports are implemente
 
 ## Releases
 
-We are in the process of setting up automated pipelines for building the component pieces of this project. This readme will be updated with build status information one that is in place.
+We are in the process of setting up automated pipelines for building (and eventually signing) the component pieces of this project. This readme will be updated with build status information one that is in place. **There are no usable builds, currently.**
 
 **There are no end-user preview releases yet.**
 
@@ -124,7 +124,7 @@ Older specifications
 
 This project supports both MIDI 1.0 and MIDI 2.0 through an updated modern API. MIDI 1.0 has been around since 1983, but MIDI 2.0 is new. You can learn more about it through the links below.
 
-[![NAMM 2022 MIDI 2.0 Update](https://img.youtube.com/vi/69hzeBFOPfo/mqdefault.jpg)](https://www.youtube.com/watch?v=69hzeBFOPfo)
+[![NAMM 2022 MIDI 2.0 Update](https://img.youtube.com/vi/69hzeBFOPfo/mqdefault.jpg)](https://www.youtube.com/watch?v=69hzeBFOPfo) 
 [![Mike Kent on MIDI 2.0 Protocol Messages and UMP](https://img.youtube.com/vi/Kky1nlwz8-8/mqdefault.jpg)](https://www.youtube.com/watch?v=Kky1nlwz8-8)
 
 * [Windows MIDI and Music Dev Blog](https://devblogs.microsoft.com/windows-music-dev/)

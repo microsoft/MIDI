@@ -1,0 +1,141 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resources">
+      <UniqueIdentifier>accd3aa8-1ba0-4223-9bbe-0c431709210b</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tga;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Generated Files">
+      <UniqueIdentifier>{926ab91d-31b4-48c3-b9a4-e681349f27f0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK">
+      <UniqueIdentifier>{4f6a2ac4-8b62-49bf-a42b-79a9e2584abe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Messages">
+      <UniqueIdentifier>{aa2a2918-1030-4549-946a-8ae21d00e0a6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Endpoints">
+      <UniqueIdentifier>{6965e07f-f558-4fdb-821c-dcb0ae49819a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Display">
+      <UniqueIdentifier>{e7e0aa49-381b-47bc-aa9b-b112d1cb6a03}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Enumeration">
+      <UniqueIdentifier>{82d4c35a-889e-43da-aff9-d630e51b0046}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\CI">
+      <UniqueIdentifier>{ecdbb882-7ad0-43b5-b67c-513e55d2774a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\CI\Properties">
+      <UniqueIdentifier>{d1f0b3c0-4ecb-436a-bc1c-d206659a3463}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\CI\Profiles">
+      <UniqueIdentifier>{9be63908-a776-4a04-a13b-9b8bcd617e32}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Internal">
+      <UniqueIdentifier>{6abb387d-1da9-403e-bb35-70e4359f1b00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Session">
+      <UniqueIdentifier>{6427be3d-78fd-4fff-9bf4-2353b462bfc3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="MidiChannel.cpp" />
+    <ClCompile Include="MidiGroup.cpp" />
+    <ClCompile Include="MidiSession.cpp" />
+    <ClCompile Include="Generated Files\module.g.cpp" />
+    <ClCompile Include="MidiServices.cpp" />
+    <ClCompile Include="MidiSessionSettings.cpp">
+      <Filter>SDK\Session</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="MidiChannel.h" />
+    <ClInclude Include="MidiGroup.h" />
+    <ClInclude Include="MidiSession.h" />
+    <ClInclude Include="MidiServices.h" />
+    <ClInclude Include="MidiAppSdkVersion.h">
+      <Filter>Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiSessionSettings.h">
+      <Filter>SDK\Session</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="Ump.idl">
+      <Filter>SDK\Messages</Filter>
+    </Midl>
+    <Midl Include="UmpUtilities.idl">
+      <Filter>SDK\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiMessageTranslator.idl">
+      <Filter>SDK\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiMessageType.idl">
+      <Filter>SDK\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiDeviceInformation.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiEndpoint.idl">
+      <Filter>SDK\Endpoints</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlock.idl">
+      <Filter>SDK\Endpoints</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointConnectOptions.idl">
+      <Filter>SDK\Endpoints</Filter>
+    </Midl>
+    <Midl Include="MidiGroupTerminalBlock.idl">
+      <Filter>SDK\Endpoints</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDisplayFormatter.idl">
+      <Filter>SDK\Display</Filter>
+    </Midl>
+    <Midl Include="MidiProfile.idl">
+      <Filter>SDK\CI\Profiles</Filter>
+    </Midl>
+    <Midl Include="MidiProperty.idl">
+      <Filter>SDK\CI\Properties</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlockDirection.idl">
+      <Filter>SDK\Endpoints</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlockUIHint.idl">
+      <Filter>SDK\Endpoints</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointInformation.idl">
+      <Filter>SDK\Endpoints</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointType.idl">
+      <Filter>SDK\Endpoints</Filter>
+    </Midl>
+    <Midl Include="MidiLocalizedStrings.idl">
+      <Filter>SDK\Display</Filter>
+    </Midl>
+    <Midl Include="MidiGroup.idl">
+      <Filter>SDK</Filter>
+    </Midl>
+    <Midl Include="MidiChannel.idl">
+      <Filter>SDK</Filter>
+    </Midl>
+    <Midl Include="MidiServices.idl">
+      <Filter>SDK</Filter>
+    </Midl>
+    <Midl Include="MidiSession.idl">
+      <Filter>SDK\Session</Filter>
+    </Midl>
+    <Midl Include="MidiSessionSettings.idl">
+      <Filter>SDK\Session</Filter>
+    </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="midi-app-sdk.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="PropertySheet.props" />
+  </ItemGroup>
+</Project>
