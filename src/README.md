@@ -4,9 +4,12 @@ The main source tree.
 
 | Location | Description |
 | -------------------- | ----------------------------------------------------- |
-| api-client | what will become the API delivered with Windows |
-| api-service-plugins | Service-side API for transports and other plugins |
+| app-dev | API and SDK for Windows apps. Includes a solution that loads both, for use during pre-1.0 development |
+| app-dev\api | API which will be in-box in Windows in the future |
+| app-dev\sdk | SDK applications should use to speak to the API |
+| Midi2 | Temporary structure for the Windows Service and related |
 | plugins | plugin implementations |
-| sdk-client | App developer API/SDKs for MIDI. This sits on top of the API and is the way almost all apps should interface with Windows MIDI Services |
+| shared | Certain files shared across the different projects |
 | tools | End-user tools like settings and the CLI |
+| unit-tests | test code |
 | usb-driver | USB MIDI 2.0 driver |
