@@ -15,8 +15,14 @@ namespace Windows.Devices.Midi2
     {
         MidiMessageBuffer();
 
-        // TODO: We'll need a high-performance way to enable accessing the memory mapped buffers from the service
-        // but in a way that is compliant with WinRT (so can't just throw around raw pointers)
+        // TODO: Once the user-mode x-proc circular buffer code is checked in, We'll need a high-performance way 
+        // to enable accessing the memory mapped buffers from the service but in a way that is compliant with 
+        // WinRT (so can't just throw around raw pointers)
+
+
+        // likely similar to IMemoryBuffer (and may implement that interface for compatibility), but works on 
+        // 32 bit MIDI Words and with the existing buffer memory, not new memory
+
 
     }
 }
