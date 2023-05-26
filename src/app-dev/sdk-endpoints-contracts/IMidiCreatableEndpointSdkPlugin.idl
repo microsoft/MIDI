@@ -1,0 +1,32 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services Client SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+namespace Microsoft.Devices.Midi2.ClientEndpointContracts
+{
+    // I wonder if it wouldn't be better to leave out this interface and just do runtime discovery
+
+    interface IMidiCreatableEndpointSdkPlugin
+    {
+        Boolean SupportsCreate{ get; };      
+        IMidiEndpointCreateSettingsPanel GetCreateSettingsPanel{ get; };
+        IMidiEndpointInAppCreateDialog GetCreateDialog{ get; };
+
+        Boolean SupportsUpdate{ get; };
+        IMidiEndpointUpdateSettingsPanel GetUpdateSettingsPanel{ get; };
+        IMidiEndpointInAppUpdateDialog GetUpdateDialog{ get; };
+
+        Boolean SupportsProperties{ get; };
+        IMidiEndpointPropertiesSettingsPanel GetPropertiesSettingsPanel{ get; };
+        IMidiEndpointInAppUpdateDialog GetPropertiesDialog{ get; };
+
+        Boolean SupportsGlobalTransportSettings{ get; };
+        IMidiTransportGlobalSettingsPanel GetTransportGlobalSettingsPanel{ get; };
+
+
+    }
+}

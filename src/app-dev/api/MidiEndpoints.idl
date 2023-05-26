@@ -1,0 +1,26 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services Client SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+// 
+
+namespace Windows.Devices.Midi2
+{
+    [default_interface]
+    runtimeclass MidiEndpoints
+    {
+        // retrieval of endpoint properties is through enumeration
+
+        // for runtime-creatable endpoints like network and virtual
+        String CreateEndpoint(String transportId, String configurationJson);
+        void UpdateEndpoint(String endpointId, String configurationJson);
+        void DeleteEndpoint(String endpointId);
+
+        // TODO
+        Boolean ConnectToEndpoint(String sessionId, String endpointId);
+    }
+}

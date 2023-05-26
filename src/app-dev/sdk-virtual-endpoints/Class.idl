@@ -1,0 +1,9 @@
+namespace midi_app_sdk_virtual_endpoints
+{
+    [default_interface]
+    runtimeclass Class
+    {
+        Class();
+        Int32 MyProperty;
+    }
+}

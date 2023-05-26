@@ -1,0 +1,22 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services Client SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+namespace Microsoft.Devices.Midi2.ClientEndpointContracts
+{
+    interface IMidiEndpointCreateSettingsPanel
+    {
+        String SettingsJson{ get; set; };
+
+        // returns true if the settings have been updated and we should apply them to the service
+        Boolean SettingsUpdated{ get; };
+
+        // Any global settings which apply to all endpoints created for this transport
+        IControl GetSettingsUI();
+    }
+}
+
