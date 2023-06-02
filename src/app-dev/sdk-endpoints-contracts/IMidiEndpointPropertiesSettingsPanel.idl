@@ -8,11 +8,11 @@
 
 namespace Microsoft.Devices.Midi2.ClientEndpointContracts
 {
-    interface IMidiTransportGlobalSettingsPanel
+    interface IMidiEndpointPropertiesSettingsPanel
     {
         String SettingsJson{ get; set; };
 
         // Any global settings which apply to all endpoints created for this transport
-        IControl GetSettingsUI();
+        Microsoft.UI.Xaml.FrameworkElement GetSettingsUI();
     }
 }

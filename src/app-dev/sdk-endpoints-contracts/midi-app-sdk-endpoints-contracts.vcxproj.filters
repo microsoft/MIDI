@@ -13,9 +13,6 @@
     <None Include="PropertySheet.props" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="readme.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <Filter Include="UI">
       <UniqueIdentifier>{46fbbda7-0443-4633-ae1c-e87a8e564430}</UniqueIdentifier>
     </Filter>
@@ -24,10 +21,10 @@
     <Midl Include="IMidiCreatableEndpointSdkPlugin.idl">
       <Filter>UI</Filter>
     </Midl>
-    <Midl Include="IMidiEndpointInAppCreateDialog.idl">
+    <Midl Include="IMidiEndpointCreateDialog.idl">
       <Filter>UI</Filter>
     </Midl>
-    <Midl Include="IMidiEndpointInAppUpdateDialog.idl">
+    <Midl Include="IMidiEndpointUpdateDialog.idl">
       <Filter>UI</Filter>
     </Midl>
     <Midl Include="IMidiTransportGlobalSettingsPanel.idl">
@@ -42,7 +39,7 @@
     <Midl Include="IMidiEndpointPropertiesSettingsPanel.idl">
       <Filter>UI</Filter>
     </Midl>
-    <Midl Include="IMidiEndpointInAppPropertiesDialog.idl">
+    <Midl Include="IMidiEndpointPropertiesDialog.idl">
       <Filter>UI</Filter>
     </Midl>
   </ItemGroup>

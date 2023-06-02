@@ -8,7 +8,6 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="Class.idl" />
     <Midl Include="MidiVirtualEndpointSettingsUI.idl">
       <Filter>UI</Filter>
     </Midl>

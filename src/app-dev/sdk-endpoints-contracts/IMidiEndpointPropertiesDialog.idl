@@ -8,7 +8,7 @@
 
 namespace Microsoft.Devices.Midi2.ClientEndpointContracts
 {
-    interface IMidiEndpointInAppPropertiesDialog
+    interface IMidiEndpointPropertiesDialog
     {
         String SettingsJson{ get; set; };
 

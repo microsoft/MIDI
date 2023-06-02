@@ -6,6 +6,18 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+import "IMidiEndpointCreateSettingsPanel.idl";
+import "IMidiEndpointCreateDialog.idl";
+
+import "IMidiEndpointUpdateSettingsPanel.idl";
+import "IMidiEndpointUpdateDialog.idl";
+
+import "IMidiEndpointPropertiesSettingsPanel.idl";
+import "IMidiEndpointPropertiesDialog.idl";
+
+import "IMidiTransportGlobalSettingsPanel.idl";
+
+
 namespace Microsoft.Devices.Midi2.ClientEndpointContracts
 {
     // I wonder if it wouldn't be better to leave out this interface and just do runtime discovery
@@ -13,19 +25,19 @@ namespace Microsoft.Devices.Midi2.ClientEndpointContracts
     interface IMidiCreatableEndpointSdkPlugin
     {
         Boolean SupportsCreate{ get; };      
-        IMidiEndpointCreateSettingsPanel GetCreateSettingsPanel{ get; };
-        IMidiEndpointInAppCreateDialog GetCreateDialog{ get; };
+        IMidiEndpointCreateSettingsPanel GetCreateSettingsPanel();
+        IMidiEndpointCreateDialog GetCreateDialog();
 
         Boolean SupportsUpdate{ get; };
-        IMidiEndpointUpdateSettingsPanel GetUpdateSettingsPanel{ get; };
-        IMidiEndpointInAppUpdateDialog GetUpdateDialog{ get; };
+        IMidiEndpointUpdateSettingsPanel GetUpdateSettingsPanel();
+        IMidiEndpointUpdateDialog GetUpdateDialog();
 
         Boolean SupportsProperties{ get; };
-        IMidiEndpointPropertiesSettingsPanel GetPropertiesSettingsPanel{ get; };
-        IMidiEndpointInAppUpdateDialog GetPropertiesDialog{ get; };
+        IMidiEndpointPropertiesSettingsPanel GetPropertiesSettingsPanel();
+        IMidiEndpointPropertiesDialog GetPropertiesDialog();
 
         Boolean SupportsGlobalTransportSettings{ get; };
-        IMidiTransportGlobalSettingsPanel GetTransportGlobalSettingsPanel{ get; };
+        IMidiTransportGlobalSettingsPanel GetTransportGlobalSettingsPanel();
 
 
     }

@@ -10,8 +10,13 @@
 namespace Microsoft.Devices.Midi2.LoopbackEndpoints
 {
     [default_interface]
-    runtimeclass MidiLoopbackEndpointSettingsUI
+    runtimeclass MidiLoopbackSettings
     {
+        String SettingsJson {get; set; };
+
+        String FirstUmpEndpointName{ get; set; };
+        String SecondUmpEndpointName{ get; set; };
+
 
     }
 }

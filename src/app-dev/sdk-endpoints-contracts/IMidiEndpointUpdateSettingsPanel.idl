@@ -16,6 +16,6 @@ namespace Microsoft.Devices.Midi2.ClientEndpointContracts
         Boolean SettingsUpdated{ get; };
 
         // Any global settings which apply to all endpoints created for this transport
-        IControl GetSettingsUI();
+        Microsoft.UI.Xaml.FrameworkElement GetSettingsUI();
     }
 }
