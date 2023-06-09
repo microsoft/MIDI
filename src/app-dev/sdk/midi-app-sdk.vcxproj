@@ -8,10 +8,9 @@
     <CppWinRTModernIDL>true</CppWinRTModernIDL>
     <CppWinRTProjectLanguage>C++/WinRT</CppWinRTProjectLanguage>
     <CppWinRTLibs>true</CppWinRTLibs>
-	  <WindowsTargetPlatformVersion Condition=" '$(WindowsTargetPlatformVersion)' == '' ">10.0.22621.0</WindowsTargetPlatformVersion>
-	  <WindowsTargetPlatformMinVersion>10.0.20348.0</WindowsTargetPlatformMinVersion>
-
-	  <MinimalCoreWin>true</MinimalCoreWin>
+    <WindowsTargetPlatformVersion Condition=" '$(WindowsTargetPlatformVersion)' == '' ">10.0.22621.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformMinVersion>10.0.20348.0</WindowsTargetPlatformMinVersion>
+    <MinimalCoreWin>true</MinimalCoreWin>
     <ProjectGuid>{3aa50484-e4c1-41fb-9ae4-feea724e6077}</ProjectGuid>
     <ProjectName>midi-app-sdk</ProjectName>
     <RootNamespace>Microsoft.Devices.Midi2</RootNamespace>
@@ -237,6 +236,7 @@
     <Midl Include="MidiEndpointInformation.idl" />
     <Midl Include="MidiEndpointType.idl" />
     <Midl Include="MidiFunctionBlockDirection.idl" />
+    <Midl Include="MidiHighResolutionValueDisplayFormatter.idl" />
     <Midl Include="MidiMessageTranslator.idl" />
     <Midl Include="MidiDeviceInformation.idl" />
     <Midl Include="MidiEndpoint.idl" />

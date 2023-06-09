@@ -130,6 +130,9 @@
     <Midl Include="MidiSessionSettings.idl">
       <Filter>SDK\Session</Filter>
     </Midl>
+    <Midl Include="MidiHighResolutionValueDisplayFormatter.idl">
+      <Filter>SDK\Display</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
