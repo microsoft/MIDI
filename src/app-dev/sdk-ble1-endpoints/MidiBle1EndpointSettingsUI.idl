@@ -7,11 +7,13 @@
 // ============================================================================
 
 
-namespace Microsoft.Devices.Midi2.NetworkEndpoints
+namespace Microsoft.Devices.Midi2.Ble1Endpoints
 {
     [default_interface]
-    runtimeclass MidiNetworkClientEndpointSettingsUI
+    runtimeclass MidiBle1EndpointSettingsUI
     {
+        // Setting for whether or not to automatically convert to running status when sending messages
+
 
     }
 }
