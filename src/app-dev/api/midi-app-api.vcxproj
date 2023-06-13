@@ -109,17 +109,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="MidiMessageBuffer.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="ServiceRPCHelper.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MidiMessageBuffer.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
-    <ClCompile Include="ServiceRPCHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi_app_api.def" />
@@ -127,13 +123,6 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="PropertySheet.props" />
-  </ItemGroup>
-  <ItemGroup>
-    <Midl Include="MidiEndpoints.idl" />
-    <Midl Include="MidiMessageBuffer.idl" />
-    <Midl Include="MidiSession.idl" />
-    <Midl Include="MidiSetups.idl" />
-    <Midl Include="MidiTransports.idl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

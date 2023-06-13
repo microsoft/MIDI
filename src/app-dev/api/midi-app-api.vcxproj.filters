@@ -3,13 +3,9 @@
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
-    <ClCompile Include="MidiMessageBuffer.cpp" />
-    <ClCompile Include="ServiceRPCHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
-    <ClInclude Include="MidiMessageBuffer.h" />
-    <ClInclude Include="ServiceRPCHelper.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi_app_api.def" />
@@ -20,20 +16,5 @@
     <Filter Include="API">
       <UniqueIdentifier>{e4be0641-d7d1-4adc-89a5-5c004402180d}</UniqueIdentifier>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <Midl Include="MidiMessageBuffer.idl" />
-    <Midl Include="MidiSetups.idl">
-      <Filter>API</Filter>
-    </Midl>
-    <Midl Include="MidiEndpoints.idl">
-      <Filter>API</Filter>
-    </Midl>
-    <Midl Include="MidiSession.idl">
-      <Filter>API</Filter>
-    </Midl>
-    <Midl Include="MidiTransports.idl">
-      <Filter>API</Filter>
-    </Midl>
   </ItemGroup>
 </Project>
