@@ -1,0 +1,26 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services Client SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+namespace Microsoft.Devices.Midi2.Ble1Endpoints
+{
+    [default_interface]
+    runtimeclass MidiBle1EndpointSettingsData
+    {
+
+        // Setting for whether or not to automatically convert to running status when sending messages
+        // Running status is part of the BLE 1 spec, designed to save bandwidth. However, MIDI 2.0 and 
+        // UMP have no concept of running status, and so even with the legacy APIs, running status gets
+        // lost at the Service layer. Running status can also get hairy with multi-client, so we have
+        // to do the conversion as late as possible.
+        Boolean AutoCreateOutgoingRunningStatus{ get; set; };
+
+        // Note that any incoming running status will be automatically converted out when we transform
+        // the messages to UMP
+    }
+}
+

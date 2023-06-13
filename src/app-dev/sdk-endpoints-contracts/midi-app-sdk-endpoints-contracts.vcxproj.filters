@@ -16,6 +16,9 @@
     <Filter Include="UI">
       <UniqueIdentifier>{46fbbda7-0443-4633-ae1c-e87a8e564430}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Data">
+      <UniqueIdentifier>{45738d09-c4c3-497a-844f-12d4bec3dcca}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="IMidiCreatableEndpointSdkPlugin.idl">
@@ -41,6 +44,9 @@
     </Midl>
     <Midl Include="IMidiEndpointPropertiesDialog.idl">
       <Filter>UI</Filter>
+    </Midl>
+    <Midl Include="IMidiEndpointSettingsData.idl">
+      <Filter>Data</Filter>
     </Midl>
   </ItemGroup>
 </Project>

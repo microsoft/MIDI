@@ -6,6 +6,8 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+import "IMidiEndpointSettingsData.idl";
+
 namespace Microsoft.Devices.Midi2.ClientEndpointContracts
 {
     interface IMidiEndpointUpdateDialog
@@ -13,7 +15,7 @@ namespace Microsoft.Devices.Midi2.ClientEndpointContracts
         // The settings to use for this plugin. If it's an existing endpoint(s), it'll be provided
         // up-front. If it's a new set of endpoint(s), it will be empty or null at the start
         // After the UI is shown, this property contains the updated/new JSON.
-        String SettingsJson{ get; set; };
+        IMidiEndpointSettingsData Settings{ get; set; };
 
         // returns true if update is to be applied, false if not
         Boolean Show(String title);

@@ -6,16 +6,13 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-import "IMidiEndpointSettingsData.idl";
 
 namespace Microsoft.Devices.Midi2.ClientEndpointContracts
 {
-    interface IMidiEndpointCreateSettingsPanel
+    interface IMidiMidiEndpointSettingsData
     {
-        IMidiEndpointSettingsData Settings{ get; set; };
+        String SettingsJson {get; set; };
 
-        // Any global settings which apply to all endpoints created for this transport
-        Microsoft.UI.Xaml.FrameworkElement GetSettingsUI();
+        Boolean IsDirty{ get; set; };
     }
 }
-

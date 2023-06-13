@@ -12,7 +12,6 @@ namespace Microsoft.Devices.Midi2.Ble1Endpoints
     [default_interface]
     runtimeclass MidiBle1EndpointSettingsUI
     {
-        // Setting for whether or not to automatically convert to running status when sending messages
 
 
     }

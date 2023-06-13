@@ -118,6 +118,7 @@
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Midl Include="MidiBle1EndpointSettingsData.idl" />
     <Midl Include="MidiBle1EndpointSettingsUI.idl" />
   </ItemGroup>
   <ItemGroup>

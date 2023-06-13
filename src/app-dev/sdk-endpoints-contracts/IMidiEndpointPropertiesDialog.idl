@@ -6,11 +6,13 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+import "IMidiEndpointSettingsData.idl";
+
 namespace Microsoft.Devices.Midi2.ClientEndpointContracts
 {
     interface IMidiEndpointPropertiesDialog
     {
-        String SettingsJson{ get; set; };
+        IMidiEndpointSettingsData Settings{ get; set; };
 
         void Show(String title);
     }

@@ -24,5 +24,8 @@
     <Filter Include="UI">
       <UniqueIdentifier>{239ea5f1-7249-4ed7-90fc-b0f57ce18e13}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Data">
+      <UniqueIdentifier>{34a45fe5-1bce-46b9-9397-d04a2daa52ef}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

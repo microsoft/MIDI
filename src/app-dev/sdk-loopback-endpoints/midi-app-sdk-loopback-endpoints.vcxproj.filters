@@ -8,10 +8,10 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="Class.idl" />
     <Midl Include="MidiLoopbackEndpointSettingsUI.idl">
       <Filter>UI</Filter>
     </Midl>
+    <Midl Include="MidiLoopbackSettings.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi_app_sdk_loopback_endpoints.def" />
@@ -21,6 +21,9 @@
   <ItemGroup>
     <Filter Include="UI">
       <UniqueIdentifier>{2708d77e-a83e-45bb-91b6-b73ff39aea3a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Data">
+      <UniqueIdentifier>{1c5dd109-813b-4d61-aea4-778d04315493}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

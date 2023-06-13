@@ -127,6 +127,7 @@
   <ItemGroup>
     <Midl Include="IMidiCreatableEndpointSdkPlugin.idl" />
     <Midl Include="IMidiEndpointCreateSettingsPanel.idl" />
+    <Midl Include="IMidiEndpointSettingsData.idl" />
     <Midl Include="IMidiEndpointPropertiesDialog.idl" />
     <Midl Include="IMidiEndpointUpdateDialog.idl" />
     <Midl Include="IMidiEndpointCreateDialog.idl" />
