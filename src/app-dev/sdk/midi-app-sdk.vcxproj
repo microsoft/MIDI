@@ -253,6 +253,8 @@
     <Midl Include="MidiServices.idl" />
     <Midl Include="MidiSession.idl" />
     <Midl Include="MidiSessionSettings.idl" />
+    <Midl Include="MidiSetup.idl" />
+    <Midl Include="MidiSetupsManager.idl" />
     <Midl Include="Ump.idl" />
     <Midl Include="UmpUtilities.idl" />
   </ItemGroup>

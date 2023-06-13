@@ -38,6 +38,9 @@
     <Filter Include="SDK\Session">
       <UniqueIdentifier>{6427be3d-78fd-4fff-9bf4-2353b462bfc3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SDK\Setups">
+      <UniqueIdentifier>{188d4647-fc87-483e-84ab-05362b62f872}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -132,6 +135,12 @@
     </Midl>
     <Midl Include="MidiHighResolutionValueDisplayFormatter.idl">
       <Filter>SDK\Display</Filter>
+    </Midl>
+    <Midl Include="MidiSetupsManager.idl">
+      <Filter>SDK\Setups</Filter>
+    </Midl>
+    <Midl Include="MidiSetup.idl">
+      <Filter>SDK\Setups</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

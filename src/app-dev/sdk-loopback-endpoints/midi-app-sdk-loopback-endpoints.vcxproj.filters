@@ -11,7 +11,9 @@
     <Midl Include="MidiLoopbackEndpointSettingsUI.idl">
       <Filter>UI</Filter>
     </Midl>
-    <Midl Include="MidiLoopbackSettings.idl" />
+    <Midl Include="MidiLoopbackSettings.idl">
+      <Filter>Data</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi_app_sdk_loopback_endpoints.def" />
