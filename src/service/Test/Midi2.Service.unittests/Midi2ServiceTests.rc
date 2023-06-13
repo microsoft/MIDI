@@ -1,0 +1,10 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE             VFT_DLL
+#define VER_FILESUBTYPE          VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR  "Windows MIDI 2 service tests"
+#define VER_INTERNALNAME_STR     "Windows MIDI 2 service tests"
+#define VER_ORIGINALFILENAME_STR "Midi2.Service.unittests.dll"
+
+#include <common.ver>

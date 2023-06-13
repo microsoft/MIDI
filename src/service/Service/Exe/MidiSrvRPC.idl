@@ -1,0 +1,35 @@
+import "oaidl.idl";
+import "ocidl.idl";
+
+cpp_quote("#define MIDISRV_LRPC_PROTOCOL  L\"ncalrpc\"")
+cpp_quote("#define MIDISRV_ENDPOINT L\"MidiSrvClientRpc\"")
+
+typedef enum
+{
+    RequestEntry0 = 0,
+    RequestEntry1,
+    RequestEntry2,
+} RequestEnum;
+
+typedef struct REQUESTED_SETTINGS
+{
+    GUID Identifier;
+    BOOL Flag;
+    RequestEnum Request;
+} REQUESTED_SETTINGS, *PREQUESTED_SETTINGS;
+
+typedef struct ALLOCATED_SETTINGS
+{
+    GUID Identifier;
+    BOOL Flag;
+    RequestEnum Request;
+} ALLOCATED_SETTINGS, *PALLOCATED_SETTINGS;
+
+[
+    uuid(64839251-9DAF-4E79-AA4E-9771C86FFBC1),
+    version(1.0)
+]
+interface MidiSrvRPC
+{
+    HRESULT MidiSrvTestRpc([in] handle_t BindingHandle, [ in, string ] LPCWSTR Identifier, [in] PREQUESTED_SETTINGS RequestedSettings, [out] PALLOCATED_SETTINGS *AllocatedSettings);
+}
