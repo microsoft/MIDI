@@ -6,16 +6,23 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-import "IMidiEndpointSettingsData.idl";
 
-namespace Microsoft.Devices.Midi2.ClientEndpointContracts
+namespace Microsoft.Devices.Midi2
 {
-    interface IMidiEndpointCreateSettingsPanel
+    [default_interface]
+    runtimeclass MidiTransportInformation
     {
-        IMidiEndpointSettingsData Settings{ get; set; };
+        String Id { get; };
 
-        // Any global settings which apply to all endpoints created for this transport
-        Windows.UI.Xaml.FrameworkElement GetSettingsUI();
+        String Name { get; };
+        String ShortName{ get; };
+
+        // TBD if we change this to an image type or URI instead
+        String IconPath{ get; };
+
+        String Author{ get; };
+        String PluginFileName{ get; };
+
+        Boolean IsRuntimeCreatable{ get; };
     }
 }
-

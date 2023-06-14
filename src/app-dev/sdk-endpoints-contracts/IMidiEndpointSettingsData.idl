@@ -9,9 +9,9 @@
 
 namespace Microsoft.Devices.Midi2.ClientEndpointContracts
 {
-    interface IMidiMidiEndpointSettingsData
+    interface IMidiEndpointSettingsData
     {
-        String SettingsJson {get; set; };
+        String SettingsJson { get; set; };
 
         Boolean IsDirty{ get; set; };
     }

@@ -15,6 +15,6 @@ namespace Microsoft.Devices.Midi2.ClientEndpointContracts
         IMidiEndpointSettingsData Settings{ get; set; };
 
         // Any global settings which apply to all endpoints created for this transport
-        Microsoft.UI.Xaml.FrameworkElement GetSettingsUI();
+        Windows.UI.Xaml.FrameworkElement GetSettingsUI();
     }
 }

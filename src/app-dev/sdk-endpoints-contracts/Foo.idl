@@ -6,16 +6,17 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-import "IMidiEndpointSettingsData.idl";
+
+
+// This is here right now because C++ / WinRT won't generate properly without at least one runtimeclass
+// An interface-only lib won't compile.
 
 namespace Microsoft.Devices.Midi2.ClientEndpointContracts
 {
-    interface IMidiEndpointCreateSettingsPanel
+    [experimental]
+    [default_interface]
+    runtimeclass Foo
     {
-        IMidiEndpointSettingsData Settings{ get; set; };
-
-        // Any global settings which apply to all endpoints created for this transport
-        Windows.UI.Xaml.FrameworkElement GetSettingsUI();
+        Foo();
     }
 }
-

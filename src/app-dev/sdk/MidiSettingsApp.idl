@@ -1,0 +1,39 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services Client SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+import "MidiTransportInformation.idl";
+
+namespace Microsoft.Devices.Midi2
+{
+    enum MidiSettingsAppDisplayMode
+    {
+        UseDefault = 0,
+        ForceDarkMode,
+        ForceLightMode
+    };
+
+
+    [default_interface]
+    runtimeclass MidiSettingsApp
+    {
+        static Boolean IsSettingsAppInstalled{ get; };
+
+        static Uri SettingsAppInstallUri{ get; };
+
+        
+        static void ShowEndpointPropertiesWindow(String endpointId, MidiSettingsAppDisplayMode displayMode);
+
+        // returns the Id of the created Endpoint
+        static String ShowEndpointCreationWindow(String transportId, MidiSettingsAppDisplayMode displayMode);
+
+        // TODO: Methods to nav to specific pages in the settings app, including transport properties
+        
+
+
+    }
+}

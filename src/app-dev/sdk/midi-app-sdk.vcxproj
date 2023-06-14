@@ -233,6 +233,7 @@
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiChannel.idl" />
+    <Midl Include="MidiDiagnostics.idl" />
     <Midl Include="MidiEndpointInformation.idl" />
     <Midl Include="MidiEndpointType.idl" />
     <Midl Include="MidiFunctionBlockDirection.idl" />
@@ -253,8 +254,10 @@
     <Midl Include="MidiServices.idl" />
     <Midl Include="MidiSession.idl" />
     <Midl Include="MidiSessionSettings.idl" />
+    <Midl Include="MidiSettingsApp.idl" />
     <Midl Include="MidiSetup.idl" />
     <Midl Include="MidiSetupsManager.idl" />
+    <Midl Include="MidiTransportInformation.idl" />
     <Midl Include="Ump.idl" />
     <Midl Include="UmpUtilities.idl" />
   </ItemGroup>

@@ -17,8 +17,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="midi_app_sdk_network_endpoints.def" />
-    <None Include="packages.config" />
     <None Include="PropertySheet.props" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="UI">

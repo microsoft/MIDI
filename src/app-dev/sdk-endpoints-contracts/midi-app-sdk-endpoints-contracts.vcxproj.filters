@@ -2,10 +2,16 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
+    <ClCompile Include="Generated Files\module.g.cpp" />
+    <ClCompile Include="Foo.cpp">
+      <Filter>Data</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Foo.h">
+      <Filter>Data</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi_app_sdk_endpoints_contracts.def" />
@@ -46,6 +52,9 @@
       <Filter>UI</Filter>
     </Midl>
     <Midl Include="IMidiEndpointSettingsData.idl">
+      <Filter>Data</Filter>
+    </Midl>
+    <Midl Include="Foo.idl">
       <Filter>Data</Filter>
     </Midl>
   </ItemGroup>

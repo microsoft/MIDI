@@ -21,7 +21,7 @@ namespace Microsoft.Devices.Midi2
             UInt32 rawValue,
             UInt32 maxRawValue,
             UInt32 scaleMaxValue,
-            UInt8 scaleNumberDecimalPlaces,
+            UInt8 scaleNumberDecimalPlaces
             );
 
         // for values which are negative. Example -32768 to 0
@@ -29,7 +29,7 @@ namespace Microsoft.Devices.Midi2
             Int32 rawValue,
             Int32 minRawValue,
             Int32 scaleMinValue,
-            UInt8 scaleNumberDecimalPlaces,
+            UInt8 scaleNumberDecimalPlaces
             );
 
         // for values which are positive and negative. Example is pitch bend.
@@ -38,8 +38,8 @@ namespace Microsoft.Devices.Midi2
             Int32 maxRawValue,
             Int32 minRawValue,
             Int32 scaleMaxValue,
-            Int32 scaleMinValue
-            UInt8 scaleNumberDecimalPlaces,
+            Int32 scaleMinValue,
+            UInt8 scaleNumberDecimalPlaces
             );
 
     }

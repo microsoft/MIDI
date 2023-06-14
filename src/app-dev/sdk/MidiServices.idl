@@ -6,6 +6,7 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+import "MidiTransportInformation.idl";
 
 namespace Microsoft.Devices.Midi2
 {
@@ -31,5 +32,10 @@ namespace Microsoft.Devices.Midi2
         static String SdkVersion{ get; };
         static String MinimumCompatibleMidiServicesVersion{ get; };
         static Windows.Foundation.Uri LatestMidiServicesInstallUri{ get; };
+
+        // list all the installed transports like Virtual, USB, BLE1, etc
+        static IVector<MidiTransportInformation> GetInstalledTransports();
+
+
     }
 }

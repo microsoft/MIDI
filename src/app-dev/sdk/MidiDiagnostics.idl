@@ -1,0 +1,28 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services Client SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+import "MidiTransportInformation.idl";
+
+namespace Microsoft.Devices.Midi2
+{
+    [default_interface]
+    runtimeclass MidiDiagnostics
+    {
+        // dumps state and prompts the user to save the file to a location they
+        // have access to. Also allows the user to view the contents.
+        // Returns the file information
+        static Windows.Storage.StorageFile DumpMidiServicesStateToFile(Windows.Storage.StorageFolder preferredFolder);
+        static Windows.Storage.StorageFile DumpMidiServicesStateToFile();
+
+
+        // TODO: Methods to get other perf data from the service
+
+
+
+    }
+}

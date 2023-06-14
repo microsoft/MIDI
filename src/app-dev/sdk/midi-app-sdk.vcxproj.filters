@@ -41,6 +41,15 @@
     <Filter Include="SDK\Setups">
       <UniqueIdentifier>{188d4647-fc87-483e-84ab-05362b62f872}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SDK\Transports">
+      <UniqueIdentifier>{7a309dc0-af6f-4fa7-8827-649ef97dcc9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Settings">
+      <UniqueIdentifier>{7e95fb26-1161-437e-983c-ea9bc06d7dae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Diagnostics">
+      <UniqueIdentifier>{44ef4305-d44c-4bf1-bae6-6488bb5a501e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -141,6 +150,15 @@
     </Midl>
     <Midl Include="MidiSetup.idl">
       <Filter>SDK\Setups</Filter>
+    </Midl>
+    <Midl Include="MidiTransportInformation.idl">
+      <Filter>SDK\Transports</Filter>
+    </Midl>
+    <Midl Include="MidiSettingsApp.idl">
+      <Filter>SDK\Settings</Filter>
+    </Midl>
+    <Midl Include="MidiDiagnostics.idl">
+      <Filter>SDK\Diagnostics</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
