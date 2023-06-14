@@ -7,21 +7,21 @@
 // ============================================================================
 
 #pragma once
-#include "MidiProperty.g.h"
-
+#include "MidiDiagnostics.g.h"
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    struct MidiProperty : MidiPropertyT<MidiProperty>
+    struct MidiDiagnostics : MidiDiagnosticsT<MidiDiagnostics>
     {
-        MidiProperty() = default;
+        MidiDiagnostics() = default;
 
-        hstring RawJson();
+        static winrt::Windows::Storage::StorageFile DumpMidiServicesStateToFile(winrt::Windows::Storage::StorageFolder const& preferredFolder);
+        static winrt::Windows::Storage::StorageFile DumpMidiServicesStateToFile();
     };
 }
 namespace winrt::Microsoft::Devices::Midi2::factory_implementation
 {
-    struct MidiProperty : MidiPropertyT<MidiProperty, implementation::MidiProperty>
+    struct MidiDiagnostics : MidiDiagnosticsT<MidiDiagnostics, implementation::MidiDiagnostics>
     {
     };
 }

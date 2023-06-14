@@ -6,27 +6,38 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-
 #include "pch.h"
-#include "MidiChannel.h"
-#include "MidiChannel.g.cpp"
+#include "MidiTransportInformation.h"
+#include "MidiTransportInformation.g.cpp"
 
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    uint8_t MidiChannel::ChannelIndex()
+    hstring MidiTransportInformation::Id()
     {
         throw hresult_not_implemented();
     }
-    uint8_t MidiChannel::ChannelNumberForDisplay()
+    hstring MidiTransportInformation::Name()
     {
         throw hresult_not_implemented();
     }
-    bool MidiChannel::IsActive()
+    hstring MidiTransportInformation::ShortName()
     {
         throw hresult_not_implemented();
     }
-    hstring MidiChannel::Name()
+    hstring MidiTransportInformation::IconPath()
+    {
+        throw hresult_not_implemented();
+    }
+    hstring MidiTransportInformation::Author()
+    {
+        throw hresult_not_implemented();
+    }
+    hstring MidiTransportInformation::ServicePluginFileName()
+    {
+        throw hresult_not_implemented();
+    }
+    bool MidiTransportInformation::IsRuntimeCreatable()
     {
         throw hresult_not_implemented();
     }

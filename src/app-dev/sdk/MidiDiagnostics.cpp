@@ -6,22 +6,19 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#pragma once
-#include "MidiProperty.g.h"
+#include "pch.h"
+#include "MidiDiagnostics.h"
+#include "MidiDiagnostics.g.cpp"
 
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    struct MidiProperty : MidiPropertyT<MidiProperty>
+    winrt::Windows::Storage::StorageFile MidiDiagnostics::DumpMidiServicesStateToFile(winrt::Windows::Storage::StorageFolder const& preferredFolder)
     {
-        MidiProperty() = default;
-
-        hstring RawJson();
-    };
-}
-namespace winrt::Microsoft::Devices::Midi2::factory_implementation
-{
-    struct MidiProperty : MidiPropertyT<MidiProperty, implementation::MidiProperty>
+        throw hresult_not_implemented();
+    }
+    winrt::Windows::Storage::StorageFile MidiDiagnostics::DumpMidiServicesStateToFile()
     {
-    };
+        throw hresult_not_implemented();
+    }
 }

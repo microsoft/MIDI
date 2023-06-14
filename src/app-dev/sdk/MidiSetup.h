@@ -7,21 +7,23 @@
 // ============================================================================
 
 #pragma once
-#include "MidiProperty.g.h"
-
+#include "MidiSetup.g.h"
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    struct MidiProperty : MidiPropertyT<MidiProperty>
+    struct MidiSetup : MidiSetupT<MidiSetup>
     {
-        MidiProperty() = default;
+        MidiSetup() = default;
 
-        hstring RawJson();
+        hstring Id();
+        void Id(hstring const& value);
+        hstring FileName();
+        void FileName(hstring const& value);
     };
 }
 namespace winrt::Microsoft::Devices::Midi2::factory_implementation
 {
-    struct MidiProperty : MidiPropertyT<MidiProperty, implementation::MidiProperty>
+    struct MidiSetup : MidiSetupT<MidiSetup, implementation::MidiSetup>
     {
     };
 }

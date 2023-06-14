@@ -6,27 +6,30 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-
 #include "pch.h"
-#include "MidiChannel.h"
-#include "MidiChannel.g.cpp"
+#include "MidiSetupsManager.h"
+#include "MidiSetupsManager.g.cpp"
 
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    uint8_t MidiChannel::ChannelIndex()
+    winrt::Microsoft::Devices::Midi2::MidiSetup MidiSetupsManager::Current()
     {
         throw hresult_not_implemented();
     }
-    uint8_t MidiChannel::ChannelNumberForDisplay()
+    void MidiSetupsManager::SwitchTo(winrt::Microsoft::Devices::Midi2::MidiSetup const& setup)
     {
         throw hresult_not_implemented();
     }
-    bool MidiChannel::IsActive()
+    void MidiSetupsManager::AddNew(winrt::Microsoft::Devices::Midi2::MidiSetup const& setup)
     {
         throw hresult_not_implemented();
     }
-    hstring MidiChannel::Name()
+    void MidiSetupsManager::Save(winrt::Microsoft::Devices::Midi2::MidiSetup const& setup)
+    {
+        throw hresult_not_implemented();
+    }
+    void MidiSetupsManager::Delete(hstring const& setupId)
     {
         throw hresult_not_implemented();
     }

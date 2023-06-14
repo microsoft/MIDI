@@ -6,22 +6,27 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#pragma once
-#include "MidiProperty.g.h"
+#include "pch.h"
+#include "MidiSetup.h"
+#include "MidiSetup.g.cpp"
 
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    struct MidiProperty : MidiPropertyT<MidiProperty>
+    hstring MidiSetup::Id()
     {
-        MidiProperty() = default;
-
-        hstring RawJson();
-    };
-}
-namespace winrt::Microsoft::Devices::Midi2::factory_implementation
-{
-    struct MidiProperty : MidiPropertyT<MidiProperty, implementation::MidiProperty>
+        throw hresult_not_implemented();
+    }
+    void MidiSetup::Id(hstring const& value)
     {
-    };
+        throw hresult_not_implemented();
+    }
+    hstring MidiSetup::FileName()
+    {
+        throw hresult_not_implemented();
+    }
+    void MidiSetup::FileName(hstring const& value)
+    {
+        throw hresult_not_implemented();
+    }
 }
