@@ -232,6 +232,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <Midl Include="IMidiEndpointSettingsData.idl" />
+    <Midl Include="IMidiTransportSettingsData.idl" />
     <Midl Include="MidiChannel.idl" />
     <Midl Include="MidiDiagnostics.idl" />
     <Midl Include="MidiEndpointInformation.idl" />

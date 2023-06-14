@@ -160,6 +160,12 @@
     <Midl Include="MidiDiagnostics.idl">
       <Filter>SDK\Diagnostics</Filter>
     </Midl>
+    <Midl Include="IMidiTransportSettingsData.idl">
+      <Filter>SDK\Transports</Filter>
+    </Midl>
+    <Midl Include="IMidiEndpointSettingsData.idl">
+      <Filter>SDK\Endpoints</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

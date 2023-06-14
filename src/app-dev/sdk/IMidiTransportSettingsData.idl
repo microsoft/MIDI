@@ -7,12 +7,12 @@
 // ============================================================================
 
 
-namespace Microsoft.Devices.Midi2.Ble1Endpoints
+namespace Microsoft.Devices.Midi2
 {
-    [default_interface]
-    runtimeclass MidiBle1EndpointSettingsUI
+    interface IMidiTransportSettingsData
     {
+        String SettingsJson { get; set; };
 
-
+        Boolean IsDirty{ get; set; };
     }
 }

@@ -21,8 +21,9 @@ namespace Microsoft.Devices.Midi2
         String IconPath{ get; };
 
         String Author{ get; };
-        String PluginFileName{ get; };
+        String ServicePluginFileName{ get; };
 
+        // controls whether or not endpoints can be created/deleted at runtime by apps or settings
         Boolean IsRuntimeCreatable{ get; };
     }
 }

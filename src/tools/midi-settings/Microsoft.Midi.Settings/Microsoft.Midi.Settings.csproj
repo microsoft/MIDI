@@ -58,6 +58,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\app-dev\sdk\midi-app-sdk.vcxproj" />
+    <ProjectReference Include="..\..\midi-settings-extensibility\midi-settings-extensibility.csproj" />
     <ProjectReference Include="..\Microsoft.Midi.Settings.ApiMock\Microsoft.Midi.Settings.SdkMock.csproj" />
     <ProjectReference Include="..\Microsoft.Midi.Settings.Core\Microsoft.Midi.Settings.Core.csproj" />
   </ItemGroup>
