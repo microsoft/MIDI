@@ -109,17 +109,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="MidiMessageBuffer.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="Placeholder.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MidiMessageBuffer.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
-    <ClCompile Include="Placeholder.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi_app_api.def" />
@@ -127,10 +123,6 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="PropertySheet.props" />
-  </ItemGroup>
-  <ItemGroup>
-    <Midl Include="MidiMessageBuffer.idl" />
-    <Midl Include="Placeholder.idl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,0 +1,28 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+namespace Microsoft.Devices.Midi2
+{
+    [default_interface]
+    runtimeclass MidiTransportInformation
+    {
+        String Id { get; };
+
+        String Name { get; };
+        String ShortName{ get; };
+
+        // TBD if we change this to an image type or URI instead
+        String IconPath{ get; };
+
+        String Author{ get; };
+        String ServicePluginFileName{ get; };
+
+        // controls whether or not endpoints can be created/deleted at runtime by apps or settings
+        Boolean IsRuntimeCreatable{ get; };
+    }
+}

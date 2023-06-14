@@ -1,0 +1,46 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+// provides standardized ways to format high-resolution controller, pitch bend, etc. values
+
+namespace Microsoft.Devices.Midi2
+{
+    [default_interface]
+    runtimeclass MidiHighResolutionValueDisplayFormatter
+    {
+        MidiHighResolutionValueDisplayFormatter();
+
+
+        // for values which are negative. Example 0 to UInt32 MaxValue
+        static String FormatUnipolarPositiveValue(
+            UInt32 rawValue,
+            UInt32 maxRawValue,
+            UInt32 scaleMaxValue,
+            UInt8 scaleNumberDecimalPlaces
+            );
+
+        // for values which are negative. Example -32768 to 0
+        static String FormatUnipolarNegativeValue(
+            Int32 rawValue,
+            Int32 minRawValue,
+            Int32 scaleMinValue,
+            UInt8 scaleNumberDecimalPlaces
+            );
+
+        // for values which are positive and negative. Example is pitch bend.
+        static String FormatBipolarValue(
+            Int32 rawValue,
+            Int32 maxRawValue,
+            Int32 minRawValue,
+            Int32 scaleMaxValue,
+            Int32 scaleMinValue,
+            UInt8 scaleNumberDecimalPlaces
+            );
+
+    }
+}

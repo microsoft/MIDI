@@ -1,19 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services Client SDK and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-// Just a placeholder to not break the build
+
+import "MidiSetup.idl";
 
 namespace Microsoft.Devices.Midi2
 {
     [default_interface]
-    runtimeclass Placeholder
+    runtimeclass MidiSetupsManager
     {
-        Placeholder();
+        MidiSetupsManager();
 
+        MidiSetup Current{ get; };
+        void SwitchTo(MidiSetup setup);
+
+        void AddNew(MidiSetup setup);
+        void Save(MidiSetup setup);
+
+        void Delete(String setupId);
     }
 }

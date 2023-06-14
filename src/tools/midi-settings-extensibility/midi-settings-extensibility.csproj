@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<TargetFramework>net8.0-windows10.0.20348.0</TargetFramework>
+		<TargetPlatformMinVersion>10.0.20348.0</TargetPlatformMinVersion>
+		<RootNamespace>Microsoft.Midi.Settings.Extensibility</RootNamespace>
+		<AssemblyName>Microsoft.Midi.Settings.Extensibility</AssemblyName>
+		<UseWinUI>true</UseWinUI>
+	</PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.UI.Xaml" Version="2.8.4" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\app-dev\sdk\midi-app-sdk.vcxproj" />
+  </ItemGroup>
+
+</Project>

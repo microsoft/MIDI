@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services Client SDK and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
@@ -55,12 +55,18 @@ namespace Microsoft.Devices.Midi2
         // send multiple strongly-typed UMPs
         void SendMultipleUmps(UInt64 timestamp, IVector<Ump> umps);
 
-        // Send a vector of words
-        void SendMultipleUmpsAsWords(UInt64 timestamp, IVector<UInt32> umpWords);
+        // Send a vector of MIDI words. The full set of words need to result in complete UMPs.
+        void SendMultipleUmpsAsWords(UInt64 timestamp, IVector<UInt32> midiWords);
 
         // TODO: Need to add a version that is just a pointer to a buffer of words, so can do a copy into the cyclic buffer
         // Maybe also have UmpBufferReader/Writer pairs and a UmpBuffer type and get rid of all but the SendUmp above?
         // Change methods to SendMessage instead of Ump to make it more clear?
+        
+        // May need to implement a separate COM interface for just pointer passing from C++ and similar, as an optimization
+        // That could be done inside a buffer type so the buffer can point to pre-allocated app memory
+        // More info: https://devblogs.microsoft.com/oldnewthing/20200424-00/?p=103702
+        // And our winmm impl https://learn.microsoft.com/en-us/windows/win32/api/mmeapi/nf-mmeapi-midioutlongmsg
+        // https://learn.microsoft.com/en-us/previous-versions/dd798449(v=vs.85)
 
 
 

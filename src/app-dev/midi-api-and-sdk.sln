@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.33711.374
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "midi-app-api", "api\midi-app-api.vcxproj", "{3C39F54E-4B0B-458B-97EF-D7CDB2940631}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "midi-app-sdk", "sdk\midi-app-sdk.vcxproj", "{3AA50484-E4C1-41FB-9AE4-FEEA724E6077}"
 EndProject
 Global
@@ -21,26 +19,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{3C39F54E-4B0B-458B-97EF-D7CDB2940631}.Debug|ARM.ActiveCfg = Debug|ARM
-		{3C39F54E-4B0B-458B-97EF-D7CDB2940631}.Debug|ARM.Build.0 = Debug|ARM
-		{3C39F54E-4B0B-458B-97EF-D7CDB2940631}.Debug|ARM64.ActiveCfg = Debug|ARM64
-		{3C39F54E-4B0B-458B-97EF-D7CDB2940631}.Debug|ARM64.Build.0 = Debug|ARM64
-		{3C39F54E-4B0B-458B-97EF-D7CDB2940631}.Debug|ARM64EC.ActiveCfg = Debug|x64
-		{3C39F54E-4B0B-458B-97EF-D7CDB2940631}.Debug|ARM64EC.Build.0 = Debug|x64
-		{3C39F54E-4B0B-458B-97EF-D7CDB2940631}.Debug|x64.ActiveCfg = Debug|x64
-		{3C39F54E-4B0B-458B-97EF-D7CDB2940631}.Debug|x64.Build.0 = Debug|x64
-		{3C39F54E-4B0B-458B-97EF-D7CDB2940631}.Debug|x86.ActiveCfg = Debug|Win32
-		{3C39F54E-4B0B-458B-97EF-D7CDB2940631}.Debug|x86.Build.0 = Debug|Win32
-		{3C39F54E-4B0B-458B-97EF-D7CDB2940631}.Release|ARM.ActiveCfg = Release|ARM
-		{3C39F54E-4B0B-458B-97EF-D7CDB2940631}.Release|ARM.Build.0 = Release|ARM
-		{3C39F54E-4B0B-458B-97EF-D7CDB2940631}.Release|ARM64.ActiveCfg = Release|ARM64
-		{3C39F54E-4B0B-458B-97EF-D7CDB2940631}.Release|ARM64.Build.0 = Release|ARM64
-		{3C39F54E-4B0B-458B-97EF-D7CDB2940631}.Release|ARM64EC.ActiveCfg = Release|x64
-		{3C39F54E-4B0B-458B-97EF-D7CDB2940631}.Release|ARM64EC.Build.0 = Release|x64
-		{3C39F54E-4B0B-458B-97EF-D7CDB2940631}.Release|x64.ActiveCfg = Release|x64
-		{3C39F54E-4B0B-458B-97EF-D7CDB2940631}.Release|x64.Build.0 = Release|x64
-		{3C39F54E-4B0B-458B-97EF-D7CDB2940631}.Release|x86.ActiveCfg = Release|Win32
-		{3C39F54E-4B0B-458B-97EF-D7CDB2940631}.Release|x86.Build.0 = Release|Win32
 		{3AA50484-E4C1-41FB-9AE4-FEEA724E6077}.Debug|ARM.ActiveCfg = Debug|x64
 		{3AA50484-E4C1-41FB-9AE4-FEEA724E6077}.Debug|ARM.Build.0 = Debug|x64
 		{3AA50484-E4C1-41FB-9AE4-FEEA724E6077}.Debug|ARM64.ActiveCfg = Debug|ARM64
