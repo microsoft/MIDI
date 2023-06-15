@@ -1,16 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFramework>net8.0-windows10.0.20348.0</TargetFramework>
-        <TargetPlatformMinVersion>10.0.20348.0</TargetPlatformMinVersion>
-        <RootNamespace>Microsoft.Midi.Settings</RootNamespace>
+		<TargetFramework>net7.0-windows10.0.20348.0</TargetFramework>
+		<TargetPlatformMinVersion>10.0.20348.0</TargetPlatformMinVersion>
+		<RootNamespace>Microsoft.Midi.Settings</RootNamespace>
         <ApplicationIcon>Assets/WindowIcon.ico</ApplicationIcon>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <Platforms>x64;arm64</Platforms>
         <RuntimeIdentifiers>win10-x64;win10-arm64</RuntimeIdentifiers>
 	    <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-	    <SupportedOSPlatformVersion>10.0.20348.0</SupportedOSPlatformVersion>
 
 	    <UseWinUI>true</UseWinUI>
 
@@ -33,12 +32,21 @@
 
 	<PropertyGroup>
 		<!--<CsWinRTIncludes>Microsoft.Devices.Midi2</CsWinRTIncludes>-->
-		<CsWinRTGeneratedFilesDir>$(OutDir)</CsWinRTGeneratedFilesDir>
+		<!--<CsWinRTGeneratedFilesDir>$(OutDir)</CsWinRTGeneratedFilesDir>-->
 		<!--<CsWinRTExcludes></CsWinRTExcludes> -->
 		<!--<CsWinRTExcludesPrivate></CsWinRTExcludesPrivate> -->
-	</PropertyGroup>	
-	
+	</PropertyGroup>
 
+	<!-- Note the directory structure here needs to be as it is in the Github repo -->
+	<PropertyGroup>
+		<RestoreSources>
+			https://api.nuget.org/v3/index.json;
+			../../../app-dev-sdk/sdk-projections/MidiAppSdkCSharpProjection/nuget
+		</RestoreSources>
+	</PropertyGroup>
+	<ItemGroup>
+		<!--<PackageReference Include="Microsoft.Devices.Midi2" Version="0.1.0-prerelease" /> -->
+	</ItemGroup>
 	
 		
   <ItemGroup>
