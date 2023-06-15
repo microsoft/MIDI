@@ -22,7 +22,7 @@ namespace Microsoft.Midi.Settings.Extensibility
 
         Microsoft.Devices.Midi2.MidiTransportInformation TransportInformation { get; }
 
-        //// TODO: return a winui object
+        // TODO: return a winui object
         //Windows.UI.Xaml.FrameworkElement GetTransportSettingsPanel();
 
 

@@ -12,7 +12,7 @@
     <WindowsTargetPlatformMinVersion>10.0.20348.0</WindowsTargetPlatformMinVersion>
     <MinimalCoreWin>true</MinimalCoreWin>
     <ProjectGuid>{3aa50484-e4c1-41fb-9ae4-feea724e6077}</ProjectGuid>
-    <ProjectName>midi-app-sdk</ProjectName>
+    <ProjectName>Microsoft.Devices.Midi2</ProjectName>
     <RootNamespace>Microsoft.Devices.Midi2</RootNamespace>
     <DefaultLanguage>en-US</DefaultLanguage>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
@@ -114,15 +114,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-	  <ClInclude Include="MidiDiagnostics.h">
-		  <DependentUpon>MidiDiagnostics.idl</DependentUpon>
-	  </ClInclude>
+    <ClInclude Include="MidiDiagnostics.h">
+      <DependentUpon>MidiDiagnostics.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiEndpointDisplayFormatter.h">
       <DependentUpon>MidiEndpointDisplayFormatter.idl</DependentUpon>
     </ClInclude>
-	  <ClInclude Include="MidiHighResolutionValueDisplayFormatter.h">
-		  <DependentUpon>MidiHighResolutionValueDisplayFormatter.idl</DependentUpon>
-	  </ClInclude>
+    <ClInclude Include="MidiHighResolutionValueDisplayFormatter.h">
+      <DependentUpon>MidiHighResolutionValueDisplayFormatter.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiLocalizedStrings.h">
       <DependentUpon>MidiLocalizedStrings.idl</DependentUpon>
     </ClInclude>
@@ -150,22 +150,23 @@
     <ClInclude Include="MidiServices.h">
       <DependentUpon>MidiServices.idl</DependentUpon>
     </ClInclude>
-	  <ClInclude Include="MidiAppSdkVersion.h"></ClInclude>
+    <ClInclude Include="MidiAppSdkVersion.h">
+    </ClInclude>
     <ClInclude Include="MidiSessionSettings.h">
       <DependentUpon>MidiSessionSettings.idl</DependentUpon>
     </ClInclude>
-	  <ClInclude Include="MidiSettingsApp.h">
-		  <DependentUpon>MidiSettingsApp.idl</DependentUpon>
-	  </ClInclude>
-	  <ClInclude Include="MidiSetup.h">
-		  <DependentUpon>MidiSetup.idl</DependentUpon>
-	  </ClInclude>
-	  <ClInclude Include="MidiSetupsManager.h">
-		  <DependentUpon>MidiSetupsManager.idl</DependentUpon>
-	  </ClInclude>
-	  <ClInclude Include="MidiTransportInformation.h">
-		  <DependentUpon>MidiTransportInformation.idl</DependentUpon>
-	  </ClInclude>
+    <ClInclude Include="MidiSettingsApp.h">
+      <DependentUpon>MidiSettingsApp.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiSetup.h">
+      <DependentUpon>MidiSetup.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiSetupsManager.h">
+      <DependentUpon>MidiSetupsManager.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiTransportInformation.h">
+      <DependentUpon>MidiTransportInformation.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="Ump.h">
       <DependentUpon>Ump.idl</DependentUpon>
     </ClInclude>
@@ -191,15 +192,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Generated Files\module.g.cpp" />
-	  <ClCompile Include="MidiDiagnostics.cpp">
-		  <DependentUpon>MidiDiagnostics.idl</DependentUpon>
-	  </ClCompile>
+    <ClCompile Include="MidiDiagnostics.cpp">
+      <DependentUpon>MidiDiagnostics.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiEndpointDisplayFormatter.cpp">
       <DependentUpon>MidiEndpointDisplayFormatter.idl</DependentUpon>
     </ClCompile>
-	  <ClCompile Include="MidiHighResolutionValueDisplayFormatter.cpp">
-		  <DependentUpon>MidiHighResolutionValueDisplayFormatter.idl</DependentUpon>
-	  </ClCompile>
+    <ClCompile Include="MidiHighResolutionValueDisplayFormatter.cpp">
+      <DependentUpon>MidiHighResolutionValueDisplayFormatter.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiLocalizedStrings.cpp">
       <DependentUpon>MidiLocalizedStrings.idl</DependentUpon>
     </ClCompile>
@@ -230,18 +231,18 @@
     <ClCompile Include="MidiSessionSettings.cpp">
       <DependentUpon>MidiSessionSettings.idl</DependentUpon>
     </ClCompile>
-	  <ClCompile Include="MidiSettingsApp.cpp">
-		  <DependentUpon>MidiSettingsApp.idl</DependentUpon>
-	  </ClCompile>
-	  <ClCompile Include="MidiSetup.cpp">
-		  <DependentUpon>MidiSetup.idl</DependentUpon>
-	  </ClCompile>
-	  <ClCompile Include="MidiSetupsManager.cpp">
-		  <DependentUpon>MidiSetupsManager.idl</DependentUpon>
-	  </ClCompile>
-	  <ClCompile Include="MidiTransportInformation.cpp">
-		  <DependentUpon>MidiTransportInformation.idl</DependentUpon>
-	  </ClCompile>
+    <ClCompile Include="MidiSettingsApp.cpp">
+      <DependentUpon>MidiSettingsApp.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiSetup.cpp">
+      <DependentUpon>MidiSetup.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiSetupsManager.cpp">
+      <DependentUpon>MidiSetupsManager.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiTransportInformation.cpp">
+      <DependentUpon>MidiTransportInformation.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="Ump.cpp">
       <DependentUpon>Ump.idl</DependentUpon>
     </ClCompile>

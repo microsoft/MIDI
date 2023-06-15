@@ -6,8 +6,8 @@
         <RootNamespace>Microsoft.Midi.Settings</RootNamespace>
         <ApplicationIcon>Assets/WindowIcon.ico</ApplicationIcon>
         <ApplicationManifest>app.manifest</ApplicationManifest>
-        <Platforms>x86;x64;arm64</Platforms>
-        <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
+        <Platforms>x64;arm64</Platforms>
+        <RuntimeIdentifiers>win10-x64;win10-arm64</RuntimeIdentifiers>
 	    <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
 	    <SupportedOSPlatformVersion>10.0.20348.0</SupportedOSPlatformVersion>
@@ -23,11 +23,24 @@
 	    <AppxSymbolPackageEnabled>True</AppxSymbolPackageEnabled>
 	    <GenerateTestArtifacts>True</GenerateTestArtifacts>
 	    <AppxBundle>Never</AppxBundle>
-	    <PackageCertificateThumbprint>DAC77297934678914CC6B107CE26743135B68C64</PackageCertificateThumbprint>
+		
+		<PackageCertificateThumbprint>DAC77297934678914CC6B107CE26743135B68C64</PackageCertificateThumbprint>
 	    <PackageCertificateKeyFile>Microsoft.Midi.Settings_TemporaryKey.pfx</PackageCertificateKeyFile>
-    </PropertyGroup>
 	
+	    <!--<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained> -->
+		<!--<ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles> -->
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<!--<CsWinRTIncludes>Microsoft.Devices.Midi2</CsWinRTIncludes>-->
+		<CsWinRTGeneratedFilesDir>$(OutDir)</CsWinRTGeneratedFilesDir>
+		<!--<CsWinRTExcludes></CsWinRTExcludes> -->
+		<!--<CsWinRTExcludesPrivate></CsWinRTExcludesPrivate> -->
+	</PropertyGroup>	
 	
+
+	
+		
   <ItemGroup>
     <None Remove="Styles\MessageTemplates.xaml" />
     <None Remove="Views\DevicesPage.xaml" />
@@ -47,19 +60,22 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Labs.WinUI.SettingsControls" Version="0.0.17" />
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0-preview1" />
+    <PackageReference Include="CommunityToolkit.Common" Version="8.2.0" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.4.230518007-experimental1" />
+	<PackageReference Include="Microsoft.UI.Xaml" Version="2.8.4" />
+
+	<PackageReference Include="CommunityToolkit.Labs.WinUI.SettingsControls" Version="0.0.18" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0" />
     <PackageReference Include="CommunityToolkit.WinUI.UI.Animations" Version="7.1.2" />
     <PackageReference Include="CommunityToolkit.WinUI.UI.Controls" Version="7.1.2" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0-preview.2.23128.3" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.3.230228005-preview1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0-preview.5.23280.8" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.3" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.25387-preview" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="2.0.9" />
-    <PackageReference Include="WinUIEx" Version="2.1.0" />
+    <PackageReference Include="WinUIEx" Version="2.2.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\app-dev\sdk\midi-app-sdk.vcxproj" />
-    <ProjectReference Include="..\..\midi-settings-extensibility\midi-settings-extensibility.csproj" />
     <ProjectReference Include="..\Microsoft.Midi.Settings.ApiMock\Microsoft.Midi.Settings.SdkMock.csproj" />
     <ProjectReference Include="..\Microsoft.Midi.Settings.Core\Microsoft.Midi.Settings.Core.csproj" />
   </ItemGroup>
@@ -109,8 +125,15 @@
   <ItemGroup>
     <Folder Include="ViewModels\Data\" />
   </ItemGroup>
+
+  <PropertyGroup Label="Globals">
+    <WebView2UseWinRT>False</WebView2UseWinRT>
+  </PropertyGroup>
   
   <PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
   </PropertyGroup>
+
+
+
 </Project>
