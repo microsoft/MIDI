@@ -37,17 +37,7 @@
 		<!--<CsWinRTExcludesPrivate></CsWinRTExcludesPrivate> -->
 	</PropertyGroup>
 
-	<!-- Note the directory structure here needs to be as it is in the Github repo -->
-	<PropertyGroup>
-		<RestoreSources>
-			https://api.nuget.org/v3/index.json;
-			../../../app-dev-sdk/sdk-projections/MidiAppSdkCSharpProjection/nuget
-		</RestoreSources>
-	</PropertyGroup>
-	<ItemGroup>
-		<!--<PackageReference Include="Microsoft.Devices.Midi2" Version="0.1.0-prerelease" /> -->
-	</ItemGroup>
-	
+
 		
   <ItemGroup>
     <None Remove="Styles\MessageTemplates.xaml" />
@@ -84,7 +74,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Microsoft.Midi.Settings.ApiMock\Microsoft.Midi.Settings.SdkMock.csproj" />
     <ProjectReference Include="..\Microsoft.Midi.Settings.Core\Microsoft.Midi.Settings.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
@@ -134,10 +123,7 @@
     <Folder Include="ViewModels\Data\" />
   </ItemGroup>
 
-  <PropertyGroup Label="Globals">
-    <WebView2UseWinRT>False</WebView2UseWinRT>
-  </PropertyGroup>
-  
+ 
   <PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
   </PropertyGroup>

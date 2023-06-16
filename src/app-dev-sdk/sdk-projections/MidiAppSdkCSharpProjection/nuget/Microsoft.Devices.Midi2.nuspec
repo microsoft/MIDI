@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
 	<metadata>
 		<id>Microsoft.Devices.Midi2</id>
-		<version>0.1.1-prerelease</version>
+		<version>0.1.2-prerelease</version>
 		<authors>Microsoft</authors>
 		<description>Windows MIDI Services app SDK</description>
 		<dependencies>
@@ -14,8 +14,8 @@
 	</metadata>
 	<files>
 		
-		<!-- CS / .NET 8 projection -->
-		<file src="..\..\..\_build\AnyCPU\Debug\MidiAppSdkCSProjection\bin\Microsoft.Devices.Midi2.CS.dll" target="lib\net7.0-windows10.0.20348.0\Microsoft.Devices.Midi2.CS.dll" />
+		<!-- CS / .NET projection -->
+		<file src="..\..\..\_build\x64\Debug\MidiAppSdkCSProjection\bin\Microsoft.Devices.Midi2.CS.dll" target="lib\net7.0-windows10.0.20348.0\Microsoft.Devices.Midi2.CS.dll" />
 		
 		<!-- Metadata -->
 		
