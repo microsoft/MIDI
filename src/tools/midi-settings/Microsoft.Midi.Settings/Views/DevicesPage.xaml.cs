@@ -16,8 +16,8 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Midi.Settings.ViewModels;
-using Microsoft.Midi.Settings.SdkMock;
-using Microsoft.Midi.Settings.SdkMock.TransportClientSdk;
+//using Microsoft.Midi.Settings.SdkMock;
+//using Microsoft.Midi.Settings.SdkMock.TransportClientSdk;
 using Microsoft.Midi.Settings.Models;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -43,30 +43,30 @@ namespace Microsoft.Midi.Settings.Views
         // this code needs to be moved to the ViewModel
         private async void TempCreateNetworkEndpoint_Click(object sender, RoutedEventArgs e)
         {
-            if (!AppState.Current.HasActiveMidiSession)
-            {
-                AppState.Current.CreateMidiSession();
-            }
+            //if (!AppState.Current.HasActiveMidiSession)
+            //{
+            //    AppState.Current.CreateMidiSession();
+            //}
 
-            if (AppState.Current.MidiSession != null)
-            {
-                var transportClientPlugin = new NetworkMidiServerClientPlugin();
+            //if (AppState.Current.MidiSession != null)
+            //{
+            //    var transportClientPlugin = new NetworkMidiServerClientPlugin();
 
-                var jsonParameters = transportClientPlugin.GetJsonConfiguration();
+            //    var jsonParameters = transportClientPlugin.GetJsonConfiguration();
 
-                var device = await AppState.Current.MidiSession.CreateNewUmpDeviceAsync("some_network2_class_identifier", jsonParameters);
+            //    var device = await AppState.Current.MidiSession.CreateNewUmpDeviceAsync("some_network2_class_identifier", jsonParameters);
 
-                // binding fails with the WinRT PropertySet type, so replicating
-                foreach (string key in device.UmpEndpoint.Properties.Keys)
-                {
-                    device.Properties.Add(key, device.UmpEndpoint.Properties[key]);
-                }
+            //    // binding fails with the WinRT PropertySet type, so replicating
+            //    foreach (string key in device.UmpEndpoint.Properties.Keys)
+            //    {
+            //        device.Properties.Add(key, device.UmpEndpoint.Properties[key]);
+            //    }
 
 
 
-                System.Diagnostics.Debug.WriteLine("Created UMP Device " + device.Id);
+            //    System.Diagnostics.Debug.WriteLine("Created UMP Device " + device.Id);
 
-            }
+            //}
         }
     }
 }

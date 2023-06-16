@@ -2,13 +2,12 @@
   <PropertyGroup>
     <TargetFramework>net7.0-windows10.0.20348.0</TargetFramework>
     <RootNamespace>Microsoft.Midi.Settings.Core</RootNamespace>
-    <Platforms>AnyCPU;x64</Platforms>
     <Platforms>x64;arm64;AnyCPU</Platforms>
     <ImplicitUsings>enable</ImplicitUsings>
     <SupportedOSPlatformVersion>10.0.20348.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 </Project>
