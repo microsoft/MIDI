@@ -23,12 +23,12 @@ namespace Microsoft.Midi.Settings.Extensibility
         Microsoft.Devices.Midi2.MidiTransportInformation TransportInformation { get; }
 
         // TODO: return a winui object
-        Windows.UI.Xaml.FrameworkElement GetTransportSettingsPanel();
+        //Windows.UI.Xaml.FrameworkElement GetTransportSettingsPanel();
 
 
-        // TODO: Have this take an endpoint info object and settings and return a winui object
-        Windows.UI.Xaml.FrameworkElement GetEndpointViewSettingsPanel(string settings);
-        Windows.UI.Xaml.FrameworkElement GetEndpointCreateSettingsPanel(string settings);
-        Windows.UI.Xaml.FrameworkElement GetEndpointUpdateSettingsPanel(string settings);
+        //// TODO: Have this take an endpoint info object and settings and return a winui object
+        //Windows.UI.Xaml.FrameworkElement GetEndpointViewSettingsPanel(string settings);
+        //Windows.UI.Xaml.FrameworkElement GetEndpointCreateSettingsPanel(string settings);
+        //Windows.UI.Xaml.FrameworkElement GetEndpointUpdateSettingsPanel(string settings);
     }
 }

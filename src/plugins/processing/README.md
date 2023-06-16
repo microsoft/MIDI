@@ -16,6 +16,7 @@ Additional
 * Note quantizing to a configured key
 * Velocity curve remapping
 * Aftertouch curve remapping
-* Convert UMP-packaged MIDI 1.0 to Native MIDI 2.0 messages and vv.
 * Change MIDI 1.0 Note On with velocity zero to a MIDI 1.0 or MIDI 2.0 Note off message
 * Patch map (program change remapping)
+
+Most of these will begin development after our initial 1.0 release and stabilization of Windows MIDI Services
