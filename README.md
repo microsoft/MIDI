@@ -24,6 +24,8 @@ The existing MIDI APIs on Windows talk almost directly to MIDI 1.0 drivers. In W
 
 Here is where we currently stand with planned backwards compatibility. Note this is largely "best effort" and not a commitment other than ensuring we do not break existing applications using these APIs in supported ways.
 
+Backwards compatibility with WinMM and WinRT APIs will be a post-1.0 feature, but shortly after that first release.
+
 | API | What you should expect |
 | --------------- | ----------------------------------- |
 | Windows MIDI Services | This project. 100% of all supported features for MIDI 1.0 and MIDI 2.0, including multi-client. API/SDK uses UMP as its internal data format even for MIDI 1.0 devices. Transports and the service handle translation. |
@@ -45,7 +47,7 @@ You'll notice that this repo contains a number of related projects all grouped t
 | MIDI Service | MIDI in Windows now uses a Windows Service, like audio does today. This enables us to do a lot more on behalf of the user. The MIDI service is what talks to the various transports and drivers directly. |
 | MIDI Abstraction Layer | This is mostly part of the service. This provides the abstractions we need to be able to enable different types of transports, and also enable compatibility with the current MIDI 1.0 APIs |
 | New MIDI API | The API is the interface into the service. To ensure that we can ship the API with Windows and still keep up with evolving MIDI standards, much of the API uses JSON payloads for parameters and configuration and is largely just a direct pipe. Our intent is for application developers to avoid using the API directly in most cases, but to instead use the SDK. |
-| MIDI SDK | The SDK is shipped with individual applications. It provides strongly-typed entry points into and interpretations of API information. It also helps ensure applications name and treat MIDI entities in similar or identical ways. Additionally, the SDK can rev at the speed needed to keep up with updates to the MIDI specifications, without breaking compatibility with the operating system API. **We encourage all application developers to use the SDK rather than the API directly.** |
+| MIDI App SDK | The SDK is shipped with individual applications. It provides strongly-typed entry points into and interpretations of API information. It also helps ensure applications name and treat MIDI entities in similar or identical ways. Additionally, the SDK can rev at the speed needed to keep up with updates to the MIDI specifications, without breaking compatibility with the operating system API. **We encourage all application developers to use the SDK rather than the API directly.** |
 | MIDI Settings Tool | This is the first of the end-user-focused tools we are delivering with Windows MIDI Services. It is a GUI tool which helps the user manage the MIDI system, and also perform tests, provide information to product support teams, perform common tasks such as sending/receiving SysEx, and much more. |
 
 ### Transports
@@ -105,11 +107,9 @@ This project may contain trademarks or logos for projects, products, or services
 
 ## Relevant specifications
 
-**TODO: Update these with the new specs as soon as they make it on to the site.**
+These are the updated MIDI 2.0 (June 2023) specifications which apply to this project today.
 
-These are the specifications which apply to this project today.
-
-* [MIDI 2.0]( --- TODO ---)
+* [MIDI 2.0](https://midi.org/specifications)
 
 Note that this project does not support the deprecated MIDI CI protocol negotiation and related mechanisms.
 
