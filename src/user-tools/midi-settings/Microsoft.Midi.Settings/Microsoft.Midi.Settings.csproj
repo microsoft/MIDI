@@ -1,33 +1,31 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-		<TargetFramework>net7.0-windows10.0.20348.0</TargetFramework>
+	    <TargetFramework>net7.0-windows10.0.22621.0</TargetFramework>
 		<TargetPlatformMinVersion>10.0.20348.0</TargetPlatformMinVersion>
-		<RootNamespace>Microsoft.Midi.Settings</RootNamespace>
+		
+        <RootNamespace>Microsoft.Midi.Settings</RootNamespace>
         <ApplicationIcon>Assets/WindowIcon.ico</ApplicationIcon>
         <ApplicationManifest>app.manifest</ApplicationManifest>
-        <Platforms>x64;arm64</Platforms>
-        <RuntimeIdentifiers>win10-x64;win10-arm64</RuntimeIdentifiers>
+		<Platforms>x64;arm64</Platforms>
+		<RuntimeIdentifiers>win10-x64;win10-arm64</RuntimeIdentifiers>
+        <PublishProfile>Properties\PublishProfiles\win10-$(Platform).pubxml</PublishProfile>
 	    <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-
+	    <Nullable>enable</Nullable>
 	    <UseWinUI>true</UseWinUI>
-
-	    <EnableMsixTooling>true</EnableMsixTooling>
-	    <PublishProfile>Properties\PublishProfiles\win10-$(Platform).pubxml</PublishProfile>
-	    <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
-	    <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
-	    <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
-	    <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
-	    <AppxSymbolPackageEnabled>True</AppxSymbolPackageEnabled>
-	    <GenerateTestArtifacts>True</GenerateTestArtifacts>
-	    <AppxBundle>Never</AppxBundle>
+        <EnableMsixTooling>true</EnableMsixTooling>
 		
-		<PackageCertificateThumbprint>DAC77297934678914CC6B107CE26743135B68C64</PackageCertificateThumbprint>
-	    <PackageCertificateKeyFile>Microsoft.Midi.Settings_TemporaryKey.pfx</PackageCertificateKeyFile>
+	    <UseWinUI>true</UseWinUI>
+	    <EnableMsixTooling>true</EnableMsixTooling>
+		
+		<!--<PackageCertificateThumbprint>DAC77297934678914CC6B107CE26743135B68C64</PackageCertificateThumbprint>-->
+	    <!--<PackageCertificateKeyFile>Microsoft.Midi.Settings_TemporaryKey.pfx</PackageCertificateKeyFile>-->
 	
-	    <!--<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained> -->
-		<!--<ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles> -->
+	    
+		<!--<ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>-->
+	
+	    <!--<WindowsSdkPackageVersion>10.0.20348.28</WindowsSdkPackageVersion>-->
+	    <WindowsSdkPackageVersion>10.0.22621.29</WindowsSdkPackageVersion>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -58,24 +56,27 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.3" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.3.230502000" />
+    <PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="2.0.9" />
+    <PackageReference Include="WinUIEx" Version="2.2" />
+
+	  
     <PackageReference Include="CommunityToolkit.Common" Version="8.2.0" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.4.230518007-experimental1" />
-	<PackageReference Include="Microsoft.UI.Xaml" Version="2.8.4" />
+	<!--<PackageReference Include="Microsoft.UI.Xaml" Version="2.8.4" />-->
 
 	<PackageReference Include="CommunityToolkit.Labs.WinUI.SettingsControls" Version="0.0.18" />
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0" />
     <PackageReference Include="CommunityToolkit.WinUI.UI.Animations" Version="7.1.2" />
     <PackageReference Include="CommunityToolkit.WinUI.UI.Controls" Version="7.1.2" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0-preview.5.23280.8" />
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.3" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.25387-preview" />
-    <PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="2.0.9" />
-    <PackageReference Include="WinUIEx" Version="2.2.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.Midi.Settings.Core\Microsoft.Midi.Settings.Core.csproj" />
   </ItemGroup>
+	
   <ItemGroup>
     <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

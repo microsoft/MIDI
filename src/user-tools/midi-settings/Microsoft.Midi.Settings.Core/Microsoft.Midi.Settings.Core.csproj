@@ -2,8 +2,9 @@
   <PropertyGroup>
     <TargetFramework>net7.0-windows10.0.20348.0</TargetFramework>
     <RootNamespace>Microsoft.Midi.Settings.Core</RootNamespace>
-    <Platforms>x64;arm64;AnyCPU</Platforms>
-    <ImplicitUsings>enable</ImplicitUsings>
+	  <Platforms>AnyCPU;x64;x86</Platforms>
+	  <Platforms>x86;x64;arm64;AnyCPU</Platforms>
+	  <ImplicitUsings>enable</ImplicitUsings>
     <SupportedOSPlatformVersion>10.0.20348.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
