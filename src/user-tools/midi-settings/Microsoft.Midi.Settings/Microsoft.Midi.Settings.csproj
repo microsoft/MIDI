@@ -18,14 +18,14 @@
 	    <UseWinUI>true</UseWinUI>
 	    <EnableMsixTooling>true</EnableMsixTooling>
 		
-		<!--<PackageCertificateThumbprint>DAC77297934678914CC6B107CE26743135B68C64</PackageCertificateThumbprint>-->
-	    <!--<PackageCertificateKeyFile>Microsoft.Midi.Settings_TemporaryKey.pfx</PackageCertificateKeyFile>-->
+		<PackageCertificateThumbprint>DAC77297934678914CC6B107CE26743135B68C64</PackageCertificateThumbprint>
+	    <PackageCertificateKeyFile>Microsoft.Midi.Settings_TemporaryKey.pfx</PackageCertificateKeyFile>
 	
 	    
 		<!--<ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>-->
 	
 	    <!--<WindowsSdkPackageVersion>10.0.20348.28</WindowsSdkPackageVersion>-->
-	    <WindowsSdkPackageVersion>10.0.22621.29</WindowsSdkPackageVersion>
+	    <!--<WindowsSdkPackageVersion>10.0.22621.29</WindowsSdkPackageVersion>-->
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -65,8 +65,6 @@
 
 	  
     <PackageReference Include="CommunityToolkit.Common" Version="8.2.0" />
-	<!--<PackageReference Include="Microsoft.UI.Xaml" Version="2.8.4" />-->
-
 	<PackageReference Include="CommunityToolkit.Labs.WinUI.SettingsControls" Version="0.0.18" />
     <PackageReference Include="CommunityToolkit.WinUI.UI.Animations" Version="7.1.2" />
     <PackageReference Include="CommunityToolkit.WinUI.UI.Controls" Version="7.1.2" />
