@@ -22,9 +22,7 @@ Our intention is for developers to begin adopting Windows MIDI Services in place
 
 The existing MIDI APIs on Windows talk almost directly to MIDI 1.0 drivers. In Windows MIDI Services, the architecture is built around a central Windows Service, much like our audio system today. It also uses a much faster IO mechanism for speaking to the USB driver vs what our MIDI 1.0 API uses today. This provides much more flexibility, including the potential for multi-client use, and good baseline speed with our new class driver. We are working on shims and abstractions which will allow some of the existing MIDI 1.0 APIs to talk to the service rather than directly to the driver.
 
-Here is where we currently stand with planned backwards compatibility. Note this is largely "best effort" and not a commitment other than ensuring we do not break existing applications using these APIs in supported ways.
-
-Backwards compatibility with WinMM and WinRT APIs will be a post-1.0 feature, but shortly after that first release.
+Here is where we currently stand with planned backwards compatibility. Backwards compatibility for WinMM and WinRT APIs will be a post-1.0 feature, but shortly after that first release.
 
 | API | What you should expect |
 | --------------- | ----------------------------------- |
@@ -46,19 +44,19 @@ You'll notice that this repo contains a number of related projects all grouped t
 | USB MIDI 2.0 Driver | The new MIDI 1.0 and MIDI 2.0 class driver for Windows |
 | MIDI Service | MIDI in Windows now uses a Windows Service, like audio does today. This enables us to do a lot more on behalf of the user. The MIDI service is what talks to the various transports and drivers directly. |
 | MIDI Abstraction Layer | This is mostly part of the service. This provides the abstractions we need to be able to enable different types of transports, and also enable compatibility with the current MIDI 1.0 APIs |
-| New MIDI API | The API is the interface into the service. To ensure that we can ship the API with Windows and still keep up with evolving MIDI standards, much of the API uses JSON payloads for parameters and configuration and is largely just a direct pipe. Our intent is for application developers to avoid using the API directly in most cases, but to instead use the SDK. |
+| New MIDI API | The API is the interface into the service. To ensure that we can ship the API with Windows and still keep up with evolving MIDI standards, much of the API uses JSON payloads for parameters and configuration and is largely just a direct pipe to the service. Our intent is for application developers to avoid using the API directly in most cases, but to instead use the SDK. |
 | MIDI App SDK | The SDK is shipped with individual applications. It provides strongly-typed entry points into and interpretations of API information. It also helps ensure applications name and treat MIDI entities in similar or identical ways. Additionally, the SDK can rev at the speed needed to keep up with updates to the MIDI specifications, without breaking compatibility with the operating system API. **We encourage all application developers to use the SDK rather than the API directly.** |
 | MIDI Settings Tool | This is the first of the end-user-focused tools we are delivering with Windows MIDI Services. It is a GUI tool which helps the user manage the MIDI system, and also perform tests, provide information to product support teams, perform common tasks such as sending/receiving SysEx, and much more. |
 
 ### Transports
 
-Here are the current plans for transports. In general, transports are implemented as plugins into the Windows Service. Some, like USB, require related drivers, but the majority do not.
+Here are the current plans for transports. In general, transports are implemented as plugins into the Windows Service. Some, like USB, require related drivers, but the majority are user-mode code.
 
 | Transport | Description |
 | --------------- | ----------------------------------- |
 | USB | The USB transport code and driver. This will be delivered with the initial release |
-| Virtual | This will be built-in |
-| Network | The in-progress UDP-based Network specification for UWP. We have this prototyped, and will deliver shortly after the specification is finalized. UWP Endpoints from Network will show up just like any other transport in the API/SDK. This transport will not require any other third-party products. We are also using the Network protocol, alongside the USB protocol, to validate our abstraction layers and plugin approach.|
+| Virtual and Loopback | These will be early transport plugins |
+| Network MIDI 2.0 | The in-progress UDP-based Network specification for UWP. We have this prototyped, and will deliver shortly after the specification is finalized. UWP Endpoints from Network will show up just like any other transport in the API/SDK. This transport will not require any other third-party products. We are also using the Network protocol, alongside the USB protocol, to validate our abstraction layers and plugin approach.|
 | BLE | BLE MIDI 1.0 is currently planned to be implemented clean-room to include in this repo as full open source, and also address bugs brought up from the broader developer and musician communities. This work has not yet started. |
 | RTP | No current plans for implementing RTP MIDI 1.0. That may change in the future if the need is there. We would, of course, accept contributions here if someone wishes to make an RTP network plugin. In the meantime, the existing RTP solutions should continue to work as they do today. |
 
@@ -85,7 +83,7 @@ For maximum flexibility and compatibility, there are several release mechanisms 
 | Settings and Related Tools | Github Install | Microsoft Store on Windows, WinGet |
 | Documentation and Samples | Github | Microsoft Learn / Docs |
 
-**When will components be considered "production"?** The bar in Windows is very high for any big changes (especially anything which may break compatibility) to an API that has shipped in-box, so we want to ensure the API and service are truly production-ready before including them in-box. This will be based on stability/readiness/performance, with input from stakeholders including AMEI, and not a specific timeline.
+**When will components be considered "production"?** The bar in Windows is very high for any big changes (especially anything which may break compatibility) to an API that has shipped in-box, so we want to ensure the API and service are truly production-ready before including them in-box. This will be based on stability/readiness/performance, with input from stakeholders including AMEI, and not necessarily a specific timeline (although we do need to support partner product launches).
 
 ## License
 
