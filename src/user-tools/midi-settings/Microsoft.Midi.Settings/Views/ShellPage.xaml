@@ -84,6 +84,16 @@
 
             <NavigationView.MenuItems>
 
+                <NavigationViewItemHeader x:Uid="Shell_Midi1ApiNavHeader"/>
+
+                <NavigationViewItem x:Uid="Shell_Midi1ApiDevices" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.Midi1DevicesViewModel">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe88e;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+                <NavigationViewItemHeader x:Uid="Shell_MidiServicesNavHeader"/>
+
                 <NavigationViewItem x:Uid="Shell_Setup" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.SetupViewModel">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe838;"/>
@@ -154,6 +164,11 @@
                                     Visibility="{x:Bind ViewModel.AreDeveloperOptionsEnabled, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xec7a;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Uid="Shell_Midi1Devices" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.Midi1DevicesViewModel">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe7c3;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
             </NavigationView.MenuItems>
