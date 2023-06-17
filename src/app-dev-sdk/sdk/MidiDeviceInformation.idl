@@ -7,6 +7,7 @@
 // ============================================================================
 
 // class that wraps the DeviceInformation class and provides better access to properties
+// This is the PnP information, not the in-protocol information. 
 
 import "MidiEndpoint.idl";
 
@@ -21,13 +22,15 @@ namespace Microsoft.Devices.Midi2
         static Windows.Devices.Enumeration.DeviceWatcher CreateWatcher(MidiDeviceSelectorMidiType midiDeviceType);
 
 
+
+
         // TODO:
         // Device names
         // Manufacturer information
         // Driver information if present
         // Transport information
         // Other device metadata
-        // Group blocks (json or binary struct packed into properties)
+        // Group terminal blocks (json or binary struct packed into properties but broken out here)
 
         
 

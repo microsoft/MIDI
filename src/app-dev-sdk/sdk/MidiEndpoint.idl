@@ -34,7 +34,7 @@ namespace Microsoft.Devices.Midi2
         static String GetDeviceSelector(MidiDeviceSelectorMidiType midiDeviceType);
 
 
-        // Id from Windows. This can be used to retrieve the MidiDeviceInformation object
+        // Id from Windows. This can be used to retrieve the MidiDeviceInformation object with the PnP properties
         String DeviceId{ get; };
 
         // TODO: the other types of names (user-provided, device-provided, etc.)
@@ -48,6 +48,12 @@ namespace Microsoft.Devices.Midi2
         // Blocks which tell us how to treat the groups
         IObservableVector<MidiFunctionBlock>FunctionBlocks { get; };  // these are discovered in-protocol. They can change within the rules in the spec
         IVector<MidiGroupTerminalBlock>GroupTerminalBlocks { get; };  // these are USB-specific, created at enumeration time, and do not change
+
+
+        // NOTE: This is likely to change. We're working on the correct buffers to speak to the service
+        // and API. That buffer also deals with timestamps and more. Intent is to provide UMP types
+        // for folks who wish to use them, and direct access to buffers of MIDI words for those who
+        // prefer that approach.
 
         // Send a single strongly-typed UMP with a timestamp
         void SendUmp(UInt64 timestamp, Microsoft.Devices.Midi2.Ump ump);

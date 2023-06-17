@@ -19,8 +19,9 @@ namespace Microsoft.Devices.Midi2
         static Windows.Storage.StorageFile DumpMidiServicesStateToFile(Windows.Storage.StorageFolder preferredFolder);
         static Windows.Storage.StorageFile DumpMidiServicesStateToFile();
 
-
         // TODO: Methods to get other perf data from the service
+
+        // TODO: Methods to set up a monitor for an endpoint / traffic
 
 
 
