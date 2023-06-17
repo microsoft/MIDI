@@ -1,0 +1,59 @@
+﻿<Page
+    x:Class="Microsoft.Midi.Settings.Views.Midi1DevicesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="using:Microsoft.Midi.Settings.ViewModels"
+        xmlns:labs="using:CommunityToolkit.Labs.WinUI"
+
+    mc:Ignorable="d">
+
+    <Grid x:Name="ContentArea">
+
+
+        <Grid Grid.Row="2">
+            <ItemsRepeater ItemsSource="{x:Bind ViewModel.Midi1Devices}">
+            <ItemsRepeater.ItemTemplate>
+                <DataTemplate x:DataType="local:Midi1ParentDeviceInformation">
+                    <Expander IsExpanded="True" Margin="3">
+                        <Expander.HeaderTemplate>
+                            <DataTemplate x:DataType="local:Midi1ParentDeviceInformation">
+                                    <Grid>
+                                        <TextBlock Text="{x:Bind Name}" Margin="3" HorizontalAlignment="Left"/>
+                                        <TextBlock Text="{x:Bind Id}" Margin="3" HorizontalAlignment="Right"/>
+                                    </Grid>
+                            </DataTemplate>
+                        </Expander.HeaderTemplate>
+
+                        <Expander.ContentTemplate>
+                            <DataTemplate x:DataType="local:Midi1ParentDeviceInformation">
+
+                                <ItemsRepeater ItemsSource="{x:Bind Ports}">
+                                    <ItemsRepeater.ItemTemplate>
+                                        <DataTemplate x:DataType="local:Midi1PortInformation">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="100" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="{Binding Path=PortDirection}" Margin="3" />
+                                                <TextBlock Grid.Column="1" Text="{Binding Path=Name}" Margin="3"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding Path=DeviceInstanceId}" Margin="3" />
+                                                </Grid>
+                                        </DataTemplate>
+                                    </ItemsRepeater.ItemTemplate>
+                                </ItemsRepeater>
+                            </DataTemplate>
+                        </Expander.ContentTemplate>
+                    </Expander>
+                </DataTemplate>
+            </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </Grid>
+
+
+    </Grid>
+</Page>

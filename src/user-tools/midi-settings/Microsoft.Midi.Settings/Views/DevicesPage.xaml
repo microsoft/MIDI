@@ -22,11 +22,11 @@
             <TextBlock TextWrapping="WrapWholeWords" Margin="3" Text="Click the button below to create a single network UMP Endpoint. After you do that, go to the Traffic Monitor page and click the 'Monitor on Screen' button. At that point, start sending UMP messages from your Network MIDI 2.0 device to the advertised Windows MIDI Endpoint." />
         </StackPanel>
         
-        <Grid Grid.Row="1">
+        <!--<Grid Grid.Row="1">
             <Button x:Name="TempCreateNetworkEndpoint" Click="TempCreateNetworkEndpoint_Click" Content="Create Network MIDI 2.0 Server Host and Endpoint"
                 HorizontalAlignment="Left" VerticalAlignment="Top" Margin="20" 
                 />
-        </Grid>
+        </Grid>-->
             
         <!-- Set of cards -->
         <!--<Grid Grid.Row="2">

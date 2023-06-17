@@ -31,6 +31,7 @@ public class PageService : IPageService
         Configure<ToolsTestViewModel, ToolsTestPage>();
         Configure<TroubleshootingViewModel, TroubleshootingPage>();
 
+        Configure<Midi1DevicesViewModel, Midi1DevicesPage>();
     }
 
     public Type GetPageType(string key)
