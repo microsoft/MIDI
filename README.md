@@ -6,7 +6,7 @@ This project is the next-generation MIDI API for Windows, including MIDI 1.0, MI
 
 **This is an official Microsoft project**. Although Microsoft is an active member of the MIDI Association, and Pete is the chair of the MIDI Association Executive Board, and other contributors are on standards boards, this project is not affiliated with the MIDI Association other than as a consumer of and contributor to the standards. Affiliation with AMEI is disclosed above.
 
-Here's a high-level view of the prototype. Details subject to change.
+Here's a high-level view of the end goal. Details subject to change.
 
 ![High-level view of the MIDI stack](img/high-level-view.png)
 
