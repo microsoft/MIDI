@@ -136,9 +136,6 @@
     <Midl Include="MidiEndpointConnectOptions.idl">
       <Filter>SDK\Endpoints</Filter>
     </Midl>
-    <Midl Include="MidiGroupTerminalBlock.idl">
-      <Filter>SDK\Endpoints</Filter>
-    </Midl>
     <Midl Include="MidiEndpointDisplayFormatter.idl">
       <Filter>SDK\Display</Filter>
     </Midl>
@@ -155,9 +152,6 @@
       <Filter>SDK\Endpoints</Filter>
     </Midl>
     <Midl Include="MidiEndpointInformation.idl">
-      <Filter>SDK\Endpoints</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointType.idl">
       <Filter>SDK\Endpoints</Filter>
     </Midl>
     <Midl Include="MidiLocalizedStrings.idl">
@@ -201,6 +195,12 @@
     </Midl>
     <Midl Include="IMidiEndpointSettingsData.idl">
       <Filter>SDK\Endpoints</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointNativeDataFormatType.idl">
+      <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiGroupTerminalBlock.idl">
+      <Filter>SDK\Enumeration</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

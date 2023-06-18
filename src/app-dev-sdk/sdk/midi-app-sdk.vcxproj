@@ -275,7 +275,7 @@
     <Midl Include="MidiChannel.idl" />
     <Midl Include="MidiDiagnostics.idl" />
     <Midl Include="MidiEndpointInformation.idl" />
-    <Midl Include="MidiEndpointType.idl" />
+    <Midl Include="MidiEndpointNativeDataFormatType.idl" />
     <Midl Include="MidiFunctionBlockDirection.idl" />
     <Midl Include="MidiHighResolutionValueDisplayFormatter.idl" />
     <Midl Include="MidiMessageTranslator.idl" />
