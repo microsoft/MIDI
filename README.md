@@ -130,6 +130,7 @@ Older specifications
 
 This project supports both MIDI 1.0 and MIDI 2.0 through an updated modern API. MIDI 1.0 has been around since 1983, but MIDI 2.0 is new. You can learn more about it through the links below.
 
+[![ADC 2022 Apple, Google, and Microsoft Implementations of MIDI 2.0](https://img.youtube.com/vi/AVQeHsBZjxc/mqdefault.jpg)](https://www.youtube.com/watch?v=AVQeHsBZjxc)
 [![NAMM 2022 MIDI 2.0 Update](https://img.youtube.com/vi/69hzeBFOPfo/mqdefault.jpg)](https://www.youtube.com/watch?v=69hzeBFOPfo) 
 [![Mike Kent on MIDI 2.0 Protocol Messages and UMP](https://img.youtube.com/vi/Kky1nlwz8-8/mqdefault.jpg)](https://www.youtube.com/watch?v=Kky1nlwz8-8)
 
