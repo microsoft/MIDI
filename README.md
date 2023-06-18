@@ -85,6 +85,8 @@ For maximum flexibility and compatibility, there are several release mechanisms 
 
 **When will components be considered "production"?** The bar in Windows is very high for any big changes (especially anything which may break compatibility) to an API that has shipped in-box, so we want to ensure the API and service are truly production-ready before including them in-box. This will be based on stability/readiness/performance, with input from stakeholders including AMEI, and not necessarily a specific timeline (although we do need to support partner product launches, and we do have broad milestone dates).
 
+> Although we do track some Windows-internal specific items inside Microsoft in Azure DevOps, [here's everything we're tracking in the open](https://github.com/orgs/microsoft/projects/339).
+
 ## Building MIDI 2.0 Products
 
 First, if you are building a commercial MIDI 2.0 product, we strongly encourage you to [become a corporate member of the MIDI Association](https://aka.ms/midiorgjoin). Doing so will support MIDI development, provide access to the corporate member forums where most of the discussions happen, access to in-progress transports and updates, the ability to shape the future of MIDI, and if your product qualifies, the right to use the MIDI logo.
