@@ -87,7 +87,7 @@ For maximum flexibility and compatibility, there are several release mechanisms 
 
 ## Building MIDI 2.0 Products
 
-First, if you are building a commercial MIDI 2.0 product, we strongly encourage you to [become a corporate member of the MIDI Association](https://midi.org/about). Doing so will support MIDI development, provide access to the corporate member forums where most of the discussions happen, access to in-progress transports and updates, the ability to shape the future of MIDI, and if your product qualifies, the right to use the MIDI logo.
+First, if you are building a commercial MIDI 2.0 product, we strongly encourage you to [become a corporate member of the MIDI Association](https://aka.ms/midiorgjoin). Doing so will support MIDI development, provide access to the corporate member forums where most of the discussions happen, access to in-progress transports and updates, the ability to shape the future of MIDI, and if your product qualifies, the right to use the MIDI logo.
 
 We encourage you to begin building your products using the information in this repo. If you run into any problems with your products integrating with the implementation here, please be sure to open an issue if you believe it is a bug or omission, or have a discussion about it on Discord. 
 
@@ -136,3 +136,4 @@ This project supports both MIDI 1.0 and MIDI 2.0 through an updated modern API. 
 * [Windows MIDI and Music Dev Blog](https://devblogs.microsoft.com/windows-music-dev/)
 * [MIDI is about collaboration, not competition](https://midi.org/midi-articles/midi-is-about-collaboration-not-competition)
 * [MIDI @ 40 and the new Windows MIDI Services](https://devblogs.microsoft.com/windows-music-dev/midi-40-and-the-new-windows-midi-services/)
+* [Join the MIDI Association](https://aka.ms/midiorgjoin/)
