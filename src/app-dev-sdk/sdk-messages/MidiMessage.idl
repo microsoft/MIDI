@@ -1,0 +1,34 @@
+import "Ump32.idl";
+import "Ump64.idl";
+import "Ump96.idl";
+import "Ump128.idl";
+import "MidiStream.idl";
+
+
+namespace Microsoft.Devices.Midi2.Messages
+{
+
+    // Base class for all MIDI messages
+    // this needs to be an abstract class
+
+    unsealed runtimeclass MidiMessage
+    {
+        UInt8 MessageType { get; };
+        UInt8 Status{ get; };
+        UInt8 Group{ get; };
+
+        // these static methods return a strongly-typed MidiMessage when given a UMP
+        [default_overload]
+        static MidiMessage FromUmp(Ump32 ump);
+        static MidiMessage FromUmp(Ump64 ump);
+        static MidiMessage FromUmp(Ump96 ump);
+        static MidiMessage FromUmp(Ump128 ump);
+    };
+
+
+
+
+    // TODO: Need sysex, system common, system realtime, mixed data set, and other types of messages
+
+
+}

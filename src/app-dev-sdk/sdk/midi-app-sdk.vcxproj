@@ -12,7 +12,7 @@
     <WindowsTargetPlatformMinVersion>10.0.20348.0</WindowsTargetPlatformMinVersion>
     <MinimalCoreWin>true</MinimalCoreWin>
     <ProjectGuid>{3aa50484-e4c1-41fb-9ae4-feea724e6077}</ProjectGuid>
-    <ProjectName>Microsoft.Devices.Midi2</ProjectName>
+    <ProjectName>Microsoft.Devices.Midi2.Core</ProjectName>
     <RootNamespace>Microsoft.Devices.Midi2</RootNamespace>
     <DefaultLanguage>en-US</DefaultLanguage>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
