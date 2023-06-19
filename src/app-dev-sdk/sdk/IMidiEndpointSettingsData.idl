@@ -6,7 +6,10 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-
+// Runtime-creatable endpoint implementations will provide classes which use this to 
+// provide the settings to the service. The service only understands Json for this, and
+// delegates all the parsing to the plugins, so we want to provide more app-friendly 
+// approach which will ensure the json is well-formed and correct.
 namespace Microsoft.Devices.Midi2.ClientEndpointContracts
 {
     interface IMidiEndpointSettingsData

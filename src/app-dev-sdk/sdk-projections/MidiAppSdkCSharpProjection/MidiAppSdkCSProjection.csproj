@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 	<Platform>AnyCPU</Platform>
-	<Platforms>AnyCPU;x64</Platforms>
+	<Platforms>AnyCPU;x64;ARM64</Platforms>
   </PropertyGroup>
 
 	<PropertyGroup>

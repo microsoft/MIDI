@@ -11,14 +11,13 @@
 #include "MidiEndpoint.h"
 #include "MidiEndpoint.g.cpp"
 
-
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     hstring MidiEndpoint::GetDeviceSelector()
     {
         throw hresult_not_implemented();
     }
-    hstring MidiEndpoint::GetDeviceSelector(winrt::Microsoft::Devices::Midi2::MidiDeviceSelectorMidiType const& midiDeviceType)
+    hstring MidiEndpoint::GetDeviceSelector(winrt::Microsoft::Devices::Midi2::MidiEndpointNativeDataFormatType const& midiEndpointType)
     {
         throw hresult_not_implemented();
     }
@@ -34,15 +33,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
-    winrt::Microsoft::Devices::Midi2::MidiEndpointType MidiEndpoint::EndpointType()
-    {
-        throw hresult_not_implemented();
-    }
     winrt::Windows::Foundation::Collections::IObservableVector<winrt::Microsoft::Devices::Midi2::MidiFunctionBlock> MidiEndpoint::FunctionBlocks()
-    {
-        throw hresult_not_implemented();
-    }
-    winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiGroupTerminalBlock> MidiEndpoint::GroupTerminalBlocks()
     {
         throw hresult_not_implemented();
     }

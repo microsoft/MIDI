@@ -9,6 +9,8 @@
 
 import "MidiFunctionBlockDirection.idl";
 import "MidiFunctionBlockUIHint.idl";
+import "Ump.idl";
+import "MidiGroup.idl";
 
 namespace Microsoft.Devices.Midi2
 {
@@ -26,8 +28,8 @@ namespace Microsoft.Devices.Midi2
         Boolean IsMidi10Connection{ get; };
         Boolean IsBandwidthRestricted{ get; };      // true if the block is asking for 31.25kbps restriction
 
-        UInt8 FirstGroupIndex{ get; };      
-        UInt8 GroupSpanCount{ get; };
+        IVector<MidiGroup> IncludedGroups{ get; };
+        IVector<Ump> OriginalResponses{ get; };
 
         UInt8 MidiCIMessageVersionFormat{ get; };
 

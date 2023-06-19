@@ -6,22 +6,17 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+// This is the moral equivalent of a "port" in MIDI 1.0. MIDI 2.0 UMP Endpoints are
+// almost always bidirectional. This is the main entity that applications will use
+// after creating a session
 
 import "MidiEndpointInformation.idl";
-import "MidiGroupTerminalBlock.idl";
 import "MidiFunctionBlock.idl";
-import "MidiEndpointType.idl";
+import "MidiEndpointNativeDataFormatType.idl";
 import "Ump.idl";
 
 namespace Microsoft.Devices.Midi2
 {
-    enum MidiDeviceSelectorMidiType
-    {
-        All = 0,                            // All MIDI protocols (currently only 1.0 and 2.0)
-        ConvertedMidi10ByteStream = 100,    // UMP Endpoints that connect to a byte stream MIDI 1.0 device (remapped by the service, or specified by the endpoint)
-        NativeMidi20Ump = 200               // MIDI 2.0 Endpoints (which may have group/function blocks that are MIDI 1.0)
-    };
-
     [default_interface]
     runtimeclass MidiEndpoint
     {
@@ -31,23 +26,27 @@ namespace Microsoft.Devices.Midi2
         static String GetDeviceSelector();
     
         // device selector for a device which implements a specific MIDI transport/protocol
-        static String GetDeviceSelector(MidiDeviceSelectorMidiType midiDeviceType);
+        static String GetDeviceSelector(MidiEndpointNativeDataFormatType midiEndpointType);
 
 
-        // Id from Windows. This can be used to retrieve the MidiDeviceInformation object
+
+
+        // Id from Windows. This can be used to retrieve the MidiDeviceInformation object with the PnP properties
         String DeviceId{ get; };
 
         // TODO: the other types of names (user-provided, device-provided, etc.)
         
-        Boolean EndpointInformationValid{ get; };               // needed because UMP doesn't allow null types
+        Boolean EndpointInformationValid{ get; };               // needed because WinRT doesn't allow null types
         MidiEndpointInformation EndpointInformation{ get; };    // information from Endpoint Info request. Not valid until EndpointInformation requested and received.
-
-        // from Windows - tells us if this is a converted MIDI 1.0 byte stream port, or native UMP endpoint
-        MidiEndpointType EndpointType{ get; };
 
         // Blocks which tell us how to treat the groups
         IObservableVector<MidiFunctionBlock>FunctionBlocks { get; };  // these are discovered in-protocol. They can change within the rules in the spec
-        IVector<MidiGroupTerminalBlock>GroupTerminalBlocks { get; };  // these are USB-specific, created at enumeration time, and do not change
+
+
+        // NOTE: This is likely to change. We're working on the correct buffers to speak to the service
+        // and API. That buffer also deals with timestamps and more. Intent is to provide UMP types
+        // for folks who wish to use them, and direct access to buffers of MIDI words for those who
+        // prefer that approach.
 
         // Send a single strongly-typed UMP with a timestamp
         void SendUmp(UInt64 timestamp, Microsoft.Devices.Midi2.Ump ump);
@@ -71,7 +70,7 @@ namespace Microsoft.Devices.Midi2
 
 
 
-        // TODO: Some additional calls for information gathering.
+        // TODO: Some additional calls for information gathering. This will be in their own section
         // Property Exchange handling
         //  - Get patches, for example
         // Profile capture

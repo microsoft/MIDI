@@ -25,7 +25,7 @@ namespace Microsoft.Devices.Midi2
         // but it's good to check and be ready in case it is not
         static Boolean CheckForWindowsMidiServices(out WindowsMidiServicesCheckError errorResult);
 
-        // The version of Windows MIDI Services installed on this PC (makes an API call to retrieve this)
+        // The version of Windows MIDI Services installed on this PC
         static String GetInstalledWindowsMidiServicesVersion();
 
         // version of this SDK the application was compiled with

@@ -6,13 +6,55 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+// Group terminal blocks are being phased out in favor of Function Blocks, but
+// will still be found in devices. See MIDI implementation guide and 
+// documentation to better understand the relationship between Group Terminal
+// Blocks and Function Blocks
+
+import "MidiGroup.idl";
+    
 namespace Microsoft.Devices.Midi2
 {
+    enum MidiGroupTerminalBlockDirection
+    {
+        MidiGroupTerminalBlockBidirectional = 0x0,
+        MidiGroupTerminalBlockDeviceInput = 0x1,
+        MidiGroupTerminalBlockDeviceOutput = 0x2
+    };
+
+    enum MidiGroupTerminalBlockProtocol
+    {
+        MidiGroupTerminalBlockProtocolUnknown = 0x00,
+        MidiGroupTerminalBlockProtocolMidi1Ump64 = 0x01,
+        MidiGroupTerminalBlockProtocolMidi1Ump64WithJitterReduction = 0x02,
+        MidiGroupTerminalBlockProtocolMidi1Ump128 = 0x03,
+        MidiGroupTerminalBlockProtocolMidi1Ump128WithJitterReduction = 0x04,
+        MidiGroupTerminalBlockProtocolMidi2 = 0x11,
+        MidiGroupTerminalBlockProtocolMidi2WithJitterReduction = 0x12
+    };
+
     [default_interface]
     runtimeclass MidiGroupTerminalBlock
     {
         MidiGroupTerminalBlock();
 
 
+        String Id{ get; };
+
+        // this is essentially the string referred to by iBlockItem
+        String Name{ get; };
+
+        MidiGroupTerminalBlockDirection Direction { get; };
+        MidiGroupTerminalBlockProtocol Protocol { get; };
+
+        // rather than number of groups and a start group, we just have a vector of groups
+        // here to make it flexible and to be consistent with what we do for function blocks
+        IVector<MidiGroup> IncludedGroups{ get; };
+
+        // Note: 0x0000 is unknown or not fixed
+        // 0x0001 is 31.24kb/s
+        // all others are 4kb/second * value
+        UInt16 MaxDeviceInputBandwidthIn4KBSecondUnits{ get; };
+        UInt16 MaxDeviceOutputBandwidthIn4KBSecondUnits{ get; };
     }
 }
