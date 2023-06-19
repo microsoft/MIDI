@@ -2,11 +2,10 @@
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="packages\Microsoft.Windows.CppWinRT.2.0.230225.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('packages\Microsoft.Windows.CppWinRT.2.0.230225.1\build\native\Microsoft.Windows.CppWinRT.props')" />
   <PropertyGroup Label="Globals">
-	  <ProjectName>Microsoft.Devices.Midi2.Core</ProjectName>
-	  <RootNamespace>Microsoft.Devices.Midi2</RootNamespace>
-	  <ProjectGuid>{3aa50484-e4c1-41fb-9ae4-feea724e6077}</ProjectGuid>
-
-	  <CppWinRTOptimized>true</CppWinRTOptimized>
+    <ProjectName>Microsoft.Devices.Midi2.Core</ProjectName>
+    <RootNamespace>Microsoft.Devices.Midi2</RootNamespace>
+    <ProjectGuid>{3aa50484-e4c1-41fb-9ae4-feea724e6077}</ProjectGuid>
+    <CppWinRTOptimized>true</CppWinRTOptimized>
     <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
     <CppWinRTGenerateWindowsMetadata>true</CppWinRTGenerateWindowsMetadata>
     <CppWinRTModernIDL>true</CppWinRTModernIDL>
@@ -154,9 +153,6 @@
     <ClInclude Include="MidiSessionSettings.h">
       <DependentUpon>MidiSessionSettings.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiSettingsApp.h">
-      <DependentUpon>MidiSettingsApp.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiTransportInformation.h">
       <DependentUpon>MidiTransportInformation.idl</DependentUpon>
     </ClInclude>
@@ -215,9 +211,6 @@
     <ClCompile Include="MidiSessionSettings.cpp">
       <DependentUpon>MidiSessionSettings.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiSettingsApp.cpp">
-      <DependentUpon>MidiSettingsApp.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiTransportInformation.cpp">
       <DependentUpon>MidiTransportInformation.idl</DependentUpon>
     </ClCompile>
@@ -262,7 +255,6 @@
     <Midl Include="MidiServices.idl" />
     <Midl Include="MidiSession.idl" />
     <Midl Include="MidiSessionSettings.idl" />
-    <Midl Include="MidiSettingsApp.idl" />
     <Midl Include="MidiTransportInformation.idl" />
     <Midl Include="Ump.idl" />
     <Midl Include="UmpUtilities.idl" />

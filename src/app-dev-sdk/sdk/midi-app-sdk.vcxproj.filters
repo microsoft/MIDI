@@ -32,9 +32,6 @@
     <Filter Include="SDK\Transports">
       <UniqueIdentifier>{7a309dc0-af6f-4fa7-8827-649ef97dcc9a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SDK\Settings">
-      <UniqueIdentifier>{7e95fb26-1161-437e-983c-ea9bc06d7dae}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -46,20 +43,11 @@
     <ClCompile Include="MidiSessionSettings.cpp">
       <Filter>SDK\Session</Filter>
     </ClCompile>
-    <ClCompile Include="MidiDiagnostics.cpp">
-      <Filter>SDK\Diagnostics</Filter>
-    </ClCompile>
     <ClCompile Include="MidiHighResolutionValueDisplayFormatter.cpp">
       <Filter>SDK\Display</Filter>
     </ClCompile>
     <ClCompile Include="MidiSettingsApp.cpp">
       <Filter>SDK\Settings</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiSetup.cpp">
-      <Filter>SDK\Setups</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiSetupsManager.cpp">
-      <Filter>SDK\Setups</Filter>
     </ClCompile>
     <ClCompile Include="MidiTransportInformation.cpp">
       <Filter>SDK\Transports</Filter>
@@ -77,20 +65,11 @@
     <ClInclude Include="MidiSessionSettings.h">
       <Filter>SDK\Session</Filter>
     </ClInclude>
-    <ClInclude Include="MidiDiagnostics.h">
-      <Filter>SDK\Diagnostics</Filter>
-    </ClInclude>
     <ClInclude Include="MidiHighResolutionValueDisplayFormatter.h">
       <Filter>SDK\Display</Filter>
     </ClInclude>
     <ClInclude Include="MidiSettingsApp.h">
       <Filter>SDK\Settings</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiSetup.h">
-      <Filter>SDK\Setups</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiSetupsManager.h">
-      <Filter>SDK\Setups</Filter>
     </ClInclude>
     <ClInclude Include="MidiTransportInformation.h">
       <Filter>SDK\Transports</Filter>
@@ -156,9 +135,6 @@
     </Midl>
     <Midl Include="MidiTransportInformation.idl">
       <Filter>SDK\Transports</Filter>
-    </Midl>
-    <Midl Include="MidiSettingsApp.idl">
-      <Filter>SDK\Settings</Filter>
     </Midl>
     <Midl Include="IMidiTransportSettingsData.idl">
       <Filter>SDK\Transports</Filter>

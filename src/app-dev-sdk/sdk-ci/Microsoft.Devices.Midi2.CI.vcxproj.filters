@@ -10,6 +10,7 @@
   <ItemGroup>
     <None Include="Microsoft_Devices_Midi2_CI.def" />
     <None Include="PropertySheet.props" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="readme.txt" />
@@ -31,6 +32,9 @@
     </Midl>
     <Midl Include="MidiProperty.idl">
       <Filter>SDK\Properties</Filter>
+    </Midl>
+    <Midl Include="MidiCIReceiveProcessor.idl">
+      <Filter>SDK</Filter>
     </Midl>
   </ItemGroup>
 </Project>
