@@ -7,21 +7,11 @@
 // ============================================================================
 
 
-import "MidiSetup.idl";
 
-namespace Microsoft.Devices.Midi2
+namespace Microsoft.Devices.Midi2.SysEx
 {
-    [default_interface]
-    runtimeclass MidiSetupsManager
+    runtimeclass MidiSysEx8Sender
     {
-        MidiSetupsManager();
+    };
 
-        MidiSetup Current{ get; };
-        void SwitchTo(MidiSetup setup);
-
-        void AddNew(MidiSetup setup);
-        void Save(MidiSetup setup);
-
-        void Delete(String setupId);
-    }
 }

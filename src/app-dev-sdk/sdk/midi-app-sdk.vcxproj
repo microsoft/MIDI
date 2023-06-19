@@ -115,9 +115,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="MidiDiagnostics.h">
-      <DependentUpon>MidiDiagnostics.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiEndpointDisplayFormatter.h">
       <DependentUpon>MidiEndpointDisplayFormatter.idl</DependentUpon>
     </ClInclude>
@@ -159,12 +156,6 @@
     <ClInclude Include="MidiSettingsApp.h">
       <DependentUpon>MidiSettingsApp.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiSetup.h">
-      <DependentUpon>MidiSetup.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiSetupsManager.h">
-      <DependentUpon>MidiSetupsManager.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiTransportInformation.h">
       <DependentUpon>MidiTransportInformation.idl</DependentUpon>
     </ClInclude>
@@ -183,19 +174,10 @@
     <ClInclude Include="MidiSession.h">
       <DependentUpon>MidiSession.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiProfile.h">
-      <DependentUpon>MidiProfile.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiProperty.h">
-      <DependentUpon>MidiProperty.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Generated Files\module.g.cpp" />
-    <ClCompile Include="MidiDiagnostics.cpp">
-      <DependentUpon>MidiDiagnostics.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiEndpointDisplayFormatter.cpp">
       <DependentUpon>MidiEndpointDisplayFormatter.idl</DependentUpon>
     </ClCompile>
@@ -235,12 +217,6 @@
     <ClCompile Include="MidiSettingsApp.cpp">
       <DependentUpon>MidiSettingsApp.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiSetup.cpp">
-      <DependentUpon>MidiSetup.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiSetupsManager.cpp">
-      <DependentUpon>MidiSetupsManager.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiTransportInformation.cpp">
       <DependentUpon>MidiTransportInformation.idl</DependentUpon>
     </ClCompile>
@@ -259,12 +235,6 @@
     <ClCompile Include="MidiSession.cpp">
       <DependentUpon>MidiSession.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiProfile.cpp">
-      <DependentUpon>MidiProfile.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiProperty.cpp">
-      <DependentUpon>MidiProperty.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -273,7 +243,6 @@
     <Midl Include="IMidiEndpointSettingsData.idl" />
     <Midl Include="IMidiTransportSettingsData.idl" />
     <Midl Include="MidiChannel.idl" />
-    <Midl Include="MidiDiagnostics.idl" />
     <Midl Include="MidiEndpointInformation.idl" />
     <Midl Include="MidiEndpointNativeDataFormatType.idl" />
     <Midl Include="MidiFunctionBlockDirection.idl" />
@@ -289,14 +258,10 @@
     <Midl Include="MidiGroupTerminalBlock.idl" />
     <Midl Include="MidiLocalizedStrings.idl" />
     <Midl Include="MidiMessageType.idl" />
-    <Midl Include="MidiProfile.idl" />
-    <Midl Include="MidiProperty.idl" />
     <Midl Include="MidiServices.idl" />
     <Midl Include="MidiSession.idl" />
     <Midl Include="MidiSessionSettings.idl" />
     <Midl Include="MidiSettingsApp.idl" />
-    <Midl Include="MidiSetup.idl" />
-    <Midl Include="MidiSetupsManager.idl" />
     <Midl Include="MidiTransportInformation.idl" />
     <Midl Include="Ump.idl" />
     <Midl Include="UmpUtilities.idl" />

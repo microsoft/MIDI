@@ -6,9 +6,7 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-import "MidiSetup.idl";
-
-namespace Microsoft.Devices.Midi2
+namespace Microsoft.Devices.Midi2.Setups
 {
     [default_interface]
     runtimeclass MidiSetup

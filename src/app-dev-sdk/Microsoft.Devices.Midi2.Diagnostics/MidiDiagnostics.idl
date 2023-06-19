@@ -8,7 +8,7 @@
 
 import "MidiTransportInformation.idl";
 
-namespace Microsoft.Devices.Midi2
+namespace Microsoft.Devices.Midi2.Diagnostics
 {
     [default_interface]
     runtimeclass MidiDiagnostics
