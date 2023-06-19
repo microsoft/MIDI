@@ -10,6 +10,7 @@
 import "MidiFunctionBlockDirection.idl";
 import "MidiFunctionBlockUIHint.idl";
 import "Ump.idl";
+import "MidiGroup.idl";
 
 namespace Microsoft.Devices.Midi2
 {

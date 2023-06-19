@@ -9,9 +9,10 @@
 // class that wraps the DeviceInformation class and provides better access to properties
 // This is the PnP information provided by drivers and transport plugins, not the 
 // in-protocol information. We may revisit that in the future, but having transports
-// do function block and endpoint queries, and in a resonable time, is a heavy lift
+// do function block and endpoint queries, and in a reasonable time, is a heavy lift
 
 import "MidiEndpoint.idl";
+
 import "MidiGroupTerminalBlock.idl";
 import "MidiEndpointNativeDataFormatType.idl";
 
@@ -43,7 +44,7 @@ namespace Microsoft.Devices.Midi2
         String UniqueIdentifier{ get; };
 
         // tells us if this is a converted MIDI 1.0 byte stream port, or native UMP endpoint
-        MidiEndpointType EndpointType{ get; };
+        MidiEndpointNativeDataFormatType EndpointType{ get; };
 
         Boolean HasGroupTerminalBlocks{ get; };
         IVector<MidiGroupTerminalBlock>GroupTerminalBlocks{ get; };  // these are USB-specific, created at enumeration time, and do not change
@@ -51,7 +52,7 @@ namespace Microsoft.Devices.Midi2
         Windows.Devices.Enumeration.DeviceThumbnail DeviceThumbnail{ get; };
 
         // maps to underlying DeviceInformation properties
-        IMapView<winrt::hstring, IInspectable const&> Properties() { get; };
+ //       IMapView<String, IInspectable const&> Properties() { get; };
 
         // original DeviceInformation object
         //Windows.Devices.Enumeration.DeviceInformation DeviceInformation{ get; };

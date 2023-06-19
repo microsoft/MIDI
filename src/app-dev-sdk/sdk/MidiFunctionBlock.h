@@ -23,8 +23,8 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         winrt::Microsoft::Devices::Midi2::MidiFunctionBlockUIHint UIHint();
         bool IsMidi10Connection();
         bool IsBandwidthRestricted();
-        uint8_t FirstGroupIndex();
-        uint8_t GroupSpanCount();
+        winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiGroup> IncludedGroups();
+        winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::Ump> OriginalResponses();
         uint8_t MidiCIMessageVersionFormat();
         uint8_t MaxSysEx8Streams();
     };

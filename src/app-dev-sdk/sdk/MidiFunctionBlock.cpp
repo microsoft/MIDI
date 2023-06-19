@@ -11,7 +11,6 @@
 #include "MidiFunctionBlock.h"
 #include "MidiFunctionBlock.g.cpp"
 
-
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     uint8_t MidiFunctionBlock::Number()
@@ -38,11 +37,11 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
-    uint8_t MidiFunctionBlock::FirstGroupIndex()
+    winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiGroup> MidiFunctionBlock::IncludedGroups()
     {
         throw hresult_not_implemented();
     }
-    uint8_t MidiFunctionBlock::GroupSpanCount()
+    winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::Ump> MidiFunctionBlock::OriginalResponses()
     {
         throw hresult_not_implemented();
     }

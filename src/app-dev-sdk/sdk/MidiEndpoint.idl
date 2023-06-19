@@ -13,7 +13,6 @@
 import "MidiEndpointInformation.idl";
 import "MidiFunctionBlock.idl";
 import "MidiEndpointNativeDataFormatType.idl";
-import "MidiDeviceSelectorEndpointType.idl";
 import "Ump.idl";
 
 namespace Microsoft.Devices.Midi2
