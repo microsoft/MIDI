@@ -18,32 +18,32 @@
     <WindowsTargetPlatformMinVersion>10.0.17134.0</WindowsTargetPlatformMinVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-	<ItemGroup Label="ProjectConfigurations">
-		<ProjectConfiguration Include="Debug|ARM64">
-			<Configuration>Debug</Configuration>
-			<Platform>ARM64</Platform>
-		</ProjectConfiguration>
-		<ProjectConfiguration Include="Debug|ARM64EC">
-			<Configuration>Debug</Configuration>
-			<Platform>ARM64EC</Platform>
-		</ProjectConfiguration>
-		<ProjectConfiguration Include="Debug|x64">
-			<Configuration>Debug</Configuration>
-			<Platform>x64</Platform>
-		</ProjectConfiguration>
-		<ProjectConfiguration Include="Release|ARM64">
-			<Configuration>Release</Configuration>
-			<Platform>ARM64</Platform>
-		</ProjectConfiguration>
-		<ProjectConfiguration Include="Release|ARM64EC">
-			<Configuration>Release</Configuration>
-			<Platform>ARM64EC</Platform>
-		</ProjectConfiguration>
-		<ProjectConfiguration Include="Release|x64">
-			<Configuration>Release</Configuration>
-			<Platform>x64</Platform>
-		</ProjectConfiguration>
-	</ItemGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64EC">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64EC</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64EC">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64EC</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
   <PropertyGroup Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <PlatformToolset>v143</PlatformToolset>
@@ -128,6 +128,11 @@
     <Midl Include="MidiSysEx7Sender.idl" />
     <Midl Include="MidiSysEx8Sender.idl" />
     <Midl Include="MidiSysExReceiveProcessor.idl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\sdk\midi-app-sdk.vcxproj">
+      <Project>{3aa50484-e4c1-41fb-9ae4-feea724e6077}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

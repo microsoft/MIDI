@@ -10,6 +10,7 @@
   <ItemGroup>
     <None Include="Microsoft_Devices_Midi2_SysExProcessor.def" />
     <None Include="PropertySheet.props" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="readme.txt" />
