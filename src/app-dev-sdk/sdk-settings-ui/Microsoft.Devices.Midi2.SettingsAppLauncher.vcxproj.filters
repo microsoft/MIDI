@@ -10,6 +10,7 @@
   <ItemGroup>
     <None Include="Microsoft_Devices_Midi2_SettingsAppLauncher.def" />
     <None Include="PropertySheet.props" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="readme.txt" />
@@ -20,7 +21,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="SettingsApp.idl">
+    <Midl Include="MidiSettingsApp.idl">
       <Filter>SDK</Filter>
     </Midl>
   </ItemGroup>

@@ -10,7 +10,6 @@ import "Ump32.idl";
 import "Ump64.idl";
 import "Ump96.idl";
 import "Ump128.idl";
-import "MidiStream.idl";
 
 
 namespace Microsoft.Devices.Midi2.Messages

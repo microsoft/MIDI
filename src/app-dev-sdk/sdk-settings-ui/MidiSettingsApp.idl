@@ -6,7 +6,6 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-import "MidiTransportInformation.idl";
 
 namespace Microsoft.Devices.Midi2.SettingsUI
 {
