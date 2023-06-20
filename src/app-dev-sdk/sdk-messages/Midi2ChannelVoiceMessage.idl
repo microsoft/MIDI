@@ -6,13 +6,14 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-import "MidiMessage.idl";
+import "Ump64.idl";
 
 namespace Microsoft.Devices.Midi2.Messages
 {
-	unsealed runtimeclass Midi2ChannelVoiceMessage : MidiMessage
+	unsealed runtimeclass Midi2ChannelVoiceMessage : Ump64
 	{
-		UInt8 Channel { get; };
+		UInt8 Group { get; set; };
+		UInt8 Channel { get; set; };
 	};
 }
 

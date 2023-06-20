@@ -6,16 +6,15 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-import "MidiMessage.idl";
 import "Midi2ChannelVoiceMessage.idl";
 
 namespace Microsoft.Devices.Midi2.Messages
 {
     runtimeclass Midi2PerNoteManagementMessage : Midi2ChannelVoiceMessage
     {
-        UInt8 NoteNumber{ get; };
-        Boolean DetachPerNoteControllers{ get; };
-        Boolean ResetPerNoteControllers{ get; };
+        UInt8 NoteNumber{ get; set; };
+        Boolean DetachPerNoteControllers{ get; set; };
+        Boolean ResetPerNoteControllers{ get; set; };
     };
 }
 

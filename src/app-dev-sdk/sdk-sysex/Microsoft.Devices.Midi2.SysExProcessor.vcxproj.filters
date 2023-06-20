@@ -3,17 +3,32 @@
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
+    <ClCompile Include="MidiSysEx7Sender.cpp">
+      <Filter>SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiSysEx8Sender.cpp">
+      <Filter>SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiSysExReceiveProcessor.cpp">
+      <Filter>SDK</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
+    <ClInclude Include="MidiSysEx7Sender.h">
+      <Filter>SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiSysEx8Sender.h">
+      <Filter>SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiSysExReceiveProcessor.h">
+      <Filter>SDK</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Microsoft_Devices_Midi2_SysExProcessor.def" />
     <None Include="PropertySheet.props" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="readme.txt" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="SDK">

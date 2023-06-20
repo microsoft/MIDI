@@ -11,6 +11,7 @@ import "MidiSetup.idl";
 
 namespace Microsoft.Devices.Midi2.Setups
 {
+    [experimental]
     [default_interface]
     runtimeclass MidiSetupsManager
     {

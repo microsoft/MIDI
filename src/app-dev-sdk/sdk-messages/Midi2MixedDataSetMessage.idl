@@ -6,12 +6,11 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-import "MidiMessage.idl";
 
 namespace Microsoft.Devices.Midi2.Messages
 {
 	unsealed runtimeclass Midi2MixedDataSetMessage
 	{
-
+		void ThisIsHereJustToAllowCppWinRTGenAndCompilation();
 	};
 }

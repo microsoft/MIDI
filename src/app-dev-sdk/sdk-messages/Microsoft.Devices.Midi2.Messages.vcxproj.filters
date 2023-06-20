@@ -57,9 +57,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="Midi2Message.idl">
-      <Filter>SDK\Midi2</Filter>
-    </Midl>
     <Midl Include="Ump32.idl">
       <Filter>SDK\Ump</Filter>
     </Midl>
@@ -233,12 +230,6 @@
     </Midl>
     <Midl Include="Midi2MixedDataSetMessage.idl">
       <Filter>SDK\Midi2\MixedData</Filter>
-    </Midl>
-    <Midl Include="Midi1Message.idl">
-      <Filter>SDK\Midi1</Filter>
-    </Midl>
-    <Midl Include="MidiMessage.idl">
-      <Filter>SDK</Filter>
     </Midl>
   </ItemGroup>
 </Project>

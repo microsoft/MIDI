@@ -6,12 +6,12 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-import "MidiMessage.idl";
+import "Ump128.idl";
 
 namespace Microsoft.Devices.Midi2.Messages
 {
-	unsealed runtimeclass Midi2FlexDataMessage
+	unsealed runtimeclass Midi2FlexDataMessage : Microsoft.Devices.Midi2.Messages.Ump128
 	{
-
+		void ThisIsHereJustToAllowCppWinRTGenAndCompilationMidi2FlexDataMessage();
 	};
 }

@@ -128,7 +128,6 @@
     <Midl Include="Midi1ChannelPressureMessage.idl" />
     <Midl Include="Midi1ChannelVoiceMessage.idl" />
     <Midl Include="Midi1ControlChangeMessage.idl" />
-    <Midl Include="Midi1Message.idl" />
     <Midl Include="Midi1NoteOffMessage.idl" />
     <Midl Include="Midi1NoteOnMessage.idl" />
     <Midl Include="Midi1PitchBendMessage.idl" />
@@ -180,8 +179,6 @@
     <Midl Include="Midi2StreamMessage.idl" />
     <Midl Include="Midi2TextMessageAggregate.idl" />
     <Midl Include="Midi2UtilityMessage.idl" />
-    <Midl Include="MidiMessage.idl" />
-    <Midl Include="Midi2Message.idl" />
     <Midl Include="Ump128.idl" />
     <Midl Include="Ump32.idl" />
     <Midl Include="Ump64.idl" />

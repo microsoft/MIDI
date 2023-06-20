@@ -7,19 +7,14 @@
 // ============================================================================
 
 
+#include "pch.h"
+#include "MidiSysExReceiveProcessor.h"
+#include "MidiSysExReceiveProcessor.g.cpp"
 
-namespace Microsoft.Devices.Midi2.SysEx
+namespace winrt::Microsoft::Devices::Midi2::SysEx::implementation
 {
-    [experimental]
-    [default_interface]
-    runtimeclass MidiSysEx7Sender
+    void MidiSysExReceiveProcessor::ThisIsHereJustToAllowCppWinRTGenAndCompilation()
     {
-        MidiSysEx7Sender();
-
-        void ThisIsHereJustToAllowCppWinRTGenAndCompilation();
-
-        
-    };
-
+        throw hresult_not_implemented();
+    }
 }
-

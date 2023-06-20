@@ -6,13 +6,15 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-import "MidiMessage.idl";
 
-namespace Microsoft.Devices.Midi2.Messages
+#include "pch.h"
+#include "MidiSysEx7Sender.h"
+#include "MidiSysEx7Sender.g.cpp"
+
+namespace winrt::Microsoft::Devices::Midi2::SysEx::implementation
 {
-    unsealed runtimeclass Midi1Message : MidiMessage
+    void MidiSysEx7Sender::ThisIsHereJustToAllowCppWinRTGenAndCompilation()
     {
-
-    };
+        throw hresult_not_implemented();
+    }
 }
-

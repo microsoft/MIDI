@@ -11,11 +11,12 @@ namespace Microsoft.Devices.Midi2.SettingsUI
 {
     enum MidiSettingsAppDisplayMode
     {
-        UseDefault = 0,
-        ForceDarkMode,
-        ForceLightMode
+        DisplayModeUseDefault = 0,
+        DisplayModeForceDarkMode,
+        DisplayModeForceLightMode
     };
 
+    [experimental]
     [default_interface]
     runtimeclass MidiSettingsApp
     {

@@ -7,19 +7,21 @@
 // ============================================================================
 
 
+#pragma once
+#include "MidiSysEx8Sender.g.h"
 
-namespace Microsoft.Devices.Midi2.SysEx
+namespace winrt::Microsoft::Devices::Midi2::SysEx::implementation
 {
-    [experimental]
-    [default_interface]
-    runtimeclass MidiSysEx7Sender
+    struct MidiSysEx8Sender : MidiSysEx8SenderT<MidiSysEx8Sender>
     {
-        MidiSysEx7Sender();
+        MidiSysEx8Sender() = default;
 
         void ThisIsHereJustToAllowCppWinRTGenAndCompilation();
-
-        
     };
-
 }
-
+namespace winrt::Microsoft::Devices::Midi2::SysEx::factory_implementation
+{
+    struct MidiSysEx8Sender : MidiSysEx8SenderT<MidiSysEx8Sender, implementation::MidiSysEx8Sender>
+    {
+    };
+}

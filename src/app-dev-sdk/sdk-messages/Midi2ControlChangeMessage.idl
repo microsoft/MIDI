@@ -6,15 +6,14 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-import "MidiMessage.idl";
 import "Midi2ChannelVoiceMessage.idl";
 
 namespace Microsoft.Devices.Midi2.Messages
 {
     runtimeclass Midi2ControlChangeMessage : Midi2ChannelVoiceMessage
     {
-        UInt8 Index{ get; };
-        UInt32 Data{ get; };
+        UInt8 Index{ get; set; };
+        UInt32 Data{ get; set; };
     };
 }
 

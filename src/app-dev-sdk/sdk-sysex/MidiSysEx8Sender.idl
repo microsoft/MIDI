@@ -10,8 +10,14 @@
 
 namespace Microsoft.Devices.Midi2.SysEx
 {
+    [experimental]
+    [default_interface]
     runtimeclass MidiSysEx8Sender
     {
+        MidiSysEx8Sender();
+
+        void ThisIsHereJustToAllowCppWinRTGenAndCompilation();
+
     };
 
 }

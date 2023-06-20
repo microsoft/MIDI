@@ -10,8 +10,15 @@
 
 namespace Microsoft.Devices.Midi2.SysEx
 {
+    [experimental]
+    [default_interface]
     runtimeclass MidiSysExReceiveProcessor
     {
+        MidiSysExReceiveProcessor();
+
+        void ThisIsHereJustToAllowCppWinRTGenAndCompilation();
+
+
     };
 
 }

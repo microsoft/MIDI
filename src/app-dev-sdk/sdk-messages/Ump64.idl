@@ -9,9 +9,9 @@
 
 namespace Microsoft.Devices.Midi2.Messages
 {
-    struct Ump64
+    unsealed runtimeclass Ump64 : Microsoft.Devices.Midi2.Ump
     {
-        UInt32 Word1;
-        UInt32 Word2;
+        UInt32 Word1{ get; set; };
+        UInt32 Word2{ get; set; };
     };
 }

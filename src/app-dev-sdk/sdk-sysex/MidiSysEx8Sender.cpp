@@ -7,19 +7,14 @@
 // ============================================================================
 
 
+#include "pch.h"
+#include "MidiSysEx8Sender.h"
+#include "MidiSysEx8Sender.g.cpp"
 
-namespace Microsoft.Devices.Midi2.SysEx
+namespace winrt::Microsoft::Devices::Midi2::SysEx::implementation
 {
-    [experimental]
-    [default_interface]
-    runtimeclass MidiSysEx7Sender
+    void MidiSysEx8Sender::ThisIsHereJustToAllowCppWinRTGenAndCompilation()
     {
-        MidiSysEx7Sender();
-
-        void ThisIsHereJustToAllowCppWinRTGenAndCompilation();
-
-        
-    };
-
+        throw hresult_not_implemented();
+    }
 }
-

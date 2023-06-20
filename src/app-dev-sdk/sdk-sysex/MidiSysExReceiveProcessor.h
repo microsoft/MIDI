@@ -7,19 +7,21 @@
 // ============================================================================
 
 
+#pragma once
+#include "MidiSysExReceiveProcessor.g.h"
 
-namespace Microsoft.Devices.Midi2.SysEx
+namespace winrt::Microsoft::Devices::Midi2::SysEx::implementation
 {
-    [experimental]
-    [default_interface]
-    runtimeclass MidiSysEx7Sender
+    struct MidiSysExReceiveProcessor : MidiSysExReceiveProcessorT<MidiSysExReceiveProcessor>
     {
-        MidiSysEx7Sender();
+        MidiSysExReceiveProcessor() = default;
 
         void ThisIsHereJustToAllowCppWinRTGenAndCompilation();
-
-        
     };
-
 }
-
+namespace winrt::Microsoft::Devices::Midi2::SysEx::factory_implementation
+{
+    struct MidiSysExReceiveProcessor : MidiSysExReceiveProcessorT<MidiSysExReceiveProcessor, implementation::MidiSysExReceiveProcessor>
+    {
+    };
+}
