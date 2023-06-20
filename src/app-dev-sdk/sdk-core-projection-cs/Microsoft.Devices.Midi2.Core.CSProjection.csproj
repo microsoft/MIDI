@@ -27,11 +27,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\sdk\midi-app-sdk.vcxproj" />
+    <None Include="nuget\Microsoft.Devices.Midi2.nuspec" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="nuget\Microsoft.Devices.Midi2.nuspec" />
+    <ProjectReference Include="..\sdk-core\Microsoft.Devices.Midi2.Core.vcxproj" />
   </ItemGroup>
 
 </Project>
