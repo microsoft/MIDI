@@ -23,32 +23,14 @@
     <Filter Include="SDK\Enumeration">
       <UniqueIdentifier>{82d4c35a-889e-43da-aff9-d630e51b0046}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SDK\CI">
-      <UniqueIdentifier>{ecdbb882-7ad0-43b5-b67c-513e55d2774a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="SDK\CI\Properties">
-      <UniqueIdentifier>{d1f0b3c0-4ecb-436a-bc1c-d206659a3463}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="SDK\CI\Profiles">
-      <UniqueIdentifier>{9be63908-a776-4a04-a13b-9b8bcd617e32}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Internal">
       <UniqueIdentifier>{6abb387d-1da9-403e-bb35-70e4359f1b00}</UniqueIdentifier>
     </Filter>
     <Filter Include="SDK\Session">
       <UniqueIdentifier>{6427be3d-78fd-4fff-9bf4-2353b462bfc3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SDK\Setups">
-      <UniqueIdentifier>{188d4647-fc87-483e-84ab-05362b62f872}</UniqueIdentifier>
-    </Filter>
     <Filter Include="SDK\Transports">
       <UniqueIdentifier>{7a309dc0-af6f-4fa7-8827-649ef97dcc9a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="SDK\Settings">
-      <UniqueIdentifier>{7e95fb26-1161-437e-983c-ea9bc06d7dae}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="SDK\Diagnostics">
-      <UniqueIdentifier>{44ef4305-d44c-4bf1-bae6-6488bb5a501e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -61,20 +43,11 @@
     <ClCompile Include="MidiSessionSettings.cpp">
       <Filter>SDK\Session</Filter>
     </ClCompile>
-    <ClCompile Include="MidiDiagnostics.cpp">
-      <Filter>SDK\Diagnostics</Filter>
-    </ClCompile>
     <ClCompile Include="MidiHighResolutionValueDisplayFormatter.cpp">
       <Filter>SDK\Display</Filter>
     </ClCompile>
     <ClCompile Include="MidiSettingsApp.cpp">
       <Filter>SDK\Settings</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiSetup.cpp">
-      <Filter>SDK\Setups</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiSetupsManager.cpp">
-      <Filter>SDK\Setups</Filter>
     </ClCompile>
     <ClCompile Include="MidiTransportInformation.cpp">
       <Filter>SDK\Transports</Filter>
@@ -92,20 +65,11 @@
     <ClInclude Include="MidiSessionSettings.h">
       <Filter>SDK\Session</Filter>
     </ClInclude>
-    <ClInclude Include="MidiDiagnostics.h">
-      <Filter>SDK\Diagnostics</Filter>
-    </ClInclude>
     <ClInclude Include="MidiHighResolutionValueDisplayFormatter.h">
       <Filter>SDK\Display</Filter>
     </ClInclude>
     <ClInclude Include="MidiSettingsApp.h">
       <Filter>SDK\Settings</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiSetup.h">
-      <Filter>SDK\Setups</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiSetupsManager.h">
-      <Filter>SDK\Setups</Filter>
     </ClInclude>
     <ClInclude Include="MidiTransportInformation.h">
       <Filter>SDK\Transports</Filter>
@@ -139,12 +103,6 @@
     <Midl Include="MidiEndpointDisplayFormatter.idl">
       <Filter>SDK\Display</Filter>
     </Midl>
-    <Midl Include="MidiProfile.idl">
-      <Filter>SDK\CI\Profiles</Filter>
-    </Midl>
-    <Midl Include="MidiProperty.idl">
-      <Filter>SDK\CI\Properties</Filter>
-    </Midl>
     <Midl Include="MidiFunctionBlockDirection.idl">
       <Filter>SDK\Endpoints</Filter>
     </Midl>
@@ -175,20 +133,8 @@
     <Midl Include="MidiHighResolutionValueDisplayFormatter.idl">
       <Filter>SDK\Display</Filter>
     </Midl>
-    <Midl Include="MidiSetupsManager.idl">
-      <Filter>SDK\Setups</Filter>
-    </Midl>
-    <Midl Include="MidiSetup.idl">
-      <Filter>SDK\Setups</Filter>
-    </Midl>
     <Midl Include="MidiTransportInformation.idl">
       <Filter>SDK\Transports</Filter>
-    </Midl>
-    <Midl Include="MidiSettingsApp.idl">
-      <Filter>SDK\Settings</Filter>
-    </Midl>
-    <Midl Include="MidiDiagnostics.idl">
-      <Filter>SDK\Diagnostics</Filter>
     </Midl>
     <Midl Include="IMidiTransportSettingsData.idl">
       <Filter>SDK\Transports</Filter>

@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props')" />
+  <PropertyGroup Label="Globals">
+    <CppWinRTOptimized>true</CppWinRTOptimized>
+    <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
+    <CppWinRTGenerateWindowsMetadata>true</CppWinRTGenerateWindowsMetadata>
+    <MinimalCoreWin>true</MinimalCoreWin>
+    <ProjectGuid>{b322045d-5106-4b70-89e4-094151cc840c}</ProjectGuid>
+    <ProjectName>Microsoft.Devices.Midi2.Messages</ProjectName>
+    <RootNamespace>Microsoft.Devices.Midi2.Messages</RootNamespace>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
+    <AppContainerApplication>true</AppContainerApplication>
+    <ApplicationType>Windows Store</ApplicationType>
+    <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
+    <WindowsTargetPlatformVersion Condition=" '$(WindowsTargetPlatformVersion)' == '' ">10.0.20348.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformMinVersion>10.0.20348.0</WindowsTargetPlatformMinVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64EC">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64EC</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64EC">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64EC</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset Condition="'$(VisualStudioVersion)' == '16.0'">v142</PlatformToolset>
+    <PlatformToolset Condition="'$(VisualStudioVersion)' == '15.0'">v141</PlatformToolset>
+    <PlatformToolset Condition="'$(VisualStudioVersion)' == '14.0'">v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="PropertySheet.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>$(IntDir)pch.pch</PrecompiledHeaderOutputFile>
+      <WarningLevel>Level4</WarningLevel>
+      <AdditionalOptions>%(AdditionalOptions) /bigobj</AdditionalOptions>
+      <PreprocessorDefinitions>_WINRT_DLL;WIN32_LEAN_AND_MEAN;WINRT_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalUsingDirectories>$(WindowsSDK_WindowsMetadata);$(AdditionalUsingDirectories)</AdditionalUsingDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
+      <ModuleDefinitionFile>Microsoft_Devices_Midi2_Messages.def</ModuleDefinitionFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+    <ClCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
+    <ClCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Microsoft_Devices_Midi2_Messages.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="PropertySheet.props" />
+    <Text Include="readme.txt">
+      <DeploymentContent>false</DeploymentContent>
+    </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="Midi1ChannelPressureMessage.idl" />
+    <Midl Include="Midi1ChannelVoiceMessage.idl" />
+    <Midl Include="Midi1ControlChangeMessage.idl" />
+    <Midl Include="Midi1NoteOffMessage.idl" />
+    <Midl Include="Midi1NoteOnMessage.idl" />
+    <Midl Include="Midi1PitchBendMessage.idl" />
+    <Midl Include="Midi1PolyPressureMessage.idl" />
+    <Midl Include="Midi1ProgramChangeMessage.idl" />
+    <Midl Include="Midi2AssignableControllerMessage.idl" />
+    <Midl Include="Midi2AssignablePerNoteControllerMessage.idl" />
+    <Midl Include="Midi2ChannelPressureMessage.idl" />
+    <Midl Include="Midi2ChannelVoiceMessage.idl" />
+    <Midl Include="Midi2ControlChangeMessage.idl" />
+    <Midl Include="Midi2DeltaClockstampTicksPerQNMessage.idl" />
+    <Midl Include="Midi2DeltaClockstampTicksSinceLastEventMessage.idl" />
+    <Midl Include="Midi2DeviceIdentityNotificationMessage.idl" />
+    <Midl Include="Midi2EndOfClipMessage.idl" />
+    <Midl Include="Midi2EndpointDiscoveryMessage.idl" />
+    <Midl Include="Midi2EndpointInfoNotificationMessage.idl" />
+    <Midl Include="Midi2EndpointNameNotificationMessage.idl" />
+    <Midl Include="Midi2FlexDataMessage.idl" />
+    <Midl Include="Midi2FunctionBlockDiscoveryMessage.idl" />
+    <Midl Include="Midi2FunctionBlockInfoNotificationMessage.idl" />
+    <Midl Include="Midi2FunctionBlockNameNotification.idl" />
+    <Midl Include="Midi2JitterReductionClockMessage.idl" />
+    <Midl Include="Midi2JitterReductionTimestampMessage.idl" />
+    <Midl Include="Midi2MixedDataSetMessage.idl" />
+    <Midl Include="Midi2NoopMessage.idl" />
+    <Midl Include="Midi2NoteOffMessage.idl" />
+    <Midl Include="Midi2NoteOnMessage.idl" />
+    <Midl Include="Midi2PerNoteManagementMessage.idl" />
+    <Midl Include="Midi2PerNotePitchBendMessage.idl" />
+    <Midl Include="Midi2PitchBendMessage.idl" />
+    <Midl Include="Midi2PolyPressureMessage.idl" />
+    <Midl Include="Midi2ProductInstanceIdNotificationMessage.idl" />
+    <Midl Include="Midi2ProgramChangeMessage.idl" />
+    <Midl Include="Midi2SysEx7Message.idl" />
+    <Midl Include="Midi2SysEx8Message.idl" />
+    <Midl Include="Midi2TextMessage.idl" />
+    <Midl Include="Midi2RegisteredControllerMessage.idl" />
+    <Midl Include="Midi2RegisteredPerNoteControllerMessage.idl" />
+    <Midl Include="Midi2RelativeAssignableControllerMessage.idl" />
+    <Midl Include="Midi2RelativeRegisteredControllerMessage.idl" />
+    <Midl Include="Midi2SetChordNameMessage.idl" />
+    <Midl Include="Midi2SetKeySignatureMessage.idl" />
+    <Midl Include="Midi2SetMetronomeMessage.idl" />
+    <Midl Include="Midi2SetTempoMessage.idl" />
+    <Midl Include="Midi2SetTimeSignatureMessage.idl" />
+    <Midl Include="Midi2StartOfClipMessage.idl" />
+    <Midl Include="Midi2StreamConfigurationNotificationMessage.idl" />
+    <Midl Include="Midi2StreamConfigurationRequestMessage.idl" />
+    <Midl Include="Midi2StreamMessage.idl" />
+    <Midl Include="Midi2TextMessageAggregate.idl" />
+    <Midl Include="Midi2UtilityMessage.idl" />
+    <Midl Include="Ump128.idl" />
+    <Midl Include="Ump32.idl" />
+    <Midl Include="Ump64.idl" />
+    <Midl Include="Ump96.idl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\sdk\midi-app-sdk.vcxproj">
+      <Project>{3aa50484-e4c1-41fb-9ae4-feea724e6077}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets')" />
+  </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets'))" />
+  </Target>
+</Project>

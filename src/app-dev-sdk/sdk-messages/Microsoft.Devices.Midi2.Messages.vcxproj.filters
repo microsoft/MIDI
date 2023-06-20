@@ -1,0 +1,235 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Microsoft_Devices_Midi2_Messages.def" />
+    <None Include="packages.config" />
+    <None Include="PropertySheet.props" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="readme.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="SDK">
+      <UniqueIdentifier>{f18f404b-38a7-4d86-bd1e-cbb573b87dc6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Midi1">
+      <UniqueIdentifier>{47c3d860-1098-48fa-a785-0febc5228800}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Midi1\ChannelVoice">
+      <UniqueIdentifier>{5a656ef4-35f4-4983-b11a-696cf725fc2a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Midi2">
+      <UniqueIdentifier>{7a9d6689-dd63-4ebb-85db-2909bf708adb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Midi2\ChannelVoice">
+      <UniqueIdentifier>{910a1fac-287b-439a-a102-c4eb53e5eb70}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Midi2\Stream">
+      <UniqueIdentifier>{ba20eb61-bf34-4ace-a62f-98d079fb6774}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Midi2\Utility">
+      <UniqueIdentifier>{b2b70a1f-ef88-45a8-a13a-9e8d92616e7a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Midi2\FlexData">
+      <UniqueIdentifier>{76c696a7-a8a1-4371-8fb5-3df0a95af132}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Midi2\FlexData\Text">
+      <UniqueIdentifier>{bf5730da-1632-4d24-9d9e-95a4d42c2c48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Midi2\System">
+      <UniqueIdentifier>{920583c9-d7b2-4181-a207-13449c94fb1d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Midi2\SysEx">
+      <UniqueIdentifier>{148964ed-c66f-4f0b-b794-2b3197284efe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Midi2\MixedData">
+      <UniqueIdentifier>{5cffd09b-da3d-4132-a9d1-15ec3c8ddb85}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Ump">
+      <UniqueIdentifier>{306a6802-ef67-4b7e-80d6-b3f6b5407497}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="Ump32.idl">
+      <Filter>SDK\Ump</Filter>
+    </Midl>
+    <Midl Include="Ump64.idl">
+      <Filter>SDK\Ump</Filter>
+    </Midl>
+    <Midl Include="Ump96.idl">
+      <Filter>SDK\Ump</Filter>
+    </Midl>
+    <Midl Include="Ump128.idl">
+      <Filter>SDK\Ump</Filter>
+    </Midl>
+    <Midl Include="Midi2AssignableControllerMessage.idl">
+      <Filter>SDK\Midi2\ChannelVoice</Filter>
+    </Midl>
+    <Midl Include="Midi2AssignablePerNoteControllerMessage.idl">
+      <Filter>SDK\Midi2\ChannelVoice</Filter>
+    </Midl>
+    <Midl Include="Midi2ChannelPressureMessage.idl">
+      <Filter>SDK\Midi2\ChannelVoice</Filter>
+    </Midl>
+    <Midl Include="Midi2ChannelVoiceMessage.idl">
+      <Filter>SDK\Midi2\ChannelVoice</Filter>
+    </Midl>
+    <Midl Include="Midi2NoteOffMessage.idl">
+      <Filter>SDK\Midi2\ChannelVoice</Filter>
+    </Midl>
+    <Midl Include="Midi2StreamMessage.idl">
+      <Filter>SDK\Midi2\Stream</Filter>
+    </Midl>
+    <Midl Include="Midi2EndpointDiscoveryMessage.idl">
+      <Filter>SDK\Midi2\Stream</Filter>
+    </Midl>
+    <Midl Include="Midi2EndpointInfoNotificationMessage.idl">
+      <Filter>SDK\Midi2\Stream</Filter>
+    </Midl>
+    <Midl Include="Midi2DeviceIdentityNotificationMessage.idl">
+      <Filter>SDK\Midi2\Stream</Filter>
+    </Midl>
+    <Midl Include="Midi2EndpointNameNotificationMessage.idl">
+      <Filter>SDK\Midi2\Stream</Filter>
+    </Midl>
+    <Midl Include="Midi2ProductInstanceIdNotificationMessage.idl">
+      <Filter>SDK\Midi2\Stream</Filter>
+    </Midl>
+    <Midl Include="Midi2StreamConfigurationRequestMessage.idl">
+      <Filter>SDK\Midi2\Stream</Filter>
+    </Midl>
+    <Midl Include="Midi2StreamConfigurationNotificationMessage.idl">
+      <Filter>SDK\Midi2\Stream</Filter>
+    </Midl>
+    <Midl Include="Midi2FunctionBlockDiscoveryMessage.idl">
+      <Filter>SDK\Midi2\Stream</Filter>
+    </Midl>
+    <Midl Include="Midi2FunctionBlockInfoNotificationMessage.idl">
+      <Filter>SDK\Midi2\Stream</Filter>
+    </Midl>
+    <Midl Include="Midi2FunctionBlockNameNotification.idl">
+      <Filter>SDK\Midi2\Stream</Filter>
+    </Midl>
+    <Midl Include="Midi2StartOfClipMessage.idl">
+      <Filter>SDK\Midi2\Stream</Filter>
+    </Midl>
+    <Midl Include="Midi2EndOfClipMessage.idl">
+      <Filter>SDK\Midi2\Stream</Filter>
+    </Midl>
+    <Midl Include="Midi2UtilityMessage.idl">
+      <Filter>SDK\Midi2\Utility</Filter>
+    </Midl>
+    <Midl Include="Midi2NoopMessage.idl">
+      <Filter>SDK\Midi2\Utility</Filter>
+    </Midl>
+    <Midl Include="Midi2JitterReductionClockMessage.idl">
+      <Filter>SDK\Midi2\Utility</Filter>
+    </Midl>
+    <Midl Include="Midi2JitterReductionTimestampMessage.idl">
+      <Filter>SDK\Midi2\Utility</Filter>
+    </Midl>
+    <Midl Include="Midi2DeltaClockstampTicksPerQNMessage.idl">
+      <Filter>SDK\Midi2\Utility</Filter>
+    </Midl>
+    <Midl Include="Midi2DeltaClockstampTicksSinceLastEventMessage.idl">
+      <Filter>SDK\Midi2\Utility</Filter>
+    </Midl>
+    <Midl Include="Midi2NoteOnMessage.idl">
+      <Filter>SDK\Midi2\ChannelVoice</Filter>
+    </Midl>
+    <Midl Include="Midi2PolyPressureMessage.idl">
+      <Filter>SDK\Midi2\ChannelVoice</Filter>
+    </Midl>
+    <Midl Include="Midi2RegisteredPerNoteControllerMessage.idl">
+      <Filter>SDK\Midi2\ChannelVoice</Filter>
+    </Midl>
+    <Midl Include="Midi2PerNoteManagementMessage.idl">
+      <Filter>SDK\Midi2\ChannelVoice</Filter>
+    </Midl>
+    <Midl Include="Midi2ControlChangeMessage.idl">
+      <Filter>SDK\Midi2\ChannelVoice</Filter>
+    </Midl>
+    <Midl Include="Midi2RegisteredControllerMessage.idl">
+      <Filter>SDK\Midi2\ChannelVoice</Filter>
+    </Midl>
+    <Midl Include="Midi2RelativeAssignableControllerMessage.idl">
+      <Filter>SDK\Midi2\ChannelVoice</Filter>
+    </Midl>
+    <Midl Include="Midi2RelativeRegisteredControllerMessage.idl">
+      <Filter>SDK\Midi2\ChannelVoice</Filter>
+    </Midl>
+    <Midl Include="Midi2ProgramChangeMessage.idl">
+      <Filter>SDK\Midi2\ChannelVoice</Filter>
+    </Midl>
+    <Midl Include="Midi2PitchBendMessage.idl">
+      <Filter>SDK\Midi2\ChannelVoice</Filter>
+    </Midl>
+    <Midl Include="Midi2PerNotePitchBendMessage.idl">
+      <Filter>SDK\Midi2\ChannelVoice</Filter>
+    </Midl>
+    <Midl Include="Midi2FlexDataMessage.idl">
+      <Filter>SDK\Midi2\FlexData</Filter>
+    </Midl>
+    <Midl Include="Midi2SetTempoMessage.idl">
+      <Filter>SDK\Midi2\FlexData</Filter>
+    </Midl>
+    <Midl Include="Midi2SetTimeSignatureMessage.idl">
+      <Filter>SDK\Midi2\FlexData</Filter>
+    </Midl>
+    <Midl Include="Midi2SetMetronomeMessage.idl">
+      <Filter>SDK\Midi2\FlexData</Filter>
+    </Midl>
+    <Midl Include="Midi2SetKeySignatureMessage.idl">
+      <Filter>SDK\Midi2\FlexData</Filter>
+    </Midl>
+    <Midl Include="Midi2SetChordNameMessage.idl">
+      <Filter>SDK\Midi2\FlexData</Filter>
+    </Midl>
+    <Midl Include="Midi2TextMessage.idl">
+      <Filter>SDK\Midi2\FlexData\Text</Filter>
+    </Midl>
+    <Midl Include="Midi2TextMessageAggregate.idl">
+      <Filter>SDK\Midi2\FlexData\Text</Filter>
+    </Midl>
+    <Midl Include="Midi1ChannelPressureMessage.idl">
+      <Filter>SDK\Midi1\ChannelVoice</Filter>
+    </Midl>
+    <Midl Include="Midi1ChannelVoiceMessage.idl">
+      <Filter>SDK\Midi1\ChannelVoice</Filter>
+    </Midl>
+    <Midl Include="Midi1ControlChangeMessage.idl">
+      <Filter>SDK\Midi1\ChannelVoice</Filter>
+    </Midl>
+    <Midl Include="Midi1NoteOffMessage.idl">
+      <Filter>SDK\Midi1\ChannelVoice</Filter>
+    </Midl>
+    <Midl Include="Midi1NoteOnMessage.idl">
+      <Filter>SDK\Midi1\ChannelVoice</Filter>
+    </Midl>
+    <Midl Include="Midi1PitchBendMessage.idl">
+      <Filter>SDK\Midi1\ChannelVoice</Filter>
+    </Midl>
+    <Midl Include="Midi1PolyPressureMessage.idl">
+      <Filter>SDK\Midi1\ChannelVoice</Filter>
+    </Midl>
+    <Midl Include="Midi1ProgramChangeMessage.idl">
+      <Filter>SDK\Midi1\ChannelVoice</Filter>
+    </Midl>
+    <Midl Include="Midi2SysEx7Message.idl">
+      <Filter>SDK\Midi2\SysEx</Filter>
+    </Midl>
+    <Midl Include="Midi2SysEx8Message.idl">
+      <Filter>SDK\Midi2\SysEx</Filter>
+    </Midl>
+    <Midl Include="Midi2MixedDataSetMessage.idl">
+      <Filter>SDK\Midi2\MixedData</Filter>
+    </Midl>
+  </ItemGroup>
+</Project>

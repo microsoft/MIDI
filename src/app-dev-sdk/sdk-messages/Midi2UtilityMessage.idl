@@ -1,0 +1,20 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+import "Ump32.idl";
+
+namespace Microsoft.Devices.Midi2.Messages
+{
+	// this needs to be an abstract class
+	unsealed runtimeclass Midi2UtilityMessage : Microsoft.Devices.Midi2.Messages.Ump32
+	{
+		void ThisIsHereJustToAllowCppWinRTGenAndCompilationMidi2UtilityMessage();
+	};
+}
+
+
