@@ -285,4 +285,7 @@
   <data name="Shell_MidiServicesNavHeader.Content" xml:space="preserve">
     <value>Windows MIDI Services</value>
   </data>
+  <data name="Midi1DevicesPage_Description.Text" xml:space="preserve">
+    <value>Below is a list of all MIDI devices as seen by the legacy MIDI 1.0 APIs, and the apps which use them.</value>
+  </data>
 </root>
