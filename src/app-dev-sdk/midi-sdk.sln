@@ -5,7 +5,7 @@ VisualStudioVersion = 17.7.33711.374
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Devices.Midi2.Core", "sdk-core\Microsoft.Devices.Midi2.Core.vcxproj", "{3AA50484-E4C1-41FB-9AE4-FEEA724E6077}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Devices.Midi2.Core.CSProjection", "sdk-projections\MidiAppSdkCSharpProjection\Microsoft.Devices.Midi2.Core.CSProjection.csproj", "{FCCCC673-71D7-412A-B67E-8201A3CE1C93}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Devices.Midi2.Core.CSProjection", "sdk-core-projection-cs\Microsoft.Devices.Midi2.Core.CSProjection.csproj", "{FCCCC673-71D7-412A-B67E-8201A3CE1C93}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C3A60AEE-F167-4267-8B67-52ACAA3323A7}"
 	ProjectSection(SolutionItems) = preProject

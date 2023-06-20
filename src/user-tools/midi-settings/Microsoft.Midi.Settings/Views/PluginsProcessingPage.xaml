@@ -11,6 +11,7 @@
     mc:Ignorable="d">
 
     <Grid>
+        <TextBlock Text="Here is where you manage message processing plugins." />
 
     </Grid>
 </Page>

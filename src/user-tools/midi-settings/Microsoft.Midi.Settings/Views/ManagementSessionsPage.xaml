@@ -12,7 +12,8 @@
     mc:Ignorable="d">
 
     <Grid>
-        
+        <TextBlock Text="After the first release, this page will contain a list of all active MIDI Sessions, so you have visibility into which apps are using which devices." />
+
 
     </Grid>
 </Page>

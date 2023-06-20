@@ -11,6 +11,6 @@
     mc:Ignorable="d">
 
     <Grid>
-
+        <TextBlock Text="This page will contain your MIDI setups. These are configurations (device names, plugins, virtual endpoints, etc.) which are stored in portable JSON files." />
     </Grid>
 </Page>
