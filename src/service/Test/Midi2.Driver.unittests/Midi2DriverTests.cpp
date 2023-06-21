@@ -6,9 +6,11 @@
 
 #include "Midi2DriverTests.h"
 
+#include "MidiDefs.h"
 #include "MidiKsDef.h"
 #include "MidiKsCommon.h"
 #include "MidiKsEnum.h"
+#include "MidiXProc.h"
 #include "MidiKs.h"
 
 using namespace WEX::Logging;
@@ -57,22 +59,22 @@ void Midi2DriverTests::TestMidiIO(BOOL Cyclic)
         }
     }
 
-    LOG_OUTPUT(L"Initializing midi out");
-    VERIFY_SUCCEEDED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiOutPins[0].UMP, PAGE_SIZE, &mmcssTaskId));
-
     LOG_OUTPUT(L"Initializing midi in");
     VERIFY_SUCCEEDED(midiInDevice.Initialize(midiDeviceEnum.m_AvailableMidiInPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiInPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiInPins[0].UMP, PAGE_SIZE, &mmcssTaskId, this));
+
+    LOG_OUTPUT(L"Initializing midi out");
+    VERIFY_SUCCEEDED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiOutPins[0].UMP, PAGE_SIZE, &mmcssTaskId));
 
     LOG_OUTPUT(L"Writing midi data");
 
     QueryPerformanceCounter(&position);
-    VERIFY_SUCCEEDED(midiOutDevice.WriteMidiData((void *) &g_MidiTestData, sizeof(UMP32), position.QuadPart));
+    VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData, sizeof(UMP32), position.QuadPart));
     QueryPerformanceCounter(&position);
-    VERIFY_SUCCEEDED(midiOutDevice.WriteMidiData((void *) &g_MidiTestData, sizeof(UMP64), position.QuadPart));
+    VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData, sizeof(UMP64), position.QuadPart));
     QueryPerformanceCounter(&position);
-    VERIFY_SUCCEEDED(midiOutDevice.WriteMidiData((void *) &g_MidiTestData, sizeof(UMP96), position.QuadPart));
+    VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData, sizeof(UMP96), position.QuadPart));
     QueryPerformanceCounter(&position);
-    VERIFY_SUCCEEDED(midiOutDevice.WriteMidiData((void *) &g_MidiTestData, sizeof(UMP128), position.QuadPart));
+    VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData, sizeof(UMP128), position.QuadPart));
 
     // wait for up to 30 seconds for all the messages
     if(!allMessagesReceived.wait(30000))
@@ -124,7 +126,10 @@ void Midi2DriverTests::TestMidiIO_ManyMessages(BOOL Cyclic)
     {
         midiMessagesReceived++;
 
-        PrintMidiMessage(payload, payloadSize, sizeof(UMP32), payloadPosition);
+        if (0 != memcmp(payload, &g_MidiTestData, min(payloadSize, sizeof(g_MidiTestData))))
+        {
+            PrintMidiMessage(payload, payloadSize, sizeof(UMP32), payloadPosition);
+        }
 
         if (midiMessagesReceived == expectedMessageCount)
         {
@@ -149,18 +154,18 @@ void Midi2DriverTests::TestMidiIO_ManyMessages(BOOL Cyclic)
         }
     }
 
-    LOG_OUTPUT(L"Initializing midi out");
-    VERIFY_SUCCEEDED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiOutPins[0].UMP, PAGE_SIZE, &mmcssTaskId));
-
     LOG_OUTPUT(L"Initializing midi in");
     VERIFY_SUCCEEDED(midiInDevice.Initialize(midiDeviceEnum.m_AvailableMidiInPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiInPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiInPins[0].UMP, PAGE_SIZE, &mmcssTaskId, this));
+
+    LOG_OUTPUT(L"Initializing midi out");
+    VERIFY_SUCCEEDED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiOutPins[0].UMP, PAGE_SIZE, &mmcssTaskId));
 
     LOG_OUTPUT(L"Writing midi data");
 
     for (UINT i = 0; i < expectedMessageCount; i++)
     {
         QueryPerformanceCounter(&position);
-        VERIFY_SUCCEEDED(midiOutDevice.WriteMidiData((void *) &g_MidiTestData, sizeof(UMP128), position.QuadPart));
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData, sizeof(UMP128), position.QuadPart));
     }
 
     // wait for up to 30 seconds for all the messages
@@ -308,11 +313,11 @@ void Midi2DriverTests::TestMidiIO_Latency(BOOL Cyclic, BOOL DelayedMessages)
         }
     }
 
-    LOG_OUTPUT(L"Initializing midi out");
-    VERIFY_SUCCEEDED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiOutPins[0].UMP, PAGE_SIZE, &mmcssTaskId));
-
     LOG_OUTPUT(L"Initializing midi in");
     VERIFY_SUCCEEDED(midiInDevice.Initialize(midiDeviceEnum.m_AvailableMidiInPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiInPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiInPins[0].UMP, PAGE_SIZE, &mmcssTaskId, this));
+
+    LOG_OUTPUT(L"Initializing midi out");
+    VERIFY_SUCCEEDED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiOutPins[0].UMP, PAGE_SIZE, &mmcssTaskId));
 
     LOG_OUTPUT(L"Writing midi data");
 
@@ -337,7 +342,7 @@ void Midi2DriverTests::TestMidiIO_Latency(BOOL Cyclic, BOOL DelayedMessages)
         LONGLONG sendLatency {0};
 
         QueryPerformanceCounter(&qpcBefore);
-        VERIFY_SUCCEEDED(midiOutDevice.WriteMidiData((void *) &g_MidiTestData, sizeof(UMP128), qpcBefore.QuadPart));
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData, sizeof(UMP128), qpcBefore.QuadPart));
         QueryPerformanceCounter(&qpcAfter);
 
         // track the min, max, and average time that the send call took,
@@ -352,7 +357,7 @@ void Midi2DriverTests::TestMidiIO_Latency(BOOL Cyclic, BOOL DelayedMessages)
             maxSendLatency = sendLatency;
         }
 
-        avgSendLatency = (avgSendLatency + ((sendLatency - avgSendLatency)/(i+1)));
+        avgSendLatency = (avgSendLatency + ((sendLatency - avgSendLatency)/(((LONGLONG)i)+1)));
 
         if (0 == i)
         {

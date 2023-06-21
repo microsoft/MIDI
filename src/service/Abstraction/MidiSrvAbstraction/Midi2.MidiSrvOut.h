@@ -7,12 +7,12 @@ class CMidi2MidiSrvOut :
         IMidiOut>
 {
 public:
-
     STDMETHOD(Initialize(_In_ LPCWSTR, _In_ DWORD *));
     STDMETHOD(SendMidiMessage(_In_ PVOID message, _In_ UINT size, _In_ LONGLONG));
     STDMETHOD(Cleanup)();
 
 private:
+    std::unique_ptr<CMidi2MidiSrv> m_MidiSrv;
 };
 
 

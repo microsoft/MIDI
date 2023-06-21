@@ -5,12 +5,11 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvBiDi::Initialize(
-    LPCWSTR,
-    DWORD *,
-    IMidiCallback *
+    LPCWSTR Device,
+    DWORD * MmcssTaskId,
+    IMidiCallback * Callback
 )
 {
-
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
@@ -18,7 +17,13 @@ CMidi2MidiSrvBiDi::Initialize(
         TraceLoggingPointer(this, "this")
         );
 
-    return E_NOTIMPL;
+    std::unique_ptr<CMidi2MidiSrv> midiSrv(new (std::nothrow) CMidi2MidiSrv());
+    RETURN_IF_NULL_ALLOC(midiSrv);
+
+    RETURN_IF_FAILED(midiSrv->Initialize(Device, MidiFlowBidirectional, MmcssTaskId, Callback));
+    m_MidiSrv = std::move(midiSrv);
+
+    return S_OK;
 }
 
 HRESULT
@@ -31,28 +36,28 @@ CMidi2MidiSrvBiDi::Cleanup()
         TraceLoggingPointer(this, "this")
         );
 
-    return E_NOTIMPL;
+    if (m_MidiSrv)
+    {
+        RETURN_IF_FAILED(m_MidiSrv->Cleanup());
+        m_MidiSrv.reset();
+    }
+
+    return S_OK;
 }
 
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvBiDi::SendMidiMessage(
-    PVOID,
-    UINT,
-    LONGLONG
+    PVOID Data,
+    UINT Length,
+    LONGLONG Position
 )
 {
-    return E_NOTIMPL;
-}
+    if (m_MidiSrv)
+    {
+        return m_MidiSrv->SendMidiMessage(Data, Length, Position);
+    }
 
-_Use_decl_annotations_
-HRESULT
-CMidi2MidiSrvBiDi::Callback(
-    PVOID,
-    UINT,
-    LONGLONG
-)
-{
-    return E_NOTIMPL;
+    return E_ABORT;
 }
 

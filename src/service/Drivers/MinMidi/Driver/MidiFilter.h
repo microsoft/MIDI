@@ -5,6 +5,7 @@ extern const KSFILTER_DESCRIPTOR g_MidiFilterDescriptor;
 
 class MidiPin;
 
+PAGED_CODE_SEG
 NTSTATUS
 CreateFilterFactory(
     _In_ PKSDEVICE device

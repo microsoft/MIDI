@@ -1,11 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 #include "stdafx.h"
 #include "midi2KSabstraction.h"
+#include "Midi2MidiSrvAbstraction.h"
 
 #include "Midi2AbstractionTests.h"
 
 #include "MidiKsCommon.h"
 #include "MidiKsEnum.h"
+#include "MidiDefs.h"
+#include "MidiXProc.h"
 
 // Temporary code to locate a bidirectional midi device which will be replaced 
 // once we have the MidiDeviceManager functional within MidiSrv.
@@ -35,7 +38,8 @@ LPCWSTR GetBiDiMidiDevice(KSMidiDeviceEnum * MidiDeviceEnum)
     return midiDevice;
 }
 
-void MidiAbstractionTests::TestMidiAbstraction()
+_Use_decl_annotations_
+void MidiAbstractionTests::TestMidiAbstraction(REFIID Iid)
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
@@ -48,7 +52,7 @@ void MidiAbstractionTests::TestMidiAbstraction()
     UINT32 expectedMessageCount = 4;
     UINT midiMessagesReceived = 0;
 
-    VERIFY_SUCCEEDED(CoCreateInstance(__uuidof(Midi2KSAbstraction), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
+    VERIFY_SUCCEEDED(CoCreateInstance(Iid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
 
     VERIFY_SUCCEEDED(midiAbstraction->Activate(__uuidof(IMidiIn), (void **) &midiInDevice));
     VERIFY_SUCCEEDED(midiAbstraction->Activate(__uuidof(IMidiOut), (void **) &midiOutDevice));
@@ -71,11 +75,11 @@ void MidiAbstractionTests::TestMidiAbstraction()
     VERIFY_IS_TRUE(midiDeviceEnum.m_AvailableMidiInPinCount > 0);
     VERIFY_IS_TRUE(midiDeviceEnum.m_AvailableMidiOutPinCount > 0);
 
-    LOG_OUTPUT(L"Initializing midi out");
-    VERIFY_SUCCEEDED(midiOutDevice->Initialize(midiDeviceEnum.m_AvailableMidiOutPins[0].FilterName.get(), &mmcssTaskId));
-
     LOG_OUTPUT(L"Initializing midi in");
     VERIFY_SUCCEEDED(midiInDevice->Initialize(midiDeviceEnum.m_AvailableMidiInPins[0].FilterName.get(), &mmcssTaskId, this));
+
+    LOG_OUTPUT(L"Initializing midi out");
+    VERIFY_SUCCEEDED(midiOutDevice->Initialize(midiDeviceEnum.m_AvailableMidiOutPins[0].FilterName.get(), &mmcssTaskId));
 
     LOG_OUTPUT(L"Writing midi data");
     VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage((void *) &g_MidiTestData, sizeof(UMP32), 0));
@@ -98,7 +102,20 @@ void MidiAbstractionTests::TestMidiAbstraction()
     VERIFY_SUCCEEDED(midiInDevice->Cleanup());
 }
 
-void MidiAbstractionTests::TestMidiAbstractionCreationOrder()
+void MidiAbstractionTests::TestMidiKSAbstraction()
+{
+    TestMidiAbstraction(__uuidof(Midi2KSAbstraction));
+}
+
+#if 0
+void MidiAbstractionTests::TestMidiSrvAbstraction()
+{
+    TestMidiAbstraction(__uuidof(Midi2MidiSrvAbstraction));
+}
+#endif
+
+_Use_decl_annotations_
+void MidiAbstractionTests::TestMidiAbstractionCreationOrder(REFIID Iid)
 {
 //    WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
@@ -106,10 +123,12 @@ void MidiAbstractionTests::TestMidiAbstractionCreationOrder()
     wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
     wil::com_ptr_nothrow<IMidiIn> midiInDevice;
     wil::com_ptr_nothrow<IMidiOut> midiOutDevice;
+    DWORD mmcssTaskId {0};
     DWORD mmcssTaskIdIn {0};
     DWORD mmcssTaskIdOut {0};
+    unique_mmcss_handle mmcssHandle;
 
-    VERIFY_SUCCEEDED(CoCreateInstance(__uuidof(Midi2KSAbstraction), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
+    VERIFY_SUCCEEDED(CoCreateInstance(Iid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
 
     VERIFY_SUCCEEDED(midiAbstraction->Activate(__uuidof(IMidiIn), (void **) &midiInDevice));
     VERIFY_SUCCEEDED(midiAbstraction->Activate(__uuidof(IMidiOut), (void **) &midiOutDevice));
@@ -117,6 +136,10 @@ void MidiAbstractionTests::TestMidiAbstractionCreationOrder()
     m_MidiInCallback = [&](PVOID, UINT32, LONGLONG)
     {
     };
+
+    // enable mmcss for our test thread, to ensure that components only
+    // manage mmcss for their own workers.
+    VERIFY_SUCCEEDED(EnableMmcss(mmcssHandle, mmcssTaskId));
 
     VERIFY_SUCCEEDED(midiDeviceEnum.EnumerateFilters());
     VERIFY_IS_TRUE(midiDeviceEnum.m_AvailableMidiInPinCount > 0);
@@ -127,10 +150,12 @@ void MidiAbstractionTests::TestMidiAbstractionCreationOrder()
     // and then initialize midi in then out to ensure that order
     // doesn't matter.
     LOG_OUTPUT(L"Initializing midi out");
+    mmcssTaskIdOut = mmcssTaskId;
     VERIFY_SUCCEEDED(midiOutDevice->Initialize(midiDeviceEnum.m_AvailableMidiOutPins[0].FilterName.get(), &mmcssTaskIdOut));
     mmcssTaskIdIn = mmcssTaskIdOut;
     LOG_OUTPUT(L"Initializing midi in");
     VERIFY_SUCCEEDED(midiInDevice->Initialize(midiDeviceEnum.m_AvailableMidiInPins[0].FilterName.get(), &mmcssTaskIdIn, this));
+    VERIFY_IS_TRUE(mmcssTaskId == mmcssTaskIdOut);
     VERIFY_IS_TRUE(mmcssTaskIdIn == mmcssTaskIdOut);
     VERIFY_SUCCEEDED(midiOutDevice->Cleanup());
     VERIFY_SUCCEEDED(midiInDevice->Cleanup());
@@ -138,36 +163,58 @@ void MidiAbstractionTests::TestMidiAbstractionCreationOrder()
     mmcssTaskIdIn = 0;
     mmcssTaskIdOut = 0;
     LOG_OUTPUT(L"Initializing midi in");
+    mmcssTaskIdIn = mmcssTaskId;
     VERIFY_SUCCEEDED(midiInDevice->Initialize(midiDeviceEnum.m_AvailableMidiInPins[0].FilterName.get(), &mmcssTaskIdIn, this));
     mmcssTaskIdOut = mmcssTaskIdIn;
     LOG_OUTPUT(L"Initializing midi out");
     VERIFY_SUCCEEDED(midiOutDevice->Initialize(midiDeviceEnum.m_AvailableMidiOutPins[0].FilterName.get(), &mmcssTaskIdOut));
+    VERIFY_IS_TRUE(mmcssTaskId == mmcssTaskIdOut);
     VERIFY_IS_TRUE(mmcssTaskIdIn == mmcssTaskIdOut);
     VERIFY_SUCCEEDED(midiOutDevice->Cleanup());
     VERIFY_SUCCEEDED(midiInDevice->Cleanup());
+
+    mmcssHandle.reset();
+    VERIFY_SUCCEEDED(EnableMmcss(mmcssHandle, mmcssTaskId));
 
     // reusing the same task id, which was cleaned up,
     // initialize again, but revers the cleanup order, which shouldn't matter,
     // then repeat again in the opposite order with reversed cleanup order.
     LOG_OUTPUT(L"Initializing midi out");
+    mmcssTaskIdOut = mmcssTaskId;
     VERIFY_SUCCEEDED(midiOutDevice->Initialize(midiDeviceEnum.m_AvailableMidiOutPins[0].FilterName.get(), &mmcssTaskIdOut));
     mmcssTaskIdIn = mmcssTaskIdOut;
     LOG_OUTPUT(L"Initializing midi in");
     VERIFY_SUCCEEDED(midiInDevice->Initialize(midiDeviceEnum.m_AvailableMidiInPins[0].FilterName.get(), &mmcssTaskIdIn, this));
+    VERIFY_IS_TRUE(mmcssTaskId == mmcssTaskIdOut);
     VERIFY_IS_TRUE(mmcssTaskIdIn == mmcssTaskIdOut);
     VERIFY_SUCCEEDED(midiInDevice->Cleanup());
     VERIFY_SUCCEEDED(midiOutDevice->Cleanup());
     LOG_OUTPUT(L"Initializing midi in");
+    mmcssTaskIdIn = mmcssTaskId;
     VERIFY_SUCCEEDED(midiInDevice->Initialize(midiDeviceEnum.m_AvailableMidiInPins[0].FilterName.get(), &mmcssTaskIdIn, this));
     mmcssTaskIdOut = mmcssTaskIdIn;
     LOG_OUTPUT(L"Initializing midi out");
     VERIFY_SUCCEEDED(midiOutDevice->Initialize(midiDeviceEnum.m_AvailableMidiOutPins[0].FilterName.get(), &mmcssTaskIdOut));
+    VERIFY_IS_TRUE(mmcssTaskId == mmcssTaskIdOut);
     VERIFY_IS_TRUE(mmcssTaskIdIn == mmcssTaskIdOut);
     VERIFY_SUCCEEDED(midiInDevice->Cleanup());
     VERIFY_SUCCEEDED(midiOutDevice->Cleanup());
 }
 
-void MidiAbstractionTests::TestMidiAbstractionBiDi()
+void MidiAbstractionTests::TestMidiKSAbstractionCreationOrder()
+{
+    TestMidiAbstractionCreationOrder(__uuidof(Midi2KSAbstraction));
+}
+
+#if 0
+void MidiAbstractionTests::TestMidiSrvAbstractionCreationOrder()
+{
+    TestMidiAbstractionCreationOrder(__uuidof(Midi2MidiSrvAbstraction));
+}
+#endif
+
+_Use_decl_annotations_
+void MidiAbstractionTests::TestMidiAbstractionBiDi(REFIID Iid)
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
@@ -179,7 +226,7 @@ void MidiAbstractionTests::TestMidiAbstractionBiDi()
     UINT32 expectedMessageCount = 4;
     UINT midiMessagesReceived = 0;
 
-    VERIFY_SUCCEEDED(CoCreateInstance(__uuidof(Midi2KSAbstraction), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
+    VERIFY_SUCCEEDED(CoCreateInstance(Iid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
     VERIFY_SUCCEEDED(midiAbstraction->Activate(__uuidof(IMidiBiDi), (void **) &midiBiDiDevice));
 
     m_MidiInCallback = [&](PVOID payload, UINT32 payloadSize, LONGLONG payloadPosition)
@@ -222,7 +269,18 @@ void MidiAbstractionTests::TestMidiAbstractionBiDi()
     VERIFY_SUCCEEDED(midiBiDiDevice->Cleanup());
 }
 
-void MidiAbstractionTests::TestMidiIO_Latency()
+void MidiAbstractionTests::TestMidiKSAbstractionBiDi()
+{
+    TestMidiAbstractionBiDi(__uuidof(Midi2KSAbstraction));
+}
+
+void MidiAbstractionTests::TestMidiSrvAbstractionBiDi()
+{
+    TestMidiAbstractionBiDi(__uuidof(Midi2MidiSrvAbstraction));
+}
+
+_Use_decl_annotations_
+void MidiAbstractionTests::TestMidiIO_Latency(REFIID Iid)
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
@@ -257,7 +315,7 @@ void MidiAbstractionTests::TestMidiIO_Latency()
 
     UINT midiMessagesReceived = 0;
 
-    VERIFY_SUCCEEDED(CoCreateInstance(__uuidof(Midi2KSAbstraction), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
+    VERIFY_SUCCEEDED(CoCreateInstance(Iid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
     VERIFY_SUCCEEDED(midiAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&midiBiDiDevice));
 
     m_MidiInCallback = [&](PVOID , UINT32 , LONGLONG payloadPosition)
@@ -366,7 +424,7 @@ void MidiAbstractionTests::TestMidiIO_Latency()
             maxSendLatency = sendLatency;
         }
 
-        avgSendLatency = (avgSendLatency + ((sendLatency - avgSendLatency) / (i + 1)));
+        avgSendLatency = (avgSendLatency + ((sendLatency - avgSendLatency) / (((LONGLONG)(i)) + 1)));
 
         if (0 == i)
         {
@@ -427,6 +485,16 @@ void MidiAbstractionTests::TestMidiIO_Latency()
     LOG_OUTPUT(L"Done, cleaning up");
 
     VERIFY_SUCCEEDED(midiBiDiDevice->Cleanup());
+}
+
+void MidiAbstractionTests::TestMidiKSIO_Latency()
+{
+    TestMidiIO_Latency(__uuidof(Midi2KSAbstraction));
+}
+
+void MidiAbstractionTests::TestMidiSrvIO_Latency()
+{
+    TestMidiIO_Latency(__uuidof(Midi2MidiSrvAbstraction));
 }
 
 bool MidiAbstractionTests::TestSetup()

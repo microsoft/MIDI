@@ -95,14 +95,14 @@ HRESULT
 PinPropertySimple(
     HANDLE Filter,
     ULONG   PinId,
-    REFGUID guidPropertySet,
+    REFGUID GuidPropertySet,
     ULONG   Property,
     PVOID   Value,
     ULONG   ValueSize)
 {
     KSP_PIN ksPProp;
 
-    ksPProp.Property.Set = guidPropertySet;
+    ksPProp.Property.Set = GuidPropertySet;
     ksPProp.Property.Id = Property;
     ksPProp.Property.Flags = KSPROPERTY_TYPE_GET;
     ksPProp.PinId = PinId;

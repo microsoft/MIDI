@@ -2,7 +2,9 @@
 #pragma once
 
 // copied from wdm.h
+#ifndef PAGE_SIZE
 #define PAGE_SIZE 0x1000
+#endif
 
 #define DWORD_ALIGN(x) ((x+3) & ~3)
 
@@ -22,14 +24,14 @@ protected:
         _In_ UINT,
         _In_ BOOL,
         _In_ BOOL,
-        _In_ ULONG);
+        _In_ ULONG&);
 
-    HRESULT OpenStream();
+    HRESULT OpenStream(_In_ ULONG&);
 
     HRESULT PinSetState(
         _In_ KSSTATE);
 
-    HRESULT ConfigureLoopedBuffer();
+    HRESULT ConfigureLoopedBuffer(_In_ ULONG&);
     HRESULT ConfigureLoopedRegisters();
     HRESULT ConfigureLoopedEvent();
 
@@ -38,25 +40,20 @@ protected:
     wil::unique_cotaskmem_string m_FilterFilename;
     UINT m_PinID {0};
 
-    BOOL m_IsLooped {FALSE};
-    BOOL m_IsUMP {FALSE};
-    ULONG m_LoopedBufferSize {PAGE_SIZE};
+    BOOL m_IsLooped{ FALSE };
+    BOOL m_IsUMP{ FALSE };
 
-    KSMIDILOOPED_BUFFER m_LoopedBuffer {0};
-    KSMIDILOOPED_REGISTERS m_LoopedRegisters {0};
+    std::unique_ptr<MEMORY_MAPPED_PIPE> m_MidiPipe;
+    std::unique_ptr<CMidiXProc> m_CrossProcessMidiPump;
 
-    wil::unique_event m_BufferWriteEvent;
-
-    HRESULT DisableMmcss();
-    HRESULT EnableMmcss( 
-        _In_ DWORD*);
-    HANDLE m_MmcssHandle {NULL};
+    unique_mmcss_handle m_MmcssHandle;
     DWORD m_MmcssTaskId {0};
 };
 
 class KSMidiOutDevice : public KSMidiDevice
 {
 public:
+
     HRESULT Initialize(
         _In_ LPCWSTR,
         _In_opt_ HANDLE,
@@ -66,7 +63,7 @@ public:
         _In_ ULONG,
         _In_ DWORD*);
 
-    HRESULT WriteMidiData(
+    HRESULT SendMidiMessage(
         _In_ void *,
         _In_ UINT32,
         _In_ LONGLONG);
@@ -86,6 +83,12 @@ private:
 class KSMidiInDevice : public KSMidiDevice
 {
 public:
+
+    virtual ~KSMidiInDevice()
+    {
+        Cleanup();
+    }
+
     HRESULT Initialize(
         _In_ LPCWSTR,
         _In_opt_ HANDLE,
@@ -111,4 +114,7 @@ private:
     wil::unique_event m_ThreadTerminateEvent;
     wil::unique_event m_ThreadStartedEvent;
     wil::unique_handle m_ThreadHandle;
+    BOOL m_Running{ TRUE };
+
+    unique_mmcss_handle m_ThreadOwnedMmcssHandle;
 };

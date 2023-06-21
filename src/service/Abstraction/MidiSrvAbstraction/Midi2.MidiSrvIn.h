@@ -4,16 +4,14 @@
 class CMidi2MidiSrvIn : 
     public Microsoft::WRL::RuntimeClass<
         Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-        IMidiIn,
-        IMidiCallback>
+        IMidiIn>
 {
 public:
-
     STDMETHOD(Initialize(_In_ LPCWSTR, _In_ DWORD *, _In_opt_ IMidiCallback *));
-    STDMETHOD(Callback)(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
     STDMETHOD(Cleanup)();
 
 private:
+    std::unique_ptr<CMidi2MidiSrv> m_MidiSrv;
 };
 
 

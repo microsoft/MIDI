@@ -5,13 +5,13 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAbstraction::Activate(
-    REFIID Iid,
+    REFIID Riid,
     void **Interface
 )
 {
     RETURN_HR_IF(E_INVALIDARG, nullptr == Interface);
 
-    if (__uuidof(IMidiIn) == Iid)
+    if (__uuidof(IMidiIn) == Riid)
     {
         TraceLoggingWrite(
             MidiKSAbstractionTelemetryProvider::Provider(),
@@ -25,7 +25,7 @@ CMidi2KSAbstraction::Activate(
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSMidiIn>(&midiIn));
         *Interface = midiIn.detach();
     }
-    else if (__uuidof(IMidiOut) == Iid)
+    else if (__uuidof(IMidiOut) == Riid)
     {
         TraceLoggingWrite(
             MidiKSAbstractionTelemetryProvider::Provider(),
@@ -39,7 +39,7 @@ CMidi2KSAbstraction::Activate(
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSMidiOut>(&midiOut));
         *Interface = midiOut.detach();
     }
-    else if (__uuidof(IMidiBiDi) == Iid)
+    else if (__uuidof(IMidiBiDi) == Riid)
     {
         TraceLoggingWrite(
             MidiKSAbstractionTelemetryProvider::Provider(),

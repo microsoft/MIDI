@@ -15,6 +15,7 @@ public:
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.KSAbstraction.dll")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.MidiSrvAbstraction.dll")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Minmidi.sys")
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"midisrv.exe")
     END_TEST_CLASS()
 
     TEST_CLASS_SETUP(ClassSetup);
@@ -24,10 +25,15 @@ public:
     TEST_METHOD_CLEANUP(TestCleanup);
 
     //Generic Tests
-    TEST_METHOD(TestMidiAbstraction);
-    TEST_METHOD(TestMidiAbstractionCreationOrder);
-    TEST_METHOD(TestMidiAbstractionBiDi);
-    TEST_METHOD(TestMidiIO_Latency);
+    TEST_METHOD(TestMidiKSAbstraction);
+    TEST_METHOD(TestMidiKSAbstractionCreationOrder);
+    TEST_METHOD(TestMidiKSAbstractionBiDi);
+    TEST_METHOD(TestMidiKSIO_Latency);
+
+    //TEST_METHOD(TestMidiSrvAbstraction);
+    //TEST_METHOD(TestMidiSrvAbstractionCreationOrder);
+    TEST_METHOD(TestMidiSrvAbstractionBiDi);
+    TEST_METHOD(TestMidiSrvIO_Latency);
 
     STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position)
     {
@@ -44,6 +50,11 @@ public:
     STDMETHODIMP_(ULONG) Release() { return 1; }
 
 private:
+    void TestMidiAbstraction(_In_ REFIID);
+    void TestMidiAbstractionCreationOrder(_In_ REFIID);
+    void TestMidiAbstractionBiDi(_In_ REFIID);
+    void TestMidiIO_Latency(_In_ REFIID);
+
     std::function<void(PVOID, UINT32, LONGLONG)> m_MidiInCallback;
 };
 

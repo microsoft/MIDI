@@ -4,10 +4,10 @@
 _Use_decl_annotations_
 HRESULT
 CMidiDeviceManager::Initialize(
-    std::shared_ptr<CMidiPerformanceManager>& performanceManager
+    std::shared_ptr<CMidiPerformanceManager>& PerformanceManager
 )
 {
-    m_PerformanceManager = performanceManager;
+    m_PerformanceManager = PerformanceManager;
     return S_OK;
 }
 

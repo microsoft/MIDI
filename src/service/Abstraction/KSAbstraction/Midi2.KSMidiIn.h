@@ -4,19 +4,16 @@
 class CMidi2KSMidiIn : 
     public Microsoft::WRL::RuntimeClass<
         Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-        IMidiIn,
-        IMidiCallback>
+        IMidiIn>
 {
 public:
 
     STDMETHOD(Initialize(_In_ LPCWSTR, _In_ DWORD *, _In_opt_ IMidiCallback *));
-    STDMETHOD(Callback)(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
     STDMETHOD(Cleanup)();
 
 private:
 
-    std::unique_ptr<KSMidiInDevice> m_MidiDevice;
-    wil::com_ptr_nothrow<IMidiCallback> m_MidiInCallback;
+    std::unique_ptr<CMidi2KSMidi> m_MidiDevice;
 };
 
 
