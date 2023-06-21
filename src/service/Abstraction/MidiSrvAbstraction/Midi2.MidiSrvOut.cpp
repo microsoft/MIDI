@@ -5,8 +5,8 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvOut::Initialize(
-    LPCWSTR,
-    DWORD *
+    LPCWSTR Device,
+    DWORD * MmcssTaskId
 )
 {
     TraceLoggingWrite(
@@ -16,7 +16,15 @@ CMidi2MidiSrvOut::Initialize(
         TraceLoggingPointer(this, "this")
         );
 
-    return E_NOTIMPL;
+    std::unique_ptr<CMidi2MidiSrv> midiSrv(new (std::nothrow) CMidi2MidiSrv());
+    RETURN_IF_NULL_ALLOC(midiSrv);
+
+    RETURN_IF_FAILED(midiSrv->Initialize(Device, MidiFlowOut, MmcssTaskId, nullptr));
+    m_MidiSrv = std::move(midiSrv);
+
+
+
+    return S_OK;
 }
 
 HRESULT
@@ -29,17 +37,28 @@ CMidi2MidiSrvOut::Cleanup()
         TraceLoggingPointer(this, "this")
         );
 
+    if (m_MidiSrv)
+    {
+        RETURN_IF_FAILED(m_MidiSrv->Cleanup());
+        m_MidiSrv.reset();
+    }
+
     return E_NOTIMPL;
 }
 
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvOut::SendMidiMessage(
-    PVOID,
-    UINT,
-    LONGLONG
+    PVOID Data,
+    UINT Length,
+    LONGLONG Position
 )
 {
-    return E_NOTIMPL;
+    if (m_MidiSrv)
+    {
+        return m_MidiSrv->SendMidiMessage(Data, Length, Position);
+    }
+
+    return E_ABORT;
 }
 

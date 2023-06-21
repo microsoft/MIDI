@@ -20,6 +20,24 @@ public:
         return S_OK;
     }
 
+    HRESULT GetClientManager(std::shared_ptr<CMidiClientManager>& manager)
+    {
+        manager = m_ClientManager;
+        return S_OK;
+    }
+
+    HRESULT GetPerformanceManager(std::shared_ptr<CMidiPerformanceManager>& manager)
+    {
+        manager = m_PerformanceManager;
+        return S_OK;
+    }
+
+    HRESULT GetProcessManager(std::shared_ptr<CMidiProcessManager>& manager)
+    {
+        manager = m_ProcessManager;
+        return S_OK;
+    }
+
 private:
     std::shared_ptr<CMidiPerformanceManager> m_PerformanceManager;
     std::shared_ptr<CMidiProcessManager> m_ProcessManager;

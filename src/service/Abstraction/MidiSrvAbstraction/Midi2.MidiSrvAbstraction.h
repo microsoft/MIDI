@@ -10,6 +10,8 @@ class MidiSrvAbstractionTelemetryProvider : public wil::TraceLoggingProvider
         (0x6e9d2090,0x31a4,0x5a2c,0xda,0x35,0xfd,0x60,0x6d,0x7d,0x6a,0xc3))
 };
 
+HRESULT GetMidiSrvBindingHandle(_In_ handle_t* BindingHandle);
+
 using namespace ATL;
 
 class ATL_NO_VTABLE CMidi2MidiSrvAbstraction : 

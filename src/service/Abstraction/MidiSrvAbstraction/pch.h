@@ -52,7 +52,11 @@
 
 #include "dllmain.h"
 
+#include "MidiDefs.h"
+#include "MidiSrvRpc.h"
+#include "MidiXProc.h"
 #include "Midi2.MidiSrvAbstraction.h"
+#include "Midi2.MidiSrv.h"
 #include "Midi2.MidiSrvIn.h"
 #include "Midi2.MidiSrvOut.h"
 #include "Midi2.MidiSrvBiDi.h"

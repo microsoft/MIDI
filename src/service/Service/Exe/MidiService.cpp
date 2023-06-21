@@ -209,6 +209,8 @@ VOID SvcUninstall()
 //
 VOID SvcInit()
 {
+    auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
+
     // service control event
     g_SvcStopEvent.reset(CreateEvent(NULL, TRUE, FALSE, NULL));
     if (NULL == g_SvcStopEvent)

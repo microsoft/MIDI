@@ -27,6 +27,7 @@
 #include <wil\registry.h>
 #include <wil\result.h>
 #include <wil\tracelogging.h>
+#include <wil\wistd_memory.h>
 #include <memory>
 #include <atlbase.h>
 #include <atlcom.h>
@@ -36,19 +37,30 @@
 #include <sddl.h>
 
 #include "MidiDefs.h"
+#include "MidiKSDef.h"
 
 #include "Midi2KSAbstraction_i.c"
 #include "Midi2KSAbstraction.h"
+
+#include "MidiSrvRpc.h"
 
 #include "MidiTelemetry.h"
 #include "MidiPerformanceManager.h"
 #include "MidiProcessManager.h"
 #include "MidiDeviceManager.h"
-#include "MidiClientManager.h"
+#include "MidiXProc.h"
+
+// MidiDevicePipe holds MidiClientPipe(s) that it is connected to.
+// MidiClientPipe holds a MidiDevicePipe that it is connected to.
+// declare these prior to including the headers.
+class CMidiClientPipe;
+class CMidiDevicePipe;
+
+#include "MidiDevicePipe.h"
 #include "MidiClientPipe.h"
+#include "MidiClientManager.h"
 
 #include "MidiSrv.h"
 
-#include "MidiSrvRpc.h"
 
 

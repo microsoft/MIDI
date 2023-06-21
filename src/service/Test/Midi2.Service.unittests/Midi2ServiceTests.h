@@ -4,7 +4,8 @@
 #include <WexTestClass.h>
 
 class Midi2ServiceTests
-    : public WEX::TestClass<Midi2ServiceTests>
+    : public WEX::TestClass<Midi2ServiceTests>,
+    public IMidiCallback
 {
 public:
 
@@ -18,14 +19,33 @@ public:
 
     TEST_CLASS_SETUP(ClassSetup);
     TEST_CLASS_CLEANUP(ClassCleanup);
-    
+
+    TEST_METHOD_SETUP(TestSetup);
+    TEST_METHOD_CLEANUP(TestCleanup);
+
     //Generic Tests
     TEST_METHOD(TestMidiServiceRPC);
+
+    TEST_METHOD(TestMidiServiceClientRPC);
 
     Midi2ServiceTests()
     {}
 
-private:
+    STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position)
+    {
+        if (m_MidiInCallback)
+        {
+            m_MidiInCallback(Data, Size, Position);
+        }
+        return S_OK;
+    }
 
+    // The test library is not refcounted, stubbed.
+    STDMETHODIMP QueryInterface(REFIID, void**) { return S_OK; }
+    STDMETHODIMP_(ULONG) AddRef() { return 1; }
+    STDMETHODIMP_(ULONG) Release() { return 1; }
+
+private:
+    std::function<void(PVOID, UINT32, LONGLONG)> m_MidiInCallback;
 };
 

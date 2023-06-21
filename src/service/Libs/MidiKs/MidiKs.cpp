@@ -29,8 +29,10 @@
 #include "MidiAbstraction_i.c"
 #include "MidiAbstraction.h"
 
+#include "MidiDefs.h"
 #include "MidiKsDef.h"
 #include "MidiKsCommon.h"
+#include "MidiXProc.h"
 #include "MidiKs.h"
 
 using namespace concurrency;
@@ -53,12 +55,11 @@ KSMidiDevice::Initialize(
     UINT PinId,
     BOOL UseCyclic,
     BOOL UseUMP,
-    ULONG BufferSize
+    ULONG& BufferSize
 )
 {
     m_IsLooped = UseCyclic;
     m_IsUMP = UseUMP;
-    m_LoopedBufferSize = BufferSize;
 
     m_FilterFilename = wil::make_cotaskmem_string_nothrow(Device);
     RETURN_IF_NULL_ALLOC(m_FilterFilename);
@@ -74,7 +75,7 @@ KSMidiDevice::Initialize(
 
     m_PinID = PinId;
 
-    RETURN_IF_FAILED(OpenStream());
+    RETURN_IF_FAILED(OpenStream(BufferSize));
     RETURN_IF_FAILED(PinSetState(KSSTATE_ACQUIRE));
     RETURN_IF_FAILED(PinSetState(KSSTATE_PAUSE));
     RETURN_IF_FAILED(PinSetState(KSSTATE_RUN));
@@ -82,18 +83,34 @@ KSMidiDevice::Initialize(
     return S_OK;
 }
 
+_Use_decl_annotations_
 HRESULT
-KSMidiDevice::OpenStream()
+KSMidiDevice::OpenStream(ULONG& BufferSize
+)
 {
     RETURN_IF_FAILED(InstantiateMidiPin(m_Filter.get(), m_PinID, m_IsLooped, m_IsUMP, &m_Pin));
 
     if (m_IsLooped)
     {
+        m_MidiPipe.reset(new (std::nothrow) MEMORY_MAPPED_PIPE);
+        RETURN_IF_NULL_ALLOC(m_MidiPipe);
+
+        m_CrossProcessMidiPump.reset(new (std::nothrow) CMidiXProc());
+        RETURN_IF_NULL_ALLOC(m_CrossProcessMidiPump);
+
+        m_MidiPipe->WriteEvent.create();
+
         // if we're looped (cyclic buffer), we need to
         // configure the buffer, registers, and event.
-        RETURN_IF_FAILED(ConfigureLoopedBuffer());
+        RETURN_IF_FAILED(ConfigureLoopedBuffer(BufferSize));
         RETURN_IF_FAILED(ConfigureLoopedRegisters());
         RETURN_IF_FAILED(ConfigureLoopedEvent());
+    }
+    else
+    {
+        // Buffer size isn't applicable for
+        // legacy messages sent through ioctl
+        BufferSize = 0;
     }
 
     return S_OK;
@@ -102,6 +119,20 @@ KSMidiDevice::OpenStream()
 HRESULT
 KSMidiDevice::Cleanup()
 {
+    // tear down all cross process work before
+    // closing out pin and filter handles, which will
+    // invalidate the memory addresses.
+    if (m_CrossProcessMidiPump)
+    {
+        m_CrossProcessMidiPump->Cleanup();
+        m_CrossProcessMidiPump.reset();
+    }
+
+    if (m_MidiPipe)
+    {
+        m_MidiPipe.reset();
+    }
+
     if (nullptr != m_Pin.get())
     {
         PinSetState(KSSTATE_PAUSE);
@@ -114,7 +145,7 @@ KSMidiDevice::Cleanup()
 
     // if a worker has configured mmcss and hasn't yet cleaned
     // it up, this is our last chance
-    DisableMmcss();
+    DisableMmcss(m_MmcssHandle);
 
     return S_OK;
 }
@@ -145,9 +176,11 @@ KSMidiDevice::PinSetState(
 }
 
 HRESULT
-KSMidiDevice::ConfigureLoopedBuffer()
+KSMidiDevice::ConfigureLoopedBuffer(ULONG& BufferSize
+)
 {
     KSMIDILOOPED_BUFFER_PROPERTY property {0};
+    KSMIDILOOPED_BUFFER buffer{0};
     ULONG propertySize {sizeof(property)};
 
     property.Property.Set           = KSPROPSETID_MidiLoopedStreaming; 
@@ -156,16 +189,19 @@ KSMidiDevice::ConfigureLoopedBuffer()
 
     // Seems to be a reasonable balance for now,
     // TBD make this configurable via api or registry.
-    property.RequestedBufferSize    = 4 * PAGE_SIZE;
+    property.RequestedBufferSize    = BufferSize;
 
     RETURN_IF_FAILED(SyncIoctl(
         m_Pin.get(),
         IOCTL_KS_PROPERTY,
         &property,
         propertySize,
-        &m_LoopedBuffer,
-        sizeof(m_LoopedBuffer),
+        &buffer,
+        sizeof(buffer),
         nullptr));
+
+    m_MidiPipe->Data.BufferAddress = (PBYTE) buffer.BufferAddress;
+    BufferSize = m_MidiPipe->Data.BufferSize = buffer.ActualBufferSize;
 
     return S_OK;
 }
@@ -174,6 +210,7 @@ HRESULT
 KSMidiDevice::ConfigureLoopedRegisters()
 {
     KSPROPERTY property {0};
+    KSMIDILOOPED_REGISTERS registers {0};
     ULONG propertySize {sizeof(property)};
 
     property.Set    = KSPROPSETID_MidiLoopedStreaming; 
@@ -185,9 +222,12 @@ KSMidiDevice::ConfigureLoopedRegisters()
         IOCTL_KS_PROPERTY,
         &property,
         propertySize,
-        &m_LoopedRegisters,
-        sizeof(m_LoopedRegisters),
+        &registers,
+        sizeof(registers),
         nullptr));
+
+    m_MidiPipe->Registers.ReadPosition = (PULONG) registers.ReadPosition;
+    m_MidiPipe->Registers.WritePosition = (PULONG) registers.WritePosition;
 
     return S_OK;
 }
@@ -199,8 +239,7 @@ KSMidiDevice::ConfigureLoopedEvent()
     ULONG propertySize {sizeof(property)};
     KSMIDILOOPED_EVENT LoopedEvent {0};
 
-    m_BufferWriteEvent.create();
-    LoopedEvent.WriteEvent = m_BufferWriteEvent.get();
+    LoopedEvent.WriteEvent = m_MidiPipe->WriteEvent.get();
 
     property.Set    = KSPROPSETID_MidiLoopedStreaming; 
     property.Id     = KSPROPERTY_MIDILOOPEDSTREAMING_NOTIFICATION_EVENT;       
@@ -218,58 +257,6 @@ KSMidiDevice::ConfigureLoopedEvent()
     return S_OK;
 }
 
-HRESULT
-KSMidiDevice::DisableMmcss()
-{
-    RETURN_HR_IF(S_OK, NULL == m_MmcssHandle);
-    // Detach the thread from the MMCSS service to free the handle.
-    RETURN_HR_IF(HRESULT_FROM_WIN32(GetLastError()), FALSE == AvRevertMmThreadCharacteristics(m_MmcssHandle));
-    m_MmcssHandle = NULL;
-
-    return S_OK;
-}
-
-_Use_decl_annotations_
-HRESULT
-KSMidiDevice::EnableMmcss(
-    DWORD* MmcssTask
-)
-{
-    // If a task id has been provided, initialize with that task id
-    if (MmcssTask)
-    {
-        m_MmcssTaskId = *MmcssTask;
-    }
-
-    m_MmcssHandle = AvSetMmThreadCharacteristics( L"Pro Audio", &m_MmcssTaskId );
-    if (NULL == m_MmcssHandle)
-    {
-        // If the task id has gone invalid, try with a new task id
-        m_MmcssTaskId = 0;
-        m_MmcssHandle = AvSetMmThreadCharacteristics( L"Pro Audio", &m_MmcssTaskId );
-    }
-
-    auto cleanupOnFailure = wil::scope_exit([&]()
-    {
-        if (m_MmcssHandle)
-        {
-            DisableMmcss();
-        }
-    });
-
-    RETURN_HR_IF(HRESULT_FROM_WIN32(GetLastError()), FALSE == AvSetMmThreadPriority(m_MmcssHandle, AVRT_PRIORITY_HIGH));
-    cleanupOnFailure.release();
-
-    // return the task id that was actually used,
-    // which will happen if the incoming task id is 0
-    if (MmcssTask)
-    {
-        *MmcssTask = m_MmcssTaskId;
-    }
-
-    return S_OK;
-}
-
 _Use_decl_annotations_
 HRESULT
 KSMidiOutDevice::Initialize(
@@ -282,113 +269,40 @@ KSMidiOutDevice::Initialize(
     DWORD* MmcssTaskId
 )
 {
-    RETURN_IF_FAILED(EnableMmcss(MmcssTaskId));
     RETURN_IF_FAILED(KSMidiDevice::Initialize(Device, Filter, PinId, Cyclic, UseUMP, BufferSize));
+
+    m_MmcssTaskId = *MmcssTaskId;
+    if (m_CrossProcessMidiPump)
+    {
+        std::unique_ptr<MEMORY_MAPPED_PIPE> emptyPipe;
+        // we're sending midi messages here, so this is a midi out pipe, midi in pipe is unused
+        RETURN_IF_FAILED(m_CrossProcessMidiPump->Initialize(MmcssTaskId, emptyPipe, m_MidiPipe, nullptr));
+    }
+    *MmcssTaskId = m_MmcssTaskId;
 
     return S_OK;
 }
 
 _Use_decl_annotations_
 HRESULT
-KSMidiOutDevice::WriteMidiData(
+KSMidiOutDevice::SendMidiMessage(
     void * MidiData,
-    UINT32 length,
-    LONGLONG position
+    UINT32 Length,
+    LONGLONG Position
 )
 {
     // The length must be one of the valid UMP data lengths
-    RETURN_HR_IF(E_INVALIDARG, length == 0);
+    RETURN_HR_IF(E_INVALIDARG, Length == 0);
 
-    if (m_IsLooped)
+    if (m_CrossProcessMidiPump)
     {
-        // using cyclic, so write via cyclic
-        return WriteLoopedMidiData(MidiData, length, position);
+        return m_CrossProcessMidiPump->SendMidiMessage(MidiData, Length, Position);
     }
     else
     {
         // using standard, write via standard streaming ioctls
-        return WritePacketMidiData(MidiData, length, position);
+        return WritePacketMidiData(MidiData, Length, Position);
     }
-}
-
-_Use_decl_annotations_
-HRESULT
-KSMidiOutDevice::WriteLoopedMidiData(
-    void * MidiData,
-    UINT32 length,
-    LONGLONG position
-)
-{
-    BOOL bufferSent {FALSE};
-    UINT32 requiredBufferSize = sizeof(UMPDATAFORMAT) + length;
-
-    do{
-        // the write position is the last position we have written,
-        // the read position is the last position the driver has read from
-        ULONG writePosition = InterlockedCompareExchange((LONG*) m_LoopedRegisters.WritePosition, 0, 0);
-        ULONG readPosition = InterlockedCompareExchange((LONG*) m_LoopedRegisters.ReadPosition, 0, 0);
-        ULONG newWritePosition = (writePosition + requiredBufferSize) % m_LoopedBuffer.ActualBufferSize;
-        ULONG bytesAvailable {0};
-
-        // Calculate the available space in the buffer.
-        if (readPosition <= writePosition)
-        {
-            bytesAvailable = m_LoopedBuffer.ActualBufferSize - (writePosition - readPosition);
-        }
-        else
-        {
-            bytesAvailable = (readPosition - writePosition);
-        }
-
-        // Note, if we fill the buffer up 100%, then write position == read position,
-        // which is the same as when the buffer is empty and everything in the buffer
-        // would be lost.
-        // Reserve 1 byte so that when the buffer is full the write position will trail
-        // the read position.
-        // Because of this reserve, and the above calculation, the true bytesAvailable 
-        // count can never be 0.
-        assert(bytesAvailable != 0);
-        bytesAvailable--;
-
-        // if there is sufficient space to write the buffer, send it
-        if (bytesAvailable >= requiredBufferSize)
-        {
-            PUMPDATAFORMAT header = (PUMPDATAFORMAT) (((BYTE *) m_LoopedBuffer.BufferAddress) + writePosition);
-
-            header->ByteCount = length;
-            CopyMemory((((BYTE *) header) + sizeof(UMPDATAFORMAT)), MidiData, length);
-
-            // if a position provided is nonzero, use it, otherwise use the current QPC
-            if (position)
-            {
-                header->Position = position;
-            }
-            else
-            {
-                LARGE_INTEGER qpc {0};
-                QueryPerformanceCounter(&qpc);
-                header->Position = qpc.QuadPart;
-            }
-
-            // update the write position and notify the other side that data is available.
-            InterlockedExchange((LONG*) m_LoopedRegisters.WritePosition, newWritePosition);
-            m_BufferWriteEvent.SetEvent();
-            bufferSent = TRUE;
-        }
-        else
-        {
-            // There is not sufficient space to send, current strategy is to delay and retry.
-
-            // TODO: If the buffer is full because the driver is wedged, this will just
-            // sit here forever retrying. Should there be a timeout?
-            bufferSent = FALSE;
-
-            // relenquish the remainder of this processing slice and try again on the next
-            Sleep(0);
-        }
-    }while (!bufferSent);
-
-    return S_OK;
 }
 
 _Use_decl_annotations_
@@ -455,15 +369,7 @@ KSMidiOutDevice::WritePacketMidiData(
 HRESULT
 KSMidiInDevice::Cleanup()
 {
-    // Looped threads have a terminate event and are directly accessing
-    // buffers allocated by the pin. So, we need to terminate this thread
-    // before we can clean up the base class.
-    if (m_IsLooped && m_ThreadHandle)
-    {
-        m_ThreadTerminateEvent.SetEvent();
-        WaitForSingleObject(m_ThreadHandle.get(), INFINITE);
-        m_ThreadHandle.reset();
-    }
+    m_Running = FALSE;
 
     // safe to clean up the base class now that any looped
     // worker threads are cleaned up.
@@ -495,7 +401,7 @@ typedef struct
 HRESULT
 KSMidiInDevice::SendRequestToDriver()
 {
-    while (true)
+    while (m_Running)
     {
         MIDI_EVENT event {0};
         KSSTREAM_HEADER kssh {0};
@@ -535,76 +441,6 @@ KSMidiInDevice::SendRequestToDriver()
             return hr;
         }
     }
-}
-
-HRESULT
-KSMidiInDevice::ProcessLoopedMidiIn()
-{
-    do
-    {
-        // wait on write event or exit event
-        HANDLE handles[] = { m_BufferWriteEvent.get(), m_ThreadTerminateEvent.get() };
-        DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, INFINITE);
-        if (ret == WAIT_OBJECT_0)
-        {
-            do
-            {
-                // the read position is the last position we have read,
-                // the write position is the last position written to
-                ULONG readPosition = InterlockedCompareExchange((LONG*) m_LoopedRegisters.ReadPosition, 0, 0);
-                ULONG writePosition = InterlockedCompareExchange((LONG*) m_LoopedRegisters.WritePosition, 0, 0);
-                ULONG bytesAvailable {0};
-
-                if (readPosition <= writePosition)
-                {
-                    bytesAvailable = writePosition - readPosition;
-                }
-                else
-                {
-                    bytesAvailable = m_LoopedBuffer.ActualBufferSize - (readPosition - writePosition);
-                }
-
-                if (0 == bytesAvailable ||
-                    bytesAvailable < sizeof(UMPDATAFORMAT))
-                {
-                    // nothing to do, need at least the UMPDATAFORMAT
-                    // to move forward. Driver will set the event when the
-                    // write position advances.
-                    break;
-                }
-
-                PUMPDATAFORMAT header = (PUMPDATAFORMAT) (((BYTE *) m_LoopedBuffer.BufferAddress) + readPosition);
-                UINT32 dataSize = header->ByteCount;
-                UINT32 totalSize = dataSize + sizeof(UMPDATAFORMAT);
-                ULONG newReadPosition = (readPosition + totalSize) % m_LoopedBuffer.ActualBufferSize;
-
-                if (bytesAvailable < totalSize)
-                {
-                    // if the full contents of this buffer isn't yet available,
-                    // stop processing and wait for data to come in.
-                    // Driver will set an event when the write position advances.
-                    break;
-                }
-
-                PVOID data = (PVOID) (((BYTE *) header) + sizeof(UMPDATAFORMAT));
-
-                if (m_MidiInCallback)
-                {
-                    m_MidiInCallback->Callback(data, dataSize, header->Position);
-                }
-
-                // advance to the next midi packet, we loop processing them one at a time
-                // until we have processed all that is available for this pass.
-                InterlockedExchange((LONG*) m_LoopedRegisters.ReadPosition, newReadPosition);
-            } while(TRUE);
-        }
-        else
-        {
-            // exit event or wait failed, exit the thread.
-            break;
-        }
-    }while (TRUE);
-
     return S_OK;
 }
 
@@ -620,22 +456,14 @@ KSMidiInDevice::MidiInWorker(
     if (This)
     {
         // Enable MMCSS for the midi in worker thread
-        if (SUCCEEDED(This->EnableMmcss(nullptr)))
+        if (SUCCEEDED(EnableMmcss(This->m_ThreadOwnedMmcssHandle, This->m_MmcssTaskId)))
         {
             // signal that our thread is started, and
             // mmcss is configured, so initialization can
             // retrieve the task id.
             This->m_ThreadStartedEvent.SetEvent();
-            if (This->m_IsLooped)
-            {
-                This->ProcessLoopedMidiIn();
-            }
-            else
-            {
-                This->SendRequestToDriver();
-            }
-
-            This->DisableMmcss();
+            This->SendRequestToDriver();
+            DisableMmcss(This->m_ThreadOwnedMmcssHandle);
         }
     }
 
@@ -657,22 +485,31 @@ KSMidiInDevice::Initialize(
 {
     RETURN_HR_IF(E_INVALIDARG, nullptr == Callback);
 
-    m_ThreadTerminateEvent.create();
-    m_ThreadStartedEvent.create();
-
-    m_MmcssTaskId = *MmcssTaskId;
-
     RETURN_IF_FAILED(KSMidiDevice::Initialize(Device, Filter, PinId, Cyclic, UseUMP, BufferSize));
 
-    // grab the callback/lambda that was passed in, for use later for message callbacks.
-    m_MidiInCallback = Callback;
+    if (m_CrossProcessMidiPump)
+    {
+        std::unique_ptr<MEMORY_MAPPED_PIPE> emptyPipe;
+        // we're getting midi messages here, so this is a midi in pipe, midi out pipe is unused
+        RETURN_IF_FAILED(m_CrossProcessMidiPump->Initialize(MmcssTaskId, m_MidiPipe, emptyPipe, Callback));
+    }
+    else
+    {
+        m_MmcssTaskId = *MmcssTaskId;
 
-    m_ThreadHandle.reset(CreateThread(nullptr, 0, MidiInWorker, this, 0, nullptr));
-    RETURN_LAST_ERROR_IF_NULL(m_ThreadHandle);
+        m_ThreadTerminateEvent.create();
+        m_ThreadStartedEvent.create();
 
-    RETURN_HR_IF(E_FAIL, WaitForSingleObject(m_ThreadStartedEvent.get(), 30000) != WAIT_OBJECT_0);
+        // grab the callback/lambda that was passed in, for use later for message callbacks.
+        m_MidiInCallback = Callback;
 
-    *MmcssTaskId = m_MmcssTaskId;
+        m_ThreadHandle.reset(CreateThread(nullptr, 0, MidiInWorker, this, 0, nullptr));
+        RETURN_LAST_ERROR_IF_NULL(m_ThreadHandle);
+
+        RETURN_HR_IF(E_FAIL, WaitForSingleObject(m_ThreadStartedEvent.get(), 30000) != WAIT_OBJECT_0);
+
+        *MmcssTaskId = m_MmcssTaskId;
+    }
 
     return S_OK;
 }

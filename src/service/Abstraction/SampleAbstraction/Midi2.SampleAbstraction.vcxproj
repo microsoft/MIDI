@@ -105,7 +105,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;midiks.lib;midikscommon.lib;midiksenum.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.SampleAbstraction.def</ModuleDefinitionFile>
     </Link>
     <Midl>
@@ -122,7 +122,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;midiks.lib;midikscommon.lib;midiksenum.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.SampleAbstraction.def</ModuleDefinitionFile>
     </Link>
     <Midl>
@@ -148,7 +148,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;midiks.lib;midikscommon.lib;midiksenum.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.SampleAbstraction.def</ModuleDefinitionFile>
     </Link>
     <Midl>
@@ -174,7 +174,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;midiks.lib;midikscommon.lib;midiksenum.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.SampleAbstraction.def</ModuleDefinitionFile>
     </Link>
     <Midl>

@@ -14,7 +14,7 @@ public:
 
 private:
 
-    std::unique_ptr<KSMidiOutDevice> m_MidiDevice;
+    std::unique_ptr<CMidi2KSMidi> m_MidiDevice;
 };
 
 

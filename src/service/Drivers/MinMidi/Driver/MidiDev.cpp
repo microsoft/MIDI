@@ -38,6 +38,7 @@ KSDEVICE_DESCRIPTOR DeviceDescriptor =
 
 DRIVER_UNLOAD DriverUnload;
 
+PAGED_CODE_SEG
 NTSTATUS
 DriverEntry(
     _In_ PDRIVER_OBJECT DriverObject,
@@ -57,6 +58,7 @@ DriverEntry(
     return STATUS_SUCCESS;
 }
 
+PAGED_CODE_SEG
 void
 DriverUnload( 
     _In_ PDRIVER_OBJECT /* DriverObject */

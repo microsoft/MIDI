@@ -68,22 +68,22 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration)</LibraryPath>
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
-    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration)</LibraryPath>
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration)</LibraryPath>
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration)</LibraryPath>
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
@@ -103,7 +103,7 @@
       <GenerateServerFiles>Stub</GenerateServerFiles>
     </Midl>
     <Link>
-      <AdditionalDependencies>Rpcrt4.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;midixproc.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <RegisterOutput>true</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
@@ -123,7 +123,7 @@
       <GenerateServerFiles>Stub</GenerateServerFiles>
     </Midl>
     <Link>
-      <AdditionalDependencies>Rpcrt4.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;midixproc.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <RegisterOutput>true</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
@@ -145,7 +145,7 @@
       </ServerStubFile>
     </Midl>
     <Link>
-      <AdditionalDependencies>Rpcrt4.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;midixproc.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <RegisterOutput>true</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
@@ -165,7 +165,7 @@
       <GenerateServerFiles>Stub</GenerateServerFiles>
     </Midl>
     <Link>
-      <AdditionalDependencies>Rpcrt4.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;midixproc.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <RegisterOutput>true</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
@@ -173,6 +173,7 @@
     <ClCompile Include="MidiClientManager.cpp" />
     <ClCompile Include="MidiClientPipe.cpp" />
     <ClCompile Include="MidiDeviceManager.cpp" />
+    <ClCompile Include="MidiDevicePipe.cpp" />
     <ClCompile Include="MidiPerformanceManager.cpp" />
     <ClCompile Include="MidiProcessManager.cpp" />
     <ClCompile Include="MidiService.cpp" />
@@ -184,6 +185,7 @@
     <ClInclude Include="..\Inc\MidiClientManager.h" />
     <ClInclude Include="..\Inc\MidiClientPipe.h" />
     <ClInclude Include="..\Inc\MidiDeviceManager.h" />
+    <ClInclude Include="..\Inc\MidiDevicePipe.h" />
     <ClInclude Include="..\Inc\MidiPerformanceManager.h" />
     <ClInclude Include="..\Inc\MidiProcessManager.h" />
     <ClInclude Include="..\Inc\MidiSrv.h" />

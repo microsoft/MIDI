@@ -91,6 +91,7 @@ MidiFilter::Close(
 }
 
 _Use_decl_annotations_
+PAGED_CODE_SEG
 NTSTATUS
 CreateFilterFactory(
     PKSDEVICE device

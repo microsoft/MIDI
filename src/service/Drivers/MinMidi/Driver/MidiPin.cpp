@@ -292,6 +292,8 @@ MidiPin::Create(
     return STATUS_SUCCESS;
 }
 
+__drv_maxIRQL(PASSIVE_LEVEL)
+PAGED_CODE_SEG
 NTSTATUS
 MidiPin::Cleanup()
 {
@@ -532,6 +534,7 @@ MidiPin::Process(
 }
 
 _Use_decl_annotations_
+PAGED_CODE_SEG
 void MidiPin::WorkerThread(PVOID context)
 {
     PAGED_CODE();
@@ -539,9 +542,13 @@ void MidiPin::WorkerThread(PVOID context)
     midiPin->HandleIo();
 }
 
+__drv_maxIRQL(PASSIVE_LEVEL)
+PAGED_CODE_SEG
 void
 MidiPin::HandleIo()
 {
+    PAGED_CODE();
+
     // This function handles both sending and receiving midi messages
     // when cyclic buffering is being used.
     // This implememtation loops the midi out data back to midi in.
@@ -996,6 +1003,10 @@ MidiPin::CleanupSingleBufferMapping(
     return STATUS_SUCCESS;
 }
 
+// irql is restored through scope_exit, which is not detected properly by
+// static analysis.
+#pragma prefast(push)
+#pragma prefast(disable:28167)
 _Use_decl_annotations_
 NTSTATUS
 MidiPin::GetDoubleBufferMapping(
@@ -1039,6 +1050,7 @@ MidiPin::GetDoubleBufferMapping(
     if (UserMode == Mode)
     {
         SINGLE_BUFFER_MAPPING doubleBuffer;
+        KIRQL OldIrql;
 
         // Create a full mapping, with an allocation, of a buffer 2x the required buffer size.
         // We aren't going to keep this, this is just to get the memory manager to set aside some space
@@ -1053,96 +1065,98 @@ MidiPin::GetDoubleBufferMapping(
                 CleanupSingleBufferMapping(&doubleBuffer);
            });
 
-        // the following scope will have a raised IRQL, to help ensure the mapping succeeds.
-        KIRQL OldIrql;
-        KeRaiseIrql( APC_LEVEL, &OldIrql );
+        {
+            // the following scope will have a raised IRQL, to help ensure the mapping succeeds.
+            KeRaiseIrql(APC_LEVEL, &OldIrql);
 
-        // restore the irql when we exit this block, 
-        // whether or not the mapping has succeeded.
-        auto restoreIrql = wil::scope_exit([&]() {
-                KeLowerIrql( OldIrql );
+            // restore the irql when we exit this block, 
+            // whether or not the mapping has succeeded.
+            auto restoreIrql = wil::scope_exit([&]()
+            {
+                KeLowerIrql(OldIrql);
             });
 
-        // retry the mapping up to 8 times, until we have a successful client address for both mappings.
-        // When we unmap it's possible that something will come in and use the space that was just unmapped, causing
-        // the double mapping to fail.
-        for (int i = 0; i < 8 && ((nullptr == Mapping->Buffer1.m_BufferClientAddress) || (nullptr == Mapping->Buffer2.m_BufferClientAddress)); i++)
-        {
-            // First lock the double buffer
-            if (nullptr == doubleBuffer.m_BufferClientAddress)
+            // retry the mapping up to 8 times, until we have a successful client address for both mappings.
+            // When we unmap it's possible that something will come in and use the space that was just unmapped, causing
+            // the double mapping to fail.
+            for (int i = 0; i < 8 && ((nullptr == Mapping->Buffer1.m_BufferClientAddress) || (nullptr == Mapping->Buffer2.m_BufferClientAddress)); i++)
             {
+                // First lock the double buffer
+                if (nullptr == doubleBuffer.m_BufferClientAddress)
+                {
+                    __try
+                    {
+                        doubleBuffer.m_BufferClientAddress = MmMapLockedPagesSpecifyCache(doubleBuffer.m_BufferMdl, Mode, MmNonCached, NULL, FALSE, NormalPagePriority | MdlMappingNoExecute);
+                    }
+                    __except (EXCEPTION_EXECUTE_HANDLER)
+                    {
+                        doubleBuffer.m_BufferClientAddress = nullptr;
+                    }
+                    NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, nullptr == doubleBuffer.m_BufferClientAddress);
+                }
+
+                // save off the address that was used for the new locking
+                PVOID doubleBufferMappedAddress = doubleBuffer.m_BufferClientAddress;
+
+                // Unmap the double so we can try to map the other two buffers into its place,
+                // hopefully the memory block isn't taken before we complete the mapping-> If it is, we'll retry.
+                MmUnmapLockedPages(doubleBuffer.m_BufferClientAddress, doubleBuffer.m_BufferMdl);
+                doubleBuffer.m_BufferClientAddress = nullptr;
+
                 __try
                 {
-                    doubleBuffer.m_BufferClientAddress = MmMapLockedPagesSpecifyCache( doubleBuffer.m_BufferMdl, Mode, MmNonCached, NULL, FALSE, NormalPagePriority | MdlMappingNoExecute);
+                    // map the data buffer at the doubleBufferMappedAddress that we just had mapped, and then unmapped.
+                    Mapping->Buffer1.m_BufferClientAddress = MmMapLockedPagesSpecifyCache(Mapping->Buffer1.m_BufferMdl, Mode, MmNonCached, doubleBufferMappedAddress, FALSE, NormalPagePriority | MdlMappingNoExecute);
                 }
-                __except(EXCEPTION_EXECUTE_HANDLER)
+                __except (EXCEPTION_EXECUTE_HANDLER)
                 {
-                    doubleBuffer.m_BufferClientAddress = nullptr;
-                }
-                NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, nullptr == doubleBuffer.m_BufferClientAddress);
-            }
-
-            // save off the address that was used for the new locking
-            PVOID doubleBufferMappedAddress = doubleBuffer.m_BufferClientAddress;
-
-            // Unmap the double so we can try to map the other two buffers into its place,
-            // hopefully the memory block isn't taken before we complete the mapping-> If it is, we'll retry.
-            MmUnmapLockedPages( doubleBuffer.m_BufferClientAddress, doubleBuffer.m_BufferMdl );
-            doubleBuffer.m_BufferClientAddress = nullptr;
-
-            __try
-            {
-                // map the data buffer at the doubleBufferMappedAddress that we just had mapped, and then unmapped.
-                Mapping->Buffer1.m_BufferClientAddress = MmMapLockedPagesSpecifyCache(Mapping->Buffer1.m_BufferMdl, Mode, MmNonCached, doubleBufferMappedAddress, FALSE, NormalPagePriority | MdlMappingNoExecute);
-            }
-            __except(EXCEPTION_EXECUTE_HANDLER)
-            {
-                Mapping->Buffer1.m_BufferClientAddress = nullptr;
-            }
-
-            // if we mapped the buffer the first time, map the same buffer a second time
-            if (nullptr != Mapping->Buffer1.m_BufferClientAddress)
-            {
-                __try
-                {
-                    // map the same data buffer a second time, at an address immediately following the first mapping->
-                    Mapping->Buffer2.m_BufferClientAddress = MmMapLockedPagesSpecifyCache(Mapping->Buffer2.m_BufferMdl, Mode, MmNonCached, ((PVOID)(((PBYTE)(Mapping->Buffer1.m_BufferClientAddress))+BufferSize)), FALSE, NormalPagePriority | MdlMappingNoExecute);
-                }
-                __except(EXCEPTION_EXECUTE_HANDLER)
-                {
-                    Mapping->Buffer2.m_BufferClientAddress = nullptr;
-                }
-
-                // if we failed mapping the second time, we may be trying again,
-                // unmap the first mapping in preparation for the next try
-                if (nullptr == Mapping->Buffer2.m_BufferClientAddress)
-                {
-                    MmUnmapLockedPages( Mapping->Buffer1.m_BufferClientAddress, Mapping->Buffer1.m_BufferMdl );
                     Mapping->Buffer1.m_BufferClientAddress = nullptr;
                 }
 
-                // not back to back, try again
-                if (Mapping->Buffer2.m_BufferClientAddress != (((PBYTE)(Mapping->Buffer1.m_BufferClientAddress))+BufferSize))
+                // if we mapped the buffer the first time, map the same buffer a second time
+                if (nullptr != Mapping->Buffer1.m_BufferClientAddress)
                 {
-                    MmUnmapLockedPages( Mapping->Buffer1.m_BufferClientAddress, Mapping->Buffer1.m_BufferMdl );
-                    Mapping->Buffer1.m_BufferClientAddress = nullptr;
-                    MmUnmapLockedPages( Mapping->Buffer2.m_BufferClientAddress, Mapping->Buffer2.m_BufferMdl );
-                    Mapping->Buffer2.m_BufferClientAddress = nullptr;
-                }
+                    __try
+                    {
+                        // map the same data buffer a second time, at an address immediately following the first mapping->
+                        Mapping->Buffer2.m_BufferClientAddress = MmMapLockedPagesSpecifyCache(Mapping->Buffer2.m_BufferMdl, Mode, MmNonCached, ((PVOID)(((PBYTE)(Mapping->Buffer1.m_BufferClientAddress)) + BufferSize)), FALSE, NormalPagePriority | MdlMappingNoExecute);
+                    }
+                    __except (EXCEPTION_EXECUTE_HANDLER)
+                    {
+                        Mapping->Buffer2.m_BufferClientAddress = nullptr;
+                    }
 
+                    // if we failed mapping the second time, we may be trying again,
+                    // unmap the first mapping in preparation for the next try
+                    if (nullptr == Mapping->Buffer2.m_BufferClientAddress)
+                    {
+                        MmUnmapLockedPages(Mapping->Buffer1.m_BufferClientAddress, Mapping->Buffer1.m_BufferMdl);
+                        Mapping->Buffer1.m_BufferClientAddress = nullptr;
+                    }
+
+                    // not back to back, try again
+                    if (Mapping->Buffer2.m_BufferClientAddress != (((PBYTE)(Mapping->Buffer1.m_BufferClientAddress)) + BufferSize))
+                    {
+                        MmUnmapLockedPages(Mapping->Buffer1.m_BufferClientAddress, Mapping->Buffer1.m_BufferMdl);
+                        Mapping->Buffer1.m_BufferClientAddress = nullptr;
+                        MmUnmapLockedPages(Mapping->Buffer2.m_BufferClientAddress, Mapping->Buffer2.m_BufferMdl);
+                        Mapping->Buffer2.m_BufferClientAddress = nullptr;
+                    }
+
+                }
             }
+
+            // if mapping failed, we failed.
+            NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, nullptr == Mapping->Buffer1.m_BufferClientAddress);
+            NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, nullptr == Mapping->Buffer2.m_BufferClientAddress);
         }
-
-        // if mapping failed, we failed.
-        NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, nullptr == Mapping->Buffer1.m_BufferClientAddress);
-        NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, nullptr == Mapping->Buffer2.m_BufferClientAddress);
     } 
     else
     {
         // kernel mode needs to map slightly differently,
         // first, we allocate the mapping address space needed for both buffers,
         // then we map them to the reserved mapping.
-        Mapping->Buffer1.m_MappingAddress = MmAllocateMappingAddressEx(BufferSize * 2, MINMIDI_POOLTAG, MM_MAPPING_ADDRESS_DIVISIBLE);
+        Mapping->Buffer1.m_MappingAddress = MmAllocateMappingAddressEx(((SIZE_T) BufferSize) * 2, MINMIDI_POOLTAG, MM_MAPPING_ADDRESS_DIVISIBLE);
         NT_RETURN_NTSTATUS_IF(STATUS_INSUFFICIENT_RESOURCES, nullptr == Mapping->Buffer1.m_MappingAddress);
 
         Mapping->Buffer1.m_BufferClientAddress = MmMapLockedPagesWithReservedMapping(Mapping->Buffer1.m_MappingAddress, MINMIDI_POOLTAG, Mapping->Buffer1.m_BufferMdl, MmNonCached);
@@ -1160,6 +1174,7 @@ MidiPin::GetDoubleBufferMapping(
 
     return STATUS_SUCCESS;
 }
+#pragma prefast(pop)
 
 _Use_decl_annotations_
 NTSTATUS

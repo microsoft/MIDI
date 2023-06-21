@@ -62,3 +62,50 @@ CMidi2MidiSrvAbstraction::Activate(
     return S_OK;
 }
 
+_Use_decl_annotations_
+void __RPC_FAR* __RPC_USER midl_user_allocate(size_t ByteCount
+)
+{
+    return (void*)new (std::nothrow) BYTE[ByteCount];
+}
+
+_Use_decl_annotations_
+void __RPC_USER midl_user_free(void __RPC_FAR* Pointer
+)
+{
+    delete[](BYTE*)Pointer;
+}
+
+// using the protocol and endpoint, retrieve the midisrv
+// rpc binding handle
+_Use_decl_annotations_
+HRESULT
+GetMidiSrvBindingHandle(handle_t* BindingHandle
+)
+{
+    RETURN_HR_IF(E_INVALIDARG, nullptr == BindingHandle);
+    *BindingHandle = NULL;
+
+    RPC_WSTR stringBinding = nullptr;
+    auto cleanupOnExit = wil::scope_exit([&]()
+    {
+        if (stringBinding)
+        {
+            RpcStringFree(&stringBinding);
+        }
+    });
+
+    RETURN_IF_WIN32_ERROR(RpcStringBindingCompose(
+        nullptr,
+        reinterpret_cast<RPC_WSTR>(MIDISRV_LRPC_PROTOCOL),
+        nullptr,
+        reinterpret_cast<RPC_WSTR>(MIDISRV_ENDPOINT),
+        nullptr,
+        &stringBinding));
+
+    RETURN_IF_WIN32_ERROR(RpcBindingFromStringBinding(
+        stringBinding,
+        BindingHandle));
+
+    return S_OK;
+}

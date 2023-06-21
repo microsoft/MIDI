@@ -1,16 +1,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 #include "stdafx.h"
 
-void __RPC_FAR* __RPC_USER midl_user_allocate(size_t cBytes)
+
+
+_Use_decl_annotations_
+void *midl_user_allocate(size_t size)
 {
-    return (void*)new (std::nothrow) BYTE[cBytes];
+    return (void*)new (std::nothrow) BYTE[size];
 }
 
-void __RPC_USER midl_user_free(void __RPC_FAR* p)
+_Use_decl_annotations_
+void midl_user_free(void* p)
 {
     delete[] (BYTE*)p;
 }
 
+// To be removed
 // Simple test RPC to validate calling into the service and getting a service allocated
 // structure returned to the client with valid contents. Simple POC of the midisrv RPC implementation.
 HRESULT MidiSrvTestRpc(
@@ -48,6 +53,56 @@ HRESULT MidiSrvTestRpc(
     // transfer the allocation
     *AllocatedSettings = allocatedSettings;
     allocatedSettings = nullptr;
+
+    return S_OK;
+}
+
+HRESULT MidiSrvCreateClient(
+    /* [in] */ handle_t BindingHandle,
+    /* [string][in] */ __RPC__in_string LPCWSTR MidiDevice,
+    /* [in] */ __RPC__in PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
+    /* [out] */ __RPC__deref_out_opt PMIDISRV_CLIENT *Client)
+{
+    std::shared_ptr<CMidiClientManager> clientManager;
+    PMIDISRV_CLIENT createdClient {nullptr};
+
+    auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
+
+    auto cleanupOnExit = wil::scope_exit([&]() {
+        if (createdClient)
+        {
+            MIDL_user_free(createdClient);
+        }
+    });
+
+    // allocate a midl object to fill in and return to the client
+    createdClient = (PMIDISRV_CLIENT) MIDL_user_allocate(sizeof(MIDISRV_CLIENT));
+    RETURN_IF_NULL_ALLOC(createdClient);
+
+    ZeroMemory(createdClient, sizeof(MIDISRV_CLIENT));
+
+    // Client manager creates the client, fills in the MIDISRV_CLIENT information
+    RETURN_IF_FAILED(g_MidiService->GetClientManager(clientManager));
+    RETURN_IF_FAILED(clientManager->CreateMidiClient(BindingHandle, MidiDevice, CreationParams, createdClient));
+
+    // Success, transfer the MIDISRV_CLIENT data to the caller.
+    *Client = createdClient;
+    createdClient = nullptr;
+
+    return S_OK;
+}
+
+HRESULT MidiSrvDestroyClient(
+    /* [in] */ handle_t BindingHandle,
+    /* [in] */ __RPC__in MidiClientHandle ClientHandle)
+{
+    std::shared_ptr<CMidiClientManager> clientManager;
+
+    auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
+
+    // Client manager creates the client, fills in the MIDISRV_CLIENT information
+    RETURN_IF_FAILED(g_MidiService->GetClientManager(clientManager));
+    RETURN_IF_FAILED(clientManager->DestroyMidiClient(BindingHandle, ClientHandle));
 
     return S_OK;
 }

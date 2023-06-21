@@ -52,12 +52,15 @@
 
 #include "dllmain.h"
 
+#include "MidiDefs.h"
 #include "MidiKsDef.h"
 #include "MidiKsCommon.h"
 #include "MidiKsEnum.h"
+#include "MidiXProc.h"
 #include "MidiKs.h"
 
 #include "Midi2.KSAbstraction.h"
+#include "Midi2.KSMidi.h"
 #include "Midi2.KSMidiIn.h"
 #include "Midi2.KSMidiOut.h"
 #include "Midi2.KSMidiBiDi.h"
