@@ -8,6 +8,7 @@ All pluggable transports need to follow the contract defined by the services abs
 
 Likely transports over time
 
+* Loopback for testing
 * USB MIDI (plug-in speaks to new USB MIDI class driver for MIDI 1.0 and MIDI 2.0)
 * BLE MIDI (repackaging of WinRT MIDI interface to BLE)
 * RTP MIDI 1.0 (support existing RTP MIDI 1.0 devices)
@@ -20,4 +21,14 @@ Others may also create "playground" types of transports to enable experimentatio
 
 ## Settings UI sections
 
-TODO
+See the settings app plugins for information on how to create the UI-side of the transport
+
+## Creating your own pluggable transport abstraction
+
+Service plugins are COM DLLs which implement one or more of the service abstraction interfaces. Note that these aren't WinRT DLLs (WinRT generally does not allow runtime discovery and binding), but are straight-up classic COM.
+
+The easiest approach to creating one is to use one of the existing transports as a template, and then be sure to change all the GUIDs that aren't referring to the defined abstractions.
+
+When creating endpoints, you'll use the Bi-directional one for most/all MIDI 2.0 UMP Endpoints. The unidirectional versions are generally for MIDI 1.0 endpoints.
+
+We'll document more on this process as the abstractions are updated to include more capabilities.

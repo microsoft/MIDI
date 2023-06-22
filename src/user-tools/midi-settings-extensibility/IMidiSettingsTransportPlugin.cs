@@ -20,7 +20,7 @@ namespace Microsoft.Midi.Settings.Extensibility
     {
         // TODO: Expose a MidiTransportInformation object from the SDK 
 
-        Microsoft.Devices.Midi2.MidiTransportInformation TransportInformation { get; }
+ //       Microsoft.Devices.Midi2.MidiTransportInformation TransportInformation { get; }
 
         // TODO: return a winui object
         //Windows.UI.Xaml.FrameworkElement GetTransportSettingsPanel();
