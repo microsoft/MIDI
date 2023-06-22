@@ -9,17 +9,17 @@
   </PropertyGroup>
 
 	<PropertyGroup>
-		<CsWinRTIncludes>Microsoft.Devices.Midi2</CsWinRTIncludes>
+		<CsWinRTIncludes>Microsoft.Devices.Midi2.Setups</CsWinRTIncludes>
 		<CsWinRTGeneratedFilesDir>$(OutDir)</CsWinRTGeneratedFilesDir>
 	</PropertyGroup>
 
 	<PropertyGroup>
 		<GeneratedNugetDir>.\nuget\</GeneratedNugetDir>
-		<NuspecFile>$(GeneratedNugetDir)Microsoft.Devices.Midi2.nuspec</NuspecFile>
+		<NuspecFile>$(GeneratedNugetDir)Microsoft.Devices.Midi2.Setups.CS.nuspec</NuspecFile>
 		<OutputPath>$(GeneratedNugetDir)</OutputPath>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<AssemblyName>Microsoft.Devices.Midi2.CS</AssemblyName>
-		<PackageOutputPath>..\..\..\..\publish\app-dev-sdk\</PackageOutputPath>
+		<AssemblyName>Microsoft.Devices.Midi2.Setups.CS</AssemblyName>
+		<PackageOutputPath>..\..\..\publish\app-dev-sdk\</PackageOutputPath>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -27,11 +27,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="nuget\Microsoft.Devices.Midi2.nuspec" />
+    <None Include="nuget\Microsoft.Devices.Midi2.Setups.CS.nuspec" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\sdk-core\Microsoft.Devices.Midi2.Core.vcxproj" />
+    <ProjectReference Include="..\sdk-setups\Microsoft.Devices.Midi2.Setups.vcxproj" />
   </ItemGroup>
 
 </Project>

@@ -5,7 +5,7 @@ VisualStudioVersion = 17.7.33711.374
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Devices.Midi2.Core", "sdk-core\Microsoft.Devices.Midi2.Core.vcxproj", "{3AA50484-E4C1-41FB-9AE4-FEEA724E6077}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Devices.Midi2.Core.CSProjection", "sdk-core-projection-cs\Microsoft.Devices.Midi2.Core.CSProjection.csproj", "{FCCCC673-71D7-412A-B67E-8201A3CE1C93}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Devices.Midi2.Core.CS", "sdk-core-projection-cs\Microsoft.Devices.Midi2.Core.CS.csproj", "{FCCCC673-71D7-412A-B67E-8201A3CE1C93}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C3A60AEE-F167-4267-8B67-52ACAA3323A7}"
 	ProjectSection(SolutionItems) = preProject
@@ -24,6 +24,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Devices.Midi2.Setups", "sdk-setups\Microsoft.Devices.Midi2.Setups.vcxproj", "{67F25A4C-E651-4739-8B13-8F454CD57B4A}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Devices.Midi2.SettingsUI", "sdk-settings-ui\Microsoft.Devices.Midi2.SettingsAppLauncher.vcxproj", "{236E1240-6005-4909-9088-92A12015AECF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Devices.Midi2.Setups.CS", "sdk-setups-projection-cs\Microsoft.Devices.Midi2.Setups.CS.csproj", "{2704528E-6E20-4B1B-A139-2C8A8E982930}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -165,6 +167,22 @@ Global
 		{236E1240-6005-4909-9088-92A12015AECF}.Release|ARM64EC.Build.0 = Release|x64
 		{236E1240-6005-4909-9088-92A12015AECF}.Release|x64.ActiveCfg = Release|x64
 		{236E1240-6005-4909-9088-92A12015AECF}.Release|x64.Build.0 = Release|x64
+		{2704528E-6E20-4B1B-A139-2C8A8E982930}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2704528E-6E20-4B1B-A139-2C8A8E982930}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2704528E-6E20-4B1B-A139-2C8A8E982930}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{2704528E-6E20-4B1B-A139-2C8A8E982930}.Debug|ARM64.Build.0 = Debug|ARM64
+		{2704528E-6E20-4B1B-A139-2C8A8E982930}.Debug|ARM64EC.ActiveCfg = Debug|Any CPU
+		{2704528E-6E20-4B1B-A139-2C8A8E982930}.Debug|ARM64EC.Build.0 = Debug|Any CPU
+		{2704528E-6E20-4B1B-A139-2C8A8E982930}.Debug|x64.ActiveCfg = Debug|x64
+		{2704528E-6E20-4B1B-A139-2C8A8E982930}.Debug|x64.Build.0 = Debug|x64
+		{2704528E-6E20-4B1B-A139-2C8A8E982930}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2704528E-6E20-4B1B-A139-2C8A8E982930}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2704528E-6E20-4B1B-A139-2C8A8E982930}.Release|ARM64.ActiveCfg = Release|ARM64
+		{2704528E-6E20-4B1B-A139-2C8A8E982930}.Release|ARM64.Build.0 = Release|ARM64
+		{2704528E-6E20-4B1B-A139-2C8A8E982930}.Release|ARM64EC.ActiveCfg = Release|Any CPU
+		{2704528E-6E20-4B1B-A139-2C8A8E982930}.Release|ARM64EC.Build.0 = Release|Any CPU
+		{2704528E-6E20-4B1B-A139-2C8A8E982930}.Release|x64.ActiveCfg = Release|x64
+		{2704528E-6E20-4B1B-A139-2C8A8E982930}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
