@@ -14,6 +14,7 @@ import "MidiEndpointInformation.idl";
 import "MidiFunctionBlock.idl";
 import "MidiEndpointNativeDataFormatType.idl";
 import "Ump.idl";
+import "MidiMessagesReceivedEvent.idl";
 
 namespace Microsoft.Devices.Midi2
 {
@@ -68,8 +69,6 @@ namespace Microsoft.Devices.Midi2
         // https://learn.microsoft.com/en-us/previous-versions/dd798449(v=vs.85)
 
 
-
-
         // TODO: Some additional calls for information gathering. This will be in their own section
         // Property Exchange handling
         //  - Get patches, for example
@@ -78,7 +77,8 @@ namespace Microsoft.Devices.Midi2
         // We won't store the values here, as they are by endpoint, group, and channel, but will provide
         // functions to easily request the information
 
-        // TODO: Events etc. for receiving messages
+
+        event MidiMessagesReceivedEventHandler MessagesReceived;
 
     }
 }

@@ -12,7 +12,7 @@
 // for folks who wish to use them, and direct access to buffers of MIDI words for those who
 // prefer that approach.
 
-import "MidiMessageType.idl";
+import "Ump.idl";
 
 namespace Microsoft.Devices.Midi2
 {
@@ -21,16 +21,13 @@ namespace Microsoft.Devices.Midi2
     // JR timestamp if we decide to just pass them through
 
     [default_interface]
-    unsealed runtimeclass Ump
+    unsealed runtimeclass UmpWithTimestamp
     {
-        Ump();
+        UmpWithTimestamp();
 
-        // revisit this? Vector? Few discrete words?
-        UInt32[] Words{ get; };
-        UInt8 WordCount{ get; };
+        UInt32 Timestamp{ get; set; };
 
-        // TODO: Need to ensure unknown message types can still work for prototyping etc.
-        MidiMessageType MessageType { get; set; };
+        Microsoft.Devices.Midi2.Ump Ump{ get; set; };
 
     }
 }

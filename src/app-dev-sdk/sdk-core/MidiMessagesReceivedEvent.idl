@@ -1,0 +1,39 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+import "UmpWithTimestamp.idl";
+
+namespace Microsoft.Devices.Midi2
+{
+    [default_interface]
+    runtimeclass MidiMessagesReceivedEventArgs
+    {
+        MidiMessagesReceivedEventArgs();
+
+        // TODO: Decide if we just want a reference to the MidiEndpoint here instead of a fat string
+        String SourceMidiEndpointId{ get; set; };
+
+        // this creates copies of the data from the buffer, which is important
+        // in casees where the buffer is rapidly filling up and the app wants to
+        // do some longer processing
+        IVector<Microsoft.Devices.Midi2.UmpWithTimestamp> GetMessagesList();
+
+        // todo: potentially a method to get the raw buffer. Some danger here
+        // with the contents changing though, as it's a circular buffer, not
+        // a copy of the data. Don't want to build in a known race condition.
+
+
+        // todo: potentially a method to get a message reader which will
+        // spit out strongly typed messages, but parse them on the go. Same
+        // concerns as accessing the buffer directly
+    }
+
+
+    delegate void MidiMessagesReceivedEventHandler(MidiMessagesReceivedEventArgs args);
+
+}

@@ -49,4 +49,13 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
+
+    winrt::event_token MidiEndpoint::MessagesReceived(winrt::Microsoft::Devices::Midi2::MidiMessagesReceivedEventHandler const& handler)
+    {
+        throw hresult_not_implemented();
+    }
+    void MidiEndpoint::MessagesReceived(winrt::event_token const& token) noexcept
+    {
+        throw hresult_not_implemented();
+    }
 }

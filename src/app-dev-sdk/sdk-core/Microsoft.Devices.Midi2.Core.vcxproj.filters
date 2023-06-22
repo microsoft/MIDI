@@ -46,11 +46,14 @@
     <ClCompile Include="MidiHighResolutionValueDisplayFormatter.cpp">
       <Filter>SDK\Display</Filter>
     </ClCompile>
-    <ClCompile Include="MidiSettingsApp.cpp">
-      <Filter>SDK\Settings</Filter>
-    </ClCompile>
     <ClCompile Include="MidiTransportInformation.cpp">
       <Filter>SDK\Transports</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessagesReceivedEventArgs.cpp">
+      <Filter>SDK\Endpoints</Filter>
+    </ClCompile>
+    <ClCompile Include="UmpWithTimestamp.cpp">
+      <Filter>SDK\Messages</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -68,11 +71,14 @@
     <ClInclude Include="MidiHighResolutionValueDisplayFormatter.h">
       <Filter>SDK\Display</Filter>
     </ClInclude>
-    <ClInclude Include="MidiSettingsApp.h">
-      <Filter>SDK\Settings</Filter>
-    </ClInclude>
     <ClInclude Include="MidiTransportInformation.h">
       <Filter>SDK\Transports</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessagesReceivedEventArgs.h">
+      <Filter>SDK\Endpoints</Filter>
+    </ClInclude>
+    <ClInclude Include="UmpWithTimestamp.h">
+      <Filter>SDK\Messages</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -147,6 +153,12 @@
     </Midl>
     <Midl Include="MidiGroupTerminalBlock.idl">
       <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiMessagesReceivedEvent.idl">
+      <Filter>SDK\Endpoints</Filter>
+    </Midl>
+    <Midl Include="UmpWithTimestamp.idl">
+      <Filter>SDK\Messages</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
