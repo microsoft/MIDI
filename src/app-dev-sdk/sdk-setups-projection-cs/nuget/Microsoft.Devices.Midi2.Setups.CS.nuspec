@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
 	<metadata>
 		<id>Microsoft.Devices.Midi2.Setups.CS</id>
-		<version>0.1.1-prerelease</version>
+		<version>0.1.5-prerelease</version>
 		<authors>Microsoft</authors>
 		<description>Windows MIDI Services Setups SDK. Applications only need this if they are helping the user manage their setups.</description>
 		<dependencies>
@@ -15,25 +15,20 @@
 	<files>		
 		<!-- CS / .NET projection ==================================== -->
 		
-		<!--<file src="..\..\_build\x64\Debug\MidiAppSdkCSProjection\bin\Microsoft.Devices.Midi2.CS.dll" 
-			  target="lib\net7.0-windows10.0.20348.0\Microsoft.Devices.Midi2.CS.dll" /> -->
 		<file src="..\..\_build\x64\Debug\Microsoft.Devices.Midi2.Setups.CS\bin\Microsoft.Devices.Midi2.Setups.CS.dll" 
-			  target="runtimes\win10-x64\native\Microsoft.Devices.Midi2.Setups.CS.dll" />
+			  target="lib\net7.0-windows10.0.20348.0\Microsoft.Devices.Midi2.Setups.CS.dll" />
+		<!--<file src="..\..\_build\x64\Debug\Microsoft.Devices.Midi2.Setups.CS\bin\Microsoft.Devices.Midi2.Setups.CS.dll" 
+			  target="runtimes\win10-x64\native\Microsoft.Devices.Midi2.Setups.CS.dll" /> -->
 		
 		<!-- Metadata ================================================ -->
 			
 		<file src="..\..\_build\x64\Debug\Microsoft.Devices.Midi2.Setups\bin\Microsoft.Devices.Midi2.Setups\Microsoft.Devices.Midi2.Setups.winmd" 
-			  target="lib\net7.0-windows10.0.20348.0\Microsoft.Devices.Midi2.Setups.winmd" />
-		<!--<file src="..\..\_build\x64\Release\midi-app-sdk\bin\midi-app-sdk\Microsoft.Devices.Midi2.winmd" target="lib\uap10.0\Microsoft.Devices.Midi2.winmd" />-->
-		<!--<file src="..\..\_build\x64\Release\midi-app-sdk\bin\midi-app-sdk\Microsoft.Devices.Midi2.winmd" target="lib\net46\Microsoft.Devices.Midi2.winmd" />-->
+			  target="runtimes\win10-x64\native\Microsoft.Devices.Midi2.Setups.winmd" />
 
 		<!-- Other Binaries ========================================== -->
 
 		<!--Architecture-specific implementation DLLs should be copied into RID-relative folders-->
 		<file src="..\..\_build\x64\Debug\Microsoft.Devices.Midi2.Setups\bin\Microsoft.Devices.Midi2.Setups\Microsoft.Devices.Midi2.Setups.dll" 
 			  target="runtimes\win10-x64\native\Microsoft.Devices.Midi2.Setups.dll" />
-
-		<!--To support x86 and Arm64, build midi-app-sdk for those other architectures and uncomment the entries below.-->
-		<!--<file src="..\..\_build\arm64\Release\midi-app-sdk\bin\midi-app-sdk\Microsoft.Devices.Midi2.dll" target="runtimes\win10-arm64\native\Microsoft.Devices.Midi2.dll" />-->
 	</files>
 </package>

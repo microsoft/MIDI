@@ -1,17 +1,15 @@
-﻿{
-  "profiles":
-  {
-    "Microsoft.Midi.Settings (Package)":
-    {
+{
+  "profiles": {
+    "Microsoft.Midi.Settings (Package)": {
       "commandName": "MsixPackage",
-      "allowLocalNetworkLoopbackProperty": true, /* Allow the app to make network calls to the device it is installed on. */
-      "nativeDebugging": true /* Enable debugging for managed and native code together, also known as mixed-mode debugging. */
+      "allowLocalNetworkLoopbackProperty": true,
+      "nativeDebugging": true,
+      "hotReloadEnabled": false
     },
-    "Microsoft.Midi.Settings (Unpackaged)":
-    {
+    "Microsoft.Midi.Settings (Unpackaged)": {
       "commandName": "Project",
-      "allowLocalNetworkLoopbackProperty": true, /* Allow the app to make network calls to the device it is installed on. */
-      "nativeDebugging": true /* Enable debugging for managed and native code together, also known as mixed-mode debugging. */
+      "allowLocalNetworkLoopbackProperty": true,
+      "nativeDebugging": true
     }
   }
 }
