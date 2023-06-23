@@ -15,8 +15,8 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         UmpWithTimestamp() = default;
 
-        uint32_t Timestamp();
-        void Timestamp(uint32_t value);
+        uint64_t Timestamp();
+        void Timestamp(uint64_t value);
         winrt::Microsoft::Devices::Midi2::Ump Ump();
         void Ump(winrt::Microsoft::Devices::Midi2::Ump const& value);
     };

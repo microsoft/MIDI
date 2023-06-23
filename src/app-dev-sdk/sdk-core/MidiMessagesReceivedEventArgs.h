@@ -16,8 +16,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         MidiMessagesReceivedEventArgs() = default;
 
         hstring SourceMidiEndpointId();
-        void SourceMidiEndpointId(hstring const& value);
-        winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::UmpWithTimestamp> GetMessagesList();
+        winrt::Microsoft::Devices::Midi2::MidiMessageReader GetMessageReader();
     };
 }
 namespace winrt::Microsoft::Devices::Midi2::factory_implementation

@@ -69,9 +69,11 @@ int main()
             // then you connect to the UMP endpoint
             auto endpoint = session.ConnectToEndpoint(selectedMidiEndpointInformation.Id(), true, MidiEndpointConnectOptions::Default());
 
-            // after connecting, you can send and receive messages and more
+            // after connecting, you can send and receive messages
 
-            // ...
+            auto writer = endpoint.GetMessageWriter();
+
+            // writer.WriteUmpWithTimestamp(...);
 
 
         }
@@ -80,7 +82,8 @@ int main()
             // no MIDI endpoints found. We'll just bail here
         }
 
-        // close the session, detaching all Windows MIDI Services resources
+        // close the session, detaching all Windows MIDI Services resources and closing all connections
+        // You can also disconnect individual Endpoint Connections when you are done with them
         session.Close();
     }
     else

@@ -19,7 +19,6 @@ namespace Microsoft.Devices.Midi2
         Boolean DisableProcessingFunctionBlockInformationMessages { get; set; };
         Boolean DisableProcessingEndpointInformationMessages { get; set; };
 
-        Boolean UseSessionLevelMessageReceiveHandler{ get; set; };
 
         static MidiEndpointConnectOptions Default{ get; };
     }

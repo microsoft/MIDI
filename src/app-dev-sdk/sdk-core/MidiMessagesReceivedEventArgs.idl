@@ -1,0 +1,32 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+// this event is just a signal to the client to read from the midimessagereader for the endpointconnection
+// This avoids copying data, and provides a lot more flexibility.
+
+
+import "UmpWithTimestamp.idl";
+import "MidiMessageReader.idl";
+
+namespace Microsoft.Devices.Midi2
+{
+    [default_interface]
+    runtimeclass MidiMessagesReceivedEventArgs
+    {
+        MidiMessagesReceivedEventArgs();
+
+        // TODO: Decide if we just want a reference to the MidiEndpoint here instead of a fat string
+        String SourceMidiEndpointId{ get; };
+
+        // convenience shortcut to the same reader from the Endpoint Connection. Useful for those who
+        // prefer a traditional .NET or WinRT approach to message handling
+        MidiMessageReader GetMessageReader();
+
+
+    }
+}

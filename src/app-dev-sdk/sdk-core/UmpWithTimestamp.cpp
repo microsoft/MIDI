@@ -12,11 +12,11 @@
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    uint32_t UmpWithTimestamp::Timestamp()
+    uint64_t UmpWithTimestamp::Timestamp()
     {
         throw hresult_not_implemented();
     }
-    void UmpWithTimestamp::Timestamp(uint32_t value)
+    void UmpWithTimestamp::Timestamp(uint64_t value)
     {
         throw hresult_not_implemented();
     }

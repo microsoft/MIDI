@@ -16,11 +16,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
-    void MidiMessagesReceivedEventArgs::SourceMidiEndpointId(hstring const& value)
-    {
-        throw hresult_not_implemented();
-    }
-    winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::UmpWithTimestamp> MidiMessagesReceivedEventArgs::GetMessagesList()
+    winrt::Microsoft::Devices::Midi2::MidiMessageReader MidiMessagesReceivedEventArgs::GetMessageReader()
     {
         throw hresult_not_implemented();
     }

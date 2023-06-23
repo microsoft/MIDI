@@ -14,14 +14,18 @@ import "MidiEndpointInformation.idl";
 import "MidiFunctionBlock.idl";
 import "MidiEndpointDataFormatEnum.idl";
 import "UmpWithTimestamp.idl";
-import "MidiMessagesReceivedEvent.idl";
+import "MidiMessagesReceivedEventArgs.idl";
+import "MidiMessageReader.idl";
+import "MidiMessageWriter.idl";
 
 namespace Microsoft.Devices.Midi2
 {
     [default_interface]
     runtimeclass MidiEndpointConnection
     {
-        MidiEndpointConnection();
+        //MidiEndpointConnection();
+
+        // Enumeration Assistance ==============================================================================================
 
         // Get the device selector for all compatible devices
         static String GetDeviceSelector();
@@ -32,16 +36,16 @@ namespace Microsoft.Devices.Midi2
         // Id from Windows. This can be used to retrieve the MidiDeviceInformation object with the PnP properties
         String DeviceId{ get; };
 
-        // TODO: the other types of names (user-provided, device-provided, etc.)
-        
+
+
+
+        // In-protocol Metadata ================================================================================================
+
         Boolean EndpointInformationValid{ get; };               // needed because WinRT doesn't allow null types
         MidiEndpointInformation EndpointInformation{ get; };    // information from Endpoint Info request. Not valid until EndpointInformation requested and received.
 
         // Blocks which tell us how to treat the groups
         IObservableVector<MidiFunctionBlock>FunctionBlocks { get; };  // these are discovered in-protocol. They can change within the rules in the spec
-
-        // Messages received event only if the centralized message receive is not used
-        event Windows.Foundation.EventHandler<MidiMessagesReceivedEventArgs> MessagesReceived;
 
 
         // call this if you have your own worker thread. It's a long-running operation
@@ -53,26 +57,19 @@ namespace Microsoft.Devices.Midi2
 
 
 
-        // Send a single strongly-typed UMP with a timestamp
-        //void SendUmp(UInt64 timestamp, Microsoft.Devices.Midi2.Ump ump);
-        void SendUmp(Microsoft.Devices.Midi2.UmpWithTimestamp ump);
+        // Message I/O =========================================================================================================
 
-        // send multiple strongly-typed UMPs
-        //void SendMultipleUmps(UInt64 timestamp, IVector<Ump> umps);
-        void SendMultipleUmps(IVector<UmpWithTimestamp> umps);
+        // Use this to obtain the message reader (one per Endpoint Connection) for processing incoming messages
+        // repeat calls to this will return the same instance
+        MidiMessageReader GetMessageReader();
 
-        // Send a vector of MIDI words. The full set of words need to result in complete UMPs.
-        // This will require the code to read the words and inser the the timestamp into the stream
-        // in between each complete UMP
-        void SendMultipleUmpsAsWords(UInt64 timestamp, IVector<UInt32> midiWords);
+        // Use this to obtain the message writer (one per Endpoint Connection) for sending messages
+        // repeat calls to this will return the same instance
+        MidiMessageWriter GetMessageWriter();
 
 
-        // May need to implement a separate COM interface for just pointer passing from C++ and similar, as an optimization
-        // That could be done inside a buffer type so the buffer can point to pre-allocated app memory
-        // More info: https://devblogs.microsoft.com/oldnewthing/20200424-00/?p=103702
-        // And our winmm impl https://learn.microsoft.com/en-us/windows/win32/api/mmeapi/nf-mmeapi-midioutlongmsg
-        // https://learn.microsoft.com/en-us/previous-versions/dd798449(v=vs.85)
-
+        // notification that there are new messages received. Optional.
+        event Windows.Foundation.EventHandler<MidiMessagesReceivedEventArgs> MessagesReceived;
 
     }
 }
