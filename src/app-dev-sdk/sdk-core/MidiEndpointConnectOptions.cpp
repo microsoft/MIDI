@@ -35,4 +35,17 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
+
+    bool MidiEndpointConnectOptions::UseSessionLevelMessageReceiveHandler()
+    {
+        throw hresult_not_implemented();
+    }
+    void MidiEndpointConnectOptions::UseSessionLevelMessageReceiveHandler(bool value)
+    {
+        throw hresult_not_implemented();
+    }
+
+    
+
+
 }

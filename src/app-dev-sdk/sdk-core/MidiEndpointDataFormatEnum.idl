@@ -10,9 +10,9 @@
 namespace Microsoft.Devices.Midi2
 {
 
-    enum MidiEndpointNativeDataFormatType
+    enum MidiEndpointDataFormat
     {
-        EndpointTypeNativeUmp = 1,
-        EndpointTypeTranslatedMidi10ByteStream = 2
+        NativeUmp = 1,
+        TranslatedMidi10ByteStream = 2
     };
 }

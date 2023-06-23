@@ -6,23 +6,23 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-
 #pragma once
-#include "MidiSessionSettings.g.h"
+#include "MidiMessagesReceivedEventArgs.g.h"
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    struct MidiSessionSettings : MidiSessionSettingsT<MidiSessionSettings>
+    struct MidiMessagesReceivedEventArgs : MidiMessagesReceivedEventArgsT<MidiMessagesReceivedEventArgs>
     {
-        MidiSessionSettings() = default;
+        MidiMessagesReceivedEventArgs() = default;
 
-        static winrt::Microsoft::Devices::Midi2::MidiSessionSettings Default();
-
+        hstring SourceMidiEndpointId();
+        void SourceMidiEndpointId(hstring const& value);
+        winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::UmpWithTimestamp> GetMessagesList();
     };
 }
 namespace winrt::Microsoft::Devices::Midi2::factory_implementation
 {
-    struct MidiSessionSettings : MidiSessionSettingsT<MidiSessionSettings, implementation::MidiSessionSettings>
+    struct MidiMessagesReceivedEventArgs : MidiMessagesReceivedEventArgsT<MidiMessagesReceivedEventArgs, implementation::MidiMessagesReceivedEventArgs>
     {
     };
 }

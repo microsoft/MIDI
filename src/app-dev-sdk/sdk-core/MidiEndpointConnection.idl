@@ -12,24 +12,22 @@
 
 import "MidiEndpointInformation.idl";
 import "MidiFunctionBlock.idl";
-import "MidiEndpointNativeDataFormatType.idl";
-import "Ump.idl";
+import "MidiEndpointDataFormatEnum.idl";
+import "UmpWithTimestamp.idl";
+import "MidiMessagesReceivedEvent.idl";
 
 namespace Microsoft.Devices.Midi2
 {
     [default_interface]
-    runtimeclass MidiEndpoint
+    runtimeclass MidiEndpointConnection
     {
-        MidiEndpoint();
+        MidiEndpointConnection();
 
-        // device selector for all compatible devices
+        // Get the device selector for all compatible devices
         static String GetDeviceSelector();
     
         // device selector for a device which implements a specific MIDI transport/protocol
-        static String GetDeviceSelector(MidiEndpointNativeDataFormatType midiEndpointType);
-
-
-
+        static String GetDeviceSelector(MidiEndpointDataFormat midiEndpointDataFormat);
 
         // Id from Windows. This can be used to retrieve the MidiDeviceInformation object with the PnP properties
         String DeviceId{ get; };
@@ -42,43 +40,39 @@ namespace Microsoft.Devices.Midi2
         // Blocks which tell us how to treat the groups
         IObservableVector<MidiFunctionBlock>FunctionBlocks { get; };  // these are discovered in-protocol. They can change within the rules in the spec
 
+        // Messages received event only if the centralized message receive is not used
+        event Windows.Foundation.EventHandler<MidiMessagesReceivedEventArgs> MessagesReceived;
 
-        // NOTE: This is likely to change. We're working on the correct buffers to speak to the service
-        // and API. That buffer also deals with timestamps and more. Intent is to provide UMP types
-        // for folks who wish to use them, and direct access to buffers of MIDI words for those who
-        // prefer that approach.
+
+        // call this if you have your own worker thread. It's a long-running operation
+        void RequestEndpointInformationAndFunctions(Boolean forceRefresh);
+
+        // call this version if you do not use your own worker thread. It's a long-running operation
+        Windows.Foundation.IAsyncAction RequestEndpointInformationAndFunctionsAsync(Boolean forceRefresh);
+
+
+
 
         // Send a single strongly-typed UMP with a timestamp
-        void SendUmp(UInt64 timestamp, Microsoft.Devices.Midi2.Ump ump);
+        //void SendUmp(UInt64 timestamp, Microsoft.Devices.Midi2.Ump ump);
+        void SendUmp(Microsoft.Devices.Midi2.UmpWithTimestamp ump);
 
         // send multiple strongly-typed UMPs
-        void SendMultipleUmps(UInt64 timestamp, IVector<Ump> umps);
+        //void SendMultipleUmps(UInt64 timestamp, IVector<Ump> umps);
+        void SendMultipleUmps(IVector<UmpWithTimestamp> umps);
 
         // Send a vector of MIDI words. The full set of words need to result in complete UMPs.
+        // This will require the code to read the words and inser the the timestamp into the stream
+        // in between each complete UMP
         void SendMultipleUmpsAsWords(UInt64 timestamp, IVector<UInt32> midiWords);
 
-        // TODO: Need to add a version that is just a pointer to a buffer of words, so can do a copy into the cyclic buffer
-        // Maybe also have UmpBufferReader/Writer pairs and a UmpBuffer type and get rid of all but the SendUmp above?
-        // Change methods to SendMessage instead of Ump to make it more clear?
-        
+
         // May need to implement a separate COM interface for just pointer passing from C++ and similar, as an optimization
         // That could be done inside a buffer type so the buffer can point to pre-allocated app memory
         // More info: https://devblogs.microsoft.com/oldnewthing/20200424-00/?p=103702
         // And our winmm impl https://learn.microsoft.com/en-us/windows/win32/api/mmeapi/nf-mmeapi-midioutlongmsg
         // https://learn.microsoft.com/en-us/previous-versions/dd798449(v=vs.85)
 
-
-
-
-        // TODO: Some additional calls for information gathering. This will be in their own section
-        // Property Exchange handling
-        //  - Get patches, for example
-        // Profile capture
-        // more
-        // We won't store the values here, as they are by endpoint, group, and channel, but will provide
-        // functions to easily request the information
-
-        // TODO: Events etc. for receiving messages
 
     }
 }

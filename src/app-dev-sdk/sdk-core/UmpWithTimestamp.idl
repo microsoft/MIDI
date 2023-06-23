@@ -12,25 +12,22 @@
 // for folks who wish to use them, and direct access to buffers of MIDI words for those who
 // prefer that approach.
 
-import "MidiMessageTypeEnum.idl";
+import "Ump.idl";
 
 namespace Microsoft.Devices.Midi2
 {
-    // TODO: Consider if this should just be a simple struct, and leave 
-    // the rest of the properties to the strongly typed classes. Optimize
-    // for performance and memory here. They all end up as C++ structs for WinRT anyway
+    // TODO: Timestamps will come in for each message, and go out with each message. Include them 
+    // in the base Ump class, or create a wrapper class? A wrapper class *could* also include a 
+    // JR timestamp if we decide to just pass them through
 
     [default_interface]
-    unsealed runtimeclass Ump
+    unsealed runtimeclass UmpWithTimestamp
     {
-        Ump();
+        UmpWithTimestamp();
 
-        // revisit this? Vector? Few discrete words?
-        UInt32[] Words{ get; };
-        UInt8 WordCount{ get; };
+        UInt32 Timestamp{ get; set; };
 
-        // TODO: Need to ensure unknown message types can still work for prototyping etc.
-        MidiMessageType MessageType { get; set; };
+        Microsoft.Devices.Midi2.Ump Ump{ get; set; };
 
     }
 }

@@ -6,14 +6,25 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-
 #include "pch.h"
-#include "MidiSessionSettings.h"
-#include "MidiSessionSettings.g.cpp"
+#include "UmpWithTimestamp.h"
+#include "UmpWithTimestamp.g.cpp"
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    winrt::Microsoft::Devices::Midi2::MidiSessionSettings MidiSessionSettings::Default()
+    uint32_t UmpWithTimestamp::Timestamp()
+    {
+        throw hresult_not_implemented();
+    }
+    void UmpWithTimestamp::Timestamp(uint32_t value)
+    {
+        throw hresult_not_implemented();
+    }
+    winrt::Microsoft::Devices::Midi2::Ump UmpWithTimestamp::Ump()
+    {
+        throw hresult_not_implemented();
+    }
+    void UmpWithTimestamp::Ump(winrt::Microsoft::Devices::Midi2::Ump const& value)
     {
         throw hresult_not_implemented();
     }

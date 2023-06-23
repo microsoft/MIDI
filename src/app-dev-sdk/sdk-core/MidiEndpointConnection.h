@@ -8,28 +8,32 @@
 
 
 #pragma once
-#include "MidiEndpoint.g.h"
+#include "MidiEndpointConnection.g.h"
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    struct MidiEndpoint : MidiEndpointT<MidiEndpoint>
+    struct MidiEndpointConnection : MidiEndpointConnectionT<MidiEndpointConnection>
     {
-        MidiEndpoint() = default;
+        MidiEndpointConnection() = default;
 
         static hstring GetDeviceSelector();
-        static hstring GetDeviceSelector(winrt::Microsoft::Devices::Midi2::MidiEndpointNativeDataFormatType const& midiEndpointType);
+        static hstring GetDeviceSelector(winrt::Microsoft::Devices::Midi2::MidiEndpointDataFormat const& midiEndpointDataFormat);
         hstring DeviceId();
         bool EndpointInformationValid();
         winrt::Microsoft::Devices::Midi2::MidiEndpointInformation EndpointInformation();
         winrt::Windows::Foundation::Collections::IObservableVector<winrt::Microsoft::Devices::Midi2::MidiFunctionBlock> FunctionBlocks();
-        void SendUmp(uint64_t timestamp, winrt::Microsoft::Devices::Midi2::Ump const& ump);
-        void SendMultipleUmps(uint64_t timestamp, winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::Ump> const& umps);
+        winrt::event_token MessagesReceived(winrt::Windows::Foundation::EventHandler<winrt::Microsoft::Devices::Midi2::MidiMessagesReceivedEventArgs> const& handler);
+        void MessagesReceived(winrt::event_token const& token) noexcept;
+        void RequestEndpointInformationAndFunctions(bool forceRefresh);
+        winrt::Windows::Foundation::IAsyncAction RequestEndpointInformationAndFunctionsAsync(bool forceRefresh);
+        void SendUmp(winrt::Microsoft::Devices::Midi2::UmpWithTimestamp const& ump);
+        void SendMultipleUmps(winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::UmpWithTimestamp> const& umps);
         void SendMultipleUmpsAsWords(uint64_t timestamp, winrt::Windows::Foundation::Collections::IVector<uint32_t> const& midiWords);
     };
 }
 namespace winrt::Microsoft::Devices::Midi2::factory_implementation
 {
-    struct MidiEndpoint : MidiEndpointT<MidiEndpoint, implementation::MidiEndpoint>
+    struct MidiEndpointConnection : MidiEndpointConnectionT<MidiEndpointConnection, implementation::MidiEndpointConnection>
     {
     };
 }

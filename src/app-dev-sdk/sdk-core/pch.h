@@ -16,3 +16,4 @@
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 
+#include <stdint.h>

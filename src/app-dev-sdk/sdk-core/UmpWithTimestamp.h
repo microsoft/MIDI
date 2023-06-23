@@ -6,23 +6,24 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-
 #pragma once
-#include "MidiSessionSettings.g.h"
+#include "UmpWithTimestamp.g.h"
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    struct MidiSessionSettings : MidiSessionSettingsT<MidiSessionSettings>
+    struct UmpWithTimestamp : UmpWithTimestampT<UmpWithTimestamp>
     {
-        MidiSessionSettings() = default;
+        UmpWithTimestamp() = default;
 
-        static winrt::Microsoft::Devices::Midi2::MidiSessionSettings Default();
-
+        uint32_t Timestamp();
+        void Timestamp(uint32_t value);
+        winrt::Microsoft::Devices::Midi2::Ump Ump();
+        void Ump(winrt::Microsoft::Devices::Midi2::Ump const& value);
     };
 }
 namespace winrt::Microsoft::Devices::Midi2::factory_implementation
 {
-    struct MidiSessionSettings : MidiSessionSettingsT<MidiSessionSettings, implementation::MidiSessionSettings>
+    struct UmpWithTimestamp : UmpWithTimestampT<UmpWithTimestamp, implementation::UmpWithTimestamp>
     {
     };
 }

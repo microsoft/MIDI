@@ -12,8 +12,11 @@
 			<!--<group targetFramework=".NETFramework4.6" /> -->
 		</dependencies>
 	</metadata>
-	<files>		
-		<!-- CS / .NET projection ==================================== -->
+	<files>
+		<!-- TODO: Add UAP, Uno and desktop .NET targets after testing -->
+		<!-- TODO: Rename the projection assemblies - remove CS and replace with a generic net indicator -->
+
+		<!-- .NET projection ==================================== -->
 		
 		<file src="..\..\_build\x64\Debug\Microsoft.Devices.Midi2.Setups.CS\bin\Microsoft.Devices.Midi2.Setups.CS.dll" 
 			  target="lib\net7.0-windows10.0.20348.0\Microsoft.Devices.Midi2.Setups.CS.dll" />

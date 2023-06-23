@@ -6,6 +6,7 @@
 // Windows MIDI Services sample code
 
 #include "pch.h"
+#include <iostream>
 
 using namespace winrt;
 using namespace Microsoft::Devices::Midi2;
@@ -30,14 +31,16 @@ int main()
         // more than one session. If so, the session name should be meaningful to the user, like
         // the name of a browser tab, or a project.
 
-        auto session = MidiSession::CreateNewSession(L"Sample Session");
+        MidiSessionSettings sessionSettings = MidiSessionSettings::Default();
+
+        auto session = MidiSession::CreateNewSession(L"Sample Session", sessionSettings);
 
         // you can ask for MIDI 1.0 Byte Stream devices, MIDI 2.0 UMP devices, or both. Note that Some MIDI 2.0
         // endpoints may have MIDI 1.0 function blocks in them, so this is endpoint/device-level only.
         // Note that every device uses UMP through this API, but it can be helpful to know when a device is
         // a MIDI 1.0 device at the main interface level.
 
-        hstring deviceSelector = MidiEndpoint::GetDeviceSelector();
+        hstring deviceSelector = MidiEndpointConnection::GetDeviceSelector();
 
         // Enumerate UMP endpoints. Note that per C++, main cannot be a co-routine,
         // so we can't just co_await this async call, but instead use the C++/WinRT Extension "get()". 
@@ -50,15 +53,27 @@ int main()
 
         if (endpointDevices.Size() > 0)
         {
-            // We're going to just pick the first one we find. 
+            // We're going to just pick the first one we find. Normally, you'd have the user pick from a list
+            // or you'd otherwise have an Id at hand.
             DeviceInformation selectedEndpointInformation = endpointDevices.GetAt(0);
 
+            // if we want the additional properties that are available to us, we can wrap the
+            // DeviceInformation object with a MIDI-specific one. You can also skip this and call the CreatFromId 
+            // method directly on MidiDeviceInformation if you have an Id handy.
+            MidiDeviceInformation selectedMidiEndpointInformation = MidiDeviceInformation::FromDeviceInformation(selectedEndpointInformation);
+
+            //selectedMidiEndpointInformation.DeviceThumbnail();
+            //selectedMidiEndpointInformation.EndpointDataFormat();
+            // ...
+
             // then you connect to the UMP endpoint
-            auto endpoint = session.ConnectToEndpoint(selectedEndpointInformation.Id(), true, MidiEndpointConnectOptions::Default());
+            auto endpoint = session.ConnectToEndpoint(selectedMidiEndpointInformation.Id(), true, MidiEndpointConnectOptions::Default());
 
             // after connecting, you can send and receive messages and more
 
             // ...
+
+
         }
         else
         {

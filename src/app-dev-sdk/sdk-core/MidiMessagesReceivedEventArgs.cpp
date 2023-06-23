@@ -6,14 +6,21 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-
 #include "pch.h"
-#include "MidiSessionSettings.h"
-#include "MidiSessionSettings.g.cpp"
+#include "MidiMessagesReceivedEventArgs.h"
+#include "MidiMessagesReceivedEventArgs.g.cpp"
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    winrt::Microsoft::Devices::Midi2::MidiSessionSettings MidiSessionSettings::Default()
+    hstring MidiMessagesReceivedEventArgs::SourceMidiEndpointId()
+    {
+        throw hresult_not_implemented();
+    }
+    void MidiMessagesReceivedEventArgs::SourceMidiEndpointId(hstring const& value)
+    {
+        throw hresult_not_implemented();
+    }
+    winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::UmpWithTimestamp> MidiMessagesReceivedEventArgs::GetMessagesList()
     {
         throw hresult_not_implemented();
     }
