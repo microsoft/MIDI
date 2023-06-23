@@ -25,7 +25,7 @@ namespace Microsoft.Devices.Midi2
     {
         UmpWithTimestamp();
 
-        UInt32 Timestamp{ get; set; };
+        UInt64 Timestamp{ get; set; };
 
         Microsoft.Devices.Midi2.Ump Ump{ get; set; };
 

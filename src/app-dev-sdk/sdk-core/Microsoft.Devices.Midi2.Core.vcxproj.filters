@@ -163,6 +163,15 @@
     <Midl Include="UmpWithTimestamp.idl">
       <Filter>SDK\Messages</Filter>
     </Midl>
+    <Midl Include="IMidiSdkMessagePreProcessor.idl">
+      <Filter>SDK\Endpoints</Filter>
+    </Midl>
+    <Midl Include="MidiMessageReader.idl">
+      <Filter>SDK\Endpoints</Filter>
+    </Midl>
+    <Midl Include="MidiMessageWriter.idl">
+      <Filter>SDK\Endpoints</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

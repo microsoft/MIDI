@@ -241,12 +241,14 @@
   </ItemGroup>
   <ItemGroup>
     <Midl Include="IMidiEndpointSettingsData.idl" />
+    <Midl Include="IMidiSdkMessagePreProcessor.idl" />
     <Midl Include="IMidiTransportSettingsData.idl" />
     <Midl Include="MidiChannel.idl" />
     <Midl Include="MidiEndpointInformation.idl" />
     <Midl Include="MidiEndpointDataFormatEnum.idl" />
     <Midl Include="MidiFunctionBlockDirectionEnum.idl" />
     <Midl Include="MidiHighResolutionValueDisplayFormatter.idl" />
+    <Midl Include="MidiMessageReader.idl" />
     <Midl Include="MidiMessagesReceivedEvent.idl" />
     <Midl Include="MidiMessageTranslator.idl" />
     <Midl Include="MidiDeviceInformation.idl" />
@@ -259,6 +261,7 @@
     <Midl Include="MidiGroupTerminalBlock.idl" />
     <Midl Include="MidiLocalizedStrings.idl" />
     <Midl Include="MidiMessageTypeEnum.idl" />
+    <Midl Include="MidiMessageWriter.idl" />
     <Midl Include="MidiServices.idl" />
     <Midl Include="MidiSession.idl" />
     <Midl Include="MidiSessionSettings.idl" />

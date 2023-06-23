@@ -21,14 +21,12 @@ namespace Microsoft.Devices.Midi2
         // this creates copies of the data from the buffer, which is important
         // in casees where the buffer is rapidly filling up and the app wants to
         // do some longer processing
-        IVector<Microsoft.Devices.Midi2.UmpWithTimestamp> GetMessagesList();
+//        IVector<Microsoft.Devices.Midi2.UmpWithTimestamp> GetMessagesList();
 
-        // todo: potentially a method to get the raw buffer. Some danger here
-        // with the contents changing though, as it's a circular buffer, not
-        // a copy of the data. Don't want to build in a known race condition.
-        // we may just need to memcopy the buffer into app memory space for 
-        // this to be safe. We can then provide an optional message reader which
-        // will spit out strongly typed messages in a stream reader type fashion
-        // This is simply to accommodate different app coding approaches.
+
+
+        // this event will just be a signal to the client to read from the midimessagereader for the endpointconnection
+        // This avoids copying data, and provides a lot more flexibility.
+
     }
 }

@@ -15,6 +15,8 @@ import "MidiFunctionBlock.idl";
 import "MidiEndpointDataFormatEnum.idl";
 import "UmpWithTimestamp.idl";
 import "MidiMessagesReceivedEvent.idl";
+import "MidiMessageReader.idl";
+import "MidiMessageWriter.idl";
 
 namespace Microsoft.Devices.Midi2
 {
@@ -29,11 +31,13 @@ namespace Microsoft.Devices.Midi2
         // device selector for a device which implements a specific MIDI transport/protocol
         static String GetDeviceSelector(MidiEndpointDataFormat midiEndpointDataFormat);
 
+
+
+
         // Id from Windows. This can be used to retrieve the MidiDeviceInformation object with the PnP properties
         String DeviceId{ get; };
 
-        // TODO: the other types of names (user-provided, device-provided, etc.)
-        
+       
         Boolean EndpointInformationValid{ get; };               // needed because WinRT doesn't allow null types
         MidiEndpointInformation EndpointInformation{ get; };    // information from Endpoint Info request. Not valid until EndpointInformation requested and received.
 
@@ -51,20 +55,22 @@ namespace Microsoft.Devices.Midi2
         Windows.Foundation.IAsyncAction RequestEndpointInformationAndFunctionsAsync(Boolean forceRefresh);
 
 
+        MidiMessageReader GetMessageReader();
+        MidiMessageWriter GetMessageWriter();
 
 
-        // Send a single strongly-typed UMP with a timestamp
-        //void SendUmp(UInt64 timestamp, Microsoft.Devices.Midi2.Ump ump);
-        void SendUmp(Microsoft.Devices.Midi2.UmpWithTimestamp ump);
+        //// Send a single strongly-typed UMP with a timestamp
+        ////void SendUmp(UInt64 timestamp, Microsoft.Devices.Midi2.Ump ump);
+        //void SendUmp(Microsoft.Devices.Midi2.UmpWithTimestamp ump);
 
-        // send multiple strongly-typed UMPs
-        //void SendMultipleUmps(UInt64 timestamp, IVector<Ump> umps);
-        void SendMultipleUmps(IVector<UmpWithTimestamp> umps);
+        //// send multiple strongly-typed UMPs
+        ////void SendMultipleUmps(UInt64 timestamp, IVector<Ump> umps);
+        //void SendMultipleUmps(IVector<UmpWithTimestamp> umps);
 
-        // Send a vector of MIDI words. The full set of words need to result in complete UMPs.
-        // This will require the code to read the words and inser the the timestamp into the stream
-        // in between each complete UMP
-        void SendMultipleUmpsAsWords(UInt64 timestamp, IVector<UInt32> midiWords);
+        //// Send a vector of MIDI words. The full set of words need to result in complete UMPs.
+        //// This will require the code to read the words and inser the the timestamp into the stream
+        //// in between each complete UMP
+        //void SendMultipleUmpsAsWords(UInt64 timestamp, IVector<UInt32> midiWords);
 
 
         // May need to implement a separate COM interface for just pointer passing from C++ and similar, as an optimization

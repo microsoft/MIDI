@@ -1,0 +1,50 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+import "MidiMessageTypeEnum.idl";
+
+
+// TODO: Consider thread synchronization for this class. Right now, assumes single-threaded access
+
+namespace Microsoft.Devices.Midi2
+{
+    // WinRT doesn't let you return null values so we need to consider the
+    // the circumstances where the caller didn't check for the end but
+    // kept reading, or the caller is multi-threaded and another thread
+    // drained the queue while they were looping
+    enum MidiMessageReaderNoMoreDataBehavior
+    {
+        ThrowException = 0,
+        WaitAndBlockCallingThread
+    };
+
+    [default_interface]
+    runtimeclass MidiMessageReader : Windows.Foundation.IClosable
+    {
+        //MidiMessageReader();
+
+        MidiMessageReaderNoMoreDataBehavior NoMoreDataBehavior{get; set; };
+
+        // EOF for MIDI messages.
+        Boolean EndOfMessages();
+
+        UInt64 PeekNextTimestamp();
+        MidiMessageType PeekNextMessageType();
+        
+        // copies all pending messages into an IVector (List in some languages)
+        IVector<UmpWithTimestamp> ReadAllPendingMessages();
+
+        // reads a single message
+        UmpWithTimestamp ReadNextMessage();
+
+        // TODO: Consider a method to read next messages into a pre-allocated app buffer
+        // This would require a COM interface because WinRT doesn't do pointers.
+
+
+    }
+}

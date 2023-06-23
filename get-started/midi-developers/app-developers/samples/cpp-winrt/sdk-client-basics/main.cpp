@@ -80,7 +80,8 @@ int main()
             // no MIDI endpoints found. We'll just bail here
         }
 
-        // close the session, detaching all Windows MIDI Services resources
+        // close the session, detaching all Windows MIDI Services resources and closing all connections
+        // You can also disconnect individual Endpoint Connections when you are done with them
         session.Close();
     }
     else
