@@ -24,7 +24,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
 
         // TODO: Call APIs to create session, and handle any other construction/settings/etc.
 
-        sessionImpl->_connectedEndpoints = winrt::single_threaded_observable_vector<winrt::Microsoft::Devices::Midi2::MidiEndpoint>();
+        sessionImpl->_connectedEndpoints = winrt::single_threaded_observable_vector<winrt::Microsoft::Devices::Midi2::MidiEndpointConnection>();
 
         // API calls succeeded so call it good and return it
         sessionImpl->_isOpen = true;
@@ -39,12 +39,12 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     }
 
 
-    winrt::Windows::Foundation::Collections::IObservableVector<winrt::Microsoft::Devices::Midi2::MidiEndpoint> MidiSession::ConnectedEndpoints()
+    winrt::Windows::Foundation::Collections::IObservableVector<winrt::Microsoft::Devices::Midi2::MidiEndpointConnection> MidiSession::Connections()
     {
         return _connectedEndpoints;
     }
 
-    winrt::Microsoft::Devices::Midi2::MidiEndpoint MidiSession::ConnectToEndpoint(hstring const& midiEndpointId, bool routeIncomingMessagesToSession, winrt::Microsoft::Devices::Midi2::MidiEndpointConnectOptions const& options)
+    winrt::Microsoft::Devices::Midi2::MidiEndpointConnection MidiSession::ConnectToEndpoint(hstring const& midiEndpointId, bool routeIncomingMessagesToSession, winrt::Microsoft::Devices::Midi2::MidiEndpointConnectOptions const& options)
     {
         throw hresult_not_implemented();
     }
@@ -56,7 +56,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     }
     void MidiSession::Close()
     {
-        // TODO: Call API to close the session and disconnect from the service
+        // TODO: Call API to close the session and disconnect from the service and disconnect all endpoints
 
         _isOpen = false;
     }
@@ -72,4 +72,15 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         return Shared::GetMidiTimestampFrequency();
     }
+
+
+    winrt::event_token MidiSession::MessagesReceived(winrt::Windows::Foundation::EventHandler<winrt::Microsoft::Devices::Midi2::MidiMessagesReceivedEventArgs> const& handler)
+    {
+        throw hresult_not_implemented();
+    }
+    void MidiSession::MessagesReceived(winrt::event_token const& token) noexcept
+    {
+        throw hresult_not_implemented();
+    }
+
 }

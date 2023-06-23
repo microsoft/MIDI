@@ -10,8 +10,12 @@
 // provide the settings to the service. The service only understands Json for this, and
 // delegates all the parsing to the plugins, so we want to provide more app-friendly 
 // approach which will ensure the json is well-formed and correct.
-namespace Microsoft.Devices.Midi2.ClientEndpointContracts
+namespace Microsoft.Devices.Midi2
 {
+    [
+        uuid(4bd93714-983f-4856-ae37-29f3018f7836),
+        version(1.0),
+    ]
     interface IMidiEndpointSettingsData
     {
         String SettingsJson { get; set; };

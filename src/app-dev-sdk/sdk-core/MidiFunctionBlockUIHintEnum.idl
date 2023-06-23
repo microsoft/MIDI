@@ -6,16 +6,14 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+
 namespace Microsoft.Devices.Midi2
 {
-    // this is the direction as specified in the spec, so it is 
-    // from the POV of the function block, not from the OS. IOW, 
-    // Input here means the device FB *receives* messages that
-    // are sent through Windows
-    enum MidiFunctionBlockDirection
+    enum MidiFunctionBlockUIHint
     {
-        FunctionBlockDirectionInput = 0x1,
-        FunctionBlockDirectionOutput = 0x2,
-        FunctionBlockDirectionBidirectional = 0x3
+        Unknown = 0x0,
+        Receiver = 0x1,
+        Sender = 0x2,
+        Bidirectional = 0x3
     };
 }

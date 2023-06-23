@@ -24,7 +24,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         bool IsMidi10Connection();
         bool IsBandwidthRestricted();
         winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiGroup> IncludedGroups();
-        winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::Ump> OriginalResponses();
+        winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::UmpWithTimestamp> OriginalResponses();
         uint8_t MidiCIMessageVersionFormat();
         uint8_t MaxSysEx8Streams();
     };

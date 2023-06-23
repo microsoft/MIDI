@@ -23,6 +23,12 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         void DisableProcessingFunctionBlockInformationMessages(bool value);
         bool DisableProcessingEndpointInformationMessages();
         void DisableProcessingEndpointInformationMessages(bool value);
+
+        bool UseSessionLevelMessageReceiveHandler();
+        void UseSessionLevelMessageReceiveHandler(bool value);
+
+        
+
     };
 }
 namespace winrt::Microsoft::Devices::Midi2::factory_implementation

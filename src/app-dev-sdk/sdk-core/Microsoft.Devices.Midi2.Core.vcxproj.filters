@@ -80,6 +80,9 @@
     <ClInclude Include="UmpWithTimestamp.h">
       <Filter>SDK\Messages</Filter>
     </ClInclude>
+    <ClInclude Include="UmpHelpers.h">
+      <Filter>Internal</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Ump.idl">
@@ -91,13 +94,13 @@
     <Midl Include="MidiMessageTranslator.idl">
       <Filter>SDK\Messages</Filter>
     </Midl>
-    <Midl Include="MidiMessageType.idl">
+    <Midl Include="MidiMessageTypeEnum.idl">
       <Filter>SDK\Messages</Filter>
     </Midl>
     <Midl Include="MidiDeviceInformation.idl">
       <Filter>SDK\Enumeration</Filter>
     </Midl>
-    <Midl Include="MidiEndpoint.idl">
+    <Midl Include="MidiEndpointConnection.idl">
       <Filter>SDK\Endpoints</Filter>
     </Midl>
     <Midl Include="MidiFunctionBlock.idl">
@@ -109,10 +112,10 @@
     <Midl Include="MidiEndpointDisplayFormatter.idl">
       <Filter>SDK\Display</Filter>
     </Midl>
-    <Midl Include="MidiFunctionBlockDirection.idl">
+    <Midl Include="MidiFunctionBlockDirectionEnum.idl">
       <Filter>SDK\Endpoints</Filter>
     </Midl>
-    <Midl Include="MidiFunctionBlockUIHint.idl">
+    <Midl Include="MidiFunctionBlockUIHintEnum.idl">
       <Filter>SDK\Endpoints</Filter>
     </Midl>
     <Midl Include="MidiEndpointInformation.idl">
@@ -148,7 +151,7 @@
     <Midl Include="IMidiEndpointSettingsData.idl">
       <Filter>SDK\Endpoints</Filter>
     </Midl>
-    <Midl Include="MidiEndpointNativeDataFormatType.idl">
+    <Midl Include="MidiEndpointDataFormatEnum.idl">
       <Filter>SDK\Enumeration</Filter>
     </Midl>
     <Midl Include="MidiGroupTerminalBlock.idl">

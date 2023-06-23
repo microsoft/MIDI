@@ -117,10 +117,9 @@
     </Text>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Devices.Midi2">
-      <HintPath>..\..\..\..\..\..\src\sdk-client\x64\Debug\Merged\Microsoft.Devices.Midi2.winmd</HintPath>
-      <IsWinMDFile>true</IsWinMDFile>
-    </Reference>
+    <ProjectReference Include="..\..\..\..\..\..\src\app-dev-sdk\sdk-core\Microsoft.Devices.Midi2.Core.vcxproj">
+      <Project>{3aa50484-e4c1-41fb-9ae4-feea724e6077}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -14,6 +14,7 @@ namespace Microsoft.Devices.Midi2
 	{
 		MidiSessionSettings();
 
+		static MidiSessionSettings Default{ get; };
 
 	}
 }

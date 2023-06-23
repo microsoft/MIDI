@@ -13,7 +13,7 @@
 
 // NOTE: This class is highly likely to change significantly
 
-import "MidiMessageType.idl";
+import "MidiMessageTypeEnum.idl";
 
 namespace Microsoft.Devices.Midi2
 {

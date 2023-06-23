@@ -12,13 +12,13 @@
 // for folks who wish to use them, and direct access to buffers of MIDI words for those who
 // prefer that approach.
 
-import "MidiMessageType.idl";
+import "MidiMessageTypeEnum.idl";
 
 namespace Microsoft.Devices.Midi2
 {
-    // TODO: Timestamps will come in for each message, and go out with each message. Include them 
-    // in the base Ump class, or create a wrapper class? A wrapper class *could* also include a 
-    // JR timestamp if we decide to just pass them through
+    // TODO: Consider if this should just be a simple struct, and leave 
+    // the rest of the properties to the strongly typed classes. Optimize
+    // for performance and memory here. They all end up as C++ structs for WinRT anyway
 
     [default_interface]
     unsealed runtimeclass Ump

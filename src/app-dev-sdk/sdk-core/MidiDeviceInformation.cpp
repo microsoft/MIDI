@@ -24,7 +24,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Devices::Enumeration::DeviceWatcher MidiDeviceInformation::CreateWatcher(winrt::Microsoft::Devices::Midi2::MidiEndpointNativeDataFormatType const& midiDeviceType)
+    winrt::Windows::Devices::Enumeration::DeviceWatcher MidiDeviceInformation::CreateWatcher(winrt::Microsoft::Devices::Midi2::MidiEndpointDataFormat const& midiEndpointDataFormat)
     {
         throw hresult_not_implemented();
     }
@@ -48,7 +48,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
-    winrt::Microsoft::Devices::Midi2::MidiEndpointNativeDataFormatType MidiDeviceInformation::EndpointType()
+    winrt::Microsoft::Devices::Midi2::MidiEndpointDataFormat MidiDeviceInformation::EndpointDataFormat()
     {
         throw hresult_not_implemented();
     }

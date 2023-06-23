@@ -41,7 +41,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::Ump> MidiFunctionBlock::OriginalResponses()
+    winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::UmpWithTimestamp> MidiFunctionBlock::OriginalResponses()
     {
         throw hresult_not_implemented();
     }

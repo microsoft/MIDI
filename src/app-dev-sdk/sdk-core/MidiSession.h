@@ -23,19 +23,20 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
 
         static winrt::Microsoft::Devices::Midi2::MidiSession CreateNewSession(hstring const& sessionName, winrt::Microsoft::Devices::Midi2::MidiSessionSettings const& settings);
         bool IsOpen();
-        winrt::Windows::Foundation::Collections::IObservableVector<winrt::Microsoft::Devices::Midi2::MidiEndpoint> ConnectedEndpoints();
-        winrt::Microsoft::Devices::Midi2::MidiEndpoint ConnectToEndpoint(hstring const& midiEndpointId, bool routeIncomingMessagesToSession, winrt::Microsoft::Devices::Midi2::MidiEndpointConnectOptions const& options);
+        winrt::Windows::Foundation::Collections::IObservableVector<winrt::Microsoft::Devices::Midi2::MidiEndpointConnection> Connections();
+        winrt::Microsoft::Devices::Midi2::MidiEndpointConnection ConnectToEndpoint(hstring const& midiEndpointId, bool routeIncomingMessagesToSession, winrt::Microsoft::Devices::Midi2::MidiEndpointConnectOptions const& options);
         void DisconnectFromEndpoint(hstring const& midiEndpointId);
         void Close();
 
         uint64_t GetMidiTimestamp();
         uint64_t GetMidiTimestampFrequency();
 
-
+        winrt::event_token MessagesReceived(winrt::Windows::Foundation::EventHandler<winrt::Microsoft::Devices::Midi2::MidiMessagesReceivedEventArgs> const& handler);
+        void MessagesReceived(winrt::event_token const& token) noexcept;
 
     private:
         bool _isOpen = false;
-        Windows::Foundation::Collections::IObservableVector<winrt::Microsoft::Devices::Midi2::MidiEndpoint> _connectedEndpoints;
+        Windows::Foundation::Collections::IObservableVector<winrt::Microsoft::Devices::Midi2::MidiEndpointConnection> _connectedEndpoints;
         
 
     };

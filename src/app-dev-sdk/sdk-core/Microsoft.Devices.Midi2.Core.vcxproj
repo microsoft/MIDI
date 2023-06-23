@@ -103,6 +103,7 @@
     <ClCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp20</LanguageStandard>
+      <GenerateXMLDocumentationFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GenerateXMLDocumentationFiles>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
@@ -124,8 +125,8 @@
     <ClInclude Include="MidiLocalizedStrings.h">
       <DependentUpon>MidiLocalizedStrings.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiEndpoint.h">
-      <DependentUpon>MidiEndpoint.idl</DependentUpon>
+    <ClInclude Include="MidiEndpointConnection.h">
+      <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiEndpointConnectOptions.h">
       <DependentUpon>MidiEndpointConnectOptions.idl</DependentUpon>
@@ -160,6 +161,7 @@
     <ClInclude Include="Ump.h">
       <DependentUpon>Ump.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="UmpHelpers.h" />
     <ClInclude Include="UmpUtilities.h">
       <DependentUpon>UmpUtilities.idl</DependentUpon>
     </ClInclude>
@@ -186,8 +188,8 @@
     <ClCompile Include="MidiLocalizedStrings.cpp">
       <DependentUpon>MidiLocalizedStrings.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiEndpoint.cpp">
-      <DependentUpon>MidiEndpoint.idl</DependentUpon>
+    <ClCompile Include="MidiEndpointConnection.cpp">
+      <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiEndpointConnectOptions.cpp">
       <DependentUpon>MidiEndpointConnectOptions.idl</DependentUpon>
@@ -242,21 +244,21 @@
     <Midl Include="IMidiTransportSettingsData.idl" />
     <Midl Include="MidiChannel.idl" />
     <Midl Include="MidiEndpointInformation.idl" />
-    <Midl Include="MidiEndpointNativeDataFormatType.idl" />
-    <Midl Include="MidiFunctionBlockDirection.idl" />
+    <Midl Include="MidiEndpointDataFormatEnum.idl" />
+    <Midl Include="MidiFunctionBlockDirectionEnum.idl" />
     <Midl Include="MidiHighResolutionValueDisplayFormatter.idl" />
     <Midl Include="MidiMessagesReceivedEvent.idl" />
     <Midl Include="MidiMessageTranslator.idl" />
     <Midl Include="MidiDeviceInformation.idl" />
-    <Midl Include="MidiEndpoint.idl" />
+    <Midl Include="MidiEndpointConnection.idl" />
     <Midl Include="MidiEndpointConnectOptions.idl" />
     <Midl Include="MidiEndpointDisplayFormatter.idl" />
     <Midl Include="MidiFunctionBlock.idl" />
-    <Midl Include="MidiFunctionBlockUIHint.idl" />
+    <Midl Include="MidiFunctionBlockUIHintEnum.idl" />
     <Midl Include="MidiGroup.idl" />
     <Midl Include="MidiGroupTerminalBlock.idl" />
     <Midl Include="MidiLocalizedStrings.idl" />
-    <Midl Include="MidiMessageType.idl" />
+    <Midl Include="MidiMessageTypeEnum.idl" />
     <Midl Include="MidiServices.idl" />
     <Midl Include="MidiSession.idl" />
     <Midl Include="MidiSessionSettings.idl" />

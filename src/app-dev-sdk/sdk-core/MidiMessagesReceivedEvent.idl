@@ -26,14 +26,9 @@ namespace Microsoft.Devices.Midi2
         // todo: potentially a method to get the raw buffer. Some danger here
         // with the contents changing though, as it's a circular buffer, not
         // a copy of the data. Don't want to build in a known race condition.
-
-
-        // todo: potentially a method to get a message reader which will
-        // spit out strongly typed messages, but parse them on the go. Same
-        // concerns as accessing the buffer directly
+        // we may just need to memcopy the buffer into app memory space for 
+        // this to be safe. We can then provide an optional message reader which
+        // will spit out strongly typed messages in a stream reader type fashion
+        // This is simply to accommodate different app coding approaches.
     }
-
-
-    delegate void MidiMessagesReceivedEventHandler(MidiMessagesReceivedEventArgs args);
-
 }

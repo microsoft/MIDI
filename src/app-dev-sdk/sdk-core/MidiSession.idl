@@ -7,9 +7,10 @@
 // ============================================================================
 
 
-import "MidiEndpoint.idl";
+import "MidiEndpointConnection.idl";
 import "MidiEndpointConnectOptions.idl";
 import "MidiSessionSettings.idl";
+import "MidiMessagesReceivedEvent.idl";
 
 namespace Microsoft.Devices.Midi2
 {
@@ -24,13 +25,13 @@ namespace Microsoft.Devices.Midi2
         Boolean IsOpen { get; };
 
         // close the session and release resources
-        void Close();
+        //void Close();
 
 
 
 
         // this really should be read-only to users of this class
-        Windows.Foundation.Collections.IObservableVector<MidiEndpoint> ConnectedEndpoints { get; };
+        Windows.Foundation.Collections.IObservableVector<MidiEndpointConnection> Connections { get; };
 
         // uses the enumeration information to connect to an endpoint
         // adds it to the list of connected endpoints. The boolean 
@@ -38,12 +39,17 @@ namespace Microsoft.Devices.Midi2
         // are handled here, or they are handled in the individual 
         // endpoint instances. It's one or the other to avoid replicating
         // messages.
-        MidiEndpoint ConnectToEndpoint(
+        MidiEndpointConnection ConnectToEndpoint(
             String midiEndpointId, 
             Boolean routeIncomingMessagesToSession, 
             MidiEndpointConnectOptions options);
 
         void DisconnectFromEndpoint(String midiEndpointId);
+
+
+        // Messages received event fires here only for Endpoints where 
+        // the centralized message receive option was set when they were connected 
+        event Windows.Foundation.EventHandler<MidiMessagesReceivedEventArgs> MessagesReceived;
 
 
         // utility methods =======================================================================

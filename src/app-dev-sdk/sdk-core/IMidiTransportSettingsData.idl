@@ -9,6 +9,10 @@
 
 namespace Microsoft.Devices.Midi2
 {
+    [
+        uuid(b2417dde-ef35-499b-a89b-0a4c32cc699a),
+        version(1.0),
+    ]
     interface IMidiTransportSettingsData
     {
         String SettingsJson { get; set; };

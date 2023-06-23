@@ -16,6 +16,8 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         MidiSessionSettings() = default;
 
+        static winrt::Microsoft::Devices::Midi2::MidiSessionSettings Default();
+
     };
 }
 namespace winrt::Microsoft::Devices::Midi2::factory_implementation
