@@ -26,9 +26,6 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         void MessagesReceived(winrt::event_token const& token) noexcept;
         void RequestEndpointInformationAndFunctions(bool forceRefresh);
         winrt::Windows::Foundation::IAsyncAction RequestEndpointInformationAndFunctionsAsync(bool forceRefresh);
-        void SendUmp(winrt::Microsoft::Devices::Midi2::UmpWithTimestamp const& ump);
-        void SendMultipleUmps(winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::UmpWithTimestamp> const& umps);
-        void SendMultipleUmpsAsWords(uint64_t timestamp, winrt::Windows::Foundation::Collections::IVector<uint32_t> const& midiWords);
     };
 }
 namespace winrt::Microsoft::Devices::Midi2::factory_implementation
