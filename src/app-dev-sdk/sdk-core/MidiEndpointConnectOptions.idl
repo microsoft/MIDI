@@ -19,12 +19,6 @@ namespace Microsoft.Devices.Midi2
         Boolean DisableProcessingFunctionBlockInformationMessages { get; set; };
         Boolean DisableProcessingEndpointInformationMessages { get; set; };
 
-        Boolean UseSessionLevelMessageReceiveHandler{ get; set; };
-
-        // TODO: Option to use polling instead of events
-        // But maybe the whole central event / endpoint event / polling thing needs to be global to the session instead.
-
-
 
         static MidiEndpointConnectOptions Default{ get; };
     }

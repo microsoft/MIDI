@@ -69,9 +69,11 @@ int main()
             // then you connect to the UMP endpoint
             auto endpoint = session.ConnectToEndpoint(selectedMidiEndpointInformation.Id(), true, MidiEndpointConnectOptions::Default());
 
-            // after connecting, you can send and receive messages and more
+            // after connecting, you can send and receive messages
 
-            // ...
+            auto writer = endpoint.GetMessageWriter();
+
+            // writer.WriteUmpWithTimestamp(...);
 
 
         }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="packages\Microsoft.Windows.CppWinRT.2.0.230225.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('packages\Microsoft.Windows.CppWinRT.2.0.230225.1\build\native\Microsoft.Windows.CppWinRT.props')" />
+  <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props')" />
   <PropertyGroup Label="Globals">
     <ProjectName>Microsoft.Devices.Midi2.Core</ProjectName>
     <RootNamespace>Microsoft.Devices.Midi2</RootNamespace>
@@ -102,7 +102,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
     <ClCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp20</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp17</LanguageStandard>
       <GenerateXMLDocumentationFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GenerateXMLDocumentationFiles>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -143,10 +143,18 @@
     <ClInclude Include="MidiDeviceInformation.h">
       <DependentUpon>MidiDeviceInformation.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiMessagesReceivedEventArgs.h" />
+	  <ClInclude Include="MidiMessageReader.h">
+		  <DependentUpon>MidiMessageReader.idl</DependentUpon>
+	  </ClInclude>
+	  <ClInclude Include="MidiMessagesReceivedEventArgs.h">
+		  <DependentUpon>MidiMessagesReceivedEventArgs.idl</DependentUpon>
+	  </ClInclude>
     <ClInclude Include="MidiMessageTranslator.h">
       <DependentUpon>MidiMessageTranslator.idl</DependentUpon>
     </ClInclude>
+	  <ClInclude Include="MidiMessageWriter.h">
+		  <DependentUpon>MidiMessageWriter.idl</DependentUpon>
+	  </ClInclude>
     <ClInclude Include="MidiServices.h">
       <DependentUpon>MidiServices.idl</DependentUpon>
     </ClInclude>
@@ -175,7 +183,9 @@
       <DependentUpon>MidiSession.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="pch.h" />
-    <ClInclude Include="UmpWithTimestamp.h" />
+    <ClInclude Include="UmpWithTimestamp.h">
+      <DependentUpon>UmpWithTimestamp.idl</DependentUpon>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Generated Files\module.g.cpp" />
@@ -206,10 +216,18 @@
     <ClCompile Include="MidiDeviceInformation.cpp">
       <DependentUpon>MidiDeviceInformation.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiMessagesReceivedEventArgs.cpp" />
+	  <ClCompile Include="MidiMessageReader.cpp">
+		  <DependentUpon>MidiMessageReader.idl</DependentUpon>
+	  </ClCompile>
+	  <ClCompile Include="MidiMessagesReceivedEventArgs.cpp">
+		  <DependentUpon>MidiMessagesReceivedEventArgs.idl</DependentUpon>
+	  </ClCompile>
     <ClCompile Include="MidiMessageTranslator.cpp">
       <DependentUpon>MidiMessageTranslator.idl</DependentUpon>
     </ClCompile>
+	  <ClCompile Include="MidiMessageWriter.cpp">
+		  <DependentUpon>MidiMessageWriter.idl</DependentUpon>
+	  </ClCompile>
     <ClCompile Include="MidiServices.cpp">
       <DependentUpon>MidiServices.idl</DependentUpon>
     </ClCompile>
@@ -237,7 +255,9 @@
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="UmpWithTimestamp.cpp" />
+    <ClCompile Include="UmpWithTimestamp.cpp">
+      <DependentUpon>UmpWithTimestamp.idl</DependentUpon>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="IMidiEndpointSettingsData.idl" />
@@ -249,7 +269,7 @@
     <Midl Include="MidiFunctionBlockDirectionEnum.idl" />
     <Midl Include="MidiHighResolutionValueDisplayFormatter.idl" />
     <Midl Include="MidiMessageReader.idl" />
-    <Midl Include="MidiMessagesReceivedEvent.idl" />
+    <Midl Include="MidiMessagesReceivedEventArgs.idl" />
     <Midl Include="MidiMessageTranslator.idl" />
     <Midl Include="MidiDeviceInformation.idl" />
     <Midl Include="MidiEndpointConnection.idl" />
@@ -279,13 +299,13 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="packages\Microsoft.Windows.CppWinRT.2.0.230225.1\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('packages\Microsoft.Windows.CppWinRT.2.0.230225.1\build\native\Microsoft.Windows.CppWinRT.targets')" />
+    <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('packages\Microsoft.Windows.CppWinRT.2.0.230225.1\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.Windows.CppWinRT.2.0.230225.1\build\native\Microsoft.Windows.CppWinRT.props'))" />
-    <Error Condition="!Exists('packages\Microsoft.Windows.CppWinRT.2.0.230225.1\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.Windows.CppWinRT.2.0.230225.1\build\native\Microsoft.Windows.CppWinRT.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets'))" />
   </Target>
 </Project>

@@ -22,10 +22,12 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         bool EndpointInformationValid();
         winrt::Microsoft::Devices::Midi2::MidiEndpointInformation EndpointInformation();
         winrt::Windows::Foundation::Collections::IObservableVector<winrt::Microsoft::Devices::Midi2::MidiFunctionBlock> FunctionBlocks();
-        winrt::event_token MessagesReceived(winrt::Windows::Foundation::EventHandler<winrt::Microsoft::Devices::Midi2::MidiMessagesReceivedEventArgs> const& handler);
-        void MessagesReceived(winrt::event_token const& token) noexcept;
         void RequestEndpointInformationAndFunctions(bool forceRefresh);
         winrt::Windows::Foundation::IAsyncAction RequestEndpointInformationAndFunctionsAsync(bool forceRefresh);
+        winrt::Microsoft::Devices::Midi2::MidiMessageReader GetMessageReader();
+        winrt::Microsoft::Devices::Midi2::MidiMessageWriter GetMessageWriter();
+        winrt::event_token MessagesReceived(winrt::Windows::Foundation::EventHandler<winrt::Microsoft::Devices::Midi2::MidiMessagesReceivedEventArgs> const& handler);
+        void MessagesReceived(winrt::event_token const& token) noexcept;
     };
 }
 namespace winrt::Microsoft::Devices::Midi2::factory_implementation

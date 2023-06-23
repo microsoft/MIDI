@@ -7,6 +7,7 @@
 // ============================================================================
 
 import "MidiMessageTypeEnum.idl";
+import "UmpWithTimestamp.idl";
 
 
 // TODO: Consider thread synchronization for this class. Right now, assumes single-threaded access
@@ -24,14 +25,14 @@ namespace Microsoft.Devices.Midi2
     };
 
     [default_interface]
-    runtimeclass MidiMessageReader : Windows.Foundation.IClosable
+    runtimeclass MidiMessageReader // : Windows.Foundation.IClosable
     {
         //MidiMessageReader();
 
-        MidiMessageReaderNoMoreDataBehavior NoMoreDataBehavior{get; set; };
+        MidiMessageReaderNoMoreDataBehavior NoMoreDataBehavior{ get; set; };
 
         // EOF for MIDI messages.
-        Boolean EndOfMessages();
+        Boolean EndOfMessages{ get; };
 
         // look at the timestamp in the buffer. This is always the first 64 bits at the read pointer
         UInt64 PeekNextTimestamp();

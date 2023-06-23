@@ -9,6 +9,8 @@
 
 // TODO: Consider thread synchronization for this class. Right now, assumes single-threaded access
 
+import "UmpWithTimestamp.idl";
+
 namespace Microsoft.Devices.Midi2
 {
     enum MidiMessageWriterQueueFullBehavior
@@ -23,14 +25,14 @@ namespace Microsoft.Devices.Midi2
     };
 
     [default_interface]
-    runtimeclass MidiMessageWriter : Windows.Foundation.IClosable
+    runtimeclass MidiMessageWriter // : Windows.Foundation.IClosable
     {
         //MidiMessageWriter();
 
-        Boolean IsFull {get; };
+        Boolean IsFull { get; };
 
         void WriteUmpWords32(UInt64 midiTimestamp, UInt32 umpWord1);
-        void WriteUmpWords64(UInt64 midiTimestamp, UInt32 umpWord1, UInt32 umpWord2,);
+        void WriteUmpWords64(UInt64 midiTimestamp, UInt32 umpWord1, UInt32 umpWord2);
         void WriteUmpWords96(UInt64 midiTimestamp, UInt32 umpWord1, UInt32 umpWord2, UInt32 umpWord3);
         void WriteUmpWords128(UInt64 midiTimestamp, UInt32 umpWord1, UInt32 umpWord2, UInt32 umpWord3, UInt32 umpWord4);
 

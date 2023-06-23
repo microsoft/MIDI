@@ -37,14 +37,6 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
-    winrt::event_token MidiEndpointConnection::MessagesReceived(winrt::Windows::Foundation::EventHandler<winrt::Microsoft::Devices::Midi2::MidiMessagesReceivedEventArgs> const& handler)
-    {
-        throw hresult_not_implemented();
-    }
-    void MidiEndpointConnection::MessagesReceived(winrt::event_token const& token) noexcept
-    {
-        throw hresult_not_implemented();
-    }
     void MidiEndpointConnection::RequestEndpointInformationAndFunctions(bool forceRefresh)
     {
         throw hresult_not_implemented();
@@ -53,15 +45,19 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
-    void MidiEndpointConnection::SendUmp(winrt::Microsoft::Devices::Midi2::UmpWithTimestamp const& ump)
+    winrt::Microsoft::Devices::Midi2::MidiMessageReader MidiEndpointConnection::GetMessageReader()
     {
         throw hresult_not_implemented();
     }
-    void MidiEndpointConnection::SendMultipleUmps(winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::UmpWithTimestamp> const& umps)
+    winrt::Microsoft::Devices::Midi2::MidiMessageWriter MidiEndpointConnection::GetMessageWriter()
     {
         throw hresult_not_implemented();
     }
-    void MidiEndpointConnection::SendMultipleUmpsAsWords(uint64_t timestamp, winrt::Windows::Foundation::Collections::IVector<uint32_t> const& midiWords)
+    winrt::event_token MidiEndpointConnection::MessagesReceived(winrt::Windows::Foundation::EventHandler<winrt::Microsoft::Devices::Midi2::MidiMessagesReceivedEventArgs> const& handler)
+    {
+        throw hresult_not_implemented();
+    }
+    void MidiEndpointConnection::MessagesReceived(winrt::event_token const& token) noexcept
     {
         throw hresult_not_implemented();
     }

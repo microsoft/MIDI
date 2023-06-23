@@ -20,7 +20,7 @@ namespace Microsoft.Devices.Midi2
         //  MIDI CI processing
 
 
-        void foo;
+        void foo();
 
         // The trick here will be to be able to pull out messages from the stream without
         // having a big impact on performance (because now we're having to copy and move, 
