@@ -25,7 +25,7 @@ namespace Microsoft.Devices.Midi2
     };
 
     [default_interface]
-    runtimeclass MidiMessageReader // : Windows.Foundation.IClosable
+    runtimeclass MidiMessageReader // not IClosable because this needs to keep the lifetime of the EndpointConnection
     {
         //MidiMessageReader();
 
