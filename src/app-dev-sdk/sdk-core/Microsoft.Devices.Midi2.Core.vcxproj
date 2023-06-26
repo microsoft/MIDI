@@ -143,18 +143,18 @@
     <ClInclude Include="MidiDeviceInformation.h">
       <DependentUpon>MidiDeviceInformation.idl</DependentUpon>
     </ClInclude>
-	  <ClInclude Include="MidiMessageReader.h">
-		  <DependentUpon>MidiMessageReader.idl</DependentUpon>
-	  </ClInclude>
-	  <ClInclude Include="MidiMessagesReceivedEventArgs.h">
-		  <DependentUpon>MidiMessagesReceivedEventArgs.idl</DependentUpon>
-	  </ClInclude>
+    <ClInclude Include="MidiMessageReader.h">
+      <DependentUpon>MidiMessageReader.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiMessagesReceivedEventArgs.h">
+      <DependentUpon>MidiMessagesReceivedEventArgs.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiMessageTranslator.h">
       <DependentUpon>MidiMessageTranslator.idl</DependentUpon>
     </ClInclude>
-	  <ClInclude Include="MidiMessageWriter.h">
-		  <DependentUpon>MidiMessageWriter.idl</DependentUpon>
-	  </ClInclude>
+    <ClInclude Include="MidiMessageWriter.h">
+      <DependentUpon>MidiMessageWriter.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiServices.h">
       <DependentUpon>MidiServices.idl</DependentUpon>
     </ClInclude>
@@ -216,18 +216,18 @@
     <ClCompile Include="MidiDeviceInformation.cpp">
       <DependentUpon>MidiDeviceInformation.idl</DependentUpon>
     </ClCompile>
-	  <ClCompile Include="MidiMessageReader.cpp">
-		  <DependentUpon>MidiMessageReader.idl</DependentUpon>
-	  </ClCompile>
-	  <ClCompile Include="MidiMessagesReceivedEventArgs.cpp">
-		  <DependentUpon>MidiMessagesReceivedEventArgs.idl</DependentUpon>
-	  </ClCompile>
+    <ClCompile Include="MidiMessageReader.cpp">
+      <DependentUpon>MidiMessageReader.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiMessagesReceivedEventArgs.cpp">
+      <DependentUpon>MidiMessagesReceivedEventArgs.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiMessageTranslator.cpp">
       <DependentUpon>MidiMessageTranslator.idl</DependentUpon>
     </ClCompile>
-	  <ClCompile Include="MidiMessageWriter.cpp">
-		  <DependentUpon>MidiMessageWriter.idl</DependentUpon>
-	  </ClCompile>
+    <ClCompile Include="MidiMessageWriter.cpp">
+      <DependentUpon>MidiMessageWriter.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiServices.cpp">
       <DependentUpon>MidiServices.idl</DependentUpon>
     </ClCompile>

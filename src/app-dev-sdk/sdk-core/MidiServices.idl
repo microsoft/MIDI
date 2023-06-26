@@ -10,6 +10,7 @@ import "MidiTransportInformation.idl";
 
 namespace Microsoft.Devices.Midi2
 {
+    // I strongly dislike the name of this enum
     enum WindowsMidiServicesCheckError
     {
         IncompatibleVersion = 100,
