@@ -8,7 +8,8 @@
 
 #pragma once
 
-#define MIDI_APP_SDK_VERSION 1.0
+// this should be kept in sync with the nuspec. Manual for now.
+#define MIDI_APP_SDK_VERSION_STRING L"0.0-prerelease"
 
 // TODO: Need to include minimum compat API version info here?
 
