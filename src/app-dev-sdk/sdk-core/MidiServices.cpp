@@ -11,6 +11,8 @@
 #include "MidiServices.h"
 #include "MidiServices.g.cpp"
 
+#include "MidiAppSdkVersion.h"
+
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     bool MidiServices::CheckForWindowsMidiServices(winrt::Microsoft::Devices::Midi2::WindowsMidiServicesCheckError& errorResult)
@@ -23,7 +25,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     }
     hstring MidiServices::SdkVersion()
     {
-        throw hresult_not_implemented();
+        return MIDI_APP_SDK_VERSION_STRING;
     }
     hstring MidiServices::MinimumCompatibleMidiServicesVersion()
     {
