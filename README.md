@@ -64,11 +64,13 @@ Here are the current plans for transports. In general, transports are implemente
 
 We are in the process of setting up automated pipelines for building (and eventually signing) the component pieces of this project. This readme will be updated with build status information one that is in place. **There are no usable builds, currently.**
 
+### Developer Releases
+
+Please see the [releases section of this repo](https://github.com/microsoft/MIDI/releases).
+
+### End-user Releases
+
 **There are no end-user preview releases yet.**
-
-**There are no developer preview releases yet.**
-
-**There are no prototype releases yet.**
 
 For maximum flexibility and compatibility, there are several release mechanisms for Windows MIDI Services components.
 
