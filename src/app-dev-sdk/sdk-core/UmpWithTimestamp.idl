@@ -8,6 +8,11 @@
 
 import "Ump.idl";
 
+// really don't like this implementation. At a minimum, need to see if there's
+// a way to allow for lightweight structs (despite them being value types). 
+// WinRT generally doesn't support that. This may be another case of a custom
+// COM interface to the classes which need to use the Ump type as a void *
+
 namespace Microsoft.Devices.Midi2
 {
     // TODO: Timestamps will come in for each message, and go out with each message. Include them 

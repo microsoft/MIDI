@@ -68,6 +68,15 @@
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DesktopCompatible>true</DesktopCompatible>
   </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">
+    <DesktopCompatible>true</DesktopCompatible>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <DesktopCompatible>true</DesktopCompatible>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <DesktopCompatible>true</DesktopCompatible>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
@@ -81,6 +90,21 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>..\..\shared\inc;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>..\..\shared\inc;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Arm64'">
+    <IncludePath>..\..\shared\inc;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Arm64'">
+    <IncludePath>..\..\shared\inc;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Arm64EC'">
+    <IncludePath>..\..\shared\inc;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Arm64EC'">
     <IncludePath>..\..\shared\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup>
@@ -264,10 +288,17 @@
     <Midl Include="IMidiSdkMessagePreProcessor.idl" />
     <Midl Include="IMidiTransportSettingsData.idl" />
     <Midl Include="MidiChannel.idl" />
+    <Midl Include="MidiChannelList.idl" />
+    <Midl Include="MidiDeviceInformationList.idl" />
+    <Midl Include="MidiEndpointConnectionList.idl" />
     <Midl Include="MidiEndpointInformation.idl" />
     <Midl Include="MidiEndpointDataFormatEnum.idl" />
     <Midl Include="MidiFunctionBlockDirectionEnum.idl" />
+    <Midl Include="MidiFunctionBlockList.idl" />
+    <Midl Include="MidiGroupList.idl" />
+    <Midl Include="MidiGroupTerminalBlockList.idl" />
     <Midl Include="MidiHighResolutionValueDisplayFormatter.idl" />
+    <Midl Include="MidiListBase.idl" />
     <Midl Include="MidiMessageReader.idl" />
     <Midl Include="MidiMessagesReceivedEventArgs.idl" />
     <Midl Include="MidiMessageTranslator.idl" />
@@ -286,6 +317,8 @@
     <Midl Include="MidiSession.idl" />
     <Midl Include="MidiSessionSettings.idl" />
     <Midl Include="MidiTransportInformation.idl" />
+    <Midl Include="MidiTransportInformationList.idl" />
+    <Midl Include="MidiUmpWithTimestampList.idl" />
     <Midl Include="Ump.idl" />
     <Midl Include="UmpUtilities.idl" />
     <Midl Include="UmpWithTimestamp.idl" />

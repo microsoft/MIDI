@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+	<metadata>
+		<id>Microsoft.Devices.Midi2.Core</id>
+		<version>1.0.0-preview.1-0040</version>
+		<authors>Microsoft Corporation</authors>
+		<description>Windows MIDI Services core application SDK. Minimum package necessary to use Windows MIDI Services from an app.</description>
+		<license type="expression">MIT</license>
+		<projectUrl>https://github.com/microsoft/midi/</projectUrl>
+		<readme>README.md</readme>
+		<repository type="git" url="https://github.com/microsoft/midi/" />
+		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<tags>midi windows music audio native</tags>
+		<dependencies>
+			<group targetFramework="net7.0-windows10.0.20348.0" />
+			<!--<group targetFramework=".NETCoreApp3.0" /> -->
+			<group targetFramework="UAP10.0.20348" />
+			<!--<group targetFramework=".NETFramework4.6" /> -->
+		</dependencies>
+	</metadata>
+	<files>
+		<!-- TODO: Add UAP, Uno and desktop .NET targets after testing -->
+		<!-- TODO: Rename the projection assemblies - remove CS and replace with a generic net indicator -->
+		
+		
+		
+		<!-- .NET projections ==================================== -->
+		<file src="..\..\_build\AnyCPU\Release\Microsoft.Devices.Midi2.Core.NET\bin\Microsoft.Devices.Midi2.NET.dll" target="lib\net7.0-windows10.0.20348.0\" />
+		<!--<file src="..\..\_build\AnyCPU\Release\Microsoft.Devices.Midi2.Core.NET46\bin\Microsoft.Devices.Midi2.NET46.dll" target="lib\net7.0-windows10.0.20348.0\" />-->
+
+
+		<!-- Metadata ================================================ -->
+		<!-- winmd metadata is not architecture-specific, so we just use the x64 one -->
+		<file src="..\..\_build\x64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.winmd" target="lib\uap10.0.20348\" />
+		<!--<file src="..\..\_build\x64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.winmd" target="lib\net46\" /> -->
+
+
+		<!--<file src="..\..\_build\x64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.winmd"     target="runtimes\win10-x64\native\" /> -->
+		<!--<file src="..\..\_build\ARM64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.winmd"   target="runtimes\win10-arm64\native\" /> -->
+		<!--<file src="..\..\_build\ARM64EC\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.winmd" target="runtimes\win10-arm64ec\native\" /> -->
+
+		
+		<!-- C++/WinRT currently has no native provision for intellisense creation. -->
+		<!--<file src="..\..\_build\x64\Debug\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.Core.xml"
+			  target="runtimes\win10-x64\native\Microsoft.Devices.Midi2.xml" /> -->
+
+		<!-- Other Binaries ========================================== -->
+
+		<!--Architecture-specific implementation DLLs should be copied into RID-relative folders-->
+		<file src="..\..\_build\x64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.Core.dll"     target="runtimes\win10-x64\native\" />
+		<file src="..\..\_build\ARM64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.Core.dll"   target="runtimes\win10-arm64\native\" />
+		<!--<file src="..\..\_build\ARM64EC\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.Core.dll" target="runtimes\win10-arm64ec\native\" />-->
+
+		<file src="Microsoft.Devices.Midi2.Core.targets" target="build\native\" />
+		<!--<file src="Microsoft.Devices.Midi2.Core.targets" target="build\win10-arm64\native\" /> -->
+		<!--<file src="Microsoft.Devices.Midi2.Core.targets" target="build\win10-arm64ec\native\" /> -->
+
+
+		<file src="README.md" target="\" />
+	</files>
+
+
+</package>

@@ -28,8 +28,10 @@ namespace Microsoft.Devices.Midi2
         Boolean IsMidi10Connection{ get; };
         Boolean IsBandwidthRestricted{ get; };      // true if the block is asking for 31.25kbps restriction
 
-        IVector<MidiGroup> IncludedGroups{ get; };
-        IVector<UmpWithTimestamp> OriginalResponses{ get; };
+        //IVector<MidiGroup> IncludedGroups{ get; };
+        //IVector<UmpWithTimestamp> OriginalResponses{ get; };
+        MidiGroupList IncludedGroups{ get; };
+        UmpWithTimestampList OriginalResponses{ get; };
 
         UInt8 MidiCIMessageVersionFormat{ get; };
 

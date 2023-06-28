@@ -12,6 +12,11 @@
 // for folks who wish to use them, and direct access to buffers of MIDI words for those who
 // prefer that approach.
 
+// really don't like this implementation. At a minimum, need to see if there's
+// a way to allow for lightweight structs (despite them being value types). 
+// WinRT generally doesn't support that. This may be another case of a custom
+// COM interface to the classes which need to use the Ump type as a void *
+
 import "MidiMessageTypeEnum.idl";
 
 namespace Microsoft.Devices.Midi2

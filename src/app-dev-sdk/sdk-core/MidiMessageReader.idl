@@ -8,6 +8,7 @@
 
 import "MidiMessageTypeEnum.idl";
 import "UmpWithTimestamp.idl";
+import "UmpWithTimestampList.idl";
 
 
 // TODO: Consider thread synchronization for this class. Right now, assumes single-threaded access
@@ -44,7 +45,8 @@ namespace Microsoft.Devices.Midi2
         UmpWithTimestamp PeekNextMessage();
         
         // copies all pending messages into an IVector (List in some languages)
-        IVector<UmpWithTimestamp> ReadToEnd();
+        //IVector<UmpWithTimestamp> ReadToEnd();
+        UmpWithTimestampList ReadToEnd();
 
         // reads a single message
         UmpWithTimestamp ReadNextMessage();

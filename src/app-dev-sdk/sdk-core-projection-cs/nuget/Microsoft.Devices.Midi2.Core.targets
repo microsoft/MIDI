@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<PropertyGroup>
+		<!-- This is just to normalized directories. Technically not needed because we don't target x86 -->
+		<Midi-Sdk-Platform Condition="'$(Platform)' == 'Win32'">x86</Midi-Sdk-Platform>
+		<Midi-Sdk-Platform Condition="'$(Platform)' != 'Win32'">$(Platform)</Midi-Sdk-Platform>
+	</PropertyGroup>
+	
+	<ItemGroup Condition="'$(TargetPlatformIdentifier)' == 'win10-x64'">
+		<Reference Include="$(MSBuildThisFileDirectory)..\..\lib\x64\Microsoft.Devices.Midi2.Core.winmd">
+			<Implementation>Microsoft.Devices.Midi2.Core.dll</Implementation>
+		</Reference>
+		<ReferenceCopyLocalPaths Include="$(MSBuildThisFileDirectory)..\..\runtimes\win10-$(Midi-Sdk-Platform)\native\Microsoft.Devices.Midi2.Core.dll" />
+	</ItemGroup>
+</Project>
+
+

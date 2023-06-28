@@ -15,7 +15,7 @@
 
 import "MidiGroupTerminalBlock.idl";
 import "MidiEndpointDataFormatEnum.idl";
-
+import "MidiGroupTerminalBlockList.idl";
 
 namespace Microsoft.Devices.Midi2
 {
@@ -47,7 +47,8 @@ namespace Microsoft.Devices.Midi2
         MidiEndpointDataFormat EndpointDataFormat{ get; };
 
         Boolean HasGroupTerminalBlocks{ get; };
-        IVector<MidiGroupTerminalBlock>GroupTerminalBlocks{ get; };  // these are USB-specific, created at enumeration time, and do not change
+        //IVector<MidiGroupTerminalBlock>GroupTerminalBlocks{ get; };  // these are USB-specific, created at enumeration time, and do not change
+        MidiGroupTerminalBlockList GroupTerminalBlocks{ get; };  // these are USB-specific, created at enumeration time, and do not change
 
         Windows.Devices.Enumeration.DeviceThumbnail DeviceThumbnail{ get; };
 

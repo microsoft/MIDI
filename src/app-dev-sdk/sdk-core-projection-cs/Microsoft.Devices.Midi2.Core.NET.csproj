@@ -15,10 +15,10 @@
 
 	<PropertyGroup>
 		<GeneratedNugetDir>.\nuget\</GeneratedNugetDir>
-		<NuspecFile>$(GeneratedNugetDir)Microsoft.Devices.Midi2.Core.CS.nuspec</NuspecFile>
+		<NuspecFile>$(GeneratedNugetDir)Microsoft.Devices.Midi2.Core.nuspec</NuspecFile>
 		<OutputPath>$(GeneratedNugetDir)</OutputPath>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<AssemblyName>Microsoft.Devices.Midi2.CS</AssemblyName>
+		<AssemblyName>Microsoft.Devices.Midi2.NET</AssemblyName>
 		<PackageOutputPath>..\..\..\publish\app-dev-sdk\</PackageOutputPath>
 	</PropertyGroup>
 
@@ -27,7 +27,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="nuget\Microsoft.Devices.Midi2.Core.CS.nuspec" />
+    <None Include="nuget\Microsoft.Devices.Midi2.Core.nuspec" />
+    <None Include="nuget\Microsoft.Devices.Midi2.Core.targets" />
+    <None Include="nuget\README.md" />
   </ItemGroup>
 
   <ItemGroup>

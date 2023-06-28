@@ -32,6 +32,9 @@
     <Filter Include="SDK\Transports">
       <UniqueIdentifier>{7a309dc0-af6f-4fa7-8827-649ef97dcc9a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SDK\Collections">
+      <UniqueIdentifier>{52b13e6c-2b08-4876-b259-c8a335409409}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -169,7 +172,36 @@
     <Midl Include="MidiMessageWriter.idl">
       <Filter>SDK\Endpoints</Filter>
     </Midl>
-    <Midl Include="MidiMessagesReceivedEventArgs.idl" />
+    <Midl Include="MidiMessagesReceivedEventArgs.idl">
+      <Filter>SDK\Endpoints</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlockList.idl">
+      <Filter>SDK\Collections</Filter>
+    </Midl>
+    <Midl Include="MidiListBase.idl">
+      <Filter>SDK\Collections</Filter>
+    </Midl>
+    <Midl Include="MidiGroupTerminalBlockList.idl">
+      <Filter>SDK\Collections</Filter>
+    </Midl>
+    <Midl Include="MidiGroupList.idl">
+      <Filter>SDK\Collections</Filter>
+    </Midl>
+    <Midl Include="MidiChannelList.idl">
+      <Filter>SDK\Collections</Filter>
+    </Midl>
+    <Midl Include="MidiDeviceInformationList.idl">
+      <Filter>SDK\Collections</Filter>
+    </Midl>
+    <Midl Include="MidiUmpWithTimestampList.idl">
+      <Filter>SDK\Collections</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointConnectionList.idl">
+      <Filter>SDK\Collections</Filter>
+    </Midl>
+    <Midl Include="MidiTransportInformationList.idl">
+      <Filter>SDK\Collections</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
