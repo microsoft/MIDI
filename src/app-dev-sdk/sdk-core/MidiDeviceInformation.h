@@ -1,13 +1,6 @@
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License
-// ============================================================================
-// This is part of the Windows MIDI Services App SDK and should be used
-// in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
-// ============================================================================
-
 #pragma once
 #include "MidiDeviceInformation.g.h"
+
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
@@ -26,7 +19,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         hstring UniqueIdentifier();
         winrt::Microsoft::Devices::Midi2::MidiEndpointDataFormat EndpointDataFormat();
         bool HasGroupTerminalBlocks();
-        winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiGroupTerminalBlock> GroupTerminalBlocks();
+        winrt::Microsoft::Devices::Midi2::MidiGroupTerminalBlockList GroupTerminalBlocks();
         winrt::Windows::Devices::Enumeration::DeviceThumbnail DeviceThumbnail();
     };
 }

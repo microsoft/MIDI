@@ -9,8 +9,8 @@
 
 // TODO: Consider thread synchronization for this class. Right now, assumes single-threaded access
 
-import "UmpWithTimestamp.idl";
-import "UmpWithTimestampList.idl";
+import "MidiUmpWithTimestamp.idl";
+import "MidiUmpWithTimestampList.idl";
 
 namespace Microsoft.Devices.Midi2
 {
@@ -39,11 +39,11 @@ namespace Microsoft.Devices.Midi2
 
         void WriteUmpWords(UInt64 midiTimeStamp, UInt32[] words, UInt8 wordCount);
 
-        void WriteUmpWithTimestamp(UmpWithTimestamp ump);
-        void WriteUmpWithTimestamp(UInt64 midiTimestamp, Ump ump);
+        void WriteUmpWithTimestamp(MidiUmpWithTimestamp ump);
+        void WriteUmpWithTimestamp(UInt64 midiTimestamp, MidiUmp ump);
 
         //void WriteMultipleUmpsWithTimestamps(IVector<UmpWithTimestamp> umpList);
-        void WriteMultipleUmpsWithTimestamps(UmpWithTimestampList umpList);
+        void WriteMultipleUmpsWithTimestamps(MidiUmpWithTimestampList umpList);
 
 
         // TODO: Considering adding a separate COM interface to this class, only for C++ 

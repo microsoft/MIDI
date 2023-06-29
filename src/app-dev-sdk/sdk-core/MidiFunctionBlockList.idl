@@ -9,6 +9,8 @@
 // The various list implementations are here because some languages (like Delphi/Pascal)
 // have no automatic projection support, and can't reasonably handle any class with
 // templates / generics.
+// The IDL is a placeholder for now
+
 
 import "MidiListBase.idl";
 
@@ -17,6 +19,6 @@ namespace Microsoft.Devices.Midi2
     [default_interface]
     runtimeclass MidiFunctionBlockList : MidiListBase
     {
-
+        MidiFunctionBlockList();
     }
 }

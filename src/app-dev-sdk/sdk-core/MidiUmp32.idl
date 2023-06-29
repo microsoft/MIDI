@@ -6,22 +6,12 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-
-import "MidiMessageTypeEnum.idl";
-
 namespace Microsoft.Devices.Midi2
 {
-    [default_interface]
-    runtimeclass UmpUtilities
-    {
-        UmpUtilities();
+	struct MidiUmp32
+	{
+		UInt64 Timestamp;
+		UInt32 Word1;
+	};
 
-
-        static MidiMessageType GetMessageTypeFromFirstWord(UInt32 firstWord);
-
-        static Int16 GetUmpLengthInWordsFromFirstWord(UInt32 firstWord);
-
-
-
-    }
 }

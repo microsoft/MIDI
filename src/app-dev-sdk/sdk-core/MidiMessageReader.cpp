@@ -1,11 +1,3 @@
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License
-// ============================================================================
-// This is part of the Windows MIDI Services App SDK and should be used
-// in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
-// ============================================================================
-
 #include "pch.h"
 #include "MidiMessageReader.h"
 #include "MidiMessageReader.g.cpp"
@@ -32,15 +24,15 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
-    winrt::Microsoft::Devices::Midi2::UmpWithTimestamp MidiMessageReader::PeekNextMessage()
+    winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestamp MidiMessageReader::PeekNextMessage()
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::UmpWithTimestamp> MidiMessageReader::ReadToEnd()
+    winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestampList MidiMessageReader::ReadToEnd()
     {
         throw hresult_not_implemented();
     }
-    winrt::Microsoft::Devices::Midi2::UmpWithTimestamp MidiMessageReader::ReadNextMessage()
+    winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestamp MidiMessageReader::ReadNextMessage()
     {
         throw hresult_not_implemented();
     }

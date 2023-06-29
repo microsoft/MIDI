@@ -1,14 +1,7 @@
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License
-// ============================================================================
-// This is part of the Windows MIDI Services App SDK and should be used
-// in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
-// ============================================================================
-
 #include "pch.h"
 #include "MidiDeviceInformation.h"
 #include "MidiDeviceInformation.g.cpp"
+
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
@@ -56,7 +49,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiGroupTerminalBlock> MidiDeviceInformation::GroupTerminalBlocks()
+    winrt::Microsoft::Devices::Midi2::MidiGroupTerminalBlockList MidiDeviceInformation::GroupTerminalBlocks()
     {
         throw hresult_not_implemented();
     }

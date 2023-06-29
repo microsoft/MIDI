@@ -13,7 +13,7 @@
 import "MidiEndpointInformation.idl";
 import "MidiFunctionBlock.idl";
 import "MidiEndpointDataFormatEnum.idl";
-import "UmpWithTimestamp.idl";
+import "MidiUmpWithTimestamp.idl";
 import "MidiMessagesReceivedEventArgs.idl";
 import "MidiMessageReader.idl";
 import "MidiMessageWriter.idl";

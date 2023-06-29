@@ -10,7 +10,7 @@
 // This avoids copying data, and provides a lot more flexibility.
 
 
-import "UmpWithTimestamp.idl";
+import "MidiUmpWithTimestamp.idl";
 import "MidiMessageReader.idl";
 
 namespace Microsoft.Devices.Midi2

@@ -6,7 +6,7 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-import "Ump.idl";
+import "MidiUmp.idl";
 
 // really don't like this implementation. At a minimum, need to see if there's
 // a way to allow for lightweight structs (despite them being value types). 
@@ -20,13 +20,13 @@ namespace Microsoft.Devices.Midi2
     // JR timestamp if we decide to just pass them through
 
     [default_interface]
-    runtimeclass UmpWithTimestamp
+    runtimeclass MidiUmpWithTimestamp
     {
-        UmpWithTimestamp();
+        MidiUmpWithTimestamp();
 
         UInt64 Timestamp{ get; set; };
 
-        Microsoft.Devices.Midi2.Ump Ump{ get; set; };
+        Microsoft.Devices.Midi2.MidiUmp Ump{ get; set; };
 
     }
 }

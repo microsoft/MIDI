@@ -23,12 +23,13 @@ namespace Microsoft.Devices.Midi2
 {
     // TODO: Consider if this should just be a simple struct, and leave 
     // the rest of the properties to the strongly typed classes. Optimize
-    // for performance and memory here. They all end up as C++ structs for WinRT anyway
+    // for performance and memory here.
+    
 
     [default_interface]
-    unsealed runtimeclass Ump
+    unsealed runtimeclass MidiUmp
     {
-        Ump();
+        MidiUmp();
 
         // revisit this? Vector? Few discrete words?
         UInt32[] Words{ get; };

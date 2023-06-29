@@ -7,8 +7,8 @@
 // ============================================================================
 
 import "MidiMessageTypeEnum.idl";
-import "UmpWithTimestamp.idl";
-import "UmpWithTimestampList.idl";
+import "MidiUmpWithTimestamp.idl";
+import "MidiUmpWithTimestampList.idl";
 
 
 // TODO: Consider thread synchronization for this class. Right now, assumes single-threaded access
@@ -42,14 +42,14 @@ namespace Microsoft.Devices.Midi2
         MidiMessageType PeekNextMessageType();
 
         // look at the next message without moving the read pointer
-        UmpWithTimestamp PeekNextMessage();
+        MidiUmpWithTimestamp PeekNextMessage();
         
-        // copies all pending messages into an IVector (List in some languages)
+        // copies all pending messages into a List
         //IVector<UmpWithTimestamp> ReadToEnd();
-        UmpWithTimestampList ReadToEnd();
+        MidiUmpWithTimestampList ReadToEnd();           // All IVector<T> were replaced with strongly typed list classes to better support Delphi apps
 
         // reads a single message
-        UmpWithTimestamp ReadNextMessage();
+        MidiUmpWithTimestamp ReadNextMessage();
 
         // TODO: Consider a method to read next messages into a pre-allocated app buffer
         // This would require a COM interface because WinRT doesn't do pointers.
