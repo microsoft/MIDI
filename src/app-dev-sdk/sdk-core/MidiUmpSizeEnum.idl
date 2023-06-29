@@ -6,14 +6,15 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-// primarily used for working with the buffer approach. Easy enough for client
-// applications to define themselves in their native language
+
 namespace Microsoft.Devices.Midi2
 {
-	struct MidiUmp32
-	{
-		UInt64 Timestamp;
-		UInt32 Word1;
-	};
 
+    enum MidiUmpSize
+    {
+        Ump32Size = 1,
+        Ump64Size = 2,
+        Ump96Size = 3,
+        Ump128Size = 4,
+    };
 }

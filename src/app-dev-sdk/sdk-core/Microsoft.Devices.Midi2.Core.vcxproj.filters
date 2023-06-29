@@ -136,9 +136,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="MidiUmp.idl">
-      <Filter>SDK\Messages</Filter>
-    </Midl>
     <Midl Include="MidiUmpUtilities.idl">
       <Filter>SDK\Messages</Filter>
     </Midl>
@@ -260,6 +257,9 @@
       <Filter>SDK\Messages</Filter>
     </Midl>
     <Midl Include="MidiUmp128.idl">
+      <Filter>SDK\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiUmpSizeEnum.idl">
       <Filter>SDK\Messages</Filter>
     </Midl>
   </ItemGroup>

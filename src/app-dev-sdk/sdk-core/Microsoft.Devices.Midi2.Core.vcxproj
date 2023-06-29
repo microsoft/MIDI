@@ -217,9 +217,6 @@
     <ClInclude Include="MidiTransportInformation.h">
       <DependentUpon>MidiTransportInformation.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiUmp.h">
-      <DependentUpon>MidiUmp.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="UmpHelpers.h" />
     <ClInclude Include="MidiUmpUtilities.h">
       <DependentUpon>MidiUmpUtilities.idl</DependentUpon>
@@ -315,9 +312,6 @@
     <ClCompile Include="MidiTransportInformation.cpp">
       <DependentUpon>MidiTransportInformation.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiUmp.cpp">
-      <DependentUpon>MidiUmp.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiUmpUtilities.cpp">
       <DependentUpon>MidiUmpUtilities.idl</DependentUpon>
     </ClCompile>
@@ -376,8 +370,8 @@
     <Midl Include="MidiUmp32.idl" />
     <Midl Include="MidiUmp64.idl" />
     <Midl Include="MidiUmp96.idl" />
+    <Midl Include="MidiUmpSizeEnum.idl" />
     <Midl Include="MidiUmpWithTimestampList.idl" />
-    <Midl Include="MidiUmp.idl" />
     <Midl Include="MidiUmpUtilities.idl" />
     <Midl Include="MidiUmpWithTimestamp.idl" />
   </ItemGroup>

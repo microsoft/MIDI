@@ -12,6 +12,7 @@
 import "MidiUmpWithTimestamp.idl";
 import "MidiUmpWithTimestampList.idl";
 
+
 namespace Microsoft.Devices.Midi2
 {
     enum MidiMessageWriterQueueFullBehavior
@@ -40,17 +41,19 @@ namespace Microsoft.Devices.Midi2
         void WriteUmpWords(UInt64 midiTimeStamp, UInt32[] words, UInt8 wordCount);
 
         void WriteUmpWithTimestamp(MidiUmpWithTimestamp ump);
-        void WriteUmpWithTimestamp(UInt64 midiTimestamp, MidiUmp ump);
 
         //void WriteMultipleUmpsWithTimestamps(IVector<UmpWithTimestamp> umpList);
         void WriteMultipleUmpsWithTimestamps(MidiUmpWithTimestampList umpList);
 
+        // a performance optimization. We'll see if this works well for performance-focused client apps before
+        // going through the process of creating a completely separate classic COM interface with pointer access.
+        // returns the number of bytes written from the buffer.
+        UInt32 WriteTimestampedUmpStructsFromBuffer(Windows.Foundation.IMemoryBufferReference buffer, UInt32 byteOffsetinBuffer, UInt32 maxBytesToWrite);
 
-        // TODO: Considering adding a separate COM interface to this class, only for C++ 
-        // (or other COM-aware and pointer-centric languages) to allow passing a pointer 
-        // to a UMP or perhaps to a buffer which has multiple UMPs and timestamps already
-        // prepared. The IBuffer approach just doesn't seem great for this and WinRT 
-        // doesn't do pointer passing across boundaries. 
+        void WriteTimestampedUmp32Struct(MidiUmp32 ump);
+        void WriteTimestampedUmp64Struct(MidiUmp64 ump);
+        void WriteTimestampedUmp96Struct(MidiUmp96 ump);
+        void WriteTimestampedUmp128Struct(MidiUmp128 ump);
 
 
         // NOTE: This class doesn't use the usual buffered approach which requires a call to Flush().

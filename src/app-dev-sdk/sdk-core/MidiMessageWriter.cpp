@@ -33,11 +33,27 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
-    void MidiMessageWriter::WriteUmpWithTimestamp(uint64_t midiTimestamp, winrt::Microsoft::Devices::Midi2::MidiUmp const& ump)
+    void MidiMessageWriter::WriteMultipleUmpsWithTimestamps(winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestampList const& umpList)
     {
         throw hresult_not_implemented();
     }
-    void MidiMessageWriter::WriteMultipleUmpsWithTimestamps(winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestampList const& umpList)
+    uint32_t MidiMessageWriter::WriteTimestampedUmpStructsFromBuffer(winrt::Windows::Foundation::IMemoryBufferReference const& buffer, uint32_t byteOffsetinBuffer, uint32_t maxBytesToWrite)
+    {
+        throw hresult_not_implemented();
+    }
+    void MidiMessageWriter::WriteTimestampedUmp32Struct(winrt::Microsoft::Devices::Midi2::MidiUmp32 const& ump)
+    {
+        throw hresult_not_implemented();
+    }
+    void MidiMessageWriter::WriteTimestampedUmp64Struct(winrt::Microsoft::Devices::Midi2::MidiUmp64 const& ump)
+    {
+        throw hresult_not_implemented();
+    }
+    void MidiMessageWriter::WriteTimestampedUmp96Struct(winrt::Microsoft::Devices::Midi2::MidiUmp96 const& ump)
+    {
+        throw hresult_not_implemented();
+    }
+    void MidiMessageWriter::WriteTimestampedUmp128Struct(winrt::Microsoft::Devices::Midi2::MidiUmp128 const& ump)
     {
         throw hresult_not_implemented();
     }

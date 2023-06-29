@@ -6,7 +6,12 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-import "MidiUmp.idl";
+import "MidiUmp32.idl";
+import "MidiUmp64.idl";
+import "MidiUmp96.idl";
+import "MidiUmp128.idl";
+
+import "MidiMessageTypeEnum.idl";
 
 // really don't like this implementation. At a minimum, need to see if there's
 // a way to allow for lightweight structs (despite them being value types). 
@@ -26,7 +31,16 @@ namespace Microsoft.Devices.Midi2
 
         UInt64 Timestamp{ get; set; };
 
-        Microsoft.Devices.Midi2.MidiUmp Ump{ get; set; };
+        UInt32[] Words{ get; };
+        UInt8 WordCount{ get; };
+
+        MidiMessageType MessageType{ get; set; };
+
+        // convert from the basic structure
+        static MidiUmpWithTimestamp FromUmp32(MidiUmp32 ump);
+        static MidiUmpWithTimestamp FromUmp64(MidiUmp64 ump);
+        static MidiUmpWithTimestamp FromUmp96(MidiUmp96 ump);
+        static MidiUmpWithTimestamp FromUmp128(MidiUmp128 ump);
 
     }
 }

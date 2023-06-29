@@ -29,8 +29,6 @@ namespace Microsoft.Devices.Midi2
         //void Close();
 
 
-
-
         // this really should be read-only to users of this class
         //Windows.Foundation.Collections.IObservableVector<MidiEndpointConnection> Connections { get; };
         MidiEndpointConnectionList Connections{ get; };

@@ -6,6 +6,8 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+// primarily used for working with the buffer approach. Easy enough for client
+// applications to define themselves in their native language
 namespace Microsoft.Devices.Midi2
 {
 	struct MidiUmp64
