@@ -21,7 +21,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
-    winrt::Microsoft::Devices::Midi2::MidiMessageType MidiMessageReader::PeekNextUmpMessageType()
+    winrt::Microsoft::Devices::Midi2::MidiUmpMessageType MidiMessageReader::PeekNextUmpMessageType()
     {
         throw hresult_not_implemented();
     }

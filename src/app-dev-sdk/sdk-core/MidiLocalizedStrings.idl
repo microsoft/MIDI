@@ -14,7 +14,7 @@
 
 // NOTE: This class is highly likely to change significantly
 
-import "MidiMessageTypeEnum.idl";
+import "MidiUmpMessageTypeEnum.idl";
 
 namespace Microsoft.Devices.Midi2
 {
@@ -27,7 +27,7 @@ namespace Microsoft.Devices.Midi2
    
 
         static String GetMidiMessageTypeLabel(Boolean abbreviatedVersion);
-        static String FormatMessageTypeValue(MidiMessageType messageType, Boolean abbreviatedVersion);
+        static String FormatMessageTypeValue(MidiUmpMessageType messageType, Boolean abbreviatedVersion);
 
         static String GetGroupLabel(Boolean abbreviatedVersion);
         static String FormatGroupValue(UInt8 groupIndex);

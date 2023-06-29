@@ -16,8 +16,8 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         void Timestamp(uint64_t value);
         com_array<uint32_t> Words();
         uint8_t WordCount();
-        winrt::Microsoft::Devices::Midi2::MidiMessageType MessageType();
-        void MessageType(winrt::Microsoft::Devices::Midi2::MidiMessageType const& value);
+        winrt::Microsoft::Devices::Midi2::MidiUmpMessageType MessageType();
+        void MessageType(winrt::Microsoft::Devices::Midi2::MidiUmpMessageType const& value);
     };
 }
 namespace winrt::Microsoft::Devices::Midi2::factory_implementation

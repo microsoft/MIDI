@@ -7,7 +7,7 @@
 // ============================================================================
 
 
-import "MidiMessageTypeEnum.idl";
+import "MidiUmpMessageTypeEnum.idl";
 
 namespace Microsoft.Devices.Midi2
 {
@@ -17,7 +17,7 @@ namespace Microsoft.Devices.Midi2
         MidiUmpUtilities();
 
 
-        static MidiMessageType GetMessageTypeFromFirstWord(UInt32 firstWord);
+        static MidiUmpMessageType GetMessageTypeFromFirstWord(UInt32 firstWord);
 
         static Int16 GetUmpLengthInWordsFromFirstWord(UInt32 firstWord);
 

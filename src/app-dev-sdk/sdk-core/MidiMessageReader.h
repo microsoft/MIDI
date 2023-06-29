@@ -12,7 +12,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         void EndOfMessagesBehavior(winrt::Microsoft::Devices::Midi2::MidiMessageReaderEndOfMessagesBehavior const& value);
         bool EndOfMessages();
         uint64_t PeekNextTimestamp();
-        winrt::Microsoft::Devices::Midi2::MidiMessageType PeekNextUmpMessageType();
+        winrt::Microsoft::Devices::Midi2::MidiUmpMessageType PeekNextUmpMessageType();
         winrt::Microsoft::Devices::Midi2::MidiUmpSize PeekNextUmpSize();
         winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestamp PeekNextMessage();
         winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestampList ReadToEnd();

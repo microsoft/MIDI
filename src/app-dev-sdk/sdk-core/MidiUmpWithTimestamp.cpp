@@ -37,11 +37,11 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
-    winrt::Microsoft::Devices::Midi2::MidiMessageType MidiUmpWithTimestamp::MessageType()
+    winrt::Microsoft::Devices::Midi2::MidiUmpMessageType MidiUmpWithTimestamp::MessageType()
     {
         throw hresult_not_implemented();
     }
-    void MidiUmpWithTimestamp::MessageType(winrt::Microsoft::Devices::Midi2::MidiMessageType const& value)
+    void MidiUmpWithTimestamp::MessageType(winrt::Microsoft::Devices::Midi2::MidiUmpMessageType const& value)
     {
         throw hresult_not_implemented();
     }

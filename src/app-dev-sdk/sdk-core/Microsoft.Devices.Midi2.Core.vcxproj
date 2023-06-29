@@ -359,7 +359,7 @@
     <Midl Include="MidiGroup.idl" />
     <Midl Include="MidiGroupTerminalBlock.idl" />
     <Midl Include="MidiLocalizedStrings.idl" />
-    <Midl Include="MidiMessageTypeEnum.idl" />
+    <Midl Include="MidiUmpMessageTypeEnum.idl" />
     <Midl Include="MidiMessageWriter.idl" />
     <Midl Include="MidiServices.idl" />
     <Midl Include="MidiSession.idl" />

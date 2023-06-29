@@ -6,7 +6,7 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-import "MidiMessageTypeEnum.idl";
+import "MidiUmpMessageTypeEnum.idl";
 import "MidiUmpWithTimestamp.idl";
 import "MidiUmpWithTimestampList.idl";
 
@@ -41,12 +41,9 @@ namespace Microsoft.Devices.Midi2
         UInt64 PeekNextTimestamp();
 
         // look at the next message's type without moving the read pointer (skips over the timestamp to do this)
-        MidiMessageType PeekNextUmpMessageType();
+        MidiUmpMessageType PeekNextUmpMessageType();
 
-        // this tells you what kind of struct to read from the stream, if you are using the struct read functions
-        MidiUmpSize PeekNextUmpSize();
-
-        // look at the next message without moving the read pointer
+        // copy the next message without moving the read pointer
         MidiUmpWithTimestamp PeekNextMessage();
         
         // copies all pending messages into a List
@@ -56,7 +53,13 @@ namespace Microsoft.Devices.Midi2
         // reads a single message in a polymorphic way
         MidiUmpWithTimestamp ReadNextMessage();
 
-        // these require you to know what the next message type is
+
+        // this tells you what kind of struct to read from the stream, if you are using the struct read functions
+        MidiUmpSize PeekNextUmpSize();
+
+        // these require you to know what the next message type is. You can
+        // get that from the PeekNextUmpSize method. Keep in mind that these
+        // messages also include a timestamp in each one
         MidiUmp32 ReadUmp32();
         MidiUmp64 ReadUmp64();
         MidiUmp96 ReadUmp96();

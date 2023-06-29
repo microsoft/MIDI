@@ -142,7 +142,7 @@
     <Midl Include="MidiMessageTranslator.idl">
       <Filter>SDK\Messages</Filter>
     </Midl>
-    <Midl Include="MidiMessageTypeEnum.idl">
+    <Midl Include="MidiUmpMessageTypeEnum.idl">
       <Filter>SDK\Messages</Filter>
     </Midl>
     <Midl Include="MidiDeviceInformation.idl">

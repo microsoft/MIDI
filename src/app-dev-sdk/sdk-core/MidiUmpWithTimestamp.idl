@@ -11,21 +11,18 @@ import "MidiUmp64.idl";
 import "MidiUmp96.idl";
 import "MidiUmp128.idl";
 
-import "MidiMessageTypeEnum.idl";
-
-// really don't like this implementation. At a minimum, need to see if there's
-// a way to allow for lightweight structs (despite them being value types). 
-// WinRT generally doesn't support that. This may be another case of a custom
-// COM interface to the classes which need to use the Ump type as a void *
+import "MidiUmpMessageTypeEnum.idl";
 
 namespace Microsoft.Devices.Midi2
 {
-    // TODO: Timestamps will come in for each message, and go out with each message. Include them 
-    // in the base Ump class, or create a wrapper class? A wrapper class *could* also include a 
-    // JR timestamp if we decide to just pass them through
-
+    // this is an alternative to the the basic structure approach. 
+    // structures are for performance and memory footprint. This
+    // class is for richer processing and easier use, especially
+    // from non-C++ languages. This is also the base class behind
+    // the strongly-typed UMP Messages in the other SDK additions
+    
     [default_interface]
-    runtimeclass MidiUmpWithTimestamp
+    unsealed runtimeclass MidiUmpWithTimestamp
     {
         MidiUmpWithTimestamp();
 
@@ -34,7 +31,7 @@ namespace Microsoft.Devices.Midi2
         UInt32[] Words{ get; };
         UInt8 WordCount{ get; };
 
-        MidiMessageType MessageType{ get; set; };
+        MidiUmpMessageType MessageType{ get; set; };
 
         // convert from the basic structure
         static MidiUmpWithTimestamp FromUmp32(MidiUmp32 ump);

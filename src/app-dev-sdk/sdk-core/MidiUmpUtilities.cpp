@@ -13,7 +13,7 @@
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    winrt::Microsoft::Devices::Midi2::MidiMessageType MidiUmpUtilities::GetMessageTypeFromFirstWord(uint32_t firstWord)
+    winrt::Microsoft::Devices::Midi2::MidiUmpMessageType MidiUmpUtilities::GetMessageTypeFromFirstWord(uint32_t firstWord)
     {
         throw hresult_not_implemented();
     }
