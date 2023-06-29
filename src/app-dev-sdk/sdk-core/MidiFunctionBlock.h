@@ -1,15 +1,5 @@
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License
-// ============================================================================
-// This is part of the Windows MIDI Services App SDK and should be used
-// in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
-// ============================================================================
-
-
 #pragma once
 #include "MidiFunctionBlock.g.h"
-
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
@@ -23,8 +13,8 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         winrt::Microsoft::Devices::Midi2::MidiFunctionBlockUIHint UIHint();
         bool IsMidi10Connection();
         bool IsBandwidthRestricted();
-        winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiGroup> IncludedGroups();
-        winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::UmpWithTimestamp> OriginalResponses();
+        winrt::Microsoft::Devices::Midi2::MidiGroupList IncludedGroups();
+        winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestampList OriginalResponses();
         uint8_t MidiCIMessageVersionFormat();
         uint8_t MaxSysEx8Streams();
     };

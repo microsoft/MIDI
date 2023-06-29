@@ -9,8 +9,10 @@
 
 import "MidiFunctionBlockDirectionEnum.idl";
 import "MidiFunctionBlockUIHintEnum.idl";
-import "UmpWithTimestamp.idl";
+import "MidiUmpWithTimestamp.idl";
 import "MidiGroup.idl";
+import "MidiGroupList.idl";
+import "MidiUmpWithTimestampList.idl";
 
 namespace Microsoft.Devices.Midi2
 {
@@ -28,8 +30,10 @@ namespace Microsoft.Devices.Midi2
         Boolean IsMidi10Connection{ get; };
         Boolean IsBandwidthRestricted{ get; };      // true if the block is asking for 31.25kbps restriction
 
-        IVector<MidiGroup> IncludedGroups{ get; };
-        IVector<UmpWithTimestamp> OriginalResponses{ get; };
+        //IVector<MidiGroup> IncludedGroups{ get; };
+        //IVector<UmpWithTimestamp> OriginalResponses{ get; };
+        MidiGroupList IncludedGroups{ get; };
+        MidiUmpWithTimestampList OriginalResponses{ get; };
 
         UInt8 MidiCIMessageVersionFormat{ get; };
 

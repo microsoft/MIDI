@@ -6,19 +6,22 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#include "pch.h"
-#include "UmpUtilities.h"
-#include "UmpUtilities.g.cpp"
 
+import "MidiUmpMessageTypeEnum.idl";
 
-namespace winrt::Microsoft::Devices::Midi2::implementation
+namespace Microsoft.Devices.Midi2
 {
-    winrt::Microsoft::Devices::Midi2::MidiMessageType UmpUtilities::GetMessageTypeFromFirstWord(uint32_t firstWord)
+    [default_interface]
+    runtimeclass MidiUmpUtilities
     {
-        throw hresult_not_implemented();
-    }
-    int16_t UmpUtilities::GetUmpLengthInWordsFromFirstWord(uint32_t firstWord)
-    {
-        throw hresult_not_implemented();
+        MidiUmpUtilities();
+
+
+        static MidiUmpMessageType GetMessageTypeFromFirstWord(UInt32 firstWord);
+
+        static Int16 GetUmpLengthInWordsFromFirstWord(UInt32 firstWord);
+
+
+
     }
 }

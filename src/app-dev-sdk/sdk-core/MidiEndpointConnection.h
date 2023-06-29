@@ -1,12 +1,3 @@
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License
-// ============================================================================
-// This is part of the Windows MIDI Services App SDK and should be used
-// in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
-// ============================================================================
-
-
 #pragma once
 #include "MidiEndpointConnection.g.h"
 
@@ -21,7 +12,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         hstring DeviceId();
         bool EndpointInformationValid();
         winrt::Microsoft::Devices::Midi2::MidiEndpointInformation EndpointInformation();
-        winrt::Windows::Foundation::Collections::IObservableVector<winrt::Microsoft::Devices::Midi2::MidiFunctionBlock> FunctionBlocks();
+        winrt::Microsoft::Devices::Midi2::MidiFunctionBlockList FunctionBlocks();
         void RequestEndpointInformationAndFunctions(bool forceRefresh);
         winrt::Windows::Foundation::IAsyncAction RequestEndpointInformationAndFunctionsAsync(bool forceRefresh);
         winrt::Microsoft::Devices::Midi2::MidiMessageReader GetMessageReader();

@@ -1,22 +1,15 @@
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License
-// ============================================================================
-// This is part of the Windows MIDI Services App SDK and should be used
-// in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
-// ============================================================================
-
 #include "pch.h"
 #include "MidiMessageReader.h"
 #include "MidiMessageReader.g.cpp"
 
+
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    winrt::Microsoft::Devices::Midi2::MidiMessageReaderNoMoreDataBehavior MidiMessageReader::NoMoreDataBehavior()
+    winrt::Microsoft::Devices::Midi2::MidiMessageReaderEndOfMessagesBehavior MidiMessageReader::EndOfMessagesBehavior()
     {
         throw hresult_not_implemented();
     }
-    void MidiMessageReader::NoMoreDataBehavior(winrt::Microsoft::Devices::Midi2::MidiMessageReaderNoMoreDataBehavior const& value)
+    void MidiMessageReader::EndOfMessagesBehavior(winrt::Microsoft::Devices::Midi2::MidiMessageReaderEndOfMessagesBehavior const& value)
     {
         throw hresult_not_implemented();
     }
@@ -28,19 +21,43 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
-    winrt::Microsoft::Devices::Midi2::MidiMessageType MidiMessageReader::PeekNextMessageType()
+    winrt::Microsoft::Devices::Midi2::MidiUmpMessageType MidiMessageReader::PeekNextUmpMessageType()
     {
         throw hresult_not_implemented();
     }
-    winrt::Microsoft::Devices::Midi2::UmpWithTimestamp MidiMessageReader::PeekNextMessage()
+    winrt::Microsoft::Devices::Midi2::MidiUmpSize MidiMessageReader::PeekNextUmpSize()
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::UmpWithTimestamp> MidiMessageReader::ReadToEnd()
+    winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestamp MidiMessageReader::PeekNextMessage()
     {
         throw hresult_not_implemented();
     }
-    winrt::Microsoft::Devices::Midi2::UmpWithTimestamp MidiMessageReader::ReadNextMessage()
+    winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestampList MidiMessageReader::ReadToEnd()
+    {
+        throw hresult_not_implemented();
+    }
+    winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestamp MidiMessageReader::ReadNextMessage()
+    {
+        throw hresult_not_implemented();
+    }
+    winrt::Microsoft::Devices::Midi2::MidiUmp32 MidiMessageReader::ReadUmp32()
+    {
+        throw hresult_not_implemented();
+    }
+    winrt::Microsoft::Devices::Midi2::MidiUmp64 MidiMessageReader::ReadUmp64()
+    {
+        throw hresult_not_implemented();
+    }
+    winrt::Microsoft::Devices::Midi2::MidiUmp96 MidiMessageReader::ReadUmp96()
+    {
+        throw hresult_not_implemented();
+    }
+    winrt::Microsoft::Devices::Midi2::MidiUmp128 MidiMessageReader::ReadUmp128()
+    {
+        throw hresult_not_implemented();
+    }
+    uint32_t MidiMessageReader::ReadTimestampedUmpStructsIntoBuffer(winrt::Windows::Foundation::IMemoryBufferReference const& buffer, uint32_t byteOffsetinBuffer, uint32_t maxBytesToRead)
     {
         throw hresult_not_implemented();
     }

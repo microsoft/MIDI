@@ -11,7 +11,7 @@ namespace Microsoft.Devices.Midi2
 {
     // We recommend not using the FutureReserved ones in client app code
     // because those names will change when they are used by new messages by the MIDI Association
-    enum MidiMessageType
+    enum MidiUmpMessageType
     {
         UtilityMessage32 = 0x0,
         SystemCommon32 = 0x1,

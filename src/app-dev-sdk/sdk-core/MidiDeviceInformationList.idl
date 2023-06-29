@@ -1,0 +1,23 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+// The various list implementations are here because some languages (like Delphi/Pascal)
+// have no automatic projection support, and can't reasonably handle any class with
+// templates / generics.
+// The IDL is a placeholder for now
+
+import "MidiListBase.idl";
+
+namespace Microsoft.Devices.Midi2
+{
+    [default_interface]
+    runtimeclass MidiDeviceInformationList : MidiListBase
+    {
+        MidiDeviceInformationList();
+    }
+}

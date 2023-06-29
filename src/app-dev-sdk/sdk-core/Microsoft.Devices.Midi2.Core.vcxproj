@@ -68,6 +68,15 @@
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DesktopCompatible>true</DesktopCompatible>
   </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">
+    <DesktopCompatible>true</DesktopCompatible>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <DesktopCompatible>true</DesktopCompatible>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <DesktopCompatible>true</DesktopCompatible>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
@@ -81,6 +90,21 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>..\..\shared\inc;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>..\..\shared\inc;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Arm64'">
+    <IncludePath>..\..\shared\inc;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Arm64'">
+    <IncludePath>..\..\shared\inc;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Arm64EC'">
+    <IncludePath>..\..\shared\inc;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Arm64EC'">
     <IncludePath>..\..\shared\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup>
@@ -116,11 +140,38 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="MidiChannelList.h">
+      <DependentUpon>MidiChannelList.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiDeviceInformationList.h">
+      <DependentUpon>MidiDeviceInformationList.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointConnectionList.h">
+      <DependentUpon>MidiEndpointConnectionList.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiFunctionBlockList.h">
+      <DependentUpon>MidiFunctionBlockList.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiGroupList.h">
+      <DependentUpon>MidiGroupList.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiGroupTerminalBlockList.h">
+      <DependentUpon>MidiGroupTerminalBlockList.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiEndpointDisplayFormatter.h">
       <DependentUpon>MidiEndpointDisplayFormatter.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiHighResolutionValueDisplayFormatter.h">
       <DependentUpon>MidiHighResolutionValueDisplayFormatter.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiListBase.h">
+      <DependentUpon>MidiListBase.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiTransportInformationList.h">
+      <DependentUpon>MidiTransportInformationList.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiUmpWithTimestampList.h">
+      <DependentUpon>MidiUmpWithTimestampList.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiLocalizedStrings.h">
       <DependentUpon>MidiLocalizedStrings.idl</DependentUpon>
@@ -166,12 +217,9 @@
     <ClInclude Include="MidiTransportInformation.h">
       <DependentUpon>MidiTransportInformation.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="Ump.h">
-      <DependentUpon>Ump.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="UmpHelpers.h" />
-    <ClInclude Include="UmpUtilities.h">
-      <DependentUpon>UmpUtilities.idl</DependentUpon>
+    <ClInclude Include="MidiUmpUtilities.h">
+      <DependentUpon>MidiUmpUtilities.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiChannel.h">
       <DependentUpon>MidiChannel.idl</DependentUpon>
@@ -183,12 +231,39 @@
       <DependentUpon>MidiSession.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="pch.h" />
-    <ClInclude Include="UmpWithTimestamp.h">
-      <DependentUpon>UmpWithTimestamp.idl</DependentUpon>
+    <ClInclude Include="MidiUmpWithTimestamp.h">
+      <DependentUpon>MidiUmpWithTimestamp.idl</DependentUpon>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Generated Files\module.g.cpp" />
+    <ClCompile Include="MidiChannelList.cpp">
+      <DependentUpon>MidiChannelList.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiDeviceInformationList.cpp">
+      <DependentUpon>MidiDeviceInformationList.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnectionList.cpp">
+      <DependentUpon>MidiEndpointConnectionList.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiGroupList.cpp">
+      <DependentUpon>MidiGroupList.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiTransportInformationList.cpp">
+      <DependentUpon>MidiTransportInformationList.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiUmpWithTimestampList.cpp">
+      <DependentUpon>MidiUmpWithTimestampList.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiFunctionBlockList.cpp">
+      <DependentUpon>MidiFunctionBlockList.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiGroupTerminalBlockList.cpp">
+      <DependentUpon>MidiGroupTerminalBlockList.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiListBase.cpp">
+      <DependentUpon>MidiListBase.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiEndpointDisplayFormatter.cpp">
       <DependentUpon>MidiEndpointDisplayFormatter.idl</DependentUpon>
     </ClCompile>
@@ -237,11 +312,8 @@
     <ClCompile Include="MidiTransportInformation.cpp">
       <DependentUpon>MidiTransportInformation.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="Ump.cpp">
-      <DependentUpon>Ump.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="UmpUtilities.cpp">
-      <DependentUpon>UmpUtilities.idl</DependentUpon>
+    <ClCompile Include="MidiUmpUtilities.cpp">
+      <DependentUpon>MidiUmpUtilities.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiChannel.cpp">
       <DependentUpon>MidiChannel.idl</DependentUpon>
@@ -255,8 +327,8 @@
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="UmpWithTimestamp.cpp">
-      <DependentUpon>UmpWithTimestamp.idl</DependentUpon>
+    <ClCompile Include="MidiUmpWithTimestamp.cpp">
+      <DependentUpon>MidiUmpWithTimestamp.idl</DependentUpon>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -264,10 +336,17 @@
     <Midl Include="IMidiSdkMessagePreProcessor.idl" />
     <Midl Include="IMidiTransportSettingsData.idl" />
     <Midl Include="MidiChannel.idl" />
+    <Midl Include="MidiChannelList.idl" />
+    <Midl Include="MidiDeviceInformationList.idl" />
+    <Midl Include="MidiEndpointConnectionList.idl" />
     <Midl Include="MidiEndpointInformation.idl" />
     <Midl Include="MidiEndpointDataFormatEnum.idl" />
     <Midl Include="MidiFunctionBlockDirectionEnum.idl" />
+    <Midl Include="MidiFunctionBlockList.idl" />
+    <Midl Include="MidiGroupList.idl" />
+    <Midl Include="MidiGroupTerminalBlockList.idl" />
     <Midl Include="MidiHighResolutionValueDisplayFormatter.idl" />
+    <Midl Include="MidiListBase.idl" />
     <Midl Include="MidiMessageReader.idl" />
     <Midl Include="MidiMessagesReceivedEventArgs.idl" />
     <Midl Include="MidiMessageTranslator.idl" />
@@ -280,15 +359,21 @@
     <Midl Include="MidiGroup.idl" />
     <Midl Include="MidiGroupTerminalBlock.idl" />
     <Midl Include="MidiLocalizedStrings.idl" />
-    <Midl Include="MidiMessageTypeEnum.idl" />
+    <Midl Include="MidiUmpMessageTypeEnum.idl" />
     <Midl Include="MidiMessageWriter.idl" />
     <Midl Include="MidiServices.idl" />
     <Midl Include="MidiSession.idl" />
     <Midl Include="MidiSessionSettings.idl" />
     <Midl Include="MidiTransportInformation.idl" />
-    <Midl Include="Ump.idl" />
-    <Midl Include="UmpUtilities.idl" />
-    <Midl Include="UmpWithTimestamp.idl" />
+    <Midl Include="MidiTransportInformationList.idl" />
+    <Midl Include="MidiUmp128.idl" />
+    <Midl Include="MidiUmp32.idl" />
+    <Midl Include="MidiUmp64.idl" />
+    <Midl Include="MidiUmp96.idl" />
+    <Midl Include="MidiUmpSizeEnum.idl" />
+    <Midl Include="MidiUmpWithTimestampList.idl" />
+    <Midl Include="MidiUmpUtilities.idl" />
+    <Midl Include="MidiUmpWithTimestamp.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-sdk.def" />

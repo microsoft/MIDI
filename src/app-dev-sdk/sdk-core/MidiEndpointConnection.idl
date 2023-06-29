@@ -13,10 +13,11 @@
 import "MidiEndpointInformation.idl";
 import "MidiFunctionBlock.idl";
 import "MidiEndpointDataFormatEnum.idl";
-import "UmpWithTimestamp.idl";
+import "MidiUmpWithTimestamp.idl";
 import "MidiMessagesReceivedEventArgs.idl";
 import "MidiMessageReader.idl";
 import "MidiMessageWriter.idl";
+import "MidiFunctionBlockList.idl";
 
 namespace Microsoft.Devices.Midi2
 {
@@ -45,7 +46,7 @@ namespace Microsoft.Devices.Midi2
         MidiEndpointInformation EndpointInformation{ get; };    // information from Endpoint Info request. Not valid until EndpointInformation requested and received.
 
         // Blocks which tell us how to treat the groups
-        IObservableVector<MidiFunctionBlock>FunctionBlocks { get; };  // these are discovered in-protocol. They can change within the rules in the spec
+        MidiFunctionBlockList FunctionBlocks { get; };  // these are discovered in-protocol. They can change within the rules in the spec
 
 
         // call this if you have your own worker thread. It's a long-running operation

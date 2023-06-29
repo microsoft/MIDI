@@ -1,0 +1,43 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+import "MidiUmp32.idl";
+import "MidiUmp64.idl";
+import "MidiUmp96.idl";
+import "MidiUmp128.idl";
+
+import "MidiUmpMessageTypeEnum.idl";
+
+namespace Microsoft.Devices.Midi2
+{
+    // this is an alternative to the the basic structure approach. 
+    // structures are for performance and memory footprint. This
+    // class is for richer processing and easier use, especially
+    // from non-C++ languages. This is also the base class behind
+    // the strongly-typed UMP Messages in the other SDK additions
+    
+    [default_interface]
+    unsealed runtimeclass MidiUmpWithTimestamp
+    {
+        MidiUmpWithTimestamp();
+
+        UInt64 Timestamp{ get; set; };
+
+        UInt32[] Words{ get; };
+        UInt8 WordCount{ get; };
+
+        MidiUmpMessageType MessageType{ get; set; };
+
+        // convert from the basic structure
+        static MidiUmpWithTimestamp FromUmp32(MidiUmp32 ump);
+        static MidiUmpWithTimestamp FromUmp64(MidiUmp64 ump);
+        static MidiUmpWithTimestamp FromUmp96(MidiUmp96 ump);
+        static MidiUmpWithTimestamp FromUmp128(MidiUmp128 ump);
+
+    }
+}

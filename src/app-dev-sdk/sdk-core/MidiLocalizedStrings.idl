@@ -8,12 +8,13 @@
 
 
 // Designed to be stand-alone so can be used even without other strongly-typed classes
+// This is something a typical application would use to format strings for display. A
+// XAML app may expose specific constants through the viewmodel, for example.
 
-// TODO: may want to rethink structure of this class. WinRT doesn't support constants so single func for labels isn't really possible
 
 // NOTE: This class is highly likely to change significantly
 
-import "MidiMessageTypeEnum.idl";
+import "MidiUmpMessageTypeEnum.idl";
 
 namespace Microsoft.Devices.Midi2
 {
@@ -22,11 +23,11 @@ namespace Microsoft.Devices.Midi2
     {
         MidiLocalizedStrings();
 
-        static String LanguageCode {get; set; };                                   // pass in en-US or similar. (Defaults to language of the creating thread)
+        static String LanguageCode { get; set; };                                   // pass in en-US or similar. (Defaults to language of the creating thread)
    
 
         static String GetMidiMessageTypeLabel(Boolean abbreviatedVersion);
-        static String FormatMessageTypeValue(MidiMessageType messageType, Boolean abbreviatedVersion);
+        static String FormatMessageTypeValue(MidiUmpMessageType messageType, Boolean abbreviatedVersion);
 
         static String GetGroupLabel(Boolean abbreviatedVersion);
         static String FormatGroupValue(UInt8 groupIndex);

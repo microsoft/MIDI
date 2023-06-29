@@ -7,23 +7,22 @@
 // ============================================================================
 
 #pragma once
-#include "UmpWithTimestamp.g.h"
+#include "MidiUmpUtilities.g.h"
+
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    struct UmpWithTimestamp : UmpWithTimestampT<UmpWithTimestamp>
+    struct MidiUmpUtilities : MidiUmpUtilitiesT<MidiUmpUtilities>
     {
-        UmpWithTimestamp() = default;
+        MidiUmpUtilities() = default;
 
-        uint64_t Timestamp();
-        void Timestamp(uint64_t value);
-        winrt::Microsoft::Devices::Midi2::Ump Ump();
-        void Ump(winrt::Microsoft::Devices::Midi2::Ump const& value);
+        static winrt::Microsoft::Devices::Midi2::MidiUmpMessageType GetMessageTypeFromFirstWord(uint32_t firstWord);
+        static int16_t GetUmpLengthInWordsFromFirstWord(uint32_t firstWord);
     };
 }
 namespace winrt::Microsoft::Devices::Midi2::factory_implementation
 {
-    struct UmpWithTimestamp : UmpWithTimestampT<UmpWithTimestamp, implementation::UmpWithTimestamp>
+    struct MidiUmpUtilities : MidiUmpUtilitiesT<MidiUmpUtilities, implementation::MidiUmpUtilities>
     {
     };
 }
