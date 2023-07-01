@@ -8,7 +8,9 @@ using namespace Microsoft::Devices::Midi2;
 
 TEST_CASE("Create session")
 {
-	MidiSession session;
+	auto settings = MidiSessionSettings::Default();
+
+	auto session = MidiSession::CreateNewSession(L"Test Session Name", settings);
 
 
 	//REQUIRE((bool)(obj.SomeProperty() == val));

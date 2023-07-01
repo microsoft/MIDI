@@ -17,9 +17,17 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
@@ -67,6 +75,9 @@
     <IncludePath>x64\Release\Generated Files;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>x64\Release\Generated Files;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <IncludePath>x64\Release\Generated Files;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup>
@@ -127,14 +138,14 @@
     <None Include="PropertySheet.props" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\app-dev-sdk\sdk-core\Microsoft.Devices.Midi2.Core.vcxproj">
-      <Project>{3aa50484-e4c1-41fb-9ae4-feea724e6077}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Manifest Include="sdk-core-cpp-winrt-tests.exe.manifest">
       <DeploymentContent>true</DeploymentContent>
     </Manifest>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\sdk-core\Microsoft.Devices.Midi2.Core.vcxproj">
+      <Project>{3aa50484-e4c1-41fb-9ae4-feea724e6077}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

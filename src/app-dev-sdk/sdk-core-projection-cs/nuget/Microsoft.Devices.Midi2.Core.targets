@@ -8,7 +8,7 @@
 	
 	<ItemGroup Condition="'$(TargetPlatformIdentifier)' == 'win10-x64'">
 		<Reference Include="$(MSBuildThisFileDirectory)..\..\lib\x64\Microsoft.Devices.Midi2.winmd">
-			<Implementation>Microsoft.Devices.Midi2.Core.dll</Implementation>
+			<Implementation>Microsoft.Devices.Midi2.dll</Implementation>
 		</Reference>
 		<ReferenceCopyLocalPaths Include="$(MSBuildThisFileDirectory)..\..\runtimes\win10-$(Midi-Sdk-Platform)\native\Microsoft.Devices.Midi2.dll" />
 	</ItemGroup>

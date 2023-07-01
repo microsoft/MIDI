@@ -97,6 +97,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>..\..\shared\inc;$(IncludePath)</IncludePath>
+    <TargetName>Microsoft.Devices.Midi2</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Arm64'">
     <IncludePath>..\..\shared\inc;$(IncludePath)</IncludePath>
@@ -104,6 +105,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Arm64'">
     <IncludePath>..\..\shared\inc;$(IncludePath)</IncludePath>
+    <TargetName>Microsoft.Devices.Midi2</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Arm64EC'">
     <IncludePath>..\..\shared\inc;$(IncludePath)</IncludePath>
@@ -111,6 +113,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Arm64EC'">
     <IncludePath>..\..\shared\inc;$(IncludePath)</IncludePath>
+    <TargetName>Microsoft.Devices.Midi2</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
