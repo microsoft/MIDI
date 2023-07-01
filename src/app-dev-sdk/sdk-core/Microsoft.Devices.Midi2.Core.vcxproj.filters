@@ -35,6 +35,15 @@
     <Filter Include="SDK\Collections">
       <UniqueIdentifier>{52b13e6c-2b08-4876-b259-c8a335409409}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SDK\TEMP">
+      <UniqueIdentifier>{8f95a2d2-322d-43d9-b7d3-3d673e055bf1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources\Strings">
+      <UniqueIdentifier>{58686a9f-285f-4481-b81c-3f06420aad3d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources\Strings\en-US">
+      <UniqueIdentifier>{53c77fb9-8938-4813-ab1f-eb196c6512ab}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -54,9 +63,6 @@
     </ClCompile>
     <ClCompile Include="MidiMessagesReceivedEventArgs.cpp">
       <Filter>SDK\Endpoints</Filter>
-    </ClCompile>
-    <ClCompile Include="UmpWithTimestamp.cpp">
-      <Filter>SDK\Messages</Filter>
     </ClCompile>
     <ClCompile Include="MidiChannelList.cpp">
       <Filter>SDK\Collections</Filter>
@@ -82,6 +88,9 @@
     <ClCompile Include="MidiUmpWithTimestampList.cpp">
       <Filter>SDK\Collections</Filter>
     </ClCompile>
+    <ClCompile Include="DummyTestClass.cpp">
+      <Filter>SDK\TEMP</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -89,7 +98,7 @@
     <ClInclude Include="MidiGroup.h" />
     <ClInclude Include="MidiSession.h" />
     <ClInclude Include="MidiServices.h" />
-    <ClInclude Include="MidiAppSdkVersion.h">
+    <ClInclude Include="midi_app_sdk_version.h">
       <Filter>Internal</Filter>
     </ClInclude>
     <ClInclude Include="MidiSessionSettings.h">
@@ -104,10 +113,7 @@
     <ClInclude Include="MidiMessagesReceivedEventArgs.h">
       <Filter>SDK\Endpoints</Filter>
     </ClInclude>
-    <ClInclude Include="UmpWithTimestamp.h">
-      <Filter>SDK\Messages</Filter>
-    </ClInclude>
-    <ClInclude Include="UmpHelpers.h">
+    <ClInclude Include="ump_helpers.h">
       <Filter>Internal</Filter>
     </ClInclude>
     <ClInclude Include="MidiChannelList.h">
@@ -133,6 +139,9 @@
     </ClInclude>
     <ClInclude Include="MidiUmpWithTimestampList.h">
       <Filter>SDK\Collections</Filter>
+    </ClInclude>
+    <ClInclude Include="DummyTestClass.h">
+      <Filter>SDK\TEMP</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -262,6 +271,9 @@
     <Midl Include="MidiUmpSizeEnum.idl">
       <Filter>SDK\Messages</Filter>
     </Midl>
+    <Midl Include="DummyTestClass.idl">
+      <Filter>SDK\TEMP</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -269,5 +281,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="PropertySheet.props" />
+  </ItemGroup>
+  <ItemGroup>
+    <PRIResource Include="..\..\shared\strings\en-US\MidiMessageResources.resw">
+      <Filter>Resources\Strings\en-US</Filter>
+    </PRIResource>
+    <PRIResource Include="..\..\shared\strings\en-US\MidiEntities.resw">
+      <Filter>Resources\Strings\en-US</Filter>
+    </PRIResource>
   </ItemGroup>
 </Project>

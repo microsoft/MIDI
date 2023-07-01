@@ -11,7 +11,7 @@
 // Most methods in here will proxy to MIDI Association conversion lib
 // These deliberately don't use UMP types so they will be useful even for
 // implementations which work directly with MIDI 2 words. The versions which
-// operate on or result in UMPs are built into the UMP types.
+// operate on or result in UMPs may be built into the UMP runtimeclass types.
 
 namespace Microsoft.Devices.Midi2
 {

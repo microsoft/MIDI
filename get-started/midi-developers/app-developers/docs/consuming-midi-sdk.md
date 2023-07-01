@@ -13,13 +13,47 @@ To use the SDK (or underlying API) your application language and tools must be a
 
 Note that there are somewhat hacky ways to get traditional C to work with the COM interfaces, but it is a ton of work for you, and is not a scenario we support. If you find yourself in that situation, I recommend factoring out the MIDI code into its own lib and encapsulating all the C++ calls in there.
 
+## Notes on WinRT
+
+When running inside Visual Studio there's a lot that is forgiven by the tools.
+
+* You can have C++ WinRT to C++ WinRT project references
+* Type activation works without a manifest file entry even when not a packaged application
+
+When run outside the tools, you'll need to be prepared to either use a packaged application (UWP or a desktop MSIX with an identity) or for those with new or existing non-packaged desktop apps, add an *appname*.exe.manifest file which lists the classes you need to activate. **We will provide one here on GitHub and keep it updated with the full list of types for all the SDK assemblies.** But, for example, the .manifest file will look something like this:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
+    <assemblyIdentity version="1.0.0.0" name="MyArbitraryButUniqueApplicationName.app"/>
+    <file name="Windows.Devices.Midi2.dll">		
+		<!-- These aren't needed inside Visual Studio -->
+		<activatableClass name="Windows.Devices.Midi2.MidiSession" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+		<activatableClass name="Windows.Devices.Midi2.MidiSessionSettings" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+		<activatableClass name="Windows.Devices.Midi2.MidiUmpWithTimestamp" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        ...
+	</file>
+</assembly>
+```
+
+| Scenario | VS Project Reference | NuGet Projection DLL Reference | winmd Reference | App manifest entries needed |
+| -------- | ------------------| -------------------- | --------------- | ------------------- |
+| C++/WinRT app in Visual Studio | Yes | No | Yes | No |
+| C#/WinRT app in Visual Studio | No | Yes | No | No |
+| Unpackaged Desktop C++ / WinRT App | No | No | Yes | Yes |
+| Appx/MSIX Packaged Desktop C++ / WinRT App | No | No | Yes | No |
+| Appx/MSIX Packaged Desktop .NET / WinRT App | No | Yes | No | No |
+
 ## Consuming from C++
 
 Add the C++/WinRT Nuget package to your C++ project in Visual Studio. This installs the required tools and build process. See the C++/WinRT FAQ link below for using LLVM/Clang. Note that the Windows MIDI Services team does not provide any support for LLVM/Clang, but we will take PRs as required if we need to change something reasonable to ensure you are successful with those tools, within what C++/WinRT can support.
 
-Download the compiled winmd packages from Github. (We may offer another way to handle this in the future, but Nuget packages can't modify C++ projects in the same way they can C# and others)
+Download the compiled winmd packages from Github (see releases for the latest).
 
 Modify the project file as required (info in the C++/WinRT docs, and you can also look at the sample application code). If you are not using Visual Studio as your toolchain for your project, you may want to pull out the MIDI code into a library in your project which does. It's not strictly required, but it's much easier. (If you do not want to do this, you'll need to manually set up the cppwinrt tools as part of your build process).
+
+> Tip: you can look at the SDK tests for up-to-date project files which target the SDKs in the same solution
 
 [Read through this page](https://learn.microsoft.com/windows/uwp/cpp-and-winrt-apis/consume-apis), specifically the "If the API is implemented in a Windows Runtime component". For the SDK, the calls are NOT in a Windows namespace, although that section can be useful to read.
 

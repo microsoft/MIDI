@@ -7,6 +7,7 @@
 // ============================================================================
 
 import "MidiTransportInformation.idl";
+import "MidiTransportInformationList.idl";
 
 namespace Microsoft.Devices.Midi2
 {
@@ -35,7 +36,7 @@ namespace Microsoft.Devices.Midi2
         static Windows.Foundation.Uri LatestMidiServicesInstallUri{ get; };
 
         // list all the installed transports like Virtual, USB, BLE1, etc
-        static IVector<MidiTransportInformation> GetInstalledTransports();
+        static MidiTransportInformationList GetInstalledTransports();
 
 
     }

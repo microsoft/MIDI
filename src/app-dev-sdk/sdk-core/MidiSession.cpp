@@ -1,3 +1,11 @@
+// Copyright(c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
 #include "pch.h"
 #include "MidiSession.h"
 #include "MidiSession.g.cpp"
@@ -7,7 +15,9 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     winrt::Microsoft::Devices::Midi2::MidiSession MidiSession::CreateNewSession(hstring const& sessionName, winrt::Microsoft::Devices::Midi2::MidiSessionSettings const& settings)
     {
-        throw hresult_not_implemented();
+        // TODO: Call the service to create the session
+
+        return winrt::make<MidiSession>();
     }
     bool MidiSession::IsOpen()
     {

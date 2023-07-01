@@ -47,8 +47,7 @@ namespace Microsoft.Devices.Midi2
         MidiUmpWithTimestamp PeekNextMessage();
         
         // copies all pending messages into a List
-        //IVector<UmpWithTimestamp> ReadToEnd();
-        MidiUmpWithTimestampList ReadToEnd();           // All IVector<T> were replaced with strongly typed list classes to better support Delphi apps
+        MidiUmpWithTimestampList ReadToEnd();
 
         // reads a single message in a polymorphic way
         MidiUmpWithTimestamp ReadNextMessage();
@@ -59,7 +58,9 @@ namespace Microsoft.Devices.Midi2
 
         // these require you to know what the next message type is. You can
         // get that from the PeekNextUmpSize method. Keep in mind that these
-        // messages also include a timestamp in each one
+        // messages also include a timestamp in each one so you get 
+        // 32 + sizeof(timestamp) (currently 64 bits) back from ReadUmp32, 
+        // for example.
         MidiUmp32 ReadUmp32();
         MidiUmp64 ReadUmp64();
         MidiUmp96 ReadUmp96();
@@ -68,10 +69,10 @@ namespace Microsoft.Devices.Midi2
 
         // a performance optimization. We'll see if this works well for performance-focused client apps before
         // going through the process of creating a completely separate classic COM interface with pointer access.
-        // returns the number of bytes read into the buffer
+        // returns the number of bytes read into the buffer. Will always read whole messages.
+        // 
+        // If EndOfMessagesBehavior is set to block, this will block ONLY if there were no messages at all to read.
+        // Otherwise, it will simply return whatever was read.
         UInt32 ReadTimestampedUmpStructsIntoBuffer(Windows.Foundation.IMemoryBufferReference buffer, UInt32 byteOffsetinBuffer, UInt32 maxBytesToRead);
-
-
-
     }
 }

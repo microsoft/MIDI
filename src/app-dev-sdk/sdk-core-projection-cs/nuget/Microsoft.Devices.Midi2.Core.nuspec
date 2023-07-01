@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
 	<metadata>
 		<id>Microsoft.Devices.Midi2.Core</id>
-		<version>1.0.0-preview.1-0041</version>
+		<version>1.0.0-preview.1-0046</version>
 		<authors>Microsoft Corporation</authors>
 		<description>Windows MIDI Services core application SDK. Minimum package necessary to use Windows MIDI Services from an app.</description>
 		<license type="expression">MIT</license>
@@ -47,8 +47,11 @@
 		<!-- Other Binaries ========================================== -->
 
 		<!--Architecture-specific implementation DLLs should be copied into RID-relative folders-->
-		<file src="..\..\_build\x64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.Core.dll"     target="runtimes\win10-x64\native\" />
-		<file src="..\..\_build\ARM64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.Core.dll"   target="runtimes\win10-arm64\native\" />
+		<file src="..\..\_build\x64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.dll"     target="runtimes\win10-x64\native\" />
+		<file src="..\..\_build\x64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.pri"     target="runtimes\win10-x64\native\" />
+
+		<file src="..\..\_build\ARM64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.dll"   target="runtimes\win10-arm64\native\" />
+		<file src="..\..\_build\ARM64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.pri"   target="runtimes\win10-arm64\native\" />
 		<!--<file src="..\..\_build\ARM64EC\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.Core.dll" target="runtimes\win10-arm64ec\native\" />-->
 
 		<file src="Microsoft.Devices.Midi2.Core.targets" target="build\native\" />

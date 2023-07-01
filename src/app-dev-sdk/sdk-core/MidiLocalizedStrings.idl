@@ -12,7 +12,7 @@
 // XAML app may expose specific constants through the viewmodel, for example.
 
 
-// NOTE: This class is highly likely to change significantly
+// NOTE: This will change and may be replaced completely by the Win App SDK MRT Core and the .resw files
 
 import "MidiUmpMessageTypeEnum.idl";
 

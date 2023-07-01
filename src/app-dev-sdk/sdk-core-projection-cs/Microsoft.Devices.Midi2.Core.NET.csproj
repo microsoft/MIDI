@@ -32,8 +32,4 @@
     <None Include="nuget\README.md" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\sdk-core\Microsoft.Devices.Midi2.Core.vcxproj" />
-  </ItemGroup>
-
 </Project>

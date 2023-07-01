@@ -9,7 +9,6 @@
 #pragma once
 #include "MidiUmpUtilities.g.h"
 
-
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     struct MidiUmpUtilities : MidiUmpUtilitiesT<MidiUmpUtilities>
