@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
 	<metadata>
 		<id>Microsoft.Devices.Midi2.Core</id>
-		<version>1.0.0-preview.1-0046</version>
+		<version>1.0.0-preview.1-0064</version>
 		<authors>Microsoft Corporation</authors>
 		<description>Windows MIDI Services core application SDK. Minimum package necessary to use Windows MIDI Services from an app.</description>
 		<license type="expression">MIT</license>
@@ -12,9 +12,9 @@
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<tags>midi windows music audio native</tags>
 		<dependencies>
-			<group targetFramework="net7.0-windows10.0.20348.0" />
+			<!--<group targetFramework="net7.0-windows10.0.20348.0" /> -->
 			<!--<group targetFramework=".NETCoreApp3.0" /> -->
-			<group targetFramework="UAP10.0.20348" />
+			<!--<group targetFramework="uap10.0" /> -->
 			<!--<group targetFramework=".NETFramework4.6" /> -->
 		</dependencies>
 	</metadata>
@@ -24,12 +24,15 @@
 		
 		
 		<!-- TODO: Need to have a ref assembly here -->
-		
+		<!--<file src="..\..\_build\x64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.winmd" target="ref\win10-x64\" />
+		<file src="..\..\_build\Arm64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.winmd" target="ref\win10-Arm64\" /> -->
+		<!--<file src="..\..\_build\x64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.winmd" target="ref\any\" /> -->
+
 
 
 		<!-- Metadata ================================================ -->
 		<!-- winmd metadata is not architecture-specific, so we just use the x64 one -->
-		<file src="..\..\_build\x64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.winmd" target="lib\uap10.0.20348\" />
+		<file src="..\..\_build\x64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.winmd" target="lib\" />
 
 		<!-- C++/WinRT currently has no native provision for intellisense creation. -->
 		<!--<file src="..\..\_build\x64\Debug\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.Core.xml"
@@ -39,20 +42,24 @@
 		
 		<!-- Intel x64 Binaries ================================================ -->
 
+		<file src="..\..\_build\x64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.winmd"     target="runtimes\win10-x64\native\" />
 		<file src="..\..\_build\x64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.dll"     target="runtimes\win10-x64\native\" />
 		<file src="..\..\_build\x64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.pri"     target="runtimes\win10-x64\native\" />
 
-		<file src="..\..\_build\x64\Release\Microsoft.Devices.Midi2.Core.NET\bin\Microsoft.Devices.Midi2.NET.dll" target="runtimes\lib\win10-x64\net7.0-windows10.0.20348.0\" />
+		<!--<file src="..\..\_build\x64\Release\Microsoft.Devices.Midi2.Core.NET\bin\Microsoft.Devices.Midi2.NET.dll" target="runtimes\lib\win10-x64\net7.0-windows10.0.20348.0\" />
+		<file src="..\..\_build\x64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.dll"   target="runtimes\lib\win10-x64\net7.0-windows10.0.20348.0\" /> -->
 
 
 		<!-- Arm64 Binaries ================================================ -->
 
+		<file src="..\..\_build\ARM64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.winmd"   target="runtimes\win10-arm64\native\" />
 		<file src="..\..\_build\ARM64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.dll"   target="runtimes\win10-arm64\native\" />
 		<file src="..\..\_build\ARM64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.pri"   target="runtimes\win10-arm64\native\" />
 
-		<file src="..\..\_build\ARM64\Release\Microsoft.Devices.Midi2.Core.NET\bin\Microsoft.Devices.Midi2.NET.dll" target="runtimes\lib\win10-arm64\net7.0-windows10.0.20348.0\" />
+		<!--<file src="..\..\_build\ARM64\Release\Microsoft.Devices.Midi2.Core.NET\bin\Microsoft.Devices.Midi2.NET.dll" target="runtimes\lib\win10-arm64\net7.0-windows10.0.20348.0\" />
+		<file src="..\..\_build\ARM64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.dll"   target="runtimes\lib\win10-arm64\net7.0-windows10.0.20348.0\" /> -->
 
-		
+
 		<!-- Arm64EC Binaries ================================================ -->
 		<!-- TODO -->
 
@@ -60,6 +67,8 @@
 		<!-- Build-time files ================================================ -->
 
 		<file src="Microsoft.Devices.Midi2.Core.targets" target="build\native\" />
+		<file src="Microsoft.Devices.Midi2.Core.props" target="build\native\" />
+		
 		<!--<file src="Microsoft.Devices.Midi2.Core.targets" target="build\win10-arm64\native\" /> -->
 		<!--<file src="Microsoft.Devices.Midi2.Core.targets" target="build\win10-arm64ec\native\" /> -->
 

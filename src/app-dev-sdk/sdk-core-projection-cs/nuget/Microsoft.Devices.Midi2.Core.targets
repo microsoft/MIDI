@@ -5,13 +5,31 @@
 		<Midi-Sdk-Platform Condition="'$(Platform)' == 'Win32'">x86</Midi-Sdk-Platform>
 		<Midi-Sdk-Platform Condition="'$(Platform)' != 'Win32'">$(Platform)</Midi-Sdk-Platform>
 	</PropertyGroup>
+
 	
-	<ItemGroup Condition="'$(TargetPlatformIdentifier)' == 'win10-x64'">
-		<Reference Include="$(MSBuildThisFileDirectory)..\..\lib\x64\Microsoft.Devices.Midi2.winmd">
+	<Target Name="PlatformCheck" Condition=" ( ('$(Platform)' != 'Arm64') AND  ('$(Platform)' != 'x64') )">
+		<Error  Text="$(MSBuildThisFileName) does not work correctly on '$(Platform)' platform. You need to specify platform (x64 or Arm64)." />
+	</Target>	
+	
+
+	<ItemGroup>
+		<!--<NativeLibs Include="$(MSBuildThisFileDirectory)\..\runtimes\win10-$(Midi-Sdk-Platform)\native\*.winmd" /> -->
+		<NativeLibs Include="$(MSBuildThisFileDirectory)\..\runtimes\win10-$(Midi-Sdk-Platform)\native\*.dll" />
+		<NativeLibs Include="$(MSBuildThisFileDirectory)\..\runtimes\win10-$(Midi-Sdk-Platform)\native\*.pri" />
+		<ContentWithTargetPath Include="@(NativeLibs)">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<TargetPath>%(Filename)%(Extension)</TargetPath>
+		</ContentWithTargetPath>
+	</ItemGroup>
+	
+	
+	
+	<!--<ItemGroup Condition="'$(TargetPlatformIdentifier)' == 'x64'">
+		<Reference Include="$(MSBuildThisFileDirectory)..\..\lib\uap10.0\Microsoft.Devices.Midi2.winmd">
 			<Implementation>Microsoft.Devices.Midi2.dll</Implementation>
 		</Reference>
 		<ReferenceCopyLocalPaths Include="$(MSBuildThisFileDirectory)..\..\runtimes\win10-$(Midi-Sdk-Platform)\native\Microsoft.Devices.Midi2.dll" />
-	</ItemGroup>
+	</ItemGroup> -->
 </Project>
 
 

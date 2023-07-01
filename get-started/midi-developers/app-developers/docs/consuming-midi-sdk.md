@@ -45,13 +45,28 @@ When run outside the tools, you'll need to be prepared to either use a packaged 
 | Appx/MSIX Packaged Desktop C++ / WinRT App | No | No | Yes | No |
 | Appx/MSIX Packaged Desktop .NET / WinRT App | No | Yes | No | No |
 
+### Problem locating header files
+
+If your project cannot resolve the header files, you may be running into [this bug](https://github.com/microsoft/cppwinrt/issues/593). That bug should be fixed, but there are instances, it seems, where it still crops up. If that happens, and you've verified that it's not a problem with the WinMD missing from your project (it's more typically an issue with a reference), you can add `$(GeneratedFilesDir)` to the include path for your project.
+
+CPPWinRT.exe creates the winrt/namespace-name.h files in the Generated Files/winrt folder based upon the referenced winmd.
+
 ## Consuming from C++
 
 Add the C++/WinRT Nuget package to your C++ project in Visual Studio. This installs the required tools and build process. See the C++/WinRT FAQ link below for using LLVM/Clang. Note that the Windows MIDI Services team does not provide any support for LLVM/Clang, but we will take PRs as required if we need to change something reasonable to ensure you are successful with those tools, within what C++/WinRT can support.
 
-Download the compiled winmd packages from Github (see releases for the latest).
+Download the NuGet package for the Core SDK
 
-Modify the project file as required (info in the C++/WinRT docs, and you can also look at the sample application code). If you are not using Visual Studio as your toolchain for your project, you may want to pull out the MIDI code into a library in your project which does. It's not strictly required, but it's much easier. (If you do not want to do this, you'll need to manually set up the cppwinrt tools as part of your build process).
+* Until this is published on NuGet.org, you'll need to set up a local package repository. This is easy to do inside the NuGet Package Manager in Visual Studio. You simply point to a folder. The structure I use in the local clone of the repo is /publish for all NuGet packages
+
+The next step will become unnecessary once the package structure is sorted. It's a silly step, and restricts you to a single architecture at the moment, but needed right now.
+
+* Right-click the project in Visual Studio, and add a reference
+* Browse to the packages folder for your project, and into the folder for the NuGet package you installed
+* Navigate to the runtimes\win10-x64\native folder
+* Add the reference to the .winmd from there. Both the .winmd and the .dll are located in that same folder, which is important. If the files are not side by side, type activation will fail.
+
+If needed, modify the project file as required (info in the C++/WinRT docs, and you can also look at the sample application code). If you are not using Visual Studio as your toolchain for your project, you may want to pull out the MIDI code into a library in your project which does. It's not strictly required, but it's much easier. (If you do not want to do this, you'll need to manually set up the cppwinrt tools as part of your build process).
 
 > Tip: you can look at the SDK tests for up-to-date project files which target the SDKs in the same solution
 
@@ -66,6 +81,8 @@ After that, you reference the types as you would anything else in C++. Only the 
 * [C++/WinRT Troubleshooting](https://learn.microsoft.com/windows/uwp/cpp-and-winrt-apis/troubleshooting)
 
 ## Consuming from C# Desktop App
+
+Please note any .NET-specifics called out in the package release. Some early packages do not support C#/ .NET.
 
 Your project will currently need to target .NET 7 or above. We are considering support for .NET Framework and lower versions of .NET like .NET 6. However, that is neither confirmed nor promised.
 
