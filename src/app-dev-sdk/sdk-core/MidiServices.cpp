@@ -11,7 +11,7 @@
 #include "MidiServices.h"
 #include "MidiServices.g.cpp"
 
-#include "MidiAppSdkVersion.h"
+#include "midi_app_sdk_version.h"
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
@@ -35,7 +35,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiTransportInformation> MidiServices::GetInstalledTransports()
+    winrt::Microsoft::Devices::Midi2::MidiTransportInformationList MidiServices::GetInstalledTransports()
     {
         throw hresult_not_implemented();
     }

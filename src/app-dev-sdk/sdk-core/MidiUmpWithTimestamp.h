@@ -1,3 +1,11 @@
+// Copyright(c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
 #pragma once
 #include "MidiUmpWithTimestamp.g.h"
 
@@ -14,10 +22,15 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         static winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestamp FromUmp128(winrt::Microsoft::Devices::Midi2::MidiUmp128 const& ump);
         uint64_t Timestamp();
         void Timestamp(uint64_t value);
-        com_array<uint32_t> Words();
-        uint8_t WordCount();
+        winrt::Windows::Foundation::Collections::IVector<uint32_t> Words();
         winrt::Microsoft::Devices::Midi2::MidiUmpMessageType MessageType();
-        void MessageType(winrt::Microsoft::Devices::Midi2::MidiUmpMessageType const& value);
+        hstring ToString();
+    private:
+        winrt::Windows::Foundation::Collections::IVector<uint32_t>
+            _words{ winrt::single_threaded_vector<uint32_t>() };
+
+        uint64_t _timestamp;
+
     };
 }
 namespace winrt::Microsoft::Devices::Midi2::factory_implementation

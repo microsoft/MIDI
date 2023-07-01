@@ -10,15 +10,19 @@
 #include "MidiUmpUtilities.h"
 #include "MidiUmpUtilities.g.cpp"
 
+#include "ump_helpers.h"
+
+using namespace Microsoft::Devices::Midi2::Internal;
+
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     winrt::Microsoft::Devices::Midi2::MidiUmpMessageType MidiUmpUtilities::GetMessageTypeFromFirstWord(uint32_t firstWord)
     {
-        throw hresult_not_implemented();
+        return (MidiUmpMessageType)(GetUmpMessageTypeFromFirstWord(firstWord));
     }
     int16_t MidiUmpUtilities::GetUmpLengthInWordsFromFirstWord(uint32_t firstWord)
     {
-        throw hresult_not_implemented();
+        return (int16_t)(GetUmpLengthInMidiWordsFromFirstWord(firstWord));
     }
 }

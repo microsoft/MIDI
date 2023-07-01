@@ -142,14 +142,10 @@
       <DeploymentContent>false</DeploymentContent>
     </Text>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\..\src\app-dev-sdk\sdk-core\Microsoft.Devices.Midi2.Core.vcxproj">
-      <Project>{3aa50484-e4c1-41fb-9ae4-feea724e6077}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets')" />
+    <Import Project="..\..\..\..\..\..\src\app-dev-sdk\packages\Microsoft.Devices.Midi2.Core.1.0.0-preview.1-0046\build\native\Microsoft.Devices.Midi2.Core.targets" Condition="Exists('..\..\..\..\..\..\src\app-dev-sdk\packages\Microsoft.Devices.Midi2.Core.1.0.0-preview.1-0046\build\native\Microsoft.Devices.Midi2.Core.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -157,5 +153,6 @@
     </PropertyGroup>
     <Error Condition="!Exists('packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props'))" />
     <Error Condition="!Exists('packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets'))" />
+    <Error Condition="!Exists('..\..\..\..\..\..\src\app-dev-sdk\packages\Microsoft.Devices.Midi2.Core.1.0.0-preview.1-0046\build\native\Microsoft.Devices.Midi2.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\..\..\..\src\app-dev-sdk\packages\Microsoft.Devices.Midi2.Core.1.0.0-preview.1-0046\build\native\Microsoft.Devices.Midi2.Core.targets'))" />
   </Target>
 </Project>

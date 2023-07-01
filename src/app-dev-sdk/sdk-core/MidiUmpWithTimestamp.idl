@@ -22,16 +22,16 @@ namespace Microsoft.Devices.Midi2
     // the strongly-typed UMP Messages in the other SDK additions
     
     [default_interface]
-    unsealed runtimeclass MidiUmpWithTimestamp
+    unsealed runtimeclass MidiUmpWithTimestamp : Windows.Foundation.IStringable
     {
         MidiUmpWithTimestamp();
 
         UInt64 Timestamp{ get; set; };
 
-        UInt32[] Words{ get; };
-        UInt8 WordCount{ get; };
+        IVector<UInt32> Words{ get; };
+        //UInt8 WordCount{ get; };
 
-        MidiUmpMessageType MessageType{ get; set; };
+        MidiUmpMessageType MessageType{ get; };
 
         // convert from the basic structure
         static MidiUmpWithTimestamp FromUmp32(MidiUmp32 ump);

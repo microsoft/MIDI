@@ -6,6 +6,8 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+// TODO: Consider changing to a struct
+
 namespace Microsoft.Devices.Midi2
 {
     [default_interface]
@@ -16,10 +18,6 @@ namespace Microsoft.Devices.Midi2
         UInt8 GroupIndex{ get; };               // 0-15, the number used in the UMPs
         UInt8 GroupNumberForDisplay{ get; };    // 1-16, the number displayed to users
         
-        
-        
         Boolean IsActive{ get; };
-        
-
     }
 }
