@@ -2,46 +2,51 @@
 
 #include "catch_amalgamated.hpp"
 
+#include <iostream>
+
 using namespace winrt;
 using namespace Microsoft::Devices::Midi2;
 
 
 TEST_CASE("Check for Windows MIDI Services", "[MidiServices.CheckForWindowsMidiServices]")
 {
-	// fails until implemented 
-	REQUIRE(false);
-
-	//REQUIRE((bool)(obj.SomeProperty() == val));
+	REQUIRE_NOTHROW(MidiServices::CheckForWindowsMidiServices());
 }
 
 TEST_CASE("Get installed Windows MIDI Services Version", "[MidiServices.GetInstalledWindowsMidiServicesVersion]")
 {
-	// fails until implemented 
-	REQUIRE(false);
+	REQUIRE_NOTHROW(MidiServices::GetInstalledWindowsMidiServicesVersion());
 
-	//REQUIRE((bool)(obj.SomeProperty() == val));
+
+	hstring version = MidiServices::GetInstalledWindowsMidiServicesVersion();
+
+	REQUIRE(version != L"");
 }
 
 TEST_CASE("Get SDK Version", "[MidiServices.GetSdkVersion]")
 {
-	// fails until implemented 
-	REQUIRE(false);
+	REQUIRE_NOTHROW(MidiServices::SdkVersion());
 
-	//REQUIRE((bool)(obj.SomeProperty() == val));
+	hstring version = MidiServices::SdkVersion();
+
+	REQUIRE(version != L"");
 }
 
 TEST_CASE("Get Latest MIDI Services Installer URI", "[MidiServices.LatestMidiServicesInstallUri]")
 {
-	// fails until implemented 
-	REQUIRE(false);
+	REQUIRE_NOTHROW(MidiServices::LatestMidiServicesInstallUri());
 
-	//REQUIRE((bool)(obj.SomeProperty() == val));
+	auto uri = MidiServices::LatestMidiServicesInstallUri();
+
+	std::cout << uri.ToString().c_str();
 }
 
 TEST_CASE("Get Installed Transports", "[MidiServices.GetInstalledTransports]")
 {
-	// fails until implemented 
-	REQUIRE(false);
+	REQUIRE_NOTHROW(MidiServices::GetInstalledTransports());
 
-	//REQUIRE((bool)(obj.SomeProperty() == val));
+	auto transports = MidiServices::GetInstalledTransports();
+
+	// zero installed transports is, in theory, a passing case, but we're going to ignore that
+	REQUIRE(transports.Size() > 0);
 }

@@ -157,14 +157,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="DummyTestClass.h" />
     <ClInclude Include="MidiEndpointDisplayFormatter.h">
       <DependentUpon>MidiEndpointDisplayFormatter.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiHighResolutionValueDisplayFormatter.h">
       <DependentUpon>MidiHighResolutionValueDisplayFormatter.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiInteropHelper.h" />
+    <ClInclude Include="MidiInteropHelper.h">
+      <DependentUpon>MidiInteropHelper.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiLocalizedStrings.h">
       <DependentUpon>MidiLocalizedStrings.idl</DependentUpon>
     </ClInclude>
@@ -229,14 +230,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Generated Files\module.g.cpp" />
-    <ClCompile Include="DummyTestClass.cpp" />
     <ClCompile Include="MidiEndpointDisplayFormatter.cpp">
       <DependentUpon>MidiEndpointDisplayFormatter.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiHighResolutionValueDisplayFormatter.cpp">
       <DependentUpon>MidiHighResolutionValueDisplayFormatter.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiInteropHelper.cpp" />
+    <ClCompile Include="MidiInteropHelper.cpp">
+      <DependentUpon>MidiInteropHelper.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiLocalizedStrings.cpp">
       <DependentUpon>MidiLocalizedStrings.idl</DependentUpon>
     </ClCompile>
@@ -299,7 +301,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="DummyTestClass.idl" />
     <Midl Include="IMidiEndpointSettingsData.idl" />
     <Midl Include="IMidiSdkMessagePreProcessor.idl" />
     <Midl Include="IMidiTransportSettingsData.idl" />

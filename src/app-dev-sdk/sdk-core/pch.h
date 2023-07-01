@@ -17,3 +17,6 @@
 #include <winrt/Windows.Devices.Enumeration.h>
 
 #include <stdint.h>
+
+
+using namespace winrt;

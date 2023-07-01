@@ -10,20 +10,26 @@
 #include "MidiSession.h"
 #include "MidiSession.g.cpp"
 
+#include <midi_timestamp.h>;
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     winrt::Microsoft::Devices::Midi2::MidiSession MidiSession::CreateNewSession(hstring const& sessionName, winrt::Microsoft::Devices::Midi2::MidiSessionSettings const& settings)
     {
         // TODO: Call the service to create the session
+        auto session = winrt::make_self<implementation::MidiSession>();
 
-        return winrt::make<MidiSession>();
+        session->Open();
 
-
+        return *session;
+    }
+    void MidiSession::Open()
+    {
+        _isOpen = true;
     }
     bool MidiSession::IsOpen()
     {
-        throw hresult_not_implemented();
+        return _isOpen;
     }
     winrt::Windows::Foundation::Collections::IVectorView<winrt::Microsoft::Devices::Midi2::MidiEndpointConnection> MidiSession::Connections()
     {
@@ -39,14 +45,17 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     }
     uint64_t MidiSession::GetMidiTimestamp()
     {
-        throw hresult_not_implemented();
+        return ::Microsoft::Devices::Midi2::Internal::Shared::GetCurrentMidiTimestamp();
     }
     uint64_t MidiSession::GetMidiTimestampFrequency()
     {
-        throw hresult_not_implemented();
+        return ::Microsoft::Devices::Midi2::Internal::Shared::GetMidiTimestampFrequency();
     }
     void MidiSession::Close()
     {
-        throw hresult_not_implemented();
+        // todo: need to clean up all connnections, disconnect from service, etc.
+
+
+        _isOpen = false;
     }
 }

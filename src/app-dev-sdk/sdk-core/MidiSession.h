@@ -24,6 +24,12 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         uint64_t GetMidiTimestamp();
         uint64_t GetMidiTimestampFrequency();
         void Close();
+
+        // private to the SDK
+        void Open();
+
+    private:
+        bool _isOpen;
     };
 }
 namespace winrt::Microsoft::Devices::Midi2::factory_implementation

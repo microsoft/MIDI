@@ -13,6 +13,6 @@ TEST_CASE("Create session")
 	auto session = MidiSession::CreateNewSession(L"Test Session Name", settings);
 
 
-	//REQUIRE((bool)(obj.SomeProperty() == val));
+	REQUIRE((bool)(session.IsOpen()));
 }
 

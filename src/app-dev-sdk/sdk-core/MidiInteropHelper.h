@@ -16,7 +16,8 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         MidiInteropHelper() = default;
 
-        static winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestamp> CreateEmptyUmpWithTimestampList();
+        static winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestamp> CreateEmptySingleThreadedUmpWithTimestampList();
+        static winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestamp> CreateEmptyMultiThreadedUmpWithTimestampList();
     };
 }
 namespace winrt::Microsoft::Devices::Midi2::factory_implementation

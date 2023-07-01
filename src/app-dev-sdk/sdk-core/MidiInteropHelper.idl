@@ -16,7 +16,8 @@ namespace Microsoft.Devices.Midi2
     [default_interface]
     runtimeclass MidiInteropHelper
     {
-        static IVector<MidiUmpWithTimestamp> CreateEmptyUmpWithTimestampList();
+        static IVector<MidiUmpWithTimestamp> CreateEmptySingleThreadedUmpWithTimestampList();
+        static IVector<MidiUmpWithTimestamp> CreateEmptyMultiThreadedUmpWithTimestampList();
 
    }
 }

@@ -23,5 +23,27 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         hstring Author();
         hstring ServicePluginFileName();
         bool IsRuntimeCreatable();
+
+
+        // constructor only on the implementation type. Not part of WinRT. Used inside the SDK only.
+        MidiTransportInformation(
+            hstring id,
+            hstring name,
+            hstring shortName,
+            hstring iconPath,
+            hstring author,
+            hstring servicePluginFileName,
+            bool isRuntimeCreatable
+        );
+
+
+    private:
+        hstring _id;
+        hstring _name;
+        hstring _shortName;
+        hstring _iconPath;
+        hstring _author;
+        hstring _servicePluginFileName;
+        bool _isRuntimeCreatable;
     };
 }

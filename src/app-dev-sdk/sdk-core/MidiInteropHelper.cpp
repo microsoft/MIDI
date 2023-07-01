@@ -13,8 +13,15 @@
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestamp> MidiInteropHelper::CreateEmptyUmpWithTimestampList()
+    winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestamp> MidiInteropHelper::CreateEmptySingleThreadedUmpWithTimestampList()
     {
-        throw hresult_not_implemented();
+        return winrt::single_threaded_vector< winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestamp>();
     }
+
+    winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestamp> MidiInteropHelper::CreateEmptyMultiThreadedUmpWithTimestampList()
+    {
+        return winrt::multi_threaded_vector< winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestamp>();
+    }
+
+
 }
