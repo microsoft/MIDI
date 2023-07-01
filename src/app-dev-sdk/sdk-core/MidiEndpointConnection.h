@@ -20,7 +20,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         hstring DeviceId();
         bool EndpointInformationValid();
         winrt::Microsoft::Devices::Midi2::MidiEndpointInformation EndpointInformation();
-        winrt::Microsoft::Devices::Midi2::MidiFunctionBlockList FunctionBlocks();
+        winrt::Windows::Foundation::Collections::IVectorView<winrt::Microsoft::Devices::Midi2::MidiFunctionBlock> FunctionBlocks();
         void RequestEndpointInformationAndFunctions(bool forceRefresh);
         winrt::Windows::Foundation::IAsyncAction RequestEndpointInformationAndFunctionsAsync(bool forceRefresh);
         winrt::Microsoft::Devices::Midi2::MidiMessageReader GetMessageReader();

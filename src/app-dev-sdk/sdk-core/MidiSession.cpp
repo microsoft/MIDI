@@ -18,12 +18,14 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         // TODO: Call the service to create the session
 
         return winrt::make<MidiSession>();
+
+
     }
     bool MidiSession::IsOpen()
     {
         throw hresult_not_implemented();
     }
-    winrt::Microsoft::Devices::Midi2::MidiEndpointConnectionList MidiSession::Connections()
+    winrt::Windows::Foundation::Collections::IVectorView<winrt::Microsoft::Devices::Midi2::MidiEndpointConnection> MidiSession::Connections()
     {
         throw hresult_not_implemented();
     }

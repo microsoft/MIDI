@@ -27,7 +27,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         hstring UniqueIdentifier();
         winrt::Microsoft::Devices::Midi2::MidiEndpointDataFormat EndpointDataFormat();
         bool HasGroupTerminalBlocks();
-        winrt::Microsoft::Devices::Midi2::MidiGroupTerminalBlockList GroupTerminalBlocks();
+        winrt::Windows::Foundation::Collections::IVectorView<winrt::Microsoft::Devices::Midi2::MidiGroupTerminalBlock> GroupTerminalBlocks();
         winrt::Windows::Devices::Enumeration::DeviceThumbnail DeviceThumbnail();
     };
 }

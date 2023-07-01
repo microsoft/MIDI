@@ -35,7 +35,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
-    winrt::Microsoft::Devices::Midi2::MidiTransportInformationList MidiServices::GetInstalledTransports()
+    winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiTransportInformation> MidiServices::GetInstalledTransports()
     {
         throw hresult_not_implemented();
     }

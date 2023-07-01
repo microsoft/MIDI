@@ -6,19 +6,15 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-// The various list implementations are here because some languages (like Delphi/Pascal)
-// have no automatic projection support, and can't reasonably handle any class with
-// templates / generics.
-// The IDL is a placeholder for now
+#include "pch.h"
+#include "MidiInteropHelper.h"
+#include "MidiInteropHelper.g.cpp"
 
 
-import "MidiListBase.idl";
-
-namespace Microsoft.Devices.Midi2
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    [default_interface]
-    runtimeclass MidiGroupList : MidiListBase
+    winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestamp> MidiInteropHelper::CreateEmptyUmpWithTimestampList()
     {
-        MidiGroupList();
+        throw hresult_not_implemented();
     }
 }

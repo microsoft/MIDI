@@ -32,7 +32,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
-    winrt::Microsoft::Devices::Midi2::MidiFunctionBlockList MidiEndpointConnection::FunctionBlocks()
+    winrt::Windows::Foundation::Collections::IVectorView<winrt::Microsoft::Devices::Midi2::MidiFunctionBlock> MidiEndpointConnection::FunctionBlocks()
     {
         throw hresult_not_implemented();
     }

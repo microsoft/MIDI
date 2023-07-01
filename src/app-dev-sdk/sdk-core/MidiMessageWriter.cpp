@@ -41,7 +41,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
-    void MidiMessageWriter::WriteMultipleUmpsWithTimestamps(winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestampList const& umpList)
+    void MidiMessageWriter::WriteMultipleUmpsWithTimestamps(winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestamp> const& umpList)
     {
         throw hresult_not_implemented();
     }

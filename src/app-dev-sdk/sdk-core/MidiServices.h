@@ -20,7 +20,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         static hstring SdkVersion();
         static hstring MinimumCompatibleMidiServicesVersion();
         static winrt::Windows::Foundation::Uri LatestMidiServicesInstallUri();
-        static winrt::Microsoft::Devices::Midi2::MidiTransportInformationList GetInstalledTransports();
+        static winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiTransportInformation> GetInstalledTransports();
     };
 }
 namespace winrt::Microsoft::Devices::Midi2::factory_implementation

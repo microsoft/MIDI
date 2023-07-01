@@ -41,7 +41,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
-    winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestampList MidiMessageReader::ReadToEnd()
+    winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestamp> MidiMessageReader::ReadToEnd()
     {
         throw hresult_not_implemented();
     }

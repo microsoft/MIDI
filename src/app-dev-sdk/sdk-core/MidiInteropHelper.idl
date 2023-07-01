@@ -6,18 +6,17 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-// The various list implementations are here because some languages (like Delphi/Pascal)
-// have no automatic projection support, and can't reasonably handle any class with
-// templates / generics.
-// The IDL is a placeholder for now
+// some helper methods for folks having to build their own projections for languages
+// like Delphi. 
 
-import "MidiListBase.idl";
+import "MidiUmpWithTimestamp.idl";
 
 namespace Microsoft.Devices.Midi2
 {
     [default_interface]
-    runtimeclass MidiDeviceInformationList : MidiListBase
+    runtimeclass MidiInteropHelper
     {
-        MidiDeviceInformationList();
-    }
+        static IVector<MidiUmpWithTimestamp> CreateEmptyUmpWithTimestampList();
+
+   }
 }

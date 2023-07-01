@@ -22,7 +22,7 @@
 // written to the queue/stream.
 
 import "MidiUmpWithTimestamp.idl";
-import "MidiUmpWithTimestampList.idl";
+
 
 
 namespace Microsoft.Devices.Midi2
@@ -55,7 +55,7 @@ namespace Microsoft.Devices.Midi2
 
         // use these for all strongly-typed UMPs
         void WriteUmpWithTimestamp(MidiUmpWithTimestamp ump);
-        void WriteMultipleUmpsWithTimestamps(MidiUmpWithTimestampList umpList);
+        void WriteMultipleUmpsWithTimestamps(IVector<MidiUmpWithTimestamp> umpList);
 
         // write a single UMP struct to the stream
         void WriteTimestampedUmp32Struct(ref const MidiUmp32 ump);

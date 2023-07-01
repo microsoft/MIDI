@@ -57,7 +57,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
-    winrt::Microsoft::Devices::Midi2::MidiGroupTerminalBlockList MidiDeviceInformation::GroupTerminalBlocks()
+    winrt::Windows::Foundation::Collections::IVectorView<winrt::Microsoft::Devices::Midi2::MidiGroupTerminalBlock> MidiDeviceInformation::GroupTerminalBlocks()
     {
         throw hresult_not_implemented();
     }

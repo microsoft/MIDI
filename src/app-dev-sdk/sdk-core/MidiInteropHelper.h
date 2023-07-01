@@ -7,20 +7,21 @@
 // ============================================================================
 
 #pragma once
-#include "MidiChannelList.g.h"
-#include "MidiListBase.h"
+#include "MidiInteropHelper.g.h"
+
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    struct MidiChannelList : MidiChannelListT<MidiChannelList, Microsoft::Devices::Midi2::implementation::MidiListBase>
+    struct MidiInteropHelper : MidiInteropHelperT<MidiInteropHelper>
     {
-        MidiChannelList() = default;
+        MidiInteropHelper() = default;
 
+        static winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestamp> CreateEmptyUmpWithTimestampList();
     };
 }
 namespace winrt::Microsoft::Devices::Midi2::factory_implementation
 {
-    struct MidiChannelList : MidiChannelListT<MidiChannelList, implementation::MidiChannelList>
+    struct MidiInteropHelper : MidiInteropHelperT<MidiInteropHelper, implementation::MidiInteropHelper>
     {
     };
 }

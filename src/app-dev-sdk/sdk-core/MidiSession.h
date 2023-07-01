@@ -18,7 +18,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
 
         static winrt::Microsoft::Devices::Midi2::MidiSession CreateNewSession(hstring const& sessionName, winrt::Microsoft::Devices::Midi2::MidiSessionSettings const& settings);
         bool IsOpen();
-        winrt::Microsoft::Devices::Midi2::MidiEndpointConnectionList Connections();
+        winrt::Windows::Foundation::Collections::IVectorView<winrt::Microsoft::Devices::Midi2::MidiEndpointConnection> Connections();
         winrt::Microsoft::Devices::Midi2::MidiEndpointConnection ConnectToEndpoint(hstring const& midiEndpointId, bool routeIncomingMessagesToSession, winrt::Microsoft::Devices::Midi2::MidiEndpointConnectOptions const& options);
         void DisconnectFromEndpoint(hstring const& midiEndpointId);
         uint64_t GetMidiTimestamp();
