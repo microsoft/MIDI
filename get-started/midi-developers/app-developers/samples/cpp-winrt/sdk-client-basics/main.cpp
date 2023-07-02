@@ -17,15 +17,13 @@ int main()
     init_apartment();
 
     // check for presence of compatible Windows MIDI Services
-
-    WindowsMidiServicesCheckError err;
-    bool servicesOk = MidiServices::CheckForWindowsMidiServices(err);
+    auto checkResult = MidiServices::CheckForWindowsMidiServices();
 
     // proceed only if MIDI services is present and compatible. Your own application may decide
     // to fall back to WinRT/WinMM MIDI 1.0 APIs, or to prompt the user to install the latest 
     // version of Windows MIDI Services
 
-    if (servicesOk)
+    if (checkResult == WindowsMidiServicesCheckResult::PresentAndUsable)
     {
         // create the MIDI session, giving us access to Windows MIDI Services. An app may open 
         // more than one session. If so, the session name should be meaningful to the user, like
@@ -88,11 +86,11 @@ int main()
     }
     else
     {
-        if (err == WindowsMidiServicesCheckError::NotPresent)
+        if (checkResult == WindowsMidiServicesCheckResult::NotPresent)
         {
             // allow the user to install the minimum required version
         }
-        else if (err == WindowsMidiServicesCheckError::IncompatibleVersion)
+        else if (checkResult == WindowsMidiServicesCheckResult::IncompatibleVersion)
         {
             // allow the user to install the minimum required version
         }
