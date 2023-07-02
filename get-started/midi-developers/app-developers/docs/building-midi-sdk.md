@@ -13,21 +13,22 @@ To build the SDK you need to use Visual Studio 2022 and C++/WinRT
 * Windows 10 22H2, or preferably, the latest version of Windows 11. Our development machines are all running Windows 11.
 * C++ 17 (C++ 20 may work, C++ 14 will not)
 * Boost 1.82 or higher installed in %BOOST_ROOT% (and that environment variable set, of course)
+  * The same environment variable as $(BOOST_ROOT) needs to be in your VC++ include location for all build configurations.
 * C++/WinRT will be installed via NuGet
 
 ## Folder Structure
 
 Here's the structure on my developer PC.
 
-github\microsoft\midi is the root of the repo. Inside that, the src, get-started, etc. folders from GitHub.
+`github\microsoft\midi` is the root of the repo. Inside that, the src, get-started, etc. folders from GitHub.
 
-github\microsoft\midi\publish is a folder that doesn't appear in the repo, but is referenced by the NuGet build. This is where the NuGet packages end up
+`github\microsoft\midi\publish` is a folder that doesn't appear in the repo, but is referenced by the NuGet build. This is where the NuGet packages end up
 
-github\microsoft\midi\src\app-dev-sdk\_build is the build target location for SDK projects. This is where the NuGet packaging steps expect to find the binaries for packaging.
+`github\microsoft\midi\src\app-dev-sdk\_build` is the build target location for SDK projects. This is where the NuGet packaging steps expect to find the binaries for packaging.
 
 ## Building
 
-The midi-sdk solution is the main solution for building, well, the MIDI SDK. It includes the correct runsettings for tests, and the Directory.Build.props files for the build layout.
+The midi-sdk solution is the main solution for building, well, the MIDI SDK. It includes the correct `runsettings` for tests, and the `Directory.Build.props` files for the build layout.
 
 For the native projects, note that 32 Bit Arm and x86 (32 bit) architectures are not supported by this project. You may build for x64, Arm64, (and in the future, Arm64EC). We are intentionally not building for 32 bit architectures here.
 
@@ -35,6 +36,6 @@ NuGet packages are set to pick up only Release output, not Debug. To get it all 
 
 ## Tests
 
-To run the Catch2 unit tests, you'll need the Catch2 Test Adapter VSIX installed. It's called "Test Adapter for Catch2" and is available in the Visual Studio Marketplace.
+To run the Catch2 unit tests, you'll need the Catch2 Test Adapter VSIX installed. It's called `Test Adapter for Catch2` and is available in the Visual Studio Marketplace.
 
 Open the Test Explorer and then build the full solution if tests do not appear in it. You can then execute tests.

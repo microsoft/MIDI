@@ -39,7 +39,6 @@ namespace Microsoft.Devices.Midi2
         // messages.
         MidiEndpointConnection ConnectToEndpoint(
             String midiEndpointId, 
-            Boolean routeIncomingMessagesToSession, 
             MidiEndpointConnectOptions options);
 
         void DisconnectFromEndpoint(String midiEndpointId);

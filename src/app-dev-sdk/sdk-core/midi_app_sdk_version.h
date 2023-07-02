@@ -15,4 +15,4 @@
 #define MIDI_MINIMUM_REQUIRED_SERVICES_VERSION_STRING L"1.0.0"
 
 // TODO: Change this to the actual install location
-#define MIDI_SERVICES_INSTALL_URI_STRING L"https://github.com/microsoft/MIDI/releases"
+#define MIDI_SERVICES_INSTALL_URI_STRING L"https://github.com/microsoft/MIDI/temporaryURIDoNotUse/foo.msi"

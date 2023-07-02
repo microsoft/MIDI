@@ -22,7 +22,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         // TODO: This will be a call to check the actual service
 
-        return WindowsMidiServicesCheckResult::NotPresent;
+        return WindowsMidiServicesCheckResult::PresentAndUsable;
     }
     hstring MidiServices::GetInstalledWindowsMidiServicesVersion()
     {

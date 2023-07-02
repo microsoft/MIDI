@@ -44,6 +44,9 @@
     <Filter Include="Resources\Strings\en-US">
       <UniqueIdentifier>{53c77fb9-8938-4813-ab1f-eb196c6512ab}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SDK\Interop">
+      <UniqueIdentifier>{39df70f7-ed7c-4e1d-b687-1a589f228d41}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -63,33 +66,6 @@
     </ClCompile>
     <ClCompile Include="MidiMessagesReceivedEventArgs.cpp">
       <Filter>SDK\Endpoints</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiChannelList.cpp">
-      <Filter>SDK\Collections</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiDeviceInformationList.cpp">
-      <Filter>SDK\Collections</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiEndpointConnectionList.cpp">
-      <Filter>SDK\Collections</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiFunctionBlockList.cpp">
-      <Filter>SDK\Collections</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiGroupTerminalBlockList.cpp">
-      <Filter>SDK\Collections</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiListBase.cpp">
-      <Filter>SDK\Collections</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiTransportInformationList.cpp">
-      <Filter>SDK\Collections</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiUmpWithTimestampList.cpp">
-      <Filter>SDK\Collections</Filter>
-    </ClCompile>
-    <ClCompile Include="DummyTestClass.cpp">
-      <Filter>SDK\TEMP</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -116,32 +92,8 @@
     <ClInclude Include="ump_helpers.h">
       <Filter>Internal</Filter>
     </ClInclude>
-    <ClInclude Include="MidiChannelList.h">
-      <Filter>SDK\Collections</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiDeviceInformationList.h">
-      <Filter>SDK\Collections</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiEndpointConnectionList.h">
-      <Filter>SDK\Collections</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiFunctionBlockList.h">
-      <Filter>SDK\Collections</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiGroupTerminalBlockList.h">
-      <Filter>SDK\Collections</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiListBase.h">
-      <Filter>SDK\Collections</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiTransportInformationList.h">
-      <Filter>SDK\Collections</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiUmpWithTimestampList.h">
-      <Filter>SDK\Collections</Filter>
-    </ClInclude>
-    <ClInclude Include="DummyTestClass.h">
-      <Filter>SDK\TEMP</Filter>
+    <ClInclude Include="midi_sdk_inproc_loopback_simulator.h">
+      <Filter>Internal</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -229,33 +181,6 @@
     <Midl Include="MidiMessagesReceivedEventArgs.idl">
       <Filter>SDK\Endpoints</Filter>
     </Midl>
-    <Midl Include="MidiFunctionBlockList.idl">
-      <Filter>SDK\Collections</Filter>
-    </Midl>
-    <Midl Include="MidiListBase.idl">
-      <Filter>SDK\Collections</Filter>
-    </Midl>
-    <Midl Include="MidiGroupTerminalBlockList.idl">
-      <Filter>SDK\Collections</Filter>
-    </Midl>
-    <Midl Include="MidiGroupList.idl">
-      <Filter>SDK\Collections</Filter>
-    </Midl>
-    <Midl Include="MidiChannelList.idl">
-      <Filter>SDK\Collections</Filter>
-    </Midl>
-    <Midl Include="MidiDeviceInformationList.idl">
-      <Filter>SDK\Collections</Filter>
-    </Midl>
-    <Midl Include="MidiUmpWithTimestampList.idl">
-      <Filter>SDK\Collections</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointConnectionList.idl">
-      <Filter>SDK\Collections</Filter>
-    </Midl>
-    <Midl Include="MidiTransportInformationList.idl">
-      <Filter>SDK\Collections</Filter>
-    </Midl>
     <Midl Include="MidiUmp32.idl">
       <Filter>SDK\Messages</Filter>
     </Midl>
@@ -271,8 +196,8 @@
     <Midl Include="MidiUmpSizeEnum.idl">
       <Filter>SDK\Messages</Filter>
     </Midl>
-    <Midl Include="DummyTestClass.idl">
-      <Filter>SDK\TEMP</Filter>
+    <Midl Include="MidiInteropHelper.idl">
+      <Filter>SDK\Interop</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

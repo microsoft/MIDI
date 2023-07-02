@@ -20,7 +20,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         bool IsOpen();
         //winrt::Windows::Foundation::Collections::IVectorView<winrt::Microsoft::Devices::Midi2::MidiEndpointConnection> Connections();
         winrt::Windows::Foundation::Collections::IMapView<hstring, winrt::Microsoft::Devices::Midi2::MidiEndpointConnection> Connections();
-        winrt::Microsoft::Devices::Midi2::MidiEndpointConnection ConnectToEndpoint(hstring const& midiEndpointId, bool routeIncomingMessagesToSession, winrt::Microsoft::Devices::Midi2::MidiEndpointConnectOptions const& options);
+        winrt::Microsoft::Devices::Midi2::MidiEndpointConnection ConnectToEndpoint(hstring const& midiEndpointId, winrt::Microsoft::Devices::Midi2::MidiEndpointConnectOptions const& options);
         void DisconnectFromEndpoint(hstring const& midiEndpointId);
         uint64_t GetMidiTimestamp();
         uint64_t GetMidiTimestampFrequency();

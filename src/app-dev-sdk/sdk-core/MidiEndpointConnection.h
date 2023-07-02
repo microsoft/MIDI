@@ -31,7 +31,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
 
         // TODO: Internal constructor to spin this up with the local inproc loopback rather than an actual device
 
-
+        MidiEndpointConnection(hstring id);
 
     private:
         hstring _id;

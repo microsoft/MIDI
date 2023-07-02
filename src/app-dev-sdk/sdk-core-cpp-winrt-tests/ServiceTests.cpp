@@ -8,45 +8,58 @@ using namespace winrt;
 using namespace Microsoft::Devices::Midi2;
 
 
-TEST_CASE("Check for Windows MIDI Services", "[MidiServices.CheckForWindowsMidiServices]")
+TEST_CASE("Check MIDI Services Properties")
 {
-	REQUIRE_NOTHROW(MidiServices::CheckForWindowsMidiServices());
+	SECTION("Check for Windows MIDI Services")
+	{
+		REQUIRE_NOTHROW(MidiServices::CheckForWindowsMidiServices());
+	}
+
+	SECTION("Get installed Windows MIDI Services Version")
+	{
+		REQUIRE_NOTHROW(MidiServices::GetInstalledWindowsMidiServicesVersion());
+
+
+		hstring version = MidiServices::GetInstalledWindowsMidiServicesVersion();
+
+		std::cout << "Windows MIDI Services API/Service Version: " << winrt::to_string(version) << std::endl;
+
+		REQUIRE(version != L"");
+	}
+
+	SECTION("Get SDK Version")
+	{
+		REQUIRE_NOTHROW(MidiServices::SdkVersion());
+
+		hstring version = MidiServices::SdkVersion();
+
+		std::cout << "SDK Version: " << winrt::to_string(version) << std::endl;
+
+		REQUIRE(version != L"");
+	}
+
+	SECTION("Get Latest MIDI Services Installer URI")
+	{
+		REQUIRE_NOTHROW(MidiServices::LatestMidiServicesInstallUri());
+
+		auto uri = MidiServices::LatestMidiServicesInstallUri();
+
+		std::cout << "Installer URI: " << winrt::to_string(uri.ToString()) << std::endl;
+	}
+
 }
 
-TEST_CASE("Get installed Windows MIDI Services Version", "[MidiServices.GetInstalledWindowsMidiServicesVersion]")
+
+TEST_CASE("Access MIDI Services Transports")
 {
-	REQUIRE_NOTHROW(MidiServices::GetInstalledWindowsMidiServicesVersion());
+	SECTION("Get installed transports")
+	{
+		REQUIRE_NOTHROW(MidiServices::GetInstalledTransports());
 
+		auto transports = MidiServices::GetInstalledTransports();
 
-	hstring version = MidiServices::GetInstalledWindowsMidiServicesVersion();
+		// zero installed transports is, in theory, a passing case, but we're going to ignore that
+		REQUIRE(transports.Size() > 0);
+	}
 
-	REQUIRE(version != L"");
-}
-
-TEST_CASE("Get SDK Version", "[MidiServices.GetSdkVersion]")
-{
-	REQUIRE_NOTHROW(MidiServices::SdkVersion());
-
-	hstring version = MidiServices::SdkVersion();
-
-	REQUIRE(version != L"");
-}
-
-TEST_CASE("Get Latest MIDI Services Installer URI", "[MidiServices.LatestMidiServicesInstallUri]")
-{
-	REQUIRE_NOTHROW(MidiServices::LatestMidiServicesInstallUri());
-
-	auto uri = MidiServices::LatestMidiServicesInstallUri();
-
-	std::cout << uri.ToString().c_str();
-}
-
-TEST_CASE("Get Installed Transports", "[MidiServices.GetInstalledTransports]")
-{
-	REQUIRE_NOTHROW(MidiServices::GetInstalledTransports());
-
-	auto transports = MidiServices::GetInstalledTransports();
-
-	// zero installed transports is, in theory, a passing case, but we're going to ignore that
-	REQUIRE(transports.Size() > 0);
 }

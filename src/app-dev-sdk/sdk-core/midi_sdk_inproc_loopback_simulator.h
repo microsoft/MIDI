@@ -20,8 +20,8 @@
 // SDK on a PC which doesn't have the rest of the MIDI Services infrastructure in place
 
 // these are designed to look somewhat like real Ids, just to allow for folks formatting
-#define MIDI_SDK_LOOPBACK_SIM1_ENDPOINT_ID L"SWD\\MIDISDK\\MIDI_Loopback1.LOOP20"
-#define MIDI_SDK_LOOPBACK_SIM2_ENDPOINT_ID L"SWD\\MIDISDK\\MIDI_Loopback2.LOOP20"
+#define MIDI_SDK_LOOPBACK_SIM1_ENDPOINT_ID L"SWD\\MIDISDK\\MIDI_LOOPBACK1.LOOP20"
+#define MIDI_SDK_LOOPBACK_SIM2_ENDPOINT_ID L"SWD\\MIDISDK\\MIDI_LOOPBACK2.LOOP20"
 
 namespace Microsoft::Devices::Midi2::Internal::Simulator
 {
