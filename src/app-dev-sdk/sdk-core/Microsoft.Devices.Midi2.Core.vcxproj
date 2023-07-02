@@ -92,27 +92,27 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>..\..\shared\inc;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\shared\inc;$(BOOST_ROOT);$(IncludePath)</IncludePath>
     <TargetName>Microsoft.Devices.Midi2</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>..\..\shared\inc;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\shared\inc;$(BOOST_ROOT);$(IncludePath)</IncludePath>
     <TargetName>Microsoft.Devices.Midi2</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Arm64'">
-    <IncludePath>..\..\shared\inc;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\shared\inc;$(BOOST_ROOT);$(IncludePath)</IncludePath>
     <TargetName>Microsoft.Devices.Midi2</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Arm64'">
-    <IncludePath>..\..\shared\inc;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\shared\inc;$(BOOST_ROOT);$(IncludePath)</IncludePath>
     <TargetName>Microsoft.Devices.Midi2</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Arm64EC'">
-    <IncludePath>..\..\shared\inc;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\shared\inc;$(BOOST_ROOT);$(IncludePath)</IncludePath>
     <TargetName>Microsoft.Devices.Midi2</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Arm64EC'">
-    <IncludePath>..\..\shared\inc;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\shared\inc;$(BOOST_ROOT);$(IncludePath)</IncludePath>
     <TargetName>Microsoft.Devices.Midi2</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup>
@@ -210,6 +210,7 @@
     <ClInclude Include="MidiTransportInformation.h">
       <DependentUpon>MidiTransportInformation.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="midi_sdk_inproc_loopback_simulator.h" />
     <ClInclude Include="ump_helpers.h" />
     <ClInclude Include="MidiUmpUtilities.h">
       <DependentUpon>MidiUmpUtilities.idl</DependentUpon>

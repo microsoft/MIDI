@@ -29,8 +29,7 @@ namespace Microsoft.Devices.Midi2
 
 
         // this really should be read-only to users of this class
-        //Windows.Foundation.Collections.IObservableVector<MidiEndpointConnection> Connections { get; };
-        IVectorView<MidiEndpointConnection> Connections{ get; };
+        IMapView<String, MidiEndpointConnection> Connections{ get; };
 
         // uses the enumeration information to connect to an endpoint
         // adds it to the list of connected endpoints. The boolean 
