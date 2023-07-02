@@ -8,7 +8,6 @@
 
 import "MidiUmpMessageTypeEnum.idl";
 import "MidiUmpWithTimestamp.idl";
-import "MidiUmpWithTimestampList.idl";
 
 import "MidiUmpSizeEnum.idl";
 
@@ -47,7 +46,7 @@ namespace Microsoft.Devices.Midi2
         MidiUmpWithTimestamp PeekNextMessage();
         
         // copies all pending messages into a List
-        MidiUmpWithTimestampList ReadToEnd();
+        IVector<MidiUmpWithTimestamp> ReadToEnd();
 
         // reads a single message in a polymorphic way
         MidiUmpWithTimestamp ReadNextMessage();

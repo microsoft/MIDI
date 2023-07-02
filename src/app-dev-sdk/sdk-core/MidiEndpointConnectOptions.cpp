@@ -16,33 +16,35 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     winrt::Microsoft::Devices::Midi2::MidiEndpointConnectOptions MidiEndpointConnectOptions::Default()
     {
-        throw hresult_not_implemented();
+        // TODO: set the actual default parameters
+
+        return *(winrt::make_self<implementation::MidiEndpointConnectOptions>());
     }
 
     bool MidiEndpointConnectOptions::DisableProcessingFunctionBlockInformationMessages()
     {
-        throw hresult_not_implemented();
+        return _disableProcessingFunctionBlockInformationMessages;
     }
     void MidiEndpointConnectOptions::DisableProcessingFunctionBlockInformationMessages(bool value)
     {
-        throw hresult_not_implemented();
+        _disableProcessingFunctionBlockInformationMessages = value;
     }
     bool MidiEndpointConnectOptions::DisableProcessingEndpointInformationMessages()
     {
-        throw hresult_not_implemented();
+        return _disableProcessingEndpointInformationMessages;
     }
     void MidiEndpointConnectOptions::DisableProcessingEndpointInformationMessages(bool value)
     {
-        throw hresult_not_implemented();
+        _disableProcessingEndpointInformationMessages = value;
     }
 
     bool MidiEndpointConnectOptions::UseSessionLevelMessageReceiveHandler()
     {
-        throw hresult_not_implemented();
+        return _useSessionLevelMessageReceiveHandler;
     }
     void MidiEndpointConnectOptions::UseSessionLevelMessageReceiveHandler(bool value)
     {
-        throw hresult_not_implemented();
+        _useSessionLevelMessageReceiveHandler = value;
     }
 
     

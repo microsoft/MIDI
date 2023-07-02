@@ -6,27 +6,18 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+// some helper methods for folks having to build their own projections for languages
+// like Delphi. 
 
-import "MidiUmpMessageTypeEnum.idl";
 import "MidiUmpWithTimestamp.idl";
 
 namespace Microsoft.Devices.Midi2
 {
     [default_interface]
-    runtimeclass DummyTestClass
+    runtimeclass MidiInteropHelper
     {
-        DummyTestClass();
+        static IVector<MidiUmpWithTimestamp> CreateEmptySingleThreadedUmpWithTimestampList();
+        static IVector<MidiUmpWithTimestamp> CreateEmptyMultiThreadedUmpWithTimestampList();
 
-        static MidiUmpMessageType GetSomeStaticValue();
-
-        UInt32 SomeProperty{ get; set; };
-
-        UInt32 SomeReadOnlyProperty{ get; };
-
-
-        void LoadDummyUmps(UInt32 count);
-
-        IVector<MidiUmpWithTimestamp> Umps{ get; };
-
-    }
+   }
 }

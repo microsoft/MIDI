@@ -7,15 +7,14 @@
 // ============================================================================
 
 import "MidiTransportInformation.idl";
-import "MidiTransportInformationList.idl";
 
 namespace Microsoft.Devices.Midi2
 {
-    // I strongly dislike the name of this enum
-    enum WindowsMidiServicesCheckError
+    enum WindowsMidiServicesCheckResult
     {
+        PresentAndUsable =0,
         IncompatibleVersion = 100,
-        NotPresent = 400
+        NotPresent = 400,
     };
 
 
@@ -25,7 +24,7 @@ namespace Microsoft.Devices.Midi2
         // Checks to see if Windows MIDI Services is running and is compatible with this SDK version
         // Because of how we're aligning versions, in most cases, the SDK version will be compatible, 
         // but it's good to check and be ready in case it is not
-        static Boolean CheckForWindowsMidiServices(out WindowsMidiServicesCheckError errorResult);
+        static WindowsMidiServicesCheckResult CheckForWindowsMidiServices();
 
         // The version of Windows MIDI Services installed on this PC
         static String GetInstalledWindowsMidiServicesVersion();
@@ -36,7 +35,7 @@ namespace Microsoft.Devices.Midi2
         static Windows.Foundation.Uri LatestMidiServicesInstallUri{ get; };
 
         // list all the installed transports like Virtual, USB, BLE1, etc
-        static MidiTransportInformationList GetInstalledTransports();
+        static IVector<MidiTransportInformation> GetInstalledTransports();
 
 
     }

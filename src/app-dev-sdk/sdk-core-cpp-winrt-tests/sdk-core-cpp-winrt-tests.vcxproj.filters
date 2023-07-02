@@ -9,9 +9,6 @@
     <ClCompile Include="SessionTests.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
-    <ClCompile Include="DummyTests.cpp">
-      <Filter>TempTests</Filter>
-    </ClCompile>
     <ClCompile Include="ServiceTests.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
@@ -27,9 +24,6 @@
     <None Include="PropertySheet.props" />
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="TempTests">
-      <UniqueIdentifier>{fbfc8fff-af3f-4456-b52b-3b6c75bd3672}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Catch">
       <UniqueIdentifier>{e34a5f67-984a-4f18-8ccd-0bcce7fd5ba9}</UniqueIdentifier>
     </Filter>

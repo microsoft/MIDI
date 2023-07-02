@@ -29,7 +29,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
-    winrt::Microsoft::Devices::Midi2::MidiGroupList MidiGroupTerminalBlock::IncludedGroups()
+    winrt::Windows::Foundation::Collections::IVectorView<winrt::Microsoft::Devices::Midi2::MidiGroup> MidiGroupTerminalBlock::IncludedGroups()
     {
         throw hresult_not_implemented();
     }

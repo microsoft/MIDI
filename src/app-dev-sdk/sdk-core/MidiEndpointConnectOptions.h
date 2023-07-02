@@ -27,7 +27,10 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         bool UseSessionLevelMessageReceiveHandler();
         void UseSessionLevelMessageReceiveHandler(bool value);
 
-        
+    private:
+        bool _disableProcessingFunctionBlockInformationMessages = false;
+        bool _disableProcessingEndpointInformationMessages = false;
+        bool _useSessionLevelMessageReceiveHandler = false;
 
     };
 }

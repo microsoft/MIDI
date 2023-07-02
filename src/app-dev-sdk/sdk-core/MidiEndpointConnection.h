@@ -20,13 +20,22 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         hstring DeviceId();
         bool EndpointInformationValid();
         winrt::Microsoft::Devices::Midi2::MidiEndpointInformation EndpointInformation();
-        winrt::Microsoft::Devices::Midi2::MidiFunctionBlockList FunctionBlocks();
+        winrt::Windows::Foundation::Collections::IVectorView<winrt::Microsoft::Devices::Midi2::MidiFunctionBlock> FunctionBlocks();
         void RequestEndpointInformationAndFunctions(bool forceRefresh);
         winrt::Windows::Foundation::IAsyncAction RequestEndpointInformationAndFunctionsAsync(bool forceRefresh);
         winrt::Microsoft::Devices::Midi2::MidiMessageReader GetMessageReader();
         winrt::Microsoft::Devices::Midi2::MidiMessageWriter GetMessageWriter();
         winrt::event_token MessagesReceived(winrt::Windows::Foundation::EventHandler<winrt::Microsoft::Devices::Midi2::MidiMessagesReceivedEventArgs> const& handler);
         void MessagesReceived(winrt::event_token const& token) noexcept;
+
+
+        // TODO: Internal constructor to spin this up with the local inproc loopback rather than an actual device
+
+        MidiEndpointConnection(hstring id);
+
+    private:
+        hstring _id;
+
     };
 }
 namespace winrt::Microsoft::Devices::Midi2::factory_implementation

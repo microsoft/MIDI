@@ -10,7 +10,6 @@
 import "MidiFunctionBlock.idl";
 import "MidiChannel.idl";
 import "MidiGroup.idl";
-import "MidiFunctionBlockList.idl";
 
 namespace Microsoft.Devices.Midi2
 {
@@ -24,12 +23,12 @@ namespace Microsoft.Devices.Midi2
         // and then makes the right decisions?
         static String FormatGroupWithFunctionBlocks(
             MidiGroup group, 
-            MidiFunctionBlockList blocks,
+            IVector<MidiFunctionBlock> blocks,
             Boolean abbreviatedVersion);
 
         // returns the "All Groups (FB name, FB name, FB name)" string
         static String FormatAllGroupOptionWithFunctionBlocks(
-            MidiFunctionBlockList blocks,
+            IVector<MidiFunctionBlock> blocks,
             Boolean abbreviatedVersion);
 
 

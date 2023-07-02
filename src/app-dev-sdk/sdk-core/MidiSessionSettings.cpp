@@ -15,6 +15,8 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     winrt::Microsoft::Devices::Midi2::MidiSessionSettings MidiSessionSettings::Default()
     {
-        throw hresult_not_implemented();
+        // right now, the default is just empty
+
+        return *(winrt::make_self<implementation::MidiSessionSettings>());
     }
 }

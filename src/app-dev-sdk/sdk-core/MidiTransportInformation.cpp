@@ -13,32 +13,53 @@
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
+    // constructor for use inside the SDK
+    MidiTransportInformation::MidiTransportInformation(
+        hstring id,
+        hstring name,
+        hstring shortName,
+        hstring iconPath,
+        hstring author,
+        hstring servicePluginFileName,
+        bool isRuntimeCreatable
+    )
+    {
+        _id = id;
+        _name = name;
+        _shortName = shortName;
+        _iconPath = iconPath;
+        _author = author;
+        _servicePluginFileName = servicePluginFileName;
+        _isRuntimeCreatable = isRuntimeCreatable;
+    }
+
+
     hstring MidiTransportInformation::Id()
     {
-        throw hresult_not_implemented();
+        return _id;
     }
     hstring MidiTransportInformation::Name()
     {
-        throw hresult_not_implemented();
+        return _name;
     }
     hstring MidiTransportInformation::ShortName()
     {
-        throw hresult_not_implemented();
+        return _shortName;
     }
     hstring MidiTransportInformation::IconPath()
     {
-        throw hresult_not_implemented();
+        return _iconPath;
     }
     hstring MidiTransportInformation::Author()
     {
-        throw hresult_not_implemented();
+        return _author;
     }
     hstring MidiTransportInformation::ServicePluginFileName()
     {
-        throw hresult_not_implemented();
+        return _servicePluginFileName;
     }
     bool MidiTransportInformation::IsRuntimeCreatable()
     {
-        throw hresult_not_implemented();
+        return _isRuntimeCreatable;
     }
 }

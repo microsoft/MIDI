@@ -11,7 +11,6 @@ import "MidiEndpointConnection.idl";
 import "MidiEndpointConnectOptions.idl";
 import "MidiSessionSettings.idl";
 import "MidiMessagesReceivedEventArgs.idl";
-import "MidiEndpointConnectionList.idl";
 
 namespace Microsoft.Devices.Midi2
 {
@@ -30,8 +29,7 @@ namespace Microsoft.Devices.Midi2
 
 
         // this really should be read-only to users of this class
-        //Windows.Foundation.Collections.IObservableVector<MidiEndpointConnection> Connections { get; };
-        MidiEndpointConnectionList Connections{ get; };
+        IMapView<String, MidiEndpointConnection> Connections{ get; };
 
         // uses the enumeration information to connect to an endpoint
         // adds it to the list of connected endpoints. The boolean 
@@ -41,7 +39,6 @@ namespace Microsoft.Devices.Midi2
         // messages.
         MidiEndpointConnection ConnectToEndpoint(
             String midiEndpointId, 
-            Boolean routeIncomingMessagesToSession, 
             MidiEndpointConnectOptions options);
 
         void DisconnectFromEndpoint(String midiEndpointId);

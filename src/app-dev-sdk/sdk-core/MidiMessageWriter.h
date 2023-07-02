@@ -23,7 +23,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         void WriteUmpWords128(uint64_t midiTimestamp, uint32_t umpWord1, uint32_t umpWord2, uint32_t umpWord3, uint32_t umpWord4);
         void WriteUmpWords(uint64_t midiTimeStamp, array_view<uint32_t const> words, uint8_t wordCount);
         void WriteUmpWithTimestamp(winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestamp const& ump);
-        void WriteMultipleUmpsWithTimestamps(winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestampList const& umpList);
+        void WriteMultipleUmpsWithTimestamps(winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestamp> const& umpList);
         uint32_t WriteTimestampedUmpStructsFromBuffer(winrt::Windows::Foundation::IMemoryBufferReference const& buffer, uint32_t byteOffsetInBuffer, uint32_t maxBytesToWrite);
         void WriteTimestampedUmp32Struct(winrt::Microsoft::Devices::Midi2::MidiUmp32 const& ump);
         void WriteTimestampedUmp64Struct(winrt::Microsoft::Devices::Midi2::MidiUmp64 const& ump);

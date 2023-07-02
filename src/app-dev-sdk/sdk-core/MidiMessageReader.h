@@ -23,7 +23,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         winrt::Microsoft::Devices::Midi2::MidiUmpMessageType PeekNextUmpMessageType();
         winrt::Microsoft::Devices::Midi2::MidiUmpSize PeekNextUmpSize();
         winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestamp PeekNextMessage();
-        winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestampList ReadToEnd();
+        winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestamp> ReadToEnd();
         winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestamp ReadNextMessage();
         winrt::Microsoft::Devices::Midi2::MidiUmp32 ReadUmp32();
         winrt::Microsoft::Devices::Midi2::MidiUmp64 ReadUmp64();

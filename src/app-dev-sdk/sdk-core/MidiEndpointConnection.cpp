@@ -12,27 +12,37 @@
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
+    // internal constructor
+    MidiEndpointConnection::MidiEndpointConnection(winrt::hstring id)
+    {
+        _id = id;
+    }
+
+
+
     hstring MidiEndpointConnection::GetDeviceSelector()
     {
-        throw hresult_not_implemented();
+        // TODO
+        return L"";
     }
     hstring MidiEndpointConnection::GetDeviceSelector(winrt::Microsoft::Devices::Midi2::MidiEndpointDataFormat const& midiEndpointDataFormat)
     {
-        throw hresult_not_implemented();
+        // TODO
+        return L"";
     }
     hstring MidiEndpointConnection::DeviceId()
     {
-        throw hresult_not_implemented();
+        return _id;
     }
     bool MidiEndpointConnection::EndpointInformationValid()
     {
-        throw hresult_not_implemented();
+        return false;
     }
     winrt::Microsoft::Devices::Midi2::MidiEndpointInformation MidiEndpointConnection::EndpointInformation()
     {
         throw hresult_not_implemented();
     }
-    winrt::Microsoft::Devices::Midi2::MidiFunctionBlockList MidiEndpointConnection::FunctionBlocks()
+    winrt::Windows::Foundation::Collections::IVectorView<winrt::Microsoft::Devices::Midi2::MidiFunctionBlock> MidiEndpointConnection::FunctionBlocks()
     {
         throw hresult_not_implemented();
     }

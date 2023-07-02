@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
 	<metadata>
 		<id>Microsoft.Devices.Midi2.Core</id>
-		<version>1.0.0-preview.1-0064</version>
+		<version>1.0.0-preview.1-0084</version>
 		<authors>Microsoft Corporation</authors>
 		<description>Windows MIDI Services core application SDK. Minimum package necessary to use Windows MIDI Services from an app.</description>
 		<license type="expression">MIT</license>
@@ -31,8 +31,8 @@
 
 
 		<!-- Metadata ================================================ -->
-		<!-- winmd metadata is not architecture-specific, so we just use the x64 one -->
-		<file src="..\..\_build\x64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.winmd" target="lib\" />
+		<!-- winmd is not architecture-specific, so we just use the x64 one -->
+		<file src="..\..\_build\x64\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.winmd" target="lib\uap10.0" />
 
 		<!-- C++/WinRT currently has no native provision for intellisense creation. -->
 		<!--<file src="..\..\_build\x64\Debug\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.Core.xml"
@@ -68,7 +68,8 @@
 
 		<file src="Microsoft.Devices.Midi2.Core.targets" target="build\native\" />
 		<file src="Microsoft.Devices.Midi2.Core.props" target="build\native\" />
-		
+
+
 		<!--<file src="Microsoft.Devices.Midi2.Core.targets" target="build\win10-arm64\native\" /> -->
 		<!--<file src="Microsoft.Devices.Midi2.Core.targets" target="build\win10-arm64ec\native\" /> -->
 

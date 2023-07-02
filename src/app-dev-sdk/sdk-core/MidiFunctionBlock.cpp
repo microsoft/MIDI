@@ -37,11 +37,11 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
-    winrt::Microsoft::Devices::Midi2::MidiGroupList MidiFunctionBlock::IncludedGroups()
+    winrt::Windows::Foundation::Collections::IVectorView<winrt::Microsoft::Devices::Midi2::MidiGroup> MidiFunctionBlock::IncludedGroups()
     {
         throw hresult_not_implemented();
     }
-    winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestampList MidiFunctionBlock::OriginalResponses()
+    winrt::Windows::Foundation::Collections::IVectorView<winrt::Microsoft::Devices::Midi2::MidiUmpWithTimestamp> MidiFunctionBlock::OriginalResponses()
     {
         throw hresult_not_implemented();
     }

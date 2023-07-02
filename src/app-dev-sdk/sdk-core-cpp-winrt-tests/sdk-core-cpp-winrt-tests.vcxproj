@@ -125,7 +125,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="catch_amalgamated.cpp" />
-    <ClCompile Include="DummyTests.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>

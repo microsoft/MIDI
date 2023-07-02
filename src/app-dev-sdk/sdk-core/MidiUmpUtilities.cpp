@@ -12,7 +12,7 @@
 
 #include "ump_helpers.h"
 
-using namespace Microsoft::Devices::Midi2::Internal;
+using namespace ::Microsoft::Devices::Midi2::Internal;
 
 
 namespace winrt::Microsoft::Devices::Midi2::implementation

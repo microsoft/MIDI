@@ -9,18 +9,23 @@
 #pragma once
 #include "MidiServices.g.h"
 
+#include "MidiTransportInformation.h"
+
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     struct MidiServices : MidiServicesT<MidiServices>
     {
         MidiServices() = default;
 
-        static bool CheckForWindowsMidiServices(winrt::Microsoft::Devices::Midi2::WindowsMidiServicesCheckError& errorResult);
+        static winrt::Microsoft::Devices::Midi2::WindowsMidiServicesCheckResult CheckForWindowsMidiServices();
         static hstring GetInstalledWindowsMidiServicesVersion();
         static hstring SdkVersion();
         static hstring MinimumCompatibleMidiServicesVersion();
         static winrt::Windows::Foundation::Uri LatestMidiServicesInstallUri();
-        static winrt::Microsoft::Devices::Midi2::MidiTransportInformationList GetInstalledTransports();
+        static winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiTransportInformation> GetInstalledTransports();
+
+    private:
+
     };
 }
 namespace winrt::Microsoft::Devices::Midi2::factory_implementation
