@@ -1,0 +1,61 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+import "MidiEndpointConnection.idl";
+import "MidiEndpointConnectOptions.idl";
+import "MidiSessionSettings.idl";
+import "MidiMessagesReceivedEventArgs.idl";
+
+namespace Windows.Devices.Midi2
+{
+    [default_interface]
+    runtimeclass MidiSession : Windows.Foundation.IClosable
+    {
+        String Id { get; };
+
+        // captures the PID, app name, etc.
+        static MidiSession CreateNewSession(String sessionName, MidiSessionSettings settings);
+
+        Boolean IsOpen { get; };
+
+        // close the session and release resources
+        // Not needed here because IClosable.Close() is used by .net and other managed languages
+        //void Close();
+
+
+        // this really should be read-only to users of this class
+        IMapView<String, MidiEndpointConnection> Connections{ get; };
+
+        // uses the enumeration information to connect to an endpoint
+        // adds it to the list of connected endpoints. The boolean 
+        // option determines if all incoming messages from that endpoint
+        // are handled here, or they are handled in the individual 
+        // endpoint instances. It's one or the other to avoid replicating
+        // messages.
+        MidiEndpointConnection ConnectToEndpoint(
+            String midiEndpointId, 
+            MidiEndpointConnectOptions options);
+
+        void DisconnectFromEndpoint(String midiEndpointId);
+
+
+        // Messages received event fires here only for Endpoints where 
+        // the centralized message receive option was set when they were connected 
+        // TBD if we support this. Commented out for now to go with the Endpoint-centric approach
+        //event Windows.Foundation.EventHandler<MidiMessagesReceivedEventArgs> MessagesReceived;
+
+
+        // utility methods =======================================================================
+
+        // gets the current MIDI timestamp
+        UInt64 GetMidiTimestamp();
+
+        // returns the units per second for the timestamp
+        UInt64 GetMidiTimestampFrequency();
+    }
+}

@@ -1,0 +1,69 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+import "IMidiUmp32.idl";
+import "IMidiUmp64.idl";
+import "IMidiUmp96.idl";
+import "IMidiUmp128.idl";
+
+import "MidiUmp32.idl";
+import "MidiUmp64.idl";
+import "MidiUmp96.idl";
+import "MidiUmp128.idl";
+
+import "MidiUmpSizeEnum.idl";
+
+// TODO: Consider thread synchronization for this class. Right now, assumes single-threaded access
+
+namespace Windows.Devices.Midi2
+{
+    // WinRT doesn't let you return null values so we need to consider the
+    // the circumstances where the caller didn't check for the end but
+    // kept reading, or the caller is multi-threaded and another thread
+    // drained the queue while they were looping
+    enum MidiMessageReaderEndOfMessagesBehavior
+    {
+        ThrowException = 0,
+        WaitAndBlockCallingThread
+    };
+
+    [default_interface]
+    runtimeclass MidiMessageReader // not IClosable because this needs to keep the lifetime of the EndpointConnection
+    {
+        //MidiMessageReader();
+
+        MidiMessageReaderEndOfMessagesBehavior EndOfMessagesBehavior{ get; set; };
+
+        // EOF for MIDI messages.
+        Boolean EndOfMessages{ get; };
+
+        // look at the timestamp in the buffer. Where this is is set by the read pointer, and the ump header structure
+        UInt64 PeekNextTimestamp();
+
+        // this tells you what kind of struct to read from the stream, if you are using the struct read functions
+        MidiUmpSize PeekNextUmpSize();
+
+        // these require you to know what the next message type is. You can
+        // get that from the PeekNextUmpSize method. Keep in mind that these
+        // messages also include a header in each one so you get  the size of 
+        // the header (which has 64 bit timestamp) + 32 bits back from ReadUmp32, 
+        // for example.
+        MidiUmp32 ReadUmp32();
+        MidiUmp64 ReadUmp64();
+        MidiUmp96 ReadUmp96();
+        MidiUmp128 ReadUmp128();
+
+        // a performance optimization. We'll see if this works well for performance-focused client apps before
+        // going through the process of creating a completely separate classic COM interface with pointer access.
+        // returns the number of bytes read into the buffer. Will always read whole messages.
+        // 
+        // If EndOfMessagesBehavior is set to block, this will block ONLY if there were no messages at all to read.
+        // Otherwise, it will simply return whatever was read.
+        UInt32 ReadBuffer(Windows.Foundation.IMemoryBufferReference buffer, UInt32 byteOffsetinBuffer, UInt32 maxBytesToRead);
+    }
+}

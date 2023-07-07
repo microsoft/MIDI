@@ -1,0 +1,84 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+
+// TODO: Consider thread synchronization for this class. Right now, assumes single-threaded access
+
+
+// NOTE: In contrast to the usal WinRT and .NET buffered stream approaches you'll run across, 
+// this class doesn't use the usual buffered approach which requires a call to Flush().
+//
+// I may rethink that, but currently, there's no real performance benefit to transmitting multiple
+// messages at once. Each message call here is self-flushing in that it sends what it has the
+// capability to send, and then signals the service to transmit the message(s).
+// 
+// In all cases where a method can send more than one message, it will signal the service
+// before any possible blocking or queue full exception if any messages have been successfully
+// written to the queue/stream.
+
+import "IMidiUmp32.idl";
+import "IMidiUmp64.idl";
+import "IMidiUmp96.idl";
+import "IMidiUmp128.idl";
+
+import "MidiUmp32.idl";
+import "MidiUmp64.idl";
+import "MidiUmp96.idl";
+import "MidiUmp128.idl";
+
+
+namespace Windows.Devices.Midi2
+{
+    enum MidiMessageWriterQueueFullBehavior
+    {
+        ThrowException = 0,
+        WaitAndBlockCallingThread
+
+        // May also have options to:
+        // - Allocate a side-by-side buffer and table the messages until they can be sent
+        // - Reallocate buffer size (this is very expensive, so not recommended)
+        // Both of those options require real investigation before we consider them here.
+    };
+
+    [default_interface]
+    runtimeclass MidiMessageWriter // not IClosable because this needs to keep the lifetime of the EndpointConnection
+    {
+        //MidiMessageWriter();
+
+        Boolean IsFull { get; };
+
+        // easiest methods to use if you just keep a big array of MIDI words that you are iterating through
+        void WriteUmpWords32(UInt64 midiTimestamp, UInt32 umpWord1);
+        void WriteUmpWords64(UInt64 midiTimestamp, UInt32 umpWord1, UInt32 umpWord2);
+        void WriteUmpWords96(UInt64 midiTimestamp, UInt32 umpWord1, UInt32 umpWord2, UInt32 umpWord3);
+        void WriteUmpWords128(UInt64 midiTimestamp, UInt32 umpWord1, UInt32 umpWord2, UInt32 umpWord3, UInt32 umpWord4);
+
+        // for writing a single UMP. If this gets more than 4 words, that is an error
+        void WriteUmpWords(UInt64 midiTimeStamp, UInt32[] words, UInt8 wordCount);
+
+        // use these for all strongly-typed UMPs that are in the SDK, or defined by others
+        // I don't believe we can have the structs implement this interface and still be plain
+        // old COM structs instead of runtimeclasses, so these are separate function calls
+        void WriteUmp32(const IMidiUmp32 ump);
+        void WriteUmp64(const IMidiUmp64 ump);
+        void WriteUmp96(const IMidiUmp96 ump);
+        void WriteUmp128(const IMidiUmp128 ump);
+
+        // write a single UMP struct to the stream
+        void WriteUmp32Struct(ref const MidiUmp32 ump);
+        void WriteUmp64Struct(ref const MidiUmp64 ump);
+        void WriteUmp96Struct(ref const MidiUmp96 ump);
+        void WriteUmp128Struct(ref const MidiUmp128 ump);
+
+        // a performance optimization for writing multiple structs. We'll see if this works well for performance-focused
+        // client apps before considering going through the process of creating a completely separate classic COM interface
+        // with pointer access. Returns the number of bytes written from the buffer. Will always write whole messages.
+        UInt32 WriteBuffer(Windows.Foundation.IMemoryBufferReference buffer, UInt32 byteOffsetInBuffer, UInt32 maxBytesToWrite);
+
+    }
+}

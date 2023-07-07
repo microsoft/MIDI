@@ -6,7 +6,7 @@
 // Info on high resolution counters/timestamps in Windows
 // https://learn.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps
 
-namespace Microsoft::Devices::Midi2::Internal::Shared
+namespace Windows::Devices::Midi2::Internal::Shared
 {
 
 #ifdef _KERNEL_MODE

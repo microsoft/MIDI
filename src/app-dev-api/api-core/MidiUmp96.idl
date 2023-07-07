@@ -1,0 +1,22 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+// primarily used for working with the buffer approach. Easy enough for client
+// applications to define themselves in their native language
+namespace Windows.Devices.Midi2
+{
+	struct MidiUmp96
+	{
+		UInt64 Timestamp;
+
+		UInt32 Word1;
+		UInt32 Word2;
+		UInt32 Word3;
+	};
+
+}

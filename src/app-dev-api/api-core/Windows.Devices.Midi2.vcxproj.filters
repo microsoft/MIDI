@@ -1,0 +1,116 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Internal">
+      <UniqueIdentifier>{6abb387d-1da9-403e-bb35-70e4359f1b00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API">
+      <UniqueIdentifier>{4f6a2ac4-8b62-49bf-a42b-79a9e2584abe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Messages">
+      <UniqueIdentifier>{aa2a2918-1030-4549-946a-8ae21d00e0a6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints">
+      <UniqueIdentifier>{6965e07f-f558-4fdb-821c-dcb0ae49819a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Session">
+      <UniqueIdentifier>{6427be3d-78fd-4fff-9bf4-2353b462bfc3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Transports">
+      <UniqueIdentifier>{7a309dc0-af6f-4fa7-8827-649ef97dcc9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Internal\ServiceAccess">
+      <UniqueIdentifier>{6da56400-6fd6-4457-a605-67182ec178bf}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="MidiSession.cpp" />
+    <ClCompile Include="Generated Files\module.g.cpp" />
+    <ClCompile Include="MidiSessionSettings.cpp">
+      <Filter>SDK\Session</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessagesReceivedEventArgs.cpp">
+      <Filter>SDK\Endpoints</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="MidiSession.h" />
+    <ClInclude Include="MidiSessionSettings.h">
+      <Filter>SDK\Session</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessagesReceivedEventArgs.h">
+      <Filter>SDK\Endpoints</Filter>
+    </ClInclude>
+    <ClInclude Include="ump_helpers.h">
+      <Filter>Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="midi_service_interface.h">
+      <Filter>Internal\ServiceAccess</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="MidiEndpointConnection.idl">
+      <Filter>API\Endpoints</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointConnectOptions.idl">
+      <Filter>API\Endpoints</Filter>
+    </Midl>
+    <Midl Include="MidiSession.idl">
+      <Filter>API\Session</Filter>
+    </Midl>
+    <Midl Include="MidiSessionSettings.idl">
+      <Filter>API\Session</Filter>
+    </Midl>
+    <Midl Include="IMidiTransportSettingsData.idl">
+      <Filter>API\Transports</Filter>
+    </Midl>
+    <Midl Include="IMidiEndpointSettingsData.idl">
+      <Filter>API\Endpoints</Filter>
+    </Midl>
+    <Midl Include="MidiMessageReader.idl">
+      <Filter>API\Endpoints</Filter>
+    </Midl>
+    <Midl Include="MidiMessageWriter.idl">
+      <Filter>API\Endpoints</Filter>
+    </Midl>
+    <Midl Include="MidiMessagesReceivedEventArgs.idl">
+      <Filter>API\Endpoints</Filter>
+    </Midl>
+    <Midl Include="MidiUmp32.idl">
+      <Filter>API\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiUmp64.idl">
+      <Filter>API\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiUmp96.idl">
+      <Filter>API\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiUmp128.idl">
+      <Filter>API\Messages</Filter>
+    </Midl>
+    <Midl Include="IMidiUmp32.idl">
+      <Filter>API\Messages</Filter>
+    </Midl>
+    <Midl Include="IMidiUmp64.idl">
+      <Filter>API\Messages</Filter>
+    </Midl>
+    <Midl Include="IMidiUmp96.idl">
+      <Filter>API\Messages</Filter>
+    </Midl>
+    <Midl Include="IMidiUmp128.idl">
+      <Filter>API\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiUmpSizeEnum.idl">
+      <Filter>API\Messages</Filter>
+    </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="midi-app-api.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="PropertySheet.props" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,24 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+namespace Windows.Devices.Midi2
+{
+	[
+		uuid(69d316b0-003f-4d51-ba42-d6efe18c2a2f),
+		version(1.0),
+	]
+
+	interface IMidiUmp96
+	{
+		UInt64 Timestamp;
+		UInt32 Word1;
+		UInt32 Word2;
+		UInt32 Word3;
+	};
+
+}
