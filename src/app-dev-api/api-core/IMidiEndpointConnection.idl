@@ -6,20 +6,18 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+import "MidiMessagesReceivedEventArgs.idl";
+import "MidiMessageReader.idl";
+import "MidiMessageWriter.idl";
 
-#include "pch.h"
-#include "MidiMessagesReceivedEventArgs.h"
-#include "MidiMessagesReceivedEventArgs.g.cpp"
-
-
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace Windows.Devices.Midi2
 {
-    winrt::Windows::Devices::Midi2::IMidiInputConnection MidiMessagesReceivedEventArgs::SourceMidiEndpoint()
+    [
+        uuid(9dc81c51-7e1f-40f2-a7bb-cf24cf9f40ff),
+        version(1.0),
+    ]
+    interface IMidiEndpointConnection
     {
-        throw hresult_not_implemented();
-    }
-    hstring MidiMessagesReceivedEventArgs::SourceMessageReaderId()
-    {
-        throw hresult_not_implemented();
+        String DeviceId{ get; };
     }
 }

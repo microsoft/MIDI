@@ -10,6 +10,8 @@
 #pragma once
 #include "MidiMessageWriter.g.h"
 
+#include "midi_service_interface.h"
+
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
@@ -17,7 +19,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiMessageWriter() = default;
 
-        bool IsFull();
         void WriteUmpWords32(uint64_t midiTimestamp, uint32_t umpWord1);
         void WriteUmpWords64(uint64_t midiTimestamp, uint32_t umpWord1, uint32_t umpWord2);
         void WriteUmpWords96(uint64_t midiTimestamp, uint32_t umpWord1, uint32_t umpWord2, uint32_t umpWord3);
@@ -35,6 +36,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void WriteUmp64(winrt::Windows::Devices::Midi2::IMidiUmp64 const& ump);
         void WriteUmp96(winrt::Windows::Devices::Midi2::IMidiUmp96 const& ump);
         void WriteUmp128(winrt::Windows::Devices::Midi2::IMidiUmp128 const& ump);
+
+    private:
+        // only one of these gets used for the writer
+        com_ptr<IMidiBiDi> _bidiDevice = nullptr;
+        com_ptr<IMidiOut> _outputOnlyDevice = nullptr;
 
     };
 }

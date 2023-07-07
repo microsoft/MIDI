@@ -17,13 +17,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiMessagesReceivedEventArgs() = default;
 
-        hstring SourceMidiEndpointId();
-        winrt::Windows::Devices::Midi2::MidiMessageReader GetMessageReader();
-    };
-}
-namespace winrt::Windows::Devices::Midi2::factory_implementation
-{
-    struct MidiMessagesReceivedEventArgs : MidiMessagesReceivedEventArgsT<MidiMessagesReceivedEventArgs, implementation::MidiMessagesReceivedEventArgs>
-    {
+        winrt::Windows::Devices::Midi2::IMidiInputConnection SourceMidiEndpoint();
+        hstring SourceMessageReaderId();
     };
 }

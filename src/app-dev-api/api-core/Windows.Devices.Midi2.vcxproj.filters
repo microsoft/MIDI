@@ -33,6 +33,15 @@
     <ClCompile Include="MidiMessagesReceivedEventArgs.cpp">
       <Filter>SDK\Endpoints</Filter>
     </ClCompile>
+    <ClCompile Include="MidiBidirectionalEndpointConnection.cpp">
+      <Filter>API\Endpoints</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiInputEndpointConnection.cpp">
+      <Filter>API\Endpoints</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiOutputEndpointConnection.cpp">
+      <Filter>API\Endpoints</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -48,6 +57,15 @@
     </ClInclude>
     <ClInclude Include="midi_service_interface.h">
       <Filter>Internal\ServiceAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiBidirectionalEndpointConnection.h">
+      <Filter>API\Endpoints</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiInputEndpointConnection.h">
+      <Filter>API\Endpoints</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiOutputEndpointConnection.h">
+      <Filter>API\Endpoints</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -104,6 +122,21 @@
     </Midl>
     <Midl Include="MidiUmpSizeEnum.idl">
       <Filter>API\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiInputEndpointConnection.idl">
+      <Filter>API\Endpoints</Filter>
+    </Midl>
+    <Midl Include="MidiOutputEndpointConnection.idl">
+      <Filter>API\Endpoints</Filter>
+    </Midl>
+    <Midl Include="MidiBidirectionalEndpointConnection.idl">
+      <Filter>API\Endpoints</Filter>
+    </Midl>
+    <Midl Include="IMidiInputEndpoint.idl">
+      <Filter>API\Endpoints</Filter>
+    </Midl>
+    <Midl Include="IMidiOutputEndpoint.idl">
+      <Filter>API\Endpoints</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

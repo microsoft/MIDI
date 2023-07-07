@@ -7,19 +7,13 @@
 // ============================================================================
 
 
-#include "pch.h"
-#include "MidiMessagesReceivedEventArgs.h"
-#include "MidiMessagesReceivedEventArgs.g.cpp"
+import "IMidiMessageClientFilter.idl";
 
-
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace Microsoft.Devices.Midi2.MessageFilters
 {
-    winrt::Windows::Devices::Midi2::IMidiInputConnection MidiMessagesReceivedEventArgs::SourceMidiEndpoint()
+    runtimeclass MidiMessageTypeClientFilter : Windows.Devices.Midi2.IMidiMessageClientFilter
     {
-        throw hresult_not_implemented();
-    }
-    hstring MidiMessagesReceivedEventArgs::SourceMessageReaderId()
-    {
-        throw hresult_not_implemented();
+        IVector<UInt8> AllowedMessageTypes{ get; set; };
+
     }
 }

@@ -14,7 +14,7 @@ namespace Windows.Devices.Midi2
     {
         MidiEndpointConnectOptions();
 
-        // TODO: Probably need options here to disable initial FB and other info queries upon connection?
+        // TODO: These are likely to go away
 
         Boolean DisableProcessingFunctionBlockInformationMessages { get; set; };
         Boolean DisableProcessingEndpointInformationMessages { get; set; };

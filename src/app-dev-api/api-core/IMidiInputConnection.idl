@@ -1,0 +1,29 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+import "MidiMessagesReceivedEventArgs.idl";
+import "MidiMessageReader.idl";
+import "MidiMessageWriter.idl";
+
+namespace Windows.Devices.Midi2
+{
+    [
+        uuid(dabfaf64-28d6-4122-92ef-5bc6548f2a69),
+        version(1.0),
+    ]
+    interface IMidiInputConnection
+    {
+//        UInt32 MmcssTaskId {get; };
+
+        // you can have any number of message readers with filters
+        IMap<String, MidiMessageReader> MessageReaders{ get; };
+
+        // notification that there are new messages received. Optional.
+        event Windows.Foundation.EventHandler<MidiMessagesReceivedEventArgs> MessagesReceived;
+    }
+}

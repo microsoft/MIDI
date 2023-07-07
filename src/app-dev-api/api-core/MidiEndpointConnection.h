@@ -14,38 +14,29 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    struct MidiEndpointConnection : MidiEndpointConnectionT<MidiEndpointConnection, ::IMidiCallback>
+    struct MidiEndpointConnection : MidiEndpointConnectionT<MidiEndpointConnection>
     {
         MidiEndpointConnection() = default;
 
         static hstring GetDeviceSelector();
-        hstring DeviceId();
 
-        winrt::Windows::Devices::Midi2::MidiMessageReader GetMessageReader();
-        winrt::Windows::Devices::Midi2::MidiMessageWriter GetMessageWriter();
-        winrt::event_token MessagesReceived(winrt::Windows::Foundation::EventHandler<winrt::Windows::Devices::Midi2::MidiMessagesReceivedEventArgs> const& handler);
-        void MessagesReceived(winrt::event_token const& token) noexcept;
+        hstring DeviceId() { return _deviceId; }
+        bool IsConnected() { return _isConnected; }
 
 
-        // Internal constructor to spin this up. Internal because we want everything an app does to go through the session
-        MidiEndpointConnection(hstring deviceId, bool useMmcss);
-
-        // internal method to start listening for new messages
-        void Start();
-        
         void SetOptions(MidiEndpointConnectOptions value) { _options = value; }
+        void SetUseMmcss(bool value) { _useMmcss = value; }
+        void SetDeviceId(hstring value) { _deviceId = value; }
 
-        // IMidiCallback support -----------------------------------------------------
-        IFACEMETHOD(Callback)(PVOID Data, UINT Size, LONGLONG Position) override;
-
-
-    private:
+    protected:
         hstring _deviceId;
         
-        bool _useMmcss = true;
+        bool _useMmcss{ true };
         DWORD _mmcssTaskId{ 0 };
 
-        MidiEndpointConnectOptions _options;
+        bool _isConnected{ false };
+
+        MidiEndpointConnectOptions _options{ nullptr };
 
     };
 }

@@ -10,19 +10,25 @@
 // almost always bidirectional. This is the main entity that applications will use
 // after creating a session
 
+import "MidiMessagesReceivedEventArgs.idl";
+import "MidiMessageReader.idl";
+import "MidiMessageWriter.idl";
+
+import "MidiEndpointConnection.idl";
+import "IMidiInputConnection.idl";
+import "IMidiOutputConnection.idl";
 
 namespace Windows.Devices.Midi2
 {
     [default_interface]
-    unsealed runtimeclass MidiEndpointConnection
+    runtimeclass MidiBidirectionalEndpointConnection : Windows.Devices.Midi2.MidiEndpointConnection, 
+                                                       Windows.Devices.Midi2.IMidiInputConnection, 
+                                                       Windows.Devices.Midi2.IMidiOutputConnection
     {
+        //MidiEndpointConnection();
 
         // Get the enumeration device selector for all compatible devices
-        static String GetDeviceSelector();
-    
-        // Id from Windows. This can be used to retrieve the MidiDeviceInformation object with the PnP properties
-        String DeviceId{ get; };
+        static String GetDeviceSelectorForBidirectional();
 
-        Boolean IsConnected{ get; };
     }
 }

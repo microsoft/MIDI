@@ -9,6 +9,7 @@
 #pragma once
 #include "MidiSession.g.h"
 
+#include <midi_timestamp.h>
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
@@ -16,15 +17,19 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiSession() = default;
 
-        hstring Id();
-
         static winrt::Windows::Devices::Midi2::MidiSession CreateNewSession(hstring const& sessionName, winrt::Windows::Devices::Midi2::MidiSessionSettings const& settings);
-        bool IsOpen();
-        winrt::Windows::Foundation::Collections::IMapView<hstring, winrt::Windows::Devices::Midi2::MidiEndpointConnection> Connections();
+
+        hstring Id() { return _id; }
+        bool IsOpen() { return _isOpen; }
+
+        winrt::Windows::Foundation::Collections::IMapView<hstring, winrt::Windows::Devices::Midi2::MidiEndpointConnection> Connections() { return _connections.GetView(); }
+
         winrt::Windows::Devices::Midi2::MidiEndpointConnection ConnectToEndpoint(hstring const& midiEndpointId, winrt::Windows::Devices::Midi2::MidiEndpointConnectOptions const& options);
         void DisconnectFromEndpoint(hstring const& midiEndpointId);
-        uint64_t GetMidiTimestamp();
-        uint64_t GetMidiTimestampFrequency();
+
+        uint64_t GetMidiTimestamp() { return ::Windows::Devices::Midi2::Internal::Shared::GetCurrentMidiTimestamp(); }
+        uint64_t GetMidiTimestampFrequency() { return ::Windows::Devices::Midi2::Internal::Shared::GetMidiTimestampFrequency(); }
+
 
         void Close();   // via IClosable
 

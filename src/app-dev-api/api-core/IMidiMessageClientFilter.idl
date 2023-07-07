@@ -1,0 +1,34 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+// this is for the MIDI Message Reader. The EvaluateXXXX methods return true if the reader
+// should retain this message and have the MessageReceivedEvent fire, and false if the
+// reader will ignore the message completely. Filters are designed so they can be created
+// in the SDK or by third parties and then plugged into the readers.
+
+import "MidiUmp32.idl";
+import "MidiUmp64.idl";
+import "MidiUmp96.idl";
+import "MidiUmp128.idl";
+
+namespace Windows.Devices.Midi2
+{
+    [
+        uuid(bf52cd4b-b487-4bad-abf3-83182966a65a),
+        version(1.0),
+    ]
+    interface IMidiMessageClientFilter
+    {
+        String Id {get; set; };
+
+        Boolean EvaluateUmp32(MidiUmp32 ump);
+        Boolean EvaluateUmp64(MidiUmp64 ump);
+        Boolean EvaluateUmp96(MidiUmp96 ump);
+        Boolean EvaluateUmp128(MidiUmp128 ump);
+    }
+}

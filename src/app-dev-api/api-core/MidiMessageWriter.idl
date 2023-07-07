@@ -48,10 +48,6 @@ namespace Windows.Devices.Midi2
     [default_interface]
     runtimeclass MidiMessageWriter // not IClosable because this needs to keep the lifetime of the EndpointConnection
     {
-        //MidiMessageWriter();
-
-        Boolean IsFull { get; };
-
         // easiest methods to use if you just keep a big array of MIDI words that you are iterating through
         void WriteUmpWords32(UInt64 midiTimestamp, UInt32 umpWord1);
         void WriteUmpWords64(UInt64 midiTimestamp, UInt32 umpWord1, UInt32 umpWord2);

@@ -11,25 +11,24 @@
 #include "MidiSession.g.cpp"
 
 #include "MidiEndpointConnection.h"
-#include <midi_timestamp.h>
+#include "MidiInputEndpointConnection.h"
+#include "MidiOutputEndpointConnection.h"
+#include "MidiBidirectionalEndpointConnection.h"
+
+
 
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    hstring MidiSession::Id()
-    {
-        return _id;
-    }
-
     winrt::Windows::Devices::Midi2::MidiSession MidiSession::CreateNewSession(hstring const& sessionName, winrt::Windows::Devices::Midi2::MidiSessionSettings const& settings)
     {
         // TODO: Call the service to create the session
         auto session = winrt::make_self<implementation::MidiSession>();
 
         //// TODO: Not sure if service will need to provide the Id, or we can simply gen a GUID and send it up
-        //hstring id = winrt::to_hstring(Windows::Foundation::GuidHelper::CreateNewGuid());
+        hstring id = winrt::to_hstring(Windows::Foundation::GuidHelper::CreateNewGuid());
 
         //session->SetIsOpen(true);
         //session->SetId(id);
@@ -38,16 +37,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         
 
         return *session;
-    }
-
-    bool MidiSession::IsOpen()
-    {
-        return _isOpen;
-    }
-    
-    winrt::Windows::Foundation::Collections::IMapView<hstring, winrt::Windows::Devices::Midi2::MidiEndpointConnection> MidiSession::Connections()
-    {
-        return _connections.GetView();
     }
 
     winrt::Windows::Devices::Midi2::MidiEndpointConnection MidiSession::ConnectToEndpoint(hstring const& midiEndpointId, winrt::Windows::Devices::Midi2::MidiEndpointConnectOptions const& options)
@@ -70,12 +59,16 @@ namespace winrt::Windows::Devices::Midi2::implementation
             return _connections.Lookup((winrt::hstring)normalizedEndpointId);
         }
 
-        auto endpoint = winrt::make_self<implementation::MidiEndpointConnection>((winrt::hstring)normalizedEndpointId, _settings.UseMmcssThreads());
+        // TODO: Figure out what kind of endpoint it is based on the enumeration info, and then instantiate the correct type
 
-        endpoint->SetOptions(options);
+        //auto endpoint = winrt::make_self<implementation::MidiInputEndpointConnection>();
+        //auto endpoint = winrt::make_self<implementation::MidiOutputEndpointConnection>();
+        auto endpoint = winrt::make_self<implementation::MidiBidirectionalEndpointConnection>();
 
+ //       endpoint->SetDeviceId((winrt::hstring)normalizedEndpointId);
+ //       endpoint->SetUseMmcss(_settings.UseMmcssThreads());
+ //       endpoint->SetOptions(options);
 
-        // TODO: Call the service API, set up the connection, and get the buffers
 
 
         // TODO: tell the endpoint connection to spin itself up to start listening
@@ -91,23 +84,21 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     void MidiSession::DisconnectFromEndpoint(hstring const& midiEndpointId)
     {
-        // TODO: Disconnect from the service
-
         if (_connections.HasKey(midiEndpointId))
         {
+            // TODO: Disconnect from the service
+
+
             _connections.Remove(midiEndpointId);
         }
+        else
+        {
+            // endpoint already disconnected. No need to except or anything, just exit.
+        }
+
     }
     
-    uint64_t MidiSession::GetMidiTimestamp()
-    {
-        return ::Windows::Devices::Midi2::Internal::Shared::GetCurrentMidiTimestamp();
-    }
-    
-    uint64_t MidiSession::GetMidiTimestampFrequency()
-    {
-        return ::Windows::Devices::Midi2::Internal::Shared::GetMidiTimestampFrequency();
-    }
+
     
     void MidiSession::Close()
     {

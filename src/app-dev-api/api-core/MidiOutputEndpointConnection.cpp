@@ -6,20 +6,24 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-
 #include "pch.h"
-#include "MidiMessagesReceivedEventArgs.h"
-#include "MidiMessagesReceivedEventArgs.g.cpp"
+#include "MidiOutputEndpointConnection.h"
+#include "MidiOutputEndpointConnection.g.cpp"
 
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    winrt::Windows::Devices::Midi2::IMidiInputConnection MidiMessagesReceivedEventArgs::SourceMidiEndpoint()
+
+    hstring MidiOutputEndpointConnection::GetDeviceSelectorForOutput()
     {
-        throw hresult_not_implemented();
+        // TODO
+        return L"";
     }
-    hstring MidiMessagesReceivedEventArgs::SourceMessageReaderId()
+
+    void MidiOutputEndpointConnection::Start()
     {
-        throw hresult_not_implemented();
+
     }
+
+
 }

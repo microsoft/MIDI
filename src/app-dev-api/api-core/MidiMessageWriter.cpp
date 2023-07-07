@@ -14,10 +14,6 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    bool MidiMessageWriter::IsFull()
-    {
-        throw hresult_not_implemented();
-    }
     void MidiMessageWriter::WriteUmpWords32(uint64_t midiTimestamp, uint32_t umpWord1)
     {
         throw hresult_not_implemented();

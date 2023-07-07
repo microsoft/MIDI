@@ -6,23 +6,20 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-// this event is just a signal to the client to read from the midimessagereader for the endpointconnection
-// This avoids copying data, and provides a lot more flexibility.
-
-
+import "MidiMessagesReceivedEventArgs.idl";
 import "MidiMessageReader.idl";
+
 import "IMidiInputConnection.idl";
+import "MidiEndpointConnection.idl";
+
 
 namespace Windows.Devices.Midi2
 {
     [default_interface]
-    runtimeclass MidiMessagesReceivedEventArgs
+    runtimeclass MidiInputEndpointConnection : Windows.Devices.Midi2.MidiEndpointConnection, 
+                                               Windows.Devices.Midi2.IMidiInputConnection
     {
-        //MidiMessagesReceivedEventArgs();
-
-        Windows.Devices.Midi2.IMidiInputConnection SourceMidiEndpoint{ get; };
-
-        String SourceMessageReaderId{ get; };
-
+        // Get the enumeration device selector for all compatible devices
+        static String GetDeviceSelectorForInput();
     }
 }

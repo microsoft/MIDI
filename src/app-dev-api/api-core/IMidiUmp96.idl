@@ -12,7 +12,6 @@ namespace Windows.Devices.Midi2
 		uuid(69d316b0-003f-4d51-ba42-d6efe18c2a2f),
 		version(1.0),
 	]
-
 	interface IMidiUmp96
 	{
 		UInt64 Timestamp;

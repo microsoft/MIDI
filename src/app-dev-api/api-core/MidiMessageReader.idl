@@ -17,6 +17,7 @@ import "MidiUmp96.idl";
 import "MidiUmp128.idl";
 
 import "MidiUmpSizeEnum.idl";
+import "IMidiMessageClientFilter.idl";
 
 // TODO: Consider thread synchronization for this class. Right now, assumes single-threaded access
 
@@ -32,12 +33,31 @@ namespace Windows.Devices.Midi2
         WaitAndBlockCallingThread
     };
 
+    enum MidiMessageClientFilterStrategy
+    {
+        OrFilters = 0,      // any filters may pass to accept the message
+        AndFilters,     // all attached filters must pass to accept the message
+    };
+
     [default_interface]
     runtimeclass MidiMessageReader // not IClosable because this needs to keep the lifetime of the EndpointConnection
     {
-        //MidiMessageReader();
+        String Id{get; };
+
+        // creates a reader with a GUID as the id
+        MidiMessageReader();
+
+        // apps may want to have a unique Id for a reader, like "Foo Controller Channel 7" or something
+        MidiMessageReader(String uniqueId);
+
+
 
         MidiMessageReaderEndOfMessagesBehavior EndOfMessagesBehavior{ get; set; };
+
+        // zero or more filters for this reader. This is the real reason to have multiple readers on an endpoint
+        IVector<IMidiMessageClientFilter> Filters{ get; };
+
+        MidiMessageClientFilterStrategy FilterStrategy{ get; set; };
 
         // EOF for MIDI messages.
         Boolean EndOfMessages{ get; };
@@ -58,12 +78,9 @@ namespace Windows.Devices.Midi2
         MidiUmp96 ReadUmp96();
         MidiUmp128 ReadUmp128();
 
-        // a performance optimization. We'll see if this works well for performance-focused client apps before
-        // going through the process of creating a completely separate classic COM interface with pointer access.
-        // returns the number of bytes read into the buffer. Will always read whole messages.
-        // 
         // If EndOfMessagesBehavior is set to block, this will block ONLY if there were no messages at all to read.
         // Otherwise, it will simply return whatever was read.
         UInt32 ReadBuffer(Windows.Foundation.IMemoryBufferReference buffer, UInt32 byteOffsetinBuffer, UInt32 maxBytesToRead);
+
     }
 }
