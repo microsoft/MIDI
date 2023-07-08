@@ -132,16 +132,13 @@
     <Midl Include="MidiBidirectionalEndpointConnection.idl">
       <Filter>API\Endpoints</Filter>
     </Midl>
-    <Midl Include="IMidiInputEndpoint.idl">
-      <Filter>API\Endpoints</Filter>
-    </Midl>
-    <Midl Include="IMidiOutputEndpoint.idl">
-      <Filter>API\Endpoints</Filter>
-    </Midl>
+    <Midl Include="IMidiInputConnection.idl" />
+    <Midl Include="IMidiMessageClientFilter.idl" />
+    <Midl Include="IMidiOutputConnection.idl" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include="midi-app-api.def" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PropertySheet.props" />

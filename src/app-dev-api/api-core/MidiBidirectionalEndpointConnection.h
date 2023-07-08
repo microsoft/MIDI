@@ -17,7 +17,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiBidirectionalEndpointConnection() = default;
 
-        static hstring GetDeviceSelectorForBidirectional();
+        static hstring GetDeviceSelectorForBidirectional() { return L""; /* TODO*/ }
 
 //        uint32_t MmcssTaskId() { return _mmcssTaskId; }
 
@@ -43,6 +43,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _messageReaders { winrt::single_threaded_map<hstring, winrt::Windows::Devices::Midi2::MidiMessageReader>() };
 
         winrt::Windows::Devices::Midi2::MidiMessageWriter _messageWriter = nullptr;
+
+
+        bool _tempMessagesReceivedFlag = false;
 
     };
 }

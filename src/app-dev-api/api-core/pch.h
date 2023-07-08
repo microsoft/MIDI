@@ -13,6 +13,9 @@
 
 
 #include <unknwn.h>
+
+#include <Windows.h>
+
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
