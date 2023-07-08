@@ -30,10 +30,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         //// TODO: Not sure if service will need to provide the Id, or we can simply gen a GUID and send it up
         hstring id = winrt::to_hstring(Windows::Foundation::GuidHelper::CreateNewGuid());
 
-        //session->SetIsOpen(true);
-        //session->SetId(id);
-        //session->SetName(sessionName);
-        //session->SetSettings(settings);
+        session->SetIsOpen(true);
+        session->SetId(id);
+        session->SetName(sessionName);
+        session->SetSettings(settings);
         
 
         return *session;
@@ -65,21 +65,26 @@ namespace winrt::Windows::Devices::Midi2::implementation
         //auto endpoint = winrt::make_self<implementation::MidiOutputEndpointConnection>();
         auto endpoint = winrt::make_self<implementation::MidiBidirectionalEndpointConnection>();
 
- //       endpoint->SetDeviceId((winrt::hstring)normalizedEndpointId);
- //       endpoint->SetUseMmcss(_settings.UseMmcssThreads());
- //       endpoint->SetOptions(options);
+        endpoint->SetDeviceId((winrt::hstring)normalizedEndpointId);
+        endpoint->SetUseMmcss(_settings.UseMmcssThreads());
+        endpoint->SetOptions(options);
 
+        if (endpoint->Start())
+        {
+            _connections.Insert((winrt::hstring)normalizedEndpointId, (const Windows::Devices::Midi2::MidiEndpointConnection)(*endpoint));
 
+            return *endpoint;
 
-        // TODO: tell the endpoint connection to spin itself up to start listening
+        }
+        else
+        {
+            // could not establish the connection. 
 
+            // TODO
 
+            return nullptr;
+        }
 
-
-
-        _connections.Insert((winrt::hstring)normalizedEndpointId, (const Windows::Devices::Midi2::MidiEndpointConnection)(*endpoint));
-
-        return *endpoint;
     }
 
     void MidiSession::DisconnectFromEndpoint(hstring const& midiEndpointId)

@@ -30,7 +30,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::Windows::Foundation::Collections::IMap<hstring, winrt::Windows::Devices::Midi2::MidiMessageReader> MessageReaders() { return _messageReaders; }
         winrt::Windows::Devices::Midi2::MidiMessageWriter MessageWriter() { return _messageWriter; }
 
-        void Start();
+        bool Start();
 
 
         // IMidiCallback support -----------------------------------------------------
