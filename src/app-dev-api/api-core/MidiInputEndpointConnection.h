@@ -16,7 +16,9 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    struct MidiInputEndpointConnection : MidiInputEndpointConnectionT<MidiInputEndpointConnection, Windows::Devices::Midi2::implementation::MidiEndpointConnection>
+    struct MidiInputEndpointConnection : MidiInputEndpointConnectionT<MidiInputEndpointConnection, 
+        Windows::Devices::Midi2::implementation::MidiEndpointConnection,
+        IMidiCallback>
     {
         MidiInputEndpointConnection() = default;
 

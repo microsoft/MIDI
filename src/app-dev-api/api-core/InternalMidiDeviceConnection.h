@@ -24,7 +24,7 @@ using InternalMidiInCallbackFuncVector = std::vector<InternalMidiInCallbackFunc>
 private:\
  winrt::event<winrt::Windows::Foundation::EventHandler<winrt::Windows::Devices::Midi2::MidiMessagesReceivedEventArgs>> _messagesReceivedEvent;\
 public:\
- STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position;\
+ STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position) override;\
  inline winrt::event_token MessagesReceived(winrt::Windows::Foundation::EventHandler<winrt::Windows::Devices::Midi2::MidiMessagesReceivedEventArgs> const& handler)\
  { return _messagesReceivedEvent.add(handler); }\
  inline void MessagesReceived(winrt::event_token const& token) noexcept\

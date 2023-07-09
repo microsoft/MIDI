@@ -140,12 +140,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                 if (_useMmcss)
                 {
-                    // TODO: Need to handle the output only case which has no callback
-                    winrt::check_hresult(iface->Initialize(
-                        (LPCWSTR)(normalizedDeviceId.c_str()), 
-                        &_mmcssTaskId, 
-                        (IMidiCallback*)(deviceConnection.get())
-                    ));
+                    //// TODO: Need to handle the output only case which has no callback
+                    //winrt::check_hresult(iface->Initialize(
+                    //    (LPCWSTR)(normalizedDeviceId.c_str()), 
+                    //    &_mmcssTaskId, 
+                    //    (IMidiCallback*)(deviceConnection.get())
+                    //));
                 }
                 else
                 {
@@ -210,29 +210,62 @@ namespace winrt::Windows::Devices::Midi2::implementation
         std::cout << __FUNCTION__ << ": About to look for an existing internal connection" << std::endl;
 
         // internal tracking of the master connection for this endpoint
-        std::shared_ptr<internal::InternalMidiDeviceConnection> deviceConnection = 
-            GetOrCreateAndInitializeDeviceConnection<IMidiBiDi>(winrt::to_string(normalizedDeviceId), umpEndpointInterface);
+        //std::shared_ptr<internal::InternalMidiDeviceConnection> deviceConnection = 
+        //    GetOrCreateAndInitializeDeviceConnection<IMidiBiDi>(winrt::to_string(normalizedDeviceId), umpEndpointInterface);
 
-        //std::cout << __FUNCTION__ << ": Start the WinRT endpoint" << std::endl;
 
-        //if (endpointConnection->Start(deviceConnection))
-        //{
-        //    std::cout << __FUNCTION__ << ": Adding the WinRT endpoint to the endpoint map " << std::endl;
 
-        //    _connections.Insert((winrt::hstring)normalizedDeviceId, (const Windows::Devices::Midi2::MidiEndpointConnection)(*endpointConnection));
 
-        //    return *endpointConnection;
-        //}
-        //else
-        //{
-        //    std::cout << __FUNCTION__ << ": WinRT Endpoint connection wouldn't start " << std::endl;
+        // this is all really messy right now
+        std::shared_ptr<internal::InternalMidiDeviceConnection> deviceConnection = std::make_shared<internal::InternalMidiDeviceConnection>();
+        deviceConnection->DeviceId = normalizedDeviceId;
+        deviceConnection->BidirectionalConnection = umpEndpointInterface;
 
-        //    // TODO: endpointConnection wouldn't start
+        auto endpointConnectionRef = endpointConnection.get();
 
-        //    // TODO: Cleanup
+
+        // Right now, without a separate listener class, this creates a complete stream for each
+        // connected endpoint, which will get expensive when folks create 16 of them for an endpoint
+        // so they can have something akin to MIDI 1.0 ports (per group)
+
+        try
+        {
+            // TODO: Need to handle the output only case which has no callback
+            winrt::check_hresult(umpEndpointInterface->Initialize(
+                (LPCWSTR)(normalizedDeviceId.c_str()),
+                &_mmcssTaskId,
+                (IMidiCallback*)(endpointConnectionRef)
+            ));
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            std::cout << __FUNCTION__ << " hresult exception on Initialize endpoint with callback" << std::endl;
+            std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
+            std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
 
             return nullptr;
-        //}
+        }
+
+        std::cout << __FUNCTION__ << ": Start the WinRT endpoint" << std::endl;
+
+        if (endpointConnection->Start(deviceConnection))
+        {
+            std::cout << __FUNCTION__ << ": Adding the WinRT endpoint to the endpoint map " << std::endl;
+
+            _connections.Insert((winrt::hstring)normalizedDeviceId, (const Windows::Devices::Midi2::MidiEndpointConnection)(*endpointConnection));
+
+            return *endpointConnection;
+        }
+        else
+        {
+            std::cout << __FUNCTION__ << ": WinRT Endpoint connection wouldn't start " << std::endl;
+
+            // TODO: endpointConnection wouldn't start
+
+            // TODO: Cleanup
+
+            return nullptr;
+        }
 
     }
 

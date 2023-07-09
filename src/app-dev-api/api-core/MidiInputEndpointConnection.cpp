@@ -13,6 +13,12 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
+    IFACEMETHODIMP MidiInputEndpointConnection::Callback(PVOID Data, UINT Size, LONGLONG Position)
+    {
+        return S_OK;
+    }
+
+
     winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiMessageClientFilter> MidiInputEndpointConnection::Filters()
     {
         throw hresult_not_implemented();

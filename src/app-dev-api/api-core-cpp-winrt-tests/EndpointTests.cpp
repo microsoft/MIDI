@@ -26,6 +26,7 @@ TEST_CASE("Create endpoint")
 	auto conn1 = session.ConnectBidirectionalEndpoint(L"foobarbaz", incomingMessageFilters, MidiMessageClientFilterStrategy::Ignore, L"" /*, nullptr */);
 
 	REQUIRE((bool)(conn1 != nullptr));
+	REQUIRE((bool)(conn1.IsConnected()));
 	REQUIRE((bool)(session.Connections().Size() == 1));
 
 	std::cout << "Endpoint Id: " << winrt::to_string(conn1.DeviceId()) << std::endl;
@@ -60,37 +61,37 @@ TEST_CASE("Send and receive messages")
 
 	REQUIRE((bool)(conn1 != nullptr));
 
-	//bool messagesReceivedFlag = false;
+	bool messagesReceivedFlag = false;
 
-	//auto MessagesReceivedHandler = [&messagesReceivedFlag](Windows::Foundation::IInspectable const& sender, MidiMessagesReceivedEventArgs const& args)
-	//	{
-	//		messagesReceivedFlag = true;
-	//		std::cout << "Message(s) Received " << std::endl;
-	//	};
+	auto MessagesReceivedHandler = [&messagesReceivedFlag](Windows::Foundation::IInspectable const& sender, MidiMessagesReceivedEventArgs const& args)
+		{
+			messagesReceivedFlag = true;
+			std::cout << "Message(s) Received " << std::endl;
+		};
 
-	//auto eventRevokeToken = conn1.MessagesReceived(MessagesReceivedHandler);
-
-
-	//// send message
-
-	//MidiUmp32 ump;
-
-	//conn1.TEMPTEST_SendUmp32(ump);
+	auto eventRevokeToken = conn1.MessagesReceived(MessagesReceivedHandler);
 
 
-	//// Wait for incoming message
+	// send message
 
-	//int timeoutCounter = 1000;
-	//while (!messagesReceivedFlag && timeoutCounter > 0)
-	//{
-	//	Sleep(10);
+	MidiUmp32 ump;
 
-	//	timeoutCounter--;
-	//}
+	conn1.TEMPTEST_SendUmp32(ump);
 
-	//REQUIRE(messagesReceivedFlag);
 
-	//// unwire event
-	//conn1.MessagesReceived(eventRevokeToken);
+	// Wait for incoming message
+
+	int timeoutCounter = 1000;
+	while (!messagesReceivedFlag && timeoutCounter > 0)
+	{
+		Sleep(10);
+
+		timeoutCounter--;
+	}
+
+	REQUIRE(messagesReceivedFlag);
+
+	// unwire event
+	conn1.MessagesReceived(eventRevokeToken);
 
 }

@@ -40,7 +40,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         IMPLEMENT_MIDI_MESSAGES_RECEIVED_EVENT
 
     private:
-
         com_ptr<IMidiBiDi> _bidiEndpoint;
 
         bool _tempMessagesReceivedFlag = false;
