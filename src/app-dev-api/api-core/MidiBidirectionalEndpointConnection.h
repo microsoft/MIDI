@@ -10,40 +10,34 @@
 #include "MidiBidirectionalEndpointConnection.g.h"
 #include "MidiEndpointConnection.h"
 
+#include "InternalMidiDeviceConnection.h"
+#include "midi_service_interface.h";
+
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    struct MidiBidirectionalEndpointConnection : MidiBidirectionalEndpointConnectionT<MidiBidirectionalEndpointConnection, Windows::Devices::Midi2::implementation::MidiEndpointConnection, ::IMidiCallback>
+    struct MidiBidirectionalEndpointConnection : MidiBidirectionalEndpointConnectionT<MidiBidirectionalEndpointConnection, Windows::Devices::Midi2::implementation::MidiEndpointConnection>
     {
         MidiBidirectionalEndpointConnection() = default;
 
         static hstring GetDeviceSelectorForBidirectional() { return L""; /* TODO*/ }
 
-//        uint32_t MmcssTaskId() { return _mmcssTaskId; }
+        winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiMessageClientFilter> Filters();
+        winrt::Windows::Devices::Midi2::MidiMessageClientFilterStrategy FilterStrategy();
+        void FilterStrategy(winrt::Windows::Devices::Midi2::MidiMessageClientFilterStrategy const& value);
 
-        winrt::event_token MessagesReceived(winrt::Windows::Foundation::EventHandler<winrt::Windows::Devices::Midi2::MidiMessagesReceivedEventArgs> const& handler);
-        void MessagesReceived(winrt::event_token const& token) noexcept;
-
-        // TODO: Consider we may want to make this a view and have add/remove methods in the endpoint
-        // to better match the pattern from Session, and reduce the number of activatable classes that
-        // folks need to put in their app config files.
-        winrt::Windows::Foundation::Collections::IMap<hstring, winrt::Windows::Devices::Midi2::MidiMessageReader> MessageReaders() { return _messageReaders; }
-        winrt::Windows::Devices::Midi2::MidiMessageWriter MessageWriter() { return _messageWriter; }
-
-        bool Start();
+        uint32_t ReceiveBuffer(winrt::Windows::Devices::Midi2::MidiMessageBuffer const& buffer, uint32_t byteOffsetinBuffer, uint32_t maxBytesToReceive);
+        uint32_t SendBuffer(winrt::Windows::Devices::Midi2::MidiMessageBuffer const& buffer, uint32_t byteOffsetInBuffer, uint32_t maxBytesToSend);
 
 
-        // IMidiCallback support -----------------------------------------------------
-        IFACEMETHOD(Callback)(PVOID Data, UINT Size, LONGLONG Position) override;
+        bool Start(std::shared_ptr<internal::InternalMidiDeviceConnection> deviceConnection);
+
+ 
+        IMPLEMENT_MIDI_MESSAGES_RECEIVED_EVENT
 
     private:
-        DWORD _mmcssTaskId{ 0 };
 
-        winrt::Windows::Foundation::Collections::IMap<hstring, winrt::Windows::Devices::Midi2::MidiMessageReader>
-            _messageReaders { winrt::single_threaded_map<hstring, winrt::Windows::Devices::Midi2::MidiMessageReader>() };
-
-        winrt::Windows::Devices::Midi2::MidiMessageWriter _messageWriter = nullptr;
-
+        com_ptr<IMidiBiDi> _bidiEndpoint;
 
         bool _tempMessagesReceivedFlag = false;
 

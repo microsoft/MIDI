@@ -6,10 +6,7 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-// This is the moral equivalent of a "port" in MIDI 1.0. MIDI 2.0 UMP Endpoints are
-// almost always bidirectional. This is the main entity that applications will use
-// after creating a session
-
+import "IMidiEndpointConnectionSettings.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -19,10 +16,20 @@ namespace Windows.Devices.Midi2
 
         // Get the enumeration device selector for all compatible devices
         static String GetDeviceSelector();
-    
+
+        // just a map key for this connection.
+        String Id{ get; };
+
         // Id from Windows. This can be used to retrieve the MidiDeviceInformation object with the PnP properties
         String DeviceId{ get; };
 
+        // app-supplied optional tag. Can hold whatever information they may want to show in a list
+        String Tag{ get; set; };
+
+        // true if this endpoint connection is actually connected.
+        // here for cases when the app holds on to an instance of this outside of the map
         Boolean IsConnected{ get; };
+
+        IMidiEndpointConnectionSettings Settings{ get; };
     }
 }

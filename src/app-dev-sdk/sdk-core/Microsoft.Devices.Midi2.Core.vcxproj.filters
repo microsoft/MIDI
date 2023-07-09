@@ -35,9 +35,6 @@
     <Filter Include="SDK\Collections">
       <UniqueIdentifier>{52b13e6c-2b08-4876-b259-c8a335409409}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SDK\TEMP">
-      <UniqueIdentifier>{8f95a2d2-322d-43d9-b7d3-3d673e055bf1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resources\Strings">
       <UniqueIdentifier>{58686a9f-285f-4481-b81c-3f06420aad3d}</UniqueIdentifier>
     </Filter>

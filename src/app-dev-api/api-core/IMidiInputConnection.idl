@@ -7,8 +7,9 @@
 // ============================================================================
 
 import "MidiMessagesReceivedEventArgs.idl";
-import "MidiMessageReader.idl";
-import "MidiMessageWriter.idl";
+import "IMidiMessageClientFilter.idl";
+import "MidiMessageClientFilterStrategy.idl";
+import "MidiMessageBuffer.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -18,10 +19,12 @@ namespace Windows.Devices.Midi2
     ]
     interface IMidiInputConnection
     {
-//        UInt32 MmcssTaskId {get; };
+        // zero or more filters for this reader. This is the real reason to have multiple readers on an endpoint
+        IVector<IMidiMessageClientFilter> Filters{ get; };
+        MidiMessageClientFilterStrategy FilterStrategy{ get; set; };
 
-        // you can have any number of message readers with filters
-        IMap<String, MidiMessageReader> MessageReaders{ get; };
+
+        UInt32 ReceiveBuffer(MidiMessageBuffer buffer, UInt32 byteOffsetInBuffer, UInt32 maxBytesToReceive);
 
         // notification that there are new messages received. Optional.
         event Windows.Foundation.EventHandler<MidiMessagesReceivedEventArgs> MessagesReceived;

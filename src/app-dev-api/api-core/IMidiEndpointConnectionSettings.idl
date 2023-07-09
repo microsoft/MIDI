@@ -6,16 +6,17 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+
 namespace Windows.Devices.Midi2
 {
-	[
-		uuid(1f326275-629b-46f7-9039-0e5f2fca7007),
-		version(1.0),
-	]
-	interface IMidiUmp32
-	{
-		UInt64 Timestamp;
-		UInt32 Word1;
-	};
+    [
+        uuid(65736736-35f3-421c-a683-3a034ad0dcc2),
+        version(1.0),
+    ]
+    interface IMidiEndpointConnectionSettings
+    {
+        String SettingsJson { get; set; };
 
+        Boolean IsDirty{ get; set; };
+    }
 }

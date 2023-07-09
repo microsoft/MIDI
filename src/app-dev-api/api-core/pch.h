@@ -19,8 +19,16 @@
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
+#include <winrt/Windows.Storage.Streams.h>
+#include <winrt/Windows.Storage.h>
+
+using namespace winrt;
+
 
 #include <stdint.h>
 
+#include "midi_service_interface.h"
+#include "InternalMidiDeviceConnection.h"
+#include "ump_helpers.h"
 
-using namespace winrt;
+namespace internal = ::Windows::Devices::Midi2::Internal;

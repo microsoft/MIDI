@@ -14,12 +14,5 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    winrt::Windows::Devices::Midi2::IMidiInputConnection MidiMessagesReceivedEventArgs::SourceMidiEndpoint()
-    {
-        throw hresult_not_implemented();
-    }
-    hstring MidiMessagesReceivedEventArgs::SourceMessageReaderId()
-    {
-        throw hresult_not_implemented();
-    }
+
 }

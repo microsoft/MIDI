@@ -10,10 +10,6 @@
 // almost always bidirectional. This is the main entity that applications will use
 // after creating a session
 
-import "MidiMessagesReceivedEventArgs.idl";
-import "MidiMessageReader.idl";
-import "MidiMessageWriter.idl";
-
 import "MidiEndpointConnection.idl";
 import "IMidiInputConnection.idl";
 import "IMidiOutputConnection.idl";

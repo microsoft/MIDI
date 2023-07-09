@@ -10,33 +10,30 @@
 #include "MidiInputEndpointConnection.g.h"
 #include "MidiEndpointConnection.h"
 
+#include "InternalMidiDeviceConnection.h"
+#include "midi_service_interface.h";
+
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    struct MidiInputEndpointConnection : MidiInputEndpointConnectionT<MidiInputEndpointConnection, Windows::Devices::Midi2::implementation::MidiEndpointConnection, ::IMidiCallback>
+    struct MidiInputEndpointConnection : MidiInputEndpointConnectionT<MidiInputEndpointConnection, Windows::Devices::Midi2::implementation::MidiEndpointConnection>
     {
         MidiInputEndpointConnection() = default;
 
-//        uint32_t MmcssTaskId() { return _mmcssTaskId; }
+        static hstring GetDeviceSelectorForInput() { return L""; /* TODO */ }
 
+        winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiMessageClientFilter> Filters();
+        winrt::Windows::Devices::Midi2::MidiMessageClientFilterStrategy FilterStrategy();
+        void FilterStrategy(winrt::Windows::Devices::Midi2::MidiMessageClientFilterStrategy const& value);
+        uint32_t ReceiveBuffer(winrt::Windows::Devices::Midi2::MidiMessageBuffer const& buffer, uint32_t byteOffsetinBuffer, uint32_t maxBytesToReceive);
 
-        static hstring GetDeviceSelectorForInput();
-        winrt::Windows::Foundation::Collections::IMap<hstring, winrt::Windows::Devices::Midi2::MidiMessageReader> MessageReaders();
-        winrt::event_token MessagesReceived(winrt::Windows::Foundation::EventHandler<winrt::Windows::Devices::Midi2::MidiMessagesReceivedEventArgs> const& handler);
-        void MessagesReceived(winrt::event_token const& token) noexcept;
+        bool Start(std::shared_ptr<internal::InternalMidiDeviceConnection> deviceConnection);
 
-
-        void Start();
-
-        // Internal constructor to spin this up. Internal because we want everything an app does to go through the session
-        MidiInputEndpointConnection(hstring deviceId, bool useMmcss);
-
-        // IMidiCallback support -----------------------------------------------------
-        IFACEMETHOD(Callback)(PVOID Data, UINT Size, LONGLONG Position) override;
+        IMPLEMENT_MIDI_MESSAGES_RECEIVED_EVENT
 
     private:
-        //winrt::Windows::Devices::Midi2::MidiMessageReader _messageReader = nullptr;
-        DWORD _mmcssTaskId{ 0 };
+
+
 
 
     };

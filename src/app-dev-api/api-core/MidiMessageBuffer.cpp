@@ -7,21 +7,24 @@
 // ============================================================================
 
 #include "pch.h"
-#include "MidiOutputEndpointConnection.h"
-#include "MidiOutputEndpointConnection.g.cpp"
+#include "MidiMessageBuffer.h"
+#include "MidiMessageBuffer.g.cpp"
 
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    uint32_t MidiOutputEndpointConnection::SendBuffer(winrt::Windows::Devices::Midi2::MidiMessageBuffer const& buffer, uint32_t byteOffsetInBuffer, uint32_t maxBytesToSend)
+    //MidiMessageBuffer::MidiMessageBuffer(uint32_t sizeInBytes)
+    //{
+    //    throw hresult_not_implemented();
+    //}
+    void MidiMessageBuffer::Close()
+    {
+        throw hresult_not_implemented();
+
+
+    }
+    winrt::Windows::Foundation::IMemoryBufferReference MidiMessageBuffer::CreateReference()
     {
         throw hresult_not_implemented();
     }
-
-    bool MidiOutputEndpointConnection::Start(::Windows::Devices::Midi2::Internal::InternalMidiDeviceConnection* connection)
-    {
-        return false;
-    }
-
-
 }

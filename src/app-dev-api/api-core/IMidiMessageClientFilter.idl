@@ -18,6 +18,7 @@ import "MidiUmp128.idl";
 
 namespace Windows.Devices.Midi2
 {
+
     [
         uuid(bf52cd4b-b487-4bad-abf3-83182966a65a),
         version(1.0),

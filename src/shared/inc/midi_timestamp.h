@@ -29,7 +29,7 @@ namespace Windows::Devices::Midi2::Internal::Shared
 		return frequency.QuadPart;
 	}
 #else
-	std::uint64_t GetCurrentMidiTimestamp()
+	inline std::uint64_t GetCurrentMidiTimestamp()
 	{
 		LARGE_INTEGER timestamp;
 
@@ -39,7 +39,7 @@ namespace Windows::Devices::Midi2::Internal::Shared
 	}
 
 
-	std::uint64_t GetMidiTimestampFrequency()
+	inline std::uint64_t GetMidiTimestampFrequency()
 	{
 		LARGE_INTEGER frequency;
 
@@ -47,6 +47,11 @@ namespace Windows::Devices::Midi2::Internal::Shared
 
 		return frequency.QuadPart;
 	}
+
+
+	// TODO: Consider adding in GetSystemTimePreciseAsFileTime for jitter measurements (KeQuerySystemTimePrecise for driver code)
+	// https://learn.microsoft.com/windows/win32/sysinfo/acquiring-high-resolution-time-stamps
+
 #endif
 
 }

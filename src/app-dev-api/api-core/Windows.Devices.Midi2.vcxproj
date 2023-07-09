@@ -163,26 +163,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+	  <ClInclude Include="InternalMidiDeviceConnection.h"></ClInclude>
     <ClInclude Include="MidiBidirectionalEndpointConnection.h">
       <DependentUpon>MidiBidirectionalEndpointConnection.idl</DependentUpon>
     </ClInclude>
+	  <ClInclude Include="MidiClock.h">
+		  <DependentUpon>MidiClock.idl</DependentUpon>
+	  </ClInclude>
     <ClInclude Include="MidiEndpointConnection.h">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiEndpointConnectOptions.h">
-      <DependentUpon>MidiEndpointConnectOptions.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiInputEndpointConnection.h">
       <DependentUpon>MidiInputEndpointConnection.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiMessageReader.h">
-      <DependentUpon>MidiMessageReader.idl</DependentUpon>
-    </ClInclude>
+	  <ClInclude Include="MidiMessageBuffer.h">
+		  <DependentUpon>MidiMessageBuffer.idl</DependentUpon>
+	  </ClInclude>
     <ClInclude Include="MidiMessagesReceivedEventArgs.h">
       <DependentUpon>MidiMessagesReceivedEventArgs.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiMessageWriter.h">
-      <DependentUpon>MidiMessageWriter.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiOutputEndpointConnection.h">
       <DependentUpon>MidiOutputEndpointConnection.idl</DependentUpon>
@@ -202,23 +200,20 @@
     <ClCompile Include="MidiBidirectionalEndpointConnection.cpp">
       <DependentUpon>MidiBidirectionalEndpointConnection.idl</DependentUpon>
     </ClCompile>
+	  <ClCompile Include="MidiClock.cpp">
+		  <DependentUpon>MidiClock.idl</DependentUpon>
+	  </ClCompile>
     <ClCompile Include="MidiEndpointConnection.cpp">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiEndpointConnectOptions.cpp">
-      <DependentUpon>MidiEndpointConnectOptions.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiInputEndpointConnection.cpp">
       <DependentUpon>MidiInputEndpointConnection.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiMessageReader.cpp">
-      <DependentUpon>MidiMessageReader.idl</DependentUpon>
-    </ClCompile>
+	  <ClCompile Include="MidiMessageBuffer.cpp">
+		  <DependentUpon>MidiMessageBuffer.idl</DependentUpon>
+	  </ClCompile>
     <ClCompile Include="MidiMessagesReceivedEventArgs.cpp">
       <DependentUpon>MidiMessagesReceivedEventArgs.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiMessageWriter.cpp">
-      <DependentUpon>MidiMessageWriter.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiOutputEndpointConnection.cpp">
       <DependentUpon>MidiOutputEndpointConnection.idl</DependentUpon>
@@ -234,22 +229,18 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="IMidiEndpointSettingsData.idl" />
     <Midl Include="IMidiInputConnection.idl" />
     <Midl Include="IMidiMessageClientFilter.idl" />
     <Midl Include="IMidiOutputConnection.idl" />
     <Midl Include="IMidiTransportSettingsData.idl" />
-    <Midl Include="IMidiUmp128.idl" />
-    <Midl Include="IMidiUmp32.idl" />
-    <Midl Include="IMidiUmp64.idl" />
-    <Midl Include="IMidiUmp96.idl" />
     <Midl Include="MidiBidirectionalEndpointConnection.idl" />
+    <Midl Include="MidiMessageBuffer.idl" />
+    <Midl Include="MidiClock.idl" />
     <Midl Include="MidiInputEndpointConnection.idl" />
-    <Midl Include="MidiMessageReader.idl" />
+    <Midl Include="MidiMessageClientFilterStrategy.idl" />
     <Midl Include="MidiMessagesReceivedEventArgs.idl" />
     <Midl Include="MidiEndpointConnection.idl" />
-    <Midl Include="MidiEndpointConnectOptions.idl" />
-    <Midl Include="MidiMessageWriter.idl" />
+    <Midl Include="IMidiEndpointConnectionSettings.idl" />
     <Midl Include="MidiOutputEndpointConnection.idl" />
     <Midl Include="MidiSession.idl" />
     <Midl Include="MidiSessionSettings.idl" />

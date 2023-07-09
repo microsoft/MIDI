@@ -9,7 +9,8 @@
 #pragma once
 #include "MidiOutputEndpointConnection.g.h"
 #include "MidiEndpointConnection.h"
-
+#include "midi_service_interface.h"
+#include "InternalMidiDeviceConnection.h"
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
@@ -17,14 +18,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiOutputEndpointConnection() = default;
 
-        static hstring GetDeviceSelectorForOutput();
+        static hstring GetDeviceSelectorForOutput() { return L""; /* TODO */ }
 
-        winrt::Windows::Devices::Midi2::MidiMessageWriter MessageWriter() { return _messageWriter; }
+        uint32_t SendBuffer(winrt::Windows::Devices::Midi2::MidiMessageBuffer const& buffer, uint32_t byteOffsetInBuffer, uint32_t maxBytesToSend);
 
-        void Start();
+        bool Start(::Windows::Devices::Midi2::Internal::InternalMidiDeviceConnection* connection);
 
     private:
-        winrt::Windows::Devices::Midi2::MidiMessageWriter _messageWriter = nullptr;
 
     };
 }

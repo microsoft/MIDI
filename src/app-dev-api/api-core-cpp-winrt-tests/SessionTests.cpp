@@ -17,40 +17,23 @@ TEST_CASE("Create new session and endpoints")
 {
 	auto settings = MidiSessionSettings::Default();
 
-	auto session = MidiSession::CreateNewSession(L"Test Session Name", settings);
+	auto session = MidiSession::CreateSession(L"Test Session Name", settings);
 
 	REQUIRE((bool)(session.IsOpen()));
-
-	SECTION("Timestamps")
-	{
-		SECTION("MIDI timestamp appears to work")
-		{
-			std::cout << "Current timestamp: " << session.GetMidiTimestamp() << std::endl;
-			std::cout << "Current timestamp: " << session.GetMidiTimestamp() << std::endl;
-			std::cout << "Current timestamp: " << session.GetMidiTimestamp() << std::endl;
-			std::cout << "Current timestamp: " << session.GetMidiTimestamp() << std::endl;
-		}
-
-		SECTION("MIDI frequency appears to work")
-		{
-			std::cout << "Timestamp Frequency: " << session.GetMidiTimestampFrequency() << std::endl;
-		}
-
-	}
 
 	SECTION("Endpoints")
 	{
 //		hstring id1 = MIDI_SDK_LOOPBACK_SIM1_ENDPOINT_ID;
 //		hstring id2 = MIDI_SDK_LOOPBACK_SIM2_ENDPOINT_ID;
 
-		SECTION("Creating MIDI Services Sample Abstraction")
+		SECTION("Creating MIDI Services Sample Bidirectional Abstraction")
 		{
 
 			REQUIRE((bool)(session.Connections().Size() == 0));
 
 			std::cout << "Connecting to Endpoint" << std::endl;
 
-			auto conn1 = session.ConnectToEndpoint(L"foobarbaz", MidiEndpointConnectOptions::Default());
+			auto conn1 = session.ConnectBidirectionalEndpoint(L"foobarbaz", nullptr, MidiMessageClientFilterStrategy::Ignore, L"", nullptr);
 
 			REQUIRE((bool)(conn1 != nullptr));
 			REQUIRE((bool)(session.Connections().Size() == 1));
@@ -67,6 +50,12 @@ TEST_CASE("Create new session and endpoints")
 					std::cout << "Endpoint Key in Map: " << winrt::to_string(key) << std::endl;
 				}
 			);
+
+
+			SECTION("Send and receive messages")
+			{
+
+			}
 
 
 

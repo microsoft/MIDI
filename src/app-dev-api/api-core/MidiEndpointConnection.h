@@ -20,23 +20,25 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static hstring GetDeviceSelector();
 
+        hstring Id() { return _id; }
         hstring DeviceId() { return _deviceId; }
         bool IsConnected() { return _isConnected; }
+        IMidiEndpointConnectionSettings Settings() { return _settings; }
 
+        hstring Tag() { return _tag; }
+        void Tag(hstring value) { _tag = value; }
 
-        void SetOptions(MidiEndpointConnectOptions value) { _options = value; }
-        void SetUseMmcss(bool value) { _useMmcss = value; }
+        void SetSettings(IMidiEndpointConnectionSettings value) { _settings = value; }
         void SetDeviceId(hstring value) { _deviceId = value; }
 
     protected:
-        hstring _deviceId;
+        hstring _id{};
+        hstring _deviceId{};
+        hstring _tag{};
         
-        bool _useMmcss{ true };
-        DWORD _mmcssTaskId{ 0 };
-
         bool _isConnected{ false };
 
-        MidiEndpointConnectOptions _options{ nullptr };
+        IMidiEndpointConnectionSettings _settings{ nullptr };
 
     };
 }

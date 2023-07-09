@@ -17,7 +17,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiMessagesReceivedEventArgs() = default;
 
-        winrt::Windows::Devices::Midi2::IMidiInputConnection SourceMidiEndpoint();
-        hstring SourceMessageReaderId();
+        winrt::Windows::Devices::Midi2::IMidiInputConnection Source() { throw hresult_not_implemented(); }
+
+    private:
+        com_ptr<IMidiInputConnection> _source{ nullptr };
+
     };
 }

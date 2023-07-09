@@ -6,11 +6,8 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-// This is the moral equivalent of a "port" in MIDI 1.0. MIDI 2.0 UMP Endpoints are
-// almost always bidirectional. This is the main entity that applications will use
-// after creating a session
-
-import "MidiMessageWriter.idl";
+// This is the moral equivalent of an output "port" in MIDI 1.0. MIDI 2.0 UMP Endpoints are
+// almost always bidirectional.
 
 import "MidiEndpointConnection.idl";
 import "IMidiOutputConnection.idl";

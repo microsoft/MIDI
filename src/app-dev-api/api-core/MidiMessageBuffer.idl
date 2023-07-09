@@ -6,17 +6,15 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+
 namespace Windows.Devices.Midi2
 {
-	[
-		uuid(d06e3099-ce8c-4cf6-bc2c-b730cf77b555),
-		version(1.0),
-	]
-	interface IMidiUmp64
-	{
-		UInt64 Timestamp;
-		UInt32 Word1;
-		UInt32 Word2;
-	};
+    unsealed runtimeclass MidiMessageBuffer : Windows.Foundation.IMemoryBuffer
+    {
+        MidiMessageBuffer();
+        //MidiMessageBuffer(UInt32 sizeInBytes);
 
+        
+
+    };
 }

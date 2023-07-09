@@ -14,9 +14,9 @@ namespace Windows.Devices.Midi2
 	{
 		UInt64 Timestamp;
 
+		UInt32 Word0;
 		UInt32 Word1;
 		UInt32 Word2;
-		UInt32 Word3;
 	};
 
 }

@@ -10,7 +10,6 @@
 // This avoids copying data, and provides a lot more flexibility.
 
 
-import "MidiMessageReader.idl";
 import "IMidiInputConnection.idl";
 
 namespace Windows.Devices.Midi2
@@ -20,9 +19,9 @@ namespace Windows.Devices.Midi2
     {
         //MidiMessagesReceivedEventArgs();
 
-        Windows.Devices.Midi2.IMidiInputConnection SourceMidiEndpoint{ get; };
+        // TODO
 
-        String SourceMessageReaderId{ get; };
+        Windows.Devices.Midi2.IMidiInputConnection Source{ get; };
 
     }
 }

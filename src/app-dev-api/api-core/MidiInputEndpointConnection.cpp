@@ -13,37 +13,38 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-
-    hstring MidiInputEndpointConnection::GetDeviceSelectorForInput()
-    {
-        // TODO
-        return L"";
-    }
-
-
-    IFACEMETHODIMP MidiInputEndpointConnection::Callback(PVOID Data, UINT Size, LONGLONG Position)
-    {
-        // TODO: process incoming messages / fire event
-
-        // check each reader. For each reader that returns True when queried, fire off the messagesreceived event
-
-
-        return S_OK;
-    }
-
-
-    winrt::event_token MidiInputEndpointConnection::MessagesReceived(winrt::Windows::Foundation::EventHandler<winrt::Windows::Devices::Midi2::MidiMessagesReceivedEventArgs> const& handler)
+    winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiMessageClientFilter> MidiInputEndpointConnection::Filters()
     {
         throw hresult_not_implemented();
     }
-    void MidiInputEndpointConnection::MessagesReceived(winrt::event_token const& token) noexcept
+    winrt::Windows::Devices::Midi2::MidiMessageClientFilterStrategy MidiInputEndpointConnection::FilterStrategy()
+    {
+        throw hresult_not_implemented();
+    }
+    void MidiInputEndpointConnection::FilterStrategy(winrt::Windows::Devices::Midi2::MidiMessageClientFilterStrategy const& value)
+    {
+        throw hresult_not_implemented();
+    }
+    uint32_t MidiInputEndpointConnection::ReceiveBuffer(winrt::Windows::Devices::Midi2::MidiMessageBuffer const& buffer, uint32_t byteOffsetinBuffer, uint32_t maxBytesToReceive)
     {
         throw hresult_not_implemented();
     }
 
-    void MidiInputEndpointConnection::Start()
-    {
 
+
+    //IFACEMETHODIMP MidiInputEndpointConnection::Callback(PVOID Data, UINT Size, LONGLONG Position)
+    //{
+    //    // TODO: process incoming messages / fire event
+
+    //    // check each reader. For each reader that returns True when queried, fire off the messagesreceived event
+
+
+    //    return S_OK;
+    //}
+
+    bool MidiInputEndpointConnection::Start(std::shared_ptr<internal::InternalMidiDeviceConnection> deviceConnection)
+    {
+        return false;
     }
 
 }

@@ -6,8 +6,8 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-import "MidiMessagesReceivedEventArgs.idl";
-import "MidiMessageWriter.idl";
+import "MidiMessageBuffer.idl";
+
 
 namespace Windows.Devices.Midi2
 {
@@ -17,8 +17,7 @@ namespace Windows.Devices.Midi2
     ]
     interface IMidiOutputConnection
     {
-        // Use this to obtain the message writer (one per Endpoint Connection) for sending messages
-        // repeat calls to this will return the same instance
-        MidiMessageWriter MessageWriter { get; };
+
+        UInt32 SendBuffer(MidiMessageBuffer buffer, UInt32 byteOffsetInBuffer, UInt32 maxBytesToSend);
     }
 }

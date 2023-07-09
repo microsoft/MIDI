@@ -6,22 +6,27 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+#pragma once
 #include "pch.h"
-#include "MidiOutputEndpointConnection.h"
-#include "MidiOutputEndpointConnection.g.cpp"
 
+#include "MidiMessageBuffer.g.h"
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    uint32_t MidiOutputEndpointConnection::SendBuffer(winrt::Windows::Devices::Midi2::MidiMessageBuffer const& buffer, uint32_t byteOffsetInBuffer, uint32_t maxBytesToSend)
+    struct MidiMessageBuffer : MidiMessageBufferT<MidiMessageBuffer>
     {
-        throw hresult_not_implemented();
-    }
+        MidiMessageBuffer() = default;
 
-    bool MidiOutputEndpointConnection::Start(::Windows::Devices::Midi2::Internal::InternalMidiDeviceConnection* connection)
+        //MidiMessageBuffer(uint32_t sizeInBytes);
+
+
+        void Close();
+        winrt::Windows::Foundation::IMemoryBufferReference CreateReference();
+    };
+}
+namespace winrt::Windows::Devices::Midi2::factory_implementation
+{
+    struct MidiMessageBuffer : MidiMessageBufferT<MidiMessageBuffer, implementation::MidiMessageBuffer>
     {
-        return false;
-    }
-
-
+    };
 }
