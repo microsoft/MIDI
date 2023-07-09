@@ -12,6 +12,9 @@
     <ClCompile Include="ClockTests.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
+    <ClCompile Include="EndpointTests.cpp">
+      <Filter>Tests</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

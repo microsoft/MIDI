@@ -17,9 +17,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiMessageBuffer() = default;
 
-        //MidiMessageBuffer(uint32_t sizeInBytes);
-
-
+        static winrt::Windows::Devices::Midi2::MidiMessageBuffer Create(uint32_t sizeInBytes);
         void Close();
         winrt::Windows::Foundation::IMemoryBufferReference CreateReference();
     };

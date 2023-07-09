@@ -9,14 +9,14 @@ using namespace winrt;
 using namespace Windows::Devices::Midi2;
 
 
-TEST_CASE("Clock")
+TEST_CASE("Timestamp Clock")
 {
 	SECTION("MIDI timestamp appears to work")
 	{
-		std::cout << "Current timestamp: " << MidiClock::GetMidiTimestamp() << std::endl;
-		std::cout << "Current timestamp: " << MidiClock::GetMidiTimestamp() << std::endl;
-		std::cout << "Current timestamp: " << MidiClock::GetMidiTimestamp() << std::endl;
-		std::cout << "Current timestamp: " << MidiClock::GetMidiTimestamp() << std::endl;
+		for (int i = 0; i < 20; i++)
+		{
+			std::cout << "Timestamp: " << i << " : " << MidiClock::GetMidiTimestamp() << std::endl;
+		}
 	}
 
 	SECTION("MIDI frequency appears to work")

@@ -4,64 +4,28 @@
 
 #include <iostream>
 #include <algorithm>
+#include <Windows.h>
 
 using namespace winrt;
 using namespace Windows::Devices::Midi2;
 
-// Note: These will be exposed by properties in the future
 
-#define MIDI_SDK_LOOPBACK_SIM1_ENDPOINT_ID L"SWD\\MIDISDK\\MIDI_LOOPBACK1.LOOP20"
-#define MIDI_SDK_LOOPBACK_SIM2_ENDPOINT_ID L"SWD\\MIDISDK\\MIDI_LOOPBACK2.LOOP20"
-
-TEST_CASE("Create new session and endpoints")
+TEST_CASE("Create new session")
 {
-	auto settings = MidiSessionSettings::Default();
+	hstring sessionName = L"Test Session Name";
 
-	auto session = MidiSession::CreateSession(L"Test Session Name", settings);
+	auto settings = MidiSessionSettings::Default();
+	auto session = MidiSession::CreateSession(sessionName, settings);
+
+	REQUIRE((bool)(session != nullptr));
 
 	REQUIRE((bool)(session.IsOpen()));
 
-	SECTION("Endpoints")
-	{
-//		hstring id1 = MIDI_SDK_LOOPBACK_SIM1_ENDPOINT_ID;
-//		hstring id2 = MIDI_SDK_LOOPBACK_SIM2_ENDPOINT_ID;
+	REQUIRE((bool)(session.Name() == sessionName));
 
-		SECTION("Creating MIDI Services Sample Bidirectional Abstraction")
-		{
+	REQUIRE((bool)(session.Id().empty() == false));
 
-			REQUIRE((bool)(session.Connections().Size() == 0));
+	REQUIRE((bool)(session.Connections().Size() == 0));
 
-			std::cout << "Connecting to Endpoint" << std::endl;
-
-			auto conn1 = session.ConnectBidirectionalEndpoint(L"foobarbaz", nullptr, MidiMessageClientFilterStrategy::Ignore, L"", nullptr);
-
-			REQUIRE((bool)(conn1 != nullptr));
-			REQUIRE((bool)(session.Connections().Size() == 1));
-
-			std::cout << "Endpoint 1 Id: " << winrt::to_string(conn1.DeviceId()) << std::endl;
-
-			std::for_each(
-				begin(session.Connections()),
-				end(session.Connections()),
-				[](const winrt::Windows::Foundation::Collections::IKeyValuePair<hstring, winrt::Windows::Devices::Midi2::MidiEndpointConnection>& kvp)
-				{
-					hstring key = kvp.Key();
-
-					std::cout << "Endpoint Key in Map: " << winrt::to_string(key) << std::endl;
-				}
-			);
-
-
-			SECTION("Send and receive messages")
-			{
-
-			}
-
-
-
-		}
-
-	}
 
 }
-

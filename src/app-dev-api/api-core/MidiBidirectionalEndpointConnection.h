@@ -16,7 +16,9 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    struct MidiBidirectionalEndpointConnection : MidiBidirectionalEndpointConnectionT<MidiBidirectionalEndpointConnection, Windows::Devices::Midi2::implementation::MidiEndpointConnection>
+    struct MidiBidirectionalEndpointConnection : MidiBidirectionalEndpointConnectionT<MidiBidirectionalEndpointConnection, 
+        Windows::Devices::Midi2::implementation::MidiEndpointConnection,
+        IMidiCallback>
     {
         MidiBidirectionalEndpointConnection() = default;
 
@@ -28,6 +30,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         uint32_t ReceiveBuffer(winrt::Windows::Devices::Midi2::MidiMessageBuffer const& buffer, uint32_t byteOffsetinBuffer, uint32_t maxBytesToReceive);
         uint32_t SendBuffer(winrt::Windows::Devices::Midi2::MidiMessageBuffer const& buffer, uint32_t byteOffsetInBuffer, uint32_t maxBytesToSend);
+
+        void TEMPTEST_SendUmp32(winrt::Windows::Devices::Midi2::MidiUmp32 const& ump);
 
 
         bool Start(std::shared_ptr<internal::InternalMidiDeviceConnection> deviceConnection);

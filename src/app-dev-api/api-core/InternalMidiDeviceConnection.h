@@ -10,12 +10,21 @@
 #pragma once
 
 #include "pch.h"
+#include <functional>
+#include <iostream>
+
+using InternalMidiInCallbackFunc = std::function<void(PVOID, UINT32, LONGLONG)>;
+using InternalMidiInCallbackFuncVector = std::vector<InternalMidiInCallbackFunc>;
+
+#define MIDIIN_CALLBACK_FUNC_DECL(n) void n (PVOID data, UINT size, LONGLONG position)
+
+
 
 #define IMPLEMENT_MIDI_MESSAGES_RECEIVED_EVENT \
 private:\
  winrt::event<winrt::Windows::Foundation::EventHandler<winrt::Windows::Devices::Midi2::MidiMessagesReceivedEventArgs>> _messagesReceivedEvent;\
 public:\
- void InternalCallback(PVOID Data, UINT Size, LONGLONG Position);\
+ STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position;\
  inline winrt::event_token MessagesReceived(winrt::Windows::Foundation::EventHandler<winrt::Windows::Devices::Midi2::MidiMessagesReceivedEventArgs> const& handler)\
  { return _messagesReceivedEvent.add(handler); }\
  inline void MessagesReceived(winrt::event_token const& token) noexcept\
@@ -27,7 +36,7 @@ public:\
 namespace Windows::Devices::Midi2::Internal
 {
 
-	class InternalMidiDeviceConnection : IMidiCallback
+	class InternalMidiDeviceConnection : public IMidiCallback
 	{
 	public:
 		hstring DeviceId{};
@@ -42,11 +51,20 @@ namespace Windows::Devices::Midi2::Internal
 
 		// TODO: Reference to the WinRT endpoints to fire off the event
 
+		InternalMidiInCallbackFuncVector RegisteredListeners{};
 
 
 		STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position)
 		{
-			// todo: for each incoming message, send a copy to each registered endpoint
+			std::cout << __FUNCTION__ << ": message received. About to loop through registered listeners." << std::endl;
+
+			std::for_each(RegisteredListeners.begin(),
+				RegisteredListeners.end(),
+				[&Data, &Size, &Position](const InternalMidiInCallbackFunc& func)
+				{ 
+					func(Data, Size, Position); 
+				}
+			);
 
 			return S_OK;
 		}

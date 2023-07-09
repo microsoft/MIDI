@@ -24,4 +24,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
+    void MidiOutputEndpointConnection::TEMPTEST_SendUmp32(winrt::Windows::Devices::Midi2::MidiUmp32 const& ump)
+    {
+        throw hresult_not_implemented();
+    }
 }

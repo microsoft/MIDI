@@ -22,6 +22,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         uint32_t SendBuffer(winrt::Windows::Devices::Midi2::MidiMessageBuffer const& buffer, uint32_t byteOffsetInBuffer, uint32_t maxBytesToSend);
 
+        void TEMPTEST_SendUmp32(winrt::Windows::Devices::Midi2::MidiUmp32 const& ump);
+
+
+    
         bool Start(::Windows::Devices::Midi2::Internal::InternalMidiDeviceConnection* connection);
 
     private:

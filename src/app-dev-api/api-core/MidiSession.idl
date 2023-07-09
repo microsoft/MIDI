@@ -64,8 +64,8 @@ namespace Windows.Devices.Midi2
             String midiEndpointId,
             IVector<IMidiMessageClientFilter> incomingMessageFilters,
             MidiMessageClientFilterStrategy messageFilterStrategy,
-            String tag,
-            IMidiEndpointConnectionSettings settings);
+            String tag /*,
+            IMidiEndpointConnectionSettings settings */);
 
         // note that this takes the connection instance id, not the endpoint id itself
         // This will remove a single endpoint connection instance. If it's the last one

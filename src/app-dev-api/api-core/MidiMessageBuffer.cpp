@@ -13,18 +13,17 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    //MidiMessageBuffer::MidiMessageBuffer(uint32_t sizeInBytes)
-    //{
-    //    throw hresult_not_implemented();
-    //}
+    winrt::Windows::Devices::Midi2::MidiMessageBuffer MidiMessageBuffer::Create(uint32_t sizeInBytes)
+    {
+        throw hresult_not_implemented();
+    }
     void MidiMessageBuffer::Close()
     {
         throw hresult_not_implemented();
-
-
     }
     winrt::Windows::Foundation::IMemoryBufferReference MidiMessageBuffer::CreateReference()
     {
         throw hresult_not_implemented();
     }
+
 }

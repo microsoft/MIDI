@@ -16,8 +16,23 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    void MidiBidirectionalEndpointConnection::InternalCallback(PVOID Data, UINT Size, LONGLONG Position)
+    MIDIIN_CALLBACK_FUNC_DECL(MidiBidirectionalEndpointConnection::MidiInCallback)
     {
+        std::cout << __FUNCTION__ << " message(s) received" << std::endl;
+
+
+        if (_messagesReceivedEvent)
+        {
+         //   auto args = winrt::make_self<MidiMessagesReceivedEventArgs>();
+
+            // todo, set up the buffer / args
+
+
+            //_messagesReceivedEvent(this, *args);
+            _messagesReceivedEvent(*this, nullptr);
+        }
+
+
         // check if we have any filters. If not, just copy all the data over
 
         // if we do have filters, check filter strategy
@@ -67,50 +82,51 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
+    void MidiBidirectionalEndpointConnection::TEMPTEST_SendUmp32(winrt::Windows::Devices::Midi2::MidiUmp32 const& ump)
+    {
+        if (_bidiEndpoint)
+        {
+            _bidiEndpoint->SendMidiMessage((void*)&ump, sizeof(winrt::Windows::Devices::Midi2::MidiUmp32), 0);
+        }
+    }
 
 
-
-
-
-    //IFACEMETHODIMP MidiBidirectionalEndpointConnection::Callback(PVOID Data, UINT Size, LONGLONG Position)
-    //{
-    //    // TODO: process incoming messages / fire event
-
-    //    std::cout << __FUNCTION__ << " loopback message received" << std::endl;
-
-    //    //OutputDebugString(L"MidiBidirectionalEndpointConnection::Callback - loopback message received");
-
-    //    _tempMessagesReceivedFlag = true;
-
-    //    return S_OK;
-    //}
 
     // internal method to start listening for incoming messages, enable processing outgoing messages, etc.
     bool MidiBidirectionalEndpointConnection::Start(std::shared_ptr<internal::InternalMidiDeviceConnection> deviceConnection)
     {
 
+        // wire up our callback
+
+        InternalMidiInCallbackFunc callbackFunc = std::bind(&MidiBidirectionalEndpointConnection::MidiInCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+
+        deviceConnection->RegisteredListeners.push_back(callbackFunc);
+
+        _bidiEndpoint = deviceConnection->BidirectionalConnection;
+
+
 
         // Begin temporary code =============================================
 
-                    //MidiUmp32 ump;
-                    //std::cout << __FUNCTION__ << " sending message" << std::endl;
+        //MidiUmp32 ump;
+        //std::cout << __FUNCTION__ << " sending message" << std::endl;
 
-                    //umpEndpoint->SendMidiMessage((PVOID)&ump, sizeof(MidiUmp32), 0);
+        //umpEndpoint->SendMidiMessage((PVOID)&ump, sizeof(MidiUmp32), 0);
 
-                    //std::cout << __FUNCTION__ << " waiting for callback" << std::endl;
+        //std::cout << __FUNCTION__ << " waiting for callback" << std::endl;
 
-                    //int timeoutCounter = 1000;
-                    //while (!_tempMessagesReceivedFlag && timeoutCounter > 0)
-                    //{
-                    //    Sleep(10);
+        //int timeoutCounter = 1000;
+        //while (!_tempMessagesReceivedFlag && timeoutCounter > 0)
+        //{
+        //    Sleep(10);
 
-                    //    timeoutCounter--;
-                    //}
+        //    timeoutCounter--;
+        //}
 
-                    //if (!_tempMessagesReceivedFlag)
-                    //{
-                    //    std::cout << __FUNCTION__ << " Failed. Waited for messages but they never arrived. " << std::endl;
-                    //}
+        //if (!_tempMessagesReceivedFlag)
+        //{
+        //    std::cout << __FUNCTION__ << " Failed. Waited for messages but they never arrived. " << std::endl;
+        //}
         // End Temporary test code ===================================================
 
         return true;
