@@ -120,6 +120,47 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     }
 
+    // just an alignment test. Alignment is normally on 64 bit boundaries.
+    // so need to ensure that when we're reading/writing x-proc.
+    // this *should* work without packing as we always have that 64 bit timestamp
+    // which starts off the struct. But there's a potential compatibility issue
+    // with the byte buffers and with reading 32 bit words. So we really need to 
+    // align on 32 bit boundaries.
+    // Complication: https://devblogs.microsoft.com/oldnewthing/20200103-00/?p=103290
+    // Also complication: MIDL 3.0 doesn't allow packing
+    //
+    // the declspec is for things like arrays. The pack controls size. Both are needed.
+    //
+#define MIDIWORDALIGNEDSTRUCT __declspec(align(sizeof(uint32_t))) struct
+
+#pragma pack(push, 4)
+    MIDIWORDALIGNEDSTRUCT testump32
+    {
+        uint64_t timestamp;
+        uint32_t word0;
+    };
+    MIDIWORDALIGNEDSTRUCT testump64
+    {
+        uint64_t timestamp;
+        uint32_t word0;
+        uint32_t word1;
+    };
+    MIDIWORDALIGNEDSTRUCT testump96
+    {
+        uint64_t timestamp;
+        uint32_t word0;
+        uint32_t word1;
+        uint32_t word2;
+    };
+    MIDIWORDALIGNEDSTRUCT testump128
+    {
+        uint64_t timestamp;
+        uint32_t word0;
+        uint32_t word1;
+        uint32_t word2;
+        uint32_t word3;
+    };
+#pragma pack(pop)
 
     void MidiBidirectionalEndpointConnection::TEMPTEST_SendUmp32(winrt::Windows::Devices::Midi2::MidiUmp32 const& ump)
     {
@@ -129,7 +170,45 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
             if (_bidiEndpoint)
             {
-                _bidiEndpoint->SendMidiMessage((void*)&ump, sizeof(winrt::Windows::Devices::Midi2::MidiUmp32), 0);
+                // TODO: Problem: the WinRT MidiUmp32 type is 16 bytes. It should be only 12. There's an additional 4 bytes in it.
+                testump32 smallUmp32;
+                smallUmp32.timestamp = ump.Timestamp;
+                smallUmp32.word0 = ump.Word0;
+
+                //testump64 smallUmp64;
+                //smallUmp64.timestamp = ump.Timestamp;
+                //smallUmp64.word0 = ump.Word0;
+                //smallUmp64.word1 = ump.Word0;
+
+                //testump96 smallUmp96;
+                //smallUmp96.timestamp = ump.Timestamp;
+                //smallUmp96.word0 = ump.Word0;
+                //smallUmp96.word1 = ump.Word0;
+                //smallUmp96.word2 = ump.Word0;
+
+                //testump128 smallUmp128;
+                //smallUmp128.timestamp = ump.Timestamp;
+                //smallUmp128.word0 = ump.Word0;
+                //smallUmp128.word1 = ump.Word0;
+                //smallUmp128.word2 = ump.Word0;
+                //smallUmp128.word3 = ump.Word0;
+
+                size_t umpSize = sizeof(winrt::Windows::Devices::Midi2::MidiUmp32);
+
+                std::cout << "size of WinRT ump32 :  " << umpSize << " ( " << sizeof(MidiUmp32) * 8 -64 << "bits +64 for timestamp )" << std::endl;
+                std::cout << "size of WinRT ump64 :  " << sizeof(MidiUmp64) << " ( " << sizeof(MidiUmp64) * 8 - 64 << "bits +64 for timestamp )" << std::endl;
+                std::cout << "size of WinRT ump96 :  " << sizeof(MidiUmp96) << " ( " << sizeof(MidiUmp96) * 8 - 64 << "bits +64 for timestamp )" << std::endl;
+                std::cout << "size of WinRT ump128:  " << sizeof(MidiUmp128) << " ( " << sizeof(MidiUmp128) * 8 - 64 << "bits +64 for timestamp )" << std::endl;
+
+
+
+                std::cout << "size of packed ump32:  " << sizeof(testump32) << " ( " << sizeof(testump32) * 8 - 64 << "bits +64 for timestamp )" << std::endl;
+                std::cout << "size of packed ump64:  " << sizeof(testump64) << " ( " << sizeof(testump64) * 8 - 64 << "bits +64 for timestamp )" << std::endl;
+                std::cout << "size of packed ump96:  " << sizeof(testump96) << " ( " << sizeof(testump96) * 8 - 64 << "bits +64 for timestamp )" << std::endl;
+                std::cout << "size of packed ump128: " << sizeof(testump128) << " ( " << sizeof(testump128) * 8 - 64 << "bits +64 for timestamp )" << std::endl;
+
+
+                _bidiEndpoint->SendMidiMessage((void*)&ump, umpSize, 0);
             }
         }
         catch (winrt::hresult_error const& ex)

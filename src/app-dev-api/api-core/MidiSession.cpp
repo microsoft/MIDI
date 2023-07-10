@@ -227,6 +227,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // Right now, without a separate listener class, this creates a complete stream for each
         // connected endpoint, which will get expensive when folks create 16 of them for an endpoint
         // so they can have something akin to MIDI 1.0 ports (per group)
+        // COM class in C++/WinRT example. This is the way to go so as not to surface an internal WinRT class.
+        // https://learn.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/author-coclasses
+        //
+        // Use an approach like what I had planned, but properly implement a COM coclass to service the callback
+        // and call a non-COM callback in the EndpointConnection classes
 
         try
         {

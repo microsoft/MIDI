@@ -10,11 +10,11 @@
 // applications to define themselves in their native language
 namespace Windows.Devices.Midi2
 {
+
 	struct MidiUmp32
 	{
 		UInt64 Timestamp;
 
 		UInt32 Word0;
 	};
-
 }
