@@ -20,9 +20,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static hstring GetDeviceSelectorForOutput() { return L""; /* TODO */ }
 
-        uint32_t SendBuffer(winrt::Windows::Devices::Midi2::MidiMessageBuffer const& buffer, uint32_t byteOffsetInBuffer, uint32_t maxBytesToSend);
-
-        void TEMPTEST_SendUmp32(winrt::Windows::Devices::Midi2::MidiUmp32 const& ump);
+        uint32_t SendBuffer(winrt::Windows::Foundation::IMemoryBuffer const& midiData, uint32_t byteOffset, uint32_t length);
+        void SendUmp(winrt::Windows::Devices::Midi2::IMidiUmp const& ump);
 
 
     

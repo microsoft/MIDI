@@ -42,13 +42,39 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         if (_messagesReceivedEvent)
         {
-            //   auto args = winrt::make_self<MidiMessagesReceivedEventArgs>();
+            winrt::Windows::Devices::Midi2::IMidiUmp ump;
+
+            // TODO: currently this supports only one message.
+            if (Size == sizeof(intshared::PackedUmp32))
+            {
+                ump = winrt::make_self<MidiUmp32>(Data).as<IMidiUmp>();
+            }
+            else if (Size == sizeof(intshared::PackedUmp64))
+            {
+                ump = winrt::make_self<MidiUmp64>(Data).as<IMidiUmp>();
+            }
+            else if (Size == sizeof(intshared::PackedUmp96))
+            {
+                ump = winrt::make_self<MidiUmp96>(Data).as<IMidiUmp>();
+            }
+            else if (Size == sizeof(intshared::PackedUmp128))
+            {
+                ump = winrt::make_self<MidiUmp128>(Data).as<IMidiUmp>();
+            }
+            else
+            {
+                // shouldn't happen until we support more than one message
+                return E_FAIL;
+            }
+
+
+ //            auto args = winrt::make_self<winrt::Windows::Devices::Midi2::MidiMessagesReceivedEventArgs>(ump);
 
             // todo, set up the buffer / args
 
 
             //_messagesReceivedEvent(this, *args);
-            _messagesReceivedEvent(*this, nullptr);
+ //           _messagesReceivedEvent((IMidiInputConnection)(*this), args);
         }
 
         return S_OK;
@@ -103,112 +129,52 @@ namespace winrt::Windows::Devices::Midi2::implementation
         throw hresult_not_implemented();
     }
 
-    uint32_t MidiBidirectionalEndpointConnection::ReceiveBuffer(winrt::Windows::Devices::Midi2::MidiMessageBuffer const& buffer, uint32_t byteOffsetinBuffer, uint32_t maxBytesToReceive)
+    uint32_t MidiBidirectionalEndpointConnection::ReceiveBuffer(winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffsetinBuffer, uint32_t maxBytesToReceive)
     {
         throw hresult_not_implemented();
     }
 
-    uint32_t MidiBidirectionalEndpointConnection::SendBuffer(winrt::Windows::Devices::Midi2::MidiMessageBuffer const& buffer, uint32_t byteOffsetInBuffer, uint32_t maxBytesToSend)
+
+    uint32_t MidiBidirectionalEndpointConnection::SendBuffer(winrt::Windows::Foundation::IMemoryBuffer const& midiData, uint32_t byteOffset, uint32_t length)
     {
         throw hresult_not_implemented();
-
-        //buffer.data();
-
-        // return the number of bytes written
-
-
-
     }
 
-    // just an alignment test. Alignment is normally on 64 bit boundaries.
-    // so need to ensure that when we're reading/writing x-proc.
-    // this *should* work without packing as we always have that 64 bit timestamp
-    // which starts off the struct. But there's a potential compatibility issue
-    // with the byte buffers and with reading 32 bit words. So we really need to 
-    // align on 32 bit boundaries.
-    // Complication: https://devblogs.microsoft.com/oldnewthing/20200103-00/?p=103290
-    // Also complication: MIDL 3.0 doesn't allow packing
-    //
-    // the declspec is for things like arrays. The pack controls size. Both are needed.
-    //
-#define MIDIWORDALIGNEDSTRUCT __declspec(align(sizeof(uint32_t))) struct
 
-#pragma pack(push, 4)
-    MIDIWORDALIGNEDSTRUCT testump32
-    {
-        uint64_t timestamp;
-        uint32_t word0;
-    };
-    MIDIWORDALIGNEDSTRUCT testump64
-    {
-        uint64_t timestamp;
-        uint32_t word0;
-        uint32_t word1;
-    };
-    MIDIWORDALIGNEDSTRUCT testump96
-    {
-        uint64_t timestamp;
-        uint32_t word0;
-        uint32_t word1;
-        uint32_t word2;
-    };
-    MIDIWORDALIGNEDSTRUCT testump128
-    {
-        uint64_t timestamp;
-        uint32_t word0;
-        uint32_t word1;
-        uint32_t word2;
-        uint32_t word3;
-    };
-#pragma pack(pop)
 
-    void MidiBidirectionalEndpointConnection::TEMPTEST_SendUmp32(winrt::Windows::Devices::Midi2::MidiUmp32 const& ump)
+
+    void MidiBidirectionalEndpointConnection::SendUmp(winrt::Windows::Devices::Midi2::IMidiUmp const& ump)
     {
+        // TODO: most or all of this logic needs to be factored out into the internal connection object
+
         std::cout << __FUNCTION__ << " sending message to service" << std::endl;
 
         try
         {
             if (_bidiEndpoint)
             {
-                // TODO: Problem: the WinRT MidiUmp32 type is 16 bytes. It should be only 12. There's an additional 4 bytes in it.
-                testump32 smallUmp32;
-                smallUmp32.timestamp = ump.Timestamp;
-                smallUmp32.word0 = ump.Word0;
+                // https://gist.github.com/kennykerr/f1d941c2d26227abbf762481bcbd84d3
 
-                //testump64 smallUmp64;
-                //smallUmp64.timestamp = ump.Timestamp;
-                //smallUmp64.word0 = ump.Word0;
-                //smallUmp64.word1 = ump.Word0;
+                Windows::Foundation::IMemoryBuffer umpDataBuffer = ump.RawData();
 
-                //testump96 smallUmp96;
-                //smallUmp96.timestamp = ump.Timestamp;
-                //smallUmp96.word0 = ump.Word0;
-                //smallUmp96.word1 = ump.Word0;
-                //smallUmp96.word2 = ump.Word0;
+                auto ref = umpDataBuffer.CreateReference();
 
-                //testump128 smallUmp128;
-                //smallUmp128.timestamp = ump.Timestamp;
-                //smallUmp128.word0 = ump.Word0;
-                //smallUmp128.word1 = ump.Word0;
-                //smallUmp128.word2 = ump.Word0;
-                //smallUmp128.word3 = ump.Word0;
+                auto interop = ref.as<IMemoryBufferByteAccess>();
 
-                size_t umpSize = sizeof(winrt::Windows::Devices::Midi2::MidiUmp32);
+                uint8_t* umpData{};
+                uint32_t umpDataSize{};
+                check_hresult(interop->GetBuffer(&umpData, &umpDataSize));
 
-                std::cout << "size of WinRT ump32 :  " << umpSize << " ( " << sizeof(MidiUmp32) * 8 -64 << "bits +64 for timestamp )" << std::endl;
-                std::cout << "size of WinRT ump64 :  " << sizeof(MidiUmp64) << " ( " << sizeof(MidiUmp64) * 8 - 64 << "bits +64 for timestamp )" << std::endl;
-                std::cout << "size of WinRT ump96 :  " << sizeof(MidiUmp96) << " ( " << sizeof(MidiUmp96) * 8 - 64 << "bits +64 for timestamp )" << std::endl;
-                std::cout << "size of WinRT ump128:  " << sizeof(MidiUmp128) << " ( " << sizeof(MidiUmp128) * 8 - 64 << "bits +64 for timestamp )" << std::endl;
+                WINRT_ASSERT(umpDataSize == sizeof(intshared::PackedUmp32));
+
+                _bidiEndpoint->SendMidiMessage((void*)umpData, umpDataSize, 0);
 
 
-
-                std::cout << "size of packed ump32:  " << sizeof(testump32) << " ( " << sizeof(testump32) * 8 - 64 << "bits +64 for timestamp )" << std::endl;
-                std::cout << "size of packed ump64:  " << sizeof(testump64) << " ( " << sizeof(testump64) * 8 - 64 << "bits +64 for timestamp )" << std::endl;
-                std::cout << "size of packed ump96:  " << sizeof(testump96) << " ( " << sizeof(testump96) * 8 - 64 << "bits +64 for timestamp )" << std::endl;
-                std::cout << "size of packed ump128: " << sizeof(testump128) << " ( " << sizeof(testump128) * 8 - 64 << "bits +64 for timestamp )" << std::endl;
-
-
-                _bidiEndpoint->SendMidiMessage((void*)&ump, umpSize, 0);
+                std::cout << __FUNCTION__ << " message sent" << std::endl;
+            }
+            else
+            {
+                std::cout << __FUNCTION__ << " _bidiEndpoint is nullptr" << std::endl;
             }
         }
         catch (winrt::hresult_error const& ex)
@@ -220,9 +186,53 @@ namespace winrt::Windows::Devices::Midi2::implementation
             return;
         }
 
-        std::cout << __FUNCTION__ << " message sent" << std::endl;
 
     }
+
+
+    //void MidiBidirectionalEndpointConnection::TEMPTEST_SendUmp32(winrt::Windows::Devices::Midi2::MidiUmp32 const& ump)
+    //{
+    //    std::cout << __FUNCTION__ << " sending message to service" << std::endl;
+
+    //    try
+    //    {
+    //        if (_bidiEndpoint)
+    //        {
+    //            // TODO: Problem: the WinRT MidiUmp32 type is 16 bytes. It should be only 12. There's an additional 4 bytes in it.
+    //            intshared::PackedUmp32 smallUmp32;
+    //            smallUmp32.timestamp = ump.Timestamp();
+    //            smallUmp32.word0 = ump.Word0();
+
+    //            size_t umpSize = sizeof(winrt::Windows::Devices::Midi2::MidiUmp32);
+
+    //            std::cout << "size of WinRT ump32 :  " << umpSize << " ( " << sizeof(MidiUmp32) * 8 -64 << "bits +64 for timestamp )" << std::endl;
+    //            std::cout << "size of WinRT ump64 :  " << sizeof(MidiUmp64) << " ( " << sizeof(MidiUmp64) * 8 - 64 << "bits +64 for timestamp )" << std::endl;
+    //            std::cout << "size of WinRT ump96 :  " << sizeof(MidiUmp96) << " ( " << sizeof(MidiUmp96) * 8 - 64 << "bits +64 for timestamp )" << std::endl;
+    //            std::cout << "size of WinRT ump128:  " << sizeof(MidiUmp128) << " ( " << sizeof(MidiUmp128) * 8 - 64 << "bits +64 for timestamp )" << std::endl;
+
+
+
+    //            std::cout << "size of packed ump32:  " << sizeof(intshared::PackedUmp32) << " ( " << sizeof(intshared::PackedUmp32) * 8 - 64 << "bits +64 for timestamp )" << std::endl;
+    //            std::cout << "size of packed ump64:  " << sizeof(intshared::PackedUmp64) << " ( " << sizeof(intshared::PackedUmp64) * 8 - 64 << "bits +64 for timestamp )" << std::endl;
+    //            std::cout << "size of packed ump96:  " << sizeof(intshared::PackedUmp96) << " ( " << sizeof(intshared::PackedUmp96) * 8 - 64 << "bits +64 for timestamp )" << std::endl;
+    //            std::cout << "size of packed ump128: " << sizeof(intshared::PackedUmp128) << " ( " << sizeof(intshared::PackedUmp128) * 8 - 64 << "bits +64 for timestamp )" << std::endl;
+
+
+    //            _bidiEndpoint->SendMidiMessage((void*)&ump, umpSize, 0);
+    //        }
+    //    }
+    //    catch (winrt::hresult_error const& ex)
+    //    {
+    //        std::cout << __FUNCTION__ << " hresult exception sending message" << std::endl;
+    //        std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
+    //        std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
+
+    //        return;
+    //    }
+
+    //    std::cout << __FUNCTION__ << " message sent" << std::endl;
+
+    //}
 
 
 

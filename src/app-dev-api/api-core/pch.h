@@ -27,8 +27,15 @@ using namespace winrt;
 
 #include <stdint.h>
 
+// internal
 #include "midi_service_interface.h"
 #include "InternalMidiDeviceConnection.h"
 #include "ump_helpers.h"
+#include "memory_buffer.h"
+
+
+// shared
+#include <midi_ump.h>
 
 namespace internal = ::Windows::Devices::Midi2::Internal;
+namespace intshared = ::Windows::Devices::Midi2::Internal::Shared;

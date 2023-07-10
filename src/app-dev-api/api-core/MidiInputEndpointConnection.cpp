@@ -31,7 +31,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
-    uint32_t MidiInputEndpointConnection::ReceiveBuffer(winrt::Windows::Devices::Midi2::MidiMessageBuffer const& buffer, uint32_t byteOffsetinBuffer, uint32_t maxBytesToReceive)
+    uint32_t MidiInputEndpointConnection::ReceiveBuffer(winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffsetinBuffer, uint32_t maxBytesToReceive)
     {
         throw hresult_not_implemented();
     }

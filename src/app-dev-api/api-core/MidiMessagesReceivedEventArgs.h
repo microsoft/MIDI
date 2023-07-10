@@ -10,6 +10,10 @@
 #pragma once
 #include "MidiMessagesReceivedEventArgs.g.h"
 
+#include "MidiUmp32.h";
+#include "MidiUmp64.h";
+#include "MidiUmp96.h";
+#include "MidiUmp128.h";
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
@@ -17,10 +21,21 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiMessagesReceivedEventArgs() = default;
 
-        winrt::Windows::Devices::Midi2::IMidiInputConnection Source();
+        // internal constructor
+        MidiMessagesReceivedEventArgs(winrt::Windows::Devices::Midi2::IMidiUmp ump) { _ump = ump; }
+
+
+        winrt::Windows::Devices::Midi2::IMidiUmp Ump() { return _ump; }
 
     private:
-        com_ptr<IMidiInputConnection> _source{ nullptr };
+        winrt::Windows::Devices::Midi2::IMidiUmp _ump;
 
+    };
+}
+
+namespace winrt::Windows::Devices::Midi2::factory_implementation
+{
+    struct MidiMessagesReceivedEventArgs : MidiMessagesReceivedEventArgsT<MidiMessagesReceivedEventArgs, implementation::MidiMessagesReceivedEventArgs>
+    {
     };
 }

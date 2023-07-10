@@ -60,6 +60,21 @@
     <ClCompile Include="MidiMessageBuffer.cpp">
       <Filter>API\Endpoints\Data</Filter>
     </ClCompile>
+    <ClCompile Include="MidiUmp.cpp">
+      <Filter>API\Messages</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiUmp32.cpp">
+      <Filter>API\Messages</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiUmp64.cpp">
+      <Filter>API\Messages</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiUmp96.cpp">
+      <Filter>API\Messages</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiUmp128.cpp">
+      <Filter>API\Messages</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -93,6 +108,21 @@
     </ClInclude>
     <ClInclude Include="MidiMessageBuffer.h">
       <Filter>API\Endpoints\Data</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiUmp.h">
+      <Filter>API\Messages</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiUmp32.h">
+      <Filter>API\Messages</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiUmp64.h">
+      <Filter>API\Messages</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiUmp96.h">
+      <Filter>API\Messages</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiUmp128.h">
+      <Filter>API\Messages</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -155,6 +185,9 @@
     </Midl>
     <Midl Include="MidiMessageBuffer.idl">
       <Filter>API\Endpoints\Data</Filter>
+    </Midl>
+    <Midl Include="MidiUmp.idl">
+      <Filter>API\Messages</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

@@ -10,18 +10,21 @@
 // This avoids copying data, and provides a lot more flexibility.
 
 
-import "IMidiInputConnection.idl";
+//import "IMidiInputConnection.idl";
+import "IMidiUmp.idl";
 
 namespace Windows.Devices.Midi2
 {
     [default_interface]
     runtimeclass MidiMessagesReceivedEventArgs
     {
-        //MidiMessagesReceivedEventArgs();
+        MidiMessagesReceivedEventArgs();
 
         // TODO
 
-        Windows.Devices.Midi2.IMidiInputConnection Source{ get; };
+        //IMidiInputConnection Source{ get; };
+
+        IMidiUmp Ump{ get; };
 
     }
 }

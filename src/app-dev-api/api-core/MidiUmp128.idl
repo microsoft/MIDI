@@ -6,18 +6,20 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-// primarily used for working with the buffer approach. Easy enough for client
-// applications to define themselves in their native language
+// wraps the UMP type so we still quickly read/write packed data appropriately
+
+import "IMidiUmp.idl";
+
 namespace Windows.Devices.Midi2
 {
-	struct MidiUmp128
+	unsealed runtimeclass MidiUmp128 : IMidiUmp
 	{
-		UInt64 Timestamp;
+		MidiUmp128();
+		MidiUmp128(UInt64 timestamp, UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
 
-		UInt32 Word0;
-		UInt32 Word1;
-		UInt32 Word2;
-		UInt32 Word3;
+		UInt32 Word0{ get; set; };
+		UInt32 Word1{ get; set; };
+		UInt32 Word2{ get; set; };
+		UInt32 Word3{ get; set; };
 	};
-
 }

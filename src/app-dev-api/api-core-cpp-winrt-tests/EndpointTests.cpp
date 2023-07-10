@@ -65,8 +65,14 @@ TEST_CASE("Send and receive messages")
 
 	auto MessagesReceivedHandler = [&messagesReceivedFlag](Windows::Foundation::IInspectable const& sender, MidiMessagesReceivedEventArgs const& args)
 		{
+			REQUIRE((bool)(sender != nullptr));
+			REQUIRE((bool)(args != nullptr));
+
 			messagesReceivedFlag = true;
 			std::cout << "Message(s) Received " << std::endl;
+			std::cout << "MidiUmpPacketType " << (uint32_t)(args.Ump().MidiUmpPacketType()) << std::endl;
+			std::cout << "MessageType " << (uint32_t)(args.Ump().MessageType()) << std::endl;
+
 		};
 
 	auto eventRevokeToken = conn1.MessagesReceived(MessagesReceivedHandler);
@@ -76,7 +82,7 @@ TEST_CASE("Send and receive messages")
 
 	MidiUmp32 ump;
 
-	conn1.TEMPTEST_SendUmp32(ump);
+	conn1.SendUmp(ump);
 
 
 	// Wait for incoming message

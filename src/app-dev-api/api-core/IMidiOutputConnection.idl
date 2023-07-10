@@ -19,8 +19,10 @@ namespace Windows.Devices.Midi2
     interface IMidiOutputConnection
     {
 
-        UInt32 SendBuffer(MidiMessageBuffer buffer, UInt32 byteOffsetInBuffer, UInt32 maxBytesToSend);
+        // sends any number of messages
+        UInt32 SendBuffer(Windows.Foundation.IMemoryBuffer midiData, UInt32 byteOffset, UInt32 length);
 
-        void TEMPTEST_SendUmp32(MidiUmp32 ump);
+        // originally this was named "SendMessage" but forgot that clashes with windows.h sendmessage
+        void SendUmp(IMidiUmp ump);
     }
 }

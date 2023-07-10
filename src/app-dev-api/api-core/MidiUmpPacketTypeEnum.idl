@@ -6,18 +6,16 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-// wraps the UMP type so we still quickly read/write packed data appropriately
-
-import "IMidiUmp.idl";
 
 namespace Windows.Devices.Midi2
 {
-	unsealed runtimeclass MidiUmp64 : IMidiUmp
-	{
-		MidiUmp64();
-		MidiUmp64(UInt64 timestamp, UInt32 word0, UInt32 word1);
+    // can be cast to the size in MIDI Words.
 
-		UInt32 Word0{ get; set; };
-		UInt32 Word1{ get; set; };
-	};
+    enum MidiUmpPacketType
+    {
+        Ump32 = 1,
+        Ump64 = 2,
+        Ump96 = 3,
+        Ump128 = 4,
+    };
 }

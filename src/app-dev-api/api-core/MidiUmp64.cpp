@@ -7,24 +7,32 @@
 // ============================================================================
 
 #include "pch.h"
-#include "MidiOutputEndpointConnection.h"
-#include "MidiOutputEndpointConnection.g.cpp"
+#include "MidiUmp64.h"
+#include "MidiUmp64.g.cpp"
 
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-
-    bool MidiOutputEndpointConnection::Start(::Windows::Devices::Midi2::Internal::InternalMidiDeviceConnection* connection)
+    MidiUmp64::MidiUmp64(uint64_t timestamp, uint32_t word0, uint32_t word1)
     {
-        return false;
+        _ump->timestamp = timestamp;
+        _ump->word0 = word0;
+        _ump->word1 = word1;
     }
 
-    uint32_t MidiOutputEndpointConnection::SendBuffer(winrt::Windows::Foundation::IMemoryBuffer const& midiData, uint32_t byteOffset, uint32_t length)
+    // internal constructor for reading from the service callback
+    MidiUmp64::MidiUmp64(PVOID data)
     {
-        throw hresult_not_implemented();
+        WINRT_ASSERT(_ump != nullptr);
+        WINRT_ASSERT(data != nullptr);
+
+        // need to have some safeties around this
+        memcpy((void*)_ump, data, sizeof(intshared::PackedUmp64));
     }
-    void MidiOutputEndpointConnection::SendUmp(winrt::Windows::Devices::Midi2::IMidiUmp const& ump)
+
+    winrt::Windows::Foundation::IMemoryBuffer MidiUmp64::RawData()
     {
         throw hresult_not_implemented();
     }
 }
+

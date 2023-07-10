@@ -8,11 +8,16 @@
 
 #pragma once
 #include "MidiBidirectionalEndpointConnection.g.h"
-#include "MidiEndpointConnection.h"
 
+#include "MidiEndpointConnection.h"
 #include "InternalMidiDeviceConnection.h"
 #include "midi_service_interface.h";
+#include "MidiMessagesReceivedEventArgs.h";
 
+#include "MidiUmp32.h";
+#include "MidiUmp64.h";
+#include "MidiUmp96.h";
+#include "MidiUmp128.h";
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
@@ -28,10 +33,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::Windows::Devices::Midi2::MidiMessageClientFilterStrategy FilterStrategy();
         void FilterStrategy(winrt::Windows::Devices::Midi2::MidiMessageClientFilterStrategy const& value);
 
-        uint32_t ReceiveBuffer(winrt::Windows::Devices::Midi2::MidiMessageBuffer const& buffer, uint32_t byteOffsetinBuffer, uint32_t maxBytesToReceive);
-        uint32_t SendBuffer(winrt::Windows::Devices::Midi2::MidiMessageBuffer const& buffer, uint32_t byteOffsetInBuffer, uint32_t maxBytesToSend);
+        uint32_t ReceiveBuffer(winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffsetinBuffer, uint32_t maxBytesToReceive);
 
-        void TEMPTEST_SendUmp32(winrt::Windows::Devices::Midi2::MidiUmp32 const& ump);
+        uint32_t SendBuffer(winrt::Windows::Foundation::IMemoryBuffer const& midiData, uint32_t byteOffset, uint32_t length);
+        void SendUmp(winrt::Windows::Devices::Midi2::IMidiUmp const& ump);
 
 
         bool Start(std::shared_ptr<internal::InternalMidiDeviceConnection> deviceConnection);

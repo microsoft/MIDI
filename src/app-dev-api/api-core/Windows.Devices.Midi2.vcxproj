@@ -165,6 +165,7 @@
   <ItemGroup>
     <ClInclude Include="InternalMidiDeviceConnection.h">
     </ClInclude>
+    <ClInclude Include="memory_buffer.h" />
     <ClInclude Include="MidiBidirectionalEndpointConnection.h">
       <DependentUpon>MidiBidirectionalEndpointConnection.idl</DependentUpon>
     </ClInclude>
@@ -188,6 +189,18 @@
     </ClInclude>
     <ClInclude Include="MidiSessionSettings.h">
       <DependentUpon>MidiSessionSettings.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiUmp128.h">
+      <DependentUpon>MidiUmp128.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiUmp32.h">
+      <DependentUpon>MidiUmp32.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiUmp64.h">
+      <DependentUpon>MidiUmp64.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiUmp96.h">
+      <DependentUpon>MidiUmp96.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="midi_service_interface.h" />
     <ClInclude Include="ump_helpers.h" />
@@ -225,6 +238,18 @@
     <ClCompile Include="MidiSession.cpp">
       <DependentUpon>MidiSession.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiUmp128.cpp">
+      <DependentUpon>MidiUmp128.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiUmp32.cpp">
+      <DependentUpon>MidiUmp32.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiUmp64.cpp">
+      <DependentUpon>MidiUmp64.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiUmp96.cpp">
+      <DependentUpon>MidiUmp96.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -245,11 +270,13 @@
     <Midl Include="MidiOutputEndpointConnection.idl" />
     <Midl Include="MidiSession.idl" />
     <Midl Include="MidiSessionSettings.idl" />
+    <Midl Include="IMidiUmp.idl" />
     <Midl Include="MidiUmp128.idl" />
     <Midl Include="MidiUmp32.idl" />
     <Midl Include="MidiUmp64.idl" />
     <Midl Include="MidiUmp96.idl" />
-    <Midl Include="MidiUmpSizeEnum.idl" />
+    <Midl Include="MidiUmpMessageTypeEnum.idl" />
+    <Midl Include="MidiUmpPacketTypeEnum.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />

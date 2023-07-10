@@ -27,7 +27,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiMessageClientFilter> Filters();
         winrt::Windows::Devices::Midi2::MidiMessageClientFilterStrategy FilterStrategy();
         void FilterStrategy(winrt::Windows::Devices::Midi2::MidiMessageClientFilterStrategy const& value);
-        uint32_t ReceiveBuffer(winrt::Windows::Devices::Midi2::MidiMessageBuffer const& buffer, uint32_t byteOffsetinBuffer, uint32_t maxBytesToReceive);
+        uint32_t ReceiveBuffer(winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffsetinBuffer, uint32_t maxBytesToReceive);
 
         bool Start(std::shared_ptr<internal::InternalMidiDeviceConnection> deviceConnection);
 

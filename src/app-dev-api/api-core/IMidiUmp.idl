@@ -7,15 +7,21 @@
 // ============================================================================
 
 
+// wraps the UMP type so we still quickly read/write packed data appropriately
+
+import "MidiUmpPacketTypeEnum.idl";
+import "MidiUmpMessageTypeEnum.idl";
+
 namespace Windows.Devices.Midi2
 {
-    // the size in MIDI Words.
+	interface IMidiUmp
+	{
+		UInt64 Timestamp { get; set; };
 
-    enum MidiUmpSize
-    {
-        Ump32 = 1,
-        Ump64 = 2,
-        Ump96 = 3,
-        Ump128 = 4,
-    };
+		MidiUmpMessageType MessageType{ get; };
+		MidiUmpPacketType MidiUmpPacketType{ get; };		// you can also get the equivalent with a cast
+
+		Windows.Foundation.IMemoryBuffer RawData{ get; };
+
+	};
 }

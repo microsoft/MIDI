@@ -24,7 +24,7 @@ namespace Windows.Devices.Midi2
         MidiMessageClientFilterStrategy FilterStrategy{ get; set; };
 
 
-        UInt32 ReceiveBuffer(MidiMessageBuffer buffer, UInt32 byteOffsetInBuffer, UInt32 maxBytesToReceive);
+        UInt32 ReceiveBuffer(Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffsetInBuffer, UInt32 maxBytesToReceive);
 
         // notification that there are new messages received. Optional.
         event Windows.Foundation.EventHandler<MidiMessagesReceivedEventArgs> MessagesReceived;
