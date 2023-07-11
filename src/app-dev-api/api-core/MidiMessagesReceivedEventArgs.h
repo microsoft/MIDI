@@ -25,12 +25,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
         //MidiMessagesReceivedEventArgs(winrt::Windows::Devices::Midi2::IMidiUmp ump) { _ump = ump; }
 
         // internal
-   //     void Ump(winrt::com_ptr<IMidiUmp> value) { _ump = value; }
+        void Ump(winrt::Windows::Devices::Midi2::IMidiUmp value) { _ump = value; }
 
- //       winrt::Windows::Devices::Midi2::IMidiUmp Ump() { return *_ump; }
+        winrt::Windows::Devices::Midi2::IMidiUmp Ump() { return _ump; }
 
     private:
-        winrt::com_ptr<winrt::Windows::Devices::Midi2::IMidiUmp> _ump;
+        winrt::Windows::Devices::Midi2::IMidiUmp _ump;
 
     };
 }

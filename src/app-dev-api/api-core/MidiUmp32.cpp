@@ -35,6 +35,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         check_hresult(interop->GetBuffer(&bufferData, &capacity));
         WINRT_ASSERT(capacity == capacity);
 
+        memset(bufferData, 0, capacity);
+
         // assign the pointer to our UMP structure for ease of access
         _ump = reinterpret_cast<intshared::PackedUmp32*>(bufferData);
     }
@@ -50,7 +52,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     // internal constructor for reading from the service callback
-    void MidiUmp32::SetData(PVOID data)
+    MidiUmp32::MidiUmp32(PVOID data)
+        : MidiUmp32()
     {
         WINRT_ASSERT(_ump != nullptr);
         WINRT_ASSERT(data != nullptr);
@@ -74,4 +77,5 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return destination;
 
     }
+
 }

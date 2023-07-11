@@ -22,7 +22,7 @@ namespace Windows.Devices.Midi2
 	{
 		UInt64 Timestamp { get; set; };
 
-		MidiUmpMessageType MessageType{ get; };
+		MidiUmpMessageType MessageType{ get; set; };
 		MidiUmpPacketType MidiUmpPacketType{ get; };		// you can also get the equivalent with a cast
 
 		Windows.Foundation.IMemoryBuffer RawData{ get; };

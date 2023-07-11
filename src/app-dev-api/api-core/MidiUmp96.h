@@ -21,7 +21,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         MidiUmp96(uint64_t timestamp, uint32_t word0, uint32_t word1, uint32_t word2);
 
         // internal
-        void SetData(PVOID data);
+        MidiUmp96(PVOID data);
 
 
         uint32_t Word0() { return _ump->word0; }
@@ -36,8 +36,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint64_t Timestamp() { return _ump->timestamp; }
         void Timestamp(uint64_t value) { _ump->timestamp = value; }
 
-
         winrt::Windows::Devices::Midi2::MidiUmpMessageType MessageType() { return (winrt::Windows::Devices::Midi2::MidiUmpMessageType)(internal::GetUmpMessageTypeFromFirstWord(_ump->word0)); }
+        void MessageType(winrt::Windows::Devices::Midi2::MidiUmpMessageType const& value) { internal::SetUmpMessageType(_ump->word0, (uint8_t)value); }
+
         winrt::Windows::Devices::Midi2::MidiUmpPacketType MidiUmpPacketType() { return winrt::Windows::Devices::Midi2::MidiUmpPacketType::Ump96; }
 
         winrt::Windows::Foundation::IMemoryBuffer RawData();

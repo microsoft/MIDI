@@ -15,6 +15,9 @@
     <ClCompile Include="EndpointTests.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
+    <ClCompile Include="UmpTests.cpp">
+      <Filter>Tests</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

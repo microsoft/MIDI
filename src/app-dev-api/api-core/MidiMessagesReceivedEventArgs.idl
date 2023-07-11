@@ -24,7 +24,7 @@ namespace Windows.Devices.Midi2
 
         //IMidiInputConnection Source{ get; };
 
- //       IMidiUmp Ump{ get; };
+        IMidiUmp Ump{ get; };
 
     }
 }
