@@ -8,7 +8,7 @@
 
 import "MidiMessageBuffer.idl";
 
-import "MidiUmp32.idl";
+import "IMidiUmp.idl";
 
 namespace Windows.Devices.Midi2
 {

@@ -20,7 +20,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         MidiUmp64(uint64_t timestamp, uint32_t word0, uint32_t word1);
 
         // internal
-        MidiUmp64(PVOID data);
+        void SetData(PVOID data);
 
         uint32_t Word0() { return _ump->word0; }
         void Word0(uint32_t value) { _ump->word0 = value; }

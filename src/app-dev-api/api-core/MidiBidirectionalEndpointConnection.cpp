@@ -22,7 +22,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     IFACEMETHODIMP MidiBidirectionalEndpointConnection::Callback(PVOID Data, UINT Size, LONGLONG Position)
     {
-        std::cout << __FUNCTION__ << " message(s) received" << std::endl;
+        std::cout << __FUNCTION__ << " message(s) received. Data Size is " << Size << std::endl;
 
 
         // check if we have any filters. If not, just copy all the data over
@@ -42,39 +42,42 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         if (_messagesReceivedEvent)
         {
-            winrt::Windows::Devices::Midi2::IMidiUmp ump;
-
-            // TODO: currently this supports only one message.
-            if (Size == sizeof(intshared::PackedUmp32))
-            {
-                ump = winrt::make_self<MidiUmp32>(Data).as<IMidiUmp>();
-            }
-            else if (Size == sizeof(intshared::PackedUmp64))
-            {
-                ump = winrt::make_self<MidiUmp64>(Data).as<IMidiUmp>();
-            }
-            else if (Size == sizeof(intshared::PackedUmp96))
-            {
-                ump = winrt::make_self<MidiUmp96>(Data).as<IMidiUmp>();
-            }
-            else if (Size == sizeof(intshared::PackedUmp128))
-            {
-                ump = winrt::make_self<MidiUmp128>(Data).as<IMidiUmp>();
-            }
-            else
-            {
-                // shouldn't happen until we support more than one message
-                return E_FAIL;
-            }
+        //    auto args = winrt::make_self<winrt::Windows::Devices::Midi2::MidiMessagesReceivedEventArgs>();
 
 
- //            auto args = winrt::make_self<winrt::Windows::Devices::Midi2::MidiMessagesReceivedEventArgs>(ump);
+            //winrt::com_ptr<winrt::Windows::Devices::Midi2::IMidiUmp> ump;
 
+            //// TODO: currently this supports only one message.
+            //if (Size == sizeof(intshared::PackedUmp32))
+            //{
+            //    ump = winrt::make_self<MidiUmp32>(Data).as<IMidiUmp>();
+            //}
+            //else if (Size == sizeof(intshared::PackedUmp64))
+            //{
+            //    ump = winrt::make_self<MidiUmp64>(Data).as<IMidiUmp>();
+            //}
+            //else if (Size == sizeof(intshared::PackedUmp96))
+            //{
+            //    ump = winrt::make_self<MidiUmp96>(Data).as<IMidiUmp>();
+            //}
+            //else if (Size == sizeof(intshared::PackedUmp128))
+            //{
+            //    ump = winrt::make_self<MidiUmp128>(Data).as<IMidiUmp>();
+            //}
+            //else
+            //{
+            //    // shouldn't happen until we support more than one message
+            //    return E_FAIL;
+            //}
+
+
+ 
             // todo, set up the buffer / args
 
 
-            //_messagesReceivedEvent(this, *args);
- //           _messagesReceivedEvent((IMidiInputConnection)(*this), args);
+            _messagesReceivedEvent(*this, nullptr);
+            //_messagesReceivedEvent(*this, *args);
+            //           _messagesReceivedEvent((IMidiInputConnection)(*this), args);
         }
 
         return S_OK;

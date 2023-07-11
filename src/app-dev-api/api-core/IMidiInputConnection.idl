@@ -9,7 +9,7 @@
 import "MidiMessagesReceivedEventArgs.idl";
 import "IMidiMessageClientFilter.idl";
 import "MidiMessageClientFilterStrategy.idl";
-import "MidiMessageBuffer.idl";
+//import "MidiMessageBuffer.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -27,6 +27,6 @@ namespace Windows.Devices.Midi2
         UInt32 ReceiveBuffer(Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffsetInBuffer, UInt32 maxBytesToReceive);
 
         // notification that there are new messages received. Optional.
-        event Windows.Foundation.EventHandler<MidiMessagesReceivedEventArgs> MessagesReceived;
+        event Windows.Foundation.TypedEventHandler<IInspectable, MidiMessagesReceivedEventArgs> MessagesReceived;
     }
 }

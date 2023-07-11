@@ -14,6 +14,10 @@ import "MidiUmpMessageTypeEnum.idl";
 
 namespace Windows.Devices.Midi2
 {
+	[
+		uuid(2eb5df8a-d751-4997-bf96-ba9a531fd5ff),
+		version(1.0),
+	]
 	interface IMidiUmp
 	{
 		UInt64 Timestamp { get; set; };

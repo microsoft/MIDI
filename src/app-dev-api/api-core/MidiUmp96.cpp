@@ -21,7 +21,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     // internal constructor for reading from the service callback
-    MidiUmp96::MidiUmp96(PVOID data)
+    void MidiUmp96::SetData(PVOID data)
     {
         WINRT_ASSERT(_ump != nullptr);
         WINRT_ASSERT(data != nullptr);

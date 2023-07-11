@@ -70,8 +70,8 @@ TEST_CASE("Send and receive messages")
 
 			messagesReceivedFlag = true;
 			std::cout << "Message(s) Received " << std::endl;
-			std::cout << "MidiUmpPacketType " << (uint32_t)(args.Ump().MidiUmpPacketType()) << std::endl;
-			std::cout << "MessageType " << (uint32_t)(args.Ump().MessageType()) << std::endl;
+//			std::cout << "MidiUmpPacketType " << (uint32_t)(args.Ump().MidiUmpPacketType()) << std::endl;
+//			std::cout << "MessageType " << (uint32_t)(args.Ump().MessageType()) << std::endl;
 
 		};
 
