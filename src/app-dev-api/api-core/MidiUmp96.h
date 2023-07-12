@@ -18,10 +18,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
     struct MidiUmp96 : MidiUmp96T<MidiUmp96>
     {
         MidiUmp96() = default;
-        MidiUmp96(uint64_t timestamp, uint32_t word0, uint32_t word1, uint32_t word2);
+        MidiUmp96(internal::MidiTimestamp timestamp, uint32_t word0, uint32_t word1, uint32_t word2);
 
         // internal
-        MidiUmp96(PVOID data);
+        MidiUmp96(internal::MidiTimestamp timestamp, PVOID data);
 
 
         uint32_t Word0() { return _ump->word0; }
@@ -33,8 +33,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint32_t Word2() { return _ump->word2; }
         void Word2(uint32_t value) { _ump->word2 = value; }
 
-        uint64_t Timestamp() { return _ump->timestamp; }
-        void Timestamp(uint64_t value) { _ump->timestamp = value; }
+        internal::MidiTimestamp Timestamp() { return _timestamp; }
+        void Timestamp(internal::MidiTimestamp value) { _timestamp = value; }
 
         winrt::Windows::Devices::Midi2::MidiUmpMessageType MessageType() { return (winrt::Windows::Devices::Midi2::MidiUmpMessageType)(internal::GetUmpMessageTypeFromFirstWord(_ump->word0)); }
         void MessageType(winrt::Windows::Devices::Midi2::MidiUmpMessageType const& value) { internal::SetUmpMessageType(_ump->word0, (uint8_t)value); }
@@ -44,7 +44,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::Windows::Foundation::IMemoryBuffer RawData();
 
     private:
-        intshared::PackedUmp96* _ump{};
+        internal::MidiTimestamp _timestamp{};
+
+        Windows::Foundation::MemoryBuffer _umpBackingStore = Windows::Foundation::MemoryBuffer(sizeof(internal::PackedUmp96));
+
+        internal::PackedUmp96* _ump{};
 
     };
 }

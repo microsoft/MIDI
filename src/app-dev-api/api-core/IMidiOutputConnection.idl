@@ -20,9 +20,8 @@ namespace Windows.Devices.Midi2
     {
 
         // sends any number of messages
-        UInt32 SendBuffer(Windows.Foundation.IMemoryBuffer midiData, UInt32 byteOffset, UInt32 length);
+        UInt32 SendBuffer(UInt64 timestamp, Windows.Foundation.IMemoryBuffer midiData, UInt32 byteOffset, UInt32 length);
 
-        // originally this was named "SendMessage" but forgot that clashes with windows.h sendmessage
         void SendUmp(IMidiUmp ump);
-    }
+}
 }

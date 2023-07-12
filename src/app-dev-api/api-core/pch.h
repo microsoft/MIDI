@@ -38,4 +38,5 @@ using namespace winrt;
 #include <midi_ump.h>
 
 namespace internal = ::Windows::Devices::Midi2::Internal;
-namespace intshared = ::Windows::Devices::Midi2::Internal::Shared;
+//namespace intshared = ::Windows::Devices::Midi2::Internal::Shared;
+//namespace intump = ::Windows::Devices::Midi2::Internal::SharedUmp;

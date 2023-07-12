@@ -9,7 +9,7 @@
 using namespace winrt;
 using namespace Windows::Devices::Midi2;
 
-TEST_CASE("Create endpoint")
+TEST_CASE("Create bidirectional endpoint")
 {
 	auto settings = MidiSessionSettings::Default();
 	auto session = MidiSession::CreateSession(L"Test Session Name", settings);
@@ -48,11 +48,9 @@ TEST_CASE("Create endpoint")
 TEST_CASE("Send and receive messages")
 {
 	auto settings = MidiSessionSettings::Default();
-
 	auto session = MidiSession::CreateSession(L"Test Session Name", settings);
 
 	REQUIRE((bool)(session.IsOpen()));
-
 	REQUIRE((bool)(session.Connections().Size() == 0));
 
 	std::cout << "Connecting to Endpoint" << std::endl;
@@ -62,11 +60,22 @@ TEST_CASE("Send and receive messages")
 	REQUIRE((bool)(conn1 != nullptr));
 
 	bool messagesReceivedFlag = false;
+	MidiUmp32 sentUmp;
 
-	auto MessagesReceivedHandler = [&messagesReceivedFlag](Windows::Foundation::IInspectable const& sender, MidiMessagesReceivedEventArgs const& args)
+	auto sentMessageType = MidiUmpMessageType::Midi1ChannelVoice32;
+	auto sentTimestamp = MidiClock::GetMidiTimestamp();
+
+	auto MessagesReceivedHandler = [&messagesReceivedFlag, &sentMessageType, &sentTimestamp](Windows::Foundation::IInspectable const& sender, MidiMessagesReceivedEventArgs const& args)
 		{
 			REQUIRE((bool)(sender != nullptr));
 			REQUIRE((bool)(args != nullptr));
+
+			// making an assumption on type here.
+			MidiUmp32 receivedUmp = args.Ump().as<MidiUmp32>();
+
+			REQUIRE(receivedUmp != nullptr);
+			REQUIRE(receivedUmp.MessageType() == sentMessageType);
+			REQUIRE(receivedUmp.Timestamp() == sentTimestamp);
 
 			messagesReceivedFlag = true;
 			std::cout << "Message(s) Received in test event handler " << std::endl;
@@ -80,19 +89,17 @@ TEST_CASE("Send and receive messages")
 
 	// send message
 
-	MidiUmp32 ump;
-	ump.MessageType(MidiUmpMessageType::Midi1ChannelVoice32);
-
-	ump.Timestamp(MidiClock::GetMidiTimestamp());
+	sentUmp.MessageType(MidiUmpMessageType::Midi1ChannelVoice32);
+	sentUmp.Timestamp(sentTimestamp);
 
 
 
 
-	std::cout << "Sending MidiUmpPacketType from test" << std::hex << (uint32_t)(ump.MidiUmpPacketType()) << std::endl;
-	std::cout << " - Timestamp " << std::hex << (uint64_t)(ump.Timestamp()) << std::endl;
-	std::cout << " - MessageType " << std::hex << (uint8_t)(ump.MessageType()) << std::endl;
+	std::cout << "Sending MidiUmpPacketType from test" << std::hex << (uint32_t)(sentUmp.MidiUmpPacketType()) << std::endl;
+	std::cout << " - Timestamp " << std::hex << (uint64_t)(sentUmp.Timestamp()) << std::endl;
+	std::cout << " - MessageType " << std::hex << (uint8_t)(sentUmp.MessageType()) << std::endl;
 
-	conn1.SendUmp(ump);
+	conn1.SendUmp(sentUmp);
 
 
 	// Wait for incoming message

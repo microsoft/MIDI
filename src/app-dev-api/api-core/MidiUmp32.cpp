@@ -22,7 +22,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // and still allows us to use the buffer type with the rest of WinRT
         // and with the service communication.
 
-        uint32_t capacity = sizeof(intshared::PackedUmp32);
+        uint32_t capacity = sizeof(internal::PackedUmp32);
 
         Windows::Foundation::IMemoryBufferReference ref = _umpBackingStore.CreateReference();
         WINRT_ASSERT(ref.Capacity() == capacity);
@@ -38,28 +38,31 @@ namespace winrt::Windows::Devices::Midi2::implementation
         memset(bufferData, 0, capacity);
 
         // assign the pointer to our UMP structure for ease of access
-        _ump = reinterpret_cast<intshared::PackedUmp32*>(bufferData);
+        //_ump = reinterpret_cast<internal::PackedUmp32*>(bufferData);
+        _ump = (internal::PackedUmp32*)(bufferData);
     }
 
-    MidiUmp32::MidiUmp32(uint64_t timestamp, uint32_t word0)
+    MidiUmp32::MidiUmp32(internal::MidiTimestamp timestamp, uint32_t word0)
         : MidiUmp32()
     {
 
         WINRT_ASSERT(_ump != nullptr);
 
-        _ump->timestamp = timestamp;
+        _timestamp = timestamp;
         _ump->word0 = word0;
     }
 
     // internal constructor for reading from the service callback
-    MidiUmp32::MidiUmp32(PVOID data)
+    MidiUmp32::MidiUmp32(internal::MidiTimestamp timestamp, PVOID data)
         : MidiUmp32()
     {
         WINRT_ASSERT(_ump != nullptr);
         WINRT_ASSERT(data != nullptr);
 
+        _timestamp = timestamp;
+
         // need to have some safeties around this
-        memcpy((void*)_ump, data, sizeof(intshared::PackedUmp32));
+        memcpy((void*)_ump, data, sizeof(internal::PackedUmp32));
     }
 
     winrt::Windows::Foundation::IMemoryBuffer MidiUmp32::RawData()
@@ -68,7 +71,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         auto sourceInterop = sourceRef.as<IMemoryBufferByteAccess>();
 
 
-        auto destination = Windows::Foundation::MemoryBuffer(sizeof(intshared::PackedUmp32));
+        auto destination = Windows::Foundation::MemoryBuffer(sizeof(internal::PackedUmp32));
         auto destinationRef = destination.CreateReference();
         auto destinationInterop = destinationRef.as<IMemoryBufferByteAccess>();
         

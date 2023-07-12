@@ -12,10 +12,13 @@
     <ClCompile Include="ClockTests.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
-    <ClCompile Include="EndpointTests.cpp">
+    <ClCompile Include="BidirectionalEndpointTests.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
     <ClCompile Include="UmpTests.cpp">
+      <Filter>Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="UmpHelperTests.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
   </ItemGroup>

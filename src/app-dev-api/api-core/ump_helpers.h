@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <pch.h>
+//#include <pch.h>
 
 #define MIDIWORDNIBBLE1(x) ((uint8_t)((x & 0xF0000000) >> 28))
 #define MIDIWORDNIBBLE2(x) ((uint8_t)((x & 0x0F000000) >> 24))
@@ -18,21 +18,8 @@
 
 namespace Windows::Devices::Midi2::Internal
 {
-    inline void SetUmpMessageType(std::uint32_t& firstWord, const uint8_t messageType)
-    {
-        // first four bits of the word is the message type
-
-        uint32_t t = messageType;
-        t <<= 28;
-
-        firstWord |= t;
-    }
 
 
-    inline std::uint8_t GetUmpMessageTypeFromFirstWord(const std::uint32_t firstWord)
-	{
-		return (uint8_t)(MIDIWORDNIBBLE1(firstWord));
-	}
 
     inline std::uint8_t GetUmpLengthInMidiWordsFromMessageType(const std::uint8_t messageType)
     {
@@ -65,15 +52,32 @@ namespace Windows::Devices::Midi2::Internal
 
     }
     
-    inline std::uint8_t GetUmpLengthInMidiWordsFromFirstWord(const std::uint32_t firstWord)
-	{
-        return GetUmpLengthInMidiWordsFromMessageType(GetUmpMessageTypeFromFirstWord(firstWord));
-	}
 
-	inline std::uint8_t GetUmpLengthInBytesFromFirstWord(const std::uint32_t firstWord)
-	{
-		return (uint8_t)(GetUmpLengthInMidiWordsFromFirstWord(firstWord) * sizeof(uint32_t));
-	}
+
+    inline void SetUmpMessageType(std::uint32_t& firstWord, const uint8_t messageType)
+    {
+        // first four bits of the word is the message type
+
+        uint32_t t = ((uint32_t)(messageType & 0x0F) << 28);
+        
+        firstWord = (firstWord & 0x0FFFFFFF) | t;
+    }
+
+    inline std::uint8_t GetUmpMessageTypeFromFirstWord(const std::uint32_t firstWord)
+    {
+        return (uint8_t)(MIDIWORDNIBBLE1(firstWord));
+    }
+
+    inline std::uint8_t GetUmpLengthInMidiWordsFromFirstWord(const std::uint32_t firstWord)
+    {
+        return GetUmpLengthInMidiWordsFromMessageType(GetUmpMessageTypeFromFirstWord(firstWord));
+    }
+
+
+    inline std::uint8_t GetUmpLengthInBytesFromFirstWord(const std::uint32_t firstWord)
+    {
+        return (uint8_t)(GetUmpLengthInMidiWordsFromFirstWord(firstWord) * sizeof(uint32_t));
+    }
 
 
 }

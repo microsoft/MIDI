@@ -18,16 +18,16 @@ namespace winrt::Windows::Devices::Midi2::implementation
     struct MidiUmp32 : MidiUmp32T<MidiUmp32>
     {
         MidiUmp32();
-        MidiUmp32(uint64_t timestamp, uint32_t word0);
+        MidiUmp32(internal::MidiTimestamp timestamp, uint32_t word0);
 
         // internal
-        MidiUmp32(PVOID data);
+        MidiUmp32(internal::MidiTimestamp timestamp, PVOID data);
 
         uint32_t Word0() { return _ump->word0; }
         void Word0(uint32_t value) { _ump->word0 = value; }
 
-        uint64_t Timestamp() { return _ump->timestamp; }
-        void Timestamp(uint64_t value) { _ump->timestamp = value; }
+        internal::MidiTimestamp Timestamp() { return _timestamp; }
+        void Timestamp(internal::MidiTimestamp value) { _timestamp = value; }
 
         winrt::Windows::Devices::Midi2::MidiUmpMessageType MessageType() { return (winrt::Windows::Devices::Midi2::MidiUmpMessageType)(internal::GetUmpMessageTypeFromFirstWord(_ump->word0)); }
         void MessageType(winrt::Windows::Devices::Midi2::MidiUmpMessageType const& value) { internal::SetUmpMessageType(_ump->word0, (uint8_t)value); }
@@ -37,9 +37,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::Windows::Foundation::IMemoryBuffer RawData();
 
     private:
-        Windows::Foundation::MemoryBuffer _umpBackingStore = Windows::Foundation::MemoryBuffer(sizeof(intshared::PackedUmp32));
+        internal::MidiTimestamp _timestamp{};
 
-        intshared::PackedUmp32* _ump{ nullptr };
+        Windows::Foundation::MemoryBuffer _umpBackingStore = Windows::Foundation::MemoryBuffer(sizeof(internal::PackedUmp32));
+        internal::PackedUmp32* _ump{ nullptr };
 
     };
 }
