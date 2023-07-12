@@ -36,13 +36,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         winrt::Windows::Foundation::IMemoryBuffer RawData();
 
-        internal::PackedUmp32* PackedUmpPointer() { return _ump; }
+        // internal for the sending code
+        internal::PackedUmp32* GetPackedUmpPointer() { return _ump.get(); }
 
     private:
         internal::MidiTimestamp _timestamp{};
 
         Windows::Foundation::MemoryBuffer _umpBackingStore = Windows::Foundation::MemoryBuffer(sizeof(internal::PackedUmp32));
-        internal::PackedUmp32* _ump{ nullptr };
+        std::unique_ptr<internal::PackedUmp32> _ump{ nullptr };
 
     };
 }

@@ -60,9 +60,6 @@
     <ClCompile Include="MidiMessageBuffer.cpp">
       <Filter>API\Endpoints\Data</Filter>
     </ClCompile>
-    <ClCompile Include="MidiUmp.cpp">
-      <Filter>API\Messages</Filter>
-    </ClCompile>
     <ClCompile Include="MidiUmp32.cpp">
       <Filter>API\Messages</Filter>
     </ClCompile>
@@ -109,9 +106,6 @@
     <ClInclude Include="MidiMessageBuffer.h">
       <Filter>API\Endpoints\Data</Filter>
     </ClInclude>
-    <ClInclude Include="MidiUmp.h">
-      <Filter>API\Messages</Filter>
-    </ClInclude>
     <ClInclude Include="MidiUmp32.h">
       <Filter>API\Messages</Filter>
     </ClInclude>
@@ -124,6 +118,7 @@
     <ClInclude Include="MidiUmp128.h">
       <Filter>API\Messages</Filter>
     </ClInclude>
+    <ClInclude Include="memory_buffer.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiSession.idl">
@@ -135,7 +130,7 @@
     <Midl Include="IMidiTransportSettingsData.idl">
       <Filter>API\Transports</Filter>
     </Midl>
-    <Midl Include="MidiMessagesReceivedEventArgs.idl">
+    <Midl Include="MidiMessageReceivedEventArgs.idl">
       <Filter>API\Endpoints</Filter>
     </Midl>
     <Midl Include="MidiUmp32.idl">
@@ -150,13 +145,7 @@
     <Midl Include="MidiUmp128.idl">
       <Filter>API\Messages</Filter>
     </Midl>
-    <Midl Include="MidiUmpSizeEnum.idl">
-      <Filter>API\Messages</Filter>
-    </Midl>
     <Midl Include="IMidiInputConnection.idl">
-      <Filter>API\Endpoints\Contracts</Filter>
-    </Midl>
-    <Midl Include="IMidiMessageClientFilter.idl">
       <Filter>API\Endpoints\Contracts</Filter>
     </Midl>
     <Midl Include="IMidiOutputConnection.idl">
@@ -186,7 +175,13 @@
     <Midl Include="MidiMessageBuffer.idl">
       <Filter>API\Endpoints\Data</Filter>
     </Midl>
-    <Midl Include="MidiUmp.idl">
+    <Midl Include="IMidiUmp.idl">
+      <Filter>API\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiUmpMessageTypeEnum.idl">
+      <Filter>API\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiUmpPacketTypeEnum.idl">
       <Filter>API\Messages</Filter>
     </Midl>
   </ItemGroup>

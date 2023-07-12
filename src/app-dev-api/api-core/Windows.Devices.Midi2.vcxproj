@@ -181,8 +181,8 @@
     <ClInclude Include="MidiMessageBuffer.h">
       <DependentUpon>MidiMessageBuffer.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiMessagesReceivedEventArgs.h">
-      <DependentUpon>MidiMessagesReceivedEventArgs.idl</DependentUpon>
+    <ClInclude Include="MidiMessageReceivedEventArgs.h">
+      <DependentUpon>MidiMessageReceivedEventArgs.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiOutputEndpointConnection.h">
       <DependentUpon>MidiOutputEndpointConnection.idl</DependentUpon>
@@ -226,8 +226,8 @@
     <ClCompile Include="MidiMessageBuffer.cpp">
       <DependentUpon>MidiMessageBuffer.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiMessagesReceivedEventArgs.cpp">
-      <DependentUpon>MidiMessagesReceivedEventArgs.idl</DependentUpon>
+    <ClCompile Include="MidiMessageReceivedEventArgs.cpp">
+      <DependentUpon>MidiMessageReceivedEventArgs.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiOutputEndpointConnection.cpp">
       <DependentUpon>MidiOutputEndpointConnection.idl</DependentUpon>
@@ -256,7 +256,6 @@
   </ItemGroup>
   <ItemGroup>
     <Midl Include="IMidiInputConnection.idl" />
-    <Midl Include="IMidiMessageClientFilter.idl" />
     <Midl Include="IMidiOutputConnection.idl" />
     <Midl Include="IMidiTransportSettingsData.idl" />
     <Midl Include="MidiBidirectionalEndpointConnection.idl" />
@@ -264,7 +263,7 @@
     <Midl Include="MidiClock.idl" />
     <Midl Include="MidiInputEndpointConnection.idl" />
     <Midl Include="MidiMessageClientFilterStrategy.idl" />
-    <Midl Include="MidiMessagesReceivedEventArgs.idl" />
+    <Midl Include="MidiMessageReceivedEventArgs.idl" />
     <Midl Include="MidiEndpointConnection.idl" />
     <Midl Include="IMidiEndpointConnectionSettings.idl" />
     <Midl Include="MidiOutputEndpointConnection.idl" />

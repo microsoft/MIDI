@@ -174,10 +174,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     winrt::Windows::Devices::Midi2::MidiBidirectionalEndpointConnection MidiSession::ConnectBidirectionalEndpoint(
         hstring const& deviceId, 
-        winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiMessageClientFilter> const& incomingMessageFilters, 
-        winrt::Windows::Devices::Midi2::MidiMessageClientFilterStrategy const& messageFilterStrategy, 
-        hstring const& tag /*,
-        winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& settings*/)
+        hstring const& tag,
+        winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& settings)
     {
 
         std::cout << __FUNCTION__ << ": setting up IMidiBiDi" << std::endl;
@@ -287,7 +285,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
-    winrt::Windows::Devices::Midi2::MidiInputEndpointConnection MidiSession::ConnectInputEndpoint(hstring const& deviceId, winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiMessageClientFilter> const& incomingMessageFilters, winrt::Windows::Devices::Midi2::MidiMessageClientFilterStrategy const& messageFilterStrategy, hstring const& tag, winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& settings)
+    winrt::Windows::Devices::Midi2::MidiInputEndpointConnection MidiSession::ConnectInputEndpoint(hstring const& deviceId, hstring const& tag, winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& settings)
     {
         winrt::com_ptr<IMidiIn> umpEndpoint{};
 

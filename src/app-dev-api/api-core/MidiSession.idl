@@ -53,8 +53,6 @@ namespace Windows.Devices.Midi2
         // The filters only affect incoming messages. Outgoing messages are not touched.
         MidiInputEndpointConnection ConnectInputEndpoint(
             String midiEndpointId,
-            IVector<IMidiMessageClientFilter> incomingMessageFilters,
-            MidiMessageClientFilterStrategy messageFilterStrategy,
             String tag,
             IMidiEndpointConnectionSettings settings);
 
@@ -62,10 +60,8 @@ namespace Windows.Devices.Midi2
         // see notes above.
         MidiBidirectionalEndpointConnection ConnectBidirectionalEndpoint(
             String midiEndpointId,
-            IVector<IMidiMessageClientFilter> incomingMessageFilters,
-            MidiMessageClientFilterStrategy messageFilterStrategy,
-            String tag /*,
-            IMidiEndpointConnectionSettings settings */);
+            String tag,
+            IMidiEndpointConnectionSettings settings);
 
         // note that this takes the connection instance id, not the endpoint id itself
         // This will remove a single endpoint connection instance. If it's the last one

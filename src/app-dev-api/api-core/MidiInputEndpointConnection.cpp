@@ -19,18 +19,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
-    winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiMessageClientFilter> MidiInputEndpointConnection::Filters()
-    {
-        throw hresult_not_implemented();
-    }
-    winrt::Windows::Devices::Midi2::MidiMessageClientFilterStrategy MidiInputEndpointConnection::FilterStrategy()
-    {
-        throw hresult_not_implemented();
-    }
-    void MidiInputEndpointConnection::FilterStrategy(winrt::Windows::Devices::Midi2::MidiMessageClientFilterStrategy const& value)
-    {
-        throw hresult_not_implemented();
-    }
+
     uint32_t MidiInputEndpointConnection::ReceiveBuffer(winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffsetinBuffer, uint32_t maxBytesToReceive)
     {
         throw hresult_not_implemented();

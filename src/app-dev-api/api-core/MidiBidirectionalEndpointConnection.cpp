@@ -52,13 +52,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         // if passed eval, add it to the queue of incoming messages for this endpoint
 
-        if (_messagesReceivedEvent)
+        if (_messageReceivedEvent)
         {
-            auto args = winrt::make_self<MidiMessagesReceivedEventArgs>();
+            auto args = winrt::make_self<MidiMessageReceivedEventArgs>();
 
             if (Size == sizeof(internal::PackedUmp32))
             {
-
                 auto ump = winrt::make_self<MidiUmp32>(Timestamp, Data);
                 args->Ump(ump.as<IMidiUmp>());
             }
@@ -89,26 +88,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
             //_messagesReceivedEvent(*this, nullptr);
-            _messagesReceivedEvent(*this, *args);
+            _messageReceivedEvent(*this, *args);
             //           _messagesReceivedEvent((IMidiInputConnection)(*this), args);
         }
 
         return S_OK;
     }
 
-
-    winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiMessageClientFilter> MidiBidirectionalEndpointConnection::Filters()
-    {
-        throw hresult_not_implemented();
-    }
-    winrt::Windows::Devices::Midi2::MidiMessageClientFilterStrategy MidiBidirectionalEndpointConnection::FilterStrategy()
-    {
-        throw hresult_not_implemented();
-    }
-    void MidiBidirectionalEndpointConnection::FilterStrategy(winrt::Windows::Devices::Midi2::MidiMessageClientFilterStrategy const& value)
-    {
-        throw hresult_not_implemented();
-    }
 
     uint32_t MidiBidirectionalEndpointConnection::ReceiveBuffer(winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffsetinBuffer, uint32_t maxBytesToReceive)
     {
@@ -123,13 +109,40 @@ namespace winrt::Windows::Devices::Midi2::implementation
         throw hresult_not_implemented();
     }
 
+    bool MidiBidirectionalEndpointConnection::SendWords(uint64_t timestamp, uint32_t word0)
+    {
+        try
+        {
+            if (_bidiEndpoint)
+            {
+                auto umpDataSize = sizeof(internal::PackedUmp32);
 
+                _bidiEndpoint->SendMidiMessage((void*)&word0, umpDataSize, timestamp);
 
-    void MidiBidirectionalEndpointConnection::SendUmp(winrt::Windows::Devices::Midi2::IMidiUmp const& ump)
+                return true;
+            }
+            else
+            {
+                std::cout << __FUNCTION__ << " _bidiEndpoint is nullptr" << std::endl;
+
+                return false;
+            }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            std::cout << __FUNCTION__ << " hresult exception sending message" << std::endl;
+            std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
+            std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
+
+            return false;
+        }
+    }
+
+    bool MidiBidirectionalEndpointConnection::SendUmp(winrt::Windows::Devices::Midi2::IMidiUmp const& ump)
     {
         // TODO: most or all of this logic needs to be factored out into the internal connection object
 
-        std::cout << __FUNCTION__ << " sending message to service" << std::endl;
+ //       std::cout << __FUNCTION__ << " sending message to service" << std::endl;
 
         try
         {
@@ -162,19 +175,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                 auto umpDataSize = sizeof(internal::PackedUmp32);
                 auto typedUmp = ump.as<MidiUmp32>();
-                typedUmp->PackedUmpPointer();           // this is damn smelly, but working at the moment.
-                
 
-                _bidiEndpoint->SendMidiMessage((void*)typedUmp->PackedUmpPointer(), umpDataSize, ump.Timestamp());
+                // the GetPackedUmpPointer call works but it requires the cast, which has a cost
+                _bidiEndpoint->SendMidiMessage((void*)typedUmp->GetPackedUmpPointer(), umpDataSize, ump.Timestamp());
 
-
-
-
-                std::cout << __FUNCTION__ << " message sent" << std::endl;
+                return true;
             }
             else
             {
                 std::cout << __FUNCTION__ << " _bidiEndpoint is nullptr" << std::endl;
+
+                return false;
             }
         }
         catch (winrt::hresult_error const& ex)
@@ -183,7 +194,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
             std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
 
-            return;
+            return false;
         }
 
 

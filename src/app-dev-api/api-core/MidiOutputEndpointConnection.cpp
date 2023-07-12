@@ -23,7 +23,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
-    void MidiOutputEndpointConnection::SendUmp(winrt::Windows::Devices::Midi2::IMidiUmp const& ump)
+    bool MidiOutputEndpointConnection::SendUmp(winrt::Windows::Devices::Midi2::IMidiUmp const& ump)
     {
         throw hresult_not_implemented();
     }

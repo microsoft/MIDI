@@ -18,7 +18,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     MidiUmp32::MidiUmp32()
     {
         // use the data buffer as our storage for this. But we have a structure
-        // to help, well, provide structure to the data. This minimizes copies
+        // to help provide structure to the data. This minimizes copies
         // and still allows us to use the buffer type with the rest of WinRT
         // and with the service communication.
 
@@ -38,10 +38,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         memset(bufferData, 0, capacity);
 
         // assign the pointer to our UMP structure for ease of access
-        //_ump = reinterpret_cast<internal::PackedUmp32*>(bufferData);
-        _ump = (internal::PackedUmp32*)(bufferData);
+//        _ump =  reinterpret_cast<internal::PackedUmp32*>(bufferData);
+        //_ump = (internal::PackedUmp32*)(bufferData);
 
-        WINRT_ASSERT((byte*)_ump == bufferData);
+      //  WINRT_ASSERT((byte*)_ump == bufferData);
 
 
     }
@@ -65,8 +65,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         _timestamp = timestamp;
 
-        // need to have some safeties around this
-        memcpy((void*)_ump, data, sizeof(internal::PackedUmp32));
+        // need to have some safeties around this and also make sure it gets deleted
+        memcpy((void*)_ump.get(), data, sizeof(internal::PackedUmp32));
     }
 
     winrt::Windows::Foundation::IMemoryBuffer MidiUmp32::RawData()

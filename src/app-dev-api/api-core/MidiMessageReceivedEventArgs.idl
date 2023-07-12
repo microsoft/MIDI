@@ -16,9 +16,9 @@ import "IMidiUmp.idl";
 namespace Windows.Devices.Midi2
 {
     [default_interface]
-    runtimeclass MidiMessagesReceivedEventArgs
+    runtimeclass MidiMessageReceivedEventArgs
     {
-        MidiMessagesReceivedEventArgs();
+        MidiMessageReceivedEventArgs();
 
         // TODO
 

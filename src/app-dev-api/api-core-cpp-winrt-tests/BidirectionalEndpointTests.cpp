@@ -20,10 +20,7 @@ TEST_CASE("Create bidirectional endpoint")
 
 	std::cout << "Connecting to Endpoint" << std::endl;
 
-	winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiMessageClientFilter> incomingMessageFilters{};
-
-
-	auto conn1 = session.ConnectBidirectionalEndpoint(L"foobarbaz", incomingMessageFilters, MidiMessageClientFilterStrategy::Ignore, L"" /*, nullptr */);
+	auto conn1 = session.ConnectBidirectionalEndpoint(L"foobarbaz", L"", nullptr);
 
 	REQUIRE((bool)(conn1 != nullptr));
 	REQUIRE((bool)(conn1.IsConnected()));
@@ -55,17 +52,17 @@ TEST_CASE("Send and receive messages")
 
 	std::cout << "Connecting to Endpoint" << std::endl;
 
-	auto conn1 = session.ConnectBidirectionalEndpoint(L"foobarbaz", nullptr, MidiMessageClientFilterStrategy::Ignore, L"" /*, nullptr */);
+	auto conn1 = session.ConnectBidirectionalEndpoint(L"foobarbaz", L"", nullptr);
 
 	REQUIRE((bool)(conn1 != nullptr));
 
-	bool messagesReceivedFlag = false;
+	bool messageReceivedFlag = false;
 	MidiUmp32 sentUmp;
 
 	auto sentMessageType = MidiUmpMessageType::Midi1ChannelVoice32;
 	auto sentTimestamp = MidiClock::GetMidiTimestamp();
 
-	auto MessagesReceivedHandler = [&messagesReceivedFlag, &sentMessageType, &sentTimestamp](Windows::Foundation::IInspectable const& sender, MidiMessagesReceivedEventArgs const& args)
+	auto MessageReceivedHandler = [&messageReceivedFlag, &sentMessageType, &sentTimestamp](Windows::Foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
 		{
 			REQUIRE((bool)(sender != nullptr));
 			REQUIRE((bool)(args != nullptr));
@@ -77,7 +74,7 @@ TEST_CASE("Send and receive messages")
 			REQUIRE(receivedUmp.MessageType() == sentMessageType);
 			REQUIRE(receivedUmp.Timestamp() == sentTimestamp);
 
-			messagesReceivedFlag = true;
+			messageReceivedFlag = true;
 			std::cout << "Received message in test" << std::endl;
 			std::cout << " - MidiUmpPacketType " << std::hex << (int)(receivedUmp.MidiUmpPacketType()) << std::endl;
 			std::cout << " - Timestamp " << std::hex << (receivedUmp.Timestamp()) << std::endl;
@@ -85,7 +82,7 @@ TEST_CASE("Send and receive messages")
 			std::cout << " - First Word " << std::hex << (receivedUmp.Word0()) << std::endl;
 		};
 
-	auto eventRevokeToken = conn1.MessagesReceived(MessagesReceivedHandler);
+	auto eventRevokeToken = conn1.MessageReceived(MessageReceivedHandler);
 
 
 	// send message
@@ -107,16 +104,16 @@ TEST_CASE("Send and receive messages")
 	// Wait for incoming message
 
 	int timeoutCounter = 1000;
-	while (!messagesReceivedFlag && timeoutCounter > 0)
+	while (!messageReceivedFlag && timeoutCounter > 0)
 	{
 		Sleep(10);
 
 		timeoutCounter--;
 	}
 
-	REQUIRE(messagesReceivedFlag);
+	REQUIRE(messageReceivedFlag);
 
 	// unwire event
-	conn1.MessagesReceived(eventRevokeToken);
+	conn1.MessageReceived(eventRevokeToken);
 
 }

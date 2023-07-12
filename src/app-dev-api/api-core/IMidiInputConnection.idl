@@ -6,10 +6,7 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-import "MidiMessagesReceivedEventArgs.idl";
-import "IMidiMessageClientFilter.idl";
-import "MidiMessageClientFilterStrategy.idl";
-//import "MidiMessageBuffer.idl";
+import "MidiMessageReceivedEventArgs.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -20,13 +17,14 @@ namespace Windows.Devices.Midi2
     interface IMidiInputConnection
     {
         // zero or more filters for this reader. This is the real reason to have multiple readers on an endpoint
-        IVector<IMidiMessageClientFilter> Filters{ get; };
-        MidiMessageClientFilterStrategy FilterStrategy{ get; set; };
+        //IVector<IMidiMessageListener> PreFilterListeners{ get; };
+        //IVector<IMidiMessageClientFilter> Filters{ get; };
+        //MidiMessageClientFilterStrategy FilterStrategy{ get; };
 
 
         UInt32 ReceiveBuffer(Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffsetInBuffer, UInt32 maxBytesToReceive);
 
         // notification that there are new messages received. Optional.
-        event Windows.Foundation.TypedEventHandler<IInspectable, MidiMessagesReceivedEventArgs> MessagesReceived;
+        event Windows.Foundation.TypedEventHandler<IInspectable, MidiMessageReceivedEventArgs> MessageReceived;
     }
 }

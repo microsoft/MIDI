@@ -8,7 +8,6 @@
 using namespace winrt;
 using namespace Windows::Devices::Midi2;
 
-
 TEST_CASE("UMP Basics")
 {
 	SECTION("Test UMP32")
@@ -26,7 +25,7 @@ TEST_CASE("UMP Basics")
 	// TODO: Finish up Ump32 initialization and apply to the other types here before uncommenting tests
 	// ==================================================================================================
 	//
-	
+
 
 
 
@@ -117,3 +116,4 @@ TEST_CASE("UMP Interface Casting")
 //
 //	}
 //}
+

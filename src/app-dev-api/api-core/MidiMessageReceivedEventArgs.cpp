@@ -8,8 +8,8 @@
 
 
 #include "pch.h"
-#include "MidiMessagesReceivedEventArgs.h"
-#include "MidiMessagesReceivedEventArgs.g.cpp"
+#include "MidiMessageReceivedEventArgs.h"
+#include "MidiMessageReceivedEventArgs.g.cpp"
 
 
 namespace winrt::Windows::Devices::Midi2::implementation

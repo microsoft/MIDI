@@ -8,7 +8,7 @@
 
 
 #pragma once
-#include "MidiMessagesReceivedEventArgs.g.h"
+#include "MidiMessageReceivedEventArgs.g.h"
 
 #include "MidiUmp32.h";
 #include "MidiUmp64.h";
@@ -17,9 +17,9 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    struct MidiMessagesReceivedEventArgs : MidiMessagesReceivedEventArgsT<MidiMessagesReceivedEventArgs>
+    struct MidiMessageReceivedEventArgs : MidiMessageReceivedEventArgsT<MidiMessageReceivedEventArgs>
     {
-        MidiMessagesReceivedEventArgs() = default;
+        MidiMessageReceivedEventArgs() = default;
 
         // internal constructor
         //MidiMessagesReceivedEventArgs(winrt::Windows::Devices::Midi2::IMidiUmp ump) { _ump = ump; }
@@ -37,7 +37,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 namespace winrt::Windows::Devices::Midi2::factory_implementation
 {
-    struct MidiMessagesReceivedEventArgs : MidiMessagesReceivedEventArgsT<MidiMessagesReceivedEventArgs, implementation::MidiMessagesReceivedEventArgs>
+    struct MidiMessageReceivedEventArgs : MidiMessageReceivedEventArgsT<MidiMessageReceivedEventArgs, implementation::MidiMessageReceivedEventArgs>
     {
     };
 }
