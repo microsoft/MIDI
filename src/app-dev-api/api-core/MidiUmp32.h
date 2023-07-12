@@ -36,6 +36,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         winrt::Windows::Foundation::IMemoryBuffer RawData();
 
+        internal::PackedUmp32* PackedUmpPointer() { return _ump; }
+
     private:
         internal::MidiTimestamp _timestamp{};
 

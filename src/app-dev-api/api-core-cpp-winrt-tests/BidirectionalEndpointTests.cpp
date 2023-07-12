@@ -70,7 +70,7 @@ TEST_CASE("Send and receive messages")
 			REQUIRE((bool)(sender != nullptr));
 			REQUIRE((bool)(args != nullptr));
 
-			// making an assumption on type here.
+			// TODO: making an assumption on type here.
 			MidiUmp32 receivedUmp = args.Ump().as<MidiUmp32>();
 
 			REQUIRE(receivedUmp != nullptr);
@@ -78,10 +78,11 @@ TEST_CASE("Send and receive messages")
 			REQUIRE(receivedUmp.Timestamp() == sentTimestamp);
 
 			messagesReceivedFlag = true;
-			std::cout << "Message(s) Received in test event handler " << std::endl;
-			std::cout << " - MidiUmpPacketType " << std::hex << (uint8_t)(args.Ump().MidiUmpPacketType()) << std::endl;
-			std::cout << " - Timestamp " << std::hex << (uint64_t)(args.Ump().Timestamp()) << std::endl;
-			std::cout << " - MessageType " << std::hex << (uint8_t)(args.Ump().MessageType()) << std::endl;
+			std::cout << "Received message in test" << std::endl;
+			std::cout << " - MidiUmpPacketType " << std::hex << (int)(receivedUmp.MidiUmpPacketType()) << std::endl;
+			std::cout << " - Timestamp " << std::hex << (receivedUmp.Timestamp()) << std::endl;
+			std::cout << " - MessageType " << std::hex << (int)(receivedUmp.MessageType()) << std::endl;
+			std::cout << " - First Word " << std::hex << (receivedUmp.Word0()) << std::endl;
 		};
 
 	auto eventRevokeToken = conn1.MessagesReceived(MessagesReceivedHandler);
@@ -97,7 +98,8 @@ TEST_CASE("Send and receive messages")
 
 	std::cout << "Sending MidiUmpPacketType from test" << std::hex << (uint32_t)(sentUmp.MidiUmpPacketType()) << std::endl;
 	std::cout << " - Timestamp " << std::hex << (uint64_t)(sentUmp.Timestamp()) << std::endl;
-	std::cout << " - MessageType " << std::hex << (uint8_t)(sentUmp.MessageType()) << std::endl;
+	std::cout << " - MessageType " << std::hex << (int)(sentUmp.MessageType()) << std::endl;
+	std::cout << " - First Word " << std::hex << (sentUmp.Word0()) << std::endl;
 
 	conn1.SendUmp(sentUmp);
 

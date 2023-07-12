@@ -25,14 +25,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
         std::cout << __FUNCTION__ << " message received in callback" << std::endl;
         std::cout << " - Data Size is " << std::dec << Size << std::endl;
         std::cout << " - Timestamp is " << std::hex << Timestamp << std::endl;
+        std::cout << " - First Word is " << std::hex << *(uint32_t*)Data << std::endl;
 
         // maybe checking this in the callback is overkill
         WINRT_ASSERT(internal::IsValidSingleUmpBufferSize(Size));
      
+        auto bd = (byte*)Data;
 
-        // DEBUG. Walk the data and show some info
-        byte mt = internal::GetUmpMessageTypeFromFirstWord(*(byte*)Data);
-        std::cout << " - Message Type in data is " << std::hex << mt << std::endl;
+        byte mt = internal::GetUmpMessageTypeFromFirstWord(*(uint32_t*)Data);
+        std::cout << " - Message Type in data is " << std::hex << (int)mt << std::endl;
 
 
 
@@ -55,7 +56,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
             auto args = winrt::make_self<MidiMessagesReceivedEventArgs>();
 
-            // TODO: currently this supports only one message.
             if (Size == sizeof(internal::PackedUmp32))
             {
 
@@ -118,7 +118,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     uint32_t MidiBidirectionalEndpointConnection::SendBuffer(internal::MidiTimestamp, winrt::Windows::Foundation::IMemoryBuffer const& midiData, uint32_t byteOffset, uint32_t length)
     {
-        //if ()
+        // todo: verify buffer is exactly one message long
 
         throw hresult_not_implemented();
     }
@@ -137,28 +137,35 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 // https://gist.github.com/kennykerr/f1d941c2d26227abbf762481bcbd84d3
 
-                Windows::Foundation::IMemoryBuffer umpDataBuffer = ump.RawData();
+                //Windows::Foundation::IMemoryBuffer umpDataBuffer = ump.RawData();
 
-                auto ref = umpDataBuffer.CreateReference();
+                //auto ref = umpDataBuffer.CreateReference();
 
-                auto interop = ref.as<IMemoryBufferByteAccess>();
+                //auto interop = ref.as<IMemoryBufferByteAccess>();
 
-                uint8_t* umpData{};
-                uint32_t umpDataSize{};
-                check_hresult(interop->GetBuffer(&umpData, &umpDataSize));
+                //uint8_t* umpData{};
+                //uint32_t umpDataSize{};
+                //check_hresult(interop->GetBuffer(&umpData, &umpDataSize));
 
-                WINRT_ASSERT(umpDataSize == sizeof(internal::PackedUmp32));
+                //// TEMP
+                //WINRT_ASSERT(umpDataSize == sizeof(internal::PackedUmp32));
 
-                // TEMP
-                std::cout << "SendUmp. Bytes: " << std::endl;
-                for (int i = 0; i < umpDataSize; i++)
-                {
-                    std::cout << std::hex << (int)(umpData[i]) << " ";
-                }
-                std::cout << std::endl;
+                //// TEMP
+                //std::cout << "SendUmp. Bytes: " << std::endl;
+                //for (int i = 0; i < umpDataSize; i++)
+                //{
+                //    std::cout << std::hex << (int)(umpData[i]) << " ";
+                //}
+                //std::cout << std::endl;
 
+                // hard code this to ump32 for now
 
-                _bidiEndpoint->SendMidiMessage((void*)umpData, umpDataSize, ump.Timestamp());
+                auto umpDataSize = sizeof(internal::PackedUmp32);
+                auto typedUmp = ump.as<MidiUmp32>();
+                typedUmp->PackedUmpPointer();           // this is damn smelly, but working at the moment.
+                
+
+                _bidiEndpoint->SendMidiMessage((void*)typedUmp->PackedUmpPointer(), umpDataSize, ump.Timestamp());
 
 
 

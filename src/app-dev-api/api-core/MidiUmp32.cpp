@@ -40,6 +40,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // assign the pointer to our UMP structure for ease of access
         //_ump = reinterpret_cast<internal::PackedUmp32*>(bufferData);
         _ump = (internal::PackedUmp32*)(bufferData);
+
+        WINRT_ASSERT((byte*)_ump == bufferData);
+
+
     }
 
     MidiUmp32::MidiUmp32(internal::MidiTimestamp timestamp, uint32_t word0)
