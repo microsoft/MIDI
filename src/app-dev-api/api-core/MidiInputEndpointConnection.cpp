@@ -42,4 +42,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return false;
     }
 
+
+
+
 }

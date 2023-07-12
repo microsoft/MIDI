@@ -48,6 +48,9 @@ namespace Windows::Devices::Midi2::Internal
         case 0xE:
         case 0xF:
             return 4;
+
+        default:
+            return 0;   // with the mask, shouldn't happen. Here only due to the compiler warning
         };
 
     }

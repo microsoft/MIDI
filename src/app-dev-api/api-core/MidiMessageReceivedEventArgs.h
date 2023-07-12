@@ -10,10 +10,10 @@
 #pragma once
 #include "MidiMessageReceivedEventArgs.g.h"
 
-#include "MidiUmp32.h";
-#include "MidiUmp64.h";
-#include "MidiUmp96.h";
-#include "MidiUmp128.h";
+#include "MidiUmp32.h"
+#include "MidiUmp64.h"
+#include "MidiUmp96.h"
+#include "MidiUmp128.h"
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {

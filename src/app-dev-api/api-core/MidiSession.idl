@@ -67,11 +67,11 @@ namespace Windows.Devices.Midi2
         // This will remove a single endpoint connection instance. If it's the last one
         // for that endpoint, it will remove/cleanup the underlying service interface and
         // resources for that endpoint.
-        void DisconnectEndpointConnectionInstance(String endpointConnectionInstanceId);
+        void DisconnectEndpointConnection(String endpointConnectionInstanceId);
 
-        // this takes an endpoint id and tears down ALL endpoint connection instances for it, and
-        // also disconnects the service interface for this endpoint
-        void DisconnectAllConnectionsForEndpoint(String endpointId);
+        //// this takes an endpoint id and tears down ALL endpoint connection instances for it, and
+        //// also disconnects the service interface for this endpoint
+        //void DisconnectAllConnectionsForEndpoint(String endpointId);
 
     }
 }

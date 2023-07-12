@@ -298,7 +298,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
-    void MidiSession::DisconnectEndpointConnectionInstance(hstring const& endpointConnectionId)
+    void MidiSession::DisconnectEndpointConnection(hstring const& endpointConnectionId)
     {
         if (_connections.HasKey(endpointConnectionId))
         {
@@ -313,9 +313,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
-    void MidiSession::DisconnectAllConnectionsForEndpoint(hstring const& deviceId)
-    {
-    }
+    //void MidiSession::DisconnectAllConnectionsForEndpoint(hstring const& deviceId)
+    //{
+    //}
 
    
 

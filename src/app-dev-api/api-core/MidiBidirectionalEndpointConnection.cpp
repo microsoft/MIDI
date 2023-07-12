@@ -35,46 +35,25 @@ namespace winrt::Windows::Devices::Midi2::implementation
         byte mt = internal::GetUmpMessageTypeFromFirstWord(*(uint32_t*)Data);
         std::cout << " - Message Type in data is " << std::hex << (int)mt << std::endl;
 
-
-
-        // check if we have any filters. If not, just copy all the data over
-
-        // if we do have filters, check filter strategy
-
-
-        // intent is to have one UMP at a time, but we will treat this as potentially multiple to allow for that in the future
-
-        // read timestamp
-
-        // read first byte of message to determine how many MIDI words to read
-
-        // evaluate message
-
-        // if passed eval, add it to the queue of incoming messages for this endpoint
-
         if (_messageReceivedEvent)
         {
             auto args = winrt::make_self<MidiMessageReceivedEventArgs>();
 
             if (Size == sizeof(internal::PackedUmp32))
             {
-                auto ump = winrt::make_self<MidiUmp32>(Timestamp, Data);
-                args->Ump(ump.as<IMidiUmp>());
+                args->Ump(winrt::make_self<MidiUmp32>(Timestamp, Data).as<IMidiUmp>());
             }
             else if (Size == sizeof(internal::PackedUmp64))
             {
-                auto ump = winrt::make_self<MidiUmp64>(Timestamp, Data);
-                args->Ump(ump.as<IMidiUmp>());
+                args->Ump(winrt::make_self<MidiUmp64>(Timestamp, Data).as<IMidiUmp>());
             }
             else if (Size == sizeof(internal::PackedUmp96))
             {
-                auto ump = winrt::make_self<MidiUmp96>(Timestamp, Data);
-                args->Ump(ump.as<IMidiUmp>());
+                args->Ump(winrt::make_self<MidiUmp96>(Timestamp, Data).as<IMidiUmp>());
             }
             else if (Size == sizeof(internal::PackedUmp128))
             {
-                auto ump = winrt::make_self<MidiUmp128>(Timestamp, Data);
-                args->Ump(ump.as<IMidiUmp>());
+                args->Ump(winrt::make_self<MidiUmp128>(Timestamp, Data).as<IMidiUmp>());
             }
             else
             {
@@ -95,9 +74,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return S_OK;
     }
 
-
     uint32_t MidiBidirectionalEndpointConnection::ReceiveBuffer(winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffsetinBuffer, uint32_t maxBytesToReceive)
     {
+        //WINRT_ASSERT(internal::IsValidSingleUmpBufferSize(Size));
+
         throw hresult_not_implemented();
     }
 
@@ -105,8 +85,16 @@ namespace winrt::Windows::Devices::Midi2::implementation
     uint32_t MidiBidirectionalEndpointConnection::SendBuffer(internal::MidiTimestamp, winrt::Windows::Foundation::IMemoryBuffer const& midiData, uint32_t byteOffset, uint32_t length)
     {
         // todo: verify buffer is exactly one message long
+        // we may decide to modify this in the future to send multiple messages
 
-        throw hresult_not_implemented();
+        if (internal::IsValidSingleUmpBufferSize(length))
+        {
+            throw hresult_not_implemented();
+        }
+        else
+        {
+            return 0;
+        }
     }
 
     bool MidiBidirectionalEndpointConnection::SendWords(uint64_t timestamp, uint32_t word0)
@@ -115,7 +103,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
             if (_bidiEndpoint)
             {
-                auto umpDataSize = sizeof(internal::PackedUmp32);
+                auto umpDataSize = (uint32_t)sizeof(internal::PackedUmp32);
 
                 _bidiEndpoint->SendMidiMessage((void*)&word0, umpDataSize, timestamp);
 
@@ -173,7 +161,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                 // hard code this to ump32 for now
 
-                auto umpDataSize = sizeof(internal::PackedUmp32);
+                auto umpDataSize = (uint32_t)sizeof(internal::PackedUmp32);
                 auto typedUmp = ump.as<MidiUmp32>();
 
                 // the GetPackedUmpPointer call works but it requires the cast, which has a cost

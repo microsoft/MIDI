@@ -42,7 +42,7 @@ TEST_CASE("Create bidirectional endpoint")
 }
 
 
-TEST_CASE("Send and receive messages")
+TEST_CASE("Send and receive message")
 {
 	auto settings = MidiSessionSettings::Default();
 	auto session = MidiSession::CreateSession(L"Test Session Name", settings);
@@ -75,11 +75,11 @@ TEST_CASE("Send and receive messages")
 			REQUIRE(receivedUmp.Timestamp() == sentTimestamp);
 
 			messageReceivedFlag = true;
-			std::cout << "Received message in test" << std::endl;
-			std::cout << " - MidiUmpPacketType " << std::hex << (int)(receivedUmp.MidiUmpPacketType()) << std::endl;
-			std::cout << " - Timestamp " << std::hex << (receivedUmp.Timestamp()) << std::endl;
-			std::cout << " - MessageType " << std::hex << (int)(receivedUmp.MessageType()) << std::endl;
-			std::cout << " - First Word " << std::hex << (receivedUmp.Word0()) << std::endl;
+			//std::cout << "Received message in test" << std::endl;
+			//std::cout << " - MidiUmpPacketType " << std::hex << (int)(receivedUmp.MidiUmpPacketType()) << std::endl;
+			//std::cout << " - Timestamp " << std::hex << (receivedUmp.Timestamp()) << std::endl;
+			//std::cout << " - MessageType " << std::hex << (int)(receivedUmp.MessageType()) << std::endl;
+			//std::cout << " - First Word " << std::hex << (receivedUmp.Word0()) << std::endl;
 		};
 
 	auto eventRevokeToken = conn1.MessageReceived(MessageReceivedHandler);
@@ -90,23 +90,20 @@ TEST_CASE("Send and receive messages")
 	sentUmp.MessageType(MidiUmpMessageType::Midi1ChannelVoice32);
 	sentUmp.Timestamp(sentTimestamp);
 
-
-
-
-	std::cout << "Sending MidiUmpPacketType from test" << std::hex << (uint32_t)(sentUmp.MidiUmpPacketType()) << std::endl;
-	std::cout << " - Timestamp " << std::hex << (uint64_t)(sentUmp.Timestamp()) << std::endl;
-	std::cout << " - MessageType " << std::hex << (int)(sentUmp.MessageType()) << std::endl;
-	std::cout << " - First Word " << std::hex << (sentUmp.Word0()) << std::endl;
+	//std::cout << "Sending MidiUmpPacketType from test" << std::hex << (uint32_t)(sentUmp.MidiUmpPacketType()) << std::endl;
+	//std::cout << " - Timestamp " << std::hex << (uint64_t)(sentUmp.Timestamp()) << std::endl;
+	//std::cout << " - MessageType " << std::hex << (int)(sentUmp.MessageType()) << std::endl;
+	//std::cout << " - First Word " << std::hex << (sentUmp.Word0()) << std::endl;
 
 	conn1.SendUmp(sentUmp);
 
 
 	// Wait for incoming message
 
-	int timeoutCounter = 1000;
+	int timeoutCounter = 3000;
 	while (!messageReceivedFlag && timeoutCounter > 0)
 	{
-		Sleep(10);
+		Sleep(1);
 
 		timeoutCounter--;
 	}
@@ -116,4 +113,14 @@ TEST_CASE("Send and receive messages")
 	// unwire event
 	conn1.MessageReceived(eventRevokeToken);
 
+	// cleanup endpoint. Technically not required as session will do it
+	session.DisconnectEndpointConnection(conn1.Id());
 }
+
+
+// TODO
+TEST_CASE("Send and receive mixed multiple messages")
+{
+	REQUIRE(false);
+}
+

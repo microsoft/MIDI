@@ -43,7 +43,7 @@ namespace Windows::Devices::Midi2::Internal
     #pragma pack(pop)
 
     // helper function to check the size of a buffer of memory
-    inline bool IsValidSingleUmpBufferSize(uint8_t size)
+    inline bool IsValidSingleUmpBufferSize(uint32_t size)
     {
         return (size == sizeof(PackedUmp32) ||
             size == sizeof(PackedUmp64) ||

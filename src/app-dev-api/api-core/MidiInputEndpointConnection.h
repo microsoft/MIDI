@@ -7,11 +7,12 @@
 // ============================================================================
 
 #pragma once
+
 #include "MidiInputEndpointConnection.g.h"
 #include "MidiEndpointConnection.h"
 
 #include "InternalMidiDeviceConnection.h"
-#include "midi_service_interface.h";
+#include "midi_service_interface.h"
 
 
 namespace winrt::Windows::Devices::Midi2::implementation

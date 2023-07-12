@@ -27,4 +27,35 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
+
+    bool MidiOutputEndpointConnection::SendWords(uint64_t timestamp, uint32_t word0)
+    {
+        //try
+        //{
+        //    if (_endpoint)
+        //    {
+        //        auto umpDataSize = (uint32_t)sizeof(internal::PackedUmp32);
+
+        //        _bidiEndpoint->SendMidiMessage((void*)&word0, umpDataSize, timestamp);
+
+        //        return true;
+        //    }
+        //    else
+        //    {
+        //        std::cout << __FUNCTION__ << " _bidiEndpoint is nullptr" << std::endl;
+
+        //        return false;
+        //    }
+        //}
+        //catch (winrt::hresult_error const& ex)
+        //{
+        //    std::cout << __FUNCTION__ << " hresult exception sending message" << std::endl;
+        //    std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
+        //    std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
+
+        //    return false;
+        //}
+
+        return false;
+    }
 }

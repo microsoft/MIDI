@@ -14,7 +14,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 {
     MidiUmp128::MidiUmp128(internal::MidiTimestamp timestamp, uint32_t word0, uint32_t word1, uint32_t word2, uint32_t word3)
     {
-        //_ump->timestamp = timestamp;
+        _timestamp = timestamp;
+
         _ump->word0 = word0;
         _ump->word1 = word1;
         _ump->word2 = word2;
@@ -27,6 +28,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         WINRT_ASSERT(_ump != nullptr);
         WINRT_ASSERT(data != nullptr);
+
+        _timestamp = timestamp;
 
         // need to have some safeties around this
         memcpy((void*)_ump, data, sizeof(internal::PackedUmp128));

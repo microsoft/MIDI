@@ -9,7 +9,7 @@
 #pragma once
 #include "MidiSession.g.h"
 
-#include "midi_service_interface.h";
+#include "midi_service_interface.h"
 #include "InternalMidiDeviceConnection.h"
 
 namespace winrt::Windows::Devices::Midi2::implementation
@@ -31,8 +31,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::Windows::Devices::Midi2::MidiOutputEndpointConnection ConnectOutputEndpoint(hstring const& deviceId, hstring const& tag, winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& settings);
         winrt::Windows::Devices::Midi2::MidiInputEndpointConnection ConnectInputEndpoint(hstring const& deviceId, hstring const& tag, winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& settings);
         winrt::Windows::Devices::Midi2::MidiBidirectionalEndpointConnection ConnectBidirectionalEndpoint(hstring const& deviceId, hstring const& tag, winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& settings);
-        void DisconnectEndpointConnectionInstance(hstring const& endpointConnectionId);
-        void DisconnectAllConnectionsForEndpoint(hstring const& deviceId);
+        void DisconnectEndpointConnection(hstring const& endpointConnectionId);
+        //void DisconnectAllConnectionsForEndpoint(hstring const& deviceId);
 
         void Close();   // via IClosable
 
