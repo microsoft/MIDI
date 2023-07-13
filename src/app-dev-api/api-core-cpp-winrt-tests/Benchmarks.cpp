@@ -19,6 +19,8 @@ using namespace winrt::Windows::Devices::Midi2;
 
 TEST_CASE("Benchmark.Endpoint.MultipleUmps Send and receive mixed multiple messages through loopback")
 {
+	std::cout << std::endl;
+
 	uint32_t numMessagesToSend = 1000;
 
 
@@ -29,8 +31,6 @@ TEST_CASE("Benchmark.Endpoint.MultipleUmps Send and receive mixed multiple messa
 
 	REQUIRE((bool)(session.IsOpen()));
 	REQUIRE((bool)(session.Connections().Size() == 0));
-
-	std::cout << "Connecting to Endpoint" << std::endl;
 
 	auto conn1 = session.ConnectBidirectionalEndpoint(BIDI_ENDPOINT_DEVICE_ID, L"", nullptr);
 
@@ -57,7 +57,9 @@ TEST_CASE("Benchmark.Endpoint.MultipleUmps Send and receive mixed multiple messa
 
 			receivedMessageCount++;
 
-			// this is to help with calculating jitter. Keep in mind that jitter will be affected by our receive loop as well
+			// this is to help with calculating jitter. Keep in mind that jitter will be 
+			// negatively affected by our receive loop as well, but should be close enough
+			// to real-world expectations
 			uint64_t currentStamp = MidiClock::GetMidiTimestamp();
 			uint64_t umpStamp = args.Ump().Timestamp();
 			timestampDeltas.push_back(currentStamp - umpStamp);
@@ -76,6 +78,12 @@ TEST_CASE("Benchmark.Endpoint.MultipleUmps Send and receive mixed multiple messa
 	// send messages
 	uint64_t sendingStartTimestamp = MidiClock::GetMidiTimestamp();
 
+	// the distribution of messages here tries to mimic what we expect to be
+	// a reasonably typical mix. In reality, almost all messages going back
+	// and forth with an endpoint during a performance are going to be
+	// UMP32 (MIDI 1.0 CV) or UMP64 (MIDI 2.0 CV), with the others in only at 
+	// certain times. The exception is any device which relies on SysEx for
+	// parameter changes on the fly.
 	for (int i = 0; i < numMessagesToSend; i++)
 	{
 		IMidiUmp ump;
