@@ -26,6 +26,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         IMidiCallback>
     {
         MidiBidirectionalEndpointConnection() = default;
+        ~MidiBidirectionalEndpointConnection();
 
         static hstring GetDeviceSelectorForBidirectional() { return L""; /* TODO*/ }
 
@@ -62,8 +63,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::event<winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs>> _messageReceivedEvent;
 
         com_ptr<IMidiBiDi> _bidiEndpoint;
-
-        bool _tempMessagesReceivedFlag = false;
 
     };
 }

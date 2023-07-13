@@ -19,6 +19,9 @@ using namespace winrt::Windows::Devices::Midi2;
 
 TEST_CASE("Benchmark.Endpoint.MultipleUmps Send and receive mixed multiple messages through loopback")
 {
+	uint32_t numMessagesToSend = 1000;
+
+
 	uint64_t setupStartTimestamp = MidiClock::GetMidiTimestamp();
 
 	auto settings = MidiSessionSettings::Default();
@@ -41,7 +44,6 @@ TEST_CASE("Benchmark.Endpoint.MultipleUmps Send and receive mixed multiple messa
 	auto ump128mt = MidiUmpMessageType::FlexData128;
 
 
-	uint32_t numMessagesToSend = 1000;
 
 	std::vector<uint64_t> timestampDeltas;
 
@@ -64,49 +66,67 @@ TEST_CASE("Benchmark.Endpoint.MultipleUmps Send and receive mixed multiple messa
 	auto eventRevokeToken = conn1.MessageReceived(MessageReceivedHandler);
 
 
-	// send messages
-
-
 	uint32_t numBytes = 0;
+	uint32_t ump32Count = 0;
+	uint32_t ump64Count = 0;
+	uint32_t ump96Count = 0;
+	uint32_t ump128Count = 0;
 
+
+	// send messages
 	uint64_t sendingStartTimestamp = MidiClock::GetMidiTimestamp();
 
 	for (int i = 0; i < numMessagesToSend; i++)
 	{
 		IMidiUmp ump;
 
-		switch (i % 4)
+		switch (i % 12)
 		{
 		case 0:
+		case 1:
+		case 2:
+		case 3:
 		{
 			MidiUmp32 ump32{};
 			ump32.MessageType(ump32mt);
 			ump = ump32.as<IMidiUmp>();
 			numBytes += sizeof(uint32_t) + sizeof(uint64_t);
+			ump32Count++;
 		}
 		break;
-		case 1:
+
+		case 4:
+		case 5:
+		case 6:
+		case 7:
 		{
 			MidiUmp64 ump64{};
 			ump64.MessageType(ump64mt);
 			ump = ump64.as<IMidiUmp>();
 			numBytes += sizeof(uint32_t) * 2 + sizeof(uint64_t);
+			ump64Count++;
 		}
 		break;
-		case 2:
+
+		case 8:
 		{
 			MidiUmp96 ump96{};
 			ump96.MessageType(ump96mt);
 			ump = ump96.as<IMidiUmp>();
 			numBytes += sizeof(uint32_t) * 3 + sizeof(uint64_t);
+			ump96Count++;
 		}
 		break;
-		case 3:
+
+		case 9:
+		case 10:
+		case 11:
 		{
 			MidiUmp128 ump128{};
 			ump128.MessageType(ump128mt);
 			ump = ump128.as<IMidiUmp>();
 			numBytes += sizeof(uint32_t) * 4 + sizeof(uint64_t);
+			ump128Count++;
 		}
 		break;
 		}
@@ -146,6 +166,10 @@ TEST_CASE("Benchmark.Endpoint.MultipleUmps Send and receive mixed multiple messa
 	//	std::cout << " - timeoutCounter " << std::dec << timeoutCounter << std::endl;
 
 	std::cout << "Num Messages:                " << std::dec << numMessagesToSend << std::endl;
+	std::cout << "- Count UMP32                " << std::dec << ump32Count << std::endl;
+	std::cout << "- Count UMP64                " << std::dec << ump64Count << std::endl;
+	std::cout << "- Count UMP96                " << std::dec << ump96Count << std::endl;
+	std::cout << "- Count UMP128               " << std::dec << ump128Count << std::endl;
 	std::cout << "Num Bytes (inc timestamp):   " << std::dec << numBytes << std::endl;
 	std::cout << "Timestamp Frequency:         " << std::dec << freq << " hz (ticks/second)" << std::endl;
 	std::cout << "-----------------------------" << std::endl;

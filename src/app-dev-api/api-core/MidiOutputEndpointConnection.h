@@ -17,7 +17,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
     struct MidiOutputEndpointConnection : MidiOutputEndpointConnectionT<MidiOutputEndpointConnection, Windows::Devices::Midi2::implementation::MidiEndpointConnection>
     {
         MidiOutputEndpointConnection() = default;
-
         static hstring GetDeviceSelectorForOutput() { return L""; /* TODO */ }
 
         uint32_t SendBuffer(internal::MidiTimestamp timestamp, winrt::Windows::Foundation::IMemoryBuffer const& midiData, uint32_t byteOffset, uint32_t length);

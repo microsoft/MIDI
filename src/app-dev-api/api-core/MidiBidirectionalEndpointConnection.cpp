@@ -234,4 +234,18 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return true;
     }
 
+    MidiBidirectionalEndpointConnection::~MidiBidirectionalEndpointConnection()
+    {
+        if (_bidiEndpoint != nullptr)
+        {
+            _bidiEndpoint->Cleanup();
+        }
+
+        _isConnected = false;
+
+        // TODO: any event cleanup?
+    }
+
+
+
 }
