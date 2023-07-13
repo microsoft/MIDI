@@ -94,15 +94,19 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
-    bool MidiBidirectionalEndpointConnection::SendWords(uint64_t timestamp, uint32_t word0)
+    bool MidiBidirectionalEndpointConnection::SendWords(uint64_t timestamp, array_view<uint32_t const> words, uint32_t wordCount)
     {
         try
         {
             if (_bidiEndpoint)
             {
-                auto umpDataSize = (uint32_t)sizeof(internal::PackedUmp32);
+                // TODO: Validate that the wordcount is valid and is only one UMP, for now.
+                // This is uint32_t in case we decide to allow sending many UMPs in the future
+                // but that would require service support and more
 
-                _bidiEndpoint->SendMidiMessage((void*)&word0, umpDataSize, timestamp);
+                auto umpDataSize = (uint32_t)(sizeof(uint32_t) * wordCount);
+
+                _bidiEndpoint->SendMidiMessage((void*)words.data(), umpDataSize, timestamp);
 
                 return true;
             }
@@ -122,6 +126,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
             return false;
         }
     }
+
+
+
+
+
+
+
+
+
+
+
 
     bool MidiBidirectionalEndpointConnection::SendUmp(winrt::Windows::Devices::Midi2::IMidiUmp const& ump)
     {

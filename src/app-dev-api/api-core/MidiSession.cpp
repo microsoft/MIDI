@@ -177,41 +177,30 @@ namespace winrt::Windows::Devices::Midi2::implementation
         hstring const& tag,
         winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& settings)
     {
-
-//        std::cout << __FUNCTION__ << ": setting up IMidiBiDi" << std::endl;
-
         winrt::com_ptr<IMidiBiDi> umpEndpointInterface{};
 
         // cleanup the id
         auto normalizedDeviceId = NormalizeDeviceId(deviceId);
 
- //       std::cout << __FUNCTION__ << ": Activating BiDi" << std::endl;
-
         // Activate the BiDi endpoint for this device. Will fail if the device is not a BiDi device
         if (!ActivateMidiStream(__uuidof(IMidiBiDi), (void**)&umpEndpointInterface))
         {
- //           std::cout << __FUNCTION__ << ": BiDi activation failed" << std::endl;
-
             return nullptr;
         }
-//        std::cout << __FUNCTION__ << ": BiDi activation succeeded" << std::endl;
-
-
-
-
-
-//        std::cout << __FUNCTION__ << ": Creating WinRT EndpointConnection" << std::endl;
 
         // Create the new endpoint and then get a com_ptr to the WinRT endpoint implementation type
         auto endpointConnection = winrt::make_self<implementation::MidiBidirectionalEndpointConnection>();
 
- //       std::cout << __FUNCTION__ << ": About to look for an existing internal connection" << std::endl;
+
+        auto guid = Windows::Foundation::GuidHelper::CreateNewGuid();
+        auto endpointId = winrt::to_hstring(guid);
+
+        endpointConnection->InternalSetId(endpointId);
+
 
         // internal tracking of the master connection for this endpoint
         //std::shared_ptr<internal::InternalMidiDeviceConnection> deviceConnection = 
         //    GetOrCreateAndInitializeDeviceConnection<IMidiBiDi>(winrt::to_string(normalizedDeviceId), umpEndpointInterface);
-
-
 
 
         // this is all really messy right now
@@ -249,12 +238,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
             return nullptr;
         }
 
- //       std::cout << __FUNCTION__ << ": Start the WinRT endpoint" << std::endl;
+
 
         if (endpointConnection->Start(deviceConnection))
         {
-//            std::cout << __FUNCTION__ << ": Adding the WinRT endpoint to the endpoint map " << std::endl;
-
             _connections.Insert((winrt::hstring)normalizedDeviceId, (const Windows::Devices::Midi2::MidiEndpointConnection)(*endpointConnection));
 
             return *endpointConnection;

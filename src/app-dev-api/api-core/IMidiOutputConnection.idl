@@ -24,10 +24,8 @@ namespace Windows.Devices.Midi2
 
         Boolean SendUmp(IMidiUmp ump);
 
-        Boolean SendWords(UInt64 timestamp, UInt32 word0);
-        //void SendWords(UInt64 timestamp, UInt32 word0, UInt32 word1);
-        //void SendWords(UInt64 timestamp, UInt32 word0, UInt32 word1, UInt32 word2);
-        //void SendWords(UInt64 timestamp, UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
+        Boolean SendWords(UInt64 timestamp, UInt32[] words, UInt32 wordCount);
+
 
 
     }

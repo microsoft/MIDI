@@ -10,7 +10,7 @@ using namespace winrt;
 using namespace Windows::Devices::Midi2;
 
 
-TEST_CASE("Create new session")
+TEST_CASE("Connected.Session.CreateSession Create new session")
 {
 	hstring sessionName = L"Test Session Name";
 
@@ -27,5 +27,5 @@ TEST_CASE("Create new session")
 
 	REQUIRE((bool)(session.Connections().Size() == 0));
 
-
+	session.Close();
 }

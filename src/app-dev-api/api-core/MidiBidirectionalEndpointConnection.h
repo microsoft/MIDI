@@ -37,7 +37,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         uint32_t SendBuffer(internal::MidiTimestamp timestamp, winrt::Windows::Foundation::IMemoryBuffer const& midiData, uint32_t byteOffset, uint32_t length);
         bool SendUmp(winrt::Windows::Devices::Midi2::IMidiUmp const& ump);
-        bool SendWords(uint64_t timestamp, uint32_t word0);
+        bool SendWords(uint64_t timestamp, array_view<uint32_t const> words, uint32_t wordCount);
+
 
 
         bool Start(std::shared_ptr<internal::InternalMidiDeviceConnection> deviceConnection);

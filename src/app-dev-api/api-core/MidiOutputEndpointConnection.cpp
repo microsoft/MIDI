@@ -28,7 +28,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         throw hresult_not_implemented();
     }
 
-    bool MidiOutputEndpointConnection::SendWords(uint64_t timestamp, uint32_t word0)
+    bool MidiOutputEndpointConnection::SendWords(uint64_t timestamp, array_view<uint32_t const> words, uint32_t wordCount)
     {
         //try
         //{

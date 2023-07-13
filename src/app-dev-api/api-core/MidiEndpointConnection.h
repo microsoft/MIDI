@@ -28,8 +28,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         hstring Tag() { return _tag; }
         void Tag(hstring value) { _tag = value; }
 
-        void SetSettings(IMidiEndpointConnectionSettings value) { _settings = value; }
-        void SetDeviceId(hstring value) { _deviceId = value; }
+        void InternalSetSettings(IMidiEndpointConnectionSettings value) { _settings = value; }
+        void InternalSetDeviceId(hstring value) { _deviceId = value; }
+        void InternalSetId(hstring value) { _id = value; }
+        void InternalSetIsConnected(bool value) { _isConnected = value; }
 
     protected:
         hstring _id{};

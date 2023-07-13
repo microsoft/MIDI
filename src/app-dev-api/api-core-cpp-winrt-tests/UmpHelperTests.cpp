@@ -10,7 +10,7 @@
 using namespace Windows::Devices::Midi2::Internal;
 
 
-TEST_CASE("UMP Helpers")
+TEST_CASE("Offline.Ump.Helpers UMP Helpers")
 {
 	SECTION("Test Internal GetUmpLengthInMidiWordsFromMessageType")
 	{

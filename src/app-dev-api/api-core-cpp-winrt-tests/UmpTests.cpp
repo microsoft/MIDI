@@ -8,7 +8,7 @@
 using namespace winrt;
 using namespace Windows::Devices::Midi2;
 
-TEST_CASE("UMP Message and Packet Types")
+TEST_CASE("Offline.Ump.MessageAndPacketTypes UMP Message and Packet Types")
 {
 	SECTION("Test UMP32")
 	{
@@ -67,7 +67,7 @@ TEST_CASE("UMP Message and Packet Types")
 }
 
 
-TEST_CASE("UMP Interface Casting")
+TEST_CASE("Offline.Ump.Casting UMP Interface Casting")
 {
 	MidiUmpMessageType mt = MidiUmpMessageType::Midi1ChannelVoice32;
 

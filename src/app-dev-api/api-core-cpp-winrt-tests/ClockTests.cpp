@@ -9,7 +9,7 @@ using namespace winrt;
 using namespace Windows::Devices::Midi2;
 
 
-TEST_CASE("Timestamp Clock")
+TEST_CASE("Offline.Clock.Timestamp Clock Basics")
 {
 	SECTION("MIDI timestamp appears to work")
 	{
