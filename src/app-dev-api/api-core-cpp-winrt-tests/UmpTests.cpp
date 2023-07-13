@@ -8,7 +8,7 @@
 using namespace winrt;
 using namespace Windows::Devices::Midi2;
 
-TEST_CASE("UMP Basics")
+TEST_CASE("UMP Message and Packet Types")
 {
 	SECTION("Test UMP32")
 	{
@@ -21,46 +21,39 @@ TEST_CASE("UMP Basics")
 		REQUIRE(ump.MidiUmpPacketType() == MidiUmpPacketType::Ump32);
 	}
 
-	// 
-	// TODO: Finish up Ump32 initialization and apply to the other types here before uncommenting tests
-	// ==================================================================================================
-	//
 
+	SECTION("Test UMP64")
+	{
+		MidiUmpMessageType mt = MidiUmpMessageType::Midi2ChannelVoice64;
 
+		MidiUmp64 ump;
+		ump.MessageType(mt);
 
+		REQUIRE(ump.MessageType() == mt);
+		REQUIRE(ump.MidiUmpPacketType() == MidiUmpPacketType::Ump64);
+	}
 
-	//SECTION("Test UMP64")
-	//{
-	//	MidiUmpMessageType mt = MidiUmpMessageType::Midi2ChannelVoice64;
+	SECTION("Test UMP96")
+	{
+		MidiUmpMessageType mt = MidiUmpMessageType::FutureReservedB96;
 
-	//	MidiUmp64 ump;
-	//	ump.MessageType(mt);
+		MidiUmp96 ump;
+		ump.MessageType(mt);
 
-	//	REQUIRE(ump.MessageType() == mt);
-	//	REQUIRE(ump.MidiUmpPacketType() == MidiUmpPacketType::Ump64);
-	//}
+		REQUIRE(ump.MessageType() == mt);
+		REQUIRE(ump.MidiUmpPacketType() == MidiUmpPacketType::Ump96);
+	}
 
-	//SECTION("Test UMP96")
-	//{
-	//	MidiUmpMessageType mt = MidiUmpMessageType::FutureReservedB96;
+	SECTION("Test UMP128")
+	{
+		MidiUmpMessageType mt = MidiUmpMessageType::UmpStream128;
 
-	//	MidiUmp96 ump;
-	//	ump.MessageType(mt);
+		MidiUmp128 ump;
+		ump.MessageType(mt);
 
-	//	REQUIRE(ump.MessageType() == mt);
-	//	REQUIRE(ump.MidiUmpPacketType() == MidiUmpPacketType::Ump96);
-	//}
-
-	//SECTION("Test UMP128")
-	//{
-	//	MidiUmpMessageType mt = MidiUmpMessageType::UmpStream128;
-
-	//	MidiUmp128 ump;
-	//	ump.MessageType(mt);
-
-	//	REQUIRE(ump.MessageType() == mt);
-	//	REQUIRE(ump.MidiUmpPacketType() == MidiUmpPacketType::Ump128);
-	//}
+		REQUIRE(ump.MessageType() == mt);
+		REQUIRE(ump.MidiUmpPacketType() == MidiUmpPacketType::Ump128);
+	}
 
 
 

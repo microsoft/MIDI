@@ -24,7 +24,7 @@ namespace Windows::Devices::Midi2::Internal::Shared
 	{
 		LARGE_INTEGER frequency;
 
-		KeQueryPerformanceCounter(&frequency);
+		KeQueryPerformanceFrequency(&frequency);
 
 		return frequency.QuadPart;
 	}
@@ -43,7 +43,7 @@ namespace Windows::Devices::Midi2::Internal::Shared
 	{
 		LARGE_INTEGER frequency;
 
-		QueryPerformanceCounter(&frequency);
+		QueryPerformanceFrequency(&frequency);
 
 		return frequency.QuadPart;
 	}

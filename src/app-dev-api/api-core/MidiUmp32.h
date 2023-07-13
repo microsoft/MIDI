@@ -34,10 +34,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         winrt::Windows::Devices::Midi2::MidiUmpPacketType MidiUmpPacketType() { return winrt::Windows::Devices::Midi2::MidiUmpPacketType::Ump32; }
 
-        winrt::Windows::Foundation::IMemoryBuffer RawData();
+     //   winrt::Windows::Foundation::IMemoryBuffer RawData();
 
         // internal for the sending code
-        internal::PackedUmp32* GetPackedUmpPointer() { return &_ump; }
+        internal::PackedUmp32* GetInternalUmpDataPointer() { return &_ump; }
 
     private:
         internal::MidiTimestamp _timestamp{};

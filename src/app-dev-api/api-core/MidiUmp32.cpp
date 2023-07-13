@@ -70,21 +70,21 @@ namespace winrt::Windows::Devices::Midi2::implementation
         memcpy((void*)&_ump, data, sizeof(internal::PackedUmp32));
     }
 
-    winrt::Windows::Foundation::IMemoryBuffer MidiUmp32::RawData()
-    {
-        //auto sourceRef = _umpBackingStore.CreateReference();
-        //auto sourceInterop = sourceRef.as<IMemoryBufferByteAccess>();
+    //winrt::Windows::Foundation::IMemoryBuffer MidiUmp32::RawData()
+    //{
+    //    //auto sourceRef = _umpBackingStore.CreateReference();
+    //    //auto sourceInterop = sourceRef.as<IMemoryBufferByteAccess>();
 
 
-        //auto destination = Windows::Foundation::MemoryBuffer(sizeof(internal::PackedUmp32));
-        //auto destinationRef = destination.CreateReference();
-        //auto destinationInterop = destinationRef.as<IMemoryBufferByteAccess>();
-        //
-        //destinationInterop.copy_from(sourceInterop.detach());
+    //    //auto destination = Windows::Foundation::MemoryBuffer(sizeof(internal::PackedUmp32));
+    //    //auto destinationRef = destination.CreateReference();
+    //    //auto destinationInterop = destinationRef.as<IMemoryBufferByteAccess>();
+    //    //
+    //    //destinationInterop.copy_from(sourceInterop.detach());
 
-        //return destination;
+    //    //return destination;
 
-        return nullptr;
-    }
+    //    return nullptr;
+    //}
 
 }
