@@ -124,6 +124,7 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Benchmarks.cpp" />
     <ClCompile Include="catch_amalgamated.cpp" />
     <ClCompile Include="ClockTests.cpp" />
     <ClCompile Include="BidirectionalEndpointTests.cpp" />

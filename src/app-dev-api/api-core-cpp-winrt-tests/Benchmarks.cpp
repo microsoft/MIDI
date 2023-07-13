@@ -1,0 +1,239 @@
+#include "pch.h"
+
+#include "catch_amalgamated.hpp"
+
+#include <iostream>
+#include <algorithm>
+#include <numeric>
+#include <functional>
+
+#include <Windows.h>
+
+//#include "..\api-core\ump_helpers.h"
+
+using namespace winrt;
+using namespace winrt::Windows::Devices::Midi2;
+
+#define BIDI_ENDPOINT_DEVICE_ID L"foobarbaz"
+
+
+TEST_CASE("Benchmark.Endpoint.MultipleUmps Send and receive mixed multiple messages through loopback")
+{
+	uint64_t setupStartTimestamp = MidiClock::GetMidiTimestamp();
+
+	auto settings = MidiSessionSettings::Default();
+	auto session = MidiSession::CreateSession(L"Test Session Name", settings);
+
+	REQUIRE((bool)(session.IsOpen()));
+	REQUIRE((bool)(session.Connections().Size() == 0));
+
+	std::cout << "Connecting to Endpoint" << std::endl;
+
+	auto conn1 = session.ConnectBidirectionalEndpoint(BIDI_ENDPOINT_DEVICE_ID, L"", nullptr);
+
+	REQUIRE((bool)(conn1 != nullptr));
+
+	uint32_t receivedMessageCount{};
+
+	auto ump32mt = MidiUmpMessageType::UtilityMessage32;
+	auto ump64mt = MidiUmpMessageType::DataMessage64;
+	auto ump96mt = MidiUmpMessageType::FutureReservedB96;
+	auto ump128mt = MidiUmpMessageType::FlexData128;
+
+
+	uint32_t numMessagesToSend = 1000;
+
+	std::vector<uint64_t> timestampDeltas;
+
+	timestampDeltas.reserve(numMessagesToSend);
+
+
+
+	auto MessageReceivedHandler = [&receivedMessageCount, &timestampDeltas](Windows::Foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
+		{
+			REQUIRE((bool)(args != nullptr));
+
+			receivedMessageCount++;
+
+			// this is to help with calculating jitter. Keep in mind that jitter will be affected by our receive loop as well
+			uint64_t currentStamp = MidiClock::GetMidiTimestamp();
+			uint64_t umpStamp = args.Ump().Timestamp();
+			timestampDeltas.push_back(currentStamp - umpStamp);
+		};
+
+	auto eventRevokeToken = conn1.MessageReceived(MessageReceivedHandler);
+
+
+	// send messages
+
+
+	uint32_t numBytes = 0;
+
+	uint64_t sendingStartTimestamp = MidiClock::GetMidiTimestamp();
+
+	for (int i = 0; i < numMessagesToSend; i++)
+	{
+		IMidiUmp ump;
+
+		switch (i % 4)
+		{
+		case 0:
+		{
+			MidiUmp32 ump32{};
+			ump32.MessageType(ump32mt);
+			ump = ump32.as<IMidiUmp>();
+			numBytes += sizeof(uint32_t) + sizeof(uint64_t);
+		}
+		break;
+		case 1:
+		{
+			MidiUmp64 ump64{};
+			ump64.MessageType(ump64mt);
+			ump = ump64.as<IMidiUmp>();
+			numBytes += sizeof(uint32_t) * 2 + sizeof(uint64_t);
+		}
+		break;
+		case 2:
+		{
+			MidiUmp96 ump96{};
+			ump96.MessageType(ump96mt);
+			ump = ump96.as<IMidiUmp>();
+			numBytes += sizeof(uint32_t) * 3 + sizeof(uint64_t);
+		}
+		break;
+		case 3:
+		{
+			MidiUmp128 ump128{};
+			ump128.MessageType(ump128mt);
+			ump = ump128.as<IMidiUmp>();
+			numBytes += sizeof(uint32_t) * 4 + sizeof(uint64_t);
+		}
+		break;
+		}
+
+		ump.Timestamp(MidiClock::GetMidiTimestamp());
+		conn1.SendUmp(ump);
+	}
+
+	uint64_t sendingFinishTimestamp = MidiClock::GetMidiTimestamp();
+
+
+	// Wait for incoming message
+
+	uint32_t timeoutCounter = 1000000;
+	uint32_t numSleepCalls = 0;
+	uint32_t sleepDuration = 0;
+
+	while (receivedMessageCount < numMessagesToSend && timeoutCounter > 0)
+	{
+		Sleep(sleepDuration);
+
+		timeoutCounter--;
+		numSleepCalls++;
+	}
+
+	uint64_t endingTimestamp = MidiClock::GetMidiTimestamp();
+
+	REQUIRE(receivedMessageCount == numMessagesToSend);
+
+
+	uint64_t sendOnlyDurationDelta = sendingFinishTimestamp - sendingStartTimestamp;
+	uint64_t sendReceiveDurationDelta = endingTimestamp - sendingStartTimestamp;
+	uint64_t setupDurationDelta = sendingStartTimestamp - setupStartTimestamp;
+
+	uint64_t freq = MidiClock::GetMidiTimestampFrequency();
+
+	//	std::cout << " - timeoutCounter " << std::dec << timeoutCounter << std::endl;
+
+	std::cout << "Num Messages:                " << std::dec << numMessagesToSend << std::endl;
+	std::cout << "Num Bytes (inc timestamp):   " << std::dec << numBytes << std::endl;
+	std::cout << "Timestamp Frequency:         " << std::dec << freq << " hz (ticks/second)" << std::endl;
+	std::cout << "-----------------------------" << std::endl;
+	std::cout << "Setup Start Timestamp:       " << std::dec << setupStartTimestamp << std::endl;
+	std::cout << "Setup/Connection Delta:      " << std::dec << setupDurationDelta << " ticks" << std::endl;
+	std::cout << "Sending Start timestamp:     " << std::dec << sendingStartTimestamp << std::endl;
+	std::cout << "Sending Stop timestamp:      " << std::dec << sendingFinishTimestamp << std::endl;
+	std::cout << "Send/Rec End timestamp:      " << std::dec << endingTimestamp << std::endl;
+	std::cout << "Sending/Receiving Delta:     " << std::dec << sendReceiveDurationDelta << " ticks" << std::endl;
+	std::cout << "Num Wait loop Sleep Calls:   " << std::dec << numSleepCalls << std::endl;
+
+	// calculate time to connect up, create the endpoint, etc.
+
+	double setupSeconds = setupDurationDelta / (double)freq;
+	double setupMilliseconds = setupSeconds * 1000.0;
+	double setupMicroseconds = setupMilliseconds * 1000;
+
+	// calculate send-only totals (included in send/receive totals)
+
+	double sendOnlySeconds = sendOnlyDurationDelta / (double)freq;
+	double sendOnlyMilliseconds = sendOnlySeconds * 1000.0;
+	double sendOnlyMicroseconds = sendOnlyMilliseconds * 1000;
+	double sendOnlyAverageMilliseconds = sendOnlyMilliseconds / (double)numMessagesToSend;
+	double sendOnlyAverageMicroseconds = sendOnlyAverageMilliseconds * 1000;
+
+	// calculate send/receive totals
+
+	double sendReceiveSeconds = sendReceiveDurationDelta / (double)freq;
+	double sendReceiveMilliseconds = sendReceiveSeconds * 1000.0;
+	double sendReceiveMicroseconds = sendReceiveMilliseconds * 1000;
+	double sendReceiveAverageMilliseconds = sendReceiveMilliseconds / (double)numMessagesToSend;
+	double sendReceiveAverageMicroseconds = sendReceiveAverageMilliseconds * 1000;
+
+	// jitter
+
+	const auto [minDeltaTicks, maxDeltaTicks] = std::minmax_element(begin(timestampDeltas), end(timestampDeltas));
+
+	double minDeltaMilliseconds = *minDeltaTicks / (double)freq;
+	double minDeltaMicroseconds = minDeltaMilliseconds * 1000;
+
+	double maxDeltaMilliseconds = *maxDeltaTicks / (double)freq;
+	double maxDeltaMicroseconds = maxDeltaMilliseconds * 1000;
+
+	double minToMaxDeltaMilliseconds = maxDeltaMilliseconds - minDeltaMilliseconds;
+	double minToMaxDeltaMicroseconds = maxDeltaMicroseconds - minDeltaMicroseconds;
+
+	double totalDeltaTicks = std::accumulate(begin(timestampDeltas), end(timestampDeltas), 0.0);
+	double avgDeltaTicks = totalDeltaTicks / (double)numMessagesToSend;	// this should be close to the other calculated average
+	double avgDeltaTicksMilliseconds = avgDeltaTicks / (double)freq;
+	double avgDeltaTicksMicroseconds = avgDeltaTicksMilliseconds * 1000;
+
+	// adapted from: https://stackoverflow.com/questions/7616511/calculate-mean-and-standard-deviation-from-a-vector-of-samples-in-c-using-boos
+	double accum = 0.0;
+	std::for_each(begin(timestampDeltas), end(timestampDeltas), [&](const double d) { accum += (d - avgDeltaTicks) * (d - avgDeltaTicks); });
+	double stdevTicks = std::sqrtf(accum / numMessagesToSend-1);
+
+	double stdevDeltaMilliseconds = stdevTicks / (double)freq;
+	double stdevDeltaMicroseconds = stdevDeltaMilliseconds * 1000;
+
+
+	// output results
+
+	std::cout << std::endl;
+	std::cout << "Prep" << std::endl;
+	std::cout << "- Setup and connect:           " << std::dec << std::fixed << setupMilliseconds << "ms (" << setupSeconds << " seconds, " << setupMicroseconds << " microseconds)." << std::endl;
+	std::cout << std::endl;
+	std::cout << "Send loop" << std::endl;
+	std::cout << "- Send only:                   " << std::dec << std::fixed << sendOnlyMilliseconds << "ms (" << sendOnlySeconds << " seconds, " << sendOnlyMicroseconds << " microseconds)." << std::endl;
+	std::cout << "- Average single send          " << std::dec << std::fixed << sendOnlyAverageMilliseconds << "ms (" << sendOnlyAverageMicroseconds << " microseconds)." << std::endl;
+	std::cout << std::endl;
+	std::cout << "Send Loop, Receive Loop, Callback" << std::endl;
+	std::cout << "- Send/receive total:          " << std::dec << std::fixed << sendReceiveMilliseconds << "ms (" << sendReceiveSeconds << " seconds, " << sendReceiveMicroseconds << " microseconds)." << std::endl;
+	std::cout << std::endl;
+	std::cout << "Single message round-trip" << std::endl;
+	std::cout << "- Average single send/receive: " << std::dec << std::fixed << sendReceiveAverageMilliseconds << "ms (" << sendReceiveAverageMicroseconds << " microseconds)." << std::endl;
+	std::cout << "- Min single send/receive:     " << std::dec << std::fixed << minDeltaMilliseconds << "ms (" << minDeltaMicroseconds << " microseconds)." << std::endl;
+	std::cout << "- Max single send/receive:     " << std::dec << std::fixed << maxDeltaMilliseconds << "ms (" << maxDeltaMicroseconds << " microseconds)." << std::endl;
+	std::cout << std::endl;
+	std::cout << "Round-trip jitter" << std::endl;
+	std::cout << "- Max - min:                   " << std::dec << std::fixed << minToMaxDeltaMilliseconds << "ms (" << minToMaxDeltaMicroseconds << " microseconds)." << std::endl;
+	std::cout << "- Average:                     " << std::dec << std::fixed << avgDeltaTicksMilliseconds << "ms (" << avgDeltaTicksMicroseconds << " microseconds)." << std::endl;
+	std::cout << "- Standard deviation:          " << std::dec << std::fixed << stdevDeltaMilliseconds << "ms (" << stdevDeltaMicroseconds << " microseconds)." << std::endl;
+
+
+	// unwire event
+	conn1.MessageReceived(eventRevokeToken);
+
+	// cleanup endpoint. Technically not required as session will do it
+	session.DisconnectEndpointConnection(conn1.Id());
+}
+

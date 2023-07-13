@@ -21,6 +21,9 @@
     <ClCompile Include="UmpHelperTests.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
+    <ClCompile Include="Benchmarks.cpp">
+      <Filter>Tests</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
