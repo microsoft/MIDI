@@ -19,12 +19,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
         MidiOutputEndpointConnection() = default;
         static hstring GetDeviceSelectorForOutput() { return L""; /* TODO */ }
 
-        uint32_t SendBuffer(internal::MidiTimestamp timestamp, winrt::Windows::Foundation::IMemoryBuffer const& midiData, uint32_t byteOffset, uint32_t length);
+        //uint32_t SendBuffer(internal::MidiTimestamp timestamp, winrt::Windows::Foundation::IMemoryBuffer const& midiData, uint32_t byteOffset, uint32_t length);
         bool SendUmp(winrt::Windows::Devices::Midi2::IMidiUmp const& ump);
-        bool SendWords(uint64_t timestamp, array_view<uint32_t const> words, uint32_t wordCount);
+        bool SendUmpWords(uint64_t timestamp, array_view<uint32_t const> words, uint32_t wordCount);
 
     
-        bool Start(::Windows::Devices::Midi2::Internal::InternalMidiDeviceConnection* connection);
+        bool InternalStart(::Windows::Devices::Midi2::Internal::InternalMidiDeviceConnection* connection);
 
     private:
 

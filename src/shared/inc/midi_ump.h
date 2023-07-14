@@ -52,5 +52,11 @@ namespace Windows::Devices::Midi2::Internal
             );
     }
 
+    inline bool IsValidSingleUmpWordCount(uint32_t wordCount)
+    {
+        return (wordCount >= 1 && wordCount <= 4);
+    }
+
+
 
 }

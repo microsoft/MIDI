@@ -177,6 +177,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
         hstring const& tag,
         winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& settings)
     {
+
+
+
+
+        // TODO: Move the IMidiBiDi initialization into the endpoint itself. It needs to own the pointer
+
         winrt::com_ptr<IMidiBiDi> umpEndpointInterface{};
 
         // cleanup the id
@@ -210,16 +216,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         auto endpointConnectionRef = endpointConnection.get();
 
-
-        // Right now, without a separate listener class, this creates a complete stream for each
-        // connected endpoint, which will get expensive when folks create 16 of them for an endpoint
-        // so they can have something akin to MIDI 1.0 ports (per group)
-        // COM class in C++/WinRT example. This is the way to go so as not to surface an internal WinRT class.
-        // https://learn.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/author-coclasses
-        //
-        // Use an approach like what I had planned, but properly implement a COM coclass to service the callback
-        // and call a non-COM callback in the EndpointConnection classes
-
         try
         {
             // TODO: Need to handle the output only case which has no callback
@@ -240,7 +236,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
-        if (endpointConnection->Start(deviceConnection))
+        if (endpointConnection->InternalStart(deviceConnection))
         {
             _connections.Insert((winrt::hstring)normalizedDeviceId, (const Windows::Devices::Midi2::MidiEndpointConnection)(*endpointConnection));
 

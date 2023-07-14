@@ -16,15 +16,7 @@ namespace Windows.Devices.Midi2
     ]
     interface IMidiInputConnection
     {
-        // zero or more filters for this reader. This is the real reason to have multiple readers on an endpoint
-        //IVector<IMidiMessageListener> PreFilterListeners{ get; };
-        //IVector<IMidiMessageClientFilter> Filters{ get; };
-        //MidiMessageClientFilterStrategy FilterStrategy{ get; };
-
-
-        UInt32 ReceiveBuffer(Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffsetInBuffer, UInt32 maxBytesToReceive);
-
-        // notification that there are new messages received. Optional.
+        // callback for when a message comes in
         event Windows.Foundation.TypedEventHandler<IInspectable, MidiMessageReceivedEventArgs> MessageReceived;
     }
 }

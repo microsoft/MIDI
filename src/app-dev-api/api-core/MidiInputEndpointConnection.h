@@ -25,13 +25,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static hstring GetDeviceSelectorForInput() { return L""; /* TODO */ }
 
-        //winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiMessageListener> PreFilterListeners();
-        //winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiMessageClientFilter> Filters();
-        //void FilterStrategy(winrt::Windows::Devices::Midi2::MidiMessageClientFilterStrategy const& value);
-
         uint32_t ReceiveBuffer(winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffsetinBuffer, uint32_t maxBytesToReceive);
 
-        bool Start(std::shared_ptr<internal::InternalMidiDeviceConnection> deviceConnection);
 
         STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position) override;
 
@@ -45,6 +40,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
             _messagesReceivedEvent.remove(token);
         }
+
+        bool InternalStart(std::shared_ptr<internal::InternalMidiDeviceConnection> deviceConnection);
 
     private:
         //winrt::event<winrt::Windows::Foundation::TypedEventHandler<winrt::Windows::Devices::Midi2::IMidiInputConnection, winrt::Windows::Devices::Midi2::MidiMessagesReceivedEventArgs>> _messagesReceivedEvent;

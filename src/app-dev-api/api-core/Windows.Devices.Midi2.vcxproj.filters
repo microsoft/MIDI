@@ -31,9 +31,6 @@
     <Filter Include="API\Endpoints\Connections">
       <UniqueIdentifier>{e57d1b46-4206-4afa-8fd3-adbe3d245aa7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="API\Endpoints\Data">
-      <UniqueIdentifier>{011acde7-fe21-4484-9597-1419d3255e11}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -54,9 +51,6 @@
     <ClCompile Include="MidiClock.cpp">
       <Filter>API\Utility</Filter>
     </ClCompile>
-    <ClCompile Include="MidiMessageBuffer.cpp">
-      <Filter>API\Endpoints\Data</Filter>
-    </ClCompile>
     <ClCompile Include="MidiUmp32.cpp">
       <Filter>API\Messages</Filter>
     </ClCompile>
@@ -68,6 +62,9 @@
     </ClCompile>
     <ClCompile Include="MidiUmp128.cpp">
       <Filter>API\Messages</Filter>
+    </ClCompile>
+    <ClCompile Include="InternalMidiMessageReceiverHelper.cpp">
+      <Filter>Internal\ServiceAccess</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -97,9 +94,6 @@
     <ClInclude Include="InternalMidiDeviceConnection.h">
       <Filter>Internal</Filter>
     </ClInclude>
-    <ClInclude Include="MidiMessageBuffer.h">
-      <Filter>API\Endpoints\Data</Filter>
-    </ClInclude>
     <ClInclude Include="MidiUmp32.h">
       <Filter>API\Messages</Filter>
     </ClInclude>
@@ -113,6 +107,12 @@
       <Filter>API\Messages</Filter>
     </ClInclude>
     <ClInclude Include="memory_buffer.h" />
+    <ClInclude Include="InternalMidiMessageReceiverHelper.h">
+      <Filter>Internal\ServiceAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="InternalMidiMessageSenderHelper.h">
+      <Filter>Internal\ServiceAccess</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiSession.idl">
@@ -162,9 +162,6 @@
     </Midl>
     <Midl Include="MidiEndpointConnection.idl">
       <Filter>API\Endpoints\Connections</Filter>
-    </Midl>
-    <Midl Include="MidiMessageBuffer.idl">
-      <Filter>API\Endpoints\Data</Filter>
     </Midl>
     <Midl Include="IMidiUmp.idl">
       <Filter>API\Messages</Filter>

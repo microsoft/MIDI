@@ -26,18 +26,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
-
-    //IFACEMETHODIMP MidiInputEndpointConnection::Callback(PVOID Data, UINT Size, LONGLONG Position)
-    //{
-    //    // TODO: process incoming messages / fire event
-
-    //    // check each reader. For each reader that returns True when queried, fire off the messagesreceived event
-
-
-    //    return S_OK;
-    //}
-
-    bool MidiInputEndpointConnection::Start(std::shared_ptr<internal::InternalMidiDeviceConnection> deviceConnection)
+    bool MidiInputEndpointConnection::InternalStart(std::shared_ptr<internal::InternalMidiDeviceConnection> deviceConnection)
     {
         return false;
     }

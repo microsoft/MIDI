@@ -46,10 +46,8 @@ public:
 };
 
 
-TEST_CASE("Benchmark.MidiSrv.MultipleUmps Send and receive mixed multiple messages through loopback")
+TEST_CASE("Connected.Benchmark.MidiSrv Send / receive messages through loopback")
 {
-
-
 	TestCallbackClass callback{};
 
 	std::cout << std::endl;

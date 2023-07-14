@@ -19,6 +19,9 @@
 #include "MidiUmp96.h"
 #include "MidiUmp128.h"
 
+#include "InternalMidiMessageReceiverHelper.h"
+#include "InternalMidiMessageSenderHelper.h"
+
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     struct MidiBidirectionalEndpointConnection : MidiBidirectionalEndpointConnectionT<MidiBidirectionalEndpointConnection, 
@@ -30,21 +33,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static hstring GetDeviceSelectorForBidirectional() { return L""; /* TODO*/ }
 
-        //winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiMessageListener> PreFilterListeners();
-        //winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiMessageClientFilter> Filters();
-        //void FilterStrategy(winrt::Windows::Devices::Midi2::MidiMessageClientFilterStrategy const& value);
-
         uint32_t ReceiveBuffer(winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffsetinBuffer, uint32_t maxBytesToReceive);
 
-        uint32_t SendBuffer(internal::MidiTimestamp timestamp, winrt::Windows::Foundation::IMemoryBuffer const& midiData, uint32_t byteOffset, uint32_t length);
+        //uint32_t SendBuffer(internal::MidiTimestamp timestamp, winrt::Windows::Foundation::IMemoryBuffer const& midiData, uint32_t byteOffset, uint32_t length);
         bool SendUmp(winrt::Windows::Devices::Midi2::IMidiUmp const& ump);
-        bool SendWords(uint64_t timestamp, array_view<uint32_t const> words, uint32_t wordCount);
+        bool SendUmpWords(uint64_t timestamp, array_view<uint32_t const> words, uint32_t wordCount);
 
 
 
-        bool Start(std::shared_ptr<internal::InternalMidiDeviceConnection> deviceConnection);
-
- 
         STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position) override;
         
         //inline winrt::event_token MessagesReceived(winrt::Windows::Foundation::TypedEventHandler<winrt::Windows::Devices::Midi2::IMidiInputConnection, winrt::Windows::Devices::Midi2::MidiMessagesReceivedEventArgs> const& handler)
@@ -58,8 +54,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _messageReceivedEvent.remove(token);
         }
 
+
+        bool InternalStart(std::shared_ptr<internal::InternalMidiDeviceConnection> deviceConnection);
+
+
     private:
-        //winrt::event<winrt::Windows::Foundation::TypedEventHandler<winrt::Windows::Devices::Midi2::IMidiInputConnection, winrt::Windows::Devices::Midi2::MidiMessagesReceivedEventArgs>> _messagesReceivedEvent;
+        internal::InternalMidiMessageReceiverHelper _messageReceiverHelper;
+        internal::InternalMidiMessageSenderHelper<IMidiBiDi> _messageSenderHelper;
+
         winrt::event<winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs>> _messageReceivedEvent;
 
         com_ptr<IMidiBiDi> _bidiEndpoint;
