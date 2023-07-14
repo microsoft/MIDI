@@ -38,7 +38,7 @@ TEST_CASE("Connected.Benchmark.APIWords Send / receive words through loopback")
 	REQUIRE((bool)(session.IsOpen()));
 	REQUIRE((bool)(session.Connections().Size() == 0));
 
-	auto conn1 = session.ConnectBidirectionalEndpoint(BIDI_ENDPOINT_DEVICE_ID, L"", nullptr);
+	auto conn1 = session.ConnectBidirectionalEndpoint(BIDI_ENDPOINT_DEVICE_ID, nullptr);
 
 	REQUIRE((bool)(conn1 != nullptr));
 
@@ -52,7 +52,7 @@ TEST_CASE("Connected.Benchmark.APIWords Send / receive words through loopback")
 	timestampDeltas.reserve(numMessagesToSend);
 
 
-	auto MessageReceivedHandler = [&allMessagesReceived, &receivedMessageCount, &numMessagesToSend, &timestampDeltas](winrt::Windows::Foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
+	auto WordsReceivedHandler = [&allMessagesReceived, &receivedMessageCount, &numMessagesToSend, &timestampDeltas](winrt::Windows::Foundation::IInspectable const& /*sender*/, MidiWordsReceivedEventArgs const& args)
 		{
 			REQUIRE((bool)(args != nullptr));
 
@@ -62,7 +62,7 @@ TEST_CASE("Connected.Benchmark.APIWords Send / receive words through loopback")
 			// negatively affected by our receive loop as well, but should be close enough
 			// to real-world expectations
 			uint64_t currentStamp = MidiClock::GetMidiTimestamp();
-			uint64_t umpStamp = args.Ump().Timestamp();
+			uint64_t umpStamp = args.Timestamp();
 			//uint64_t umpStamp = args.Timestamp();
 			timestampDeltas.push_back(currentStamp - umpStamp);
 
@@ -73,7 +73,7 @@ TEST_CASE("Connected.Benchmark.APIWords Send / receive words through loopback")
 
 		};
 
-	auto eventRevokeToken = conn1.MessageReceived(MessageReceivedHandler);
+	auto eventRevokeToken = conn1.WordsReceived(WordsReceivedHandler);
 
 
 	uint32_t numBytes = 0;
@@ -143,30 +143,14 @@ TEST_CASE("Connected.Benchmark.APIWords Send / receive words through loopback")
 		break;
 		}
 
-		//ump.Timestamp(MidiClock::GetMidiTimestamp());
-		//conn1.SendUmp(ump);
-
 		numBytes += sizeof(uint32_t) * wordCount + sizeof(uint64_t);
 		conn1.SendUmpWords(MidiClock::GetMidiTimestamp(), words, wordCount);
-
 	}
 
 	uint64_t sendingFinishTimestamp = MidiClock::GetMidiTimestamp();
 
 
 	// Wait for incoming message
-
-	uint32_t timeoutCounter = 1000000;
-	uint32_t numSleepCalls = 0;
-	uint32_t sleepDuration = 0;
-
-	//while (receivedMessageCount < numMessagesToSend && timeoutCounter > 0)
-	//{
-	//	Sleep(sleepDuration);
-
-	//	timeoutCounter--;
-	//	numSleepCalls++;
-	//}
 
 	if (!allMessagesReceived.wait(30000))
 	{
@@ -200,7 +184,6 @@ TEST_CASE("Connected.Benchmark.APIWords Send / receive words through loopback")
 	std::cout << "Sending Stop timestamp:      " << std::dec << sendingFinishTimestamp << std::endl;
 	std::cout << "Send/Rec End timestamp:      " << std::dec << endingTimestamp << std::endl;
 	std::cout << "Sending/Receiving Delta:     " << std::dec << sendReceiveDurationDelta << " ticks" << std::endl;
-	std::cout << "Num Wait loop Sleep Calls:   " << std::dec << numSleepCalls << std::endl;
 
 	// calculate time to connect up, create the endpoint, etc.
 
@@ -248,7 +231,7 @@ TEST_CASE("Connected.Benchmark.APIWords Send / receive words through loopback")
 
 	if (timestampDeltas.size() > 0)
 	{
-		const auto [minDeltaTicks, maxDeltaTicks] = std::minmax_element(begin(timestampDeltas), end(timestampDeltas));
+		auto [minDeltaTicks, maxDeltaTicks] = std::minmax_element(begin(timestampDeltas), end(timestampDeltas));
 
 		double minDeltaMilliseconds = *minDeltaTicks / (double)freq;
 		double minDeltaMicroseconds = minDeltaMilliseconds * 1000;
@@ -267,7 +250,7 @@ TEST_CASE("Connected.Benchmark.APIWords Send / receive words through loopback")
 		// adapted from: https://stackoverflow.com/questions/7616511/calculate-mean-and-standard-deviation-from-a-vector-of-samples-in-c-using-boos
 		double accum = 0.0;
 		std::for_each(begin(timestampDeltas), end(timestampDeltas), [&](const double d) { accum += (d - avgDeltaTicks) * (d - avgDeltaTicks); });
-		double stdevTicks = std::sqrtf(accum / numMessagesToSend - 1);
+		double stdevTicks = std::sqrt(accum / numMessagesToSend - 1);
 
 		double stdevDeltaMilliseconds = stdevTicks / (double)freq;
 		double stdevDeltaMicroseconds = stdevDeltaMilliseconds * 1000;
@@ -280,7 +263,7 @@ TEST_CASE("Connected.Benchmark.APIWords Send / receive words through loopback")
 	}
 
 	// unwire event
-	conn1.MessageReceived(eventRevokeToken);
+	conn1.WordsReceived(eventRevokeToken);
 
 	// cleanup endpoint. Technically not required as session will do it
 	session.DisconnectEndpointConnection(conn1.Id());
@@ -309,7 +292,7 @@ TEST_CASE("Connected.Benchmark.APIUmp Send / receive UMPs through loopback")
 	REQUIRE((bool)(session.IsOpen()));
 	REQUIRE((bool)(session.Connections().Size() == 0));
 
-	auto conn1 = session.ConnectBidirectionalEndpoint(BIDI_ENDPOINT_DEVICE_ID, L"", nullptr);
+	auto conn1 = session.ConnectBidirectionalEndpoint(BIDI_ENDPOINT_DEVICE_ID, nullptr);
 
 	REQUIRE((bool)(conn1 != nullptr));
 
@@ -323,7 +306,7 @@ TEST_CASE("Connected.Benchmark.APIUmp Send / receive UMPs through loopback")
 	timestampDeltas.reserve(numMessagesToSend);
 
 
-	auto MessageReceivedHandler = [&allMessagesReceived, &receivedMessageCount, &numMessagesToSend, &timestampDeltas](winrt::Windows::Foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
+	auto MessageReceivedHandler = [&allMessagesReceived, &receivedMessageCount, &numMessagesToSend, &timestampDeltas](winrt::Windows::Foundation::IInspectable const& /*sender*/, MidiMessageReceivedEventArgs const& args)
 		{
 			REQUIRE((bool)(args != nullptr));
 
@@ -363,9 +346,6 @@ TEST_CASE("Connected.Benchmark.APIUmp Send / receive UMPs through loopback")
 	// UMP32 (MIDI 1.0 CV) or UMP64 (MIDI 2.0 CV), with the others in only at 
 	// certain times. The exception is any device which relies on SysEx for
 	// parameter changes on the fly.
-
-	uint32_t words[]{ 0x40000000,0,0,0 };
-	uint32_t wordCount = 2;
 
 	for (int i = 0; i < numMessagesToSend; i++)
 	{
@@ -433,17 +413,7 @@ TEST_CASE("Connected.Benchmark.APIUmp Send / receive UMPs through loopback")
 	// Wait for incoming message
 
 	uint32_t timeoutCounter = 1000000;
-	uint32_t numSleepCalls = 0;
-	uint32_t sleepDuration = 0;
-
-	//while (receivedMessageCount < numMessagesToSend && timeoutCounter > 0)
-	//{
-	//	Sleep(sleepDuration);
-
-	//	timeoutCounter--;
-	//	numSleepCalls++;
-	//}
-
+	
 	if (!allMessagesReceived.wait(30000))
 	{
 		std::cout << "Failure waiting for messages, timed out." << std::endl;
@@ -476,7 +446,6 @@ TEST_CASE("Connected.Benchmark.APIUmp Send / receive UMPs through loopback")
 	std::cout << "Sending Stop timestamp:      " << std::dec << sendingFinishTimestamp << std::endl;
 	std::cout << "Send/Rec End timestamp:      " << std::dec << endingTimestamp << std::endl;
 	std::cout << "Sending/Receiving Delta:     " << std::dec << sendReceiveDurationDelta << " ticks" << std::endl;
-	std::cout << "Num Wait loop Sleep Calls:   " << std::dec << numSleepCalls << std::endl;
 
 	// calculate time to connect up, create the endpoint, etc.
 
@@ -524,7 +493,7 @@ TEST_CASE("Connected.Benchmark.APIUmp Send / receive UMPs through loopback")
 
 	if (timestampDeltas.size() > 0)
 	{
-		const auto [minDeltaTicks, maxDeltaTicks] = std::minmax_element(begin(timestampDeltas), end(timestampDeltas));
+		auto [minDeltaTicks, maxDeltaTicks] = std::minmax_element(begin(timestampDeltas), end(timestampDeltas));
 
 		double minDeltaMilliseconds = *minDeltaTicks / (double)freq;
 		double minDeltaMicroseconds = minDeltaMilliseconds * 1000;
@@ -543,7 +512,7 @@ TEST_CASE("Connected.Benchmark.APIUmp Send / receive UMPs through loopback")
 		// adapted from: https://stackoverflow.com/questions/7616511/calculate-mean-and-standard-deviation-from-a-vector-of-samples-in-c-using-boos
 		double accum = 0.0;
 		std::for_each(begin(timestampDeltas), end(timestampDeltas), [&](const double d) { accum += (d - avgDeltaTicks) * (d - avgDeltaTicks); });
-		double stdevTicks = std::sqrtf(accum / numMessagesToSend - 1);
+		float stdevTicks = std::sqrtf(accum / numMessagesToSend - 1);
 
 		double stdevDeltaMilliseconds = stdevTicks / (double)freq;
 		double stdevDeltaMicroseconds = stdevDeltaMilliseconds * 1000;

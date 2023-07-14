@@ -25,7 +25,7 @@ TEST_CASE("Connected.Endpoint.CreateBidi Create bidirectional endpoint")
 
 	std::cout << "Connecting to Endpoint" << std::endl;
 
-	auto conn1 = session.ConnectBidirectionalEndpoint(BIDI_ENDPOINT_DEVICE_ID, L"", nullptr);
+	auto conn1 = session.ConnectBidirectionalEndpoint(BIDI_ENDPOINT_DEVICE_ID, nullptr);
 
 	REQUIRE(conn1 != nullptr);
 	REQUIRE(!conn1.Id().empty());
@@ -60,7 +60,7 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message")
 
 	std::cout << "Connecting to Endpoint" << std::endl;
 
-	auto conn1 = session.ConnectBidirectionalEndpoint(L"foobarbaz", L"", nullptr);
+	auto conn1 = session.ConnectBidirectionalEndpoint(L"foobarbaz", nullptr);
 
 	REQUIRE((bool)(conn1 != nullptr));
 
@@ -140,14 +140,14 @@ TEST_CASE("Connected.Endpoint.MultipleUmpWords Send and receive multiple words")
 
 	std::cout << "Connecting to Endpoint" << std::endl;
 
-	auto conn1 = session.ConnectBidirectionalEndpoint(BIDI_ENDPOINT_DEVICE_ID, L"", nullptr);
+	auto conn1 = session.ConnectBidirectionalEndpoint(BIDI_ENDPOINT_DEVICE_ID, nullptr);
 
 	REQUIRE((bool)(conn1 != nullptr));
 
 	uint32_t receivedMessageCount{};
 
 
-	auto MessageReceivedHandler = [&receivedMessageCount](Windows::Foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
+	auto MessageReceivedHandler = [&receivedMessageCount](Windows::Foundation::IInspectable const& sender, MidiWordsReceivedEventArgs const& args)
 		{
 			//REQUIRE((bool)(sender != nullptr));
 			//REQUIRE((bool)(args != nullptr));
@@ -163,7 +163,7 @@ TEST_CASE("Connected.Endpoint.MultipleUmpWords Send and receive multiple words")
 
 		};
 
-	auto eventRevokeToken = conn1.MessageReceived(MessageReceivedHandler);
+	auto eventRevokeToken = conn1.WordsReceived(MessageReceivedHandler);
 
 
 	// send messages
@@ -230,7 +230,7 @@ TEST_CASE("Connected.Endpoint.MultipleUmpWords Send and receive multiple words")
 	REQUIRE(receivedMessageCount == numMessagesToSend);
 
 	// unwire event
-	conn1.MessageReceived(eventRevokeToken);
+	conn1.WordsReceived(eventRevokeToken);
 
 	// cleanup endpoint. Technically not required as session will do it
 	session.DisconnectEndpointConnection(conn1.Id());

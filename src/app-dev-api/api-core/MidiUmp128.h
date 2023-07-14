@@ -20,6 +20,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         MidiUmp128() = default;
         MidiUmp128(internal::MidiTimestamp timestamp, uint32_t word0, uint32_t word1, uint32_t word2, uint32_t word3);
 
+        // TODO: This doesn't do any bounds checking, and it should
+        MidiUmp128(uint64_t timestamp, array_view<uint32_t const> words) : MidiUmp128(timestamp, (PVOID)words.data()) {};
+
         // internal
         MidiUmp128(internal::MidiTimestamp timestamp, PVOID data);
 

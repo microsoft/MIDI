@@ -6,20 +6,11 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-// wraps the UMP type so we still quickly read/write packed data appropriately
+#include "pch.h"
+#include "MidiWordsReceivedEventArgs.h"
+#include "MidiWordsReceivedEventArgs.g.cpp"
 
-import "IMidiUmp.idl";
 
-namespace Windows.Devices.Midi2
+namespace winrt::Windows::Devices::Midi2::implementation
 {
-	unsealed runtimeclass MidiUmp96 : IMidiUmp
-	{
-		MidiUmp96();
-		MidiUmp96(UInt64 timestamp, UInt32 word0, UInt32 word1, UInt32 word2);
-		MidiUmp96(UInt64 timestamp, UInt32[] words);
-
-		UInt32 Word0{ get; set; };
-		UInt32 Word1{ get; set; };
-		UInt32 Word2{ get; set; };
-	};
 }

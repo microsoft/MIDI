@@ -31,6 +31,9 @@
     <Filter Include="API\Endpoints\Connections">
       <UniqueIdentifier>{e57d1b46-4206-4afa-8fd3-adbe3d245aa7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="API\Endpoints\Events">
+      <UniqueIdentifier>{27ac01b4-53c3-477f-a4c8-ded2d40e69b7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -65,6 +68,9 @@
     </ClCompile>
     <ClCompile Include="InternalMidiMessageReceiverHelper.cpp">
       <Filter>Internal\ServiceAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiWordsReceivedEventArgs.cpp">
+      <Filter>API\Endpoints\Events</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -113,6 +119,9 @@
     <ClInclude Include="InternalMidiMessageSenderHelper.h">
       <Filter>Internal\ServiceAccess</Filter>
     </ClInclude>
+    <ClInclude Include="MidiWordsReceivedEventArgs.h">
+      <Filter>API\Endpoints\Events</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiSession.idl">
@@ -123,9 +132,6 @@
     </Midl>
     <Midl Include="IMidiTransportSettingsData.idl">
       <Filter>API\Transports</Filter>
-    </Midl>
-    <Midl Include="MidiMessageReceivedEventArgs.idl">
-      <Filter>API\Endpoints</Filter>
     </Midl>
     <Midl Include="MidiUmp32.idl">
       <Filter>API\Messages</Filter>
@@ -171,6 +177,12 @@
     </Midl>
     <Midl Include="MidiUmpPacketTypeEnum.idl">
       <Filter>API\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiMessageReceivedEventArgs.idl">
+      <Filter>API\Endpoints\Events</Filter>
+    </Midl>
+    <Midl Include="MidiWordsReceivedEventArgs.idl">
+      <Filter>API\Endpoints\Events</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

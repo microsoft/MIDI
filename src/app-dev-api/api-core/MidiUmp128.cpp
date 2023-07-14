@@ -34,5 +34,4 @@ namespace winrt::Windows::Devices::Midi2::implementation
         memcpy((void*)&_ump, data, sizeof(internal::PackedUmp128));
     }
 
-
 }

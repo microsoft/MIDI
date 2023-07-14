@@ -1,3 +1,11 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
 #include "pch.h"
 #include "InternalMidiMessageReceiverHelper.h"
 
@@ -11,7 +19,7 @@ namespace implementation = winrt::Windows::Devices::Midi2::implementation;
 namespace Windows::Devices::Midi2::Internal
 {
 
-	winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs InternalMidiMessageReceiverHelper::CreateEventArgsFromCallbackParams(PVOID Data, UINT Size, LONGLONG Timestamp)
+	winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs InternalMidiMessageReceiverHelper::CreateMessageEventArgsFromCallbackParams(PVOID Data, UINT Size, LONGLONG Timestamp)
 	{
         auto args = winrt::make_self<implementation::MidiMessageReceivedEventArgs>();
 
@@ -43,5 +51,12 @@ namespace Windows::Devices::Midi2::Internal
 
 	}
 
+    winrt::Windows::Devices::Midi2::MidiWordsReceivedEventArgs InternalMidiMessageReceiverHelper::CreateWordsEventArgsFromCallbackParams(PVOID Data, UINT Size, LONGLONG Timestamp)
+    {
+        auto args = winrt::make_self<implementation::MidiWordsReceivedEventArgs>(Timestamp, Data, Size / sizeof(uint32_t));
+
+
+        return *args;
+    }
 
 }

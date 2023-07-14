@@ -6,11 +6,6 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-// this event is just a signal to the client to read from the midimessagereader for the endpointconnection
-// This avoids copying data, and provides a lot more flexibility.
-
-
-//import "IMidiInputConnection.idl";
 import "IMidiUmp.idl";
 
 namespace Windows.Devices.Midi2
@@ -20,15 +15,7 @@ namespace Windows.Devices.Midi2
     {
         MidiMessageReceivedEventArgs();
 
-        // TODO
-
-        //IMidiInputConnection Source{ get; };
-
         IMidiUmp Ump{ get; };
-
- //       UInt32[] Words{ get; };
- //       UInt32 WordCount{ get; };
- //       UInt64 Timestamp{ get; };
 
     }
 }

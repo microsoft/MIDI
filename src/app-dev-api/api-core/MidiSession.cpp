@@ -24,7 +24,9 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    winrt::Windows::Devices::Midi2::MidiSession MidiSession::CreateSession(hstring const& sessionName, winrt::Windows::Devices::Midi2::MidiSessionSettings const& settings)
+    winrt::Windows::Devices::Midi2::MidiSession MidiSession::CreateSession(
+        hstring const& sessionName, 
+        winrt::Windows::Devices::Midi2::MidiSessionSettings const& settings)
     {
         try
         {
@@ -40,7 +42,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             session->SetName(sessionName);
             session->SetSettings(settings);
 
-            if (session->Start())
+            if (session->InternalStart())
             {
                 return *session;
             }
@@ -58,7 +60,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
-    bool MidiSession::Start()
+    bool MidiSession::InternalStart()
     {
         try
         {
@@ -96,147 +98,21 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
-    bool MidiSession::ActivateMidiStream(const IID &iid, void** iface)
-    {
-        try
-        {
- //           std::cout << __FUNCTION__ << ": activating BiDi" << std::endl;
-
-            winrt::check_hresult(_serviceAbstraction->Activate(iid, iface));
-
-            return true;
-        }
-        catch (winrt::hresult_error const& ex)
-        {
-            std::cout << __FUNCTION__ << ": hresult exception on Service Abstraction Activate (service may not be installed or running or endpoint type is wrong)" << std::endl;
-            std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
-            std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
-
-            return false;
-        }
-    }
-
-    template<class TInterface>
-    std::shared_ptr<internal::InternalMidiDeviceConnection> MidiSession::GetOrCreateAndInitializeDeviceConnection(std::string normalizedDeviceId, winrt::com_ptr<TInterface> iface)
-    {
-        std::shared_ptr<internal::InternalMidiDeviceConnection> deviceConnection;
-
-//        std::cout << __FUNCTION__ << ": looking for existing connection" << std::endl;
-
-        if (_internalDeviceConnections.find(normalizedDeviceId) != _internalDeviceConnections.end())
-        {
-            // device connection already exists. Use it (and add another reference)
-            return _internalDeviceConnections[normalizedDeviceId];
-        }
-        else
-        {
-            // device connection doesn't exist. Spin up a new one
-
-       //     deviceConnection = std::make_shared<internal::InternalMidiDeviceConnection>();
-
-            try
-            {
-//                std::cout << __FUNCTION__ << ": initializing BiDi" << std::endl;
-
-                if (_useMmcss)
-                {
-                    //// TODO: Need to handle the output only case which has no callback
-                    //winrt::check_hresult(iface->Initialize(
-                    //    (LPCWSTR)(normalizedDeviceId.c_str()), 
-                    //    &_mmcssTaskId, 
-                    //    (IMidiCallback*)(deviceConnection.get())
-                    //));
-                }
-                else
-                {
-                    // TODO: Need another call or parameter set for the abstraction to tell it not to use mmcss
-                    // TODO: Need to handle the output only case which has no callback
-
-                //    winrt::check_hresult(iface->Initialize((LPCWSTR)(normalizedDeviceId.c_str(), &_mmcssTaskId, (IMidiCallback*)deviceConnection));
-                }
-
-                // store this in our internal collection
-//                _internalDeviceConnections[normalizedDeviceId] = deviceConnection;
-
-            }
-            catch (winrt::hresult_error const& ex)
-            {
-                std::cout << __FUNCTION__ << " hresult exception on Initialize" << std::endl;
-                std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
-                std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
-
-                return nullptr;
-            }
-        }
-
-    }
-
-
     winrt::Windows::Devices::Midi2::MidiBidirectionalEndpointConnection MidiSession::ConnectBidirectionalEndpoint(
         hstring const& deviceId, 
-        hstring const& tag,
         winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& settings)
     {
-
-
-
-
-        // TODO: Move the IMidiBiDi initialization into the endpoint itself. It needs to own the pointer
-
-        winrt::com_ptr<IMidiBiDi> umpEndpointInterface{};
-
-        // cleanup the id
         auto normalizedDeviceId = NormalizeDeviceId(deviceId);
-
-        // Activate the BiDi endpoint for this device. Will fail if the device is not a BiDi device
-        if (!ActivateMidiStream(__uuidof(IMidiBiDi), (void**)&umpEndpointInterface))
-        {
-            return nullptr;
-        }
-
-        // Create the new endpoint and then get a com_ptr to the WinRT endpoint implementation type
         auto endpointConnection = winrt::make_self<implementation::MidiBidirectionalEndpointConnection>();
 
-
+        // generate internal endpoint Id
         auto guid = Windows::Foundation::GuidHelper::CreateNewGuid();
         auto endpointId = winrt::to_hstring(guid);
 
         endpointConnection->InternalSetId(endpointId);
+        endpointConnection->InternalSetDeviceId(normalizedDeviceId);
 
-
-        // internal tracking of the master connection for this endpoint
-        //std::shared_ptr<internal::InternalMidiDeviceConnection> deviceConnection = 
-        //    GetOrCreateAndInitializeDeviceConnection<IMidiBiDi>(winrt::to_string(normalizedDeviceId), umpEndpointInterface);
-
-
-        // this is all really messy right now
-        std::shared_ptr<internal::InternalMidiDeviceConnection> deviceConnection = std::make_shared<internal::InternalMidiDeviceConnection>();
-        deviceConnection->DeviceId = normalizedDeviceId;
-        deviceConnection->BidirectionalConnection = umpEndpointInterface;
-
-        auto endpointConnectionRef = endpointConnection.get();
-
-        try
-        {
-            // TODO: Need to handle the output only case which has no callback
-            winrt::check_hresult(umpEndpointInterface->Initialize(
-                (LPCWSTR)(normalizedDeviceId.c_str()),
-                &_mmcssTaskId,
-                (IMidiCallback*)(endpointConnectionRef)
-            ));
-        }
-        catch (winrt::hresult_error const& ex)
-        {
-            std::cout << __FUNCTION__ << " hresult exception on Initialize endpoint with callback" << std::endl;
-            std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
-            std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
-
-            return nullptr;
-        }
-
-
-
-        if (endpointConnection->InternalStart(deviceConnection))
+        if (endpointConnection->InternalStart(_serviceAbstraction))
         {
             _connections.Insert((winrt::hstring)normalizedDeviceId, (const Windows::Devices::Midi2::MidiEndpointConnection)(*endpointConnection));
 
@@ -244,9 +120,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
         else
         {
-            std::cout << __FUNCTION__ << ": WinRT Endpoint connection wouldn't start " << std::endl;
-
-            // TODO: endpointConnection wouldn't start
+            OutputDebugString(L"" __FUNCTION__ ": WinRT Endpoint connection wouldn't start");
 
             // TODO: Cleanup
 
@@ -256,25 +130,19 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
-    winrt::Windows::Devices::Midi2::MidiOutputEndpointConnection MidiSession::ConnectOutputEndpoint(hstring const& deviceId, hstring const& tag, winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& settings)
+    winrt::Windows::Devices::Midi2::MidiOutputEndpointConnection MidiSession::ConnectOutputEndpoint(
+        hstring const& deviceId, 
+        winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& settings)
     {
-        winrt::com_ptr<IMidiOut> umpEndpoint{};
-
-        // cleanup the id
-        auto normalizedDeviceId = NormalizeDeviceId(deviceId);
-
 
         throw hresult_not_implemented();
     }
 
 
-    winrt::Windows::Devices::Midi2::MidiInputEndpointConnection MidiSession::ConnectInputEndpoint(hstring const& deviceId, hstring const& tag, winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& settings)
+    winrt::Windows::Devices::Midi2::MidiInputEndpointConnection MidiSession::ConnectInputEndpoint(
+        hstring const& deviceId, 
+        winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& settings)
     {
-        winrt::com_ptr<IMidiIn> umpEndpoint{};
-
-        // cleanup the id
-        auto normalizedDeviceId = NormalizeDeviceId(deviceId);
-
 
         throw hresult_not_implemented();
     }

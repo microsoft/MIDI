@@ -43,7 +43,6 @@ namespace Windows.Devices.Midi2
         // service connection.
         MidiOutputEndpointConnection ConnectOutputEndpoint(
             String midiEndpointId, 
-            String tag,
             IMidiEndpointConnectionSettings settings);
 
         // connects to an input-only endpoint. Typically only for MIDI 1.0 devices.
@@ -52,14 +51,12 @@ namespace Windows.Devices.Midi2
         // The filters only affect incoming messages. Outgoing messages are not touched.
         MidiInputEndpointConnection ConnectInputEndpoint(
             String midiEndpointId,
-            String tag,
             IMidiEndpointConnectionSettings settings);
 
         // connects to a bidirectional endpoint. For MIDI 2.0 devices, this will be the norm. 
         // see notes above.
         MidiBidirectionalEndpointConnection ConnectBidirectionalEndpoint(
             String midiEndpointId,
-            String tag,
             IMidiEndpointConnectionSettings settings);
 
         // note that this takes the connection instance id, not the endpoint id itself

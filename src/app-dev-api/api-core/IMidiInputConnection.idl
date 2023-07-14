@@ -7,6 +7,7 @@
 // ============================================================================
 
 import "MidiMessageReceivedEventArgs.idl";
+import "MidiWordsReceivedEventArgs.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -18,5 +19,6 @@ namespace Windows.Devices.Midi2
     {
         // callback for when a message comes in
         event Windows.Foundation.TypedEventHandler<IInspectable, MidiMessageReceivedEventArgs> MessageReceived;
-    }
+        event Windows.Foundation.TypedEventHandler<IInspectable, MidiWordsReceivedEventArgs> WordsReceived;
+}
 }

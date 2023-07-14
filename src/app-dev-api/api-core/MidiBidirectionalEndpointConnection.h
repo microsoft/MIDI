@@ -35,7 +35,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         uint32_t ReceiveBuffer(winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffsetinBuffer, uint32_t maxBytesToReceive);
 
-        //uint32_t SendBuffer(internal::MidiTimestamp timestamp, winrt::Windows::Foundation::IMemoryBuffer const& midiData, uint32_t byteOffset, uint32_t length);
         bool SendUmp(winrt::Windows::Devices::Midi2::IMidiUmp const& ump);
         bool SendUmpWords(uint64_t timestamp, array_view<uint32_t const> words, uint32_t wordCount);
 
@@ -43,7 +42,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position) override;
         
-        //inline winrt::event_token MessagesReceived(winrt::Windows::Foundation::TypedEventHandler<winrt::Windows::Devices::Midi2::IMidiInputConnection, winrt::Windows::Devices::Midi2::MidiMessagesReceivedEventArgs> const& handler)
         winrt::event_token MessageReceived(winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs> const& handler)
         {
             return _messageReceivedEvent.add(handler);
@@ -55,16 +53,34 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
 
 
-        bool InternalStart(std::shared_ptr<internal::InternalMidiDeviceConnection> deviceConnection);
+
+        winrt::event_token WordsReceived(winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiWordsReceivedEventArgs> const& handler)
+        {
+            return _wordsReceivedEvent.add(handler);
+        }
+
+        void WordsReceived(winrt::event_token const& token) noexcept
+        {
+            _wordsReceivedEvent.remove(token);
+        }
+
+
+
+
+        bool InternalStart(winrt::com_ptr<IMidiAbstraction> serviceAbstraction);
 
 
     private:
+        com_ptr<IMidiBiDi> _endpointInterface;
         internal::InternalMidiMessageReceiverHelper _messageReceiverHelper;
         internal::InternalMidiMessageSenderHelper<IMidiBiDi> _messageSenderHelper;
 
         winrt::event<winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs>> _messageReceivedEvent;
+        winrt::event<winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiWordsReceivedEventArgs>> _wordsReceivedEvent;
 
-        com_ptr<IMidiBiDi> _bidiEndpoint;
+
+        bool ActivateMidiStream(winrt::com_ptr<IMidiAbstraction> serviceAbstraction, const IID& iid, void** iface);
+
 
     };
 }

@@ -13,16 +13,9 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    IFACEMETHODIMP MidiInputEndpointConnection::Callback(PVOID Data, UINT Size, LONGLONG Position)
+    IFACEMETHODIMP MidiInputEndpointConnection::Callback(_In_ PVOID /*Data*/, _In_ UINT /*Size*/, _In_ LONGLONG /*Position*/)
     {
         return S_OK;
-    }
-
-
-
-    uint32_t MidiInputEndpointConnection::ReceiveBuffer(winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffsetinBuffer, uint32_t maxBytesToReceive)
-    {
-        throw hresult_not_implemented();
     }
 
 

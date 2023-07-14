@@ -28,11 +28,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         winrt::Windows::Foundation::Collections::IMapView<hstring, winrt::Windows::Devices::Midi2::MidiEndpointConnection> Connections() { return _connections.GetView(); }
 
-        winrt::Windows::Devices::Midi2::MidiOutputEndpointConnection ConnectOutputEndpoint(hstring const& deviceId, hstring const& tag, winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& settings);
-        winrt::Windows::Devices::Midi2::MidiInputEndpointConnection ConnectInputEndpoint(hstring const& deviceId, hstring const& tag, winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& settings);
-        winrt::Windows::Devices::Midi2::MidiBidirectionalEndpointConnection ConnectBidirectionalEndpoint(hstring const& deviceId, hstring const& tag, winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& settings);
+        winrt::Windows::Devices::Midi2::MidiOutputEndpointConnection ConnectOutputEndpoint(hstring const& deviceId, winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& settings);
+        winrt::Windows::Devices::Midi2::MidiInputEndpointConnection ConnectInputEndpoint(hstring const& deviceId, winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& settings);
+        winrt::Windows::Devices::Midi2::MidiBidirectionalEndpointConnection ConnectBidirectionalEndpoint(hstring const& deviceId, winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& settings);
+
         void DisconnectEndpointConnection(hstring const& endpointConnectionId);
-        //void DisconnectAllConnectionsForEndpoint(hstring const& deviceId);
 
         void Close();   // via IClosable
 
@@ -42,7 +42,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void SetName(hstring value) { _name = value; }
         void SetSettings(MidiSessionSettings value) { _settings = value; }
 
-        bool Start();
+        bool InternalStart();
 
     private:
         bool _isOpen;
@@ -63,10 +63,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
         hstring NormalizeDeviceId(const hstring& deviceId);
-        bool ActivateMidiStream(const IID& iid, void** iface);
 
-        template<class TInterface>
-        std::shared_ptr<internal::InternalMidiDeviceConnection> GetOrCreateAndInitializeDeviceConnection(std::string normalizedDeviceId, winrt::com_ptr<TInterface> iface);
+        //template<class TInterface>
+        //std::shared_ptr<internal::InternalMidiDeviceConnection> GetOrCreateAndInitializeDeviceConnection(std::string normalizedDeviceId, winrt::com_ptr<TInterface> iface);
 
     };
 }

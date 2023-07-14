@@ -16,6 +16,7 @@ namespace Windows.Devices.Midi2
 	{
 		MidiUmp64();
 		MidiUmp64(UInt64 timestamp, UInt32 word0, UInt32 word1);
+		MidiUmp64(UInt64 timestamp, UInt32[] words);
 
 		UInt32 Word0{ get; set; };
 		UInt32 Word1{ get; set; };

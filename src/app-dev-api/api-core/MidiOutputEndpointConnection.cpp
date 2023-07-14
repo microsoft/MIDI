@@ -19,13 +19,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return false;
     }
 
-
-
-
-    //uint32_t MidiOutputEndpointConnection::SendBuffer(internal::MidiTimestamp, winrt::Windows::Foundation::IMemoryBuffer const& midiData, uint32_t byteOffset, uint32_t length)
-    //{
-    //    throw hresult_not_implemented();
-    //}
     bool MidiOutputEndpointConnection::SendUmp(winrt::Windows::Devices::Midi2::IMidiUmp const& ump)
     {
         throw hresult_not_implemented();

@@ -25,12 +25,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static hstring GetDeviceSelectorForInput() { return L""; /* TODO */ }
 
-        uint32_t ReceiveBuffer(winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffsetinBuffer, uint32_t maxBytesToReceive);
-
-
         STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position) override;
 
-        //inline winrt::event_token MessagesReceived(winrt::Windows::Foundation::TypedEventHandler<winrt::Windows::Devices::Midi2::IMidiInputConnection, winrt::Windows::Devices::Midi2::MidiMessagesReceivedEventArgs> const& handler)
         inline winrt::event_token MessageReceived(winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs> const& handler)
         {
             return _messagesReceivedEvent.add(handler);
@@ -41,11 +37,31 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _messagesReceivedEvent.remove(token);
         }
 
+
+
+
+        winrt::event_token WordsReceived(winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiWordsReceivedEventArgs> const& handler)
+        {
+            return _wordsReceivedEvent.add(handler);
+        }
+
+        void WordsReceived(winrt::event_token const& token) noexcept
+        {
+            _wordsReceivedEvent.remove(token);
+        }
+
+
+
+
+
+
+
         bool InternalStart(std::shared_ptr<internal::InternalMidiDeviceConnection> deviceConnection);
 
     private:
         //winrt::event<winrt::Windows::Foundation::TypedEventHandler<winrt::Windows::Devices::Midi2::IMidiInputConnection, winrt::Windows::Devices::Midi2::MidiMessagesReceivedEventArgs>> _messagesReceivedEvent;
         winrt::event<winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs>> _messagesReceivedEvent;
+        winrt::event<winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiWordsReceivedEventArgs>> _wordsReceivedEvent;
 
 
 
