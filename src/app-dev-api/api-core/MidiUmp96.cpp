@@ -35,9 +35,4 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
-    //winrt::Windows::Foundation::IMemoryBuffer MidiUmp96::RawData()
-    //{
-    //    throw hresult_not_implemented();
-    //}
-
 }

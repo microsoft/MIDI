@@ -346,7 +346,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         if (_isOpen)
         {
-         //   Close();
+            Close();
         }
     }
 }

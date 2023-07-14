@@ -10,9 +10,7 @@
 #include <Windows.h>
 
 #include <wil\resource.h>
-//#include <wil\result_macros.h>
-
-//#include "..\api-core\ump_helpers.h"
+#include "..\api-core\midi_service_interface.h"
 
 using namespace winrt;
 using namespace winrt::Windows::Devices::Midi2;
@@ -20,8 +18,40 @@ using namespace winrt::Windows::Devices::Midi2;
 #define BIDI_ENDPOINT_DEVICE_ID L"foobarbaz"
 
 
-TEST_CASE("Benchmark.Endpoint.MultipleUmps Send and receive mixed multiple messages through loopback")
+
+// NOTE: This is using internal communication to test the service. This is not supported
+// in applications and is likely to break over time. Applications must use the API, and 
+// preferably also the SDK.
+
+class TestCallbackClass : public IMidiCallback
 {
+public:
+	std::function<void(PVOID, UINT32, LONGLONG)> MidiInCallback;
+
+	STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position)
+	{
+//		std::cout << "TestCallbackClass::Callback" << std::endl;
+
+		if (MidiInCallback)
+		{
+			MidiInCallback(Data, Size, Position);
+		}
+		return S_OK;
+	}
+
+	// The test library is not refcounted, stubbed.
+	STDMETHODIMP QueryInterface(REFIID, void**) { return S_OK; }
+	STDMETHODIMP_(ULONG) AddRef() { return 1; }
+	STDMETHODIMP_(ULONG) Release() { return 1; }
+};
+
+
+TEST_CASE("Benchmark.MidiSrv.MultipleUmps Send and receive mixed multiple messages through loopback")
+{
+
+
+	TestCallbackClass callback{};
+
 	std::cout << std::endl;
 
 	uint32_t numMessagesToSend = 1000;
@@ -32,49 +62,48 @@ TEST_CASE("Benchmark.Endpoint.MultipleUmps Send and receive mixed multiple messa
 
 	uint64_t setupStartTimestamp = MidiClock::GetMidiTimestamp();
 
-	auto settings = MidiSessionSettings::Default();
-	auto session = MidiSession::CreateSession(L"Test Session Name", settings);
-
-	REQUIRE((bool)(session.IsOpen()));
-	REQUIRE((bool)(session.Connections().Size() == 0));
-
-	auto conn1 = session.ConnectBidirectionalEndpoint(BIDI_ENDPOINT_DEVICE_ID, L"", nullptr);
-
-	REQUIRE((bool)(conn1 != nullptr));
+	winrt::com_ptr<IMidiAbstraction> serviceAbstraction;
+	winrt::com_ptr<IMidiBiDi> umpEndpointInterface;
+	std::wstring normalizedDeviceId{ BIDI_ENDPOINT_DEVICE_ID };
+	DWORD mmcssTaskId{ 0 };
 
 
-	auto ump32mt = MidiUmpMessageType::UtilityMessage32;
-	auto ump64mt = MidiUmpMessageType::DataMessage64;
-	auto ump96mt = MidiUmpMessageType::FutureReservedB96;
-	auto ump128mt = MidiUmpMessageType::FlexData128;
+	std::cout << "Creating service abstraction" << std::endl;
+
+	serviceAbstraction = winrt::create_instance<IMidiAbstraction>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
+
+	std::cout << "Activating BiDi abstraction" << std::endl;
+
+	winrt::check_hresult(serviceAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&umpEndpointInterface));
+
+	std::cout << "Initializing BiDi abstraction" << std::endl;
+
+	winrt::check_hresult(umpEndpointInterface->Initialize(
+		(LPCWSTR)(normalizedDeviceId.c_str()),
+		&mmcssTaskId,
+		(IMidiCallback*)(&callback))
+	);
+
 
 	std::vector<uint64_t> timestampDeltas;
 	timestampDeltas.reserve(numMessagesToSend);
 
+	std::cout << "Assigning callback" << std::endl;
 
-	auto MessageReceivedHandler = [&allMessagesReceived, &receivedMessageCount, &numMessagesToSend, &timestampDeltas](winrt::Windows::Foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
+	callback.MidiInCallback = [&](PVOID payload, UINT32 payloadSize, LONGLONG payloadPosition)
 		{
-			REQUIRE((bool)(args != nullptr));
-
 			receivedMessageCount++;
 
-			// this is to help with calculating jitter. Keep in mind that jitter will be 
-			// negatively affected by our receive loop as well, but should be close enough
-			// to real-world expectations
 			uint64_t currentStamp = MidiClock::GetMidiTimestamp();
-			uint64_t umpStamp = args.Ump().Timestamp();
-			//uint64_t umpStamp = args.Timestamp();
+			uint64_t umpStamp = payloadPosition;
+
 			timestampDeltas.push_back(currentStamp - umpStamp);
 
 			if (receivedMessageCount == numMessagesToSend)
 			{
 				allMessagesReceived.SetEvent();
 			}
-
 		};
-
-	auto eventRevokeToken = conn1.MessageReceived(MessageReceivedHandler);
-
 
 	uint32_t numBytes = 0;
 	uint32_t ump32Count = 0;
@@ -93,8 +122,10 @@ TEST_CASE("Benchmark.Endpoint.MultipleUmps Send and receive mixed multiple messa
 	// certain times. The exception is any device which relies on SysEx for
 	// parameter changes on the fly.
 
+	std::cout << "Sending messages" << std::endl;
+
 	uint32_t words[]{ 0x40000000,0,0,0 };
-	uint32_t wordCount = 2;
+	uint32_t wordCount = 4;
 
 	for (int i = 0; i < numMessagesToSend; i++)
 	{
@@ -145,8 +176,8 @@ TEST_CASE("Benchmark.Endpoint.MultipleUmps Send and receive mixed multiple messa
 		//	MidiUmp128 ump128{};
 		//	ump128.MessageType(ump128mt);
 		//	ump = ump128.as<IMidiUmp>();
-			numBytes += sizeof(uint32_t) * 4 + sizeof(uint64_t);
-		//	ump128Count++;
+		numBytes += sizeof(uint32_t) * 4 + sizeof(uint64_t);
+		ump128Count++;
 		//}
 		//break;
 		//}
@@ -154,7 +185,9 @@ TEST_CASE("Benchmark.Endpoint.MultipleUmps Send and receive mixed multiple messa
 		//ump.Timestamp(MidiClock::GetMidiTimestamp());
 		//conn1.SendUmp(ump);
 
-		conn1.SendWords(MidiClock::GetMidiTimestamp(), words, wordCount);
+		//conn1.SendWords(MidiClock::GetMidiTimestamp(), words, wordCount);
+
+		umpEndpointInterface->SendMidiMessage((void*)words, wordCount * sizeof(uint32_t), MidiClock::GetMidiTimestamp());
 
 	}
 
@@ -287,9 +320,9 @@ TEST_CASE("Benchmark.Endpoint.MultipleUmps Send and receive mixed multiple messa
 	}
 
 	// unwire event
-	conn1.MessageReceived(eventRevokeToken);
+//	conn1.MessageReceived(eventRevokeToken);
 
 	// cleanup endpoint. Technically not required as session will do it
-	session.DisconnectEndpointConnection(conn1.Id());
+//	session.DisconnectEndpointConnection(conn1.Id());
 }
 

@@ -34,11 +34,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         memcpy((void*)&_ump, data, sizeof(internal::PackedUmp64));
     }
 
-    //winrt::Windows::Foundation::IMemoryBuffer MidiUmp64::RawData()
-    //{
-    //    throw hresult_not_implemented();
-    //}
-
 
 }
 

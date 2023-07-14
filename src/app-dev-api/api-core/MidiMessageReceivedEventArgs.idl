@@ -26,5 +26,9 @@ namespace Windows.Devices.Midi2
 
         IMidiUmp Ump{ get; };
 
+ //       UInt32[] Words{ get; };
+ //       UInt32 WordCount{ get; };
+ //       UInt64 Timestamp{ get; };
+
     }
 }

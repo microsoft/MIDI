@@ -42,9 +42,6 @@
     <ClCompile Include="MidiSessionSettings.cpp">
       <Filter>SDK\Session</Filter>
     </ClCompile>
-    <ClCompile Include="MidiMessagesReceivedEventArgs.cpp">
-      <Filter>SDK\Endpoints</Filter>
-    </ClCompile>
     <ClCompile Include="MidiBidirectionalEndpointConnection.cpp">
       <Filter>API\Endpoints</Filter>
     </ClCompile>
@@ -78,9 +75,6 @@
     <ClInclude Include="MidiSession.h" />
     <ClInclude Include="MidiSessionSettings.h">
       <Filter>SDK\Session</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiMessagesReceivedEventArgs.h">
-      <Filter>SDK\Endpoints</Filter>
     </ClInclude>
     <ClInclude Include="ump_helpers.h">
       <Filter>Internal</Filter>
@@ -153,9 +147,6 @@
     </Midl>
     <Midl Include="IMidiEndpointConnectionSettings.idl">
       <Filter>API\Endpoints\Contracts</Filter>
-    </Midl>
-    <Midl Include="MidiMessageClientFilterStrategy.idl">
-      <Filter>API\Endpoints</Filter>
     </Midl>
     <Midl Include="MidiClock.idl">
       <Filter>API\Utility</Filter>

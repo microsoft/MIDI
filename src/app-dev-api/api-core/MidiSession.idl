@@ -13,7 +13,6 @@ import "MidiBidirectionalEndpointConnection.idl";
 
 import "IMidiEndpointConnectionSettings.idl";
 import "MidiSessionSettings.idl";
-import "MidiMessageClientFilterStrategy.idl";
 
 namespace Windows.Devices.Midi2
 {

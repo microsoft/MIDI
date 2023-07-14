@@ -21,20 +21,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     // This implementation will need to change ---------------------------------------------------------------------------
 
     IFACEMETHODIMP MidiBidirectionalEndpointConnection::Callback(PVOID Data, UINT Size, LONGLONG Timestamp)
-    {
-        //std::cout << __FUNCTION__ << " message received in callback" << std::endl;
-        //std::cout << " - Data Size is " << std::dec << Size << std::endl;
-        //std::cout << " - Timestamp is " << std::hex << Timestamp << std::endl;
-        //std::cout << " - First Word is " << std::hex << *(uint32_t*)Data << std::endl;
-
-        // maybe checking this in the callback is overkill
-        WINRT_ASSERT(internal::IsValidSingleUmpBufferSize(Size));
-     
-        auto bd = (byte*)Data;
-
-        byte mt = internal::GetUmpMessageTypeFromFirstWord(*(uint32_t*)Data);
- //       std::cout << " - Message Type in data is " << std::hex << (int)mt << std::endl;
-
+    {   
         if (_messageReceivedEvent)
         {
             auto args = winrt::make_self<MidiMessageReceivedEventArgs>();
@@ -61,11 +48,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 return E_FAIL;
             }
 
-            // todo, set up the buffer / args
+            //args->InternalSetData((uint32_t*)Data, Size / sizeof(uint32_t), Timestamp);
 
-            //_messagesReceivedEvent(*this, nullptr);
             _messageReceivedEvent(*this, *args);
-            //           _messagesReceivedEvent((IMidiInputConnection)(*this), args);
+
+           // _messageReceivedEvent(*this, nullptr);
+
         }
 
         return S_OK;

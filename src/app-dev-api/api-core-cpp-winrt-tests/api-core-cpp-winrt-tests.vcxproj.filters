@@ -24,6 +24,9 @@
     <ClCompile Include="Benchmarks.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
+    <ClCompile Include="BaselineMidiSrvBenchmark.cpp">
+      <Filter>Tests</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -32,8 +35,8 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include="PropertySheet.props" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Catch">
@@ -45,5 +48,8 @@
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="api-core-cpp-winrt-tests.exe.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
   </ItemGroup>
 </Project>

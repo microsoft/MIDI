@@ -262,7 +262,6 @@
     <Midl Include="MidiMessageBuffer.idl" />
     <Midl Include="MidiClock.idl" />
     <Midl Include="MidiInputEndpointConnection.idl" />
-    <Midl Include="MidiMessageClientFilterStrategy.idl" />
     <Midl Include="MidiMessageReceivedEventArgs.idl" />
     <Midl Include="MidiEndpointConnection.idl" />
     <Midl Include="IMidiEndpointConnectionSettings.idl" />

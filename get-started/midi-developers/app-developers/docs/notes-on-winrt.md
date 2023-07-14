@@ -16,15 +16,31 @@ When run outside the tools, you'll need to be prepared to either use a packaged 
 <assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
     <assemblyIdentity version="1.0.0.0" name="MyArbitraryButUniqueApplicationName.app"/>
     <file name="Windows.Devices.Midi2.dll">		
-		<activatableClass name="Windows.Devices.Midi2.MidiSession" 
+        <activatableClass name="Windows.Devices.Midi2.MidiClock" 
             threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
-		<activatableClass name="Windows.Devices.Midi2.MidiUmp32"
+        <activatableClass name="Windows.Devices.Midi2.MidiSession" 
             threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
-		<activatableClass name="Windows.Devices.Midi2.MidiUmp64"
+        <activatableClass name="Windows.Devices.Midi2.MidiSessionSettings" 
             threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
-		<activatableClass name="Windows.Devices.Midi2.MidiUmp96"
+        <activatableClass name="Windows.Devices.Midi2.MidiUmp32"
             threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
-		<activatableClass name="Windows.Devices.Midi2.MidiUmp128"
+        <activatableClass name="Windows.Devices.Midi2.MidiUmp64"
+            threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass name="Windows.Devices.Midi2.MidiUmp96"
+            threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass name="Windows.Devices.Midi2.MidiUmp128"
+            threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass name="Windows.Devices.Midi2.MidiMessageReceivedEventArgs"
+            threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass name="Windows.Devices.Midi2.MidiBidrectionalEndpointConnection"
+            threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass name="Windows.Devices.Midi2.MidiInputEndpointConnection"
+            threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass name="Windows.Devices.Midi2.MidiOutputEndpointConnection"
+            threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass name="Windows.Devices.Midi2.MidiEndpointConnection"
+            threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass name="Windows.Devices.Midi2.MidiMessageBuffer"
             threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
         ...
 	</file>

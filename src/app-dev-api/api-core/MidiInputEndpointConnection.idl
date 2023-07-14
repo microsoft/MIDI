@@ -15,11 +15,15 @@ import "IMidiInputConnection.idl";
 
 namespace Windows.Devices.Midi2
 {
+//    delegate void MessageReceived(IInspectable source, UInt64 timestamp, UInt32[] words);
+
     [default_interface]
     runtimeclass MidiInputEndpointConnection : Windows.Devices.Midi2.MidiEndpointConnection, 
                                                Windows.Devices.Midi2.IMidiInputConnection
     {
         // Get the enumeration device selector for all compatible devices
         static String GetDeviceSelectorForInput();
+
+
     }
 }

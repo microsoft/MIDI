@@ -48,12 +48,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
         STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position) override;
         
         //inline winrt::event_token MessagesReceived(winrt::Windows::Foundation::TypedEventHandler<winrt::Windows::Devices::Midi2::IMidiInputConnection, winrt::Windows::Devices::Midi2::MidiMessagesReceivedEventArgs> const& handler)
-        inline winrt::event_token MessageReceived(winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs> const& handler)
+        winrt::event_token MessageReceived(winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs> const& handler)
         {
             return _messageReceivedEvent.add(handler);
         }
 
-        inline void MessageReceived(winrt::event_token const& token) noexcept
+        void MessageReceived(winrt::event_token const& token) noexcept
         {
             _messageReceivedEvent.remove(token);
         }

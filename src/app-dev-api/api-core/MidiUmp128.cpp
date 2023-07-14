@@ -26,7 +26,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
     MidiUmp128::MidiUmp128(internal::MidiTimestamp timestamp, PVOID data)
         : MidiUmp128()
     {
-     //   WINRT_ASSERT(_ump != nullptr);
         WINRT_ASSERT(data != nullptr);
 
         _timestamp = timestamp;
@@ -35,10 +34,5 @@ namespace winrt::Windows::Devices::Midi2::implementation
         memcpy((void*)&_ump, data, sizeof(internal::PackedUmp128));
     }
 
-
-    //winrt::Windows::Foundation::IMemoryBuffer MidiUmp128::RawData()
-    //{
-    //    throw hresult_not_implemented();
-    //}
 
 }
