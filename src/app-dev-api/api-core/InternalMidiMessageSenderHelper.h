@@ -94,13 +94,15 @@ namespace Windows::Devices::Midi2::Internal
             }
             else
             {
-                std::cout << __FUNCTION__ << " _bidiEndpoint is nullptr" << std::endl;
+                OutputDebugString(L"" __FUNCTION__ " endpoint is nullptr");
 
                 return false;
             }
         }
         catch (winrt::hresult_error const& ex)
         {
+            OutputDebugString(L"" __FUNCTION__ " hresult exception sending message. Is the service running?");
+
             //std::cout << __FUNCTION__ << " hresult exception sending message" << std::endl;
             //std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
             //std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;

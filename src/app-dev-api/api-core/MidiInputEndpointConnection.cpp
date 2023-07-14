@@ -19,7 +19,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
-    bool MidiInputEndpointConnection::InternalStart(std::shared_ptr<internal::InternalMidiDeviceConnection> deviceConnection)
+    bool MidiInputEndpointConnection::InternalStart()
     {
         return false;
     }

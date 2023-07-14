@@ -30,8 +30,6 @@ public:
 
 	STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position)
 	{
-//		std::cout << "TestCallbackClass::Callback" << std::endl;
-
 		if (MidiInCallback)
 		{
 			MidiInCallback(Data, Size, Position);
@@ -46,7 +44,7 @@ public:
 };
 
 
-TEST_CASE("Connected.Benchmark.MidiSrv Send / receive messages through loopback")
+TEST_CASE("Connected.Benchmark.MidiSrv Baseline Send / receive messages through loopback")
 {
 	TestCallbackClass callback{};
 

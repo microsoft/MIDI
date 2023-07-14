@@ -56,7 +56,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
-        bool InternalStart(std::shared_ptr<internal::InternalMidiDeviceConnection> deviceConnection);
+        bool InternalStart();
 
     private:
         //winrt::event<winrt::Windows::Foundation::TypedEventHandler<winrt::Windows::Devices::Midi2::IMidiInputConnection, winrt::Windows::Devices::Midi2::MidiMessagesReceivedEventArgs>> _messagesReceivedEvent;

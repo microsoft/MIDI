@@ -11,8 +11,6 @@ namespace Windows.Devices.Midi2
     [default_interface]
     runtimeclass MidiWordsReceivedEventArgs
     {
-        MidiWordsReceivedEventArgs();
-
         UInt32[] Words{ get; };
         UInt32 WordCount{ get; };
         UInt64 Timestamp{ get; };

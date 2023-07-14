@@ -25,11 +25,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
             WINRT_ASSERT(data != nullptr);
             WINRT_ASSERT(wordCount > 0);
 
+            _timestamp = timestamp;
             _words = std::make_unique<uint32_t[]>(wordCount);
             memcpy(_words.get(), data, wordCount * sizeof(uint32_t));
         }
 
-        winrt::Windows::Devices::Midi2::IMidiUmp Ump();
         com_array<uint32_t> Words() { return com_array<uint32_t>(_words.get() [_wordCount]); }
         uint32_t WordCount() { return _wordCount; }
         uint64_t Timestamp() { return _timestamp; }
@@ -41,9 +41,4 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     };
 }
-namespace winrt::Windows::Devices::Midi2::factory_implementation
-{
-    struct MidiWordsReceivedEventArgs : MidiWordsReceivedEventArgsT<MidiWordsReceivedEventArgs, implementation::MidiWordsReceivedEventArgs>
-    {
-    };
-}
+

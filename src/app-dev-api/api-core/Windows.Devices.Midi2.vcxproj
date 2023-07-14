@@ -201,7 +201,9 @@
     <ClInclude Include="MidiUmp96.h">
       <DependentUpon>MidiUmp96.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiWordsReceivedEventArgs.h" />
+	  <ClInclude Include="MidiWordsReceivedEventArgs.h">
+		  <DependentUpon>MidiWordsReceivedEventArgs.idl</DependentUpon>
+	  </ClInclude>
     <ClInclude Include="midi_service_interface.h" />
     <ClInclude Include="ump_helpers.h" />
     <ClInclude Include="MidiSession.h">
@@ -248,7 +250,9 @@
     <ClCompile Include="MidiUmp96.cpp">
       <DependentUpon>MidiUmp96.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiWordsReceivedEventArgs.cpp" />
+	  <ClCompile Include="MidiWordsReceivedEventArgs.cpp">
+		  <DependentUpon>MidiWordsReceivedEventArgs.idl</DependentUpon>
+	  </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>

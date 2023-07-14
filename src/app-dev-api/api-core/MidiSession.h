@@ -53,7 +53,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool _useMmcss{ true };
         DWORD _mmcssTaskId{ 0 };
 
-        std::unordered_map<std::string, std::shared_ptr<internal::InternalMidiDeviceConnection>> _internalDeviceConnections{};
+ //       std::unordered_map<std::string, std::shared_ptr<internal::InternalMidiDeviceConnection>> _internalDeviceConnections{};
 
 
         winrt::impl::com_ref<IMidiAbstraction> _serviceAbstraction;

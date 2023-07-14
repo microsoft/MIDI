@@ -23,7 +23,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool SendUmpWords(uint64_t timestamp, array_view<uint32_t const> words, uint32_t wordCount);
 
     
-        bool InternalStart(::Windows::Devices::Midi2::Internal::InternalMidiDeviceConnection* connection);
+        bool InternalStart();
 
     private:
 

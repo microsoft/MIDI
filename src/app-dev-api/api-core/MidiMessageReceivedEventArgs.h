@@ -31,9 +31,3 @@ namespace winrt::Windows::Devices::Midi2::implementation
     };
 }
 
-namespace winrt::Windows::Devices::Midi2::factory_implementation
-{
-    struct MidiMessageReceivedEventArgs : MidiMessageReceivedEventArgsT<MidiMessageReceivedEventArgs, implementation::MidiMessageReceivedEventArgs>
-    {
-    };
-}

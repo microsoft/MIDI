@@ -14,7 +14,7 @@
 namespace winrt::Windows::Devices::Midi2::implementation
 {
 
-    bool MidiOutputEndpointConnection::InternalStart(::Windows::Devices::Midi2::Internal::InternalMidiDeviceConnection* connection)
+    bool MidiOutputEndpointConnection::InternalStart()
     {
         return false;
     }

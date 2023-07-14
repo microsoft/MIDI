@@ -162,9 +162,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
-            std::cout << __FUNCTION__ << " hresult exception on Initialize endpoint with callback" << std::endl;
-            std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
-            std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
+            //std::cout << __FUNCTION__ << " hresult exception on Initialize endpoint with callback" << std::endl;
+            //std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
+            //std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
 
             _endpointInterface = nullptr;
 

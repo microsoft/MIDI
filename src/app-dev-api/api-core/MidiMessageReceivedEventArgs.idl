@@ -13,9 +13,6 @@ namespace Windows.Devices.Midi2
     [default_interface]
     runtimeclass MidiMessageReceivedEventArgs
     {
-        MidiMessageReceivedEventArgs();
-
         IMidiUmp Ump{ get; };
-
     }
 }
