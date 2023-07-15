@@ -9,7 +9,7 @@
 
 import "MidiFunctionBlockDirectionEnum.idl";
 import "MidiFunctionBlockUIHintEnum.idl";
-import "MidiUmpWithTimestamp.idl";
+//import "MidiUmpWithTimestamp.idl";
 import "MidiGroup.idl";
 
 namespace Microsoft.Devices.Midi2
@@ -31,7 +31,7 @@ namespace Microsoft.Devices.Midi2
         //IVector<MidiGroup> IncludedGroups{ get; };
         //IVector<UmpWithTimestamp> OriginalResponses{ get; };
         IVectorView<MidiGroup> IncludedGroups{ get; };
-        IVectorView<MidiUmpWithTimestamp> OriginalResponses{ get; };
+        IVectorView<Windows.Devices.Midi2.MidiUmp128> OriginalResponses{ get; };
 
         UInt8 MidiCIMessageVersionFormat{ get; };
 

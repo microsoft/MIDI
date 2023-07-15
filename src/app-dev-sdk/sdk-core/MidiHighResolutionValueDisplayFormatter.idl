@@ -13,7 +13,7 @@ namespace Microsoft.Devices.Midi2
     [default_interface]
     runtimeclass MidiHighResolutionValueDisplayFormatter
     {
-        MidiHighResolutionValueDisplayFormatter();
+        //MidiHighResolutionValueDisplayFormatter();
 
 
         // for values which are negative. Example 0 to UInt32 MaxValue

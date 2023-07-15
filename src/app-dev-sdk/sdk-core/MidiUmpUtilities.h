@@ -15,7 +15,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         MidiUmpUtilities() = default;
 
-        static winrt::Microsoft::Devices::Midi2::MidiUmpMessageType GetMessageTypeFromFirstWord(uint32_t firstWord);
+        static winrt::Windows::Devices::Midi2::MidiUmpMessageType GetMessageTypeFromFirstWord(uint32_t firstWord);
         static int16_t GetUmpLengthInWordsFromFirstWord(uint32_t firstWord);
     };
 }

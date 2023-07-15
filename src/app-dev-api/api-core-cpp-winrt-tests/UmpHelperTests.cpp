@@ -1,3 +1,12 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+
 #include "pch.h"
 
 #include "catch_amalgamated.hpp"
@@ -30,8 +39,8 @@ TEST_CASE("Offline.Ump.Helpers UMP Helpers")
 
 		result = GetUmpLengthInMidiWordsFromMessageType(15);
 		REQUIRE(result == 4);
-
 	}
+
 
 	SECTION("Test Internal GetUmpMessageTypeFromFirstWord")
 	{
@@ -63,6 +72,7 @@ TEST_CASE("Offline.Ump.Helpers UMP Helpers")
 		result = GetUmpMessageTypeFromFirstWord(word);
 		REQUIRE(result == 0x0);
 	}
+
 
 	SECTION("Test Internal SetUmpMessageType")
 	{
@@ -97,7 +107,6 @@ TEST_CASE("Offline.Ump.Helpers UMP Helpers")
 		word = 0xA8675309;
 		SetUmpMessageType(word, 0x00);
 		REQUIRE(word == 0x08675309);
-
 	}
 
 

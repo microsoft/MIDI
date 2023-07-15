@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.230524.4\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.230524.4\build\native\Microsoft.Windows.CppWinRT.props')" />
+  <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.props')" />
   <PropertyGroup Label="Globals">
     <ProjectName>Microsoft.Devices.Midi2.Core</ProjectName>
     <RootNamespace>Microsoft.Devices.Midi2</RootNamespace>
@@ -163,17 +163,8 @@
     <ClInclude Include="MidiHighResolutionValueDisplayFormatter.h">
       <DependentUpon>MidiHighResolutionValueDisplayFormatter.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiInteropHelper.h">
-      <DependentUpon>MidiInteropHelper.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiLocalizedStrings.h">
       <DependentUpon>MidiLocalizedStrings.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiEndpointConnection.h">
-      <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiEndpointConnectOptions.h">
-      <DependentUpon>MidiEndpointConnectOptions.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiEndpointInformation.h">
       <DependentUpon>MidiEndpointInformation.idl</DependentUpon>
@@ -187,25 +178,13 @@
     <ClInclude Include="MidiDeviceInformation.h">
       <DependentUpon>MidiDeviceInformation.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiMessageReader.h">
-      <DependentUpon>MidiMessageReader.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiMessagesReceivedEventArgs.h">
-      <DependentUpon>MidiMessagesReceivedEventArgs.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiMessageTranslator.h">
       <DependentUpon>MidiMessageTranslator.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiMessageWriter.h">
-      <DependentUpon>MidiMessageWriter.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiServices.h">
       <DependentUpon>MidiServices.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="midi_app_sdk_version.h">
-    </ClInclude>
-    <ClInclude Include="MidiSessionSettings.h">
-      <DependentUpon>MidiSessionSettings.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiTransportInformation.h">
       <DependentUpon>MidiTransportInformation.idl</DependentUpon>
@@ -221,13 +200,7 @@
     <ClInclude Include="MidiGroup.h">
       <DependentUpon>MidiGroup.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiSession.h">
-      <DependentUpon>MidiSession.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="pch.h" />
-    <ClInclude Include="MidiUmpWithTimestamp.h">
-      <DependentUpon>MidiUmpWithTimestamp.idl</DependentUpon>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Generated Files\module.g.cpp" />
@@ -237,17 +210,8 @@
     <ClCompile Include="MidiHighResolutionValueDisplayFormatter.cpp">
       <DependentUpon>MidiHighResolutionValueDisplayFormatter.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiInteropHelper.cpp">
-      <DependentUpon>MidiInteropHelper.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiLocalizedStrings.cpp">
       <DependentUpon>MidiLocalizedStrings.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiEndpointConnection.cpp">
-      <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiEndpointConnectOptions.cpp">
-      <DependentUpon>MidiEndpointConnectOptions.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiEndpointInformation.cpp">
       <DependentUpon>MidiEndpointInformation.idl</DependentUpon>
@@ -261,23 +225,11 @@
     <ClCompile Include="MidiDeviceInformation.cpp">
       <DependentUpon>MidiDeviceInformation.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiMessageReader.cpp">
-      <DependentUpon>MidiMessageReader.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiMessagesReceivedEventArgs.cpp">
-      <DependentUpon>MidiMessagesReceivedEventArgs.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiMessageTranslator.cpp">
       <DependentUpon>MidiMessageTranslator.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiMessageWriter.cpp">
-      <DependentUpon>MidiMessageWriter.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiServices.cpp">
       <DependentUpon>MidiServices.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiSessionSettings.cpp">
-      <DependentUpon>MidiSessionSettings.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiTransportInformation.cpp">
       <DependentUpon>MidiTransportInformation.idl</DependentUpon>
@@ -291,51 +243,29 @@
     <ClCompile Include="MidiGroup.cpp">
       <DependentUpon>MidiGroup.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiSession.cpp">
-      <DependentUpon>MidiSession.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="MidiUmpWithTimestamp.cpp">
-      <DependentUpon>MidiUmpWithTimestamp.idl</DependentUpon>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="IMidiEndpointSettingsData.idl" />
-    <Midl Include="IMidiSdkMessagePreProcessor.idl" />
     <Midl Include="IMidiTransportSettingsData.idl" />
     <Midl Include="MidiChannel.idl" />
     <Midl Include="MidiEndpointInformation.idl" />
     <Midl Include="MidiEndpointDataFormatEnum.idl" />
     <Midl Include="MidiFunctionBlockDirectionEnum.idl" />
     <Midl Include="MidiHighResolutionValueDisplayFormatter.idl" />
-    <Midl Include="MidiInteropHelper.idl" />
-    <Midl Include="MidiMessageReader.idl" />
-    <Midl Include="MidiMessagesReceivedEventArgs.idl" />
     <Midl Include="MidiMessageTranslator.idl" />
     <Midl Include="MidiDeviceInformation.idl" />
-    <Midl Include="MidiEndpointConnection.idl" />
-    <Midl Include="MidiEndpointConnectOptions.idl" />
     <Midl Include="MidiEndpointDisplayFormatter.idl" />
     <Midl Include="MidiFunctionBlock.idl" />
     <Midl Include="MidiFunctionBlockUIHintEnum.idl" />
     <Midl Include="MidiGroup.idl" />
     <Midl Include="MidiGroupTerminalBlock.idl" />
     <Midl Include="MidiLocalizedStrings.idl" />
-    <Midl Include="MidiUmpMessageTypeEnum.idl" />
-    <Midl Include="MidiMessageWriter.idl" />
     <Midl Include="MidiServices.idl" />
-    <Midl Include="MidiSession.idl" />
-    <Midl Include="MidiSessionSettings.idl" />
     <Midl Include="MidiTransportInformation.idl" />
-    <Midl Include="MidiUmp128.idl" />
-    <Midl Include="MidiUmp32.idl" />
-    <Midl Include="MidiUmp64.idl" />
-    <Midl Include="MidiUmp96.idl" />
-    <Midl Include="MidiUmpSizeEnum.idl" />
     <Midl Include="MidiUmpUtilities.idl" />
-    <Midl Include="MidiUmpWithTimestamp.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-sdk.def" />
@@ -348,15 +278,20 @@
     <PRIResource Include="..\..\shared\strings\en-US\MidiEntities.resw" />
     <PRIResource Include="..\..\shared\strings\en-US\MidiMessageResources.resw" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\app-dev-api\api-core\Windows.Devices.Midi2.vcxproj">
+      <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.230524.4\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.230524.4\build\native\Microsoft.Windows.CppWinRT.targets')" />
+    <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.230524.4\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.230524.4\build\native\Microsoft.Windows.CppWinRT.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.230524.4\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.230524.4\build\native\Microsoft.Windows.CppWinRT.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.targets'))" />
   </Target>
 </Project>

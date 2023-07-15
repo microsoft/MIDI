@@ -1,3 +1,16 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+// ----------------------------------------------------------------------------
+// This requires the version of MidiSrv with the hard-coded loopback endpoint
+// ----------------------------------------------------------------------------
+
+
 #include "pch.h"
 
 #include "catch_amalgamated.hpp"

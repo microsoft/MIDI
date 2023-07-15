@@ -26,14 +26,8 @@
     <Filter Include="Internal">
       <UniqueIdentifier>{6abb387d-1da9-403e-bb35-70e4359f1b00}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SDK\Session">
-      <UniqueIdentifier>{6427be3d-78fd-4fff-9bf4-2353b462bfc3}</UniqueIdentifier>
-    </Filter>
     <Filter Include="SDK\Transports">
       <UniqueIdentifier>{7a309dc0-af6f-4fa7-8827-649ef97dcc9a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="SDK\Collections">
-      <UniqueIdentifier>{52b13e6c-2b08-4876-b259-c8a335409409}</UniqueIdentifier>
     </Filter>
     <Filter Include="Resources\Strings">
       <UniqueIdentifier>{58686a9f-285f-4481-b81c-3f06420aad3d}</UniqueIdentifier>
@@ -41,50 +35,33 @@
     <Filter Include="Resources\Strings\en-US">
       <UniqueIdentifier>{53c77fb9-8938-4813-ab1f-eb196c6512ab}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SDK\Interop">
-      <UniqueIdentifier>{39df70f7-ed7c-4e1d-b687-1a589f228d41}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="MidiChannel.cpp" />
     <ClCompile Include="MidiGroup.cpp" />
-    <ClCompile Include="MidiSession.cpp" />
     <ClCompile Include="Generated Files\module.g.cpp" />
     <ClCompile Include="MidiServices.cpp" />
-    <ClCompile Include="MidiSessionSettings.cpp">
-      <Filter>SDK\Session</Filter>
-    </ClCompile>
     <ClCompile Include="MidiHighResolutionValueDisplayFormatter.cpp">
       <Filter>SDK\Display</Filter>
     </ClCompile>
     <ClCompile Include="MidiTransportInformation.cpp">
       <Filter>SDK\Transports</Filter>
     </ClCompile>
-    <ClCompile Include="MidiMessagesReceivedEventArgs.cpp">
-      <Filter>SDK\Endpoints</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="MidiChannel.h" />
     <ClInclude Include="MidiGroup.h" />
-    <ClInclude Include="MidiSession.h" />
     <ClInclude Include="MidiServices.h" />
     <ClInclude Include="midi_app_sdk_version.h">
       <Filter>Internal</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiSessionSettings.h">
-      <Filter>SDK\Session</Filter>
     </ClInclude>
     <ClInclude Include="MidiHighResolutionValueDisplayFormatter.h">
       <Filter>SDK\Display</Filter>
     </ClInclude>
     <ClInclude Include="MidiTransportInformation.h">
       <Filter>SDK\Transports</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiMessagesReceivedEventArgs.h">
-      <Filter>SDK\Endpoints</Filter>
     </ClInclude>
     <ClInclude Include="ump_helpers.h">
       <Filter>Internal</Filter>
@@ -100,19 +77,10 @@
     <Midl Include="MidiMessageTranslator.idl">
       <Filter>SDK\Messages</Filter>
     </Midl>
-    <Midl Include="MidiUmpMessageTypeEnum.idl">
-      <Filter>SDK\Messages</Filter>
-    </Midl>
     <Midl Include="MidiDeviceInformation.idl">
       <Filter>SDK\Enumeration</Filter>
     </Midl>
-    <Midl Include="MidiEndpointConnection.idl">
-      <Filter>SDK\Endpoints</Filter>
-    </Midl>
     <Midl Include="MidiFunctionBlock.idl">
-      <Filter>SDK\Endpoints</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointConnectOptions.idl">
       <Filter>SDK\Endpoints</Filter>
     </Midl>
     <Midl Include="MidiEndpointDisplayFormatter.idl">
@@ -139,12 +107,6 @@
     <Midl Include="MidiServices.idl">
       <Filter>SDK</Filter>
     </Midl>
-    <Midl Include="MidiSession.idl">
-      <Filter>SDK\Session</Filter>
-    </Midl>
-    <Midl Include="MidiSessionSettings.idl">
-      <Filter>SDK\Session</Filter>
-    </Midl>
     <Midl Include="MidiHighResolutionValueDisplayFormatter.idl">
       <Filter>SDK\Display</Filter>
     </Midl>
@@ -163,43 +125,10 @@
     <Midl Include="MidiGroupTerminalBlock.idl">
       <Filter>SDK\Enumeration</Filter>
     </Midl>
-    <Midl Include="MidiUmpWithTimestamp.idl">
-      <Filter>SDK\Messages</Filter>
-    </Midl>
-    <Midl Include="IMidiSdkMessagePreProcessor.idl">
-      <Filter>SDK\Endpoints</Filter>
-    </Midl>
-    <Midl Include="MidiMessageReader.idl">
-      <Filter>SDK\Endpoints</Filter>
-    </Midl>
-    <Midl Include="MidiMessageWriter.idl">
-      <Filter>SDK\Endpoints</Filter>
-    </Midl>
-    <Midl Include="MidiMessagesReceivedEventArgs.idl">
-      <Filter>SDK\Endpoints</Filter>
-    </Midl>
-    <Midl Include="MidiUmp32.idl">
-      <Filter>SDK\Messages</Filter>
-    </Midl>
-    <Midl Include="MidiUmp64.idl">
-      <Filter>SDK\Messages</Filter>
-    </Midl>
-    <Midl Include="MidiUmp96.idl">
-      <Filter>SDK\Messages</Filter>
-    </Midl>
-    <Midl Include="MidiUmp128.idl">
-      <Filter>SDK\Messages</Filter>
-    </Midl>
-    <Midl Include="MidiUmpSizeEnum.idl">
-      <Filter>SDK\Messages</Filter>
-    </Midl>
-    <Midl Include="MidiInteropHelper.idl">
-      <Filter>SDK\Interop</Filter>
-    </Midl>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include="midi-app-sdk.def" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PropertySheet.props" />

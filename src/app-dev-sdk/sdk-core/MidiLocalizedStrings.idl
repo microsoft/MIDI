@@ -14,7 +14,7 @@
 
 // NOTE: This will change and may be replaced completely by the Win App SDK MRT Core and the .resw files
 
-import "MidiUmpMessageTypeEnum.idl";
+//import "MidiUmpMessageTypeEnum.idl";
 
 namespace Microsoft.Devices.Midi2
 {
@@ -27,7 +27,7 @@ namespace Microsoft.Devices.Midi2
    
 
         static String GetMidiMessageTypeLabel(Boolean abbreviatedVersion);
-        static String FormatMessageTypeValue(MidiUmpMessageType messageType, Boolean abbreviatedVersion);
+        static String FormatMessageTypeValue(Windows.Devices.Midi2.MidiUmpMessageType messageType, Boolean abbreviatedVersion);
 
         static String GetGroupLabel(Boolean abbreviatedVersion);
         static String FormatGroupValue(UInt8 groupIndex);
