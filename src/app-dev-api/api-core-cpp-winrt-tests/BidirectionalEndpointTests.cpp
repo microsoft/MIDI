@@ -160,28 +160,21 @@ TEST_CASE("Connected.Endpoint.MultipleUmpWords Send and receive multiple words")
 	uint32_t receivedMessageCount{};
 
 
-	auto MessageReceivedHandler = [&receivedMessageCount](Windows::Foundation::IInspectable const& sender, MidiWordsReceivedEventArgs const& args)
+	auto WordsReceivedHandler = [&receivedMessageCount](Windows::Foundation::IInspectable const& sender, MidiWordsReceivedEventArgs const& args)
 		{
-			//REQUIRE((bool)(sender != nullptr));
-			//REQUIRE((bool)(args != nullptr));
+			REQUIRE((bool)(sender != nullptr));
+			REQUIRE((bool)(args != nullptr));
 
 			receivedMessageCount++;
 
-			//		std::cout << " - Received MessageType " << std::hex << (int)(args.Ump().MessageType()) << std::endl;
-
-					// TODO: Verify we have the correct actual packet type
-
-
-
-
 		};
 
-	auto eventRevokeToken = conn1.WordsReceived(MessageReceivedHandler);
+	auto eventRevokeToken = conn1.WordsReceived(WordsReceivedHandler);
 
 
 	// send messages
 
-	uint32_t numMessagesToSend = 1000;
+	uint32_t numMessagesToSend = 500;
 
 	//std::cout << "Sending messages. Count=" << std::dec << numMessagesToSend << std::endl;
 

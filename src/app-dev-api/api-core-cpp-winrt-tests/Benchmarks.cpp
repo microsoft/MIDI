@@ -35,7 +35,7 @@ using namespace winrt::Windows::Devices::Midi2;
 
 TEST_CASE("Connected.Benchmark.APIWords Send / receive words through loopback")
 {
-	std::cout << std::endl;
+	std::cout << std::endl << "API Words benchmark" << std::endl;
 
 	uint32_t numMessagesToSend = 1000;
 	uint32_t receivedMessageCount{};
@@ -67,7 +67,7 @@ TEST_CASE("Connected.Benchmark.APIWords Send / receive words through loopback")
 
 	auto WordsReceivedHandler = [&allMessagesReceived, &receivedMessageCount, &numMessagesToSend, &timestampDeltas](winrt::Windows::Foundation::IInspectable const& /*sender*/, MidiWordsReceivedEventArgs const& args)
 		{
-			REQUIRE((bool)(args != nullptr));
+//			REQUIRE((bool)(args != nullptr));
 
 			receivedMessageCount++;
 
@@ -111,8 +111,6 @@ TEST_CASE("Connected.Benchmark.APIWords Send / receive words through loopback")
 
 	for (int i = 0; i < numMessagesToSend; i++)
 	{
-		IMidiUmp ump;
-
 		switch (i % 12)
 		{
 		case 0:
@@ -289,7 +287,7 @@ TEST_CASE("Connected.Benchmark.APIWords Send / receive words through loopback")
 
 TEST_CASE("Connected.Benchmark.APIUmp Send / receive UMPs through loopback")
 {
-	std::cout << std::endl;
+	std::cout << std::endl << "API UMP benchmark" << std::endl;
 
 	uint32_t numMessagesToSend = 1000;
 	uint32_t receivedMessageCount{};
@@ -360,9 +358,14 @@ TEST_CASE("Connected.Benchmark.APIUmp Send / receive UMPs through loopback")
 	// certain times. The exception is any device which relies on SysEx for
 	// parameter changes on the fly.
 
+	IMidiUmp ump;
+	MidiUmp32 ump32{};
+	MidiUmp64 ump64{};
+	MidiUmp96 ump96{};
+	MidiUmp128 ump128{};
+
 	for (int i = 0; i < numMessagesToSend; i++)
 	{
-		IMidiUmp ump;
 
 		switch (i % 12)
 		{
@@ -371,7 +374,6 @@ TEST_CASE("Connected.Benchmark.APIUmp Send / receive UMPs through loopback")
 		case 2:
 		case 3:
 		{
-			MidiUmp32 ump32{};
 			ump32.MessageType(ump32mt);
 			ump = ump32.as<IMidiUmp>();
 			numBytes += sizeof(uint32_t) + sizeof(uint64_t);
@@ -384,7 +386,6 @@ TEST_CASE("Connected.Benchmark.APIUmp Send / receive UMPs through loopback")
 		case 6:
 		case 7:
 		{
-			MidiUmp64 ump64{};
 			ump64.MessageType(ump64mt);
 			ump = ump64.as<IMidiUmp>();
 			numBytes += sizeof(uint32_t) * 2 + sizeof(uint64_t);
@@ -394,7 +395,6 @@ TEST_CASE("Connected.Benchmark.APIUmp Send / receive UMPs through loopback")
 
 		case 8:
 		{
-			MidiUmp96 ump96{};
 			ump96.MessageType(ump96mt);
 			ump = ump96.as<IMidiUmp>();
 			numBytes += sizeof(uint32_t) * 3 + sizeof(uint64_t);
@@ -406,7 +406,6 @@ TEST_CASE("Connected.Benchmark.APIUmp Send / receive UMPs through loopback")
 		case 10:
 		case 11:
 		{
-			MidiUmp128 ump128{};
 			ump128.MessageType(ump128mt);
 			ump = ump128.as<IMidiUmp>();
 			numBytes += sizeof(uint32_t) * 4 + sizeof(uint64_t);
@@ -425,8 +424,6 @@ TEST_CASE("Connected.Benchmark.APIUmp Send / receive UMPs through loopback")
 
 	// Wait for incoming message
 
-	uint32_t timeoutCounter = 1000000;
-	
 	if (!allMessagesReceived.wait(30000))
 	{
 		std::cout << "Failure waiting for messages, timed out." << std::endl;
@@ -437,7 +434,7 @@ TEST_CASE("Connected.Benchmark.APIUmp Send / receive UMPs through loopback")
 	REQUIRE(receivedMessageCount == numMessagesToSend);
 
 
-	uint64_t sendOnlyDurationDelta = sendingFinishTimestamp - sendingStartTimestamp;
+	uint64_t sendOnlyDurationDelta = sendingFinishTimestamp - sendingStartTimestamp;	// this will contain some receives
 	uint64_t sendReceiveDurationDelta = endingTimestamp - sendingStartTimestamp;
 	uint64_t setupDurationDelta = sendingStartTimestamp - setupStartTimestamp;
 

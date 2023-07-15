@@ -157,9 +157,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="MidiChannelEndpointListener.h" />
     <ClInclude Include="MidiEndpointDisplayFormatter.h">
       <DependentUpon>MidiEndpointDisplayFormatter.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiGroupEndpointListener.h" />
     <ClInclude Include="MidiHighResolutionValueDisplayFormatter.h">
       <DependentUpon>MidiHighResolutionValueDisplayFormatter.idl</DependentUpon>
     </ClInclude>
@@ -204,9 +206,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Generated Files\module.g.cpp" />
+    <ClCompile Include="MidiChannelEndpointListener.cpp" />
     <ClCompile Include="MidiEndpointDisplayFormatter.cpp">
       <DependentUpon>MidiEndpointDisplayFormatter.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiGroupEndpointListener.cpp" />
     <ClCompile Include="MidiHighResolutionValueDisplayFormatter.cpp">
       <DependentUpon>MidiHighResolutionValueDisplayFormatter.idl</DependentUpon>
     </ClCompile>

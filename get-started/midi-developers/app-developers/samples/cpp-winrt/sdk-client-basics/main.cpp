@@ -63,6 +63,8 @@ int main()
         Windows::Foundation::IAsyncOperation<DeviceInformationCollection> op = DeviceInformation::FindAllAsync(deviceSelector);
         DeviceInformationCollection endpointDevices = op.get();
 
+        // this currently requires you have a USB MIDI 1.0 device. If you have nothing connected, just remove this check for now
+        // That will change once MIDI 2.0 device selectors have been created
         if (endpointDevices.Size() > 0)
         {
             std::cout << "MIDI Endpoints were found (not really, but pretending they are for now)." << std::endl;
@@ -117,7 +119,7 @@ int main()
             auto ump = ump32.as<IMidiUmp>();
             endpoint.SendUmp(ump);
 
-            std::cout << "Wait for the message to arrive, and then press any key to cleanup." << std::endl;
+            std::cout << "Wait for the message to arrive, and then press enter to cleanup." << std::endl;
             system("pause");
 
             // deregister the event

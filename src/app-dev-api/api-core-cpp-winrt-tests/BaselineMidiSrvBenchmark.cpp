@@ -59,6 +59,10 @@ public:
 
 TEST_CASE("Connected.Benchmark.MidiSrv Baseline Send / receive messages through loopback")
 {
+	std::cout << std::endl << "Direct service benchmark" << std::endl;
+
+	std::cout << "Note: this benchmark is not 100% equivalent to the others because it uses the same memory for the UMP, without any other allocations." << std::endl;
+
 	TestCallbackClass callback{};
 
 	std::cout << std::endl;
@@ -120,16 +124,13 @@ TEST_CASE("Connected.Benchmark.MidiSrv Baseline Send / receive messages through 
 	uint32_t ump96Count = 0;
 	uint32_t ump128Count = 0;
 
+	auto ump32mt = MidiUmpMessageType::UtilityMessage32;
+	auto ump64mt = MidiUmpMessageType::DataMessage64;
+	auto ump96mt = MidiUmpMessageType::FutureReservedB96;
+	auto ump128mt = MidiUmpMessageType::FlexData128;
 
 	// send messages
 	uint64_t sendingStartTimestamp = MidiClock::GetMidiTimestamp();
-
-	// the distribution of messages here tries to mimic what we expect to be
-	// a reasonably typical mix. In reality, almost all messages going back
-	// and forth with an endpoint during a performance are going to be
-	// UMP32 (MIDI 1.0 CV) or UMP64 (MIDI 2.0 CV), with the others in only at 
-	// certain times. The exception is any device which relies on SysEx for
-	// parameter changes on the fly.
 
 	std::cout << "Sending messages" << std::endl;
 
@@ -138,63 +139,50 @@ TEST_CASE("Connected.Benchmark.MidiSrv Baseline Send / receive messages through 
 
 	for (int i = 0; i < numMessagesToSend; i++)
 	{
-		//IMidiUmp ump;
+		switch (i % 12)
+		{
+		case 0:
+		case 1:
+		case 2:
+		case 3:
+		{
+			words[0] = (uint32_t)ump32mt << 28;
+			wordCount = 1;
+			ump32Count++;
+		}
+		break;
 
-		//switch (i % 12)
-		//{
-		//case 0:
-		//case 1:
-		//case 2:
-		//case 3:
-		//{
-		//	MidiUmp32 ump32{};
-		//	ump32.MessageType(ump32mt);
-		//	ump = ump32.as<IMidiUmp>();
-		//	numBytes += sizeof(uint32_t) + sizeof(uint64_t);
-		//	ump32Count++;
-		//}
-		//break;
+		case 4:
+		case 5:
+		case 6:
+		case 7:
+		{
+			words[0] = (uint32_t)ump64mt << 28;
+			wordCount = 2;
+			ump64Count++;
+		}
+		break;
 
-		//case 4:
-		//case 5:
-		//case 6:
-		//case 7:
-		//{
-		//	MidiUmp64 ump64{};
-		//	ump64.MessageType(ump64mt);
-		//	ump = ump64.as<IMidiUmp>();
-		//	numBytes += sizeof(uint32_t) * 2 + sizeof(uint64_t);
-		//	ump64Count++;
-		//}
-		//break;
+		case 8:
+		{
+			words[0] = (uint32_t)ump96mt << 28;
+			wordCount = 3;
+			ump96Count++;
+		}
+		break;
 
-		//case 8:
-		//{
-		//	MidiUmp96 ump96{};
-		//	ump96.MessageType(ump96mt);
-		//	ump = ump96.as<IMidiUmp>();
-		//	numBytes += sizeof(uint32_t) * 3 + sizeof(uint64_t);
-		//	ump96Count++;
-		//}
-		//break;
+		case 9:
+		case 10:
+		case 11:
+		{
+			words[0] = (uint32_t)ump128mt << 28;
+			wordCount = 4;
+			ump128Count++;
+		}
+		break;
+		}
 
-		//case 9:
-		//case 10:
-		//case 11:
-		//{
-		//	MidiUmp128 ump128{};
-		//	ump128.MessageType(ump128mt);
-		//	ump = ump128.as<IMidiUmp>();
-		numBytes += sizeof(uint32_t) * 4 + sizeof(uint64_t);
-		ump128Count++;
-		//}
-		//break;
-		//}
-
-		//ump.Timestamp(MidiClock::GetMidiTimestamp());
-		//conn1.SendUmp(ump);
-
-		//conn1.SendWords(MidiClock::GetMidiTimestamp(), words, wordCount);
+		numBytes += sizeof(uint32_t) * wordCount + sizeof(uint64_t);
 
 		umpEndpointInterface->SendMidiMessage((void*)words, wordCount * sizeof(uint32_t), MidiClock::GetMidiTimestamp());
 
@@ -203,19 +191,11 @@ TEST_CASE("Connected.Benchmark.MidiSrv Baseline Send / receive messages through 
 	uint64_t sendingFinishTimestamp = MidiClock::GetMidiTimestamp();
 
 
-	// Wait for incoming message
+	// Wait for incoming messages. They already started coming in while we were in the send loop
 
 	uint32_t timeoutCounter = 1000000;
 	uint32_t numSleepCalls = 0;
 	uint32_t sleepDuration = 0;
-
-	//while (receivedMessageCount < numMessagesToSend && timeoutCounter > 0)
-	//{
-	//	Sleep(sleepDuration);
-
-	//	timeoutCounter--;
-	//	numSleepCalls++;
-	//}
 
 	if (!allMessagesReceived.wait(30000))
 	{
@@ -285,10 +265,8 @@ TEST_CASE("Connected.Benchmark.MidiSrv Baseline Send / receive messages through 
 	std::cout << "- Send only:                   " << std::dec << std::fixed << sendOnlyMilliseconds << "ms (" << sendOnlySeconds << " seconds, " << sendOnlyMicroseconds << " microseconds)." << std::endl;
 	std::cout << "- Average single send          " << std::dec << std::fixed << sendOnlyAverageMilliseconds << "ms (" << sendOnlyAverageMicroseconds << " microseconds)." << std::endl;
 	std::cout << std::endl;
-	std::cout << "Send Loop, Receive Loop, Callback" << std::endl;
+	std::cout << "Send Loop + Receive Callback" << std::endl;
 	std::cout << "- Send/receive total:          " << std::dec << std::fixed << sendReceiveMilliseconds << "ms (" << sendReceiveSeconds << " seconds, " << sendReceiveMicroseconds << " microseconds)." << std::endl;
-	std::cout << std::endl;
-	std::cout << "Single message round-trip" << std::endl;
 	std::cout << "- Average single send/receive: " << std::dec << std::fixed << sendReceiveAverageMilliseconds << "ms (" << sendReceiveAverageMicroseconds << " microseconds)." << std::endl;
 	//std::cout << "- Min single send/receive:     " << std::dec << std::fixed << minDeltaMilliseconds << "ms (" << minDeltaMicroseconds << " microseconds)." << std::endl;
 	//std::cout << "- Max single send/receive:     " << std::dec << std::fixed << maxDeltaMilliseconds << "ms (" << maxDeltaMicroseconds << " microseconds)." << std::endl;

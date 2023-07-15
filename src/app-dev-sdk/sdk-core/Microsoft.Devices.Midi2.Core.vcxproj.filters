@@ -51,6 +51,12 @@
     <ClCompile Include="MidiTransportInformation.cpp">
       <Filter>SDK\Transports</Filter>
     </ClCompile>
+    <ClCompile Include="MidiChannelEndpointListener.cpp">
+      <Filter>SDK\Listeners</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiGroupEndpointListener.cpp">
+      <Filter>SDK\Listeners</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -71,6 +77,12 @@
     </ClInclude>
     <ClInclude Include="midi_sdk_inproc_loopback_simulator.h">
       <Filter>Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiChannelEndpointListener.h">
+      <Filter>SDK\Listeners</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiGroupEndpointListener.h">
+      <Filter>SDK\Listeners</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
