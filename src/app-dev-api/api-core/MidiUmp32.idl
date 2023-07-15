@@ -1,0 +1,23 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+
+// wraps the UMP type so we still quickly read/write packed data appropriately
+
+import "IMidiUmp.idl";
+
+namespace Windows.Devices.Midi2
+{
+	unsealed runtimeclass MidiUmp32 : IMidiUmp
+	{
+		MidiUmp32();
+		MidiUmp32(UInt64 timestamp, UInt32 word0);
+
+		UInt32 Word0{ get; set; };
+	};
+}

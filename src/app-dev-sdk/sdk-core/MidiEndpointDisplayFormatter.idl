@@ -16,7 +16,7 @@ namespace Microsoft.Devices.Midi2
     [default_interface]
     runtimeclass MidiEndpointDisplayFormatter
     {
-        MidiEndpointDisplayFormatter();
+        //MidiEndpointDisplayFormatter();
 
         // TODO: Need to create a version of this for group blocks? Likely, but how do we advise apps about which one to use?
         // we should be opinionated here. Maybe just have one call which takes both Function and Group blocks

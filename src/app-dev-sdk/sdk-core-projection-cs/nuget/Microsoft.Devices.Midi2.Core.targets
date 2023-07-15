@@ -20,6 +20,9 @@
 			<Reference Include="$(MSBuildThisFileDirectory)..\..\lib\uap10.0\Microsoft.Devices.Midi2.winmd">
 				<Implementation>Microsoft.Devices.Midi2.dll</Implementation>
 			</Reference>
+			<Reference Include="$(MSBuildThisFileDirectory)..\..\lib\uap10.0\Windows.Devices.Midi2.winmd">
+				<Implementation>Windows.Devices.Midi2.dll</Implementation>
+			</Reference>
 		</ItemGroup>
 
 		<ItemGroup>

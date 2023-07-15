@@ -16,43 +16,7 @@ Note that there are somewhat hacky ways to get traditional C to work with the CO
 
 ## Notes on WinRT
 
-When running inside Visual Studio there's a lot that is forgiven by the tools.
-
-* You can have C++ WinRT to C++ WinRT project references
-* Type activation works without a manifest file entry even when not a packaged application
-
-When run outside the tools, you'll need to be prepared to either use a packaged application (UWP or a desktop MSIX with an identity) or for those with new or existing non-packaged desktop apps, add an *appname*.exe.manifest file which lists the classes you need to activate. **We will provide one here on GitHub and keep it updated with the full list of types for all the SDK assemblies.** But, for example, the .manifest file will look something like this:
-
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
-    <assemblyIdentity version="1.0.0.0" name="MyArbitraryButUniqueApplicationName.app"/>
-    <file name="Windows.Devices.Midi2.dll">		
-		<!-- These aren't needed inside Visual Studio -->
-		<activatableClass name="Windows.Devices.Midi2.MidiSession" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
-		<activatableClass name="Windows.Devices.Midi2.MidiSessionSettings" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
-
-		<activatableClass name="Windows.Devices.Midi2.MidiUmpWithTimestamp" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
-        ...
-	</file>
-</assembly>
-```
-
-| Scenario | VS Project Reference | NuGet Projection DLL Reference | winmd Reference | App manifest entries needed |
-| -------- | ------------------| -------------------- | --------------- | ------------------- |
-| C++/WinRT app in Visual Studio | Yes | No | Yes | No |
-| C#/WinRT app in Visual Studio | No | Yes | No | No |
-| Unpackaged Desktop C++ / WinRT App | No | No | Yes | Yes |
-| Appx/MSIX Packaged Desktop C++ / WinRT App | No | No | Yes | No |
-| Appx/MSIX Packaged Desktop .NET / WinRT App | No | Yes | No | No |
-
-### Problem locating header files
-
-**First, REBuild your project (not just Build) after adding or updating the SDK NuGet package.** I'm working on the correct targets file to enable normal incremental build to generate the header file based on the winmd, but it's not functioning at the moment. Of course, I'm assuming you have the C++/WinRT NuGet package already installed in your project.
-
-If your project cannot resolve the header files, you may be running into [this bug](https://github.com/microsoft/cppwinrt/issues/593). That bug should be fixed, but there are instances, it seems, where it still crops up. If that happens, and you've verified that it's not a problem with the WinMD missing from your project (it's more typically an issue with a reference), you can add `$(GeneratedFilesDir)` to the include path for your project.
-
-CPPWinRT.exe creates the winrt/namespace-name.h files in the Generated Files/winrt folder based upon the referenced winmd.
+Please see [Notes on WinRT](./notes-on-winrt.md)
 
 ## Consuming from C++
 
@@ -80,7 +44,7 @@ After that, you reference the types as you would anything else in C++. Only the 
 
 ## Consuming from C# Desktop App
 
-**NOTE: In the current SDK builds, .NET Consumption is not working**
+**NOTE: In the current SDK and API builds, .NET Consumption is not working**
 
 Please note any .NET-specifics called out in the package release. Some early packages do not support C#/ .NET.
 

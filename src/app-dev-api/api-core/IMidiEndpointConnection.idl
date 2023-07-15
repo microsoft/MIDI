@@ -1,0 +1,23 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+import "MidiMessagesReceivedEventArgs.idl";
+import "MidiMessageReader.idl";
+import "MidiMessageWriter.idl";
+
+namespace Windows.Devices.Midi2
+{
+    [
+        uuid(9dc81c51-7e1f-40f2-a7bb-cf24cf9f40ff),
+        version(1.0),
+    ]
+    interface IMidiEndpointConnection
+    {
+        String DeviceId{ get; };
+    }
+}

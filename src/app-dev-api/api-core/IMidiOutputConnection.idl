@@ -1,0 +1,23 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+import "IMidiUmp.idl";
+
+namespace Windows.Devices.Midi2
+{
+    [
+        uuid(8b71d1b8-c239-4b88-8142-05ee5118d41e),
+        version(1.0),
+    ]
+    interface IMidiOutputConnection
+    {
+        Boolean SendUmp(IMidiUmp ump);
+
+        Boolean SendUmpWords(UInt64 timestamp, UInt32[] words, UInt32 wordCount);
+    }
+}
