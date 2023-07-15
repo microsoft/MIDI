@@ -15,12 +15,10 @@ namespace Microsoft.Devices.Midi2
     {
         MidiChannel();
 
-        UInt8 ChannelIndex{ get; };                 // 0-15, the number used in the UMPs
-        UInt8 ChannelNumberForDisplay{ get; };      // 1-16, the number displayed to users
+        UInt8 Index{ get; };                 // 0-15, the number used in the UMPs
+        UInt8 NumberForDisplay{ get; };      // 1-16, the number displayed to users
 
         Boolean IsActive{ get; };                   // from channel information
         String Name{ get; };                        // from channel information
-
-
     }
 }

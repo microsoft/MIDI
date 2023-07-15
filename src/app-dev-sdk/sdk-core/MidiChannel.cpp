@@ -14,11 +14,11 @@
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    uint8_t MidiChannel::ChannelIndex()
+    uint8_t MidiChannel::Index()
     {
         throw hresult_not_implemented();
     }
-    uint8_t MidiChannel::ChannelNumberForDisplay()
+    uint8_t MidiChannel::NumberForDisplay()
     {
         throw hresult_not_implemented();
     }

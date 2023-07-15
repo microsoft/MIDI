@@ -17,8 +17,8 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         MidiGroup() = default;
 
-        uint8_t GroupIndex();
-        uint8_t GroupNumberForDisplay();
+        uint8_t Index();
+        uint8_t NumberForDisplay();
         bool IsActive();
     };
 }

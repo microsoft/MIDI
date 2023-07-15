@@ -118,16 +118,13 @@ int main()
             endpoint.SendUmp(ump);
 
             std::cout << "Wait for the message to arrive, and then press any key to cleanup." << std::endl;
-            
             system("pause");
-
 
             // deregister the event
             endpoint.MessageReceived(eventRevokeToken);
 
             // not strictly necessary as the session.Close() call will do it, but it's here in case you need it
             session.DisconnectEndpointConnection(endpoint.Id());
-
         }
         else
         {

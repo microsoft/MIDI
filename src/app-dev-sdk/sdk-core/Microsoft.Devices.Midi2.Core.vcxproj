@@ -248,12 +248,14 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="IMidiEndpointSettingsData.idl" />
+    <Midl Include="IMidiEndpointListener.idl" />
     <Midl Include="IMidiTransportSettingsData.idl" />
     <Midl Include="MidiChannel.idl" />
+    <Midl Include="MidiChannelEndpointListener.idl" />
     <Midl Include="MidiEndpointInformation.idl" />
     <Midl Include="MidiEndpointDataFormatEnum.idl" />
     <Midl Include="MidiFunctionBlockDirectionEnum.idl" />
+    <Midl Include="MidiGroupEndpointListener.idl" />
     <Midl Include="MidiHighResolutionValueDisplayFormatter.idl" />
     <Midl Include="MidiMessageTranslator.idl" />
     <Midl Include="MidiDeviceInformation.idl" />

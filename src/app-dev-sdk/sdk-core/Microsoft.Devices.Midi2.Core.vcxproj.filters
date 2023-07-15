@@ -35,6 +35,9 @@
     <Filter Include="Resources\Strings\en-US">
       <UniqueIdentifier>{53c77fb9-8938-4813-ab1f-eb196c6512ab}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SDK\Listeners">
+      <UniqueIdentifier>{163e6eab-50a4-49ba-8cc5-3dcebbe6bb11}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -116,14 +119,20 @@
     <Midl Include="IMidiTransportSettingsData.idl">
       <Filter>SDK\Transports</Filter>
     </Midl>
-    <Midl Include="IMidiEndpointSettingsData.idl">
-      <Filter>SDK\Endpoints</Filter>
-    </Midl>
     <Midl Include="MidiEndpointDataFormatEnum.idl">
       <Filter>SDK\Enumeration</Filter>
     </Midl>
     <Midl Include="MidiGroupTerminalBlock.idl">
       <Filter>SDK\Enumeration</Filter>
+    </Midl>
+    <Midl Include="IMidiEndpointListener.idl">
+      <Filter>SDK\Listeners</Filter>
+    </Midl>
+    <Midl Include="MidiGroupEndpointListener.idl">
+      <Filter>SDK\Listeners</Filter>
+    </Midl>
+    <Midl Include="MidiChannelEndpointListener.idl">
+      <Filter>SDK\Listeners</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
