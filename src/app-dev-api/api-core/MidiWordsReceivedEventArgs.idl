@@ -14,6 +14,5 @@ namespace Windows.Devices.Midi2
         UInt32[] Words{ get; };
         UInt32 WordCount{ get; };
         UInt64 Timestamp{ get; };
-
    }
 }

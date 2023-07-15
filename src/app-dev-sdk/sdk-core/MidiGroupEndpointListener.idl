@@ -6,15 +6,16 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#include "pch.h"
-#include "MidiProfile.h"
-#include "MidiProfile.g.cpp"
+import "MidiGroup.idl";
 
-
-namespace winrt::Microsoft::Devices::Midi2::implementation
+namespace Microsoft.Devices.Midi2
 {
-    hstring MidiProfile::RawJson()
+    [default_interface]
+    runtimeclass MidiGroupEndpointListener
     {
-        throw hresult_not_implemented();
+        MidiGroupEndpointListener();
+
+        IVector<MidiGroup> IncludeGroups{ get; };
+
     }
 }

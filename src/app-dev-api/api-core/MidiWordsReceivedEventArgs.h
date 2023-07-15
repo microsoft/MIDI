@@ -27,10 +27,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             _timestamp = timestamp;
             _words = std::make_unique<uint32_t[]>(wordCount);
+
             memcpy(_words.get(), data, wordCount * sizeof(uint32_t));
         }
 
         com_array<uint32_t> Words() { return com_array<uint32_t>(_words.get() [_wordCount]); }
+
         uint32_t WordCount() { return _wordCount; }
         uint64_t Timestamp() { return _timestamp; }
 

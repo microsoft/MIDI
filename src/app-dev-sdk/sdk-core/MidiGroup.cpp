@@ -13,11 +13,11 @@
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    uint8_t MidiGroup::GroupIndex()
+    uint8_t MidiGroup::Index()
     {
         throw hresult_not_implemented();
     }
-    uint8_t MidiGroup::GroupNumberForDisplay()
+    uint8_t MidiGroup::NumberForDisplay()
     {
         throw hresult_not_implemented();
     }

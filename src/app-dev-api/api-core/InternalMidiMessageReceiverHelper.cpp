@@ -55,7 +55,6 @@ namespace Windows::Devices::Midi2::Internal
     {
         auto args = winrt::make_self<implementation::MidiWordsReceivedEventArgs>(Timestamp, Data, Size / sizeof(uint32_t));
 
-
         return *args;
     }
 

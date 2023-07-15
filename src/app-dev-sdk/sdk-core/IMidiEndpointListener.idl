@@ -6,22 +6,12 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#pragma once
-#include "MidiProperty.g.h"
 
-
-namespace winrt::Microsoft::Devices::Midi2::implementation
+namespace Microsoft.Devices.Midi2
 {
-    struct MidiProperty : MidiPropertyT<MidiProperty>
+    interface IMidiEndpointListener
     {
-        MidiProperty() = default;
+        void Foo();
 
-        hstring RawJson();
-    };
-}
-namespace winrt::Microsoft::Devices::Midi2::factory_implementation
-{
-    struct MidiProperty : MidiPropertyT<MidiProperty, implementation::MidiProperty>
-    {
-    };
+    }
 }
