@@ -19,6 +19,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return false;
     }
 
+    bool MidiOutputEndpointConnection::SendUmpBuffer(uint64_t timestamp, winrt::Windows::Foundation::IMemoryBuffer const& buffer)
+    {
+        // TODO
+
+        return false;
+    }
+
+    
     bool MidiOutputEndpointConnection::SendUmp(winrt::Windows::Devices::Midi2::IMidiUmp const& ump)
     {
         throw hresult_not_implemented();

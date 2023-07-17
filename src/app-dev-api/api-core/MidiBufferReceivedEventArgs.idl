@@ -6,18 +6,12 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-import "IMidiUmp.idl";
-
 namespace Windows.Devices.Midi2
 {
-    [
-        uuid(8b71d1b8-c239-4b88-8142-05ee5118d41e),
-        version(1.0),
-    ]
-    interface IMidiOutputConnection
+    [default_interface]
+    runtimeclass MidiBufferReceivedEventArgs
     {
-        Boolean SendUmp(IMidiUmp ump);
-        Boolean SendUmpWords(UInt64 timestamp, UInt32[] words, UInt32 wordCount);
-        Boolean SendUmpBuffer(UInt64 timestamp, Windows.Foundation.IMemoryBuffer buffer);
-}
+        UInt64 Timestamp{ get; };
+        Windows.Foundation.IMemoryBuffer Buffer{ get; };
+   }
 }

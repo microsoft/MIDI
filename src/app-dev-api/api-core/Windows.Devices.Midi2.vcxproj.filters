@@ -72,6 +72,9 @@
     <ClCompile Include="MidiWordsReceivedEventArgs.cpp">
       <Filter>API\Endpoints\Events</Filter>
     </ClCompile>
+    <ClCompile Include="MidiBufferReceivedEventArgs.cpp">
+      <Filter>API\Endpoints\Events</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -120,6 +123,9 @@
       <Filter>Internal\ServiceAccess</Filter>
     </ClInclude>
     <ClInclude Include="MidiWordsReceivedEventArgs.h">
+      <Filter>API\Endpoints\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiBufferReceivedEventArgs.h">
       <Filter>API\Endpoints\Events</Filter>
     </ClInclude>
   </ItemGroup>
@@ -182,6 +188,9 @@
       <Filter>API\Endpoints\Events</Filter>
     </Midl>
     <Midl Include="MidiWordsReceivedEventArgs.idl">
+      <Filter>API\Endpoints\Events</Filter>
+    </Midl>
+    <Midl Include="MidiBufferReceivedEventArgs.idl">
       <Filter>API\Endpoints\Events</Filter>
     </Midl>
   </ItemGroup>

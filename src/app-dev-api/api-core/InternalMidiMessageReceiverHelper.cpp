@@ -19,6 +19,15 @@ namespace implementation = winrt::Windows::Devices::Midi2::implementation;
 namespace Windows::Devices::Midi2::Internal
 {
 
+    winrt::Windows::Devices::Midi2::MidiBufferReceivedEventArgs InternalMidiMessageReceiverHelper::CreateBufferEventArgsFromCallbackParams(PVOID Data, UINT Size, LONGLONG Timestamp)
+    {
+        // size here is bytes, and that's what the buffer event args need
+        auto args = winrt::make_self<implementation::MidiBufferReceivedEventArgs>(Timestamp, Data, Size);
+
+        return *args;
+    }
+
+
 	winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs InternalMidiMessageReceiverHelper::CreateMessageEventArgsFromCallbackParams(PVOID Data, UINT Size, LONGLONG Timestamp)
 	{
         auto args = winrt::make_self<implementation::MidiMessageReceivedEventArgs>();
@@ -53,6 +62,7 @@ namespace Windows::Devices::Midi2::Internal
 
     winrt::Windows::Devices::Midi2::MidiWordsReceivedEventArgs InternalMidiMessageReceiverHelper::CreateWordsEventArgsFromCallbackParams(PVOID Data, UINT Size, LONGLONG Timestamp)
     {
+        // size here is bytes, but event args needs word count
         auto args = winrt::make_self<implementation::MidiWordsReceivedEventArgs>(Timestamp, Data, Size / sizeof(uint32_t));
 
         return *args;

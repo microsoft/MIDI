@@ -17,6 +17,23 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     IFACEMETHODIMP MidiBidirectionalEndpointConnection::Callback(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Timestamp)
     {   
+
+        if (_bufferReceivedEvent)
+        {
+
+            auto args = _messageReceiverHelper.CreateBufferEventArgsFromCallbackParams(Data, Size, Timestamp);
+
+            if (args != nullptr)
+            {
+                _bufferReceivedEvent(*this, args);
+            }
+            else
+            {
+                return E_FAIL;
+            }
+
+        }
+
         if (_messageReceivedEvent)
         {
             auto args = _messageReceiverHelper.CreateMessageEventArgsFromCallbackParams(Data, Size, Timestamp);
@@ -48,6 +65,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return S_OK;
     }
 
+    bool MidiBidirectionalEndpointConnection::SendUmpBuffer(uint64_t timestamp, winrt::Windows::Foundation::IMemoryBuffer const& buffer)
+    {
+        // TODO
+
+        throw hresult_not_implemented();
+
+    }
+
     // sends a single UMP's worth of words
     bool MidiBidirectionalEndpointConnection::SendUmpWords(uint64_t timestamp, array_view<uint32_t const> words, uint32_t wordCount)
     {
@@ -75,6 +100,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
+
             //std::cout << __FUNCTION__ << " hresult exception sending message" << std::endl;
             //std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
             //std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;

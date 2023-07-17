@@ -39,6 +39,8 @@ namespace Windows::Devices::Midi2::Internal
     {
         if (endpoint != nullptr)
         {
+            //LOG_IF_FAILED(DoWork());
+
             winrt::check_hresult(endpoint->SendMidiMessage(data, sizeInBytes, timestamp));
 
             return true;

@@ -12,7 +12,10 @@
 #include "MidiEndpointConnection.h"
 #include "InternalMidiDeviceConnection.h"
 #include "midi_service_interface.h"
+
 #include "MidiMessageReceivedEventArgs.h"
+#include "MidiBufferReceivedEventArgs.h"
+#include "MidiWordsReceivedEventArgs.h"
 
 #include "MidiUmp32.h"
 #include "MidiUmp64.h"
@@ -33,11 +36,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static hstring GetDeviceSelectorForBidirectional() { return L""; /* TODO*/ }
 
-        uint32_t ReceiveBuffer(winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffsetinBuffer, uint32_t maxBytesToReceive);
-
         bool SendUmp(winrt::Windows::Devices::Midi2::IMidiUmp const& ump);
         bool SendUmpWords(uint64_t timestamp, array_view<uint32_t const> words, uint32_t wordCount);
-
+        bool SendUmpBuffer(uint64_t timestamp, winrt::Windows::Foundation::IMemoryBuffer const& buffer);
 
 
         STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position) override;
@@ -65,6 +66,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
 
 
+        winrt::event_token BufferReceived(winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiBufferReceivedEventArgs> const& handler)
+        {
+            return _bufferReceivedEvent.add(handler);
+        }
+
+        void BufferReceived(winrt::event_token const& token) noexcept
+        {
+            _bufferReceivedEvent.remove(token);
+        }
 
 
         bool InternalStart(winrt::com_ptr<IMidiAbstraction> serviceAbstraction);
@@ -77,6 +87,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         winrt::event<winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs>> _messageReceivedEvent;
         winrt::event<winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiWordsReceivedEventArgs>> _wordsReceivedEvent;
+        winrt::event<winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiBufferReceivedEventArgs>> _bufferReceivedEvent;
 
 
         bool ActivateMidiStream(winrt::com_ptr<IMidiAbstraction> serviceAbstraction, const IID& iid, void** iface);
