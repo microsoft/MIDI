@@ -43,18 +43,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     private:
-        internal::MidiTimestamp _timestamp;
+        internal::MidiTimestamp _timestamp{ 0 };
 
         // this does mean each event argument is up to 12 bytes larger than it needs to be, but this
         // is more efficient speed-wise, and avoids additional heap allocations.
 
-        struct InternalMidiData
-        {
-            uint32_t Word0{ 0 };
-            uint32_t Word1{ 0 };
-            uint32_t Word2{ 0 };
-            uint32_t Word3{ 0 };
-        } _data ;
+#pragma 
+        internal::PackedMaxInternalUmpStorage _data{};
 
     };
 }

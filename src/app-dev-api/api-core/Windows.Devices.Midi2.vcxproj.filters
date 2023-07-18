@@ -69,12 +69,6 @@
     <ClCompile Include="InternalMidiMessageReceiverHelper.cpp">
       <Filter>Internal\ServiceAccess</Filter>
     </ClCompile>
-    <ClCompile Include="MidiWordsReceivedEventArgs.cpp">
-      <Filter>API\Endpoints\Events</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiBufferReceivedEventArgs.cpp">
-      <Filter>API\Endpoints\Events</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -121,12 +115,6 @@
     </ClInclude>
     <ClInclude Include="InternalMidiMessageSenderHelper.h">
       <Filter>Internal\ServiceAccess</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiWordsReceivedEventArgs.h">
-      <Filter>API\Endpoints\Events</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiBufferReceivedEventArgs.h">
-      <Filter>API\Endpoints\Events</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

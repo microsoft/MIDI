@@ -29,7 +29,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         if (_data.Word0 != 0)
         {
-            return (MidiUmpPacketType)(internal::GetUmpLengthInMidiWordsFromMessageType(_data.Word0));
+            return (MidiUmpPacketType)(internal::GetUmpLengthInMidiWordsFromFirstWord(_data.Word0));
         }
         else
         {
@@ -40,7 +40,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     winrt::Windows::Devices::Midi2::IMidiUmp MidiMessageReceivedEventArgs::GetUmp()
     {
-        auto ty = (MidiUmpPacketType)(internal::GetUmpLengthInMidiWordsFromMessageType(_data.Word0));
+        auto ty = (MidiUmpPacketType)(internal::GetUmpLengthInMidiWordsFromFirstWord(_data.Word0));
 
         if (ty == MidiUmpPacketType::UnknownOrInvalid)
         {
@@ -68,7 +68,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     bool MidiMessageReceivedEventArgs::FillWords(uint32_t& word0, uint32_t& word1, uint32_t& word2, uint32_t& word3)
     {
-        auto ty = (MidiUmpPacketType)(internal::GetUmpLengthInMidiWordsFromMessageType(_data.Word0));
+        auto ty = (MidiUmpPacketType)(internal::GetUmpLengthInMidiWordsFromFirstWord(_data.Word0));
 
         if (ty == MidiUmpPacketType::UnknownOrInvalid)
         {
@@ -100,23 +100,113 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     bool MidiMessageReceivedEventArgs::FillUmp32(winrt::Windows::Devices::Midi2::MidiUmp32 const& ump)
     {
-        throw hresult_not_implemented();
+        if (ump == nullptr)
+        {
+            OutputDebugString(L"" __FUNCTION__ " ump is nullptr");
+            return false;
+        }
+
+        if (UmpType() != MidiUmpPacketType::Ump32)
+        {
+            OutputDebugString(L"" __FUNCTION__ " incorrect MIDI packet type");
+            return false;
+        }
+
+        auto impUmp = winrt::get_self<implementation::MidiUmp32, winrt::Windows::Devices::Midi2::MidiUmp32>(ump);
+        WINRT_ASSERT(impUmp != nullptr);
+
+        auto umpDestinationData = impUmp->GetInternalUmpDataPointer();
+        WINRT_ASSERT(umpDestinationData != nullptr);
+
+        // copy data over. TODO: need to error check this
+        // Consider adding a write lock to UMP to guard this as well
+        memcpy(umpDestinationData, &_data, (uint32_t)(MidiUmpPacketType::Ump32) * sizeof(uint32_t));
+
+        return true;
     }
 
     bool MidiMessageReceivedEventArgs::FillUmp64(winrt::Windows::Devices::Midi2::MidiUmp64 const& ump)
     {
-        throw hresult_not_implemented();
+        if (ump == nullptr)
+        {
+            OutputDebugString(L"" __FUNCTION__ " ump is nullptr");
+            return false;
+        }
+
+        if (UmpType() != MidiUmpPacketType::Ump64)
+        {
+            OutputDebugString(L"" __FUNCTION__ " incorrect MIDI packet type");
+            return false;
+        }
+
+        auto impUmp = winrt::get_self<implementation::MidiUmp64, winrt::Windows::Devices::Midi2::MidiUmp64>(ump);
+        WINRT_ASSERT(impUmp != nullptr);
+
+        auto umpDestinationData = impUmp->GetInternalUmpDataPointer();
+        WINRT_ASSERT(umpDestinationData != nullptr);
+
+        // copy data over. TODO: need to error check this
+        // Consider adding a write lock to UMP to guard this as well
+        memcpy(umpDestinationData, &_data, (uint32_t)(MidiUmpPacketType::Ump64) * sizeof(uint32_t));
+
+        return true;
     }
 
     bool MidiMessageReceivedEventArgs::FillUmp96(winrt::Windows::Devices::Midi2::MidiUmp96 const& ump)
     {
-        throw hresult_not_implemented();
+        if (ump == nullptr)
+        {
+            OutputDebugString(L"" __FUNCTION__ " ump is nullptr");
+            return false;
+        }
+
+        if (UmpType() != MidiUmpPacketType::Ump96)
+        {
+            OutputDebugString(L"" __FUNCTION__ " incorrect MIDI packet type");
+            return false;
+        }
+
+        auto impUmp = winrt::get_self<implementation::MidiUmp96, winrt::Windows::Devices::Midi2::MidiUmp96>(ump);
+        WINRT_ASSERT(impUmp != nullptr);
+
+        auto umpDestinationData = impUmp->GetInternalUmpDataPointer();
+        WINRT_ASSERT(umpDestinationData != nullptr);
+
+        // copy data over. TODO: need to error check this
+        // Consider adding a write lock to UMP to guard this as well
+        memcpy(umpDestinationData, &_data, (uint32_t)(MidiUmpPacketType::Ump96) * sizeof(uint32_t));
+
+        return true;
     }
 
     bool MidiMessageReceivedEventArgs::FillUmp128(winrt::Windows::Devices::Midi2::MidiUmp128 const& ump)
     {
-        throw hresult_not_implemented();
+        if (ump == nullptr)
+        {
+            OutputDebugString(L"" __FUNCTION__ " ump is nullptr");
+            return false;
+        }
+
+        if (UmpType() != MidiUmpPacketType::Ump128)
+        {
+            OutputDebugString(L"" __FUNCTION__ " incorrect MIDI packet type");
+            return false;
+        }
+
+        auto impUmp = winrt::get_self<implementation::MidiUmp128, winrt::Windows::Devices::Midi2::MidiUmp128>(ump);
+        WINRT_ASSERT(impUmp != nullptr);
+
+        auto umpDestinationData = impUmp->GetInternalUmpDataPointer();
+        WINRT_ASSERT(umpDestinationData != nullptr);
+
+        // copy data over. TODO: need to error check this
+        // Consider adding a write lock to UMP to guard this as well
+        memcpy(umpDestinationData, &_data, (uint32_t)(MidiUmpPacketType::Ump128) * sizeof(uint32_t));
+
+        return true;
     }
+
+
 
     bool MidiMessageReceivedEventArgs::FillWordArray(array_view<uint32_t> words)
     {
