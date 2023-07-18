@@ -171,9 +171,6 @@
     <ClInclude Include="MidiBidirectionalEndpointConnection.h">
       <DependentUpon>MidiBidirectionalEndpointConnection.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiBufferReceivedEventArgs.h">
-      <DependentUpon>MidiBufferReceivedEventArgs.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiClock.h">
       <DependentUpon>MidiClock.idl</DependentUpon>
     </ClInclude>
@@ -204,9 +201,6 @@
     <ClInclude Include="MidiUmp96.h">
       <DependentUpon>MidiUmp96.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiWordsReceivedEventArgs.h">
-      <DependentUpon>MidiWordsReceivedEventArgs.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="midi_service_interface.h" />
     <ClInclude Include="ump_helpers.h" />
     <ClInclude Include="MidiSession.h">
@@ -219,9 +213,6 @@
     <ClCompile Include="InternalMidiMessageReceiverHelper.cpp" />
     <ClCompile Include="MidiBidirectionalEndpointConnection.cpp">
       <DependentUpon>MidiBidirectionalEndpointConnection.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiBufferReceivedEventArgs.cpp">
-      <DependentUpon>MidiBufferReceivedEventArgs.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiClock.cpp">
       <DependentUpon>MidiClock.idl</DependentUpon>
@@ -256,9 +247,6 @@
     <ClCompile Include="MidiUmp96.cpp">
       <DependentUpon>MidiUmp96.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiWordsReceivedEventArgs.cpp">
-      <DependentUpon>MidiWordsReceivedEventArgs.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -268,7 +256,6 @@
     <Midl Include="IMidiOutputConnection.idl" />
     <Midl Include="IMidiTransportSettingsData.idl" />
     <Midl Include="MidiBidirectionalEndpointConnection.idl" />
-    <Midl Include="MidiBufferReceivedEventArgs.idl" />
     <Midl Include="MidiClock.idl" />
     <Midl Include="MidiInputEndpointConnection.idl" />
     <Midl Include="MidiMessageReceivedEventArgs.idl" />
@@ -284,7 +271,6 @@
     <Midl Include="MidiUmp96.idl" />
     <Midl Include="MidiUmpMessageTypeEnum.idl" />
     <Midl Include="MidiUmpPacketTypeEnum.idl" />
-    <Midl Include="MidiWordsReceivedEventArgs.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />

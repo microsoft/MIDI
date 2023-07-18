@@ -187,12 +187,6 @@
     <Midl Include="MidiMessageReceivedEventArgs.idl">
       <Filter>API\Endpoints\Events</Filter>
     </Midl>
-    <Midl Include="MidiWordsReceivedEventArgs.idl">
-      <Filter>API\Endpoints\Events</Filter>
-    </Midl>
-    <Midl Include="MidiBufferReceivedEventArgs.idl">
-      <Filter>API\Endpoints\Events</Filter>
-    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />

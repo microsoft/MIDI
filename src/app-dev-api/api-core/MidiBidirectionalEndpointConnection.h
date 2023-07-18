@@ -14,8 +14,6 @@
 #include "midi_service_interface.h"
 
 #include "MidiMessageReceivedEventArgs.h"
-#include "MidiBufferReceivedEventArgs.h"
-#include "MidiWordsReceivedEventArgs.h"
 
 #include "MidiUmp32.h"
 #include "MidiUmp64.h"
@@ -55,29 +53,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
 
 
-
-        winrt::event_token WordsReceived(winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiWordsReceivedEventArgs> const& handler)
-        {
-            return _wordsReceivedEvent.add(handler);
-        }
-
-        void WordsReceived(winrt::event_token const& token) noexcept
-        {
-            _wordsReceivedEvent.remove(token);
-        }
-
-
-        winrt::event_token BufferReceived(winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiBufferReceivedEventArgs> const& handler)
-        {
-            return _bufferReceivedEvent.add(handler);
-        }
-
-        void BufferReceived(winrt::event_token const& token) noexcept
-        {
-            _bufferReceivedEvent.remove(token);
-        }
-
-
         bool InternalStart(winrt::com_ptr<IMidiAbstraction> serviceAbstraction);
 
 
@@ -87,8 +62,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         internal::InternalMidiMessageSenderHelper<IMidiBiDi> _messageSenderHelper;
 
         winrt::event<winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs>> _messageReceivedEvent;
-        winrt::event<winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiWordsReceivedEventArgs>> _wordsReceivedEvent;
-        winrt::event<winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiBufferReceivedEventArgs>> _bufferReceivedEvent;
 
 
         bool ActivateMidiStream(winrt::com_ptr<IMidiAbstraction> serviceAbstraction, const IID& iid, void** iface);

@@ -8,11 +8,45 @@
 
 import "IMidiUmp.idl";
 
+import "MidiUmp32.idl";
+import "MidiUmp64.idl";
+import "MidiUmp96.idl";
+import "MidiUmp128.idl";
+
+import "MidiUmpPacketTypeEnum.idl";
+
+
+
 namespace Windows.Devices.Midi2
 {
     [default_interface]
     runtimeclass MidiMessageReceivedEventArgs
     {
-        IMidiUmp Ump{ get; };
+        // Type of UMP contained in the data
+        MidiUmpPacketType UmpType{ get; };
+
+        UInt64 Timestamp{ get; };
+
+        // Returns a new UMP. Allocation-wise, this is the most expensive, but it is also the friendliest
+        IMidiUmp GetUmp();
+
+        // Fills 1-4 words. Use UmpType to see how many words are valid.
+        Boolean FillWords(out UInt32 word0, out UInt32 word1, out UInt32 word2, out UInt32 word3);
+
+        // these are for when you have an existing UMP type and prefer not to allocate a new one
+        // caller is responsible for using UmpType to pick the correct one. Parameters are references
+        // to existing types, but the way WinRT works, it's not as efficient as an & parameters in C++
+        Boolean FillUmp32(MidiUmp32 ump);
+        Boolean FillUmp64(MidiUmp64 ump);
+        Boolean FillUmp96(MidiUmp96 ump);
+        Boolean FillUmp128(MidiUmp128 ump);
+
+        // Use existing arrays instead of allocating new ones. Array should be at least as large
+        // as the UMP being read
+        Boolean FillWordArray(ref UInt32[] words);
+        Boolean FillByteArray(ref UInt8[] bytes);
+
+        // Fill a spot in an existing IMemoryBuffer controlled by the caller
+        Boolean FillBuffer(Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffset);
     }
 }

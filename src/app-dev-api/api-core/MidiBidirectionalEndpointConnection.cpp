@@ -17,42 +17,16 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     IFACEMETHODIMP MidiBidirectionalEndpointConnection::Callback(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Timestamp)
     {   
-        if (_bufferReceivedEvent)
-        {
-            auto args = _messageReceiverHelper.CreateBufferEventArgsFromCallbackParams(Data, Size, Timestamp);
-
-            if (args != nullptr && args.Buffer() != nullptr)
-            {
-                _bufferReceivedEvent(*this, args);
-            }
-            else
-            {
-                return E_FAIL;
-            }
-
-        }
 
         if (_messageReceivedEvent)
         {
-            auto args = _messageReceiverHelper.CreateMessageEventArgsFromCallbackParams(Data, Size, Timestamp);
+        //    auto args = _messageReceiverHelper.CreateMessageEventArgsFromCallbackParams(Data, Size, Timestamp);
+
+            auto args = winrt::make_self<MidiMessageReceivedEventArgs>(Data, Size, Timestamp);
 
             if (args != nullptr)
             {
-                _messageReceivedEvent(*this, args);
-            }
-            else
-            {
-                return E_FAIL;
-            }
-        }
-
-        if (_wordsReceivedEvent)
-        {
-            auto args = _messageReceiverHelper.CreateWordsEventArgsFromCallbackParams(Data, Size, Timestamp);
-
-            if (args != nullptr)
-            {
-                _wordsReceivedEvent(*this, args);
+                _messageReceivedEvent(*this, *args);
             }
             else
             {
@@ -73,30 +47,42 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     bool MidiBidirectionalEndpointConnection::SendUmpBuffer(uint64_t timestamp, winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffset, uint32_t byteLength)
     {
-        // make sure we're sending only a single UMP
-        if (!internal::IsValidSingleUmpWordCount(byteLength / sizeof(uint32_t)))
+        try
         {
+            // make sure we're sending only a single UMP
+            if (!internal::IsValidSingleUmpWordCount(byteLength / sizeof(uint32_t)))
+            {
+                return false;
+            }
+
+            Windows::Foundation::IMemoryBufferReference bufferReference = buffer.CreateReference();
+
+            auto interop = bufferReference.as<IMemoryBufferByteAccess>();
+
+            uint8_t* dataPointer;
+            uint32_t dataSize;
+            winrt::check_hresult(interop->GetBuffer(&dataPointer, &dataSize));
+
+            // make sure we're not going to spin past the end of the buffer
+            if (byteOffset + byteLength > bufferReference.Capacity())
+            {
+                return false;
+            }
+
+
+            // send the ump
+
+            return _messageSenderHelper.SendMessageRaw(_endpointInterface, (void*)(dataPointer + byteOffset), byteLength, timestamp);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+
+            //std::cout << __FUNCTION__ << " hresult exception sending message" << std::endl;
+            //std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
+            //std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
+
             return false;
         }
-
-        Windows::Foundation::IMemoryBufferReference bufferReference = buffer.CreateReference();
-
-        auto interop = bufferReference.as<IMemoryBufferByteAccess>();
-
-        uint8_t* dataPointer;
-        uint32_t dataSize;
-        winrt::check_hresult(interop->GetBuffer(&dataPointer, &dataSize));
-
-        // make sure we're not going to spin past the end of the buffer
-        if (byteOffset + byteLength > bufferReference.Capacity())
-        {
-            return false;
-        }
-
-
-        // send the ump
-
-        return _messageSenderHelper.SendMessageRaw(_endpointInterface, (void*)(dataPointer + byteOffset), byteLength, timestamp);
     }
 
 

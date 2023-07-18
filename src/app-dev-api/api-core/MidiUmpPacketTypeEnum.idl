@@ -13,6 +13,7 @@ namespace Windows.Devices.Midi2
 
     enum MidiUmpPacketType
     {
+        UnknownOrInvalid = 0,
         Ump32 = 1,
         Ump64 = 2,
         Ump96 = 3,

@@ -9,8 +9,6 @@
 #pragma once
 
 #include "MidiMessageReceivedEventArgs.h"
-#include "MidiWordsReceivedEventArgs.h"
-#include "MidiBufferReceivedEventArgs.h"
 
 namespace Windows::Devices::Midi2::Internal
 {
@@ -18,8 +16,8 @@ namespace Windows::Devices::Midi2::Internal
     {
     public:
         winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs CreateMessageEventArgsFromCallbackParams(PVOID dataPointer, UINT sizeInBytes, LONGLONG timestamp);
-        winrt::Windows::Devices::Midi2::MidiWordsReceivedEventArgs CreateWordsEventArgsFromCallbackParams(PVOID dataPointer, UINT sizeInBytes, LONGLONG timestamp);
-        winrt::Windows::Devices::Midi2::MidiBufferReceivedEventArgs CreateBufferEventArgsFromCallbackParams(PVOID dataPointer, UINT sizeInBytes, LONGLONG timestamp);
+        //winrt::Windows::Devices::Midi2::MidiWordsReceivedEventArgs CreateWordsEventArgsFromCallbackParams(PVOID dataPointer, UINT sizeInBytes, LONGLONG timestamp);
+       // winrt::Windows::Devices::Midi2::MidiBufferReceivedEventArgs CreateBufferEventArgsFromCallbackParams(PVOID dataPointer, UINT sizeInBytes, LONGLONG timestamp);
 
 
 

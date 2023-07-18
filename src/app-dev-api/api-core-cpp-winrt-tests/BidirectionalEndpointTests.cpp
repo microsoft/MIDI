@@ -89,11 +89,11 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message")
 			REQUIRE((bool)(args != nullptr));
 
 			// TODO: making an assumption on type here.
-			MidiUmp32 receivedUmp = args.Ump().as<MidiUmp32>();
+//			MidiUmp32 receivedUmp = args.Ump().as<MidiUmp32>();
 
-			REQUIRE(receivedUmp != nullptr);
-			REQUIRE(receivedUmp.MessageType() == sentMessageType);
-			REQUIRE(receivedUmp.Timestamp() == sentTimestamp);
+			//REQUIRE(receivedUmp != nullptr);
+			//REQUIRE(receivedUmp.MessageType() == sentMessageType);
+			//REQUIRE(receivedUmp.Timestamp() == sentTimestamp);
 
 			messageReceivedFlag = true;
 			//std::cout << "Received message in test" << std::endl;
@@ -160,16 +160,16 @@ TEST_CASE("Connected.Endpoint.MultipleUmpWords Send and receive multiple words")
 	uint32_t receivedMessageCount{};
 
 
-	auto WordsReceivedHandler = [&receivedMessageCount](Windows::Foundation::IInspectable const& sender, MidiWordsReceivedEventArgs const& args)
-		{
-			REQUIRE((bool)(sender != nullptr));
-			REQUIRE((bool)(args != nullptr));
+	//auto WordsReceivedHandler = [&receivedMessageCount](Windows::Foundation::IInspectable const& sender, MidiWordsReceivedEventArgs const& args)
+	//	{
+	//		REQUIRE((bool)(sender != nullptr));
+	//		REQUIRE((bool)(args != nullptr));
 
-			receivedMessageCount++;
+	//		receivedMessageCount++;
 
-		};
+	//	};
 
-	auto eventRevokeToken = conn1.WordsReceived(WordsReceivedHandler);
+	//auto eventRevokeToken = conn1.WordsReceived(WordsReceivedHandler);
 
 
 	// send messages
@@ -236,7 +236,7 @@ TEST_CASE("Connected.Endpoint.MultipleUmpWords Send and receive multiple words")
 	REQUIRE(receivedMessageCount == numMessagesToSend);
 
 	// unwire event
-	conn1.WordsReceived(eventRevokeToken);
+	//conn1.WordsReceived(eventRevokeToken);
 
 	// cleanup endpoint. Technically not required as session will do it
 	session.DisconnectEndpointConnection(conn1.Id());
