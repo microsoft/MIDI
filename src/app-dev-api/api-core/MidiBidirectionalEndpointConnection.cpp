@@ -37,13 +37,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return S_OK;
     }
 
-    bool MidiBidirectionalEndpointConnection::SendUmpBuffer(uint64_t timestamp, winrt::Windows::Foundation::IMemoryBuffer const& buffer)
-    {
-        // TODO
-
-        throw hresult_not_implemented();
-
-    }
 
     bool MidiBidirectionalEndpointConnection::SendUmpBuffer(uint64_t timestamp, winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffset, uint32_t byteLength)
     {
@@ -120,6 +113,24 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             return false;
         }
+    }
+
+
+    bool MidiBidirectionalEndpointConnection::SendUmp32Words(uint64_t timestamp, uint32_t word0)
+    {
+        throw hresult_not_implemented();
+    }
+    bool MidiBidirectionalEndpointConnection::SendUmp64Words(uint64_t timestamp, uint32_t word0, uint32_t word1)
+    {
+        throw hresult_not_implemented();
+    }
+    bool MidiBidirectionalEndpointConnection::SendUmp96Words(uint64_t timestamp, uint32_t word0, uint32_t word1, uint32_t word2)
+    {
+        throw hresult_not_implemented();
+    }
+    bool MidiBidirectionalEndpointConnection::SendUmp128Words(uint64_t timestamp, uint32_t word0, uint32_t word1, uint32_t word2, uint32_t word3)
+    {
+        throw hresult_not_implemented();
     }
 
 
