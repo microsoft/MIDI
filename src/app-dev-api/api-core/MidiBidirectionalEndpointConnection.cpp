@@ -89,6 +89,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 return false;
             }
 
+            if (internal::GetUmpLengthInMidiWordsFromFirstWord(words[0]) != wordCount)
+            {
+                // mismatch between the message type and the number of words
+                return false;
+            }
+
+
+
 
             if (_endpointInterface)
             {
@@ -96,11 +104,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                 // if the service goes down, this will fail
 
+
                 return _messageSenderHelper.SendMessageRaw(_endpointInterface, (void*)words.data(), umpDataSize, timestamp);
             }
             else
             {
-                OutputDebugString(L"" __FUNCTION__ " _bidiEndpoint is nullptr");
+                OutputDebugString(L"" __FUNCTION__ " endpoint is nullptr");
                 return false;
             }
         }
@@ -118,19 +127,165 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     bool MidiBidirectionalEndpointConnection::SendUmp32Words(uint64_t timestamp, uint32_t word0)
     {
-        throw hresult_not_implemented();
+        try
+        {
+            if (internal::GetUmpLengthInMidiWordsFromFirstWord(word0) != 1)
+            {
+                // mismatch between the message type and the number of words
+                OutputDebugString(L"" __FUNCTION__ " word count is incorrect for message type");
+                return false;
+            }
+
+
+            if (_endpointInterface)
+            {
+                auto umpDataSize = (uint32_t)(sizeof(uint32_t) * 1);
+
+                // if the service goes down, this will fail
+
+                return _messageSenderHelper.SendMessageRaw(_endpointInterface, (void*)&word0, umpDataSize, timestamp);
+            }
+            else
+            {
+                OutputDebugString(L"" __FUNCTION__ " endpoint is nullptr");
+                return false;
+            }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+
+            //std::cout << __FUNCTION__ << " hresult exception sending message" << std::endl;
+            //std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
+            //std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
+
+            return false;
+        }
     }
+
     bool MidiBidirectionalEndpointConnection::SendUmp64Words(uint64_t timestamp, uint32_t word0, uint32_t word1)
     {
-        throw hresult_not_implemented();
+        try
+        {
+            if (internal::GetUmpLengthInMidiWordsFromFirstWord(word0) != 2)
+            {
+                // mismatch between the message type and the number of words
+                OutputDebugString(L"" __FUNCTION__ " word count is incorrect for message type");
+                return false;
+            }
+
+
+            if (_endpointInterface)
+            {
+                auto umpDataSize = (uint32_t)(sizeof(internal::PackedUmp64));
+                internal::PackedUmp64 ump{};
+
+                ump.word0 = word0;
+                ump.word1 = word1;
+
+                // if the service goes down, this will fail
+
+                return _messageSenderHelper.SendMessageRaw(_endpointInterface, (void*)&ump, umpDataSize, timestamp);
+            }
+            else
+            {
+                OutputDebugString(L"" __FUNCTION__ " endpoint is nullptr");
+                return false;
+            }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+
+            //std::cout << __FUNCTION__ << " hresult exception sending message" << std::endl;
+            //std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
+            //std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
+
+            return false;
+        }
     }
+
     bool MidiBidirectionalEndpointConnection::SendUmp96Words(uint64_t timestamp, uint32_t word0, uint32_t word1, uint32_t word2)
     {
-        throw hresult_not_implemented();
+        try
+        {
+            if (internal::GetUmpLengthInMidiWordsFromFirstWord(word0) != 3)
+            {
+                // mismatch between the message type and the number of words
+                OutputDebugString(L"" __FUNCTION__ " word count is incorrect for message type");
+                return false;
+            }
+
+
+            if (_endpointInterface)
+            {
+                auto umpDataSize = (uint32_t)(sizeof(internal::PackedUmp96));
+                internal::PackedUmp96 ump{};
+
+                ump.word0 = word0;
+                ump.word1 = word1;
+                ump.word2 = word2;
+
+                // if the service goes down, this will fail
+
+                return _messageSenderHelper.SendMessageRaw(_endpointInterface, (void*)&ump, umpDataSize, timestamp);
+            }
+            else
+            {
+                OutputDebugString(L"" __FUNCTION__ " endpoint is nullptr");
+                return false;
+            }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+
+            //std::cout << __FUNCTION__ << " hresult exception sending message" << std::endl;
+            //std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
+            //std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
+
+            return false;
+        }
     }
+
     bool MidiBidirectionalEndpointConnection::SendUmp128Words(uint64_t timestamp, uint32_t word0, uint32_t word1, uint32_t word2, uint32_t word3)
     {
-        throw hresult_not_implemented();
+        try
+        {
+            if (internal::GetUmpLengthInMidiWordsFromFirstWord(word0) != 4)
+            {
+                // mismatch between the message type and the number of words
+                OutputDebugString(L"" __FUNCTION__ " word count is incorrect for message type");
+                return false;
+            }
+
+
+            if (_endpointInterface)
+            {
+                auto umpDataSize = (uint32_t)(sizeof(internal::PackedUmp128));
+                internal::PackedUmp128 ump{};
+
+                ump.word0 = word0;
+                ump.word1 = word1;
+                ump.word2 = word2;
+                ump.word3 = word3;
+
+                // if the service goes down, this will fail
+
+                return _messageSenderHelper.SendMessageRaw(_endpointInterface, (void*)&ump, umpDataSize, timestamp);
+            }
+            else
+            {
+                OutputDebugString(L"" __FUNCTION__ " endpoint is nullptr");
+                return false;
+            }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+
+            //std::cout << __FUNCTION__ << " hresult exception sending message" << std::endl;
+            //std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
+            //std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
+
+            return false;
+        }
     }
 
 
@@ -145,7 +300,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             }
             else
             {
-                OutputDebugString(L"" __FUNCTION__ " _bidiEndpoint is nullptr");
+                OutputDebugString(L"" __FUNCTION__ " endpoint is nullptr");
 
                 return false;
             }
@@ -173,6 +328,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
+            OutputDebugString(L"" __FUNCTION__ " hresult exception activating stream. Service may be unavailable.");
+
             //std::cout << __FUNCTION__ << ": hresult exception on Service Abstraction Activate (service may not be installed or running or endpoint type is wrong)" << std::endl;
             //std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
             //std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
@@ -212,6 +369,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
+            OutputDebugString(L"" __FUNCTION__ " hresult exception initializing endpoint interface. Service may be unavailable.");
+
             //std::cout << __FUNCTION__ << " hresult exception on Initialize endpoint with callback" << std::endl;
             //std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
             //std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
