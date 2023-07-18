@@ -261,6 +261,9 @@
     <Midl Include="MidiFunctionBlockDirectionEnum.idl" />
     <Midl Include="MidiGroupEndpointListener.idl" />
     <Midl Include="MidiHighResolutionValueDisplayFormatter.idl" />
+    <Midl Include="MidiMessageBufferHelper.idl" />
+    <Midl Include="MidiMessageBufferReader.idl" />
+    <Midl Include="MidiMessageBufferWriter.idl" />
     <Midl Include="MidiMessageTranslator.idl" />
     <Midl Include="MidiDeviceInformation.idl" />
     <Midl Include="MidiEndpointDisplayFormatter.idl" />

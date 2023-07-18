@@ -17,9 +17,9 @@ namespace Windows::Devices::Midi2::Internal
     class InternalMidiMessageReceiverHelper
     {
     public:
-        winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs CreateMessageEventArgsFromCallbackParams(PVOID Data, UINT Size, LONGLONG Position);
-        winrt::Windows::Devices::Midi2::MidiWordsReceivedEventArgs CreateWordsEventArgsFromCallbackParams(PVOID Data, UINT Size, LONGLONG Position);
-        winrt::Windows::Devices::Midi2::MidiBufferReceivedEventArgs CreateBufferEventArgsFromCallbackParams(PVOID Data, UINT Size, LONGLONG Position);
+        winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs CreateMessageEventArgsFromCallbackParams(PVOID dataPointer, UINT sizeInBytes, LONGLONG timestamp);
+        winrt::Windows::Devices::Midi2::MidiWordsReceivedEventArgs CreateWordsEventArgsFromCallbackParams(PVOID dataPointer, UINT sizeInBytes, LONGLONG timestamp);
+        winrt::Windows::Devices::Midi2::MidiBufferReceivedEventArgs CreateBufferEventArgsFromCallbackParams(PVOID dataPointer, UINT sizeInBytes, LONGLONG timestamp);
 
 
 

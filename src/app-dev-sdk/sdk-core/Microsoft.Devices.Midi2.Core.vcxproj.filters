@@ -38,6 +38,9 @@
     <Filter Include="SDK\Listeners">
       <UniqueIdentifier>{163e6eab-50a4-49ba-8cc5-3dcebbe6bb11}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SDK\Messages\Buffer">
+      <UniqueIdentifier>{7f998efe-71c4-4ad0-8215-d9536c879c45}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -145,6 +148,15 @@
     </Midl>
     <Midl Include="MidiChannelEndpointListener.idl">
       <Filter>SDK\Listeners</Filter>
+    </Midl>
+    <Midl Include="MidiMessageBufferReader.idl">
+      <Filter>SDK\Messages\Buffer</Filter>
+    </Midl>
+    <Midl Include="MidiMessageBufferWriter.idl">
+      <Filter>SDK\Messages\Buffer</Filter>
+    </Midl>
+    <Midl Include="MidiMessageBufferHelper.idl">
+      <Filter>SDK\Messages\Buffer</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

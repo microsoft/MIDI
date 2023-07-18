@@ -32,13 +32,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
             auto session = winrt::make_self<implementation::MidiSession>();
 
-
-            // Connect to the MidiSrv abstraction
-
- //           std::cout << __FUNCTION__ << " creating and activating MidiSrv abstraction" << std::endl;
-
-            // TODO: See if this umpEndpoint connection to the service is already open. If so, skip initialization
-
             session->SetName(sessionName);
             session->SetSettings(settings);
 
@@ -52,6 +45,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
             std::cout << __FUNCTION__ << ": hresult exception creating session" << std::endl;
             std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
             std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
+
+
+            // TODO: throwing an exception here would be preferred vs returning null
 
             return nullptr;
         }

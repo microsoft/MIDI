@@ -171,9 +171,9 @@
     <ClInclude Include="MidiBidirectionalEndpointConnection.h">
       <DependentUpon>MidiBidirectionalEndpointConnection.idl</DependentUpon>
     </ClInclude>
-	  <ClInclude Include="MidiBufferReceivedEventArgs.h">
-		  <DependentUpon>MidiBufferReceivedEventArgs.idl</DependentUpon>
-	  </ClInclude>
+    <ClInclude Include="MidiBufferReceivedEventArgs.h">
+      <DependentUpon>MidiBufferReceivedEventArgs.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiClock.h">
       <DependentUpon>MidiClock.idl</DependentUpon>
     </ClInclude>
@@ -220,9 +220,9 @@
     <ClCompile Include="MidiBidirectionalEndpointConnection.cpp">
       <DependentUpon>MidiBidirectionalEndpointConnection.idl</DependentUpon>
     </ClCompile>
-	  <ClCompile Include="MidiBufferReceivedEventArgs.cpp">
-		  <DependentUpon>MidiBufferReceivedEventArgs.idl</DependentUpon>
-	  </ClCompile>
+    <ClCompile Include="MidiBufferReceivedEventArgs.cpp">
+      <DependentUpon>MidiBufferReceivedEventArgs.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiClock.cpp">
       <DependentUpon>MidiClock.idl</DependentUpon>
     </ClCompile>

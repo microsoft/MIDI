@@ -6,22 +6,12 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#include "pch.h"
-#include "MidiInputEndpointConnection.h"
-#include "MidiInputEndpointConnection.g.cpp"
+// TODO: This will go into the SDK
 
-
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace Microsoft.Devices.Midi2
 {
-    IFACEMETHODIMP MidiInputEndpointConnection::Callback(_In_ PVOID /*Data*/, _In_ UINT /*Size*/, _In_ LONGLONG /*Position*/)
-    {
-        return S_OK;
-    }
-
-
-    bool MidiInputEndpointConnection::InternalStart()
-    {
-        throw hresult_not_implemented();
-    }
-
+	runtimeclass MidiMessageBufferHelper
+	{
+		static IMemoryBuffer CreateMemoryBuffer(UInt32 midiWordCount);
+	};
 }

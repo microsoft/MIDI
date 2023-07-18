@@ -15,14 +15,27 @@ namespace winrt::Windows::Devices::Midi2::implementation
     struct MidiBufferReceivedEventArgs : MidiBufferReceivedEventArgsT<MidiBufferReceivedEventArgs>
     {
         MidiBufferReceivedEventArgs() = default;
+        ~MidiBufferReceivedEventArgs() { if (_buffer) _buffer.Close(); }
 
         MidiBufferReceivedEventArgs(internal::MidiTimestamp timestamp, void* data, uint32_t byteCount)
         {
             // TODO: This could use some checks, like make sure CreateReference returns a non-zero capacity
 
+            _timestamp = timestamp;
+
             _buffer = Windows::Foundation::MemoryBuffer(byteCount);
 
-            memcpy(_buffer.CreateReference().data(), data, byteCount);
+            auto ref = _buffer.CreateReference();
+
+            if (ref.Capacity() == byteCount)
+            {
+                memcpy(ref.data(), data, byteCount);
+            }
+            else
+            {
+                // I don't like doing this in a constructor
+                throw hresult_error();
+            }
         }
 
         winrt::Windows::Foundation::IMemoryBuffer Buffer() { return _buffer; }

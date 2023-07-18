@@ -16,15 +16,20 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     bool MidiOutputEndpointConnection::InternalStart()
     {
-        return false;
+        throw hresult_not_implemented();
     }
 
     bool MidiOutputEndpointConnection::SendUmpBuffer(uint64_t timestamp, winrt::Windows::Foundation::IMemoryBuffer const& buffer)
     {
         // TODO
-
-        return false;
+        throw hresult_not_implemented();
     }
+
+    bool MidiOutputEndpointConnection::SendUmpBuffer(uint64_t timestamp, winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffset, uint32_t byteLength)
+    {
+        throw hresult_not_implemented();
+    }
+
 
     
     bool MidiOutputEndpointConnection::SendUmp(winrt::Windows::Devices::Midi2::IMidiUmp const& ump)
@@ -36,4 +41,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
+
+
 }

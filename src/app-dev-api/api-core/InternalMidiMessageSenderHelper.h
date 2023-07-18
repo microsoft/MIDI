@@ -13,6 +13,8 @@
 #include "MidiUmp96.h"
 #include "MidiUmp128.h"
 
+#include <iostream>
+
 namespace implementation = winrt::Windows::Devices::Midi2::implementation;
 
 
@@ -40,6 +42,7 @@ namespace Windows::Devices::Midi2::Internal
         if (endpoint != nullptr)
         {
             //LOG_IF_FAILED(DoWork());
+//            std::cout << "First word of " << std::dec << sizeInBytes << " bytes is : 0x" << std::hex << *((uint32_t*)data) << std::endl;
 
             winrt::check_hresult(endpoint->SendMidiMessage(data, sizeInBytes, timestamp));
 
