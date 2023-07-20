@@ -10,7 +10,6 @@
 #include "MidiSession.g.h"
 
 #include "midi_service_interface.h"
-#include "InternalMidiDeviceConnection.h"
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
@@ -20,13 +19,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static winrt::Windows::Devices::Midi2::MidiSession CreateSession(hstring const& sessionName, winrt::Windows::Devices::Midi2::MidiSessionSettings const& settings);
 
-        hstring Id() { return _id; }
-        hstring Name() { return _name; }
-        bool IsOpen() { return _isOpen; }
-        winrt::Windows::Devices::Midi2::MidiSessionSettings Settings() { return _settings; }
+        hstring Id() { return m_id; }
+        hstring Name() { return m_name; }
+        bool IsOpen() { return m_isOpen; }
+        winrt::Windows::Devices::Midi2::MidiSessionSettings Settings() { return m_settings; }
 
 
-        winrt::Windows::Foundation::Collections::IMapView<hstring, winrt::Windows::Devices::Midi2::MidiEndpointConnection> Connections() { return _connections.GetView(); }
+        winrt::Windows::Foundation::Collections::IMapView<hstring, winrt::Windows::Devices::Midi2::MidiEndpointConnection> Connections() { return m_connections.GetView(); }
 
         winrt::Windows::Devices::Midi2::MidiOutputEndpointConnection ConnectOutputEndpoint(hstring const& deviceId, winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& settings);
         winrt::Windows::Devices::Midi2::MidiInputEndpointConnection ConnectInputEndpoint(hstring const& deviceId, winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& settings);
@@ -39,27 +38,27 @@ namespace winrt::Windows::Devices::Midi2::implementation
         ~MidiSession();
 
         // internal to the API
-        void SetName(hstring value) { _name = value; }
-        void SetSettings(MidiSessionSettings value) { _settings = value; }
+        void SetName(hstring value) { m_name = value; }
+        void SetSettings(MidiSessionSettings value) { m_settings = value; }
 
         bool InternalStart();
 
     private:
-        bool _isOpen;
-        hstring _id;
-        hstring _name;
-        MidiSessionSettings _settings;
+        bool m_isOpen;
+        hstring m_id;
+        hstring m_name;
+        MidiSessionSettings m_settings;
 
-        bool _useMmcss{ true };
-        DWORD _mmcssTaskId{ 0 };
+        bool m_useMmcss{ true };
+        DWORD m_mmcssTaskId{ 0 };
 
  //       std::unordered_map<std::string, std::shared_ptr<internal::InternalMidiDeviceConnection>> _internalDeviceConnections{};
 
 
-        winrt::impl::com_ref<IMidiAbstraction> _serviceAbstraction;
+        winrt::impl::com_ref<IMidiAbstraction> m_serviceAbstraction;
 
         winrt::Windows::Foundation::Collections::IMap<hstring, winrt::Windows::Devices::Midi2::MidiEndpointConnection>
-            _connections{ winrt::single_threaded_map<hstring, winrt::Windows::Devices::Midi2::MidiEndpointConnection>() };
+            m_connections{ winrt::single_threaded_map<hstring, winrt::Windows::Devices::Midi2::MidiEndpointConnection>() };
 
 
         hstring NormalizeDeviceId(const hstring& deviceId);

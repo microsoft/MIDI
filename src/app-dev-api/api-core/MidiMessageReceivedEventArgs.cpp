@@ -16,20 +16,20 @@ namespace winrt::Windows::Devices::Midi2::implementation
 {
     MidiMessageReceivedEventArgs::MidiMessageReceivedEventArgs(PVOID data, UINT sizeInBytes, LONGLONG timestamp)
     {
-        _timestamp = timestamp;
+        m_timestamp = timestamp;
 
         if (sizeInBytes <= (uint32_t)(MidiUmpPacketType::Ump128) * sizeof(uint32_t))
         {
-            memcpy(&_data, data, sizeInBytes);
+            memcpy(&m_data, data, sizeInBytes);
         }
     }
 
 
     winrt::Windows::Devices::Midi2::MidiUmpPacketType MidiMessageReceivedEventArgs::UmpType()
     {
-        if (_data.Word0 != 0)
+        if (m_data.Word0 != 0)
         {
-            return (MidiUmpPacketType)(internal::GetUmpLengthInMidiWordsFromFirstWord(_data.Word0));
+            return (MidiUmpPacketType)(internal::GetUmpLengthInMidiWordsFromFirstWord(m_data.Word0));
         }
         else
         {
@@ -40,35 +40,35 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     winrt::Windows::Devices::Midi2::IMidiUmp MidiMessageReceivedEventArgs::GetUmp()
     {
-        auto ty = (MidiUmpPacketType)(internal::GetUmpLengthInMidiWordsFromFirstWord(_data.Word0));
+        auto ty = (MidiUmpPacketType)(internal::GetUmpLengthInMidiWordsFromFirstWord(m_data.Word0));
 
         if (ty == MidiUmpPacketType::UnknownOrInvalid)
-        {
+        {          
             throw hresult_error();
         }
 
 
         if (ty == MidiUmpPacketType::Ump32)
         {
-            return winrt::make_self<implementation::MidiUmp32>(_timestamp, _data.Word0).as<winrt::Windows::Devices::Midi2::IMidiUmp>();
+            return winrt::make_self<implementation::MidiUmp32>(m_timestamp, m_data.Word0).as<winrt::Windows::Devices::Midi2::IMidiUmp>();
         }
         else if (ty == MidiUmpPacketType::Ump64)
         {
-            return winrt::make_self<implementation::MidiUmp64>(_timestamp, _data.Word0, _data.Word1).as<winrt::Windows::Devices::Midi2::IMidiUmp>();
+            return winrt::make_self<implementation::MidiUmp64>(m_timestamp, m_data.Word0, m_data.Word1).as<winrt::Windows::Devices::Midi2::IMidiUmp>();
         }
         else if (ty == MidiUmpPacketType::Ump96)
         {
-            return winrt::make_self<implementation::MidiUmp96>(_timestamp, _data.Word0, _data.Word1, _data.Word2).as<winrt::Windows::Devices::Midi2::IMidiUmp>();
+            return winrt::make_self<implementation::MidiUmp96>(m_timestamp, m_data.Word0, m_data.Word1, m_data.Word2).as<winrt::Windows::Devices::Midi2::IMidiUmp>();
         }
         else if (ty == MidiUmpPacketType::Ump128)
         {
-            return winrt::make_self<implementation::MidiUmp128>(_timestamp, _data.Word0, _data.Word1, _data.Word2, _data.Word3).as<winrt::Windows::Devices::Midi2::IMidiUmp>();
+            return winrt::make_self<implementation::MidiUmp128>(m_timestamp, m_data.Word0, m_data.Word1, m_data.Word2, m_data.Word3).as<winrt::Windows::Devices::Midi2::IMidiUmp>();
         }
     }
 
     bool MidiMessageReceivedEventArgs::FillWords(uint32_t& word0, uint32_t& word1, uint32_t& word2, uint32_t& word3)
     {
-        auto ty = (MidiUmpPacketType)(internal::GetUmpLengthInMidiWordsFromFirstWord(_data.Word0));
+        auto ty = (MidiUmpPacketType)(internal::GetUmpLengthInMidiWordsFromFirstWord(m_data.Word0));
 
         if (ty == MidiUmpPacketType::UnknownOrInvalid)
         {
@@ -76,22 +76,22 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
         else
         {
-            word0 = _data.Word0;
+            word0 = m_data.Word0;
         }
         
         if (ty == MidiUmpPacketType::Ump64 || ty == MidiUmpPacketType::Ump96 || ty == MidiUmpPacketType::Ump128)
         {
-            word1 = _data.Word1;
+            word1 = m_data.Word1;
         }
 
         if (ty == MidiUmpPacketType::Ump96 || ty == MidiUmpPacketType::Ump128)
         {
-            word2 = _data.Word2;
+            word2 = m_data.Word2;
         }
 
         if (ty == MidiUmpPacketType::Ump128)
         {
-            word3 = _data.Word3;
+            word3 = m_data.Word3;
         }
 
         return true;
@@ -120,7 +120,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         // copy data over. TODO: need to error check this
         // Consider adding a write lock to UMP to guard this as well
-        memcpy(umpDestinationData, &_data, (uint32_t)(MidiUmpPacketType::Ump32) * sizeof(uint32_t));
+        memcpy(umpDestinationData, &m_data, (uint32_t)(MidiUmpPacketType::Ump32) * sizeof(uint32_t));
 
         return true;
     }
@@ -147,7 +147,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         // copy data over. TODO: need to error check this
         // Consider adding a write lock to UMP to guard this as well
-        memcpy(umpDestinationData, &_data, (uint32_t)(MidiUmpPacketType::Ump64) * sizeof(uint32_t));
+        memcpy(umpDestinationData, &m_data, (uint32_t)(MidiUmpPacketType::Ump64) * sizeof(uint32_t));
 
         return true;
     }
@@ -174,7 +174,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         // copy data over. TODO: need to error check this
         // Consider adding a write lock to UMP to guard this as well
-        memcpy(umpDestinationData, &_data, (uint32_t)(MidiUmpPacketType::Ump96) * sizeof(uint32_t));
+        memcpy(umpDestinationData, &m_data, (uint32_t)(MidiUmpPacketType::Ump96) * sizeof(uint32_t));
 
         return true;
     }
@@ -184,6 +184,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         if (ump == nullptr)
         {
             OutputDebugString(L"" __FUNCTION__ " ump is nullptr");
+
             return false;
         }
 
@@ -201,12 +202,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         // copy data over. TODO: need to error check this
         // Consider adding a write lock to UMP to guard this as well
-        memcpy(umpDestinationData, &_data, (uint32_t)(MidiUmpPacketType::Ump128) * sizeof(uint32_t));
+        memcpy(umpDestinationData, &m_data, (uint32_t)(MidiUmpPacketType::Ump128) * sizeof(uint32_t));
 
         return true;
     }
-
-
 
     bool MidiMessageReceivedEventArgs::FillWordArray(array_view<uint32_t> words)
     {
@@ -222,4 +221,5 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
+
 }

@@ -13,7 +13,6 @@
 
 #include "MidiMessageReceivedEventArgs.h"
 
-#include "InternalMidiDeviceConnection.h"
 #include "midi_service_interface.h"
 
 
@@ -31,19 +30,19 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         inline winrt::event_token MessageReceived(winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs> const& handler)
         {
-            return _messagesReceivedEvent.add(handler);
+            return m_messagesReceivedEvent.add(handler);
         }
 
         inline void MessageReceived(winrt::event_token const& token) noexcept
         {
-            _messagesReceivedEvent.remove(token);
+            m_messagesReceivedEvent.remove(token);
         }
 
 
         bool InternalStart();
 
     private:
-        winrt::event<winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs>> _messagesReceivedEvent;
+        winrt::event<winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs>> m_messagesReceivedEvent;
 
     };
 }

@@ -10,7 +10,6 @@
 #include "MidiBidirectionalEndpointConnection.g.h"
 
 #include "MidiEndpointConnection.h"
-#include "InternalMidiDeviceConnection.h"
 #include "midi_service_interface.h"
 
 #include "MidiMessageReceivedEventArgs.h"
@@ -50,12 +49,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
         
         winrt::event_token MessageReceived(winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs> const& handler)
         {
-            return _messageReceivedEvent.add(handler);
+            return m_messageReceivedEvent.add(handler);
         }
 
         void MessageReceived(winrt::event_token const& token) noexcept
         {
-            _messageReceivedEvent.remove(token);
+            m_messageReceivedEvent.remove(token);
         }
 
 
@@ -63,11 +62,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     private:
-        com_ptr<IMidiBiDi> _endpointInterface;
-        internal::InternalMidiMessageReceiverHelper _messageReceiverHelper;
-        internal::InternalMidiMessageSenderHelper<IMidiBiDi> _messageSenderHelper;
+        com_ptr<IMidiBiDi> m_endpointInterface;
+        internal::InternalMidiMessageReceiverHelper m_messageReceiverHelper;
+        internal::InternalMidiMessageSenderHelper<IMidiBiDi> m_messageSenderHelper;
 
-        winrt::event<winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs>> _messageReceivedEvent;
+        winrt::event<winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;
 
 
         bool ActivateMidiStream(winrt::com_ptr<IMidiAbstraction> serviceAbstraction, const IID& iid, void** iface);

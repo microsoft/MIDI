@@ -24,7 +24,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     private:
-        bool _useMmcss = true;
+        bool m_useMmcss = true;
     };
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation

@@ -171,7 +171,6 @@ TEST_CASE("Connected.Benchmark.APIWords Send / receive words through loopback")
 
 
 	// Wait for incoming message
-
 	if (!allMessagesReceived.wait(30000))
 	{
 		std::cout << "Failure waiting for messages, timed out." << std::endl;

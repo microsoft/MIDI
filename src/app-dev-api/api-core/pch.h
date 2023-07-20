@@ -33,7 +33,6 @@ using namespace winrt;
 
 // internal
 #include "midi_service_interface.h"
-#include "InternalMidiDeviceConnection.h"
 #include "ump_helpers.h"
 #include "memory_buffer.h"
 

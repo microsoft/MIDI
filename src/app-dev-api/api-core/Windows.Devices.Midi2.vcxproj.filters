@@ -94,9 +94,6 @@
     <ClInclude Include="MidiClock.h">
       <Filter>API\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="InternalMidiDeviceConnection.h">
-      <Filter>Internal</Filter>
-    </ClInclude>
     <ClInclude Include="MidiUmp32.h">
       <Filter>API\Messages</Filter>
     </ClInclude>

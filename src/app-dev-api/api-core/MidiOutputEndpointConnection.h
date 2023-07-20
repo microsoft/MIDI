@@ -10,7 +10,6 @@
 #include "MidiOutputEndpointConnection.g.h"
 #include "MidiEndpointConnection.h"
 #include "midi_service_interface.h"
-#include "InternalMidiDeviceConnection.h"
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {

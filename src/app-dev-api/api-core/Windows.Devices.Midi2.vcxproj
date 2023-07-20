@@ -161,8 +161,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="InternalMidiDeviceConnection.h">
-    </ClInclude>
     <ClInclude Include="InternalMidiMessageReceiverHelper.h" />
     <ClInclude Include="InternalMidiMessageSenderHelper.h" />
     <ClInclude Include="memory_buffer.h" />

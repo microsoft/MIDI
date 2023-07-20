@@ -18,7 +18,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     IFACEMETHODIMP MidiBidirectionalEndpointConnection::Callback(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Timestamp)
     {   
 
-        if (_messageReceivedEvent)
+        if (m_messageReceivedEvent)
         {
         //    auto args = _messageReceiverHelper.CreateMessageEventArgsFromCallbackParams(Data, Size, Timestamp);
 
@@ -26,7 +26,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             if (args != nullptr)
             {
-                _messageReceivedEvent(*this, *args);
+                m_messageReceivedEvent(*this, *args);
             }
             else
             {
@@ -45,6 +45,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
             // make sure we're sending only a single UMP
             if (!internal::IsValidSingleUmpWordCount(byteLength / sizeof(uint32_t)))
             {
+                OutputDebugString(L"" __FUNCTION__ " word count is incorrect for a single UMP");
+                //throw hresult_invalid_argument();
                 return false;
             }
 
@@ -65,7 +67,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             // send the ump
 
-            return _messageSenderHelper.SendMessageRaw(_endpointInterface, (void*)(dataPointer + byteOffset), byteLength, timestamp);
+            return m_messageSenderHelper.SendMessageRaw(m_endpointInterface, (void*)(dataPointer + byteOffset), byteLength, timestamp);
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -86,26 +88,30 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
             if (!internal::IsValidSingleUmpWordCount(wordCount))
             {
+                //throw hresult_invalid_argument();
+                OutputDebugString(L"" __FUNCTION__ " word count is incorrect for a single UMP");
                 return false;
             }
 
             if (internal::GetUmpLengthInMidiWordsFromFirstWord(words[0]) != wordCount)
             {
                 // mismatch between the message type and the number of words
+                //throw hresult_invalid_argument();
+                OutputDebugString(L"" __FUNCTION__ " word count is incorrect for message type");
                 return false;
             }
 
 
 
 
-            if (_endpointInterface)
+            if (m_endpointInterface)
             {
                 auto umpDataSize = (uint32_t)(sizeof(uint32_t) * wordCount);
 
                 // if the service goes down, this will fail
 
 
-                return _messageSenderHelper.SendMessageRaw(_endpointInterface, (void*)words.data(), umpDataSize, timestamp);
+                return m_messageSenderHelper.SendMessageRaw(m_endpointInterface, (void*)words.data(), umpDataSize, timestamp);
             }
             else
             {
@@ -137,13 +143,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
             }
 
 
-            if (_endpointInterface)
+            if (m_endpointInterface)
             {
                 auto umpDataSize = (uint32_t)(sizeof(uint32_t) * 1);
 
                 // if the service goes down, this will fail
 
-                return _messageSenderHelper.SendMessageRaw(_endpointInterface, (void*)&word0, umpDataSize, timestamp);
+                return m_messageSenderHelper.SendMessageRaw(m_endpointInterface, (void*)&word0, umpDataSize, timestamp);
             }
             else
             {
@@ -174,7 +180,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             }
 
 
-            if (_endpointInterface)
+            if (m_endpointInterface)
             {
                 auto umpDataSize = (uint32_t)(sizeof(internal::PackedUmp64));
                 internal::PackedUmp64 ump{};
@@ -184,7 +190,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                 // if the service goes down, this will fail
 
-                return _messageSenderHelper.SendMessageRaw(_endpointInterface, (void*)&ump, umpDataSize, timestamp);
+                return m_messageSenderHelper.SendMessageRaw(m_endpointInterface, (void*)&ump, umpDataSize, timestamp);
             }
             else
             {
@@ -215,7 +221,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             }
 
 
-            if (_endpointInterface)
+            if (m_endpointInterface)
             {
                 auto umpDataSize = (uint32_t)(sizeof(internal::PackedUmp96));
                 internal::PackedUmp96 ump{};
@@ -226,7 +232,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                 // if the service goes down, this will fail
 
-                return _messageSenderHelper.SendMessageRaw(_endpointInterface, (void*)&ump, umpDataSize, timestamp);
+                return m_messageSenderHelper.SendMessageRaw(m_endpointInterface, (void*)&ump, umpDataSize, timestamp);
             }
             else
             {
@@ -257,7 +263,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             }
 
 
-            if (_endpointInterface)
+            if (m_endpointInterface)
             {
                 auto umpDataSize = (uint32_t)(sizeof(internal::PackedUmp128));
                 internal::PackedUmp128 ump{};
@@ -269,7 +275,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                 // if the service goes down, this will fail
 
-                return _messageSenderHelper.SendMessageRaw(_endpointInterface, (void*)&ump, umpDataSize, timestamp);
+                return m_messageSenderHelper.SendMessageRaw(m_endpointInterface, (void*)&ump, umpDataSize, timestamp);
             }
             else
             {
@@ -294,9 +300,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
-            if (_endpointInterface)
+            if (m_endpointInterface)
             {
-                return _messageSenderHelper.SendUmp(_endpointInterface, ump);
+                return m_messageSenderHelper.SendUmp(m_endpointInterface, ump);
             }
             else
             {
@@ -348,7 +354,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         DWORD mmcssTaskId;  // TODO: Does this need to be session-wise? Probably, but it can be modified by the endpoint init, so maybe should be endpoint-local
 
         // Activate the endpoint for this device. Will fail if the device is not a BiDi device
-        if (!ActivateMidiStream(serviceAbstraction, __uuidof(IMidiBiDi), (void**)&_endpointInterface))
+        if (!ActivateMidiStream(serviceAbstraction, __uuidof(IMidiBiDi), (void**)&m_endpointInterface))
         {
             return false;
         }
@@ -356,13 +362,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
         try
         {
             // TODO: Need to handle the output only case which has no callback
-            winrt::check_hresult(_endpointInterface->Initialize(
+            winrt::check_hresult(m_endpointInterface->Initialize(
                 (LPCWSTR)(DeviceId().c_str()),
                 &mmcssTaskId,
                 (IMidiCallback*)(this)
             ));
 
-            _isConnected = true;
+            m_isConnected = true;
 
             return true;
 
@@ -375,7 +381,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             //std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
             //std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
 
-            _endpointInterface = nullptr;
+            m_endpointInterface = nullptr;
 
             return false;
         }
@@ -384,12 +390,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     MidiBidirectionalEndpointConnection::~MidiBidirectionalEndpointConnection()
     {
-        if (_endpointInterface != nullptr)
+        if (m_endpointInterface != nullptr)
         {
-            _endpointInterface->Cleanup();
+            m_endpointInterface->Cleanup();
         }
 
-        _isConnected = false;
+        m_isConnected = false;
 
         // TODO: any event cleanup?
     }

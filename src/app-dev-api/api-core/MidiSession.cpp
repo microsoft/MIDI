@@ -61,13 +61,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
         try
         {
             // We're talking to the service, so use the MIDI Service abstraction, not a KS or other one
-            _serviceAbstraction = winrt::create_instance<IMidiAbstraction>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
+            m_serviceAbstraction = winrt::create_instance<IMidiAbstraction>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
 
             // TODO: Not sure if service will need to provide the Id, or we can simply gen a GUID and send it up
             // that's why the assignment is in this function and not in CreateSession()
-            _id = winrt::to_hstring(Windows::Foundation::GuidHelper::CreateNewGuid());
+            m_id = winrt::to_hstring(Windows::Foundation::GuidHelper::CreateNewGuid());
 
-            _isOpen = true;
+            m_isOpen = true;
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -108,9 +108,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         endpointConnection->InternalSetId(endpointId);
         endpointConnection->InternalSetDeviceId(normalizedDeviceId);
 
-        if (endpointConnection->InternalStart(_serviceAbstraction))
+        if (endpointConnection->InternalStart(m_serviceAbstraction))
         {
-            _connections.Insert((winrt::hstring)normalizedDeviceId, (const Windows::Devices::Midi2::MidiEndpointConnection)(*endpointConnection));
+            m_connections.Insert((winrt::hstring)normalizedDeviceId, (const Windows::Devices::Midi2::MidiEndpointConnection)(*endpointConnection));
 
             return *endpointConnection;
         }
@@ -147,12 +147,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     void MidiSession::DisconnectEndpointConnection(hstring const& endpointConnectionId)
     {
-        if (_connections.HasKey(endpointConnectionId))
+        if (m_connections.HasKey(endpointConnectionId))
         {
             // TODO: Disconnect from the service
 
 
-            _connections.Remove(endpointConnectionId);
+            m_connections.Remove(endpointConnectionId);
         }
         else
         {
@@ -181,22 +181,22 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         //        });
 
-        _connections.Clear();
+        m_connections.Clear();
 
         // disconnect this session from the service completely
 
 
         // Id is no longer valid, and session is not open
-        _id.clear();
+        m_id.clear();
 
-        if (_serviceAbstraction != nullptr)
+        if (m_serviceAbstraction != nullptr)
         {
             // TODO: Call any cleanup method on the service
 
-            _serviceAbstraction = nullptr;
+            m_serviceAbstraction = nullptr;
         }
 
-        _isOpen = false;
+        m_isOpen = false;
 
 
     }
@@ -204,7 +204,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     MidiSession::~MidiSession()
     {
-        if (_isOpen)
+        if (m_isOpen)
         {
             Close();
         }

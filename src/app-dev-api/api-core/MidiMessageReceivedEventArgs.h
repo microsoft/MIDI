@@ -17,6 +17,9 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
+    // Getxxx methods return something new
+    // Fill methods put data into existing data structures
+
     struct MidiMessageReceivedEventArgs : MidiMessageReceivedEventArgsT<MidiMessageReceivedEventArgs>
     {
         MidiMessageReceivedEventArgs() = default;
@@ -24,7 +27,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         MidiMessageReceivedEventArgs(PVOID data, UINT sizeInBytes, LONGLONG timestamp);
 
         winrt::Windows::Devices::Midi2::MidiUmpPacketType UmpType();
-        internal::MidiTimestamp Timestamp() { return _timestamp; }
+        internal::MidiTimestamp Timestamp() { return m_timestamp; }
 
         winrt::Windows::Devices::Midi2::IMidiUmp GetUmp();
 
@@ -36,20 +39,19 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool FillUmp128(winrt::Windows::Devices::Midi2::MidiUmp128 const& ump);
         
         bool FillWordArray(array_view<uint32_t> words);
-        
         bool FillByteArray(array_view<uint8_t> bytes);
         
         bool FillBuffer(winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffset);
 
 
     private:
-        internal::MidiTimestamp _timestamp{ 0 };
+        internal::MidiTimestamp m_timestamp{ 0 };
 
         // this does mean each event argument is up to 12 bytes larger than it needs to be, but this
         // is more efficient speed-wise, and avoids additional heap allocations.
 
 #pragma 
-        internal::PackedMaxInternalUmpStorage _data{};
+        internal::PackedMaxInternalUmpStorage m_data{};
 
     };
 }
