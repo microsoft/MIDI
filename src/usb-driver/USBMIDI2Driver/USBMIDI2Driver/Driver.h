@@ -39,6 +39,7 @@ Environment:
 
 #include <ntddk.h>
 #include <wdf.h>
+#include <acx.h>
 #include <usb.h>
 #include <usbdlib.h>
 #include <wdfusb.h>
@@ -55,7 +56,8 @@ EXTERN_C_START
 //
 
 DRIVER_INITIALIZE DriverEntry;
-EVT_WDF_DRIVER_DEVICE_ADD USBUMPDriverEvtDeviceAdd;
+DRIVER_UNLOAD     DriverUnload;
+EVT_WDF_DRIVER_DEVICE_ADD USBMIDI2DriverEvtDeviceAdd;
 EVT_WDF_OBJECT_CONTEXT_CLEANUP USBUMPDriverEvtDriverContextCleanup;
 
 EXTERN_C_END

@@ -41,11 +41,54 @@ Environment:
 #include "driver.tmh"
 
 #ifdef ALLOC_PRAGMA
+#pragma alloc_text (PAGE, DriverUnload)
 #pragma alloc_text (INIT, DriverEntry)
-#pragma alloc_text (PAGE, USBUMPDriverEvtDeviceAdd)
-#pragma alloc_text (PAGE, USBUMPDriverEvtDriverContextCleanup)
+#pragma alloc_text (PAGE, USBMIDI2DriverEvtDeviceAdd)
 #endif
 
+VOID
+DriverUnload(
+    _In_ WDFDRIVER Driver
+)
+/*++
+Routine Description:
+
+    Free all the resources allocated in DriverEntry.
+
+Arguments:
+
+    DriverObject - handle to a WDF Driver object.
+
+Return Value:
+
+    VOID.
+
+--*/
+{
+    PAGED_CODE();
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
+
+    if (!Driver)
+    {
+        ASSERT(FALSE);
+        return;
+    }
+
+    //
+    // Stop WPP Tracing
+    //
+    WPP_CLEANUP(WdfDriverWdmGetDriverObject(Driver));
+
+    // Remove further created memory
+    if (g_RegistryPath.Buffer != nullptr)
+    {
+        ExFreePool(g_RegistryPath.Buffer);
+        RtlZeroMemory(&g_RegistryPath, sizeof(g_RegistryPath));
+    }
+
+    return;
+}
 
 NTSTATUS
 DriverEntry(
@@ -78,36 +121,73 @@ Return Value:
 
 --*/
 {
-    WDF_DRIVER_CONFIG config;
-    NTSTATUS status;
-    WDF_OBJECT_ATTRIBUTES attributes;
+    WDF_DRIVER_CONFIG       config;
+    ACX_DRIVER_CONFIG       acxConfig;
+    WDFDRIVER               driver;
+    NTSTATUS                status;
+    WDF_OBJECT_ATTRIBUTES   attributes;
 
     //
     // Initialize WPP Tracing
     //
     WPP_INIT_TRACING( DriverObject, RegistryPath );
-
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
+    //
+    // Keep local reference of registry path
+    // 
+    status = CopyRegistrySettingsPath(RegistryPath);
+    if (!NT_SUCCESS(status))
+    {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DRIVER, "WdfDriverCreate error fething registry path %!STATUS!", status);
+        WPP_CLEANUP(DriverObject);
+        return status;
+    }
+
+    //
+    // Initiialize driver config to control the attributes that
+    // are global to the driver. Note that framework by default
+    // provides a driver unload routine. If you create any resources
+    // in the DriverEntry and want to be cleaned in driver unload,
+    // you can override that by manually setting the EvtDriverUnload in the
+    // config structure. In general xxx_CONFIG_INIT macros are provided to
+    // initialize most commonly used members.
+    //
     //
     // Register a cleanup callback so that we can call WPP_CLEANUP when
     // the framework driver object is deleted during driver unload.
     //
-    WDF_OBJECT_ATTRIBUTES_INIT(&attributes);  attributes.EvtCleanupCallback = USBUMPDriverEvtDriverContextCleanup;
+    WDF_DRIVER_CONFIG_INIT(&config, USBMIDI2DriverEvtDeviceAdd);
+    config.EvtDriverUnload = DriverUnload;
 
-    WDF_DRIVER_CONFIG_INIT(&config,
-                           USBUMPDriverEvtDeviceAdd
-                           );
+    //
+    // Add a Driver Context. For illustrative purposes only
+    //
+    WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&attributes, DEVICE_CONTEXT);
 
+    //
+    // Create a framework driver object to represent our driver
+    //
     status = WdfDriverCreate(DriverObject,
                              RegistryPath,
                              &attributes,
                              &config,
-                             WDF_NO_HANDLE
+                             &driver
                              );
 
     if (!NT_SUCCESS(status)) {
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DRIVER, "WdfDriverCreate failed %!STATUS!", status);
+        WPP_CLEANUP(DriverObject);
+        return status;
+    }
+
+    //
+    // Post init
+    //
+    ACX_DRIVER_CONFIG_INIT(&acxConfig);
+    status = AcxDriverInitialize(driver, &acxConfig);
+    if (!NT_SUCCESS(status)) {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DRIVER, "AcxDriverInitialize failed %!STATUS!", status);
         WPP_CLEANUP(DriverObject);
         return status;
     }
@@ -118,7 +198,7 @@ Return Value:
 }
 
 NTSTATUS
-USBUMPDriverEvtDeviceAdd(
+USBMIDI2DriverEvtDeviceAdd(
     _In_    WDFDRIVER       Driver,
     _Inout_ PWDFDEVICE_INIT DeviceInit
     )
@@ -154,36 +234,4 @@ Return Value:
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
     return status;
-}
-
-VOID
-USBUMPDriverEvtDriverContextCleanup(
-    _In_ WDFOBJECT DriverObject
-    )
-/*++
-Routine Description:
-
-    Free all the resources allocated in DriverEntry.
-
-Arguments:
-
-    DriverObject - handle to a WDF Driver object.
-
-Return Value:
-
-    VOID.
-
---*/
-{
-    UNREFERENCED_PARAMETER(DriverObject);
-
-    PAGED_CODE ();
-
-    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
-
-    //
-    // Stop WPP Tracing
-    //
-    WPP_CLEANUP( WdfDriverWdmGetDriverObject( (WDFDRIVER) DriverObject) );
-
 }

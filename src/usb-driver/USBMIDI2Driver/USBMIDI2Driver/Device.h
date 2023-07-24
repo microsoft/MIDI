@@ -158,6 +158,15 @@ EVT_WDF_REQUEST_COMPLETION_ROUTINE      USBUMPDriverEvtRequestWriteCompletionRou
 
 // Forward Declartion of helper functions
 //
+// Function to fetch local copy of registry path
+//
+extern UNICODE_STRING g_RegistryPath;
+NTSTATUS
+CopyRegistrySettingsPath(
+    _In_ PUNICODE_STRING RegistryPath
+);
+
+//
 // Function to parse descriptors and select usb Interface
 //
 NTSTATUS

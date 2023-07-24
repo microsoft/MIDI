@@ -43,6 +43,7 @@ Environment:
 #include "Common.h"
 
 #ifdef ALLOC_PRAGMA
+#pragma alloc_text (PAGE, CopyRegistrySettingsPath)
 #pragma alloc_text (PAGE, USBUMPDriverCreateDevice)
 #pragma alloc_text (PAGE, USBUMPDriverEvtDevicePrepareHardware)
 #pragma alloc_text (PAGE, USBUMPDriverEvtDeviceD0Entry)
@@ -59,6 +60,49 @@ Environment:
 #pragma alloc_text (NONPAGE, USBUMPDriverSendToUSB)
 #endif
 
+UNICODE_STRING g_RegistryPath = { 0 };      // This is used to store the registry settings path for the driver
+
+NTSTATUS
+CopyRegistrySettingsPath(
+    _In_ PUNICODE_STRING RegistryPath
+)
+/*++
+
+Routine Description:
+
+Copies the following registry path to a global variable.
+
+\REGISTRY\MACHINE\SYSTEM\ControlSetxxx\Services\<driver>\Parameters
+
+Arguments:
+
+RegistryPath - Registry path passed to DriverEntry
+
+Returns:
+
+NTSTATUS - SUCCESS if able to configure the framework
+
+--*/
+
+{
+    // Initializing the unicode string, so that if it is not allocated it will not be deallocated too.
+    RtlInitUnicodeString(&g_RegistryPath, nullptr);
+
+    g_RegistryPath.MaximumLength = RegistryPath->Length + sizeof(WCHAR);
+
+    g_RegistryPath.Buffer = (PWCH)ExAllocatePool2(POOL_FLAG_PAGED, g_RegistryPath.MaximumLength, USBUMP_POOLTAG);
+
+    if (g_RegistryPath.Buffer == nullptr)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    // ExAllocatePool2 zeros memory.
+
+    RtlAppendUnicodeToString(&g_RegistryPath, RegistryPath->Buffer);
+
+    return STATUS_SUCCESS;
+}
 
 NTSTATUS
 USBUMPDriverCreateDevice(
