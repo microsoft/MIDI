@@ -26,7 +26,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
-    hstring MidiLocalizedStrings::FormatMessageTypeValue(winrt::Microsoft::Devices::Midi2::MidiUmpMessageType const& messageType, bool abbreviatedVersion)
+    hstring MidiLocalizedStrings::FormatMessageTypeValue(winrt::Windows::Devices::Midi2::MidiUmpMessageType const& messageType, bool abbreviatedVersion)
     {
         throw hresult_not_implemented();
     }

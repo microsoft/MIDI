@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+    <Catch2Adapter>
+        <FilenameFilter>^.+\-tests$</FilenameFilter>
+    </Catch2Adapter>
+	<TreatNoTestsAsError>true</TreatNoTestsAsError>
+</RunSettings>

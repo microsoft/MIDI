@@ -16,8 +16,8 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         MidiChannel() = default;
 
-        uint8_t ChannelIndex();
-        uint8_t ChannelNumberForDisplay();
+        uint8_t Index();
+        uint8_t NumberForDisplay();
         bool IsActive();
         hstring Name();
     };

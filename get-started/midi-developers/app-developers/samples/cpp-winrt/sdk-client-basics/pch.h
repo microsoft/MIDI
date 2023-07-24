@@ -4,3 +4,4 @@
 #include <winrt/Windows.Devices.Enumeration.h>
 
 #include <winrt/Microsoft.Devices.Midi2.h>
+#include <winrt/Windows.Devices.Midi2.h>

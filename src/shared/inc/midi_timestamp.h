@@ -6,7 +6,7 @@
 // Info on high resolution counters/timestamps in Windows
 // https://learn.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps
 
-namespace Microsoft::Devices::Midi2::Internal::Shared
+namespace Windows::Devices::Midi2::Internal::Shared
 {
 
 #ifdef _KERNEL_MODE
@@ -24,12 +24,12 @@ namespace Microsoft::Devices::Midi2::Internal::Shared
 	{
 		LARGE_INTEGER frequency;
 
-		KeQueryPerformanceCounter(&frequency);
+		KeQueryPerformanceFrequency(&frequency);
 
 		return frequency.QuadPart;
 	}
 #else
-	std::uint64_t GetCurrentMidiTimestamp()
+	inline std::uint64_t GetCurrentMidiTimestamp()
 	{
 		LARGE_INTEGER timestamp;
 
@@ -39,14 +39,19 @@ namespace Microsoft::Devices::Midi2::Internal::Shared
 	}
 
 
-	std::uint64_t GetMidiTimestampFrequency()
+	inline std::uint64_t GetMidiTimestampFrequency()
 	{
 		LARGE_INTEGER frequency;
 
-		QueryPerformanceCounter(&frequency);
+		QueryPerformanceFrequency(&frequency);
 
 		return frequency.QuadPart;
 	}
+
+
+	// TODO: Consider adding in GetSystemTimePreciseAsFileTime for jitter measurements (KeQuerySystemTimePrecise for driver code)
+	// https://learn.microsoft.com/windows/win32/sysinfo/acquiring-high-resolution-time-stamps
+
 #endif
 
 }

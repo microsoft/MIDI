@@ -1,0 +1,29 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+// This is the moral equivalent of an input "port" in MIDI 1.0. MIDI 2.0 UMP Endpoints are
+// almost always bidirectional.
+
+import "MidiEndpointConnection.idl";
+import "IMidiInputConnection.idl";
+
+
+namespace Windows.Devices.Midi2
+{
+//    delegate void MessageReceived(IInspectable source, UInt64 timestamp, UInt32[] words);
+
+    [default_interface]
+    runtimeclass MidiInputEndpointConnection : Windows.Devices.Midi2.MidiEndpointConnection, 
+                                               Windows.Devices.Midi2.IMidiInputConnection
+    {
+        // Get the enumeration device selector for all compatible devices
+        static String GetDeviceSelectorForInput();
+
+
+    }
+}

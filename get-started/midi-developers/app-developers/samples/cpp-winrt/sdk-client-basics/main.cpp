@@ -10,6 +10,8 @@
 
 using namespace winrt;
 using namespace Microsoft::Devices::Midi2;
+using namespace Windows::Devices::Midi2;
+
 using namespace Windows::Devices::Enumeration;
 
 int main()
@@ -39,7 +41,7 @@ int main()
 
         std::cout << "Creating session." << std::endl;
 
-        auto session = MidiSession::CreateNewSession(L"Sample Session", sessionSettings);
+        auto session = MidiSession::CreateSession(L"Sample Session", sessionSettings);
 
         // you can ask for MIDI 1.0 Byte Stream devices, MIDI 2.0 UMP devices, or both. Note that Some MIDI 2.0
         // endpoints may have MIDI 1.0 function blocks in them, so this is endpoint/device-level only.
@@ -61,6 +63,8 @@ int main()
         Windows::Foundation::IAsyncOperation<DeviceInformationCollection> op = DeviceInformation::FindAllAsync(deviceSelector);
         DeviceInformationCollection endpointDevices = op.get();
 
+        // this currently requires you have a USB MIDI 1.0 device. If you have nothing connected, just remove this check for now
+        // That will change once MIDI 2.0 device selectors have been created
         if (endpointDevices.Size() > 0)
         {
             std::cout << "MIDI Endpoints were found (not really, but pretending they are for now)." << std::endl;
@@ -69,28 +73,60 @@ int main()
             // or you'd otherwise have an Id at hand.
             DeviceInformation selectedEndpointInformation = endpointDevices.GetAt(0);
 
-            // if we want the additional properties that are available to us, we can wrap the
-            // DeviceInformation object with a MIDI-specific one. You can also skip this and call the CreatFromId 
-            // method directly on MidiDeviceInformation if you have an Id handy.
-//            MidiDeviceInformation selectedMidiEndpointInformation = MidiDeviceInformation::FromDeviceInformation(selectedEndpointInformation);
-
-            //selectedMidiEndpointInformation.DeviceThumbnail();
-            //selectedMidiEndpointInformation.EndpointDataFormat();
-            // ...
 
             // then you connect to the UMP endpoint
             std::cout << "Connecting to UMP Endpoint." << std::endl;
+            std::cout << "Note: For this example to fully work, you need to the special Loopback MidiSrv installed." << std::endl;
+            std::cout << "Otherwise, creating an endpoint will fail, and no messages will be sent or received." << std::endl;
 
             //auto endpoint = session.ConnectToEndpoint(selectedMidiEndpointInformation.Id(), MidiEndpointConnectOptions::Default());
-            auto endpoint = session.ConnectToEndpoint(L"foobarbaz", MidiEndpointConnectOptions::Default());
+            auto endpoint = session.ConnectBidirectionalEndpoint(L"foobarbaz", nullptr);
 
-            // after connecting, you can send and receive messages
+            // after connecting, you can send and receive messages to/from the endpoint. Sending and receiving is
+            // performed one complete UMP at a time. 
+            // -----------------------------
+            // Wire up an event handler to receive the message. This event handler type receives an IMidiUmp type
+            // but you can also wire up one which receives a uint32_t array and a uint64_t timestamp instead. The
+            // performance is almost identical (within a couple ms total over 1000 send/receives despite the 
+            // additional type activations and casting) but one may be more convenient than the other to you, so
+            // both are provided. 
 
-//            auto writer = endpoint.GetMessageWriter();
+            auto MessageReceivedHandler = [](winrt::Windows::Foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
+                {
+                    std::cout << std::endl;
+                    std::cout << "Received UMP" << std::endl;
+                    std::cout << "- Current Timestamp: " << std::dec << MidiClock::GetMidiTimestamp() << std::endl;
+                    std::cout << "- UMP Timestamp: " << std::dec << args.Ump().Timestamp() << std::endl;
+                    std::cout << "- UMP Type: " << std::hex << (uint32_t)args.Ump().MessageType() << std::endl;
 
-            // writer.WriteUmpWithTimestamp(...);
+                    // if you wish to cast the IMidiUmp to a specific Ump Type, you can do so using .as<T>.
 
+                    if (args.Ump().MidiUmpPacketType() == MidiUmpPacketType::Ump32)
+                    {
+                        auto ump = args.Ump().as<MidiUmp32>();
+                        std::cout << "Word 0: " << std::hex << ump.Word0() << std::endl;
+                    }
 
+                    std::cout << std::endl;
+
+                };
+
+            // the returned token is used to deregister the event later.
+            auto eventRevokeToken = endpoint.MessageReceived(MessageReceivedHandler);
+
+            MidiUmp32 ump32{};
+            ump32.MessageType(MidiUmpMessageType::Midi1ChannelVoice32);
+            auto ump = ump32.as<IMidiUmp>();
+            endpoint.SendUmp(ump);
+
+            std::cout << "Wait for the message to arrive, and then press enter to cleanup." << std::endl;
+            system("pause");
+
+            // deregister the event
+            endpoint.MessageReceived(eventRevokeToken);
+
+            // not strictly necessary as the session.Close() call will do it, but it's here in case you need it
+            session.DisconnectEndpointConnection(endpoint.Id());
         }
         else
         {

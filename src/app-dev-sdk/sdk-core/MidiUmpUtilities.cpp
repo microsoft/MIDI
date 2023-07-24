@@ -17,9 +17,9 @@ using namespace ::Microsoft::Devices::Midi2::Internal;
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    winrt::Microsoft::Devices::Midi2::MidiUmpMessageType MidiUmpUtilities::GetMessageTypeFromFirstWord(uint32_t firstWord)
+    winrt::Windows::Devices::Midi2::MidiUmpMessageType MidiUmpUtilities::GetMessageTypeFromFirstWord(uint32_t firstWord)
     {
-        return (MidiUmpMessageType)(GetUmpMessageTypeFromFirstWord(firstWord));
+        return (winrt::Windows::Devices::Midi2::MidiUmpMessageType)(GetUmpMessageTypeFromFirstWord(firstWord));
     }
     int16_t MidiUmpUtilities::GetUmpLengthInWordsFromFirstWord(uint32_t firstWord)
     {
