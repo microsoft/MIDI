@@ -13,18 +13,25 @@
 import "MidiEndpointConnection.idl";
 import "IMidiInputConnection.idl";
 import "IMidiOutputConnection.idl";
+import "IMidiEndpointMessageListener.idl";
+import "IMidiMessageReceivedEventSource.idl";
+
 
 namespace Windows.Devices.Midi2
 {
     [default_interface]
     runtimeclass MidiBidirectionalEndpointConnection : Windows.Devices.Midi2.MidiEndpointConnection, 
-                                                       Windows.Devices.Midi2.IMidiInputConnection, 
+                                                       Windows.Devices.Midi2.IMidiInputConnection,
+                                                       Windows.Devices.Midi2.IMidiMessageReceivedEventSource,
                                                        Windows.Devices.Midi2.IMidiOutputConnection
     {
         //MidiEndpointConnection();
 
         // Get the enumeration device selector for all compatible devices
         static String GetDeviceSelectorForBidirectional();
+
+
+
 
     }
 }

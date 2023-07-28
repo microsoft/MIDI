@@ -6,11 +6,17 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#include "pch.h"
-#include "MidiWordsReceivedEventArgs.h"
-#include "MidiWordsReceivedEventArgs.g.cpp"
+import "MidiMessageReceivedEventArgs.idl";
 
-
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace Windows.Devices.Midi2
 {
+    [
+        uuid(101ceb4b-cca4-48a1-b91e-6002b928613c),
+        version(1.0),
+    ]
+    interface IMidiMessageReceivedEventSource
+    {      
+        // callback for when a message comes in
+        event Windows.Foundation.TypedEventHandler<IInspectable, MidiMessageReceivedEventArgs> MessageReceived;
+    }
 }

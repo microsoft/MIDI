@@ -23,11 +23,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     bool MidiSessionSettings::UseMmcssThreads()
     {
-        return _useMmcss;
+        return m_useMmcss;
     }
     void MidiSessionSettings::UseMmcssThreads(bool value)
     {
-        _useMmcss = value;
+        m_useMmcss = value;
     }
 
 }

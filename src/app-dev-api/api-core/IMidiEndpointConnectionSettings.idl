@@ -7,6 +7,9 @@
 // ============================================================================
 
 
+// Interface for settings classes that transport SDK plugins will implement when 
+// providing custom connection settings for their transports
+
 namespace Windows.Devices.Midi2
 {
     [

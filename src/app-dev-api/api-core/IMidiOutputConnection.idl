@@ -17,7 +17,13 @@ namespace Windows.Devices.Midi2
     interface IMidiOutputConnection
     {
         Boolean SendUmp(IMidiUmp ump);
-
         Boolean SendUmpWords(UInt64 timestamp, UInt32[] words, UInt32 wordCount);
+
+        Boolean SendUmp32Words(UInt64 timestamp, UInt32 word0);
+        Boolean SendUmp64Words(UInt64 timestamp, UInt32 word0, UInt32 word1);
+        Boolean SendUmp96Words(UInt64 timestamp, UInt32 word0, UInt32 word1, UInt32 word2);
+        Boolean SendUmp128Words(UInt64 timestamp, UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
+
+        Boolean SendUmpBuffer(UInt64 timestamp, Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffset, UInt32 byteLength);
     }
 }

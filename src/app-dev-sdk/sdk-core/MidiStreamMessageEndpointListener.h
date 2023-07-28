@@ -7,18 +7,14 @@
 // ============================================================================
 
 #pragma once
-#include "MidiChannelEndpointListener.g.h"
+#include "MidiStreamMessageEndpointListener.g.h"
 
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    struct MidiChannelEndpointListener : MidiChannelEndpointListenerT<MidiChannelEndpointListener>
+    struct MidiStreamMessageEndpointListener : MidiStreamMessageEndpointListenerT<MidiStreamMessageEndpointListener>
     {
-        MidiChannelEndpointListener() = default;
-
-        winrt::Microsoft::Devices::Midi2::MidiGroup IncludeGroup();
-        void IncludeGroup(winrt::Microsoft::Devices::Midi2::MidiGroup const& value);
-        winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiChannel> IncludeChannels();
+        MidiStreamMessageEndpointListener() = default;
 
         hstring Id() { return m_id; }
         void Id(hstring const& value) { m_id = value; }
@@ -33,12 +29,11 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         hstring m_id{};
         hstring m_name{};
         IInspectable m_tag{ nullptr };
-
     };
 }
 namespace winrt::Microsoft::Devices::Midi2::factory_implementation
 {
-    struct MidiChannelEndpointListener : MidiChannelEndpointListenerT<MidiChannelEndpointListener, implementation::MidiChannelEndpointListener>
+    struct MidiStreamMessageEndpointListener : MidiStreamMessageEndpointListenerT<MidiStreamMessageEndpointListener, implementation::MidiStreamMessageEndpointListener>
     {
     };
 }

@@ -21,10 +21,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     bool MidiInputEndpointConnection::InternalStart()
     {
-        return false;
+        throw hresult_not_implemented();
     }
-
-
-
 
 }

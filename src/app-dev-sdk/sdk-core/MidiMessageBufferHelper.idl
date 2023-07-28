@@ -6,17 +6,10 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-
-namespace Windows.Devices.Midi2
+namespace Microsoft.Devices.Midi2
 {
-    // can be cast to the size in MIDI Words.
-
-    enum MidiUmpPacketType
-    {
-        UnknownOrInvalid = 0,
-        Ump32 = 1,
-        Ump64 = 2,
-        Ump96 = 3,
-        Ump128 = 4,
-    };
+	runtimeclass MidiMessageBufferHelper
+	{
+		static Windows.Foundation.IMemoryBuffer CreateMemoryBuffer(UInt32 midiWordCount);
+	};
 }

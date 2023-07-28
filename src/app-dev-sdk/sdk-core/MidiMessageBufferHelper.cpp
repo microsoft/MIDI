@@ -6,12 +6,15 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+#include "pch.h"
+#include "MidiMessageBufferHelper.h"
+#include "MidiMessageBufferHelper.g.cpp"
 
-namespace Microsoft.Devices.Midi2
+
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    interface IMidiEndpointListener
+    winrt::Windows::Foundation::IMemoryBuffer MidiMessageBufferHelper::CreateMemoryBuffer(uint32_t midiWordCount)
     {
-        void Foo();
-
+        throw hresult_not_implemented();
     }
 }

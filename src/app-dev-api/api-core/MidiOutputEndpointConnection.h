@@ -10,7 +10,6 @@
 #include "MidiOutputEndpointConnection.g.h"
 #include "MidiEndpointConnection.h"
 #include "midi_service_interface.h"
-#include "InternalMidiDeviceConnection.h"
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
@@ -22,7 +21,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool SendUmp(winrt::Windows::Devices::Midi2::IMidiUmp const& ump);
         bool SendUmpWords(uint64_t timestamp, array_view<uint32_t const> words, uint32_t wordCount);
 
-    
+        bool SendUmpBuffer(uint64_t timestamp, winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffset, uint32_t byteLength);
+
+        bool SendUmp32Words(uint64_t timestamp, uint32_t word0);
+        bool SendUmp64Words(uint64_t timestamp, uint32_t word0, uint32_t word1);
+        bool SendUmp96Words(uint64_t timestamp, uint32_t word0, uint32_t word1, uint32_t word2);
+        bool SendUmp128Words(uint64_t timestamp, uint32_t word0, uint32_t word1, uint32_t word2, uint32_t word3);
+
         bool InternalStart();
 
     private:

@@ -16,6 +16,10 @@
 
 #include <Windows.h>
 
+//#include <wil/cppwinrt.h> // must be before the first C++ WinRT header
+//#include <wil/result.h>
+
+
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
@@ -29,10 +33,9 @@ using namespace winrt;
 
 // internal
 #include "midi_service_interface.h"
-#include "InternalMidiDeviceConnection.h"
 #include "ump_helpers.h"
 #include "memory_buffer.h"
-
+#include "trace_logging.h"
 
 // shared
 #include <midi_ump.h>

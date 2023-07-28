@@ -13,6 +13,8 @@
 #include "MidiUmp96.h"
 #include "MidiUmp128.h"
 
+#include <iostream>
+
 namespace implementation = winrt::Windows::Devices::Midi2::implementation;
 
 
@@ -37,14 +39,30 @@ namespace Windows::Devices::Midi2::Internal
     template <typename TEndpoint>
     bool InternalMidiMessageSenderHelper<TEndpoint>::SendMessageRaw(winrt::com_ptr<TEndpoint> endpoint, void* data, uint32_t sizeInBytes, uint64_t timestamp)
     {
-        if (endpoint != nullptr)
+        try
         {
-            winrt::check_hresult(endpoint->SendMidiMessage(data, sizeInBytes, timestamp));
+            if (endpoint != nullptr)
+            {
+                //LOG_IF_FAILED(DoWork());
+    //            std::cout << "First word of " << std::dec << sizeInBytes << " bytes is : 0x" << std::hex << *((uint32_t*)data) << std::endl;
 
-            return true;
+                winrt::check_hresult(endpoint->SendMidiMessage(data, sizeInBytes, timestamp));
+
+                return true;
+            }
+
+            return false;
         }
+        catch (winrt::hresult_error const& ex)
+        {
+            OutputDebugString(L"" __FUNCTION__ " hresult exception sending message. Is the service running?");
 
-        return false;
+            //std::cout << __FUNCTION__ << " hresult exception sending message" << std::endl;
+            //std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
+            //std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
+
+            return false;
+        }
     }
 
 

@@ -18,7 +18,7 @@ namespace Microsoft.Devices.Midi2
     [default_interface]
     runtimeclass MidiMessageTranslator
     {
-        MidiMessageTranslator();
+        // MidiMessageTranslator();
 
         // main message translators
         static UInt32[] TranslateMidi1ByteCVToMidi2UmpCV(UInt8[] midi1Bytes);

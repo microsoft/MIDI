@@ -20,27 +20,27 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static hstring GetDeviceSelector();
 
-        hstring Id() { return _id; }
-        hstring DeviceId() { return _deviceId; }
-        bool IsConnected() { return _isConnected; }
-        IMidiEndpointConnectionSettings Settings() { return _settings; }
+        hstring Id() { return m_id; }
+        hstring DeviceId() { return m_deviceId; }
+        bool IsConnected() { return m_isConnected; }
+        IMidiEndpointConnectionSettings Settings() { return m_settings; }
 
-        hstring Tag() { return _tag; }
-        void Tag(hstring value) { _tag = value; }
+        IInspectable Tag() { return m_tag; }
+        void Tag(IInspectable value) { m_tag = value; }
 
-        void InternalSetSettings(IMidiEndpointConnectionSettings value) { _settings = value; }
-        void InternalSetDeviceId(hstring value) { _deviceId = value; }
-        void InternalSetId(hstring value) { _id = value; }
-        void InternalSetIsConnected(bool value) { _isConnected = value; }
+        void InternalSetSettings(IMidiEndpointConnectionSettings value) { m_settings = value; }
+        void InternalSetDeviceId(hstring value) { m_deviceId = value; }
+        void InternalSetId(hstring value) { m_id = value; }
+        void InternalSetIsConnected(bool value) { m_isConnected = value; }
 
     protected:
-        hstring _id{};
-        hstring _deviceId{};
-        hstring _tag{};
+        hstring m_id {};
+        hstring m_deviceId {};
+        IInspectable m_tag{ nullptr };
         
-        bool _isConnected{ false };
+        bool m_isConnected{ false };
 
-        IMidiEndpointConnectionSettings _settings{ nullptr };
+        IMidiEndpointConnectionSettings m_settings{ nullptr };
 
     };
 }

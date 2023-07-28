@@ -20,6 +20,7 @@
 #include <Windows.h>
 
 //#include "..\api-core\ump_helpers.h"
+#include <wil\resource.h>
 
 using namespace winrt;
 using namespace winrt::Windows::Devices::Midi2;
@@ -65,13 +66,16 @@ TEST_CASE("Connected.Endpoint.CreateBidi Create bidirectional endpoint")
 
 TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message")
 {
+	wil::unique_event_nothrow allMessagesReceived;
+	allMessagesReceived.create();
+
 	auto settings = MidiSessionSettings::Default();
 	auto session = MidiSession::CreateSession(L"Test Session Name", settings);
 
 	REQUIRE((bool)(session.IsOpen()));
 	REQUIRE((bool)(session.Connections().Size() == 0));
 
-	std::cout << "Connecting to Endpoint" << std::endl;
+	std::cout << std::endl << "Connecting to Endpoint" << std::endl;
 
 	auto conn1 = session.ConnectBidirectionalEndpoint(L"foobarbaz", nullptr);
 
@@ -83,24 +87,32 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message")
 	auto sentMessageType = MidiUmpMessageType::Midi1ChannelVoice32;
 	auto sentTimestamp = MidiClock::GetMidiTimestamp();
 
-	auto MessageReceivedHandler = [&messageReceivedFlag, &sentMessageType, &sentTimestamp](Windows::Foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
+
+	auto MessageReceivedHandler = [&](Windows::Foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
 		{
 			REQUIRE((bool)(sender != nullptr));
 			REQUIRE((bool)(args != nullptr));
 
-			// TODO: making an assumption on type here.
-			MidiUmp32 receivedUmp = args.Ump().as<MidiUmp32>();
+			// strongly typed UMP
+			auto receivedUmp = args.GetUmp();
 
 			REQUIRE(receivedUmp != nullptr);
+
+			// verify that the message that comes back is what we sent
 			REQUIRE(receivedUmp.MessageType() == sentMessageType);
 			REQUIRE(receivedUmp.Timestamp() == sentTimestamp);
 
+			// Making an assumption on type here.
+			MidiUmp32 receivedUmp32 = receivedUmp.as<MidiUmp32>();
+
+			std::cout << "Received message in test" << std::endl;
+			std::cout << " - MidiUmpPacketType: 0x" << std::hex << (int)(receivedUmp32.MidiUmpPacketType()) << std::endl;
+			std::cout << " - Timestamp:         0x" << std::hex << (receivedUmp32.Timestamp()) << std::endl;
+			std::cout << " - MessageType:       0x" << std::hex << (int)(receivedUmp32.MessageType()) << std::endl;
+			std::cout << " - First Word:        0x" << std::hex << (receivedUmp32.Word0()) << std::endl << std::endl;
+
 			messageReceivedFlag = true;
-			//std::cout << "Received message in test" << std::endl;
-			//std::cout << " - MidiUmpPacketType " << std::hex << (int)(receivedUmp.MidiUmpPacketType()) << std::endl;
-			//std::cout << " - Timestamp " << std::hex << (receivedUmp.Timestamp()) << std::endl;
-			//std::cout << " - MessageType " << std::hex << (int)(receivedUmp.MessageType()) << std::endl;
-			//std::cout << " - First Word " << std::hex << (receivedUmp.Word0()) << std::endl;
+			allMessagesReceived.SetEvent();
 		};
 
 	auto eventRevokeToken = conn1.MessageReceived(MessageReceivedHandler);
@@ -108,24 +120,23 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message")
 
 	// send message
 
-	sentUmp.MessageType(MidiUmpMessageType::Midi1ChannelVoice32);
+	sentUmp.MessageType(sentMessageType);
 	sentUmp.Timestamp(sentTimestamp);
 
-	//std::cout << "Sending MidiUmpPacketType from test" << std::hex << (uint32_t)(sentUmp.MidiUmpPacketType()) << std::endl;
-	//std::cout << " - Timestamp " << std::hex << (uint64_t)(sentUmp.Timestamp()) << std::endl;
-	//std::cout << " - MessageType " << std::hex << (int)(sentUmp.MessageType()) << std::endl;
-	//std::cout << " - First Word " << std::hex << (sentUmp.Word0()) << std::endl;
+	std::cout << "Sending message" << std::hex << (uint32_t)(sentUmp.MidiUmpPacketType()) << std::endl;
+	std::cout << " - Timestamp:   0x" << std::hex << (uint64_t)(sentUmp.Timestamp()) << std::endl;
+	std::cout << " - MessageType: 0x" << std::hex << (int)(sentUmp.MessageType()) << std::endl;
+	std::cout << " - First Word:  0x" << std::hex << (sentUmp.Word0()) << std::endl << std::endl;
 
 	conn1.SendUmp(sentUmp);
 
 
 	// Wait for incoming message
 
-	int timeoutCounter = 3000;
-	while (!messageReceivedFlag && timeoutCounter > 0)
+	// Wait for incoming message
+	if (!allMessagesReceived.wait(3000))
 	{
-		Sleep(1);
-		timeoutCounter--;
+		std::cout << "Failure waiting for messages, timed out." << std::endl;
 	}
 
 	REQUIRE(messageReceivedFlag);
@@ -142,6 +153,10 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message")
 
 TEST_CASE("Connected.Endpoint.MultipleUmpWords Send and receive multiple words")
 {
+	wil::unique_event_nothrow allMessagesReceived;
+	allMessagesReceived.create();
+
+
 	uint64_t setupStartTimestamp = MidiClock::GetMidiTimestamp();
 
 
@@ -159,24 +174,31 @@ TEST_CASE("Connected.Endpoint.MultipleUmpWords Send and receive multiple words")
 
 	uint32_t receivedMessageCount{};
 
+	uint32_t numMessagesToSend = 10;
 
-	auto WordsReceivedHandler = [&receivedMessageCount](Windows::Foundation::IInspectable const& sender, MidiWordsReceivedEventArgs const& args)
+	auto MessageReceivedHandler = [&](Windows::Foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
 		{
 			REQUIRE((bool)(sender != nullptr));
 			REQUIRE((bool)(args != nullptr));
 
+
+
+
+
+
 			receivedMessageCount++;
+
+			if (receivedMessageCount == numMessagesToSend)
+			{
+				allMessagesReceived.SetEvent();
+			}
 
 		};
 
-	auto eventRevokeToken = conn1.WordsReceived(WordsReceivedHandler);
+	auto eventRevokeToken = conn1.MessageReceived(MessageReceivedHandler);
 
 
 	// send messages
-
-	uint32_t numMessagesToSend = 500;
-
-	//std::cout << "Sending messages. Count=" << std::dec << numMessagesToSend << std::endl;
 
 	uint32_t numBytes = 0;
 
@@ -222,21 +244,17 @@ TEST_CASE("Connected.Endpoint.MultipleUmpWords Send and receive multiple words")
 
 	}
 	// Wait for incoming message
-
-	uint32_t timeoutCounter = 1000000;
-	uint32_t sleepDuration = 0;
-
-	while (receivedMessageCount < numMessagesToSend && timeoutCounter > 0)
+	if (!allMessagesReceived.wait(3000))
 	{
-		Sleep(sleepDuration);
-
-		timeoutCounter--;
+		std::cout << "Failure waiting for messages, timed out." << std::endl;
 	}
+
+//	REQUIRE(messageReceivedFlag);
 
 	REQUIRE(receivedMessageCount == numMessagesToSend);
 
 	// unwire event
-	conn1.WordsReceived(eventRevokeToken);
+	//conn1.WordsReceived(eventRevokeToken);
 
 	// cleanup endpoint. Technically not required as session will do it
 	session.DisconnectEndpointConnection(conn1.Id());

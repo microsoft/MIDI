@@ -7,20 +7,14 @@
 // ============================================================================
 
 #include "pch.h"
-#include "MidiGroupEndpointListener.h"
-#include "MidiGroupEndpointListener.g.cpp"
+#include "MidiStreamMessageEndpointListener.h"
+#include "MidiStreamMessageEndpointListener.g.cpp"
 
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiGroup> MidiGroupEndpointListener::IncludeGroups()
+    void MidiStreamMessageEndpointListener::ProcessIncomingMessage(winrt::Windows::Devices::Midi2::IMidiInputConnection const& sourceConnection, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs const& args, bool& stopProcessing, bool& removeMessageFromQueue)
     {
         throw hresult_not_implemented();
     }
-
-    void MidiGroupEndpointListener::ProcessIncomingMessage(winrt::Windows::Devices::Midi2::IMidiInputConnection const& sourceConnection, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs const& args, bool& stopProcessing, bool& removeMessageFromQueue)
-    {
-        throw hresult_not_implemented();
-    }
-
 }

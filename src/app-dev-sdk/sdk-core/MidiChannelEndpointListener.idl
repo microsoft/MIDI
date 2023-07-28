@@ -12,7 +12,7 @@ import "MidiChannel.idl";
 namespace Microsoft.Devices.Midi2
 {
     [default_interface]
-    runtimeclass MidiChannelEndpointListener
+    runtimeclass MidiChannelEndpointListener : Windows.Devices.Midi2.IMidiEndpointMessageListener
     {
         MidiChannelEndpointListener();
         

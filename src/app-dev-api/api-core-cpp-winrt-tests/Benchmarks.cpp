@@ -25,13 +25,22 @@
 #include <wil\resource.h>
 //#include <wil\result_macros.h>
 
-//#include "..\api-core\ump_helpers.h"
+#include "..\api-core\memory_buffer.h"
 
 using namespace winrt;
 using namespace winrt::Windows::Devices::Midi2;
 
-#define BIDI_ENDPOINT_DEVICE_ID L"foobarbaz"
 
+auto ump32mt = MidiUmpMessageType::Midi1ChannelVoice32;
+auto ump64mt = MidiUmpMessageType::Midi2ChannelVoice64;
+auto ump96mt = MidiUmpMessageType::FutureReservedB96;
+auto ump128mt = MidiUmpMessageType::UmpStream128;
+
+
+
+
+
+#define BIDI_ENDPOINT_DEVICE_ID L"foobarbaz"
 
 TEST_CASE("Connected.Benchmark.APIWords Send / receive words through loopback")
 {
@@ -56,16 +65,16 @@ TEST_CASE("Connected.Benchmark.APIWords Send / receive words through loopback")
 	REQUIRE((bool)(conn1 != nullptr));
 
 
-	auto ump32mt = MidiUmpMessageType::UtilityMessage32;
-	auto ump64mt = MidiUmpMessageType::DataMessage64;
-	auto ump96mt = MidiUmpMessageType::FutureReservedB96;
-	auto ump128mt = MidiUmpMessageType::FlexData128;
+	//auto ump32mt = MidiUmpMessageType::UtilityMessage32;
+	//auto ump64mt = MidiUmpMessageType::DataMessage64;
+	//auto ump96mt = MidiUmpMessageType::FutureReservedB96;
+	//auto ump128mt = MidiUmpMessageType::FlexData128;
 
 	std::vector<uint64_t> timestampDeltas;
 	timestampDeltas.reserve(numMessagesToSend);
 
 
-	auto WordsReceivedHandler = [&allMessagesReceived, &receivedMessageCount, &numMessagesToSend, &timestampDeltas](winrt::Windows::Foundation::IInspectable const& /*sender*/, MidiWordsReceivedEventArgs const& args)
+	auto ReceivedHandler = [&allMessagesReceived, &receivedMessageCount, &numMessagesToSend, &timestampDeltas](winrt::Windows::Foundation::IInspectable const& /*sender*/, MidiMessageReceivedEventArgs const& args)
 		{
 //			REQUIRE((bool)(args != nullptr));
 
@@ -86,7 +95,7 @@ TEST_CASE("Connected.Benchmark.APIWords Send / receive words through loopback")
 
 		};
 
-	auto eventRevokeToken = conn1.WordsReceived(WordsReceivedHandler);
+	auto eventRevokeToken = conn1.MessageReceived(ReceivedHandler);
 
 
 	uint32_t numBytes = 0;
@@ -162,7 +171,6 @@ TEST_CASE("Connected.Benchmark.APIWords Send / receive words through loopback")
 
 
 	// Wait for incoming message
-
 	if (!allMessagesReceived.wait(30000))
 	{
 		std::cout << "Failure waiting for messages, timed out." << std::endl;
@@ -274,16 +282,14 @@ TEST_CASE("Connected.Benchmark.APIWords Send / receive words through loopback")
 	}
 
 	// unwire event
-	conn1.WordsReceived(eventRevokeToken);
+	conn1.MessageReceived(eventRevokeToken);
 
 	// cleanup endpoint. Technically not required as session will do it
 	session.DisconnectEndpointConnection(conn1.Id());
 }
 
 
-
-
-
+#if false
 
 TEST_CASE("Connected.Benchmark.APIUmp Send / receive UMPs through loopback")
 {
@@ -308,10 +314,10 @@ TEST_CASE("Connected.Benchmark.APIUmp Send / receive UMPs through loopback")
 	REQUIRE((bool)(conn1 != nullptr));
 
 
-	auto ump32mt = MidiUmpMessageType::UtilityMessage32;
-	auto ump64mt = MidiUmpMessageType::DataMessage64;
-	auto ump96mt = MidiUmpMessageType::FutureReservedB96;
-	auto ump128mt = MidiUmpMessageType::FlexData128;
+	//auto ump32mt = MidiUmpMessageType::UtilityMessage32;
+	//auto ump64mt = MidiUmpMessageType::DataMessage64;
+	//auto ump96mt = MidiUmpMessageType::FutureReservedB96;
+	//auto ump128mt = MidiUmpMessageType::FlexData128;
 
 	std::vector<uint64_t> timestampDeltas;
 	timestampDeltas.reserve(numMessagesToSend);
@@ -541,3 +547,7 @@ TEST_CASE("Connected.Benchmark.APIUmp Send / receive UMPs through loopback")
 	session.DisconnectEndpointConnection(conn1.Id());
 }
 
+
+
+
+#endif

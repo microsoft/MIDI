@@ -14,11 +14,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
 {
     MidiUmp96::MidiUmp96(internal::MidiTimestamp timestamp, uint32_t word0, uint32_t word1, uint32_t word2)
     {
-        _timestamp = timestamp;
+        m_timestamp = timestamp;
 
-        _ump.word0 = word0;
-        _ump.word1 = word1;
-        _ump.word2 = word2;
+        m_ump.word0 = word0;
+        m_ump.word1 = word1;
+        m_ump.word2 = word2;
     }
 
     // internal constructor for reading from the service callback
@@ -28,10 +28,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
       //  WINRT_ASSERT(_ump != nullptr);
         WINRT_ASSERT(data != nullptr);
 
-        _timestamp = timestamp;
+        m_timestamp = timestamp;
 
         // need to have some safeties around this
-        memcpy((void*)&_ump, data, sizeof(internal::PackedUmp96));
+        memcpy((void*)&m_ump, data, sizeof(internal::PackedUmp96));
     }
 
 

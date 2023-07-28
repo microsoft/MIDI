@@ -60,12 +60,10 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
     <UseDebugLibraries>true</UseDebugLibraries>
-    <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DesktopCompatible>true</DesktopCompatible>
@@ -163,8 +161,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="InternalMidiDeviceConnection.h">
-    </ClInclude>
     <ClInclude Include="InternalMidiMessageReceiverHelper.h" />
     <ClInclude Include="InternalMidiMessageSenderHelper.h" />
     <ClInclude Include="memory_buffer.h" />
@@ -201,10 +197,8 @@
     <ClInclude Include="MidiUmp96.h">
       <DependentUpon>MidiUmp96.idl</DependentUpon>
     </ClInclude>
-	  <ClInclude Include="MidiWordsReceivedEventArgs.h">
-		  <DependentUpon>MidiWordsReceivedEventArgs.idl</DependentUpon>
-	  </ClInclude>
     <ClInclude Include="midi_service_interface.h" />
+    <ClInclude Include="trace_logging.h" />
     <ClInclude Include="ump_helpers.h" />
     <ClInclude Include="MidiSession.h">
       <DependentUpon>MidiSession.idl</DependentUpon>
@@ -250,15 +244,15 @@
     <ClCompile Include="MidiUmp96.cpp">
       <DependentUpon>MidiUmp96.idl</DependentUpon>
     </ClCompile>
-	  <ClCompile Include="MidiWordsReceivedEventArgs.cpp">
-		  <DependentUpon>MidiWordsReceivedEventArgs.idl</DependentUpon>
-	  </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="trace_logging.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Midl Include="IMidiEndpointMessageListener.idl" />
     <Midl Include="IMidiInputConnection.idl" />
+    <Midl Include="IMidiMessageReceivedEventSource.idl" />
     <Midl Include="IMidiOutputConnection.idl" />
     <Midl Include="IMidiTransportSettingsData.idl" />
     <Midl Include="MidiBidirectionalEndpointConnection.idl" />
@@ -277,7 +271,6 @@
     <Midl Include="MidiUmp96.idl" />
     <Midl Include="MidiUmpMessageTypeEnum.idl" />
     <Midl Include="MidiUmpPacketTypeEnum.idl" />
-    <Midl Include="MidiWordsReceivedEventArgs.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />

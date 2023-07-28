@@ -20,10 +20,11 @@
 #include <iostream>
 
 
-
-
 namespace winrt::Windows::Devices::Midi2::implementation
 {
+
+    // TODO: Returning nullptr on failure is not super useful. Consider throwing an hresult
+
     winrt::Windows::Devices::Midi2::MidiSession MidiSession::CreateSession(
         hstring const& sessionName, 
         winrt::Windows::Devices::Midi2::MidiSessionSettings const& settings)
@@ -32,13 +33,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
             auto session = winrt::make_self<implementation::MidiSession>();
 
-
-            // Connect to the MidiSrv abstraction
-
- //           std::cout << __FUNCTION__ << " creating and activating MidiSrv abstraction" << std::endl;
-
-            // TODO: See if this umpEndpoint connection to the service is already open. If so, skip initialization
-
             session->SetName(sessionName);
             session->SetSettings(settings);
 
@@ -46,12 +40,16 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 return *session;
             }
+            else
+            {
+                return nullptr;
+            }
         }
         catch (winrt::hresult_error const& ex)
         {
-            std::cout << __FUNCTION__ << ": hresult exception creating session" << std::endl;
-            std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
-            std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
+            internal::LogHresultError(__FUNCTION__, L" hresult exception initializing creating session. Service may be unavailable.", ex);
+
+            // TODO: throwing an exception here would be preferred vs returning null
 
             return nullptr;
         }
@@ -65,19 +63,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
         try
         {
             // We're talking to the service, so use the MIDI Service abstraction, not a KS or other one
-            _serviceAbstraction = winrt::create_instance<IMidiAbstraction>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
+            m_serviceAbstraction = winrt::create_instance<IMidiAbstraction>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
 
             // TODO: Not sure if service will need to provide the Id, or we can simply gen a GUID and send it up
             // that's why the assignment is in this function and not in CreateSession()
-            _id = winrt::to_hstring(Windows::Foundation::GuidHelper::CreateNewGuid());
+            m_id = winrt::to_hstring(Windows::Foundation::GuidHelper::CreateNewGuid());
 
-            _isOpen = true;
+            m_isOpen = true;
         }
         catch (winrt::hresult_error const& ex)
         {
-            std::cout << __FUNCTION__ << ": hresult exception creating service abstraction" << std::endl;
-            std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
-            std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
+            internal::LogHresultError(__FUNCTION__, L" hresult exception starting session. Service may be unavailable.", ex);
 
             return false;
         }
@@ -112,15 +108,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
         endpointConnection->InternalSetId(endpointId);
         endpointConnection->InternalSetDeviceId(normalizedDeviceId);
 
-        if (endpointConnection->InternalStart(_serviceAbstraction))
+        if (endpointConnection->InternalStart(m_serviceAbstraction))
         {
-            _connections.Insert((winrt::hstring)normalizedDeviceId, (const Windows::Devices::Midi2::MidiEndpointConnection)(*endpointConnection));
+            m_connections.Insert((winrt::hstring)normalizedDeviceId, (const Windows::Devices::Midi2::MidiEndpointConnection)(*endpointConnection));
 
             return *endpointConnection;
         }
         else
         {
-            OutputDebugString(L"" __FUNCTION__ ": WinRT Endpoint connection wouldn't start");
+            internal::LogGeneralError(__FUNCTION__, L"WinRT Endpoint connection wouldn't start");
 
             // TODO: Cleanup
 
@@ -151,12 +147,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     void MidiSession::DisconnectEndpointConnection(hstring const& endpointConnectionId)
     {
-        if (_connections.HasKey(endpointConnectionId))
+        if (m_connections.HasKey(endpointConnectionId))
         {
             // TODO: Disconnect from the service
 
 
-            _connections.Remove(endpointConnectionId);
+            m_connections.Remove(endpointConnectionId);
         }
         else
         {
@@ -164,11 +160,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
-    //void MidiSession::DisconnectAllConnectionsForEndpoint(hstring const& deviceId)
-    //{
-    //}
 
-   
 
     
     void MidiSession::Close()
@@ -185,32 +177,36 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         //        });
 
-        _connections.Clear();
+        m_connections.Clear();
 
         // disconnect this session from the service completely
 
 
         // Id is no longer valid, and session is not open
-        _id.clear();
+        m_id.clear();
 
-        if (_serviceAbstraction != nullptr)
+        if (m_serviceAbstraction != nullptr)
         {
             // TODO: Call any cleanup method on the service
 
-            _serviceAbstraction = nullptr;
+            m_serviceAbstraction = nullptr;
         }
 
-        _isOpen = false;
+        m_isOpen = false;
 
 
     }
+
 
 
     MidiSession::~MidiSession()
     {
-        if (_isOpen)
+        if (m_isOpen)
         {
             Close();
         }
     }
+
+
+
 }
