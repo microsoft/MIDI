@@ -6,12 +6,10 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-// TODO: This will go into the SDK
-
 namespace Microsoft.Devices.Midi2
 {
 	runtimeclass MidiMessageBufferHelper
 	{
-		static IMemoryBuffer CreateMemoryBuffer(UInt32 midiWordCount);
+		static Windows.Foundation.IMemoryBuffer CreateMemoryBuffer(UInt32 midiWordCount);
 	};
 }

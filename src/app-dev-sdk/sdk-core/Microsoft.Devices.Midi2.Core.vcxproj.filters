@@ -60,6 +60,18 @@
     <ClCompile Include="MidiGroupEndpointListener.cpp">
       <Filter>SDK\Listeners</Filter>
     </ClCompile>
+    <ClCompile Include="MidiStreamMessageEndpointListener.cpp">
+      <Filter>SDK\Listeners</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessageBufferHelper.cpp">
+      <Filter>SDK\Messages\Buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessageBufferReader.cpp">
+      <Filter>SDK\Messages\Buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessageBufferWriter.cpp">
+      <Filter>SDK\Messages\Buffer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -86,6 +98,18 @@
     </ClInclude>
     <ClInclude Include="MidiGroupEndpointListener.h">
       <Filter>SDK\Listeners</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiStreamMessageEndpointListener.h">
+      <Filter>SDK\Listeners</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessageBufferHelper.h">
+      <Filter>SDK\Messages\Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessageBufferReader.h">
+      <Filter>SDK\Messages\Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessageBufferWriter.h">
+      <Filter>SDK\Messages\Buffer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -140,9 +164,6 @@
     <Midl Include="MidiGroupTerminalBlock.idl">
       <Filter>SDK\Enumeration</Filter>
     </Midl>
-    <Midl Include="IMidiEndpointListener.idl">
-      <Filter>SDK\Listeners</Filter>
-    </Midl>
     <Midl Include="MidiGroupEndpointListener.idl">
       <Filter>SDK\Listeners</Filter>
     </Midl>
@@ -157,6 +178,9 @@
     </Midl>
     <Midl Include="MidiMessageBufferHelper.idl">
       <Filter>SDK\Messages\Buffer</Filter>
+    </Midl>
+    <Midl Include="MidiStreamMessageEndpointListener.idl">
+      <Filter>SDK\Listeners</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

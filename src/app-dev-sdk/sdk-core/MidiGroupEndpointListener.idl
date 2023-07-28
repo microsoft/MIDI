@@ -11,7 +11,7 @@ import "MidiGroup.idl";
 namespace Microsoft.Devices.Midi2
 {
     [default_interface]
-    runtimeclass MidiGroupEndpointListener : Windows.Devices.Midi2.IMidiEndpointListener
+    runtimeclass MidiGroupEndpointListener : Windows.Devices.Midi2.IMidiEndpointMessageListener
     {
         MidiGroupEndpointListener();
 

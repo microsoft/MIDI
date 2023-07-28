@@ -19,22 +19,22 @@ namespace Microsoft.Devices.Midi2
 		static Boolean WriteUmp32Words( Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, UInt64 timestamp, UInt32 word0);
 		static Boolean WriteUmp64Words( Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, UInt64 timestamp, UInt32 word0, UInt32 word1);
 		static Boolean WriteUmp96Words( Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, UInt64 timestamp, UInt32 word0, UInt32 word1, UInt32 word2);
-		static Boolean WriteUmp96Words( Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, UInt64 timestamp, UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
+		static Boolean WriteUmp128Words( Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, UInt64 timestamp, UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
 
 				// general for any typed MIDI message
-		static Boolean WriteIMidiUmp(IMemoryBuffer buffer, UInt32 offset);
+		static Boolean WriteIMidiUmp(Windows.Foundation.IMemoryBuffer buffer, UInt32 offset);
 
 				// supports all the strongly typed classes
-		static Boolean WriteUmp32(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, MidiUmp32 ump);
-		static Boolean WriteUmp64(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, MidiUmp64 ump);
-		static Boolean WriteUmp96(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, MidiUmp96 ump);
-		static Boolean WriteUmp128(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, MidiUmp128 ump);
+		static Boolean WriteUmp32(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, Windows.Devices.Midi2.MidiUmp32 ump);
+		static Boolean WriteUmp64(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, Windows.Devices.Midi2.MidiUmp64 ump);
+		static Boolean WriteUmp96(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, Windows.Devices.Midi2.MidiUmp96 ump);
+		static Boolean WriteUmp128(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, Windows.Devices.Midi2.MidiUmp128 ump);
 
 				// a developer requested these to make life easier. They require the data be aligned like it would be on the wire
 				// so word0 and word2 would be the high (most significant) words in those UInt64s, word1 and word3 would be the low (least significant) words
 		static Boolean WriteUmp32WordsLL( Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, UInt64 timestamp, UInt64 word0);
 		static Boolean WriteUmp64WordsLL( Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, UInt64 timestamp, UInt64 word0and1);
 		static Boolean WriteUmp96WordsLL( Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, UInt64 timestamp, UInt64 word0and1, UInt64 word2);
-		static Boolean WriteUmp96WordsLL( Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, UInt64 timestamp, UInt32 word0and1, UInt32 word2and3);
+		static Boolean WriteUmp128WordsLL( Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, UInt64 timestamp, UInt32 word0and1, UInt32 word2and3);
 	};
 }

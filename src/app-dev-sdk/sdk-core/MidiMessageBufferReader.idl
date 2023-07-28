@@ -13,28 +13,29 @@ namespace Microsoft.Devices.Midi2
 	runtimeclass MidiMessageBufferReader
 	{
 		// read array of words. This uses the FillArray pattern where the array is allocated by the caller in advance
-		static Boolean ReadWordArray(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, ref UInt64 timestamp, ref UInt32[] words, UInt32 arrayOffset, UInt32 wordCount);
+		static Boolean ReadWordArray(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, out UInt64 timestamp, ref UInt32[] words, UInt32 arrayOffset, UInt32 wordCount);
 
 		// read individual words.
 		static Boolean ReadUmp32Words(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, out UInt64 timestamp, out UInt32 word0);
 		static Boolean ReadUmp64Words(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, out UInt64 timestamp, out UInt32 word0, out UInt32 word1);
 		static Boolean ReadUmp96Words(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, out UInt64 timestamp, out UInt32 word0, out UInt32 word1, out UInt32 word2);
-		static Boolean ReadUmp96Words(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, out UInt64 timestamp, out UInt32 word0, out UInt32 word1, out UInt32 word2, out UInt32 word3);
+		static Boolean ReadUmp128Words(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, out UInt64 timestamp, out UInt32 word0, out UInt32 word1, out UInt32 word2, out UInt32 word3);
 
 				// general for any typed MIDI message. Has to check the message type
-		static Boolean ReadIMidiUmp(IMemoryBuffer buffer, UInt32 offset);
+		static Boolean ReadIMidiUmp(Windows.Foundation.IMemoryBuffer buffer, UInt32 offset);
 
 				// supports all the strongly typed classes. Has to check the message type
-		static Boolean ReadUmp32(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, out MidiUmp32 ump);
-		static Boolean ReadUmp64(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, out MidiUmp64 ump);
-		static Boolean ReadUmp96(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, out MidiUmp96 ump);
-		static Boolean ReadUmp128(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, out MidiUmp128 ump);
+		static Boolean ReadUmp32(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, out Windows.Devices.Midi2.MidiUmp32 ump);
+		static Boolean ReadUmp64(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, out Windows.Devices.Midi2.MidiUmp64 ump);
+		static Boolean ReadUmp96(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, out Windows.Devices.Midi2.MidiUmp96 ump);
+		static Boolean ReadUmp128(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, out Windows.Devices.Midi2.MidiUmp128 ump);
 
 				// a developer requested these to make life easier. They require the data be aligned like it would be on the wire
 				// so word0 and word2 would be the high (most significant) words in those UInt64s, word1 and word3 would be the low (least significant) words
+		
 		static Boolean ReadUmp32WordsLL(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, out UInt64 timestamp, out UInt64 word0);
 		static Boolean ReadUmp64WordsLL(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, out UInt64 timestamp, out UInt64 word0and1);
 		static Boolean ReadUmp96WordsLL(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, out UInt64 timestamp, out UInt64 word0and1, out UInt64 word2);
-		static Boolean ReadUmp96WordsLL(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, out UInt64 timestamp, out UInt32 word0and1, out UInt32 word2and3);
+		static Boolean ReadUmp128WordsLL(Windows.Foundation.IMemoryBuffer buffer, UInt32 bufferByteOffset, out UInt64 timestamp, out UInt32 word0and1, out UInt32 word2and3);
 	};
 }
