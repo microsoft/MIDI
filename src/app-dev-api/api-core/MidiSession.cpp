@@ -20,10 +20,11 @@
 #include <iostream>
 
 
-
-
 namespace winrt::Windows::Devices::Midi2::implementation
 {
+
+    // TODO: Returning nullptr on failure is not super useful. Consider throwing an hresult
+
     winrt::Windows::Devices::Midi2::MidiSession MidiSession::CreateSession(
         hstring const& sessionName, 
         winrt::Windows::Devices::Midi2::MidiSessionSettings const& settings)
@@ -39,13 +40,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 return *session;
             }
+            else
+            {
+                return nullptr;
+            }
         }
         catch (winrt::hresult_error const& ex)
         {
-            std::cout << __FUNCTION__ << ": hresult exception creating session" << std::endl;
-            std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
-            std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
-
+            internal::LogHresultError(__FUNCTION__, L" hresult exception initializing creating session. Service may be unavailable.", ex);
 
             // TODO: throwing an exception here would be preferred vs returning null
 
@@ -71,9 +73,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
-            std::cout << __FUNCTION__ << ": hresult exception creating service abstraction" << std::endl;
-            std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
-            std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
+            internal::LogHresultError(__FUNCTION__, L" hresult exception starting session. Service may be unavailable.", ex);
 
             return false;
         }
@@ -116,7 +116,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
         else
         {
-            OutputDebugString(L"" __FUNCTION__ ": WinRT Endpoint connection wouldn't start");
+            internal::LogGeneralError(__FUNCTION__, L"WinRT Endpoint connection wouldn't start");
 
             // TODO: Cleanup
 
@@ -160,11 +160,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
-    //void MidiSession::DisconnectAllConnectionsForEndpoint(hstring const& deviceId)
-    //{
-    //}
 
-   
 
     
     void MidiSession::Close()
@@ -202,6 +198,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
+
     MidiSession::~MidiSession()
     {
         if (m_isOpen)
@@ -209,4 +206,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             Close();
         }
     }
+
+
+
 }

@@ -8,6 +8,14 @@
 
 import "IMidiEndpointConnectionSettings.idl";
 
+
+
+
+// TODO: This should probably just be an interface
+
+
+
+
 namespace Windows.Devices.Midi2
 {
     [default_interface]
@@ -24,7 +32,7 @@ namespace Windows.Devices.Midi2
         String DeviceId{ get; };
 
         // app-supplied optional tag. Can hold whatever information they may want to show in a list
-        String Tag{ get; set; };
+        IInspectable Tag{ get; set; };
 
         // true if this endpoint connection is actually connected.
         // here for cases when the app holds on to an instance of this outside of the map

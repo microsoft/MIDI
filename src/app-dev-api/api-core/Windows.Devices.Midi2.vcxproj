@@ -198,6 +198,7 @@
       <DependentUpon>MidiUmp96.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="midi_service_interface.h" />
+    <ClInclude Include="trace_logging.h" />
     <ClInclude Include="ump_helpers.h" />
     <ClInclude Include="MidiSession.h">
       <DependentUpon>MidiSession.idl</DependentUpon>
@@ -246,9 +247,12 @@
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="trace_logging.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Midl Include="IMidiEndpointMessageListener.idl" />
     <Midl Include="IMidiInputConnection.idl" />
+    <Midl Include="IMidiMessageReceivedEventSource.idl" />
     <Midl Include="IMidiOutputConnection.idl" />
     <Midl Include="IMidiTransportSettingsData.idl" />
     <Midl Include="MidiBidirectionalEndpointConnection.idl" />

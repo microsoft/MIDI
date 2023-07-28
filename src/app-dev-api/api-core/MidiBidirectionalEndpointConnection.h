@@ -22,6 +22,8 @@
 #include "InternalMidiMessageReceiverHelper.h"
 #include "InternalMidiMessageSenderHelper.h"
 
+#include <pch.h>
+
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     struct MidiBidirectionalEndpointConnection : MidiBidirectionalEndpointConnectionT<MidiBidirectionalEndpointConnection, 
@@ -33,16 +35,20 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static hstring GetDeviceSelectorForBidirectional() { return L""; /* TODO*/ }
 
+        winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiEndpointMessageListener> MessageListeners() { return m_messageListeners; }
+
+
+
         bool SendUmp(winrt::Windows::Devices::Midi2::IMidiUmp const& ump);
 
-        bool SendUmp32Words(uint64_t timestamp, uint32_t word0);
-        bool SendUmp64Words(uint64_t timestamp, uint32_t word0, uint32_t word1);
-        bool SendUmp96Words(uint64_t timestamp, uint32_t word0, uint32_t word1, uint32_t word2);
-        bool SendUmp128Words(uint64_t timestamp, uint32_t word0, uint32_t word1, uint32_t word2, uint32_t word3);
+        bool SendUmp32Words(internal::MidiTimestamp timestamp, uint32_t word0);
+        bool SendUmp64Words(internal::MidiTimestamp timestamp, uint32_t word0, uint32_t word1);
+        bool SendUmp96Words(internal::MidiTimestamp timestamp, uint32_t word0, uint32_t word1, uint32_t word2);
+        bool SendUmp128Words(internal::MidiTimestamp timestamp, uint32_t word0, uint32_t word1, uint32_t word2, uint32_t word3);
 
-        bool SendUmpWords(uint64_t timestamp, array_view<uint32_t const> words, uint32_t wordCount);
+        bool SendUmpWords(internal::MidiTimestamp timestamp, array_view<uint32_t const> words, uint32_t wordCount);
 
-        bool SendUmpBuffer(uint64_t timestamp, winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffset, uint32_t byteLength);
+        bool SendUmpBuffer(internal::MidiTimestamp timestamp, winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffset, uint32_t byteLength);
 
 
         STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position) override;
@@ -65,6 +71,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         com_ptr<IMidiBiDi> m_endpointInterface;
         internal::InternalMidiMessageReceiverHelper m_messageReceiverHelper;
         internal::InternalMidiMessageSenderHelper<IMidiBiDi> m_messageSenderHelper;
+
+        winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiEndpointMessageListener>
+            m_messageListeners{ winrt::single_threaded_vector<winrt::Windows::Devices::Midi2::IMidiEndpointMessageListener>() };
+
 
         winrt::event<winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;
 

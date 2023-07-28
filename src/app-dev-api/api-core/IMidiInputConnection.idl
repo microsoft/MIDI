@@ -7,6 +7,7 @@
 // ============================================================================
 
 import "MidiMessageReceivedEventArgs.idl";
+import "IMidiEndpointMessageListener.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -16,9 +17,12 @@ namespace Windows.Devices.Midi2
     ]
     interface IMidiInputConnection
     {
-        // callback for when a message comes in
-        event Windows.Foundation.TypedEventHandler<IInspectable, MidiMessageReceivedEventArgs> MessageReceived;
-        //event Windows.Foundation.TypedEventHandler<IInspectable, MidiWordsReceivedEventArgs> WordsReceived;
-        //event Windows.Foundation.TypedEventHandler<IInspectable, MidiBufferReceivedEventArgs> BufferReceived;
+        // for those who don't want to use just the normal event, they can set up
+        // custom listeners which filter the stream (to groups, channels, etc.)
+        // to allow functionality similar to Ports in MIDI 1.0. Using this approach
+        // is preferable to opening multiple (expensive) Endpoint Connections from
+        // a single application
+        IVector<IMidiEndpointMessageListener> MessageListeners{ get; };
+
     }
 }

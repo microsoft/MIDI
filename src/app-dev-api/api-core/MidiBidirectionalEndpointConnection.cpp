@@ -17,11 +17,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     IFACEMETHODIMP MidiBidirectionalEndpointConnection::Callback(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Timestamp)
     {   
-
         if (m_messageReceivedEvent)
         {
-        //    auto args = _messageReceiverHelper.CreateMessageEventArgsFromCallbackParams(Data, Size, Timestamp);
-
             auto args = winrt::make_self<MidiMessageReceivedEventArgs>(Data, Size, Timestamp);
 
             if (args != nullptr)
@@ -38,14 +35,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
-    bool MidiBidirectionalEndpointConnection::SendUmpBuffer(uint64_t timestamp, winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffset, uint32_t byteLength)
+    bool MidiBidirectionalEndpointConnection::SendUmpBuffer(internal::MidiTimestamp timestamp, winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffset, uint32_t byteLength)
     {
         try
         {
             // make sure we're sending only a single UMP
-            if (!internal::IsValidSingleUmpWordCount(byteLength / sizeof(uint32_t)))
+            uint32_t sizeInWords = byteLength / sizeof(uint32_t);
+
+            if (!internal::IsValidSingleUmpWordCount(sizeInWords))
             {
-                OutputDebugString(L"" __FUNCTION__ " word count is incorrect for a single UMP");
+                internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for a single UMP", sizeInWords, timestamp);
+
                 //throw hresult_invalid_argument();
                 return false;
             }
@@ -61,6 +61,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
             // make sure we're not going to spin past the end of the buffer
             if (byteOffset + byteLength > bufferReference.Capacity())
             {
+                // TODO: Log
+
+                internal::LogGeneralError(__FUNCTION__, L"Buffer smaller than provided offset + byteLength");
+
                 return false;
             }
 
@@ -71,10 +75,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
-
-            //std::cout << __FUNCTION__ << " hresult exception sending message" << std::endl;
-            //std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
-            //std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
+            internal::LogHresultError(__FUNCTION__,  L"hresult exception sending message", ex);
 
             return false;
         }
@@ -82,26 +83,24 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     // sends a single UMP's worth of words
-    bool MidiBidirectionalEndpointConnection::SendUmpWords(uint64_t timestamp, array_view<uint32_t const> words, uint32_t wordCount)
+    bool MidiBidirectionalEndpointConnection::SendUmpWords(internal::MidiTimestamp timestamp, array_view<uint32_t const> words, uint32_t wordCount)
     {
         try
         {
             if (!internal::IsValidSingleUmpWordCount(wordCount))
             {
                 //throw hresult_invalid_argument();
-                OutputDebugString(L"" __FUNCTION__ " word count is incorrect for a single UMP");
+                internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for a single UMP", wordCount, timestamp);
+
                 return false;
             }
 
             if (internal::GetUmpLengthInMidiWordsFromFirstWord(words[0]) != wordCount)
             {
-                // mismatch between the message type and the number of words
-                //throw hresult_invalid_argument();
-                OutputDebugString(L"" __FUNCTION__ " word count is incorrect for message type");
+                internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for messageType", wordCount, timestamp);
+
                 return false;
             }
-
-
 
 
             if (m_endpointInterface)
@@ -110,35 +109,32 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                 // if the service goes down, this will fail
 
-
                 return m_messageSenderHelper.SendMessageRaw(m_endpointInterface, (void*)words.data(), umpDataSize, timestamp);
             }
             else
             {
-                OutputDebugString(L"" __FUNCTION__ " endpoint is nullptr");
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
+
                 return false;
             }
         }
         catch (winrt::hresult_error const& ex)
         {
-
-            //std::cout << __FUNCTION__ << " hresult exception sending message" << std::endl;
-            //std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
-            //std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
+            internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex);
 
             return false;
         }
     }
 
 
-    bool MidiBidirectionalEndpointConnection::SendUmp32Words(uint64_t timestamp, uint32_t word0)
+    bool MidiBidirectionalEndpointConnection::SendUmp32Words(internal::MidiTimestamp timestamp, uint32_t word0)
     {
         try
         {
             if (internal::GetUmpLengthInMidiWordsFromFirstWord(word0) != 1)
             {
                 // mismatch between the message type and the number of words
-                OutputDebugString(L"" __FUNCTION__ " word count is incorrect for message type");
+                internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for messageType", 1, timestamp);
                 return false;
             }
 
@@ -153,29 +149,27 @@ namespace winrt::Windows::Devices::Midi2::implementation
             }
             else
             {
-                OutputDebugString(L"" __FUNCTION__ " endpoint is nullptr");
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
+
                 return false;
             }
         }
         catch (winrt::hresult_error const& ex)
         {
-
-            //std::cout << __FUNCTION__ << " hresult exception sending message" << std::endl;
-            //std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
-            //std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
+            internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex);
 
             return false;
         }
     }
 
-    bool MidiBidirectionalEndpointConnection::SendUmp64Words(uint64_t timestamp, uint32_t word0, uint32_t word1)
+    bool MidiBidirectionalEndpointConnection::SendUmp64Words(internal::MidiTimestamp timestamp, uint32_t word0, uint32_t word1)
     {
         try
         {
             if (internal::GetUmpLengthInMidiWordsFromFirstWord(word0) != 2)
             {
                 // mismatch between the message type and the number of words
-                OutputDebugString(L"" __FUNCTION__ " word count is incorrect for message type");
+                internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for messageType", 2, timestamp);
                 return false;
             }
 
@@ -194,29 +188,27 @@ namespace winrt::Windows::Devices::Midi2::implementation
             }
             else
             {
-                OutputDebugString(L"" __FUNCTION__ " endpoint is nullptr");
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
+
                 return false;
             }
         }
         catch (winrt::hresult_error const& ex)
         {
-
-            //std::cout << __FUNCTION__ << " hresult exception sending message" << std::endl;
-            //std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
-            //std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
+            internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex);
 
             return false;
         }
     }
 
-    bool MidiBidirectionalEndpointConnection::SendUmp96Words(uint64_t timestamp, uint32_t word0, uint32_t word1, uint32_t word2)
+    bool MidiBidirectionalEndpointConnection::SendUmp96Words(internal::MidiTimestamp timestamp, uint32_t word0, uint32_t word1, uint32_t word2)
     {
         try
         {
             if (internal::GetUmpLengthInMidiWordsFromFirstWord(word0) != 3)
             {
                 // mismatch between the message type and the number of words
-                OutputDebugString(L"" __FUNCTION__ " word count is incorrect for message type");
+                internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for messageType", 3, timestamp);
                 return false;
             }
 
@@ -236,29 +228,26 @@ namespace winrt::Windows::Devices::Midi2::implementation
             }
             else
             {
-                OutputDebugString(L"" __FUNCTION__ " endpoint is nullptr");
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
+
                 return false;
             }
         }
         catch (winrt::hresult_error const& ex)
         {
-
-            //std::cout << __FUNCTION__ << " hresult exception sending message" << std::endl;
-            //std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
-            //std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
+            internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex);
 
             return false;
         }
     }
 
-    bool MidiBidirectionalEndpointConnection::SendUmp128Words(uint64_t timestamp, uint32_t word0, uint32_t word1, uint32_t word2, uint32_t word3)
+    bool MidiBidirectionalEndpointConnection::SendUmp128Words(internal::MidiTimestamp timestamp, uint32_t word0, uint32_t word1, uint32_t word2, uint32_t word3)
     {
         try
         {
             if (internal::GetUmpLengthInMidiWordsFromFirstWord(word0) != 4)
             {
-                // mismatch between the message type and the number of words
-                OutputDebugString(L"" __FUNCTION__ " word count is incorrect for message type");
+                internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for messageType", 4, timestamp);
                 return false;
             }
 
@@ -279,16 +268,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
             }
             else
             {
-                OutputDebugString(L"" __FUNCTION__ " endpoint is nullptr");
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
+
                 return false;
             }
         }
         catch (winrt::hresult_error const& ex)
         {
-
-            //std::cout << __FUNCTION__ << " hresult exception sending message" << std::endl;
-            //std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
-            //std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
+            internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex);
 
             return false;
         }
@@ -306,7 +293,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             }
             else
             {
-                OutputDebugString(L"" __FUNCTION__ " endpoint is nullptr");
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
 
                 return false;
             }
@@ -317,7 +304,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             //std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
             //std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
 
-            OutputDebugString(L"" __FUNCTION__ " hresult exception sending message. Service may be unavailable.");
+            internal::LogHresultError(__FUNCTION__, L"hresult exception sending message. Service may be unavailable", ex);
 
             return false;
         }
@@ -334,11 +321,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
-            OutputDebugString(L"" __FUNCTION__ " hresult exception activating stream. Service may be unavailable.");
-
-            //std::cout << __FUNCTION__ << ": hresult exception on Service Abstraction Activate (service may not be installed or running or endpoint type is wrong)" << std::endl;
-            //std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
-            //std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
+            internal::LogHresultError(__FUNCTION__, L"hresult exception activating stream. Service may be unavailable", ex);
 
             return false;
         }
@@ -356,6 +339,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // Activate the endpoint for this device. Will fail if the device is not a BiDi device
         if (!ActivateMidiStream(serviceAbstraction, __uuidof(IMidiBiDi), (void**)&m_endpointInterface))
         {
+            internal::LogGeneralError(__FUNCTION__, L"Could not activate MIDI Stream");
+
             return false;
         }
 
@@ -375,11 +360,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
-            OutputDebugString(L"" __FUNCTION__ " hresult exception initializing endpoint interface. Service may be unavailable.");
-
-            //std::cout << __FUNCTION__ << " hresult exception on Initialize endpoint with callback" << std::endl;
-            //std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
-            //std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
+            internal::LogHresultError(__FUNCTION__, L" hresult exception initializing endpoint interface. Service may be unavailable.", ex);
 
             m_endpointInterface = nullptr;
 

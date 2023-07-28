@@ -6,20 +6,17 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-
-// Interface for settings classes that transport SDK plugins will implement when 
-// providing custom connection settings for their transports
+import "MidiMessageReceivedEventArgs.idl";
 
 namespace Windows.Devices.Midi2
 {
     [
-        uuid(65736736-35f3-421c-a683-3a034ad0dcc2),
+        uuid(101ceb4b-cca4-48a1-b91e-6002b928613c),
         version(1.0),
     ]
-    interface IMidiEndpointConnectionSettings
-    {
-        String SettingsJson { get; set; };
-
-        Boolean IsDirty{ get; set; };
+    interface IMidiMessageReceivedEventSource
+    {      
+        // callback for when a message comes in
+        event Windows.Foundation.TypedEventHandler<IInspectable, MidiMessageReceivedEventArgs> MessageReceived;
     }
 }

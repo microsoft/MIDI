@@ -25,8 +25,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool IsConnected() { return m_isConnected; }
         IMidiEndpointConnectionSettings Settings() { return m_settings; }
 
-        hstring Tag() { return m_tag; }
-        void Tag(hstring value) { m_tag = value; }
+        IInspectable Tag() { return m_tag; }
+        void Tag(IInspectable value) { m_tag = value; }
 
         void InternalSetSettings(IMidiEndpointConnectionSettings value) { m_settings = value; }
         void InternalSetDeviceId(hstring value) { m_deviceId = value; }
@@ -34,9 +34,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void InternalSetIsConnected(bool value) { m_isConnected = value; }
 
     protected:
-        hstring m_id{};
-        hstring m_deviceId{};
-        hstring m_tag{};
+        hstring m_id {};
+        hstring m_deviceId {};
+        IInspectable m_tag{ nullptr };
         
         bool m_isConnected{ false };
 

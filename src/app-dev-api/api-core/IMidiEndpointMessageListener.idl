@@ -1,0 +1,31 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+// Custom event sinks to provide MIDI 1.0 port-like views into the stream for 
+// incoming messages
+
+import "MidiMessageReceivedEventArgs.idl";
+import "IMidiInputConnection.idl";
+
+namespace Windows.Devices.Midi2
+{
+    [
+        uuid(38d87ced-b820-41bd-9a44-d43a19c1dfcb),
+        version(1.0),
+    ]
+    interface IMidiEndpointMessageListener
+    {
+        String Id { get; set; };            // Id supplied by the consuming application
+        String Name{ get; set; };           // Name supplied by the consuming application
+        IInspectable Tag{ get; set; };      // Arbitrary data attached by the consuming application
+
+        // called by the endpoint connection when a message is received
+        // if the listener is also an event source, it may raise the message received event
+        void ProcessIncomingMessage(IMidiInputConnection sourceConnection, MidiMessageReceivedEventArgs args, out Boolean stopProcessing, out Boolean removeMessageFromQueue);
+    }
+}

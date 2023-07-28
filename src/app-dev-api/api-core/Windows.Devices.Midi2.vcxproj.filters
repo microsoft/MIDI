@@ -34,6 +34,9 @@
     <Filter Include="API\Endpoints\Events">
       <UniqueIdentifier>{27ac01b4-53c3-477f-a4c8-ded2d40e69b7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Internal\Trace">
+      <UniqueIdentifier>{870a47af-3bdf-43ad-a1f9-21c144450b0e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -68,6 +71,9 @@
     </ClCompile>
     <ClCompile Include="InternalMidiMessageReceiverHelper.cpp">
       <Filter>Internal\ServiceAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="trace_logging.cpp">
+      <Filter>Internal\Trace</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -112,6 +118,9 @@
     </ClInclude>
     <ClInclude Include="InternalMidiMessageSenderHelper.h">
       <Filter>Internal\ServiceAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="trace_logging.h">
+      <Filter>Internal\Trace</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -171,6 +180,12 @@
     </Midl>
     <Midl Include="MidiMessageReceivedEventArgs.idl">
       <Filter>API\Endpoints\Events</Filter>
+    </Midl>
+    <Midl Include="IMidiEndpointMessageListener.idl">
+      <Filter>API\Endpoints\Contracts</Filter>
+    </Midl>
+    <Midl Include="IMidiMessageReceivedEventSource.idl">
+      <Filter>API\Endpoints\Contracts</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

@@ -9,9 +9,11 @@
 
 namespace Microsoft.Devices.Midi2
 {
-    interface IMidiEndpointListener
+    [default_interface]
+    runtimeclass MidiStreamMessageEndpointListener : Windows.Devices.Midi2.IMidiEndpointListener
     {
-        void Foo();
+        MidiStreamMessageEndpointListener();
+
 
     }
 }
