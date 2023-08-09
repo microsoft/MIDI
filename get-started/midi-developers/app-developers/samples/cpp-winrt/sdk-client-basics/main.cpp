@@ -93,18 +93,20 @@ int main()
 
             auto MessageReceivedHandler = [](winrt::Windows::Foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
                 {
+                    auto ump = args.GetUmp();
+
                     std::cout << std::endl;
                     std::cout << "Received UMP" << std::endl;
                     std::cout << "- Current Timestamp: " << std::dec << MidiClock::GetMidiTimestamp() << std::endl;
-                    std::cout << "- UMP Timestamp: " << std::dec << args.Ump().Timestamp() << std::endl;
-                    std::cout << "- UMP Type: " << std::hex << (uint32_t)args.Ump().MessageType() << std::endl;
+                    std::cout << "- UMP Timestamp: " << std::dec << ump.Timestamp() << std::endl;
+                    std::cout << "- UMP Type: " << std::hex << (uint32_t)ump.MessageType() << std::endl;
 
                     // if you wish to cast the IMidiUmp to a specific Ump Type, you can do so using .as<T>.
 
-                    if (args.Ump().MidiUmpPacketType() == MidiUmpPacketType::Ump32)
+                    if (ump.MidiUmpPacketType() == MidiUmpPacketType::Ump32)
                     {
-                        auto ump = args.Ump().as<MidiUmp32>();
-                        std::cout << "Word 0: " << std::hex << ump.Word0() << std::endl;
+                        auto ump32 = ump.as<MidiUmp32>();
+                        std::cout << "Word 0: " << std::hex << ump32.Word0() << std::endl;
                     }
 
                     std::cout << std::endl;

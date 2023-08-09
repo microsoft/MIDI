@@ -240,7 +240,7 @@ TEST_CASE("Connected.Endpoint.MultipleUmpWords Send and receive multiple words")
 		}
 
 		numBytes += sizeof(uint32_t) * wordCount + sizeof(uint64_t);
-		conn1.SendUmpWords(timestamp, words, wordCount);
+		conn1.SendUmpWordArray(timestamp, words, wordCount);
 
 	}
 	// Wait for incoming message

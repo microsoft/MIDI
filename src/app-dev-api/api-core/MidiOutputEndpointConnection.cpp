@@ -32,24 +32,24 @@ namespace winrt::Windows::Devices::Midi2::implementation
         throw hresult_not_implemented();
     }
 
-    bool MidiOutputEndpointConnection::SendUmp32Words(uint64_t timestamp, uint32_t word0)
+    bool MidiOutputEndpointConnection::SendUmpWords(uint64_t timestamp, uint32_t word0)
     {
         throw hresult_not_implemented();
     }
-    bool MidiOutputEndpointConnection::SendUmp64Words(uint64_t timestamp, uint32_t word0, uint32_t word1)
+    bool MidiOutputEndpointConnection::SendUmpWords(uint64_t timestamp, uint32_t word0, uint32_t word1)
     {
         throw hresult_not_implemented();
     }
-    bool MidiOutputEndpointConnection::SendUmp96Words(uint64_t timestamp, uint32_t word0, uint32_t word1, uint32_t word2)
+    bool MidiOutputEndpointConnection::SendUmpWords(uint64_t timestamp, uint32_t word0, uint32_t word1, uint32_t word2)
     {
         throw hresult_not_implemented();
     }
-    bool MidiOutputEndpointConnection::SendUmp128Words(uint64_t timestamp, uint32_t word0, uint32_t word1, uint32_t word2, uint32_t word3)
+    bool MidiOutputEndpointConnection::SendUmpWords(uint64_t timestamp, uint32_t word0, uint32_t word1, uint32_t word2, uint32_t word3)
     {
         throw hresult_not_implemented();
     }
 
-    bool MidiOutputEndpointConnection::SendUmpWords(uint64_t timestamp, array_view<uint32_t const> words, uint32_t wordCount)
+    bool MidiOutputEndpointConnection::SendUmpWordArray(uint64_t timestamp, array_view<uint32_t const> words, uint32_t wordCount)
     {
         throw hresult_not_implemented();
     }

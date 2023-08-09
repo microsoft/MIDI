@@ -23,7 +23,6 @@
 #include <Windows.h>
 
 #include <wil\resource.h>
-//#include <wil\result_macros.h>
 
 #include "..\api-core\memory_buffer.h"
 
@@ -42,7 +41,7 @@ auto ump128mt = MidiUmpMessageType::UmpStream128;
 
 #define BIDI_ENDPOINT_DEVICE_ID L"foobarbaz"
 
-TEST_CASE("Connected.Benchmark.APIWords Send / receive words through loopback")
+TEST_CASE("Connected.Benchmark.APIWords Send / receive word array through loopback")
 {
 	std::cout << std::endl << "API Words benchmark" << std::endl;
 
@@ -164,7 +163,7 @@ TEST_CASE("Connected.Benchmark.APIWords Send / receive words through loopback")
 		}
 
 		numBytes += sizeof(uint32_t) * wordCount + sizeof(uint64_t);
-		conn1.SendUmpWords(MidiClock::GetMidiTimestamp(), words, wordCount);
+		conn1.SendUmpWordArray(MidiClock::GetMidiTimestamp(), words, wordCount);
 	}
 
 	uint64_t sendingFinishTimestamp = MidiClock::GetMidiTimestamp();
