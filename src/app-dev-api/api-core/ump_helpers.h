@@ -15,6 +15,10 @@
 #define MIDIWORDNIBBLE3(x) ((uint8_t)((x & 0x00F00000) >> 20))
 #define MIDIWORDNIBBLE4(x) ((uint8_t)((x & 0x000F0000) >> 16))
 
+#define UMP32_WORD_COUNT 1
+#define UMP64_WORD_COUNT 2
+#define UMP96_WORD_COUNT 3
+#define UMP128_WORD_COUNT 4
 
 namespace Windows::Devices::Midi2::Internal
 {

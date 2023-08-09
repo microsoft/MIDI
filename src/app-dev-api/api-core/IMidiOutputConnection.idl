@@ -16,14 +16,19 @@ namespace Windows.Devices.Midi2
     ]
     interface IMidiOutputConnection
     {
+        // send the UMP interface used by strongly-typed Midi Message classes in the SDK
         Boolean SendUmp(IMidiUmp ump);
-        Boolean SendUmpWords(UInt64 timestamp, UInt32[] words, UInt32 wordCount);
 
-        Boolean SendUmp32Words(UInt64 timestamp, UInt32 word0);
-        Boolean SendUmp64Words(UInt64 timestamp, UInt32 word0, UInt32 word1);
-        Boolean SendUmp96Words(UInt64 timestamp, UInt32 word0, UInt32 word1, UInt32 word2);
-        Boolean SendUmp128Words(UInt64 timestamp, UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
+        // Uses projection-specific array conversion operators for sending data. Not all languages support this
+        Boolean SendUmpWordArray(UInt64 timestamp, UInt32[] words, UInt32 wordCount);
 
+        // sending words is a fast approach, but does work with copies of the data
+        Boolean SendUmpWords(UInt64 timestamp, UInt32 word0);
+        Boolean SendUmpWords(UInt64 timestamp, UInt32 word0, UInt32 word1);
+        Boolean SendUmpWords(UInt64 timestamp, UInt32 word0, UInt32 word1, UInt32 word2);
+        Boolean SendUmpWords(UInt64 timestamp, UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
+
+        // for sending a section of a pre-existing buffer. Used when a client app is maintaining its own memory
         Boolean SendUmpBuffer(UInt64 timestamp, Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffset, UInt32 byteLength);
     }
 }

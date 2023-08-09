@@ -2,9 +2,9 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
 	<metadata>
 		<id>Microsoft.Devices.Midi2.Core</id>
-		<version>1.0.0-preview.1-0092</version>
+		<version>1.0.0-preview.1-0095</version>
 		<authors>Microsoft Corporation</authors>
-		<description>Windows MIDI Services core application SDK. Minimum package necessary to use Windows MIDI Services from an app.</description>
+		<description>Windows MIDI Services core application SDK (and temporary API shipment). Minimum package necessary to use Windows MIDI Services from an app on a PC that has Windows MIDI Services installed.</description>
 		<license type="expression">MIT</license>
 		<projectUrl>https://github.com/microsoft/midi/</projectUrl>
 		<readme>README.md</readme>
@@ -87,9 +87,15 @@
 
 
 		<!-- Arm64EC Binaries ================================================ -->
-		<!-- TODO -->
+		<!-- <file src="..\..\_build\ARM64EC\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.winmd" target="runtimes\win10-arm64ec\native\" /> -->
+		<!-- <file src="..\..\_build\ARM64EC\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.dll"   target="runtimes\win10-arm64ec\native\" /> -->
+		<!-- <file src="..\..\_build\ARM64EC\Release\Microsoft.Devices.Midi2.Core\bin\Microsoft.Devices.Midi2.Core\Microsoft.Devices.Midi2.pri"   target="runtimes\win10-arm64ec\native\" /> -->
 
-		
+		<!-- <file src="..\..\_build\ARM64EC\Release\Windows.Devices.Midi2\bin\Windows.Devices.Midi2\Windows.Devices.Midi2.winmd" target="runtimes\win10-arm64ec\native\" /> -->
+		<!-- <file src="..\..\_build\ARM64EC\Release\Windows.Devices.Midi2\bin\Windows.Devices.Midi2\Windows.Devices.Midi2.dll"   target="runtimes\win10-arm64ec\native\" /> -->
+		<!-- <file src="..\..\_build\ARM64EC\Release\Windows.Devices.Midi2\bin\Windows.Devices.Midi2\Windows.Devices.Midi2.pri"   target="runtimes\win10-arm64ec\native\" /> -->
+
+
 		<!-- Build-time files ================================================ -->
 
 		<file src="Microsoft.Devices.Midi2.Core.targets" target="build\native\" />

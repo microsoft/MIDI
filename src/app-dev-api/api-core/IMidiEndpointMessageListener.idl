@@ -26,6 +26,6 @@ namespace Windows.Devices.Midi2
 
         // called by the endpoint connection when a message is received
         // if the listener is also an event source, it may raise the message received event
-        void ProcessIncomingMessage(IMidiInputConnection sourceConnection, MidiMessageReceivedEventArgs args, out Boolean stopProcessing, out Boolean removeMessageFromQueue);
+        void ProcessIncomingMessage(IMidiInputConnection sourceConnection, MidiMessageReceivedEventArgs args, out Boolean skipFurtherListeners, out Boolean skipMainMessageReceivedEvent);
     }
 }

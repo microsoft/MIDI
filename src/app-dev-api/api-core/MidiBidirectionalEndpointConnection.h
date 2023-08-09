@@ -41,12 +41,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         bool SendUmp(winrt::Windows::Devices::Midi2::IMidiUmp const& ump);
 
-        bool SendUmp32Words(internal::MidiTimestamp timestamp, uint32_t word0);
-        bool SendUmp64Words(internal::MidiTimestamp timestamp, uint32_t word0, uint32_t word1);
-        bool SendUmp96Words(internal::MidiTimestamp timestamp, uint32_t word0, uint32_t word1, uint32_t word2);
-        bool SendUmp128Words(internal::MidiTimestamp timestamp, uint32_t word0, uint32_t word1, uint32_t word2, uint32_t word3);
+        bool SendUmpWords(internal::MidiTimestamp timestamp, uint32_t word0);
+        bool SendUmpWords(internal::MidiTimestamp timestamp, uint32_t word0, uint32_t word1);
+        bool SendUmpWords(internal::MidiTimestamp timestamp, uint32_t word0, uint32_t word1, uint32_t word2);
+        bool SendUmpWords(internal::MidiTimestamp timestamp, uint32_t word0, uint32_t word1, uint32_t word2, uint32_t word3);
 
-        bool SendUmpWords(internal::MidiTimestamp timestamp, array_view<uint32_t const> words, uint32_t wordCount);
+        bool SendUmpWordArray(internal::MidiTimestamp timestamp, array_view<uint32_t const> words, uint32_t wordCount);
 
         bool SendUmpBuffer(internal::MidiTimestamp timestamp, winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffset, uint32_t byteLength);
 
