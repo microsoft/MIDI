@@ -19,7 +19,16 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
+            // one copy of the event args for this gets sent to all listeners and the main event
             auto args = winrt::make_self<MidiMessageReceivedEventArgs>(Data, Size, Timestamp);
+
+            // we failed to create the event args
+            if (args == nullptr)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Unable to create MidiMessageReceivedEventArgs");
+
+                return E_FAIL;
+            }
 
             bool skipMainMessageReceivedEvent = false;
             bool skipFurtherListeners = false;
@@ -29,35 +38,21 @@ namespace winrt::Windows::Devices::Midi2::implementation
             if (m_messageListeners && m_messageListeners.Size() > 0)
             {
                 // loop through listeners
-
-                //auto listenerArgs = winrt::make<MidiMessageReceivedEventArgs>(Data, Size, Timestamp);
-
                 for (const auto& listener : m_messageListeners)
                 {
                     // TODO: this is synchronous by design, but that requires the client to not block
                     listener.ProcessIncomingMessage((IMidiInputConnection)*this, *args, skipFurtherListeners, skipMainMessageReceivedEvent);
 
-                    // if the listener has told us to skip further listeners, effectively removing this message from the queue, then do so
+                    // if the listener has told us to skip further listeners, effectively 
+                    // removing this message from the queue, then break out of the loop
                     if (skipFurtherListeners) break;
                 }
             }
 
-            // if the main message received event is hooked up, use it
-
-            if (m_messageReceivedEvent)
+            // if the main message received event is hooked up, and we're not skipping it, use it
+            if (m_messageReceivedEvent && !skipMainMessageReceivedEvent)
             {
-
-                if (!skipMainMessageReceivedEvent)
-                {
-                    if (args != nullptr)
-                    {
-                        m_messageReceivedEvent(*this, *args);
-                    }
-                    else
-                    {
-                        return E_FAIL;
-                    }
-                }
+                m_messageReceivedEvent(*this, *args);
             }
 
             return S_OK;
@@ -66,7 +61,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
             internal::LogHresultError(__FUNCTION__, L"hresult exception calling message handlers", ex);
 
-            return false;
+            return E_FAIL;
         }
     }
 
