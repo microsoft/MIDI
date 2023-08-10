@@ -8,6 +8,8 @@
 #include "pch.h"
 #include <iostream>
 
+using namespace winrt;
+
 using namespace winrt::Windows::Devices::Midi2;        // API
 using namespace winrt::Microsoft::Devices::Midi2;      // SDK
 
@@ -49,7 +51,7 @@ int main()
 
         std::cout << "Creating Device Selector." << std::endl;
 
-        winrt::hstring deviceSelector = MidiEndpointConnection::GetDeviceSelector();
+        hstring deviceSelector = MidiEndpointConnection::GetDeviceSelector();
 
         // Enumerate UMP endpoints. Note that per C++, main cannot be a co-routine,
         // so we can't just co_await this async call, but instead use the C++/WinRT Extension "get()". 
@@ -59,7 +61,7 @@ int main()
 
         std::cout << "Enumerating through Windows::Devices::Enumeration." << std::endl;
 
-        winrt::Windows::Foundation::IAsyncOperation<DeviceInformationCollection> op = DeviceInformation::FindAllAsync(deviceSelector);
+        Windows::Foundation::IAsyncOperation<DeviceInformationCollection> op = DeviceInformation::FindAllAsync(deviceSelector);
         DeviceInformationCollection endpointDevices = op.get();
 
         // this currently requires you have a USB MIDI 1.0 device. If you have nothing connected, just remove this check for now
@@ -94,7 +96,7 @@ int main()
             // MidiMessageReceivedEventArgs class provides the different ways to access the data
             // Your event handlers should return quickly as they are called synchronously.
 
-            auto MessageReceivedHandler = [](winrt::Windows::Foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
+            auto MessageReceivedHandler = [](Windows::Foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
                 {
                     // there are several ways to get the message data from the arguments. If you want to use
                     // strongly-typed UMP classes, then you may start with the GetUmp() method. The GetXXX calls 
@@ -108,7 +110,9 @@ int main()
                     std::cout << "Received UMP" << std::endl;
                     std::cout << "- Current Timestamp: " << std::dec << MidiClock::GetMidiTimestamp() << std::endl;
                     std::cout << "- UMP Timestamp:     " << std::dec << ump.Timestamp() << std::endl;
-                    std::cout << "- UMP Type:        0x" << std::hex << (uint32_t)ump.MessageType() << std::endl;
+                    std::cout << "- UMP Msg Type:      0x" << std::hex << (uint32_t)ump.MessageType() << std::endl;
+                    std::cout << "- UMP Packet Type:   0x" << std::hex << (uint32_t)ump.MidiUmpPacketType() << std::endl;
+                  
 
                     // if you wish to cast the IMidiUmp to a specific Ump Type, you can do so using .as<T> WinRT extension
 
@@ -118,7 +122,7 @@ int main()
                         // 32-bit messages derive from. There are also MidiUmp64/96/128 classes.
                         auto ump32 = ump.as<MidiUmp32>();
 
-                        std::cout << "- Word 0:          0x" << std::hex << ump32.Word0() << std::endl;
+                        std::cout << "- Word 0:            0x" << std::hex << ump32.Word0() << std::endl;
                     }
 
                     std::cout << std::endl;
