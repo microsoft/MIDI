@@ -23,7 +23,6 @@
 namespace winrt::Windows::Devices::Midi2::implementation
 {
 
-    // TODO: Returning nullptr on failure is not super useful. Consider throwing an hresult
 
     winrt::Windows::Devices::Midi2::MidiSession MidiSession::CreateSession(
         hstring const& sessionName, 
@@ -42,6 +41,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
             }
             else
             {
+                // TODO: Returning nullptr on failure is not super useful per feedback. Consider throwing an hresult?
+
                 return nullptr;
             }
         }

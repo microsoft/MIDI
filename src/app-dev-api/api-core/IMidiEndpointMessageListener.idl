@@ -25,7 +25,6 @@ namespace Windows.Devices.Midi2
         IInspectable Tag{ get; set; };      // Optional Arbitrary data attached by the consuming application
         
 
-
         // initialize may do things like allocate a shared table which is used to keep metadata
         // that is being listened to
         void Initialize(IMidiInputConnection inputConnection);
@@ -37,6 +36,9 @@ namespace Windows.Devices.Midi2
         // called by the endpoint connection when a message is received
         // if the listener is also an event source, it may raise the message received event
         void ProcessIncomingMessage(MidiMessageReceivedEventArgs args, out Boolean skipFurtherListeners, out Boolean skipMainMessageReceivedEvent);
+
+
+        Windows.Foundation.IAsyncAction ProcessIncomingMessageAsync(MidiMessageReceivedEventArgs args);
 
 
         void Cleanup();

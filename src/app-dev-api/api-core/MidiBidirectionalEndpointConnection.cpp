@@ -19,6 +19,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
+            auto args = winrt::make_self<MidiMessageReceivedEventArgs>(Data, Size, Timestamp);
+
             bool skipMainMessageReceivedEvent = false;
             bool skipFurtherListeners = false;
 
@@ -28,14 +30,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 // loop through listeners
 
+                //auto listenerArgs = winrt::make<MidiMessageReceivedEventArgs>(Data, Size, Timestamp);
+
                 for (const auto& listener : m_messageListeners)
                 {
-                    auto listenerArgs = winrt::make<MidiMessageReceivedEventArgs>(Data, Size, Timestamp);
-
                     // TODO: this is synchronous by design, but that requires the client to not block
-                    listener.ProcessIncomingMessage((IMidiInputConnection)*this, listenerArgs, skipFurtherListeners, skipMainMessageReceivedEvent);
+                    listener.ProcessIncomingMessage((IMidiInputConnection)*this, *args, skipFurtherListeners, skipMainMessageReceivedEvent);
 
-                    // if the listener has told us to skip further listeners, then do so
+                    // if the listener has told us to skip further listeners, effectively removing this message from the queue, then do so
                     if (skipFurtherListeners) break;
                 }
             }
@@ -44,7 +46,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             if (m_messageReceivedEvent)
             {
-                auto args = winrt::make_self<MidiMessageReceivedEventArgs>(Data, Size, Timestamp);
 
                 if (!skipMainMessageReceivedEvent)
                 {
