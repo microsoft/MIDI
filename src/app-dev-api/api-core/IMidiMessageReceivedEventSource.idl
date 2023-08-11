@@ -6,10 +6,14 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+#include "midl_defines.h";
+MIDI_IDL_IMPORT
+
 import "MidiMessageReceivedEventArgs.idl";
 
 namespace Windows.Devices.Midi2
 {
+    [MIDI_API_CONTRACT_1]
     [
         uuid(101ceb4b-cca4-48a1-b91e-6002b928613c),
         version(1.0),

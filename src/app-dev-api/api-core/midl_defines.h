@@ -6,20 +6,19 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#include "midl_defines.h";
-MIDI_IDL_IMPORT
+#pragma once
 
-namespace Windows.Devices.Midi2
-{
-    [MIDI_API_CONTRACT_1]
-    [
-        uuid(b2417dde-ef35-499b-a89b-0a4c32cc699a),
-        version(1.0),
-    ]
-    interface IMidiTransportSettingsData
-    {
-        String SettingsJson { get; set; };
+// These are required for internal Microsoft build support and if set incorrectly
+// will break any public compilation.
 
-        Boolean IsDirty{ get; set; };
-    }
-}
+#ifdef RAZZLE
+
+#define MIDI_API_CONTRACT_1 contract(Windows.Foundation.UniversalApiContract, 1) 
+#define MIDI_IDL_IMPORT import "Windows.Foundation.idl";
+
+#else
+
+#define MIDI_API_CONTRACT_1
+#define MIDI_IDL_IMPORT
+
+#endif

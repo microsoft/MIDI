@@ -44,8 +44,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="MidiChannel.cpp" />
-    <ClCompile Include="MidiGroup.cpp" />
     <ClCompile Include="Generated Files\module.g.cpp" />
     <ClCompile Include="MidiServices.cpp" />
     <ClCompile Include="MidiHighResolutionValueDisplayFormatter.cpp">
@@ -53,12 +51,6 @@
     </ClCompile>
     <ClCompile Include="MidiTransportInformation.cpp">
       <Filter>SDK\Transports</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiChannelEndpointListener.cpp">
-      <Filter>SDK\Listeners</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiGroupEndpointListener.cpp">
-      <Filter>SDK\Listeners</Filter>
     </ClCompile>
     <ClCompile Include="MidiStreamMessageEndpointListener.cpp">
       <Filter>SDK\Listeners</Filter>
@@ -75,8 +67,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
-    <ClInclude Include="MidiChannel.h" />
-    <ClInclude Include="MidiGroup.h" />
     <ClInclude Include="MidiServices.h" />
     <ClInclude Include="midi_app_sdk_version.h">
       <Filter>Internal</Filter>
@@ -92,12 +82,6 @@
     </ClInclude>
     <ClInclude Include="midi_sdk_inproc_loopback_simulator.h">
       <Filter>Internal</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiChannelEndpointListener.h">
-      <Filter>SDK\Listeners</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiGroupEndpointListener.h">
-      <Filter>SDK\Listeners</Filter>
     </ClInclude>
     <ClInclude Include="MidiStreamMessageEndpointListener.h">
       <Filter>SDK\Listeners</Filter>
@@ -122,17 +106,8 @@
     <Midl Include="MidiDeviceInformation.idl">
       <Filter>SDK\Enumeration</Filter>
     </Midl>
-    <Midl Include="MidiFunctionBlock.idl">
-      <Filter>SDK\Endpoints</Filter>
-    </Midl>
     <Midl Include="MidiEndpointDisplayFormatter.idl">
       <Filter>SDK\Display</Filter>
-    </Midl>
-    <Midl Include="MidiFunctionBlockDirectionEnum.idl">
-      <Filter>SDK\Endpoints</Filter>
-    </Midl>
-    <Midl Include="MidiFunctionBlockUIHintEnum.idl">
-      <Filter>SDK\Endpoints</Filter>
     </Midl>
     <Midl Include="MidiEndpointInformation.idl">
       <Filter>SDK\Endpoints</Filter>
@@ -166,9 +141,6 @@
     </Midl>
     <Midl Include="MidiMessageBufferHelper.idl">
       <Filter>SDK\Messages\Buffer</Filter>
-    </Midl>
-    <Midl Include="MidiStreamMessageEndpointListener.idl">
-      <Filter>SDK\Listeners</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

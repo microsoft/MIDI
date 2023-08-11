@@ -185,6 +185,8 @@
     <ClInclude Include="MidiEndpointConnection.h">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiEndpointInformation.h" />
+    <ClInclude Include="MidiFunctionBlock.h" />
     <ClInclude Include="MidiGroup.h">
       <DependentUpon>MidiGroup.idl</DependentUpon>
     </ClInclude>
@@ -197,9 +199,9 @@
     <ClInclude Include="MidiMessageReceivedEventArgs.h">
       <DependentUpon>MidiMessageReceivedEventArgs.idl</DependentUpon>
     </ClInclude>
-	  <ClInclude Include="MidiMessageTypeEndpointListener.h">
-		  <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
-	  </ClInclude>
+    <ClInclude Include="MidiMessageTypeEndpointListener.h">
+      <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiOutputEndpointConnection.h">
       <DependentUpon>MidiOutputEndpointConnection.idl</DependentUpon>
     </ClInclude>
@@ -219,6 +221,7 @@
       <DependentUpon>MidiUmp96.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="midi_service_interface.h" />
+    <ClInclude Include="midl_defines.h" />
     <ClInclude Include="string_util.h" />
     <ClInclude Include="trace_logging.h" />
     <ClInclude Include="ump_helpers.h" />
@@ -245,6 +248,8 @@
     <ClCompile Include="MidiEndpointConnection.cpp">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiEndpointInformation.cpp" />
+    <ClCompile Include="MidiFunctionBlock.cpp" />
     <ClCompile Include="MidiGroup.cpp">
       <DependentUpon>MidiGroup.idl</DependentUpon>
     </ClCompile>
@@ -257,9 +262,9 @@
     <ClCompile Include="MidiMessageReceivedEventArgs.cpp">
       <DependentUpon>MidiMessageReceivedEventArgs.idl</DependentUpon>
     </ClCompile>
-	  <ClCompile Include="MidiMessageTypeEndpointListener.cpp">
-		  <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
-	  </ClCompile>
+    <ClCompile Include="MidiMessageTypeEndpointListener.cpp">
+      <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiOutputEndpointConnection.cpp">
       <DependentUpon>MidiOutputEndpointConnection.idl</DependentUpon>
     </ClCompile>
@@ -296,6 +301,10 @@
     <Midl Include="MidiChannel.idl" />
     <Midl Include="MidiChannelEndpointListener.idl" />
     <Midl Include="MidiClock.idl" />
+    <Midl Include="MidiEndpointInformation.idl" />
+    <Midl Include="MidiFunctionBlock.idl" />
+    <Midl Include="MidiFunctionBlockDirectionEnum.idl" />
+    <Midl Include="MidiFunctionBlockUIHintEnum.idl" />
     <Midl Include="MidiGroup.idl" />
     <Midl Include="MidiGroupEndpointListener.idl" />
     <Midl Include="MidiInputEndpointConnection.idl" />

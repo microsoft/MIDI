@@ -43,6 +43,15 @@
     <Filter Include="API\BasicTypes">
       <UniqueIdentifier>{95a0abe7-f4a2-472b-9c2b-f64e534ea12a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="API\Endpoints\Metadata">
+      <UniqueIdentifier>{11e76454-b867-4a89-975a-5839611cbba3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Metadata\Functions">
+      <UniqueIdentifier>{277e880f-09e8-43d0-aaa9-926305908cd1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Metadata\Endpoints">
+      <UniqueIdentifier>{bce3490a-eb00-4ae7-9e49-6e31e91d70d1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -95,6 +104,12 @@
     </ClCompile>
     <ClCompile Include="MidiMessageTypeEndpointListener.cpp">
       <Filter>API\Endpoints\Listeners</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiFunctionBlock.cpp">
+      <Filter>API\Endpoints\Metadata\Functions</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointInformation.cpp">
+      <Filter>API\Endpoints\Metadata\Endpoints</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -163,6 +178,13 @@
     <ClInclude Include="MidiMessageTypeEndpointListener.h">
       <Filter>API\Endpoints\Listeners</Filter>
     </ClInclude>
+    <ClInclude Include="MidiFunctionBlock.h">
+      <Filter>API\Endpoints\Metadata\Functions</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointInformation.h">
+      <Filter>API\Endpoints\Metadata\Endpoints</Filter>
+    </ClInclude>
+    <ClInclude Include="midl_defines.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiSession.idl">
@@ -242,6 +264,18 @@
     </Midl>
     <Midl Include="MidiMessageTypeEndpointListener.idl">
       <Filter>API\Endpoints\Listeners</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlock.idl">
+      <Filter>API\Endpoints\Metadata\Functions</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlockDirectionEnum.idl">
+      <Filter>API\Endpoints\Metadata\Functions</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlockUIHintEnum.idl">
+      <Filter>API\Endpoints\Metadata\Functions</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointInformation.idl">
+      <Filter>API\Endpoints\Metadata\Endpoints</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

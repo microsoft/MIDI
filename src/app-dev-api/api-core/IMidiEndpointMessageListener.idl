@@ -9,11 +9,15 @@
 // Custom event sinks to provide MIDI 1.0 port-like views into the stream for 
 // incoming messages
 
+#include "midl_defines.h";
+MIDI_IDL_IMPORT
+
 import "MidiMessageReceivedEventArgs.idl";
 import "IMidiInputConnection.idl";
 
 namespace Windows.Devices.Midi2
 {
+    [MIDI_API_CONTRACT_1]
     [
         uuid(38d87ced-b820-41bd-9a44-d43a19c1dfcb),
         version(1.0),

@@ -6,6 +6,9 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+#include "midl_defines.h";
+MIDI_IDL_IMPORT
+
 import "IMidiUmp.idl";
 
 import "MidiUmp32.idl";
@@ -19,6 +22,7 @@ import "MidiUmpPacketTypeEnum.idl";
 
 namespace Windows.Devices.Midi2
 {
+    [MIDI_API_CONTRACT_1]
     [default_interface]
     runtimeclass MidiMessageReceivedEventArgs
     {
