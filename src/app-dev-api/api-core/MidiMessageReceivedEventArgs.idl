@@ -43,10 +43,10 @@ namespace Windows.Devices.Midi2
 
         // Use existing arrays instead of allocating new ones. Array should be at least as large
         // as the UMP being read
-        Boolean FillWordArray(ref UInt32[] words);
-        Boolean FillByteArray(ref UInt8[] bytes);
+        Boolean FillWordArray(ref UInt32[] words, UInt32 index, out UInt32 elementsWritten);
+        Boolean FillByteArray(ref UInt8[] bytes, UInt32 index, out UInt32 elementsWritten);
 
         // Fill a spot in an existing IMemoryBuffer controlled by the caller
-        Boolean FillBuffer(Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffset);
+        Boolean FillBuffer(Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffset, out UInt32 bytesWritten);
     }
 }

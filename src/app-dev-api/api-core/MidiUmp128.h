@@ -18,44 +18,47 @@ namespace winrt::Windows::Devices::Midi2::implementation
     struct MidiUmp128 : MidiUmp128T<MidiUmp128>
     {
         MidiUmp128() = default;
-        MidiUmp128(internal::MidiTimestamp timestamp, uint32_t word0, uint32_t word1, uint32_t word2, uint32_t word3);
+        MidiUmp128(
+            _In_ internal::MidiTimestamp const timestamp, 
+            _In_ uint32_t const word0, 
+            _In_ uint32_t const word1, 
+            _In_ uint32_t const word2, 
+            _In_ uint32_t const word3);
 
         // TODO: This doesn't do any bounds checking, and it should
-        MidiUmp128(uint64_t timestamp, array_view<uint32_t const> words) : MidiUmp128(timestamp, (PVOID)words.data()) {};
+        MidiUmp128(
+            _In_ internal::MidiTimestamp const timestamp, 
+            _In_ array_view<uint32_t const> words) : MidiUmp128(timestamp, (PVOID)words.data()) {};
 
         // internal
-        MidiUmp128(internal::MidiTimestamp timestamp, PVOID data);
+        MidiUmp128(_In_ internal::MidiTimestamp const timestamp, _In_ PVOID data);
 
 
-        uint32_t Word0() { return m_ump.word0; }
-        void Word0(uint32_t value) { m_ump.word0 = value; }
+        uint32_t Word0() const { return m_ump.word0; }
+        void Word0(_In_ uint32_t value) { m_ump.word0 = value; }
 
-        uint32_t Word1() { return m_ump.word1; }
-        void Word1(uint32_t value) { m_ump.word1 = value; }
+        uint32_t Word1() const { return m_ump.word1; }
+        void Word1(_In_ uint32_t value) { m_ump.word1 = value; }
 
-        uint32_t Word2() { return m_ump.word2; }
-        void Word2(uint32_t value) { m_ump.word2 = value; }
+        uint32_t Word2() const { return m_ump.word2; }
+        void Word2(_In_ uint32_t value) { m_ump.word2 = value; }
         
-        uint32_t Word3() { return m_ump.word3; }
-        void Word3(uint32_t value) { m_ump.word3 = value; }
+        uint32_t Word3() const { return m_ump.word3; }
+        void Word3(_In_ uint32_t value) { m_ump.word3 = value; }
 
-        internal::MidiTimestamp Timestamp() { return m_timestamp; }
-        void Timestamp(internal::MidiTimestamp value) { m_timestamp = value; }
+        internal::MidiTimestamp Timestamp() const { return m_timestamp; }
+        void Timestamp(_In_ internal::MidiTimestamp value) { m_timestamp = value; }
 
-        winrt::Windows::Devices::Midi2::MidiUmpMessageType MessageType() { return (winrt::Windows::Devices::Midi2::MidiUmpMessageType)(internal::GetUmpMessageTypeFromFirstWord(m_ump.word0)); }
-        void MessageType(winrt::Windows::Devices::Midi2::MidiUmpMessageType const& value) { internal::SetUmpMessageType(m_ump.word0, (uint8_t)value); }
+        winrt::Windows::Devices::Midi2::MidiUmpMessageType MessageType() const { return (winrt::Windows::Devices::Midi2::MidiUmpMessageType)(internal::GetUmpMessageTypeFromFirstWord(m_ump.word0)); }
+        void MessageType(_In_ winrt::Windows::Devices::Midi2::MidiUmpMessageType const& value) { internal::SetUmpMessageType(m_ump.word0, (uint8_t)value); }
 
-        winrt::Windows::Devices::Midi2::MidiUmpPacketType MidiUmpPacketType() { return winrt::Windows::Devices::Midi2::MidiUmpPacketType::Ump128; }
-
-      //  winrt::Windows::Foundation::IMemoryBuffer RawData();
+        winrt::Windows::Devices::Midi2::MidiUmpPacketType MidiUmpPacketType() const { return winrt::Windows::Devices::Midi2::MidiUmpPacketType::Ump128; }
 
         // internal for the sending code
         internal::PackedUmp128* GetInternalUmpDataPointer() { return &m_ump; }
 
     private:
         internal::MidiTimestamp m_timestamp{};
-
-       // Windows::Foundation::MemoryBuffer _umpBackingStore = Windows::Foundation::MemoryBuffer(sizeof(internal::PackedUmp128));
 
         internal::PackedUmp128 m_ump{};
 

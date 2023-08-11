@@ -31,9 +31,25 @@ namespace Windows::Devices::Midi2::Internal
     void UnregisterTraceLogging();
 
 
-    void LogHresultError(char* location, wchar_t* message, winrt::hresult_error const& ex);
-    void LogGeneralError(char* location, wchar_t* message);
-    void LogUmpDataValidationError(char* location, wchar_t* message, uint32_t firstWord, uint64_t timestamp);
-    void LogUmpSizeValidationError(char* location, wchar_t* message, uint32_t providedSizeInWords, uint64_t timestamp);
+    void LogHresultError(
+        _In_ const char* location,
+        _In_ const wchar_t* message,
+        _In_ winrt::hresult_error const& ex) noexcept;
+
+    void LogGeneralError(
+        _In_ const char* location,
+        _In_ const wchar_t* message) noexcept;
+
+    void LogUmpDataValidationError(
+        _In_ const char* location,
+        _In_ const wchar_t* message,
+        _In_ const uint32_t firstWord,
+        _In_ const uint64_t timestamp) noexcept;
+
+    void LogUmpSizeValidationError(
+        _In_ const char* location,
+        _In_ const wchar_t* message,
+        _In_ const uint32_t providedSizeInWords,
+        _In_ const uint64_t timestamp) noexcept;
 
 }

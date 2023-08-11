@@ -15,19 +15,16 @@
 #include "MidiOutputEndpointConnection.h"
 #include "MidiBidirectionalEndpointConnection.h"
 
-#include <algorithm>
-#include <boost/algorithm/string.hpp>
-#include <iostream>
+#include "string_util.h"
 
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
 
-    // TODO: Returning nullptr on failure is not super useful. Consider throwing an hresult
 
     winrt::Windows::Devices::Midi2::MidiSession MidiSession::CreateSession(
-        hstring const& sessionName, 
-        winrt::Windows::Devices::Midi2::MidiSessionSettings const& settings)
+        _In_ hstring const& sessionName,
+        _In_ winrt::Windows::Devices::Midi2::MidiSessionSettings const& settings)
     {
         try
         {
@@ -42,6 +39,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
             }
             else
             {
+                // TODO: Returning nullptr on failure is not super useful per feedback. Consider throwing an hresult?
+
                 return nullptr;
             }
         }
@@ -83,24 +82,18 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
-    hstring MidiSession::NormalizeDeviceId(const hstring& deviceId)
+    hstring MidiSession::NormalizeDeviceId(_In_ const hstring& deviceId)
     {
         if (deviceId.empty()) return deviceId;
 
-
-        std::wstring normalizedDeviceId{ deviceId };
-
-        boost::algorithm::to_upper(normalizedDeviceId);
-        boost::algorithm::trim(normalizedDeviceId);
-
-        return (hstring)(normalizedDeviceId);
+        return internal::ToUpperTrimmedHStringCopy(deviceId);
     }
 
 
 
     winrt::Windows::Devices::Midi2::MidiBidirectionalEndpointConnection MidiSession::ConnectBidirectionalEndpoint(
-        hstring const& deviceId, 
-        winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& settings)
+        _In_ hstring const& deviceId, 
+        _In_ winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& /*settings*/)
     {
         try
         {
@@ -140,8 +133,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     winrt::Windows::Devices::Midi2::MidiOutputEndpointConnection MidiSession::ConnectOutputEndpoint(
-        hstring const& deviceId, 
-        winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& settings)
+        _In_ hstring const& /*deviceId*/,
+        _In_ winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& /*settings*/)
     {
         // TODO: Implement ConnectOutputEndpoint
 
@@ -150,8 +143,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     winrt::Windows::Devices::Midi2::MidiInputEndpointConnection MidiSession::ConnectInputEndpoint(
-        hstring const& deviceId, 
-        winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& settings)
+        _In_ hstring const& /*deviceId*/,
+        _In_ winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& /*settings*/)
     {
         // TODO: Implement ConnectInputEndpoint
 
@@ -160,7 +153,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
-    void MidiSession::DisconnectEndpointConnection(hstring const& endpointConnectionId)
+    void MidiSession::DisconnectEndpointConnection(_In_ hstring const& endpointConnectionId)
     {
         try
         {

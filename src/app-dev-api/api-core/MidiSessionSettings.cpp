@@ -21,11 +21,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return *(winrt::make_self<implementation::MidiSessionSettings>());
     }
 
-    bool MidiSessionSettings::UseMmcssThreads()
-    {
-        return m_useMmcss;
-    }
-    void MidiSessionSettings::UseMmcssThreads(bool value)
+   
+
+    void MidiSessionSettings::UseMmcssThreads(_In_ bool value)
     {
         m_useMmcss = value;
     }

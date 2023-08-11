@@ -9,14 +9,15 @@
 #include <iostream>
 
 using namespace winrt;
-using namespace Microsoft::Devices::Midi2;
-using namespace Windows::Devices::Midi2;
 
-using namespace Windows::Devices::Enumeration;
+using namespace winrt::Windows::Devices::Midi2;        // API
+using namespace winrt::Microsoft::Devices::Midi2;      // SDK
+
+using namespace winrt::Windows::Devices::Enumeration;
 
 int main()
 {
-    init_apartment();
+    winrt::init_apartment();
 
     std::cout << "Checking for MIDI Services" << std::endl;
 
@@ -82,31 +83,46 @@ int main()
             //auto endpoint = session.ConnectToEndpoint(selectedMidiEndpointInformation.Id(), MidiEndpointConnectOptions::Default());
             auto endpoint = session.ConnectBidirectionalEndpoint(L"foobarbaz", nullptr);
 
-            // after connecting, you can send and receive messages to/from the endpoint. Sending and receiving is
-            // performed one complete UMP at a time. 
-            // -----------------------------
-            // Wire up an event handler to receive the message. This event handler type receives an IMidiUmp type
-            // but you can also wire up one which receives a uint32_t array and a uint64_t timestamp instead. The
-            // performance is almost identical (within a couple ms total over 1000 send/receives despite the 
-            // additional type activations and casting) but one may be more convenient than the other to you, so
-            // both are provided. 
+            // Each UMP Endpoint connection creates a number of resources for communication between the API and
+            // the service, and also for wiring up within the service itself. We do not prevent multiple
+            // connections to the same single UMP Endpoint from within the same session, but if you do so, you 
+            // want to consider the memory and processing cost associated with that.
+            
+            // After connecting, you can send and receive messages to/from the endpoint. Sending and receiving is
+            // performed one complete UMP at a time. Each message has an associated timestamp.
+            
+            
+            // Wire up an event handler to receive the message. There is a single event handler type, but the
+            // MidiMessageReceivedEventArgs class provides the different ways to access the data
+            // Your event handlers should return quickly as they are called synchronously.
 
-            auto MessageReceivedHandler = [](winrt::Windows::Foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
+            auto MessageReceivedHandler = [](Windows::Foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
                 {
+                    // there are several ways to get the message data from the arguments. If you want to use
+                    // strongly-typed UMP classes, then you may start with the GetUmp() method. The GetXXX calls 
+                    // are all generating something within the function, so you want to call them once and then
+                    // keep the result around in a variable if you plan to refer to it multiple times. In 
+                    // contrast, the FillXXX functions will update values in provided (pre-allocated) types
+                    // passed in to the functions.
                     auto ump = args.GetUmp();
 
                     std::cout << std::endl;
                     std::cout << "Received UMP" << std::endl;
                     std::cout << "- Current Timestamp: " << std::dec << MidiClock::GetMidiTimestamp() << std::endl;
-                    std::cout << "- UMP Timestamp: " << std::dec << ump.Timestamp() << std::endl;
-                    std::cout << "- UMP Type: " << std::hex << (uint32_t)ump.MessageType() << std::endl;
+                    std::cout << "- UMP Timestamp:     " << std::dec << ump.Timestamp() << std::endl;
+                    std::cout << "- UMP Msg Type:      0x" << std::hex << (uint32_t)ump.MessageType() << std::endl;
+                    std::cout << "- UMP Packet Type:   0x" << std::hex << (uint32_t)ump.MidiUmpPacketType() << std::endl;
+                  
 
-                    // if you wish to cast the IMidiUmp to a specific Ump Type, you can do so using .as<T>.
+                    // if you wish to cast the IMidiUmp to a specific Ump Type, you can do so using .as<T> WinRT extension
 
                     if (ump.MidiUmpPacketType() == MidiUmpPacketType::Ump32)
                     {
+                        // we'll use the Ump32 type here. This is a runtimeclass that the strongly-typed 
+                        // 32-bit messages derive from. There are also MidiUmp64/96/128 classes.
                         auto ump32 = ump.as<MidiUmp32>();
-                        std::cout << "Word 0: " << std::hex << ump32.Word0() << std::endl;
+
+                        std::cout << "- Word 0:            0x" << std::hex << ump32.Word0() << std::endl;
                     }
 
                     std::cout << std::endl;
@@ -116,15 +132,19 @@ int main()
             // the returned token is used to deregister the event later.
             auto eventRevokeToken = endpoint.MessageReceived(MessageReceivedHandler);
 
+
             MidiUmp32 ump32{};
             ump32.MessageType(MidiUmpMessageType::Midi1ChannelVoice32);
+
+            // here you would set other values in the UMP word(s)
+
             auto ump = ump32.as<IMidiUmp>();
             endpoint.SendUmp(ump);
 
             std::cout << "Wait for the message to arrive, and then press enter to cleanup." << std::endl;
             system("pause");
 
-            // deregister the event
+            // deregister the event by passing in the revoke token
             endpoint.MessageReceived(eventRevokeToken);
 
             // not strictly necessary as the session.Close() call will do it, but it's here in case you need it
@@ -145,16 +165,15 @@ int main()
         if (checkResult == WindowsMidiServicesCheckResult::NotPresent)
         {
             std::cout << "MIDI Services Not Present" << std::endl;
-
-            // allow the user to install the minimum required version
         }
         else if (checkResult == WindowsMidiServicesCheckResult::IncompatibleVersion)
         {
             std::cout << "MIDI Present, but is not a compatible version." << std::endl;
-            std::cout << "Here you would prompt the user to install the latest version from " << winrt::to_string(MidiServices::LatestMidiServicesInstallUri().ToString()) << std::endl;
-
-            // allow the user to install the minimum required version
         }
+
+        // allow the user to install the minimum required version. You'd provide a UI which enables the download
+        std::cout << "Here you would prompt the user to install the latest version from " << winrt::to_string(MidiServices::LatestMidiServicesInstallUri().ToString()) << std::endl;
+
     }
 
 }

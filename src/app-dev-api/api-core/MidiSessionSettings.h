@@ -19,14 +19,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static winrt::Windows::Devices::Midi2::MidiSessionSettings Default();
 
-        bool UseMmcssThreads();
-        void UseMmcssThreads(bool value);
+        bool UseMmcssThreads() const { return m_useMmcss; }
+        void UseMmcssThreads(_In_ bool value);
 
 
     private:
-        bool m_useMmcss = true;
+        bool m_useMmcss{ true };
     };
 }
+
 namespace winrt::Windows::Devices::Midi2::factory_implementation
 {
     struct MidiSessionSettings : MidiSessionSettingsT<MidiSessionSettings, implementation::MidiSessionSettings>

@@ -28,38 +28,38 @@ namespace Windows::Devices::Midi2::Internal
     //}
 
 
-	winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs InternalMidiMessageReceiverHelper::CreateMessageEventArgsFromCallbackParams(PVOID dataPointer, UINT sizeInBytes, LONGLONG timestamp)
-	{
-        auto args = winrt::make_self<implementation::MidiMessageReceivedEventArgs>();
+	//winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs InternalMidiMessageReceiverHelper::CreateMessageEventArgsFromCallbackParams(PVOID dataPointer, UINT sizeInBytes, LONGLONG timestamp)
+	//{
+ //       auto args = winrt::make_self<implementation::MidiMessageReceivedEventArgs>();
 
 
 
-        // should probably factor this out into a UMP Builder class
+ //       // should probably factor this out into a UMP Builder class
 
-        //if (sizeInBytes == sizeof(internal::PackedUmp32))
-        //{
-        //    args->Ump(winrt::make_self<implementation::MidiUmp32>(timestamp, dataPointer).as<winrt::Windows::Devices::Midi2::IMidiUmp>());
-        //}
-        //else if (sizeInBytes == sizeof(internal::PackedUmp64))
-        //{
-        //    args->Ump(winrt::make_self<implementation::MidiUmp64>(timestamp, dataPointer).as<winrt::Windows::Devices::Midi2::IMidiUmp>());
-        //}
-        //else if (sizeInBytes == sizeof(internal::PackedUmp96))
-        //{
-        //    args->Ump(winrt::make_self<implementation::MidiUmp96>(timestamp, dataPointer).as<winrt::Windows::Devices::Midi2::IMidiUmp>());
-        //}
-        //else if (sizeInBytes == sizeof(internal::PackedUmp128))
-        //{
-        //    args->Ump(winrt::make_self<implementation::MidiUmp128>(timestamp, dataPointer).as<winrt::Windows::Devices::Midi2::IMidiUmp>());
-        //}
-        //else
-        //{
-        //    // shouldn't happen until we support more than one message
-        //    return nullptr;
-        //}
+ //       //if (sizeInBytes == sizeof(internal::PackedUmp32))
+ //       //{
+ //       //    args->Ump(winrt::make_self<implementation::MidiUmp32>(timestamp, dataPointer).as<winrt::Windows::Devices::Midi2::IMidiUmp>());
+ //       //}
+ //       //else if (sizeInBytes == sizeof(internal::PackedUmp64))
+ //       //{
+ //       //    args->Ump(winrt::make_self<implementation::MidiUmp64>(timestamp, dataPointer).as<winrt::Windows::Devices::Midi2::IMidiUmp>());
+ //       //}
+ //       //else if (sizeInBytes == sizeof(internal::PackedUmp96))
+ //       //{
+ //       //    args->Ump(winrt::make_self<implementation::MidiUmp96>(timestamp, dataPointer).as<winrt::Windows::Devices::Midi2::IMidiUmp>());
+ //       //}
+ //       //else if (sizeInBytes == sizeof(internal::PackedUmp128))
+ //       //{
+ //       //    args->Ump(winrt::make_self<implementation::MidiUmp128>(timestamp, dataPointer).as<winrt::Windows::Devices::Midi2::IMidiUmp>());
+ //       //}
+ //       //else
+ //       //{
+ //       //    // shouldn't happen until we support more than one message
+ //       //    return nullptr;
+ //       //}
 
-        return *args;
+ //       return *args;
 
-	}
+	//}
 
 }

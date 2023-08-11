@@ -117,7 +117,7 @@ TEST_CASE("Connected.Benchmark.APIWords Send / receive word array through loopba
 	uint32_t words[]{ 0x40000000,0,0,0 };
 	uint32_t wordCount{};
 
-	for (int i = 0; i < numMessagesToSend; i++)
+	for (uint32_t i = 0; i < numMessagesToSend; i++)
 	{
 		switch (i % 12)
 		{

@@ -140,12 +140,6 @@
     <Midl Include="MidiLocalizedStrings.idl">
       <Filter>SDK\Display</Filter>
     </Midl>
-    <Midl Include="MidiGroup.idl">
-      <Filter>SDK</Filter>
-    </Midl>
-    <Midl Include="MidiChannel.idl">
-      <Filter>SDK</Filter>
-    </Midl>
     <Midl Include="MidiServices.idl">
       <Filter>SDK</Filter>
     </Midl>
@@ -163,12 +157,6 @@
     </Midl>
     <Midl Include="MidiGroupTerminalBlock.idl">
       <Filter>SDK\Enumeration</Filter>
-    </Midl>
-    <Midl Include="MidiGroupEndpointListener.idl">
-      <Filter>SDK\Listeners</Filter>
-    </Midl>
-    <Midl Include="MidiChannelEndpointListener.idl">
-      <Filter>SDK\Listeners</Filter>
     </Midl>
     <Midl Include="MidiMessageBufferReader.idl">
       <Filter>SDK\Messages\Buffer</Filter>

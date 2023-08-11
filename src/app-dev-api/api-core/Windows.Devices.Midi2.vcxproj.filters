@@ -37,6 +37,12 @@
     <Filter Include="Internal\Trace">
       <UniqueIdentifier>{870a47af-3bdf-43ad-a1f9-21c144450b0e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="API\Endpoints\Listeners">
+      <UniqueIdentifier>{577d9050-8eb1-416d-9d4f-17cbb58b9b47}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\BasicTypes">
+      <UniqueIdentifier>{95a0abe7-f4a2-472b-9c2b-f64e534ea12a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -75,6 +81,21 @@
     <ClCompile Include="trace_logging.cpp">
       <Filter>Internal\Trace</Filter>
     </ClCompile>
+    <ClCompile Include="MidiChannel.cpp">
+      <Filter>API\BasicTypes</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiGroup.cpp">
+      <Filter>API\BasicTypes</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiChannelEndpointListener.cpp">
+      <Filter>API\Endpoints\Listeners</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiGroupEndpointListener.cpp">
+      <Filter>API\Endpoints\Listeners</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessageTypeEndpointListener.cpp">
+      <Filter>API\Endpoints\Listeners</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -112,7 +133,6 @@
     <ClInclude Include="MidiUmp128.h">
       <Filter>API\Messages</Filter>
     </ClInclude>
-    <ClInclude Include="memory_buffer.h" />
     <ClInclude Include="InternalMidiMessageReceiverHelper.h">
       <Filter>Internal\ServiceAccess</Filter>
     </ClInclude>
@@ -121,6 +141,27 @@
     </ClInclude>
     <ClInclude Include="trace_logging.h">
       <Filter>Internal\Trace</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiChannel.h">
+      <Filter>API\BasicTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiGroup.h">
+      <Filter>API\BasicTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiChannelEndpointListener.h">
+      <Filter>API\Endpoints\Listeners</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiGroupEndpointListener.h">
+      <Filter>API\Endpoints\Listeners</Filter>
+    </ClInclude>
+    <ClInclude Include="string_util.h">
+      <Filter>Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="memory_buffer.h">
+      <Filter>Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessageTypeEndpointListener.h">
+      <Filter>API\Endpoints\Listeners</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -186,6 +227,21 @@
     </Midl>
     <Midl Include="IMidiMessageReceivedEventSource.idl">
       <Filter>API\Endpoints\Contracts</Filter>
+    </Midl>
+    <Midl Include="MidiGroupEndpointListener.idl">
+      <Filter>API\Endpoints\Listeners</Filter>
+    </Midl>
+    <Midl Include="MidiChannelEndpointListener.idl">
+      <Filter>API\Endpoints\Listeners</Filter>
+    </Midl>
+    <Midl Include="MidiGroup.idl">
+      <Filter>API\BasicTypes</Filter>
+    </Midl>
+    <Midl Include="MidiChannel.idl">
+      <Filter>API\BasicTypes</Filter>
+    </Midl>
+    <Midl Include="MidiMessageTypeEndpointListener.idl">
+      <Filter>API\Endpoints\Listeners</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

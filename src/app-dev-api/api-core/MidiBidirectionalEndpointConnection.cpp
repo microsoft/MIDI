@@ -19,6 +19,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
+            // one copy of the event args for this gets sent to all listeners and the main event
+            auto args = winrt::make_self<MidiMessageReceivedEventArgs>(Data, Size, Timestamp);
+
+            // we failed to create the event args
+            if (args == nullptr)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Unable to create MidiMessageReceivedEventArgs");
+
+                return E_FAIL;
+            }
+
             bool skipMainMessageReceivedEvent = false;
             bool skipFurtherListeners = false;
 
@@ -27,36 +38,21 @@ namespace winrt::Windows::Devices::Midi2::implementation
             if (m_messageListeners && m_messageListeners.Size() > 0)
             {
                 // loop through listeners
-
                 for (const auto& listener : m_messageListeners)
                 {
-                    auto listenerArgs = winrt::make<MidiMessageReceivedEventArgs>(Data, Size, Timestamp);
-
                     // TODO: this is synchronous by design, but that requires the client to not block
-                    listener.ProcessIncomingMessage((IMidiInputConnection)*this, listenerArgs, skipFurtherListeners, skipMainMessageReceivedEvent);
+                    listener.ProcessIncomingMessage(*args, skipFurtherListeners, skipMainMessageReceivedEvent);
 
-                    // if the listener has told us to skip further listeners, then do so
+                    // if the listener has told us to skip further listeners, effectively 
+                    // removing this message from the queue, then break out of the loop
                     if (skipFurtherListeners) break;
                 }
             }
 
-            // if the main message received event is hooked up, use it
-
-            if (m_messageReceivedEvent)
+            // if the main message received event is hooked up, and we're not skipping it, use it
+            if (m_messageReceivedEvent && !skipMainMessageReceivedEvent)
             {
-                auto args = winrt::make_self<MidiMessageReceivedEventArgs>(Data, Size, Timestamp);
-
-                if (!skipMainMessageReceivedEvent)
-                {
-                    if (args != nullptr)
-                    {
-                        m_messageReceivedEvent(*this, *args);
-                    }
-                    else
-                    {
-                        return E_FAIL;
-                    }
-                }
+                m_messageReceivedEvent(*this, *args);
             }
 
             return S_OK;
@@ -65,12 +61,16 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
             internal::LogHresultError(__FUNCTION__, L"hresult exception calling message handlers", ex);
 
-            return false;
+            return E_FAIL;
         }
     }
 
-
-    bool MidiBidirectionalEndpointConnection::SendUmpBuffer(internal::MidiTimestamp timestamp, winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffset, uint32_t byteLength)
+    _Success_(return == true)
+    bool MidiBidirectionalEndpointConnection::SendUmpBuffer(
+        _In_ const internal::MidiTimestamp timestamp, 
+        _In_ winrt::Windows::Foundation::IMemoryBuffer const& buffer, 
+        _In_ const uint32_t byteOffset, 
+        _In_ const uint32_t byteLength)
     {
         try
         {
@@ -89,8 +89,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             auto interop = bufferReference.as<IMemoryBufferByteAccess>();
 
-            uint8_t* dataPointer;
-            uint32_t dataSize;
+            uint8_t* dataPointer{};
+            uint32_t dataSize{};
             winrt::check_hresult(interop->GetBuffer(&dataPointer, &dataSize));
 
             // make sure we're not going to spin past the end of the buffer
@@ -118,7 +118,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     // sends a single UMP's worth of words
-    bool MidiBidirectionalEndpointConnection::SendUmpWordArray(internal::MidiTimestamp timestamp, array_view<uint32_t const> words, uint32_t wordCount)
+    _Success_(return == true)
+    bool MidiBidirectionalEndpointConnection::SendUmpWordArray(
+        _In_ internal::MidiTimestamp const timestamp, 
+        _In_ array_view<uint32_t const> words, 
+        _In_ uint32_t const wordCount)
     {
         try
         {
@@ -161,8 +165,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
-
-    bool MidiBidirectionalEndpointConnection::SendUmpWords(internal::MidiTimestamp timestamp, uint32_t word0)
+    _Success_(return == true)
+    bool MidiBidirectionalEndpointConnection::SendUmpWords(
+        _In_ internal::MidiTimestamp const timestamp, 
+        _In_ uint32_t const word0)
     {
         try
         {
@@ -197,7 +203,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
-    bool MidiBidirectionalEndpointConnection::SendUmpWords(internal::MidiTimestamp timestamp, uint32_t word0, uint32_t word1)
+    _Success_(return == true)
+    bool MidiBidirectionalEndpointConnection::SendUmpWords(
+        _In_ internal::MidiTimestamp const timestamp,
+        _In_ uint32_t const word0, 
+        _In_ uint32_t const word1)
     {
         try
         {
@@ -236,7 +246,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
-    bool MidiBidirectionalEndpointConnection::SendUmpWords(internal::MidiTimestamp timestamp, uint32_t word0, uint32_t word1, uint32_t word2)
+    _Success_(return == true)
+    bool MidiBidirectionalEndpointConnection::SendUmpWords(
+        _In_ internal::MidiTimestamp const timestamp,
+        _In_ uint32_t const word0,
+        _In_ uint32_t const word1,
+        _In_ uint32_t const word2)
     {
         try
         {
@@ -276,7 +291,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
-    bool MidiBidirectionalEndpointConnection::SendUmpWords(internal::MidiTimestamp timestamp, uint32_t word0, uint32_t word1, uint32_t word2, uint32_t word3)
+    _Success_(return == true)
+    bool MidiBidirectionalEndpointConnection::SendUmpWords(
+        _In_ internal::MidiTimestamp const timestamp,
+        _In_ uint32_t const word0,
+        _In_ uint32_t const word1,
+        _In_ uint32_t const word2,
+        _In_ uint32_t const word3)
     {
         try
         {
@@ -317,8 +338,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
-
-    bool MidiBidirectionalEndpointConnection::SendUmp(winrt::Windows::Devices::Midi2::IMidiUmp const& ump)
+    _Success_(return == true)
+    bool MidiBidirectionalEndpointConnection::SendUmp(
+        _In_ winrt::Windows::Devices::Midi2::IMidiUmp const& ump)
     {
         try
         {
@@ -341,8 +363,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
-
-    bool MidiBidirectionalEndpointConnection::ActivateMidiStream(com_ptr<IMidiAbstraction> serviceAbstraction, const IID& iid, void** iface)
+    _Success_(return == true)
+    bool MidiBidirectionalEndpointConnection::ActivateMidiStream(
+        _In_ com_ptr<IMidiAbstraction> serviceAbstraction, 
+        _In_ const IID& iid, 
+        _Out_ void** iface)
     {
         try
         {
@@ -360,12 +385,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
     
     // internal method to start listening for incoming messages, enable processing outgoing messages, etc.
     // TODO: Change signature of this
-    bool MidiBidirectionalEndpointConnection::InternalStart(winrt::com_ptr<IMidiAbstraction> serviceAbstraction)
+    _Success_(return == true)
+    bool MidiBidirectionalEndpointConnection::InternalStart(
+        _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction)
     {
         WINRT_ASSERT(!DeviceId().empty());
         WINRT_ASSERT(serviceAbstraction != nullptr);
 
-        DWORD mmcssTaskId;  // TODO: Does this need to be session-wise? Probably, but it can be modified by the endpoint init, so maybe should be endpoint-local
+        DWORD mmcssTaskId{};  // TODO: Does this need to be session-wide? Probably, but it can be modified by the endpoint init, so maybe should be endpoint-local
 
         // Activate the endpoint for this device. Will fail if the device is not a BiDi device
         if (!ActivateMidiStream(serviceAbstraction, __uuidof(IMidiBiDi), (void**)&m_endpointInterface))

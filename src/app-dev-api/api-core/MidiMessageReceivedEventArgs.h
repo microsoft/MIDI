@@ -24,24 +24,39 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiMessageReceivedEventArgs() = default;
 
-        MidiMessageReceivedEventArgs(PVOID data, UINT sizeInBytes, LONGLONG timestamp);
+        // internal implementation constructor
+        MidiMessageReceivedEventArgs(_In_ PVOID data, _In_ UINT sizeInBytes, _In_ LONGLONG timestamp);
 
         winrt::Windows::Devices::Midi2::MidiUmpPacketType UmpType();
-        internal::MidiTimestamp Timestamp() { return m_timestamp; }
+        internal::MidiTimestamp Timestamp() const { return m_timestamp; }
 
         winrt::Windows::Devices::Midi2::IMidiUmp GetUmp();
 
-        bool FillWords(uint32_t& word0, uint32_t& word1, uint32_t& word2, uint32_t& word3);
+        bool FillWords(
+            _Inout_ uint32_t& word0, 
+            _Inout_ uint32_t& word1, 
+            _Inout_ uint32_t& word2, 
+            _Inout_ uint32_t& word3);
 
-        bool FillUmp32(winrt::Windows::Devices::Midi2::MidiUmp32 const& ump);
-        bool FillUmp64(winrt::Windows::Devices::Midi2::MidiUmp64 const& ump);
-        bool FillUmp96(winrt::Windows::Devices::Midi2::MidiUmp96 const& ump);
-        bool FillUmp128(winrt::Windows::Devices::Midi2::MidiUmp128 const& ump);
+        bool FillUmp32(_In_ winrt::Windows::Devices::Midi2::MidiUmp32 const& ump);
+        bool FillUmp64(_In_ winrt::Windows::Devices::Midi2::MidiUmp64 const& ump);
+        bool FillUmp96(_In_ winrt::Windows::Devices::Midi2::MidiUmp96 const& ump);
+        bool FillUmp128(_In_ winrt::Windows::Devices::Midi2::MidiUmp128 const& ump);
         
-        bool FillWordArray(array_view<uint32_t> words);
-        bool FillByteArray(array_view<uint8_t> bytes);
+        bool FillWordArray(
+            _In_ array_view<uint32_t> words, 
+            _In_ uint32_t index, 
+            _Out_ uint32_t& elementsWritten);
+
+        bool FillByteArray(
+            _In_ array_view<uint8_t> bytes, 
+            _In_ uint32_t index, 
+            _Out_ uint32_t& elementsWritten);
         
-        bool FillBuffer(winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffset);
+        bool FillBuffer(
+            _In_ winrt::Windows::Foundation::IMemoryBuffer const& buffer, 
+            _In_ uint32_t byteOffset, 
+            _Out_ uint32_t& bytesWritten);
 
 
     private:

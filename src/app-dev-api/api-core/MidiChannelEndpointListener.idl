@@ -1,21 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App SDK and should be used
+// This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-import "MidiGroup.idl";
 
-namespace Microsoft.Devices.Midi2
+import "MidiGroup.idl";
+import "MidiChannel.idl";
+
+import "IMidiEndpointMessageListener.idl";
+
+namespace Windows.Devices.Midi2
 {
     [default_interface]
-    runtimeclass MidiGroupEndpointListener : Windows.Devices.Midi2.IMidiEndpointMessageListener
+    runtimeclass MidiChannelEndpointListener : IMidiEndpointMessageListener
     {
-        MidiGroupEndpointListener();
+        MidiChannelEndpointListener();
 
-        IVector<MidiGroup> IncludeGroups{ get; };
+        MidiGroup IncludeGroup{ get; set; };
+
+        IVector<MidiChannel> IncludeChannels{ get; };
 
     }
 }

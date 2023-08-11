@@ -21,11 +21,27 @@ namespace Windows.Devices.Midi2
     interface IMidiEndpointMessageListener
     {
         String Id { get; set; };            // Id supplied by the consuming application
-        String Name{ get; set; };           // Name supplied by the consuming application
-        IInspectable Tag{ get; set; };      // Arbitrary data attached by the consuming application
+        String Name{ get; set; };           // Optional Name supplied by the consuming application
+        IInspectable Tag{ get; set; };      // Optional Arbitrary data attached by the consuming application
+        
+
+        // initialize may do things like allocate a shared table which is used to keep metadata
+        // that is being listened to
+        void Initialize(IMidiInputConnection inputConnection);
+
+        // some implementations of this will also have a reference to an IMidiOutputConnection, 
+        // but that doesn't need to be part of the interface. Examples include MIDI CI helpers.
+
 
         // called by the endpoint connection when a message is received
         // if the listener is also an event source, it may raise the message received event
-        void ProcessIncomingMessage(IMidiInputConnection sourceConnection, MidiMessageReceivedEventArgs args, out Boolean skipFurtherListeners, out Boolean skipMainMessageReceivedEvent);
+        void ProcessIncomingMessage(MidiMessageReceivedEventArgs args, out Boolean skipFurtherListeners, out Boolean skipMainMessageReceivedEvent);
+
+
+        Windows.Foundation.IAsyncAction ProcessIncomingMessageAsync(MidiMessageReceivedEventArgs args);
+
+
+        void Cleanup();
+
     }
 }
