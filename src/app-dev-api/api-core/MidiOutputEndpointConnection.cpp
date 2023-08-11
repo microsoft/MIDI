@@ -20,36 +20,58 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
-    bool MidiOutputEndpointConnection::SendUmpBuffer(uint64_t timestamp, winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffset, uint32_t byteLength)
+    bool MidiOutputEndpointConnection::SendUmpBuffer(
+        _In_ internal::MidiTimestamp /* timestamp*/,
+        _In_ winrt::Windows::Foundation::IMemoryBuffer const& /* buffer*/,
+        _In_ uint32_t /*byteOffset*/ ,
+        _In_ uint32_t /*byteLength*/ )
     {
         throw hresult_not_implemented();
     }
 
 
     
-    bool MidiOutputEndpointConnection::SendUmp(winrt::Windows::Devices::Midi2::IMidiUmp const& ump)
+    bool MidiOutputEndpointConnection::SendUmp(
+        _In_ winrt::Windows::Devices::Midi2::IMidiUmp const& /*ump*/)
     {
         throw hresult_not_implemented();
     }
 
-    bool MidiOutputEndpointConnection::SendUmpWords(uint64_t timestamp, uint32_t word0)
+    bool MidiOutputEndpointConnection::SendUmpWords(
+        _In_ internal::MidiTimestamp /*timestamp*/,
+        _In_ uint32_t /*word0*/)
     {
         throw hresult_not_implemented();
     }
-    bool MidiOutputEndpointConnection::SendUmpWords(uint64_t timestamp, uint32_t word0, uint32_t word1)
+    bool MidiOutputEndpointConnection::SendUmpWords(
+        _In_ internal::MidiTimestamp /*timestamp*/,
+        _In_ uint32_t /*word0*/,
+        _In_ uint32_t /*word1*/)
     {
         throw hresult_not_implemented();
     }
-    bool MidiOutputEndpointConnection::SendUmpWords(uint64_t timestamp, uint32_t word0, uint32_t word1, uint32_t word2)
+    bool MidiOutputEndpointConnection::SendUmpWords(
+        _In_ internal::MidiTimestamp /*timestamp*/,
+        _In_ uint32_t /*word0*/,
+        _In_ uint32_t /*word1*/,
+        _In_ uint32_t /*word2*/)
     {
         throw hresult_not_implemented();
     }
-    bool MidiOutputEndpointConnection::SendUmpWords(uint64_t timestamp, uint32_t word0, uint32_t word1, uint32_t word2, uint32_t word3)
+    bool MidiOutputEndpointConnection::SendUmpWords(
+        _In_ internal::MidiTimestamp /*timestamp*/,
+        _In_ uint32_t /*word0*/,
+        _In_ uint32_t /*word1*/,
+        _In_ uint32_t /*word2*/,
+        _In_ uint32_t /*word3*/)
     {
         throw hresult_not_implemented();
     }
 
-    bool MidiOutputEndpointConnection::SendUmpWordArray(uint64_t timestamp, array_view<uint32_t const> words, uint32_t wordCount)
+    bool MidiOutputEndpointConnection::SendUmpWordArray(
+        _In_ internal::MidiTimestamp /*timestamp*/,
+        _In_ array_view<uint32_t const> /*words*/,
+        _In_ uint32_t /*wordCount*/)
     {
         throw hresult_not_implemented();
     }

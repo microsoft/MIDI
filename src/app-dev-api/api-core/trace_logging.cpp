@@ -18,9 +18,9 @@ namespace Windows::Devices::Midi2::Internal
 
     void WINAPI LoggingProviderEnabledCallback(
         _In_      LPCGUID /*sourceId*/,
-        _In_      ULONG isEnabled,
-        _In_      UCHAR level,
-        _In_      ULONGLONG matchAnyKeyword,
+        _In_      ULONG /*isEnabled*/,
+        _In_      UCHAR /*level*/,
+        _In_      ULONGLONG /*matchAnyKeyword*/,
         _In_      ULONGLONG /*matchAllKeywords*/,
         _In_opt_  PEVENT_FILTER_DESCRIPTOR /*filterData*/,
         _In_opt_  PVOID /*callbackContext*/)
@@ -33,7 +33,7 @@ namespace Windows::Devices::Midi2::Internal
 
     void RegisterTraceLogging()
     {
-        HRESULT hr = S_OK;
+        // HRESULT hr = S_OK;
 
         TraceLoggingRegisterEx(g_hLoggingProvider, LoggingProviderEnabledCallback, nullptr);
 
@@ -62,7 +62,10 @@ namespace Windows::Devices::Midi2::Internal
 
 
     // may want to allow passing in a keyword so we can be finer-grained
-    void LogHresultError(char* location, wchar_t* message, winrt::hresult_error const& ex)
+    void LogHresultError(
+        _In_ const char* location, 
+        _In_ const wchar_t* message, 
+        _In_ winrt::hresult_error const& ex) noexcept
     {
         TraceLoggingWrite(
             g_hLoggingProvider,
@@ -76,7 +79,9 @@ namespace Windows::Devices::Midi2::Internal
         );
     }
 
-    void LogGeneralError(char* location, wchar_t* message)
+    void LogGeneralError(
+        _In_ const char* location, 
+        _In_ const wchar_t* message) noexcept
     {
         TraceLoggingWrite(
             g_hLoggingProvider,
@@ -88,7 +93,11 @@ namespace Windows::Devices::Midi2::Internal
         );
     }
 
-    void LogUmpDataValidationError(char* location, wchar_t* message, uint32_t firstWord, uint64_t timestamp)
+    void LogUmpDataValidationError(
+        _In_ const char* location, 
+        _In_ const wchar_t* message, 
+        _In_ const uint32_t firstWord, 
+        _In_ const uint64_t timestamp) noexcept
     {
         TraceLoggingWrite(
             g_hLoggingProvider,
@@ -102,7 +111,11 @@ namespace Windows::Devices::Midi2::Internal
         );
     }
 
-    void LogUmpSizeValidationError(char* location, wchar_t* message, uint32_t providedSizeInWords, uint64_t timestamp)
+    void LogUmpSizeValidationError(
+        _In_ const char* location, 
+        _In_ const wchar_t* message, 
+        _In_ const uint32_t providedSizeInWords, 
+        _In_ const uint64_t timestamp) noexcept
     {
         TraceLoggingWrite(
             g_hLoggingProvider,

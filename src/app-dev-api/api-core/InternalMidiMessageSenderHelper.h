@@ -43,23 +43,20 @@ namespace Windows::Devices::Midi2::Internal
         {
             if (endpoint != nullptr)
             {
-                //LOG_IF_FAILED(DoWork());
-    //            std::cout << "First word of " << std::dec << sizeInBytes << " bytes is : 0x" << std::hex << *((uint32_t*)data) << std::endl;
-
                 winrt::check_hresult(endpoint->SendMidiMessage(data, sizeInBytes, timestamp));
 
                 return true;
             }
+            else
+            {
+                internal::LogGeneralError(__FUNCTION__, L"endpoint is nullptr");
 
-            return false;
+                return false;
+            }
         }
         catch (winrt::hresult_error const& ex)
         {
-            OutputDebugString(L"" __FUNCTION__ " hresult exception sending message. Is the service running?");
-
-            //std::cout << __FUNCTION__ << " hresult exception sending message" << std::endl;
-            //std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
-            //std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
+            internal::LogHresultError(__FUNCTION__, L"hresult error sending message. Is the service running?", ex);
 
             return false;
         }
@@ -112,18 +109,14 @@ namespace Windows::Devices::Midi2::Internal
             }
             else
             {
-                OutputDebugString(L"" __FUNCTION__ " endpoint is nullptr");
+                internal::LogGeneralError(__FUNCTION__, L"endpoint is nullptr");
 
                 return false;
             }
         }
         catch (winrt::hresult_error const& ex)
         {
-            OutputDebugString(L"" __FUNCTION__ " hresult exception sending message. Is the service running?");
-
-            //std::cout << __FUNCTION__ << " hresult exception sending message" << std::endl;
-            //std::cout << "HRESULT: 0x" << std::hex << (uint32_t)(ex.code()) << std::endl;
-            //std::cout << "Message: " << winrt::to_string(ex.message()) << std::endl;
+            internal::LogHresultError(__FUNCTION__, L"hresult error sending message. Is the service running?", ex);
 
             return false;
         }

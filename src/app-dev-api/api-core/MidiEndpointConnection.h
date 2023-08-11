@@ -28,10 +28,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         IInspectable Tag() { return m_tag; }
         void Tag(IInspectable value) { m_tag = value; }
 
-        void InternalSetSettings(IMidiEndpointConnectionSettings value) { m_settings = value; }
-        void InternalSetDeviceId(hstring value) { m_deviceId = value; }
-        void InternalSetId(hstring value) { m_id = value; }
-        void InternalSetIsConnected(bool value) { m_isConnected = value; }
+        void InternalSetSettings(_In_ IMidiEndpointConnectionSettings value) { m_settings = value; }
+        void InternalSetDeviceId(_In_ hstring value) { m_deviceId = value; }
+        void InternalSetId(_In_ hstring value) { m_id = value; }
+        void InternalSetIsConnected(_In_ bool value) { m_isConnected = value; }
 
     protected:
         hstring m_id {};

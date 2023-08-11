@@ -14,7 +14,7 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    MidiMessageReceivedEventArgs::MidiMessageReceivedEventArgs(PVOID data, UINT sizeInBytes, LONGLONG timestamp)
+    MidiMessageReceivedEventArgs::MidiMessageReceivedEventArgs(_In_ PVOID data, _In_ UINT sizeInBytes, _In_ LONGLONG timestamp)
     {
         m_timestamp = timestamp;
 
@@ -44,6 +44,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         if (ty == MidiUmpPacketType::UnknownOrInvalid)
         {          
+            internal::LogGeneralError(__FUNCTION__, L"Invalid UMP Packet type");
+
             throw hresult_error();
         }
 
@@ -64,14 +66,28 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
             return winrt::make_self<implementation::MidiUmp128>(m_timestamp, m_data.Word0, m_data.Word1, m_data.Word2, m_data.Word3).as<winrt::Windows::Devices::Midi2::IMidiUmp>();
         }
+        else
+        {
+            // this should never happen
+
+            internal::LogGeneralError(__FUNCTION__, L"Invalid UMP Packet type");
+
+            return nullptr;
+        }
     }
 
-    bool MidiMessageReceivedEventArgs::FillWords(uint32_t& word0, uint32_t& word1, uint32_t& word2, uint32_t& word3)
+    bool MidiMessageReceivedEventArgs::FillWords(
+        _Inout_ uint32_t& word0, 
+        _Inout_ uint32_t& word1, 
+        _Inout_ uint32_t& word2,
+        _Inout_ uint32_t& word3)
     {
         auto ty = (MidiUmpPacketType)(internal::GetUmpLengthInMidiWordsFromFirstWord(m_data.Word0));
 
         if (ty == MidiUmpPacketType::UnknownOrInvalid)
         {
+            internal::LogGeneralError(__FUNCTION__, L"Invalid UMP Packet type");
+
             return false;
         }
         else
@@ -98,17 +114,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     }
 
-    bool MidiMessageReceivedEventArgs::FillUmp32(winrt::Windows::Devices::Midi2::MidiUmp32 const& ump)
+    bool MidiMessageReceivedEventArgs::FillUmp32(_In_ winrt::Windows::Devices::Midi2::MidiUmp32 const& ump)
     {
         if (ump == nullptr)
         {
-            OutputDebugString(L"" __FUNCTION__ " ump is nullptr");
+            internal::LogGeneralError(__FUNCTION__, L"UMP parameter is null");
             return false;
         }
 
         if (UmpType() != MidiUmpPacketType::Ump32)
         {
-            OutputDebugString(L"" __FUNCTION__ " incorrect MIDI packet type");
+            internal::LogGeneralError(__FUNCTION__, L"Incorrect UMP Packet type for Ump32");
             return false;
         }
 
@@ -125,17 +141,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return true;
     }
 
-    bool MidiMessageReceivedEventArgs::FillUmp64(winrt::Windows::Devices::Midi2::MidiUmp64 const& ump)
+    bool MidiMessageReceivedEventArgs::FillUmp64(_In_ winrt::Windows::Devices::Midi2::MidiUmp64 const& ump)
     {
         if (ump == nullptr)
         {
-            OutputDebugString(L"" __FUNCTION__ " ump is nullptr");
+            internal::LogGeneralError(__FUNCTION__, L"UMP parameter is null");
             return false;
         }
 
         if (UmpType() != MidiUmpPacketType::Ump64)
         {
-            OutputDebugString(L"" __FUNCTION__ " incorrect MIDI packet type");
+            internal::LogGeneralError(__FUNCTION__, L"Incorrect UMP Packet type for Ump64");
             return false;
         }
 
@@ -152,17 +168,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return true;
     }
 
-    bool MidiMessageReceivedEventArgs::FillUmp96(winrt::Windows::Devices::Midi2::MidiUmp96 const& ump)
+    bool MidiMessageReceivedEventArgs::FillUmp96(_In_ winrt::Windows::Devices::Midi2::MidiUmp96 const& ump)
     {
         if (ump == nullptr)
         {
-            OutputDebugString(L"" __FUNCTION__ " ump is nullptr");
+            internal::LogGeneralError(__FUNCTION__, L"UMP parameter is null");
             return false;
         }
 
         if (UmpType() != MidiUmpPacketType::Ump96)
         {
-            OutputDebugString(L"" __FUNCTION__ " incorrect MIDI packet type");
+            internal::LogGeneralError(__FUNCTION__, L"Incorrect UMP Packet type for Ump96");
             return false;
         }
 
@@ -179,18 +195,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return true;
     }
 
-    bool MidiMessageReceivedEventArgs::FillUmp128(winrt::Windows::Devices::Midi2::MidiUmp128 const& ump)
+    bool MidiMessageReceivedEventArgs::FillUmp128(_In_ winrt::Windows::Devices::Midi2::MidiUmp128 const& ump)
     {
         if (ump == nullptr)
         {
-            OutputDebugString(L"" __FUNCTION__ " ump is nullptr");
-
+            internal::LogGeneralError(__FUNCTION__, L"UMP parameter is null");
             return false;
         }
 
         if (UmpType() != MidiUmpPacketType::Ump128)
         {
-            OutputDebugString(L"" __FUNCTION__ " incorrect MIDI packet type");
+            internal::LogGeneralError(__FUNCTION__, L"Incorrect UMP Packet type for Ump128");
             return false;
         }
 
@@ -207,17 +222,26 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return true;
     }
 
-    bool MidiMessageReceivedEventArgs::FillWordArray(array_view<uint32_t> words)
+    bool MidiMessageReceivedEventArgs::FillWordArray(
+        _In_ array_view<uint32_t> /* words */, 
+        _In_ uint32_t /*index*/, 
+        _Out_ uint32_t& /*elementsWritten*/)
     {
         throw hresult_not_implemented();
     }
 
-    bool MidiMessageReceivedEventArgs::FillByteArray(array_view<uint8_t> bytes)
+    bool MidiMessageReceivedEventArgs::FillByteArray(
+        _In_ array_view<uint8_t> /* bytes */, 
+        _In_ uint32_t /*index*/, 
+        _Out_ uint32_t& /*elementsWritten*/)
     {
         throw hresult_not_implemented();
     }
 
-    bool MidiMessageReceivedEventArgs::FillBuffer(winrt::Windows::Foundation::IMemoryBuffer const& buffer, uint32_t byteOffset)
+    bool MidiMessageReceivedEventArgs::FillBuffer(
+        _In_ winrt::Windows::Foundation::IMemoryBuffer const& /* buffer */, 
+        _In_ uint32_t /* byteOffset*/,
+        _Out_ uint32_t& /* bytesWritten*/)
     {
         throw hresult_not_implemented();
     }

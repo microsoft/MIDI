@@ -157,14 +157,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="MidiChannelEndpointListener.h">
-      <DependentUpon>MidiChannelEndpointListener.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiEndpointDisplayFormatter.h">
       <DependentUpon>MidiEndpointDisplayFormatter.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiGroupEndpointListener.h">
-      <DependentUpon>MidiGroupEndpointListener.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiHighResolutionValueDisplayFormatter.h">
       <DependentUpon>MidiHighResolutionValueDisplayFormatter.idl</DependentUpon>
@@ -184,24 +178,24 @@
     <ClInclude Include="MidiDeviceInformation.h">
       <DependentUpon>MidiDeviceInformation.idl</DependentUpon>
     </ClInclude>
-	  <ClInclude Include="MidiMessageBufferHelper.h">
-		  <DependentUpon>MidiMessageBufferHelper.idl</DependentUpon>
-	  </ClInclude>
-	  <ClInclude Include="MidiMessageBufferReader.h">
-		  <DependentUpon>MidiMessageBufferReader.idl</DependentUpon>
-	  </ClInclude>
-	  <ClInclude Include="MidiMessageBufferWriter.h">
-		  <DependentUpon>MidiMessageBufferWriter.idl</DependentUpon>
-	  </ClInclude>
+    <ClInclude Include="MidiMessageBufferHelper.h">
+      <DependentUpon>MidiMessageBufferHelper.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiMessageBufferReader.h">
+      <DependentUpon>MidiMessageBufferReader.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiMessageBufferWriter.h">
+      <DependentUpon>MidiMessageBufferWriter.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiMessageTranslator.h">
       <DependentUpon>MidiMessageTranslator.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiServices.h">
       <DependentUpon>MidiServices.idl</DependentUpon>
     </ClInclude>
-	  <ClInclude Include="MidiStreamMessageEndpointListener.h">
-		  <DependentUpon>MidiStreamMessageEndpointListener.idl</DependentUpon>
-	  </ClInclude>
+    <ClInclude Include="MidiStreamMessageEndpointListener.h">
+      <DependentUpon>MidiStreamMessageEndpointListener.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="midi_app_sdk_version.h">
     </ClInclude>
     <ClInclude Include="MidiTransportInformation.h">
@@ -212,24 +206,12 @@
     <ClInclude Include="MidiUmpUtilities.h">
       <DependentUpon>MidiUmpUtilities.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiChannel.h">
-      <DependentUpon>MidiChannel.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiGroup.h">
-      <DependentUpon>MidiGroup.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Generated Files\module.g.cpp" />
-    <ClCompile Include="MidiChannelEndpointListener.cpp">
-      <DependentUpon>MidiChannelEndpointListener.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiEndpointDisplayFormatter.cpp">
       <DependentUpon>MidiEndpointDisplayFormatter.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiGroupEndpointListener.cpp">
-      <DependentUpon>MidiGroupEndpointListener.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiHighResolutionValueDisplayFormatter.cpp">
       <DependentUpon>MidiHighResolutionValueDisplayFormatter.idl</DependentUpon>
@@ -249,35 +231,29 @@
     <ClCompile Include="MidiDeviceInformation.cpp">
       <DependentUpon>MidiDeviceInformation.idl</DependentUpon>
     </ClCompile>
-	  <ClCompile Include="MidiMessageBufferHelper.cpp">
-		  <DependentUpon>MidiMessageBufferHelper.idl</DependentUpon>
-	  </ClCompile>
-	  <ClCompile Include="MidiMessageBufferReader.cpp">
-		  <DependentUpon>MidiMessageBufferReader.idl</DependentUpon>
-	  </ClCompile>
-	  <ClCompile Include="MidiMessageBufferWriter.cpp">
-		  <DependentUpon>MidiMessageBufferWriter.idl</DependentUpon>
-	  </ClCompile>
+    <ClCompile Include="MidiMessageBufferHelper.cpp">
+      <DependentUpon>MidiMessageBufferHelper.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiMessageBufferReader.cpp">
+      <DependentUpon>MidiMessageBufferReader.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiMessageBufferWriter.cpp">
+      <DependentUpon>MidiMessageBufferWriter.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiMessageTranslator.cpp">
       <DependentUpon>MidiMessageTranslator.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiServices.cpp">
       <DependentUpon>MidiServices.idl</DependentUpon>
     </ClCompile>
-	  <ClCompile Include="MidiStreamMessageEndpointListener.cpp">
-		  <DependentUpon>MidiStreamMessageEndpointListener.idl</DependentUpon>
-	  </ClCompile>
+    <ClCompile Include="MidiStreamMessageEndpointListener.cpp">
+      <DependentUpon>MidiStreamMessageEndpointListener.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiTransportInformation.cpp">
       <DependentUpon>MidiTransportInformation.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiUmpUtilities.cpp">
       <DependentUpon>MidiUmpUtilities.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiChannel.cpp">
-      <DependentUpon>MidiChannel.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiGroup.cpp">
-      <DependentUpon>MidiGroup.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -285,12 +261,9 @@
   </ItemGroup>
   <ItemGroup>
     <Midl Include="IMidiTransportSettingsData.idl" />
-    <Midl Include="MidiChannel.idl" />
-    <Midl Include="MidiChannelEndpointListener.idl" />
     <Midl Include="MidiEndpointInformation.idl" />
     <Midl Include="MidiEndpointDataFormatEnum.idl" />
     <Midl Include="MidiFunctionBlockDirectionEnum.idl" />
-    <Midl Include="MidiGroupEndpointListener.idl" />
     <Midl Include="MidiHighResolutionValueDisplayFormatter.idl" />
     <Midl Include="MidiMessageBufferHelper.idl" />
     <Midl Include="MidiMessageBufferReader.idl" />
@@ -300,7 +273,6 @@
     <Midl Include="MidiEndpointDisplayFormatter.idl" />
     <Midl Include="MidiFunctionBlock.idl" />
     <Midl Include="MidiFunctionBlockUIHintEnum.idl" />
-    <Midl Include="MidiGroup.idl" />
     <Midl Include="MidiGroupTerminalBlock.idl" />
     <Midl Include="MidiLocalizedStrings.idl" />
     <Midl Include="MidiServices.idl" />
