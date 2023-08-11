@@ -20,13 +20,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static hstring GetDeviceSelector();
 
-        hstring Id() const { return m_id; }
-        hstring DeviceId() const { return m_deviceId; }
-        bool IsConnected() const { return m_isConnected; }
-        IMidiEndpointConnectionSettings Settings() { return m_settings; }
+        hstring Id() const noexcept { return m_id; }
+        hstring DeviceId() const noexcept { return m_deviceId; }
+        bool IsConnected() const noexcept { return m_isConnected; }
+        IMidiEndpointConnectionSettings Settings() noexcept { return m_settings; }
 
-        IInspectable Tag() const { return m_tag; }
-        void Tag(_In_ IInspectable value) { m_tag = value; }
+        IInspectable Tag() const noexcept { return m_tag; }
+        void Tag(_In_ IInspectable value) noexcept { m_tag = value; }
 
 
         void InternalSetSettings(_In_ IMidiEndpointConnectionSettings value) { m_settings = value; }

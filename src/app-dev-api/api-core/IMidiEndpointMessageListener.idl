@@ -25,6 +25,8 @@ namespace Windows.Devices.Midi2
         String Name{ get; set; };           // Optional Name supplied by the consuming application
         IInspectable Tag{ get; set; };      // Optional Arbitrary data attached by the consuming application
         
+        Boolean IsEnabled{ get; set; };
+
         IMidiInputConnection InputConnection{ get; set; };
 
         // initialize may do things like allocate a shared table which is used to keep metadata

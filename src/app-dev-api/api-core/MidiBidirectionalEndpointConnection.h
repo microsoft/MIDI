@@ -33,7 +33,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         MidiBidirectionalEndpointConnection() = default;
         ~MidiBidirectionalEndpointConnection();
 
-        static hstring GetDeviceSelectorForBidirectional() { return L""; /* TODO*/ }
+        static hstring GetDeviceSelectorForBidirectional() noexcept { return L""; /* TODO*/ }
 
         winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiEndpointMessageListener> MessageListeners() { return m_messageListeners; }
 
@@ -91,7 +91,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         void MessageReceived(_In_ winrt::event_token const& token) noexcept
         {
-            m_messageReceivedEvent.remove(token);
+            if (m_messageReceivedEvent) m_messageReceivedEvent.remove(token);
         }
 
         _Success_(return == true)
