@@ -1,26 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
 
-// Interface for settings classes that transport SDK plugins will implement when 
-// providing custom connection settings for their transports
+// This interface requires you to also implement IMidiEndpointMessageListener
 
 #include "midl_defines.h";
 MIDI_IDL_IMPORT
 
+import "MidiMessageReceivedEventArgs.idl";
+import "IMidiOutputConnection.idl";
+import "IMidiEndpointMessageListener.idl";
+
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
-    [MIDI_INTERFACE_UUID("65736736-35f3-421c-a683-3a034ad0dcc2",1.0)]
-    interface IMidiEndpointConnectionSettings
+    [MIDI_INTERFACE_UUID("3f4a7cc3-baf6-4e4c-b4c4-c7ee38af2049",1.0)]
+    interface IMidiEndpointMessageResponder
     {
-        String SettingsJson { get; set; };
-
-        Boolean IsDirty{ get; set; };
+        IMidiOutputConnection OutputConnection{ get; set; };
     }
 }

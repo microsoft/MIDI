@@ -10,15 +10,12 @@
 MIDI_IDL_IMPORT
 
 import "MidiMessageReceivedEventArgs.idl";
-import "IMidiEndpointMessageListener.idl";
+//import "IMidiEndpointMessageListener.idl";
 
 namespace Windows.Devices.Midi2
 {
-    [MIDI_API_CONTRACT_1]
-    [
-        uuid(dabfaf64-28d6-4122-92ef-5bc6548f2a69),
-        version(1.0),
-    ]
+    [MIDI_API_CONTRACT(1)]
+    [MIDI_INTERFACE_UUID("dabfaf64-28d6-4122-92ef-5bc6548f2a69",1.0)]
     interface IMidiInputConnection
     {
         // for those who don't want to use just the normal event, they can set up
@@ -26,7 +23,7 @@ namespace Windows.Devices.Midi2
         // to allow functionality similar to Ports in MIDI 1.0. Using this approach
         // is preferable to opening multiple (expensive) Endpoint Connections from
         // a single application
-        IVector<IMidiEndpointMessageListener> MessageListeners{ get; };
+        //IVector<IMidiEndpointMessageListener> MessageListeners{ get; };
 
     }
 }

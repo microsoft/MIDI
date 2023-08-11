@@ -26,11 +26,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::Windows::Foundation::IInspectable Tag() const { return m_tag; }
         void Tag(_In_ winrt::Windows::Foundation::IInspectable const& value) { m_tag = value; }
 
+        winrt::Windows::Devices::Midi2::IMidiInputConnection InputConnection() const { return m_inputConnection; }
+        void InputConnection(_In_ winrt::Windows::Devices::Midi2::IMidiInputConnection const& value) { m_inputConnection = value; }
 
         winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::MidiGroup> IncludeGroups();
 
-        void Initialize(
-            _In_ winrt::Windows::Devices::Midi2::IMidiInputConnection const& inputConnection);
+        void Initialize();
         void Cleanup();
 
         void ProcessIncomingMessage(
@@ -46,6 +47,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         hstring m_id{};
         hstring m_name{};
         IInspectable m_tag{ nullptr };
+        IMidiInputConnection m_inputConnection;
 
 
     };

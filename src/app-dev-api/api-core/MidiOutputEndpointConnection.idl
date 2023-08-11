@@ -18,7 +18,7 @@ import "IMidiOutputConnection.idl";
 
 namespace Windows.Devices.Midi2
 {
-    [MIDI_API_CONTRACT_1]
+    [MIDI_API_CONTRACT(1)]
     [default_interface]
     runtimeclass MidiOutputEndpointConnection : Windows.Devices.Midi2.MidiEndpointConnection, 
                                                 Windows.Devices.Midi2.IMidiOutputConnection

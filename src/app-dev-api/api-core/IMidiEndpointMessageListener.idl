@@ -17,25 +17,19 @@ import "IMidiInputConnection.idl";
 
 namespace Windows.Devices.Midi2
 {
-    [MIDI_API_CONTRACT_1]
-    [
-        uuid(38d87ced-b820-41bd-9a44-d43a19c1dfcb),
-        version(1.0),
-    ]
+    [MIDI_API_CONTRACT(1)]
+    [MIDI_INTERFACE_UUID("38d87ced-b820-41bd-9a44-d43a19c1dfcb",1.0)]
     interface IMidiEndpointMessageListener
     {
         String Id { get; set; };            // Id supplied by the consuming application
         String Name{ get; set; };           // Optional Name supplied by the consuming application
         IInspectable Tag{ get; set; };      // Optional Arbitrary data attached by the consuming application
         
+        IMidiInputConnection InputConnection{ get; set; };
 
         // initialize may do things like allocate a shared table which is used to keep metadata
         // that is being listened to
-        void Initialize(IMidiInputConnection inputConnection);
-
-        // some implementations of this will also have a reference to an IMidiOutputConnection, 
-        // but that doesn't need to be part of the interface. Examples include MIDI CI helpers.
-
+        void Initialize();
 
         // called by the endpoint connection when a message is received
         // if the listener is also an event source, it may raise the message received event

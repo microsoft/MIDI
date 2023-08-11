@@ -19,8 +19,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
-    void MidiChannelEndpointListener::Initialize(
-        _In_ winrt::Windows::Devices::Midi2::IMidiInputConnection const& /*inputConnection*/)
+    void MidiChannelEndpointListener::Initialize()
     {
         throw hresult_not_implemented();
     }

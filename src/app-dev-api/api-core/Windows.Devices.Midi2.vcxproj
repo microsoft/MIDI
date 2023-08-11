@@ -185,8 +185,12 @@
     <ClInclude Include="MidiEndpointConnection.h">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiEndpointInformation.h" />
-    <ClInclude Include="MidiFunctionBlock.h" />
+    <ClInclude Include="MidiEndpointInformation.h">
+      <DependentUpon>MidiEndpointInformation.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiFunctionBlock.h">
+      <DependentUpon>MidiFunctionBlock.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiGroup.h">
       <DependentUpon>MidiGroup.idl</DependentUpon>
     </ClInclude>
@@ -248,8 +252,12 @@
     <ClCompile Include="MidiEndpointConnection.cpp">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiEndpointInformation.cpp" />
-    <ClCompile Include="MidiFunctionBlock.cpp" />
+    <ClCompile Include="MidiEndpointInformation.cpp">
+      <DependentUpon>MidiEndpointInformation.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiFunctionBlock.cpp">
+      <DependentUpon>MidiFunctionBlock.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiGroup.cpp">
       <DependentUpon>MidiGroup.idl</DependentUpon>
     </ClCompile>
@@ -293,6 +301,7 @@
   </ItemGroup>
   <ItemGroup>
     <Midl Include="IMidiEndpointMessageListener.idl" />
+    <Midl Include="IMidiEndpointMessageResponder.idl" />
     <Midl Include="IMidiInputConnection.idl" />
     <Midl Include="IMidiMessageReceivedEventSource.idl" />
     <Midl Include="IMidiOutputConnection.idl" />

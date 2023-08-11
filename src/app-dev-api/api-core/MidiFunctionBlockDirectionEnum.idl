@@ -15,7 +15,7 @@ namespace Windows.Devices.Midi2
     // from the POV of the function block, not from the OS. IOW, 
     // Input here means the device FB *receives* messages that
     // are sent through Windows
-    [MIDI_API_CONTRACT_1]
+    [MIDI_API_CONTRACT(1)]
     enum MidiFunctionBlockDirection
     {
         Undefined = 0x0,

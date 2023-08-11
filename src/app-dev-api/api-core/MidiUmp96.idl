@@ -15,7 +15,7 @@ import "IMidiUmp.idl";
 
 namespace Windows.Devices.Midi2
 {
-	[MIDI_API_CONTRACT_1]
+	[MIDI_API_CONTRACT(1)]
 	unsealed runtimeclass MidiUmp96 : IMidiUmp
 	{
 		MidiUmp96();

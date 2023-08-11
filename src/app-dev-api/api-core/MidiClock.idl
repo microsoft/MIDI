@@ -12,7 +12,7 @@ MIDI_IDL_IMPORT
 
 namespace Windows.Devices.Midi2
 {
-    [MIDI_API_CONTRACT_1]
+    [MIDI_API_CONTRACT(1)]
     [default_interface]
     runtimeclass MidiClock
     {

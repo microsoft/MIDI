@@ -13,12 +13,18 @@
 
 #ifdef RAZZLE
 
-#define MIDI_API_CONTRACT_1 contract(Windows.Foundation.UniversalApiContract, 1) 
+// internal build (using Razzle)
+
+#define MIDI_API_CONTRACT(n) contract(Windows.Foundation.UniversalApiContract, n) 
 #define MIDI_IDL_IMPORT import "Windows.Foundation.idl";
+#define MIDI_INTERFACE_UUID(u,v) uuid(u)
 
 #else
 
-#define MIDI_API_CONTRACT_1
+// public build (using Visual Studio, msbuild, etc.)
+
+#define MIDI_API_CONTRACT(n)
 #define MIDI_IDL_IMPORT
+#define MIDI_INTERFACE_UUID(u,v) uuid(u), version(v)
 
 #endif

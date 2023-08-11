@@ -18,7 +18,7 @@ import "IMidiMessageReceivedEventSource.idl";
 
 namespace Windows.Devices.Midi2
 {
-    [MIDI_API_CONTRACT_1]
+    [MIDI_API_CONTRACT(1)]
     [default_interface]
     runtimeclass MidiInputEndpointConnection : Windows.Devices.Midi2.MidiEndpointConnection, 
                                                Windows.Devices.Midi2.IMidiInputConnection,
@@ -28,7 +28,6 @@ namespace Windows.Devices.Midi2
         // Get the enumeration device selector for all compatible devices
         static String GetDeviceSelectorForInput();
 
-
-
+ //       IVector<IMidiEndpointMessageListener> MessageListeners{ get; };
     }
 }
