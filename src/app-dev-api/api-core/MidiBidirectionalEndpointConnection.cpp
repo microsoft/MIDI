@@ -65,7 +65,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
-
+    _Success_(return == true)
     bool MidiBidirectionalEndpointConnection::SendUmpBuffer(
         _In_ const internal::MidiTimestamp timestamp, 
         _In_ winrt::Windows::Foundation::IMemoryBuffer const& buffer, 
@@ -118,6 +118,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     // sends a single UMP's worth of words
+    _Success_(return == true)
     bool MidiBidirectionalEndpointConnection::SendUmpWordArray(
         _In_ internal::MidiTimestamp const timestamp, 
         _In_ array_view<uint32_t const> words, 
@@ -164,7 +165,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
-
+    _Success_(return == true)
     bool MidiBidirectionalEndpointConnection::SendUmpWords(
         _In_ internal::MidiTimestamp const timestamp, 
         _In_ uint32_t const word0)
@@ -202,6 +203,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
+    _Success_(return == true)
     bool MidiBidirectionalEndpointConnection::SendUmpWords(
         _In_ internal::MidiTimestamp const timestamp,
         _In_ uint32_t const word0, 
@@ -244,6 +246,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
+    _Success_(return == true)
     bool MidiBidirectionalEndpointConnection::SendUmpWords(
         _In_ internal::MidiTimestamp const timestamp,
         _In_ uint32_t const word0,
@@ -288,6 +291,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
+    _Success_(return == true)
     bool MidiBidirectionalEndpointConnection::SendUmpWords(
         _In_ internal::MidiTimestamp const timestamp,
         _In_ uint32_t const word0,
@@ -334,7 +338,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
-
+    _Success_(return == true)
     bool MidiBidirectionalEndpointConnection::SendUmp(
         _In_ winrt::Windows::Devices::Midi2::IMidiUmp const& ump)
     {
@@ -359,7 +363,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
-
+    _Success_(return == true)
     bool MidiBidirectionalEndpointConnection::ActivateMidiStream(
         _In_ com_ptr<IMidiAbstraction> serviceAbstraction, 
         _In_ const IID& iid, 
@@ -381,6 +385,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     
     // internal method to start listening for incoming messages, enable processing outgoing messages, etc.
     // TODO: Change signature of this
+    _Success_(return == true)
     bool MidiBidirectionalEndpointConnection::InternalStart(
         _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction)
     {

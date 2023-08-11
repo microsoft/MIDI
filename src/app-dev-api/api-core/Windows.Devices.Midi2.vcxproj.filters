@@ -93,7 +93,9 @@
     <ClCompile Include="MidiGroupEndpointListener.cpp">
       <Filter>API\Endpoints\Listeners</Filter>
     </ClCompile>
-    <ClCompile Include="MidiMessageTypeEndpointListener.cpp" />
+    <ClCompile Include="MidiMessageTypeEndpointListener.cpp">
+      <Filter>API\Endpoints\Listeners</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -158,7 +160,9 @@
     <ClInclude Include="memory_buffer.h">
       <Filter>Internal</Filter>
     </ClInclude>
-    <ClInclude Include="MidiMessageTypeEndpointListener.h" />
+    <ClInclude Include="MidiMessageTypeEndpointListener.h">
+      <Filter>API\Endpoints\Listeners</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiSession.idl">
@@ -236,7 +240,9 @@
     <Midl Include="MidiChannel.idl">
       <Filter>API\BasicTypes</Filter>
     </Midl>
-    <Midl Include="MidiMessageTypeEndpointListener.idl" />
+    <Midl Include="MidiMessageTypeEndpointListener.idl">
+      <Filter>API\Endpoints\Listeners</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />

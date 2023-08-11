@@ -12,7 +12,12 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    MidiUmp128::MidiUmp128(internal::MidiTimestamp timestamp, uint32_t word0, uint32_t word1, uint32_t word2, uint32_t word3)
+    MidiUmp128::MidiUmp128(
+        _In_ internal::MidiTimestamp const timestamp, 
+        _In_ uint32_t const word0, 
+        _In_ uint32_t const word1, 
+        _In_ uint32_t const word2, 
+        _In_ uint32_t const word3)
     {
         m_timestamp = timestamp;
 
@@ -23,7 +28,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     // internal constructor for reading from the service callback
-    MidiUmp128::MidiUmp128(internal::MidiTimestamp timestamp, PVOID data)
+    MidiUmp128::MidiUmp128(_In_ internal::MidiTimestamp timestamp, _In_ PVOID data)
         : MidiUmp128()
     {
         WINRT_ASSERT(data != nullptr);

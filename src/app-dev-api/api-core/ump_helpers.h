@@ -24,7 +24,7 @@ namespace Windows::Devices::Midi2::Internal
 {
 
 
-    inline std::uint8_t GetUmpLengthInMidiWordsFromMessageType(const std::uint8_t messageType)
+    inline std::uint8_t GetUmpLengthInMidiWordsFromMessageType(_In_ const std::uint8_t messageType)
     {
         switch (messageType & 0x0F)
         {
@@ -60,7 +60,7 @@ namespace Windows::Devices::Midi2::Internal
     
 
 
-    inline void SetUmpMessageType(std::uint32_t& firstWord, const uint8_t messageType)
+    inline void SetUmpMessageType(_In_ std::uint32_t& firstWord, _In_ const uint8_t messageType)
     {
         // first four bits of the word is the message type
 
@@ -69,18 +69,18 @@ namespace Windows::Devices::Midi2::Internal
         firstWord = (firstWord & 0x0FFFFFFF) | t;
     }
 
-    inline std::uint8_t GetUmpMessageTypeFromFirstWord(const std::uint32_t firstWord)
+    inline std::uint8_t GetUmpMessageTypeFromFirstWord(_In_ const std::uint32_t firstWord)
     {
         return (uint8_t)(MIDIWORDNIBBLE1(firstWord));
     }
 
-    inline std::uint8_t GetUmpLengthInMidiWordsFromFirstWord(const std::uint32_t firstWord)
+    inline std::uint8_t GetUmpLengthInMidiWordsFromFirstWord(_In_ const std::uint32_t firstWord)
     {
         return GetUmpLengthInMidiWordsFromMessageType(GetUmpMessageTypeFromFirstWord(firstWord));
     }
 
 
-    inline std::uint8_t GetUmpLengthInBytesFromFirstWord(const std::uint32_t firstWord)
+    inline std::uint8_t GetUmpLengthInBytesFromFirstWord(_In_ const std::uint32_t firstWord)
     {
         return (uint8_t)(GetUmpLengthInMidiWordsFromFirstWord(firstWord) * sizeof(uint32_t));
     }

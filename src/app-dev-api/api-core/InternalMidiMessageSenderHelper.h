@@ -24,8 +24,8 @@ namespace Windows::Devices::Midi2::Internal
 	class InternalMidiMessageSenderHelper
 	{
 	public:
-		bool SendMessageRaw(winrt::com_ptr<TEndpoint> endpoint, void* data, uint32_t sizeInBytes, uint64_t timestamp);
-		bool SendUmp(winrt::com_ptr<TEndpoint> endpoint, winrt::Windows::Devices::Midi2::IMidiUmp const& ump);
+		bool SendMessageRaw(_In_ winrt::com_ptr<TEndpoint> endpoint, _In_ void* data, _In_ uint32_t sizeInBytes, _In_ internal::MidiTimestamp timestamp);
+		bool SendUmp(_In_ winrt::com_ptr<TEndpoint> endpoint, _In_ winrt::Windows::Devices::Midi2::IMidiUmp const& ump);
 
 	private:
 		void* GetUmpDataPointer(winrt::Windows::Devices::Midi2::IMidiUmp const& ump, uint32_t& dataSizeOut);
@@ -37,7 +37,11 @@ namespace Windows::Devices::Midi2::Internal
 
 
     template <typename TEndpoint>
-    bool InternalMidiMessageSenderHelper<TEndpoint>::SendMessageRaw(winrt::com_ptr<TEndpoint> endpoint, void* data, uint32_t sizeInBytes, uint64_t timestamp)
+    bool InternalMidiMessageSenderHelper<TEndpoint>::SendMessageRaw(
+        _In_ winrt::com_ptr<TEndpoint> endpoint, 
+        _In_ void* data, 
+        _In_ uint32_t sizeInBytes, 
+        _In_ internal::MidiTimestamp timestamp)
     {
         try
         {
@@ -65,7 +69,9 @@ namespace Windows::Devices::Midi2::Internal
 
 
     template <typename TEndpoint>
-    void* InternalMidiMessageSenderHelper<TEndpoint>::GetUmpDataPointer(winrt::Windows::Devices::Midi2::IMidiUmp const& ump, uint32_t& dataSizeOut)
+    void* InternalMidiMessageSenderHelper<TEndpoint>::GetUmpDataPointer(
+        _In_ winrt::Windows::Devices::Midi2::IMidiUmp const& ump, 
+        _In_ uint32_t& dataSizeOut)
     {
         void* umpDataPointer{};
         dataSizeOut = 0;
@@ -95,7 +101,9 @@ namespace Windows::Devices::Midi2::Internal
 
 
     template <typename TEndpoint>
-    bool InternalMidiMessageSenderHelper<TEndpoint>::SendUmp(com_ptr<TEndpoint> endpoint, winrt::Windows::Devices::Midi2::IMidiUmp const& ump)
+    bool InternalMidiMessageSenderHelper<TEndpoint>::SendUmp(
+        _In_ com_ptr<TEndpoint> endpoint, 
+        _In_ winrt::Windows::Devices::Midi2::IMidiUmp const& ump)
     {
         try
         {

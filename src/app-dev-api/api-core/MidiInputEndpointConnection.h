@@ -32,7 +32,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position) override;
 
-        inline winrt::event_token MessageReceived(_In_ winrt::Windows::Foundation::TypedEventHandler<IInspectable, _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs> const& handler)
+        inline winrt::event_token MessageReceived(_In_ winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs> const& handler)
         {
             return m_messagesReceivedEvent.add(handler);
         }
@@ -43,6 +43,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
 
 
+        _Success_(return == true)
         bool InternalStart();
 
     private:

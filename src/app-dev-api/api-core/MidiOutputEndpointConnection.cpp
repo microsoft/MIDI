@@ -14,12 +14,14 @@
 namespace winrt::Windows::Devices::Midi2::implementation
 {
 
+    _Success_(return == true)
     bool MidiOutputEndpointConnection::InternalStart()
     {
         throw hresult_not_implemented();
     }
 
 
+    _Success_(return == true)
     bool MidiOutputEndpointConnection::SendUmpBuffer(
         _In_ internal::MidiTimestamp /* timestamp*/,
         _In_ winrt::Windows::Foundation::IMemoryBuffer const& /* buffer*/,
@@ -30,19 +32,22 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
-    
+    _Success_(return == true)
     bool MidiOutputEndpointConnection::SendUmp(
         _In_ winrt::Windows::Devices::Midi2::IMidiUmp const& /*ump*/)
     {
         throw hresult_not_implemented();
     }
 
+    _Success_(return == true)
     bool MidiOutputEndpointConnection::SendUmpWords(
         _In_ internal::MidiTimestamp /*timestamp*/,
         _In_ uint32_t /*word0*/)
     {
         throw hresult_not_implemented();
     }
+
+    _Success_(return == true)
     bool MidiOutputEndpointConnection::SendUmpWords(
         _In_ internal::MidiTimestamp /*timestamp*/,
         _In_ uint32_t /*word0*/,
@@ -50,6 +55,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
+
+    _Success_(return == true)
     bool MidiOutputEndpointConnection::SendUmpWords(
         _In_ internal::MidiTimestamp /*timestamp*/,
         _In_ uint32_t /*word0*/,
@@ -58,6 +65,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         throw hresult_not_implemented();
     }
+
+    _Success_(return == true)
     bool MidiOutputEndpointConnection::SendUmpWords(
         _In_ internal::MidiTimestamp /*timestamp*/,
         _In_ uint32_t /*word0*/,
@@ -68,6 +77,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         throw hresult_not_implemented();
     }
 
+    _Success_(return == true)
     bool MidiOutputEndpointConnection::SendUmpWordArray(
         _In_ internal::MidiTimestamp /*timestamp*/,
         _In_ array_view<uint32_t const> /*words*/,

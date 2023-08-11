@@ -197,7 +197,9 @@
     <ClInclude Include="MidiMessageReceivedEventArgs.h">
       <DependentUpon>MidiMessageReceivedEventArgs.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiMessageTypeEndpointListener.h" />
+	  <ClInclude Include="MidiMessageTypeEndpointListener.h">
+		  <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
+	  </ClInclude>
     <ClInclude Include="MidiOutputEndpointConnection.h">
       <DependentUpon>MidiOutputEndpointConnection.idl</DependentUpon>
     </ClInclude>
@@ -255,7 +257,9 @@
     <ClCompile Include="MidiMessageReceivedEventArgs.cpp">
       <DependentUpon>MidiMessageReceivedEventArgs.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiMessageTypeEndpointListener.cpp" />
+	  <ClCompile Include="MidiMessageTypeEndpointListener.cpp">
+		  <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
+	  </ClCompile>
     <ClCompile Include="MidiOutputEndpointConnection.cpp">
       <DependentUpon>MidiOutputEndpointConnection.idl</DependentUpon>
     </ClCompile>

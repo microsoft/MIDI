@@ -50,7 +50,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
         // internal to the API
-        void SetName(hstring value) { m_name = value; }
+        void SetName(_In_ hstring value) { m_name = value; }
         void SetSettings(_In_ MidiSessionSettings value) { m_settings = value; }
 
         bool InternalStart();

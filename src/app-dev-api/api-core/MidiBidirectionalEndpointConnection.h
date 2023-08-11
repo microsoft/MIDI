@@ -38,21 +38,53 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiEndpointMessageListener> MessageListeners() { return m_messageListeners; }
 
 
-        bool SendUmp(_In_ winrt::Windows::Devices::Midi2::IMidiUmp const& ump);
+        _Success_(return == true)
+        bool SendUmp(
+            _In_ winrt::Windows::Devices::Midi2::IMidiUmp const& ump);
 
-        bool SendUmpWords(_In_ internal::MidiTimestamp const timestamp, _In_ uint32_t const word0);
-        bool SendUmpWords(_In_ internal::MidiTimestamp const timestamp, _In_ uint32_t const word0, _In_ uint32_t const word1);
-        bool SendUmpWords(_In_ internal::MidiTimestamp const timestamp, _In_ uint32_t const word0, _In_ uint32_t const word1, _In_ uint32_t const word2);
-        bool SendUmpWords(_In_ internal::MidiTimestamp const timestamp, _In_ uint32_t const word0, _In_ uint32_t const word1, _In_ uint32_t const word2, _In_ uint32_t const word3);
+        _Success_(return == true)
+        bool SendUmpWords(
+            _In_ internal::MidiTimestamp const timestamp, 
+            _In_ uint32_t const word0);
 
-        bool SendUmpWordArray(_In_ internal::MidiTimestamp const timestamp, _In_ array_view<uint32_t const> words, _In_ uint32_t const wordCount);
+        _Success_(return == true)
+        bool SendUmpWords(
+            _In_ internal::MidiTimestamp const timestamp, 
+            _In_ uint32_t const word0, 
+            _In_ uint32_t const word1);
 
-        bool SendUmpBuffer(_In_ internal::MidiTimestamp timestamp, _In_ winrt::Windows::Foundation::IMemoryBuffer const& buffer, _In_ uint32_t byteOffset, _In_ uint32_t byteLength);
+        _Success_(return == true)
+        bool SendUmpWords(
+            _In_ internal::MidiTimestamp const timestamp, 
+            _In_ uint32_t const word0, 
+            _In_ uint32_t const word1, 
+            _In_ uint32_t const word2);
+
+        _Success_(return == true)
+        bool SendUmpWords(
+            _In_ internal::MidiTimestamp const timestamp, 
+            _In_ uint32_t const word0, 
+            _In_ uint32_t const word1, 
+            _In_ uint32_t const word2, 
+            _In_ uint32_t const word3);
+
+        _Success_(return == true)
+        bool SendUmpWordArray(
+            _In_ internal::MidiTimestamp const timestamp, 
+            _In_ array_view<uint32_t const> words, 
+            _In_ uint32_t const wordCount);
+
+        _Success_(return == true)
+        bool SendUmpBuffer(
+            _In_ internal::MidiTimestamp timestamp, 
+            _In_ winrt::Windows::Foundation::IMemoryBuffer const& buffer, 
+            _In_ uint32_t byteOffset, 
+            _In_ uint32_t byteLength);
 
 
         STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position) override;
         
-        winrt::event_token MessageReceived(winrt::Windows::Foundation::TypedEventHandler<_In_ IInspectable, _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs> const& handler)
+        winrt::event_token MessageReceived(_In_ winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs> const& handler)
         {
             return m_messageReceivedEvent.add(handler);
         }
@@ -62,8 +94,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
             m_messageReceivedEvent.remove(token);
         }
 
-
-        bool InternalStart(_In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction);
+        _Success_(return == true)
+        bool InternalStart(
+            _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction);
 
 
     private:
@@ -77,8 +110,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         winrt::event<winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;
 
-
-        bool ActivateMidiStream(_In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction, _In_ const IID& iid, _Out_ void** iface);
+        _Success_(return == true)
+        bool ActivateMidiStream(
+            _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction, 
+            _In_ const IID& iid, 
+            _Out_ void** iface);
 
 
     };

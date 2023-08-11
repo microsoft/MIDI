@@ -17,13 +17,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiMessageTypeEndpointListener() = default;
 
-        hstring Id() { return m_id; }
+        hstring Id() const { return m_id; }
         void Id(hstring const& value) { m_id = internal::ToUpperTrimmedHStringCopy(value); }
 
-        hstring Name() { return m_name; }
+        hstring Name() const { return m_name; }
         void Name(_In_ hstring const& value) { m_name = internal::TrimmedHStringCopy(value); }
 
-        winrt::Windows::Foundation::IInspectable Tag() { return m_tag; }
+        winrt::Windows::Foundation::IInspectable Tag() const { return m_tag; }
         void Tag(_In_ winrt::Windows::Foundation::IInspectable const& value) { m_tag = value; }
 
 
