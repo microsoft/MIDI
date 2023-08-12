@@ -24,4 +24,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         throw hresult_not_implemented();
     }
 
+    _Success_(return == true)
+    bool MidiInputEndpointConnection::Open()
+    {
+        throw hresult_not_implemented();
+    }
+
 }

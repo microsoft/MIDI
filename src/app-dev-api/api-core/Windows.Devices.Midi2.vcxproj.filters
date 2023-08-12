@@ -37,9 +37,6 @@
     <Filter Include="Internal\Trace">
       <UniqueIdentifier>{870a47af-3bdf-43ad-a1f9-21c144450b0e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="API\Endpoints\Listeners">
-      <UniqueIdentifier>{577d9050-8eb1-416d-9d4f-17cbb58b9b47}</UniqueIdentifier>
-    </Filter>
     <Filter Include="API\BasicTypes">
       <UniqueIdentifier>{95a0abe7-f4a2-472b-9c2b-f64e534ea12a}</UniqueIdentifier>
     </Filter>
@@ -51,6 +48,9 @@
     </Filter>
     <Filter Include="API\Endpoints\Metadata\Endpoints">
       <UniqueIdentifier>{bce3490a-eb00-4ae7-9e49-6e31e91d70d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\ListenersAndResponders">
+      <UniqueIdentifier>{577d9050-8eb1-416d-9d4f-17cbb58b9b47}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -110,6 +110,12 @@
     </ClCompile>
     <ClCompile Include="MidiEndpointInformation.cpp">
       <Filter>API\Endpoints\Metadata\Endpoints</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiCiProxy.cpp">
+      <Filter>API\Endpoints\ListenersAndResponders</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointInformationListener.cpp">
+      <Filter>API\Endpoints\ListenersAndResponders</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -185,6 +191,12 @@
       <Filter>API\Endpoints\Metadata\Endpoints</Filter>
     </ClInclude>
     <ClInclude Include="midl_defines.h" />
+    <ClInclude Include="MidiCiProxy.h">
+      <Filter>API\Endpoints\ListenersAndResponders</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointInformationListener.h">
+      <Filter>API\Endpoints\ListenersAndResponders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiSession.idl">
@@ -248,10 +260,10 @@
       <Filter>API\Endpoints\Contracts</Filter>
     </Midl>
     <Midl Include="MidiGroupEndpointListener.idl">
-      <Filter>API\Endpoints\Listeners</Filter>
+      <Filter>API\Endpoints\ListenersAndResponders</Filter>
     </Midl>
     <Midl Include="MidiChannelEndpointListener.idl">
-      <Filter>API\Endpoints\Listeners</Filter>
+      <Filter>API\Endpoints\ListenersAndResponders</Filter>
     </Midl>
     <Midl Include="MidiGroup.idl">
       <Filter>API\BasicTypes</Filter>
@@ -260,7 +272,7 @@
       <Filter>API\BasicTypes</Filter>
     </Midl>
     <Midl Include="MidiMessageTypeEndpointListener.idl">
-      <Filter>API\Endpoints\Listeners</Filter>
+      <Filter>API\Endpoints\ListenersAndResponders</Filter>
     </Midl>
     <Midl Include="MidiFunctionBlock.idl">
       <Filter>API\Endpoints\Metadata\Functions</Filter>
@@ -275,10 +287,16 @@
       <Filter>API\Endpoints\Metadata\Endpoints</Filter>
     </Midl>
     <Midl Include="IMidiEndpointMessageListener.idl">
-      <Filter>API\Endpoints\Listeners</Filter>
+      <Filter>API\Endpoints\ListenersAndResponders</Filter>
     </Midl>
     <Midl Include="IMidiEndpointMessageResponder.idl">
-      <Filter>API\Endpoints\Listeners</Filter>
+      <Filter>API\Endpoints\ListenersAndResponders</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointInformationListener.idl">
+      <Filter>API\Endpoints\ListenersAndResponders</Filter>
+    </Midl>
+    <Midl Include="MidiCIProxy.idl">
+      <Filter>API\Endpoints\ListenersAndResponders</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

@@ -10,8 +10,7 @@
 // almost always bidirectional. This is the main entity that applications will use
 // after creating a session
 
-#include "midl_defines.h";
-
+#include "midl_defines.h"
 MIDI_IDL_IMPORT
 
 

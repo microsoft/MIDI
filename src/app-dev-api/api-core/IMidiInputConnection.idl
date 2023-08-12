@@ -6,7 +6,7 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#include "midl_defines.h";
+#include "midl_defines.h"
 MIDI_IDL_IMPORT
 
 import "MidiMessageReceivedEventArgs.idl";
@@ -25,5 +25,8 @@ namespace Windows.Devices.Midi2
         // a single application
         //IVector<IMidiEndpointMessageListener> MessageListeners{ get; };
 
+
+        Boolean Open();
+    //    void Close();
     }
 }

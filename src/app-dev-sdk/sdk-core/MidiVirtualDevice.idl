@@ -1,0 +1,53 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+
+// Mostly for virtual devices (app to app MIDI).
+
+
+
+
+// This needs to have a factory that takes in an input and output endpoint, or a bidirectional endpoint
+
+// Lets the app register profiles for caching so they don't get requested each time
+
+// Has methods to respond to property queries using a structured response
+
+// need to look at what else is available for CI
+ 
+
+// This may need to move to the virtual endpoint SDK
+
+
+namespace Microsoft.Devices.Midi2
+{
+	runtimeclass MidiVirtualDevice
+	{
+		static MidiVirtualDevice Create(
+			Windows.Devices.Midi2.BidirectionalEndpointConnection connection);
+
+		static MidiVirtualDevice Create(
+			Windows.Devices.Midi2.MidiInputEndpointConnection inputConnection, 
+			Windows.Devices.Midi2.MidiOutputEndpointConnection outputConnection);
+
+
+		// registers the function block and creates a random MUID and returns it
+		MidiUniqueId RegisterFunctionBlock(MidiFunctionBlock block);	
+
+		// todo: needs group/channel/function/etc. info
+		void RegisterProfile(MidiProfile profile);
+
+		// initiates listening etc. Also sends out the CI discovery messages
+		void Start();
+
+		event Windows.Foundation.TypedEventHandler<IInspectable, MidiCIPropertyRequestedEventArgs> PropertyRequested;
+
+
+
+	};
+}

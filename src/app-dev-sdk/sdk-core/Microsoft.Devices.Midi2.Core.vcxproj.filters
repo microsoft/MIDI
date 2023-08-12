@@ -41,6 +41,9 @@
     <Filter Include="SDK\Messages\Buffer">
       <UniqueIdentifier>{7f998efe-71c4-4ad0-8215-d9536c879c45}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SDK\CI">
+      <UniqueIdentifier>{a8eac16b-2d26-4ccb-bc3b-90ded9db0596}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -51,9 +54,6 @@
     </ClCompile>
     <ClCompile Include="MidiTransportInformation.cpp">
       <Filter>SDK\Transports</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiStreamMessageEndpointListener.cpp">
-      <Filter>SDK\Listeners</Filter>
     </ClCompile>
     <ClCompile Include="MidiMessageBufferHelper.cpp">
       <Filter>SDK\Messages\Buffer</Filter>
@@ -82,9 +82,6 @@
     </ClInclude>
     <ClInclude Include="midi_sdk_inproc_loopback_simulator.h">
       <Filter>Internal</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiStreamMessageEndpointListener.h">
-      <Filter>SDK\Listeners</Filter>
     </ClInclude>
     <ClInclude Include="MidiMessageBufferHelper.h">
       <Filter>SDK\Messages\Buffer</Filter>
@@ -141,6 +138,12 @@
     </Midl>
     <Midl Include="MidiMessageBufferHelper.idl">
       <Filter>SDK\Messages\Buffer</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualDevice.idl">
+      <Filter>SDK\CI</Filter>
+    </Midl>
+    <Midl Include="MidiCIPropertyRequestedEventArgs.idl">
+      <Filter>SDK\CI</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

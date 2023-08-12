@@ -28,3 +28,8 @@
 #define MIDI_INTERFACE_UUID(u,v) uuid(u), version(v)
 
 #endif
+
+
+// common MIDL defines
+
+#define MIDI_TIMESTAMP UInt64

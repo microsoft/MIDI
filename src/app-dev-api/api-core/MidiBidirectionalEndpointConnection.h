@@ -26,7 +26,8 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    struct MidiBidirectionalEndpointConnection : MidiBidirectionalEndpointConnectionT<MidiBidirectionalEndpointConnection, 
+    struct MidiBidirectionalEndpointConnection : MidiBidirectionalEndpointConnectionT<
+        MidiBidirectionalEndpointConnection, 
         Windows::Devices::Midi2::implementation::MidiEndpointConnection,
         IMidiCallback>
     {
@@ -97,6 +98,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         _Success_(return == true)
         bool InternalStart(
             _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction);
+
+        bool Open();
 
 
     private:

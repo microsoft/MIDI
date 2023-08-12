@@ -7,8 +7,7 @@
 // ============================================================================
 
 
-#include "midl_defines.h";
-
+#include "midl_defines.h"
 MIDI_IDL_IMPORT
 
 namespace Windows.Devices.Midi2

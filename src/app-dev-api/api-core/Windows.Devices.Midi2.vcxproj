@@ -179,6 +179,7 @@
     <ClInclude Include="MidiChannelEndpointListener.h">
       <DependentUpon>MidiChannelEndpointListener.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiCiProxy.h" />
     <ClInclude Include="MidiClock.h">
       <DependentUpon>MidiClock.idl</DependentUpon>
     </ClInclude>
@@ -188,6 +189,7 @@
     <ClInclude Include="MidiEndpointInformation.h">
       <DependentUpon>MidiEndpointInformation.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiEndpointInformationListener.h" />
     <ClInclude Include="MidiFunctionBlock.h">
       <DependentUpon>MidiFunctionBlock.idl</DependentUpon>
     </ClInclude>
@@ -246,6 +248,7 @@
     <ClCompile Include="MidiChannelEndpointListener.cpp">
       <DependentUpon>MidiChannelEndpointListener.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiCiProxy.cpp" />
     <ClCompile Include="MidiClock.cpp">
       <DependentUpon>MidiClock.idl</DependentUpon>
     </ClCompile>
@@ -255,6 +258,7 @@
     <ClCompile Include="MidiEndpointInformation.cpp">
       <DependentUpon>MidiEndpointInformation.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiEndpointInformationListener.cpp" />
     <ClCompile Include="MidiFunctionBlock.cpp">
       <DependentUpon>MidiFunctionBlock.idl</DependentUpon>
     </ClCompile>
@@ -309,8 +313,10 @@
     <Midl Include="MidiBidirectionalEndpointConnection.idl" />
     <Midl Include="MidiChannel.idl" />
     <Midl Include="MidiChannelEndpointListener.idl" />
+    <Midl Include="MidiCIProxy.idl" />
     <Midl Include="MidiClock.idl" />
     <Midl Include="MidiEndpointInformation.idl" />
+    <Midl Include="MidiEndpointInformationListener.idl" />
     <Midl Include="MidiFunctionBlock.idl" />
     <Midl Include="MidiFunctionBlockDirectionEnum.idl" />
     <Midl Include="MidiFunctionBlockUIHintEnum.idl" />

@@ -249,6 +249,8 @@
   </ItemGroup>
   <ItemGroup>
     <Midl Include="IMidiTransportSettingsData.idl" />
+    <Midl Include="MidiCIPropertyRequestedEventArgs.idl" />
+    <Midl Include="MidiVirtualDevice.idl" />
     <Midl Include="MidiEndpointInformation.idl" />
     <Midl Include="MidiEndpointDataFormatEnum.idl" />
     <Midl Include="MidiHighResolutionValueDisplayFormatter.idl" />

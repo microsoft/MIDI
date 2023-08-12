@@ -46,6 +46,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         _Success_(return == true)
         bool InternalStart();
 
+        bool Open();
+
+
     private:
         winrt::event<winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs>> m_messagesReceivedEvent;
 

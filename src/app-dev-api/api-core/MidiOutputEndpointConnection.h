@@ -13,7 +13,9 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    struct MidiOutputEndpointConnection : MidiOutputEndpointConnectionT<MidiOutputEndpointConnection, Windows::Devices::Midi2::implementation::MidiEndpointConnection>
+    struct MidiOutputEndpointConnection : MidiOutputEndpointConnectionT<
+        MidiOutputEndpointConnection, 
+        Windows::Devices::Midi2::implementation::MidiEndpointConnection>
     {
         MidiOutputEndpointConnection() = default;
 
@@ -64,6 +66,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         _Success_(return == true)
         bool InternalStart();
+
+        bool Open();
+
 
     private:
 

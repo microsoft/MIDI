@@ -427,6 +427,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     }
 
+
+    _Success_(return == true)
+    bool MidiBidirectionalEndpointConnection::Open()
+    {
+        throw hresult_not_implemented();
+    }
+
+
     MidiBidirectionalEndpointConnection::~MidiBidirectionalEndpointConnection()
     {
         if (m_endpointInterface != nullptr)
