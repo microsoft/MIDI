@@ -107,7 +107,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             endpointConnection->InternalSetId(endpointId);
             endpointConnection->InternalSetDeviceId(normalizedDeviceId);
 
-            if (endpointConnection->InternalStart(m_serviceAbstraction))
+            if (endpointConnection->InternalInitialize(m_serviceAbstraction))
             {
                 m_connections.Insert((winrt::hstring)normalizedDeviceId, (const Windows::Devices::Midi2::MidiEndpointConnection)(*endpointConnection));
 

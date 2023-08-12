@@ -15,7 +15,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 {
 
     _Success_(return == true)
-    bool MidiOutputEndpointConnection::InternalStart()
+    bool MidiOutputEndpointConnection::InternalInitialize()
     {
         throw hresult_not_implemented();
     }

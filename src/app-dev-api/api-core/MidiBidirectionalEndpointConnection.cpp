@@ -383,55 +383,71 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
     
-    // internal method to start listening for incoming messages, enable processing outgoing messages, etc.
-    // TODO: Change signature of this
     _Success_(return == true)
-    bool MidiBidirectionalEndpointConnection::InternalStart(
+    bool MidiBidirectionalEndpointConnection::InternalInitialize(
         _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction)
     {
-        WINRT_ASSERT(!DeviceId().empty());
-        WINRT_ASSERT(serviceAbstraction != nullptr);
-
-        DWORD mmcssTaskId{};  // TODO: Does this need to be session-wide? Probably, but it can be modified by the endpoint init, so maybe should be endpoint-local
-
-        // Activate the endpoint for this device. Will fail if the device is not a BiDi device
-        if (!ActivateMidiStream(serviceAbstraction, __uuidof(IMidiBiDi), (void**)&m_endpointInterface))
-        {
-            internal::LogGeneralError(__FUNCTION__, L"Could not activate MIDI Stream");
-
-            return false;
-        }
-
         try
         {
-            // TODO: Need to handle the output only case which has no callback
-            winrt::check_hresult(m_endpointInterface->Initialize(
-                (LPCWSTR)(DeviceId().c_str()),
-                &mmcssTaskId,
-                (IMidiCallback*)(this)
-            ));
+            WINRT_ASSERT(!DeviceId().empty());
+            WINRT_ASSERT(serviceAbstraction != nullptr);
 
-            m_isOpen = true;
+            m_serviceAbstraction = serviceAbstraction;
+
+            // TODO: Read any settings we need for this endpoint
 
             return true;
-
         }
         catch (winrt::hresult_error const& ex)
         {
-            internal::LogHresultError(__FUNCTION__, L" hresult exception initializing endpoint interface. Service may be unavailable.", ex);
-
-            m_endpointInterface = nullptr;
+            internal::LogHresultError(__FUNCTION__, L" hresult exception initializing endpoint.", ex);
 
             return false;
         }
-
     }
 
 
     _Success_(return == true)
     bool MidiBidirectionalEndpointConnection::Open()
     {
-        throw hresult_not_implemented();
+        if (!m_isOpen)
+        {
+            // Activate the endpoint for this device. Will fail if the device is not a BiDi device
+            if (!ActivateMidiStream(m_serviceAbstraction, __uuidof(IMidiBiDi), (void**)&m_endpointInterface))
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Could not activate MIDI Stream");
+
+                return false;
+            }
+
+            try
+            {
+                DWORD mmcssTaskId{};  // TODO: Does this need to be session-wide? Probably, but it can be modified by the endpoint init, so maybe should be endpoint-local
+
+                winrt::check_hresult(m_endpointInterface->Initialize(
+                    (LPCWSTR)(DeviceId().c_str()),
+                    &mmcssTaskId,
+                    (IMidiCallback*)(this)
+                ));
+
+                m_isOpen = true;
+
+                return true;
+            }
+            catch (winrt::hresult_error const& ex)
+            {
+                internal::LogHresultError(__FUNCTION__, L" hresult exception initializing endpoint interface. Service may be unavailable.", ex);
+
+                m_endpointInterface = nullptr;
+
+                return false;
+            }
+        }
+        else
+        {
+            // already open. Just return true here. Not fatal in any way, so no error
+            return true;
+        }
     }
 
 

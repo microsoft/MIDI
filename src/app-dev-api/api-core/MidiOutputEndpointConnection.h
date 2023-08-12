@@ -65,7 +65,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ uint32_t const word3);
 
         _Success_(return == true)
-        bool InternalStart();
+        bool InternalInitialize();
 
         _Success_(return == true)
         bool Open();

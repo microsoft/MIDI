@@ -96,7 +96,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
 
         _Success_(return == true)
-        bool InternalStart(
+        bool InternalInitialize(
             _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction);
 
         _Success_(return == true)
@@ -104,7 +104,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     private:
-        com_ptr<IMidiBiDi> m_endpointInterface;
+        winrt::com_ptr<IMidiAbstraction> m_serviceAbstraction{ nullptr };
+        winrt::com_ptr<IMidiBiDi> m_endpointInterface{ nullptr };
         internal::InternalMidiMessageReceiverHelper m_messageReceiverHelper;
         internal::InternalMidiMessageSenderHelper<IMidiBiDi> m_messageSenderHelper;
 
