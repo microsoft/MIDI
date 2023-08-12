@@ -12,15 +12,15 @@ MIDI_IDL_IMPORT
 
 namespace Windows.Devices.Midi2
 {
-	[MIDI_API_CONTRACT(1)]
-	[default_interface]
-	unsealed runtimeclass MidiSessionSettings
-	{
-		MidiSessionSettings();
+    [MIDI_API_CONTRACT(1)]
+    [default_interface]
+    unsealed runtimeclass MidiSessionSettings
+    {
+        MidiSessionSettings();
 
-		Boolean UseMmcssThreads{ get; set; };
+        Boolean UseMmcssThreads{ get; set; };
 
-		static MidiSessionSettings Default{ get; };
+        static MidiSessionSettings Default{ get; };
 
-	}
+    }
 }

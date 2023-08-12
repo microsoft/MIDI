@@ -99,6 +99,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool InternalStart(
             _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction);
 
+        _Success_(return == true)
         bool Open();
 
 

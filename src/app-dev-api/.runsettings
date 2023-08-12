@@ -3,5 +3,5 @@
     <Catch2Adapter>
         <FilenameFilter>^.+\-tests$</FilenameFilter>
     </Catch2Adapter>
-	<TreatNoTestsAsError>true</TreatNoTestsAsError>
+    <TreatNoTestsAsError>true</TreatNoTestsAsError>
 </RunSettings>

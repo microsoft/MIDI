@@ -15,12 +15,12 @@ import "IMidiUmp.idl";
 
 namespace Windows.Devices.Midi2
 {
-	[MIDI_API_CONTRACT(1)]
-	unsealed runtimeclass MidiUmp32 : IMidiUmp
-	{
-		MidiUmp32();
-		MidiUmp32(MIDI_TIMESTAMP timestamp, UInt32 word0);
+    [MIDI_API_CONTRACT(1)]
+    unsealed runtimeclass MidiUmp32 : IMidiUmp
+    {
+        MidiUmp32();
+        MidiUmp32(MIDI_TIMESTAMP timestamp, UInt32 word0);
 
-		UInt32 Word0{ get; set; };
-	};
+        UInt32 Word0{ get; set; };
+    };
 }

@@ -4,12 +4,11 @@
 
 #include "catch_amalgamated.hpp"
 
-using namespace winrt;
-using namespace Windows::Foundation;
+using namespace winrt::Windows::Foundation;
 
 int main(int argc, char* argv[]) 
 {
-    init_apartment();
+    winrt::init_apartment();
 
 
     int result = Catch::Session().run(argc, argv);

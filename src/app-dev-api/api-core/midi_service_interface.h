@@ -14,7 +14,7 @@
 // is an unsupported scenario for applications. They are open source in the spirit of
 // open source, not for direct use.
 
-#include "ext\MidiAbstraction.h"
-#include "ext\Midi2MidiSrvAbstraction.h"
+#include "MidiAbstraction.h"
+#include "Midi2MidiSrvAbstraction.h"
 
 

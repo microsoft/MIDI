@@ -67,6 +67,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         _Success_(return == true)
         bool InternalStart();
 
+        _Success_(return == true)
         bool Open();
 
 
