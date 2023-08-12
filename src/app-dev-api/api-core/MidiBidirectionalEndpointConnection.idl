@@ -61,6 +61,6 @@ namespace Windows.Devices.Midi2
 
         // Same thing with other discovery calls, endpoint info, etc.
 
-
+        Boolean Open();
     }
 }

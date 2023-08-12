@@ -26,5 +26,6 @@ namespace Windows.Devices.Midi2
         // Get the enumeration device selector for all compatible devices
         static String GetDeviceSelectorForOutput();
 
+        Boolean Open();
     }
 }

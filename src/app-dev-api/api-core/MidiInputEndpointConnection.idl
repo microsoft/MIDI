@@ -29,5 +29,8 @@ namespace Windows.Devices.Midi2
         static String GetDeviceSelectorForInput();
 
  //       IVector<IMidiEndpointMessageListener> MessageListeners{ get; };
+
+        Boolean Open();
+
     }
 }

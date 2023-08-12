@@ -17,9 +17,7 @@ int main(int argc, char* argv[])
 
     winrt::init_apartment();
 
-
     int result = Catch::Session().run(argc, argv);
-
 
     return result;
 }

@@ -411,7 +411,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 (IMidiCallback*)(this)
             ));
 
-            m_isConnected = true;
+            m_isOpen = true;
 
             return true;
 
@@ -442,7 +442,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             m_endpointInterface->Cleanup();
         }
 
-        m_isConnected = false;
+        m_isOpen = false;
 
         // TODO: any event cleanup?
     }

@@ -22,7 +22,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         hstring Id() const noexcept { return m_id; }
         hstring DeviceId() const noexcept { return m_deviceId; }
-        bool IsConnected() const noexcept { return m_isConnected; }
+        bool IsOpen() const noexcept { return m_isOpen; }
         IMidiEndpointConnectionSettings Settings() noexcept { return m_settings; }
 
         IInspectable Tag() const noexcept { return m_tag; }
@@ -32,14 +32,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void InternalSetSettings(_In_ IMidiEndpointConnectionSettings value) { m_settings = value; }
         void InternalSetDeviceId(_In_ hstring value) { m_deviceId = value; }
         void InternalSetId(_In_ hstring value) { m_id = value; }
-        void InternalSetIsConnected(_In_ bool value) { m_isConnected = value; }
+        void InternalSetIsConnected(_In_ bool value) { m_isOpen = value; }
 
     protected:
         hstring m_id {};
         hstring m_deviceId {};
         IInspectable m_tag{ nullptr };
         
-        bool m_isConnected{ false };
+        bool m_isOpen{ false };
 
         IMidiEndpointConnectionSettings m_settings{ nullptr };
 

@@ -43,7 +43,9 @@ TEST_CASE("Connected.Endpoint.CreateBidi Create bidirectional endpoint")
 
     REQUIRE(conn1 != nullptr);
     REQUIRE(!conn1.Id().empty());
-    REQUIRE(conn1.IsConnected());
+
+    REQUIRE(conn1.Open());
+    REQUIRE(conn1.IsOpen());
 
     REQUIRE(session.Connections().Size() == 1);
 
@@ -117,6 +119,7 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message")
 
     auto eventRevokeToken = conn1.MessageReceived(MessageReceivedHandler);
 
+    REQUIRE(conn1.Open());
 
     // send message
 
@@ -198,6 +201,7 @@ TEST_CASE("Connected.Endpoint.MultipleUmpWords Send and receive multiple words")
     auto eventRevokeToken = conn1.MessageReceived(MessageReceivedHandler);
 
     // open connection
+    REQUIRE(conn1.Open());
 
 
     // send messages

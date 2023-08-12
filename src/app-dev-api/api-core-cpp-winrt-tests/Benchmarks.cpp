@@ -96,6 +96,7 @@ TEST_CASE("Connected.Benchmark.APIWords Send / receive word array through loopba
 
     auto eventRevokeToken = conn1.MessageReceived(ReceivedHandler);
 
+    conn1.Open();
 
     uint32_t numBytes = 0;
     uint32_t ump32Count = 0;
@@ -345,6 +346,7 @@ TEST_CASE("Connected.Benchmark.APIUmp Send / receive UMPs through loopback")
 
     auto eventRevokeToken = conn1.MessageReceived(MessageReceivedHandler);
 
+    conn1.Open();
 
     uint32_t numBytes = 0;
     uint32_t ump32Count = 0;
@@ -541,6 +543,10 @@ TEST_CASE("Connected.Benchmark.APIUmp Send / receive UMPs through loopback")
 
     // unwire event
     conn1.MessageReceived(eventRevokeToken);
+
+    conn1.Open();
+
+
 
     // cleanup endpoint. Technically not required as session will do it
     session.DisconnectEndpointConnection(conn1.Id());
