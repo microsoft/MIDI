@@ -179,7 +179,9 @@
     <ClInclude Include="MidiChannelEndpointListener.h">
       <DependentUpon>MidiChannelEndpointListener.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiCiProxy.h" />
+    <ClInclude Include="MidiCiProxy.h">
+      <DependentUpon>MidiCiProxy.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiClock.h">
       <DependentUpon>MidiClock.idl</DependentUpon>
     </ClInclude>
@@ -189,10 +191,15 @@
     <ClInclude Include="MidiEndpointInformation.h">
       <DependentUpon>MidiEndpointInformation.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiEndpointInformationListener.h" />
+    <ClInclude Include="MidiEndpointInformationEndpointListener.h">
+      <DependentUpon>MidiEndpointInformationEndpointListener.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiFunctionBlock.h">
       <DependentUpon>MidiFunctionBlock.idl</DependentUpon>
     </ClInclude>
+      <ClInclude Include="MidiFunctionBlockEndpointListener.h">
+          <DependentUpon>MidiFunctionBlockEndpointListener.idl</DependentUpon>
+      </ClInclude>
     <ClInclude Include="MidiGroup.h">
       <DependentUpon>MidiGroup.idl</DependentUpon>
     </ClInclude>
@@ -214,6 +221,9 @@
     <ClInclude Include="MidiSessionSettings.h">
       <DependentUpon>MidiSessionSettings.idl</DependentUpon>
     </ClInclude>
+      <ClInclude Include="MidiStreamConfigurationEndpointListener.h">
+          <DependentUpon>MidiStreamConfigurationEndpointListener.idl</DependentUpon>
+      </ClInclude>
     <ClInclude Include="MidiUmp128.h">
       <DependentUpon>MidiUmp128.idl</DependentUpon>
     </ClInclude>
@@ -248,7 +258,9 @@
     <ClCompile Include="MidiChannelEndpointListener.cpp">
       <DependentUpon>MidiChannelEndpointListener.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiCiProxy.cpp" />
+    <ClCompile Include="MidiCiProxy.cpp">
+      <DependentUpon>MidiCiProxy.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiClock.cpp">
       <DependentUpon>MidiClock.idl</DependentUpon>
     </ClCompile>
@@ -258,10 +270,15 @@
     <ClCompile Include="MidiEndpointInformation.cpp">
       <DependentUpon>MidiEndpointInformation.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiEndpointInformationListener.cpp" />
+    <ClCompile Include="MidiEndpointInformationEndpointListener.cpp">
+      <DependentUpon>MidiEndpointInformationEndpointListener.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiFunctionBlock.cpp">
       <DependentUpon>MidiFunctionBlock.idl</DependentUpon>
     </ClCompile>
+      <ClCompile Include="MidiFunctionBlockEndpointListener.cpp">
+          <DependentUpon>MidiFunctionBlockEndpointListener.idl</DependentUpon>
+      </ClCompile>
     <ClCompile Include="MidiGroup.cpp">
       <DependentUpon>MidiGroup.idl</DependentUpon>
     </ClCompile>
@@ -286,6 +303,9 @@
     <ClCompile Include="MidiSession.cpp">
       <DependentUpon>MidiSession.idl</DependentUpon>
     </ClCompile>
+      <ClCompile Include="MidiStreamConfigurationEndpointListener.cpp">
+          <DependentUpon>MidiStreamConfigurationEndpointListener.idl</DependentUpon>
+      </ClCompile>
     <ClCompile Include="MidiUmp128.cpp">
       <DependentUpon>MidiUmp128.idl</DependentUpon>
     </ClCompile>
@@ -316,9 +336,10 @@
     <Midl Include="MidiCIProxy.idl" />
     <Midl Include="MidiClock.idl" />
     <Midl Include="MidiEndpointInformation.idl" />
-    <Midl Include="MidiEndpointInformationListener.idl" />
+    <Midl Include="MidiEndpointInformationEndpointListener.idl" />
     <Midl Include="MidiFunctionBlock.idl" />
     <Midl Include="MidiFunctionBlockDirectionEnum.idl" />
+    <Midl Include="MidiFunctionBlockEndpointListener.idl" />
     <Midl Include="MidiFunctionBlockUIHintEnum.idl" />
     <Midl Include="MidiGroup.idl" />
     <Midl Include="MidiGroupEndpointListener.idl" />
@@ -331,6 +352,7 @@
     <Midl Include="MidiSession.idl" />
     <Midl Include="MidiSessionSettings.idl" />
     <Midl Include="IMidiUmp.idl" />
+    <Midl Include="MidiStreamConfigurationEndpointListener.idl" />
     <Midl Include="MidiUmp128.idl" />
     <Midl Include="MidiUmp32.idl" />
     <Midl Include="MidiUmp64.idl" />

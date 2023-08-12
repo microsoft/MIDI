@@ -6,24 +6,25 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+
 #include "pch.h"
-#include "MidiEndpointInformationListener.h"
-#include "MidiEndpointInformationListener.g.cpp"
+#include "MidiFunctionBlockEndpointListener.h"
+#include "MidiFunctionBlockEndpointListener.g.cpp"
 
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    void MidiEndpointInformationListener::Initialize()
+    void MidiFunctionBlockEndpointListener::Initialize()
     {
         throw hresult_not_implemented();
     }
 
-    void MidiEndpointInformationListener::Cleanup()
+    void MidiFunctionBlockEndpointListener::Cleanup()
     {
         throw hresult_not_implemented();
     }
 
-    void MidiEndpointInformationListener::ProcessIncomingMessage(
+    void MidiFunctionBlockEndpointListener::ProcessIncomingMessage(
         _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs const& /*args*/,
         _Out_ bool& skipFurtherListeners,
         _Out_ bool& skipMainMessageReceivedEvent)
@@ -34,7 +35,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         throw hresult_not_implemented();
     }
 
-    winrt::Windows::Foundation::IAsyncAction MidiEndpointInformationListener::ProcessIncomingMessageAsync(
+    winrt::Windows::Foundation::IAsyncAction MidiFunctionBlockEndpointListener::ProcessIncomingMessageAsync(
         _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs /*args*/)
     {
         throw hresult_not_implemented();

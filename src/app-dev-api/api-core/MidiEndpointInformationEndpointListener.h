@@ -7,15 +7,15 @@
 // ============================================================================
 
 #pragma once
-#include "MidiEndpointInformationListener.g.h"
+#include "MidiEndpointInformationEndpointListener.g.h"
 
 #include "string_util.h"
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    struct MidiEndpointInformationListener : MidiEndpointInformationListenerT<MidiEndpointInformationListener>
+    struct MidiEndpointInformationEndpointListener : MidiEndpointInformationEndpointListenerT<MidiEndpointInformationEndpointListener>
     {
-        MidiEndpointInformationListener() = default;
+        MidiEndpointInformationEndpointListener() = default;
 
         hstring Id() const noexcept { return m_id; }
         void Id(_In_ hstring const& value) noexcept { m_id = internal::ToUpperTrimmedHStringCopy(value); }
@@ -55,7 +55,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation
 {
-    struct MidiEndpointInformationListener : MidiEndpointInformationListenerT<MidiEndpointInformationListener, implementation::MidiEndpointInformationListener>
+    struct MidiEndpointInformationEndpointListener : MidiEndpointInformationEndpointListenerT<MidiEndpointInformationEndpointListener, implementation::MidiEndpointInformationEndpointListener>
     {
     };
 }

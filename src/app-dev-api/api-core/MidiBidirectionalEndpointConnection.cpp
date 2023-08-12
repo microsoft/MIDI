@@ -432,6 +432,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                 m_isOpen = true;
 
+
+                // TODO: Send discovery messages using app provided settings and user settings read from the property store
+                // These get fired off here quickly so we can return. The listener is responsible for catching them.
+
+
+
+
+
                 return true;
             }
             catch (winrt::hresult_error const& ex)
