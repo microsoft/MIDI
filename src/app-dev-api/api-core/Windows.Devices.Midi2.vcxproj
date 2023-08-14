@@ -173,6 +173,8 @@
     <ClInclude Include="MidiBidirectionalEndpointConnection.h">
       <DependentUpon>MidiBidirectionalEndpointConnection.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiSettingsService.h" />
+    <ClInclude Include="MidiStateService.h" />
     <ClInclude Include="MidiChannel.h">
       <DependentUpon>MidiChannel.idl</DependentUpon>
     </ClInclude>
@@ -197,9 +199,9 @@
     <ClInclude Include="MidiFunctionBlock.h">
       <DependentUpon>MidiFunctionBlock.idl</DependentUpon>
     </ClInclude>
-      <ClInclude Include="MidiFunctionBlockEndpointListener.h">
-          <DependentUpon>MidiFunctionBlockEndpointListener.idl</DependentUpon>
-      </ClInclude>
+    <ClInclude Include="MidiFunctionBlockEndpointListener.h">
+      <DependentUpon>MidiFunctionBlockEndpointListener.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiGroup.h">
       <DependentUpon>MidiGroup.idl</DependentUpon>
     </ClInclude>
@@ -221,9 +223,9 @@
     <ClInclude Include="MidiSessionSettings.h">
       <DependentUpon>MidiSessionSettings.idl</DependentUpon>
     </ClInclude>
-      <ClInclude Include="MidiStreamConfigurationEndpointListener.h">
-          <DependentUpon>MidiStreamConfigurationEndpointListener.idl</DependentUpon>
-      </ClInclude>
+    <ClInclude Include="MidiStreamConfigurationEndpointListener.h">
+      <DependentUpon>MidiStreamConfigurationEndpointListener.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiUmp128.h">
       <DependentUpon>MidiUmp128.idl</DependentUpon>
     </ClInclude>
@@ -252,6 +254,8 @@
     <ClCompile Include="MidiBidirectionalEndpointConnection.cpp">
       <DependentUpon>MidiBidirectionalEndpointConnection.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiSettingsService.cpp" />
+    <ClCompile Include="MidiStateService.cpp" />
     <ClCompile Include="MidiChannel.cpp">
       <DependentUpon>MidiChannel.idl</DependentUpon>
     </ClCompile>
@@ -276,9 +280,9 @@
     <ClCompile Include="MidiFunctionBlock.cpp">
       <DependentUpon>MidiFunctionBlock.idl</DependentUpon>
     </ClCompile>
-      <ClCompile Include="MidiFunctionBlockEndpointListener.cpp">
-          <DependentUpon>MidiFunctionBlockEndpointListener.idl</DependentUpon>
-      </ClCompile>
+    <ClCompile Include="MidiFunctionBlockEndpointListener.cpp">
+      <DependentUpon>MidiFunctionBlockEndpointListener.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiGroup.cpp">
       <DependentUpon>MidiGroup.idl</DependentUpon>
     </ClCompile>
@@ -303,9 +307,9 @@
     <ClCompile Include="MidiSession.cpp">
       <DependentUpon>MidiSession.idl</DependentUpon>
     </ClCompile>
-      <ClCompile Include="MidiStreamConfigurationEndpointListener.cpp">
-          <DependentUpon>MidiStreamConfigurationEndpointListener.idl</DependentUpon>
-      </ClCompile>
+    <ClCompile Include="MidiStreamConfigurationEndpointListener.cpp">
+      <DependentUpon>MidiStreamConfigurationEndpointListener.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiUmp128.cpp">
       <DependentUpon>MidiUmp128.idl</DependentUpon>
     </ClCompile>

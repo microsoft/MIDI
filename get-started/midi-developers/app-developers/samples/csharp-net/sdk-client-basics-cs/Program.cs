@@ -63,6 +63,12 @@ if (checkResult == WindowsMidiServicesCheckResult.PresentAndUsable)
                 }
             };
 
+            // once you have wired up all your event handlers, added any filters/listeners, etc.
+            // You can open the connection. Doing this will query the cache for the in-protocol 
+            // endpoint information and function blocks. If not there, it will send out the requests
+            // which will come back asynchronously with responses.
+            endpoint.Open();
+
             MidiUmp32 ump32 = new MidiUmp32();
 
             ump32.MessageType = MidiUmpMessageType.Midi1ChannelVoice32;

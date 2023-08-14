@@ -74,6 +74,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
+            if (!m_isOpen)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
+
+                // return failure if we're not open
+                return false;
+            }
+
             // make sure we're sending only a single UMP
             uint32_t sizeInWords = byteLength / sizeof(uint32_t);
 
@@ -126,6 +134,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
+            if (!m_isOpen)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
+
+                // return failure if we're not open
+                return false;
+            }
+
+
             if (!internal::IsValidSingleUmpWordCount(wordCount))
             {
                 //throw hresult_invalid_argument();
@@ -172,6 +189,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
+            if (!m_isOpen)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
+
+                // return failure if we're not open
+                return false;
+            }
+
+
             if (internal::GetUmpLengthInMidiWordsFromFirstWord(word0) != UMP32_WORD_COUNT)
             {
                 // mismatch between the message type and the number of words
@@ -211,6 +237,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
+            if (!m_isOpen)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
+
+                // return failure if we're not open
+                return false;
+            }
+
+
             if (internal::GetUmpLengthInMidiWordsFromFirstWord(word0) != UMP64_WORD_COUNT)
             {
                 // mismatch between the message type and the number of words
@@ -255,6 +290,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
+            if (!m_isOpen)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
+
+                // return failure if we're not open
+                return false;
+            }
+
+
             if (internal::GetUmpLengthInMidiWordsFromFirstWord(word0) != UMP96_WORD_COUNT)
             {
                 // mismatch between the message type and the number of words
@@ -301,6 +345,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
+            if (!m_isOpen)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
+
+                // return failure if we're not open
+                return false;
+            }
+
+
             if (internal::GetUmpLengthInMidiWordsFromFirstWord(word0) != UMP128_WORD_COUNT)
             {
                 internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for messageType", UMP128_WORD_COUNT, timestamp);
@@ -344,6 +397,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
+            if (!m_isOpen)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
+
+                // return failure if we're not open
+                return false;
+            }
+
+
             if (m_endpointInterface)
             {
                 return m_messageSenderHelper.SendUmp(m_endpointInterface, ump);
