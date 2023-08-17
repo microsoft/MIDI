@@ -96,30 +96,30 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>.\ext;..\..\shared\inc;$(IncludePath)</IncludePath>
+    <IncludePath>.\ext;..\shared\inc;..\shared\ext;..\app-dev-api\api-core\ext;$(IncludePath)</IncludePath>
     <TargetName>Windows.Devices.Midi2</TargetName>
     <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>..\..\shared\inc;$(BOOST_ROOT);$(IncludePath)</IncludePath>
+    <IncludePath>..\..\shared\inc;.\ext;..\shared\ext;..\shared\inc;..\app-dev-api\api-core\ext;$(IncludePath)</IncludePath>
     <TargetName>Windows.Devices.Midi2</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Arm64'">
-    <IncludePath>.\ext;..\..\shared\inc;$(IncludePath)</IncludePath>
+    <IncludePath>.\ext;..\shared\inc;..\shared\ext;..\app-dev-api\api-core\ext;$(IncludePath)</IncludePath>
     <TargetName>Windows.Devices.Midi2</TargetName>
     <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Arm64'">
-    <IncludePath>..\..\shared\inc;$(BOOST_ROOT);$(IncludePath)</IncludePath>
+    <IncludePath>..\..\shared\inc;.\ext;..\shared\ext;..\shared\inc;..\app-dev-api\api-core\ext;$(IncludePath)</IncludePath>
     <TargetName>Windows.Devices.Midi2</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Arm64EC'">
-    <IncludePath>.\ext;..\..\shared\inc;$(IncludePath)</IncludePath>
+    <IncludePath>.\ext;..\shared\inc;..\shared\ext;..\app-dev-api\api-core\ext;$(IncludePath)</IncludePath>
     <TargetName>Windows.Devices.Midi2</TargetName>
     <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Arm64EC'">
-    <IncludePath>..\..\shared\inc;$(BOOST_ROOT);$(IncludePath)</IncludePath>
+    <IncludePath>..\..\shared\inc;.\ext;..\shared\ext;..\shared\inc;..\app-dev-api\api-core\ext;$(IncludePath)</IncludePath>
     <TargetName>Windows.Devices.Midi2</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup>

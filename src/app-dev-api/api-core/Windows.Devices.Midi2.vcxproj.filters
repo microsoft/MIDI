@@ -114,9 +114,8 @@
     <ClCompile Include="MidiCiProxy.cpp">
       <Filter>API\Endpoints\ListenersAndResponders</Filter>
     </ClCompile>
-    <ClCompile Include="MidiEndpointInformationListener.cpp">
-      <Filter>API\Endpoints\ListenersAndResponders</Filter>
-    </ClCompile>
+    <ClCompile Include="MidiSettingsService.cpp" />
+    <ClCompile Include="MidiStateService.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -194,9 +193,8 @@
     <ClInclude Include="MidiCiProxy.h">
       <Filter>API\Endpoints\ListenersAndResponders</Filter>
     </ClInclude>
-    <ClInclude Include="MidiEndpointInformationListener.h">
-      <Filter>API\Endpoints\ListenersAndResponders</Filter>
-    </ClInclude>
+    <ClInclude Include="MidiSettingsService.h" />
+    <ClInclude Include="MidiStateService.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiSession.idl">
@@ -292,12 +290,12 @@
     <Midl Include="IMidiEndpointMessageResponder.idl">
       <Filter>API\Endpoints\ListenersAndResponders</Filter>
     </Midl>
-    <Midl Include="MidiEndpointInformationListener.idl">
-      <Filter>API\Endpoints\ListenersAndResponders</Filter>
-    </Midl>
     <Midl Include="MidiCIProxy.idl">
       <Filter>API\Endpoints\ListenersAndResponders</Filter>
     </Midl>
+    <Midl Include="MidiEndpointInformationEndpointListener.idl" />
+    <Midl Include="MidiFunctionBlockEndpointListener.idl" />
+    <Midl Include="MidiStreamConfigurationEndpointListener.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />
