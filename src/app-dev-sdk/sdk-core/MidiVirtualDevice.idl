@@ -28,24 +28,24 @@ namespace Microsoft.Devices.Midi2
 {
 	runtimeclass MidiVirtualDevice
 	{
-		static MidiVirtualDevice Create(
-			Windows.Devices.Midi2.BidirectionalEndpointConnection connection);
+		//static MidiVirtualDevice Create(
+		//	Windows.Devices.Midi2.BidirectionalEndpointConnection connection);
 
-		static MidiVirtualDevice Create(
-			Windows.Devices.Midi2.MidiInputEndpointConnection inputConnection, 
-			Windows.Devices.Midi2.MidiOutputEndpointConnection outputConnection);
+		//static MidiVirtualDevice Create(
+		//	Windows.Devices.Midi2.MidiInputEndpointConnection inputConnection, 
+		//	Windows.Devices.Midi2.MidiOutputEndpointConnection outputConnection);
 
 
-		// registers the function block and creates a random MUID and returns it
-		MidiUniqueId RegisterFunctionBlock(MidiFunctionBlock block);	
+		//// registers the function block and creates a random MUID and returns it
+		//MidiUniqueId RegisterFunctionBlock(MidiFunctionBlock block);	
 
-		// todo: needs group/channel/function/etc. info
-		void RegisterProfile(MidiProfile profile);
+		//// todo: needs group/channel/function/etc. info
+		//void RegisterProfile(MidiProfile profile);
 
 		// initiates listening etc. Also sends out the CI discovery messages
 		void Start();
 
-		event Windows.Foundation.TypedEventHandler<IInspectable, MidiCIPropertyRequestedEventArgs> PropertyRequested;
+//		event Windows.Foundation.TypedEventHandler<IInspectable, MidiCIPropertyRequestedEventArgs> PropertyRequested;
 
 
 

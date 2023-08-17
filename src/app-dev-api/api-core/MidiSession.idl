@@ -32,11 +32,6 @@ namespace Windows.Devices.Midi2
 
         Boolean IsOpen { get; };
 
-        // close the session and release resources
-        // Not needed here because IClosable.Close() is used by .net and other managed languages
-        //void Close();
-
-
         // this really should be read-only to users of this class
         IMapView<String, MidiEndpointConnection> Connections{ get; };
 
@@ -69,9 +64,6 @@ namespace Windows.Devices.Midi2
         // resources for that endpoint.
         void DisconnectEndpointConnection(String endpointConnectionInstanceId);
 
-        //// this takes an endpoint id and tears down ALL endpoint connection instances for it, and
-        //// also disconnects the service interface for this endpoint
-        //void DisconnectAllConnectionsForEndpoint(String endpointId);
-
+ 
     }
 }

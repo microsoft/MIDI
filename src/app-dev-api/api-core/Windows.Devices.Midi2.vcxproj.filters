@@ -52,6 +52,9 @@
     <Filter Include="API\Endpoints\ListenersAndResponders">
       <UniqueIdentifier>{577d9050-8eb1-416d-9d4f-17cbb58b9b47}</UniqueIdentifier>
     </Filter>
+    <Filter Include="API\Endpoints\Metadata\MUID">
+      <UniqueIdentifier>{6629b1ee-8608-477e-9537-9a1f55cb770f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -116,6 +119,9 @@
     </ClCompile>
     <ClCompile Include="MidiSettingsService.cpp" />
     <ClCompile Include="MidiStateService.cpp" />
+    <ClCompile Include="MidiUniqueId.cpp">
+      <Filter>API\Endpoints\Metadata\MUID</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -195,6 +201,9 @@
     </ClInclude>
     <ClInclude Include="MidiSettingsService.h" />
     <ClInclude Include="MidiStateService.h" />
+    <ClInclude Include="MidiUniqueId.h">
+      <Filter>API\Endpoints\Metadata\MUID</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiSession.idl">
@@ -296,6 +305,9 @@
     <Midl Include="MidiEndpointInformationEndpointListener.idl" />
     <Midl Include="MidiFunctionBlockEndpointListener.idl" />
     <Midl Include="MidiStreamConfigurationEndpointListener.idl" />
+    <Midl Include="MidiUniqueId.idl">
+      <Filter>API\Endpoints\Metadata\MUID</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />

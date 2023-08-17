@@ -38,7 +38,7 @@ using namespace winrt;
 #include "trace_logging.h"
 
 // shared
-#include <midi_ump.h>
+#include "midi_ump.h"
 
 namespace internal = ::Windows::Devices::Midi2::Internal;
 //namespace intshared = ::Windows::Devices::Midi2::Internal::Shared;

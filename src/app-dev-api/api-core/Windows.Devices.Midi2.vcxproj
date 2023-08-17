@@ -96,30 +96,30 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>.\ext;..\shared\inc;..\shared\ext;..\app-dev-api\api-core\ext;$(IncludePath)</IncludePath>
+    <IncludePath>.\ext;..\shared\inc;..\shared\ext;..\app-dev-api\api-core\ext;..\..\..\shared\inc;..\..\..\shared\ext;..\..\shared\ext;..\..\shared\inc;$(IncludePath)</IncludePath>
     <TargetName>Windows.Devices.Midi2</TargetName>
     <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>..\..\shared\inc;.\ext;..\shared\ext;..\shared\inc;..\app-dev-api\api-core\ext;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\..\shared\inc;..\..\..\shared\ext;..\..\shared\ext;..\..\shared\inc;.\ext;..\shared\ext;..\shared\inc;..\app-dev-api\api-core\ext;$(IncludePath)</IncludePath>
     <TargetName>Windows.Devices.Midi2</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Arm64'">
-    <IncludePath>.\ext;..\shared\inc;..\shared\ext;..\app-dev-api\api-core\ext;$(IncludePath)</IncludePath>
+    <IncludePath>.\ext;..\shared\inc;..\shared\ext;..\app-dev-api\api-core\ext;..\..\..\shared\inc;..\..\..\shared\ext;..\..\shared\ext;..\..\shared\inc;$(IncludePath)</IncludePath>
     <TargetName>Windows.Devices.Midi2</TargetName>
     <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Arm64'">
-    <IncludePath>..\..\shared\inc;.\ext;..\shared\ext;..\shared\inc;..\app-dev-api\api-core\ext;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\..\shared\inc;..\..\..\shared\ext;..\..\shared\ext;..\..\shared\inc;.\ext;..\shared\ext;..\shared\inc;..\app-dev-api\api-core\ext;$(IncludePath)</IncludePath>
     <TargetName>Windows.Devices.Midi2</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Arm64EC'">
-    <IncludePath>.\ext;..\shared\inc;..\shared\ext;..\app-dev-api\api-core\ext;$(IncludePath)</IncludePath>
+    <IncludePath>.\ext;..\shared\inc;..\shared\ext;..\app-dev-api\api-core\ext;..\..\..\shared\inc;..\..\..\shared\ext;..\..\shared\ext;..\..\shared\inc;$(IncludePath)</IncludePath>
     <TargetName>Windows.Devices.Midi2</TargetName>
     <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Arm64EC'">
-    <IncludePath>..\..\shared\inc;.\ext;..\shared\ext;..\shared\inc;..\app-dev-api\api-core\ext;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\..\shared\inc;..\..\..\shared\ext;..\..\shared\ext;..\..\shared\inc;.\ext;..\shared\ext;..\shared\inc;..\app-dev-api\api-core\ext;$(IncludePath)</IncludePath>
     <TargetName>Windows.Devices.Midi2</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup>
@@ -238,6 +238,7 @@
     <ClInclude Include="MidiUmp96.h">
       <DependentUpon>MidiUmp96.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiUniqueId.h" />
     <ClInclude Include="midi_service_interface.h" />
     <ClInclude Include="midl_defines.h" />
     <ClInclude Include="string_util.h" />
@@ -322,6 +323,7 @@
     <ClCompile Include="MidiUmp96.cpp">
       <DependentUpon>MidiUmp96.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiUniqueId.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -363,6 +365,7 @@
     <Midl Include="MidiUmp96.idl" />
     <Midl Include="MidiUmpMessageTypeEnum.idl" />
     <Midl Include="MidiUmpPacketTypeEnum.idl" />
+    <Midl Include="MidiUniqueId.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />
