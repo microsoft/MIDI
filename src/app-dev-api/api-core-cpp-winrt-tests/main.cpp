@@ -1,19 +1,23 @@
 ﻿#include "pch.h"
 
 //#define CATCH_CONFIG_MAIN
+//#define CATCH_CONFIG_RUNNER
+#define CATCH_AMALGAMATED_CUSTOM_MAIN
+
 
 #include "catch_amalgamated.hpp"
 
-using namespace winrt;
-using namespace Windows::Foundation;
+#include <iostream>
+
+using namespace winrt::Windows::Foundation;
 
 int main(int argc, char* argv[]) 
 {
-    init_apartment();
+    std::cout << "Custom main for Catch2" << std::endl;
 
+    winrt::init_apartment();
 
     int result = Catch::Session().run(argc, argv);
-
 
     return result;
 }

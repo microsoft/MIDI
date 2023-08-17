@@ -6,14 +6,13 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-
 namespace Microsoft.Devices.Midi2
 {
-    [default_interface]
-    runtimeclass MidiStreamMessageEndpointListener : Windows.Devices.Midi2.IMidiEndpointMessageListener
-    {
-        MidiStreamMessageEndpointListener();
+	runtimeclass MidiCIPropertyRequestedEventArgs
+	{
+		Windows.Devices.Midi2.MidiUniqueId UniqueId{ get; };
 
+		
 
-    }
+	};
 }

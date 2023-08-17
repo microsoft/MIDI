@@ -20,17 +20,17 @@ namespace implementation = winrt::Windows::Devices::Midi2::implementation;
 
 namespace Windows::Devices::Midi2::Internal
 {
-	template<typename TEndpoint>
-	class InternalMidiMessageSenderHelper
-	{
-	public:
-		bool SendMessageRaw(_In_ winrt::com_ptr<TEndpoint> endpoint, _In_ void* data, _In_ uint32_t sizeInBytes, _In_ internal::MidiTimestamp timestamp);
-		bool SendUmp(_In_ winrt::com_ptr<TEndpoint> endpoint, _In_ winrt::Windows::Devices::Midi2::IMidiUmp const& ump);
+    template<typename TEndpoint>
+    class InternalMidiMessageSenderHelper
+    {
+    public:
+        bool SendMessageRaw(_In_ winrt::com_ptr<TEndpoint> endpoint, _In_ void* data, _In_ uint32_t sizeInBytes, _In_ internal::MidiTimestamp timestamp);
+        bool SendUmp(_In_ winrt::com_ptr<TEndpoint> endpoint, _In_ winrt::Windows::Devices::Midi2::IMidiUmp const& ump);
 
-	private:
-		void* GetUmpDataPointer(winrt::Windows::Devices::Midi2::IMidiUmp const& ump, uint32_t& dataSizeOut);
+    private:
+        void* GetUmpDataPointer(winrt::Windows::Devices::Midi2::IMidiUmp const& ump, uint32_t& dataSizeOut);
 
-	};
+    };
 
 
     // implementation must be in header (or otherwise included) for template classes

@@ -26,14 +26,15 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    struct MidiBidirectionalEndpointConnection : MidiBidirectionalEndpointConnectionT<MidiBidirectionalEndpointConnection, 
+    struct MidiBidirectionalEndpointConnection : MidiBidirectionalEndpointConnectionT<
+        MidiBidirectionalEndpointConnection, 
         Windows::Devices::Midi2::implementation::MidiEndpointConnection,
         IMidiCallback>
     {
         MidiBidirectionalEndpointConnection() = default;
         ~MidiBidirectionalEndpointConnection();
 
-        static hstring GetDeviceSelectorForBidirectional() { return L""; /* TODO*/ }
+        static hstring GetDeviceSelectorForBidirectional() noexcept { return L""; /* TODO*/ }
 
         winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiEndpointMessageListener> MessageListeners() { return m_messageListeners; }
 
@@ -91,16 +92,20 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         void MessageReceived(_In_ winrt::event_token const& token) noexcept
         {
-            m_messageReceivedEvent.remove(token);
+            if (m_messageReceivedEvent) m_messageReceivedEvent.remove(token);
         }
 
         _Success_(return == true)
-        bool InternalStart(
+        bool InternalInitialize(
             _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction);
+
+        _Success_(return == true)
+        bool Open();
 
 
     private:
-        com_ptr<IMidiBiDi> m_endpointInterface;
+        winrt::com_ptr<IMidiAbstraction> m_serviceAbstraction{ nullptr };
+        winrt::com_ptr<IMidiBiDi> m_endpointInterface{ nullptr };
         internal::InternalMidiMessageReceiverHelper m_messageReceiverHelper;
         internal::InternalMidiMessageSenderHelper<IMidiBiDi> m_messageSenderHelper;
 

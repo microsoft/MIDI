@@ -15,6 +15,8 @@
 #include "MidiOutputEndpointConnection.h"
 #include "MidiBidirectionalEndpointConnection.h"
 
+#include "MidiEndpointInformationEndpointListener.h"
+
 #include "string_util.h"
 
 
@@ -107,9 +109,24 @@ namespace winrt::Windows::Devices::Midi2::implementation
             endpointConnection->InternalSetId(endpointId);
             endpointConnection->InternalSetDeviceId(normalizedDeviceId);
 
-            if (endpointConnection->InternalStart(m_serviceAbstraction))
+            if (endpointConnection->InternalInitialize(m_serviceAbstraction))
             {
                 m_connections.Insert((winrt::hstring)normalizedDeviceId, (const Windows::Devices::Midi2::MidiEndpointConnection)(*endpointConnection));
+
+                // TODO: This value needs to come from configuration for this endpoint
+                bool autoHandleEndpointMessages = true;
+
+                if (autoHandleEndpointMessages)
+                {
+                    auto endpointInformationListener = winrt::make_self<implementation::MidiEndpointInformationEndpointListener>();
+
+                    endpointInformationListener->Id(L"auto_EndpointInformationListener");
+                    endpointInformationListener->Name(L"Automatic Endpoint Information Message Handler");
+                    endpointInformationListener->InputConnection(endpointConnection.as<IMidiInputConnection>());
+                    endpointInformationListener->Initialize();
+                                       
+                    endpointConnection->MessageListeners().Append(*endpointInformationListener);
+                }
 
                 return *endpointConnection;
             }

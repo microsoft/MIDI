@@ -6,18 +6,15 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
 import "IMidiEndpointConnectionSettings.idl";
-
-
-
-
-// TODO: This should probably just be an interface
-
-
 
 
 namespace Windows.Devices.Midi2
 {
+    [MIDI_API_CONTRACT(1)]
     [default_interface]
     unsealed runtimeclass MidiEndpointConnection
     {
@@ -36,7 +33,7 @@ namespace Windows.Devices.Midi2
 
         // true if this endpoint connection is actually connected.
         // here for cases when the app holds on to an instance of this outside of the map
-        Boolean IsConnected{ get; };
+        Boolean IsOpen{ get; };
 
         IMidiEndpointConnectionSettings Settings{ get; };
     }

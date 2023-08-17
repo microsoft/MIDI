@@ -6,6 +6,9 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
 import "IMidiUmp.idl";
 
 import "MidiUmp32.idl";
@@ -19,13 +22,14 @@ import "MidiUmpPacketTypeEnum.idl";
 
 namespace Windows.Devices.Midi2
 {
+    [MIDI_API_CONTRACT(1)]
     [default_interface]
     runtimeclass MidiMessageReceivedEventArgs
     {
         // Type of UMP contained in the data
         MidiUmpPacketType UmpType{ get; };
 
-        UInt64 Timestamp{ get; };
+        MIDI_TIMESTAMP Timestamp{ get; };
 
         // Returns a new UMP. Allocation-wise, this is the most expensive, but it is also the friendliest
         IMidiUmp GetUmp();

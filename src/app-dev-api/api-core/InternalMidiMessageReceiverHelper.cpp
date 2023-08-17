@@ -28,8 +28,8 @@ namespace Windows::Devices::Midi2::Internal
     //}
 
 
-	//winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs InternalMidiMessageReceiverHelper::CreateMessageEventArgsFromCallbackParams(PVOID dataPointer, UINT sizeInBytes, LONGLONG timestamp)
-	//{
+    //winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs InternalMidiMessageReceiverHelper::CreateMessageEventArgsFromCallbackParams(PVOID dataPointer, UINT sizeInBytes, LONGLONG timestamp)
+    //{
  //       auto args = winrt::make_self<implementation::MidiMessageReceivedEventArgs>();
 
 
@@ -60,6 +60,6 @@ namespace Windows::Devices::Midi2::Internal
 
  //       return *args;
 
-	//}
+    //}
 
 }

@@ -169,9 +169,6 @@
     <ClInclude Include="MidiEndpointInformation.h">
       <DependentUpon>MidiEndpointInformation.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiFunctionBlock.h">
-      <DependentUpon>MidiFunctionBlock.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiGroupTerminalBlock.h">
       <DependentUpon>MidiGroupTerminalBlock.idl</DependentUpon>
     </ClInclude>
@@ -192,9 +189,6 @@
     </ClInclude>
     <ClInclude Include="MidiServices.h">
       <DependentUpon>MidiServices.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiStreamMessageEndpointListener.h">
-      <DependentUpon>MidiStreamMessageEndpointListener.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="midi_app_sdk_version.h">
     </ClInclude>
@@ -222,9 +216,6 @@
     <ClCompile Include="MidiEndpointInformation.cpp">
       <DependentUpon>MidiEndpointInformation.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiFunctionBlock.cpp">
-      <DependentUpon>MidiFunctionBlock.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiGroupTerminalBlock.cpp">
       <DependentUpon>MidiGroupTerminalBlock.idl</DependentUpon>
     </ClCompile>
@@ -246,9 +237,6 @@
     <ClCompile Include="MidiServices.cpp">
       <DependentUpon>MidiServices.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiStreamMessageEndpointListener.cpp">
-      <DependentUpon>MidiStreamMessageEndpointListener.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiTransportInformation.cpp">
       <DependentUpon>MidiTransportInformation.idl</DependentUpon>
     </ClCompile>
@@ -261,9 +249,10 @@
   </ItemGroup>
   <ItemGroup>
     <Midl Include="IMidiTransportSettingsData.idl" />
+    <Midl Include="MidiCIPropertyRequestedEventArgs.idl" />
+    <Midl Include="MidiVirtualDevice.idl" />
     <Midl Include="MidiEndpointInformation.idl" />
     <Midl Include="MidiEndpointDataFormatEnum.idl" />
-    <Midl Include="MidiFunctionBlockDirectionEnum.idl" />
     <Midl Include="MidiHighResolutionValueDisplayFormatter.idl" />
     <Midl Include="MidiMessageBufferHelper.idl" />
     <Midl Include="MidiMessageBufferReader.idl" />
@@ -271,12 +260,9 @@
     <Midl Include="MidiMessageTranslator.idl" />
     <Midl Include="MidiDeviceInformation.idl" />
     <Midl Include="MidiEndpointDisplayFormatter.idl" />
-    <Midl Include="MidiFunctionBlock.idl" />
-    <Midl Include="MidiFunctionBlockUIHintEnum.idl" />
     <Midl Include="MidiGroupTerminalBlock.idl" />
     <Midl Include="MidiLocalizedStrings.idl" />
     <Midl Include="MidiServices.idl" />
-    <Midl Include="MidiStreamMessageEndpointListener.idl" />
     <Midl Include="MidiTransportInformation.idl" />
     <Midl Include="MidiUmpUtilities.idl" />
   </ItemGroup>

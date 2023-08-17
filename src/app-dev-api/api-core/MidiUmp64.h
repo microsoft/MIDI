@@ -31,19 +31,19 @@ namespace winrt::Windows::Devices::Midi2::implementation
         MidiUmp64(_In_ internal::MidiTimestamp timestamp, _In_ PVOID data);
 
 
-        uint32_t Word0() const { return m_ump.word0; }
-        void Word0(_In_ uint32_t value) { m_ump.word0 = value; }
+        uint32_t Word0() const noexcept { return m_ump.word0; }
+        void Word0(_In_ uint32_t value) noexcept { m_ump.word0 = value; }
 
-        uint32_t Word1() const { return m_ump.word1; }
-        void Word1(_In_ uint32_t value) { m_ump.word1 = value; }
+        uint32_t Word1() const noexcept { return m_ump.word1; }
+        void Word1(_In_ uint32_t value) noexcept { m_ump.word1 = value; }
 
-        internal::MidiTimestamp Timestamp() const { return m_timestamp; }
-        void Timestamp(_In_ internal::MidiTimestamp value) { m_timestamp = value; }
+        internal::MidiTimestamp Timestamp() const noexcept { return m_timestamp; }
+        void Timestamp(_In_ internal::MidiTimestamp value) noexcept { m_timestamp = value; }
 
-        winrt::Windows::Devices::Midi2::MidiUmpMessageType MessageType() const { return (winrt::Windows::Devices::Midi2::MidiUmpMessageType)(internal::GetUmpMessageTypeFromFirstWord(m_ump.word0)); }
-        void MessageType(_In_ winrt::Windows::Devices::Midi2::MidiUmpMessageType const& value) { internal::SetUmpMessageType(m_ump.word0, (uint8_t)value); }
+        winrt::Windows::Devices::Midi2::MidiUmpMessageType MessageType() const noexcept { return (winrt::Windows::Devices::Midi2::MidiUmpMessageType)(internal::GetUmpMessageTypeFromFirstWord(m_ump.word0)); }
+        void MessageType(_In_ winrt::Windows::Devices::Midi2::MidiUmpMessageType const& value) noexcept { internal::SetUmpMessageType(m_ump.word0, (uint8_t)value); }
 
-        winrt::Windows::Devices::Midi2::MidiUmpPacketType MidiUmpPacketType() const { return winrt::Windows::Devices::Midi2::MidiUmpPacketType::Ump64; }
+        winrt::Windows::Devices::Midi2::MidiUmpPacketType MidiUmpPacketType() const noexcept { return winrt::Windows::Devices::Midi2::MidiUmpPacketType::Ump64; }
 
         // internal for the sending code
         internal::PackedUmp64* GetInternalUmpDataPointer() { return &m_ump; }

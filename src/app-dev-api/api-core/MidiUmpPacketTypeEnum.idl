@@ -6,11 +6,14 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
 
 namespace Windows.Devices.Midi2
 {
     // can be cast to the size in MIDI Words.
 
+    [MIDI_API_CONTRACT(1)]
     enum MidiUmpPacketType
     {
         UnknownOrInvalid = 0,

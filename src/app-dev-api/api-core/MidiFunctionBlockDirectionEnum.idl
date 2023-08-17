@@ -1,19 +1,24 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App SDK and should be used
+// This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-namespace Microsoft.Devices.Midi2
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+namespace Windows.Devices.Midi2
 {
     // this is the direction as specified in the spec, so it is 
     // from the POV of the function block, not from the OS. IOW, 
     // Input here means the device FB *receives* messages that
     // are sent through Windows
+    [MIDI_API_CONTRACT(1)]
     enum MidiFunctionBlockDirection
     {
+        Undefined = 0x0,
         Input = 0x1,
         Output = 0x2,
         Bidirectional = 0x3

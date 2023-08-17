@@ -74,6 +74,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
+            if (!m_isOpen)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
+
+                // return failure if we're not open
+                return false;
+            }
+
             // make sure we're sending only a single UMP
             uint32_t sizeInWords = byteLength / sizeof(uint32_t);
 
@@ -126,6 +134,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
+            if (!m_isOpen)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
+
+                // return failure if we're not open
+                return false;
+            }
+
+
             if (!internal::IsValidSingleUmpWordCount(wordCount))
             {
                 //throw hresult_invalid_argument();
@@ -172,6 +189,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
+            if (!m_isOpen)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
+
+                // return failure if we're not open
+                return false;
+            }
+
+
             if (internal::GetUmpLengthInMidiWordsFromFirstWord(word0) != UMP32_WORD_COUNT)
             {
                 // mismatch between the message type and the number of words
@@ -211,6 +237,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
+            if (!m_isOpen)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
+
+                // return failure if we're not open
+                return false;
+            }
+
+
             if (internal::GetUmpLengthInMidiWordsFromFirstWord(word0) != UMP64_WORD_COUNT)
             {
                 // mismatch between the message type and the number of words
@@ -255,6 +290,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
+            if (!m_isOpen)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
+
+                // return failure if we're not open
+                return false;
+            }
+
+
             if (internal::GetUmpLengthInMidiWordsFromFirstWord(word0) != UMP96_WORD_COUNT)
             {
                 // mismatch between the message type and the number of words
@@ -301,6 +345,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
+            if (!m_isOpen)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
+
+                // return failure if we're not open
+                return false;
+            }
+
+
             if (internal::GetUmpLengthInMidiWordsFromFirstWord(word0) != UMP128_WORD_COUNT)
             {
                 internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for messageType", UMP128_WORD_COUNT, timestamp);
@@ -344,6 +397,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
+            if (!m_isOpen)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
+
+                // return failure if we're not open
+                return false;
+            }
+
+
             if (m_endpointInterface)
             {
                 return m_messageSenderHelper.SendUmp(m_endpointInterface, ump);
@@ -383,49 +445,81 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
     
-    // internal method to start listening for incoming messages, enable processing outgoing messages, etc.
-    // TODO: Change signature of this
     _Success_(return == true)
-    bool MidiBidirectionalEndpointConnection::InternalStart(
+    bool MidiBidirectionalEndpointConnection::InternalInitialize(
         _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction)
     {
-        WINRT_ASSERT(!DeviceId().empty());
-        WINRT_ASSERT(serviceAbstraction != nullptr);
-
-        DWORD mmcssTaskId{};  // TODO: Does this need to be session-wide? Probably, but it can be modified by the endpoint init, so maybe should be endpoint-local
-
-        // Activate the endpoint for this device. Will fail if the device is not a BiDi device
-        if (!ActivateMidiStream(serviceAbstraction, __uuidof(IMidiBiDi), (void**)&m_endpointInterface))
-        {
-            internal::LogGeneralError(__FUNCTION__, L"Could not activate MIDI Stream");
-
-            return false;
-        }
-
         try
         {
-            // TODO: Need to handle the output only case which has no callback
-            winrt::check_hresult(m_endpointInterface->Initialize(
-                (LPCWSTR)(DeviceId().c_str()),
-                &mmcssTaskId,
-                (IMidiCallback*)(this)
-            ));
+            WINRT_ASSERT(!DeviceId().empty());
+            WINRT_ASSERT(serviceAbstraction != nullptr);
 
-            m_isConnected = true;
+            m_serviceAbstraction = serviceAbstraction;
+
+            // TODO: Read any settings we need for this endpoint
 
             return true;
-
         }
         catch (winrt::hresult_error const& ex)
         {
-            internal::LogHresultError(__FUNCTION__, L" hresult exception initializing endpoint interface. Service may be unavailable.", ex);
-
-            m_endpointInterface = nullptr;
+            internal::LogHresultError(__FUNCTION__, L" hresult exception initializing endpoint.", ex);
 
             return false;
         }
-
     }
+
+
+    _Success_(return == true)
+    bool MidiBidirectionalEndpointConnection::Open()
+    {
+        if (!m_isOpen)
+        {
+            // Activate the endpoint for this device. Will fail if the device is not a BiDi device
+            if (!ActivateMidiStream(m_serviceAbstraction, __uuidof(IMidiBiDi), (void**)&m_endpointInterface))
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Could not activate MIDI Stream");
+
+                return false;
+            }
+
+            try
+            {
+                DWORD mmcssTaskId{};  // TODO: Does this need to be session-wide? Probably, but it can be modified by the endpoint init, so maybe should be endpoint-local
+
+                winrt::check_hresult(m_endpointInterface->Initialize(
+                    (LPCWSTR)(DeviceId().c_str()),
+                    &mmcssTaskId,
+                    (IMidiCallback*)(this)
+                ));
+
+                m_isOpen = true;
+
+
+                // TODO: Send discovery messages using app provided settings and user settings read from the property store
+                // These get fired off here quickly so we can return. The listener is responsible for catching them.
+
+
+
+
+
+                return true;
+            }
+            catch (winrt::hresult_error const& ex)
+            {
+                internal::LogHresultError(__FUNCTION__, L" hresult exception initializing endpoint interface. Service may be unavailable.", ex);
+
+                m_endpointInterface = nullptr;
+
+                return false;
+            }
+        }
+        else
+        {
+            // already open. Just return true here. Not fatal in any way, so no error
+            return true;
+        }
+    }
+
 
     MidiBidirectionalEndpointConnection::~MidiBidirectionalEndpointConnection()
     {
@@ -434,7 +528,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             m_endpointInterface->Cleanup();
         }
 
-        m_isConnected = false;
+        m_isOpen = false;
 
         // TODO: any event cleanup?
     }

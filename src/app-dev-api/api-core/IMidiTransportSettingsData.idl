@@ -6,13 +6,13 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
 
 namespace Windows.Devices.Midi2
 {
-    [
-        uuid(b2417dde-ef35-499b-a89b-0a4c32cc699a),
-        version(1.0),
-    ]
+    [MIDI_API_CONTRACT(1)]
+    [MIDI_INTERFACE_UUID("b2417dde-ef35-499b-a89b-0a4c32cc699a",1.0)]
     interface IMidiTransportSettingsData
     {
         String SettingsJson { get; set; };

@@ -17,20 +17,24 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiGroupEndpointListener() = default;
 
-        hstring Id() const { return m_id; }
+        hstring Id() const noexcept { return m_id; }
         void Id(hstring const& value) { m_id = internal::ToUpperTrimmedHStringCopy(value); }
 
-        hstring Name() const { return m_name; }
+        hstring Name() const noexcept { return m_name; }
         void Name(_In_ hstring const& value) { m_name = internal::TrimmedHStringCopy(value); }
 
-        winrt::Windows::Foundation::IInspectable Tag() const { return m_tag; }
-        void Tag(_In_ winrt::Windows::Foundation::IInspectable const& value) { m_tag = value; }
+        bool IsEnabled() const noexcept { return m_enabled; }
+        void IsEnabled(_In_ bool const& value) noexcept { m_enabled = value; }
 
+        winrt::Windows::Foundation::IInspectable Tag() const noexcept { return m_tag; }
+        void Tag(_In_ winrt::Windows::Foundation::IInspectable const& value) noexcept { m_tag = value; }
+
+        winrt::Windows::Devices::Midi2::IMidiInputConnection InputConnection() const noexcept { return m_inputConnection; }
+        void InputConnection(_In_ winrt::Windows::Devices::Midi2::IMidiInputConnection const& value) noexcept { m_inputConnection = value; }
 
         winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::MidiGroup> IncludeGroups();
 
-        void Initialize(
-            _In_ winrt::Windows::Devices::Midi2::IMidiInputConnection const& inputConnection);
+        void Initialize();
         void Cleanup();
 
         void ProcessIncomingMessage(
@@ -45,7 +49,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
     private:
         hstring m_id{};
         hstring m_name{};
+        bool m_enabled{ false };
         IInspectable m_tag{ nullptr };
+        IMidiInputConnection m_inputConnection;
 
 
     };

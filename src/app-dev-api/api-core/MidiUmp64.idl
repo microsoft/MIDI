@@ -6,19 +6,23 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
 // wraps the UMP type so we still quickly read/write packed data appropriately
 
 import "IMidiUmp.idl";
 
 namespace Windows.Devices.Midi2
 {
-	unsealed runtimeclass MidiUmp64 : IMidiUmp
-	{
-		MidiUmp64();
-		MidiUmp64(UInt64 timestamp, UInt32 word0, UInt32 word1);
-		MidiUmp64(UInt64 timestamp, UInt32[] words);
+    [MIDI_API_CONTRACT(1)]
+    unsealed runtimeclass MidiUmp64 : IMidiUmp
+    {
+        MidiUmp64();
+        MidiUmp64(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1);
+        MidiUmp64(MIDI_TIMESTAMP timestamp, UInt32[] words);
 
-		UInt32 Word0{ get; set; };
-		UInt32 Word1{ get; set; };
-	};
+        UInt32 Word0{ get; set; };
+        UInt32 Word1{ get; set; };
+    };
 }

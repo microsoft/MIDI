@@ -13,10 +13,13 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    struct MidiOutputEndpointConnection : MidiOutputEndpointConnectionT<MidiOutputEndpointConnection, Windows::Devices::Midi2::implementation::MidiEndpointConnection>
+    struct MidiOutputEndpointConnection : MidiOutputEndpointConnectionT<
+        MidiOutputEndpointConnection, 
+        Windows::Devices::Midi2::implementation::MidiEndpointConnection>
     {
         MidiOutputEndpointConnection() = default;
-        static hstring GetDeviceSelectorForOutput() { return L""; /* TODO */ }
+
+        static hstring GetDeviceSelectorForOutput() noexcept { return L""; /* TODO */ }
 
         _Success_(return == true)
         bool SendUmp(
@@ -24,45 +27,49 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         _Success_(return == true)
         bool SendUmpWordArray(
-            _In_ internal::MidiTimestamp timestamp, 
+            _In_ internal::MidiTimestamp const timestamp, 
             _In_ array_view<uint32_t const> words, 
-            _In_ uint32_t wordCount);
+            _In_ uint32_t const wordCount);
 
         _Success_(return == true)
         bool SendUmpBuffer(
-            _In_ internal::MidiTimestamp timestamp, 
+            _In_ internal::MidiTimestamp const timestamp, 
             _In_ winrt::Windows::Foundation::IMemoryBuffer const& buffer, 
-            _In_ uint32_t byteOffset, 
-            _In_ uint32_t byteLength);
+            _In_ uint32_t const byteOffset,
+            _In_ uint32_t const byteLength);
 
         _Success_(return == true)
         bool SendUmpWords(
-            _In_ internal::MidiTimestamp timestamp, 
-            _In_ uint32_t word0);
+            _In_ internal::MidiTimestamp const timestamp,
+            _In_ uint32_t const word0);
 
         _Success_(return == true)
         bool SendUmpWords(
-            _In_ internal::MidiTimestamp timestamp, 
-            _In_ uint32_t word0, 
-            _In_ uint32_t word1);
+            _In_ internal::MidiTimestamp const timestamp,
+            _In_ uint32_t const word0,
+            _In_ uint32_t const word1);
         
         _Success_(return == true)
         bool SendUmpWords(
-            _In_ internal::MidiTimestamp timestamp, 
-            _In_ uint32_t word0, 
-            _In_ uint32_t word1, 
-            _In_ uint32_t word2);
+            _In_ internal::MidiTimestamp const timestamp,
+            _In_ uint32_t const word0,
+            _In_ uint32_t const word1,
+            _In_ uint32_t const word2);
 
         _Success_(return == true)
         bool SendUmpWords(
-            _In_ internal::MidiTimestamp timestamp, 
-            _In_ uint32_t word0, 
-            _In_ uint32_t word1, 
-            _In_ uint32_t word2, 
-            _In_ uint32_t word3);
+            _In_ internal::MidiTimestamp const timestamp,
+            _In_ uint32_t const word0,
+            _In_ uint32_t const word1,
+            _In_ uint32_t const word2,
+            _In_ uint32_t const word3);
 
         _Success_(return == true)
-        bool InternalStart();
+        bool InternalInitialize();
+
+        _Success_(return == true)
+        bool Open();
+
 
     private:
 

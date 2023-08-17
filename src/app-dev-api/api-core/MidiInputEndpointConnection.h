@@ -24,7 +24,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiInputEndpointConnection() = default;
 
-        static hstring GetDeviceSelectorForInput() { return L""; /* TODO */ }
+        static hstring GetDeviceSelectorForInput() noexcept { return L""; /* TODO */ }
 
         winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiEndpointMessageListener> MessageListeners() { return m_messageListeners; }
 
@@ -39,12 +39,16 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         inline void MessageReceived(_In_ winrt::event_token const& token) noexcept
         {
-            m_messagesReceivedEvent.remove(token);
+            if (m_messagesReceivedEvent) m_messagesReceivedEvent.remove(token);
         }
 
 
         _Success_(return == true)
-        bool InternalStart();
+        bool InternalInitialize();
+
+        _Success_(return == true)
+        bool Open();
+
 
     private:
         winrt::event<winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs>> m_messagesReceivedEvent;

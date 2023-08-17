@@ -8426,14 +8426,14 @@ public:
             m_isOpen = true;
             *this << RowBreak();
 
-			TextFlow::Columns headerCols;
-			auto spacer = TextFlow::Spacer(2);
-			for (auto const& info : m_columnInfos) {
+            TextFlow::Columns headerCols;
+            auto spacer = TextFlow::Spacer(2);
+            for (auto const& info : m_columnInfos) {
                 assert(info.width > 2);
-				headerCols += TextFlow::Column(info.name).width(info.width - 2);
-				headerCols += spacer;
-			}
-			m_os << headerCols << '\n';
+                headerCols += TextFlow::Column(info.name).width(info.width - 2);
+                headerCols += spacer;
+            }
+            m_os << headerCols << '\n';
 
             m_os << lineOfChars('-') << '\n';
         }
@@ -8567,20 +8567,20 @@ void ConsoleReporter::sectionEnded(SectionStats const& _sectionStats) {
 }
 
 void ConsoleReporter::benchmarkPreparing( StringRef name ) {
-	lazyPrintWithoutClosingBenchmarkTable();
+    lazyPrintWithoutClosingBenchmarkTable();
 
-	auto nameCol = TextFlow::Column( static_cast<std::string>( name ) )
+    auto nameCol = TextFlow::Column( static_cast<std::string>( name ) )
                        .width( m_tablePrinter->columnInfos()[0].width - 2 );
 
-	bool firstLine = true;
-	for (auto line : nameCol) {
-		if (!firstLine)
-			(*m_tablePrinter) << ColumnBreak() << ColumnBreak() << ColumnBreak();
-		else
-			firstLine = false;
+    bool firstLine = true;
+    for (auto line : nameCol) {
+        if (!firstLine)
+            (*m_tablePrinter) << ColumnBreak() << ColumnBreak() << ColumnBreak();
+        else
+            firstLine = false;
 
-		(*m_tablePrinter) << line << ColumnBreak();
-	}
+        (*m_tablePrinter) << line << ColumnBreak();
+    }
 }
 
 void ConsoleReporter::benchmarkStarting(BenchmarkInfo const& info) {

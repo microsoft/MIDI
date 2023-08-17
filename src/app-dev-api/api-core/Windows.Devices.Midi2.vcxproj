@@ -96,30 +96,30 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>..\..\shared\inc;$(IncludePath)</IncludePath>
+    <IncludePath>.\ext;..\shared\inc;..\shared\ext;..\app-dev-api\api-core\ext;..\..\..\shared\inc;..\..\..\shared\ext;..\..\shared\ext;..\..\shared\inc;$(IncludePath)</IncludePath>
     <TargetName>Windows.Devices.Midi2</TargetName>
     <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>..\..\shared\inc;$(BOOST_ROOT);$(IncludePath)</IncludePath>
+    <IncludePath>..\..\..\shared\inc;..\..\..\shared\ext;..\..\shared\ext;..\..\shared\inc;.\ext;..\shared\ext;..\shared\inc;..\app-dev-api\api-core\ext;$(IncludePath)</IncludePath>
     <TargetName>Windows.Devices.Midi2</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Arm64'">
-    <IncludePath>..\..\shared\inc;$(IncludePath)</IncludePath>
+    <IncludePath>.\ext;..\shared\inc;..\shared\ext;..\app-dev-api\api-core\ext;..\..\..\shared\inc;..\..\..\shared\ext;..\..\shared\ext;..\..\shared\inc;$(IncludePath)</IncludePath>
     <TargetName>Windows.Devices.Midi2</TargetName>
     <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Arm64'">
-    <IncludePath>..\..\shared\inc;$(BOOST_ROOT);$(IncludePath)</IncludePath>
+    <IncludePath>..\..\..\shared\inc;..\..\..\shared\ext;..\..\shared\ext;..\..\shared\inc;.\ext;..\shared\ext;..\shared\inc;..\app-dev-api\api-core\ext;$(IncludePath)</IncludePath>
     <TargetName>Windows.Devices.Midi2</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Arm64EC'">
-    <IncludePath>..\..\shared\inc;$(IncludePath)</IncludePath>
+    <IncludePath>.\ext;..\shared\inc;..\shared\ext;..\app-dev-api\api-core\ext;..\..\..\shared\inc;..\..\..\shared\ext;..\..\shared\ext;..\..\shared\inc;$(IncludePath)</IncludePath>
     <TargetName>Windows.Devices.Midi2</TargetName>
     <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Arm64EC'">
-    <IncludePath>..\..\shared\inc;$(BOOST_ROOT);$(IncludePath)</IncludePath>
+    <IncludePath>..\..\..\shared\inc;..\..\..\shared\ext;..\..\shared\ext;..\..\shared\inc;.\ext;..\shared\ext;..\shared\inc;..\app-dev-api\api-core\ext;$(IncludePath)</IncludePath>
     <TargetName>Windows.Devices.Midi2</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup>
@@ -173,17 +173,34 @@
     <ClInclude Include="MidiBidirectionalEndpointConnection.h">
       <DependentUpon>MidiBidirectionalEndpointConnection.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiSettingsService.h" />
+    <ClInclude Include="MidiStateService.h" />
     <ClInclude Include="MidiChannel.h">
       <DependentUpon>MidiChannel.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiChannelEndpointListener.h">
       <DependentUpon>MidiChannelEndpointListener.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiCiProxy.h">
+      <DependentUpon>MidiCiProxy.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiClock.h">
       <DependentUpon>MidiClock.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiEndpointConnection.h">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointInformation.h">
+      <DependentUpon>MidiEndpointInformation.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointInformationEndpointListener.h">
+      <DependentUpon>MidiEndpointInformationEndpointListener.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiFunctionBlock.h">
+      <DependentUpon>MidiFunctionBlock.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiFunctionBlockEndpointListener.h">
+      <DependentUpon>MidiFunctionBlockEndpointListener.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiGroup.h">
       <DependentUpon>MidiGroup.idl</DependentUpon>
@@ -197,14 +214,17 @@
     <ClInclude Include="MidiMessageReceivedEventArgs.h">
       <DependentUpon>MidiMessageReceivedEventArgs.idl</DependentUpon>
     </ClInclude>
-	  <ClInclude Include="MidiMessageTypeEndpointListener.h">
-		  <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
-	  </ClInclude>
+    <ClInclude Include="MidiMessageTypeEndpointListener.h">
+      <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiOutputEndpointConnection.h">
       <DependentUpon>MidiOutputEndpointConnection.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiSessionSettings.h">
       <DependentUpon>MidiSessionSettings.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiStreamConfigurationEndpointListener.h">
+      <DependentUpon>MidiStreamConfigurationEndpointListener.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiUmp128.h">
       <DependentUpon>MidiUmp128.idl</DependentUpon>
@@ -218,7 +238,9 @@
     <ClInclude Include="MidiUmp96.h">
       <DependentUpon>MidiUmp96.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiUniqueId.h" />
     <ClInclude Include="midi_service_interface.h" />
+    <ClInclude Include="midl_defines.h" />
     <ClInclude Include="string_util.h" />
     <ClInclude Include="trace_logging.h" />
     <ClInclude Include="ump_helpers.h" />
@@ -233,17 +255,34 @@
     <ClCompile Include="MidiBidirectionalEndpointConnection.cpp">
       <DependentUpon>MidiBidirectionalEndpointConnection.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiSettingsService.cpp" />
+    <ClCompile Include="MidiStateService.cpp" />
     <ClCompile Include="MidiChannel.cpp">
       <DependentUpon>MidiChannel.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiChannelEndpointListener.cpp">
       <DependentUpon>MidiChannelEndpointListener.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiCiProxy.cpp">
+      <DependentUpon>MidiCiProxy.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiClock.cpp">
       <DependentUpon>MidiClock.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiEndpointConnection.cpp">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointInformation.cpp">
+      <DependentUpon>MidiEndpointInformation.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointInformationEndpointListener.cpp">
+      <DependentUpon>MidiEndpointInformationEndpointListener.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiFunctionBlock.cpp">
+      <DependentUpon>MidiFunctionBlock.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiFunctionBlockEndpointListener.cpp">
+      <DependentUpon>MidiFunctionBlockEndpointListener.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiGroup.cpp">
       <DependentUpon>MidiGroup.idl</DependentUpon>
@@ -257,9 +296,9 @@
     <ClCompile Include="MidiMessageReceivedEventArgs.cpp">
       <DependentUpon>MidiMessageReceivedEventArgs.idl</DependentUpon>
     </ClCompile>
-	  <ClCompile Include="MidiMessageTypeEndpointListener.cpp">
-		  <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
-	  </ClCompile>
+    <ClCompile Include="MidiMessageTypeEndpointListener.cpp">
+      <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiOutputEndpointConnection.cpp">
       <DependentUpon>MidiOutputEndpointConnection.idl</DependentUpon>
     </ClCompile>
@@ -268,6 +307,9 @@
     </ClCompile>
     <ClCompile Include="MidiSession.cpp">
       <DependentUpon>MidiSession.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiStreamConfigurationEndpointListener.cpp">
+      <DependentUpon>MidiStreamConfigurationEndpointListener.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiUmp128.cpp">
       <DependentUpon>MidiUmp128.idl</DependentUpon>
@@ -281,6 +323,7 @@
     <ClCompile Include="MidiUmp96.cpp">
       <DependentUpon>MidiUmp96.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiUniqueId.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -288,6 +331,7 @@
   </ItemGroup>
   <ItemGroup>
     <Midl Include="IMidiEndpointMessageListener.idl" />
+    <Midl Include="IMidiEndpointMessageResponder.idl" />
     <Midl Include="IMidiInputConnection.idl" />
     <Midl Include="IMidiMessageReceivedEventSource.idl" />
     <Midl Include="IMidiOutputConnection.idl" />
@@ -295,7 +339,14 @@
     <Midl Include="MidiBidirectionalEndpointConnection.idl" />
     <Midl Include="MidiChannel.idl" />
     <Midl Include="MidiChannelEndpointListener.idl" />
+    <Midl Include="MidiCIProxy.idl" />
     <Midl Include="MidiClock.idl" />
+    <Midl Include="MidiEndpointInformation.idl" />
+    <Midl Include="MidiEndpointInformationEndpointListener.idl" />
+    <Midl Include="MidiFunctionBlock.idl" />
+    <Midl Include="MidiFunctionBlockDirectionEnum.idl" />
+    <Midl Include="MidiFunctionBlockEndpointListener.idl" />
+    <Midl Include="MidiFunctionBlockUIHintEnum.idl" />
     <Midl Include="MidiGroup.idl" />
     <Midl Include="MidiGroupEndpointListener.idl" />
     <Midl Include="MidiInputEndpointConnection.idl" />
@@ -307,12 +358,14 @@
     <Midl Include="MidiSession.idl" />
     <Midl Include="MidiSessionSettings.idl" />
     <Midl Include="IMidiUmp.idl" />
+    <Midl Include="MidiStreamConfigurationEndpointListener.idl" />
     <Midl Include="MidiUmp128.idl" />
     <Midl Include="MidiUmp32.idl" />
     <Midl Include="MidiUmp64.idl" />
     <Midl Include="MidiUmp96.idl" />
     <Midl Include="MidiUmpMessageTypeEnum.idl" />
     <Midl Include="MidiUmpPacketTypeEnum.idl" />
+    <Midl Include="MidiUniqueId.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />

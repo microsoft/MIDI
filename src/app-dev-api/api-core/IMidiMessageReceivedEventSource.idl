@@ -6,14 +6,15 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
 import "MidiMessageReceivedEventArgs.idl";
 
 namespace Windows.Devices.Midi2
 {
-    [
-        uuid(101ceb4b-cca4-48a1-b91e-6002b928613c),
-        version(1.0),
-    ]
+    [MIDI_API_CONTRACT(1)]
+    [MIDI_INTERFACE_UUID("101ceb4b-cca4-48a1-b91e-6002b928613c",1.0)]
     interface IMidiMessageReceivedEventSource
     {      
         // callback for when a message comes in

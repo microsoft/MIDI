@@ -18,8 +18,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         throw hresult_not_implemented();
     }
 
-    void MidiGroupEndpointListener::Initialize(
-        _In_ winrt::Windows::Devices::Midi2::IMidiInputConnection const& /*inputConnection*/)
+    void MidiGroupEndpointListener::Initialize()
     {
         throw hresult_not_implemented();
     }
