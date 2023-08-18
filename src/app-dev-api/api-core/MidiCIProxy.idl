@@ -20,6 +20,7 @@ MIDI_IDL_IMPORT
 
 // TODO: Evaluate if this needs to be in API for caching purposes, or if it can live in the SDK instead
 
+
 import "IMidiEndpointMessageListener.idl";
 import "IMidiEndpointMessageResponder.idl";
 
@@ -34,19 +35,20 @@ namespace Windows.Devices.Midi2
         // can also consider just having an observable vector which contains the info, and that will
         // raise the notifications to anyone interested in it. May end up going that route instead. Just
         // keep vectors of profiles, properties, etc.
-//        event Windows.Foundation.TypedEventHandler<IInspectable, MidiProfileAddedEventArgs> ProfileAdded;
-//        event Windows.Foundation.TypedEventHandler<IInspectable, MidiProfileRemovedEventArgs> ProfileRemoved;
+        //event Windows.Foundation.TypedEventHandler<IInspectable, MidiProfileAddedEventArgs> ProfileAdded;
+        //event Windows.Foundation.TypedEventHandler<IInspectable, MidiProfileRemovedEventArgs> ProfileRemoved;
 
-//        event Windows.Foundation.TypedEventHandler<IInspectable, MidiProfileRemovedEventArgs> ProfileEnabled;
-//        event Windows.Foundation.TypedEventHandler<IInspectable, MidiProfileRemovedEventArgs> ProfileDisabled;
+        //event Windows.Foundation.TypedEventHandler<IInspectable, MidiProfileRemovedEventArgs> ProfileEnabled;
+        //event Windows.Foundation.TypedEventHandler<IInspectable, MidiProfileRemovedEventArgs> ProfileDisabled;
 
-        // also need stuff for the MUID, but can keep that in a table instead of a bunch of events
+        //// also need stuff for the MUID, but can keep that in a table instead of a bunch of events
 
-        // These would be good candidates for being async
+        //// These would be good candidates for being async
 
-//        SomeMidiPropertyCapsStructure GetPropertyExchangeCapabilities();       
-//        MidiPropertyData GetPropertyData(MidiUniqueId destinationMuid, String requestHeaderData, bool subscribe);
-//        bool GetPropertyData(MidiUniqueId destinationMuid, String requestHeaderData, bool subscribe);
+        //SomeMidiPropertyCapsStructure GetPropertyExchangeCapabilities();       
+
+        //MidiPropertyData GetPropertyData(MidiUniqueId destinationMuid, String requestHeaderData, bool subscribe);
+        //bool GetPropertyData(MidiUniqueId destinationMuid, String requestHeaderData, bool subscribe);
 
 
         // TODO: SDK can include helpers for building the request header
