@@ -122,6 +122,9 @@
     <ClCompile Include="MidiUniqueId.cpp">
       <Filter>API\Endpoints\Metadata\MUID</Filter>
     </ClCompile>
+    <ClCompile Include="MidiMessageBuilder.cpp">
+      <Filter>API\Messages</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -203,6 +206,9 @@
     <ClInclude Include="MidiStateService.h" />
     <ClInclude Include="MidiUniqueId.h">
       <Filter>API\Endpoints\Metadata\MUID</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessageBuilder.h">
+      <Filter>API\Messages</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -302,11 +308,23 @@
     <Midl Include="MidiCIProxy.idl">
       <Filter>API\Endpoints\ListenersAndResponders</Filter>
     </Midl>
-    <Midl Include="MidiEndpointInformationEndpointListener.idl" />
-    <Midl Include="MidiFunctionBlockEndpointListener.idl" />
-    <Midl Include="MidiStreamConfigurationEndpointListener.idl" />
     <Midl Include="MidiUniqueId.idl">
       <Filter>API\Endpoints\Metadata\MUID</Filter>
+    </Midl>
+    <Midl Include="MidiMessageBuilder.idl">
+      <Filter>API\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiSysEx8StatusEnum.idl">
+      <Filter>API\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointInformationEndpointListener.idl">
+      <Filter>API\Endpoints\ListenersAndResponders</Filter>
+    </Midl>
+    <Midl Include="MidiStreamConfigurationEndpointListener.idl">
+      <Filter>API\Endpoints\ListenersAndResponders</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlockEndpointListener.idl">
+      <Filter>API\Endpoints\ListenersAndResponders</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

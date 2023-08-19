@@ -173,6 +173,9 @@
     <ClInclude Include="MidiBidirectionalEndpointConnection.h">
       <DependentUpon>MidiBidirectionalEndpointConnection.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiMessageBuilder.h">
+      <DependentUpon>MidiMessageBuilder.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiSettingsService.h" />
     <ClInclude Include="MidiStateService.h" />
     <ClInclude Include="MidiChannel.h">
@@ -238,7 +241,9 @@
     <ClInclude Include="MidiUmp96.h">
       <DependentUpon>MidiUmp96.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiUniqueId.h" />
+    <ClInclude Include="MidiUniqueId.h">
+      <DependentUpon>MidiUniqueId.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="midi_service_interface.h" />
     <ClInclude Include="midl_defines.h" />
     <ClInclude Include="string_util.h" />
@@ -254,6 +259,9 @@
     <ClCompile Include="InternalMidiMessageReceiverHelper.cpp" />
     <ClCompile Include="MidiBidirectionalEndpointConnection.cpp">
       <DependentUpon>MidiBidirectionalEndpointConnection.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiMessageBuilder.cpp">
+      <DependentUpon>MidiMessageBuilder.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiSettingsService.cpp" />
     <ClCompile Include="MidiStateService.cpp" />
@@ -323,7 +331,9 @@
     <ClCompile Include="MidiUmp96.cpp">
       <DependentUpon>MidiUmp96.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiUniqueId.cpp" />
+    <ClCompile Include="MidiUniqueId.cpp">
+      <DependentUpon>MidiUniqueId.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -350,6 +360,7 @@
     <Midl Include="MidiGroup.idl" />
     <Midl Include="MidiGroupEndpointListener.idl" />
     <Midl Include="MidiInputEndpointConnection.idl" />
+    <Midl Include="MidiMessageBuilder.idl" />
     <Midl Include="MidiMessageReceivedEventArgs.idl" />
     <Midl Include="MidiEndpointConnection.idl" />
     <Midl Include="IMidiEndpointConnectionSettings.idl" />
@@ -359,6 +370,7 @@
     <Midl Include="MidiSessionSettings.idl" />
     <Midl Include="IMidiUmp.idl" />
     <Midl Include="MidiStreamConfigurationEndpointListener.idl" />
+    <Midl Include="MidiSysEx8StatusEnum.idl" />
     <Midl Include="MidiUmp128.idl" />
     <Midl Include="MidiUmp32.idl" />
     <Midl Include="MidiUmp64.idl" />
