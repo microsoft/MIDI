@@ -24,8 +24,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
-
-    winrt::Windows::Devices::Midi2::MidiUmpPacketType MidiMessageReceivedEventArgs::UmpType()
+    winrt::Windows::Devices::Midi2::MidiUmpPacketType MidiMessageReceivedEventArgs::UmpType() const noexcept
     {
         if (m_data.Word0 != 0)
         {
@@ -34,7 +33,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         else
         {
             return MidiUmpPacketType::UnknownOrInvalid;
-
         }
     }
 
@@ -48,7 +46,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             throw hresult_error();
         }
-
 
         if (ty == MidiUmpPacketType::Ump32)
         {
@@ -111,7 +108,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
 
         return true;
-
     }
 
     bool MidiMessageReceivedEventArgs::FillUmp32(_In_ winrt::Windows::Devices::Midi2::MidiUmp32 const& ump)
@@ -224,7 +220,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     bool MidiMessageReceivedEventArgs::FillWordArray(
         _In_ array_view<uint32_t> /* words */, 
-        _In_ uint32_t /*index*/, 
+        _In_ uint32_t const /*startIndex*/, 
         _Out_ uint32_t& /*elementsWritten*/)
     {
         throw hresult_not_implemented();
@@ -232,7 +228,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     bool MidiMessageReceivedEventArgs::FillByteArray(
         _In_ array_view<uint8_t> /* bytes */, 
-        _In_ uint32_t /*index*/, 
+        _In_ uint32_t const /*startIndex*/, 
         _Out_ uint32_t& /*elementsWritten*/)
     {
         throw hresult_not_implemented();
@@ -240,10 +236,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     bool MidiMessageReceivedEventArgs::FillBuffer(
         _In_ winrt::Windows::Foundation::IMemoryBuffer const& /* buffer */, 
-        _In_ uint32_t /* byteOffset*/,
+        _In_ uint32_t const /* byteOffset*/,
         _Out_ uint32_t& /* bytesWritten*/)
     {
         throw hresult_not_implemented();
     }
+
 
 }

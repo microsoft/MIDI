@@ -27,8 +27,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // internal implementation constructor
         MidiMessageReceivedEventArgs(_In_ PVOID data, _In_ UINT sizeInBytes, _In_ LONGLONG timestamp);
 
-        winrt::Windows::Devices::Midi2::MidiUmpPacketType UmpType();
-        internal::MidiTimestamp Timestamp() const { return m_timestamp; }
+        winrt::Windows::Devices::Midi2::MidiUmpPacketType UmpType() const noexcept;
+
+        internal::MidiTimestamp Timestamp() const noexcept { return m_timestamp; }
 
         winrt::Windows::Devices::Midi2::IMidiUmp GetUmp();
 
@@ -38,24 +39,24 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _Inout_ uint32_t& word2, 
             _Inout_ uint32_t& word3);
 
-        bool FillUmp32(_In_ winrt::Windows::Devices::Midi2::MidiUmp32 const& ump);
-        bool FillUmp64(_In_ winrt::Windows::Devices::Midi2::MidiUmp64 const& ump);
-        bool FillUmp96(_In_ winrt::Windows::Devices::Midi2::MidiUmp96 const& ump);
+        bool FillUmp32( _In_ winrt::Windows::Devices::Midi2::MidiUmp32 const& ump);
+        bool FillUmp64( _In_ winrt::Windows::Devices::Midi2::MidiUmp64 const& ump);
+        bool FillUmp96( _In_ winrt::Windows::Devices::Midi2::MidiUmp96 const& ump);
         bool FillUmp128(_In_ winrt::Windows::Devices::Midi2::MidiUmp128 const& ump);
         
         bool FillWordArray(
             _In_ array_view<uint32_t> words, 
-            _In_ uint32_t index, 
+            _In_ uint32_t const startIndex,
             _Out_ uint32_t& elementsWritten);
 
         bool FillByteArray(
             _In_ array_view<uint8_t> bytes, 
-            _In_ uint32_t index, 
+            _In_ uint32_t const startIndex, 
             _Out_ uint32_t& elementsWritten);
         
         bool FillBuffer(
             _In_ winrt::Windows::Foundation::IMemoryBuffer const& buffer, 
-            _In_ uint32_t byteOffset, 
+            _In_ uint32_t const byteOffset, 
             _Out_ uint32_t& bytesWritten);
 
 
@@ -65,7 +66,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // this does mean each event argument is up to 12 bytes larger than it needs to be, but this
         // is more efficient speed-wise, and avoids additional heap allocations.
 
-#pragma 
+
         internal::PackedMaxInternalUmpStorage m_data{};
 
     };

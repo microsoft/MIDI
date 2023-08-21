@@ -27,6 +27,9 @@
     <ClCompile Include="BaselineMidiSrvBenchmark.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
+    <ClCompile Include="MessageBuilderTests.cpp">
+      <Filter>Tests</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

@@ -205,38 +205,38 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     winrt::Windows::Devices::Midi2::MidiUmp128 MidiMessageBuilder::BuildMixedDataSetChunkHeaderMessage(
-        _In_ internal::MidiTimestamp const timestamp,
-        _In_ uint8_t const groupIndex,
-        _In_ uint8_t const mdsId,
-        _In_ uint16_t const numberValidDataBytesInThisChunk,
-        _In_ uint16_t const numberChunksInMixedDataSet,
-        _In_ uint16_t const numberOfThisChunk,
-        _In_ uint16_t const manufacturerId,
-        _In_ uint16_t const deviceId,
-        _In_ uint16_t const subId1,
-        _In_ uint16_t const subId2)
+        _In_ internal::MidiTimestamp const /*timestamp*/,
+        _In_ uint8_t const /*groupIndex*/,
+        _In_ uint8_t const /*mdsId*/,
+        _In_ uint16_t const /*numberValidDataBytesInThisChunk*/,
+        _In_ uint16_t const /*numberChunksInMixedDataSet*/,
+        _In_ uint16_t const /*numberOfThisChunk*/,
+        _In_ uint16_t const /*manufacturerId*/,
+        _In_ uint16_t const /*deviceId*/,
+        _In_ uint16_t const /*subId1*/,
+        _In_ uint16_t const /*subId2*/)
     {
         throw hresult_not_implemented();
     }
 
     winrt::Windows::Devices::Midi2::MidiUmp128 MidiMessageBuilder::BuildMixedDataSetChunkDataMessage(
-        _In_ internal::MidiTimestamp const timestamp,
-        _In_ uint8_t const groupIndex,
-        _In_ uint8_t const mdsId,
-        _In_ uint8_t const dataByte00,
-        _In_ uint8_t const dataByte01,
-        _In_ uint8_t const dataByte02,
-        _In_ uint8_t const dataByte03,
-        _In_ uint8_t const dataByte04,
-        _In_ uint8_t const dataByte05,
-        _In_ uint8_t const dataByte06,
-        _In_ uint8_t const dataByte07,
-        _In_ uint8_t const dataByte08,
-        _In_ uint8_t const dataByte09,
-        _In_ uint8_t const dataByte10,
-        _In_ uint8_t const dataByte11,
-        _In_ uint8_t const dataByte12,
-        _In_ uint8_t const dataByte13)
+        _In_ internal::MidiTimestamp const /*timestamp*/,
+        _In_ uint8_t const /*groupIndex*/,
+        _In_ uint8_t const /*mdsId*/,
+        _In_ uint8_t const /*dataByte00*/,
+        _In_ uint8_t const /*dataByte01*/,
+        _In_ uint8_t const /*dataByte02*/,
+        _In_ uint8_t const /*dataByte03*/,
+        _In_ uint8_t const /*dataByte04*/,
+        _In_ uint8_t const /*dataByte05*/,
+        _In_ uint8_t const /*dataByte06*/,
+        _In_ uint8_t const /*dataByte07*/,
+        _In_ uint8_t const /*dataByte08*/,
+        _In_ uint8_t const /*dataByte09*/,
+        _In_ uint8_t const /*dataByte10*/,
+        _In_ uint8_t const /*dataByte11*/,
+        _In_ uint8_t const /*dataByte12*/,
+        _In_ uint8_t const /*dataByte13*/)
     {
         throw hresult_not_implemented();
     }

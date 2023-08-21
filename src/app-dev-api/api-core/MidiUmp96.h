@@ -50,7 +50,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::Windows::Devices::Midi2::MidiUmpMessageType MessageType() const noexcept { return (winrt::Windows::Devices::Midi2::MidiUmpMessageType)(internal::GetUmpMessageTypeFromFirstWord(m_ump.word0)); }
         void MessageType(_In_ winrt::Windows::Devices::Midi2::MidiUmpMessageType const& value) noexcept { internal::SetUmpMessageType(m_ump.word0, (uint8_t)value); }
 
-        winrt::Windows::Devices::Midi2::MidiUmpPacketType MidiUmpPacketType() const { return winrt::Windows::Devices::Midi2::MidiUmpPacketType::Ump96; }
+        winrt::Windows::Devices::Midi2::MidiUmpPacketType UmpPacketType() const { return winrt::Windows::Devices::Midi2::MidiUmpPacketType::Ump96; }
 
         // internal for the sending code
         internal::PackedUmp96* GetInternalUmpDataPointer() { return &m_ump; }

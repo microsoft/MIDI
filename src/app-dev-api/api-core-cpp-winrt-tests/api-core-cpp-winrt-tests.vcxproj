@@ -133,6 +133,7 @@
     <ClCompile Include="BidirectionalEndpointTests.cpp" />
     <ClCompile Include="BaselineMidiSrvBenchmark.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MessageBuilderTests.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>

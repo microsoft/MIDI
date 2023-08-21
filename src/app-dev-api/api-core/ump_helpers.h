@@ -89,27 +89,27 @@ namespace Windows::Devices::Midi2::Internal
 
 
 
-    inline uint8_t CleanupInt10(_In_ uint16_t const value)
+    inline uint16_t CleanupInt10(_In_ uint16_t const value)
     {
-        return value & 0x3FF;
+        return value & (uint16_t)0x3FF;
     }
 
     // 7 bit byte
     inline uint8_t CleanupByte7(_In_ uint8_t const value)
     {
-        return value & 0x7F;
+        return value & (uint8_t)0x7F;
     }
 
     // 4-bit value
     inline uint8_t CleanupNibble(_In_ uint8_t const value)
     {
-        return value & 0xF;
+        return value & (uint8_t)0xF;
     }
 
     // 2-bit value
     inline uint8_t CleanupCrumb(_In_ uint8_t const value)
     {
-        return value & 0x3;
+        return value & (uint8_t)0x3;
     }
 
 

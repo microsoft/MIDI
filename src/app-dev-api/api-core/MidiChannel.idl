@@ -6,10 +6,6 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-// TODO: Consider changing to a struct
-
-//import "Windows.Foundation.idl";
-
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 

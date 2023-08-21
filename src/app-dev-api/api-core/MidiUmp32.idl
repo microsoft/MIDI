@@ -24,3 +24,6 @@ namespace Windows.Devices.Midi2
         UInt32 Word0{ get; set; };
     };
 }
+
+
+
