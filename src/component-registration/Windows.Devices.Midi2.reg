@@ -1,0 +1,181 @@
+Windows Registry Editor Version 5.00
+
+; Copyright (c) Microsoft Corporation.
+; Licensed under the MIT License
+; ============================================================================
+; This is part of the Windows MIDI Services App API and should be used
+; in your Windows application via an official binary distribution.
+; Further information: https://github.com/microsoft/MIDI/
+; ============================================================================
+;
+; NOTE: This file is not yet complete
+;
+; Threading Values: TODO
+; TrustLevel Values: TODO
+; ActivationType Values: TODO
+; TODO: Register all the COM types
+; Also TODO: CLSID entry values for each class. ex: "CLSID"="{3A004F2A-7483-4C17-9F8F-A246053D3A2A}"
+
+
+
+; Session Management
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId\Windows.Devices.Midi2.MidiSession]
+"ActivationType"=dword:00000000
+"DllPath"="%programfiles%\\Microsoft\\Midi 2.0\\Windows.Devices.Midi2.dll"
+"Threading"=dword:00000000
+"TrustLevel"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId\Windows.Devices.Midi2.MidiSessionSettings]
+"ActivationType"=dword:00000000
+"DllPath"="%programfiles%\\Microsoft\\Midi 2.0\\Windows.Devices.Midi2.dll"
+"Threading"=dword:00000000
+"TrustLevel"=dword:00000000
+
+; Messages
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId\Windows.Devices.Midi2.MidiMessageBuilder]
+"ActivationType"=dword:00000000
+"DllPath"="%programfiles%\\Microsoft\\Midi 2.0\\Windows.Devices.Midi2.dll"
+"Threading"=dword:00000000
+"TrustLevel"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId\Windows.Devices.Midi2.MidiUmp32]
+"ActivationType"=dword:00000000
+"DllPath"="%programfiles%\\Microsoft\\Midi 2.0\\Windows.Devices.Midi2.dll"
+"Threading"=dword:00000000
+"TrustLevel"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId\Windows.Devices.Midi2.MidiUmp64]
+"ActivationType"=dword:00000000
+"DllPath"="%programfiles%\\Microsoft\\Midi 2.0\\Windows.Devices.Midi2.dll"
+"Threading"=dword:00000000
+"TrustLevel"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId\Windows.Devices.Midi2.MidiUmp96]
+"ActivationType"=dword:00000000
+"DllPath"="%programfiles%\\Microsoft\\Midi 2.0\\Windows.Devices.Midi2.dll"
+"Threading"=dword:00000000
+"TrustLevel"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId\Windows.Devices.Midi2.MidiUmp128]
+"ActivationType"=dword:00000000
+"DllPath"="%programfiles%\\Microsoft\\Midi 2.0\\Windows.Devices.Midi2.dll"
+"Threading"=dword:00000000
+"TrustLevel"=dword:00000000
+
+; Metadata
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId\Windows.Devices.Midi2.MidiEndpointInformation]
+"ActivationType"=dword:00000000
+"DllPath"="%programfiles%\\Microsoft\\Midi 2.0\\Windows.Devices.Midi2.dll"
+"Threading"=dword:00000000
+"TrustLevel"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId\Windows.Devices.Midi2.MidiFunctionBlock]
+"ActivationType"=dword:00000000
+"DllPath"="%programfiles%\\Microsoft\\Midi 2.0\\Windows.Devices.Midi2.dll"
+"Threading"=dword:00000000
+"TrustLevel"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId\Windows.Devices.Midi2.MidiUniqueId]
+"ActivationType"=dword:00000000
+"DllPath"="%programfiles%\\Microsoft\\Midi 2.0\\Windows.Devices.Midi2.dll"
+"Threading"=dword:00000000
+"TrustLevel"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId\Windows.Devices.Midi2.GroupTerminalBlock]
+"ActivationType"=dword:00000000
+"DllPath"="%programfiles%\\Microsoft\\Midi 2.0\\Windows.Devices.Midi2.dll"
+"Threading"=dword:00000000
+"TrustLevel"=dword:00000000
+
+
+; Listeners and Responders
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId\Windows.Devices.Midi2.MidiChannelEndpointListener]
+"ActivationType"=dword:00000000
+"DllPath"="%programfiles%\\Microsoft\\Midi 2.0\\Windows.Devices.Midi2.dll"
+"Threading"=dword:00000000
+"TrustLevel"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId\Windows.Devices.Midi2.MidiEndpointInformationEndpointListener]
+"ActivationType"=dword:00000000
+"DllPath"="%programfiles%\\Microsoft\\Midi 2.0\\Windows.Devices.Midi2.dll"
+"Threading"=dword:00000000
+"TrustLevel"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId\Windows.Devices.Midi2.MidiFunctionBlockEndpointListener]
+"ActivationType"=dword:00000000
+"DllPath"="%programfiles%\\Microsoft\\Midi 2.0\\Windows.Devices.Midi2.dll"
+"Threading"=dword:00000000
+"TrustLevel"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId\Windows.Devices.Midi2.MidiGroupEndpointListener]
+"ActivationType"=dword:00000000
+"DllPath"="%programfiles%\\Microsoft\\Midi 2.0\\Windows.Devices.Midi2.dll"
+"Threading"=dword:00000000
+"TrustLevel"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId\Windows.Devices.Midi2.MidiMessageTypeEndpointListener]
+"ActivationType"=dword:00000000
+"DllPath"="%programfiles%\\Microsoft\\Midi 2.0\\Windows.Devices.Midi2.dll"
+"Threading"=dword:00000000
+"TrustLevel"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId\Windows.Devices.Midi2.MidiStreamConfigurationEndpointListener]
+"ActivationType"=dword:00000000
+"DllPath"="%programfiles%\\Microsoft\\Midi 2.0\\Windows.Devices.Midi2.dll"
+"Threading"=dword:00000000
+"TrustLevel"=dword:00000000
+
+; Events
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId\Windows.Devices.Midi2.MidiMessageReceivedEventArgs]
+"ActivationType"=dword:00000000
+"DllPath"="%programfiles%\\Microsoft\\Midi 2.0\\Windows.Devices.Midi2.dll"
+"Threading"=dword:00000000
+"TrustLevel"=dword:00000000
+
+
+; Endpoint Connections
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId\Windows.Devices.Midi2.MidiBidirectionalEndpointConnection]
+"ActivationType"=dword:00000000
+"DllPath"="%programfiles%\\Microsoft\\Midi 2.0\\Windows.Devices.Midi2.dll"
+"Threading"=dword:00000000
+"TrustLevel"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId\Windows.Devices.Midi2.MidiEndpointConnection]
+"ActivationType"=dword:00000000
+"DllPath"="%programfiles%\\Microsoft\\Midi 2.0\\Windows.Devices.Midi2.dll"
+"Threading"=dword:00000000
+"TrustLevel"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId\Windows.Devices.Midi2.MidiInputEndpointConnection]
+"ActivationType"=dword:00000000
+"DllPath"="%programfiles%\\Microsoft\\Midi 2.0\\Windows.Devices.Midi2.dll"
+"Threading"=dword:00000000
+"TrustLevel"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId\Windows.Devices.Midi2.MidiOutputEndpointConnection]
+"ActivationType"=dword:00000000
+"DllPath"="%programfiles%\\Microsoft\\Midi 2.0\\Windows.Devices.Midi2.dll"
+"Threading"=dword:00000000
+"TrustLevel"=dword:00000000
+
+
+; Basic types
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId\Windows.Devices.Midi2.MidiChannel]
+"ActivationType"=dword:00000000
+"DllPath"="%programfiles%\\Microsoft\\Midi 2.0\\Windows.Devices.Midi2.dll"
+"Threading"=dword:00000000
+"TrustLevel"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId\Windows.Devices.Midi2.MidiGroup]
+"ActivationType"=dword:00000000
+"DllPath"="%programfiles%\\Microsoft\\Midi 2.0\\Windows.Devices.Midi2.dll"
+"Threading"=dword:00000000
+"TrustLevel"=dword:00000000
+

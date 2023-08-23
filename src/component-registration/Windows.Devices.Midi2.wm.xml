@@ -1,4 +1,18 @@
 <?xml version='1.0' encoding='utf-8' standalone='yes'?>
+
+<!--
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+-->
+
+<!-- This file is not yet complete -->
+
+
 <identity
     xmlns="urn:Microsoft.CompPlat/ManifestSchema.v1.00"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema"

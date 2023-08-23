@@ -173,6 +173,7 @@
     <ClInclude Include="MidiBidirectionalEndpointConnection.h">
       <DependentUpon>MidiBidirectionalEndpointConnection.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiGroupTerminalBlock.h" />
     <ClInclude Include="MidiMessageBuilder.h">
       <DependentUpon>MidiMessageBuilder.idl</DependentUpon>
     </ClInclude>
@@ -260,6 +261,7 @@
     <ClCompile Include="MidiBidirectionalEndpointConnection.cpp">
       <DependentUpon>MidiBidirectionalEndpointConnection.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiGroupTerminalBlock.cpp" />
     <ClCompile Include="MidiMessageBuilder.cpp">
       <DependentUpon>MidiMessageBuilder.idl</DependentUpon>
     </ClCompile>
@@ -359,6 +361,9 @@
     <Midl Include="MidiFunctionBlockUIHintEnum.idl" />
     <Midl Include="MidiGroup.idl" />
     <Midl Include="MidiGroupEndpointListener.idl" />
+    <Midl Include="MidiGroupTerminalBlock.idl" />
+    <Midl Include="MidiGroupTerminalBlockDirectionEnum.idl" />
+    <Midl Include="MidiGroupTerminalBlockProtocolEnum.idl" />
     <Midl Include="MidiInputEndpointConnection.idl" />
     <Midl Include="MidiMessageBuilder.idl" />
     <Midl Include="MidiMessageReceivedEventArgs.idl" />

@@ -76,7 +76,7 @@ namespace Windows::Devices::Midi2::Internal
         void* umpDataPointer{};
         dataSizeOut = 0;
 
-        switch (ump.MidiUmpPacketType())
+        switch (ump.UmpPacketType())
         {
         case winrt::Windows::Devices::Midi2::MidiUmpPacketType::Ump32:
             dataSizeOut = (uint32_t)sizeof(internal::PackedUmp32);

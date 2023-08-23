@@ -10,6 +10,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.runsettings = .runsettings
 		Directory.Build.props = Directory.Build.props
 		README.md = README.md
+		..\component-registration\Windows.Devices.Midi2.reg = ..\component-registration\Windows.Devices.Midi2.reg
+		..\component-registration\Windows.Devices.Midi2.wm.xml = ..\component-registration\Windows.Devices.Midi2.wm.xml
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Windows.Devices.Midi2.Configuration", "api-config\midi-configuration-api.vcxproj", "{F9518C1F-97F1-473A-8C5C-831EAE17AAF3}"

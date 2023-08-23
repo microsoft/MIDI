@@ -55,6 +55,9 @@
     <Filter Include="API\Endpoints\Metadata\MUID">
       <UniqueIdentifier>{6629b1ee-8608-477e-9537-9a1f55cb770f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="API\Endpoints\Metadata\GroupTerminals">
+      <UniqueIdentifier>{3c52bf63-efe2-49f8-b72e-67ca9986e46b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -124,6 +127,9 @@
     </ClCompile>
     <ClCompile Include="MidiMessageBuilder.cpp">
       <Filter>API\Messages</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiGroupTerminalBlock.cpp">
+      <Filter>API\Endpoints\Metadata\GroupTerminals</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -209,6 +215,9 @@
     </ClInclude>
     <ClInclude Include="MidiMessageBuilder.h">
       <Filter>API\Messages</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiGroupTerminalBlock.h">
+      <Filter>API\Endpoints\Metadata\GroupTerminals</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -325,6 +334,15 @@
     </Midl>
     <Midl Include="MidiFunctionBlockEndpointListener.idl">
       <Filter>API\Endpoints\ListenersAndResponders</Filter>
+    </Midl>
+    <Midl Include="MidiGroupTerminalBlockDirectionEnum.idl">
+      <Filter>API\Endpoints\Metadata\GroupTerminals</Filter>
+    </Midl>
+    <Midl Include="MidiGroupTerminalBlockProtocolEnum.idl">
+      <Filter>API\Endpoints\Metadata\GroupTerminals</Filter>
+    </Midl>
+    <Midl Include="MidiGroupTerminalBlock.idl">
+      <Filter>API\Endpoints\Metadata\GroupTerminals</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
