@@ -36,8 +36,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\app-dev-api\api-core\Windows.Devices.Midi2.vcxproj" />
     <ProjectReference Include="..\sdk-core\Microsoft.Devices.Midi2.Core.vcxproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Windows.Devices.Midi2">
+      <HintPath>C:\Program Files\Microsoft\Midi 2.0\Windows.Devices.Midi2.winmd</HintPath>
+      <IsWinMDFile>true</IsWinMDFile>
+    </Reference>
   </ItemGroup>
 
 </Project>

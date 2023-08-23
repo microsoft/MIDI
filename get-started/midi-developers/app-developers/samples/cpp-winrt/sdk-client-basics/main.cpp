@@ -112,12 +112,12 @@ int main()
                     std::cout << "- Current Timestamp: " << std::dec << MidiClock::GetMidiTimestamp() << std::endl;
                     std::cout << "- UMP Timestamp:     " << std::dec << ump.Timestamp() << std::endl;
                     std::cout << "- UMP Msg Type:      0x" << std::hex << (uint32_t)ump.MessageType() << std::endl;
-                    std::cout << "- UMP Packet Type:   0x" << std::hex << (uint32_t)ump.MidiUmpPacketType() << std::endl;
+                    std::cout << "- UMP Packet Type:   0x" << std::hex << (uint32_t)ump.UmpPacketType() << std::endl;
                   
 
                     // if you wish to cast the IMidiUmp to a specific Ump Type, you can do so using .as<T> WinRT extension
 
-                    if (ump.MidiUmpPacketType() == MidiUmpPacketType::Ump32)
+                    if (ump.UmpPacketType() == MidiUmpPacketType::Ump32)
                     {
                         // we'll use the Ump32 type here. This is a runtimeclass that the strongly-typed 
                         // 32-bit messages derive from. There are also MidiUmp64/96/128 classes.
