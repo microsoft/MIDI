@@ -9,8 +9,9 @@
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-import "IMidiEndpointConnectionSettings.idl";
+import "IMidiEndpointDefinedConnectionSettings.idl";
 
+import "MidiEndpointConnectionSharingEnum.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -35,6 +36,11 @@ namespace Windows.Devices.Midi2
         // here for cases when the app holds on to an instance of this outside of the map
         Boolean IsOpen{ get; };
 
-        IMidiEndpointConnectionSettings Settings{ get; };
+
+        // the sharing mode that is currently active
+
+        MidiEndpointConnectionSharing ActiveSharingMode{ get; };
+
+        IMidiEndpointDefinedConnectionSettings Settings{ get; };
     }
 }

@@ -23,13 +23,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
         hstring Id() const noexcept { return m_id; }
         hstring DeviceId() const noexcept { return m_deviceId; }
         bool IsOpen() const noexcept { return m_isOpen; }
-        IMidiEndpointConnectionSettings Settings() noexcept { return m_settings; }
+        IMidiEndpointDefinedConnectionSettings Settings() noexcept { return m_settings; }
+
+        winrt::Windows::Devices::Midi2::MidiEndpointConnectionSharing ActiveSharingMode() { return m_activeSharingMode; }
 
         IInspectable Tag() const noexcept { return m_tag; }
         void Tag(_In_ IInspectable value) noexcept { m_tag = value; }
 
 
-        void InternalSetSettings(_In_ IMidiEndpointConnectionSettings value) { m_settings = value; }
+        void InternalSetSettings(_In_ IMidiEndpointDefinedConnectionSettings value) { m_settings = value; }
         void InternalSetDeviceId(_In_ hstring value) { m_deviceId = value; }
         void InternalSetId(_In_ hstring value) { m_id = value; }
         void InternalSetIsConnected(_In_ bool value) { m_isOpen = value; }
@@ -38,10 +40,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         hstring m_id {};
         hstring m_deviceId {};
         IInspectable m_tag{ nullptr };
+        winrt::Windows::Devices::Midi2::MidiEndpointConnectionSharing m_activeSharingMode{ winrt::Windows::Devices::Midi2::MidiEndpointConnectionSharing::Unknown };
         
         bool m_isOpen{ false };
 
-        IMidiEndpointConnectionSettings m_settings{ nullptr };
+        IMidiEndpointDefinedConnectionSettings m_settings{ nullptr };
 
     };
 }

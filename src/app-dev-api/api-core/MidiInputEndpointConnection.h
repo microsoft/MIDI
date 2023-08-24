@@ -18,7 +18,8 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    struct MidiInputEndpointConnection : MidiInputEndpointConnectionT<MidiInputEndpointConnection, 
+    struct MidiInputEndpointConnection : MidiInputEndpointConnectionT<
+        MidiInputEndpointConnection, 
         Windows::Devices::Midi2::implementation::MidiEndpointConnection,
         IMidiCallback>
     {

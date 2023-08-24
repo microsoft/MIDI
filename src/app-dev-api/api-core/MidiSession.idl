@@ -14,8 +14,14 @@ import "MidiOutputEndpointConnection.idl";
 import "MidiInputEndpointConnection.idl";
 import "MidiBidirectionalEndpointConnection.idl";
 
-import "IMidiEndpointConnectionSettings.idl";
+import "IMidiEndpointDefinedConnectionSettings.idl";
+
 import "MidiSessionSettings.idl";
+
+import "MidiBidirectionalEndpointOpenOptions.idl";
+import "MidiInputEndpointOpenOptions.idl";
+import "MidiOutputEndpointOpenOptions.idl";
+
 
 namespace Windows.Devices.Midi2
 {
@@ -28,6 +34,7 @@ namespace Windows.Devices.Midi2
         MidiSessionSettings Settings{ get; };
 
         // captures the PID, app name, etc.
+        static MidiSession CreateSession(String sessionName);
         static MidiSession CreateSession(String sessionName, MidiSessionSettings settings);
 
         Boolean IsOpen { get; };
@@ -35,33 +42,56 @@ namespace Windows.Devices.Midi2
         // this really should be read-only to users of this class
         IMapView<String, MidiEndpointConnection> Connections{ get; };
 
+        // output-only. Typically for MIDI 1.0 device/block
+        MidiOutputEndpointConnection ConnectOutputEndpoint(
+            String midiEndpointId);
 
-        // connects to an output-only endpoint. Typically only for MIDI 1.0 devices.
-        // Call this as many times as needed to get different logical connections
-        // Each logical connection for a single endpoint shares the same IO stream and
-        // service connection.
         MidiOutputEndpointConnection ConnectOutputEndpoint(
             String midiEndpointId, 
-            IMidiEndpointConnectionSettings settings);
+            MidiOutputEndpointOpenOptions options);
 
-        // connects to an input-only endpoint. Typically only for MIDI 1.0 devices.
-        // Call this as many times as needed to get different logical connections
-        // different filters (like a connection per group or function block, if you'd like)
-        // The filters only affect incoming messages. Outgoing messages are not touched.
+        MidiOutputEndpointConnection ConnectOutputEndpoint(
+            String midiEndpointId,
+            MidiOutputEndpointOpenOptions options,
+            IMidiEndpointDefinedConnectionSettings settings);
+
+
+        // input-only. Typically for MIDI 1.0 device/block
+
+        MidiInputEndpointConnection ConnectInputEndpoint(
+            String midiEndpointId);
+
         MidiInputEndpointConnection ConnectInputEndpoint(
             String midiEndpointId,
-            IMidiEndpointConnectionSettings settings);
+            MidiInputEndpointOpenOptions options);
+
+        MidiInputEndpointConnection ConnectInputEndpoint(
+            String midiEndpointId,
+            MidiInputEndpointOpenOptions options,
+            IMidiEndpointDefinedConnectionSettings settings);
+
 
         // connects to a bidirectional endpoint. For MIDI 2.0 devices, this will be the norm. 
         // see notes above.
         MidiBidirectionalEndpointConnection ConnectBidirectionalEndpoint(
+            String midiEndpointId);
+
+        MidiBidirectionalEndpointConnection ConnectBidirectionalEndpoint(
             String midiEndpointId,
-            IMidiEndpointConnectionSettings settings);
+            MidiBidirectionalEndpointOpenOptions options);
+
+        MidiBidirectionalEndpointConnection ConnectBidirectionalEndpoint(
+            String midiEndpointId,
+            MidiBidirectionalEndpointOpenOptions options, 
+            IMidiEndpointDefinedConnectionSettings settings);
+
+
+
+
 
         // note that this takes the connection instance id, not the endpoint id itself
-        // This will remove a single endpoint connection instance. If it's the last one
-        // for that endpoint, it will remove/cleanup the underlying service interface and
-        // resources for that endpoint.
+        // This will remove a single endpoint connection instance.
+
         void DisconnectEndpointConnection(String endpointConnectionInstanceId);
 
  

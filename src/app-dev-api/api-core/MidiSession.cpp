@@ -57,6 +57,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
        
     }
 
+    winrt::Windows::Devices::Midi2::MidiSession MidiSession::CreateSession(
+        _In_ hstring const& sessionName)
+    {
+        return CreateSession(sessionName, winrt::Windows::Devices::Midi2::MidiSessionSettings::Default());
+    }
 
     // Internal method called inside the API to connect to the abstraction. Called by the code which creates
     // the session instance
@@ -91,11 +96,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return internal::ToUpperTrimmedHStringCopy(deviceId);
     }
 
-
+    // Bidirectional ===========================================================================================================
 
     winrt::Windows::Devices::Midi2::MidiBidirectionalEndpointConnection MidiSession::ConnectBidirectionalEndpoint(
-        _In_ hstring const& deviceId, 
-        _In_ winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& /*settings*/)
+        _In_ hstring const& deviceId,
+        _In_ winrt::Windows::Devices::Midi2::MidiBidirectionalEndpointOpenOptions const& /* options */,
+        _In_ winrt::Windows::Devices::Midi2::IMidiEndpointDefinedConnectionSettings const& /*settings*/)
     {
         try
         {
@@ -113,7 +119,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 m_connections.Insert((winrt::hstring)normalizedDeviceId, (const Windows::Devices::Midi2::MidiEndpointConnection)(*endpointConnection));
 
-                // TODO: This value needs to come from configuration for this endpoint
+                // TODO: This value needs to come from configuration for this endpoint. It comes from
+                // the user settings property store, and then the open options
                 bool autoHandleEndpointMessages = true;
 
                 if (autoHandleEndpointMessages)
@@ -145,28 +152,77 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             return nullptr;
         }
+    }
 
+    winrt::Windows::Devices::Midi2::MidiBidirectionalEndpointConnection MidiSession::ConnectBidirectionalEndpoint(
+        _In_ hstring const& deviceId,
+        _In_ winrt::Windows::Devices::Midi2::MidiBidirectionalEndpointOpenOptions const& options)
+    {
+        return ConnectBidirectionalEndpoint(deviceId, options, nullptr);
+    }
+
+    winrt::Windows::Devices::Midi2::MidiBidirectionalEndpointConnection MidiSession::ConnectBidirectionalEndpoint(
+        _In_ hstring const& deviceId)
+    {
+        return ConnectBidirectionalEndpoint(deviceId, nullptr, nullptr);
     }
 
 
+
+
+    // Output ===================================================================================================================
+
     winrt::Windows::Devices::Midi2::MidiOutputEndpointConnection MidiSession::ConnectOutputEndpoint(
         _In_ hstring const& /*deviceId*/,
-        _In_ winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& /*settings*/)
+        _In_ winrt::Windows::Devices::Midi2::MidiOutputEndpointOpenOptions const& /* options */,
+        _In_ winrt::Windows::Devices::Midi2::IMidiEndpointDefinedConnectionSettings const& /*settings*/)
     {
         // TODO: Implement ConnectOutputEndpoint
 
         throw hresult_not_implemented();
     }
 
+    winrt::Windows::Devices::Midi2::MidiOutputEndpointConnection MidiSession::ConnectOutputEndpoint(
+        _In_ hstring const& deviceId,
+        _In_ winrt::Windows::Devices::Midi2::MidiOutputEndpointOpenOptions const& options)
+    {
+        return ConnectOutputEndpoint(deviceId, options, nullptr);
+    }
+
+    winrt::Windows::Devices::Midi2::MidiOutputEndpointConnection MidiSession::ConnectOutputEndpoint(
+        _In_ hstring const& deviceId)
+    {
+        return ConnectOutputEndpoint(deviceId, nullptr, nullptr);
+    }
+
+
+
+    // Input ==================================================================================================================
 
     winrt::Windows::Devices::Midi2::MidiInputEndpointConnection MidiSession::ConnectInputEndpoint(
         _In_ hstring const& /*deviceId*/,
-        _In_ winrt::Windows::Devices::Midi2::IMidiEndpointConnectionSettings const& /*settings*/)
+        _In_ winrt::Windows::Devices::Midi2::MidiInputEndpointOpenOptions const& /* options */,
+        _In_ winrt::Windows::Devices::Midi2::IMidiEndpointDefinedConnectionSettings const& /*settings*/)
     {
         // TODO: Implement ConnectInputEndpoint
 
         throw hresult_not_implemented();
     }
+
+    winrt::Windows::Devices::Midi2::MidiInputEndpointConnection MidiSession::ConnectInputEndpoint(
+        _In_ hstring const& deviceId,
+        _In_ winrt::Windows::Devices::Midi2::MidiInputEndpointOpenOptions const& options)
+    {
+        return ConnectInputEndpoint(deviceId, options, nullptr);
+    }
+
+    winrt::Windows::Devices::Midi2::MidiInputEndpointConnection MidiSession::ConnectInputEndpoint(
+        _In_ hstring const& deviceId)
+    {
+        return ConnectInputEndpoint(deviceId, nullptr, nullptr);
+    }
+
+
 
 
 
@@ -176,7 +232,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
             if (m_connections.HasKey(endpointConnectionId))
             {
-                // todo: disconnect the endpoint from the service
+                // todo: disconnect the endpoint from the service, call Close() etc.
 
 
 
@@ -189,7 +245,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
-            internal::LogHresultError(__FUNCTION__, L" hresult exception disconnectingfrom endpoint.", ex);
+            internal::LogHresultError(__FUNCTION__, L" hresult exception disconnecting from endpoint.", ex);
 
             return;
         }

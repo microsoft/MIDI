@@ -173,10 +173,13 @@
     <ClInclude Include="MidiBidirectionalEndpointConnection.h">
       <DependentUpon>MidiBidirectionalEndpointConnection.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiBidirectionalEndpointOpenOptions.h" />
     <ClInclude Include="MidiGroupTerminalBlock.h" />
+    <ClInclude Include="MidiInputEndpointOpenOptions.h" />
     <ClInclude Include="MidiMessageBuilder.h">
       <DependentUpon>MidiMessageBuilder.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiOutputEndpointOpenOptions.h" />
     <ClInclude Include="MidiSettingsService.h" />
     <ClInclude Include="MidiStateService.h" />
     <ClInclude Include="MidiChannel.h">
@@ -261,10 +264,13 @@
     <ClCompile Include="MidiBidirectionalEndpointConnection.cpp">
       <DependentUpon>MidiBidirectionalEndpointConnection.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiBidirectionalEndpointOpenOptions.cpp" />
     <ClCompile Include="MidiGroupTerminalBlock.cpp" />
+    <ClCompile Include="MidiInputEndpointOpenOptions.cpp" />
     <ClCompile Include="MidiMessageBuilder.cpp">
       <DependentUpon>MidiMessageBuilder.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiOutputEndpointOpenOptions.cpp" />
     <ClCompile Include="MidiSettingsService.cpp" />
     <ClCompile Include="MidiStateService.cpp" />
     <ClCompile Include="MidiChannel.cpp">
@@ -349,10 +355,13 @@
     <Midl Include="IMidiOutputConnection.idl" />
     <Midl Include="IMidiTransportSettingsData.idl" />
     <Midl Include="MidiBidirectionalEndpointConnection.idl" />
+    <Midl Include="MidiBidirectionalEndpointOpenOptions.idl" />
     <Midl Include="MidiChannel.idl" />
     <Midl Include="MidiChannelEndpointListener.idl" />
     <Midl Include="MidiCIProxy.idl" />
     <Midl Include="MidiClock.idl" />
+    <Midl Include="MidiEndpointConnectionSharingEnum.idl" />
+    <Midl Include="MidiEndpointConnectionSharingPreferenceEnum.idl" />
     <Midl Include="MidiEndpointInformation.idl" />
     <Midl Include="MidiEndpointInformationEndpointListener.idl" />
     <Midl Include="MidiFunctionBlock.idl" />
@@ -365,12 +374,14 @@
     <Midl Include="MidiGroupTerminalBlockDirectionEnum.idl" />
     <Midl Include="MidiGroupTerminalBlockProtocolEnum.idl" />
     <Midl Include="MidiInputEndpointConnection.idl" />
+    <Midl Include="MidiInputEndpointOpenOptions.idl" />
     <Midl Include="MidiMessageBuilder.idl" />
     <Midl Include="MidiMessageReceivedEventArgs.idl" />
     <Midl Include="MidiEndpointConnection.idl" />
-    <Midl Include="IMidiEndpointConnectionSettings.idl" />
+    <Midl Include="IMidiEndpointDefinedConnectionSettings.idl" />
     <Midl Include="MidiMessageTypeEndpointListener.idl" />
     <Midl Include="MidiOutputEndpointConnection.idl" />
+    <Midl Include="MidiOutputEndpointOpenOptions.idl" />
     <Midl Include="MidiSession.idl" />
     <Midl Include="MidiSessionSettings.idl" />
     <Midl Include="IMidiUmp.idl" />
