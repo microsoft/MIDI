@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "MidiLoopbackDevice.h"
+
 class CMidi2SimpleLoopbackMidiBiDi : 
     public Microsoft::WRL::RuntimeClass<
         Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
@@ -23,6 +25,9 @@ public:
 
 private:
     IMidiCallback* m_callback;
+
+    // loopback is simple, so we only have the one device we're associated with
+    MidiLoopbackDevice* m_midiDevice;
 };
 
 

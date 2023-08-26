@@ -26,7 +26,15 @@ CMidi2SimpleLoopbackMidiBiDi::Initialize(
         TraceLoggingPointer(this, "this")
         );
 
+    RETURN_HR_IF_NULL(E_INVALIDARG, callback);
     m_callback = callback;
+
+    // if you're looking for code to emulate for your own transport, this isn't the best
+    // example. Why? We completely ignore the device Id and simply return a static device
+    // based on the type of endpoint requested.
+
+    m_midiDevice = (MidiLoopbackDevice*)(MidiDeviceTable::Current().GetBidiDevice());
+    RETURN_HR_IF_NULL(E_POINTER, m_midiDevice);
 
     return S_OK;
 }
@@ -42,6 +50,7 @@ CMidi2SimpleLoopbackMidiBiDi::Cleanup()
         );
 
     m_callback = nullptr;
+    m_midiDevice = nullptr;
 
     return S_OK;
 }
@@ -51,52 +60,34 @@ HRESULT
 CMidi2SimpleLoopbackMidiBiDi::SendMidiMessage(
     PVOID message,
     UINT size,
-    LONGLONG position
+    LONGLONG timestamp
 )
 {
     if (m_callback == nullptr)
     {
         // TODO log that callback is null
-        return E_FAIL;
+        return E_POINTER;
     }
 
     if (message == nullptr)
     {
         // TODO log that message was null
-        return E_FAIL;
+        return E_INVALIDARG;
     }
 
     if (size < sizeof(uint32_t))
     {
         // TODO log that data was smaller than minimum UMP size
-        return E_FAIL;
+        return E_INVALIDARG;
     }
 
-    //// copy the data
+    if (m_midiDevice == nullptr)
+    {
+        // TODO log that midi device is null
+        return E_POINTER;
+    }
 
-    //auto data = std::make_unique<byte[]>(size);
-
-    //std::memcpy((void*)(data.get()), message, size);
-
-
-    //uint32_t firstWord = *(uint32_t*)message;
-
-    //std::wstringstream ss;
-
-    //ss << "CMidi2SampleMidiBiDi::SendMidiMessage. Received timestamp: " << std::hex << position << ", Size: " << size << ", First word: " << firstWord;
-    //OutputDebugString(ss.str().c_str());
-
-    //// resend it. "position" is the timestamp
-
-    //_callback->Callback(data.get(), size, position);
-
-    //OutputDebugString(L"CMidi2SampleMidiBiDi::SendMidiMessage Callback message sent");
-
-
-    m_callback->Callback(message, size, position);
-
-    return S_OK;
-
+    return m_midiDevice->SendMidiMessage(message, size, timestamp);
 }
 
 _Use_decl_annotations_
@@ -107,8 +98,6 @@ CMidi2SimpleLoopbackMidiBiDi::Callback(
     LONGLONG
 )
 {
-    //return E_NOTIMPL;
-
     // just eat it for this simple loopback
     return S_OK;
 }
