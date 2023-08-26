@@ -26,7 +26,7 @@ TEST_CASE("Offline.Ump.MessageAndPacketTypes UMP Message and Packet Types")
         ump.MessageType(mt);
 
         REQUIRE(ump.MessageType() == mt);
-        REQUIRE(ump.MidiUmpPacketType() == MidiUmpPacketType::Ump32);
+        REQUIRE(ump.UmpPacketType() == MidiUmpPacketType::Ump32);
     }
 
 
@@ -38,7 +38,7 @@ TEST_CASE("Offline.Ump.MessageAndPacketTypes UMP Message and Packet Types")
         ump.MessageType(mt);
 
         REQUIRE(ump.MessageType() == mt);
-        REQUIRE(ump.MidiUmpPacketType() == MidiUmpPacketType::Ump64);
+        REQUIRE(ump.UmpPacketType() == MidiUmpPacketType::Ump64);
     }
 
     SECTION("Test UMP96")
@@ -49,7 +49,7 @@ TEST_CASE("Offline.Ump.MessageAndPacketTypes UMP Message and Packet Types")
         ump.MessageType(mt);
 
         REQUIRE(ump.MessageType() == mt);
-        REQUIRE(ump.MidiUmpPacketType() == MidiUmpPacketType::Ump96);
+        REQUIRE(ump.UmpPacketType() == MidiUmpPacketType::Ump96);
     }
 
     SECTION("Test UMP128")
@@ -60,7 +60,7 @@ TEST_CASE("Offline.Ump.MessageAndPacketTypes UMP Message and Packet Types")
         ump.MessageType(mt);
 
         REQUIRE(ump.MessageType() == mt);
-        REQUIRE(ump.MidiUmpPacketType() == MidiUmpPacketType::Ump128);
+        REQUIRE(ump.UmpPacketType() == MidiUmpPacketType::Ump128);
     }
 
 
@@ -84,17 +84,17 @@ TEST_CASE("Offline.Ump.Casting UMP Interface Casting")
     originalUmp.MessageType(mt);        // set message type after the word because it changes Word0
 
     REQUIRE(originalUmp.MessageType() == mt);
-    REQUIRE(originalUmp.MidiUmpPacketType() == MidiUmpPacketType::Ump32);
+    REQUIRE(originalUmp.UmpPacketType() == MidiUmpPacketType::Ump32);
 
     // cast as the interface
     IMidiUmp iface = originalUmp.as<IMidiUmp>();
     REQUIRE(iface.MessageType() == mt);
-    REQUIRE(iface.MidiUmpPacketType() == MidiUmpPacketType::Ump32);
+    REQUIRE(iface.UmpPacketType() == MidiUmpPacketType::Ump32);
 
     // recast from the interface back to the UMP type to validate data is still there
     MidiUmp32 recastUmp = iface.as<MidiUmp32>();
     REQUIRE(recastUmp.MessageType() == mt);
-    REQUIRE(recastUmp.MidiUmpPacketType() == MidiUmpPacketType::Ump32);
+    REQUIRE(recastUmp.UmpPacketType() == MidiUmpPacketType::Ump32);
     REQUIRE(recastUmp.Word0() == originalUmp.Word0());
 
 }

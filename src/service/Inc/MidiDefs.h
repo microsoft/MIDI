@@ -21,11 +21,8 @@ DEFINE_GUID(DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI, 0xe7cce071, 0x3c03, 0x423f, 0
 //
 // Defining common midi interface properties
 //
-#define STRING_PKEY_MIDI_AbstractionLayer L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},1"
-DEFINE_DEVPROPKEY(PKEY_MIDI_AbstractionLayer, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 1);     // DEVPROP_TYPE_UINT64
-// Note from Pete on the above: According to docs, that property identifier needs to be a minimum value of 2. It's set to 1
-// https://learn.microsoft.com/en-us/windows-hardware/drivers/install/property-keys
-
+#define STRING_PKEY_MIDI_AbstractionLayer L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},3"
+DEFINE_DEVPROPKEY(PKEY_MIDI_AbstractionLayer, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 3);     // DEVPROP_TYPE_UINT64
 
 #define STRING_PKEY_MIDI_AssociatedUMP L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},2"
 DEFINE_DEVPROPKEY(PKEY_MIDI_AssociatedUMP, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 2);     // DEVPROP_TYPE_UINT64
@@ -35,9 +32,9 @@ DEFINE_DEVPROPKEY(PKEY_MIDI_AssociatedUMP, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2
 DEFINE_DEVPROPKEY(PKEY_MIDI_TransportMnemonic, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 10);     // DEVPROP_TYPE_string
 
 
-// true if this device is a standard loopback device or part of a loopback pair of devices
-#define STRING_PKEY_MIDI_Loopback L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},20"
-DEFINE_DEVPROPKEY(PKEY_MIDI_Loopback, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 20);     // DEVPROP_TYPE_BOOLEAN
+// true if this device is a standard MIDI 2loopback device or part of a loopback pair of devices
+#define STRING_PKEY_MIDI_UmpLoopback L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},20"
+DEFINE_DEVPROPKEY(PKEY_MIDI_UmpLoopback, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 20);     // DEVPROP_TYPE_BOOLEAN
 
 // The unique ID for the device. Not all transports supply this. Some do as ProductInstanceId. Some as iSerialNumber
 #define STRING_PKEY_MIDI_UniqueIdentifier L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},21"

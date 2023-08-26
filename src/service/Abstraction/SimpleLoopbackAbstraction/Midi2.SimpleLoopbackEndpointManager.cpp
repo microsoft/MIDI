@@ -18,6 +18,9 @@ using namespace Microsoft::WRL::Wrappers;
 
 #define MAX_DEVICE_ID_LEN 200 // size in chars
 
+
+GUID AbstractionLayerGUID = __uuidof(Midi2SimpleLoopbackAbstraction);
+
 _Use_decl_annotations_
 HRESULT
 CMidi2SimpleLoopbackEndpointManager::Initialize(
@@ -164,7 +167,9 @@ CMidi2SimpleLoopbackEndpointManager::CreateEndpoint(_In_ std::wstring const inst
     DEVPROPERTY interfaceDevProperties[] = {
         {{DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_STRING, static_cast<ULONG>((name.length() + 1) * sizeof(WCHAR)), (PVOID)name.c_str()},
-        {{PKEY_MIDI_Loopback, DEVPROP_STORE_SYSTEM, nullptr},
+        {{PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_GUID, static_cast<ULONG>(sizeof(GUID)), (PVOID)&AbstractionLayerGUID },        // essential to instantiate the right endpoint types
+        {{PKEY_MIDI_UmpLoopback, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue},
         {{PKEY_MIDI_SupportsMultiClient, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue},

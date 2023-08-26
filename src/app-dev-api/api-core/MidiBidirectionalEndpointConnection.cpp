@@ -482,36 +482,51 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 return false;
             }
 
-            try
+            if (m_endpointInterface != nullptr)
             {
-                DWORD mmcssTaskId{};  // TODO: Does this need to be session-wide? Probably, but it can be modified by the endpoint init, so maybe should be endpoint-local
-
-                winrt::check_hresult(m_endpointInterface->Initialize(
-                    (LPCWSTR)(DeviceId().c_str()),
-                    &mmcssTaskId,
-                    (IMidiCallback*)(this)
-                ));
-
-                m_isOpen = true;
-
-
-                // TODO: Send discovery messages using app provided settings and user settings read from the property store
-                // These get fired off here quickly so we can return. The listener is responsible for catching them.
+                try
+                {
+                    DWORD mmcssTaskId{};  // TODO: Does this need to be session-wide? Probably, but it can be modified by the endpoint init, so maybe should be endpoint-local
 
 
 
 
+                    winrt::check_hresult(m_endpointInterface->Initialize(
+                        (LPCWSTR)(DeviceId().c_str()),
+                        &mmcssTaskId,
+                        (IMidiCallback*)(this)
+                    ));
 
-                return true;
+                    m_isOpen = true;
+
+
+                    // TODO: Send discovery messages using app provided settings and user settings read from the property store
+                    // These get fired off here quickly so we can return. The listener is responsible for catching them.
+
+
+
+
+
+                    return true;
+                }
+                catch (winrt::hresult_error const& ex)
+                {
+                    internal::LogHresultError(__FUNCTION__, L" hresult exception initializing endpoint interface. Service may be unavailable.", ex);
+
+                    m_endpointInterface = nullptr;
+
+                    return false;
+                }
             }
-            catch (winrt::hresult_error const& ex)
+            else
             {
-                internal::LogHresultError(__FUNCTION__, L" hresult exception initializing endpoint interface. Service may be unavailable.", ex);
-
-                m_endpointInterface = nullptr;
+                internal::LogGeneralError(__FUNCTION__, L" Endpoint interface is nullptr");
 
                 return false;
+
             }
+
+
         }
         else
         {

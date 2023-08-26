@@ -18,7 +18,6 @@ CMidi2SimpleLoopbackMidiBiDi::Initialize(
     IMidiCallback * callback
 )
 {
-
     TraceLoggingWrite(
         MidiSimpleLoopbackAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
@@ -35,6 +34,8 @@ CMidi2SimpleLoopbackMidiBiDi::Initialize(
 
     m_midiDevice = (MidiLoopbackDevice*)(MidiDeviceTable::Current().GetBidiDevice());
     RETURN_HR_IF_NULL(E_POINTER, m_midiDevice);
+
+    m_midiDevice->SetCallback(this);
 
     return S_OK;
 }
@@ -93,12 +94,30 @@ CMidi2SimpleLoopbackMidiBiDi::SendMidiMessage(
 _Use_decl_annotations_
 HRESULT
 CMidi2SimpleLoopbackMidiBiDi::Callback(
-    PVOID,
-    UINT,
-    LONGLONG
+    PVOID message,
+    UINT size,
+    LONGLONG timestamp
 )
 {
-    // just eat it for this simple loopback
-    return S_OK;
+    if (m_callback == nullptr)
+    {
+        // TODO log that callback is null
+        return E_POINTER;
+    }
+
+    if (message == nullptr)
+    {
+        // TODO log that message was null
+        return E_INVALIDARG;
+    }
+
+    if (size < sizeof(uint32_t))
+    {
+        // TODO log that data was smaller than minimum UMP size
+        return E_INVALIDARG;
+    }
+
+
+    return m_callback->Callback(message, size, timestamp);
 }
 

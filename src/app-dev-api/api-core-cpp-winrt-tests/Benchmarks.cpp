@@ -24,7 +24,7 @@
 
 #include <wil\resource.h>
 
-#include "..\api-core\memory_buffer.h"
+//#include "..\api-core\memory_buffer.h"
 
 //using namespace winrt;
 using namespace winrt::Windows::Devices::Midi2;
@@ -36,10 +36,6 @@ auto ump96mt = MidiUmpMessageType::FutureReservedB96;
 auto ump128mt = MidiUmpMessageType::UmpStream128;
 
 
-
-
-
-#define BIDI_ENDPOINT_DEVICE_ID L"foobarbaz"
 
 TEST_CASE("Connected.Benchmark.APIWords Send / receive word array through loopback")
 {
@@ -59,7 +55,7 @@ TEST_CASE("Connected.Benchmark.APIWords Send / receive word array through loopba
     REQUIRE((bool)(session.IsOpen()));
     REQUIRE((bool)(session.Connections().Size() == 0));
 
-    auto conn1 = session.ConnectBidirectionalEndpoint(BIDI_ENDPOINT_DEVICE_ID, nullptr);
+    auto conn1 = session.ConnectBidirectionalEndpoint(LOOPBACK_BIDI_ID);
 
     REQUIRE((bool)(conn1 != nullptr));
 
@@ -309,7 +305,7 @@ TEST_CASE("Connected.Benchmark.APIUmp Send / receive UMPs through loopback")
     REQUIRE((bool)(session.IsOpen()));
     REQUIRE((bool)(session.Connections().Size() == 0));
 
-    auto conn1 = session.ConnectBidirectionalEndpoint(BIDI_ENDPOINT_DEVICE_ID, nullptr);
+    auto conn1 = session.ConnectBidirectionalEndpoint(LOOPBACK_BIDI_ID, nullptr);
 
     REQUIRE((bool)(conn1 != nullptr));
 

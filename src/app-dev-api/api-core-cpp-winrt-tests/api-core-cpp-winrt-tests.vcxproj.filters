@@ -24,9 +24,6 @@
     <ClCompile Include="Benchmarks.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
-    <ClCompile Include="BaselineMidiSrvBenchmark.cpp">
-      <Filter>Tests</Filter>
-    </ClCompile>
     <ClCompile Include="MessageBuilderTests.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
@@ -35,6 +32,9 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="catch_amalgamated.hpp">
       <Filter>Catch</Filter>
+    </ClInclude>
+    <ClInclude Include="loopback_ids.h">
+      <Filter>Tests</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

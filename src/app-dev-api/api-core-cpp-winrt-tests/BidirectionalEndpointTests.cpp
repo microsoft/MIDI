@@ -25,8 +25,6 @@
 //using namespace winrt;
 using namespace winrt::Windows::Devices::Midi2;
 
-#define BIDI_ENDPOINT_DEVICE_ID L"foobarbaz"
-
 
 TEST_CASE("Connected.Endpoint.CreateBidi Create bidirectional endpoint")
 {
@@ -39,7 +37,7 @@ TEST_CASE("Connected.Endpoint.CreateBidi Create bidirectional endpoint")
 
     std::cout << "Connecting to Endpoint" << std::endl;
 
-    auto conn1 = session.ConnectBidirectionalEndpoint(BIDI_ENDPOINT_DEVICE_ID, nullptr);
+    auto conn1 = session.ConnectBidirectionalEndpoint(LOOPBACK_BIDI_ID, nullptr);
 
     REQUIRE(conn1 != nullptr);
     REQUIRE(!conn1.Id().empty());
@@ -79,7 +77,7 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message")
 
     std::cout << std::endl << "Connecting to Endpoint" << std::endl;
 
-    auto conn1 = session.ConnectBidirectionalEndpoint(L"foobarbaz", nullptr);
+    auto conn1 = session.ConnectBidirectionalEndpoint(LOOPBACK_BIDI_ID, nullptr);
 
     REQUIRE((bool)(conn1 != nullptr));
 
@@ -108,7 +106,7 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message")
             MidiUmp32 receivedUmp32 = receivedUmp.as<MidiUmp32>();
 
             std::cout << "Received message in test" << std::endl;
-            std::cout << " - MidiUmpPacketType: 0x" << std::hex << (int)(receivedUmp32.MidiUmpPacketType()) << std::endl;
+            std::cout << " - UmpPacketType:     0x" << std::hex << (int)(receivedUmp32.UmpPacketType()) << std::endl;
             std::cout << " - Timestamp:         0x" << std::hex << (receivedUmp32.Timestamp()) << std::endl;
             std::cout << " - MessageType:       0x" << std::hex << (int)(receivedUmp32.MessageType()) << std::endl;
             std::cout << " - First Word:        0x" << std::hex << (receivedUmp32.Word0()) << std::endl << std::endl;
@@ -126,7 +124,7 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message")
     sentUmp.MessageType(sentMessageType);
     sentUmp.Timestamp(sentTimestamp);
 
-    std::cout << "Sending message" << std::hex << (uint32_t)(sentUmp.MidiUmpPacketType()) << std::endl;
+    std::cout << "Sending message" << std::hex << (uint32_t)(sentUmp.UmpPacketType()) << std::endl;
     std::cout << " - Timestamp:   0x" << std::hex << (uint64_t)(sentUmp.Timestamp()) << std::endl;
     std::cout << " - MessageType: 0x" << std::hex << (int)(sentUmp.MessageType()) << std::endl;
     std::cout << " - First Word:  0x" << std::hex << (sentUmp.Word0()) << std::endl << std::endl;
@@ -171,7 +169,7 @@ TEST_CASE("Connected.Endpoint.MultipleUmpWords Send and receive multiple words")
 
     std::cout << "Connecting to Endpoint" << std::endl;
 
-    auto conn1 = session.ConnectBidirectionalEndpoint(BIDI_ENDPOINT_DEVICE_ID, nullptr);
+    auto conn1 = session.ConnectBidirectionalEndpoint(LOOPBACK_BIDI_ID, nullptr);
 
     REQUIRE((bool)(conn1 != nullptr));
 

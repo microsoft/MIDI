@@ -125,14 +125,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                 if (autoHandleEndpointMessages)
                 {
-                    auto endpointInformationListener = winrt::make_self<implementation::MidiEndpointInformationEndpointListener>();
+                    //auto endpointInformationListener = winrt::make_self<implementation::MidiEndpointInformationEndpointListener>();
 
-                    endpointInformationListener->Id(L"auto_EndpointInformationListener");
-                    endpointInformationListener->Name(L"Automatic Endpoint Information Message Handler");
-                    endpointInformationListener->InputConnection(endpointConnection.as<IMidiInputConnection>());
-                    endpointInformationListener->Initialize();
-                                       
-                    endpointConnection->MessageListeners().Append(*endpointInformationListener);
+                    //endpointInformationListener->Id(L"auto_EndpointInformationListener");
+                    //endpointInformationListener->Name(L"Automatic Endpoint Information Message Handler");
+                    //endpointInformationListener->InputConnection(endpointConnection.as<IMidiInputConnection>());
+                    //endpointInformationListener->Initialize();
+                    //                   
+                    //endpointConnection->MessageListeners().Append(*endpointInformationListener);
                 }
 
                 return *endpointConnection;
