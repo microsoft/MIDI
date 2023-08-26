@@ -1,0 +1,29 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+import "MidiAbstraction.idl";
+
+[
+    uuid(578daa61-200b-4622-8cb1-6d8a6fa93c17),
+    version(1.0),
+]
+library Midi2SimpleLoopbackAbstractionLib
+{
+    importlib("stdole2.tlb");
+
+    [uuid(ac9b5417-3fe0-4e62-960f-034ee4235a1a), version(1.0)]
+    coclass Midi2SimpleLoopbackAbstraction
+    {
+        [default] interface IMidiAbstraction;
+    }
+};
+

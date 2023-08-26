@@ -1,5 +1,6 @@
 import "oaidl.idl";
 import "ocidl.idl";
+import "mididevicemanagerinterface.idl";
 
 cpp_quote("#define MIDISRV_LRPC_PROTOCOL  L\"ncalrpc\"")
 cpp_quote("#define MIDISRV_ENDPOINT L\"MidiSrvClientRpc\"")
@@ -30,7 +31,6 @@ typedef struct ALLOCATED_SETTINGS
 } ALLOCATED_SETTINGS, *PALLOCATED_SETTINGS;
 // end temporary test RPC data, to be removed
 
-
 typedef enum
 {
     LegacyMidi = 0,
@@ -38,13 +38,6 @@ typedef enum
 } MidiProtocol;
 
 typedef ULONGLONG MidiClientHandle;
-
-typedef enum
-{
-    MidiFlowIn = 0,
-    MidiFlowOut,
-    MidiFlowBidirectional
-} MidiFlow;
 
 typedef struct MIDISRV_CLIENTCREATION_PARAMS
 {

@@ -23,14 +23,14 @@ public:
     HRESULT Cleanup();
 
 private:
+    wil::critical_section m_ClientManagerLock;
+
     std::shared_ptr<CMidiPerformanceManager> m_PerformanceManager;
     std::shared_ptr<CMidiProcessManager> m_ProcessManager;
     std::shared_ptr<CMidiDeviceManager> m_DeviceManager;
 
-    // TODO: convert this to a list of clients
-    wil::com_ptr_nothrow<CMidiClientPipe> m_ClientPipe;
-
-    wil::com_ptr_nothrow<CMidiDevicePipe> m_DevicePipe;
+    std::map<MidiClientHandle, wil::com_ptr_nothrow<CMidiClientPipe>> m_ClientPipes;
+    std::map<std::wstring, wil::com_ptr_nothrow<CMidiDevicePipe>> m_DevicePipes;
 
     // mmcss task id that is shared among all midi clients
     DWORD m_MmcssTaskId {0};

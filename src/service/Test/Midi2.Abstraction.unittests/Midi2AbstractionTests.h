@@ -30,8 +30,8 @@ public:
     TEST_METHOD(TestMidiKSAbstractionBiDi);
     TEST_METHOD(TestMidiKSIO_Latency);
 
-    //TEST_METHOD(TestMidiSrvAbstraction);
-    //TEST_METHOD(TestMidiSrvAbstractionCreationOrder);
+    TEST_METHOD(TestMidiSrvAbstraction);
+    TEST_METHOD(TestMidiSrvAbstractionCreationOrder);
     TEST_METHOD(TestMidiSrvAbstractionBiDi);
     TEST_METHOD(TestMidiSrvIO_Latency);
 

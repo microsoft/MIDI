@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 #include "stdafx.h"
 
+#include <Devpkey.h>
+#include <initguid.h>
+#include <mmdeviceapi.h>
 #include "MidiTestCommon.h"
 #include "MidiAbstraction.h"
 #include "MidiDefs.h"
@@ -8,35 +11,7 @@
 #include "Midi2ServiceTests.h"
 
 #include "MidiKsCommon.h"
-#include "MidiKsEnum.h"
-
-// Temporary code to locate a bidirectional midi device which will be replaced 
-// once we have the MidiDeviceManager functional within MidiSrv.
-LPCWSTR GetBiDiMidiDevice(KSMidiDeviceEnum* MidiDeviceEnum)
-{
-    LPCWSTR midiDevice = nullptr;
-
-    VERIFY_IS_TRUE(MidiDeviceEnum->m_AvailableMidiInPinCount > 0);
-    VERIFY_IS_TRUE(MidiDeviceEnum->m_AvailableMidiOutPinCount > 0);
-
-    for (UINT i = 0; i < MidiDeviceEnum->m_AvailableMidiInPinCount && !midiDevice; i++)
-    {
-        UMP_PINS* testInPin = &(MidiDeviceEnum->m_AvailableMidiInPins[i]);
-
-        for (UINT j = 0; j < MidiDeviceEnum->m_AvailableMidiOutPinCount && !midiDevice; j++)
-        {
-            UMP_PINS* testOutPin = &(MidiDeviceEnum->m_AvailableMidiOutPins[j]);
-
-            // has to be on the same filter to be a pair, both need to be UMP, and the same
-            // buffering mode must be used
-            if (0 == _wcsicmp(testInPin->FilterName.get(), testOutPin->FilterName.get()) &&
-                testInPin->UMP && testOutPin->UMP && testInPin->Cyclic == testOutPin->Cyclic)
-                midiDevice = testInPin->FilterName.get();
-        }
-    }
-
-    return midiDevice;
-}
+#include "MidiSwEnum.h"
 
 _Use_decl_annotations_
 void * midl_user_allocate(size_t size)
@@ -136,11 +111,15 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
     std::unique_ptr<CMidiXProc> midiPump;
     DWORD MmCssTaskId{ 0 };
 
-    KSMidiDeviceEnum midiDeviceEnum;
-    VERIFY_SUCCEEDED(midiDeviceEnum.EnumerateFilters());
+    MidiSWDeviceEnum midiDeviceEnum;
+    
+    VERIFY_SUCCEEDED(midiDeviceEnum.EnumerateDevices());
+    UINT numMidiBidirectional = midiDeviceEnum.GetNumMidiDevices(MidiFlowBidirectional);
 
-    LPCWSTR midiDevice = GetBiDiMidiDevice(&midiDeviceEnum);
+    VERIFY_IS_TRUE(numMidiBidirectional > 0);
 
+    std::wstring midiDevice = midiDeviceEnum.GetMidiInstanceId(0, MidiFlowBidirectional);
+    
     auto cleanupOnExit = wil::scope_exit([&]() {
 
         if (midiPump)
@@ -190,7 +169,7 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
     VERIFY_SUCCEEDED([&]() {
         // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
         // with structured exception handling.
-        RpcTryExcept RETURN_IF_FAILED(MidiSrvCreateClient(bindingHandle.get(), midiDevice, &creationParams, &client));
+        RpcTryExcept RETURN_IF_FAILED(MidiSrvCreateClient(bindingHandle.get(), midiDevice.c_str(), &creationParams, &client));
         RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
         RpcEndExcept
         return S_OK;

@@ -1,12 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 #pragma once
 
-#include <ntstatus.h>
-
-#define WIN32_NO_STATUS
 #include <windows.h>
-#include <winternl.h>
-#undef WIN32_NO_STATUS
 
 #include <hstring.h>
 

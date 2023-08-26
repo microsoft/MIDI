@@ -13,7 +13,6 @@
 
 import "unknwn.idl";
 
-
 [
     object,
     local,
@@ -104,4 +103,19 @@ interface IMidiBiDi : IUnknown
         [in] UINT size,
         [in] LONGLONG position
     );
+};
+
+[
+    object,
+    local,
+    uuid(badff6d2-0e3c-4009-a473-6ba82c008662),
+    pointer_default(unique)
+]
+interface IMidiEndpointManager : IUnknown
+{
+    HRESULT Initialize(
+        [in] IUnknown* midiDeviceManager
+    );
+
+    HRESULT Cleanup();
 };

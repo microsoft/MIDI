@@ -20,10 +20,10 @@ CMidi2MidiSrvIn::Initialize(
     std::unique_ptr<CMidi2MidiSrv> midiSrv(new (std::nothrow) CMidi2MidiSrv());
     RETURN_IF_NULL_ALLOC(midiSrv);
 
-    RETURN_IF_FAILED(midiSrv->Initialize(Device, MidiFlowBidirectional, MmcssTaskId, Callback));
+    RETURN_IF_FAILED(midiSrv->Initialize(Device, MidiFlowIn, MmcssTaskId, Callback));
     m_MidiSrv = std::move(midiSrv);
 
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 HRESULT
@@ -42,6 +42,6 @@ CMidi2MidiSrvIn::Cleanup()
         m_MidiSrv.reset();
     }
 
-    return E_NOTIMPL;
+    return S_OK;
 }
 

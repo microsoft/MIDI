@@ -1,0 +1,29 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+import "MidiMessageReceivedEventArgs.idl";
+//import "IMidiEndpointMessageListener.idl";
+
+namespace Windows.Devices.Midi2
+{
+    [MIDI_API_CONTRACT(1)]
+    [MIDI_INTERFACE_UUID("dabfaf64-28d6-4122-92ef-5bc6548f2a69",1.0)]
+    interface IMidiInputConnection
+    {
+        // for those who don't want to use just the normal event, they can set up
+        // custom listeners which filter the stream (to groups, channels, etc.)
+        // to allow functionality similar to Ports in MIDI 1.0. Using this approach
+        // is preferable to opening multiple (expensive) Endpoint Connections from
+        // a single application
+        //IVector<IMidiEndpointMessageListener> MessageListeners{ get; };
+
+    }
+}

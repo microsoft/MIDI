@@ -1,0 +1,31 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+// wraps the UMP type so we still quickly read/write packed data appropriately
+
+import "MidiUmpPacketTypeEnum.idl";
+import "MidiUmpMessageTypeEnum.idl";
+
+namespace Windows.Devices.Midi2
+{
+	[MIDI_API_CONTRACT(1)]
+	[MIDI_INTERFACE_UUID("2eb5df8a-d751-4997-bf96-ba9a531fd5ff",1.0)]
+	interface IMidiUmp
+	{
+		UInt64 Timestamp { get; set; };
+
+		MidiUmpMessageType MessageType{ get; set; };
+		MidiUmpPacketType MidiUmpPacketType{ get; };		// you can also get the equivalent with a cast
+
+	//	Windows.Foundation.IMemoryBuffer RawData{ get; };
+
+	};
+}

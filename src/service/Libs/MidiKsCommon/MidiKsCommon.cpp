@@ -1,11 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
-
-#include <ntstatus.h>
-
-#define WIN32_NO_STATUS
 #include <windows.h>
-#include <winternl.h>
-#undef WIN32_NO_STATUS
 
 #include <assert.h>
 #include <devioctl.h>
@@ -18,6 +12,8 @@
 #include <wil\resource.h>
 #include <wil\result_macros.h>
 
+#include <initguid.h>
+#include <Devpkey.h>
 #include "MidiKsDef.h"
 #include "MidiKsCommon.h"
 

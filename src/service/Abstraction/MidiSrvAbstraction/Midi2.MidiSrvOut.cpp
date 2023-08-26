@@ -22,8 +22,6 @@ CMidi2MidiSrvOut::Initialize(
     RETURN_IF_FAILED(midiSrv->Initialize(Device, MidiFlowOut, MmcssTaskId, nullptr));
     m_MidiSrv = std::move(midiSrv);
 
-
-
     return S_OK;
 }
 
@@ -43,7 +41,7 @@ CMidi2MidiSrvOut::Cleanup()
         m_MidiSrv.reset();
     }
 
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 _Use_decl_annotations_

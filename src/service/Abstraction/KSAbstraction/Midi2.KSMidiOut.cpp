@@ -26,7 +26,7 @@ CMidi2KSMidiOut::Initialize(
     std::unique_ptr<CMidi2KSMidi> midiDevice(new (std::nothrow) CMidi2KSMidi());
     RETURN_IF_NULL_ALLOC(midiDevice);
 
-    RETURN_IF_FAILED(midiDevice->Initialize(Device, FALSE, TRUE, MmCssTaskId, nullptr));
+    RETURN_IF_FAILED(midiDevice->Initialize(Device, MidiFlowOut, MmCssTaskId, nullptr));
     m_MidiDevice = std::move(midiDevice);
 
     return S_OK;

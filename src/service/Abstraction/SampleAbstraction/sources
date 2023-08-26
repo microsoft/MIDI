@@ -1,0 +1,49 @@
+ARM64X_EC_ENABLED=1
+
+TARGETNAME = Midi2.SampleAbstraction
+TARGETTYPE = DYNLINK
+DLLENTRY=_DllMainCRTStartup
+DLLDEF=Midi2.SampleAbstraction.def
+
+MSC_WARNING_LEVEL=/W4 /WX
+
+USE_CPPWINRT=1
+USE_ATL=1
+ATL_VER=ATL_VER_CURRENT
+
+TARGET_DESTINATION=retail
+
+C_DEFINES=$(C_DEFINES) -DUNICODE -D_UNICODE
+
+PRECOMPILED_CXX=1
+PRECOMPILED_INCLUDE=pch.h
+
+SOURCES = \
+    midi2.sampleabstraction.rc \
+    midi2sampleabstraction.idl \
+    dllmain.cpp \
+    midi2.sampleabstraction.cpp \
+    midi2.samplemidiin.cpp \
+    midi2.samplemidiout.cpp \
+    midi2.samplemidibidi.cpp \
+
+MSC_WARNING_LEVEL= \
+    $(MSC_WARNING_LEVEL) \
+    /wd4447 \
+
+INCLUDES = \
+    $(INCLUDES); \
+    ..\..\idl; \
+    ..\..\inc; \
+    $(OBJ_PATH)\..\..\idl\$(O); \
+    $(ONECORE_INTERNAL_SDK_INC_PATH); \
+    $(ONECOREUAPSHELL_INTERNAL_INC_PATH_L); \
+    $(MINWIN_INTERNAL_PRIV_SDK_INC_PATH_L); \
+
+TARGETLIBS = \
+    $(TARGETLIBS) \
+    $(ONECORE_EXTERNAL_SDK_LIB_VPATH)\onecoreuap.lib \
+    $(ONECOREUAP_EXTERNAL_SDK_LIB_PATH)\ksuser.lib \
+    $(ONECOREUAP_INTERNAL_SDK_LIB_PATH)\onecoreuapuuid.lib \
+    $(ONECOREUAP_EXTERNAL_SDK_LIB_PATH)\avrt.lib \
+

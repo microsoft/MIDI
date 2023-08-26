@@ -9,6 +9,8 @@ CMidiClientManager::Initialize(
     std::shared_ptr<CMidiDeviceManager>& DeviceManager
 )
 {
+    auto lock = m_ClientManagerLock.lock();
+
     m_PerformanceManager = PerformanceManager;
     m_ProcessManager = ProcessManager;
     m_DeviceManager = DeviceManager;
@@ -19,9 +21,23 @@ CMidiClientManager::Initialize(
 HRESULT
 CMidiClientManager::Cleanup()
 {
+    auto lock = m_ClientManagerLock.lock();
+
     m_PerformanceManager.reset();
     m_ProcessManager.reset();
     m_DeviceManager.reset();
+
+    for (auto const& Client : m_ClientPipes)
+    {
+        Client.second->Cleanup();
+    }
+    m_ClientPipes.clear();
+
+    for (auto const& Device : m_DevicePipes)
+    {
+        Device.second->Cleanup();
+    }
+    m_DevicePipes.clear();
 
     return S_OK;
 }
@@ -35,11 +51,14 @@ CMidiClientManager::CreateMidiClient(
     PMIDISRV_CLIENT Client
 )
 {
+    auto lock = m_ClientManagerLock.lock();
+
     DWORD clientProcessId{0};
     wil::unique_handle clientProcessHandle;
     wil::com_ptr_nothrow<CMidiClientPipe> clientPipe;
     wil::com_ptr_nothrow<CMidiDevicePipe> devicePipe;
     unique_mmcss_handle MmcssHandle;
+    BOOL newDeviceCreated{ FALSE };
 
     // get the client PID, impersonate the client to get the client process handle, and then
     // revert back to self.
@@ -59,26 +78,38 @@ CMidiClientManager::CreateMidiClient(
     // actively using this task id for the duration of this pipe.
     RETURN_IF_FAILED(EnableMmcss(MmcssHandle, m_MmcssTaskId));
 
-    // Todo: determine if there is an existing midi device pipe this client can be attached to
-    
+    // check to see if there is an existing device pipe.
+    // TODO: if this is a legacy instance id, retrieve the mapped UMP instance
+    // id if one exists, if not use the legacy instance id.
+    // TODO: anything required for the client creation params?
+    auto device = m_DevicePipes.find(MidiDevice);
+    if (device != m_DevicePipes.end())
+    {
+        devicePipe = device->second;
+    }
+    else
+    {
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiDevicePipe>(&devicePipe));
+        RETURN_IF_FAILED(devicePipe->Initialize(BindingHandle, MidiDevice, CreationParams, &m_MmcssTaskId));
+        newDeviceCreated = TRUE;
+    }
+
+    // we have either a new device or an existing device, create the client pipe and connect to it.
     RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiClientPipe>(&clientPipe));
-    RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiDevicePipe>(&devicePipe));
 
     // Adjust the requested buffer size to align with client requirements.
     RETURN_IF_FAILED(clientPipe->AdjustForBufferingRequirements(CreationParams));
-    RETURN_IF_FAILED(devicePipe->Initialize(BindingHandle, clientProcessHandle.get(), MidiDevice, CreationParams, &m_MmcssTaskId));
     RETURN_IF_FAILED(clientPipe->Initialize(BindingHandle, clientProcessHandle.get(), MidiDevice, CreationParams, Client, &m_MmcssTaskId, devicePipe));
 
-    // Adding the client pipe to the device pipe creates an intentional circular reference between the client
-    // and device. After this point, a proper cleanup is required, simply releasing the two will, intentionally, not
-    // clean up because there is a cross dependency between the client pipe and device pipe that requires a proper
-    // shutdown.
-    RETURN_IF_FAILED(devicePipe->AddClientPipe(clientPipe));
+    if (newDeviceCreated)
+    {
+        // transfer this new device pipe to the device list
+        m_DevicePipes.emplace(MidiDevice, std::move(devicePipe));
+    }
 
-    // transfer this client pipe to internal tracking list
-    m_ClientPipe = clientPipe;
-    m_DevicePipe = devicePipe;
-    Client->ClientHandle = (MidiClientHandle)m_ClientPipe.get();
+    // transfer this new client pipe to internal tracking list
+    Client->ClientHandle = (MidiClientHandle)clientPipe.get();
+    m_ClientPipes.emplace(Client->ClientHandle, std::move(clientPipe));
 
     return S_OK;
 }
@@ -90,18 +121,33 @@ CMidiClientManager::DestroyMidiClient(
     MidiClientHandle ClientHandle
 )
 {
+    auto lock = m_ClientManagerLock.lock();
+
     // Temp, we currently only allow a single client. If this is a request
     // for that client, then destroy it. Else, invalid arg.
     //
     // Eventually, this will search for the specified pipe, confirm
     // that the caller is the owner, and remove it.
-    if (ClientHandle == (MidiClientHandle)m_ClientPipe.get())
+    auto client = m_ClientPipes.find(ClientHandle);
+    if (client != m_ClientPipes.end())
     {
-        m_DevicePipe->RemoveClientPipe(m_ClientPipe);
-        m_ClientPipe->Cleanup();
-        m_DevicePipe->Cleanup();
-        m_ClientPipe.reset();
-        m_DevicePipe.reset();
+        std::wstring deviceInstanceId = client->second->MidiDevice();
+
+        client->second->Cleanup();
+        m_ClientPipes.erase(client);
+
+        // if this was the last client using this device pipe, clean
+        // up the device pipe as well.
+        auto device = m_DevicePipes.find(deviceInstanceId);
+
+        if (device != m_DevicePipes.end())
+        {
+            if (!device->second->InUse())
+            {
+                device->second->Cleanup();
+                m_DevicePipes.erase(device);
+            }
+        }
     }
     else
     {

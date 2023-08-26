@@ -1,0 +1,19 @@
+ARM64X_EC_ENABLED=1
+
+TARGETNAME = MidiKSEnum
+TARGETTYPE = LIBRARY
+
+MSC_WARNING_LEVEL=/W4 /WX
+
+USE_CPPWINRT=1
+
+C_DEFINES=$(C_DEFINES) -DUNICODE -D_UNICODE
+
+SOURCES = \
+    MidiKSEnum.cpp \
+
+INCLUDES = \
+    $(INCLUDES); \
+    ..\..\inc; \
+    ..\..\..\inc; \
+

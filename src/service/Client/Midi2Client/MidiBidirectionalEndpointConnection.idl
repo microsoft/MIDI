@@ -1,0 +1,67 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+// This is the moral equivalent of a "port" in MIDI 1.0. MIDI 2.0 UMP Endpoints are
+// almost always bidirectional. This is the main entity that applications will use
+// after creating a session
+
+#include "midl_defines.h"
+
+MIDI_IDL_IMPORT
+
+
+import "MidiEndpointConnection.idl";
+import "IMidiInputConnection.idl";
+import "IMidiOutputConnection.idl";
+import "IMidiEndpointMessageListener.idl";
+import "IMidiMessageReceivedEventSource.idl";
+
+import "MidiFunctionBlock.idl";
+import "MidiEndpointInformation.idl";
+
+namespace Windows.Devices.Midi2
+{
+    [MIDI_API_CONTRACT(1)]
+    [default_interface]
+    runtimeclass MidiBidirectionalEndpointConnection : Windows.Devices.Midi2.MidiEndpointConnection, 
+                                                       Windows.Devices.Midi2.IMidiInputConnection,
+                                                       Windows.Devices.Midi2.IMidiMessageReceivedEventSource,
+                                                       Windows.Devices.Midi2.IMidiOutputConnection
+    {
+        //MidiEndpointConnection();
+
+        // Get the enumeration device selector for all compatible devices
+        static String GetDeviceSelectorForBidirectional();
+
+        IVector<IMidiEndpointMessageListener> MessageListeners{ get; };
+
+        //IVectorView<MidiFunctionBlock> FunctionBlocks{ get; };
+        //MidiEndpointInformation EndpointInformation{ get; };
+
+        //event Windows.Foundation.TypedEventHandler<IInspectable, MidiFunctionBlocksUpdatedEventArgs> FunctionBlocksUpdated;
+        //event Windows.Foundation.TypedEventHandler<IInspectable, MidiEndpointInformationUpdatedEventArgs> EndpointInformationUpdated;
+
+        // TODO: Think through how and when to capture and cache Function Block information. Will also require
+        // subscribing to Function Block notifications. Having the call in the API will enable us to talk to 
+        // the cache so each client isn't making the same calls. 
+
+        // we could do this when connecting to an endpoint. First one in takes the hit for populating the FB
+        // info the first time. After that, someone needs to update it, and the other client may have gone 
+        // away. So short of putting this in the service itself, it may mean we just have multiple
+        // clients attempting to update the cache. If we lock, not the end of the world, really, assuming we
+        // check for actual changes before we send notifications to all the clients so we don't spam
+        // update notifications.
+
+        // Note that this needs to respect the settings the user has for that Bidirectional Endpoint. If they
+        // say not to parse FB messages, then we don't do anything.
+
+        // Same thing with other discovery calls, endpoint info, etc.
+
+
+    }
+}

@@ -6,16 +6,13 @@
 #define STRICT
 #endif
 
-#include <ntstatus.h>
-
-#define WIN32_NO_STATUS
 #include <windows.h>
-#include <winternl.h>
-#undef WIN32_NO_STATUS
 
 #include <hstring.h>
 
-#include <Windows.Devices.Enumeration.h>
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Foundation.Collections.h>
+#include <winrt/Windows.Devices.Enumeration.h>
 #include <assert.h>
 #include <devioctl.h>
 #include <wrl\implements.h>
@@ -47,15 +44,25 @@
 #include <winmeta.h>
 #include <TraceLoggingProvider.h>
 
+#include "SWDevice.h"
+#include <initguid.h>
+#include "setupapi.h"
+#include "Devpkey.h"
+#include <mmdeviceapi.h>
+
+#include "strsafe.h"
+
 #include "Midi2KSAbstraction_i.c"
 #include "Midi2KSAbstraction.h"
+
+#include "mididevicemanagerinterface_i.c"
+#include "mididevicemanagerinterface.h"
 
 #include "dllmain.h"
 
 #include "MidiDefs.h"
 #include "MidiKsDef.h"
 #include "MidiKsCommon.h"
-#include "MidiKsEnum.h"
 #include "MidiXProc.h"
 #include "MidiKs.h"
 
@@ -64,4 +71,4 @@
 #include "Midi2.KSMidiIn.h"
 #include "Midi2.KSMidiOut.h"
 #include "Midi2.KSMidiBiDi.h"
-
+#include "Midi2.KSMidiEndpointManager.h"

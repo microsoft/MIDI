@@ -26,7 +26,7 @@ CMidiClientPipe::Initialize(
     std::unique_ptr<MEMORY_MAPPED_PIPE> midiOutPipe;
     wil::com_ptr_nothrow<IMidiCallback> thisCallback;
 
-    m_ClientPipe.m_MidiDevice = wil::make_unique_string<wil::unique_hstring>(Device);
+    m_ClientPipe.MidiDevice = Device;
     m_ClientPipe.Flow = CreationParams->Flow;
     m_ClientPipe.Protocol = CreationParams->Protocol;
 
@@ -93,6 +93,13 @@ CMidiClientPipe::Initialize(
 
     RETURN_IF_FAILED(QueryInterface(__uuidof(IMidiCallback), (void**)&thisCallback));
 
+    // Adding the client pipe to the device pipe creates an intentional circular reference between the client
+    // and device. After this point, a proper cleanup is required, simply releasing the two will, intentionally, not
+    // clean up because there is a cross dependency between the client pipe and device pipe that requires a proper
+    // shutdown.
+    wil::com_ptr_nothrow<CMidiClientPipe> This = this;
+    RETURN_IF_FAILED(m_MidiDevicePipe->AddClientPipe(This));
+
     // The client MidiOut pipe is an input from the client side, sending data to the server,
     // and the client MidiIn pipe is an output from the server, sending data to the client.
     // Thus, the pump is initialized with midiOutPipe for input and midiInPipe for output,
@@ -114,6 +121,8 @@ CMidiClientPipe::Cleanup()
         m_ClientPipe.MidiPump.reset();
     }
 
+    wil::com_ptr_nothrow<CMidiClientPipe> This = this;
+    m_MidiDevicePipe->RemoveClientPipe(This);
     m_MidiDevicePipe.reset();
 
     return S_OK;

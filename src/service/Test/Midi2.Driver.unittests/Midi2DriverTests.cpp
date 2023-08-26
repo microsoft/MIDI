@@ -6,6 +6,7 @@
 
 #include "Midi2DriverTests.h"
 
+#include <Devpkey.h>
 #include "MidiDefs.h"
 #include "MidiKsDef.h"
 #include "MidiKsCommon.h"

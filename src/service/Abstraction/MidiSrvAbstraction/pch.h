@@ -6,12 +6,7 @@
 #define STRICT
 #endif
 
-#include <ntstatus.h>
-
-#define WIN32_NO_STATUS
 #include <windows.h>
-#include <winternl.h>
-#undef WIN32_NO_STATUS
 
 #include <hstring.h>
 
@@ -52,6 +47,7 @@
 
 #include "dllmain.h"
 
+#include <Devpkey.h>
 #include "MidiDefs.h"
 #include "MidiSrvRpc.h"
 #include "MidiXProc.h"

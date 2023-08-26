@@ -1,17 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 #pragma once
 
-#include <ntstatus.h>
-
-#define WIN32_NO_STATUS
 #include <windows.h>
-#include <winternl.h>
-#undef WIN32_NO_STATUS
+#include <cguid.h>
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Foundation.Collections.h>
+#include <winrt/Windows.Devices.Enumeration.h>
 
 #include <hstring.h>
 #include <strsafe.h>
-
-#include <Windows.Devices.Enumeration.h>
 #include <assert.h>
 #include <devioctl.h>
 #include <wrl\implements.h>
@@ -35,14 +32,36 @@
 #include <atlcoll.h>
 #include <atlsync.h>
 #include <sddl.h>
+#include <vector>
+#include <string>
+#include <array>
+#include <map>
 
-#include "MidiDefs.h"
-#include "MidiKSDef.h"
+//#include "MidiKSDef.h"
+
+#include "Midi2SimpleLoopbackAbstraction_i.c"
+#include "Midi2SimpleLoopbackAbstraction.h"
+
+#include "Midi2NetworkMidiAbstraction_i.c"
+#include "Midi2NetworkMidiAbstraction.h"
+
+#include "Midi2VirtualMidiAbstraction_i.c"
+#include "Midi2VirtualMidiAbstraction.h"
+
 
 #include "Midi2KSAbstraction_i.c"
 #include "Midi2KSAbstraction.h"
 
+#include "mididevicemanagerinterface_i.c"
+#include "mididevicemanagerinterface.h"
+
 #include "MidiSrvRpc.h"
+
+#include "SWDevice.h"
+#include <initguid.h>
+#include <MMDeviceAPI.h>
+#include <Devpkey.h>
+#include "MidiDefs.h"
 
 #include "MidiTelemetry.h"
 #include "MidiPerformanceManager.h"

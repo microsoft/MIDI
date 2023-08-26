@@ -1,46 +1,25 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
-#include <ntstatus.h>
-
-#define WIN32_NO_STATUS
 #include <windows.h>
-#include <winternl.h>
-#undef WIN32_NO_STATUS
+#include <cguid.h>
+#include <memory>
 
-#include <Windows.Devices.Enumeration.h>
-#include <assert.h>
 #include <devioctl.h>
-#include <wrl\implements.h>
-#include <wrl\module.h>
-#include <wrl\event.h>
 #include <ks.h>
 #include <ksmedia.h>
 #include <avrt.h>
 #include <wil\com.h>
 #include <wil\resource.h>
 #include <wil\result_macros.h>
-#include <ppltasks.h>
-
-#include <atlbase.h>
-#include <atlcom.h>
-#include <atlctl.h>
-#include <atlcoll.h>
-#include <atlsync.h>
 
 #include "MidiAbstraction_i.c"
 #include "MidiAbstraction.h"
 
+#include <Devpkey.h>
 #include "MidiDefs.h"
 #include "MidiKsDef.h"
 #include "MidiKsCommon.h"
 #include "MidiXProc.h"
 #include "MidiKs.h"
-
-using namespace concurrency;
-using namespace ABI::Windows::Devices::Enumeration;
-using namespace ABI::Windows::Foundation;
-using namespace ABI::Windows::Foundation::Collections;
-using namespace Microsoft::WRL;
-using namespace Microsoft::WRL::Wrappers;
 
 KSMidiDevice::~KSMidiDevice()
 {

@@ -1,47 +1,56 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 #include "stdafx.h"
 
+using namespace winrt::Windows::Devices::Enumeration;
+
 _Use_decl_annotations_
 HRESULT
 CMidiDevicePipe::Initialize(
     handle_t /* BindingHandle */,
-    HANDLE /* clientProcess */,
     LPCWSTR Device,
     PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
     DWORD* MmcssTaskId
 )
 {
+    auto clientLock = m_ClientPipeLock.lock();
+    auto deviceLock = m_DevicePipeLock.lock();
+
     m_MidiDevice = wil::make_unique_string<wil::unique_hstring>(Device);
     m_Flow = CreationParams->Flow;
     m_Protocol = CreationParams->Protocol;
 
-    // Todo: Currently hard coded to create the KS abstraction. Long term this needs to retrieve
-    // the device from the midi device manager, determine what abstraction is required, and cocreate the
-    // abstraction related to the requested device, rather than assuming KS.
+    // retrieve the abstraction layer GUID for this peripheral
+    auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
+    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_AbstractionLayer));
+
+    auto deviceInfo = DeviceInformation::CreateFromIdAsync(Device, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
+
+    auto prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_AbstractionLayer);
+    m_AbstractionGuid = winrt::unbox_value<winrt::guid>(prop);
 
     if (MidiFlowBidirectional == CreationParams->Flow)
     {
         wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
 
-        RETURN_IF_FAILED(CoCreateInstance(__uuidof(Midi2KSAbstraction), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
-        RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&m_KSMidiBiDiDevice));
-        RETURN_IF_FAILED(m_KSMidiBiDiDevice->Initialize(Device, MmcssTaskId, this));
+        RETURN_IF_FAILED(CoCreateInstance(m_AbstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
+        RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&m_MidiBiDiDevice));
+        RETURN_IF_FAILED(m_MidiBiDiDevice->Initialize(Device, MmcssTaskId, this));
     }
     else if (MidiFlowIn == CreationParams->Flow)
     {
         wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
 
-        RETURN_IF_FAILED(CoCreateInstance(__uuidof(Midi2KSAbstraction), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
-        RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiIn), (void**)&m_KSMidiInDevice));
-        RETURN_IF_FAILED(m_KSMidiInDevice->Initialize(Device, MmcssTaskId, this));
+        RETURN_IF_FAILED(CoCreateInstance(m_AbstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
+        RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiIn), (void**)&m_MidiInDevice));
+        RETURN_IF_FAILED(m_MidiInDevice->Initialize(Device, MmcssTaskId, this));
     }
     else if (MidiFlowOut == CreationParams->Flow)
     {
         wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
 
-        RETURN_IF_FAILED(CoCreateInstance(__uuidof(Midi2KSAbstraction), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
-        RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiOut), (void**)&m_KSMidiOutDevice));
-        RETURN_IF_FAILED(m_KSMidiOutDevice->Initialize(Device, MmcssTaskId));
+        RETURN_IF_FAILED(CoCreateInstance(m_AbstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
+        RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiOut), (void**)&m_MidiOutDevice));
+        RETURN_IF_FAILED(m_MidiOutDevice->Initialize(Device, MmcssTaskId));
     }
     else
     {
@@ -54,24 +63,31 @@ CMidiDevicePipe::Initialize(
 HRESULT
 CMidiDevicePipe::Cleanup()
 {
-    if (m_KSMidiBiDiDevice)
     {
-        m_KSMidiBiDiDevice->Cleanup();
-    }
-    if (m_KSMidiInDevice)
-    {
-        m_KSMidiInDevice->Cleanup();
-    }
-    if (m_KSMidiOutDevice)
-    {
-        m_KSMidiOutDevice->Cleanup();
+        auto lock = m_DevicePipeLock.lock();
+
+        if (m_MidiBiDiDevice)
+        {
+            m_MidiBiDiDevice->Cleanup();
+        }
+        if (m_MidiInDevice)
+        {
+            m_MidiInDevice->Cleanup();
+        }
+        if (m_MidiOutDevice)
+        {
+            m_MidiOutDevice->Cleanup();
+        }
+
+        m_MidiBiDiDevice.reset();
+        m_MidiInDevice.reset();
+        m_MidiOutDevice.reset();
     }
 
-    m_KSMidiBiDiDevice.reset();
-    m_KSMidiInDevice.reset();
-    m_KSMidiOutDevice.reset();
-
-    m_MidiClientPipe.reset();
+    {
+        auto lock = m_ClientPipeLock.lock();
+        m_MidiClientPipes.clear();
+    }
 
     return S_OK;
 }
@@ -84,13 +100,16 @@ CMidiDevicePipe::SendMidiMessage(
     LONGLONG Position
 )
 {
-    if (m_KSMidiBiDiDevice)
+    // only one client may send a message to the device at a time
+    auto lock = m_DevicePipeLock.lock();
+
+    if (m_MidiBiDiDevice)
     {
-        return m_KSMidiBiDiDevice->SendMidiMessage(Data, Length, Position);
+        return m_MidiBiDiDevice->SendMidiMessage(Data, Length, Position);
     }
-    else if (m_KSMidiOutDevice)
+    else if (m_MidiOutDevice)
     {
-        return m_KSMidiOutDevice->SendMidiMessage(Data, Length, Position);
+        return m_MidiOutDevice->SendMidiMessage(Data, Length, Position);
     }
 
     return E_ABORT;
@@ -104,9 +123,15 @@ CMidiDevicePipe::Callback(
     LONGLONG Position
 )
 {
-    if (m_MidiClientPipe)
+    // need to hold the client pipe lock to ensure that
+    // no clients are added or removed while performing the callback
+    // to the client.
+    auto lock = m_ClientPipeLock.lock();
+
+    for (auto const& Client : m_MidiClientPipes)
     {
-        return m_MidiClientPipe->SendMidiMessage(Data, Length, Position);
+        Client.second->SendMidiMessage(Data, Length, Position);
     }
+
     return E_ABORT;
 }

@@ -3,7 +3,7 @@
 
 typedef struct MIDI_CLIENT_PIPE
 {
-    wil::unique_hstring m_MidiDevice;
+    std::wstring MidiDevice;
     MidiClientHandle ClientHandle{ 0 };
 
     MidiProtocol Protocol{ LegacyMidi };
@@ -33,6 +33,8 @@ public:
     HRESULT SendMidiMessage(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
 
     STDMETHOD(Callback)(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
+
+    std::wstring MidiDevice() { return m_ClientPipe.MidiDevice; }
 
 private:
     MIDI_CLIENT_PIPE m_ClientPipe;

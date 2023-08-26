@@ -7,16 +7,15 @@ _Use_decl_annotations_
 HRESULT
 CMidi2KSMidi::Initialize(
     LPCWSTR Device,
-    BOOL MidiIn,
-    BOOL MidiOut,
+    MidiFlow Flow,
     DWORD * MmCssTaskId,
     IMidiCallback * Callback
 )
 {
-    RETURN_HR_IF(E_INVALIDARG, MidiIn && nullptr == Callback);
+    RETURN_HR_IF(E_INVALIDARG, Flow == MidiFlowIn && nullptr == Callback);
+    RETURN_HR_IF(E_INVALIDARG, Flow == MidiFlowBidirectional && nullptr == Callback);
     RETURN_HR_IF(E_INVALIDARG, nullptr == Device);
     RETURN_HR_IF(E_INVALIDARG, nullptr == MmCssTaskId);
-    RETURN_HR_IF(E_INVALIDARG, !MidiIn && !MidiOut);
 
     TraceLoggingWrite(
         MidiKSAbstractionTelemetryProvider::Provider(),
@@ -24,83 +23,105 @@ CMidi2KSMidi::Initialize(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(Device, "Device"),
-        TraceLoggingBool(MidiIn, "MidiIn"),
-        TraceLoggingBool(MidiOut, "MidiOut"),
+        TraceLoggingHexUInt32(Flow, "MidiFlow"),
         TraceLoggingHexUInt32(*MmCssTaskId, "MmCssTaskId"),
         TraceLoggingPointer(Callback, "callback")
         );
 
-    // the below KSMidiDeviceEnum is a temporary workaround until we can pass in the SWD to this code
-    KSMidiDeviceEnum devices;
-    devices.EnumerateFilters();
-    wil::unique_handle Filter;    
-    UMP_PINS *selectedPinIn = nullptr;
-    UMP_PINS *selectedPinOut = nullptr;
+    wil::unique_handle filter;
     std::unique_ptr<KSMidiInDevice> midiInDevice;
     std::unique_ptr<KSMidiOutDevice> midiOutDevice;
+    winrt::guid interfaceClass;
 
-    // Todo: buffer size and other device parameters (cyclic/legacy) shall come from the SWD,
-    // for now use the system allocation granularity and assume cyclic.
+    ULONG inPinId{ 0 };
+    ULONG outPinId{ 0 };
+    bool ump{ false };
+    bool looped{ false };
+    bool midiOne{ false };
+
+    std::wstring filterInterfaceId;
+    auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
+
+    additionalProperties.Append(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_KsFilterInterfaceId));
+    additionalProperties.Append(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_KsPinId));
+    additionalProperties.Append(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_InPinId));
+    additionalProperties.Append(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_OutPinId));
+    additionalProperties.Append(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_SupportsUMPFormat));
+    additionalProperties.Append(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_SupportsMidiOneFormat));
+    additionalProperties.Append(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_SupportsLooped));
+    additionalProperties.Append(winrt::to_hstring(L"System.Devices.InterfaceClassGuid"));
+
+    auto deviceInfo = DeviceInformation::CreateFromIdAsync(Device, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
+
+    auto prop = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiPort_KsFilterInterfaceId);
+    filterInterfaceId = winrt::unbox_value<winrt::hstring>(prop).c_str();
+
+    prop = deviceInfo.Properties().Lookup(L"System.Devices.InterfaceClassGuid");
+    interfaceClass = winrt::unbox_value<winrt::guid>(prop);
+
+    if (winrt::guid(DEVINTERFACE_MIDI_INPUT) == interfaceClass ||
+        winrt::guid(DEVINTERFACE_MIDI_OUTPUT) == interfaceClass)
+    {
+        // if we're activated with the legacy interface class,
+        // then we activate as a midi one peripheral
+        ump = false;
+        looped = false;
+        midiOne = true;
+    }
+    else if (winrt::guid(DEVINTERFACE_UNIVERSALMIDIPACKET_INPUT) == interfaceClass ||
+        winrt::guid(DEVINTERFACE_UNIVERSALMIDIPACKET_OUTPUT) == interfaceClass ||
+        winrt::guid(DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI) == interfaceClass)
+    {
+        // UMP interface class, determine the endpoint capabilities.
+        prop = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiPort_SupportsUMPFormat);
+        ump = winrt::unbox_value<bool>(prop);
+
+        prop = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiPort_SupportsMidiOneFormat);
+        midiOne = winrt::unbox_value<bool>(prop);
+
+        prop = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiPort_SupportsLooped);
+        looped = winrt::unbox_value<bool>(prop);
+    }
+    else
+    {
+        RETURN_IF_FAILED(E_UNEXPECTED);
+    }
+
+    // must support either ump or midiOne formats, fail if neither supported
+    RETURN_HR_IF(E_INVALIDARG, false == ump && false == midiOne);
+
+    if (Flow == MidiFlowBidirectional)
+    {
+        prop = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiPort_InPinId);
+        inPinId = outPinId = winrt::unbox_value<uint32_t>(prop);
+
+        prop = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiPort_OutPinId);
+        outPinId = outPinId = winrt::unbox_value<uint32_t>(prop);
+    }
+    else
+    {
+        prop = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiPort_KsPinId);
+        inPinId = outPinId = winrt::unbox_value<uint32_t>(prop);
+    }
+
     ULONG requestedBufferSize = PAGE_SIZE;
     RETURN_IF_FAILED(GetRequiredBufferSize(requestedBufferSize));
 
-    if (MidiIn)
-    {
-        for (UINT i = 0; i < devices.m_AvailableMidiInPinCount; i++)
-        {
-            if (0 == _wcsicmp(devices.m_AvailableMidiInPins[i].FilterName.get(), Device))
-            {
-                selectedPinIn = &(devices.m_AvailableMidiInPins[i]);
-                break;
-            }
-        }
-    }
+    RETURN_IF_FAILED(FilterInstantiate(filterInterfaceId.c_str(), &filter));
 
-    if (MidiOut)
-    {
-        for (UINT i = 0; i < devices.m_AvailableMidiOutPinCount; i++)
-        {
-            if (0 == _wcsicmp(devices.m_AvailableMidiOutPins[i].FilterName.get(), Device))
-            {
-                selectedPinOut = &(devices.m_AvailableMidiOutPins[i]);
-                break;
-            }
-        }
-    }
-
-    RETURN_HR_IF(E_INVALIDARG, MidiIn && nullptr == selectedPinIn);
-    RETURN_HR_IF(E_INVALIDARG, MidiOut && nullptr == selectedPinOut);
-
-    // bidirectional only applies to UMP, if UMP isn't supported on both pins, bidirectional
-    // is not supported for these pins.
-    if (MidiIn && MidiOut)
-    {
-        RETURN_HR_IF(E_NOTIMPL, !selectedPinIn->UMP);
-        RETURN_HR_IF(E_NOTIMPL, !selectedPinOut->UMP);
-
-        // Both directions need to use the same transfer mechanism
-        RETURN_HR_IF(E_NOTIMPL, selectedPinIn->Cyclic != selectedPinOut->Cyclic);
-    }
-    // the above KSMidiDeviceEnum is a temporary workaround until we can pass in the SWD to this code
-
-    // instantiate both pins on the same filter instance, to better emulate a bidirectional implementation.
-    RETURN_IF_FAILED(FilterInstantiate(Device, &Filter));
-
-    // simulate a bidirectional device through using two unidirectional devices, as KS Midi is not currently
-    // bidirectional
-    if (MidiIn)
+    if (Flow == MidiFlowIn || Flow == MidiFlowBidirectional)
     {
         midiInDevice.reset(new (std::nothrow) KSMidiInDevice());
         RETURN_IF_NULL_ALLOC(midiInDevice);
-        RETURN_IF_FAILED(midiInDevice->Initialize(Device, Filter.get(), selectedPinIn->PinId, selectedPinIn->Cyclic, TRUE, requestedBufferSize, MmCssTaskId, Callback));
+        RETURN_IF_FAILED(midiInDevice->Initialize(Device, filter.get(), inPinId, looped, ump, requestedBufferSize, MmCssTaskId, Callback));
         m_MidiInDevice = std::move(midiInDevice);
     }
 
-    if (MidiOut)
+    if (Flow == MidiFlowOut || Flow == MidiFlowBidirectional)
     {
         midiOutDevice.reset(new (std::nothrow) KSMidiOutDevice());
         RETURN_IF_NULL_ALLOC(midiOutDevice);
-        RETURN_IF_FAILED(midiOutDevice->Initialize(Device, Filter.get(), selectedPinOut->PinId, selectedPinOut->Cyclic, TRUE, requestedBufferSize, MmCssTaskId));
+        RETURN_IF_FAILED(midiOutDevice->Initialize(Device, filter.get(), outPinId, looped, ump, requestedBufferSize, MmCssTaskId));
         m_MidiOutDevice = std::move(midiOutDevice);
     }
 

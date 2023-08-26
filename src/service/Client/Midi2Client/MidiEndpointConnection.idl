@@ -1,0 +1,40 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+import "IMidiEndpointConnectionSettings.idl";
+
+
+namespace Windows.Devices.Midi2
+{
+    [MIDI_API_CONTRACT(1)]
+    [default_interface]
+    unsealed runtimeclass MidiEndpointConnection
+    {
+
+        // Get the enumeration device selector for all compatible devices
+        static String GetDeviceSelector();
+
+        // just a map key for this connection.
+        String Id{ get; };
+
+        // Id from Windows. This can be used to retrieve the MidiDeviceInformation object with the PnP properties
+        String DeviceId{ get; };
+
+        // app-supplied optional tag. Can hold whatever information they may want to show in a list
+        IInspectable Tag{ get; set; };
+
+        // true if this endpoint connection is actually connected.
+        // here for cases when the app holds on to an instance of this outside of the map
+        Boolean IsConnected{ get; };
+
+        IMidiEndpointConnectionSettings Settings{ get; };
+    }
+}

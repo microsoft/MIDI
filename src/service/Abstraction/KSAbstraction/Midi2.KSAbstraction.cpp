@@ -53,6 +53,20 @@ CMidi2KSAbstraction::Activate(
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSMidiBiDi>(&midiBiDi));
         *Interface = midiBiDi.detach();
     }
+    else if (__uuidof(IMidiEndpointManager) == Riid)
+    {
+        TraceLoggingWrite(
+            MidiKSAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__ "- Midi Endpoint Manager",
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingValue(__FUNCTION__),
+            TraceLoggingPointer(this, "this")
+            );
+
+        wil::com_ptr_nothrow<IMidiEndpointManager> midiEndpointManager;
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSMidiEndpointManager>(&midiEndpointManager));
+        *Interface = midiEndpointManager.detach();
+    }
 
     else
     {
