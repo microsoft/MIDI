@@ -41,7 +41,7 @@
 
   <ItemGroup>
     <Reference Include="Windows.Devices.Midi2">
-      <HintPath>C:\Program Files\Microsoft\Midi 2.0\Windows.Devices.Midi2.winmd</HintPath>
+      <HintPath>..\..\api\Publish\x64\Release\Windows.Devices.Midi2.winmd</HintPath>
       <IsWinMDFile>true</IsWinMDFile>
     </Reference>
   </ItemGroup>
