@@ -1,8 +1,0 @@
-PUBLIC_PASS0_CONSUMES= \
-    minkernel\published\base|PASS0 \
-    onecore\base\published|PASS0 \
-    onecore\com\published\idlole\publish|PASS0 \
-    onecore\com\published\winrt\foundation|PASS0 \
-    onecore\com\winrt\buildtools\winmetadata|PASS0 \
-    onecoreuap\merged\winmetadata\sdkmetadata|PASS0 \
-

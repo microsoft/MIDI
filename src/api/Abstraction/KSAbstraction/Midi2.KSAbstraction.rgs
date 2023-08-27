@@ -1,0 +1,14 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {26FA740D-469C-4D33-BEB1-3885DE7D6DF1} = s 'Midi2KSAbstraction Class'
+		{
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Both'
+			}
+			'Version' = s '1.0'
+		}
+	}
+}
