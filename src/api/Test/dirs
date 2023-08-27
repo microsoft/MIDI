@@ -1,0 +1,7 @@
+DIRS=\
+    Libs \
+    Midi2.Abstraction.unittests \
+    Midi2.Api.unittests \
+    Midi2.Client.unittests \
+    Midi2.Service.unittests \
+    Midi2.Driver.unittests \

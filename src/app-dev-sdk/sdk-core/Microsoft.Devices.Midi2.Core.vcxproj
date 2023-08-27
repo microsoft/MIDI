@@ -278,9 +278,10 @@
     <PRIResource Include="..\..\shared\strings\en-US\MidiMessageResources.resw" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\app-dev-api\api-core\Windows.Devices.Midi2.vcxproj">
-      <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
-    </ProjectReference>
+    <Reference Include="Windows.Devices.Midi2">
+      <HintPath>..\..\api\Publish\x64\Release\Windows.Devices.Midi2.winmd</HintPath>
+      <IsWinMDFile>true</IsWinMDFile>
+    </Reference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

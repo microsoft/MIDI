@@ -1,0 +1,8 @@
+DIRS=\
+  idl \
+  Libs \
+  Abstraction \
+  Service \
+  Client \
+  Test \
+  Drivers \

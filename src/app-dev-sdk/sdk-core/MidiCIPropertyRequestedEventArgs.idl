@@ -11,8 +11,6 @@ namespace Microsoft.Devices.Midi2
 	runtimeclass MidiCIPropertyRequestedEventArgs
 	{
 		Windows.Devices.Midi2.MidiUniqueId UniqueId{ get; };
-
-		
-
+			
 	};
 }

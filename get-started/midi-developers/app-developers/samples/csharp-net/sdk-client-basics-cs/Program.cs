@@ -15,15 +15,13 @@ if (checkResult == WindowsMidiServicesCheckResult.PresentAndUsable)
     Console.WriteLine("MIDI Services Present and usable");
     Console.WriteLine("Creating session settings");
 
-    MidiSessionSettings sessionSettings = MidiSessionSettings.Default;
-
     Console.WriteLine("Creating session");
 
-    using (var session = MidiSession.CreateSession("Sample Session", sessionSettings))
+    using (var session = MidiSession.CreateSession("Sample Session"))
     {
         Console.WriteLine("Creating Device Selector.");
 
-        var deviceSelector = MidiEndpointConnection.GetDeviceSelector();
+        var deviceSelector = MidiBidirectionalEndpointConnection.GetDeviceSelector();
 
         Console.WriteLine("Enumerating through Windows.Devices.Enumeration.");
 
@@ -33,15 +31,32 @@ if (checkResult == WindowsMidiServicesCheckResult.PresentAndUsable)
         // That will change once MIDI 2.0 device selectors have been created
         if (endpointDevices.Count > 0)
         {
-            Console.WriteLine("MIDI Endpoints were found (not really, but pretending they are for now).");
+            Console.WriteLine("Devices found:");
 
-            DeviceInformation selectedEndpointInformation = endpointDevices.First();
+            DeviceInformation selectedEndpointInformation = null;
 
-            Console.WriteLine("Connecting to UMP Endpoint.");
-            Console.WriteLine("Note: For this example to fully work, you need to the special Loopback MidiSrv installed.");
-            Console.WriteLine("Otherwise, creating an endpoint will fail, and no messages will be sent or received.");
+            foreach (var device in endpointDevices)
+            {
+                Console.WriteLine("  " + device.Name);
+                Console.WriteLine("    " + device.Id);
+                Console.WriteLine();
 
-            var endpoint = session.ConnectBidirectionalEndpoint("foobarbaz", null);
+                // we'll have a more deterministic way to do this in the future
+                if (device.Id.Contains("LOOPBACK"))
+                {
+                    selectedEndpointInformation = device;
+                }
+            }
+
+            if (selectedEndpointInformation == null)
+            {
+                Console.WriteLine("No loopback device found. This is not normal. Exiting");
+                return;
+            }
+
+            Console.WriteLine("Connecting to UMP Endpoint: " + selectedEndpointInformation.Name);
+
+            var endpoint = session.ConnectBidirectionalEndpoint(selectedEndpointInformation.Id);
 
             endpoint.MessageReceived += (sender, args) =>
             {
@@ -63,11 +78,16 @@ if (checkResult == WindowsMidiServicesCheckResult.PresentAndUsable)
                 }
             };
 
+            Console.WriteLine("Opening endpoint connection (this sends out the required discovery messages which will loop back)..");
+
             // once you have wired up all your event handlers, added any filters/listeners, etc.
             // You can open the connection. Doing this will query the cache for the in-protocol 
             // endpoint information and function blocks. If not there, it will send out the requests
             // which will come back asynchronously with responses.
             endpoint.Open();
+
+
+            Console.WriteLine("Creating MIDI 1.0 Channel Voice 32-bit UMP...");
 
             MidiUmp32 ump32 = new MidiUmp32();
 
