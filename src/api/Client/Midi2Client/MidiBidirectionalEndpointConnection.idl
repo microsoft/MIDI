@@ -36,7 +36,8 @@ namespace Windows.Devices.Midi2
         //MidiEndpointConnection();
 
         // Get the enumeration device selector for all compatible devices
-        static String GetDeviceSelectorForBidirectional();
+        static String GetDeviceSelector();
+        //static String GetDeviceSelectorForLoopbackEndpoint();
 
         IVector<IMidiEndpointMessageListener> MessageListeners{ get; };
 

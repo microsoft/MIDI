@@ -24,7 +24,9 @@ namespace Windows.Devices.Midi2
                                                 Windows.Devices.Midi2.IMidiOutputConnection
     {
         // Get the enumeration device selector for all compatible devices
-        static String GetDeviceSelectorForOutput();
+        static String GetDeviceSelector();
+        //static String GetDeviceSelectorForLoopbackEndpoint();
+
 
         Boolean Open();
     }

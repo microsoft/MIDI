@@ -25,7 +25,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiInputEndpointConnection() = default;
 
-        static hstring GetDeviceSelectorForInput() noexcept { return L""; /* TODO */ }
+        static hstring GetDeviceSelector() noexcept { return L"System.Devices.InterfaceClassGuid:=\"{AE174174-6396-4DEE-AC9E-1E9C6F403230}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True"; }
 
         winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiEndpointMessageListener> MessageListeners() { return m_messageListeners; }
 

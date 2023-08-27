@@ -19,7 +19,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiOutputEndpointConnection() = default;
 
-        static hstring GetDeviceSelectorForOutput() noexcept { return L""; /* TODO */ }
+        static hstring GetDeviceSelector() noexcept { return L"System.Devices.InterfaceClassGuid:=\"{3705DC2B-17A7-4452-98CE-BF12C6F48A0B}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True"; }
 
         _Success_(return == true)
         bool SendUmp(

@@ -24,6 +24,8 @@
 
 #include <pch.h>
 
+
+
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     struct MidiBidirectionalEndpointConnection : MidiBidirectionalEndpointConnectionT<
@@ -34,7 +36,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         MidiBidirectionalEndpointConnection() = default;
         ~MidiBidirectionalEndpointConnection();
 
-        static hstring GetDeviceSelectorForBidirectional() noexcept { return L""; /* TODO*/ }
+        static hstring GetDeviceSelector() noexcept { return L"System.Devices.InterfaceClassGuid:=\"{E7CCE071-3C03-423f-88D3-F1045D02552B}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True"; }
+        //static hstring GetDeviceSelectorForLoopbackEndpoint() noexcept { return L""; /* TODO*/ }
 
         winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiEndpointMessageListener> MessageListeners() { return m_messageListeners; }
 

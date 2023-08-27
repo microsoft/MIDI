@@ -21,6 +21,12 @@ DEFINE_GUID(DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI, 0xe7cce071, 0x3c03, 0x423f, 0
 //
 // Defining common midi interface properties
 //
+
+// NOTE: Becuase these use GUID/PID format, they cannot be used in Windows.Devices.Enumeration AQS filter strings in WinRT
+// We should probably create a .prodesc schema per these links, if they can even be applied to devices
+//     https://learn.microsoft.com/en-us/windows/win32/properties/building-property-handlers-property-schemas
+// and https://learn.microsoft.com/en-us/windows/win32/properties/propdesc-schema-entry
+
 #define STRING_PKEY_MIDI_AbstractionLayer L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},3"
 DEFINE_DEVPROPKEY(PKEY_MIDI_AbstractionLayer, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 3);     // DEVPROP_TYPE_UINT64
 

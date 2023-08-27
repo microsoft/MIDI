@@ -18,7 +18,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiEndpointConnection() = default;
 
-        static hstring GetDeviceSelector();
+        //static hstring GetDeviceSelector();
 
         hstring Id() const noexcept { return m_id; }
         hstring DeviceId() const noexcept { return m_deviceId; }
@@ -48,9 +48,4 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     };
 }
-namespace winrt::Windows::Devices::Midi2::factory_implementation
-{
-    struct MidiEndpointConnection : MidiEndpointConnectionT<MidiEndpointConnection, implementation::MidiEndpointConnection>
-    {
-    };
-}
+
