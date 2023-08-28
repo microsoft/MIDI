@@ -279,7 +279,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Windows.Devices.Midi2">
-      <HintPath>..\..\api\Publish\x64\Release\Windows.Devices.Midi2.winmd</HintPath>
+      <HintPath>..\..\api\VSFiles\x64\Release\PublishedWinMD\Windows.Devices.Midi2.winmd</HintPath>
       <IsWinMDFile>true</IsWinMDFile>
     </Reference>
   </ItemGroup>

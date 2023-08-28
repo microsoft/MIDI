@@ -10,19 +10,17 @@
 
 	<PropertyGroup>
 		
-		<!-- TODO: Remove Windows.Devices.Midi2 when it goes in-box -->
-		
-		<CsWinRTIncludes>Microsoft.Devices.Midi2;Windows.Devices.Midi2</CsWinRTIncludes>
+		<CsWinRTIncludes>Windows.Devices.Midi2</CsWinRTIncludes>
 		<CsWinRTGeneratedFilesDir>$(OutDir)</CsWinRTGeneratedFilesDir>
 	</PropertyGroup>
 
 	<PropertyGroup>
 		<GeneratedNugetDir>.\nuget\</GeneratedNugetDir>
-		<NuspecFile>$(GeneratedNugetDir)Microsoft.Devices.Midi2.Core.nuspec</NuspecFile>
+		<NuspecFile>$(GeneratedNugetDir)Windows.Devices.Midi2.nuspec</NuspecFile>
 		<OutputPath>$(GeneratedNugetDir)</OutputPath>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<AssemblyName>Microsoft.Devices.Midi2.NET</AssemblyName>
-		<PackageOutputPath>..\..\..\publish\app-dev-sdk\</PackageOutputPath>
+		<AssemblyName>Windows.Devices.Midi2.NET</AssemblyName>
+		<PackageOutputPath>..\..\VSFiles\$(PlatformTarget)\$(Configuration)\PublishedApiNuget\</PackageOutputPath>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -30,13 +28,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="nuget\Microsoft.Devices.Midi2.Core.nuspec" />
-    <None Include="nuget\Microsoft.Devices.Midi2.Core.targets" />
     <None Include="nuget\README.md" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\sdk-core\Microsoft.Devices.Midi2.Core.vcxproj" />
+    <ProjectReference Include="..\Midi2Client\Windows.Devices.Midi2.vcxproj" />
   </ItemGroup>
 
 </Project>
