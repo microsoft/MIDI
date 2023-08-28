@@ -103,10 +103,16 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message th
 
 
     bool messageReceivedFlag = false;
-    MidiUmp32 sentUmp;
 
-    auto sentMessageType = MidiUmpMessageType::Midi1ChannelVoice32;
     auto sentTimestamp = MidiClock::GetMidiTimestamp();
+    auto sentMessageType = MidiUmpMessageType::Midi1ChannelVoice32;
+    auto sentUmp = MidiMessageBuilder::BuildMidi1ChannelVoiceMessage(
+        sentTimestamp, 
+        5, 
+        Midi1ChannelVoiceMessageStatus::NoteOn, 
+        10, 
+        0x33, 
+        0x7F);
 
 
     auto MessageReceivedHandler = [&](winrt::Windows::Foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
@@ -114,26 +120,31 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message th
             REQUIRE((bool)(sender != nullptr));
             REQUIRE((bool)(args != nullptr));
 
-            // strongly typed UMP
-            auto receivedUmp = args.GetUmp();
+            // check to see if this is our sent message (this helps filter out any automatic/discovery messages)
 
-            REQUIRE(receivedUmp != nullptr);
+            if (args.Timestamp() == sentTimestamp)
+            {
+                // strongly typed UMP
+                auto receivedUmp = args.GetUmp();
 
-            // verify that the message that comes back is what we sent
-            REQUIRE(receivedUmp.MessageType() == sentMessageType);
-            REQUIRE(receivedUmp.Timestamp() == sentTimestamp);
+                REQUIRE(receivedUmp != nullptr);
 
-            // Making an assumption on type here.
-            MidiUmp32 receivedUmp32 = receivedUmp.as<MidiUmp32>();
+                // verify that the message that comes back is what we sent
+                REQUIRE(receivedUmp.MessageType() == sentMessageType);
 
-            std::cout << "Received message in test" << std::endl;
-            std::cout << " - UmpPacketType:     0x" << std::hex << (int)(receivedUmp32.UmpPacketType()) << std::endl;
-            std::cout << " - Timestamp:         0x" << std::hex << (receivedUmp32.Timestamp()) << std::endl;
-            std::cout << " - MessageType:       0x" << std::hex << (int)(receivedUmp32.MessageType()) << std::endl;
-            std::cout << " - First Word:        0x" << std::hex << (receivedUmp32.Word0()) << std::endl << std::endl;
+                // Making an assumption on type here.
+                MidiUmp32 receivedUmp32 = receivedUmp.as<MidiUmp32>();
 
-            messageReceivedFlag = true;
-            allMessagesReceived.SetEvent();
+                std::cout << "Received message in test" << std::endl;
+                std::cout << " - UmpPacketType:     0x" << std::hex << (int)(receivedUmp32.UmpPacketType()) << std::endl;
+                std::cout << " - Timestamp:         0x" << std::hex << (receivedUmp32.Timestamp()) << std::endl;
+                std::cout << " - MessageType:       0x" << std::hex << (int)(receivedUmp32.MessageType()) << std::endl;
+                std::cout << " - First Word:        0x" << std::hex << (receivedUmp32.Word0()) << std::endl << std::endl;
+
+                messageReceivedFlag = true;
+                allMessagesReceived.SetEvent();
+            }
+
         };
 
     auto eventRevokeToken = connIn.MessageReceived(MessageReceivedHandler);

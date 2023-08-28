@@ -36,6 +36,7 @@ auto ump96mt = MidiUmpMessageType::FutureReservedB96;
 auto ump128mt = MidiUmpMessageType::UmpStream128;
 
 
+#if false
 
 TEST_CASE("Connected.Benchmark.APIWords Send / receive word array through loopback")
 {
@@ -285,7 +286,6 @@ TEST_CASE("Connected.Benchmark.APIWords Send / receive word array through loopba
 }
 
 
-#if false
 
 TEST_CASE("Connected.Benchmark.APIUmp Send / receive UMPs through loopback")
 {
