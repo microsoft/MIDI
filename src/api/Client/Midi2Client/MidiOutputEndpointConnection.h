@@ -7,9 +7,19 @@
 // ============================================================================
 
 #pragma once
+#include <pch.h>
+
 #include "MidiOutputEndpointConnection.g.h"
 #include "MidiEndpointConnection.h"
 #include "midi_service_interface.h"
+
+#include "MidiUmp32.h"
+#include "MidiUmp64.h"
+#include "MidiUmp96.h"
+#include "MidiUmp128.h"
+
+#include "InternalMidiMessageSenderHelper.h"
+
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
@@ -18,6 +28,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         Windows::Devices::Midi2::implementation::MidiEndpointConnection>
     {
         MidiOutputEndpointConnection() = default;
+        ~MidiOutputEndpointConnection();
 
         static hstring GetDeviceSelector() noexcept { return L"System.Devices.InterfaceClassGuid:=\"{3705DC2B-17A7-4452-98CE-BF12C6F48A0B}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True"; }
 
@@ -65,14 +76,26 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ uint32_t const word3);
 
         _Success_(return == true)
-        bool InternalInitialize();
+            bool InternalInitialize(
+                _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction);
 
         _Success_(return == true)
-        bool Open();
+            bool Open();
 
 
     private:
+        winrt::com_ptr<IMidiAbstraction> m_serviceAbstraction{ nullptr };
+        winrt::com_ptr<IMidiOut> m_endpointInterface{ nullptr };
 
+        internal::InternalMidiMessageSenderHelper<IMidiOut> m_messageSenderHelper;
+
+
+
+        _Success_(return == true)
+            bool ActivateMidiStream(
+                _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
+                _In_ const IID & iid,
+                _Out_ void** iface);
     };
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation

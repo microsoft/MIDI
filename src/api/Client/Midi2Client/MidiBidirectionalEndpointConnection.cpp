@@ -13,6 +13,18 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
+
+
+    // TODO: Refactor this common code (Output and BiDi, Input and BiDi) into another class
+
+
+
+
+
+
+
+
+
     // Callback handler from the Midi Service endpoint abstraction
 
     IFACEMETHODIMP MidiBidirectionalEndpointConnection::Callback(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Timestamp)

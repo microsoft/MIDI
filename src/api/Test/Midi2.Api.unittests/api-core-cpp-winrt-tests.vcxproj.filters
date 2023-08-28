@@ -24,6 +24,9 @@
     <ClCompile Include="MessageBuilderTests.cpp">
       <Filter>Tests</Filter>
     </ClCompile>
+    <ClCompile Include="UnidirectionalEndpointTests.cpp">
+      <Filter>Tests</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
