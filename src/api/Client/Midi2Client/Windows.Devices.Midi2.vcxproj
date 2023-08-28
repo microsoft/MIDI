@@ -180,6 +180,15 @@
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</Profile>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</RegisterOutput>
     </Link>
+    <PostBuildEvent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">xcopy "$(OutDir)$(TargetName).winmd" "$(OutDir)PublishedWinMD\"</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">xcopy "$(OutDir)$(TargetName).winmd" "$(OutDir)PublishedWinMD\"</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">xcopy "$(OutDir)$(TargetName).winmd" "$(OutDir)PublishedWinMD\"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
     <ClCompile>
@@ -198,6 +207,15 @@
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">false</RegisterOutput>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</RegisterOutput>
     </Link>
+    <PostBuildEvent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">xcopy "$(OutDir)$(TargetName).winmd" "$(OutDir)PublishedWinMD\"</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">xcopy "$(OutDir)$(TargetName).winmd" "$(OutDir)PublishedWinMD\"</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">xcopy "$(OutDir)$(TargetName).winmd" "$(OutDir)PublishedWinMD\"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="InternalMidiMessageReceiverHelper.h" />
@@ -289,7 +307,9 @@
     <ClInclude Include="MidiUniqueId.h">
       <DependentUpon>MidiUniqueId.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiVirtualDeviceManager.h" />
+    <ClInclude Include="MidiVirtualDeviceManager.h">
+      <DependentUpon>MidiVirtualDeviceManager.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="midi_service_interface.h" />
     <ClInclude Include="midl_defines.h" />
     <ClInclude Include="string_util.h" />
@@ -392,7 +412,9 @@
     <ClCompile Include="MidiUniqueId.cpp">
       <DependentUpon>MidiUniqueId.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiVirtualDeviceManager.cpp" />
+    <ClCompile Include="MidiVirtualDeviceManager.cpp">
+      <DependentUpon>MidiVirtualDeviceManager.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -405,6 +427,8 @@
     <Midl Include="IMidiMessageReceivedEventSource.idl" />
     <Midl Include="IMidiOutputConnection.idl" />
     <Midl Include="IMidiTransportSettingsData.idl" />
+    <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl" />
+    <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl" />
     <Midl Include="MidiBidirectionalEndpointConnection.idl" />
     <Midl Include="MidiBidirectionalEndpointOpenOptions.idl" />
     <Midl Include="MidiChannel.idl" />

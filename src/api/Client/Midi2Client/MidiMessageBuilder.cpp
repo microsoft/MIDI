@@ -17,7 +17,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 {
     winrt::Windows::Devices::Midi2::MidiUmp32 MidiMessageBuilder::BuildUtilityMessage(
         _In_ internal::MidiTimestamp const timestamp,
-        _In_ uint8_t const reserved,
         _In_ uint8_t const status,
         _In_ uint32_t const dataOrReserved)
     {      
@@ -25,9 +24,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
             timestamp,
             (uint32_t)(
                 0x0 | 
-                internal::CleanupNibble(reserved) << 24 |
                 internal::CleanupNibble(status) << 20 |
-                dataOrReserved)
+                dataOrReserved) // TODO: clean up the dataOrReserved field
         );
 
     }
@@ -53,7 +51,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     winrt::Windows::Devices::Midi2::MidiUmp32 MidiMessageBuilder::BuildMidi1ChannelVoiceMessage(
         _In_ internal::MidiTimestamp const timestamp,
         _In_ uint8_t const groupIndex,
-        _In_ uint8_t const status,
+        _In_ winrt::Windows::Devices::Midi2::Midi1ChannelVoiceMessageStatus const& status,
         _In_ uint8_t const channel,
         _In_ uint8_t const byte3,
         _In_ uint8_t const byte4)
@@ -63,7 +61,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             (uint32_t)(
                 0x2 << 28 |
                 internal::CleanupNibble(groupIndex) << 24 |
-                internal::CleanupNibble(status) << 20 |
+                internal::CleanupNibble((uint8_t)status) << 20 |
                 internal::CleanupNibble(channel) << 16 |
                 internal::CleanupByte7(byte3) << 8 |
                 internal::CleanupByte7(byte4))
@@ -128,7 +126,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     winrt::Windows::Devices::Midi2::MidiUmp64 MidiMessageBuilder::BuildMidi2ChannelVoiceMessage(
         _In_ internal::MidiTimestamp const timestamp,
         _In_ uint8_t const groupIndex,
-        _In_ uint8_t const status,
+        _In_ winrt::Windows::Devices::Midi2::Midi2ChannelVoiceMessageStatus const& status,
         _In_ uint8_t const channel,
         _In_ uint16_t const index,
         _In_ uint32_t const data)
@@ -138,7 +136,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             (uint32_t)(
                 0x4 << 28 |
                 internal::CleanupNibble(groupIndex) << 24 |
-                internal::CleanupNibble(status) << 20 |
+                internal::CleanupNibble((uint8_t)status) << 20 |
                 internal::CleanupNibble(channel) << 16 |
                 index), 
             data);
