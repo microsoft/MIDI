@@ -1,5 +1,4 @@
 DIRS=\
     Midi2Client \
-    Midi2Configuration \
     #MidiRT \
-    #WinMM \
+    #WinMM \

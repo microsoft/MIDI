@@ -20,13 +20,13 @@ CMidi2VirtualMidiAbstraction::Activate(
 
     RETURN_HR_IF(E_INVALIDARG, nullptr == Interface);
 
-   /*if (__uuidof(IMidiIn) == Riid)
+   if (__uuidof(IMidiIn) == Riid)
     {
        OutputDebugString(L"" __FUNCTION__ " Activating IMidiIn");
 
         TraceLoggingWrite(
             MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- Midi in",
+            __FUNCTION__ "- IMidiIn",
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingValue(__FUNCTION__),
             TraceLoggingPointer(this, "this")
@@ -36,13 +36,15 @@ CMidi2VirtualMidiAbstraction::Activate(
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2VirtualMidiIn>(&midiIn));
         *Interface = midiIn.detach();
     }
+
+
     else if (__uuidof(IMidiOut) == Riid)
     {
        OutputDebugString(L"" __FUNCTION__ " Activating IMidiOut");
        
        TraceLoggingWrite(
             MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- Midi Out",
+            __FUNCTION__ "- IMidiOut",
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingValue(__FUNCTION__),
             TraceLoggingPointer(this, "this")
@@ -52,13 +54,15 @@ CMidi2VirtualMidiAbstraction::Activate(
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2VirtualMidiOut>(&midiOut));
         *Interface = midiOut.detach();
     }
-    else*/ if (__uuidof(IMidiBiDi) == Riid)
+
+
+    else if (__uuidof(IMidiBiDi) == Riid)
     {
        OutputDebugString(L"" __FUNCTION__ " Activating IMidiBiDi");
 
         TraceLoggingWrite(
             MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- Midi BiDi",
+            __FUNCTION__ "- IMidiBiDi",
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingValue(__FUNCTION__),
             TraceLoggingPointer(this, "this")
@@ -68,20 +72,30 @@ CMidi2VirtualMidiAbstraction::Activate(
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2VirtualMidiBiDi>(&midiBiDi));
         *Interface = midiBiDi.detach();
     }
-    else if (__uuidof(IMidiEndpointManager) == Riid)
+
+
+    // IMidiEndpointManager and IMidiApiEndpointManagerExtension are interfaces implemented by the same class
+    // We want to make sure we're always returning the same instance for these calls
+    else if (__uuidof(IMidiEndpointManager) == Riid || __uuidof(IMidiApiEndpointManagerExtension) == Riid)
     {
         TraceLoggingWrite(
             MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- Midi Endpoint Manager",
+            __FUNCTION__ "- IMidiEndpointManager",
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingValue(__FUNCTION__),
             TraceLoggingPointer(this, "this")
         );
 
-        wil::com_ptr_nothrow<IMidiEndpointManager> midiEndpointManager;
-        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2VirtualMidiEndpointManager>(&midiEndpointManager));
-        *Interface = midiEndpointManager.detach();
+        // check to see if this is the first time we're creating the endpoint manager. If so, create it.
+        if (m_endpointManager == nullptr)
+        {
+            RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2VirtualMidiEndpointManager>(&m_endpointManager));
+        }
+
+        // TODO: Not sure if this is the right pattern for this or not. There's no detach call here, so does this leak?
+        RETURN_IF_FAILED(m_endpointManager.query_to(Riid, Interface));
     }
+
     else
     {
         OutputDebugString(L"" __FUNCTION__ " Returning E_NOINTERFACE. Was an interface added that isn't handled in the Abstraction?");

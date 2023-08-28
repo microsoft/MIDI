@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "MidiLoopbackDevice.h"
+//#include "MidiVirtualDevice.h"
 
 // thread-safe meyers singleton for storing the devices we'll use
 
@@ -21,8 +21,8 @@ class MidiDeviceTable
 {
 public:
     //std::shared_ptr<LoopbackDevice> GetDevice(std::wstring deviceId);
-    MidiLoopbackDevice* GetBidiDevice();
-    MidiLoopbackDevice* GetInOutDevice();
+    //MidiLoopbackDevice* GetBidiDevice();
+    //MidiLoopbackDevice* GetInOutDevice();
 
     static MidiDeviceTable& Current();
 
@@ -35,6 +35,6 @@ private:
     ~MidiDeviceTable();
 
 
-    MidiLoopbackDevice m_bidiDevice;
-    MidiLoopbackDevice m_inOutDevice;
+    //MidiLoopbackDevice m_bidiDevice;
+    //MidiLoopbackDevice m_inOutDevice;
 };

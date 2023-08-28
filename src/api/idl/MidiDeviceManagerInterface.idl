@@ -46,4 +46,5 @@ interface IMidiDeviceManagerInterface : IUnknown
     HRESULT RemoveEndpoint(
         [in] LPCWSTR InstanceId
     );
+
 };

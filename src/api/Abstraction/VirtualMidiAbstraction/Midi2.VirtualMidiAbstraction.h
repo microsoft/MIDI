@@ -39,7 +39,10 @@ public:
     DECLARE_PROTECT_FINAL_CONSTRUCT()
 
     STDMETHOD(Activate)(_In_ REFIID, _Out_  void**);
+
 private:
+    wil::com_ptr_nothrow<IMidiEndpointManager> m_endpointManager;
+
 };
 
 OBJECT_ENTRY_AUTO(__uuidof(Midi2VirtualMidiAbstraction), CMidi2VirtualMidiAbstraction)
