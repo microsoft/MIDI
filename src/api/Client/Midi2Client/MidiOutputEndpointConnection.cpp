@@ -23,7 +23,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     _Success_(return == true)
-        bool MidiOutputEndpointConnection::SendUmpBuffer(
+    bool MidiOutputEndpointConnection::SendUmpBuffer(
             _In_ const internal::MidiTimestamp timestamp,
             _In_ winrt::Windows::Foundation::IMemoryBuffer const& buffer,
             _In_ const uint32_t byteOffset,
@@ -84,7 +84,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     // sends a single UMP's worth of words
     _Success_(return == true)
-        bool MidiOutputEndpointConnection::SendUmpWordArray(
+    bool MidiOutputEndpointConnection::SendUmpWordArray(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ array_view<uint32_t const> words,
             _In_ uint32_t const wordCount)
@@ -140,7 +140,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Success_(return == true)
-        bool MidiOutputEndpointConnection::SendUmpWords(
+    bool MidiOutputEndpointConnection::SendUmpWords(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint32_t const word0)
     {
@@ -187,7 +187,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Success_(return == true)
-        bool MidiOutputEndpointConnection::SendUmpWords(
+    bool MidiOutputEndpointConnection::SendUmpWords(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint32_t const word0,
             _In_ uint32_t const word1)
@@ -239,7 +239,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Success_(return == true)
-        bool MidiOutputEndpointConnection::SendUmpWords(
+    bool MidiOutputEndpointConnection::SendUmpWords(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint32_t const word0,
             _In_ uint32_t const word1,
@@ -293,7 +293,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Success_(return == true)
-        bool MidiOutputEndpointConnection::SendUmpWords(
+    bool MidiOutputEndpointConnection::SendUmpWords(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint32_t const word0,
             _In_ uint32_t const word1,
@@ -349,7 +349,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     _Success_(return == true)
-        bool MidiOutputEndpointConnection::SendUmp(
+    bool MidiOutputEndpointConnection::SendUmp(
             _In_ winrt::Windows::Devices::Midi2::IMidiUmp const& ump)
     {
         try
@@ -383,7 +383,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Success_(return == true)
-        bool MidiOutputEndpointConnection::ActivateMidiStream(
+    bool MidiOutputEndpointConnection::ActivateMidiStream(
             _In_ com_ptr<IMidiAbstraction> serviceAbstraction,
             _In_ const IID & iid,
             _Out_ void** iface)
@@ -403,7 +403,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Success_(return == true)
-        bool MidiOutputEndpointConnection::InternalInitialize(
+    bool MidiOutputEndpointConnection::InternalInitialize(
             _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction)
     {
         try
@@ -427,7 +427,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     _Success_(return == true)
-        bool MidiOutputEndpointConnection::Open()
+    bool MidiOutputEndpointConnection::Open()
     {
         if (!m_isOpen)
         {
@@ -451,16 +451,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
                     ));
 
                     m_isOpen = true;
-
-
-                    // TODO: Send discovery messages using app provided settings and user settings read from the property store
-                    // These get fired off here quickly so we can return. The listener is responsible for catching them.
-
-
-
-
-
-
 
                     return true;
                 }

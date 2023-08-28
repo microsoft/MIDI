@@ -19,6 +19,8 @@ HRESULT MidiLoopbackDevice::SendMidiMessage(
     RETURN_HR_IF_NULL(E_INVALIDARG, message);
     RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
 
+    // this is a loopback, so all we do is call the callback
+
     return m_callback->Callback(message, size, timestamp);
 }
 

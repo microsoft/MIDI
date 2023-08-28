@@ -20,7 +20,7 @@ CMidi2SimpleLoopbackAbstraction::Activate(
 
     RETURN_HR_IF(E_INVALIDARG, nullptr == Interface);
 
-   /*if (__uuidof(IMidiIn) == Riid)
+   if (__uuidof(IMidiIn) == Riid)
     {
        OutputDebugString(L"" __FUNCTION__ " Activating IMidiIn");
 
@@ -52,7 +52,7 @@ CMidi2SimpleLoopbackAbstraction::Activate(
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2SimpleLoopbackMidiOut>(&midiOut));
         *Interface = midiOut.detach();
     }
-    else*/ if (__uuidof(IMidiBiDi) == Riid)
+    else if (__uuidof(IMidiBiDi) == Riid)
     {
        OutputDebugString(L"" __FUNCTION__ " Activating IMidiBiDi");
 
