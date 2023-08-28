@@ -22,6 +22,7 @@ import "MidiBidirectionalEndpointOpenOptions.idl";
 import "MidiInputEndpointOpenOptions.idl";
 import "MidiOutputEndpointOpenOptions.idl";
 
+import "MidiVirtualDeviceManager.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -39,7 +40,6 @@ namespace Windows.Devices.Midi2
 
         Boolean IsOpen { get; };
 
-        // this really should be read-only to users of this class
         IMapView<String, MidiEndpointConnection> Connections{ get; };
 
         // output-only. Typically for MIDI 1.0 device/block
@@ -85,15 +85,14 @@ namespace Windows.Devices.Midi2
             MidiBidirectionalEndpointOpenOptions options, 
             IMidiEndpointDefinedConnectionSettings settings);
 
-
-
-
-
         // note that this takes the connection instance id, not the endpoint id itself
         // This will remove a single endpoint connection instance.
 
         void DisconnectEndpointConnection(String endpointConnectionInstanceId);
 
- 
+        // This is associated with the session so we can session-scoped
+        // lifetime / info as well as provide the session-level service interface
+        MidiVirtualDeviceManager VirtualDeviceManager{ get; };
+
     }
 }

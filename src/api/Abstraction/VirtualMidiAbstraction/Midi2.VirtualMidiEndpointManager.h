@@ -72,12 +72,19 @@ typedef struct _PARENTDEVICECREATECONTEXT
 class CMidi2VirtualMidiEndpointManager :
     public Microsoft::WRL::RuntimeClass<
         Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-        IMidiEndpointManager>
+        IMidiEndpointManager, 
+        IMidiApiEndpointManagerExtension>
 
 {
 public:
     STDMETHOD(Initialize(_In_ IUnknown*));
     STDMETHOD(Cleanup)();
+
+    STDMETHOD(ApplyConfiguration(
+        _In_ LPCWSTR configurationJson,
+        _Out_ LPCWSTR resultJson
+    ));
+
 
 private:
 

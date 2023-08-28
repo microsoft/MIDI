@@ -301,3 +301,17 @@ CMidi2VirtualMidiEndpointManager::Cleanup()
 
     return S_OK;
 }
+
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2VirtualMidiEndpointManager::ApplyConfiguration(
+    _In_ LPCWSTR /*configurationJson*/,
+    _Out_ LPCWSTR /*resultJson*/
+)
+{
+    return E_NOTIMPL;
+}
+
+

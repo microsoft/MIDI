@@ -77,6 +77,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
             m_id = winrt::to_hstring(Windows::Foundation::GuidHelper::CreateNewGuid());
 
             m_isOpen = true;
+
+            // create the virtual device manager
+
+            auto virtualDeviceManager = winrt::make_self<MidiVirtualDeviceManager>();
+            if (virtualDeviceManager != nullptr)
+            {
+                virtualDeviceManager->Initialize(m_serviceAbstraction);
+
+                m_virtualDeviceManager = *virtualDeviceManager;
+            }
+
         }
         catch (winrt::hresult_error const& ex)
         {

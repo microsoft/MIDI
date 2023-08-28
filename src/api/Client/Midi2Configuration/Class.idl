@@ -1,9 +1,0 @@
-namespace midi_configuration_api
-{
-    [default_interface]
-    runtimeclass Class
-    {
-        Class();
-        Int32 MyProperty;
-    }
-}

@@ -8,6 +8,7 @@
 
 #pragma once
 #include "MidiSession.g.h"
+#include "MidiVirtualDeviceManager.h"
 
 #include "midi_service_interface.h"
 
@@ -20,10 +21,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static winrt::Windows::Devices::Midi2::MidiSession CreateSession(
             _In_ hstring const& sessionName, 
-            _In_ winrt::Windows::Devices::Midi2::MidiSessionSettings const& settings);
+            _In_ winrt::Windows::Devices::Midi2::MidiSessionSettings const& settings
+        );
 
         static winrt::Windows::Devices::Midi2::MidiSession CreateSession(
-            _In_ hstring const& sessionName);
+            _In_ hstring const& sessionName
+        );
 
         hstring Id() const { return m_id; }
         hstring Name() const { return m_name; }
@@ -35,51 +38,68 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::Windows::Foundation::Collections::IMapView<hstring, winrt::Windows::Devices::Midi2::MidiEndpointConnection> Connections() { return m_connections.GetView(); }
 
         winrt::Windows::Devices::Midi2::MidiOutputEndpointConnection ConnectOutputEndpoint(
-            _In_ hstring const& deviceId);
+            _In_ hstring const& deviceId
+        );
 
         winrt::Windows::Devices::Midi2::MidiOutputEndpointConnection ConnectOutputEndpoint(
             _In_ hstring const& deviceId, 
-            _In_ winrt::Windows::Devices::Midi2::MidiOutputEndpointOpenOptions const& options);
+            _In_ winrt::Windows::Devices::Midi2::MidiOutputEndpointOpenOptions const& options
+        );
 
         winrt::Windows::Devices::Midi2::MidiOutputEndpointConnection ConnectOutputEndpoint(
             _In_ hstring const& deviceId,
             _In_ winrt::Windows::Devices::Midi2::MidiOutputEndpointOpenOptions const& options,
-            _In_ winrt::Windows::Devices::Midi2::IMidiEndpointDefinedConnectionSettings const& settings);
+            _In_ winrt::Windows::Devices::Midi2::IMidiEndpointDefinedConnectionSettings const& settings
+        );
 
 
 
         winrt::Windows::Devices::Midi2::MidiInputEndpointConnection ConnectInputEndpoint(
-            _In_ hstring const& deviceId);
+            _In_ hstring const& deviceId
+        );
 
         winrt::Windows::Devices::Midi2::MidiInputEndpointConnection ConnectInputEndpoint(
             _In_ hstring const& deviceId,
-            _In_ winrt::Windows::Devices::Midi2::MidiInputEndpointOpenOptions const& options);
+            _In_ winrt::Windows::Devices::Midi2::MidiInputEndpointOpenOptions const& options
+        );
 
         winrt::Windows::Devices::Midi2::MidiInputEndpointConnection ConnectInputEndpoint(
             _In_ hstring const& deviceId,
             _In_ winrt::Windows::Devices::Midi2::MidiInputEndpointOpenOptions const& options,
-            _In_ winrt::Windows::Devices::Midi2::IMidiEndpointDefinedConnectionSettings const& settings);
+            _In_ winrt::Windows::Devices::Midi2::IMidiEndpointDefinedConnectionSettings const& settings
+        );
 
 
 
         winrt::Windows::Devices::Midi2::MidiBidirectionalEndpointConnection ConnectBidirectionalEndpoint(
-            _In_ hstring const& deviceId);
+            _In_ hstring const& deviceId
+        );
 
         winrt::Windows::Devices::Midi2::MidiBidirectionalEndpointConnection ConnectBidirectionalEndpoint(
             _In_ hstring const& deviceId,
-            _In_ winrt::Windows::Devices::Midi2::MidiBidirectionalEndpointOpenOptions const& options);
+            _In_ winrt::Windows::Devices::Midi2::MidiBidirectionalEndpointOpenOptions const& options
+        );
 
         winrt::Windows::Devices::Midi2::MidiBidirectionalEndpointConnection ConnectBidirectionalEndpoint(
             _In_ hstring const& deviceId,
             _In_ winrt::Windows::Devices::Midi2::MidiBidirectionalEndpointOpenOptions const& options,
-            _In_ winrt::Windows::Devices::Midi2::IMidiEndpointDefinedConnectionSettings const& settings);
+            _In_ winrt::Windows::Devices::Midi2::IMidiEndpointDefinedConnectionSettings const& settings
+        );
 
 
 
         void DisconnectEndpointConnection(
-            _In_ hstring const& endpointConnectionId);
+            _In_ hstring const& endpointConnectionId
+        );
 
         void Close();   // via IClosable
+
+
+
+        winrt::Windows::Devices::Midi2::MidiVirtualDeviceManager VirtualDeviceManager() { return m_virtualDeviceManager; }
+
+
+
 
 
         // internal to the API
@@ -92,7 +112,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool m_isOpen{ false };
         hstring m_id{};
         hstring m_name{};
-        MidiSessionSettings m_settings{ nullptr };
+        winrt::Windows::Devices::Midi2::MidiSessionSettings m_settings{ nullptr };
+        winrt::Windows::Devices::Midi2::MidiVirtualDeviceManager m_virtualDeviceManager{ nullptr };
 
         bool m_useMmcss{ true };
         DWORD m_mmcssTaskId{ 0 };
