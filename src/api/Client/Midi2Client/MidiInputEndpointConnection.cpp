@@ -113,7 +113,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         if (!m_isOpen)
         {
             // Activate the endpoint for this device. Will fail if the device is not a BiDi device
-            if (!ActivateMidiStream(m_serviceAbstraction, __uuidof(IMidiBiDi), (void**)&m_endpointInterface))
+            if (!ActivateMidiStream(m_serviceAbstraction, __uuidof(IMidiIn), (void**)&m_endpointInterface))
             {
                 internal::LogGeneralError(__FUNCTION__, L"Could not activate MIDI Stream");
 
