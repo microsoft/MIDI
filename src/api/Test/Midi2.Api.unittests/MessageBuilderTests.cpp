@@ -29,14 +29,27 @@ using namespace winrt::Windows::Devices::Midi2;
 
 TEST_CASE("Build Type 2 MIDI 1.0 Channel Voice Messages")
 {
-    MidiGroup grp{ 4 };
-    MidiChannel ch{ 15 };
-    uint8_t note{ 0x80 };
+    MidiGroup grp{ 0x4 };
+    Midi1ChannelVoiceMessageStatus status = Midi1ChannelVoiceMessageStatus::NoteOn; // 9
+    MidiChannel ch{ 0xF };
+    uint8_t note{ 0x81 };
     uint8_t velocity{ 0x7F };
 
-    auto ump = MidiMessageBuilder::BuildMidi1ChannelVoiceMessage(MidiClock::GetMidiTimestamp(), grp.Index(), Midi1ChannelVoiceMessageStatus::NoteOn, ch.Index(), note, velocity);
+    // update this if you change any values from above. We're not using a 
+    // function to create this because we need to check our logic in this test
+    uint32_t resultingWord0 = 0x249F817F;
 
+    auto ump = MidiMessageBuilder::BuildMidi1ChannelVoiceMessage(
+        MidiClock::GetMidiTimestamp(), 
+        grp.Index(), 
+        status,
+        ch.Index(), 
+        note, 
+        velocity);
 
+    // verify values are in the UMP
+
+    REQUIRE(ump.Word0() == resultingWord0);
 }
 
 //TEST_CASE("Build Type 3 SysEx7 Messages")
