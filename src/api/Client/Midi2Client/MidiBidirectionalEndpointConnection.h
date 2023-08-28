@@ -7,6 +7,9 @@
 // ============================================================================
 
 #pragma once
+#include <pch.h>
+
+
 #include "MidiBidirectionalEndpointConnection.g.h"
 
 #include "MidiEndpointConnection.h"
@@ -21,8 +24,6 @@
 
 #include "InternalMidiMessageReceiverHelper.h"
 #include "InternalMidiMessageSenderHelper.h"
-
-#include <pch.h>
 
 
 

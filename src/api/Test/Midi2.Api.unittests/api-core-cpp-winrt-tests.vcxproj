@@ -142,6 +142,7 @@
     </ClCompile>
     <ClCompile Include="SessionTests.cpp" />
     <ClCompile Include="UmpTests.cpp" />
+    <ClCompile Include="UnidirectionalEndpointTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
