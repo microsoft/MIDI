@@ -71,4 +71,5 @@
 #include "Midi2.SimpleLoopbackEndpointManager.h"
 
 #include "MidiLoopbackDevice.h"
+#include "MidiLoopbackBidiDevice.h"
 #include "MidiDeviceTable.h"

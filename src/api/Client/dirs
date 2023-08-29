@@ -1,4 +1,5 @@
 DIRS=\
     Midi2Client \
+    Midi2Client-Projection \
     #MidiRT \
     #WinMM \

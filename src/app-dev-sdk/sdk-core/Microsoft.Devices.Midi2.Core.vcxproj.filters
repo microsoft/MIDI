@@ -64,6 +64,12 @@
     <ClCompile Include="MidiMessageBufferWriter.cpp">
       <Filter>SDK\Messages\Buffer</Filter>
     </ClCompile>
+    <ClCompile Include="MidiCIPropertyRequestedEventArgs.cpp">
+      <Filter>SDK\CI</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiVirtualDevice.cpp">
+      <Filter>SDK\CI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -91,6 +97,12 @@
     </ClInclude>
     <ClInclude Include="MidiMessageBufferWriter.h">
       <Filter>SDK\Messages\Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiCIPropertyRequestedEventArgs.h">
+      <Filter>SDK\CI</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualDevice.h">
+      <Filter>SDK\CI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -154,9 +154,10 @@
     </Manifest>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Client\Midi2Client\Windows.Devices.Midi2.vcxproj">
-      <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
-    </ProjectReference>
+    <Reference Include="Windows.Devices.Midi2">
+      <HintPath>..\..\VSFiles\x64\Release\PublishedWinMD\Windows.Devices.Midi2.winmd</HintPath>
+      <IsWinMDFile>true</IsWinMDFile>
+    </Reference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

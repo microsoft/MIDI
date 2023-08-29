@@ -21,6 +21,10 @@ import "MidiUmp128.idl";
 
 import "MidiSysEx8StatusEnum.idl";
 
+import "Midi1ChannelVoiceMessageStatusEnum.idl";
+import "Midi2ChannelVoiceMessageStatusEnum.idl";
+
+
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
@@ -31,7 +35,7 @@ namespace Windows.Devices.Midi2
         // Type 0 utility messages
         static MidiUmp32 BuildUtilityMessage(
             MIDI_TIMESTAMP timestamp, 
-            UInt8 reserved, 
+            /* UInt8 reserved,*/
             UInt8 status, 
             UInt32 dataOrReserved);
 
@@ -47,7 +51,7 @@ namespace Windows.Devices.Midi2
         static MidiUmp32 BuildMidi1ChannelVoiceMessage(
             MIDI_TIMESTAMP timestamp,
             UInt8 groupIndex,
-            UInt8 status, 
+            Midi1ChannelVoiceMessageStatus status,
             UInt8 channel, 
             UInt8 byte3, 
             UInt8 byte4);
@@ -86,7 +90,7 @@ namespace Windows.Devices.Midi2
         static MidiUmp64 BuildMidi2ChannelVoiceMessage(
             MIDI_TIMESTAMP timestamp,
             UInt8 groupIndex,
-            UInt8 status, 
+            Midi2ChannelVoiceMessageStatus status, 
             UInt8 channel, 
             UInt16 index, 
             UInt32 data);

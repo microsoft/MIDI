@@ -399,6 +399,12 @@
     <Midl Include="MidiEndpointTypeEnum.idl">
       <Filter>API\Transports</Filter>
     </Midl>
+    <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl">
+      <Filter>API\Messages</Filter>
+    </Midl>
+    <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl">
+      <Filter>API\Messages</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />

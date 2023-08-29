@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "MidiLoopbackDevice.h"
+#include "MidiLoopbackBidiDevice.h"
 
 class CMidi2SimpleLoopbackMidiBiDi : 
     public Microsoft::WRL::RuntimeClass<
@@ -27,7 +27,9 @@ private:
     IMidiCallback* m_callback;
 
     // loopback is simple, so we only have the one device we're associated with
-    MidiLoopbackDevice* m_midiDevice;
+    MidiLoopbackBidiDevice* m_midiDevice;
+
+    bool m_isEndpointA; // true if A, false if B
 };
 
 

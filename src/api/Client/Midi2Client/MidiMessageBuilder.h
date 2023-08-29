@@ -17,21 +17,20 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static winrt::Windows::Devices::Midi2::MidiUmp32 BuildUtilityMessage(
             _In_ internal::MidiTimestamp const timestamp,
-            _In_ uint8_t const reserved,
             _In_ uint8_t const status, 
             _In_ uint32_t const dataOrReserved);
 
         static winrt::Windows::Devices::Midi2::MidiUmp32 BuildSystemMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const groupIndex,
-            _In_ uint8_t const status, 
+            _In_ uint8_t const status,
             _In_ uint8_t const midi1Byte2, 
             _In_ uint8_t const midi1Byte3);
 
         static winrt::Windows::Devices::Midi2::MidiUmp32 BuildMidi1ChannelVoiceMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const groupIndex,
-            _In_ uint8_t const status, 
+            _In_ winrt::Windows::Devices::Midi2::Midi1ChannelVoiceMessageStatus const& status,
             _In_ uint8_t const channel, 
             _In_ uint8_t const byte3, 
             _In_ uint8_t const byte4);
@@ -67,7 +66,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         static winrt::Windows::Devices::Midi2::MidiUmp64 BuildMidi2ChannelVoiceMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const groupIndex,
-            _In_ uint8_t const status,
+            _In_ winrt::Windows::Devices::Midi2::Midi2ChannelVoiceMessageStatus const& status,
             _In_ uint8_t const channel,
             _In_ uint16_t const index,
             _In_ uint32_t const data);

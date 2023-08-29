@@ -3,7 +3,7 @@
 
 	<!-- TODO: This will need to support Arm64EC -->
 	<Target Name="PlatformCheck" Condition=" ( ('$(Platform)' != 'ARM64') AND ('$(Platform)' != 'ARM64EC') AND ('$(Platform)' != 'x64') )">
-		<Error  Text="The Windows MIDI Services SDK does not support '$(Platform)' platform. You need to specify at 64 bit platform (x64, Arm64EC, or Arm64)." />
+		<Error  Text="The Windows MIDI Services API does not support '$(Platform)' platform. You need to specify at 64 bit platform (x64, Arm64EC, or Arm64)." />
 	</Target>
 
 
@@ -12,12 +12,12 @@
 		<MidiNativeLibs Include="$(MSBuildThisFileDirectory)\..\..\runtimes\win10-$(Platform)\native\*.pri" />
 	</ItemGroup>
 
-	<Target Name="Setup MIDI Services SDK Reference"
+	<Target Name="Setup MIDI Services API Reference"
 			BeforeTargets="BeforeBuild;BeforeResolveReferences">
 
-		<ItemGroup Label="CopyMidiServicesSDKReferenceFiles">
-			<Reference Include="$(MSBuildThisFileDirectory)..\..\ref\win10-x64\uap10.0\Microsoft.Devices.Midi2.winmd">
-				<Implementation>Microsoft.Devices.Midi2.dll</Implementation>
+		<ItemGroup Label="CopyMidiServicesAPIReferenceFiles">
+			<Reference Include="$(MSBuildThisFileDirectory)..\..\ref\win10-x64\native\Windows.Devices.Midi2.winmd">
+				<!-- <Implementation>Windows.Devices.Midi2.dll</Implementation> --> <!-- Impl must already be installed on PC -->
 			</Reference>
 		</ItemGroup>
 
