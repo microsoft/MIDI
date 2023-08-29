@@ -24,10 +24,11 @@ MidiDeviceTable& MidiDeviceTable::Current()
 }
 
 
-MidiLoopbackDevice* MidiDeviceTable::GetBidiDevice()
+MidiLoopbackBidiDevice* MidiDeviceTable::GetBidiDevice()
 {
     return &m_bidiDevice;
 }
+
 
 MidiLoopbackDevice* MidiDeviceTable::GetInOutDevice()
 {

@@ -10,10 +10,13 @@
 #include "pch.h"
 #include "midi2.SimpleLoopbackabstraction.h"
 
+#include "loopback_defs.h"
+
+
 _Use_decl_annotations_
 HRESULT
 CMidi2SimpleLoopbackMidiBiDi::Initialize(
-    LPCWSTR,
+    LPCWSTR endpointId,
     DWORD *,
     IMidiCallback * callback
 )
@@ -28,14 +31,34 @@ CMidi2SimpleLoopbackMidiBiDi::Initialize(
     RETURN_HR_IF_NULL(E_INVALIDARG, callback);
     m_callback = callback;
 
-    // if you're looking for code to emulate for your own transport, this isn't the best
-    // example. Why? We completely ignore the device Id and simply return a static device
-    // based on the type of endpoint requested.
+    // really should uppercase this
 
-    m_midiDevice = (MidiLoopbackDevice*)(MidiDeviceTable::Current().GetBidiDevice());
+    std::wstring id{ endpointId };
+    
+    // Both endpoints share the same internal device as a simple way of routing between the two.
+
+    if (id.find(DEFAULT_LOOPBACK_BIDI_A_ID) != std::wstring::npos)
+    {
+        // bidi endpoint A
+
+        m_isEndpointA = true;
+        m_midiDevice = (MidiLoopbackBidiDevice*)(MidiDeviceTable::Current().GetBidiDevice());
+        m_midiDevice->SetCallbackA(this);
+    }
+    else if (id.find(DEFAULT_LOOPBACK_BIDI_B_ID) != std::wstring::npos)
+    {
+        // bidi endpoint B
+
+        m_isEndpointA = false;
+        m_midiDevice = (MidiLoopbackBidiDevice*)(MidiDeviceTable::Current().GetBidiDevice());
+        m_midiDevice->SetCallbackB(this);
+    }
+    else
+    {
+        return E_FAIL;
+    }
+
     RETURN_HR_IF_NULL(E_POINTER, m_midiDevice);
-
-    m_midiDevice->SetCallback(this);
 
     return S_OK;
 }
@@ -82,7 +105,14 @@ CMidi2SimpleLoopbackMidiBiDi::SendMidiMessage(
         return E_POINTER;
     }
 
-    return m_midiDevice->SendMidiMessage(message, size, timestamp);
+    if (m_isEndpointA)
+    {
+        return m_midiDevice->SendMidiMessageFromAToB(message, size, timestamp);
+    }
+    else
+    {
+        return m_midiDevice->SendMidiMessageFromBToA(message, size, timestamp);
+    }
 }
 
 _Use_decl_annotations_

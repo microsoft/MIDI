@@ -17,10 +17,10 @@
 	<PropertyGroup>
 		<GeneratedNugetDir>.\nuget\</GeneratedNugetDir>
 		<NuspecFile>$(GeneratedNugetDir)Windows.Devices.Midi2.nuspec</NuspecFile>
-		<OutputPath>$(GeneratedNugetDir)</OutputPath>
+		<OutputPath>..\..\VSFiles\$(Platform)\$(Configuration)</OutputPath>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<AssemblyName>Windows.Devices.Midi2.NET</AssemblyName>
-		<PackageOutputPath>..\..\VSFiles\$(PlatformTarget)\$(Configuration)\PublishedApiNuget\</PackageOutputPath>
+		<PackageOutputPath>..\..\VSFiles\PublishedApiNuGet\</PackageOutputPath>
 	</PropertyGroup>
 
 	<ItemGroup>

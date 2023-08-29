@@ -43,9 +43,8 @@ CMidi2SimpleLoopbackEndpointManager::Initialize(
 
     RETURN_IF_FAILED(CreateParentDevice());
 
-    // TODO: Double check these directions are correct, and not reversed. As devices, In/Out may be opposite
-
-    RETURN_IF_FAILED(CreateEndpoint(DEFAULT_LOOPBACK_BIDI_ID, DEFAULT_LOOPBACK_BIDI_NAME, MidiFlow::MidiFlowBidirectional));
+    RETURN_IF_FAILED(CreateEndpoint(DEFAULT_LOOPBACK_BIDI_A_ID, DEFAULT_LOOPBACK_BIDI_A_NAME, MidiFlow::MidiFlowBidirectional));
+    RETURN_IF_FAILED(CreateEndpoint(DEFAULT_LOOPBACK_BIDI_B_ID, DEFAULT_LOOPBACK_BIDI_B_NAME, MidiFlow::MidiFlowBidirectional));
     RETURN_IF_FAILED(CreateEndpoint(DEFAULT_LOOPBACK_OUT_ID, DEFAULT_LOOPBACK_OUT_NAME, MidiFlow::MidiFlowOut));
     RETURN_IF_FAILED(CreateEndpoint(DEFAULT_LOOPBACK_IN_ID, DEFAULT_LOOPBACK_IN_NAME, MidiFlow::MidiFlowIn));
 

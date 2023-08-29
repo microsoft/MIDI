@@ -276,6 +276,7 @@
   <ItemGroup>
     <ClCompile Include="MidiDeviceTable.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="MidiLoopbackBidiDevice.cpp" />
     <ClCompile Include="MidiLoopbackDevice.cpp" />
     <ClCompile Include="Midi2.SimpleLoopbackAbstraction.cpp" />
     <ClCompile Include="Midi2.SimpleLoopbackEndpointManager.cpp" />
@@ -293,6 +294,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="MidiLoopbackBidiDevice.h" />
     <ClInclude Include="MidiDeviceTable.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="MidiLoopbackDevice.h" />
