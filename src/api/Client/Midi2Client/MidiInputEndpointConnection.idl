@@ -12,17 +12,20 @@
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-import "MidiEndpointConnection.idl";
 import "IMidiInputConnection.idl";
 import "IMidiMessageReceivedEventSource.idl";
+
+import "IMidiEndpointConnection.idl";
+
 
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [default_interface]
-    runtimeclass MidiInputEndpointConnection : Windows.Devices.Midi2.MidiEndpointConnection, 
+    runtimeclass MidiInputEndpointConnection :  
                                                Windows.Devices.Midi2.IMidiInputConnection,
-                                               Windows.Devices.Midi2.IMidiMessageReceivedEventSource
+                                               Windows.Devices.Midi2.IMidiMessageReceivedEventSource,
+                                               Windows.Devices.Midi2.IMidiEndpointConnection
 
     {
         // Get the enumeration device selector for all compatible devices
@@ -31,7 +34,7 @@ namespace Windows.Devices.Midi2
 
  //       IVector<IMidiEndpointMessageListener> MessageListeners{ get; };
 
-        Boolean Open();
+        //Boolean Open();
 
     }
 }

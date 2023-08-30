@@ -10,7 +10,6 @@
 #include "MidiSession.h"
 #include "MidiSession.g.cpp"
 
-#include "MidiEndpointConnection.h"
 #include "MidiInputEndpointConnection.h"
 #include "MidiOutputEndpointConnection.h"
 #include "MidiBidirectionalEndpointConnection.h"
@@ -125,12 +124,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
             auto guid = Windows::Foundation::GuidHelper::CreateNewGuid();
             auto endpointId = winrt::to_hstring(guid);
 
-            endpointConnection->InternalSetId(endpointId);
-            endpointConnection->InternalSetDeviceId(normalizedDeviceId);
+            //endpointConnection->InternalSetId(endpointId);
+            //endpointConnection->InternalSetDeviceId(normalizedDeviceId);
 
-            if (endpointConnection->InternalInitialize(m_serviceAbstraction))
+            if (endpointConnection->InternalInitialize(m_serviceAbstraction, endpointId, normalizedDeviceId))
             {
-                m_connections.Insert((winrt::hstring)normalizedDeviceId, (const Windows::Devices::Midi2::MidiEndpointConnection)(*endpointConnection));
+                m_connections.Insert((winrt::hstring)normalizedDeviceId, (const Windows::Devices::Midi2::IMidiEndpointConnection)(*endpointConnection));
 
                 // TODO: This value needs to come from configuration for this endpoint. It comes from
                 // the user settings property store, and then the open options
@@ -199,12 +198,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
             auto guid = Windows::Foundation::GuidHelper::CreateNewGuid();
             auto endpointId = winrt::to_hstring(guid);
 
-            endpointConnection->InternalSetId(endpointId);
-            endpointConnection->InternalSetDeviceId(normalizedDeviceId);
+            //endpointConnection->InternalSetId(endpointId);
+            //endpointConnection->InternalSetDeviceId(normalizedDeviceId);
 
-            if (endpointConnection->InternalInitialize(m_serviceAbstraction))
+            if (endpointConnection->InternalInitialize(m_serviceAbstraction, endpointId, normalizedDeviceId))
             {
-                m_connections.Insert((winrt::hstring)normalizedDeviceId, (const Windows::Devices::Midi2::MidiEndpointConnection)(*endpointConnection));
+                m_connections.Insert((winrt::hstring)normalizedDeviceId, (const Windows::Devices::Midi2::IMidiEndpointConnection)(*endpointConnection));
 
                 return *endpointConnection;
             }
@@ -259,12 +258,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
             auto guid = Windows::Foundation::GuidHelper::CreateNewGuid();
             auto endpointId = winrt::to_hstring(guid);
 
-            endpointConnection->InternalSetId(endpointId);
-            endpointConnection->InternalSetDeviceId(normalizedDeviceId);
-
-            if (endpointConnection->InternalInitialize(m_serviceAbstraction))
+            if (endpointConnection->InternalInitialize(m_serviceAbstraction, endpointId, normalizedDeviceId))
             {
-                m_connections.Insert((winrt::hstring)normalizedDeviceId, (const Windows::Devices::Midi2::MidiEndpointConnection)(*endpointConnection));
+                m_connections.Insert((winrt::hstring)normalizedDeviceId, (const Windows::Devices::Midi2::IMidiEndpointConnection)(*endpointConnection));
 
                 // TODO: This value needs to come from configuration for this endpoint. It comes from
                 // the user settings property store, and then the open options

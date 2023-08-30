@@ -85,10 +85,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Success_(return == true)
     bool MidiInputEndpointConnection::InternalInitialize(
-            _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction)
+        _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
+        _In_ winrt::hstring const endpointId,
+        _In_ winrt::hstring const deviceId)
     {
         try
         {
+            m_id = endpointId;
+            m_deviceId = deviceId;
+
             WINRT_ASSERT(!DeviceId().empty());
             WINRT_ASSERT(serviceAbstraction != nullptr);
 

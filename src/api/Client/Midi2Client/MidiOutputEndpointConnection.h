@@ -10,7 +10,6 @@
 #include <pch.h>
 
 #include "MidiOutputEndpointConnection.g.h"
-#include "MidiEndpointConnection.h"
 #include "midi_service_interface.h"
 
 #include "MidiUmp32.h"
@@ -24,13 +23,27 @@
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     struct MidiOutputEndpointConnection : MidiOutputEndpointConnectionT<
-        MidiOutputEndpointConnection, 
-        Windows::Devices::Midi2::implementation::MidiEndpointConnection>
+        MidiOutputEndpointConnection>
     {
         MidiOutputEndpointConnection() = default;
         ~MidiOutputEndpointConnection();
 
         static hstring GetDeviceSelector() noexcept { return L"System.Devices.InterfaceClassGuid:=\"{3705DC2B-17A7-4452-98CE-BF12C6F48A0B}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True"; }
+
+
+        hstring Id() const noexcept { return m_id; }
+        hstring DeviceId() const noexcept { return m_deviceId; }
+        bool IsOpen() const noexcept { return m_isOpen; }
+        IMidiEndpointDefinedConnectionSettings Settings() noexcept { return m_settings; }
+
+        winrt::Windows::Devices::Midi2::MidiEndpointConnectionSharing ActiveSharingMode() { return m_activeSharingMode; }
+
+        IInspectable Tag() const noexcept { return m_tag; }
+        void Tag(_In_ IInspectable value) noexcept { m_tag = value; }
+
+
+
+
 
         _Success_(return == true)
         bool SendUmp(
@@ -76,14 +89,26 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ uint32_t const word3);
 
         _Success_(return == true)
-            bool InternalInitialize(
-                _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction);
+        bool InternalInitialize(
+            _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
+            _In_ winrt::hstring const endpointId,
+            _In_ winrt::hstring const deviceId);
 
         _Success_(return == true)
             bool Open();
 
 
     private:
+        hstring m_id{};
+        hstring m_deviceId{};
+        IInspectable m_tag{ nullptr };
+        winrt::Windows::Devices::Midi2::MidiEndpointConnectionSharing m_activeSharingMode{ winrt::Windows::Devices::Midi2::MidiEndpointConnectionSharing::Unknown };
+
+        bool m_isOpen{ false };
+
+        IMidiEndpointDefinedConnectionSettings m_settings{ nullptr };
+
+
         winrt::com_ptr<IMidiAbstraction> m_serviceAbstraction{ nullptr };
         winrt::com_ptr<IMidiOut> m_endpointInterface{ nullptr };
 

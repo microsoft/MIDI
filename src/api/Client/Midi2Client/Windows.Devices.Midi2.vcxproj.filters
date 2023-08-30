@@ -294,9 +294,6 @@
     <Midl Include="MidiOutputEndpointConnection.idl">
       <Filter>API\Endpoints\Connections</Filter>
     </Midl>
-    <Midl Include="MidiEndpointConnection.idl">
-      <Filter>API\Endpoints\Connections</Filter>
-    </Midl>
     <Midl Include="IMidiUmp.idl">
       <Filter>API\Messages</Filter>
     </Midl>
@@ -404,6 +401,9 @@
     </Midl>
     <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl">
       <Filter>API\Messages</Filter>
+    </Midl>
+    <Midl Include="IMidiEndpointConnection.idl">
+      <Filter>API\Endpoints\Contracts</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
