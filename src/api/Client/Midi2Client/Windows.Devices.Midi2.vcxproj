@@ -253,9 +253,6 @@
     <ClInclude Include="MidiClock.h">
       <DependentUpon>MidiClock.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiEndpointConnection.h">
-      <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiEndpointInformation.h">
       <DependentUpon>MidiEndpointInformation.idl</DependentUpon>
     </ClInclude>
@@ -355,9 +352,6 @@
     <ClCompile Include="MidiClock.cpp">
       <DependentUpon>MidiClock.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiEndpointConnection.cpp">
-      <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiEndpointInformation.cpp">
       <DependentUpon>MidiEndpointInformation.idl</DependentUpon>
     </ClCompile>
@@ -421,6 +415,7 @@
     <ClCompile Include="trace_logging.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Midl Include="IMidiEndpointConnection.idl" />
     <Midl Include="IMidiEndpointMessageListener.idl" />
     <Midl Include="IMidiEndpointMessageResponder.idl" />
     <Midl Include="IMidiInputConnection.idl" />
@@ -453,7 +448,6 @@
     <Midl Include="MidiInputEndpointOpenOptions.idl" />
     <Midl Include="MidiMessageBuilder.idl" />
     <Midl Include="MidiMessageReceivedEventArgs.idl" />
-    <Midl Include="MidiEndpointConnection.idl" />
     <Midl Include="IMidiEndpointDefinedConnectionSettings.idl" />
     <Midl Include="MidiMessageTypeEndpointListener.idl" />
     <Midl Include="MidiOutputEndpointConnection.idl" />

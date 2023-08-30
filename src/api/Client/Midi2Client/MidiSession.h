@@ -35,7 +35,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::Windows::Devices::Midi2::MidiSessionSettings Settings() { return m_settings; }
 
 
-        winrt::Windows::Foundation::Collections::IMapView<hstring, winrt::Windows::Devices::Midi2::MidiEndpointConnection> Connections() { return m_connections.GetView(); }
+        winrt::Windows::Foundation::Collections::IMapView<hstring, winrt::Windows::Devices::Midi2::IMidiEndpointConnection> Connections() { return m_connections.GetView(); }
 
         winrt::Windows::Devices::Midi2::MidiOutputEndpointConnection ConnectOutputEndpoint(
             _In_ hstring const& deviceId
@@ -120,8 +120,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         winrt::impl::com_ref<IMidiAbstraction> m_serviceAbstraction;
 
-        winrt::Windows::Foundation::Collections::IMap<hstring, winrt::Windows::Devices::Midi2::MidiEndpointConnection>
-            m_connections{ winrt::single_threaded_map<hstring, winrt::Windows::Devices::Midi2::MidiEndpointConnection>() };
+        winrt::Windows::Foundation::Collections::IMap<hstring, winrt::Windows::Devices::Midi2::IMidiEndpointConnection>
+            m_connections{ winrt::single_threaded_map<hstring, winrt::Windows::Devices::Midi2::IMidiEndpointConnection>() };
 
 
         hstring NormalizeDeviceId(_In_ const hstring& deviceId);

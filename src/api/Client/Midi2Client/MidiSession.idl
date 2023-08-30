@@ -9,7 +9,7 @@
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-import "MidiEndpointConnection.idl";
+import "IMidiEndpointConnection.idl";
 import "MidiOutputEndpointConnection.idl";
 import "MidiInputEndpointConnection.idl";
 import "MidiBidirectionalEndpointConnection.idl";
@@ -40,7 +40,8 @@ namespace Windows.Devices.Midi2
 
         Boolean IsOpen { get; };
 
-        IMapView<String, MidiEndpointConnection> Connections{ get; };
+        // TODO: Change to IMidiEndpointConnection
+        IMapView<String, IMidiEndpointConnection> Connections{ get; };
 
         // output-only. Typically for MIDI 1.0 device/block
         MidiOutputEndpointConnection ConnectOutputEndpoint(

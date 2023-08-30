@@ -14,7 +14,6 @@
 MIDI_IDL_IMPORT
 
 
-import "MidiEndpointConnection.idl";
 import "IMidiInputConnection.idl";
 import "IMidiOutputConnection.idl";
 import "IMidiEndpointMessageListener.idl";
@@ -23,15 +22,17 @@ import "IMidiMessageReceivedEventSource.idl";
 import "MidiFunctionBlock.idl";
 import "MidiEndpointInformation.idl";
 
+import "IMidiEndpointConnection.idl";
 
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [default_interface]
-    runtimeclass MidiBidirectionalEndpointConnection : Windows.Devices.Midi2.MidiEndpointConnection, 
+    runtimeclass MidiBidirectionalEndpointConnection : 
                                                        Windows.Devices.Midi2.IMidiInputConnection,
                                                        Windows.Devices.Midi2.IMidiMessageReceivedEventSource,
-                                                       Windows.Devices.Midi2.IMidiOutputConnection
+                                                       Windows.Devices.Midi2.IMidiOutputConnection,
+                                                       Windows.Devices.Midi2.IMidiEndpointConnection
     {
         //MidiEndpointConnection();
 
@@ -49,6 +50,6 @@ namespace Windows.Devices.Midi2
 
         // Same thing with other discovery calls, endpoint info, etc.
 
-        Boolean Open();
+        //Boolean Open();
     }
 }

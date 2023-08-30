@@ -16,7 +16,22 @@
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.3" />
     <PackageReference Include="Spectre.Console" Version="0.47.1-preview.0.11" />
     <PackageReference Include="Spectre.Console.Cli" Version="0.47.1-preview.0.11" />
-    <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.1-0011" />
+    <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.1-0012" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Resources\Strings.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Strings.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\Strings.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Strings.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>
