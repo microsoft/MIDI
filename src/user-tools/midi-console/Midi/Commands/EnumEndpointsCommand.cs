@@ -135,13 +135,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             //table.AddRow(rowData);
 
-            table.AddRow(new Text(endpointInfo.Name));
+            table.AddRow(new Markup(AnsiMarkupFormatter.FormatEndpointName(endpointInfo.Name)));
 
             table.AddRow(endpointType);
 
             if (settings.IncludeId)
             {
-                table.AddRow(new Text(endpointInfo.Id));
+                table.AddRow(new Markup(AnsiMarkupFormatter.FormatDeviceInstanceId(endpointInfo.Id)));
             }
 
             table.AddEmptyRow();

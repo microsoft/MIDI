@@ -55,6 +55,12 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             string endpointId = settings.InstanceId.Trim().ToUpper();
 
+            // TODO: localize this
+            AnsiConsole.MarkupLine("Sending MIDI message(s) through: " + AnsiMarkupFormatter.FormatDeviceInstanceId(endpointId));
+            AnsiConsole.WriteLine();
+
+
+
             AnsiConsole.Status()
                 .Start(Strings.StatusCreatingSessionAndOpeningEndpoint, ctx =>
                 {
