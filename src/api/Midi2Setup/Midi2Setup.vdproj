@@ -4052,7 +4052,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:MIDI 2.0"
         "ProductCode" = "8:{66FE638B-F86B-4592-B5A0-21701F9D3D6B}"
-        "PackageCode" = "8:{FCF50C1B-AC2A-4BE2-A500-6C54F06986D7}"
+        "PackageCode" = "8:{4C38B576-3FB7-4EA0-90C6-76829E6BA26B}"
         "UpgradeCode" = "8:{05A49F02-230E-4CCE-AEE5-4179B0172736}"
         "AspNetVersion" = "8:"
         "RestartWWWService" = "11:FALSE"
@@ -4102,6 +4102,1336 @@
                             "Transitive" = "11:FALSE"
                                 "Keys"
                                 {
+                                }
+                                "Values"
+                                {
+                                }
+                            }
+                            "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_B11DE3FBBB16418BB1889475DE4A73C0"
+                            {
+                            "Name" = "8:Microsoft"
+                            "Condition" = "8:"
+                            "AlwaysCreate" = "11:FALSE"
+                            "DeleteAtUninstall" = "11:FALSE"
+                            "Transitive" = "11:FALSE"
+                                "Keys"
+                                {
+                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_FFC9C26AB22D4F15950DE94AA1B9346B"
+                                    {
+                                    "Name" = "8:WindowsRuntime"
+                                    "Condition" = "8:"
+                                    "AlwaysCreate" = "11:FALSE"
+                                    "DeleteAtUninstall" = "11:FALSE"
+                                    "Transitive" = "11:FALSE"
+                                        "Keys"
+                                        {
+                                            "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_FB0E6F40DC6E4D45A92B80C926F23FCA"
+                                            {
+                                            "Name" = "8:ActivatableClassId"
+                                            "Condition" = "8:"
+                                            "AlwaysCreate" = "11:FALSE"
+                                            "DeleteAtUninstall" = "11:FALSE"
+                                            "Transitive" = "11:FALSE"
+                                                "Keys"
+                                                {
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_01B9C454E4214321BD7519667B06FB87"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiFunctionBlock"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_0F12E9CAC153477FA2AB3B4E0C333A07"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_7F7C177884454033899916C5C055D520"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_84B97A354A1940E0A1A2B42BEAB4E44D"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_8D6EFC027C9C4CE19D6E2450CCD377FA"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_137E1F79DCFB4A6C95312BDEE45C7016"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiUmp32"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_117F443C238C43A4A2F7D5B9AF03F098"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_5BD53FA6F5AD45D1921A8F9B4BEB3CF3"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_7CBBBD1563904AC09FBCB06D7D7F85CD"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_C9600CE62F974D839FE750E899C645AC"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_1AFD37EEFF144BEB9C93515120F09D8E"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiVirtualDeviceManager"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_2B7B35EA49B74AE0962BEC267A623F9C"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_2E8E4E0C67CA44F789C299155E31C8A2"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_31592D40838740819849A458329FD2C5"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_4E4D661FD5C74241AD796C87BAF65AA6"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_208B3A606F45457EA56337EAB6544488"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiGroupEndpointListener"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_24CC3318FBD4403280C02DBADE1E4EE5"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_68CF25111D254FDFA2B132774B577C27"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_A10AE395A7A74E5E85E7302844155D87"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_E44DFCE8C552471F937F5DE5ADF5E09A"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_221A7E2F8F4843348E63928FE97C0BEA"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiMessageBuilder"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_1C76737EA44E41D1830EF4378BD18C8B"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_2CDF0CB4592A4DCAA81370A8F41EC0E9"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_4268EDA033554112BB80918B48AC6F85"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_6A5D3E289D5A428BBD54AA10244919C3"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_263328EFBF934EB6883257312C519F3C"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiSessionSettings"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_08DB4FCC0683410A8C385B46DF940330"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_7209AD55A2E341B0AEC41CB1BD9BF924"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_79B3D73F02DC4BF2B7063349B7D4EC47"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_EE19738252B84C94875329C095888638"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_316499885E3D4A49B0580F90401713F5"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.IMidiSessionStatics"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_1A09C54B4F5540A08FE4EAB39C9D6BA1"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_5C56C9BCC73545C7B32C566679606145"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_8A60D53884F24455BC375F4ACB135388"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_E931150C0F3D4ABEA6E1D585972D7FCB"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_42D591987F0848B9972E1B24E86090FC"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiChannel"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_0E2F81BBCEF34325B11B96753E24DD49"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_7F1B719FF03D4EF9BAB4B4C3CEDDF498"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_81BBE7733ABB44548D6110BF2BA65C72"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_851F0E65DDCF4264915A7461E922C3B0"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_4FA0E3A4F7E64411A88C912A6CF91BFF"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiMessageReceivedEventArgs"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_23D8AB4D0ED6457A9E3A41B5D747484E"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_868A64B0E55A468790FD4837AA6B560C"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_C4CF91D3F0244B14A97F732220B3E2FE"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_C822F18BEC034E1CBC62AD28475BE72F"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_50F99CF6A40E4CB189269A926AD8ABD4"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiEndpointInformation"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_0633C5A6F8E64EC2BDB01DE48D1ACD2B"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_5AC76B587B2E4A57B44A146E82A36187"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_6AEF20870AEC436DBB108136F4E18037"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_FAC8902EEF514E0DBEE9CD99CD33268A"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_5135A2C84218481CBDFF0045524F6E4B"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiInputEndpointOpenOptions"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_58F2F156BE494424A0F6CE4077C90A53"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_98466758237841D1AB3C9108E0CBDAA1"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_C6471536ACC14EDA8A648B717BF28A2B"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_F45A61CECAE44F4DBC3E01E0EEE13502"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_5339902B879A4785A8E9BBAD65CE0C7D"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiMessageTypeEndpointListener"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_A918928D69D84E8C9D94563AE72D42E0"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_AE13521A9976411EBBD35A1A7D03B6DD"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_E53BF48BAE804AAFB867424151E596A6"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_EB9892A1C6344F63AE7FAE27278FE25D"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_5EB3B582385244E3A498EEFC3049D054"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiFunctionBlockEndpointListener"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_1548D443FE2E4D49873C443E60548303"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_B86F06337D0F43228DE427CC49A6699C"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_C0DA434005FA4B8AB61AA4B8427B3BA1"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_D1A3025CE8D64074AE311502B94E2629"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_658A108C3E8C4ED3AE7104D6F93DB438"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiSession"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_3FAEDB96BA1844749CF0272F5C7C8858"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_5ED81F6A08FE4AA39AFA70A451D2C121"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_6B88ADCD665D459DA6F4BB3F228861A0"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_6E4884BDAA2A4E7AA937D4B2E7565520"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_6979475C617A4776BC0BC75EB9E3F422"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiBidirectionalEndpointOpenOptions"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_1EA4E2F929714E7898CCBA76387D2696"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_AC293B79A64E4A7F972B17D77289C55A"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_B0A95E8A501745738D40FF147CCEC3CA"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_F0D5AF48536C4C29A7CF9F619869682F"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_69B60E2FC7D044338F36C0C3A92CF470"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiGroupTerminalBlock"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_20D955AD9BC4496DA15E559D6F58F50E"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_48FE4EF18C2649619C0FA0938483ECA7"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_7B57878F7D82449DA085E63F08DC269D"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_EF7BCCFE34214C2FBFB49CC8BE497E7F"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_775C3A5F018A4CC69DEFD6A3E161B7B6"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiOutputEndpointConnection"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_3F75934024414B8580EC4AB11DAC3AD4"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_581C039903BE4ECA84B334B62A42CF2D"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_8C478025AFF849969FA89A502D3AD136"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_A5A1A91F804C46838854EFD28C76DBB4"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_7F1294CEE70048469902F59213607ECC"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiGroup"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_13B630DB9D06459C8EC9795127D56379"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_2C4038C2838244EFB22BA8D91691C18A"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_7C4664A981AE4CA498139A104F5D6985"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_C7275B91E68D4EE09FFBBA61736E5939"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_80815CFC53AF47DB92CF16C17B82C1D9"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiUmp96"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_3AEC7BB073644B0C87C1516927A10AEA"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_3D88D974AFB44E29A22E542A26B010ED"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_4C0312D2E3E442BEAB25799E0FCA2E4F"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_CBB7FA639F3149088962774FE69A3287"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_90EA2B0617E1471996B72120DEC1DDAA"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiEndpointInformationEndpointListener"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_15D21167CB964F72BADFB91C13AC3915"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_3FAA8DB1A9E545C599AA2015CD337665"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_9422114B064A40A6963E7F95413D2847"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_D0DE7D38D5B24AE288D16388CC2FA445"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_A68B2C3FC8CB4D1AA889E1452B1DBB88"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiBidirectionalEndpointConnection"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_00AEA49E3F0F4BEFA1E3C564A5EBCE6B"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_777834C4627D4536B333DFFABA76316C"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_8B57C2580FFD4D86B71CC1D9E5E4277B"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_8E907156F6CF40DA80D24A3671A82F5D"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_BA1B7ECA146A403D8A4C8C009FED5388"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiUniqueId"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_818D7CFED69D4C2FB7328B90901083A1"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_842D9368DF1344E8A336147D713CA575"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_88FFA1C7AC6D4A07AB7EAA6539DC1865"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_AB6857106AC143239B23C2FC7DBD7609"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_CA172C4B948B48EA9FF45CA74D9A5880"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiOutputEndpointOpenOptions"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_65A22DE924884B3388791685116E2B7E"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_C08C14780FEB4EF0B87F9AED5B2CC664"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_D076F95609D24E33A3EA58DC16745E6E"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_DAB43B4FA34449829F1139605D866A26"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_DE05D21BD1FF4E5A9BB37EE5703B6D64"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiInputEndpointConnection"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_5C6D229332A5499DA3184C73E2E4A238"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_6939034B52FB4EC388A98D6C75DC4365"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_98C2695D2C214C4A98330177D87C0C9D"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_D6CF4355750D4FD6A75CE57DC17484AD"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_E67568ADCC83450780CB44419456F3E3"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiUmp128"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_1AE7F4F825094CEB88DCB7D3B58DFE2A"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_4BDEB02417BE45A6851DA662D8E4A229"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_84F19E7DBA444638B56A5807986494CC"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_ADD00C391C1F44A288BF40407829751F"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_EA97DB37EE1D4EB6B0274BAFDA5F37B2"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiUmp64"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_918C7E22380C4F6E859996AF6450AB66"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_B5EC09D212504687B36853D3DCC10997"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_B6C93F699503430195B9BF2C511C7D3D"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_DBFFF1964B954BB1B65F5252227BBC81"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_F7B700D7F0374A69A749764EBBE03D65"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiChannelEndpointListener"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_4B1F68726FF740778C0CD32B015CF63E"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_5128D8E0CBF941EAA1D85091BFC8ACE8"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_C4E56B4328304F5A982DB45973D7C31D"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_E6D1C4DC0D7D441D88A12BF49CD91DD2"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                        }
+                                                    }
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_FC1BBB05A43741F88C15076DCED81C61"
+                                                    {
+                                                    "Name" = "8:Windows.Devices.Midi2.MidiStreamConfigurationEndpointListener"
+                                                    "Condition" = "8:"
+                                                    "AlwaysCreate" = "11:FALSE"
+                                                    "DeleteAtUninstall" = "11:FALSE"
+                                                    "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_1F4C658099B64708B449476A0FB285DD"
+                                                            {
+                                                            "Name" = "8:ActivationType"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_7AEB05B7A0054664AA74994ADB549D3B"
+                                                            {
+                                                            "Name" = "8:Threading"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_83D18785F6F64BC7BAF16F04AEDFA2FD"
+                                                            {
+                                                            "Name" = "8:TrustLevel"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:0"
+                                                            }
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_E22525D6C5294163AA779490ADB9FCE3"
+                                                            {
+                                                            "Name" = "8:DllPath"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:1"
+                                                            "Value" = "8:C:\\Program Files\\Windows MIDI Services (Preview)\\API\\Windows.Devices.Midi2.dll"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                "Values"
+                                                {
+                                                }
+                                            }
+                                        }
+                                        "Values"
+                                        {
+                                        }
+                                    }
                                 }
                                 "Values"
                                 {
