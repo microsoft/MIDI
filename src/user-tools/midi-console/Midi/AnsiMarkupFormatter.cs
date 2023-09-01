@@ -23,7 +23,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             return "[steelblue1_1]" + name.Trim() + "[/]";
         }
 
-
         public static string FormatMidiWords(params UInt32[] words)
         {
             string output = string.Empty;

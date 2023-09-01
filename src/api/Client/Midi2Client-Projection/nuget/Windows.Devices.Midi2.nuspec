@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
 	<metadata>
 		<id>Windows.Devices.Midi2</id>
-		<version>1.0.0-preview.1-0012</version>
+		<version>1.0.0-preview.1-0013</version>
 		<authors>Microsoft Corporation</authors>
 		<description>Windows MIDI Services API. Minimum package necessary to use Windows MIDI Services from an app on a PC that has Windows MIDI Services installed.</description>
 		<license type="expression">MIT</license>
@@ -23,14 +23,14 @@
         <!-- Compile-time References  ================================================ -->
         <file src="..\..\..\VSFiles\AnyCPU\Release\net7.0-windows10.0.20348.0\Windows.Devices.Midi2.NET.dll"
 			  target="ref\win10-x64\net7.0-windows10.0.20348.0\" />
-
         <file src="..\..\..\VSFiles\AnyCPU\Release\net7.0-windows10.0.20348.0\Windows.Devices.Midi2.NET.dll"
 			  target="ref\win10-x64\net8.0-windows10.0.20348.0\" />
 
-        <file src="..\..\..\VSFiles\x64\Release\PublishedWinMD\Windows.Devices.Midi2.winmd"
+
+        <file src="..\..\..\VSFiles\x64\Release\Windows.Devices.Midi2.winmd"
               target="ref\win10-x64\uap10.0\" />
 
-        <file src="..\..\..\VSFiles\x64\Release\PublishedWinMD\Windows.Devices.Midi2.winmd"
+        <file src="..\..\..\VSFiles\x64\Release\Windows.Devices.Midi2.winmd"
               target="ref\win10-x64\native\" />
 
 
@@ -38,7 +38,6 @@
 		
         <file src="..\..\..\VSFiles\AnyCPU\Release\net7.0-windows10.0.20348.0\Windows.Devices.Midi2.NET.dll" 
               target="lib\net7.0-windows10.0.20348.0\" />
-
         <file src="..\..\..\VSFiles\AnyCPU\Release\net7.0-windows10.0.20348.0\Windows.Devices.Midi2.NET.dll"
               target="lib\net8.0-windows10.0.20348.0\" />
 

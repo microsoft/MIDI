@@ -1,0 +1,14 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+    <Fragment>
+        <ComponentGroup Id="ConsoleApp" 
+                        Directory="CONSOLEAPP_INSTALLFOLDER">
+            <Component Id="ConsoleAppExe"
+                       Guid="1c74ff9c-d414-4a1e-a1f8-7cf62388f3bd">
+                <!-- Install Tools: Console app -->
+
+                <!-- TODO: Add folder to path -->
+
+            </Component>
+        </ComponentGroup>
+    </Fragment>
+</Wix>

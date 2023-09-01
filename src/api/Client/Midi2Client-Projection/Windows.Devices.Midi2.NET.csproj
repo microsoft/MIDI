@@ -18,7 +18,7 @@
 		<GeneratedNugetDir>.\nuget\</GeneratedNugetDir>
 		<NuspecFile>$(GeneratedNugetDir)Windows.Devices.Midi2.nuspec</NuspecFile>
 		<OutputPath>..\..\VSFiles\$(Platform)\$(Configuration)</OutputPath>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 		<AssemblyName>Windows.Devices.Midi2.NET</AssemblyName>
 		<PackageOutputPath>..\..\VSFiles\PublishedApiNuGet\</PackageOutputPath>
 	</PropertyGroup>

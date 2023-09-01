@@ -1,0 +1,111 @@
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"
+     xmlns:netfx="http://wixtoolset.org/schemas/v4/wxs/netfx">
+
+    <?define StagingSourceRootFolder=..\..\..\build\staging ?>
+
+    <Package 
+          Name="Windows MIDI Services (Preview)"
+          Manufacturer="Microsoft Corporation"
+          Version="1.0.0.0">
+       
+        <MediaTemplate EmbedCab="yes" />
+      
+        <Property Id="WINDOWS_BUILD_NUMBER">
+        <RegistrySearch Id="WindowsCurrentBuildNumber"
+                Root="HKLM"
+                Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+                Name="CurrentBuildNumber"
+                Type="raw" />
+        </Property>
+
+        <!-- TODO: Gate on OS version. -->
+        <!-- The USB stack updates aren't present on versions prior to Windows 10 22H2, and the Min SDK we target is 22H2 -->
+
+        <Launch Condition="Installed OR (VersionNT &gt;= 603)" 
+            Message="[ProductName] is only supported on Windows 10 22H2 or Windows 11. Earlier versions lack the correct USB support and SDK features." />
+
+        <!-- Check build from HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\CurrentBuildNumber 22H2 is build 19045 -->
+      
+
+        <!-- Destination Folder structure -->
+        <!-- TODO: Need to be able to set these values up-front and share across the bundle -->
+        <StandardDirectory Id="ProgramFiles64Folder">
+            <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
+                <Directory Id="SERVICE_INSTALLFOLDER" Name="Service" />
+                <Directory Id="API_INSTALLFOLDER" Name="API" />
+                <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
+                    <Directory Id="CONSOLEAPP_INSTALLFOLDER" Name="Console" />
+                    <Directory Id="SETTINGSAPP_INSTALLFOLDER" Name="Settings" />
+                </Directory>
+            </Directory>
+        </StandardDirectory>
+        
+        <!-- Install Windows Service -->
+     
+        <ComponentGroup Id="WindowsServiceComponents" Directory="SERVICE_INSTALLFOLDER">
+            <!-- Transport and other Service Plugins -->
+            <!-- Setting the SelfRegCost attribute to any positive number causes DLL Self Registration -->
+            <Component Id="WindowsService" Guid="{6a2300f5-ccae-4f61-b849-d41aefb8a2f7}" >
+                <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.KSAbstraction.dll"               SelfRegCost="1" />
+                <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.MidiSrvAbstraction.dll"          SelfRegCost="1"/>
+                <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.NetworkMidiAbstraction.dll"      SelfRegCost="1"/>
+                <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.SimpleLoopbackAbstraction.dll"   SelfRegCost="1"/>
+                <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.VirtualMidiAbstraction.dll"      SelfRegCost="1"/>
+
+                <File Source="$(StagingSourceRootFolder)\api\x64\MidiSrv.exe" Id="WINDOWS_SERVICE" />          
+            </Component>       
+        </ComponentGroup>
+
+        <CustomAction Id="RegisterMidiService"
+                Execute="immediate"
+                ExeCommand="/service"
+                Return="asyncNoWait"
+                FileRef="WINDOWS_SERVICE"
+                />
+
+        <InstallExecuteSequence>           
+            <!-- Run the Windows service so it installs -->
+            <Custom Action="RegisterMidiService" Before="InstallFinalize" />
+        </InstallExecuteSequence>
+
+        <!-- Install API -->
+
+        <ComponentGroup Id="ApiComponents" Directory="API_INSTALLFOLDER">
+            <Component Id="WindowsAPI">
+                <File Source="$(var.StagingSourceRootFolder)\api\x64\Windows.Devices.Midi2.dll"  />
+
+                <!-- API Component Activation - WinRT -->
+
+                <!-- API Component Activation - COM -->
+                
+            </Component>
+        </ComponentGroup>
+
+
+
+
+        <!-- Install Tools: Settings app -->
+
+        <ComponentGroup Id="ToolsSettingsAppComponents" Directory="SETTINGSAPP_INSTALLFOLDER">
+            <!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->
+            <!-- <Component Id="ProductComponent"> -->
+            <!-- TODO: Insert files, registry keys, and other resources here. -->
+            <!-- </Component> -->
+
+            <!-- Add shortcut to start menu -->
+        </ComponentGroup>
+    
+
+
+        <Feature Id="WindowsMIDIServices">
+            <ComponentGroupRef Id="WindowsServiceComponents"/>
+            <ComponentGroupRef Id="ApiComponents"/>
+        </Feature>
+
+
+
+
+
+      </Package>
+</Wix>

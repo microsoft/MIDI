@@ -181,13 +181,16 @@
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</RegisterOutput>
     </Link>
     <PostBuildEvent>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">xcopy /R /Y "$(OutDir)$(TargetName).winmd" "$(OutDir)PublishedWinMD\$(TargetName).winmd"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+      </Command>
     </PostBuildEvent>
     <PostBuildEvent>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">xcopy /R /Y "$(OutDir)$(TargetName).winmd" "$(OutDir)PublishedWinMD\$(TargetName).winmd"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">
+      </Command>
     </PostBuildEvent>
     <PostBuildEvent>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">xcopy /R /Y "$(OutDir)$(TargetName).winmd" "$(OutDir)PublishedWinMD\$(TargetName).winmd"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
@@ -208,13 +211,16 @@
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</RegisterOutput>
     </Link>
     <PostBuildEvent>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">xcopy /R /Y "$(OutDir)$(TargetName).winmd" "$(OutDir)PublishedWinMD\$(TargetName).winmd"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+      </Command>
     </PostBuildEvent>
     <PostBuildEvent>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">xcopy /R /Y "$(OutDir)$(TargetName).winmd" "$(OutDir)PublishedWinMD\$(TargetName).winmd"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">
+      </Command>
     </PostBuildEvent>
     <PostBuildEvent>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">xcopy /R /Y "$(OutDir)$(TargetName).winmd" "$(OutDir)PublishedWinMD\$(TargetName).winmd"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
