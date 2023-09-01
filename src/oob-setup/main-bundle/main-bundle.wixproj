@@ -1,7 +1,7 @@
 ﻿<Project Sdk="WixToolset.Sdk/4.0.1">
   <PropertyGroup>
     <OutputType>Bundle</OutputType>
-    <OutputName>WindowsMidiServices</OutputName>
+    <OutputName>WindowsMidiServicesSetup</OutputName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <SuppressValidation>true</SuppressValidation>

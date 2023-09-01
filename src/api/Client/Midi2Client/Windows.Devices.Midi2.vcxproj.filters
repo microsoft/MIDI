@@ -61,6 +61,9 @@
     <Filter Include="API\Endpoints\Connections\Options">
       <UniqueIdentifier>{3c7e0669-3b44-4eb6-803e-308b307a3474}</UniqueIdentifier>
     </Filter>
+    <Filter Include="InstallSupport">
+      <UniqueIdentifier>{f99f0bd4-c968-4322-a806-90aca0f9e73e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -415,5 +418,10 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="WinRTActivationEntries.txt">
+      <Filter>InstallSupport</Filter>
+    </Text>
   </ItemGroup>
 </Project>

@@ -480,6 +480,9 @@
     <None Include="packages.config" />
     <None Include="PropertySheet.props" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="WinRTActivationEntries.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.230411.1\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.230411.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />

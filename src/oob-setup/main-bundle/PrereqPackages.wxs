@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
 
-    <!-- Sorry to hard-code this. -->
-    <?define VCRuntimeRedistSourceFolder=C:\Program Files\Microsoft Visual Studio\2022\Preview\VC\Redist\MSVC\14.38.32919\ ?>
+    <?define VCRuntimeRedistSourceFolder=..\..\..\build\dependencies ?>
     
     <Fragment>
         <PackageGroup Id="PrereqPackages">
             <!-- NOTE: The x64 redist contains *both* x64 and Arm64 binaries, so it's the only one we need to install -->
             <!-- Also see https://stackoverflow.com/questions/42720958/web-download-of-vcruntime140-with-wix-burn -->
-            <ExePackage
+<!--            <ExePackage
                 InstallArguments="/install /passive /norestart"
                 PerMachine="yes"
                 Id="VCRuntimePackage"
@@ -17,7 +16,7 @@
                 Compressed="yes"
                 SourceFile="$(VCRuntimeRedistSourceFolder)\vc_redist.x64.exe">
             </ExePackage>
-            
+-->            
             
         </PackageGroup>
     </Fragment>

@@ -25,9 +25,16 @@
             <MsiPackage
                 Id="MidiServicesCoreSetup"
                 Vital="yes"
-                Permanent="yes"
+                Permanent="no"
                 Compressed="yes"
                 SourceFile="WindowsMIDIServicesCoreSetup.msi" />
+
+            <MsiPackage
+                Id="MidiToolsSetup"
+                Vital="yes"
+                Permanent="no"
+                Compressed="yes"
+                SourceFile="WindowsMidiServicesTools.msi" />
 
         </PackageGroup>
     </Fragment>

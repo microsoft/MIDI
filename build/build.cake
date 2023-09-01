@@ -87,11 +87,13 @@ Task("Clean")
 Task("VerifyDependencies")
     .Does(() =>
 {
-    // Check for latest MSVC runtimes
+    // Grab latest VC runtime
+
+    //https://aka.ms/vs/17/release/vc_redist.x64.exe
 
 
 
-    // Get latest .NET 8 runtimes
+
 });
 
 
@@ -136,7 +138,75 @@ Task("VerifyDependencies")
 
     CopyFiles(System.IO.Path.Combine(outputDir, "Windows.Devices.Midi2.winmd"), copyToDir); 
     CopyFiles(System.IO.Path.Combine(outputDir, "Windows.Devices.Midi2.pri"), copyToDir); 
-    
+
+    CopyFiles(System.IO.Path.Combine(outputDir, "WinRTActivationEntries.txt"), copyToDir); 
+});
+
+
+Task("BuildApiActivationRegEntries")
+    .IsDependentOn("BuildServiceAndAPI")
+    .DoesForEach(platformTargets, plat =>
+{
+    Information("\nBuilding WinRT Activation Entries for " + plat.ToString());
+
+    // read the file of dependencies
+    var sourceFileName = System.IO.Path.Combine(apiAndServiceStagingDir, plat.ToString(), "WinRTActivationEntries.txt");
+    var wxiDestinationFileName = System.IO.Path.Combine(apiAndServiceStagingDir, plat.ToString(), "WinRTActivationEntries.wxi");
+
+    const string parentHKLMRegKey = "SOFTWARE\\Microsoft\\WindowsRuntime\\ActivatableClassId\\";
+    const string wixWinrtLibFileName = "[API_INSTALLFOLDER]\\Windows.Devices.Midi2.dll";
+
+    if (!System.IO.File.Exists(sourceFileName))
+        throw new ArgumentException("Missing WinRT Activation entries file " + sourceFileName);
+
+    using (StreamReader reader = System.IO.File.OpenText(sourceFileName))
+    {
+        using (StreamWriter wxiWriter = System.IO.File.CreateText(wixWinrtLibFileName))            
+        {
+            wxiWriter.WriteLine("<Include xmlns=\"http://wixtoolset.org/schemas/v4/wxs\">");
+
+            string line;
+
+            while ((line = reader.ReadLine()) != null)
+            {
+                string trimmedLine = line.Trim();
+
+                if (string.IsNullOrWhiteSpace(trimmedLine) || trimmedLine.StartsWith("#"))
+                {
+                    // comment or empty line
+                    continue;
+                }
+
+                // pipe-delimited lines
+                var elements = trimmedLine.Split('|');
+
+                if (elements.Count() != 4)
+                    throw new ArgumentException("Bad line:  " + trimmedLine); 
+
+                // entries in order are
+                // ClassName | ActivationType | Threading | TrustLevel
+
+                string className = elements[0].Trim();
+                string activationType = elements[1].Trim();
+                string threading = elements[2].Trim();
+                string trustLevel = elements[3].Trim();
+
+                writer.WriteLine($"<RegistryKey Root=\"HKLM\" Key=\"{parentHKLMRegKey}{className}\">");
+                
+                wxiWriter.WriteLine($"    <RegistryValue Name=\"DllPath\" Type=\"string\" Value=\"{wixWinrtLibFileName}\" />");
+                wxiWriter.WriteLine($"    <RegistryValue Name=\"ActivationType\" Type=\"integer\" Value=\"{activationType}\" />");
+                wxiWriter.WriteLine($"    <RegistryValue Name=\"Threading\" Type=\"integer\" Value=\"{threading}\" />");
+                wxiWriter.WriteLine($"    <RegistryValue Name=\"TrustLevel\" Type=\"integer\" Value=\"{trustLevel}\" />");
+               
+                wxiWriter.WriteLine("</RegistryKey>");
+
+            }
+
+            wxiWriter.WriteLine("</Include>");
+
+        }
+    }
+
 });
 
 
@@ -210,6 +280,8 @@ Task("BuildConsoleApp")
         throw new ArgumentException("Invalid platform target " + plat.ToString());
 
 
+    // Note: Spectre.Console doesn't support trimming, so you get a huge exe.
+    // Consider making this framework-dependent once .NET 8 releasesmi
     DotNetPublish(consoleAppSolutionFile, new DotNetPublishSettings
     {
         WorkingDirectory = consoleAppSolutionDir,
@@ -217,7 +289,7 @@ Task("BuildConsoleApp")
         Configuration = configuration,
 
         PublishSingleFile = true,
-        PublishTrimmed = true,
+        PublishTrimmed = false,
         SelfContained = true,
         Framework = frameworkVersion,
         Runtime = rid
@@ -239,6 +311,7 @@ Task("BuildSettingsApp")
 
 Task("BuildInstaller")
     .IsDependentOn("BuildServiceAndAPI")
+    .IsDependentOn("BuildApiActivationRegEntries")
     .IsDependentOn("BuildSDK")
     .IsDependentOn("BuildSettingsApp")
     .IsDependentOn("BuildConsoleApp")
