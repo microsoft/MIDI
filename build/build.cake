@@ -54,7 +54,7 @@ var settingsAppStagingDir = System.IO.Path.Combine(stagingRootDir, "midi-setting
 
 
 var setupSolutionDir = System.IO.Path.Combine(srcDir, "oob-setup");
-var setupSolutionFile = System.IO.Path.Combine(setupSolutionDir, "WindowsMidiServicesSetup.sln");
+var setupSolutionFile = System.IO.Path.Combine(setupSolutionDir, "midi-services-setup.sln");
 
 var setupReleaseDir = releaseRootDir;
 
@@ -161,7 +161,7 @@ Task("BuildApiActivationRegEntries")
 
     using (StreamReader reader = System.IO.File.OpenText(sourceFileName))
     {
-        using (StreamWriter wxiWriter = System.IO.File.CreateText(wixWinrtLibFileName))            
+        using (StreamWriter wxiWriter = System.IO.File.CreateText(wxiDestinationFileName))            
         {
             wxiWriter.WriteLine("<Include xmlns=\"http://wixtoolset.org/schemas/v4/wxs\">");
 
@@ -191,7 +191,7 @@ Task("BuildApiActivationRegEntries")
                 string threading = elements[2].Trim();
                 string trustLevel = elements[3].Trim();
 
-                writer.WriteLine($"<RegistryKey Root=\"HKLM\" Key=\"{parentHKLMRegKey}{className}\">");
+                wxiWriter.WriteLine($"<RegistryKey Root=\"HKLM\" Key=\"{parentHKLMRegKey}{className}\">");
                 
                 wxiWriter.WriteLine($"    <RegistryValue Name=\"DllPath\" Type=\"string\" Value=\"{wixWinrtLibFileName}\" />");
                 wxiWriter.WriteLine($"    <RegistryValue Name=\"ActivationType\" Type=\"integer\" Value=\"{activationType}\" />");

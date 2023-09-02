@@ -75,23 +75,27 @@
        <Directory Id="ApiInstallFolder" Name="[API_INSTALLFOLDER]">
             <Component Id="WindowsAPI" Guid="dc48ab14-dd46-4ff2-8d59-10b9a8215c7e">
                 <File Source="$(StagingSourceRootFolder)\api\x64\Windows.Devices.Midi2.dll" Vital="true" />
-
-                <!-- API Component Activation - WinRT -->
-                <!-- NOTE: You can't write to these keys until you take ownership in the registry for the entire -->
-
-                <?include $(StagingSourceRootFolder)\api\x64\WinRTActivationEntries.wxi ?>
-                
-                <!-- API Component Activation - COM -->
-                
             </Component>
-        </Directory>
-    
+
+           <Component Id="WindowsAPIRegistration">
+               <!-- API Component Activation - WinRT -->
+               <!-- NOTE: You can't write to these keys until you take ownership in the registry for the entire -->
+
+               <?include $(StagingSourceRootFolder)\api\x64\WinRTActivationEntries.wxi ?>
+
+               <!-- API Component Activation - COM -->
+           </Component>
+
+           
+       </Directory>
+
 
 
         <Feature Id="WindowsMIDIServices">
             <ComponentRef Id="WindowsServiceAbstractions"/>
             <ComponentRef Id="WindowsService"/>
             <ComponentRef Id="WindowsAPI"/>
+            <ComponentRef Id="WindowsAPIRegistration"/>
         </Feature>
 
       </Package>
