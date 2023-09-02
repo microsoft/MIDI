@@ -7,10 +7,14 @@
     <SuppressValidation>true</SuppressValidation>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="midi_installer_logo_square.png" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="WixToolset.Bal.wixext" Version="4.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\api-package\api-package.wixproj" />
-    <ProjectReference Include="..\tools-package\tools-package.wixproj" />
+    <ProjectReference Include="..\tools-package\tools-console-app-package.wixproj" />
+    <ProjectReference Include="..\tools-settings-app-package\tools-settings-app-package.wixproj" />
   </ItemGroup>
 </Project>

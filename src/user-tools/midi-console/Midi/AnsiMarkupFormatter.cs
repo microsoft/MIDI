@@ -8,6 +8,10 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 {
     internal class AnsiMarkupFormatter
     {
+        public static string FormatError(string error)
+        {
+            return "[red]" + error + "[/]";
+        }
         public static string FormatTimestamp(UInt64 timestamp)
         {
             return "[olive]" + timestamp.ToString() + "[/]";

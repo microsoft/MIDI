@@ -1,0 +1,36 @@
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+    <?define StagingSourceRootFolder=..\..\..\build\staging ?>
+
+    <Package
+        Name="Windows MIDI Services (Preview) Settings App"
+        Manufacturer="Microsoft"
+        Version="1.0.0.0"
+        UpgradeCode="5153154b-0837-4682-9f00-11defb0f23ce">
+
+        <!-- TODO: Provide default value for this -->
+        <Property Id="SETTINGSAPP_INSTALLFOLDER" Secure="yes"/>
+
+        <MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" />
+
+
+        <Directory Id="SettingsAppFolder" 
+                   Name="[SETTINGSAPP_INSTALLFOLDER]">
+
+            <Component Id="SettingsAppExe"
+                       Guid="1e903d6a-b855-44f6-b00a-8f8827617eb5">
+
+                <!-- Install Tools: Settings app -->
+
+           <!--     <File Source="$(StagingSourceRootFolder)\midi-settings\x64\midi-settings.exe" /> -->
+
+                <!-- TODO: Add icon -->
+
+            </Component>
+        </Directory>
+        
+        
+        <Feature Id="Main">
+            <ComponentRef Id="SettingsAppExe"/>
+        </Feature>
+    </Package>
+</Wix>

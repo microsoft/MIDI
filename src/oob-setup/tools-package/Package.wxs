@@ -1,15 +1,33 @@
 ﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+    <?define StagingSourceRootFolder=..\..\..\build\staging ?>
+
     <Package 
-        Name="Windows MIDI Services (Preview) Tools" 
+        Name="Windows MIDI Services (Preview) Console App" 
         Manufacturer="Microsoft" 
         Version="1.0.0.0" 
         UpgradeCode="9f112a86-31ea-4000-a562-93fc3718932a">
-      
+
+        <!-- TODO: Provide default value for this -->
+        <Property Id="CONSOLEAPP_INSTALLFOLDER" Secure="yes" />
+
         <MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" />
 
+        <Directory Id="ConsoleApp" Name="[CONSOLEAPP_INSTALLFOLDER]">
+            <Component Id="ConsoleAppExe"
+                       Guid="1c74ff9c-d414-4a1e-a1f8-7cf62388f3bd">
+
+                <!-- Install Tools: Console app -->
+                <File Source="$(StagingSourceRootFolder)\midi-console\x64\midi.exe" />
+
+                <!-- TODO: Add folder to path -->
+
+                <Environment Id="AddConsoleAppToSystemPath"
+                                Name="PATH" Action="set" Part="last" System="yes" Value="[CONSOLEAPP_INSTALLFOLDER]" Permanent="no"/>
+            </Component>
+        </Directory>
+        
         <Feature Id="Main">
             <ComponentRef Id="ConsoleAppExe"/>
-            <ComponentRef Id="SettingsAppExe"/>
         </Feature>
     </Package>
 </Wix>

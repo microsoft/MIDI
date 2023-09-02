@@ -10,6 +10,11 @@
           Version="1.0.0.0">
        
         <MediaTemplate EmbedCab="yes" />
+        
+        <!-- TODO: Provide default values for these -->
+        <Property Id="API_INSTALLFOLDER" Secure="yes" />
+        <Property Id="SERVICE_INSTALLFOLDER" Secure="yes" />
+        
       
         <Property Id="WINDOWS_BUILD_NUMBER">
         <RegistrySearch Id="WindowsCurrentBuildNumber"
@@ -26,84 +31,68 @@
             Message="[ProductName] is only supported on Windows 10 22H2 or Windows 11. Earlier versions lack the correct USB support and SDK features." />
 
         <!-- Check build from HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\CurrentBuildNumber 22H2 is build 19045 -->
-      
-
-        <!-- Destination Folder structure -->
-        <!-- TODO: Need to be able to set these values up-front and share across the bundle -->
-        <StandardDirectory Id="ProgramFiles64Folder">
-            <Directory Id="ROOTINSTALLFOLDER" Name="!(bind.Property.ProductName)">
-                <Directory Id="SERVICE_INSTALLFOLDER" Name="Service" />
-                <Directory Id="API_INSTALLFOLDER" Name="API" />
-                <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
-                    <Directory Id="CONSOLEAPP_INSTALLFOLDER" Name="Console" />
-                    <Directory Id="SETTINGSAPP_INSTALLFOLDER" Name="Settings" />
-                </Directory>
-            </Directory>
-        </StandardDirectory>
+    
         
         <!-- Install Windows Service -->
      
-        <ComponentGroup Id="WindowsServiceComponents" Directory="SERVICE_INSTALLFOLDER">
+        <Directory Id="ServiceInstallFolder" Name="[SERVICE_INSTALLFOLDER]">
             <!-- Transport and other Service Plugins -->
             <!-- Setting the SelfRegCost attribute to any positive number causes DLL Self Registration -->
-            <Component Id="WindowsServiceAbstractions" Guid="{6a2300f5-ccae-4f61-b849-d41aefb8a999}" >
-                <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.KSAbstraction.dll"               SelfRegCost="1" />
-                <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.MidiSrvAbstraction.dll"          SelfRegCost="1"/>
+            <Component Id="WindowsServiceAbstractions"
+                       Guid="{6a2300f5-ccae-4f61-b849-d41aefb8a999}" >
+                <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.KSAbstraction.dll"               SelfRegCost="1" Vital="true" />
+                <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.MidiSrvAbstraction.dll"          SelfRegCost="1" Vital="true" />
                 <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.NetworkMidiAbstraction.dll"      SelfRegCost="1"/>
-                <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.SimpleLoopbackAbstraction.dll"   SelfRegCost="1"/>
+                <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.SimpleLoopbackAbstraction.dll"   SelfRegCost="1" Vital="true" />
                 <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.VirtualMidiAbstraction.dll"      SelfRegCost="1"/>
             </Component>
 
-            <Component Id="WindowsService" Guid="6a2300f5-ccae-4f61-b849-d41aefb8a2f7" >
-                <File Source="$(StagingSourceRootFolder)\api\x64\MidiSrv.exe" Id="WINDOWS_SERVICE"  />
+            <Component Id="WindowsService"
+                       Guid="6a2300f5-ccae-4f61-b849-d41aefb8a2f7" >
+                <File Source="$(StagingSourceRootFolder)\api\x64\MidiSrv.exe" Id="WINDOWS_SERVICE"  Vital="true" />
 
                 <ServiceInstall
                     Id="MidiServiceInstaller"
                     Type="ownProcess"
                     Name="MidiSrv"
                     DisplayName="Microsoft MIDI Service"
-                    Description="!(bind.Property.ProductName) core service for MIDI 1.0 and MIDI 2.0 message handling, device routing, and more."
+                    Description="!(bind.Property.ProductName) core service for MIDI 1.0 and MIDI 2.0 message routing, device enumeration, and more."
                     Start="auto"
                     Account="LocalSystem"
                     ErrorControl="normal"
-                    Vital="true"
-                    />
+                    Vital="true" />
                 <ServiceControl Id="MidiServiceStart" 
                                 Start="install" 
                                 Stop="both" 
                                 Remove="uninstall" 
                                 Name="MidiSrv" 
                                 Wait="yes" />
-            </Component>       
-        </ComponentGroup>
-
+            </Component>                  
+        </Directory>
+        
         <!-- Install API -->
 
-        <ComponentGroup Id="ApiComponents" Directory="API_INSTALLFOLDER">
+       <Directory Id="ApiInstallFolder" Name="[API_INSTALLFOLDER]">
             <Component Id="WindowsAPI" Guid="dc48ab14-dd46-4ff2-8d59-10b9a8215c7e">
                 <File Source="$(StagingSourceRootFolder)\api\x64\Windows.Devices.Midi2.dll" Vital="true" />
 
                 <!-- API Component Activation - WinRT -->
+                <!-- NOTE: You can't write to these keys until you take ownership in the registry for the entire -->
 
                 <?include $(StagingSourceRootFolder)\api\x64\WinRTActivationEntries.wxi ?>
                 
                 <!-- API Component Activation - COM -->
                 
             </Component>
-        </ComponentGroup>
-
-
+        </Directory>
     
 
 
         <Feature Id="WindowsMIDIServices">
-            <ComponentGroupRef Id="WindowsServiceComponents"/>
-            <ComponentGroupRef Id="ApiComponents"/>
+            <ComponentRef Id="WindowsServiceAbstractions"/>
+            <ComponentRef Id="WindowsService"/>
+            <ComponentRef Id="WindowsAPI"/>
         </Feature>
-
-
-
-
 
       </Package>
 </Wix>

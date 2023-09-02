@@ -1,0 +1,8 @@
+﻿<Project Sdk="WixToolset.Sdk/4.0.1">
+    <PropertyGroup>
+        <OutputName>WindowsMidiServicesSettingsAppSetup</OutputName>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+        <SuppressValidation>true</SuppressValidation>
+    </PropertyGroup>
+</Project>

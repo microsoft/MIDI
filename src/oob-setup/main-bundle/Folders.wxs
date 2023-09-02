@@ -2,7 +2,7 @@
     
     <Fragment>
         <StandardDirectory Id="ProgramFiles64Folder">
-            <Directory Id="ROOTINSTALLFOLDER" Name="!(bind.Property.ProductName)">
+            <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
                 <Directory Id="SERVICE_INSTALLFOLDER" Name="Service" />
                 <Directory Id="API_INSTALLFOLDER" Name="API" />
                 <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
