@@ -8,8 +8,15 @@
     <StartupObject></StartupObject>
     <AssemblyName>midi</AssemblyName>
     <RootNamespace>Microsoft.Devices.Midi2.ConsoleApp</RootNamespace>
-    <PlatformTarget>x64</PlatformTarget>
+    <!--<PlatformTarget>x64, arm64</PlatformTarget>-->
     <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+
+      <PublishSingleFile>true</PublishSingleFile>
+      <SelfContained>true</SelfContained>
+      <PublishTrimmed>true</PublishTrimmed>
+      <Platforms>ARM64;x64</Platforms>
+      <!--<RuntimeIdentifiers>win10-x64;win10-arm64</RuntimeIdentifiers>-->
+      
   </PropertyGroup>
 
   <ItemGroup>

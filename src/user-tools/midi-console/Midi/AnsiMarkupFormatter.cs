@@ -13,6 +13,16 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             return "[olive]" + timestamp.ToString() + "[/]";
         }
 
+        public static string FormatDeviceInstanceId(string id)
+        {
+            return "[olive]" + id.Trim() + "[/]";
+        }
+
+        public static string FormatEndpointName(string name)
+        {
+            return "[steelblue1_1]" + name.Trim() + "[/]";
+        }
+
         public static string FormatMidiWords(params UInt32[] words)
         {
             string output = string.Empty;

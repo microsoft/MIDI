@@ -46,16 +46,14 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             string endpointId = settings.InstanceId.Trim().ToUpper();
 
+            // TODO: localize this
+            AnsiConsole.MarkupLine("Monitoring incoming messages on: " + AnsiMarkupFormatter.FormatDeviceInstanceId(endpointId));
+            AnsiConsole.MarkupLine("Press [green]escape[/] to stop monitoring.");
+            AnsiConsole.WriteLine();
+
+
 
             var table = new Table();
-
-            // TODO: Localize these
-
-            table.AddColumn("Timestamp");
-            table.AddColumn("MIDI Words Received");
-
-
-
 
 
 
@@ -98,6 +96,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             AnsiConsole.Live(table)
                 .Start(ctx =>
                 {
+                    bool firstMessageReceived = false;
+
                     // set up the event handler
                     IMidiMessageReceivedEventSource eventSource = (IMidiMessageReceivedEventSource)connection;
 
@@ -105,6 +105,16 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                     eventSource.MessageReceived += (s, e) =>
                     {
+                        // TODO: Localize these
+
+                        if (!firstMessageReceived)
+                        {
+                            table.AddColumn("Timestamp");
+                            table.AddColumn("MIDI Words Received");
+
+                            firstMessageReceived = true;
+                        }
+
                         DisplayUmp(e.GetUmp(), table);
 
                         ctx.Refresh();
@@ -120,7 +130,24 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                     while (continueWaiting)
                     {
-                        Thread.Sleep(100);
+                        if (Console.KeyAvailable)
+                        {
+                            var keyInfo = Console.ReadKey(false);
+                            if (keyInfo.Key == ConsoleKey.Escape)
+                            {
+                                if (!firstMessageReceived)
+                                {
+                                    // TODO: we should erase the table, otherwise it leaves artifacts.
+                                    // may need to rethink how table is created
+                                }
+
+                                AnsiConsole.MarkupLine("Escape key pressed. Monitoring terminated.");
+                                continueWaiting = false;
+                                break;
+                            }
+                        }
+                        
+                        Thread.Sleep(50);
 
                         // todo: code to allow pressing escape to stop listening and gracefully shut down
 

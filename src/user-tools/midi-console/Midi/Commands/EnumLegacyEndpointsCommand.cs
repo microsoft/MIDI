@@ -100,13 +100,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         private void DisplayEndpointInformationFormatted(Table table, Settings settings, DeviceInformation endpointInfo, string endpointType)
         {
 
-            table.AddRow(new Text(endpointInfo.Name));
+            table.AddRow(new Markup(AnsiMarkupFormatter.FormatEndpointName(endpointInfo.Name)));
 
             table.AddRow(endpointType);
 
             if (settings.IncludeId)
             {
-                table.AddRow(new Text(endpointInfo.Id));
+                table.AddRow(new Markup(AnsiMarkupFormatter.FormatDeviceInstanceId(endpointInfo.Id)));
             }
 
             table.AddEmptyRow();

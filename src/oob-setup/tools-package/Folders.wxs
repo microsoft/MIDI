@@ -1,0 +1,15 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+    
+    <Fragment>
+        <StandardDirectory Id="ProgramFiles64Folder">
+            <Directory Id="ROOTINSTALLFOLDER" Name="!(bind.Property.ProductName)">
+                <Directory Id="SERVICE_INSTALLFOLDER" Name="Service" />
+                <Directory Id="API_INSTALLFOLDER" Name="API" />
+                <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
+                    <Directory Id="CONSOLEAPP_INSTALLFOLDER" Name="Console" />
+                    <Directory Id="SETTINGSAPP_INSTALLFOLDER" Name="Settings" />
+                </Directory>
+            </Directory>        
+        </StandardDirectory>
+    </Fragment>
+</Wix>

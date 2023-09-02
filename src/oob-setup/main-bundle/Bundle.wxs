@@ -1,0 +1,41 @@
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal">
+
+    <!-- TODO: Gate on Arm64 or x64. No x86 installation -->
+
+    <!-- TODO: Gate on Windows 10 22H2 or later -->
+
+    <Bundle Name="Windows MIDI Services (Preview)" 
+          Manufacturer="Microsoft Corporation" 
+          Version="1.0.0.0" 
+          UpgradeCode="ecfae6e7-7186-4f41-b9d2-df17ba86c69f">
+        
+        <BootstrapperApplication>
+            <bal:WixStandardBootstrapperApplication LicenseUrl="https://github.com/microsoft/midi/LICENSE" Theme="hyperlinkLicense" />
+        </BootstrapperApplication>
+
+        <Chain>
+            <PackageGroupRef Id="PrereqPackages" />
+            <PackageGroupRef Id="MidiServicesPackages" />
+        </Chain>
+    </Bundle>
+
+    
+    <Fragment>
+        <PackageGroup Id="MidiServicesPackages">
+            <MsiPackage
+                Id="MidiServicesCoreSetup"
+                Vital="yes"
+                Permanent="no"
+                Compressed="yes"
+                SourceFile="WindowsMIDIServicesCoreSetup.msi" />
+
+            <MsiPackage
+                Id="MidiToolsSetup"
+                Vital="yes"
+                Permanent="no"
+                Compressed="yes"
+                SourceFile="WindowsMidiServicesTools.msi" />
+
+        </PackageGroup>
+    </Fragment>
+</Wix>
