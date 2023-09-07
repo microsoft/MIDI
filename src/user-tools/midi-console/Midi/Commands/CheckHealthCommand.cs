@@ -27,7 +27,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         public override int Execute(CommandContext context, Settings settings)
         {
             // check to see if the service is running. 
-            // TODO: move this code into the SDK
+            // NOTE: Equivalent code can't be moved to the SDK due to Desktop/WinRT limitations.
 
             string serviceName = "MidiSrv";
 
@@ -41,7 +41,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                     if (settings.Loopback)
                     {
-                        // TODO: write the loopback test
+                        // TODO: write the loopback test. This should be in the diagnostic SDK
 
                         AnsiConsole.WriteLine($"Loopback test is not currently implemented.");
 
@@ -52,12 +52,12 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 }
                 else
                 {
-                    AnsiConsole.Markup(AnsiMarkupFormatter.FormatError($"Service '{serviceName}' status is {controller.Status.ToString()}\n"));
+                    AnsiConsole.Markup(AnsiMarkupFormatter.FormatError($"Service '{serviceName}' status is {controller.Status.ToString()}. You may want to restart the service or reboot.\n"));
                 }
             }
             else
             {
-                AnsiConsole.Markup(AnsiMarkupFormatter.FormatError($"Unable to connect to service '{serviceName}'\n"));
+                AnsiConsole.Markup(AnsiMarkupFormatter.FormatError($"Unable to connect to service '{serviceName}'. Is Windows MIDI Services installed?\n"));
             }
 
 

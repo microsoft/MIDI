@@ -51,10 +51,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
-
-
-
-
         winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiEndpointMessageListener> MessageListeners() { return m_messageListeners; }
 
 
@@ -117,7 +113,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         _Success_(return == true)
         bool InternalInitialize(
             _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
-            _In_ winrt::hstring const endpointId,
+            _In_ winrt::hstring const endpointInstanceId,
             _In_ winrt::hstring const deviceId);
 
         _Success_(return == true)

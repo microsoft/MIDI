@@ -47,6 +47,7 @@ DEFINE_DEVPROPKEY(PKEY_MIDI_TransportMnemonic, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d,
 #define STRING_PKEY_MIDI_UmpLoopback L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},20"
 DEFINE_DEVPROPKEY(PKEY_MIDI_UmpLoopback, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 20);     // DEVPROP_TYPE_BOOLEAN
 
+
 // The unique ID for the device. Not all transports supply this. Some do as ProductInstanceId. Some as iSerialNumber
 #define STRING_PKEY_MIDI_UniqueIdentifier L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},21"
 DEFINE_DEVPROPKEY(PKEY_MIDI_UniqueIdentifier, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 21);     // DEVPROP_TYPE_STRING
@@ -56,6 +57,11 @@ DEFINE_DEVPROPKEY(PKEY_MIDI_UniqueIdentifier, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 
 // transport shouldn't use multi-client for endpoints (this is up for discussion in the Network MIDI 2.0 Working Group, for example)
 #define STRING_PKEY_MIDI_SupportsMultiClient L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},22"
 DEFINE_DEVPROPKEY(PKEY_MIDI_SupportsMultiClient, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 22);     // DEVPROP_TYPE_BOOLEAN
+
+// true if this device is the standard ping Bidi device
+#define STRING_PKEY_MIDI_UmpPing L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},23"
+DEFINE_DEVPROPKEY(PKEY_MIDI_UmpPing, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 23);     // DEVPROP_TYPE_BOOLEAN
+
 
 using unique_mmcss_handle = wil::unique_any<HANDLE, decltype(&::AvRevertMmThreadCharacteristics), AvRevertMmThreadCharacteristics>;
 using unique_viewoffile = wil::unique_any<LPVOID, decltype(&::UnmapViewOfFile), UnmapViewOfFile>;

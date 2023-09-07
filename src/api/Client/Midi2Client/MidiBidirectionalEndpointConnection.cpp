@@ -460,12 +460,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Success_(return == true)
     bool MidiBidirectionalEndpointConnection::InternalInitialize(
         _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
-        _In_ winrt::hstring const endpointId,
+        _In_ winrt::hstring const endpointInstanceId,
         _In_ winrt::hstring const deviceId)
     {
         try
         {
-            m_id = endpointId;
+            m_id = endpointInstanceId;
             m_deviceId = deviceId;
 
             WINRT_ASSERT(!DeviceId().empty());

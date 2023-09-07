@@ -43,7 +43,7 @@
                 <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.KSAbstraction.dll"               SelfRegCost="1" Vital="true" />
                 <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.MidiSrvAbstraction.dll"          SelfRegCost="1" Vital="true" />
                 <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.NetworkMidiAbstraction.dll"      SelfRegCost="1"/>
-                <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.SimpleLoopbackAbstraction.dll"   SelfRegCost="1" Vital="true" />
+                <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.DiagnosticsAbstraction.dll"      SelfRegCost="1" Vital="true" />
                 <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.VirtualMidiAbstraction.dll"      SelfRegCost="1"/>
             </Component>
 
@@ -79,9 +79,9 @@
 
            <Component Id="WindowsAPIRegistration">
                <!-- API Component Activation - WinRT -->
-               <!-- NOTE: You can't write to these keys until you take ownership in the registry for the entire -->
+               <!-- NOTE: You can't write to these keys until you take ownership in the registry for the ActivatableClassId key under WindowsRuntime -->
 
-               <?include $(StagingSourceRootFolder)\api\x64\WinRTActivationEntries.wxi ?>
+           <!--    <?include $(StagingSourceRootFolder)\api\x64\WinRTActivationEntries.wxi ?> -->
 
                <!-- API Component Activation - COM -->
            </Component>

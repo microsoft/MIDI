@@ -13,12 +13,14 @@ import "IMidiEndpointConnection.idl";
 import "MidiOutputEndpointConnection.idl";
 import "MidiInputEndpointConnection.idl";
 import "MidiBidirectionalEndpointConnection.idl";
+import "MidiBidirectionalAggregatedEndpointConnection.idl";
 
 import "IMidiEndpointDefinedConnectionSettings.idl";
 
 import "MidiSessionSettings.idl";
 
 import "MidiBidirectionalEndpointOpenOptions.idl";
+import "MidiBidirectionalAggregatedEndpointOpenOptions.idl";
 import "MidiInputEndpointOpenOptions.idl";
 import "MidiOutputEndpointOpenOptions.idl";
 
@@ -85,6 +87,27 @@ namespace Windows.Devices.Midi2
             String midiEndpointId,
             MidiBidirectionalEndpointOpenOptions options, 
             IMidiEndpointDefinedConnectionSettings settings);
+
+
+        // Connects to separate input and output endpoints, treating them just like any bidi
+        // sending the right discovery messages, etc.
+        // The API must be able to open both input and output for this to succeed
+
+        MidiBidirectionalAggregatedEndpointConnection ConnectBidirectionalAggregatedEndpoint(
+            String midiInputEndpointId,
+            String midiOutputEndpointId);
+
+        MidiBidirectionalAggregatedEndpointConnection ConnectBidirectionalAggregatedEndpoint(
+            String midiInputEndpointId,
+            String midiOutputEndpointId,
+            MidiBidirectionalAggregatedEndpointOpenOptions options);
+
+        MidiBidirectionalAggregatedEndpointConnection ConnectBidirectionalAggregatedEndpoint(
+            String midiInputEndpointId,
+            String midiOutputEndpointId,
+            MidiBidirectionalAggregatedEndpointOpenOptions options,
+            IMidiEndpointDefinedConnectionSettings settings);
+
 
         // note that this takes the connection instance id, not the endpoint id itself
         // This will remove a single endpoint connection instance.

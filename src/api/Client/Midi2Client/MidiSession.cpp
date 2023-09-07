@@ -106,7 +106,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return internal::ToUpperTrimmedHStringCopy(deviceId);
     }
 
-    // TODO: The connection open code is almost identical across the three types. Refactor with an internal template function or something.
+    // TODO: The connection open code is almost identical across the four types. Refactor with an internal template function or something.
 
     // Bidirectional ===========================================================================================================
 
@@ -178,6 +178,44 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         return ConnectBidirectionalEndpoint(deviceId, nullptr, nullptr);
     }
+
+
+    // Bidirectional Aggregated ===========================================================================================================
+
+    winrt::Windows::Devices::Midi2::MidiBidirectionalAggregatedEndpointConnection MidiSession::ConnectBidirectionalAggregatedEndpoint(
+        _In_ hstring const& /* inputDeviceId*/,
+        _In_ hstring const& /*outputDeviceId*/ ,
+        _In_ winrt::Windows::Devices::Midi2::MidiBidirectionalAggregatedEndpointOpenOptions const& /*options*/,
+        _In_ winrt::Windows::Devices::Midi2::IMidiEndpointDefinedConnectionSettings const& /*settings*/
+    )
+    {
+        // TODO:
+
+        throw hresult_not_implemented();
+    }
+
+    winrt::Windows::Devices::Midi2::MidiBidirectionalAggregatedEndpointConnection MidiSession::ConnectBidirectionalAggregatedEndpoint(
+        _In_ hstring const& inputDeviceId,
+        _In_ hstring const& outputDeviceId,
+        _In_ winrt::Windows::Devices::Midi2::MidiBidirectionalAggregatedEndpointOpenOptions const& options
+    )
+    {
+        return ConnectBidirectionalAggregatedEndpoint(inputDeviceId, outputDeviceId, options, nullptr);
+    }
+
+
+    winrt::Windows::Devices::Midi2::MidiBidirectionalAggregatedEndpointConnection MidiSession::ConnectBidirectionalAggregatedEndpoint(
+        _In_ hstring const& inputDeviceId,
+        _In_ hstring const& outputDeviceId
+    )
+    {
+        return ConnectBidirectionalAggregatedEndpoint(inputDeviceId, outputDeviceId, nullptr, nullptr);
+    }
+
+
+
+
+
 
 
 

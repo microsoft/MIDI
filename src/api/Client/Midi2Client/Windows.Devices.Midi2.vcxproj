@@ -227,6 +227,12 @@
     <ClInclude Include="InternalMidiMessageReceiverHelper.h" />
     <ClInclude Include="InternalMidiMessageSenderHelper.h" />
     <ClInclude Include="memory_buffer.h" />
+    <ClInclude Include="MidiBidirectionalAggregatedEndpointConnection.h">
+      <DependentUpon>MidiBidirectionalAggregatedEndpointConnection.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiBidirectionalAggregatedEndpointOpenOptions.h">
+      <DependentUpon>MidiBidirectionalAggregatedEndpointOpenOptions.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiBidirectionalEndpointConnection.h">
       <DependentUpon>MidiBidirectionalEndpointConnection.idl</DependentUpon>
     </ClInclude>
@@ -245,8 +251,19 @@
     <ClInclude Include="MidiOutputEndpointOpenOptions.h">
       <DependentUpon>MidiOutputEndpointOpenOptions.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiSettingsService.h" />
-    <ClInclude Include="MidiStateService.h" />
+      <ClInclude Include="MidiService.h">
+          <DependentUpon>MidiService.idl</DependentUpon>
+      </ClInclude>
+      <ClInclude Include="MidiServicePingResponse.h">
+          <DependentUpon>MidiServicePingResponse.idl</DependentUpon>
+      </ClInclude>
+      <ClInclude Include="MidiServicePingResponseSummary.h">
+          <DependentUpon>MidiServicePingResponseSummary.idl</DependentUpon>
+      </ClInclude>
+      <ClInclude Include="MidiSettingsService.h">
+      </ClInclude>
+      <ClInclude Include="MidiStateService.h">
+      </ClInclude>
     <ClInclude Include="MidiChannel.h">
       <DependentUpon>MidiChannel.idl</DependentUpon>
     </ClInclude>
@@ -295,6 +312,9 @@
     <ClInclude Include="MidiStreamConfigurationEndpointListener.h">
       <DependentUpon>MidiStreamConfigurationEndpointListener.idl</DependentUpon>
     </ClInclude>
+      <ClInclude Include="MidiTransportInformation.h">
+          <DependentUpon>MidiTransportInformation.idl</DependentUpon>
+      </ClInclude>
     <ClInclude Include="MidiUmp128.h">
       <DependentUpon>MidiUmp128.idl</DependentUpon>
     </ClInclude>
@@ -326,6 +346,12 @@
   <ItemGroup>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
     <ClCompile Include="InternalMidiMessageReceiverHelper.cpp" />
+    <ClCompile Include="MidiBidirectionalAggregatedEndpointConnection.cpp">
+      <DependentUpon>MidiBidirectionalAggregatedEndpointConnection.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiBidirectionalAggregatedEndpointOpenOptions.cpp">
+      <DependentUpon>MidiBidirectionalAggregatedEndpointOpenOptions.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiBidirectionalEndpointConnection.cpp">
       <DependentUpon>MidiBidirectionalEndpointConnection.idl</DependentUpon>
     </ClCompile>
@@ -344,8 +370,19 @@
     <ClCompile Include="MidiOutputEndpointOpenOptions.cpp">
       <DependentUpon>MidiOutputEndpointOpenOptions.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiSettingsService.cpp" />
-    <ClCompile Include="MidiStateService.cpp" />
+      <ClCompile Include="MidiService.cpp">
+          <DependentUpon>MidiService.idl</DependentUpon>
+      </ClCompile>
+      <ClCompile Include="MidiServicePingResponse.cpp">
+          <DependentUpon>MidiServicePingResponse.idl</DependentUpon>
+      </ClCompile>
+      <ClCompile Include="MidiServicePingResponseSummary.cpp">
+          <DependentUpon>MidiServicePingResponseSummary.idl</DependentUpon>
+      </ClCompile>
+      <ClCompile Include="MidiSettingsService.cpp">
+      </ClCompile>
+      <ClCompile Include="MidiStateService.cpp">
+      </ClCompile>
     <ClCompile Include="MidiChannel.cpp">
       <DependentUpon>MidiChannel.idl</DependentUpon>
     </ClCompile>
@@ -397,6 +434,9 @@
     <ClCompile Include="MidiStreamConfigurationEndpointListener.cpp">
       <DependentUpon>MidiStreamConfigurationEndpointListener.idl</DependentUpon>
     </ClCompile>
+      <ClCompile Include="MidiTransportInformation.cpp">
+          <DependentUpon>MidiTransportInformation.idl</DependentUpon>
+      </ClCompile>
     <ClCompile Include="MidiUmp128.cpp">
       <DependentUpon>MidiUmp128.idl</DependentUpon>
     </ClCompile>
@@ -430,6 +470,8 @@
     <Midl Include="IMidiTransportSettingsData.idl" />
     <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl" />
     <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl" />
+    <Midl Include="MidiBidirectionalAggregatedEndpointConnection.idl" />
+    <Midl Include="MidiBidirectionalAggregatedEndpointOpenOptions.idl" />
     <Midl Include="MidiBidirectionalEndpointConnection.idl" />
     <Midl Include="MidiBidirectionalEndpointOpenOptions.idl" />
     <Midl Include="MidiChannel.idl" />
@@ -459,11 +501,15 @@
     <Midl Include="MidiOutputEndpointConnection.idl" />
     <Midl Include="MidiOutputEndpointOpenOptions.idl" />
     <Midl Include="MidiProtocolEnum.idl" />
+    <Midl Include="MidiService.idl" />
+    <Midl Include="MidiServicePingResponse.idl" />
+    <Midl Include="MidiServicePingResponseSummary.idl" />
     <Midl Include="MidiSession.idl" />
     <Midl Include="MidiSessionSettings.idl" />
     <Midl Include="IMidiUmp.idl" />
     <Midl Include="MidiStreamConfigurationEndpointListener.idl" />
     <Midl Include="MidiSysEx8StatusEnum.idl" />
+    <Midl Include="MidiTransportInformation.idl" />
     <Midl Include="MidiUmp128.idl" />
     <Midl Include="MidiUmp32.idl" />
     <Midl Include="MidiUmp64.idl" />

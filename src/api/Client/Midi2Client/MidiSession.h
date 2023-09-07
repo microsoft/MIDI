@@ -88,6 +88,25 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
+        winrt::Windows::Devices::Midi2::MidiBidirectionalAggregatedEndpointConnection ConnectBidirectionalAggregatedEndpoint(
+            _In_ hstring const& inputDeviceId,
+            _In_ hstring const& outputDeviceId
+        );
+
+        winrt::Windows::Devices::Midi2::MidiBidirectionalAggregatedEndpointConnection ConnectBidirectionalAggregatedEndpoint(
+            _In_ hstring const& inputDeviceId,
+            _In_ hstring const& outputDeviceId,
+            _In_ winrt::Windows::Devices::Midi2::MidiBidirectionalAggregatedEndpointOpenOptions const& options
+        );
+
+        winrt::Windows::Devices::Midi2::MidiBidirectionalAggregatedEndpointConnection ConnectBidirectionalAggregatedEndpoint(
+            _In_ hstring const& inputDeviceId,
+            _In_ hstring const& outputDeviceId,
+            _In_ winrt::Windows::Devices::Midi2::MidiBidirectionalAggregatedEndpointOpenOptions const& options,
+            _In_ winrt::Windows::Devices::Midi2::IMidiEndpointDefinedConnectionSettings const& settings
+        );
+
+
         void DisconnectEndpointConnection(
             _In_ hstring const& endpointConnectionId
         );

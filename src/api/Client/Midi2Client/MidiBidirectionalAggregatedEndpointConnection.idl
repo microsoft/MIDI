@@ -1,0 +1,39 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+// This class combines two unidirectional endpoints, which understand UMP, into 
+// a single logical bidirectional UMP endpoint, sending all the same discovery
+// and other required MIDI 2.0 protocol messages on Open
+
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+import "IMidiInputConnection.idl";
+import "IMidiOutputConnection.idl";
+import "IMidiEndpointMessageListener.idl";
+import "IMidiMessageReceivedEventSource.idl";
+
+import "MidiFunctionBlock.idl";
+import "MidiEndpointInformation.idl";
+
+import "IMidiEndpointConnection.idl";
+
+namespace Windows.Devices.Midi2
+{
+    [MIDI_API_CONTRACT(1)]
+    [default_interface]
+    runtimeclass MidiBidirectionalAggregatedEndpointConnection :
+                                                       Windows.Devices.Midi2.IMidiInputConnection,
+                                                       Windows.Devices.Midi2.IMidiMessageReceivedEventSource,
+                                                       Windows.Devices.Midi2.IMidiOutputConnection,
+                                                       Windows.Devices.Midi2.IMidiEndpointConnection
+    {
+        IVector<IMidiEndpointMessageListener> MessageListeners{ get; };
+
+    }
+}

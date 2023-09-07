@@ -17,7 +17,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         MidiServices() = default;
 
-        static winrt::Microsoft::Devices::Midi2::WindowsMidiServicesCheckResult CheckForWindowsMidiServices();
+        static winrt::Microsoft::Devices::Midi2::MidiServicesStatus CheckForWindowsMidiServices();
         static hstring GetInstalledWindowsMidiServicesVersion();
         static hstring SdkVersion();
         static hstring MinimumCompatibleMidiServicesVersion();
