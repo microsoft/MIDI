@@ -1,16 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 
 #include <windows.h>
-#include <cguid.h>
+
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
-#include <ks.h>
+
 #include <wil\com.h>
 #include <wil\resource.h>
 #include <wil\result_macros.h>
-#include <vector>
-#include <string>
 
 #include <avrt.h>
 #include <Devpkey.h>
@@ -18,6 +16,8 @@
 #include "MidiDefs.h"
 #include "MidiDeviceManagerInterface.h"
 #include "MidiSwEnum.h"
+
+#include "Midi2MidiSrvAbstraction.h"
 
 using namespace winrt::Windows::Devices::Enumeration;
 
@@ -40,7 +40,7 @@ MidiSWDeviceEnum::~MidiSWDeviceEnum()
     L"AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True"
 
 HRESULT
-MidiSWDeviceEnum::EnumerateDevices()
+MidiSWDeviceEnum::EnumerateDevices(_In_ GUID requestedAbstraction)
 {
     winrt::hstring deviceSelector(MIDI_DEVICE_SELECTOR);
     wil::unique_event enumerationCompleted{wil::EventOptions::None};
@@ -58,13 +58,27 @@ MidiSWDeviceEnum::EnumerateDevices()
         auto instanceId = device.Id();
         winrt::guid abstractionGuid;
 
-        auto prop = device.Properties().Lookup(STRING_PKEY_MIDI_AbstractionLayer);
+        auto prop = device.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_AbstractionLayer));
         if (prop)
         {
             abstractionGuid = winrt::unbox_value<winrt::guid>(prop);
+
+            // if it's not the midisrv abstraction, and it's not the requested abstraction,
+            // filter it.
+            if (requestedAbstraction != __uuidof(Midi2MidiSrvAbstraction) &&
+                (GUID)abstractionGuid != requestedAbstraction)
+            {
+                return S_OK;
+            }
+        }
+        else
+        {
+            // TODO: SWD's created by AudioEndpointBuilder lack an abstraction guid entirely,
+            // we don't currently know how to use these endpoints. Skip for now.
+            return S_OK;
         }
 
-        prop = device.Properties().Lookup(L"System.Devices.InterfaceClassGuid");
+        prop = device.Properties().Lookup(winrt::to_hstring(L"System.Devices.InterfaceClassGuid"));
         auto interfaceClass = winrt::unbox_value<winrt::guid>(prop);
         
         std::unique_ptr<MIDIU_DEVICE> midiDevice = std::make_unique<MIDIU_DEVICE>();

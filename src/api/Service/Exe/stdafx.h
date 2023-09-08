@@ -2,20 +2,14 @@
 #pragma once
 
 #include <windows.h>
-#include <cguid.h>
+
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 
-#include <hstring.h>
 #include <strsafe.h>
-#include <assert.h>
-#include <devioctl.h>
-#include <wrl\implements.h>
 #include <wrl\module.h>
 #include <wrl\event.h>
-#include <ks.h>
-#include <ksmedia.h>
 #include <avrt.h>
 #include <wil\com.h>
 #include <wil\resource.h>
@@ -25,31 +19,18 @@
 #include <wil\result.h>
 #include <wil\tracelogging.h>
 #include <wil\wistd_memory.h>
-#include <memory>
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlctl.h>
 #include <atlcoll.h>
 #include <atlsync.h>
 #include <sddl.h>
-#include <vector>
-#include <string>
-#include <array>
-#include <map>
 
-//#include "MidiKSDef.h"
+#include "MidiAbstraction.h"
 
-#include "Midi2SimpleLoopbackAbstraction_i.c"
 #include "Midi2SimpleLoopbackAbstraction.h"
-
-#include "Midi2NetworkMidiAbstraction_i.c"
 #include "Midi2NetworkMidiAbstraction.h"
-
-#include "Midi2VirtualMidiAbstraction_i.c"
 #include "Midi2VirtualMidiAbstraction.h"
-
-
-#include "Midi2KSAbstraction_i.c"
 #include "Midi2KSAbstraction.h"
 
 #include "mididevicemanagerinterface_i.c"

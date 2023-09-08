@@ -23,6 +23,7 @@ INCLUDES = \
     ..\..\inc; \
     ..\..\idl; \
     $(OBJ_PATH)\..\..\idl\$(O); \
+    $(OBJ_PATH)\..\..\abstraction\midisrvabstraction\$(O); \
     $(OBJ_PATH)\..\..\service\exe\$(O); \
     $(ONECORE_TAEF_INC_PATH); \
     $(ONECORE_INTERNAL_SDK_INC_PATH); \

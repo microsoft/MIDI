@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 #include <windows.h>
 
-#include <assert.h>
-#include <wrl\implements.h>
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Foundation.Collections.h>
+#include <winrt/Windows.Devices.Enumeration.h>
+
 #include <wrl\module.h>
 #include <wrl\event.h>
 #include <ks.h>
@@ -15,13 +17,9 @@
 #include <wil\registry.h>
 #include <wil\result.h>
 #include <wil\wistd_memory.h>
-#include <memory>
 
 #include "MidiAbstraction.h"
 
-#include "Mididevicemanagerinterface.h"
-
-#include <initguid.h>
 #include <Devpkey.h>
 #include "MidiKsDef.h"
 #include "MidiDefs.h"
@@ -128,9 +126,13 @@ DisableMmcss(
     unique_mmcss_handle& MmcssHandle
 )
 {
+#if 1
     RETURN_HR_IF(S_OK, NULL == MmcssHandle);
     // Detach the thread from the MMCSS service to free the handle.
     MmcssHandle.reset();
+#else
+    UNREFERENCED_PARAMETER(MmcssHandle);
+#endif
 
     return S_OK;
 }
@@ -142,6 +144,7 @@ EnableMmcss(
     DWORD& MmcssTaskId
 )
 {
+#if 1
     MmcssHandle.reset(AvSetMmThreadCharacteristics( L"Pro Audio", &MmcssTaskId ));
     if (!MmcssHandle)
     {
@@ -157,6 +160,14 @@ EnableMmcss(
 
     RETURN_HR_IF(HRESULT_FROM_WIN32(GetLastError()), FALSE == AvSetMmThreadPriority(MmcssHandle.get(), AVRT_PRIORITY_HIGH));
     cleanupOnFailure.release();
+#else
+    UNREFERENCED_PARAMETER(MmcssHandle);
+    UNREFERENCED_PARAMETER(MmcssTaskId);
+
+    SetPriorityClass(GetCurrentThread(), HIGH_PRIORITY_CLASS);
+    SetPriorityClass(GetCurrentThread(), REALTIME_PRIORITY_CLASS);
+    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+#endif
 
     return S_OK;
 }
@@ -239,8 +250,11 @@ CMidiXProc::SendMidiMessage(
 {
     BOOL bufferSent {FALSE};
     UINT32 requiredBufferSize = sizeof(UMPDATAFORMAT) + Length;
+    UINT maxRetries{ 10000 };
 
     RETURN_HR_IF(E_UNEXPECTED, !m_MidiOut);
+    RETURN_HR_IF(E_INVALIDARG, Length > MAXIMUM_UMP_DATASIZE);
+    RETURN_HR_IF(E_INVALIDARG, Length < MINIMUM_UMP_DATASIZE);
 
     PMEMORY_MAPPED_REGISTERS Registers = &(m_MidiOut->Registers);
     PMEMORY_MAPPED_DATA Data = &(m_MidiOut->Data);
@@ -300,16 +314,17 @@ CMidiXProc::SendMidiMessage(
         }
         else
         {
-            // There is not sufficient space to send, current strategy is to delay and retry.
-
-            // TODO: If the buffer is full because the driver is wedged, this will just
-            // sit here forever retrying. Should there be a timeout?
-            bufferSent = FALSE;
-
             // relenquish the remainder of this processing slice and try again on the next
             Sleep(0);
         }
-    }while (!bufferSent);
+    }while (!bufferSent && --maxRetries > 0);
+
+    // Failed to send the buffer due to insufficient space,
+    // fail.
+    if (!bufferSent)
+    {
+        return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+    }
 
     return S_OK;
 }
@@ -320,15 +335,19 @@ CMidiXProc::ProcessMidiIn()
     do
     {
         // wait on write event or exit event
-        HANDLE handles[] = { m_MidiIn->WriteEvent.get(), m_ThreadTerminateEvent.get()};
+        HANDLE handles[] = { m_ThreadTerminateEvent.get(), m_MidiIn->WriteEvent.get() };
         DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, INFINITE);
-        if (ret == WAIT_OBJECT_0)
+        if (ret == (WAIT_OBJECT_0 + 1))
         {
             PMEMORY_MAPPED_REGISTERS Registers = &(m_MidiIn->Registers);
             PMEMORY_MAPPED_DATA Data = &(m_MidiIn->Data);
 
             do
             {
+                // we're doing a pass on the buffer, so safe to reset the event right now, no chance
+                // of missing anything if we reset it before we retrieve the current positions.
+                m_MidiIn->WriteEvent.ResetEvent();
+
                 // the read position is the last position we have read,
                 // the write position is the last position written to
                 ULONG readPosition = InterlockedCompareExchange((LONG*) Registers->ReadPosition, 0, 0);

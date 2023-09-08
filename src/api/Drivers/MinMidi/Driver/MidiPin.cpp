@@ -16,6 +16,12 @@
 wil::fast_mutex_with_critical_region *g_MidiInLock {nullptr};
 MidiPin* g_MidiInPin {nullptr};
 
+// UMP 32 is 4 bytes
+#define MINIMUM_UMP_DATASIZE 4
+
+// UMP 128 is 16 bytes
+#define MAXIMUM_UMP_DATASIZE 16
+
 static const
 KSDATARANGE_MUSIC g_MidiStreamDataRange[] =
 {
@@ -561,14 +567,14 @@ MidiPin::HandleIo()
     {
         // application is sending a midi message out, this is traditionally called
         // midi out.            
-        PVOID waitObjects[] = { m_WriteEvent, m_ThreadExitEvent.get() };
+        PVOID waitObjects[] = { m_ThreadExitEvent.get(), m_WriteEvent };
 
         do
         {
             // run until we get a thread exit event.
             // wait for either a write event indicating data is ready to move, or thread exit.
             status = KeWaitForMultipleObjects(2, waitObjects, WaitAny, Executive, KernelMode, FALSE, nullptr, nullptr);
-            if (STATUS_WAIT_0 == status)
+            if (STATUS_WAIT_1 == status)
             {
                 do
                 {
@@ -586,8 +592,10 @@ MidiPin::HandleIo()
                     // we have a write event, there should be data available to move.
                     if (nullptr != g_MidiInPin)
                     {
-                        ULONG bytesToCopy = 0;
+                        ULONG bytesAvailableToRead = 0;
                         ULONG bytesAvailable = 0;
+
+                        KeResetEvent(m_WriteEvent);
 
                         // Retrieve the midi out position for the buffer we are reading from. The data between the read position
                         // and write position is valid. (read position is our last read position, write position is their last written).
@@ -596,13 +604,6 @@ MidiPin::HandleIo()
                         ULONG midiOutReadPosition = (ULONG) InterlockedCompareExchange((LONG *)m_ReadRegister, 0, 0);
                         ULONG midiOutWritePosition = (ULONG) InterlockedCompareExchange((LONG *)m_WriteRegister, 0, 0);
 
-                        // Retrieve the midi in position for the buffer that we are writing to. The data between the write position
-                        // and read position is empty. (read position is their last read position, write position is our last written).
-                        // retrieve our write position first since we know it won't be changing, and their read position second,
-                        // so we can have as much free space as possible.
-                        ULONG midiInWritePosition = (ULONG) InterlockedCompareExchange((LONG *)g_MidiInPin->m_WriteRegister, 0, 0);
-                        ULONG midiInReadPosition = (ULONG) InterlockedCompareExchange((LONG *)g_MidiInPin->m_ReadRegister, 0, 0);
-
                         // first figure out how much data there is to read, taking
                         // into account the looping buffer.
                         if (midiOutReadPosition <= midiOutWritePosition)
@@ -610,7 +611,7 @@ MidiPin::HandleIo()
                             // if the read position is less than the write position, 
                             // then we haven't looped around so the difference between
                             // the read and write position is the amount of data to read.
-                            bytesToCopy = midiOutWritePosition - midiOutReadPosition;
+                            bytesAvailableToRead = midiOutWritePosition - midiOutReadPosition;
                         }
                         else
                         {
@@ -618,14 +619,44 @@ MidiPin::HandleIo()
                             // we looped around. The difference between the read position and 
                             // the write position is the available space, so the total buffer
                             // size minus the available space gives us the amount of data to read.
-                            bytesToCopy = m_BufferSize - (midiOutReadPosition - midiOutWritePosition);
+                            bytesAvailableToRead = m_BufferSize - (midiOutReadPosition - midiOutWritePosition);
                         }
 
-                        if (bytesToCopy == 0)
+                        if (bytesAvailableToRead == 0)
                         {
                             // nothing to copy, so we are finished with this pass
                             break;
                         }
+
+                        PVOID startingReadAddress = (PVOID)(((PBYTE)m_KernelBufferMapping.Buffer1.m_BufferClientAddress) + midiOutReadPosition);
+                        PUMPDATAFORMAT header = (PUMPDATAFORMAT)(startingReadAddress);
+                        UINT32 dataSize = header->ByteCount;
+
+                        if (dataSize < MINIMUM_UMP_DATASIZE || dataSize > MAXIMUM_UMP_DATASIZE)
+                        {
+                            // TBD: need to log an abort
+
+                            // data is malformed, abort.
+                            return;
+                        }
+
+                        ULONG bytesToCopy = dataSize + sizeof(UMPDATAFORMAT);
+                        ULONG finalReadPosition = (midiOutReadPosition + bytesToCopy) % m_BufferSize;
+
+                        if (bytesAvailableToRead < bytesToCopy)
+                        {
+                            // if the full contents of this buffer isn't yet available,
+                            // wait for more data to come in.
+                            // Client will set an event when the write position advances.
+                            break;
+                        }
+
+                        // Retrieve the midi in position for the buffer that we are writing to. The data between the write position
+                        // and read position is empty. (read position is their last read position, write position is our last written).
+                        // retrieve our write position first since we know it won't be changing, and their read position second,
+                        // so we can have as much free space as possible.
+                        ULONG midiInWritePosition = (ULONG) InterlockedCompareExchange((LONG *)g_MidiInPin->m_WriteRegister, 0, 0);
+                        ULONG midiInReadPosition = (ULONG) InterlockedCompareExchange((LONG *)g_MidiInPin->m_ReadRegister, 0, 0);
 
                         // Now we need to calculate the available space, taking into account the looping
                         // buffer.
@@ -656,41 +687,21 @@ MidiPin::HandleIo()
 
                         if (bytesToCopy > bytesAvailable)
                         {
-                            // We have somewhat of a problem. We have data to move, but there
-                            // isn't enough buffer available to do it. Some, or all of it is going to have to
-                            // wait until the next pass.
+                            // We have a problem. We have data to move, but there
+                            // isn't enough buffer available to do it. The client is not reading data,
+                            // or not reading it fast enough.
 
                             // TBD: need to log a glitch event if this happens, so we can
                             // track it.
 
-                            // We're know that we are only partially processing the data from this write event, so
-                            // we are going to have to try again. Set the local write event on
-                            // ourselves so we try again. Without this the reader could read out the data,
-                            // but we'd never wake up to try writing.
-
-                            // TBD: Should we use a separate event, or maybe a timer event, to trigger the wake up
-                            // and retry? Resetting this same event is going to put us into a tight retry loop,
-                            // while a timer could back off a little before the retry to give the system an opportunity
-                            // to catch up. For simplicity, and hopefully fastest handling, just set the existing
-                            // event.
+                            // Two options, either retry, or drop the data.
+                            // For reliability purposes of testing, retry.
                             KeSetEvent(m_WriteEvent, 0, 0);
-
-                            if (0 == bytesAvailable)
-                            {
-                                // this is really bad, there is no space to copy anything, the client thread
-                                // isn't doing any work. We aren't moving any data at all for this pass.
-                                // The only thing we can do is exit this processin gloop and try again later.
-
-                                // TBD: this is severe enough that we likely want a special glitch event for
-                                // tracking.
-                                break;
-                            }
+                            // InterlockedExchange((LONG*)m_ReadRegister, finalReadPosition);
+                            break;
                         }
 
-                        // copy all of the available data, up to the available space.
-                        bytesToCopy = min(bytesToCopy, bytesAvailable);
-
-                        PVOID startingReadAddress = (PVOID)(((PBYTE)m_KernelBufferMapping.Buffer1.m_BufferClientAddress)+midiOutReadPosition);
+                        // There's enough space available, calculate our write position
                         PVOID startingWriteAddress = (PVOID)(((PBYTE)g_MidiInPin->m_KernelBufferMapping.Buffer1.m_BufferClientAddress)+midiInWritePosition);
 
                         // copy the data. This works (reading/writing past the end of the buffer)
@@ -705,11 +716,6 @@ MidiPin::HandleIo()
                             startingReadAddress,
                             bytesToCopy
                         );
-
-                        // now we need to calculate the new position that we have read up to.
-                        // This will be our old read position plus the number of bytes copied, modulus the buffer
-                        // size to take into account the loop.
-                        ULONG finalReadPosition = (midiOutReadPosition + bytesToCopy) % m_BufferSize;
 
                         // now calculate the new position that the buffer has been written up to.
                         // this will be the original write position, plus the bytes copied, again modululs

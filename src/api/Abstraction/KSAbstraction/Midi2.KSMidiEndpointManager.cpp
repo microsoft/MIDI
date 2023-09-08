@@ -10,13 +10,20 @@ using namespace winrt::Windows::Foundation::Collections;
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
 
+// if this is defined, then KSMidiEndpointManager will publish a BiDi endpoint
+// for pairs of midi in & out endpoints on the same filter.
+// Filters which do not have a a single pair of midi in and out,
+// separate midi in and out SWD's will always be created.
 #define CREATE_KS_BIDI_SWDS
-// build in, out, and bidi, for current testing.
-//#define BIDI_REPLACES_INOUT_SWDS
 
-#define MAX_DEVICE_ID_LEN 200 // size in chars
-
-GUID KsAbstractionLayerGUID = __uuidof(Midi2KSAbstraction);
+// If this is defined, we will skip building midi in and midi out
+// SWD's for endpoints where BIDI SWD's are created.
+// Otherwise, MidiIn, Out, and BiDi will be created. Creating all 3
+// is OK for unit testing one at a time, however is not valid for
+// normal usage because MidiIn and MidiOut use the same pins as 
+// MidiBidi, so only MidiIn and MidiOut or MidiBidi can be used,
+// never all 3 at the same time.
+#define BIDI_REPLACES_INOUT_SWDS
 
 _Use_decl_annotations_
 HRESULT
@@ -31,14 +38,7 @@ CMidi2KSMidiEndpointManager::Initialize(
     winrt::hstring deviceSelector(
         L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
 
-    auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-
-    additionalProperties.Append(winrt::to_hstring(L"System.Devices.FriendlyName"));
-    additionalProperties.Append(winrt::to_hstring(L"System.Devices.DeviceDescription1"));
-    additionalProperties.Append(winrt::to_hstring(L"System.Devices.DeviceDescription2"));
-    additionalProperties.Append(winrt::to_hstring(L"System.Devices.Parent"));
-
-    m_Watcher = DeviceInformation::CreateWatcher(deviceSelector, additionalProperties);
+    m_Watcher = DeviceInformation::CreateWatcher(deviceSelector);
 
     auto deviceAddedHandler = TypedEventHandler<DeviceWatcher, DeviceInformation>(this, &CMidi2KSMidiEndpointManager::OnDeviceAdded);
     auto deviceRemovedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidi2KSMidiEndpointManager::OnDeviceRemoved);
@@ -72,7 +72,7 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
     auto properties = device.Properties();
 
     // retrieve the device instance id from the DeviceInformation property store
-    auto prop = properties.Lookup(L"System.Devices.DeviceInstanceId");
+    auto prop = properties.Lookup(winrt::to_hstring(L"System.Devices.DeviceInstanceId"));
     deviceInstanceId = winrt::unbox_value<winrt::hstring>(prop).c_str();
     deviceId = device.Id().c_str();
 
@@ -221,61 +221,69 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
     //in the added callback we're going to go ahead and create the SWD's:
     for (auto const& MidiPin : newMidiPins)
     {
+        GUID KsAbstractionLayerGUID = __uuidof(Midi2KSAbstraction);
         DEVPROP_BOOLEAN supportsMidiOne = (MidiPin->MidiOne)?DEVPROP_TRUE:DEVPROP_FALSE;
         DEVPROP_BOOLEAN supportsUmp = (MidiPin->CyclicUmp || MidiPin->StandardUmp)?DEVPROP_TRUE:DEVPROP_FALSE;
         DEVPROP_BOOLEAN supportsCyclic = (MidiPin->CyclicUmp)?DEVPROP_TRUE:DEVPROP_FALSE;
+        DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
 
-        // 6 items added at initialization, up to 2 additional items added below, for a total of 8.
-        ULONG interfacePropertyCount{ 6 };
-        DEVPROPERTY interfaceDevProperties[8] = {
-            { {DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_STRING, static_cast<ULONG>((MidiPin->Name.length() + 1) * sizeof(WCHAR)), (PVOID)MidiPin->Name.c_str() },
-            { {DEVPKEY_KsMidiPort_KsFilterInterfaceId, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_STRING, static_cast<ULONG>((MidiPin->Id.length() + 1) * sizeof(WCHAR)), (PVOID)MidiPin->Id.c_str() },
-            { {PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_GUID, static_cast<ULONG>(sizeof(GUID)), (PVOID)&KsAbstractionLayerGUID },
-            { { DEVPKEY_KsMidiPort_SupportsMidiOneFormat, DEVPROP_STORE_SYSTEM, nullptr },
-                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(supportsMidiOne)), (PVOID)&supportsMidiOne },
-            { { DEVPKEY_KsMidiPort_SupportsUMPFormat, DEVPROP_STORE_SYSTEM, nullptr },
-                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(supportsUmp)), (PVOID)&supportsUmp },
-            { { DEVPKEY_KsMidiPort_SupportsLooped, DEVPROP_STORE_SYSTEM, nullptr },
-                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(supportsCyclic)), (PVOID)&supportsCyclic },
-            { 0 } // set the remainder to 0
-        };
+        std::vector<DEVPROPERTY> interfaceDevProperties;
+        std::vector<DEVPROPERTY> deviceDevProperties;
+
+        interfaceDevProperties.push_back({ {DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_STRING, static_cast<ULONG>((MidiPin->Name.length() + 1) * sizeof(WCHAR)), (PVOID)MidiPin->Name.c_str() });
+        interfaceDevProperties.push_back({ {DEVPKEY_KsMidiPort_KsFilterInterfaceId, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_STRING, static_cast<ULONG>((MidiPin->Id.length() + 1) * sizeof(WCHAR)), (PVOID)MidiPin->Id.c_str() });
+        interfaceDevProperties.push_back({ {PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_GUID, static_cast<ULONG>(sizeof(GUID)), (PVOID)&KsAbstractionLayerGUID });
+        interfaceDevProperties.push_back({ { DEVPKEY_KsMidiPort_SupportsMidiOneFormat, DEVPROP_STORE_SYSTEM, nullptr },
+                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(supportsMidiOne)), (PVOID)&supportsMidiOne });
+        interfaceDevProperties.push_back({ { DEVPKEY_KsMidiPort_SupportsUMPFormat, DEVPROP_STORE_SYSTEM, nullptr },
+                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(supportsUmp)), (PVOID)&supportsUmp });
+        interfaceDevProperties.push_back({ { DEVPKEY_KsMidiPort_SupportsLooped, DEVPROP_STORE_SYSTEM, nullptr },
+                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(supportsCyclic)), (PVOID)&supportsCyclic });
+
 
         // Bidirectional uses a different property for the in and out pins, since we currently require two separate ones.
         if (MidiPin->Flow == MidiFlowBidirectional)
         {
-            interfaceDevProperties[interfacePropertyCount++] = { { DEVPKEY_KsMidiPort_OutPinId, DEVPROP_STORE_SYSTEM, nullptr },
-                DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), &(MidiPin->PinId) };
-            interfaceDevProperties[interfacePropertyCount++] = { { DEVPKEY_KsMidiPort_InPinId, DEVPROP_STORE_SYSTEM, nullptr },
-                DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), &(MidiPin->PinIdIn) };
+            interfaceDevProperties.push_back({ { DEVPKEY_KsMidiPort_OutPinId, DEVPROP_STORE_SYSTEM, nullptr },
+                DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), &(MidiPin->PinId) });
+            interfaceDevProperties.push_back({ { DEVPKEY_KsMidiPort_InPinId, DEVPROP_STORE_SYSTEM, nullptr },
+                DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), &(MidiPin->PinIdIn) });
         }
         else
         {
             // In and out have only a single pin id to create.
-            interfaceDevProperties[interfacePropertyCount++] = { { DEVPKEY_KsMidiPort_KsPinId, DEVPROP_STORE_SYSTEM, nullptr },
-                DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), &(MidiPin->PinId) };
+            interfaceDevProperties.push_back({ { DEVPKEY_KsMidiPort_KsPinId, DEVPROP_STORE_SYSTEM, nullptr },
+                DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), &(MidiPin->PinId) });
         }
 
-        DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
+        deviceDevProperties.push_back({ { DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr },
+                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
 
-        DEVPROPERTY deviceDevProperties[] = {
-            {{DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue}
-        };
+        SW_DEVICE_CREATE_INFO createInfo{ 0 };
 
-        SW_DEVICE_CREATE_INFO createInfo = {};
         createInfo.cbSize = sizeof(createInfo);
-
         createInfo.pszInstanceId = MidiPin->InstanceId.c_str();
         createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
         createInfo.pszDeviceDescription = MidiPin->Name.c_str();
 
-        LOG_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(MidiPin->ParentInstanceId.c_str(), MidiPin->CreateUMPOnly, MidiPin->Flow, interfacePropertyCount, ARRAYSIZE(deviceDevProperties), (PVOID)interfaceDevProperties, (PVOID)deviceDevProperties, (PVOID)&createInfo));
+        // log telemetry in the event activating the SWD for this pin has failed,
+        // but push forward with creation for other pins.
+        LOG_IF_FAILED(MidiPin->SwdCreation = m_MidiDeviceManager->ActivateEndpoint(
+                                                            MidiPin->ParentInstanceId.c_str(),
+                                                            MidiPin->CreateUMPOnly,
+                                                            MidiPin->Flow,
+                                                            (ULONG) interfaceDevProperties.size(),
+                                                            (ULONG) deviceDevProperties.size(),
+                                                            (PVOID)interfaceDevProperties.data(),
+                                                            (PVOID)deviceDevProperties.data(),
+                                                            (PVOID)&createInfo));
     }
 
-
+    // move the newMidiPins to the m_AvailableMidiPins list, which contains a list of
+    // all KS pins (and their swd's), which exist on the system.
     while (newMidiPins.size() > 0)
     {
         m_AvailableMidiPins.push_back(std::move(newMidiPins.back()));

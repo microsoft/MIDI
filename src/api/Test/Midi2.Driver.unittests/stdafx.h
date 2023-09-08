@@ -2,15 +2,12 @@
 #pragma once
 
 #include <windows.h>
+#include <cguid.h>
 
-#include <hstring.h>
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Foundation.Collections.h>
+#include <winrt/Windows.Devices.Enumeration.h>
 
-#include <Windows.Devices.Enumeration.h>
-#include <assert.h>
-#include <devioctl.h>
-#include <wrl\implements.h>
-#include <wrl\module.h>
-#include <wrl\event.h>
 #include <ks.h>
 #include <ksmedia.h>
 #include <avrt.h>

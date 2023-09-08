@@ -119,8 +119,6 @@ interface IMidiEndpointManager : IUnknown
 
     HRESULT Cleanup();
 };
-
-
 // This interface exists so apps can create endpoints through the API
 // typically the EndpointManager implements this if API-driven device/endpoint
 // creation is supported. Optional for any transport abstraction. Required for

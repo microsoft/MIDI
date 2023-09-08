@@ -60,11 +60,14 @@ void Midi2DriverTests::TestMidiIO(BOOL Cyclic)
         }
     }
 
+    ULONG requestedBufferSize = PAGE_SIZE;
+    VERIFY_SUCCEEDED(GetRequiredBufferSize(requestedBufferSize));
+
     LOG_OUTPUT(L"Initializing midi in");
-    VERIFY_SUCCEEDED(midiInDevice.Initialize(midiDeviceEnum.m_AvailableMidiInPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiInPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiInPins[0].UMP, PAGE_SIZE, &mmcssTaskId, this));
+    VERIFY_SUCCEEDED(midiInDevice.Initialize(midiDeviceEnum.m_AvailableMidiInPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiInPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiInPins[0].UMP, requestedBufferSize, &mmcssTaskId, this));
 
     LOG_OUTPUT(L"Initializing midi out");
-    VERIFY_SUCCEEDED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiOutPins[0].UMP, PAGE_SIZE, &mmcssTaskId));
+    VERIFY_SUCCEEDED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiOutPins[0].UMP, requestedBufferSize, &mmcssTaskId));
 
     LOG_OUTPUT(L"Writing midi data");
 
@@ -155,11 +158,14 @@ void Midi2DriverTests::TestMidiIO_ManyMessages(BOOL Cyclic)
         }
     }
 
+    ULONG requestedBufferSize = PAGE_SIZE;
+    VERIFY_SUCCEEDED(GetRequiredBufferSize(requestedBufferSize));
+
     LOG_OUTPUT(L"Initializing midi in");
-    VERIFY_SUCCEEDED(midiInDevice.Initialize(midiDeviceEnum.m_AvailableMidiInPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiInPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiInPins[0].UMP, PAGE_SIZE, &mmcssTaskId, this));
+    VERIFY_SUCCEEDED(midiInDevice.Initialize(midiDeviceEnum.m_AvailableMidiInPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiInPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiInPins[0].UMP, requestedBufferSize, &mmcssTaskId, this));
 
     LOG_OUTPUT(L"Initializing midi out");
-    VERIFY_SUCCEEDED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiOutPins[0].UMP, PAGE_SIZE, &mmcssTaskId));
+    VERIFY_SUCCEEDED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiOutPins[0].UMP, requestedBufferSize, &mmcssTaskId));
 
     LOG_OUTPUT(L"Writing midi data");
 
@@ -208,25 +214,28 @@ void Midi2DriverTests::TestMidiIO_Latency(BOOL Cyclic, BOOL DelayedMessages)
     KSMidiInDevice midiInDevice;
     DWORD mmcssTaskId {0};
     wil::unique_event_nothrow allMessagesReceived;
-    UINT expectedMessageCount = DelayedMessages?(30000/messageDelay):100000;
+    UINT expectedMessageCount = DelayedMessages ? (3000 / messageDelay) : 100000;
 
-    LARGE_INTEGER performanceFrequency {0};
-    LARGE_INTEGER firstSend {0};
-    LARGE_INTEGER lastReceive {0};
+    LARGE_INTEGER performanceFrequency{ 0 };
+    LARGE_INTEGER firstSend{ 0 };
+    LARGE_INTEGER lastReceive{ 0 };
 
-    LONGLONG firstRoundTripLatency {0};
-    LONGLONG lastRoundTripLatency {0};
-    LONGLONG avgRoundTripLatency {0};
-    LONGLONG minRoundTripLatency {0xffffffff};
-    LONGLONG maxRoundTripLatency {0};
+    LONGLONG firstRoundTripLatency{ 0 };
+    LONGLONG lastRoundTripLatency{ 0 };
+    long double avgRoundTripLatency{ 0 };
+    long double stdevRoundTripLatency{ 0 };
 
-    LONGLONG avgReceiveLatency {0};
-    LONGLONG minReceiveLatency {0xffffffff};
-    LONGLONG maxReceiveLatency {0};
+    LONGLONG minRoundTripLatency{ 0xffffffff };
+    LONGLONG maxRoundTripLatency{ 0 };
 
-    LONGLONG previousReceive {0};
+    long double avgReceiveLatency{ 0 };
+    long double stdevReceiveLatency{ 0 };
+    LONGLONG minReceiveLatency{ 0xffffffff };
+    LONGLONG maxReceiveLatency{ 0 };
 
-    double qpcPerMs = 0;
+    LONGLONG previousReceive{ 0 };
+
+    long double qpcPerMs = 0;
 
     QueryPerformanceFrequency(&performanceFrequency);
 
@@ -260,8 +269,12 @@ void Midi2DriverTests::TestMidiIO_Latency(BOOL Cyclic, BOOL DelayedMessages)
                 maxReceiveLatency = receiveLatency;
             }
 
+            long double prevAvgReceiveLatency = avgReceiveLatency;
+
             // running average for the average recieve latency/jitter
-            avgReceiveLatency = (avgReceiveLatency + ((receiveLatency - avgReceiveLatency)/(midiMessagesReceived)));
+            avgReceiveLatency = (prevAvgReceiveLatency + (((long double) receiveLatency - prevAvgReceiveLatency) / ((long double)midiMessagesReceived)));
+
+            stdevReceiveLatency = stdevReceiveLatency + ((receiveLatency - prevAvgReceiveLatency) * (receiveLatency - avgReceiveLatency));
         }
         previousReceive = qpc.QuadPart;
 
@@ -281,8 +294,12 @@ void Midi2DriverTests::TestMidiIO_Latency(BOOL Cyclic, BOOL DelayedMessages)
             maxRoundTripLatency = roundTripLatency;
         }
 
+        long double prevAvgRoundTripLatency = avgRoundTripLatency;
+
         // running average for the round trip latency
-        avgRoundTripLatency = (avgRoundTripLatency + ((roundTripLatency - avgRoundTripLatency)/midiMessagesReceived));
+        avgRoundTripLatency = (prevAvgRoundTripLatency + (((long double)roundTripLatency - prevAvgRoundTripLatency) / (long double)midiMessagesReceived));
+
+        stdevRoundTripLatency = stdevRoundTripLatency + ((roundTripLatency - prevAvgRoundTripLatency) * (roundTripLatency - avgRoundTripLatency));
 
         // Save the latency for the very first message
         if (1 == midiMessagesReceived)
@@ -314,22 +331,23 @@ void Midi2DriverTests::TestMidiIO_Latency(BOOL Cyclic, BOOL DelayedMessages)
         }
     }
 
+    ULONG requestedBufferSize = PAGE_SIZE;
+    VERIFY_SUCCEEDED(GetRequiredBufferSize(requestedBufferSize));
+
     LOG_OUTPUT(L"Initializing midi in");
-    VERIFY_SUCCEEDED(midiInDevice.Initialize(midiDeviceEnum.m_AvailableMidiInPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiInPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiInPins[0].UMP, PAGE_SIZE, &mmcssTaskId, this));
+    VERIFY_SUCCEEDED(midiInDevice.Initialize(midiDeviceEnum.m_AvailableMidiInPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiInPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiInPins[0].UMP, requestedBufferSize, &mmcssTaskId, this));
 
     LOG_OUTPUT(L"Initializing midi out");
-    VERIFY_SUCCEEDED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiOutPins[0].UMP, PAGE_SIZE, &mmcssTaskId));
+    VERIFY_SUCCEEDED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiOutPins[0].UMP, requestedBufferSize, &mmcssTaskId));
 
     LOG_OUTPUT(L"Writing midi data");
 
-    LONGLONG firstSendLatency {0};
-    LONGLONG lastSendLatency {0};
-    LONGLONG avgSendLatency {0};
-    LONGLONG minSendLatency {0xffffffff};
-    LONGLONG maxSendLatency {0};
-
-    // stabilize the system before we start testing.
-    Sleep(1000);
+    LONGLONG firstSendLatency{ 0 };
+    LONGLONG lastSendLatency{ 0 };
+    long double avgSendLatency{ 0 };
+    long double stddevSendLatency{ 0 };
+    LONGLONG minSendLatency{ 0xffffffff };
+    LONGLONG maxSendLatency{ 0 };
 
     for (UINT i = 0; i < expectedMessageCount; i++)
     {
@@ -343,7 +361,7 @@ void Midi2DriverTests::TestMidiIO_Latency(BOOL Cyclic, BOOL DelayedMessages)
         LONGLONG sendLatency {0};
 
         QueryPerformanceCounter(&qpcBefore);
-        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData, sizeof(UMP128), qpcBefore.QuadPart));
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void*) &g_MidiTestData, sizeof(UMP32), qpcBefore.QuadPart));
         QueryPerformanceCounter(&qpcAfter);
 
         // track the min, max, and average time that the send call took,
@@ -358,7 +376,11 @@ void Midi2DriverTests::TestMidiIO_Latency(BOOL Cyclic, BOOL DelayedMessages)
             maxSendLatency = sendLatency;
         }
 
-        avgSendLatency = (avgSendLatency + ((sendLatency - avgSendLatency)/(((LONGLONG)i)+1)));
+        long double prevAvgSendLatency = avgSendLatency;
+
+        avgSendLatency = (prevAvgSendLatency + (((long double)sendLatency - prevAvgSendLatency) / ((long double)i + 1)));
+
+        stddevSendLatency = stddevSendLatency + ((sendLatency - prevAvgSendLatency) * (sendLatency - avgSendLatency));
 
         if (0 == i)
         {
@@ -372,45 +394,64 @@ void Midi2DriverTests::TestMidiIO_Latency(BOOL Cyclic, BOOL DelayedMessages)
     }
 
     // wait for up to 30 seconds for all the messages
-    if(!allMessagesReceived.wait(30000))
+    if(!allMessagesReceived.wait(5000))
     {
         LOG_OUTPUT(L"Failure waiting for messages, timed out.");
     }
 
     // wait to see if any additional messages come in (there shouldn't be any)
-    Sleep(500);
+    Sleep(100);
 
     LOG_OUTPUT(L"%d messages expected, %d received", expectedMessageCount, midiMessagesReceived);
     VERIFY_IS_TRUE(midiMessagesReceived == expectedMessageCount);
 
-    double messagesPerSecond {0};
-    double elapsedMs {0};
+    long double elapsedMs = (lastReceive.QuadPart - firstSend.QuadPart) / qpcPerMs;
+    long double messagesPerSecond = ((long double)expectedMessageCount) / (elapsedMs / 1000.);
 
-    elapsedMs = (lastReceive.QuadPart - firstSend.QuadPart) / qpcPerMs;
-    messagesPerSecond = expectedMessageCount / (elapsedMs / 1000.);
+    long double rtLatency = 1000. * (avgRoundTripLatency / qpcPerMs);
+    long double firstRtLatency = 1000. * (firstRoundTripLatency / qpcPerMs);
+    long double lastRtLatency = 1000. * (lastRoundTripLatency / qpcPerMs);
+    long double minRtLatency = 1000. * (minRoundTripLatency / qpcPerMs);
+    long double maxRtLatency = 1000. * (maxRoundTripLatency / qpcPerMs);
+    long double stddevRtLatency = 1000. * (sqrt(stdevRoundTripLatency / (long double)midiMessagesReceived) / qpcPerMs);
+
+    long double avgSLatency = 1000. * (avgSendLatency / qpcPerMs);
+    long double firstSLatency = 1000. * (firstSendLatency / qpcPerMs);
+    long double lastSLatency = 1000. * (lastSendLatency / qpcPerMs);
+    long double minSLatency = 1000. * (minSendLatency / qpcPerMs);
+    long double maxSLatency = 1000. * (maxSendLatency / qpcPerMs);
+    long double stddevSLatency = 1000. * (sqrt(stddevSendLatency / (long double)midiMessagesReceived) / qpcPerMs);
+
+    long double avgRLatency = 1000. * (avgReceiveLatency / qpcPerMs);
+    long double maxRLatency = 1000. * (maxReceiveLatency / qpcPerMs);
+    long double minRLatency = 1000. * (minReceiveLatency / qpcPerMs);
+    long double stddevRLatency = 1000. * (sqrt(stdevReceiveLatency / ((long double)midiMessagesReceived - 1.)) / qpcPerMs);
 
     LOG_OUTPUT(L"****************************************************************************");
     LOG_OUTPUT(L"Elapsed time from start of send to final receive %g ms", elapsedMs);
     LOG_OUTPUT(L"Messages per second %.9g", messagesPerSecond);
     LOG_OUTPUT(L" ");
     LOG_OUTPUT(L"RoundTrip latencies");
-    LOG_OUTPUT(L"Average round trip latency %g ms", avgRoundTripLatency / qpcPerMs);
-    LOG_OUTPUT(L"First message round trip latency %g ms", firstRoundTripLatency / qpcPerMs );
-    LOG_OUTPUT(L"Last message round trip latency %g ms", lastRoundTripLatency / qpcPerMs );
-    LOG_OUTPUT(L"Smallest round trip latency %g ms", minRoundTripLatency / qpcPerMs);
-    LOG_OUTPUT(L"Largest round trip latency %g ms", maxRoundTripLatency / qpcPerMs);
+    LOG_OUTPUT(L"Average round trip latency %g micro seconds", rtLatency);
+    LOG_OUTPUT(L"First message round trip latency %g micro seconds", firstRtLatency);
+    LOG_OUTPUT(L"Last message round trip latency %g micro seconds", lastRtLatency);
+    LOG_OUTPUT(L"Smallest round trip latency %g micro seconds", minRtLatency);
+    LOG_OUTPUT(L"Largest round trip latency %g micro seconds", maxRtLatency);
+    LOG_OUTPUT(L"Standard deviation %g micro seconds", stddevRtLatency);
     LOG_OUTPUT(L" ");
     LOG_OUTPUT(L"Message send jitter");
-    LOG_OUTPUT(L"Average message send %g ms", avgSendLatency / qpcPerMs);
-    LOG_OUTPUT(L"First message send %g ms", firstSendLatency / qpcPerMs);
-    LOG_OUTPUT(L"Last message send %g ms", lastSendLatency / qpcPerMs);
-    LOG_OUTPUT(L"Smallest message send %g ms", minSendLatency / qpcPerMs);
-    LOG_OUTPUT(L"Largest message send %g ms", maxSendLatency / qpcPerMs);
+    LOG_OUTPUT(L"Average message send %g micro seconds", avgSLatency);
+    LOG_OUTPUT(L"First message send %g micro seconds", firstSLatency);
+    LOG_OUTPUT(L"Last message send %g micro seconds", lastSLatency);
+    LOG_OUTPUT(L"Smallest message send %g micro seconds", minSLatency);
+    LOG_OUTPUT(L"Largest message send %g micro seconds", maxSLatency);
+    LOG_OUTPUT(L"Standard deviation %g micro seconds", stddevSLatency);
     LOG_OUTPUT(L" ");
     LOG_OUTPUT(L"Message receive jitter");
-    LOG_OUTPUT(L"Average message receive %g ms", avgReceiveLatency / qpcPerMs);
-    LOG_OUTPUT(L"Largest message receive %g ms", maxReceiveLatency / qpcPerMs);
-    LOG_OUTPUT(L"Smallest message receive %g ms", minReceiveLatency / qpcPerMs);
+    LOG_OUTPUT(L"Average message receive %g micro seconds", avgRLatency);
+    LOG_OUTPUT(L"Largest message receive %g micro seconds", minRLatency);
+    LOG_OUTPUT(L"Smallest message receive %g micro seconds", maxRLatency);
+    LOG_OUTPUT(L"Standard deviation %g micro seconds", stddevRLatency);
     LOG_OUTPUT(L" ");
     LOG_OUTPUT(L"****************************************************************************");
 
@@ -454,7 +495,6 @@ bool Midi2DriverTests::TestCleanup()
 bool Midi2DriverTests::ClassSetup()
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
-    
     return true;
 }
 

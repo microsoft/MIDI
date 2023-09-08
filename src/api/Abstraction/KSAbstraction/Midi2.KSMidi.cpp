@@ -53,10 +53,10 @@ CMidi2KSMidi::Initialize(
 
     auto deviceInfo = DeviceInformation::CreateFromIdAsync(Device, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
 
-    auto prop = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiPort_KsFilterInterfaceId);
+    auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_KsFilterInterfaceId));
     filterInterfaceId = winrt::unbox_value<winrt::hstring>(prop).c_str();
 
-    prop = deviceInfo.Properties().Lookup(L"System.Devices.InterfaceClassGuid");
+    prop = deviceInfo.Properties().Lookup(winrt::to_hstring(L"System.Devices.InterfaceClassGuid"));
     interfaceClass = winrt::unbox_value<winrt::guid>(prop);
 
     if (winrt::guid(DEVINTERFACE_MIDI_INPUT) == interfaceClass ||
@@ -73,13 +73,13 @@ CMidi2KSMidi::Initialize(
         winrt::guid(DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI) == interfaceClass)
     {
         // UMP interface class, determine the endpoint capabilities.
-        prop = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiPort_SupportsUMPFormat);
+        prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_SupportsUMPFormat));
         ump = winrt::unbox_value<bool>(prop);
 
-        prop = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiPort_SupportsMidiOneFormat);
+        prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_SupportsMidiOneFormat));
         midiOne = winrt::unbox_value<bool>(prop);
 
-        prop = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiPort_SupportsLooped);
+        prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_SupportsLooped));
         looped = winrt::unbox_value<bool>(prop);
     }
     else
@@ -92,15 +92,15 @@ CMidi2KSMidi::Initialize(
 
     if (Flow == MidiFlowBidirectional)
     {
-        prop = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiPort_InPinId);
+        prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_InPinId));
         inPinId = outPinId = winrt::unbox_value<uint32_t>(prop);
 
-        prop = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiPort_OutPinId);
+        prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_OutPinId));
         outPinId = outPinId = winrt::unbox_value<uint32_t>(prop);
     }
     else
     {
-        prop = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiPort_KsPinId);
+        prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_KsPinId));
         inPinId = outPinId = winrt::unbox_value<uint32_t>(prop);
     }
 
@@ -162,7 +162,7 @@ CMidi2KSMidi::SendMidiMessage(
 {
     if (m_MidiOutDevice)
     {
-        return m_MidiOutDevice->SendMidiMessage(Data, Length, Position);
+        return m_MidiOutDevice->SendMidiMessage(Data, Length, Position);;
     }
 
     return E_ABORT;

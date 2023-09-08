@@ -25,7 +25,7 @@ CMidiDevicePipe::Initialize(
 
     auto deviceInfo = DeviceInformation::CreateFromIdAsync(Device, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
 
-    auto prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_AbstractionLayer);
+    auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_AbstractionLayer));
     m_AbstractionGuid = winrt::unbox_value<winrt::guid>(prop);
 
     if (MidiFlowBidirectional == CreationParams->Flow)
@@ -133,5 +133,5 @@ CMidiDevicePipe::Callback(
         Client.second->SendMidiMessage(Data, Length, Position);
     }
 
-    return E_ABORT;
+    return S_OK;
 }

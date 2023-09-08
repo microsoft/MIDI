@@ -32,12 +32,14 @@ using unique_swd_string = wil::unique_any<PWSTR, decltype(&::SwMemFree), ::SwMem
 
 typedef struct _MIDIPORT
 {
-    MidiFlow MidiFlow;
-    GUID InterfaceCategory;
-    SWDEVICESTATE SwDeviceState;         // SWD creation state
+    MidiFlow MidiFlow{ MidiFlowIn };
+    const GUID* InterfaceCategory{ nullptr };
+    SWDEVICESTATE SwDeviceState{ CreatePending };         // SWD creation state
     unique_hswdevice SwDevice;           // Handle to the SWD created for the MIDI port
     unique_swd_string DeviceInterfaceId; // SWD interface ID for the MIDI port
     std::wstring InstanceId;
+    std::wstring Enumerator;
+    HRESULT hr{ S_OK };
 } MIDIPORT, *PMIDIPORT;
 
 class CMidiDeviceManager  : 

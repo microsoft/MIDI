@@ -8,14 +8,9 @@
 
 #include <windows.h>
 
-#include <hstring.h>
-
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
-#include <assert.h>
-#include <devioctl.h>
-#include <wrl\implements.h>
 #include <wrl\module.h>
 #include <wrl\event.h>
 #include <ks.h>
@@ -25,7 +20,6 @@
 #include <wil\resource.h>
 #include <wil\result_macros.h>
 #include <wil\tracelogging.h>
-#include <ppltasks.h>
 
 #include <SDKDDKVer.h>
 
@@ -46,7 +40,6 @@
 
 #include "SWDevice.h"
 #include <initguid.h>
-#include "setupapi.h"
 #include "Devpkey.h"
 #include <mmdeviceapi.h>
 

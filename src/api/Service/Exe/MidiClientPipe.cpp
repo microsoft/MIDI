@@ -57,7 +57,7 @@ CMidiClientPipe::Initialize(
         // Midi in controls, buffering, and eventing.
         RETURN_IF_FAILED(CreateMappedDataBuffer(CreationParams->BufferSize, midiInPipe->DataBuffer.get(), &midiInPipe->Data));
         RETURN_IF_FAILED(CreateMappedRegisters(midiInPipe->RegistersBuffer.get(), &midiInPipe->Registers));
-        midiInPipe->WriteEvent.create();
+        midiInPipe->WriteEvent.create(wil::EventOptions::ManualReset);
 
         RETURN_LAST_ERROR_IF(FALSE == DuplicateHandle(GetCurrentProcess(), midiInPipe->DataBuffer->FileMapping.get(), GetCurrentProcess(), &(Client->MidiInDataFileMapping), DUPLICATE_SAME_ACCESS, TRUE, 0));
         RETURN_LAST_ERROR_IF(FALSE == DuplicateHandle(GetCurrentProcess(), midiInPipe->RegistersBuffer->FileMapping.get(), GetCurrentProcess(), &(Client->MidiInRegisterFileMapping), DUPLICATE_SAME_ACCESS, TRUE, 0));
@@ -80,7 +80,7 @@ CMidiClientPipe::Initialize(
         // Midi out controls, buffering, and eventing
         RETURN_IF_FAILED(CreateMappedDataBuffer(CreationParams->BufferSize, midiOutPipe->DataBuffer.get(), &midiOutPipe->Data));
         RETURN_IF_FAILED(CreateMappedRegisters(midiOutPipe->RegistersBuffer.get(), &midiOutPipe->Registers));
-        midiOutPipe->WriteEvent.create();
+        midiOutPipe->WriteEvent.create(wil::EventOptions::ManualReset);
 
         RETURN_LAST_ERROR_IF(FALSE == DuplicateHandle(GetCurrentProcess(), midiOutPipe->DataBuffer->FileMapping.get(), GetCurrentProcess(), &(Client->MidiOutDataFileMapping), DUPLICATE_SAME_ACCESS, FALSE, 0));
         RETURN_LAST_ERROR_IF(FALSE == DuplicateHandle(GetCurrentProcess(), midiOutPipe->RegistersBuffer->FileMapping.get(), GetCurrentProcess(), &(Client->MidiOutRegisterFileMapping), DUPLICATE_SAME_ACCESS, FALSE, 0));

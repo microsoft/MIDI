@@ -10,14 +10,12 @@ void Midi2ClientTests::TestMidiClient()
 bool Midi2ClientTests::ClassSetup()
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
-    VERIFY_SUCCEEDED(Windows::Foundation::Initialize(RO_INIT_MULTITHREADED));
     
     return true;
 }
 
 bool Midi2ClientTests::ClassCleanup()
 {
-    Windows::Foundation::Uninitialize();
     return true;
 }
 

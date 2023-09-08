@@ -118,7 +118,6 @@ VOID SvcInstall()
         NULL,
         NULL,
         NULL));
-
     if (!service)
     {
         LOG_LAST_ERROR_MSG("Cannot install service, CreateService failed");
@@ -130,7 +129,6 @@ VOID SvcInstall()
         LOG_LAST_ERROR_MSG("Starting the service failed during service install");
         return;
     }
-
     // Set the service description so it's not just blank. This should be localized
     // in the future with "@[path]dllname,-strID"
 
@@ -143,7 +141,6 @@ VOID SvcInstall()
         LOG_LAST_ERROR_MSG("Changing service description failed");
         return;
     }
-
 }
 
 //
@@ -233,8 +230,6 @@ VOID SvcUninstall()
 //
 VOID SvcInit()
 {
-    auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
-
     // service control event
     g_SvcStopEvent.reset(CreateEvent(NULL, TRUE, FALSE, NULL));
     if (NULL == g_SvcStopEvent)
@@ -373,6 +368,8 @@ int __cdecl _tmain(_In_ int ArgC, _In_reads_(ArgC) TCHAR *ArgV[])
     // If command-line parameter is "install", install the service. 
     // Otherwise, the service is probably being started by the SCM.
     wil::SetResultTelemetryFallback(MidiSrvTelemetryProvider::FallbackTelemetryCallback);
+
+    winrt::init_apartment();
 
     if (ArgC >= 2 && lstrcmpi(ArgV[1], TEXT("install")) == 0)
     {
