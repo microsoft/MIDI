@@ -33,6 +33,10 @@ namespace Windows.Devices.Midi2
                                                        Windows.Devices.Midi2.IMidiOutputConnection,
                                                        Windows.Devices.Midi2.IMidiEndpointConnection
     {
+        // Id from Windows. This can be used to retrieve the MidiDeviceInformation object with the PnP properties
+        String InputDeviceId{ get; };
+        String OutputDeviceId{ get; };
+
         IVector<IMidiEndpointMessageListener> MessageListeners{ get; };
 
     }

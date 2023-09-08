@@ -67,7 +67,6 @@ namespace Windows::Devices::Midi2::Internal
     }
 
 
-
     template <typename TEndpoint>
     void* InternalMidiMessageSenderHelper<TEndpoint>::GetUmpDataPointer(
         _In_ winrt::Windows::Devices::Midi2::IMidiUmp const& ump, 

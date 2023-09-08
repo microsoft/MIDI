@@ -24,7 +24,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
         hstring Id() const noexcept { return m_id; }
-        hstring DeviceId() const noexcept { return m_deviceId; }
+        hstring InputDeviceId() const noexcept { return m_inputDeviceId; }
+        hstring OutputDeviceId() const noexcept { return m_outputDeviceId; }
         bool IsOpen() const noexcept { return m_isOpen; }
         IMidiEndpointDefinedConnectionSettings Settings() noexcept { return m_settings; }
 
@@ -106,7 +107,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     private:
         hstring m_id{};
-        hstring m_deviceId{};
+        hstring m_inputDeviceId{};
+        hstring m_outputDeviceId{};
+
         IInspectable m_tag{ nullptr };
         winrt::Windows::Devices::Midi2::MidiEndpointConnectionSharing m_activeSharingMode{ winrt::Windows::Devices::Midi2::MidiEndpointConnectionSharing::Unknown };
 
@@ -115,7 +118,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         IMidiEndpointDefinedConnectionSettings m_settings{ nullptr };
 
         winrt::com_ptr<IMidiAbstraction> m_serviceAbstraction{ nullptr };
-        winrt::com_ptr<IMidiBiDi> m_endpointInterface{ nullptr };
+        winrt::com_ptr<IMidiIn> m_inputEndpointInterface{ nullptr };
+        winrt::com_ptr<IMidiOut> m_outputEndpointInterface{ nullptr };
+
         internal::InternalMidiMessageReceiverHelper m_messageReceiverHelper;
         internal::InternalMidiMessageSenderHelper<IMidiBiDi> m_messageSenderHelper;
 

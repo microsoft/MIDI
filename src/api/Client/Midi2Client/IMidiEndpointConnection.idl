@@ -27,9 +27,6 @@ namespace Windows.Devices.Midi2
         // just a map key for this connection.
         String Id{ get; };
 
-        // Id from Windows. This can be used to retrieve the MidiDeviceInformation object with the PnP properties
-        String DeviceId{ get; };
-
         // app-supplied optional tag. Can hold whatever information they may want to show in a list
         IInspectable Tag{ get; set; };
 

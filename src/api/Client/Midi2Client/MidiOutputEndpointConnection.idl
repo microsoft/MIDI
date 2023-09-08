@@ -29,9 +29,9 @@ namespace Windows.Devices.Midi2
     {
         // Get the enumeration device selector for all compatible devices
         static String GetDeviceSelector();
-        //static String GetDeviceSelectorForLoopbackEndpoint();
 
+        // Id from Windows. This can be used to retrieve the MidiDeviceInformation object with the PnP properties
+        String DeviceId{ get; };
 
-        //Boolean Open();
     }
 }

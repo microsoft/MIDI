@@ -34,22 +34,14 @@ namespace Windows.Devices.Midi2
                                                        Windows.Devices.Midi2.IMidiOutputConnection,
                                                        Windows.Devices.Midi2.IMidiEndpointConnection
     {
-        //MidiEndpointConnection();
-
         // Get the enumeration device selector for all compatible devices
         static String GetDeviceSelector();
-        //static String GetDeviceSelectorForLoopbackEndpoint();
+
+        // Id from Windows. This can be used to retrieve the MidiDeviceInformation object with the PnP properties
+        String DeviceId{ get; };
+
 
         IVector<IMidiEndpointMessageListener> MessageListeners{ get; };
 
-        //IVectorView<MidiFunctionBlock> FunctionBlocks{ get; };
-        //MidiEndpointInformation EndpointInformation{ get; };
-
-        //event Windows.Foundation.TypedEventHandler<IInspectable, MidiFunctionBlocksUpdatedEventArgs> FunctionBlocksUpdated;
-        //event Windows.Foundation.TypedEventHandler<IInspectable, MidiEndpointInformationUpdatedEventArgs> EndpointInformationUpdated;
-
-        // Same thing with other discovery calls, endpoint info, etc.
-
-        //Boolean Open();
     }
 }
