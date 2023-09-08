@@ -11,7 +11,7 @@
 
 using namespace winrt::Windows::Foundation;
 
-int main(int argc, char* argv[]) 
+int __cdecl main(int argc, char* argv[]) 
 {
     std::cout << "Custom main for Catch2" << std::endl;
 

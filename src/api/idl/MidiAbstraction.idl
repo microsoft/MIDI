@@ -133,7 +133,7 @@ interface IMidiApiEndpointManagerExtension : IUnknown
 {
     HRESULT ApplyConfiguration(         // IMidiEndpointManager could also include a function like this for changing device/endpoint names etc. TBD.
         [in]LPCWSTR configurationJson,  // typically this contains specs for one or more endpoints and any routing
-        [out]LPCWSTR resultJson         // contains Ids of created endpoints, or other status info.
+        [out]LPWSTR resultJson         // contains Ids of created endpoints, or other status info.
     );
 
 };

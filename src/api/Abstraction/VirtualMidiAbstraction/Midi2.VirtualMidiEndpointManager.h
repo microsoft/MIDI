@@ -82,7 +82,7 @@ public:
 
     STDMETHOD(ApplyConfiguration(
         _In_ LPCWSTR configurationJson,
-        _Out_ LPCWSTR resultJson
+        _Out_ LPWSTR resultJson
     ));
 
 

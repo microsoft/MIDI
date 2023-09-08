@@ -102,7 +102,6 @@ void SwMidiParentDeviceCreateCallback(__in HSWDEVICE /*hSwDevice*/, __in HRESULT
 
 
 
-_Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiEndpointManager::CreateParentDevice()
 {
@@ -211,7 +210,6 @@ CMidi2NetworkMidiEndpointManager::CreateParentDevice()
 
 // this will be called from the runtime endpoint creation interface
 
-_Use_decl_annotations_
 HRESULT 
 CMidi2NetworkMidiEndpointManager::CreateEndpoint()
 {
@@ -285,7 +283,6 @@ CMidi2NetworkMidiEndpointManager::CreateEndpoint()
 
 
 
-_Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiEndpointManager::Cleanup()
 {

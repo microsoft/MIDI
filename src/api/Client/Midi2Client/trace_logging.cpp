@@ -69,10 +69,11 @@ namespace Windows::Devices::Midi2::Internal
 
 
     // may want to allow passing in a keyword so we can be finer-grained
+    _Use_decl_annotations_
     void LogHresultError(
-        _In_ const char* location, 
-        _In_ const wchar_t* message, 
-        _In_ winrt::hresult_error const& ex) noexcept
+        const char* location, 
+        const wchar_t* message, 
+        winrt::hresult_error const& ex) noexcept
     {
         TraceLoggingWrite(
             g_hLoggingProvider,
@@ -86,9 +87,10 @@ namespace Windows::Devices::Midi2::Internal
         );
     }
 
+    _Use_decl_annotations_
     void LogGeneralError(
-        _In_ const char* location, 
-        _In_ const wchar_t* message) noexcept
+        const char* location, 
+        const wchar_t* message) noexcept
     {
         TraceLoggingWrite(
             g_hLoggingProvider,
@@ -100,11 +102,12 @@ namespace Windows::Devices::Midi2::Internal
         );
     }
 
+    _Use_decl_annotations_
     void LogUmpDataValidationError(
-        _In_ const char* location, 
-        _In_ const wchar_t* message, 
-        _In_ const uint32_t firstWord, 
-        _In_ const uint64_t timestamp) noexcept
+        const char* location, 
+        const wchar_t* message, 
+        const uint32_t firstWord, 
+        const uint64_t timestamp) noexcept
     {
         TraceLoggingWrite(
             g_hLoggingProvider,
@@ -118,11 +121,12 @@ namespace Windows::Devices::Midi2::Internal
         );
     }
 
+    _Use_decl_annotations_
     void LogUmpSizeValidationError(
-        _In_ const char* location, 
-        _In_ const wchar_t* message, 
-        _In_ const uint32_t providedSizeInWords, 
-        _In_ const uint64_t timestamp) noexcept
+        const char* location, 
+        const wchar_t* message, 
+        const uint32_t providedSizeInWords, 
+        const uint64_t timestamp) noexcept
     {
         TraceLoggingWrite(
             g_hLoggingProvider,
