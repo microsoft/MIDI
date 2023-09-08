@@ -6,12 +6,16 @@
 #include <mmdeviceapi.h>
 #include "MidiTestCommon.h"
 #include "MidiAbstraction.h"
+
+#include <initguid.h>
 #include "MidiDefs.h"
 #include "MidiXProc.h"
 #include "Midi2ServiceTests.h"
 
 #include "MidiKsCommon.h"
 #include "MidiSwEnum.h"
+
+#include "Midi2MidiSrvAbstraction.h"
 
 _Use_decl_annotations_
 void * midl_user_allocate(size_t size)
@@ -112,8 +116,8 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
     DWORD MmCssTaskId{ 0 };
 
     MidiSWDeviceEnum midiDeviceEnum;
-    
-    VERIFY_SUCCEEDED(midiDeviceEnum.EnumerateDevices());
+
+    VERIFY_SUCCEEDED(midiDeviceEnum.EnumerateDevices((GUID) __uuidof(Midi2MidiSrvAbstraction)));
     UINT numMidiBidirectional = midiDeviceEnum.GetNumMidiDevices(MidiFlowBidirectional);
 
     VERIFY_IS_TRUE(numMidiBidirectional > 0);
@@ -269,14 +273,12 @@ bool Midi2ServiceTests::TestCleanup()
 bool Midi2ServiceTests::ClassSetup()
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
-    VERIFY_SUCCEEDED(Windows::Foundation::Initialize(RO_INIT_MULTITHREADED));
 
     return true;
 }
 
 bool Midi2ServiceTests::ClassCleanup()
 {
-    Windows::Foundation::Uninitialize();
     return true;
 }
 

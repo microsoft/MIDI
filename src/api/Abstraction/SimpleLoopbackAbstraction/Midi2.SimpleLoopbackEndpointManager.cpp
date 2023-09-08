@@ -82,7 +82,6 @@ void SwMidiParentDeviceCreateCallback(__in HSWDEVICE /*hSwDevice*/, __in HRESULT
 
 
 
-_Use_decl_annotations_
 HRESULT
 CMidi2SimpleLoopbackEndpointManager::CreateParentDevice()
 {
@@ -155,7 +154,7 @@ CMidi2SimpleLoopbackEndpointManager::CreateParentDevice()
 
 _Use_decl_annotations_
 HRESULT 
-CMidi2SimpleLoopbackEndpointManager::CreateEndpoint(_In_ std::wstring const instanceId, _In_ std::wstring const name, _In_ MidiFlow const flow)
+CMidi2SimpleLoopbackEndpointManager::CreateEndpoint(std::wstring const instanceId, std::wstring const name, MidiFlow const flow)
 {
     //put all of the devproperties we want into arrays and pass into ActivateEndpoint:
 
@@ -205,7 +204,6 @@ CMidi2SimpleLoopbackEndpointManager::CreateEndpoint(_In_ std::wstring const inst
 
 
 
-_Use_decl_annotations_
 HRESULT
 CMidi2SimpleLoopbackEndpointManager::Cleanup()
 {

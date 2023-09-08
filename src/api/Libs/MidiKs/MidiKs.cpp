@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 #include <windows.h>
 #include <cguid.h>
-#include <memory>
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Foundation.Collections.h>
+#include <winrt/Windows.Devices.Enumeration.h>
 
 #include <devioctl.h>
 #include <ks.h>
@@ -77,7 +79,7 @@ KSMidiDevice::OpenStream(ULONG& BufferSize
         m_CrossProcessMidiPump.reset(new (std::nothrow) CMidiXProc());
         RETURN_IF_NULL_ALLOC(m_CrossProcessMidiPump);
 
-        m_MidiPipe->WriteEvent.create();
+        m_MidiPipe->WriteEvent.create(wil::EventOptions::ManualReset);
 
         // if we're looped (cyclic buffer), we need to
         // configure the buffer, registers, and event.

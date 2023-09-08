@@ -34,7 +34,7 @@ interface IMidiDeviceManagerInterface : IUnknown
         [in] MidiFlow MidiFlow,
         [in] ULONG IntPropertyCount,
         [in] ULONG DevPropertyCount,
-        [in, annotation("_In_opt_")] PVOID DnterfaceDevProperties,
+        [in, annotation("_In_opt_")] PVOID InterfaceDevProperties,
         [in, annotation("_In_opt_")] PVOID DeviceDevProperties,
         [in, annotation("_In_opt_")] PVOID CreateInfo
     );
@@ -46,5 +46,4 @@ interface IMidiDeviceManagerInterface : IUnknown
     HRESULT RemoveEndpoint(
         [in] LPCWSTR InstanceId
     );
-
 };

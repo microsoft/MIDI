@@ -17,6 +17,7 @@ public:
     BOOL MidiOne{ FALSE };
     MidiFlow Flow{ MidiFlowOut };
     BOOL CreateUMPOnly{ FALSE };
+    HRESULT SwdCreation{ S_OK };
 } MIDI_PIN_INFO, *PMIDI_PIN_INFO;
 
 class CMidi2KSMidiEndpointManager : 

@@ -167,7 +167,7 @@ CMidi2MidiSrv::SendMidiMessage(
 {
     if (m_MidiPump)
     {
-        return m_MidiPump->SendMidiMessage(Data, Length, Position);
+        return m_MidiPump->SendMidiMessage(Data, Length, Position);;
     }
 
     return E_ABORT;

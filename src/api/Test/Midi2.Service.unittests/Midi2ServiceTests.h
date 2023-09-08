@@ -3,6 +3,13 @@
 
 #include <WexTestClass.h>
 
+MODULE_SETUP(ModuleSetup);
+bool ModuleSetup()
+{
+    winrt::init_apartment();
+    return true;
+}
+
 class Midi2ServiceTests
     : public WEX::TestClass<Midi2ServiceTests>,
     public IMidiCallback
@@ -10,7 +17,6 @@ class Midi2ServiceTests
 public:
 
     BEGIN_TEST_CLASS(Midi2ServiceTests)
-        TEST_CLASS_PROPERTY(L"ThreadingModel", L"MTA")
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.KSAbstraction.dll")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Minmidi.sys")

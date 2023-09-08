@@ -33,10 +33,10 @@ CMidiDeviceManager::Initialize(std::shared_ptr<CMidiPerformanceManager>& Perform
 
 typedef struct _CREATECONTEXT
 {
-    PMIDIPORT MidiPort;
+    PMIDIPORT MidiPort{ nullptr };
     wil::unique_event creationCompleted{wil::EventOptions::None};
-    DEVPROPERTY* InterfaceDevProperties;
-    ULONG IntPropertyCount;
+    DEVPROPERTY* InterfaceDevProperties{ nullptr };
+    ULONG IntPropertyCount{ 0 };
 } CREATECONTEXT, * PCREATECONTEXT;
 
 void SwMidiPortCreateCallback(__in HSWDEVICE hSwDevice, __in HRESULT CreationResult, __in_opt PVOID pContext, __in_opt PCWSTR /* pszDeviceInstanceId */)
@@ -46,23 +46,21 @@ void SwMidiPortCreateCallback(__in HSWDEVICE hSwDevice, __in HRESULT CreationRes
     // interface registration has started, assume
     // failure
     creationContext->MidiPort->SwDeviceState = SWDEVICESTATE::Failed;
+    creationContext->MidiPort->hr = CreationResult;
 
-    LOG_IF_FAILED(CreationResult);
-
-    if (SUCCEEDED(CreationResult))
+    if (SUCCEEDED(creationContext->MidiPort->hr))
     {
-        CreationResult = SwDeviceInterfaceRegister(
+        creationContext->MidiPort->hr = SwDeviceInterfaceRegister(
             hSwDevice,
-            &(creationContext->MidiPort->InterfaceCategory),
+            creationContext->MidiPort->InterfaceCategory,
             nullptr,
             creationContext->IntPropertyCount,
             creationContext->InterfaceDevProperties,
             TRUE,
             wil::out_param(creationContext->MidiPort->DeviceInterfaceId));
-        LOG_IF_FAILED(CreationResult);
     }
 
-    if (SUCCEEDED(CreationResult))
+    if (SUCCEEDED(creationContext->MidiPort->hr))
     {
         // success, mark the port as created
         creationContext->MidiPort->SwDeviceState = SWDEVICESTATE::Created;
@@ -154,7 +152,6 @@ CMidiDeviceManager::ActivateEndpointInternal
 )
 {
     std::unique_ptr<MIDIPORT> midiPort = std::make_unique<MIDIPORT>();
-    CREATECONTEXT creationContext;
 
     RETURN_IF_NULL_ALLOC(midiPort);
 
@@ -163,79 +160,97 @@ CMidiDeviceManager::ActivateEndpointInternal
 
     if (AssociatedInstanceId)
     {
-        // add the items to the vector
+        // add any additional required items to the vector
         interfaceProperties.push_back({ {PKEY_MIDI_AssociatedUMP, DEVPROP_STORE_SYSTEM, nullptr},
                    DEVPROP_TYPE_STRING, static_cast<ULONG>((wcslen(AssociatedInstanceId) + 1) * sizeof(WCHAR)), (PVOID)AssociatedInstanceId });
+    }
+
+    midiPort->InstanceId = CreateInfo->pszInstanceId;
+    midiPort->MidiFlow = MidiFlow;
+    midiPort->Enumerator = MidiOne?AUDIO_DEVICE_ENUMERATOR : MIDI_DEVICE_ENUMERATOR;
+
+    if (MidiOne)
+    {
+        if (MidiFlow == MidiFlow::MidiFlowOut)
+        {
+            midiPort->InterfaceCategory = &DEVINTERFACE_MIDI_OUTPUT;
+        }
+        else if (MidiFlow == MidiFlow::MidiFlowIn)
+        {
+            midiPort->InterfaceCategory = &DEVINTERFACE_MIDI_INPUT;
+        }
+        else
+        {
+            RETURN_IF_FAILED(E_INVALIDARG);
+        }
+    }
+    else
+    {
+        if (MidiFlow == MidiFlow::MidiFlowOut)
+        {
+            midiPort->InterfaceCategory = &DEVINTERFACE_UNIVERSALMIDIPACKET_OUTPUT;
+        }
+        else if (MidiFlow == MidiFlow::MidiFlowIn)
+        {
+            midiPort->InterfaceCategory = &DEVINTERFACE_UNIVERSALMIDIPACKET_INPUT;
+        }
+        else if (MidiFlow == MidiFlow::MidiFlowBidirectional)
+        {
+            midiPort->InterfaceCategory = &DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI;
+        }
+        else
+        {
+            RETURN_IF_FAILED(E_INVALIDARG);
+        }
     }
 
     // lambdas can only be converted to a function pointer if they
     // don't do capture, so copy everything into the CREATECONTEXT
     // to share with the SwDeviceCreate callback.
+    CREATECONTEXT creationContext;
     creationContext.MidiPort = midiPort.get();
     creationContext.InterfaceDevProperties = interfaceProperties.data();
-    creationContext.IntPropertyCount = (ULONG) interfaceProperties.size();
+    creationContext.IntPropertyCount = (ULONG)interfaceProperties.size();
 
-    midiPort->SwDeviceState = SWDEVICESTATE::CreatePending;
-
-    midiPort->InstanceId = CreateInfo->pszInstanceId;
-    midiPort->MidiFlow = MidiFlow;
-
-    const GUID* interfaceCategory;
-    std::wstring enumeratorName;
-
-    if (MidiOne)
-    {
-        enumeratorName = AUDIO_DEVICE_ENUMERATOR;
-        if (MidiFlow == MidiFlow::MidiFlowOut)
-        {
-            interfaceCategory = &DEVINTERFACE_MIDI_OUTPUT;
-        }
-        else if (MidiFlow == MidiFlow::MidiFlowIn)
-        {
-            interfaceCategory = &DEVINTERFACE_MIDI_INPUT;
-        }
-        else
-        {
-            RETURN_IF_FAILED(E_UNEXPECTED);
-        }
-    }
-    else
-    {
-        enumeratorName = MIDI_DEVICE_ENUMERATOR;
-        if (MidiFlow == MidiFlow::MidiFlowOut)
-        {
-            interfaceCategory = &DEVINTERFACE_UNIVERSALMIDIPACKET_OUTPUT;
-        }
-        else if (MidiFlow == MidiFlow::MidiFlowIn)
-        {
-            interfaceCategory = &DEVINTERFACE_UNIVERSALMIDIPACKET_INPUT;
-        }
-        else if (MidiFlow == MidiFlow::MidiFlowBidirectional)
-        {
-            interfaceCategory = &DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI;
-        }
-        else
-        {
-            RETURN_IF_FAILED(E_UNEXPECTED);
-        }
-    }
-
-    midiPort->InterfaceCategory = *interfaceCategory;
-
-    RETURN_IF_FAILED(SwDeviceCreate(
-        enumeratorName.c_str(),
+    // create the devnode for the device
+    midiPort->hr = SwDeviceCreate(
+        midiPort->Enumerator.c_str(),
         ParentInstanceId,
         CreateInfo,
         DevPropertyCount,
         DeviceDevProperties,
         SwMidiPortCreateCallback,
         &creationContext,
-        wil::out_param(midiPort->SwDevice)));
+        wil::out_param(midiPort->SwDevice));
+    if (SUCCEEDED(midiPort->hr))
+    {
+        // wait for creation to complete
+        creationContext.creationCompleted.wait();
+    }
+    else if (HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS) == midiPort->hr)
+    {
+        // if the devnode already exists, then we likely only need to create/activate the interface, a previous
+        // call created the devnode. First, locate the matching SwDevice handle for the existing devnode.
+        auto item = std::find_if(m_MidiPorts.begin(), m_MidiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
+        {
+            // if this instance id already activated, then we cannot activate/create a second time,
+            if (midiPort->InstanceId == Port->InstanceId &&
+                midiPort->Enumerator == Port->Enumerator)
+            {
+                return true;
+            }
 
-    // wait for creation to complete
-    creationContext.creationCompleted.wait();
+            return false;
+        });
+
+        if (item != m_MidiPorts.end())
+        {
+            SwMidiPortCreateCallback(item->get()->SwDevice.get(), S_OK, &creationContext, nullptr);
+        }
+    }
 
     // confirm we were able to register the interface
+    RETURN_IF_FAILED(midiPort->hr);
     RETURN_HR_IF(E_FAIL, midiPort->SwDeviceState != SWDEVICESTATE::Created);
 
     if (DeviceInterfaceId)
@@ -304,7 +319,6 @@ CMidiDeviceManager::RemoveEndpoint
     return S_OK;
 }
 
-_Use_decl_annotations_
 HRESULT
 CMidiDeviceManager::Cleanup()
 {

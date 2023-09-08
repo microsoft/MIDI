@@ -6,6 +6,12 @@
 #define PAGE_SIZE 0x1000
 #endif
 
+// UMP 32 is 4 bytes
+#define MINIMUM_UMP_DATASIZE 4
+
+// UMP 128 is 16 bytes
+#define MAXIMUM_UMP_DATASIZE 16
+
 //
 // Defining new interface categories
 //
@@ -27,8 +33,8 @@ DEFINE_GUID(DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI, 0xe7cce071, 0x3c03, 0x423f, 0
 //     https://learn.microsoft.com/en-us/windows/win32/properties/building-property-handlers-property-schemas
 // and https://learn.microsoft.com/en-us/windows/win32/properties/propdesc-schema-entry
 
-#define STRING_PKEY_MIDI_AbstractionLayer L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},3"
-DEFINE_DEVPROPKEY(PKEY_MIDI_AbstractionLayer, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 3);     // DEVPROP_TYPE_UINT64
+#define STRING_PKEY_MIDI_AbstractionLayer L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},1"
+DEFINE_DEVPROPKEY(PKEY_MIDI_AbstractionLayer, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 1);     // DEVPROP_TYPE_UINT64
 
 #define STRING_PKEY_MIDI_AssociatedUMP L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},2"
 DEFINE_DEVPROPKEY(PKEY_MIDI_AssociatedUMP, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 2);     // DEVPROP_TYPE_UINT64
@@ -36,7 +42,6 @@ DEFINE_DEVPROPKEY(PKEY_MIDI_AssociatedUMP, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2
 // Provided as a property for convenience. BLE, NET, USB, etc.
 #define STRING_PKEY_MIDI_TransportMnemonic L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},10"
 DEFINE_DEVPROPKEY(PKEY_MIDI_TransportMnemonic, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 10);     // DEVPROP_TYPE_string
-
 
 // true if this device is a standard MIDI 2loopback device or part of a loopback pair of devices
 #define STRING_PKEY_MIDI_UmpLoopback L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},20"
@@ -51,16 +56,6 @@ DEFINE_DEVPROPKEY(PKEY_MIDI_UniqueIdentifier, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 
 // transport shouldn't use multi-client for endpoints (this is up for discussion in the Network MIDI 2.0 Working Group, for example)
 #define STRING_PKEY_MIDI_SupportsMultiClient L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},22"
 DEFINE_DEVPROPKEY(PKEY_MIDI_SupportsMultiClient, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 22);     // DEVPROP_TYPE_BOOLEAN
-
-
-
-
-
-
-
-
-
-
 
 using unique_mmcss_handle = wil::unique_any<HANDLE, decltype(&::AvRevertMmThreadCharacteristics), AvRevertMmThreadCharacteristics>;
 using unique_viewoffile = wil::unique_any<LPVOID, decltype(&::UnmapViewOfFile), UnmapViewOfFile>;

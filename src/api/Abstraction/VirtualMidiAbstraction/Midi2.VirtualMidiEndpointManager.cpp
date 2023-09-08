@@ -102,7 +102,6 @@ void SwMidiParentDeviceCreateCallback(__in HSWDEVICE /*hSwDevice*/, __in HRESULT
 
 
 
-_Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiEndpointManager::CreateParentDevice()
 {
@@ -211,7 +210,6 @@ CMidi2VirtualMidiEndpointManager::CreateParentDevice()
 
 // this will be called from the runtime endpoint creation interface
 
-_Use_decl_annotations_
 HRESULT 
 CMidi2VirtualMidiEndpointManager::CreateEndpoint()
 {
@@ -285,7 +283,6 @@ CMidi2VirtualMidiEndpointManager::CreateEndpoint()
 
 
 
-_Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiEndpointManager::Cleanup()
 {
@@ -307,8 +304,8 @@ CMidi2VirtualMidiEndpointManager::Cleanup()
 _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiEndpointManager::ApplyConfiguration(
-    _In_ LPCWSTR /*configurationJson*/,
-    _Out_ LPCWSTR /*resultJson*/
+    LPCWSTR /*configurationJson*/,
+    LPWSTR /*resultJson*/
 )
 {
     return E_NOTIMPL;

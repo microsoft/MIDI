@@ -40,9 +40,15 @@ INCLUDES=\
     $(OBJ_PATH)\..\..\idl\$(O)\arm64ec; \
     $(OBJ_PATH)\$(O)\arm64ec; \
     $(OBJ_PATH)\..\..\abstraction\ksabstraction\$(O)\arm64ec; \
+    $(OBJ_PATH)\..\..\abstraction\SimpleLoopbackAbstraction\$(O)\arm64ec; \
+    $(OBJ_PATH)\..\..\abstraction\VirtualMidiAbstraction\$(O)\arm64ec; \
+    $(OBJ_PATH)\..\..\abstraction\NetworkMidiAbstraction\$(O)\arm64ec; \
 !endif    
     $(OBJ_PATH)\..\..\idl\$(O); \
     $(OBJ_PATH)\..\..\abstraction\ksabstraction\$(O); \
+    $(OBJ_PATH)\..\..\abstraction\SimpleLoopbackAbstraction\$(O); \
+    $(OBJ_PATH)\..\..\abstraction\VirtualMidiAbstraction\$(O); \
+    $(OBJ_PATH)\..\..\abstraction\NetworkMidiAbstraction\$(O); \
     $(MINWIN_INTERNAL_PRIV_SDK_INC_PATH_L); \
     $(ONECORE_INTERNAL_SDK_INC_PATH); \
     $(ONECOREUAPSHELL_INTERNAL_INC_PATH_L); \

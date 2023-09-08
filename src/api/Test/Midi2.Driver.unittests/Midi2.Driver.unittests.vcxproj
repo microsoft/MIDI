@@ -138,6 +138,7 @@
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)test\inc;$(WindowsSdkDir)\Testing\Development\inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <Optimization>MaxSpeed</Optimization>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;midiks.lib;midikscommon.lib;midiksenum.lib;miditestcommon.lib;midixproc.lib;$(CoreLibraryDependencies)</AdditionalDependencies>

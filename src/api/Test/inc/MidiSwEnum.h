@@ -17,7 +17,7 @@ class MidiSWDeviceEnum
 public:
     MidiSWDeviceEnum();
     virtual ~MidiSWDeviceEnum();
-    HRESULT EnumerateDevices();
+    HRESULT EnumerateDevices(_In_ GUID requestedAbstraction);
     virtual HRESULT Cleanup();
 
     UINT GetNumMidiDevices(_In_ MidiFlow, _In_ BOOL MidiOne=FALSE);

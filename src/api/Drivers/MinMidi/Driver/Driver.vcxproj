@@ -120,6 +120,7 @@
     </ClCompile>
     <ClCompile>
       <LanguageStandard_C>Default</LanguageStandard_C>
+      <Optimization>MaxSpeed</Optimization>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)ntoskrnl.lib;$(DDK_LIB_PATH)hal.lib;$(DDK_LIB_PATH)wmilib.lib;$(DDK_LIB_PATH)ks.lib</AdditionalDependencies>

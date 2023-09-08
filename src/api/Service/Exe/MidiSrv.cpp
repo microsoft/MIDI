@@ -23,8 +23,6 @@ RPC_STATUS MidiSrvRpcIfCallback(
 HRESULT
 CMidiSrv::Initialize()
 {
-    auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
-
     auto cleanupOnError = wil::scope_exit([&]()
     {
         Cleanup();
@@ -84,8 +82,6 @@ CMidiSrv::Initialize()
 HRESULT
 CMidiSrv::Cleanup()
 {
-    auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
-
     if (m_ClientManager)
     {
         RETURN_IF_FAILED(m_ClientManager->Cleanup());

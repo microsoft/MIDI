@@ -17,4 +17,5 @@ INCLUDES = \
     ..\..\inc; \
     ..\..\..\inc; \
     $(OBJ_PATH)\..\..\..\idl\$(O); \
+    $(OBJ_PATH)\..\..\..\abstraction\midisrvabstraction\$(O); \
 

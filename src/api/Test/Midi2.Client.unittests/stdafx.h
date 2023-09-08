@@ -3,11 +3,10 @@
 
 #include <windows.h>
 
-#include <assert.h>
-#include <devioctl.h>
-#include <wrl\implements.h>
-#include <ks.h>
-#include <ksmedia.h>
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Foundation.Collections.h>
+#include <winrt/Windows.Devices.Enumeration.h>
+
 #include <avrt.h>
 #include <wil\resource.h>
 #include <wil\result_macros.h>

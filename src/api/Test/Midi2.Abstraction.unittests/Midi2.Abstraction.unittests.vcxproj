@@ -70,20 +70,20 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)VSFiles\intermediate\midi2.abstraction.unittests\$(Platform)\$(Configuration)\</IntDir>
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiswenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);;$(SolutionDir)\VSFiles\intermediate\test\midiswenum\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\test\midiswenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiswenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);;$(SolutionDir)\VSFiles\intermediate\test\midiswenum\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\test\midiswenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration)</LibraryPath>
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)VSFiles\intermediate\midi2.abstraction.unittests\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)VSFiles\intermediate\midi2.abstraction.unittests\$(Platform)\$(Configuration)\</IntDir>
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiswenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);;$(SolutionDir)\VSFiles\intermediate\test\midiswenum\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\test\midiswenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
-    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiswenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);;$(SolutionDir)\VSFiles\intermediate\test\midiswenum\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\test\midiswenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration)</LibraryPath>
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)VSFiles\intermediate\midi2.abstraction.unittests\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
@@ -130,6 +130,7 @@
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)test\inc;$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <Optimization>MaxSpeed</Optimization>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>

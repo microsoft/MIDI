@@ -36,7 +36,8 @@ INCLUDES = \
     $(OBJ_PATH)\..\..\abstraction\midisrvabstraction\$(O); \
 
 SOURCES = \
-	IMidiEndpointConnectionSettings.idl \
+	IMidiEndpointConnection.idl \
+	IMidiEndpointDefinedConnectionSettings.idl \
 	IMidiEndpointMessageListener.idl \
 	IMidiEndpointMessageResponder.idl \
 	IMidiInputConnection.idl \
@@ -44,49 +45,80 @@ SOURCES = \
 	IMidiOutputConnection.idl \
 	IMidiTransportSettingsData.idl \
 	IMidiUmp.idl \
+	Midi1ChannelVoiceMessageStatusEnum.idl \
+	Midi2ChannelVoiceMessageStatusEnum.idl \
 	MidiBidirectionalEndpointConnection.idl \
+	MidiBidirectionalEndpointOpenOptions.idl \
 	MidiChannel.idl \
 	MidiChannelEndpointListener.idl \
+	MidiCIProxy.idl \
 	MidiClock.idl \
-	MidiEndpointConnection.idl \
+	MidiEndpointConnectionSharingEnum.idl \
+	MidiEndpointConnectionSharingPreferenceEnum.idl \
 	MidiEndpointInformation.idl \
+	MidiEndpointInformationEndpointListener.idl \
+	MidiEndpointTypeEnum.idl \
 	MidiFunctionBlock.idl \
 	MidiFunctionBlockDirectionEnum.idl \
+	MidiFunctionBlockEndpointListener.idl \
 	MidiFunctionBlockUIHintEnum.idl \
 	MidiGroup.idl \
 	MidiGroupEndpointListener.idl \
+	MidiGroupTerminalBlock.idl \
+	MidiGroupTerminalBlockDirectionEnum.idl \
+	MidiGroupTerminalBlockProtocolEnum.idl \
 	MidiInputEndpointConnection.idl \
+	MidiInputEndpointOpenOptions.idl \
+	MidiMessageBuilder.idl \
 	MidiMessageReceivedEventArgs.idl \
 	MidiMessageTypeEndpointListener.idl \
 	MidiOutputEndpointConnection.idl \
+	MidiOutputEndpointOpenOptions.idl \
+	MidiProtocolEnum.idl \
 	MidiSession.idl \
 	MidiSessionSettings.idl \
+	MidiStreamConfigurationEndpointListener.idl \
+	MidiSysEx8StatusEnum.idl \
 	MidiUmp128.idl \
 	MidiUmp32.idl \
 	MidiUmp64.idl \
 	MidiUmp96.idl \
 	MidiUmpMessageTypeEnum.idl \
 	MidiUmpPacketTypeEnum.idl \
+	MidiUniqueId.idl \
+	MidiVirtualDeviceManager.idl \
 	InternalMidiMessageReceiverHelper.cpp \
 	MidiBidirectionalEndpointConnection.cpp \
+	MidiBidirectionalEndpointOpenOptions.cpp \
 	MidiChannel.cpp \
 	MidiChannelEndpointListener.cpp \
+	MidiCiProxy.cpp \
 	MidiClock.cpp \
-	MidiEndpointConnection.cpp \
 	MidiEndpointInformation.cpp \
+	MidiEndpointInformationEndpointListener.cpp \
 	MidiFunctionBlock.cpp \
+	MidiFunctionBlockEndpointListener.cpp \
 	MidiGroup.cpp \
 	MidiGroupEndpointListener.cpp \
+	MidiGroupTerminalBlock.cpp \
 	MidiInputEndpointConnection.cpp \
+	MidiInputEndpointOpenOptions.cpp \
+	MidiMessageBuilder.cpp \
 	MidiMessageReceivedEventArgs.cpp \
 	MidiMessageTypeEndpointListener.cpp \
 	MidiOutputEndpointConnection.cpp \
+	MidiOutputEndpointOpenOptions.cpp \
 	MidiSession.cpp \
 	MidiSessionSettings.cpp \
+	MidiSettingsService.cpp \
+	MidiStateService.cpp \
+	MidiStreamConfigurationEndpointListener.cpp \
 	MidiUmp128.cpp \
 	MidiUmp32.cpp \
 	MidiUmp64.cpp \
 	MidiUmp96.cpp \
+	MidiUniqueId.cpp \
+	MidiVirtualDeviceManager.cpp \
 	trace_logging.cpp \
 
 TARGETLIBS = \

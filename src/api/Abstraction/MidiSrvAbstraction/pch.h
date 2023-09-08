@@ -8,22 +8,17 @@
 
 #include <windows.h>
 
-#include <hstring.h>
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Foundation.Collections.h>
+#include <winrt/Windows.Devices.Enumeration.h>
 
-#include <Windows.Devices.Enumeration.h>
-#include <assert.h>
-#include <devioctl.h>
-#include <wrl\implements.h>
 #include <wrl\module.h>
 #include <wrl\event.h>
-#include <ks.h>
-#include <ksmedia.h>
 #include <avrt.h>
 #include <wil\com.h>
 #include <wil\resource.h>
 #include <wil\result_macros.h>
 #include <wil\tracelogging.h>
-#include <ppltasks.h>
 
 #include <SDKDDKVer.h>
 

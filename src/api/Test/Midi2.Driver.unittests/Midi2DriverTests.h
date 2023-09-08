@@ -1,6 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 #pragma once
 
+MODULE_SETUP(ModuleSetup);
+bool ModuleSetup()
+{
+    winrt::init_apartment();
+    return true;
+}
+
 class Midi2DriverTests
     : public WEX::TestClass<Midi2DriverTests>,
     public IMidiCallback
@@ -8,7 +15,6 @@ class Midi2DriverTests
 public:
 
     BEGIN_TEST_CLASS(Midi2DriverTests)
-        TEST_CLASS_PROPERTY(L"ThreadingModel", L"MTA")
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Minmidi.sys")
     END_TEST_CLASS()

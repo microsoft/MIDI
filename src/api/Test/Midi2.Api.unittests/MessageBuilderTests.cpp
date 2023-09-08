@@ -63,7 +63,6 @@ TEST_CASE("Build Type 4 MIDI 2.0 Channel Voice Messages")
     MidiGroup grp{ 0x5 };
     Midi2ChannelVoiceMessageStatus status = Midi2ChannelVoiceMessageStatus::NoteOn; // 9
     MidiChannel ch{ 0xF };
-    uint8_t note{ 0x71 };
     uint16_t index{0x6655};         // not a real attribute type
     uint16_t velocity{ 0xFF7F };
     uint16_t attribute{ 0xD00B };   // not real attribute data
