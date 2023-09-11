@@ -6,7 +6,9 @@ typedef class _MIDIU_DEVICE
 public:
     GUID AbstractionLayer;
     GUID InterfaceClass;
-    std::wstring InstanceId;
+    std::wstring DeviceId;
+    std::wstring DeviceInstanceId;
+    std::wstring ParentDeviceInstanceId;
     std::wstring Name; // friendly name for this device
     MidiFlow Flow{ MidiFlowOut };
     BOOL MidiOne{ FALSE };
@@ -15,14 +17,5 @@ public:
 class MidiSWDeviceEnum
 {
 public:
-    MidiSWDeviceEnum();
-    virtual ~MidiSWDeviceEnum();
-    HRESULT EnumerateDevices(_In_ GUID requestedAbstraction);
-    virtual HRESULT Cleanup();
-
-    UINT GetNumMidiDevices(_In_ MidiFlow, _In_ BOOL MidiOne=FALSE);
-    std::wstring GetMidiInstanceId(_In_ UINT, _In_ MidiFlow, _In_ BOOL MidiOne=FALSE);
-
-private:
-    std::vector<std::unique_ptr<MIDIU_DEVICE>> m_AvailableMidiDevices;
+    static HRESULT EnumerateDevices(std::vector<std::unique_ptr<MIDIU_DEVICE>>& Devices, std::function<bool(PMIDIU_DEVICE)>&& Predicate);
 };

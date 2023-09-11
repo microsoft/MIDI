@@ -52,7 +52,4 @@
   <ItemGroup>
     <Manifest Include="api-core-cpp-winrt-tests.exe.manifest" />
   </ItemGroup>
-  <ItemGroup>
-    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
-  </ItemGroup>
 </Project>

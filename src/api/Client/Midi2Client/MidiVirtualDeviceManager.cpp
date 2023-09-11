@@ -13,6 +13,7 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
+    _Use_decl_annotations_
     void MidiVirtualDeviceManager::Initialize(winrt::com_ptr<IMidiAbstraction> serviceAbstraction)
     { 
         m_serviceAbstraction = serviceAbstraction; 
@@ -22,8 +23,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     }
 
-
-
+    _Use_decl_annotations_
     bool MidiVirtualDeviceManager::CreateDevice(
         hstring const& /*name*/,
         bool /*exclusive*/,
@@ -37,6 +37,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     }
 
+    _Use_decl_annotations_
     bool MidiVirtualDeviceManager::CreateEndpoint(
         hstring const& /*parentDeviceId*/,
         hstring const& /*name*/,
@@ -50,6 +51,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         throw hresult_not_implemented();
     }
 
+    _Use_decl_annotations_
     bool MidiVirtualDeviceManager::DeleteDeviceAndEndpoints(
         hstring const& /*deviceId*/
     )
@@ -57,6 +59,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         throw hresult_not_implemented();
     }
 
+    _Use_decl_annotations_
     bool MidiVirtualDeviceManager::DeleteEndpoint(
         hstring const& /*endpointId*/
     )
@@ -64,6 +67,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         throw hresult_not_implemented();
     }
 
+    _Use_decl_annotations_
     bool MidiVirtualDeviceManager::RouteConnectEndpoints(
         hstring const& /*outputEndpointId*/,
         hstring const& /*inputEndpointId*/

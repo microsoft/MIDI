@@ -18,7 +18,6 @@ void MidiAbstractionTests::TestMidiAbstraction(REFIID Iid, BOOL IncludeMidiOne)
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
-    MidiSWDeviceEnum midiDeviceEnum;
     wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
     wil::com_ptr_nothrow<IMidiIn> midiInDevice;
     wil::com_ptr_nothrow<IMidiOut> midiOutDevice;
@@ -45,19 +44,46 @@ void MidiAbstractionTests::TestMidiAbstraction(REFIID Iid, BOOL IncludeMidiOne)
 
     VERIFY_SUCCEEDED(allMessagesReceived.create());
 
-    VERIFY_SUCCEEDED(midiDeviceEnum.EnumerateDevices((GUID) Iid));
+    std::vector<std::unique_ptr<MIDIU_DEVICE>> midiInDevices;
+    VERIFY_SUCCEEDED(MidiSWDeviceEnum::EnumerateDevices(midiInDevices, [&](PMIDIU_DEVICE device)
+    {
+        if (device->AbstractionLayer == (GUID) __uuidof(Midi2KSAbstraction) &&
+            device->Flow == MidiFlowIn &&
+            std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi") &&
+            (IncludeMidiOne || !device->MidiOne))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }));
 
-    UINT numMidiIn = midiDeviceEnum.GetNumMidiDevices(MidiFlowIn, IncludeMidiOne);
-    UINT numMidiOut = midiDeviceEnum.GetNumMidiDevices(MidiFlowOut, IncludeMidiOne);
+    std::vector<std::unique_ptr<MIDIU_DEVICE>> midiOutDevices;
+    VERIFY_SUCCEEDED(MidiSWDeviceEnum::EnumerateDevices(midiOutDevices, [&](PMIDIU_DEVICE device)
+    {
+        if (device->AbstractionLayer == (GUID) __uuidof(Midi2KSAbstraction) &&
+            device->Flow == MidiFlowOut &&
+            std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi") &&
+            (IncludeMidiOne || !device->MidiOne))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }));
 
-    if (numMidiIn == 0 || numMidiOut == 0)
+    if (midiInDevices.size() == 0 || midiOutDevices.size() == 0)
     {
         WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test requires at least 1 midi in and 1 midi out endpoint.");
         return;
     }
 
-    std::wstring midiInInstanceId = midiDeviceEnum.GetMidiInstanceId(0, MidiFlowIn, IncludeMidiOne);
-    std::wstring midiOutInstanceId = midiDeviceEnum.GetMidiInstanceId(0, MidiFlowOut, IncludeMidiOne);
+    std::wstring midiInInstanceId = midiInDevices[0]->DeviceId;
+    std::wstring midiOutInstanceId = midiOutDevices[0]->DeviceId;
 
     LOG_OUTPUT(L"Initializing midi in");
     VERIFY_SUCCEEDED(midiInDevice->Initialize(midiInInstanceId.c_str(), &mmcssTaskId, this));
@@ -101,7 +127,6 @@ void MidiAbstractionTests::TestMidiAbstractionCreationOrder(REFIID Iid, BOOL Inc
 {
 //    WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
-    MidiSWDeviceEnum midiDeviceEnum;
     wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
     wil::com_ptr_nothrow<IMidiIn> midiInDevice;
     wil::com_ptr_nothrow<IMidiOut> midiOutDevice;
@@ -123,19 +148,46 @@ void MidiAbstractionTests::TestMidiAbstractionCreationOrder(REFIID Iid, BOOL Inc
     // manage mmcss for their own workers.
     VERIFY_SUCCEEDED(EnableMmcss(mmcssHandle, mmcssTaskId));
 
-    VERIFY_SUCCEEDED(midiDeviceEnum.EnumerateDevices((GUID) Iid));
+    std::vector<std::unique_ptr<MIDIU_DEVICE>> midiInDevices;
+    VERIFY_SUCCEEDED(MidiSWDeviceEnum::EnumerateDevices(midiInDevices, [&](PMIDIU_DEVICE device)
+    {
+        if (device->AbstractionLayer == (GUID) __uuidof(Midi2KSAbstraction) &&
+            device->Flow == MidiFlowIn &&
+            std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi") &&
+            (IncludeMidiOne || !device->MidiOne))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }));
 
-    UINT numMidiIn = midiDeviceEnum.GetNumMidiDevices(MidiFlowIn, IncludeMidiOne);
-    UINT numMidiOut = midiDeviceEnum.GetNumMidiDevices(MidiFlowOut, IncludeMidiOne);
+    std::vector<std::unique_ptr<MIDIU_DEVICE>> midiOutDevices;
+    VERIFY_SUCCEEDED(MidiSWDeviceEnum::EnumerateDevices(midiOutDevices, [&](PMIDIU_DEVICE device)
+    {
+        if (device->AbstractionLayer == (GUID) __uuidof(Midi2KSAbstraction) &&
+            device->Flow == MidiFlowOut &&
+            std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi") &&
+            (IncludeMidiOne || !device->MidiOne))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }));
 
-    if (numMidiIn == 0 || numMidiOut == 0)
+    if (midiInDevices.size() == 0 || midiOutDevices.size() == 0)
     {
         WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test requires at least 1 midi in and 1 midi out endpoint.");
         return;
     }
 
-    std::wstring midiInInstanceId = midiDeviceEnum.GetMidiInstanceId(0, MidiFlowIn, IncludeMidiOne);
-    std::wstring midiOutInstanceId = midiDeviceEnum.GetMidiInstanceId(0, MidiFlowOut, IncludeMidiOne);
+    std::wstring midiInInstanceId = midiInDevices[0]->DeviceId;
+    std::wstring midiOutInstanceId = midiOutDevices[0]->DeviceId;
 
     // initialize midi out and then midi in, reset the task id,
     // and then initialize midi in then out to ensure that order
@@ -207,7 +259,6 @@ void MidiAbstractionTests::TestMidiAbstractionBiDi(REFIID Iid)
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
-    MidiSWDeviceEnum midiDeviceEnum;
     wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
     wil::com_ptr_nothrow<IMidiBiDi> midiBiDiDevice;
     DWORD mmcssTaskId {0};
@@ -231,13 +282,29 @@ void MidiAbstractionTests::TestMidiAbstractionBiDi(REFIID Iid)
 
     VERIFY_SUCCEEDED(allMessagesReceived.create());
 
-    VERIFY_SUCCEEDED(midiDeviceEnum.EnumerateDevices((GUID) Iid));
+    std::vector<std::unique_ptr<MIDIU_DEVICE>> midiBiDiDevices;
+    VERIFY_SUCCEEDED(MidiSWDeviceEnum::EnumerateDevices(midiBiDiDevices, [&](PMIDIU_DEVICE device)
+    {
+        if (device->AbstractionLayer == (GUID) __uuidof(Midi2KSAbstraction) &&
+            device->Flow == MidiFlowBidirectional &&
+            std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi") &&
+            !device->MidiOne)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }));
 
-    UINT numMidiBiDirectional = midiDeviceEnum.GetNumMidiDevices(MidiFlowBidirectional);
+    if (midiBiDiDevices.size() == 0)
+    {
+        WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test requires at least 1 midi bidi endpoint.");
+        return;
+    }
     
-    VERIFY_IS_TRUE(numMidiBiDirectional > 0);
-    
-    std::wstring midiBiDirectionalInstanceId = midiDeviceEnum.GetMidiInstanceId(0, MidiFlowBidirectional);
+    std::wstring midiBiDirectionalInstanceId = midiBiDiDevices[0]->DeviceId;
     
     LOG_OUTPUT(L"Initializing midi BiDi");
     VERIFY_SUCCEEDED(midiBiDiDevice->Initialize(midiBiDirectionalInstanceId.c_str(), &mmcssTaskId, this));
@@ -279,7 +346,6 @@ void MidiAbstractionTests::TestMidiIO_Latency(REFIID Iid, BOOL DelayedMessages)
 
     DWORD messageDelay{ 10 };
 
-    MidiSWDeviceEnum midiDeviceEnum;
     wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
     wil::com_ptr_nothrow<IMidiBiDi> midiBiDiDevice;
     DWORD mmcssTaskId{0};
@@ -390,13 +456,29 @@ void MidiAbstractionTests::TestMidiIO_Latency(REFIID Iid, BOOL DelayedMessages)
 
     VERIFY_SUCCEEDED(allMessagesReceived.create());
 
-    VERIFY_SUCCEEDED(midiDeviceEnum.EnumerateDevices((GUID) Iid));
+    std::vector<std::unique_ptr<MIDIU_DEVICE>> midiBiDiDevices;
+    VERIFY_SUCCEEDED(MidiSWDeviceEnum::EnumerateDevices(midiBiDiDevices, [&](PMIDIU_DEVICE device)
+    {
+        if (device->AbstractionLayer == (GUID) __uuidof(Midi2KSAbstraction) &&
+            device->Flow == MidiFlowBidirectional &&
+            std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi") &&
+            !device->MidiOne)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }));
 
-    UINT numMidiBiDirectional = midiDeviceEnum.GetNumMidiDevices(MidiFlowBidirectional);
+    if (midiBiDiDevices.size() == 0)
+    {
+        WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test requires at least 1 midi bidi endpoint.");
+        return;
+    }
 
-    VERIFY_IS_TRUE(numMidiBiDirectional > 0);
-
-    std::wstring midiBiDirectionalInstanceId = midiDeviceEnum.GetMidiInstanceId(0, MidiFlowBidirectional);
+    std::wstring midiBiDirectionalInstanceId = midiBiDiDevices[0]->DeviceId;
 
     LOG_OUTPUT(L"Initializing midi BiDi");
     VERIFY_SUCCEEDED(midiBiDiDevice->Initialize(midiBiDirectionalInstanceId.c_str(), &mmcssTaskId, this));
@@ -547,7 +629,6 @@ void MidiAbstractionTests::TestMidiSrv_MultiClient()
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
-    MidiSWDeviceEnum midiDeviceEnum;
     wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
     wil::com_ptr_nothrow<IMidiIn> midiInDevice1;
     wil::com_ptr_nothrow<IMidiOut> midiOutDevice1;
@@ -566,19 +647,44 @@ void MidiAbstractionTests::TestMidiSrv_MultiClient()
     // we need to ensure that only 1 is processed at a time.
     wil::critical_section callbackLock;
 
-    VERIFY_SUCCEEDED(midiDeviceEnum.EnumerateDevices((GUID)__uuidof(Midi2MidiSrvAbstraction)));
+    std::vector<std::unique_ptr<MIDIU_DEVICE>> midiInDevices;
+    VERIFY_SUCCEEDED(MidiSWDeviceEnum::EnumerateDevices(midiInDevices, [&](PMIDIU_DEVICE device)
+    {
+        if (device->AbstractionLayer == (GUID) __uuidof(Midi2KSAbstraction) &&
+            device->Flow == MidiFlowIn &&
+            std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi"))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }));
 
-    UINT numMidiIn = midiDeviceEnum.GetNumMidiDevices(MidiFlowIn, TRUE);
-    UINT numMidiOut = midiDeviceEnum.GetNumMidiDevices(MidiFlowOut, TRUE);
+    std::vector<std::unique_ptr<MIDIU_DEVICE>> midiOutDevices;
+    VERIFY_SUCCEEDED(MidiSWDeviceEnum::EnumerateDevices(midiOutDevices, [&](PMIDIU_DEVICE device)
+    {
+        if (device->AbstractionLayer == (GUID) __uuidof(Midi2KSAbstraction) &&
+            device->Flow == MidiFlowOut &&
+            std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi"))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }));
 
-    if (numMidiIn == 0 || numMidiOut == 0)
+    if (midiInDevices.size() == 0 || midiOutDevices.size() == 0)
     {
         WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test requires at least 1 midi in and 1 midi out endpoint.");
         return;
     }
 
-    std::wstring midiInInstanceId = midiDeviceEnum.GetMidiInstanceId(0, MidiFlowIn, TRUE);
-    std::wstring midiOutInstanceId = midiDeviceEnum.GetMidiInstanceId(0, MidiFlowOut, TRUE);
+    std::wstring midiInInstanceId = midiInDevices[0]->DeviceId;
+    std::wstring midiOutInstanceId = midiOutDevices[0]->DeviceId;
 
     VERIFY_SUCCEEDED(CoCreateInstance(__uuidof(Midi2MidiSrvAbstraction), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
     VERIFY_SUCCEEDED(midiAbstraction->Activate(__uuidof(IMidiIn), (void**)&midiInDevice1));

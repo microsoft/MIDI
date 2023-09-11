@@ -12,8 +12,8 @@ CMidiDeviceManager::Initialize(std::shared_ptr<CMidiPerformanceManager>& Perform
     availableAbstractionLayers.push_back(__uuidof(Midi2KSAbstraction));
 
     availableAbstractionLayers.push_back(__uuidof(Midi2SimpleLoopbackAbstraction));
-    availableAbstractionLayers.push_back(__uuidof(Midi2NetworkMidiAbstraction));
-    availableAbstractionLayers.push_back(__uuidof(Midi2VirtualMidiAbstraction));
+    // availableAbstractionLayers.push_back(__uuidof(Midi2NetworkMidiAbstraction));
+    // availableAbstractionLayers.push_back(__uuidof(Midi2VirtualMidiAbstraction));
 
     for (auto const& AbstractionLayer : availableAbstractionLayers)
     {
