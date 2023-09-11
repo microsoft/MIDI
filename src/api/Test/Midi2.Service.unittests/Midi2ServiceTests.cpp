@@ -115,14 +115,30 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
     std::unique_ptr<CMidiXProc> midiPump;
     DWORD MmCssTaskId{ 0 };
 
-    MidiSWDeviceEnum midiDeviceEnum;
+    std::vector<std::unique_ptr<MIDIU_DEVICE>> testDevices;
+    VERIFY_SUCCEEDED(MidiSWDeviceEnum::EnumerateDevices(testDevices, [&](PMIDIU_DEVICE device)
+    {
+        if (device->Flow == MidiFlowBidirectional &&
+            std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi") &&
+            !device->MidiOne)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }));
 
-    VERIFY_SUCCEEDED(midiDeviceEnum.EnumerateDevices((GUID) __uuidof(Midi2MidiSrvAbstraction)));
-    UINT numMidiBidirectional = midiDeviceEnum.GetNumMidiDevices(MidiFlowBidirectional);
+    if (testDevices.size() == 0)
+    {
+        WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test requires at least 1 MinMidi bidi endpoint.");
+        return;
+    }
 
-    VERIFY_IS_TRUE(numMidiBidirectional > 0);
+    VERIFY_IS_TRUE(testDevices.size() > 0);
 
-    std::wstring midiDevice = midiDeviceEnum.GetMidiInstanceId(0, MidiFlowBidirectional);
+    std::wstring midiDevice = testDevices[0]->DeviceId;
     
     auto cleanupOnExit = wil::scope_exit([&]() {
 

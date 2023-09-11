@@ -6,6 +6,8 @@
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 
+#include <functional>
+
 #include <wil\com.h>
 #include <wil\resource.h>
 #include <wil\result_macros.h>
@@ -21,15 +23,6 @@
 
 using namespace winrt::Windows::Devices::Enumeration;
 
-MidiSWDeviceEnum::MidiSWDeviceEnum()
-{
-}
-
-MidiSWDeviceEnum::~MidiSWDeviceEnum()
-{
-    Cleanup();
-}
-
 // enumerate both UMP and MidiOne endpoints for testing
 #define MIDI_DEVICE_SELECTOR \
     L"(System.Devices.InterfaceClassGuid:=\"{AE174174-6396-4DEE-AC9E-1E9C6F403230}\""\
@@ -39,8 +32,12 @@ MidiSWDeviceEnum::~MidiSWDeviceEnum()
     L"OR System.Devices.InterfaceClassGuid:=\"{6DC23320-AB33-4CE4-80D4-BBB3EBBF2814}\")"\
     L"AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True"
 
+_Use_decl_annotations_
 HRESULT
-MidiSWDeviceEnum::EnumerateDevices(_In_ GUID requestedAbstraction)
+MidiSWDeviceEnum::EnumerateDevices(
+    std::vector<std::unique_ptr<MIDIU_DEVICE>>& Devices,
+    std::function<bool(PMIDIU_DEVICE)>&& Predicate
+)
 {
     winrt::hstring deviceSelector(MIDI_DEVICE_SELECTOR);
     wil::unique_event enumerationCompleted{wil::EventOptions::None};
@@ -55,21 +52,14 @@ MidiSWDeviceEnum::EnumerateDevices(_In_ GUID requestedAbstraction)
     auto deviceAddedHandler = watcher.Added(winrt::auto_revoke, [&](DeviceWatcher watcher, DeviceInformation device)
     {
         auto name = device.Name();
-        auto instanceId = device.Id();
+        auto deviceId = device.Id();
         winrt::guid abstractionGuid;
+        auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
 
         auto prop = device.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_AbstractionLayer));
         if (prop)
         {
             abstractionGuid = winrt::unbox_value<winrt::guid>(prop);
-
-            // if it's not the midisrv abstraction, and it's not the requested abstraction,
-            // filter it.
-            if (requestedAbstraction != __uuidof(Midi2MidiSrvAbstraction) &&
-                (GUID)abstractionGuid != requestedAbstraction)
-            {
-                return S_OK;
-            }
         }
         else
         {
@@ -80,6 +70,9 @@ MidiSWDeviceEnum::EnumerateDevices(_In_ GUID requestedAbstraction)
 
         prop = device.Properties().Lookup(winrt::to_hstring(L"System.Devices.InterfaceClassGuid"));
         auto interfaceClass = winrt::unbox_value<winrt::guid>(prop);
+
+        prop = device.Properties().Lookup(winrt::to_hstring(L"System.Devices.DeviceInstanceId"));
+        auto deviceInstanceId = winrt::unbox_value<winrt::hstring>(prop).c_str();
         
         std::unique_ptr<MIDIU_DEVICE> midiDevice = std::make_unique<MIDIU_DEVICE>();
         
@@ -87,7 +80,8 @@ MidiSWDeviceEnum::EnumerateDevices(_In_ GUID requestedAbstraction)
 
         midiDevice->AbstractionLayer = abstractionGuid;
         midiDevice->InterfaceClass = interfaceClass;
-        midiDevice->InstanceId = instanceId;
+        midiDevice->DeviceId = deviceId;
+        midiDevice->DeviceInstanceId = deviceInstanceId;
         midiDevice->Name = name;
 
         if (winrt::guid(DEVINTERFACE_MIDI_INPUT) == interfaceClass)
@@ -117,7 +111,19 @@ MidiSWDeviceEnum::EnumerateDevices(_In_ GUID requestedAbstraction)
             RETURN_IF_FAILED(E_UNEXPECTED);
         }
 
-        m_AvailableMidiDevices.push_back(std::move(midiDevice));
+        additionalProperties.Append(winrt::to_hstring(L"System.Devices.Parent"));
+
+        auto parentDeviceInfo = DeviceInformation::CreateFromIdAsync(deviceInstanceId,
+        additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::Device).get();
+
+        prop = parentDeviceInfo.Properties().Lookup(winrt::to_hstring(L"System.Devices.Parent"));
+        auto parentDeviceInstanceId = winrt::unbox_value<winrt::hstring>(prop);
+        midiDevice->ParentDeviceInstanceId = parentDeviceInstanceId;
+
+        if (Predicate(midiDevice.get()))
+        {
+            Devices.push_back(std::move(midiDevice));
+        }
 
         return S_OK;
     });
@@ -143,52 +149,6 @@ MidiSWDeviceEnum::EnumerateDevices(_In_ GUID requestedAbstraction)
     deviceStoppedHandler.revoke();
     enumerationCompletedHandler.revoke();
 
-    return S_OK;
-}
-
-_Use_decl_annotations_
-UINT
-MidiSWDeviceEnum::GetNumMidiDevices(MidiFlow Flow, BOOL MidiOne)
-{
-    UINT numDevices = 0;
-
-    for (auto const& MidiDevice : m_AvailableMidiDevices)
-    {
-        if (MidiDevice->MidiOne == MidiOne &&
-            MidiDevice->Flow == Flow)
-        {
-            numDevices++;
-        }
-    }
-    return numDevices;
-}
-
-_Use_decl_annotations_
-std::wstring
-MidiSWDeviceEnum::GetMidiInstanceId(UINT Index, MidiFlow Flow, BOOL MidiOne)
-{
-    std::wstring midiDevice;
-
-    for (auto const& MidiDevice : m_AvailableMidiDevices)
-    {
-        if (MidiDevice->MidiOne == MidiOne &&
-            MidiDevice->Flow == Flow)
-        {
-            if (Index == 0)
-            {
-                midiDevice = MidiDevice->InstanceId;
-                break;
-            }
-            Index--;
-        }
-    }
-
-    return midiDevice;
-}
-
-HRESULT
-MidiSWDeviceEnum::Cleanup()
-{
     return S_OK;
 }
 

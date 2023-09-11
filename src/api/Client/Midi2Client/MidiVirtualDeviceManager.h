@@ -49,7 +49,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         // internal. Called by the session when initializing
 
-        void Initialize(winrt::com_ptr<IMidiAbstraction> serviceAbstraction);
+        void Initialize(_In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction);
 
     private:
 
