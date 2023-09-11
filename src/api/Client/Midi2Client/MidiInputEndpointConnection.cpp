@@ -13,75 +13,6 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    IFACEMETHODIMP MidiInputEndpointConnection::Callback(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Timestamp)
-    {
-        try
-        {
-            // one copy of the event args for this gets sent to all listeners and the main event
-            auto args = winrt::make_self<MidiMessageReceivedEventArgs>(Data, Size, Timestamp);
-
-            // we failed to create the event args
-            if (args == nullptr)
-            {
-                internal::LogGeneralError(__FUNCTION__, L"Unable to create MidiMessageReceivedEventArgs");
-
-                return E_FAIL;
-            }
-
-            bool skipMainMessageReceivedEvent = false;
-//            bool skipFurtherListeners = false;
-
-            // If any listeners are hooked up, use them
-
-            if (m_messageProcessingPlugins && m_messageProcessingPlugins.Size() > 0)
-            {
-                // loop through and check for listeners
-                //for (const auto& plugin : m_messageProcessingPlugins)
-                //{
-                //    //listener.ProcessIncomingMessage(*args, skipFurtherListeners, skipMainMessageReceivedEvent);
-
-                //    // if the listener has told us to skip further listeners, effectively 
-                //    // removing this message from the queue, then break out of the loop
-                //    if (skipFurtherListeners) break;
-                //}
-            }
-
-            // if the main message received event is hooked up, and we're not skipping it, use it
-            if (m_messageReceivedEvent && !skipMainMessageReceivedEvent)
-            {
-                m_messageReceivedEvent(*this, *args);
-            }
-
-            return S_OK;
-        }
-        catch (winrt::hresult_error const& ex)
-        {
-            internal::LogHresultError(__FUNCTION__, L"hresult exception calling message handlers", ex);
-
-            return E_FAIL;
-        }
-    }
-
-    _Success_(return == true)
-    bool MidiInputEndpointConnection::ActivateMidiStream(
-            _In_ com_ptr<IMidiAbstraction> serviceAbstraction,
-            _In_ const IID & iid,
-            _Out_ void** iface)
-    {
-        try
-        {
-            winrt::check_hresult(serviceAbstraction->Activate(iid, iface));
-
-            return true;
-        }
-        catch (winrt::hresult_error const& ex)
-        {
-            internal::LogHresultError(__FUNCTION__, L"hresult exception activating stream. Service may be unavailable", ex);
-
-            return false;
-        }
-    }
-
     _Success_(return == true)
     bool MidiInputEndpointConnection::InternalInitialize(
         _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
@@ -91,7 +22,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         try
         {
             m_id = endpointId;
-            m_deviceId = deviceId;
+            m_inputDeviceId = deviceId;
 
             WINRT_ASSERT(!DeviceId().empty());
             WINRT_ASSERT(serviceAbstraction != nullptr);
@@ -114,39 +45,37 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Success_(return == true)
     bool MidiInputEndpointConnection::Open()
     {
-        if (!m_isOpen)
+        if (!IsOpen())
         {
             // Activate the endpoint for this device. Will fail if the device is not a BiDi device
-            if (!ActivateMidiStream(m_serviceAbstraction, __uuidof(IMidiIn), (void**)&m_endpointInterface))
+            if (!ActivateMidiStream(m_serviceAbstraction, __uuidof(IMidiIn), (void**)&m_inputAbstraction))
             {
                 internal::LogGeneralError(__FUNCTION__, L"Could not activate MIDI Stream");
+
+                IsOpen(false);
+                InputIsOpen(false);
+
+                m_inputAbstraction = nullptr;
 
                 return false;
             }
 
-            if (m_endpointInterface != nullptr)
+            if (m_inputAbstraction != nullptr)
             {
                 try
                 {
                     DWORD mmcssTaskId{};  // TODO: Does this need to be session-wide? Probably, but it can be modified by the endpoint init, so maybe should be endpoint-local
 
-                    winrt::check_hresult(m_endpointInterface->Initialize(
+                    winrt::check_hresult(m_inputAbstraction->Initialize(
                         (LPCWSTR)(DeviceId().c_str()),
                         &mmcssTaskId,
                         (IMidiCallback*)(this)
                     ));
 
-                    m_isOpen = true;
+                    IsOpen(true);
+                    InputIsOpen(true);
 
-
-                    // TODO: Send discovery messages using app provided settings and user settings read from the property store
-                    // These get fired off here quickly so we can return. The listener is responsible for catching them.
-
-
-
-
-
-
+                    CallOnConnectionOpenedOnPlugins();
 
                     return true;
                 }
@@ -154,7 +83,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 {
                     internal::LogHresultError(__FUNCTION__, L" hresult exception initializing endpoint interface. Service may be unavailable.", ex);
 
-                    m_endpointInterface = nullptr;
+                    m_inputAbstraction = nullptr;
+
+                    IsOpen(false);
+                    InputIsOpen(false);
 
                     return false;
                 }
@@ -162,6 +94,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
             else
             {
                 internal::LogGeneralError(__FUNCTION__, L" Endpoint interface is nullptr");
+
+                IsOpen(false);
+                InputIsOpen(false);
 
                 return false;
 
@@ -179,12 +114,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     MidiInputEndpointConnection::~MidiInputEndpointConnection()
     {
-        if (m_endpointInterface != nullptr)
+        if (m_inputAbstraction != nullptr)
         {
-            m_endpointInterface->Cleanup();
+            m_inputAbstraction->Cleanup();
+            m_inputAbstraction = nullptr;
         }
 
-        m_isOpen = false;
+        IsOpen(false);
+        InputIsOpen(false);
 
         // TODO: any event cleanup?
     }

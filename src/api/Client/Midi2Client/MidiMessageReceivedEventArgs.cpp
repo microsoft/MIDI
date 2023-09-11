@@ -14,7 +14,8 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    MidiMessageReceivedEventArgs::MidiMessageReceivedEventArgs(_In_ PVOID data, _In_ UINT sizeInBytes, _In_ LONGLONG timestamp)
+    _Use_decl_annotations_
+    MidiMessageReceivedEventArgs::MidiMessageReceivedEventArgs(PVOID data, UINT sizeInBytes, internal::MidiTimestamp timestamp)
     {
         m_timestamp = timestamp;
 
@@ -24,6 +25,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
+    _Use_decl_annotations_
     winrt::Windows::Devices::Midi2::MidiUmpPacketType MidiMessageReceivedEventArgs::UmpType() const noexcept
     {
         if (m_data.Word0 != 0)
@@ -36,6 +38,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
+    _Use_decl_annotations_
     winrt::Windows::Devices::Midi2::IMidiUmp MidiMessageReceivedEventArgs::GetUmp()
     {
         auto ty = (MidiUmpPacketType)(internal::GetUmpLengthInMidiWordsFromFirstWord(m_data.Word0));
@@ -49,19 +52,19 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         if (ty == MidiUmpPacketType::Ump32)
         {
-            return winrt::make_self<implementation::MidiUmp32>(m_timestamp, m_data.Word0).as<winrt::Windows::Devices::Midi2::IMidiUmp>();
+            return winrt::make_self<implementation::MidiUmp32>(m_timestamp, m_data.Word0).as<midi2::IMidiUmp>();
         }
         else if (ty == MidiUmpPacketType::Ump64)
         {
-            return winrt::make_self<implementation::MidiUmp64>(m_timestamp, m_data.Word0, m_data.Word1).as<winrt::Windows::Devices::Midi2::IMidiUmp>();
+            return winrt::make_self<implementation::MidiUmp64>(m_timestamp, m_data.Word0, m_data.Word1).as<midi2::IMidiUmp>();
         }
         else if (ty == MidiUmpPacketType::Ump96)
         {
-            return winrt::make_self<implementation::MidiUmp96>(m_timestamp, m_data.Word0, m_data.Word1, m_data.Word2).as<winrt::Windows::Devices::Midi2::IMidiUmp>();
+            return winrt::make_self<implementation::MidiUmp96>(m_timestamp, m_data.Word0, m_data.Word1, m_data.Word2).as<midi2::IMidiUmp>();
         }
         else if (ty == MidiUmpPacketType::Ump128)
         {
-            return winrt::make_self<implementation::MidiUmp128>(m_timestamp, m_data.Word0, m_data.Word1, m_data.Word2, m_data.Word3).as<winrt::Windows::Devices::Midi2::IMidiUmp>();
+            return winrt::make_self<implementation::MidiUmp128>(m_timestamp, m_data.Word0, m_data.Word1, m_data.Word2, m_data.Word3).as<midi2::IMidiUmp>();
         }
         else
         {
@@ -73,11 +76,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
+    _Use_decl_annotations_
     bool MidiMessageReceivedEventArgs::FillWords(
-        _Inout_ uint32_t& word0, 
-        _Inout_ uint32_t& word1, 
-        _Inout_ uint32_t& word2,
-        _Inout_ uint32_t& word3)
+        uint32_t& word0, 
+        uint32_t& word1, 
+        uint32_t& word2,
+        uint32_t& word3)
     {
         auto ty = (MidiUmpPacketType)(internal::GetUmpLengthInMidiWordsFromFirstWord(m_data.Word0));
 
@@ -110,7 +114,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return true;
     }
 
-    bool MidiMessageReceivedEventArgs::FillUmp32(_In_ winrt::Windows::Devices::Midi2::MidiUmp32 const& ump)
+    _Use_decl_annotations_
+    bool MidiMessageReceivedEventArgs::FillUmp32(midi2::MidiUmp32 const& ump)
     {
         if (ump == nullptr)
         {
@@ -124,7 +129,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             return false;
         }
 
-        auto impUmp = winrt::get_self<implementation::MidiUmp32, winrt::Windows::Devices::Midi2::MidiUmp32>(ump);
+        auto impUmp = winrt::get_self<implementation::MidiUmp32, midi2::MidiUmp32>(ump);
         WINRT_ASSERT(impUmp != nullptr);
 
         auto umpDestinationData = impUmp->GetInternalUmpDataPointer();
@@ -137,7 +142,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return true;
     }
 
-    bool MidiMessageReceivedEventArgs::FillUmp64(_In_ winrt::Windows::Devices::Midi2::MidiUmp64 const& ump)
+    bool MidiMessageReceivedEventArgs::FillUmp64(_In_ midi2::MidiUmp64 const& ump)
     {
         if (ump == nullptr)
         {
@@ -151,7 +156,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             return false;
         }
 
-        auto impUmp = winrt::get_self<implementation::MidiUmp64, winrt::Windows::Devices::Midi2::MidiUmp64>(ump);
+        auto impUmp = winrt::get_self<implementation::MidiUmp64, midi2::MidiUmp64>(ump);
         WINRT_ASSERT(impUmp != nullptr);
 
         auto umpDestinationData = impUmp->GetInternalUmpDataPointer();
@@ -164,7 +169,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return true;
     }
 
-    bool MidiMessageReceivedEventArgs::FillUmp96(_In_ winrt::Windows::Devices::Midi2::MidiUmp96 const& ump)
+    _Use_decl_annotations_
+    bool MidiMessageReceivedEventArgs::FillUmp96(_In_ midi2::MidiUmp96 const& ump)
     {
         if (ump == nullptr)
         {
@@ -178,7 +184,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             return false;
         }
 
-        auto impUmp = winrt::get_self<implementation::MidiUmp96, winrt::Windows::Devices::Midi2::MidiUmp96>(ump);
+        auto impUmp = winrt::get_self<implementation::MidiUmp96, midi2::MidiUmp96>(ump);
         WINRT_ASSERT(impUmp != nullptr);
 
         auto umpDestinationData = impUmp->GetInternalUmpDataPointer();
@@ -191,7 +197,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return true;
     }
 
-    bool MidiMessageReceivedEventArgs::FillUmp128(_In_ winrt::Windows::Devices::Midi2::MidiUmp128 const& ump)
+    _Use_decl_annotations_
+    bool MidiMessageReceivedEventArgs::FillUmp128(midi2::MidiUmp128 const& ump)
     {
         if (ump == nullptr)
         {
@@ -205,7 +212,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             return false;
         }
 
-        auto impUmp = winrt::get_self<implementation::MidiUmp128, winrt::Windows::Devices::Midi2::MidiUmp128>(ump);
+        auto impUmp = winrt::get_self<implementation::MidiUmp128, midi2::MidiUmp128>(ump);
         WINRT_ASSERT(impUmp != nullptr);
 
         auto umpDestinationData = impUmp->GetInternalUmpDataPointer();
@@ -218,26 +225,29 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return true;
     }
 
+    _Use_decl_annotations_
     bool MidiMessageReceivedEventArgs::FillWordArray(
-        _In_ array_view<uint32_t> /* words */, 
-        _In_ uint32_t const /*startIndex*/, 
-        _Out_ uint32_t& /*elementsWritten*/)
+        array_view<uint32_t> /* words */, 
+        uint32_t const /*startIndex*/, 
+        uint32_t& /*elementsWritten*/)
     {
         throw hresult_not_implemented();
     }
 
+    _Use_decl_annotations_
     bool MidiMessageReceivedEventArgs::FillByteArray(
-        _In_ array_view<uint8_t> /* bytes */, 
-        _In_ uint32_t const /*startIndex*/, 
-        _Out_ uint32_t& /*elementsWritten*/)
+        array_view<uint8_t> /* bytes */, 
+        uint32_t const /*startIndex*/, 
+        uint32_t& /*elementsWritten*/)
     {
         throw hresult_not_implemented();
     }
 
+    _Use_decl_annotations_
     bool MidiMessageReceivedEventArgs::FillBuffer(
-        _In_ winrt::Windows::Foundation::IMemoryBuffer const& /* buffer */, 
-        _In_ uint32_t const /* byteOffset*/,
-        _Out_ uint32_t& /* bytesWritten*/)
+        winrt::Windows::Foundation::IMemoryBuffer const& /* buffer */, 
+        uint32_t const /* byteOffset*/,
+        uint32_t& /* bytesWritten*/)
     {
         throw hresult_not_implemented();
     }

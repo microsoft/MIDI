@@ -12,30 +12,35 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
+    _Use_decl_annotations_
     winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::MidiUmpMessageType> MidiMessageTypeEndpointListener::IncludeMessageTypes()
     {
         throw hresult_not_implemented();
     }
 
+    _Use_decl_annotations_
     void MidiMessageTypeEndpointListener::Initialize()
     {
         throw hresult_not_implemented();
     }
 
+    _Use_decl_annotations_
     void MidiMessageTypeEndpointListener::OnEndpointConnectionOpened()
     {
         throw hresult_not_implemented();
     }
 
+    _Use_decl_annotations_
     void MidiMessageTypeEndpointListener::Cleanup()
     {
         throw hresult_not_implemented();
     }
 
+    _Use_decl_annotations_
     void MidiMessageTypeEndpointListener::ProcessIncomingMessage(
-        _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs const& /*args*/,
-        _Out_ bool& skipFurtherListeners, 
-        _Out_ bool& skipMainMessageReceivedEvent)
+        winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs const& /*args*/,
+        bool& skipFurtherListeners, 
+        bool& skipMainMessageReceivedEvent)
     {
         skipFurtherListeners = false;
         skipMainMessageReceivedEvent = false;

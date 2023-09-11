@@ -15,13 +15,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
     struct MidiGroup : MidiGroupT<MidiGroup>
     {
         MidiGroup() = default;
-        MidiGroup(_In_ uint8_t index) { if (index >= 0 && index <= 15) m_index = index; }
+        MidiGroup(_In_ uint8_t index) noexcept { Index(index); }
 
 
-        uint8_t Index() const { return m_index; }
-        void Index(uint8_t value) { if (value >= 0 && value <= 15) m_index = value; }
+        uint8_t Index() const noexcept { return m_index; }
+        void Index(_In_ uint8_t value) noexcept { if (value >= 0 && value <= 15) m_index = value; }
 
-        uint8_t NumberForDisplay() const { return m_index + 1; }
+        uint8_t NumberForDisplay() const noexcept { return m_index + 1; }
 
     private:
         uint8_t m_index{ 0 };

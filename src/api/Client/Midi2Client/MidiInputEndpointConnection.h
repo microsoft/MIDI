@@ -19,51 +19,29 @@
 #include "midi_service_interface.h"
 
 #include "InternalMidiInputConnection.h"
-
+#include "InternalMidiConnectionCommon.h"
 
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     struct MidiInputEndpointConnection : MidiInputEndpointConnectionT<
         MidiInputEndpointConnection, 
-        IMidiCallback>
+        IMidiCallback>,
+        public internal::InternalMidiConnectionCommon,
+        public internal::InternalMidiInputConnection<IMidiIn>
     {
         MidiInputEndpointConnection() = default;
         ~MidiInputEndpointConnection();
 
-        static hstring GetDeviceSelector() noexcept { return L"System.Devices.InterfaceClassGuid:=\"{AE174174-6396-4DEE-AC9E-1E9C6F403230}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True"; }
+        static winrt::hstring GetDeviceSelector() noexcept { return L"System.Devices.InterfaceClassGuid:=\"{AE174174-6396-4DEE-AC9E-1E9C6F403230}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True"; }
 
 
-        hstring Id() const noexcept { return m_id; }
-        hstring DeviceId() const noexcept { return m_deviceId; }
-        bool IsOpen() const noexcept { return m_isOpen; }
-        IMidiEndpointDefinedConnectionSettings Settings() noexcept { return m_settings; }
+        winrt::hstring DeviceId() const noexcept { return m_inputDeviceId; }
 
-        winrt::Windows::Devices::Midi2::MidiEndpointConnectionSharing ActiveSharingMode() const { return m_activeSharingMode; }
-
-        IInspectable Tag() const noexcept { return m_tag; }
-        void Tag(_In_ IInspectable value) noexcept { m_tag = value; }
-
-
-
-
-
-        winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins() { return m_messageProcessingPlugins; }
-
-
-
-        STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position) override;
-
-        inline winrt::event_token MessageReceived(_In_ winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs> const& handler)
+        STDMETHOD(Callback)(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position) override
         {
-            return m_messageReceivedEvent.add(handler);
+            return CallbackImpl(*this, data, size, position);
         }
-
-        inline void MessageReceived(_In_ winrt::event_token const& token) noexcept
-        {
-            if (m_messageReceivedEvent) m_messageReceivedEvent.remove(token);
-        }
-
 
         _Success_(return == true)
         bool InternalInitialize(
@@ -74,34 +52,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         _Success_(return == true)
         bool Open();
 
-
-
     private:
-        hstring m_id{};
-        hstring m_deviceId{};
-        IInspectable m_tag{ nullptr };
-        winrt::Windows::Devices::Midi2::MidiEndpointConnectionSharing m_activeSharingMode{ winrt::Windows::Devices::Midi2::MidiEndpointConnectionSharing::Unknown };
-
-        bool m_isOpen{ false };
-
-        IMidiEndpointDefinedConnectionSettings m_settings{ nullptr };
-
-
-        winrt::com_ptr<IMidiAbstraction> m_serviceAbstraction{ nullptr };
-        winrt::com_ptr<IMidiIn> m_endpointInterface{ nullptr };
-
- //       internal::InternalMidiMessageReceiverHelper m_messageReceiverHelper;
-
-        winrt::event<winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;
-
-        winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiEndpointMessageProcessingPlugin>
-            m_messageProcessingPlugins{ winrt::single_threaded_vector<winrt::Windows::Devices::Midi2::IMidiEndpointMessageProcessingPlugin>() };
-
-        _Success_(return == true)
-            bool ActivateMidiStream(
-                _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
-                _In_ const IID & iid,
-                _Out_ void** iface);
 
     };
 }

@@ -29,12 +29,11 @@ namespace Windows::Devices::Midi2::Internal
 
     }
 
-
-    _Success_(return == true)
-        bool InternalMidiConnectionCommon::ActivateMidiStream(
-            _In_ com_ptr<IMidiAbstraction> serviceAbstraction,
-            _In_ const IID& iid,
-            _Out_ void** iface)
+    _Use_decl_annotations_
+    bool InternalMidiConnectionCommon::ActivateMidiStream(
+        winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
+        const IID& iid,
+        void** iface)
     {
         try
         {

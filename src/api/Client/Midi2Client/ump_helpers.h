@@ -22,9 +22,6 @@
 
 namespace Windows::Devices::Midi2::Internal
 {
-
-
-
     inline std::uint8_t GetUmpLengthInMidiWordsFromMessageType(_In_ const std::uint8_t messageType)
     {
         switch (messageType & 0x0F)

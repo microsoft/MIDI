@@ -14,6 +14,7 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
+    _Use_decl_annotations_
     winrt::Windows::Devices::Midi2::MidiSessionSettings MidiSessionSettings::Default()
     {
         // right now, the default is just empty
@@ -21,9 +22,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return *(winrt::make_self<implementation::MidiSessionSettings>());
     }
 
-   
-
-    void MidiSessionSettings::UseMmcssThreads(_In_ bool value)
+    _Use_decl_annotations_
+    void MidiSessionSettings::UseMmcssThreads(bool const value)
     {
         m_useMmcss = value;
     }

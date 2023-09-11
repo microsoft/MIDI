@@ -22,10 +22,11 @@
 namespace winrt::Windows::Devices::Midi2::implementation
 {
 
-
-    winrt::Windows::Devices::Midi2::MidiSession MidiSession::CreateSession(
-        _In_ hstring const& sessionName,
-        _In_ winrt::Windows::Devices::Midi2::MidiSessionSettings const& settings)
+    _Use_decl_annotations_
+    midi2::MidiSession MidiSession::CreateSession(
+        winrt::hstring const& sessionName,
+        midi2::MidiSessionSettings const& settings
+        ) noexcept
     {
         try
         {
@@ -56,14 +57,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
        
     }
 
-    winrt::Windows::Devices::Midi2::MidiSession MidiSession::CreateSession(
-        _In_ hstring const& sessionName)
+    _Use_decl_annotations_
+    midi2::MidiSession MidiSession::CreateSession(
+        winrt::hstring const& sessionName
+        ) noexcept
     {
-        return CreateSession(sessionName, winrt::Windows::Devices::Midi2::MidiSessionSettings::Default());
+        return CreateSession(sessionName, midi2::MidiSessionSettings::Default());
     }
 
     // Internal method called inside the API to connect to the abstraction. Called by the code which creates
     // the session instance
+    _Use_decl_annotations_
     bool MidiSession::InternalStart()
     {
         try
@@ -73,13 +77,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             // TODO: Not sure if service will need to provide the Id, or we can simply gen a GUID and send it up
             // that's why the assignment is in this function and not in CreateSession()
-            m_id = winrt::to_hstring(Windows::Foundation::GuidHelper::CreateNewGuid());
+            m_id = winrt::to_hstring(foundation::GuidHelper::CreateNewGuid());
 
             m_isOpen = true;
 
             // create the virtual device manager
 
-            auto virtualDeviceManager = winrt::make_self<MidiVirtualDeviceManager>();
+            auto virtualDeviceManager = winrt::make_self<implementation::MidiVirtualDeviceManager>();
             if (virtualDeviceManager != nullptr)
             {
                 virtualDeviceManager->Initialize(m_serviceAbstraction);
@@ -98,8 +102,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return true;
     }
 
-
-    hstring MidiSession::NormalizeDeviceId(_In_ const hstring& deviceId)
+    _Use_decl_annotations_
+    winrt::hstring MidiSession::NormalizeDeviceId(const winrt::hstring& deviceId)
     {
         if (deviceId.empty()) return deviceId;
 
@@ -110,10 +114,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     // Bidirectional ===========================================================================================================
 
-    winrt::Windows::Devices::Midi2::MidiBidirectionalEndpointConnection MidiSession::ConnectBidirectionalEndpoint(
-        _In_ hstring const& deviceId,
-        _In_ winrt::Windows::Devices::Midi2::MidiBidirectionalEndpointOpenOptions const& /* options */,
-        _In_ winrt::Windows::Devices::Midi2::IMidiEndpointDefinedConnectionSettings const& /*settings*/)
+    _Use_decl_annotations_
+    midi2::MidiBidirectionalEndpointConnection MidiSession::ConnectBidirectionalEndpoint(
+        winrt::hstring const& deviceId,
+        midi2::MidiBidirectionalEndpointOpenOptions const& /* options */,
+        midi2::IMidiEndpointDefinedConnectionSettings const& /*settings*/
+        ) noexcept
     {
         try
         {
@@ -121,15 +127,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
             auto endpointConnection = winrt::make_self<implementation::MidiBidirectionalEndpointConnection>();
 
             // generate internal endpoint Id
-            auto guid = Windows::Foundation::GuidHelper::CreateNewGuid();
-            auto endpointId = winrt::to_hstring(guid);
+            auto guid = foundation::GuidHelper::CreateNewGuid();
+            auto connectionInstanceId = winrt::to_hstring(guid);
 
-            //endpointConnection->InternalSetId(endpointId);
+            //endpointConnection->InternalSetId(connectionInstanceId);
             //endpointConnection->InternalSetDeviceId(normalizedDeviceId);
 
-            if (endpointConnection->InternalInitialize(m_serviceAbstraction, endpointId, normalizedDeviceId))
+            if (endpointConnection->InternalInitialize(m_serviceAbstraction, connectionInstanceId, normalizedDeviceId))
             {
-                m_connections.Insert((winrt::hstring)normalizedDeviceId, (const Windows::Devices::Midi2::IMidiEndpointConnection)(*endpointConnection));
+                m_connections.Insert((winrt::hstring)connectionInstanceId, (const midi2::IMidiEndpointConnection)(*endpointConnection));
 
                 // TODO: This value needs to come from configuration for this endpoint. It comes from
                 // the user settings property store, and then the open options
@@ -166,15 +172,19 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
-    winrt::Windows::Devices::Midi2::MidiBidirectionalEndpointConnection MidiSession::ConnectBidirectionalEndpoint(
-        _In_ hstring const& deviceId,
-        _In_ winrt::Windows::Devices::Midi2::MidiBidirectionalEndpointOpenOptions const& options)
+    _Use_decl_annotations_
+    midi2::MidiBidirectionalEndpointConnection MidiSession::ConnectBidirectionalEndpoint(
+        winrt::hstring const& deviceId,
+        midi2::MidiBidirectionalEndpointOpenOptions const& options
+        ) noexcept
     {
         return ConnectBidirectionalEndpoint(deviceId, options, nullptr);
     }
 
-    winrt::Windows::Devices::Midi2::MidiBidirectionalEndpointConnection MidiSession::ConnectBidirectionalEndpoint(
-        _In_ hstring const& deviceId)
+    _Use_decl_annotations_
+    midi2::MidiBidirectionalEndpointConnection MidiSession::ConnectBidirectionalEndpoint(
+        winrt::hstring const& deviceId
+        ) noexcept
     {
         return ConnectBidirectionalEndpoint(deviceId, nullptr, nullptr);
     }
@@ -182,32 +192,79 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     // Bidirectional Aggregated ===========================================================================================================
 
-    winrt::Windows::Devices::Midi2::MidiBidirectionalAggregatedEndpointConnection MidiSession::ConnectBidirectionalAggregatedEndpoint(
-        _In_ hstring const& /* inputDeviceId*/,
-        _In_ hstring const& /*outputDeviceId*/ ,
-        _In_ winrt::Windows::Devices::Midi2::MidiBidirectionalAggregatedEndpointOpenOptions const& /*options*/,
-        _In_ winrt::Windows::Devices::Midi2::IMidiEndpointDefinedConnectionSettings const& /*settings*/
-    )
+    _Use_decl_annotations_
+    midi2::MidiBidirectionalAggregatedEndpointConnection MidiSession::ConnectBidirectionalAggregatedEndpoint(
+        winrt::hstring const& inputDeviceId,
+        winrt::hstring const& outputDeviceId ,
+        midi2::MidiBidirectionalAggregatedEndpointOpenOptions const& /*options*/,
+        midi2::IMidiEndpointDefinedConnectionSettings const& /*settings*/
+        ) noexcept
     {
-        // TODO:
+        try
+        {
+            auto normalizedInputDeviceId = NormalizeDeviceId(inputDeviceId);
+            auto normalizedOutputDeviceId = NormalizeDeviceId(outputDeviceId);
+            auto endpointConnection = winrt::make_self<implementation::MidiBidirectionalAggregatedEndpointConnection>();
 
-        throw hresult_not_implemented();
+            // generate internal endpoint Id
+            auto guid = foundation::GuidHelper::CreateNewGuid();
+            auto connectionInstanceId = winrt::to_hstring(guid);
+
+
+            if (endpointConnection->InternalInitialize(m_serviceAbstraction, connectionInstanceId, normalizedInputDeviceId, normalizedOutputDeviceId))
+            {
+                m_connections.Insert((winrt::hstring)connectionInstanceId, (const midi2::IMidiEndpointConnection)(*endpointConnection));
+
+                // TODO: This value needs to come from configuration for this endpoint. It comes from
+                // the user settings property store, and then the open options
+                bool autoHandleEndpointMessages = true;
+
+                if (autoHandleEndpointMessages)
+                {
+                    //auto endpointInformationListener = winrt::make_self<implementation::MidiEndpointInformationEndpointListener>();
+
+                    //endpointInformationListener->Id(L"auto_EndpointInformationListener");
+                    //endpointInformationListener->Name(L"Automatic Endpoint Information Message Handler");
+                    //endpointInformationListener->InputConnection(endpointConnection.as<IMidiInputConnection>());
+                    //endpointInformationListener->Initialize();
+                    //                   
+                    //endpointConnection->MessageListeners().Append(*endpointInformationListener);
+                }
+
+                return *endpointConnection;
+            }
+            else
+            {
+                internal::LogGeneralError(__FUNCTION__, L"WinRT Endpoint connection wouldn't start");
+
+                // TODO: Cleanup
+
+                return nullptr;
+            }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            internal::LogHresultError(__FUNCTION__, L" hresult exception connecting to endpoint. Service or endpoint may be unavailable, or endpoint may not be the correct type.", ex);
+
+            return nullptr;
+        }
     }
 
-    winrt::Windows::Devices::Midi2::MidiBidirectionalAggregatedEndpointConnection MidiSession::ConnectBidirectionalAggregatedEndpoint(
-        _In_ hstring const& inputDeviceId,
-        _In_ hstring const& outputDeviceId,
-        _In_ winrt::Windows::Devices::Midi2::MidiBidirectionalAggregatedEndpointOpenOptions const& options
-    )
+    _Use_decl_annotations_
+    midi2::MidiBidirectionalAggregatedEndpointConnection MidiSession::ConnectBidirectionalAggregatedEndpoint(
+        winrt::hstring const& inputDeviceId,
+        winrt::hstring const& outputDeviceId,
+        midi2::MidiBidirectionalAggregatedEndpointOpenOptions const& options
+        ) noexcept
     {
         return ConnectBidirectionalAggregatedEndpoint(inputDeviceId, outputDeviceId, options, nullptr);
     }
 
-
-    winrt::Windows::Devices::Midi2::MidiBidirectionalAggregatedEndpointConnection MidiSession::ConnectBidirectionalAggregatedEndpoint(
-        _In_ hstring const& inputDeviceId,
-        _In_ hstring const& outputDeviceId
-    )
+    _Use_decl_annotations_
+    midi2::MidiBidirectionalAggregatedEndpointConnection MidiSession::ConnectBidirectionalAggregatedEndpoint(
+        winrt::hstring const& inputDeviceId,
+        winrt::hstring const& outputDeviceId
+        ) noexcept
     {
         return ConnectBidirectionalAggregatedEndpoint(inputDeviceId, outputDeviceId, nullptr, nullptr);
     }
@@ -222,10 +279,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     // Output ===================================================================================================================
 
-    winrt::Windows::Devices::Midi2::MidiOutputEndpointConnection MidiSession::ConnectOutputEndpoint(
-        _In_ hstring const& deviceId,
-        _In_ winrt::Windows::Devices::Midi2::MidiOutputEndpointOpenOptions const& /*options*/,
-        _In_ winrt::Windows::Devices::Midi2::IMidiEndpointDefinedConnectionSettings const& /*settings*/)
+    _Use_decl_annotations_
+    midi2::MidiOutputEndpointConnection MidiSession::ConnectOutputEndpoint(
+        winrt::hstring const& deviceId,
+        midi2::MidiOutputEndpointOpenOptions const& /*options*/,
+        midi2::IMidiEndpointDefinedConnectionSettings const& /*settings*/
+        ) noexcept
     {
         try
         {
@@ -234,14 +293,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             // generate internal endpoint Id
             auto guid = Windows::Foundation::GuidHelper::CreateNewGuid();
-            auto endpointId = winrt::to_hstring(guid);
+            auto connectionInstanceId = winrt::to_hstring(guid);
 
-            //endpointConnection->InternalSetId(endpointId);
+            //endpointConnection->InternalSetId(connectionInstanceId);
             //endpointConnection->InternalSetDeviceId(normalizedDeviceId);
 
-            if (endpointConnection->InternalInitialize(m_serviceAbstraction, endpointId, normalizedDeviceId))
+            if (endpointConnection->InternalInitialize(m_serviceAbstraction, connectionInstanceId, normalizedDeviceId))
             {
-                m_connections.Insert((winrt::hstring)normalizedDeviceId, (const Windows::Devices::Midi2::IMidiEndpointConnection)(*endpointConnection));
+                m_connections.Insert((winrt::hstring)connectionInstanceId, (const midi2::IMidiEndpointConnection)(*endpointConnection));
 
                 return *endpointConnection;
             }
@@ -265,15 +324,20 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     }
 
-    winrt::Windows::Devices::Midi2::MidiOutputEndpointConnection MidiSession::ConnectOutputEndpoint(
-        _In_ hstring const& deviceId,
-        _In_ winrt::Windows::Devices::Midi2::MidiOutputEndpointOpenOptions const& options)
+
+    _Use_decl_annotations_
+    midi2::MidiOutputEndpointConnection MidiSession::ConnectOutputEndpoint(
+        winrt::hstring const& deviceId,
+        midi2::MidiOutputEndpointOpenOptions const& options
+        ) noexcept
     {
         return ConnectOutputEndpoint(deviceId, options, nullptr);
     }
 
-    winrt::Windows::Devices::Midi2::MidiOutputEndpointConnection MidiSession::ConnectOutputEndpoint(
-        _In_ hstring const& deviceId)
+    _Use_decl_annotations_
+    midi2::MidiOutputEndpointConnection MidiSession::ConnectOutputEndpoint(
+        winrt::hstring const& deviceId
+        ) noexcept
     {
         return ConnectOutputEndpoint(deviceId, nullptr, nullptr);
     }
@@ -282,10 +346,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     // Input ==================================================================================================================
 
-    winrt::Windows::Devices::Midi2::MidiInputEndpointConnection MidiSession::ConnectInputEndpoint(
-        _In_ hstring const& deviceId,
-        _In_ winrt::Windows::Devices::Midi2::MidiInputEndpointOpenOptions const& /* options */,
-        _In_ winrt::Windows::Devices::Midi2::IMidiEndpointDefinedConnectionSettings const& /*settings*/)
+    _Use_decl_annotations_
+    midi2::MidiInputEndpointConnection MidiSession::ConnectInputEndpoint(
+        winrt::hstring const& deviceId,
+        midi2::MidiInputEndpointOpenOptions const& /* options */,
+        midi2::IMidiEndpointDefinedConnectionSettings const& /*settings*/
+        ) noexcept
     {
         try
         {
@@ -294,11 +360,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             // generate internal endpoint Id
             auto guid = Windows::Foundation::GuidHelper::CreateNewGuid();
-            auto endpointId = winrt::to_hstring(guid);
+            auto connectionInstanceId = winrt::to_hstring(guid);
 
-            if (endpointConnection->InternalInitialize(m_serviceAbstraction, endpointId, normalizedDeviceId))
+            if (endpointConnection->InternalInitialize(m_serviceAbstraction, connectionInstanceId, normalizedDeviceId))
             {
-                m_connections.Insert((winrt::hstring)normalizedDeviceId, (const Windows::Devices::Midi2::IMidiEndpointConnection)(*endpointConnection));
+                m_connections.Insert((winrt::hstring)connectionInstanceId, (const midi2::IMidiEndpointConnection)(*endpointConnection));
 
                 // TODO: This value needs to come from configuration for this endpoint. It comes from
                 // the user settings property store, and then the open options
@@ -335,15 +401,18 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
-    winrt::Windows::Devices::Midi2::MidiInputEndpointConnection MidiSession::ConnectInputEndpoint(
-        _In_ hstring const& deviceId,
-        _In_ winrt::Windows::Devices::Midi2::MidiInputEndpointOpenOptions const& options)
+    _Use_decl_annotations_
+    midi2::MidiInputEndpointConnection MidiSession::ConnectInputEndpoint(
+        winrt::hstring const& deviceId,
+        midi2::MidiInputEndpointOpenOptions const& options
+        ) noexcept
     {
         return ConnectInputEndpoint(deviceId, options, nullptr);
     }
 
-    winrt::Windows::Devices::Midi2::MidiInputEndpointConnection MidiSession::ConnectInputEndpoint(
-        _In_ hstring const& deviceId)
+    midi2::MidiInputEndpointConnection MidiSession::ConnectInputEndpoint(
+        winrt::hstring const& deviceId
+        ) noexcept
     {
         return ConnectInputEndpoint(deviceId, nullptr, nullptr);
     }
@@ -351,8 +420,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
-
-    void MidiSession::DisconnectEndpointConnection(_In_ hstring const& endpointConnectionId)
+    _Use_decl_annotations_
+    void MidiSession::DisconnectEndpointConnection(
+        winrt::hstring const& endpointConnectionId
+        ) noexcept
     {
         try
         {
@@ -379,15 +450,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
-    
-    void MidiSession::Close()
+    _Use_decl_annotations_
+    void MidiSession::Close() noexcept
     {
         // todo: need to clean up all connections, disconnect from service, etc.
 
         //std::for_each(
         //    begin(_connections), 
         //    end(_connections), 
-        //    [](winrt::Windows::Foundation::Collections::IKeyValuePair<hstring, winrt::Windows::Devices::Midi2::MidiEndpointConnection> &kvp)
+        //    [](winrt::Windows::Foundation::Collections::IKeyValuePair<hstring,midi2::MidiEndpointConnection> &kvp)
         //        { 
         //            // TODO: close the Endpoint at the service, remove the buffers, etc.
         //            
@@ -410,8 +481,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
-
-    MidiSession::~MidiSession()
+    _Use_decl_annotations_
+    MidiSession::~MidiSession() noexcept
     {
         if (m_isOpen)
         {

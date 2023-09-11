@@ -33,15 +33,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
         MidiBidirectionalAggregatedEndpointConnectionT<
             MidiBidirectionalAggregatedEndpointConnection, 
             IMidiCallback>,
-        public ::Windows::Devices::Midi2::Internal::InternalMidiConnectionCommon,
-        public ::Windows::Devices::Midi2::Internal::InternalMidiInputConnection<IMidiIn>,
-        public ::Windows::Devices::Midi2::Internal::InternalMidiOutputConnection<IMidiOut>
+        public internal::InternalMidiConnectionCommon,
+        public internal::InternalMidiInputConnection<IMidiIn>,
+        public internal::InternalMidiOutputConnection<IMidiOut>
     {
         MidiBidirectionalAggregatedEndpointConnection() = default;
         ~MidiBidirectionalAggregatedEndpointConnection();
 
-        hstring InputDeviceId() const noexcept { return m_inputDeviceId; }
-        hstring OutputDeviceId() const noexcept { return m_outputDeviceId; }
+        winrt::hstring InputDeviceId() const noexcept { return m_inputDeviceId; }
+        winrt::hstring OutputDeviceId() const noexcept { return m_outputDeviceId; }
 
         STDMETHOD(Callback)(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position) override
         {

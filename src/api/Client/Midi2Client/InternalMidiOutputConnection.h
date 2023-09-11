@@ -58,7 +58,7 @@ namespace Windows::Devices::Midi2::Internal
         _Success_(return == true)
         bool SendUmpWordArray(
             _In_ internal::MidiTimestamp const timestamp,
-            _In_ array_view<uint32_t const> words,
+            _In_ winrt::array_view<uint32_t const> words,
             _In_ uint32_t const wordCount);
 
         _Success_(return == true)
@@ -79,9 +79,22 @@ namespace Windows::Devices::Midi2::Internal
 
         bool m_isOpen{ false };
 
-        bool SendUmpInternal(_In_ winrt::com_ptr<TEndpointAbstraction> endpoint, _In_ midi2::IMidiUmp const& ump);
-        bool SendMessageRaw(_In_ winrt::com_ptr<TEndpointAbstraction> endpoint, _In_ void* data, _In_ uint32_t sizeInBytes, _In_ internal::MidiTimestamp timestamp);
-        void* GetUmpDataPointer(midi2::IMidiUmp const& ump, uint32_t& dataSizeOut);
+        _Success_(return == true)
+        bool SendUmpInternal(
+            _In_ winrt::com_ptr<TEndpointAbstraction> endpoint, 
+            _In_ midi2::IMidiUmp const& ump);
+
+        _Success_(return == true)
+        bool SendMessageRaw(
+            _In_ winrt::com_ptr<TEndpointAbstraction> endpoint, 
+            _In_ void* data, 
+            _In_ uint32_t sizeInBytes, 
+            _In_ internal::MidiTimestamp timestamp);
+
+        _Success_(return != nullptr)
+        void* GetUmpDataPointer(
+            _In_ midi2::IMidiUmp const& ump, 
+            _Out_ uint32_t& dataSizeOut);
 
     };
 
@@ -157,8 +170,8 @@ namespace Windows::Devices::Midi2::Internal
     _Use_decl_annotations_
     template <typename TEndpointAbstraction>
     bool InternalMidiOutputConnection<TEndpointAbstraction>::SendUmpInternal(
-            com_ptr<TEndpointAbstraction> endpoint,
-            winrt::Windows::Devices::Midi2::IMidiUmp const& ump)
+            winrt::com_ptr<TEndpointAbstraction> endpoint,
+            midi2::IMidiUmp const& ump)
     {
         try
         {
@@ -184,10 +197,6 @@ namespace Windows::Devices::Midi2::Internal
             return false;
         }
     }
-
-
-
-
 
 
     _Use_decl_annotations_
@@ -256,7 +265,7 @@ namespace Windows::Devices::Midi2::Internal
     template <typename TEndpointAbstraction>
     bool InternalMidiOutputConnection<TEndpointAbstraction>::SendUmpWordArray(
             internal::MidiTimestamp const timestamp,
-            array_view<uint32_t const> words,
+            winrt::array_view<uint32_t const> words,
             uint32_t const wordCount)
     {
         try

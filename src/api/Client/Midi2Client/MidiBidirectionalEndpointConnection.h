@@ -34,9 +34,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
     struct MidiBidirectionalEndpointConnection : MidiBidirectionalEndpointConnectionT<
             MidiBidirectionalEndpointConnection, 
             IMidiCallback>, 
-        public ::Windows::Devices::Midi2::Internal::InternalMidiConnectionCommon,
-        public ::Windows::Devices::Midi2::Internal::InternalMidiInputConnection<IMidiBiDi>,
-        public ::Windows::Devices::Midi2::Internal::InternalMidiOutputConnection<IMidiBiDi>
+        public internal::InternalMidiConnectionCommon,
+        public internal::InternalMidiInputConnection<IMidiBiDi>,
+        public internal::InternalMidiOutputConnection<IMidiBiDi>
     {
         MidiBidirectionalEndpointConnection() = default;
         ~MidiBidirectionalEndpointConnection();

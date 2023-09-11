@@ -30,7 +30,7 @@ namespace Windows::Devices::Midi2::Internal
         index = ws.find_last_not_of(' ');
         ws.resize(index + 1);
 
-        return hstring{ ws };
+        return winrt::hstring{ ws };
     }
 
     inline winrt::hstring ToUpperHStringCopy(_In_ winrt::hstring s)
@@ -38,9 +38,8 @@ namespace Windows::Devices::Midi2::Internal
         std::wstring ws{ s };
         std::transform(ws.begin(), ws.end(), ws.begin(), std::towupper); 
 
-        return hstring{ ws };
+        return winrt::hstring{ ws };
     }
-
 
     inline winrt::hstring ToUpperTrimmedHStringCopy(_In_ winrt::hstring s)
     {

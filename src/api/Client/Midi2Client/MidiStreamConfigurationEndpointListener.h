@@ -28,10 +28,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void IsEnabled(_In_ bool const& value) noexcept { m_enabled = value; }
 
         winrt::Windows::Foundation::IInspectable Tag() const noexcept { return m_tag; }
-        void Tag(_In_ winrt::Windows::Foundation::IInspectable const& value) { m_tag = value; }
+        void Tag(_In_ foundation::IInspectable const& value) { m_tag = value; }
 
-        winrt::Windows::Devices::Midi2::IMidiInputConnection InputConnection() const noexcept { return m_inputConnection; }
-        void InputConnection(_In_ winrt::Windows::Devices::Midi2::IMidiInputConnection const& value) noexcept { m_inputConnection = value; }
+        midi2::IMidiInputConnection InputConnection() const noexcept { return m_inputConnection; }
+        void InputConnection(_In_ midi2::IMidiInputConnection const& value) noexcept { m_inputConnection = value; }
 
         void ProcessIncomingMessage(
             _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs const& args,
@@ -42,8 +42,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void Initialize();
         void OnEndpointConnectionOpened();
         void Cleanup();
-
-
 
     private:
         hstring m_id{};

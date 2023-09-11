@@ -128,8 +128,6 @@
     <ClCompile Include="MidiEndpointInformation.cpp">
       <Filter>API\Endpoints\Metadata\Endpoints</Filter>
     </ClCompile>
-    <ClCompile Include="MidiSettingsService.cpp" />
-    <ClCompile Include="MidiStateService.cpp" />
     <ClCompile Include="MidiUniqueId.cpp">
       <Filter>API\Endpoints\Metadata\MUID</Filter>
     </ClCompile>
@@ -172,6 +170,12 @@
     </ClCompile>
     <ClCompile Include="InternalMidiConnectionCommon.cpp">
       <Filter>API\Endpoints\Connections\InternalImplementation</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiSettingsService.cpp">
+      <Filter>Internal</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiStateService.cpp">
+      <Filter>Internal</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

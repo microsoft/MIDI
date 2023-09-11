@@ -35,6 +35,13 @@ namespace Windows.Devices.Midi2
         UInt8 Byte2{ get; set; };
         UInt8 Byte3{ get; set; };
         UInt8 Byte4{ get; set; };
+
+        // TODO: Consider adding an "AsInt32" or similar function to do all the shifting required to 
+        // present this as a 28 bit number
+
+        // TODO: Consider adding a constructor which takes a UInt32 and creates the MUID from it
+
+        // TODO: Consider adding a "CreateNew" or similar static function to generate the random number
     };
 
 

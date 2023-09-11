@@ -26,8 +26,6 @@
 #include <winrt/Windows.Storage.Streams.h>
 #include <winrt/Windows.Storage.h>
 
-using namespace winrt;
-
 
 #include <stdint.h>
 
@@ -77,5 +75,7 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 #include "MidiTransportInformation.h"
 #include "MidiService.h"
 
+
+// TODO: Consider changing these to midi2impl and midi2proj
 namespace implementation = winrt::Windows::Devices::Midi2::implementation;
 namespace midi2 = ::winrt::Windows::Devices::Midi2;

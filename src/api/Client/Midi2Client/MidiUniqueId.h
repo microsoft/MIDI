@@ -16,7 +16,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiUniqueId() = default;
 
-        MidiUniqueId(uint8_t sevenBitByte1, uint8_t sevenBitByte2, uint8_t sevenBitByte3, uint8_t sevenBitByte4)
+        MidiUniqueId(
+            _In_ uint8_t const sevenBitByte1, 
+            _In_ uint8_t const sevenBitByte2,
+            _In_ uint8_t const sevenBitByte3,
+            _In_ uint8_t const sevenBitByte4
+        ) noexcept
         {
             Byte1(sevenBitByte1);
             Byte2(sevenBitByte2);

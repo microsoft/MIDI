@@ -15,10 +15,11 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
+    _Use_decl_annotations_
     winrt::Windows::Devices::Midi2::MidiUmp32 MidiMessageBuilder::BuildUtilityMessage(
-        _In_ internal::MidiTimestamp const timestamp,
-        _In_ uint8_t const status,
-        _In_ uint32_t const dataOrReserved)
+        internal::MidiTimestamp const timestamp,
+        uint8_t const status,
+        uint32_t const dataOrReserved)
     {      
         return MidiUmp32(
             timestamp,
@@ -30,12 +31,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     }
 
+    _Use_decl_annotations_
     winrt::Windows::Devices::Midi2::MidiUmp32 MidiMessageBuilder::BuildSystemMessage(
-        _In_ internal::MidiTimestamp const timestamp,
-        _In_ uint8_t const groupIndex,
-        _In_ uint8_t const status,
-        _In_ uint8_t const midi1Byte2,
-        _In_ uint8_t const midi1Byte3)
+        internal::MidiTimestamp const timestamp,
+        uint8_t const groupIndex,
+        uint8_t const status,
+        uint8_t const midi1Byte2,
+        uint8_t const midi1Byte3)
     {
         return MidiUmp32(
             timestamp,
@@ -48,13 +50,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
         );
     }
 
+    _Use_decl_annotations_
     winrt::Windows::Devices::Midi2::MidiUmp32 MidiMessageBuilder::BuildMidi1ChannelVoiceMessage(
-        _In_ internal::MidiTimestamp const timestamp,
-        _In_ uint8_t const groupIndex,
-        _In_ winrt::Windows::Devices::Midi2::Midi1ChannelVoiceMessageStatus const& status,
-        _In_ uint8_t const channel,
-        _In_ uint8_t const byte3,
-        _In_ uint8_t const byte4)
+        internal::MidiTimestamp const timestamp,
+        uint8_t const groupIndex,
+        midi2::Midi1ChannelVoiceMessageStatus const& status,
+        uint8_t const channel,
+        uint8_t const byte3,
+        uint8_t const byte4)
     {
         return MidiUmp32(
             timestamp,
@@ -68,17 +71,18 @@ namespace winrt::Windows::Devices::Midi2::implementation
         );
     }
 
+    _Use_decl_annotations_
     winrt::Windows::Devices::Midi2::MidiUmp64 MidiMessageBuilder::BuildSysEx7Message(
-        _In_ internal::MidiTimestamp const timestamp,
-        _In_ uint8_t const groupIndex,
-        _In_ uint8_t const status,
-        _In_ uint8_t const numberOfBytes,
-        _In_ uint8_t const dataByte0,
-        _In_ uint8_t const dataByte1,
-        _In_ uint8_t const dataByte2,
-        _In_ uint8_t const dataByte3,
-        _In_ uint8_t const dataByte4,
-        _In_ uint8_t const dataByte5)
+        internal::MidiTimestamp const timestamp,
+        uint8_t const groupIndex,
+        uint8_t const status,
+        uint8_t const numberOfBytes,
+        uint8_t const dataByte0,
+        uint8_t const dataByte1,
+        uint8_t const dataByte2,
+        uint8_t const dataByte3,
+        uint8_t const dataByte4,
+        uint8_t const dataByte5)
     {
         
         return MidiUmp64(
@@ -101,35 +105,38 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     }
 
+    _Use_decl_annotations_
     winrt::Windows::Devices::Midi2::MidiUmp64 MidiMessageBuilder::BuildSysEx7MessageFromArray(
-        _In_ internal::MidiTimestamp const /*timestamp*/,
-        _In_ uint8_t const /*groupIndex*/,
-        _In_ uint8_t const /*status*/,
-        _In_ uint8_t const /*numberOfBytes*/,
-        _In_ array_view<uint8_t const> const /*dataBytes*/,
-        _In_ uint32_t const /*arrayStartIndex*/)
+        internal::MidiTimestamp const /*timestamp*/,
+        uint8_t const /*groupIndex*/,
+        uint8_t const /*status*/,
+        uint8_t const /*numberOfBytes*/,
+        array_view<uint8_t const> const /*dataBytes*/,
+        uint32_t const /*arrayStartIndex*/)
     {
         throw hresult_not_implemented();
     }
 
+    _Use_decl_annotations_
     winrt::Windows::Devices::Midi2::MidiUmp64 MidiMessageBuilder::BuildSysEx7MessageFromBuffer(
-        _In_ internal::MidiTimestamp const /*timestamp*/,
-        _In_ uint8_t const /*groupIndex*/,
-        _In_ uint8_t const /*status*/,
-        _In_ uint8_t const /*numberOfBytes*/,
-        _In_ winrt::Windows::Foundation::IMemoryBuffer const& /*buffer*/,
-        _In_ uint32_t const /*byteOffsetInBuffer*/)
+        internal::MidiTimestamp const /*timestamp*/,
+        uint8_t const /*groupIndex*/,
+        uint8_t const /*status*/,
+        uint8_t const /*numberOfBytes*/,
+        foundation::IMemoryBuffer const& /*buffer*/,
+        uint32_t const /*byteOffsetInBuffer*/)
     {
         throw hresult_not_implemented();
     }
 
+    _Use_decl_annotations_
     winrt::Windows::Devices::Midi2::MidiUmp64 MidiMessageBuilder::BuildMidi2ChannelVoiceMessage(
-        _In_ internal::MidiTimestamp const timestamp,
-        _In_ uint8_t const groupIndex,
-        _In_ winrt::Windows::Devices::Midi2::Midi2ChannelVoiceMessageStatus const& status,
-        _In_ uint8_t const channel,
-        _In_ uint16_t const index,
-        _In_ uint32_t const data)
+        internal::MidiTimestamp const timestamp,
+        uint8_t const groupIndex,
+        midi2::Midi2ChannelVoiceMessageStatus const& status,
+        uint8_t const channel,
+        uint16_t const index,
+        uint32_t const data)
     {
         return MidiUmp64(
             timestamp,
@@ -142,25 +149,26 @@ namespace winrt::Windows::Devices::Midi2::implementation
             data);
     }
 
+    _Use_decl_annotations_
     winrt::Windows::Devices::Midi2::MidiUmp128 MidiMessageBuilder::BuildSysEx8Message(
-        _In_ internal::MidiTimestamp const timestamp,
-        _In_ uint8_t const groupIndex,
-        _In_ winrt::Windows::Devices::Midi2::MidiSysEx8Status const& status,
-        _In_ uint8_t const numberOfValidDataBytesThisMessage,
-        _In_ uint8_t const streamId,
-        _In_ uint8_t const dataByte00,
-        _In_ uint8_t const dataByte01,
-        _In_ uint8_t const dataByte02,
-        _In_ uint8_t const dataByte03,
-        _In_ uint8_t const dataByte04,
-        _In_ uint8_t const dataByte05,
-        _In_ uint8_t const dataByte06,
-        _In_ uint8_t const dataByte07,
-        _In_ uint8_t const dataByte08,
-        _In_ uint8_t const dataByte09,
-        _In_ uint8_t const dataByte10,
-        _In_ uint8_t const dataByte11,
-        _In_ uint8_t const dataByte12)
+        internal::MidiTimestamp const timestamp,
+        uint8_t const groupIndex,
+        midi2::MidiSysEx8Status const& status,
+        uint8_t const numberOfValidDataBytesThisMessage,
+        uint8_t const streamId,
+        uint8_t const dataByte00,
+        uint8_t const dataByte01,
+        uint8_t const dataByte02,
+        uint8_t const dataByte03,
+        uint8_t const dataByte04,
+        uint8_t const dataByte05,
+        uint8_t const dataByte06,
+        uint8_t const dataByte07,
+        uint8_t const dataByte08,
+        uint8_t const dataByte09,
+        uint8_t const dataByte10,
+        uint8_t const dataByte11,
+        uint8_t const dataByte12)
     {
 
         return MidiUmp128(
@@ -179,99 +187,106 @@ namespace winrt::Windows::Devices::Midi2::implementation
             );
     }
 
+    _Use_decl_annotations_
     winrt::Windows::Devices::Midi2::MidiUmp128 MidiMessageBuilder::BuildSysEx8MessageFromArray(
-        _In_ internal::MidiTimestamp const /*timestamp*/,
-        _In_ uint8_t const /*groupIndex*/,
-        _In_ winrt::Windows::Devices::Midi2::MidiSysEx8Status const& /*status*/,
-        _In_ uint8_t const /*numberOfValidDataBytesThisMessage*/,
-        _In_ uint8_t const /*streamId*/,
-        _In_ array_view<uint8_t const> const /*dataBytes*/,
-        _In_ uint32_t const /*arrayStartIndex*/)
+        internal::MidiTimestamp const /*timestamp*/,
+        uint8_t const /*groupIndex*/,
+        midi2::MidiSysEx8Status const& /*status*/,
+        uint8_t const /*numberOfValidDataBytesThisMessage*/,
+        uint8_t const /*streamId*/,
+        array_view<uint8_t const> const /*dataBytes*/,
+        uint32_t const /*arrayStartIndex*/)
     {
         throw hresult_not_implemented();
     }
 
+    _Use_decl_annotations_
     winrt::Windows::Devices::Midi2::MidiUmp128 MidiMessageBuilder::BuildSysEx8MessageFromBuffer(
-        _In_ internal::MidiTimestamp const /*timestamp*/,
-        _In_ uint8_t const /*groupIndex*/,
-        _In_ winrt::Windows::Devices::Midi2::MidiSysEx8Status const& /*status*/,
-        _In_ uint8_t const /*numberOfValidDataBytesThisMessage*/,
-        _In_ winrt::Windows::Foundation::IMemoryBuffer const& /*buffer*/,
-        _In_ uint32_t const /*byteOffsetInBuffer*/)
+        internal::MidiTimestamp const /*timestamp*/,
+        uint8_t const /*groupIndex*/,
+        midi2::MidiSysEx8Status const& /*status*/,
+        uint8_t const /*numberOfValidDataBytesThisMessage*/,
+        foundation::IMemoryBuffer const& /*buffer*/,
+        uint32_t const /*byteOffsetInBuffer*/)
     {
         throw hresult_not_implemented();
     }
 
+    _Use_decl_annotations_
     winrt::Windows::Devices::Midi2::MidiUmp128 MidiMessageBuilder::BuildMixedDataSetChunkHeaderMessage(
-        _In_ internal::MidiTimestamp const /*timestamp*/,
-        _In_ uint8_t const /*groupIndex*/,
-        _In_ uint8_t const /*mdsId*/,
-        _In_ uint16_t const /*numberValidDataBytesInThisChunk*/,
-        _In_ uint16_t const /*numberChunksInMixedDataSet*/,
-        _In_ uint16_t const /*numberOfThisChunk*/,
-        _In_ uint16_t const /*manufacturerId*/,
-        _In_ uint16_t const /*deviceId*/,
-        _In_ uint16_t const /*subId1*/,
-        _In_ uint16_t const /*subId2*/)
+        internal::MidiTimestamp const /*timestamp*/,
+        uint8_t const /*groupIndex*/,
+        uint8_t const /*mdsId*/,
+        uint16_t const /*numberValidDataBytesInThisChunk*/,
+        uint16_t const /*numberChunksInMixedDataSet*/,
+        uint16_t const /*numberOfThisChunk*/,
+        uint16_t const /*manufacturerId*/,
+        uint16_t const /*deviceId*/,
+        uint16_t const /*subId1*/,
+        uint16_t const /*subId2*/)
     {
         throw hresult_not_implemented();
     }
 
+    _Use_decl_annotations_
     winrt::Windows::Devices::Midi2::MidiUmp128 MidiMessageBuilder::BuildMixedDataSetChunkDataMessage(
-        _In_ internal::MidiTimestamp const /*timestamp*/,
-        _In_ uint8_t const /*groupIndex*/,
-        _In_ uint8_t const /*mdsId*/,
-        _In_ uint8_t const /*dataByte00*/,
-        _In_ uint8_t const /*dataByte01*/,
-        _In_ uint8_t const /*dataByte02*/,
-        _In_ uint8_t const /*dataByte03*/,
-        _In_ uint8_t const /*dataByte04*/,
-        _In_ uint8_t const /*dataByte05*/,
-        _In_ uint8_t const /*dataByte06*/,
-        _In_ uint8_t const /*dataByte07*/,
-        _In_ uint8_t const /*dataByte08*/,
-        _In_ uint8_t const /*dataByte09*/,
-        _In_ uint8_t const /*dataByte10*/,
-        _In_ uint8_t const /*dataByte11*/,
-        _In_ uint8_t const /*dataByte12*/,
-        _In_ uint8_t const /*dataByte13*/)
+        internal::MidiTimestamp const /*timestamp*/,
+        uint8_t const /*groupIndex*/,
+        uint8_t const /*mdsId*/,
+        uint8_t const /*dataByte00*/,
+        uint8_t const /*dataByte01*/,
+        uint8_t const /*dataByte02*/,
+        uint8_t const /*dataByte03*/,
+        uint8_t const /*dataByte04*/,
+        uint8_t const /*dataByte05*/,
+        uint8_t const /*dataByte06*/,
+        uint8_t const /*dataByte07*/,
+        uint8_t const /*dataByte08*/,
+        uint8_t const /*dataByte09*/,
+        uint8_t const /*dataByte10*/,
+        uint8_t const /*dataByte11*/,
+        uint8_t const /*dataByte12*/,
+        uint8_t const /*dataByte13*/)
     {
         throw hresult_not_implemented();
     }
 
+    _Use_decl_annotations_
     winrt::Windows::Devices::Midi2::MidiUmp128 MidiMessageBuilder::BuildMixedDataSetChunkDataMessageFromArray(
-        _In_ internal::MidiTimestamp const /*timestamp*/,
-        _In_ uint8_t const /*groupIndex*/,
-        _In_ uint8_t const /*mdsId*/,
-        _In_ uint8_t const /*numberOfValidDataBytesThisMessage*/,
-        _In_ array_view<uint8_t const> const /*dataBytes*/,
-        _In_ uint32_t const /*arrayStartIndex*/)
+        internal::MidiTimestamp const /*timestamp*/,
+        uint8_t const /*groupIndex*/,
+        uint8_t const /*mdsId*/,
+        uint8_t const /*numberOfValidDataBytesThisMessage*/,
+        array_view<uint8_t const> const /*dataBytes*/,
+        uint32_t const /*arrayStartIndex*/)
     {
         throw hresult_not_implemented();
     }
 
+    _Use_decl_annotations_
     winrt::Windows::Devices::Midi2::MidiUmp128 MidiMessageBuilder::BuildMixedDataSetChunkDataMessageFromBuffer(
-        _In_ internal::MidiTimestamp const /*timestamp*/,
-        _In_ uint8_t const /*groupIndex*/,
-        _In_ uint8_t const /*mdsId*/,
-        _In_ uint8_t const /*numberOfValidDataBytesThisMessage*/,
-        _In_ winrt::Windows::Foundation::IMemoryBuffer const& /*buffer*/,
-        _In_ uint32_t const /*byteOffsetInBuffer*/)
+        internal::MidiTimestamp const /*timestamp*/,
+        uint8_t const /*groupIndex*/,
+        uint8_t const /*mdsId*/,
+        uint8_t const /*numberOfValidDataBytesThisMessage*/,
+        foundation::IMemoryBuffer const& /*buffer*/,
+        uint32_t const /*byteOffsetInBuffer*/)
     {
         throw hresult_not_implemented();
     }
 
+    _Use_decl_annotations_
     winrt::Windows::Devices::Midi2::MidiUmp128 MidiMessageBuilder::BuildFlexDataMessage(
-        _In_ internal::MidiTimestamp const timestamp,
-        _In_ uint8_t const groupIndex,
-        _In_ uint8_t const form,
-        _In_ uint8_t const address,
-        _In_ uint8_t const channel,
-        _In_ uint8_t const statusBank,
-        _In_ uint8_t const status,
-        _In_ uint32_t const word1Data,
-        _In_ uint32_t const word2Data,
-        _In_ uint32_t const word3Data)
+        internal::MidiTimestamp const timestamp,
+        uint8_t const groupIndex,
+        uint8_t const form,
+        uint8_t const address,
+        uint8_t const channel,
+        uint8_t const statusBank,
+        uint8_t const status,
+        uint32_t const word1Data,
+        uint32_t const word2Data,
+        uint32_t const word3Data)
     {
         return MidiUmp128(
             timestamp,
@@ -289,14 +304,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
         );
     }
 
+    _Use_decl_annotations_
     winrt::Windows::Devices::Midi2::MidiUmp128 MidiMessageBuilder::BuildUmpStreamMessage(
-        _In_ internal::MidiTimestamp const timestamp,
-        _In_ uint8_t const form,
-        _In_ uint16_t const status,
-        _In_ uint16_t const word0RemainingData,
-        _In_ uint32_t const word1Data,
-        _In_ uint32_t const word2Data,
-        _In_ uint32_t const word3Data)
+        internal::MidiTimestamp const timestamp,
+        uint8_t const form,
+        uint16_t const status,
+        uint16_t const word0RemainingData,
+        uint32_t const word1Data,
+        uint32_t const word2Data,
+        uint32_t const word3Data)
     {       
         return MidiUmp128(
             timestamp, 

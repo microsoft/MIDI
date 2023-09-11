@@ -13,30 +13,35 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::MidiChannel> MidiChannelEndpointListener::IncludeChannels()
+    _Use_decl_annotations_
+    foundation::Collections::IVector<midi2::MidiChannel> MidiChannelEndpointListener::IncludeChannels()
     {
         throw hresult_not_implemented();
     }
+
+    _Use_decl_annotations_
     void MidiChannelEndpointListener::Initialize()
     {
         throw hresult_not_implemented();
     }
 
+    _Use_decl_annotations_
     void MidiChannelEndpointListener::OnEndpointConnectionOpened()
     {
         throw hresult_not_implemented();
     }
 
+    _Use_decl_annotations_
     void MidiChannelEndpointListener::Cleanup()
     {
         throw hresult_not_implemented();
     }
 
-
+    _Use_decl_annotations_
     void MidiChannelEndpointListener::ProcessIncomingMessage(
-        _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs const& /*args*/,
-        _Out_ bool& skipFurtherListeners, 
-        _Out_ bool& skipMainMessageReceivedEvent)
+        midi2::MidiMessageReceivedEventArgs const& /*args*/,
+        bool& skipFurtherListeners, 
+        bool& skipMainMessageReceivedEvent)
     {
         skipFurtherListeners = false;
         skipMainMessageReceivedEvent = false;

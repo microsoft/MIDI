@@ -17,33 +17,33 @@ namespace winrt::Windows::Devices::Midi2::implementation
         MidiVirtualDeviceManager() = default;
 
         bool CreateDevice(
-            _In_ hstring const& name, 
+            _In_ winrt::hstring const& name, 
             _In_ bool const exclusive, 
             _In_opt_ winrt::Windows::Foundation::IInspectable const& tag, 
-            _Out_ hstring& createdDeviceId
+            _Out_ winrt::hstring& createdDeviceId
         );
 
         bool CreateEndpoint(
-            _In_ hstring const& parentDeviceId,
-            _In_ hstring const& name,
-            _In_ winrt::Windows::Devices::Midi2::MidiEndpointType const& endpointType,
+            _In_ winrt::hstring const& parentDeviceId,
+            _In_ winrt::hstring const& name,
+            _In_ midi2::MidiEndpointType const& endpointType,
             _In_ bool exclusive,
-            _In_ winrt::Windows::Devices::Midi2::MidiProtocol const& protocol,
+            _In_ midi2::MidiProtocol const& protocol,
             _In_opt_ winrt::Windows::Foundation::IInspectable const& tag,
-            _Out_ hstring& createdEndpointId
+            _Out_ winrt::hstring& createdEndpointId
         );
 
         bool DeleteDeviceAndEndpoints(
-            _In_ hstring const& deviceId
+            _In_ winrt::hstring const& deviceId
         );
 
         bool DeleteEndpoint(
-            _In_ hstring const& endpointId
+            _In_ winrt::hstring const& endpointId
         );
 
         bool RouteConnectEndpoints(
-            _In_ hstring const& outputEndpointId, 
-            _In_ hstring const& inputEndpointId
+            _In_ winrt::hstring const& outputEndpointId,
+            _In_ winrt::hstring const& inputEndpointId
         );
 
 
