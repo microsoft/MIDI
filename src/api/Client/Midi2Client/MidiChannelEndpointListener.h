@@ -42,15 +42,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
         void Initialize();
+        void OnEndpointConnectionOpened();
         void Cleanup();
 
         void ProcessIncomingMessage(
             _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs const& args, 
             _Out_ bool& skipFurtherListeners, 
             _Out_ bool& skipMainMessageReceivedEvent);
-
-        winrt::Windows::Foundation::IAsyncAction ProcessIncomingMessageAsync(
-            _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs args);
 
 
     private:

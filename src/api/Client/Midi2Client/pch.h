@@ -41,6 +41,41 @@ using namespace winrt;
 // shared
 #include "midi_ump.h"
 
+namespace foundation = ::winrt::Windows::Foundation;
 namespace internal = ::Windows::Devices::Midi2::Internal;
-//namespace intshared = ::Windows::Devices::Midi2::Internal::Shared;
-//namespace intump = ::Windows::Devices::Midi2::Internal::SharedUmp;
+
+
+#include "MidiUmp32.h"
+#include "MidiUmp64.h"
+#include "MidiUmp96.h"
+#include "MidiUmp128.h"
+
+#include "MidiGroup.h"
+#include "MidiChannel.h"
+
+#include "MidiFunctionBlock.h"
+#include "MidiGroupTerminalBlock.h"
+#include "MidiEndpointInformation.h"
+#include "MidiUniqueId.h"
+
+#include "MidiInputEndpointConnection.h"
+#include "MidiOutputEndpointConnection.h"
+#include "MidiBidirectionalEndpointConnection.h"
+#include "MidiBidirectionalAggregatedEndpointConnection.h"
+
+#include "MidiInputEndpointOpenOptions.h"
+#include "MidiOutputEndpointOpenOptions.h"
+#include "MidiBidirectionalEndpointOpenOptions.h"
+#include "MidiBidirectionalAggregatedEndpointOpenOptions.h"
+
+#include "MidiMessageReceivedEventArgs.h"
+
+#include "MidiSession.h"
+
+#include "MidiServicePingResponse.h"
+#include "MidiServicePingResponseSummary.h"
+#include "MidiTransportInformation.h"
+#include "MidiService.h"
+
+namespace implementation = winrt::Windows::Devices::Midi2::implementation;
+namespace midi2 = ::winrt::Windows::Devices::Midi2;

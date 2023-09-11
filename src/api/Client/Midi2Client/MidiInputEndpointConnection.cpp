@@ -29,22 +29,21 @@ namespace winrt::Windows::Devices::Midi2::implementation
             }
 
             bool skipMainMessageReceivedEvent = false;
-            bool skipFurtherListeners = false;
+//            bool skipFurtherListeners = false;
 
             // If any listeners are hooked up, use them
 
-            if (m_messageListeners && m_messageListeners.Size() > 0)
+            if (m_messageProcessingPlugins && m_messageProcessingPlugins.Size() > 0)
             {
-                // loop through listeners
-                for (const auto& listener : m_messageListeners)
-                {
-                    // TODO: this is synchronous by design, but that requires the client to not block
-                    listener.ProcessIncomingMessage(*args, skipFurtherListeners, skipMainMessageReceivedEvent);
+                // loop through and check for listeners
+                //for (const auto& plugin : m_messageProcessingPlugins)
+                //{
+                //    //listener.ProcessIncomingMessage(*args, skipFurtherListeners, skipMainMessageReceivedEvent);
 
-                    // if the listener has told us to skip further listeners, effectively 
-                    // removing this message from the queue, then break out of the loop
-                    if (skipFurtherListeners) break;
-                }
+                //    // if the listener has told us to skip further listeners, effectively 
+                //    // removing this message from the queue, then break out of the loop
+                //    if (skipFurtherListeners) break;
+                //}
             }
 
             // if the main message received event is hooked up, and we're not skipping it, use it

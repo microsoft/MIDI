@@ -19,6 +19,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         throw hresult_not_implemented();
     }
 
+    void MidiStreamConfigurationEndpointListener::OnEndpointConnectionOpened()
+    {
+        throw hresult_not_implemented();
+    }
+
     void MidiStreamConfigurationEndpointListener::Cleanup()
     {
         throw hresult_not_implemented();
@@ -32,12 +37,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         skipFurtherListeners = false;
         skipMainMessageReceivedEvent = false;
 
-        throw hresult_not_implemented();
-    }
-
-    winrt::Windows::Foundation::IAsyncAction MidiStreamConfigurationEndpointListener::ProcessIncomingMessageAsync(
-        _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs /*args*/)
-    {
         throw hresult_not_implemented();
     }
 

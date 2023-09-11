@@ -16,6 +16,7 @@ MIDI_IDL_IMPORT
 import "IMidiEndpointDefinedConnectionSettings.idl";
 
 import "MidiEndpointConnectionSharingEnum.idl";
+import "IMidiEndpointMessageProcessingPlugin.idl";
 
 
 namespace Windows.Devices.Midi2
@@ -41,5 +42,8 @@ namespace Windows.Devices.Midi2
         IMidiEndpointDefinedConnectionSettings Settings{ get; };
 
         Boolean Open();
+
+        IVector<IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins{ get; };
+
     }
 }

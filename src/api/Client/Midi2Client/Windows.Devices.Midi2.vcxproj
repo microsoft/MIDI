@@ -224,8 +224,9 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="InternalMidiMessageReceiverHelper.h" />
-    <ClInclude Include="InternalMidiMessageSenderHelper.h" />
+    <ClInclude Include="InternalMidiConnectionCommon.h" />
+    <ClInclude Include="InternalMidiInputConnection.h" />
+    <ClInclude Include="InternalMidiOutputConnection.h" />
     <ClInclude Include="memory_buffer.h" />
     <ClInclude Include="MidiBidirectionalAggregatedEndpointConnection.h">
       <DependentUpon>MidiBidirectionalAggregatedEndpointConnection.idl</DependentUpon>
@@ -342,7 +343,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
-    <ClCompile Include="InternalMidiMessageReceiverHelper.cpp" />
+    <ClCompile Include="InternalMidiConnectionCommon.cpp" />
     <ClCompile Include="MidiBidirectionalAggregatedEndpointConnection.cpp">
       <DependentUpon>MidiBidirectionalAggregatedEndpointConnection.idl</DependentUpon>
     </ClCompile>
@@ -457,6 +458,7 @@
   <ItemGroup>
     <Midl Include="IMidiEndpointConnection.idl" />
     <Midl Include="IMidiEndpointMessageListener.idl" />
+    <Midl Include="IMidiEndpointMessageProcessingPlugin.idl" />
     <Midl Include="IMidiEndpointMessageResponder.idl" />
     <Midl Include="IMidiInputConnection.idl" />
     <Midl Include="IMidiMessageReceivedEventSource.idl" />

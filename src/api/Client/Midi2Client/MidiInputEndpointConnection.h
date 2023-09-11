@@ -18,7 +18,8 @@
 
 #include "midi_service_interface.h"
 
-#include "InternalMidiMessageReceiverHelper.h"
+#include "InternalMidiInputConnection.h"
+
 
 
 namespace winrt::Windows::Devices::Midi2::implementation
@@ -38,7 +39,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool IsOpen() const noexcept { return m_isOpen; }
         IMidiEndpointDefinedConnectionSettings Settings() noexcept { return m_settings; }
 
-        winrt::Windows::Devices::Midi2::MidiEndpointConnectionSharing ActiveSharingMode() { return m_activeSharingMode; }
+        winrt::Windows::Devices::Midi2::MidiEndpointConnectionSharing ActiveSharingMode() const { return m_activeSharingMode; }
 
         IInspectable Tag() const noexcept { return m_tag; }
         void Tag(_In_ IInspectable value) noexcept { m_tag = value; }
@@ -47,7 +48,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
-        winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiEndpointMessageListener> MessageListeners() { return m_messageListeners; }
+        winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins() { return m_messageProcessingPlugins; }
 
 
 
@@ -89,12 +90,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::com_ptr<IMidiAbstraction> m_serviceAbstraction{ nullptr };
         winrt::com_ptr<IMidiIn> m_endpointInterface{ nullptr };
 
-        internal::InternalMidiMessageReceiverHelper m_messageReceiverHelper;
+ //       internal::InternalMidiMessageReceiverHelper m_messageReceiverHelper;
 
         winrt::event<winrt::Windows::Foundation::TypedEventHandler<IInspectable, winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;
 
-        winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiEndpointMessageListener>
-            m_messageListeners{ winrt::single_threaded_vector<winrt::Windows::Devices::Midi2::IMidiEndpointMessageListener>() };
+        winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiEndpointMessageProcessingPlugin>
+            m_messageProcessingPlugins{ winrt::single_threaded_vector<winrt::Windows::Devices::Midi2::IMidiEndpointMessageProcessingPlugin>() };
 
         _Success_(return == true)
             bool ActivateMidiStream(

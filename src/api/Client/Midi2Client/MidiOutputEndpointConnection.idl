@@ -13,9 +13,7 @@
 MIDI_IDL_IMPORT
 
 import "IMidiOutputConnection.idl";
-
 import "IMidiEndpointConnection.idl";
-
 
 
 namespace Windows.Devices.Midi2
@@ -23,8 +21,8 @@ namespace Windows.Devices.Midi2
     [MIDI_API_CONTRACT(1)]
     [default_interface]
     runtimeclass MidiOutputEndpointConnection :  
-                                                Windows.Devices.Midi2.IMidiOutputConnection,
-                                                Windows.Devices.Midi2.IMidiEndpointConnection
+                                                Windows.Devices.Midi2.IMidiEndpointConnection,
+                                                Windows.Devices.Midi2.IMidiOutputConnection
 
     {
         // Get the enumeration device selector for all compatible devices

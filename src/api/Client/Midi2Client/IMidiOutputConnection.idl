@@ -31,9 +31,5 @@ namespace Windows.Devices.Midi2
 
         // for sending a section of a pre-existing buffer. Used when a client app is maintaining its own memory
         Boolean SendUmpBuffer(MIDI_TIMESTAMP timestamp, Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffset, UInt32 byteLength);
-
-
-    //    Boolean Open();
-    //    void Close();
     }
 }

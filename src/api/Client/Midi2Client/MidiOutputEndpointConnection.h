@@ -7,6 +7,7 @@
 // ============================================================================
 
 #pragma once
+
 #include <pch.h>
 
 #include "MidiOutputEndpointConnection.g.h"
@@ -17,7 +18,7 @@
 #include "MidiUmp96.h"
 #include "MidiUmp128.h"
 
-#include "InternalMidiMessageSenderHelper.h"
+#include "InternalMidiOutputConnection.h"
 
 
 namespace winrt::Windows::Devices::Midi2::implementation
@@ -36,14 +37,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool IsOpen() const noexcept { return m_isOpen; }
         IMidiEndpointDefinedConnectionSettings Settings() noexcept { return m_settings; }
 
-        winrt::Windows::Devices::Midi2::MidiEndpointConnectionSharing ActiveSharingMode() { return m_activeSharingMode; }
+        winrt::Windows::Devices::Midi2::MidiEndpointConnectionSharing ActiveSharingMode() const { return m_activeSharingMode; }
 
         IInspectable Tag() const noexcept { return m_tag; }
         void Tag(_In_ IInspectable value) noexcept { m_tag = value; }
 
 
-
-
+        winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins() { return m_messageProcessingPlugins; }
 
         _Success_(return == true)
         bool SendUmp(
@@ -112,8 +112,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::com_ptr<IMidiAbstraction> m_serviceAbstraction{ nullptr };
         winrt::com_ptr<IMidiOut> m_endpointInterface{ nullptr };
 
-        internal::InternalMidiMessageSenderHelper<IMidiOut> m_messageSenderHelper;
+ //       internal::InternalMidiMessageSenderHelper<IMidiOut> m_messageSenderHelper;
 
+        winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::IMidiEndpointMessageProcessingPlugin>
+            m_messageProcessingPlugins{ winrt::single_threaded_vector<winrt::Windows::Devices::Midi2::IMidiEndpointMessageProcessingPlugin>() };
 
 
         _Success_(return == true)

@@ -128,9 +128,6 @@
     <ClCompile Include="MidiEndpointInformation.cpp">
       <Filter>API\Endpoints\Metadata\Endpoints</Filter>
     </ClCompile>
-    <ClCompile Include="MidiCiProxy.cpp">
-      <Filter>API\Endpoints\ListenersAndResponders</Filter>
-    </ClCompile>
     <ClCompile Include="MidiSettingsService.cpp" />
     <ClCompile Include="MidiStateService.cpp" />
     <ClCompile Include="MidiUniqueId.cpp">
@@ -161,9 +158,6 @@
     <ClCompile Include="MidiBidirectionalAggregatedEndpointOpenOptions.cpp">
       <Filter>API\Endpoints\Connections\Options</Filter>
     </ClCompile>
-    <ClCompile Include="InternalMidiMessageReceiverHelper.cpp">
-      <Filter>API\Endpoints\Connections\InternalImplementation</Filter>
-    </ClCompile>
     <ClCompile Include="MidiService.cpp">
       <Filter>API\Service</Filter>
     </ClCompile>
@@ -175,6 +169,9 @@
     </ClCompile>
     <ClCompile Include="MidiTransportInformation.cpp">
       <Filter>API\Service</Filter>
+    </ClCompile>
+    <ClCompile Include="InternalMidiConnectionCommon.cpp">
+      <Filter>API\Endpoints\Connections\InternalImplementation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -244,9 +241,6 @@
       <Filter>API\Endpoints\Metadata\Endpoints</Filter>
     </ClInclude>
     <ClInclude Include="midl_defines.h" />
-    <ClInclude Include="MidiCiProxy.h">
-      <Filter>API\Endpoints\ListenersAndResponders</Filter>
-    </ClInclude>
     <ClInclude Include="MidiUniqueId.h">
       <Filter>API\Endpoints\Metadata\MUID</Filter>
     </ClInclude>
@@ -280,10 +274,10 @@
     <ClInclude Include="MidiBidirectionalAggregatedEndpointOpenOptions.h">
       <Filter>API\Endpoints\Connections\Options</Filter>
     </ClInclude>
-    <ClInclude Include="InternalMidiMessageReceiverHelper.h">
+    <ClInclude Include="InternalMidiInputConnection.h">
       <Filter>API\Endpoints\Connections\InternalImplementation</Filter>
     </ClInclude>
-    <ClInclude Include="InternalMidiMessageSenderHelper.h">
+    <ClInclude Include="InternalMidiOutputConnection.h">
       <Filter>API\Endpoints\Connections\InternalImplementation</Filter>
     </ClInclude>
     <ClInclude Include="MidiService.h">
@@ -297,6 +291,9 @@
     </ClInclude>
     <ClInclude Include="MidiTransportInformation.h">
       <Filter>API\Service</Filter>
+    </ClInclude>
+    <ClInclude Include="InternalMidiConnectionCommon.h">
+      <Filter>API\Endpoints\Connections\InternalImplementation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -367,9 +364,6 @@
       <Filter>API\Endpoints\ListenersAndResponders</Filter>
     </Midl>
     <Midl Include="IMidiEndpointMessageResponder.idl">
-      <Filter>API\Endpoints\ListenersAndResponders</Filter>
-    </Midl>
-    <Midl Include="MidiCIProxy.idl">
       <Filter>API\Endpoints\ListenersAndResponders</Filter>
     </Midl>
     <Midl Include="MidiUniqueId.idl">
@@ -470,6 +464,9 @@
     </Midl>
     <Midl Include="MidiTransportInformation.idl">
       <Filter>API\Service</Filter>
+    </Midl>
+    <Midl Include="IMidiEndpointMessageProcessingPlugin.idl">
+      <Filter>API\Endpoints\ListenersAndResponders</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

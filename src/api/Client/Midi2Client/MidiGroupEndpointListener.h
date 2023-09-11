@@ -35,15 +35,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::MidiGroup> IncludeGroups();
 
         void Initialize();
+        void OnEndpointConnectionOpened();
         void Cleanup();
 
         void ProcessIncomingMessage(
             _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs const& args, 
             _Out_ bool& skipFurtherListeners, 
             _Out_ bool& skipMainMessageReceivedEvent);
-
-        winrt::Windows::Foundation::IAsyncAction ProcessIncomingMessageAsync(
-            _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs args);
 
 
     private:

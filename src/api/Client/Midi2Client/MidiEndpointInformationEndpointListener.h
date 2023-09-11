@@ -37,11 +37,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _Out_ bool& skipFurtherListeners,
             _Out_ bool& skipMainMessageReceivedEvent);
 
-        winrt::Windows::Foundation::IAsyncAction ProcessIncomingMessageAsync(
-            _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs args);
-
 
         void Initialize();
+        void OnEndpointConnectionOpened();
         void Cleanup();
 
 

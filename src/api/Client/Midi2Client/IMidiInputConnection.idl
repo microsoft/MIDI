@@ -24,9 +24,5 @@ namespace Windows.Devices.Midi2
         // is preferable to opening multiple (expensive) Endpoint Connections from
         // a single application
         //IVector<IMidiEndpointMessageListener> MessageListeners{ get; };
-
-
-    //    Boolean Open();
-    //    void Close();
     }
 }

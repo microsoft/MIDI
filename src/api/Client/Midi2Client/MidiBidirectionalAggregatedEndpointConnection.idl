@@ -15,12 +15,7 @@ MIDI_IDL_IMPORT
 
 import "IMidiInputConnection.idl";
 import "IMidiOutputConnection.idl";
-import "IMidiEndpointMessageListener.idl";
 import "IMidiMessageReceivedEventSource.idl";
-
-import "MidiFunctionBlock.idl";
-import "MidiEndpointInformation.idl";
-
 import "IMidiEndpointConnection.idl";
 
 namespace Windows.Devices.Midi2
@@ -28,16 +23,14 @@ namespace Windows.Devices.Midi2
     [MIDI_API_CONTRACT(1)]
     [default_interface]
     runtimeclass MidiBidirectionalAggregatedEndpointConnection :
+                                                       Windows.Devices.Midi2.IMidiEndpointConnection,
                                                        Windows.Devices.Midi2.IMidiInputConnection,
                                                        Windows.Devices.Midi2.IMidiMessageReceivedEventSource,
-                                                       Windows.Devices.Midi2.IMidiOutputConnection,
-                                                       Windows.Devices.Midi2.IMidiEndpointConnection
+                                                       Windows.Devices.Midi2.IMidiOutputConnection
     {
         // Id from Windows. This can be used to retrieve the MidiDeviceInformation object with the PnP properties
         String InputDeviceId{ get; };
         String OutputDeviceId{ get; };
-
-        IVector<IMidiEndpointMessageListener> MessageListeners{ get; };
 
     }
 }

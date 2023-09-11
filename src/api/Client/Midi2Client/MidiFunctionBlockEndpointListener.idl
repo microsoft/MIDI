@@ -10,13 +10,14 @@
 MIDI_IDL_IMPORT
 
 
+import "IMidiEndpointMessageProcessingPlugin.idl";
 import "IMidiEndpointMessageListener.idl";
 
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [default_interface]
-    runtimeclass MidiFunctionBlockEndpointListener : IMidiEndpointMessageListener
+    runtimeclass MidiFunctionBlockEndpointListener : IMidiEndpointMessageProcessingPlugin, IMidiEndpointMessageListener
     {
         MidiFunctionBlockEndpointListener();
 
