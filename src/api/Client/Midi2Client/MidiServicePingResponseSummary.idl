@@ -17,8 +17,11 @@ namespace Windows.Devices.Midi2
     [default_interface]
     runtimeclass MidiServicePingResponseSummary
     {
+        Boolean Succeeded { get; };
+        String FailureReason{ get; };
+
         MIDI_TIMESTAMP TotalPingRoundTripMidiClock { get; };
 
-        IVector<MidiServicePingResponse> Responses { get; };
+        IVectorView<MidiServicePingResponse> Responses { get; };
     }
 }

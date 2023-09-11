@@ -16,7 +16,24 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiServicePingResponseSummary() = default;
 
-        uint64_t TotalPingRoundTripMidiClock();
-        winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::MidiServicePingResponse> Responses();
+        bool Succeeded() const { return m_success; }
+        winrt::hstring FailureReason() const { return m_failureReason; }
+
+        uint64_t TotalPingRoundTripMidiClock() { return m_totalPingMidiClockTicks; }
+
+        foundation::Collections::IVectorView<midi2::MidiServicePingResponse> Responses() const { return m_responses.GetView(); }
+
+        void InternalSetFailed(_In_ winrt::hstring failureReason) { m_success = false; m_failureReason = failureReason; }
+        void InternalSetSucceeded() { m_success = true; }
+
+    private:
+        bool m_success{ false };
+        winrt::hstring m_failureReason{};
+
+        internal::MidiTimestamp m_totalPingMidiClockTicks;
+
+        foundation::Collections::IVector<midi2::MidiServicePingResponse>
+            m_responses { winrt::single_threaded_vector<midi2::MidiServicePingResponse>() };
+
     };
 }

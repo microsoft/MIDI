@@ -15,8 +15,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiService() = default;
 
-        static winrt::Windows::Devices::Midi2::MidiServicePingResponseSummary PingService(uint8_t pingCount);
-        static winrt::Windows::Foundation::Collections::IVectorView<winrt::Windows::Devices::Midi2::MidiTransportInformation> GetInstalledTransports();
+        static midi2::MidiServicePingResponseSummary PingService(_In_ uint8_t const pingCount) noexcept;
+
+        static foundation::Collections::IVectorView<midi2::MidiTransportInformation> GetInstalledTransports();
     };
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation

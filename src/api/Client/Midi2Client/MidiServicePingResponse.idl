@@ -18,9 +18,10 @@ namespace Windows.Devices.Midi2
     {
         UInt64 Id { get; };
 
-        MIDI_TIMESTAMP SendMidiTimestamp{ get; };
-        MIDI_TIMESTAMP ReceiveMidiTimestamp{ get; };
+        MIDI_TIMESTAMP ClientSendMidiTimestamp{ get; };
+        MIDI_TIMESTAMP ServiceReportedMidiTimestamp{ get; };
+        MIDI_TIMESTAMP ClientReceiveMidiTimestamp{ get; };
 
-        MIDI_TIMESTAMP DeltaTimestamp{ get; };
+        MIDI_TIMESTAMP ClientDeltaTimestamp{ get; };
     }
 }

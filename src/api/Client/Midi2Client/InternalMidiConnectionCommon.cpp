@@ -16,17 +16,45 @@ namespace Windows::Devices::Midi2::Internal
 
     void InternalMidiConnectionCommon::InitializePlugins()
     {
-
+        for (const auto& plugin : m_messageProcessingPlugins)
+        {
+            try
+            {
+                plugin.Initialize();
+            }
+            catch (...)
+            {
+            }
+        }
     }
 
     void InternalMidiConnectionCommon::CallOnConnectionOpenedOnPlugins()
     {
-
+        for (const auto& plugin : m_messageProcessingPlugins)
+        {
+            try
+            {
+                plugin.OnEndpointConnectionOpened();
+            }
+            catch (...)
+            {
+            }
+        }
     }
 
     void InternalMidiConnectionCommon::CleanupPlugins()
     {
-
+        for (const auto& plugin : m_messageProcessingPlugins)
+        {
+            try
+            {
+                plugin.Cleanup();
+            }
+            catch (...)
+            {
+                // eat any exceptions
+            }
+        }
     }
 
     _Use_decl_annotations_

@@ -19,7 +19,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     winrt::Windows::Devices::Midi2::MidiUmp32 MidiMessageBuilder::BuildUtilityMessage(
         internal::MidiTimestamp const timestamp,
         uint8_t const status,
-        uint32_t const dataOrReserved)
+        uint32_t const dataOrReserved) noexcept
     {      
         return MidiUmp32(
             timestamp,
@@ -37,7 +37,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint8_t const groupIndex,
         uint8_t const status,
         uint8_t const midi1Byte2,
-        uint8_t const midi1Byte3)
+        uint8_t const midi1Byte3) noexcept
     {
         return MidiUmp32(
             timestamp,
@@ -57,7 +57,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::Midi1ChannelVoiceMessageStatus const& status,
         uint8_t const channel,
         uint8_t const byte3,
-        uint8_t const byte4)
+        uint8_t const byte4) noexcept
     {
         return MidiUmp32(
             timestamp,
@@ -82,7 +82,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint8_t const dataByte2,
         uint8_t const dataByte3,
         uint8_t const dataByte4,
-        uint8_t const dataByte5)
+        uint8_t const dataByte5) noexcept
     {
         
         return MidiUmp64(
@@ -136,7 +136,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::Midi2ChannelVoiceMessageStatus const& status,
         uint8_t const channel,
         uint16_t const index,
-        uint32_t const data)
+        uint32_t const data) noexcept
     {
         return MidiUmp64(
             timestamp,
@@ -168,7 +168,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint8_t const dataByte09,
         uint8_t const dataByte10,
         uint8_t const dataByte11,
-        uint8_t const dataByte12)
+        uint8_t const dataByte12) noexcept
     {
 
         return MidiUmp128(
@@ -312,7 +312,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint16_t const word0RemainingData,
         uint32_t const word1Data,
         uint32_t const word2Data,
-        uint32_t const word3Data)
+        uint32_t const word3Data) noexcept
     {       
         return MidiUmp128(
             timestamp, 
