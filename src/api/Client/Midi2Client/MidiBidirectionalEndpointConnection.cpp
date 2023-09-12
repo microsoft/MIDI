@@ -16,11 +16,13 @@
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     
-    _Success_(return == true)
+    _Use_decl_annotations_
     bool MidiBidirectionalEndpointConnection::InternalInitialize(
-        _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
-        _In_ winrt::hstring const endpointInstanceId,
-        _In_ winrt::hstring const deviceId)
+        winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
+        winrt::hstring const endpointInstanceId,
+        winrt::hstring const deviceId, 
+        midi2::MidiBidirectionalEndpointOpenOptions options
+    )
     {
         try
         {
@@ -35,6 +37,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             // TODO: Read any settings we need for this endpoint
 
+
+            // TODO: Add any automatic handlers if the options allow for it
+
+
             return true;
         }
         catch (winrt::hresult_error const& ex)
@@ -46,7 +52,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
-    _Success_(return == true)
+    _Use_decl_annotations_
     bool MidiBidirectionalEndpointConnection::Open()
     {
         if (!IsOpen())
@@ -99,10 +105,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 internal::LogGeneralError(__FUNCTION__, L" Endpoint interface is nullptr");
 
                 return false;
-
             }
-
-
         }
         else
         {
@@ -116,6 +119,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     // TODO: Move this logic to the base classes
 
+    _Use_decl_annotations_
     MidiBidirectionalEndpointConnection::~MidiBidirectionalEndpointConnection()
     {
         if (m_inputAbstraction != nullptr)

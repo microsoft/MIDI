@@ -1,0 +1,120 @@
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"
+     xmlns:netfx="http://wixtoolset.org/schemas/v4/wxs/netfx">
+
+    <?define StagingSourceRootFolder=..\..\..\build\staging ?>
+
+    <Package 
+          Name="Windows MIDI Services"
+          Manufacturer="Microsoft Corporation"
+          Version="1.0.0.0"
+          UpgradeCode="5f3a293b-09fb-4129-99b1-1a4d67cfd57c">
+       
+        <MediaTemplate EmbedCab="yes" />
+               
+        <!-- Install Windows Service -->
+     
+        <!-- Transport and other Service Plugins -->
+        <!-- Setting the SelfRegCost attribute to any positive number causes DLL Self Registration -->
+        <Component Id="WindowsServiceAbstractions"
+                   Directory="SERVICE_INSTALLFOLDER"
+                   Guid="{6a2300f5-ccae-4f61-b849-d41aefb8a999}"  >
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.KSAbstraction.dll"               SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.MidiSrvAbstraction.dll"          SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.NetworkMidiAbstraction.dll"      SelfRegCost="1"/>
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.DiagnosticsAbstraction.dll"      SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.VirtualMidiAbstraction.dll"      SelfRegCost="1"/>
+        </Component>
+
+        <Component Id="WindowsService"
+                   Directory="SERVICE_INSTALLFOLDER"
+                   Guid="6a2300f5-ccae-4f61-b849-d41aefb8a2f7" >
+            <File Source="$(StagingSourceRootFolder)\api\x64\MidiSrv.exe" Id="WINDOWS_SERVICE"  Vital="true" />
+
+            <ServiceInstall
+                Id="MidiServiceInstaller"
+                Type="ownProcess"
+                Name="MidiSrv"
+                DisplayName="Microsoft MIDI Service"
+                Description="!(bind.Property.ProductName) core service for MIDI 1.0 and MIDI 2.0 message routing, device enumeration, and more."
+                Start="auto"
+                Account="LocalSystem"
+                ErrorControl="normal"
+                Vital="true" />
+            <ServiceControl Id="MidiServiceStart" 
+                            Start="install" 
+                            Stop="both" 
+                            Remove="uninstall" 
+                            Name="MidiSrv" 
+                            Wait="yes" />
+
+            <File Source="$(StagingSourceRootFolder)\api\x64\MidiSrv.pdb" />
+
+        </Component>                  
+        
+        <!-- Install API -->
+
+        <Component Id="WindowsAPI"
+                   Directory="API_INSTALLFOLDER"
+                   Guid="dc48ab14-dd46-4ff2-8d59-10b9a8215c7e">
+            <File Source="$(StagingSourceRootFolder)\api\x64\Windows.Devices.Midi2.dll" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Windows.Devices.Midi2.pdb" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Windows.Devices.Midi2.pri" />
+        </Component>
+
+        <Component Id="WindowsAPIRegistration"
+                   Directory="API_INSTALLFOLDER"
+                   Guid="fa0230b9-824a-4c5f-b4e4-396433baa962">                   
+            <!-- API Component Activation - WinRT -->
+            <!-- NOTE: You can't write to these keys until you take ownership in the registry for the ActivatableClassId key under WindowsRuntime -->
+
+            <?include $(StagingSourceRootFolder)\api\x64\WinRTActivationEntries.wxi ?>
+
+            <!-- API Component Activation - COM -->
+        </Component>
+
+        <!-- Install Console App -->
+
+        <Component Id="ConsoleAppExe"
+                   Directory="CONSOLEAPP_INSTALLFOLDER"
+                   Guid="1c74ff9c-d414-4a1e-a1f8-7cf62388f3bd">
+
+            <!-- Install Tools: Console app -->
+            <File Source="$(StagingSourceRootFolder)\midi-console\x64\midi.exe" />
+
+            <!-- Add folder to path -->
+            <Environment Id="AddConsoleAppToSystemPath"
+                            Name="PATH" Action="set" Part="last" System="yes" Value="[CONSOLEAPP_INSTALLFOLDER]" Permanent="no"/>
+        </Component>
+
+
+        <!-- Install Settings App -->
+
+        <Component Id="SettingsAppExe"
+                   Directory="SETTINGSAPP_INSTALLFOLDER"
+                   Guid="1e903d6a-b855-44f6-b00a-8f8827617eb5">
+
+            <!-- Install Tools: Settings app -->
+
+            <!--     <File Source="$(StagingSourceRootFolder)\midi-settings\x64\midi-settings.exe" /> -->
+
+            <!-- TODO: Add icon -->
+
+
+        </Component>
+
+
+
+        <Feature Id="WindowsMIDIServices">
+            <ComponentRef Id="WindowsServiceAbstractions"/>
+            <ComponentRef Id="WindowsService"/>
+            <ComponentRef Id="WindowsAPI"/>
+            <ComponentRef Id="WindowsAPIRegistration"/>
+
+            <ComponentRef Id="ConsoleAppExe"/>
+
+            <ComponentRef Id="SettingsAppExe"/>
+        </Feature>
+
+      </Package>
+</Wix>

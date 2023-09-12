@@ -27,6 +27,7 @@ HRESULT MidiPingBidiDevice::SendMidiMessage(
 
     // build response message
     Windows::Devices::Midi2::Internal::PackedPingResponseUmp responseUmp;
+    responseUmp.Word0 = INTERNAL_PING_RESPONSE_UMP_WORD0;
     responseUmp.PingId = requestUmp->PingId;
 
     auto newTimestamp = Windows::Devices::Midi2::Internal::Shared::GetCurrentMidiTimestamp();

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "MidiLoopbackBidiDevice.h"
+#include "MidiPingBidiDevice.h"
 
 class CMidi2LoopbackMidiBiDi : 
     public Microsoft::WRL::RuntimeClass<
@@ -26,10 +27,12 @@ public:
 private:
     IMidiCallback* m_callback;
 
-    // loopback is simple, so we only have the one device we're associated with
-    MidiLoopbackBidiDevice* m_midiDevice;
+    MidiLoopbackBidiDevice* m_loopbackMidiDevice;
+    MidiPingBidiDevice* m_pingMidiDevice;
 
-    bool m_isEndpointA; // true if A, false if B
+
+    bool m_isEndpointA; // true if A, false if B or ping
+    bool m_isPing{ false };
 };
 
 

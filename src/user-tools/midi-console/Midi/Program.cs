@@ -32,13 +32,21 @@ app.Configure(config =>
         .WithExample("test", "--loopback")
         ;
 
+    config.AddCommand<ServicePingCommand>("service-ping")
+        .WithAlias("ping")
+        .WithDescription(Strings.CommandServicePingDescription)
+        .WithExample("service-ping", "--count 10 --timeout 5000 --details")
+        ;
+
+
     config.AddCommand<SendMessageCommand>("send-message")
-        .WithAlias("send")
+        .WithAlias("send-ump")
         .WithExample("send-message", "-word 0x405F3AB7 -word 0x12345789")
         .WithDescription(Strings.CommandSendMessageDescription)
         ;
 
     config.AddCommand<SendMessagesFileCommand>("send-message-file")
+        .WithAlias("send-ump-file")
         .WithAlias("send-file")
         .WithExample("send-message-file", "%USERPROFILE%\\Documents\\messages.txt")
         .WithDescription(Strings.CommandSendMessagesFileDescription)
@@ -58,18 +66,17 @@ app.Configure(config =>
         ;
 });
 
+// app title
+AnsiConsole.WriteLine();
+AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppTitle(Strings.AppTitle));
+AnsiConsole.WriteLine();
+
 if (args.Length == 0)
 {
-    //AnsiConsole.Write(new FigletText("MIDI Console")
-    //    .LeftJustified()
-    //    .Color(Color.Purple));
+    // show app description only when no arguments supplied
 
+    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppDescription(Strings.AppDescription));
+    AnsiConsole.WriteLine();
 }
-
-AnsiConsole.WriteLine();
-AnsiConsole.MarkupLine(Strings.AppTitle);
-AnsiConsole.WriteLine();
-AnsiConsole.MarkupLine(Strings.AppDescription);
-AnsiConsole.WriteLine();
 
 return app.Run(args);

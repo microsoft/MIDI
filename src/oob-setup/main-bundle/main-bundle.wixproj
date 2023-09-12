@@ -14,7 +14,5 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\api-package\api-package.wixproj" />
-    <ProjectReference Include="..\tools-package\tools-console-app-package.wixproj" />
-    <ProjectReference Include="..\tools-settings-app-package\tools-settings-app-package.wixproj" />
   </ItemGroup>
 </Project>

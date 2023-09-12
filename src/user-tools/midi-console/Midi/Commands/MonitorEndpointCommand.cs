@@ -47,8 +47,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             string endpointId = settings.InstanceId.Trim().ToUpper();
 
             // TODO: localize this
-            AnsiConsole.MarkupLine("Monitoring incoming messages on: " + AnsiMarkupFormatter.FormatDeviceInstanceId(endpointId));
-            AnsiConsole.MarkupLine("Press [green]escape[/] to stop monitoring.");
+            AnsiConsole.MarkupLine(Strings.MonitorMonitoringOnEndpointLabel + ": " + AnsiMarkupFormatter.FormatDeviceInstanceId(endpointId));
+            AnsiConsole.MarkupLine(Strings.MonitorPressEscapeToStopMonitoringMessage);
             AnsiConsole.WriteLine();
 
 
@@ -62,7 +62,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 {
                     ctx.Spinner(Spinner.Known.Star);
 
-                    session = MidiSession.CreateSession("MIDI Console - Monitor");
+                    session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.MonitorSessionNameSuffix}");
 
                     if (session != null)
                     {
@@ -80,12 +80,12 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             if (session == null)
             {
                 AnsiConsole.WriteLine(Strings.ErrorUnableToCreateSession);
-                return 1;
+                return (int)MidiConsoleReturnCode.ErrorCreatingSession;
             }
             else if (connection == null)
             {
                 AnsiConsole.WriteLine(Strings.ErrorUnableToOpenEndpoint);
-                return 1;
+                return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
             }
 
 
@@ -109,8 +109,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                         if (!firstMessageReceived)
                         {
-                            table.AddColumn("Timestamp");
-                            table.AddColumn("MIDI Words Received");
+                            table.AddColumn(Strings.MonitorEndpointResultTableColumnHeaderTimestamp);
+                            table.AddColumn(Strings.MonitorEndpointResultTableColumnHeaderWordsReceived);
 
                             firstMessageReceived = true;
                         }
@@ -141,7 +141,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                     // may need to rethink how table is created
                                 }
 
-                                AnsiConsole.MarkupLine("Escape key pressed. Monitoring terminated.");
+                                AnsiConsole.MarkupLine(Strings.MonitorEscapedPressedMessage);
                                 continueWaiting = false;
                                 break;
                             }

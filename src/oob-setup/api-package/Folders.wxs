@@ -1,5 +1,4 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-    
     <Fragment>
         <StandardDirectory Id="ProgramFiles64Folder">
             <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">

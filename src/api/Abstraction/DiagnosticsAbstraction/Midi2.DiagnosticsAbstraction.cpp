@@ -54,15 +54,6 @@ CMidi2DiagnosticsAbstraction::Activate(
     }
     else if (__uuidof(IMidiBiDi) == Riid)
     {
-
-
-       // TODO: Check to see if this is ping or loopback
-
-
-
-
-
-
        OutputDebugString(L"" __FUNCTION__ " Activating IMidiBiDi");
 
         TraceLoggingWrite(

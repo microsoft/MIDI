@@ -12,11 +12,6 @@ using Microsoft.Devices.Midi2.ConsoleApp.Resources;
 
 namespace Microsoft.Devices.Midi2.ConsoleApp
 {
-    // commands to check the health of Windows MIDI Services on this PC
-    // will check for MIDI services
-    // will attempt a loopback test
-
-
     internal class SendMessageCommand : Command<SendMessageCommand.Settings>
     {
         public sealed class Settings : CommandSettings
@@ -34,39 +29,54 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             [LocalizedDescription("ParameterSendMessageCount")]
             [CommandOption("-c|--count")]
             [DefaultValue(1)]
-            public UInt32 Count { get; init; }
+            public int Count { get; init; }
 
             [LocalizedDescription("ParameterSendMessageDelayBetweenMessages")]
-            [CommandOption("-p|--pause")]
-            [DefaultValue(1000)]
+            [CommandOption("-p|--pause|--delay")]
+            [DefaultValue(100)]
             public int DelayBetweenMessages { get; init; }
 
-            // TODO: Need to validate this is > 0 and <= 4 words
             [LocalizedDescription("ParameterSendMessageWords")]
             [CommandOption("-w|--word")]
             public UInt32[] Words { get; init; }
 
         }
 
+        public override Spectre.Console.ValidationResult Validate(CommandContext context, Settings settings)
+        {
+            if (settings.Words.Length == 0)
+            {
+                return Spectre.Console.ValidationResult.Error(Strings.SendMessageValidationErrorTooFewWords);
+            }
+            else if (settings.Words.Length > 4)
+            {
+                return Spectre.Console.ValidationResult.Error(Strings.SendMessageValidationErrorTooManyWords);
+            }
+
+
+
+            return base.Validate(context, settings);
+        }
+
         public override int Execute(CommandContext context, Settings settings)
         {
-            MidiSession session = null;
-            IMidiOutputConnection connection = null;
+            MidiSession? session = null;
+            IMidiOutputConnection? connection = null;
 
             string endpointId = settings.InstanceId.Trim().ToUpper();
 
             // TODO: localize this
-            AnsiConsole.MarkupLine("Sending MIDI message(s) through: " + AnsiMarkupFormatter.FormatDeviceInstanceId(endpointId));
+            AnsiConsole.MarkupLine(Strings.SendMessageSendingThroughEndpointLabel + ": " + AnsiMarkupFormatter.FormatDeviceInstanceId(endpointId));
             AnsiConsole.WriteLine();
 
-
+            bool openSuccess = false;
 
             AnsiConsole.Status()
                 .Start(Strings.StatusCreatingSessionAndOpeningEndpoint, ctx =>
                 {
                     ctx.Spinner(Spinner.Known.Star);
 
-                    session = MidiSession.CreateSession("MIDI Console - Sender");
+                    session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
 
                     if (session != null)
                     {
@@ -82,33 +92,43 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                     if (connection != null)
                     {
+                        bool openSuccess = false;
+
                         if (connection is MidiBidirectionalEndpointConnection)
                         {
-                            ((MidiBidirectionalEndpointConnection)(connection)).Open();
+                            openSuccess = ((MidiBidirectionalEndpointConnection)(connection)).Open();
                         }
                         else if (connection is MidiOutputEndpointConnection)
                         {
-                            ((MidiOutputEndpointConnection)(connection)).Open();
+                            openSuccess = ((MidiOutputEndpointConnection)(connection)).Open();
                         }
+
                     }
                 });
 
             if (session == null)
             {
-                AnsiConsole.WriteLine(Strings.ErrorUnableToCreateSession);
-                return 1;
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToCreateSession));
+                return (int)MidiConsoleReturnCode.ErrorCreatingSession;
             }
             else if (connection == null)
             {
-                AnsiConsole.WriteLine(Strings.ErrorUnableToOpenEndpoint);
-                return 1;
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToCreateEndpointConnection));
+
+                return (int)MidiConsoleReturnCode.ErrorCreatingEndpointConnection;
             }
+            else if (!openSuccess)
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToOpenEndpoint));
+
+                return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
+            }
+
 
             var table = new Table();
 
-            // TODO: Localize these
-            table.AddColumn("Timestamp");
-            table.AddColumn("MIDI Words Sent");
+            table.AddColumn(Strings.SendMessageResultTableColumnHeaderTimestamp);
+            table.AddColumn(Strings.SendMessageResultTableColumnHeaderWordsSent);
 
             AnsiConsole.Live(table)
                 .Start(ctx =>

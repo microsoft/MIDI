@@ -15,18 +15,21 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiServicePingResponse() = default;
 
-        uint64_t Id() const { return m_id; }
-        internal::MidiTimestamp ClientSendMidiTimestamp() const { return m_clientSendTimestamp; }
-        internal::MidiTimestamp ServiceReportedMidiTimestamp() const { return m_serviceTimestamp; }
-        internal::MidiTimestamp ClientReceiveMidiTimestamp() const { return m_clientReceiveTimestamp; }
-        internal::MidiTimestamp ClientDeltaTimestamp() const { return m_clientDeltaTimestamp; }
+        uint32_t SourceId() const noexcept { return m_idHigh; }
+        uint32_t Index() const noexcept { return m_idLow; }
+        internal::MidiTimestamp ClientSendMidiTimestamp() const noexcept { return m_clientSendTimestamp; }
+        internal::MidiTimestamp ServiceReportedMidiTimestamp() const noexcept { return m_serviceTimestamp; }
+        internal::MidiTimestamp ClientReceiveMidiTimestamp() const noexcept { return m_clientReceiveTimestamp; }
+        internal::MidiTimestamp ClientDeltaTimestamp() const noexcept { return m_clientDeltaTimestamp; }
 
 
         void InternalSetSendInfo(
-            _In_ uint64_t const pingId,
+            _In_ uint32_t const pingSourceId,
+            _In_ uint32_t const pingIndex,
             _In_ internal::MidiTimestamp const sendTimestamp)
         {
-            m_id = pingId;
+            m_idHigh = pingSourceId;
+            m_idLow = pingIndex;
             m_clientSendTimestamp = sendTimestamp;
         }
 
@@ -39,16 +42,18 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             if (m_clientReceiveTimestamp > m_clientSendTimestamp)
             {
-                m_clientDeltaTimestamp = m_clientSendTimestamp - m_clientReceiveTimestamp;
+                m_clientDeltaTimestamp = m_clientReceiveTimestamp - m_clientSendTimestamp;
             }
             else
             {
+                // if we hit a wrap situation. We could do some better math here if we wanted to.
                 m_clientDeltaTimestamp = 0;
             }
         }
 
     private:
-        uint64_t m_id{};
+        uint32_t m_idHigh{};
+        uint32_t m_idLow{};
         internal::MidiTimestamp m_clientSendTimestamp{};
         internal::MidiTimestamp m_serviceTimestamp{};
         internal::MidiTimestamp m_clientReceiveTimestamp{};

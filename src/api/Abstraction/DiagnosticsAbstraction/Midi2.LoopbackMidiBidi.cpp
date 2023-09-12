@@ -35,30 +35,44 @@ CMidi2LoopbackMidiBiDi::Initialize(
 
     std::wstring id{ endpointId };
     
-    // Both endpoints share the same internal device as a simple way of routing between the two.
+    // Both loopback endpoints share the same internal device as a simple way of routing between the two. 
+    // The Ping device is separate
 
-    if (id.find(DEFAULT_LOOPBACK_BIDI_A_ID) != std::wstring::npos)
+    m_isEndpointA = false;
+    m_loopbackMidiDevice = nullptr;
+    m_pingMidiDevice = nullptr;
+
+    if (id.find(DEFAULT_PING_BIDI_ID) != std::wstring::npos)
+    {
+        // ping bidi endpoint
+
+        m_isPing = true;
+
+        m_pingMidiDevice = (MidiPingBidiDevice*)(MidiDeviceTable::Current().GetPingDevice());
+        m_pingMidiDevice->SetCallback(this);
+    }
+    else if (id.find(DEFAULT_LOOPBACK_BIDI_A_ID) != std::wstring::npos)
     {
         // bidi endpoint A
 
         m_isEndpointA = true;
-        m_midiDevice = (MidiLoopbackBidiDevice*)(MidiDeviceTable::Current().GetBidiDevice());
-        m_midiDevice->SetCallbackA(this);
+        m_loopbackMidiDevice = (MidiLoopbackBidiDevice*)(MidiDeviceTable::Current().GetBidiDevice());
+        m_loopbackMidiDevice->SetCallbackA(this);
     }
     else if (id.find(DEFAULT_LOOPBACK_BIDI_B_ID) != std::wstring::npos)
     {
         // bidi endpoint B
 
         m_isEndpointA = false;
-        m_midiDevice = (MidiLoopbackBidiDevice*)(MidiDeviceTable::Current().GetBidiDevice());
-        m_midiDevice->SetCallbackB(this);
+        m_loopbackMidiDevice = (MidiLoopbackBidiDevice*)(MidiDeviceTable::Current().GetBidiDevice());
+        m_loopbackMidiDevice->SetCallbackB(this);
     }
     else
     {
         return E_FAIL;
     }
 
-    RETURN_HR_IF_NULL(E_POINTER, m_midiDevice);
+    //RETURN_HR_IF_NULL(E_POINTER, m_midiDevice);
 
     return S_OK;
 }
@@ -74,7 +88,8 @@ CMidi2LoopbackMidiBiDi::Cleanup()
         );
 
     m_callback = nullptr;
-    m_midiDevice = nullptr;
+    m_loopbackMidiDevice = nullptr;
+    m_pingMidiDevice = nullptr;
 
     return S_OK;
 }
@@ -88,17 +103,22 @@ CMidi2LoopbackMidiBiDi::SendMidiMessage(
 )
 {
     RETURN_HR_IF_NULL(E_INVALIDARG, message);
-    RETURN_HR_IF_NULL(E_POINTER, m_midiDevice);
     RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
     
-
-    if (m_isEndpointA)
+    if (m_isPing)
     {
-        return m_midiDevice->SendMidiMessageFromAToB(message, size, timestamp);
+        RETURN_HR_IF_NULL(E_POINTER, m_pingMidiDevice);
+        return m_pingMidiDevice->SendMidiMessage(message, size, timestamp);
+    }
+    else if (m_isEndpointA)
+    {
+        RETURN_HR_IF_NULL(E_POINTER, m_loopbackMidiDevice);
+        return m_loopbackMidiDevice->SendMidiMessageFromAToB(message, size, timestamp);
     }
     else
     {
-        return m_midiDevice->SendMidiMessageFromBToA(message, size, timestamp);
+        RETURN_HR_IF_NULL(E_POINTER, m_loopbackMidiDevice);
+        return m_loopbackMidiDevice->SendMidiMessageFromBToA(message, size, timestamp);
     }
 }
 

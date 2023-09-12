@@ -16,21 +16,39 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiServicePingResponseSummary() = default;
 
-        bool Succeeded() const { return m_success; }
-        winrt::hstring FailureReason() const { return m_failureReason; }
+        bool Success() const noexcept { return m_success; }
+        winrt::hstring FailureReason() const noexcept { return m_failureReason; }
 
-        uint64_t TotalPingRoundTripMidiClock() { return m_totalPingMidiClockTicks; }
+        internal::MidiTimestamp TotalPingRoundTripMidiClock() const noexcept { return m_totalPingMidiClockTicks; }
+        internal::MidiTimestamp AveragePingRoundTripMidiClock() const noexcept { return m_averagePingMidiClockTicks; }
 
-        foundation::Collections::IVectorView<midi2::MidiServicePingResponse> Responses() const { return m_responses.GetView(); }
+        foundation::Collections::IVectorView<midi2::MidiServicePingResponse> Responses() const noexcept { return m_responses.GetView(); }
 
         void InternalSetFailed(_In_ winrt::hstring failureReason) { m_success = false; m_failureReason = failureReason; }
         void InternalSetSucceeded() { m_success = true; }
+
+        void InternalSetTotals(
+            _In_ internal::MidiTimestamp const totalPingRoundTrip, 
+            _In_ internal::MidiTimestamp const averagePingRoundTrip
+            )
+        {
+            m_totalPingMidiClockTicks = totalPingRoundTrip;
+            m_averagePingMidiClockTicks = averagePingRoundTrip;
+        }
+
+        void InternalAddResponse(
+            _In_ midi2::MidiServicePingResponse response
+            )
+        {
+            m_responses.Append(response);
+        }
 
     private:
         bool m_success{ false };
         winrt::hstring m_failureReason{};
 
         internal::MidiTimestamp m_totalPingMidiClockTicks;
+        internal::MidiTimestamp m_averagePingMidiClockTicks;
 
         foundation::Collections::IVector<midi2::MidiServicePingResponse>
             m_responses { winrt::single_threaded_vector<midi2::MidiServicePingResponse>() };

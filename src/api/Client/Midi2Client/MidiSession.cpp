@@ -117,7 +117,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     midi2::MidiBidirectionalEndpointConnection MidiSession::ConnectBidirectionalEndpoint(
         winrt::hstring const& deviceId,
-        midi2::MidiBidirectionalEndpointOpenOptions const& /* options */,
+        midi2::MidiBidirectionalEndpointOpenOptions const& options,
         midi2::IMidiEndpointDefinedConnectionSettings const& /*settings*/
         ) noexcept
     {
@@ -130,10 +130,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             auto guid = foundation::GuidHelper::CreateNewGuid();
             auto connectionInstanceId = winrt::to_hstring(guid);
 
-            //endpointConnection->InternalSetId(connectionInstanceId);
-            //endpointConnection->InternalSetDeviceId(normalizedDeviceId);
-
-            if (endpointConnection->InternalInitialize(m_serviceAbstraction, connectionInstanceId, normalizedDeviceId))
+            if (endpointConnection->InternalInitialize(m_serviceAbstraction, connectionInstanceId, normalizedDeviceId, options))
             {
                 m_connections.Insert((winrt::hstring)connectionInstanceId, (const midi2::IMidiEndpointConnection)(*endpointConnection));
 

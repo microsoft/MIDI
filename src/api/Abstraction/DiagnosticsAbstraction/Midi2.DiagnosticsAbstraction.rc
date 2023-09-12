@@ -93,10 +93,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROJNAME                    "Midi2.Diagnosticsbstraction"
+    IDS_PROJNAME                    "Midi2.DiagnosticsAbstraction"
 END
 
-IDR_MIDI2SIMPLELOOPBACKABSTRACTION REGISTRY "Midi2.DiagnosticsAbstraction.rgs"
+IDR_MIDI2DIAGNOSTICSABSTRACTION REGISTRY "Midi2.DiagnosticsAbstraction.rgs"
 ////////////////////////////////////////////////////////////////////////////
 
 

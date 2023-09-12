@@ -134,10 +134,13 @@ Task("VerifyDependencies")
 
     // copy all the DLLs
     CopyFiles(System.IO.Path.Combine(outputDir, "*.dll"), copyToDir); 
+
+    CopyFiles(System.IO.Path.Combine(outputDir, "*.pri"), copyToDir); 
+    CopyFiles(System.IO.Path.Combine(outputDir, "*.pdb"), copyToDir); 
+
     CopyFiles(System.IO.Path.Combine(outputDir, "MidiSrv.exe"), copyToDir); 
 
     CopyFiles(System.IO.Path.Combine(outputDir, "Windows.Devices.Midi2.winmd"), copyToDir); 
-    CopyFiles(System.IO.Path.Combine(outputDir, "Windows.Devices.Midi2.pri"), copyToDir); 
 
     CopyFiles(System.IO.Path.Combine(outputDir, "WinRTActivationEntries.txt"), copyToDir); 
 });

@@ -116,12 +116,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             if (atLeastOneEndpointFound)
             {
-                return 0;
+                return (int)MidiConsoleReturnCode.Success;
             }
             else
             {
-                // TODO: Formalize error codes.
-                return 1;
+                return (int)MidiConsoleReturnCode.NoEndpointsFound;
             }
         }
 

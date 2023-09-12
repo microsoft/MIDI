@@ -70,7 +70,16 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to [fuchsia on black]Microsoft Windows MIDI Services Console[/].
+        ///   Looks up a localized string similar to MIDI Console.
+        /// </summary>
+        internal static string AppShortName {
+            get {
+                return ResourceManager.GetString("AppShortName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Microsoft Windows MIDI Services Console.
         /// </summary>
         internal static string AppTitle {
             get {
@@ -142,7 +151,52 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to [darkred]Unable to create session.[/].
+        ///   Looks up a localized string similar to Ping the MIDI Windows Service.
+        /// </summary>
+        internal static string CommandServicePingDescription {
+            get {
+                return ResourceManager.GetString("CommandServicePingDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ping test failed.
+        /// </summary>
+        internal static string ErrorPingTestFailed {
+            get {
+                return ResourceManager.GetString("ErrorPingTestFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ping result summary is null.
+        /// </summary>
+        internal static string ErrorPingTestFailReasonSummaryNull {
+            get {
+                return ResourceManager.GetString("ErrorPingTestFailReasonSummaryNull", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The WinRT types could not be activated. Is Windows MIDI Services installed?.
+        /// </summary>
+        internal static string ErrorPingTestFailReasonWinRTActivation {
+            get {
+                return ResourceManager.GetString("ErrorPingTestFailReasonWinRTActivation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to create endpoint connection. Is the endpoint Id correct? Is the type of endpoint correct?.
+        /// </summary>
+        internal static string ErrorUnableToCreateEndpointConnection {
+            get {
+                return ResourceManager.GetString("ErrorUnableToCreateEndpointConnection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to create session..
         /// </summary>
         internal static string ErrorUnableToCreateSession {
             get {
@@ -151,11 +205,110 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to [darkred]Unable to open specified endpoint.[/].
+        ///   Looks up a localized string similar to Unable to open specified endpoint..
         /// </summary>
         internal static string ErrorUnableToOpenEndpoint {
             get {
                 return ResourceManager.GetString("ErrorUnableToOpenEndpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Average.
+        /// </summary>
+        internal static string GenericAverage {
+            get {
+                return ResourceManager.GetString("GenericAverage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to clock ticks.
+        /// </summary>
+        internal static string GenericClockTicks {
+            get {
+                return ResourceManager.GetString("GenericClockTicks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Count.
+        /// </summary>
+        internal static string GenericCount {
+            get {
+                return ResourceManager.GetString("GenericCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to responses.
+        /// </summary>
+        internal static string GenericResponses {
+            get {
+                return ResourceManager.GetString("GenericResponses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Total.
+        /// </summary>
+        internal static string GenericTotal {
+            get {
+                return ResourceManager.GetString("GenericTotal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Timestamp.
+        /// </summary>
+        internal static string MonitorEndpointResultTableColumnHeaderTimestamp {
+            get {
+                return ResourceManager.GetString("MonitorEndpointResultTableColumnHeaderTimestamp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MIDI Words Received.
+        /// </summary>
+        internal static string MonitorEndpointResultTableColumnHeaderWordsReceived {
+            get {
+                return ResourceManager.GetString("MonitorEndpointResultTableColumnHeaderWordsReceived", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Escape key pressed. Monitoring terminated..
+        /// </summary>
+        internal static string MonitorEscapedPressedMessage {
+            get {
+                return ResourceManager.GetString("MonitorEscapedPressedMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Monitoring incoming messages on.
+        /// </summary>
+        internal static string MonitorMonitoringOnEndpointLabel {
+            get {
+                return ResourceManager.GetString("MonitorMonitoringOnEndpointLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Press escape to stop monitoring..
+        /// </summary>
+        internal static string MonitorPressEscapeToStopMonitoringMessage {
+            get {
+                return ResourceManager.GetString("MonitorPressEscapeToStopMonitoringMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Monitor.
+        /// </summary>
+        internal static string MonitorSessionNameSuffix {
+            get {
+                return ResourceManager.GetString("MonitorSessionNameSuffix", resourceCulture);
             }
         }
         
@@ -277,11 +430,168 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Number of times to ping the MIDI Windows Service.
+        /// </summary>
+        internal static string ParameterServicePingCount {
+            get {
+                return ResourceManager.GetString("ParameterServicePingCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to True to show details from each ping request and response..
+        /// </summary>
+        internal static string ParameterServicePingDetails {
+            get {
+                return ResourceManager.GetString("ParameterServicePingDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Total ping timeout in milliseconds. Does not include the session and connection creation and teardown time..
+        /// </summary>
+        internal static string ParameterServicePingTimeout {
+            get {
+                return ResourceManager.GetString("ParameterServicePingTimeout", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ping.
+        /// </summary>
+        internal static string PingResultTableColumnHeaderPing {
+            get {
+                return ResourceManager.GetString("PingResultTableColumnHeaderPing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Receive
+        ///Timestamp.
+        /// </summary>
+        internal static string PingResultTableColumnHeaderReceiveTimestamp {
+            get {
+                return ResourceManager.GetString("PingResultTableColumnHeaderReceiveTimestamp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Round Trip
+        ///Microseconds.
+        /// </summary>
+        internal static string PingResultTableColumnHeaderRoundTripMicroseconds {
+            get {
+                return ResourceManager.GetString("PingResultTableColumnHeaderRoundTripMicroseconds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Round Trip
+        ///Ticks.
+        /// </summary>
+        internal static string PingResultTableColumnHeaderRoundTripTicks {
+            get {
+                return ResourceManager.GetString("PingResultTableColumnHeaderRoundTripTicks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Send
+        ///Timestamp.
+        /// </summary>
+        internal static string PingResultTableColumnHeaderSendTimestamp {
+            get {
+                return ResourceManager.GetString("PingResultTableColumnHeaderSendTimestamp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Timestamp.
+        /// </summary>
+        internal static string SendMessageResultTableColumnHeaderTimestamp {
+            get {
+                return ResourceManager.GetString("SendMessageResultTableColumnHeaderTimestamp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MIDI Words Sent.
+        /// </summary>
+        internal static string SendMessageResultTableColumnHeaderWordsSent {
+            get {
+                return ResourceManager.GetString("SendMessageResultTableColumnHeaderWordsSent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sending MIDI message(s) through.
+        /// </summary>
+        internal static string SendMessageSendingThroughEndpointLabel {
+            get {
+                return ResourceManager.GetString("SendMessageSendingThroughEndpointLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sender.
+        /// </summary>
+        internal static string SendMessageSessionNameSuffix {
+            get {
+                return ResourceManager.GetString("SendMessageSessionNameSuffix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please provide at least one valid 32-bit MIDI word.
+        /// </summary>
+        internal static string SendMessageValidationErrorTooFewWords {
+            get {
+                return ResourceManager.GetString("SendMessageValidationErrorTooFewWords", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please provide up to four valid 32-bit MIDI words, comprising a single valid UMP..
+        /// </summary>
+        internal static string SendMessageValidationErrorTooManyWords {
+            get {
+                return ResourceManager.GetString("SendMessageValidationErrorTooManyWords", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Creating session and opening endpoint....
         /// </summary>
         internal static string StatusCreatingSessionAndOpeningEndpoint {
             get {
                 return ResourceManager.GetString("StatusCreatingSessionAndOpeningEndpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specified ping count is too high. Please provide a value &lt;= 100..
+        /// </summary>
+        internal static string ValidationErrorPingCountTooHigh {
+            get {
+                return ResourceManager.GetString("ValidationErrorPingCountTooHigh", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specified ping count is too low. Please provide a value &gt; 0..
+        /// </summary>
+        internal static string ValidationErrorPingCountTooLow {
+            get {
+                return ResourceManager.GetString("ValidationErrorPingCountTooLow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specified timeout is too low. Please provide a value &gt;= 10ms..
+        /// </summary>
+        internal static string ValidationErrorPingTimeoutTooLow {
+            get {
+                return ResourceManager.GetString("ValidationErrorPingTimeoutTooLow", resourceCulture);
             }
         }
     }

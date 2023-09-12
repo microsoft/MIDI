@@ -16,7 +16,8 @@ namespace Windows.Devices.Midi2
     [default_interface]
     runtimeclass MidiServicePingResponse
     {
-        UInt64 Id { get; };
+        UInt32 SourceId { get; };
+        UInt32 Index { get; };
 
         MIDI_TIMESTAMP ClientSendMidiTimestamp{ get; };
         MIDI_TIMESTAMP ServiceReportedMidiTimestamp{ get; };

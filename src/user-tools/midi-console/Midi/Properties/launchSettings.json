@@ -1,7 +1,8 @@
 {
   "profiles": {
     "Midi": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "commandLineArgs": "service-ping -c 3 -d"
     }
   }
 }

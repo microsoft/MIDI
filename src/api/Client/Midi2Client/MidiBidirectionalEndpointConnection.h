@@ -54,7 +54,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool InternalInitialize(
             _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
             _In_ winrt::hstring const endpointInstanceId,
-            _In_ winrt::hstring const deviceId);
+            _In_ winrt::hstring const deviceId,
+            _In_ midi2::MidiBidirectionalEndpointOpenOptions options);
 
         _Success_(return == true)
         bool Open();

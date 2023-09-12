@@ -23,6 +23,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             [CommandOption("-f|--file")]
             public string File { get; init; }
 
+            [LocalizedDescription("ParameterSendMessageDelayBetweenMessages")]
+            [CommandOption("-p|--pause|--delay")]
+            [DefaultValue(100)]
+            public int DelayBetweenMessages { get; init; }
+
         }
 
         public override int Execute(CommandContext context, Settings settings)

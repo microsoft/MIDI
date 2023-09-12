@@ -4,7 +4,7 @@
 
     <!-- TODO: Gate on Windows 10 22H2 or later -->
 
-    <Bundle Name="Microsoft Windows MIDI Services (Developer Preview)" 
+    <Bundle Name="Microsoft Windows MIDI Services (Developer Preview 1)" 
           Manufacturer="Microsoft Corporation" 
           Version="1.0.0.0" 
           UpgradeCode="ecfae6e7-7186-4f41-b9d2-df17ba86c69f">
@@ -15,6 +15,8 @@
             <bal:WixStandardBootstrapperApplication LicenseUrl="https://github.com/microsoft/MIDI/blob/main/LICENSE" 
                                                     Theme="hyperlinkLicense" 
                                                     LogoFile="midi_installer_logo_square.png"/>
+
+        
         </BootstrapperApplication>
 
         <Chain>
@@ -32,28 +34,7 @@
                 Permanent="no"
                 Compressed="yes"
                 SourceFile="WindowsMIDIServicesCoreSetup.msi">
-                <MsiProperty Name="API_INSTALLFOLDER" Value="[API_INSTALLFOLDER]"/>
-                <MsiProperty Name="SERVICE_INSTALLFOLDER" Value="[SERVICE_INSTALLFOLDER]"/>
             </MsiPackage>
-
-            <MsiPackage
-                Id="MidiToolsConsoleAppSetup"
-                Vital="yes"
-                Permanent="no"
-                Compressed="yes"
-                SourceFile="WindowsMidiServicesConsoleAppSetup.msi">
-                <MsiProperty Name="CONSOLEAPP_INSTALLFOLDER" Value="[CONSOLEAPP_INSTALLFOLDER]"/>
-            </MsiPackage>
-
-            <MsiPackage
-                Id="MidiToolsSettingsAppSetup"
-                Vital="yes"
-                Permanent="no"
-                Compressed="yes"
-                SourceFile="WindowsMidiServicesSettingsAppSetup.msi">
-                <MsiProperty Name="SETTINGSAPP_INSTALLFOLDER" Value="[SETTINGSAPP_INSTALLFOLDER]"/>
-            </MsiPackage>
-
         </PackageGroup>
     </Fragment>
 </Wix>
