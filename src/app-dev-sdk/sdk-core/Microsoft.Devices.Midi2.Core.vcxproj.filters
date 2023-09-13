@@ -130,9 +130,6 @@
     <Midl Include="MidiHighResolutionValueDisplayFormatter.idl">
       <Filter>SDK\Display</Filter>
     </Midl>
-    <Midl Include="MidiTransportInformation.idl">
-      <Filter>SDK\Transports</Filter>
-    </Midl>
     <Midl Include="IMidiTransportSettingsData.idl">
       <Filter>SDK\Transports</Filter>
     </Midl>

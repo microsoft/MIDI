@@ -201,9 +201,6 @@
     <ClInclude Include="MidiVirtualDevice.h" />
     <ClInclude Include="midi_app_sdk_version.h">
     </ClInclude>
-    <ClInclude Include="MidiTransportInformation.h">
-      <DependentUpon>MidiTransportInformation.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="midi_sdk_inproc_loopback_simulator.h" />
     <ClInclude Include="ump_helpers.h" />
     <ClInclude Include="MidiUmpUtilities.h">
@@ -247,9 +244,6 @@
     <ClCompile Include="MidiServices.cpp">
       <DependentUpon>MidiServices.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiTransportInformation.cpp">
-      <DependentUpon>MidiTransportInformation.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiUmpUtilities.cpp">
       <DependentUpon>MidiUmpUtilities.idl</DependentUpon>
     </ClCompile>
@@ -274,7 +268,6 @@
     <Midl Include="MidiGroupTerminalBlock.idl" />
     <Midl Include="MidiLocalizedStrings.idl" />
     <Midl Include="MidiServices.idl" />
-    <Midl Include="MidiTransportInformation.idl" />
     <Midl Include="MidiUmpUtilities.idl" />
     <Midl Include="MidiServicesStatusEnum.idl" />
   </ItemGroup>
