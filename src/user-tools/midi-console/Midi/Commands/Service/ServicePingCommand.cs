@@ -26,17 +26,17 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             [LocalizedDescription("ParameterServicePingCount")]
             [CommandOption("-c|--count")]
             [DefaultValue(10)]
-            public byte Count { get; set; }
+            public int Count { get; set; }
 
             [LocalizedDescription("ParameterServicePingTimeout")]
             [CommandOption("-t|--timeout")]
             [DefaultValue(5000)]
             public int Timeout { get; set; }
 
-            [LocalizedDescription("ParameterServicePingDetails")]
-            [CommandOption("-d|--details")]
+            [LocalizedDescription("ParameterServicePingVerbose")]
+            [CommandOption("-v|--verbose|--details")]
             [DefaultValue(false)]
-            public bool Details { get; set; }
+            public bool Verbose { get; set; }
 
         }
 
@@ -72,7 +72,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                 //UInt32 timeout = settings.Timeout.HasValue ? settings.Timeout.Value : 0;
 
-                var pingResult = MidiService.PingService(settings.Count, (UInt32)settings.Timeout);
+                var pingResult = MidiService.PingService((byte)settings.Count, (UInt32)settings.Timeout);
 
                 // TODO: Display results in a table
 
@@ -82,7 +82,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     {
                         // show the summary
 
-                        if (settings.Details)
+                        if (settings.Verbose)
                         {
                             // show table of the ping results
 
@@ -102,19 +102,19 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                                 table.AddRow(
                                     new Text(response.Index.ToString()),
-                                    new Text(response.ClientSendMidiTimestamp.ToString()),
-                                    new Text(response.ClientReceiveMidiTimestamp.ToString()),
+                                    new Markup(AnsiMarkupFormatter.FormatTimestamp(response.ClientSendMidiTimestamp)),
+                                    new Markup(AnsiMarkupFormatter.FormatTimestamp(response.ClientReceiveMidiTimestamp)),
                                     new Markup(AnsiMarkupFormatter.FormatGeneralNumber(response.ClientDeltaTimestamp)),
                                     new Markup(AnsiMarkupFormatter.FormatGeneralNumber(deltaMicroseconds))
                                     );
                             }
 
                             AnsiConsole.Write(table);
-
-                            AnsiConsole.MarkupLine($" {Strings.GenericCount}: {AnsiMarkupFormatter.FormatGeneralNumber(pingResult.Responses.Count)} {Strings.GenericResponses}");
-                            AnsiConsole.MarkupLine($" {Strings.GenericTotal}: {AnsiMarkupFormatter.FormatGeneralNumber(pingResult.TotalPingRoundTripMidiClock)} {Strings.GenericClockTicks}");
-                            AnsiConsole.MarkupLine($" {Strings.GenericAverage}: {AnsiMarkupFormatter.FormatGeneralNumber(pingResult.AveragePingRoundTripMidiClock)} {Strings.GenericClockTicks}");
                         }
+
+                        AnsiConsole.MarkupLine($" {Strings.GenericCount}: {AnsiMarkupFormatter.FormatGeneralNumber(pingResult.Responses.Count)} {Strings.GenericResponses}");
+                        AnsiConsole.MarkupLine($" {Strings.GenericTotal}: {AnsiMarkupFormatter.FormatGeneralNumber(pingResult.TotalPingRoundTripMidiClock)} {Strings.GenericClockTicks}");
+                        AnsiConsole.MarkupLine($" {Strings.GenericAverage}: {AnsiMarkupFormatter.FormatGeneralNumber(pingResult.AveragePingRoundTripMidiClock)} {Strings.GenericClockTicks}");
 
                     }
                     else
@@ -130,15 +130,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             }
             catch (System.TypeInitializationException ex)
             {
-                AnsiConsole.Markup(AnsiMarkupFormatter.FormatError($"{Strings.ErrorPingTestFailed}: {Strings.ErrorPingTestFailReasonWinRTActivation}"));
+                AnsiConsole.Markup(AnsiMarkupFormatter.FormatError($"{Strings.ErrorPingTestFailed}: {Strings.ErrorGeneralFailReasonWinRTActivation}"));
 
-                return (int)MidiConsoleReturnCode.WinRTTypeActivationFailure;
+                return (int)MidiConsoleReturnCode.ErrorWinRTTypeActivationFailure;
             }
             catch (Exception ex)
             {
                 AnsiConsole.Markup(AnsiMarkupFormatter.FormatError($"{Strings.ErrorPingTestFailed}: " + ex.Message));
 
-                return (int)MidiConsoleReturnCode.GeneralFailure;
+                return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
             }
         }
     }

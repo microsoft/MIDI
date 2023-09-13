@@ -21,22 +21,18 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
     internal class MonitorEndpointCommand : Command<MonitorEndpointCommand.Settings>
     {
-        public sealed class Settings : CommandSettings
+        public sealed class Settings : EndpointCommandSettings
         {
-            [LocalizedDescription("ParameterCommonInstanceIdDescription")]
-            [CommandOption("-i|--instance-id")]
-            public string InstanceId { get; init; }
-
             [LocalizedDescription("ParameterMonitorEndpointDirectionDescription")]
             [CommandOption("-d|--direction")]
             [DefaultValue(EndpointDirectionInputs.Bidirectional)]
-            public EndpointDirectionInputs EndpointDirection { get; init; }
+            public EndpointDirectionInputs EndpointDirection { get; set; }
 
 
             [LocalizedDescription("ParameterMonitorEndpointSingleMessage")]
             [CommandOption("-s|--single-message")]
             [DefaultValue(false)]
-            public bool SingleMessage { get; init; }
+            public bool SingleMessage { get; set; }
         }
 
         public override int Execute(CommandContext context, Settings settings)
@@ -44,14 +40,22 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             MidiSession session = null;
             IMidiEndpointConnection connection = null;
 
-            string endpointId = settings.InstanceId.Trim().ToUpper();
 
-            // TODO: localize this
+            string endpointId = string.Empty;
+
+            if (!string.IsNullOrEmpty(settings.InstanceId))
+            {
+                endpointId = settings.InstanceId.Trim().ToLower();
+            }
+            else
+            {
+                endpointId = UmpEndpointPicker.PickInput();
+            }
+
+
             AnsiConsole.MarkupLine(Strings.MonitorMonitoringOnEndpointLabel + ": " + AnsiMarkupFormatter.FormatDeviceInstanceId(endpointId));
             AnsiConsole.MarkupLine(Strings.MonitorPressEscapeToStopMonitoringMessage);
             AnsiConsole.WriteLine();
-
-
 
             var table = new Table();
 

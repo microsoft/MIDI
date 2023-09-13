@@ -325,6 +325,7 @@
     <ClInclude Include="MidiUmp96.h">
       <DependentUpon>MidiUmp96.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiUmpUtility.h" />
     <ClInclude Include="MidiUniqueId.h">
       <DependentUpon>MidiUniqueId.idl</DependentUpon>
     </ClInclude>
@@ -444,6 +445,7 @@
     <ClCompile Include="MidiUmp96.cpp">
       <DependentUpon>MidiUmp96.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiUmpUtility.cpp" />
     <ClCompile Include="MidiUniqueId.cpp">
       <DependentUpon>MidiUniqueId.idl</DependentUpon>
     </ClCompile>
@@ -511,6 +513,7 @@
     <Midl Include="MidiUmp96.idl" />
     <Midl Include="MidiUmpMessageTypeEnum.idl" />
     <Midl Include="MidiUmpPacketTypeEnum.idl" />
+    <Midl Include="MidiUmpUtility.idl" />
     <Midl Include="MidiUniqueId.idl" />
     <Midl Include="MidiVirtualDeviceManager.idl" />
   </ItemGroup>

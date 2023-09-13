@@ -12,6 +12,8 @@ using System.Threading.Tasks;
 using Windows.Devices.Enumeration;
 using Windows.Devices.Midi2;
 
+using Microsoft.Devices.Midi2.ConsoleApp.Resources;
+
 namespace Microsoft.Devices.Midi2.ConsoleApp
 {
     internal sealed class EnumEndpointsCommand : Command<EnumEndpointsCommand.Settings>
@@ -21,12 +23,12 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             [LocalizedDescription("ParameterEnumEndpointsDirection")]
             [CommandOption("-d|--direction")]
             [DefaultValue(EndpointDirection.All)]
-            public EndpointDirection EndpointDirection { get; init; }
+            public EndpointDirection EndpointDirection { get; set; }
 
             [LocalizedDescription("ParameterEnumEndpointsIncludeInstanceId")]
             [CommandOption("-i|--include-instance-id")]
             [DefaultValue(true)]
-            public bool IncludeId { get; init; }
+            public bool IncludeId { get; set; }
         }
 
         public override int Execute(CommandContext context, Settings settings)
@@ -49,7 +51,19 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                     if (settings.EndpointDirection == EndpointDirection.All || settings.EndpointDirection == EndpointDirection.Bidirectional)
                     {
-                        var endpoints = DeviceInformation.FindAllAsync(MidiBidirectionalEndpointConnection.GetDeviceSelector())
+                        string selector = string.Empty;
+
+                        try
+                        {
+                            selector = MidiBidirectionalEndpointConnection.GetDeviceSelector();
+                        }
+                        catch (System.TypeInitializationException ex)
+                        {
+                            AnsiConsole.Markup(AnsiMarkupFormatter.FormatError($"{Strings.ErrorEnumEndpointsFailed}: {Strings.ErrorGeneralFailReasonWinRTActivation}"));
+                            return;
+                        }
+
+                        var endpoints = DeviceInformation.FindAllAsync(selector)
                             .GetAwaiter().GetResult();
 
                         if (endpoints.Count > 0)
@@ -71,7 +85,19 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                     if (settings.EndpointDirection == EndpointDirection.All || settings.EndpointDirection == EndpointDirection.In)
                     {
-                        var endpoints = DeviceInformation.FindAllAsync(MidiInputEndpointConnection.GetDeviceSelector())
+                        string selector = string.Empty;
+
+                        try
+                        {
+                            selector = MidiInputEndpointConnection.GetDeviceSelector();
+                        }
+                        catch (System.TypeInitializationException ex)
+                        {
+                            AnsiConsole.Markup(AnsiMarkupFormatter.FormatError($"{Strings.ErrorEnumEndpointsFailed}: {Strings.ErrorGeneralFailReasonWinRTActivation}"));
+                            return;
+                        }
+
+                        var endpoints = DeviceInformation.FindAllAsync(selector)
                         .GetAwaiter().GetResult();
 
                         if (endpoints.Count > 0)
@@ -93,7 +119,19 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                     if (settings.EndpointDirection == EndpointDirection.All || settings.EndpointDirection == EndpointDirection.Out)
                     {
-                        var endpoints = DeviceInformation.FindAllAsync(MidiOutputEndpointConnection.GetDeviceSelector())
+                        string selector = string.Empty;
+
+                        try
+                        {
+                            selector = MidiOutputEndpointConnection.GetDeviceSelector();
+                        }
+                        catch (System.TypeInitializationException ex)
+                        {
+                            AnsiConsole.Markup(AnsiMarkupFormatter.FormatError($"{Strings.ErrorEnumEndpointsFailed}: {Strings.ErrorGeneralFailReasonWinRTActivation}"));
+                            return;
+                        }
+
+                        var endpoints = DeviceInformation.FindAllAsync(selector)
                         .GetAwaiter().GetResult();
 
                         if (endpoints.Count > 0)
@@ -120,20 +158,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             }
             else
             {
-                return (int)MidiConsoleReturnCode.NoEndpointsFound;
+                return (int)MidiConsoleReturnCode.ErrorNoEndpointsFound;
             }
         }
 
 
         private void DisplayEndpointInformationFormatted(Table table, Settings settings, DeviceInformation endpointInfo, string endpointType)
         {
-            //var rowData = new List<IRenderable>();
-
-            //rowData.Add(new Text(endpointInfo.Name));
-
-
-            //table.AddRow(rowData);
-
             table.AddRow(new Markup(AnsiMarkupFormatter.FormatEndpointName(endpointInfo.Name)));
 
             table.AddRow(endpointType);

@@ -10,17 +10,19 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
     {
         Success = 0,
 
-        WinRTTypeActivationFailure = 10,
+        ErrorWinRTTypeActivationFailure = 10,
+        ErrorMidiServicesNotInstalled = 12,
 
         ErrorCreatingSession = 100,
 
-        NoEndpointsFound = 200,
+        ErrorNoEndpointsFound = 200,
         ErrorCreatingEndpointConnection = 210,
         ErrorOpeningEndpointConnection = 212,
 
-        MalformedUmp = 300,
+        ErrorMalformedUmp = 300,
 
 
-        GeneralFailure = 999
+        ErrorNotImplemented = 998,
+        ErrorGeneralFailure = 999
     }
 }

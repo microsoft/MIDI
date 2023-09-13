@@ -2,7 +2,7 @@
   "profiles": {
     "Midi": {
       "commandName": "Project",
-      "commandLineArgs": "service-ping -c 3 -d"
+      "commandLineArgs": "endpoint send-message 0x22345678"
     }
   }
 }

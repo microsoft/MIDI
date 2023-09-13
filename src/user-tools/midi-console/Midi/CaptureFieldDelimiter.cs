@@ -6,7 +6,11 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Devices.Midi2.ConsoleApp
 {
-    internal class EnumTransportsCommand
+    public enum CaptureFieldDelimiter
     {
+        Space = 0,
+        Comma,
+        Pipe
     }
+
 }

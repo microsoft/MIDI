@@ -28,9 +28,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         {
             return "[red]" + error + "[/]";
         }
+
+        public static string FormatSuccess(string message)
+        {
+            return "[green]" + message + "[/]";
+        }
+
         public static string FormatTimestamp(UInt64 timestamp)
         {
-            return "[olive]" + timestamp.ToString() + "[/]";
+            return "[darkseagreen2]" + timestamp.ToString() + "[/]";
         }
 
         public static string FormatDeviceInstanceId(string id)

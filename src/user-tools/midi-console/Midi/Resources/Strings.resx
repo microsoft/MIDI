@@ -126,17 +126,23 @@
   <data name="AppTitle" xml:space="preserve">
     <value>Microsoft Windows MIDI Services Console</value>
   </data>
-  <data name="CommandCheckHealthDescription" xml:space="preserve">
-    <value>Basic testing for Windows MIDI Services</value>
-  </data>
   <data name="CommandDiagnosticsReportDescription" xml:space="preserve">
     <value>Generate a report, typically for a support request, or for use when filing a bug</value>
+  </data>
+  <data name="CommandEndpointDescription" xml:space="preserve">
+    <value>Perform operations on a single endpoint, including reporting details, sending messages, monitoring, and more. If you leave out the Instance Id, you will be prompted to select from a list.</value>
+  </data>
+  <data name="CommandEnumerateDescription" xml:space="preserve">
+    <value>Enumerate (list) endpoints and transports</value>
   </data>
   <data name="CommandEnumerateEndpointsDescription" xml:space="preserve">
     <value>List MIDI UMP endpoints visible to Windows MIDI Services-aware applications</value>
   </data>
   <data name="CommandEnumerateLegacyEndpointsDescription" xml:space="preserve">
     <value>List MIDI 1.0 endpoints as seen in apps using older MIDI APIs</value>
+  </data>
+  <data name="CommandEnumerateTransportPluginsDescription" xml:space="preserve">
+    <value>List all MIDI transport plugins installed on this PC.</value>
   </data>
   <data name="CommandMonitorEndpointDescription" xml:space="preserve">
     <value>Monitors a UMP endpoint for incoming messages</value>
@@ -147,17 +153,26 @@
   <data name="CommandSendMessagesFileDescription" xml:space="preserve">
     <value>Sends a text file of UMP MIDI words to the specified endpoint. Each line in the file is a single message of 1-4 words delimited by spaces</value>
   </data>
+  <data name="CommandServiceDescription" xml:space="preserve">
+    <value>Perform operations on the service, such as checking to see if it is running, pinging the standard ping loopback, etc.</value>
+  </data>
   <data name="CommandServicePingDescription" xml:space="preserve">
     <value>Ping the MIDI Windows Service</value>
+  </data>
+  <data name="CommandServiceStatusDescription" xml:space="preserve">
+    <value>Check to see if the Windows Service is running</value>
+  </data>
+  <data name="ErrorEnumEndpointsFailed" xml:space="preserve">
+    <value>Enumerating endpoints failed</value>
+  </data>
+  <data name="ErrorGeneralFailReasonWinRTActivation" xml:space="preserve">
+    <value>The WinRT types could not be activated. Is Windows MIDI Services installed?</value>
   </data>
   <data name="ErrorPingTestFailed" xml:space="preserve">
     <value>Ping test failed</value>
   </data>
   <data name="ErrorPingTestFailReasonSummaryNull" xml:space="preserve">
     <value>Ping result summary is null</value>
-  </data>
-  <data name="ErrorPingTestFailReasonWinRTActivation" xml:space="preserve">
-    <value>The WinRT types could not be activated. Is Windows MIDI Services installed?</value>
   </data>
   <data name="ErrorUnableToCreateEndpointConnection" xml:space="preserve">
     <value>Unable to create endpoint connection. Is the endpoint Id correct? Is the type of endpoint correct?</value>
@@ -201,11 +216,29 @@
   <data name="MonitorSessionNameSuffix" xml:space="preserve">
     <value>Monitor</value>
   </data>
-  <data name="ParameterCheckHealthLoopback" xml:space="preserve">
-    <value>Perform a loopback test</value>
+  <data name="ParameterCaptureMessagesAnnotate" xml:space="preserve">
+    <value>True to annotate key messages written to the file. Annotations begin with the # sign and are written on the line before the UMP line.</value>
+  </data>
+  <data name="ParameterCaptureMessagesEcho" xml:space="preserve">
+    <value>True to echo the incoming messages to the screen. False to simply show capture progress.</value>
+  </data>
+  <data name="ParameterCaptureMessagesFieldDelimiter" xml:space="preserve">
+    <value>Delimiter to separate fields. Valid values include:</value>
+  </data>
+  <data name="ParameterCaptureMessagesFieldFormat" xml:space="preserve">
+    <value>Format for the fields. Hex prefix is "0x", suffix is "h". Decimal values do not have leading zeroes. Valid values include:</value>
+  </data>
+  <data name="ParameterCaptureMessagesFilter" xml:space="preserve">
+    <value>Filter for the messages. Valid values include:</value>
+  </data>
+  <data name="ParameterCaptureMessagesIncludeTimestamps" xml:space="preserve">
+    <value>True to include the timestamp as the first field for each message.</value>
+  </data>
+  <data name="ParameterCaptureMessagesOutputFile" xml:space="preserve">
+    <value>Name of the file to write to. The file must not already exist.</value>
   </data>
   <data name="ParameterCommonInstanceIdDescription" xml:space="preserve">
-    <value>Instance Id of the endpoint</value>
+    <value>Instance Id of the endpoint as used in Windows.Devices.Enumeration. This includes the MIDI interface GUID at the end of the string. You can find the endpoint Instance Ids by enumerating endpoints through this app. If you leave off the Instance Id, we'll re-enumerate them and provide a list for you to pick from.</value>
   </data>
   <data name="ParameterEnumEndpointsDirection" xml:space="preserve">
     <value>The direction of data flow for the endpoints to list</value>
@@ -237,17 +270,23 @@
   <data name="ParameterSendMessagesFileCommandFile" xml:space="preserve">
     <value>Path and filename of the text file to send</value>
   </data>
+  <data name="ParameterSendMessagesFileVerbose" xml:space="preserve">
+    <value>Verbose output as the messages are sent</value>
+  </data>
   <data name="ParameterSendMessageWords" xml:space="preserve">
     <value>32-bit MIDI words, typically in hexadecimal 0x00000000 format. Use the parameter name in front of each word sent.</value>
   </data>
   <data name="ParameterServicePingCount" xml:space="preserve">
     <value>Number of times to ping the MIDI Windows Service</value>
   </data>
-  <data name="ParameterServicePingDetails" xml:space="preserve">
-    <value>True to show details from each ping request and response.</value>
-  </data>
   <data name="ParameterServicePingTimeout" xml:space="preserve">
     <value>Total ping timeout in milliseconds. Does not include the session and connection creation and teardown time.</value>
+  </data>
+  <data name="ParameterServicePingVerbose" xml:space="preserve">
+    <value>True to show details from each ping request and response.</value>
+  </data>
+  <data name="ParameterServiceStatusVerbose" xml:space="preserve">
+    <value>Report additional details about the service</value>
   </data>
   <data name="PingResultTableColumnHeaderPing" xml:space="preserve">
     <value>Ping</value>

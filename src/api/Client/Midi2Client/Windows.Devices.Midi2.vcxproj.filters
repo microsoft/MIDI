@@ -79,6 +79,9 @@
     <Filter Include="API\Endpoints\Message Processing Plugins\Stock Plugins">
       <UniqueIdentifier>{a82088aa-e010-490c-b11d-a2797913bffd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="API\Endpoints\Enumeration">
+      <UniqueIdentifier>{db470d3d-3d8b-43b9-9ceb-8f0791d044c9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -182,6 +185,9 @@
     </ClCompile>
     <ClCompile Include="MidiStateService.cpp">
       <Filter>Internal</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiUmpUtility.cpp">
+      <Filter>API\Messages</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -304,6 +310,9 @@
     </ClInclude>
     <ClInclude Include="InternalMidiConnectionCommon.h">
       <Filter>API\Endpoints\Connections\Internal Implementation</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiUmpUtility.h">
+      <Filter>API\Messages</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -478,6 +487,9 @@
     <Midl Include="MidiStreamConfigurationEndpointListener.idl">
       <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins</Filter>
     </Midl>
+    <Midl Include="MidiUmpUtility.idl">
+      <Filter>API\Messages</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />
@@ -487,6 +499,7 @@
     <None Include="PropertySheet.props" />
   </ItemGroup>
   <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
   </ItemGroup>
   <ItemGroup>

@@ -88,20 +88,29 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Basic testing for Windows MIDI Services.
-        /// </summary>
-        internal static string CommandCheckHealthDescription {
-            get {
-                return ResourceManager.GetString("CommandCheckHealthDescription", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Generate a report, typically for a support request, or for use when filing a bug.
         /// </summary>
         internal static string CommandDiagnosticsReportDescription {
             get {
                 return ResourceManager.GetString("CommandDiagnosticsReportDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Perform operations on a single endpoint, including reporting details, sending messages, monitoring, and more. If you leave out the Instance Id, you will be prompted to select from a list..
+        /// </summary>
+        internal static string CommandEndpointDescription {
+            get {
+                return ResourceManager.GetString("CommandEndpointDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enumerate (list) endpoints and transports.
+        /// </summary>
+        internal static string CommandEnumerateDescription {
+            get {
+                return ResourceManager.GetString("CommandEnumerateDescription", resourceCulture);
             }
         }
         
@@ -120,6 +129,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         internal static string CommandEnumerateLegacyEndpointsDescription {
             get {
                 return ResourceManager.GetString("CommandEnumerateLegacyEndpointsDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List all MIDI transport plugins installed on this PC..
+        /// </summary>
+        internal static string CommandEnumerateTransportPluginsDescription {
+            get {
+                return ResourceManager.GetString("CommandEnumerateTransportPluginsDescription", resourceCulture);
             }
         }
         
@@ -151,11 +169,47 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Perform operations on the service, such as checking to see if it is running, pinging the standard ping loopback, etc..
+        /// </summary>
+        internal static string CommandServiceDescription {
+            get {
+                return ResourceManager.GetString("CommandServiceDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ping the MIDI Windows Service.
         /// </summary>
         internal static string CommandServicePingDescription {
             get {
                 return ResourceManager.GetString("CommandServicePingDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Check to see if the Windows Service is running.
+        /// </summary>
+        internal static string CommandServiceStatusDescription {
+            get {
+                return ResourceManager.GetString("CommandServiceStatusDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enumerating endpoints failed.
+        /// </summary>
+        internal static string ErrorEnumEndpointsFailed {
+            get {
+                return ResourceManager.GetString("ErrorEnumEndpointsFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The WinRT types could not be activated. Is Windows MIDI Services installed?.
+        /// </summary>
+        internal static string ErrorGeneralFailReasonWinRTActivation {
+            get {
+                return ResourceManager.GetString("ErrorGeneralFailReasonWinRTActivation", resourceCulture);
             }
         }
         
@@ -174,15 +228,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         internal static string ErrorPingTestFailReasonSummaryNull {
             get {
                 return ResourceManager.GetString("ErrorPingTestFailReasonSummaryNull", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The WinRT types could not be activated. Is Windows MIDI Services installed?.
-        /// </summary>
-        internal static string ErrorPingTestFailReasonWinRTActivation {
-            get {
-                return ResourceManager.GetString("ErrorPingTestFailReasonWinRTActivation", resourceCulture);
             }
         }
         
@@ -313,16 +358,70 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Perform a loopback test.
+        ///   Looks up a localized string similar to True to annotate key messages written to the file. Annotations begin with the # sign and are written on the line before the UMP line..
         /// </summary>
-        internal static string ParameterCheckHealthLoopback {
+        internal static string ParameterCaptureMessagesAnnotate {
             get {
-                return ResourceManager.GetString("ParameterCheckHealthLoopback", resourceCulture);
+                return ResourceManager.GetString("ParameterCaptureMessagesAnnotate", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Instance Id of the endpoint.
+        ///   Looks up a localized string similar to True to echo the incoming messages to the screen. False to simply show capture progress..
+        /// </summary>
+        internal static string ParameterCaptureMessagesEcho {
+            get {
+                return ResourceManager.GetString("ParameterCaptureMessagesEcho", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delimiter to separate fields. Valid values include:.
+        /// </summary>
+        internal static string ParameterCaptureMessagesFieldDelimiter {
+            get {
+                return ResourceManager.GetString("ParameterCaptureMessagesFieldDelimiter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Format for the fields. Hex prefix is &quot;0x&quot;, suffix is &quot;h&quot;. Decimal values do not have leading zeroes. Valid values include:.
+        /// </summary>
+        internal static string ParameterCaptureMessagesFieldFormat {
+            get {
+                return ResourceManager.GetString("ParameterCaptureMessagesFieldFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Filter for the messages. Valid values include:.
+        /// </summary>
+        internal static string ParameterCaptureMessagesFilter {
+            get {
+                return ResourceManager.GetString("ParameterCaptureMessagesFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to True to include the timestamp as the first field for each message..
+        /// </summary>
+        internal static string ParameterCaptureMessagesIncludeTimestamps {
+            get {
+                return ResourceManager.GetString("ParameterCaptureMessagesIncludeTimestamps", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name of the file to write to. The file must not already exist..
+        /// </summary>
+        internal static string ParameterCaptureMessagesOutputFile {
+            get {
+                return ResourceManager.GetString("ParameterCaptureMessagesOutputFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Instance Id of the endpoint as used in Windows.Devices.Enumeration. This includes the MIDI interface GUID at the end of the string. You can find the endpoint Instance Ids by enumerating endpoints through this app. If you leave off the Instance Id, we&apos;ll re-enumerate them and provide a list for you to pick from..
         /// </summary>
         internal static string ParameterCommonInstanceIdDescription {
             get {
@@ -421,6 +520,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Verbose output as the messages are sent.
+        /// </summary>
+        internal static string ParameterSendMessagesFileVerbose {
+            get {
+                return ResourceManager.GetString("ParameterSendMessagesFileVerbose", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to 32-bit MIDI words, typically in hexadecimal 0x00000000 format. Use the parameter name in front of each word sent..
         /// </summary>
         internal static string ParameterSendMessageWords {
@@ -439,20 +547,29 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to True to show details from each ping request and response..
-        /// </summary>
-        internal static string ParameterServicePingDetails {
-            get {
-                return ResourceManager.GetString("ParameterServicePingDetails", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Total ping timeout in milliseconds. Does not include the session and connection creation and teardown time..
         /// </summary>
         internal static string ParameterServicePingTimeout {
             get {
                 return ResourceManager.GetString("ParameterServicePingTimeout", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to True to show details from each ping request and response..
+        /// </summary>
+        internal static string ParameterServicePingVerbose {
+            get {
+                return ResourceManager.GetString("ParameterServicePingVerbose", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Report additional details about the service.
+        /// </summary>
+        internal static string ParameterServiceStatusVerbose {
+            get {
+                return ResourceManager.GetString("ParameterServiceStatusVerbose", resourceCulture);
             }
         }
         

@@ -14,32 +14,18 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 {
     internal class SendMessageCommand : Command<SendMessageCommand.Settings>
     {
-        public sealed class Settings : CommandSettings
+        public sealed class Settings : SendMessageCommandSettings
         {
-            [LocalizedDescription("ParameterCommonInstanceIdDescription")]
-            [CommandOption("-i|--instance-id")]
-            public string InstanceId { get; init; }
+            // Would be better to remove this and just do an enumeration lookup to see what type of endpoint it is
 
-            [LocalizedDescription("ParameterSendMessageEndpointDirectionDescription")]
-            [CommandOption("-d|--direction")]
-            [DefaultValue(EndpointDirectionOutputs.Bidirectional)]
-            public EndpointDirectionOutputs EndpointDirection { get; init; }
-
+            [LocalizedDescription("ParameterSendMessageWords")]
+            [CommandArgument(1, "<MIDI Words>")]
+            public UInt32[] Words { get; init; }
 
             [LocalizedDescription("ParameterSendMessageCount")]
             [CommandOption("-c|--count")]
             [DefaultValue(1)]
             public int Count { get; init; }
-
-            [LocalizedDescription("ParameterSendMessageDelayBetweenMessages")]
-            [CommandOption("-p|--pause|--delay")]
-            [DefaultValue(100)]
-            public int DelayBetweenMessages { get; init; }
-
-            [LocalizedDescription("ParameterSendMessageWords")]
-            [CommandOption("-w|--word")]
-            public UInt32[] Words { get; init; }
-
         }
 
         public override Spectre.Console.ValidationResult Validate(CommandContext context, Settings settings)
@@ -58,14 +44,32 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             return base.Validate(context, settings);
         }
 
+        private void ValidateMessage(UInt32[] words)
+        {
+
+        }
+
+        private void SendSingleMessage(IMidiOutputConnection endpoint, UInt32[] words)
+        {
+
+        }
+
         public override int Execute(CommandContext context, Settings settings)
         {
             MidiSession? session = null;
             IMidiOutputConnection? connection = null;
 
-            string endpointId = settings.InstanceId.Trim().ToUpper();
+            string endpointId = string.Empty;
 
-            // TODO: localize this
+            if (!string.IsNullOrEmpty(settings.InstanceId))
+            {
+                endpointId = settings.InstanceId.Trim().ToLower();
+            }
+            else
+            {
+                endpointId = UmpEndpointPicker.PickOutput();
+            }
+
             AnsiConsole.MarkupLine(Strings.SendMessageSendingThroughEndpointLabel + ": " + AnsiMarkupFormatter.FormatDeviceInstanceId(endpointId));
             AnsiConsole.WriteLine();
 
@@ -78,13 +82,16 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                     session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
 
+
                     if (session != null)
                     {
-                        if (settings.EndpointDirection == EndpointDirectionOutputs.Bidirectional)
+                        var endpointDirection = EndpointUtility.GetUmpEndpointTypeFromInstanceId(endpointId);
+
+                        if (endpointDirection == EndpointDirection.Bidirectional)
                         {
                             connection = session.ConnectBidirectionalEndpoint(endpointId);
                         }
-                        else if (settings.EndpointDirection == EndpointDirectionOutputs.Out)
+                        else if (endpointDirection == EndpointDirection.Out)
                         {
                             connection = session.ConnectOutputEndpoint(endpointId);
                         }
@@ -92,7 +99,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                     if (connection != null)
                     {
-                        bool openSuccess = false;
+                        openSuccess = false;
 
                         if (connection is MidiBidirectionalEndpointConnection)
                         {
