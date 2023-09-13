@@ -27,7 +27,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         [EnumLocalizedDescription("ParameterSendMessageWordFormat", typeof(MidiWordDataFormat))]
         [CommandOption("-w|--word-format")]
         [DefaultValue(MidiWordDataFormat.Hex)]
-        public int WordDataFormat { get; set; }
+        public MidiWordDataFormat WordDataFormat { get; set; }
 
 
     }

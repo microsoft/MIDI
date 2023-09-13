@@ -232,7 +232,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                     table.AddRow(
                                         AnsiMarkupFormatter.FormatGeneralNumber(lineNumber), 
                                         "", 
-                                        AnsiMarkupFormatter.FormatError("Line does not contain a valid UMP"),
+                                        AnsiMarkupFormatter.FormatError("Line does not contain a valid UMP") + "\n\"" + line + "\"",
                                         ""
                                         );
 
@@ -246,7 +246,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                 table.AddRow(
                                     AnsiMarkupFormatter.FormatGeneralNumber(lineNumber), 
                                     "", 
-                                    AnsiMarkupFormatter.FormatError("Unable to parse MIDI words from line"),
+                                    AnsiMarkupFormatter.FormatError("Unable to parse MIDI words from line") + "\n\"" + line + "\"",
                                     ""
                                     );
 
@@ -318,7 +318,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 {
                     words = new UInt32[1];
 
-                    words[0] = Convert.ToUInt32(inputLine.Trim(), 16);
+                    words[0] = ParseMidiWord(inputLine.Trim(), fromBase); 
 
                     return true;
                 }
@@ -338,7 +338,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     {
                         // TODO: Use the word data format to convert to base 10
 
-                        words[i] = Convert.ToUInt32(strings[i].Trim(), fromBase);
+                        words[i] = ParseMidiWord(strings[i].Trim(), fromBase);
                     }
 
                     return true;
@@ -353,7 +353,25 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             }
         }
 
+        private UInt32 ParseMidiWord(string midiWord, int fromBase)
+        {
+            // support an "h" suffix for hex
+            if (fromBase == 16 && midiWord.ToLower().EndsWith("h"))
+            {
+                midiWord = midiWord.Substring(0, midiWord.Length - 1);
+            }
+            else if (fromBase == 10 && midiWord.ToLower().EndsWith("d"))
+            {
+                midiWord = midiWord.Substring(0, midiWord.Length - 1);
+            }
+            else if (fromBase == 2 && midiWord.ToLower().EndsWith("b"))
+            {
+                midiWord = midiWord.Substring(0, midiWord.Length - 1);
+            }
 
+
+            return Convert.ToUInt32(midiWord, fromBase);
+        }
 
 
 
