@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.Devices.Midi2;
 
 namespace Microsoft.Devices.Midi2.ConsoleApp
 {
@@ -13,6 +14,12 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
     internal class AnsiMarkupFormatter
     {
+        public static string FormatMessageType(MidiUmpMessageType messageType)
+        {
+            return "[darkseagreen3]" + messageType.ToString() + "[/]";
+        }
+
+
         public static string FormatAppTitle(string title)
         {
             return "[deepskyblue1]" + title + "[/]";

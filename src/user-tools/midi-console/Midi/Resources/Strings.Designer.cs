@@ -160,7 +160,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Sends a text file of UMP MIDI words to the specified endpoint. Each line in the file is a single message of 1-4 words delimited by spaces.
+        ///   Looks up a localized string similar to Sends a text file of UMP MIDI words to the specified endpoint. See arguments and options for format and delimiters..
         /// </summary>
         internal static string CommandSendMessagesFileDescription {
             get {
@@ -300,6 +300,33 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         internal static string GenericTotal {
             get {
                 return ResourceManager.GetString("GenericTotal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The data does not result in a valid UMP.
+        /// </summary>
+        internal static string MessageValidationErrorInvalidUmp {
+            get {
+                return ResourceManager.GetString("MessageValidationErrorInvalidUmp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please provide at least one valid 32-bit MIDI word.
+        /// </summary>
+        internal static string MessageValidationErrorTooFewWords {
+            get {
+                return ResourceManager.GetString("MessageValidationErrorTooFewWords", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please provide up to four valid 32-bit MIDI words, comprising a single valid UMP..
+        /// </summary>
+        internal static string MessageValidationErrorTooManyWords {
+            get {
+                return ResourceManager.GetString("MessageValidationErrorTooManyWords", resourceCulture);
             }
         }
         
@@ -511,11 +538,20 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Path and filename of the text file to send.
+        ///   Looks up a localized string similar to Path and filename of the text file to send. This can include lines which begin with # for a comment, or are completely empty for spacing. Remaining lines must be valid delimited hexadecimal UMP words..
         /// </summary>
         internal static string ParameterSendMessagesFileCommandFile {
             get {
                 return ResourceManager.GetString("ParameterSendMessagesFileCommandFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delimiter between fields. Set to &quot;Auto&quot; to have this evaluated for each line. Valid values include:.
+        /// </summary>
+        internal static string ParameterSendMessagesFileFieldDelimiter {
+            get {
+                return ResourceManager.GetString("ParameterSendMessagesFileFieldDelimiter", resourceCulture);
             }
         }
         
@@ -525,6 +561,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         internal static string ParameterSendMessagesFileVerbose {
             get {
                 return ResourceManager.GetString("ParameterSendMessagesFileVerbose", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Data format for the individual words. Valid values include:.
+        /// </summary>
+        internal static string ParameterSendMessageWordFormat {
+            get {
+                return ResourceManager.GetString("ParameterSendMessageWordFormat", resourceCulture);
             }
         }
         
@@ -659,29 +704,29 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please provide at least one valid 32-bit MIDI word.
-        /// </summary>
-        internal static string SendMessageValidationErrorTooFewWords {
-            get {
-                return ResourceManager.GetString("SendMessageValidationErrorTooFewWords", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Please provide up to four valid 32-bit MIDI words, comprising a single valid UMP..
-        /// </summary>
-        internal static string SendMessageValidationErrorTooManyWords {
-            get {
-                return ResourceManager.GetString("SendMessageValidationErrorTooManyWords", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Creating session and opening endpoint....
         /// </summary>
         internal static string StatusCreatingSessionAndOpeningEndpoint {
             get {
                 return ResourceManager.GetString("StatusCreatingSessionAndOpeningEndpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Message Type.
+        /// </summary>
+        internal static string TableColumnHeaderCommonMessageType {
+            get {
+                return ResourceManager.GetString("TableColumnHeaderCommonMessageType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Timestamp.
+        /// </summary>
+        internal static string TableColumnHeaderCommonTimestamp {
+            get {
+                return ResourceManager.GetString("TableColumnHeaderCommonTimestamp", resourceCulture);
             }
         }
         

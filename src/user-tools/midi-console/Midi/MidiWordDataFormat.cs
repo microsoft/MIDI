@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Devices.Midi2.ConsoleApp
 {
-    public enum CaptureFieldDelimiter
+    public enum MidiWordDataFormat
     {
-        Space = 1,
-        Comma,
-        Pipe, 
-        Tab,
+        Hex = 16,
+        Decimal = 10,
+        Octal = 8,
+        Binary = 2,
     }
 
 }

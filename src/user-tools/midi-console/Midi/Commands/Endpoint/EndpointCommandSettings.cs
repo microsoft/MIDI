@@ -21,8 +21,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
     {
         [LocalizedDescription("ParameterSendMessageDelayBetweenMessages")]
         [CommandOption("-p|--pause|--delay")]
-        [DefaultValue(100)]
+        [DefaultValue(10)]
         public int DelayBetweenMessages { get; set; }
+
+        [EnumLocalizedDescription("ParameterSendMessageWordFormat", typeof(MidiWordDataFormat))]
+        [CommandOption("-w|--word-format")]
+        [DefaultValue(MidiWordDataFormat.Hex)]
+        public int WordDataFormat { get; set; }
+
+
     }
 
 

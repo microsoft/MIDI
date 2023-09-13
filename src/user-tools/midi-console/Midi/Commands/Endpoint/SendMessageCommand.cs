@@ -32,21 +32,33 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         {
             if (settings.Words.Length == 0)
             {
-                return Spectre.Console.ValidationResult.Error(Strings.SendMessageValidationErrorTooFewWords);
+                return Spectre.Console.ValidationResult.Error(Strings.MessageValidationErrorTooFewWords);
             }
             else if (settings.Words.Length > 4)
             {
-                return Spectre.Console.ValidationResult.Error(Strings.SendMessageValidationErrorTooManyWords);
+                return Spectre.Console.ValidationResult.Error(Strings.MessageValidationErrorTooManyWords);
             }
-
+            else if (!ValidateMessage(settings.Words))
+            {
+                return Spectre.Console.ValidationResult.Error(Strings.MessageValidationErrorInvalidUmp);
+            }
 
 
             return base.Validate(context, settings);
         }
 
-        private void ValidateMessage(UInt32[] words)
+        // this should be moved to a base class
+        private bool ValidateMessage(UInt32[] words)
         {
-
+            if (words != null && words.Length > 0 && words.Length <= 4)
+            {
+                // allowed behavior is to cast the packet type to the word count
+                return (bool)((int)MidiUmpUtility.GetPacketTypeFromFirstUmpWord(words[0]) == words.Length);
+            }
+            else
+            {
+                return false;
+            }
         }
 
         private void SendSingleMessage(IMidiOutputConnection endpoint, UInt32[] words)
@@ -63,7 +75,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             if (!string.IsNullOrEmpty(settings.InstanceId))
             {
-                endpointId = settings.InstanceId.Trim().ToLower();
+                endpointId = settings.InstanceId.Trim();
             }
             else
             {
@@ -134,8 +146,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             var table = new Table();
 
-            table.AddColumn(Strings.SendMessageResultTableColumnHeaderTimestamp);
+            table.AddColumn(Strings.TableColumnHeaderCommonTimestamp);
             table.AddColumn(Strings.SendMessageResultTableColumnHeaderWordsSent);
+            table.AddColumn(Strings.TableColumnHeaderCommonMessageType);
 
             AnsiConsole.Live(table)
                 .Start(ctx =>
@@ -145,7 +158,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         UInt64 timestamp = MidiClock.GetMidiTimestamp();
                         connection.SendUmpWordArray(timestamp, settings.Words, (UInt32)settings.Words.Count());
 
-                        table.AddRow(AnsiMarkupFormatter.FormatTimestamp(timestamp), AnsiMarkupFormatter.FormatMidiWords(settings.Words));
+                        table.AddRow(
+                            AnsiMarkupFormatter.FormatTimestamp(timestamp), 
+                            AnsiMarkupFormatter.FormatMidiWords(settings.Words), 
+                            AnsiMarkupFormatter.FormatMessageType(MidiUmpUtility.GetMessageTypeFromFirstUmpWord(settings.Words[0]))
+                            );
 
                         ctx.Refresh();
 

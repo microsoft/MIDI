@@ -113,8 +113,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                         if (!firstMessageReceived)
                         {
-                            table.AddColumn(Strings.MonitorEndpointResultTableColumnHeaderTimestamp);
+                            table.AddColumn(Strings.TableColumnHeaderCommonTimestamp);
                             table.AddColumn(Strings.MonitorEndpointResultTableColumnHeaderWordsReceived);
+                            table.AddColumn(Strings.TableColumnHeaderCommonMessageType);
 
                             firstMessageReceived = true;
                         }
@@ -193,7 +194,12 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 data = AnsiMarkupFormatter.FormatMidiWords(ump32.Word0);
             }
 
-            table.AddRow(new Markup(AnsiMarkupFormatter.FormatTimestamp(ump.Timestamp)), new Markup(data));
+            table.AddRow(
+                new Markup(AnsiMarkupFormatter.FormatTimestamp(ump.Timestamp)), 
+                new Markup(data),
+                new Markup(AnsiMarkupFormatter.FormatMessageType(ump.MessageType))
+                );
+
         }
 
 

@@ -6,12 +6,13 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Devices.Midi2.ConsoleApp
 {
-    public enum CaptureFieldDelimiter
+    public enum ParseFieldDelimiter
     {
-        Space = 1,
+        Auto = 0,
+        Space,
         Comma,
-        Pipe, 
-        Tab,
+        Pipe,
+        Tab
     }
 
 }
