@@ -15,6 +15,7 @@ MIDI_IDL_IMPORT
 
 import "MidiUmpMessageTypeEnum.idl";
 import "MidiUmpPacketTypeEnum.idl";
+import "MidiGroup.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -28,6 +29,9 @@ namespace Windows.Devices.Midi2
 
         static MidiUmpMessageType GetMessageTypeFromFirstUmpWord(UInt32 word0);
         static MidiUmpPacketType GetPacketTypeFromFirstUmpWord(UInt32 word0);
+
+        static Boolean MessageTypeHasGroupField(MidiUmpMessageType messageType);
+        static UInt32 ReplaceGroup(UInt32 word0, MidiGroup newGroup);
 
     };
 }

@@ -84,6 +84,56 @@ namespace Windows::Devices::Midi2::Internal
     }
 
 
+    // assumes the caller has already checked to see if the message type has a group field. Otherwise, this will stomp on their data
+    inline std::uint32_t GetFirstWordWithNewGroupNumber(_In_ std::uint32_t const firstWord, _In_ std::uint8_t const groupIndex)
+    {
+        if (groupIndex > 15)
+            return firstWord;
+
+        // mask out the group
+        uint32_t newWord = firstWord & 0xF0FFFFFF;
+
+        // move our group over to the right position
+        uint32_t groupValue = ((uint32_t)groupIndex) << 24;
+
+        // return the masked word with the new group value
+        return newWord | groupValue;
+    }
+
+    // NOTE: This check needs to change when new message types are added. The WinRT enum will need to change as well.
+
+    inline bool MessageTypeHasGroupField(_In_ std::uint8_t messageType)
+    {
+        switch (messageType)
+        {
+        case 0x0: // MidiUmpMessageType::UtilityMessage32  // type 0
+            return false;
+
+        case 0x1: // MidiUmpMessageType::SystemCommon32    // type 1
+            return true;
+        case 0x2: // MidiUmpMessageType::Midi1ChannelVoice32   // type 2
+            return true;
+        case 0x3: // MidiUmpMessageType::DataMessage64   // type 3
+            return true;
+        case 0x4: // MidiUmpMessageType::Midi2ChannelVoice64   // type 4
+            return true;
+        case 0x5: // MidiUmpMessageType::DataMessage128   // type 5
+            return true;
+        case 0xD: // MidiUmpMessageType::FlexData128       // type D
+            return true;
+
+        case 0xF: // MidiUmpMessageType::UmpStream128      // type F
+            return false;
+
+
+            // all other message types are undefined, so return false until those are defined
+        default:
+            return false;
+
+        }
+    }
+
+
 
 
     inline uint16_t CleanupInt10(_In_ uint16_t const value)

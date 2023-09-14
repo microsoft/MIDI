@@ -556,6 +556,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to For non-stream messages, replace the second nibble with the specified new group index. Helpful when sending previously-recorded SysEx to a new group..
+        /// </summary>
+        internal static string ParameterSendMessagesFileReplaceGroup {
+            get {
+                return ResourceManager.GetString("ParameterSendMessagesFileReplaceGroup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Verbose output as the messages are sent.
         /// </summary>
         internal static string ParameterSendMessagesFileVerbose {
@@ -727,6 +736,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         internal static string TableColumnHeaderCommonTimestamp {
             get {
                 return ResourceManager.GetString("TableColumnHeaderCommonTimestamp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The specified group index is invalid. Specify a group index between 0 and 15..
+        /// </summary>
+        internal static string ValidationErrorInvalidGroup {
+            get {
+                return ResourceManager.GetString("ValidationErrorInvalidGroup", resourceCulture);
             }
         }
         

@@ -282,6 +282,9 @@
   <data name="ParameterSendMessagesFileFieldDelimiter" xml:space="preserve">
     <value>Delimiter between fields. Set to "Auto" to have this evaluated for each line. Valid values include:</value>
   </data>
+  <data name="ParameterSendMessagesFileReplaceGroup" xml:space="preserve">
+    <value>For non-stream messages, replace the second nibble with the specified new group index. Helpful when sending previously-recorded SysEx to a new group.</value>
+  </data>
   <data name="ParameterSendMessagesFileVerbose" xml:space="preserve">
     <value>Verbose output as the messages are sent</value>
   </data>
@@ -342,6 +345,9 @@ Timestamp</value>
   </data>
   <data name="TableColumnHeaderCommonTimestamp" xml:space="preserve">
     <value>Timestamp</value>
+  </data>
+  <data name="ValidationErrorInvalidGroup" xml:space="preserve">
+    <value>The specified group index is invalid. Specify a group index between 0 and 15.</value>
   </data>
   <data name="ValidationErrorPingCountTooHigh" xml:space="preserve">
     <value>Specified ping count is too high. Please provide a value &lt;= 100.</value>

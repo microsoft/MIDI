@@ -20,5 +20,7 @@ namespace Windows.Devices.Midi2
 
         UInt8 Index{ get; set; };                   // 0-15, the number used in the UMPs
         UInt8 NumberForDisplay{ get; };             // 1-16, the number displayed to users
+
+        static Boolean IsValidChannelIndex(UInt8 index);
     }
 }

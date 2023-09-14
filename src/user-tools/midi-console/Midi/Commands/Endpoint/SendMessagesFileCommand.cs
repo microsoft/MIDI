@@ -30,14 +30,29 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             [CommandOption("-v|--verbose|--details")]
             [DefaultValue(false)]
             public bool Verbose { get; set; }
+
+            [LocalizedDescription("ParameterSendMessagesFileReplaceGroup")]
+            [CommandOption("-g|--new-group-index")]
+            public byte? NewGroupIndex { get; set; }
+
+
         }
 
         public override ValidationResult Validate(CommandContext context, Settings settings)
         {
-            // we won't overwrite existing files. Intent is to prevent misuse of this app
             if (!System.IO.File.Exists(settings.InputFile))
             {
                 return ValidationResult.Error($"File not found {settings.InputFile}.");
+            }
+
+            if (settings.NewGroupIndex.HasValue)
+            {
+                byte newGroup = (byte)settings.NewGroupIndex.GetValueOrDefault(0);
+
+                if (!MidiGroup.IsValidGroupIndex(newGroup))
+                {
+                    return ValidationResult.Error(Strings.ValidationErrorInvalidGroup);
+                }
             }
 
             return base.Validate(context, settings);
@@ -180,6 +195,10 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                             break;
                     }
 
+                    bool changeGroup = settings.NewGroupIndex.HasValue;
+                    var newGroup = new MidiGroup((byte)settings.NewGroupIndex.GetValueOrDefault(0));
+
+
                     if (fileStream != null)
                     {
                         uint lineNumber = 0;        // if someone has a file with more than uint.MaxValue / 4.3 billion lines, we'll overflow :)
@@ -214,8 +233,18 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                 {
                                     var timestamp = MidiClock.GetMidiTimestamp();
 
+                                    if (changeGroup)
+                                    {
+                                        if (MidiUmpUtility.MessageTypeHasGroupField(MidiUmpUtility.GetMessageTypeFromFirstUmpWord(words[0])))
+                                        {
+                                            words[0] = MidiUmpUtility.ReplaceGroup(words[0], newGroup);
+                                        }
+                                    }
+
+                                    // send the message
                                     connection.SendUmpWordArray(timestamp, words, (UInt32)words.Count());
 
+                                    // display the sent data
                                     table.AddRow(
                                         AnsiMarkupFormatter.FormatGeneralNumber(lineNumber), 
                                         AnsiMarkupFormatter.FormatTimestamp(timestamp),
@@ -267,6 +296,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             return (int)MidiConsoleReturnCode.Success;
         }
+
 
         // true if the line is a comment or is white space
         private bool LineIsIgnorable(string inputLine)

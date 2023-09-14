@@ -2,7 +2,7 @@
   "profiles": {
     "Midi": {
       "commandName": "Project",
-      "commandLineArgs": "endpoint send-message 0x22345678"
+      "commandLineArgs": "endpoint send-message-file %userprofile%\\Documents\\TestMidiFile.txt -g 1"
     }
   }
 }

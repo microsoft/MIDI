@@ -47,4 +47,20 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         return (midi2::MidiUmpPacketType)internal::GetUmpLengthInMidiWordsFromFirstWord(word0);
     }
+
+
+    // It's expected for the user to check to see if the message type has a group field before calling this
+    _Use_decl_annotations_
+    uint32_t MidiUmpUtility::ReplaceGroup(uint32_t const word0, midi2::MidiGroup const newGroup) noexcept
+    {
+        return internal::GetFirstWordWithNewGroupNumber(word0, newGroup.Index());
+    }
+
+    _Use_decl_annotations_
+    bool MidiUmpUtility::MessageTypeHasGroupField(midi2::MidiUmpMessageType const messageType) noexcept
+    {
+        return internal::MessageTypeHasGroupField((uint8_t)messageType);
+    }
+
+
 }
