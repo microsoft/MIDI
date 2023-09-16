@@ -6,19 +6,12 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#pragma once
-class MidiStateService
+#include "pch.h"
+#include "MidiEndpointInformationUpdatedEventArgs.h"
+#include "MidiEndpointInformationUpdatedEventArgs.g.cpp"
+
+
+namespace winrt::Windows::Devices::Midi2::implementation
 {
-public:
 
-    //// returns the json for function blocks
-    //std::wstring GetFunctionBlockEntriesForEndpoint(_In_ std::wstring endpointDeviceId);
-    //bool UpdateFunctionBlockEntriesForEndpoint(_In_ std::wstring endpointDeviceId, _In_ std::wstring functionBlocksJson);
-
-    //// other cache types, MUID table, etc.
-
-
-
-private:
-};
-
+}

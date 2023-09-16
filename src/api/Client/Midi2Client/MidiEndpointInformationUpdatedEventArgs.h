@@ -6,11 +6,18 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+#pragma once
+#include "MidiEndpointInformationUpdatedEventArgs.g.h"
 
-#include "pch.h"
-#include "MidiFunctionBlock.h"
-#include "MidiFunctionBlock.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
+    struct MidiEndpointInformationUpdatedEventArgs : MidiEndpointInformationUpdatedEventArgsT<MidiEndpointInformationUpdatedEventArgs>
+    {
+        MidiEndpointInformationUpdatedEventArgs() = default;
+
+        winrt::hstring DeviceId() { return m_deviceId; }
+    private:
+        winrt::hstring m_deviceId{};
+    };
 }

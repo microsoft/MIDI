@@ -25,6 +25,8 @@
 #include "InternalMidiConnectionCommon.h"
 #include "InternalMidiInputConnection.h"
 #include "InternalMidiOutputConnection.h"
+#include "InternalMidiFunctionBlockDevice.h"
+#include "InternalMidiEndpointInformationDevice.h"
 
 
 
@@ -36,7 +38,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
             IMidiCallback>, 
         public internal::InternalMidiConnectionCommon,
         public internal::InternalMidiInputConnection<IMidiBiDi>,
-        public internal::InternalMidiOutputConnection<IMidiBiDi>
+        public internal::InternalMidiOutputConnection<IMidiBiDi>,
+        public internal::InternalMidiFunctionBlockDevice,
+        public internal::InternalMidiEndpointInformationDevice
     {
         MidiBidirectionalEndpointConnection() = default;
         ~MidiBidirectionalEndpointConnection();

@@ -6,5 +6,16 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#include "pch.h"
-#include "MidiStateService.h"
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+namespace Windows.Devices.Midi2
+{
+    [MIDI_API_CONTRACT(1)]
+    [default_interface]
+    runtimeclass MidiFunctionBlocksUpdatedEventArgs
+    {
+        String DeviceId { get; };
+    }
+}
+

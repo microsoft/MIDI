@@ -6,6 +6,11 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+// Convenience listener for code which wants to pay attention only to to
+// certain channels on a group on an endpoint. You may have multiples of
+// these attached to an endpoint, and use them in different places in your
+// application
+
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
@@ -22,8 +27,8 @@ namespace Windows.Devices.Midi2
     [MIDI_API_CONTRACT(1)]
     [default_interface]
     runtimeclass MidiChannelEndpointListener : IMidiEndpointMessageProcessingPlugin, 
-                                                IMidiEndpointMessageListener,
-                                                IMidiMessageReceivedEventSource
+                                               IMidiEndpointMessageListener,
+                                               IMidiMessageReceivedEventSource
     {
         MidiChannelEndpointListener();
 

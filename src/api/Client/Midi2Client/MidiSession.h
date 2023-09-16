@@ -133,7 +133,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         winrt::com_ptr<IMidiAbstraction> m_serviceAbstraction;
 
-        foundation::Collections::IMap<winrt::hstring, midi2::IMidiEndpointConnection>
+        collections::IMap<winrt::hstring, midi2::IMidiEndpointConnection>
             m_connections{ winrt::single_threaded_map<winrt::hstring, midi2::IMidiEndpointConnection>() };
 
 

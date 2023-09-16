@@ -6,8 +6,12 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#pragma once
-class MidiSettingsService
-{
-};
+#include "pch.h"
+#include "MidiFunctionBlocksUpdatedEventArgs.h"
+#include "MidiFunctionBlocksUpdatedEventArgs.g.cpp"
 
+
+namespace winrt::Windows::Devices::Midi2::implementation
+{
+
+}

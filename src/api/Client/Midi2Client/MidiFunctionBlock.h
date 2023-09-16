@@ -16,16 +16,33 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiFunctionBlock() = default;
 
-        uint8_t Number();
-        hstring Name();
-        bool IsActive();
-        winrt::Windows::Devices::Midi2::MidiFunctionBlockDirection Direction();
-        winrt::Windows::Devices::Midi2::MidiFunctionBlockUIHint UIHint();
-        bool IsMidi10Connection();
-        bool IsBandwidthRestricted();
-        winrt::Windows::Foundation::Collections::IVectorView<winrt::Windows::Devices::Midi2::MidiGroup> IncludedGroups();
-        uint8_t MidiCIMessageVersionFormat();
-        uint8_t MaxSysEx8Streams();
+        uint8_t Number() const noexcept { return m_number; }
+        winrt::hstring Name() const noexcept { return m_name; }
+        bool IsActive() const noexcept { return m_isActive; }
+        midi2::MidiFunctionBlockDirection Direction() const noexcept { return m_direction; }
+        midi2::MidiFunctionBlockUIHint UIHint() const noexcept { return m_uiHint; }
+        bool IsMidi10Connection() const noexcept { return m_isMidi10Connection; }
+        bool IsBandwidthRestricted() const noexcept { return m_isBandwidthRestricted; }
+        uint8_t MidiCIMessageVersionFormat() const noexcept { return m_midiCIMessageVersionFormat; }
+        uint8_t MaxSysEx8Streams() const noexcept { return m_maxSysEx8Streams; }
+
+        collections::IVectorView<midi2::MidiGroup> IncludedGroups() { return m_includedGroups.GetView(); }
+
+        // TODO Function to init values
+
+    private:
+        uint8_t m_number;
+        winrt::hstring m_name;
+        bool m_isActive;
+        MidiFunctionBlockDirection m_direction;
+        MidiFunctionBlockUIHint m_uiHint;
+        bool m_isMidi10Connection;
+        bool m_isBandwidthRestricted;
+        uint8_t m_midiCIMessageVersionFormat;
+        uint8_t m_maxSysEx8Streams;
+
+        collections::IVector<midi2::MidiGroup>
+            m_includedGroups{ winrt::single_threaded_vector<midi2::MidiGroup>() };
     };
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation
