@@ -17,7 +17,7 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    MidiDeviceMetadataCache MidiService::m_deviceMetadataCache{};
+    MidiEndpointMetadataCache MidiService::m_endpointMetadataCache{};
     MidiGlobalCache MidiService::m_globalCache{};
 
 

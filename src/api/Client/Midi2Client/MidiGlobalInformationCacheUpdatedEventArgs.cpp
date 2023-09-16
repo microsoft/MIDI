@@ -13,12 +13,5 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    winrt::Windows::Devices::Midi2::MidiCacheUpdateType MidiGlobalInformationCacheUpdatedEventArgs::UpdateType()
-    {
-        throw hresult_not_implemented();
-    }
-    hstring MidiGlobalInformationCacheUpdatedEventArgs::Key()
-    {
-        throw hresult_not_implemented();
-    }
+
 }

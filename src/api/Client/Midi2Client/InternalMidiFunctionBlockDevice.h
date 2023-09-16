@@ -11,7 +11,7 @@
 #include <pch.h>
 
 #include "MidiFunctionBlocksUpdatedEventArgs.h"
-#include "MidiDeviceMetadataCache.h"
+#include "MidiEndpointMetadataCache.h"
 #include "MidiFunctionBlock.h"
 
 namespace Windows::Devices::Midi2::Internal

@@ -62,7 +62,7 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 #include "MidiEndpointInformation.h"
 #include "MidiUniqueId.h"
 
-#include "MidiDeviceMetadataCache.h"
+#include "MidiEndpointMetadataCache.h"
 #include "MidiGlobalCache.h"
 
 #include "MidiInputEndpointConnection.h"

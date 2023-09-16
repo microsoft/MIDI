@@ -26,18 +26,32 @@ Windows.Devices.Midi2.IMidiUmpUtilityStatics | 0 | 0 | 0
 
 # Metadata
 
+Windows.Devices.Midi2.MidiGlobalCache | 0 | 0 | 0
+Windows.Devices.Midi2.MidiGlobalInformationUpdatedEventArgs | 0 | 0 | 0
+
+Windows.Devices.Midi2.MidiDeviceInformationCache | 0 | 0 | 0
+Windows.Devices.Midi2.MidiDeviceInformationCacheUpdatedEventArgs | 0 | 0 | 0
+
+Windows.Devices.Midi2.MidiEndpointInformationUpdatedEventArgs | 0 | 0 | 0
 Windows.Devices.Midi2.MidiEndpointInformation | 0 | 0 | 0
+
+Windows.Devices.Midi2.MidiFunctionBlocksUpdatedEventArgs | 0 | 0 | 0
 Windows.Devices.Midi2.MidiFunctionBlock | 0 | 0 | 0
+
 Windows.Devices.Midi2.MidiUniqueId | 0 | 0 | 0
+
 Windows.Devices.Midi2.MidiGroupTerminalBlock | 0 | 0 | 0
 
-# Message Processing Plugins
+# Convenience Message Processing Plugins
 
 Windows.Devices.Midi2.MidiChannelEndpointListener | 0 | 0 | 0
-Windows.Devices.Midi2.MidiEndpointInformationEndpointListener | 0 | 0 | 0
-Windows.Devices.Midi2.MidiFunctionBlockEndpointListener | 0 | 0 | 0
 Windows.Devices.Midi2.MidiGroupEndpointListener | 0 | 0 | 0
 Windows.Devices.Midi2.MidiMessageTypeEndpointListener | 0 | 0 | 0
+
+# Infrastructure Message Processing Plugins
+
+Windows.Devices.Midi2.MidiEndpointInformationConfigurator | 0 | 0 | 0
+Windows.Devices.Midi2.MidiFunctionBlockEndpointListener | 0 | 0 | 0
 Windows.Devices.Midi2.MidiStreamConfigurationEndpointListener | 0 | 0 | 0
 
 # Events
@@ -63,7 +77,7 @@ Windows.Devices.Midi2.MidiOutputEndpointOpenOptions | 0 | 0 | 0
 Windows.Devices.Midi2.MidiService | 0 | 0 | 0
 Windows.Devices.Midi2.IMidiServiceStatics | 0 | 0 | 0
 
-# Utility
+# Clock
 
 Windows.Devices.Midi2.MidiClock | 0 | 0 | 0
 Windows.Devices.Midi2.IMidiClockStatics | 0 | 0 | 0

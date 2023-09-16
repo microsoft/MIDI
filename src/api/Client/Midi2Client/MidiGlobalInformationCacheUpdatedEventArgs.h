@@ -15,7 +15,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiGlobalInformationCacheUpdatedEventArgs() = default;
 
-        winrt::Windows::Devices::Midi2::MidiCacheUpdateType UpdateType();
-        hstring Key();
+        midi2::MidiCacheUpdateType UpdateType() { return m_updateType; }
+        winrt::hstring Key() { return m_key; }
+
+    private:
+        midi2::MidiCacheUpdateType m_updateType;
+        winrt::hstring m_key{};
     };
 }

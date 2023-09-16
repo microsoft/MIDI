@@ -13,40 +13,54 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    _Use_decl_annotations_
-    foundation::Collections::IVector<midi2::MidiGroup> MidiGroupEndpointListener::IncludeGroups()
-    {
-        throw hresult_not_implemented();
-    }
 
     _Use_decl_annotations_
     void MidiGroupEndpointListener::Initialize()
-    {
-        throw hresult_not_implemented();
+    {        
     }
 
     _Use_decl_annotations_
     void MidiGroupEndpointListener::OnEndpointConnectionOpened()
-    {
-        throw hresult_not_implemented();
+    {        
     }
 
     _Use_decl_annotations_
     void MidiGroupEndpointListener::Cleanup()
-    {
-        throw hresult_not_implemented();
+    {        
     }
 
     _Use_decl_annotations_
     void MidiGroupEndpointListener::ProcessIncomingMessage(
-        midi2::MidiMessageReceivedEventArgs const& /*args*/,
+        midi2::MidiMessageReceivedEventArgs const& args,
         bool& skipFurtherListeners, 
         bool& skipMainMessageReceivedEvent)
     {
+        skipFurtherListeners = m_preventCallingFurtherListeners;
+        skipMainMessageReceivedEvent = m_preventFiringMainMessageReceivedEvent;
 
-        skipFurtherListeners = false;
-        skipMainMessageReceivedEvent = false;
+        if (internal::MessageTypeHasChannelField((uint8_t)args.UmpMessageType()))
+        {
+            uint32_t word0 = args.InspectFirstWord();
 
-        throw hresult_not_implemented();
+            uint8_t messageGroup = internal::GetGroupIndexFromFirstWord(word0);
+
+            // check the channel against our list of channels
+            for (auto const& group : m_includedGroups)
+            {
+                if (group.Index() == messageGroup)
+                {
+                    // found it. Fire off the event and leave
+                    // events are synchronous, so the chain of calls here needs to be short
+
+                    if (m_messageReceivedEvent)
+                    {
+                        m_messageReceivedEvent(m_inputConnection, args);
+                    }
+
+                    break;
+                }
+            }
+
+        }
     }
 }

@@ -31,6 +31,8 @@ namespace RegistryCustomActions
         {
             session.Log("REGKEYHACK: ReturnToDefaultPermissions");
 
+            RestoreKeyPermissions(session);
+
             session.Log("REGKEYHACK: ReturnToDefaultPermissions Leaving");
 
             return ActionResult.Success;
@@ -154,5 +156,108 @@ namespace RegistryCustomActions
                 session.Log("REGKEYHACK: Complete");
             }, privs);
         }
+
+
+
+
+        private static void RestoreKeyPermissions(Session session)
+        {
+            var privs = new[] { Privilege.TakeOwnership, Privilege.Backup, Privilege.Restore };
+
+            session.Log("REGKEYHACK: Attempting to run with privileges");
+
+            Privilege.RunWithPrivileges(() =>
+            {
+                session.Log("REGKEYHACK: Getting current user");
+
+                // get the current running user 
+                var currentUserIdentity = WindowsIdentity.GetCurrent();
+
+                if (currentUserIdentity == null)
+                {
+                    session.Log($"REGKEYHACK: Current user identity is null");
+                    return;
+                }
+                session.Log($"REGKEYHACK: Current user={currentUserIdentity.Name}");
+
+
+                // in case the installer is launching us in a 32 bit process
+                var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
+                if (baseKey == null)
+                {
+                    session.Log($"REGKEYHACK: Base HKLM key is null");
+                    return;
+                }
+
+                // Let's get to that registry entry
+                session.Log($"REGKEYHACK: Attempting to open registry key {baseKey.ToString()} {rootKey}");
+                var regKey = baseKey.OpenSubKey(
+                    rootKey,
+                    Microsoft.Win32.RegistryKeyPermissionCheck.ReadWriteSubTree,
+                    System.Security.AccessControl.RegistryRights.TakeOwnership);
+
+                if (regKey == null)
+                {
+                    session.Log($"REGKEYHACK: reg key is null");
+                    return;
+                }
+                else
+                {
+                    session.Log($"REGKEYHACK: key opened");
+                }
+
+                var registrySecurity = regKey.GetAccessControl(System.Security.AccessControl.AccessControlSections.All);
+
+                if (registrySecurity == null)
+                {
+                    session.Log($"REGKEYHACK: GetAccessControl return null ACL");
+                    return;
+                }
+
+                // and now take ownership so we can write to it. Normally, this key and all subkeys
+                // are owned by TrustedInstaller. This is something we're doing ONLY for a limited 
+                // developer preview. This should never be done on a production machine as it 
+                // compromises WinRT / UWP security.
+
+                var trustedInstallerSecurityIdentifier = new SecurityIdentifier(trustedInstallerSID);
+
+                session.Log("REGKEYHACK: Setting the reg key owner to TrustedInstaller");
+                var trustedInstallerSid = new SecurityIdentifier(trustedInstallerSID);
+                registrySecurity.SetOwner(trustedInstallerSecurityIdentifier);
+                regKey.SetAccessControl(registrySecurity);
+
+                session.Log("REGKEYHACK: Setting access rule protection on that reg key");
+                registrySecurity.SetAccessRuleProtection(false, false);
+                regKey.SetAccessControl(registrySecurity);
+
+                session.Log("REGKEYHACK: Creating the full access rule");
+                var fullAccessRule = new RegistryAccessRule(
+                    currentUserIdentity.Name,
+                    RegistryRights.FullControl,
+                    InheritanceFlags.ContainerInherit,
+                    PropagationFlags.None,
+                    AccessControlType.Allow);
+
+                if (fullAccessRule == null)
+                {
+                    session.Log($"REGKEYHACK: Creating Registry Access Rule return null");
+                    return;
+                }
+                registrySecurity.AddAccessRule(fullAccessRule);
+
+                session.Log("REGKEYHACK: Setting ACL on the key to allow full access by TrustedInstaller");
+                regKey.SetAccessControl(registrySecurity);
+
+
+                // TODO: Need to revoke the permissions we gave earlier. This script isn't doing that yet.
+
+
+
+
+                session.Log("REGKEYHACK: Complete");
+            }, privs);
+        }
+
+
     }
 }

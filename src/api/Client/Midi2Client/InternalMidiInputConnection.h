@@ -23,7 +23,7 @@ namespace Windows::Devices::Midi2::Internal
 
     {
     public:
-        winrt::hstring InputDeviceId() const noexcept { return m_inputDeviceId; }
+        winrt::hstring InputEndpointDeviceId() const noexcept { return m_inputDeviceId; }
 
         winrt::event_token MessageReceived(_In_ foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiMessageReceivedEventArgs> const& handler)
         {

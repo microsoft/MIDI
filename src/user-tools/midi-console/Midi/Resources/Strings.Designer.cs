@@ -448,11 +448,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Instance Id of the endpoint as used in Windows.Devices.Enumeration. This includes the MIDI interface GUID at the end of the string. You can find the endpoint Instance Ids by enumerating endpoints through this app. If you leave off the Instance Id, we&apos;ll re-enumerate them and provide a list for you to pick from..
+        ///   Looks up a localized string similar to Endpoint Id (also called a Device Instance Id) of the endpoint as used in Windows.Devices.Enumeration. This includes the MIDI interface GUID at the end of the string. You can find the Endpoint Ids by enumerating endpoints through this app. If you leave off the Id, we&apos;ll re-enumerate them and provide a list for you to pick from..
         /// </summary>
-        internal static string ParameterCommonInstanceIdDescription {
+        internal static string ParameterCommonEndpointIdDescription {
             get {
-                return ResourceManager.GetString("ParameterCommonInstanceIdDescription", resourceCulture);
+                return ResourceManager.GetString("ParameterCommonEndpointIdDescription", resourceCulture);
             }
         }
         
@@ -466,11 +466,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Include the UMP device instance id in the output.
+        ///   Looks up a localized string similar to Include the UMP Endpoint Id in the output.
         /// </summary>
-        internal static string ParameterEnumEndpointsIncludeInstanceId {
+        internal static string ParameterEnumEndpointsIncludeEndpointId {
             get {
-                return ResourceManager.GetString("ParameterEnumEndpointsIncludeInstanceId", resourceCulture);
+                return ResourceManager.GetString("ParameterEnumEndpointsIncludeEndpointId", resourceCulture);
             }
         }
         
@@ -484,11 +484,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Include the MIDI 1.0 device instance id in the output.
+        ///   Looks up a localized string similar to Include the MIDI 1.0 Endpoint Id (the Port Id) in the output.
         /// </summary>
-        internal static string ParameterEnumLegacyEndpointsIncludeInstanceId {
+        internal static string ParameterEnumLegacyEndpointsIncludeEndpointId {
             get {
-                return ResourceManager.GetString("ParameterEnumLegacyEndpointsIncludeInstanceId", resourceCulture);
+                return ResourceManager.GetString("ParameterEnumLegacyEndpointsIncludeEndpointId", resourceCulture);
             }
         }
         

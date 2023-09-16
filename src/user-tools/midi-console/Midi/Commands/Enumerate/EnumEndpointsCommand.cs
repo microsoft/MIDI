@@ -25,8 +25,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             [DefaultValue(EndpointDirection.All)]
             public EndpointDirection EndpointDirection { get; set; }
 
-            [LocalizedDescription("ParameterEnumEndpointsIncludeInstanceId")]
-            [CommandOption("-i|--include-instance-id")]
+            [LocalizedDescription("ParameterEnumEndpointsIncludeEndpointId")]
+            [CommandOption("-i|--include-endpoint-id")]
             [DefaultValue(true)]
             public bool IncludeId { get; set; }
         }

@@ -20,16 +20,16 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Success_(return == true)
     bool MidiBidirectionalAggregatedEndpointConnection::InternalInitialize(
         _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
-        _In_ winrt::hstring const endpointInstanceId,
-        _In_ winrt::hstring const deviceIdInputConnection,
-        _In_ winrt::hstring const deviceIdOutputConnection)
+        _In_ winrt::hstring const connectionId,
+        _In_ winrt::hstring const inputEndpointDeviceId,
+        _In_ winrt::hstring const outputEndpointDeviceId)
     {
         try
         {
-            m_id = endpointInstanceId;
+            m_id = connectionId;
 
-            m_inputDeviceId = deviceIdInputConnection;
-            m_outputDeviceId = deviceIdOutputConnection;
+            m_inputDeviceId = inputEndpointDeviceId;
+            m_outputDeviceId = outputEndpointDeviceId;
 
             WINRT_ASSERT(!InputDeviceId().empty());
             WINRT_ASSERT(!OutputDeviceId().empty());
@@ -82,13 +82,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
                     DWORD mmcssTaskIdIOutput{};
 
                     winrt::check_hresult(m_inputAbstraction->Initialize(
-                        (LPCWSTR)(InputDeviceId().c_str()),
+                        (LPCWSTR)(InputEndpointDeviceId().c_str()),
                         &mmcssTaskIdInput,
                         (IMidiCallback*)(this)
                     ));
 
                     winrt::check_hresult(m_outputAbstraction->Initialize(
-                        (LPCWSTR)(OutputDeviceId().c_str()),
+                        (LPCWSTR)(OutputEndpointDeviceId().c_str()),
                         &mmcssTaskIdIOutput
                     ));
 

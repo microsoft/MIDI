@@ -15,13 +15,13 @@ namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [default_interface]
-    runtimeclass MidiDeviceInformationCacheUpdatedEventArgs
+    runtimeclass MidiEndpointMetadataCacheUpdatedEventArgs
     {
         MidiCacheUpdateType UpdateType { get; };
 
-        String DeviceId { get; };
+        String EndpointDeviceId { get; };
 
-        String Key{ get; };
+        String PropertyKey{ get; };
     }
 }
 

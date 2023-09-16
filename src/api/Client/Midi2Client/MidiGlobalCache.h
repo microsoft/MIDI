@@ -43,8 +43,28 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
 
 
+        std::string BuildCacheKey(winrt::hstring const& key)
+        {
+            return winrt::to_string(key);
+        }
+
+        bool InternalIsDataPresent(std::string cacheKey)
+        {
+            if (auto result = m_cache.find(cacheKey); result != m_cache.end())
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
     private:
         winrt::event<foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiGlobalInformationCacheUpdatedEventArgs>> m_dataUpdateEvent;
+
+        // This is all local until we have the cache service in place
+        std::map<std::string, std::string> m_cache{};
 
 
     };

@@ -26,7 +26,7 @@ namespace Windows.Devices.Midi2
     interface IMidiEndpointConnection
     {
         // just a map key for this connection.
-        String Id{ get; };
+        String ConnectionId{ get; };
 
         // app-supplied optional tag. Can hold whatever information they may want to show in a list
         IInspectable Tag{ get; set; };

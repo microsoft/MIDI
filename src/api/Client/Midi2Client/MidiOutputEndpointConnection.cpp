@@ -17,13 +17,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Success_(return == true)
     bool MidiOutputEndpointConnection::InternalInitialize(
         _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
-        _In_ winrt::hstring const endpointId,
-        _In_ winrt::hstring const deviceId)
+        _In_ winrt::hstring const connectionId,
+        _In_ winrt::hstring const endpointDeviceId)
     {
         try
         {
-            m_id = endpointId;
-            m_outputDeviceId = deviceId;
+            m_id = connectionId;
+            m_outputDeviceId = endpointDeviceId;
 
 
             WINRT_ASSERT(!DeviceId().empty());
@@ -68,7 +68,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                     DWORD mmcssTaskId{};  // TODO: Does this need to be session-wide? Probably, but it can be modified by the endpoint init, so maybe should be endpoint-local
 
                     winrt::check_hresult(m_outputAbstraction->Initialize(
-                        (LPCWSTR)(OutputDeviceId().c_str()),
+                        (LPCWSTR)(OutputEndpointDeviceId().c_str()),
                         &mmcssTaskId
                     ));
 

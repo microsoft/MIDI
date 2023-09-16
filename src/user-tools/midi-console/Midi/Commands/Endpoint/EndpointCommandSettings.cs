@@ -12,9 +12,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
     // could make it optional, and then if missing, use AnsiConsole.Prompt()
     internal class EndpointCommandSettings : CommandSettings
     {
-        [LocalizedDescription("ParameterCommonInstanceIdDescription")]
-        [CommandArgument(0, "[Instance Id]")]
-        public string InstanceId { get; set; }
+        [LocalizedDescription("ParameterCommonEndpointIdDescription")]
+        [CommandArgument(0, "[Endpoint Id]")]
+        public string EndpointId { get; set; }
     }
 
     internal class SendMessageCommandSettings : EndpointCommandSettings

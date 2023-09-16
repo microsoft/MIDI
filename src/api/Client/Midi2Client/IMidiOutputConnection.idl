@@ -17,7 +17,7 @@ namespace Windows.Devices.Midi2
     [MIDI_INTERFACE_UUID("8b71d1b8-c239-4b88-8142-05ee5118d41e",1.0)]
     interface IMidiOutputConnection
     {
-        String OutputDeviceId{ get; };
+        String OutputEndpointDeviceId{ get; };
 
         // send the UMP interface used by strongly-typed Midi Message classes in the SDK
         Boolean SendUmp(IMidiUmp ump);

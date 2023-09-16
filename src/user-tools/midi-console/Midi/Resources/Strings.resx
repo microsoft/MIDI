@@ -246,20 +246,20 @@
   <data name="ParameterCaptureMessagesOutputFile" xml:space="preserve">
     <value>Name of the file to write to. The file must not already exist.</value>
   </data>
-  <data name="ParameterCommonInstanceIdDescription" xml:space="preserve">
-    <value>Instance Id of the endpoint as used in Windows.Devices.Enumeration. This includes the MIDI interface GUID at the end of the string. You can find the endpoint Instance Ids by enumerating endpoints through this app. If you leave off the Instance Id, we'll re-enumerate them and provide a list for you to pick from.</value>
+  <data name="ParameterCommonEndpointIdDescription" xml:space="preserve">
+    <value>Endpoint Id (also called a Device Instance Id) of the endpoint as used in Windows.Devices.Enumeration. This includes the MIDI interface GUID at the end of the string. You can find the Endpoint Ids by enumerating endpoints through this app. If you leave off the Id, we'll re-enumerate them and provide a list for you to pick from.</value>
   </data>
   <data name="ParameterEnumEndpointsDirection" xml:space="preserve">
     <value>The direction of data flow for the endpoints to list</value>
   </data>
-  <data name="ParameterEnumEndpointsIncludeInstanceId" xml:space="preserve">
-    <value>Include the UMP device instance id in the output</value>
+  <data name="ParameterEnumEndpointsIncludeEndpointId" xml:space="preserve">
+    <value>Include the UMP Endpoint Id in the output</value>
   </data>
   <data name="ParameterEnumLegacyEndpointsDirection" xml:space="preserve">
     <value>The direction of data flow for the endpoints to list</value>
   </data>
-  <data name="ParameterEnumLegacyEndpointsIncludeInstanceId" xml:space="preserve">
-    <value>Include the MIDI 1.0 device instance id in the output</value>
+  <data name="ParameterEnumLegacyEndpointsIncludeEndpointId" xml:space="preserve">
+    <value>Include the MIDI 1.0 Endpoint Id (the Port Id) in the output</value>
   </data>
   <data name="ParameterMonitorEndpointDirectionDescription" xml:space="preserve">
     <value>The direction of the endpoint referenced by the Id. If this doesn't match the endpoint type, the connection will fail.</value>

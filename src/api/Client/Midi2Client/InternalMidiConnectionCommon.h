@@ -19,7 +19,7 @@ namespace Windows::Devices::Midi2::Internal
 
     {
     public:
-        winrt::hstring Id() const noexcept { return m_id; }
+        winrt::hstring ConnectionId() const noexcept { return m_id; }
         bool IsOpen() const noexcept { return m_isOpen; }
         midi2::IMidiEndpointDefinedConnectionSettings Settings() const noexcept { return m_settings; }
 

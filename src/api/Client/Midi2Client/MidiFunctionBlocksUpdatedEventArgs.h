@@ -17,6 +17,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         MidiFunctionBlocksUpdatedEventArgs() = default;
 
         winrt::hstring DeviceId() { return m_deviceId; }
+
     private:
         winrt::hstring m_deviceId{};
     };

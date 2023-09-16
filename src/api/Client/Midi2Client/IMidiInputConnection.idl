@@ -25,6 +25,6 @@ namespace Windows.Devices.Midi2
         // a single application
         //IVector<IMidiEndpointMessageListener> MessageListeners{ get; };
 
-        String InputDeviceId{ get; };
+        String InputEndpointDeviceId{ get; };
     }
 }

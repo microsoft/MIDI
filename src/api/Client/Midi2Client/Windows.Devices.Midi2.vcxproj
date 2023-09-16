@@ -224,6 +224,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="InternalMidiCache.h" />
     <ClInclude Include="InternalMidiConnectionCommon.h" />
     <ClInclude Include="InternalMidiEndpointInformationDevice.h" />
     <ClInclude Include="InternalMidiFunctionBlockDevice.h" />
@@ -242,8 +243,8 @@
     <ClInclude Include="MidiBidirectionalEndpointOpenOptions.h">
       <DependentUpon>MidiBidirectionalEndpointOpenOptions.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiDeviceInformationCacheUpdatedEventArgs.h">
-      <DependentUpon>MidiDeviceInformationCacheUpdatedEventArgs.idl</DependentUpon>
+    <ClInclude Include="MidiEndpointMetadataCacheUpdatedEventArgs.h">
+      <DependentUpon>MidiEndpointMetadataCacheUpdatedEventArgs.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiEndpointInformationUpdatedEventArgs.h" />
     <ClInclude Include="MidiFunctionBlocksUpdatedEventArgs.h" />
@@ -262,8 +263,8 @@
     <ClInclude Include="MidiMessageBuilder.h">
       <DependentUpon>MidiMessageBuilder.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiDeviceMetadataCache.h">
-      <DependentUpon>MidiDeviceMetadataCache.idl</DependentUpon>
+    <ClInclude Include="MidiEndpointMetadataCache.h">
+      <DependentUpon>MidiEndpointMetadataCache.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiOutputEndpointOpenOptions.h">
       <DependentUpon>MidiOutputEndpointOpenOptions.idl</DependentUpon>
@@ -371,8 +372,8 @@
     <ClCompile Include="MidiBidirectionalEndpointOpenOptions.cpp">
       <DependentUpon>MidiBidirectionalEndpointOpenOptions.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiDeviceInformationCacheUpdatedEventArgs.cpp">
-      <DependentUpon>MidiDeviceInformationCacheUpdatedEventArgs.idl</DependentUpon>
+    <ClCompile Include="MidiEndpointMetadataCacheUpdatedEventArgs.cpp">
+      <DependentUpon>MidiEndpointMetadataCacheUpdatedEventArgs.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiEndpointInformationUpdatedEventArgs.cpp" />
     <ClCompile Include="MidiFunctionBlocksUpdatedEventArgs.cpp" />
@@ -391,8 +392,8 @@
     <ClCompile Include="MidiMessageBuilder.cpp">
       <DependentUpon>MidiMessageBuilder.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiDeviceMetadataCache.cpp">
-      <DependentUpon>MidiDeviceMetadataCache.idl</DependentUpon>
+    <ClCompile Include="MidiEndpointMetadataCache.cpp">
+      <DependentUpon>MidiEndpointMetadataCache.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiOutputEndpointOpenOptions.cpp">
       <DependentUpon>MidiOutputEndpointOpenOptions.idl</DependentUpon>
@@ -508,8 +509,8 @@
     <Midl Include="MidiFunctionBlocksUpdatedEventArgs.idl" />
     <Midl Include="MidiGlobalCache.idl" />
     <Midl Include="MidiGlobalInformationCacheUpdatedEventArgs.idl" />
-    <Midl Include="MidiDeviceMetadataCache.idl" />
-    <Midl Include="MidiDeviceInformationCacheUpdatedEventArgs.idl" />
+    <Midl Include="MidiEndpointMetadataCache.idl" />
+    <Midl Include="MidiEndpointMetadataCacheUpdatedEventArgs.idl" />
     <Midl Include="MidiEndpointConnectionSharingEnum.idl" />
     <Midl Include="MidiEndpointConnectionSharingPreferenceEnum.idl" />
     <Midl Include="MidiEndpointInformation.idl" />

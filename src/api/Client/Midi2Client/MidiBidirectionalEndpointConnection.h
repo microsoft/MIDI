@@ -47,8 +47,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static hstring GetDeviceSelector() noexcept { return L"System.Devices.InterfaceClassGuid:=\"{E7CCE071-3C03-423f-88D3-F1045D02552B}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True"; }
 
-        winrt::hstring InputDeviceId() const noexcept { return InternalGetDeviceId(); }
-        winrt::hstring OutputDeviceId() const noexcept { return InternalGetDeviceId(); } // will be the same as input
+        //winrt::hstring InputEndpointDeviceId() const noexcept { return InternalGetDeviceId(); }
+        //winrt::hstring OutputEndpointDeviceId() const noexcept { return InternalGetDeviceId(); } // will be the same as input
 
         STDMETHOD(Callback)(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position) override
         {
@@ -58,8 +58,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         _Success_(return == true)
         bool InternalInitialize(
             _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
-            _In_ winrt::hstring const endpointInstanceId,
-            _In_ winrt::hstring const deviceId,
+            _In_ winrt::hstring const connectionId,
+            _In_ winrt::hstring const endpointDeviceId,
             _In_ midi2::MidiBidirectionalEndpointOpenOptions options);
 
         _Success_(return == true)

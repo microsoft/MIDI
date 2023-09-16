@@ -23,8 +23,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             [DefaultValue(LegacyEndpointDirection.All)]
             public LegacyEndpointDirection EndpointDirection { get; init; }
 
-            [LocalizedDescription("ParameterEnumLegacyEndpointsIncludeInstanceId")]
-            [CommandOption("-i|--include-instance-id")]
+            [LocalizedDescription("ParameterEnumLegacyEndpointsIncludeEndpointId")]
+            [CommandOption("-i|--include-endpoint-id")]
             [DefaultValue(true)]
             public bool IncludeId { get; init; }
         }

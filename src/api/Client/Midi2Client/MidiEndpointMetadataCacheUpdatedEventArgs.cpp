@@ -6,17 +6,11 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#pragma once
-#include "MidiDeviceInformationCacheUpdatedEventArgs.g.h"
+#include "pch.h"
+#include "MidiEndpointMetadataCacheUpdatedEventArgs.h"
+#include "MidiEndpointMetadataCacheUpdatedEventArgs.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    struct MidiDeviceInformationCacheUpdatedEventArgs : MidiDeviceInformationCacheUpdatedEventArgsT<MidiDeviceInformationCacheUpdatedEventArgs>
-    {
-        MidiDeviceInformationCacheUpdatedEventArgs() = default;
 
-        winrt::Windows::Devices::Midi2::MidiCacheUpdateType UpdateType();
-        hstring DeviceId();
-        hstring Key();
-    };
 }

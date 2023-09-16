@@ -22,9 +22,6 @@
     <Filter Include="Internal\ServiceAccess">
       <UniqueIdentifier>{6da56400-6fd6-4457-a605-67182ec178bf}</UniqueIdentifier>
     </Filter>
-    <Filter Include="API\Utility">
-      <UniqueIdentifier>{b99bb6ef-1d6e-4e3b-9f03-1be7d35b49f5}</UniqueIdentifier>
-    </Filter>
     <Filter Include="API\Endpoints\Connections">
       <UniqueIdentifier>{e57d1b46-4206-4afa-8fd3-adbe3d245aa7}</UniqueIdentifier>
     </Filter>
@@ -96,6 +93,12 @@
     </Filter>
     <Filter Include="API\Messages\Utility">
       <UniqueIdentifier>{8f3d4198-ee96-4a00-bcd1-d22248ce496f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Clock">
+      <UniqueIdentifier>{b99bb6ef-1d6e-4e3b-9f03-1be7d35b49f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Metadata\Cache\Implementation">
+      <UniqueIdentifier>{a8647252-b6ea-4f33-92d6-09200731b429}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -359,6 +362,9 @@
     <ClInclude Include="MidiEndpointInformationUpdatedEventArgs.h">
       <Filter>API\Endpoints\Metadata\Endpoints</Filter>
     </ClInclude>
+    <ClInclude Include="InternalMidiCache.h">
+      <Filter>API\Endpoints\Metadata\Cache\Implementation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiSession.idl">
@@ -371,7 +377,7 @@
       <Filter>API\Transports</Filter>
     </Midl>
     <Midl Include="MidiClock.idl">
-      <Filter>API\Utility</Filter>
+      <Filter>API\Clock</Filter>
     </Midl>
     <Midl Include="MidiUmpMessageTypeEnum.idl">
       <Filter>API\Messages</Filter>
@@ -499,13 +505,13 @@
     <Midl Include="MidiCacheUpdateTypeEnum.idl">
       <Filter>API\Endpoints\Metadata\Cache</Filter>
     </Midl>
-    <Midl Include="MidiDeviceInformationCacheUpdatedEventArgs.idl">
+    <Midl Include="MidiEndpointMetadataCacheUpdatedEventArgs.idl">
       <Filter>API\Endpoints\Metadata\Cache</Filter>
     </Midl>
     <Midl Include="MidiGlobalInformationCacheUpdatedEventArgs.idl">
       <Filter>API\Endpoints\Metadata\Cache</Filter>
     </Midl>
-    <Midl Include="MidiDeviceMetadataCache.idl">
+    <Midl Include="MidiEndpointMetadataCache.idl">
       <Filter>API\Endpoints\Metadata\Cache</Filter>
     </Midl>
     <Midl Include="MidiGlobalCache.idl">

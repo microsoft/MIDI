@@ -45,8 +45,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         _Success_(return == true)
         bool InternalInitialize(
             _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
-            _In_ winrt::hstring const endpointId,
-            _In_ winrt::hstring const deviceId);
+            _In_ winrt::hstring const connectionId,
+            _In_ winrt::hstring const endpointDeviceId);
 
         _Success_(return == true)
         bool Open();
