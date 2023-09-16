@@ -44,8 +44,10 @@ var sdkStagingDir = System.IO.Path.Combine(stagingRootDir, "app-dev-sdk");
 
 var vsFilesDir = System.IO.Path.Combine(apiAndServiceSolutionDir, "VSFiles");
 
-var consoleAppSolutionDir = System.IO.Path.Combine(srcDir, "user-tools", "midi-console", "Midi");
-var consoleAppSolutionFile = System.IO.Path.Combine(consoleAppSolutionDir, "Midi.csproj");
+var consoleAppSolutionDir = System.IO.Path.Combine(srcDir, "user-tools", "midi-console");
+var consoleAppSolutionFile = System.IO.Path.Combine(consoleAppSolutionDir, "midi-console.sln");
+var consoleAppProjectDir = System.IO.Path.Combine(consoleAppSolutionDir, "Midi");
+var consoleAppProjectFile = System.IO.Path.Combine(consoleAppProjectDir, "Midi.csproj");
 var consoleAppStagingDir = System.IO.Path.Combine(stagingRootDir, "midi-console");
 
 var settingsAppSolutionDir = System.IO.Path.Combine(srcDir, "user-tools", "midi-settings");
@@ -89,14 +91,30 @@ Task("VerifyDependencies")
 {
     // Grab latest VC runtime
 
-    //https://aka.ms/vs/17/release/vc_redist.x64.exe
+    // https://aka.ms/vs/17/release/vc_redist.x64.exe
 
+
+    // Grab lates t.NET runtime if the file isn't there. It will have a long name with a 
+    // version number, like dotnet-runtime-8.0.0-rc.1.23419.4-win-x64 so you'llneed to 
+    // rename that for the installer
+    // https://aka.ms/dotnet/8.0/preview/windowsdesktop-runtime-win-x64.exe
 
 
 
 });
 
+Task("SetupEnvironment")
+    .Does(()=>
+{
+    // TODO: Need to verify that %MIDI_REPO_ROOT% is set. If not, set it to the root \midi folder
+    var rootVariableExists = !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("MIDI_REPO_ROOT"));
 
+    if (!rootVariableExists)
+    {
+        // this will only work if this folder is located in \midi\build or some other subfolder of the root \midi folder
+        Environment.SetEnvironmentVariable("MIDI_REPO_ROOT", System.IO.Path.GetFullPath("..\\"));
+    }
+});
 
 
  Task("BuildServiceAndAPI")
@@ -157,7 +175,7 @@ Task("BuildApiActivationRegEntries")
     var wxiDestinationFileName = System.IO.Path.Combine(apiAndServiceStagingDir, plat.ToString(), "WinRTActivationEntries.wxi");
 
     const string parentHKLMRegKey = "SOFTWARE\\Microsoft\\WindowsRuntime\\ActivatableClassId\\";
-    const string wixWinrtLibFileName = "[API_INSTALLFOLDER]\\Windows.Devices.Midi2.dll";
+    const string wixWinrtLibFileName = "[API_INSTALLFOLDER]Windows.Devices.Midi2.dll";
 
     if (!System.IO.File.Exists(sourceFileName))
         throw new ArgumentException("Missing WinRT Activation entries file " + sourceFileName);
@@ -268,12 +286,15 @@ Task("BuildConsoleApp")
 
     Information("\nBuilding MIDI console app for " + plat.ToString());
 
-    DotNetBuild(consoleAppSolutionFile, new DotNetBuildSettings
+    // update nuget packages for the entire solution. This is important for API/SDK NuGet in particular
+
+    NuGetUpdate(consoleAppSolutionFile, new NuGetUpdateSettings
     {
         WorkingDirectory = consoleAppSolutionDir,
-        Configuration = configuration
     });
 
+    // we're specifying a rid, so we need to compile the project, not the solution
+    
     string rid = "";
     if (plat == PlatformTarget.x64)
         rid = ridX64;
@@ -282,18 +303,25 @@ Task("BuildConsoleApp")
     else
         throw new ArgumentException("Invalid platform target " + plat.ToString());
 
+    DotNetBuild(consoleAppProjectFile, new DotNetBuildSettings
+    {
+        WorkingDirectory = consoleAppProjectDir,
+        Configuration = configuration, 
+        Runtime = rid,        
+    });
+
 
     // Note: Spectre.Console doesn't support trimming, so you get a huge exe.
-    // Consider making this framework-dependent once .NET 8 releasesmi
-    DotNetPublish(consoleAppSolutionFile, new DotNetPublishSettings
+    // Consider making this framework-dependent once .NET 8 releases
+    DotNetPublish(consoleAppProjectFile, new DotNetPublishSettings
     {
-        WorkingDirectory = consoleAppSolutionDir,
+        WorkingDirectory = consoleAppProjectDir,
         OutputDirectory = System.IO.Path.Combine(consoleAppStagingDir, plat.ToString()),
         Configuration = configuration,
 
-        PublishSingleFile = true,
+        PublishSingleFile = false,
         PublishTrimmed = false,
-        SelfContained = true,
+        SelfContained = false,
         Framework = frameworkVersion,
         Runtime = rid
     });
@@ -307,12 +335,17 @@ Task("BuildSettingsApp")
     .DoesForEach(platformTargets, plat =>
 {
     // TODO: Update nuget ref in settings app to the new version
+    
+    //NuGetUpdate(settingsAppSolutionFile);
+
+
 
 });
 
 
 
 Task("BuildInstaller")
+    .IsDependentOn("SetupEnvironment")
     .IsDependentOn("BuildServiceAndAPI")
     .IsDependentOn("BuildApiActivationRegEntries")
     .IsDependentOn("BuildSDK")

@@ -6,7 +6,6 @@ using Microsoft.Devices.Midi2.ConsoleApp;
 using Microsoft.Devices.Midi2.ConsoleApp.Resources;
 using Windows.Gaming.Input.ForceFeedback;
 using Windows.Devices.Midi2;
-using Microsoft.Devices.Midi2.ConsoleApp;
 
 var app = new CommandApp();
 
@@ -21,24 +20,29 @@ app.Configure(config =>
     {
         enumerate.SetDescription(Strings.CommandEnumerateDescription);
 
-        enumerate.AddCommand<EnumEndpointsCommand>("endpoints")
+        enumerate.AddCommand<EnumEndpointsCommand>("ump-endpoints")
+            .WithAlias("ump")
+            .WithAlias("endpoints")
             .WithDescription(Strings.CommandEnumerateEndpointsDescription)
-            .WithExample("enumerate", "endpoints", "--direction", "all")
+            .WithExample("enumerate", "ump-endpoints", "--direction", "all")
             ;
 
-        enumerate.AddCommand<EnumLegacyEndpointsCommand>("legacy-endpoints")
+        enumerate.AddCommand<EnumLegacyEndpointsCommand>("bytestream-endpoints")
+            .WithAlias("legacy-endpoints")
             .WithAlias("legacy")
             .WithDescription(Strings.CommandEnumerateLegacyEndpointsDescription)
-            .WithExample("enumerate", "legacy-endpoints", "--direction", "all")
+            .WithExample("enumerate", "bytestream-endpoints", "--direction", "all")
             ;
+
 
         // TODO: may want to change this to just "plugins" and offer a switch
         // for the type of plugins to show
+        /*
         enumerate.AddCommand<EnumTransportsCommand>("transport-plugins")
             .WithAlias("transports")
             .WithDescription(Strings.CommandEnumerateTransportPluginsDescription)
             .WithExample("enumerate", "transport-plugins")
-            ;
+            ; */
     }).WithAlias("list")
     .WithAlias("enum");
 
@@ -98,12 +102,12 @@ app.Configure(config =>
     }).WithAlias("ep");
 
 
-
+    /*
     config.AddCommand<DiagnosticsReportCommand>("diagnostics-report")
         .WithAlias("report")
         .WithDescription(Strings.CommandDiagnosticsReportDescription)
         .WithExample("diagnostics-report", "%USERPROFILE%\\Documents\\report.txt")
-        ;
+        ; */
 });
 
 // app title

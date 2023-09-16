@@ -10,7 +10,9 @@
     <Content Include="midi_installer_logo_square.png" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="WixToolset.Bal.wixext" Version="4.0.0" />
+    <PackageReference Include="WixToolset.Bal.wixext" Version="4.0.2" />
+    <PackageReference Include="WixToolset.Netfx.wixext" Version="4.0.2" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="4.0.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\api-package\api-package.wixproj" />

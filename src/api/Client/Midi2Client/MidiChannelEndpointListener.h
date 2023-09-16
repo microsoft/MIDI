@@ -38,7 +38,25 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void IncludeGroup(
             _In_ winrt::Windows::Devices::Midi2::MidiGroup const& value) noexcept { m_includedGroup = value; }
 
-        winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::MidiChannel> IncludeChannels();
+        winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::MidiChannel> IncludeChannels() { return m_includedChannels; }
+
+
+        void PreventFiringMainMessageReceivedEvent(_In_ bool const value) noexcept { m_preventFiringMainMessageReceivedEvent = value; }
+        bool PreventFiringMainMessageReceivedEvent() noexcept { return m_preventFiringMainMessageReceivedEvent; }
+
+        void PreventCallingFurtherListeners(_In_ bool const value) noexcept { m_preventCallingFurtherListeners = value; }
+        bool PreventCallingFurtherListeners() noexcept { return m_preventCallingFurtherListeners; }
+
+
+        winrt::event_token MessageReceived(_In_ foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiMessageReceivedEventArgs> const& handler)
+        {
+            return m_messageReceivedEvent.add(handler);
+        }
+
+        void MessageReceived(_In_ winrt::event_token const& token) noexcept
+        {
+            if (m_messageReceivedEvent) m_messageReceivedEvent.remove(token);
+        }
 
 
         void Initialize();
@@ -52,14 +70,22 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     private:
-        hstring m_id{};
-        hstring m_name{};
+        winrt::hstring m_id{};
+        winrt::hstring m_name{};
         bool m_enabled{ false };
-        IInspectable m_tag{ nullptr };
-        IMidiInputConnection m_inputConnection;
+        foundation::IInspectable m_tag{ nullptr };
+        midi2::IMidiInputConnection m_inputConnection;
+
+        bool m_preventCallingFurtherListeners{ false };
+        bool m_preventFiringMainMessageReceivedEvent{ false };
+
 
         winrt::Windows::Devices::Midi2::MidiGroup m_includedGroup{ nullptr };
 
+        foundation::Collections::IVector<midi2::MidiChannel>
+            m_includedChannels{ winrt::single_threaded_vector<midi2::MidiChannel>() };
+
+        winrt::event<foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;
     };
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation

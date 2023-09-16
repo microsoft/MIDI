@@ -82,6 +82,9 @@
     <Filter Include="API\Endpoints\Enumeration">
       <UniqueIdentifier>{db470d3d-3d8b-43b9-9ceb-8f0791d044c9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="API\Endpoints\Metadata\Cache">
+      <UniqueIdentifier>{c81fd3bd-c657-4aa0-a900-0900a71325e8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -188,6 +191,18 @@
     </ClCompile>
     <ClCompile Include="MidiUmpUtility.cpp">
       <Filter>API\Messages</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiDeviceInformationCacheUpdatedEventArgs.cpp">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiGlobalInformationCacheUpdatedEventArgs.cpp">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiDeviceMetadataCache.cpp">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiGlobalCache.cpp">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -313,6 +328,18 @@
     </ClInclude>
     <ClInclude Include="MidiUmpUtility.h">
       <Filter>API\Messages</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiDeviceMetadataCache.h">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiDeviceInformationCacheUpdatedEventArgs.h">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiGlobalInformationCacheUpdatedEventArgs.h">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiGlobalCache.h">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -472,9 +499,6 @@
     <Midl Include="MidiChannelEndpointListener.idl">
       <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins</Filter>
     </Midl>
-    <Midl Include="MidiEndpointInformationEndpointListener.idl">
-      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins</Filter>
-    </Midl>
     <Midl Include="MidiFunctionBlockEndpointListener.idl">
       <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins</Filter>
     </Midl>
@@ -490,6 +514,24 @@
     <Midl Include="MidiUmpUtility.idl">
       <Filter>API\Messages</Filter>
     </Midl>
+    <Midl Include="MidiCacheUpdateTypeEnum.idl">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
+    </Midl>
+    <Midl Include="MidiDeviceInformationCacheUpdatedEventArgs.idl">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
+    </Midl>
+    <Midl Include="MidiGlobalInformationCacheUpdatedEventArgs.idl">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
+    </Midl>
+    <Midl Include="MidiDeviceMetadataCache.idl">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointInformationConfigurator.idl">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins</Filter>
+    </Midl>
+    <Midl Include="MidiGlobalCache.idl">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />
@@ -499,6 +541,8 @@
     <None Include="PropertySheet.props" />
   </ItemGroup>
   <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
   </ItemGroup>

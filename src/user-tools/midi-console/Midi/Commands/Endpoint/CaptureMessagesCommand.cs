@@ -7,11 +7,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.ComponentModel;
 
+using Microsoft.Devices.Midi2.ConsoleApp.Resources;
+
 namespace Microsoft.Devices.Midi2.ConsoleApp
 {
     internal class CaptureMessagesCommand : Command<CaptureMessagesCommand.Settings>
     {
-        internal class Settings : EndpointCommandSettings
+        internal class Settings : MessageListenerCommandSettings
         {
             [LocalizedDescription("ParameterCaptureMessagesOutputFile")]
             [CommandArgument(0, "<Output File>")]
@@ -27,15 +29,10 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             [DefaultValue(false)]
             public bool Annotate { get; set; }
 
-            [EnumLocalizedDescription("ParameterCaptureMessagesFilter", typeof(CaptureMessageTypeFilter))]
-            [CommandOption("-f|--filter")]
-            [DefaultValue(CaptureMessageTypeFilter.All)]
-            public CaptureMessageTypeFilter Filter { get; set; }
-
-            [LocalizedDescription("ParameterCaptureMessagesIncludeTimestamps")]
-            [CommandOption("-t|--timestamps")]
-            [DefaultValue(false)]
-            public bool IncludeTimestamps { get; set; }
+            //[LocalizedDescription("ParameterCaptureMessagesIncludeTimestamps")]
+            //[CommandOption("-t|--timestamps")]
+            //[DefaultValue(false)]
+            //public bool IncludeTimestamps { get; set; }
 
             [EnumLocalizedDescription("ParameterCaptureMessagesFieldDelimiter", typeof(CaptureFieldDelimiter))]
             [CommandOption("-d|--delimiter")]
@@ -56,6 +53,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         }
 
 
+        private string BuildAnnotationLine(UInt64 timestamp, UInt32[] words)
+        {
+            // format here is
+            // # ___timestamp___ ___message type___
+
+            return string.Empty;
+        }
 
 
 

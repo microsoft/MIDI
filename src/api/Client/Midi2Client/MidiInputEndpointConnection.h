@@ -36,7 +36,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         static winrt::hstring GetDeviceSelector() noexcept { return L"System.Devices.InterfaceClassGuid:=\"{AE174174-6396-4DEE-AC9E-1E9C6F403230}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True"; }
 
 
-        winrt::hstring DeviceId() const noexcept { return m_inputDeviceId; }
 
         STDMETHOD(Callback)(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position) override
         {

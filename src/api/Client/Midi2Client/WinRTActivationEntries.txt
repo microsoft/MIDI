@@ -71,4 +71,6 @@ Windows.Devices.Midi2.IMidiClockStatics | 0 | 0 | 0
 # Basic Types
 
 Windows.Devices.Midi2.MidiChannel | 0 | 0 | 0
+Windows.Devices.Midi2.IMidiChannelStatics | 0 | 0 | 0
 Windows.Devices.Midi2.MidiGroup | 0 | 0 | 0
+Windows.Devices.Midi2.IMidiGroupStatics | 0 | 0 | 0

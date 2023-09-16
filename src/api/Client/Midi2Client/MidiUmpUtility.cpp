@@ -48,12 +48,18 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return (midi2::MidiUmpPacketType)internal::GetUmpLengthInMidiWordsFromFirstWord(word0);
     }
 
+    _Use_decl_annotations_
+    midi2::MidiGroup MidiUmpUtility::GetGroup(_In_ uint32_t const word0)
+    {
+        return MidiGroup(internal::GetGroupIndexFromFirstWord(word0));
+    }
+
 
     // It's expected for the user to check to see if the message type has a group field before calling this
     _Use_decl_annotations_
     uint32_t MidiUmpUtility::ReplaceGroup(uint32_t const word0, midi2::MidiGroup const newGroup) noexcept
     {
-        return internal::GetFirstWordWithNewGroupNumber(word0, newGroup.Index());
+        return internal::GetFirstWordWithNewGroup(word0, newGroup.Index());
     }
 
     _Use_decl_annotations_
@@ -62,5 +68,25 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return internal::MessageTypeHasGroupField((uint8_t)messageType);
     }
 
+
+    _Use_decl_annotations_
+    midi2::MidiChannel MidiUmpUtility::GetChannel(_In_ uint32_t const word0)
+    {
+        return MidiChannel(internal::GetChannelIndexFromFirstWord(word0));
+    }
+
+
+    // It's expected for the user to check to see if the message type has a channel field before calling this
+    _Use_decl_annotations_
+    uint32_t MidiUmpUtility::ReplaceChannel(uint32_t const word0, midi2::MidiChannel const newChannel) noexcept
+    {
+        return internal::GetFirstWordWithNewChannel(word0, newChannel.Index());
+    }
+
+    _Use_decl_annotations_
+        bool MidiUmpUtility::MessageTypeHasChannelField(midi2::MidiUmpMessageType const messageType) noexcept
+    {
+        return internal::MessageTypeHasChannelField((uint8_t)messageType);
+    }
 
 }

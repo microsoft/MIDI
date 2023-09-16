@@ -32,6 +32,9 @@ namespace Windows::Devices::Midi2::Internal
             { return m_messageProcessingPlugins; }
 
 
+        void SetInputConnectionOnPlugins(_In_ midi2::IMidiInputConnection const inputConnection);
+        void SetOutputConnectionOnPlugins(_In_ midi2::IMidiOutputConnection const outputConnection);
+
         void InitializePlugins();
         void CallOnConnectionOpenedOnPlugins();
         void CleanupPlugins();

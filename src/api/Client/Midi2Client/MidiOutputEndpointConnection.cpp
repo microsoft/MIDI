@@ -68,7 +68,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                     DWORD mmcssTaskId{};  // TODO: Does this need to be session-wide? Probably, but it can be modified by the endpoint init, so maybe should be endpoint-local
 
                     winrt::check_hresult(m_outputAbstraction->Initialize(
-                        (LPCWSTR)(DeviceId().c_str()),
+                        (LPCWSTR)(OutputDeviceId().c_str()),
                         &mmcssTaskId
                     ));
 

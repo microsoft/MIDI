@@ -33,7 +33,7 @@ namespace Windows.Devices.Midi2
         static String GetDeviceSelector();
 
         // Id from Windows. This can be used to retrieve the MidiDeviceInformation object with the PnP properties
-        String DeviceId{ get; };
+        //String DeviceId{ get; };
 
     }
 }

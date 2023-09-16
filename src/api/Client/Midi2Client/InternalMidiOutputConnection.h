@@ -23,6 +23,7 @@ namespace Windows::Devices::Midi2::Internal
     class InternalMidiOutputConnection
     {
     public:
+        winrt::hstring OutputDeviceId() const noexcept { return m_outputDeviceId; }
 
 
         _Success_(return == true)

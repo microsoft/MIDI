@@ -12,40 +12,45 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    _Use_decl_annotations_
-    winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::MidiUmpMessageType> MidiMessageTypeEndpointListener::IncludeMessageTypes()
-    {
-        throw hresult_not_implemented();
-    }
 
     _Use_decl_annotations_
     void MidiMessageTypeEndpointListener::Initialize()
-    {
-        throw hresult_not_implemented();
+    {       
     }
 
     _Use_decl_annotations_
     void MidiMessageTypeEndpointListener::OnEndpointConnectionOpened()
     {
-        throw hresult_not_implemented();
     }
 
     _Use_decl_annotations_
     void MidiMessageTypeEndpointListener::Cleanup()
     {
-        throw hresult_not_implemented();
     }
 
     _Use_decl_annotations_
     void MidiMessageTypeEndpointListener::ProcessIncomingMessage(
-        winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs const& /*args*/,
+        winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs const& args,
         bool& skipFurtherListeners, 
         bool& skipMainMessageReceivedEvent)
     {
-        skipFurtherListeners = false;
-        skipMainMessageReceivedEvent = false;
+        skipFurtherListeners = m_preventCallingFurtherListeners;
+        skipMainMessageReceivedEvent = m_preventFiringMainMessageReceivedEvent;
 
-        throw hresult_not_implemented();
+        auto messageMessageType = args.UmpMessageType();
+
+        for (auto const& messageType : m_includedMessageTypes)
+        {
+            if (messageMessageType == messageType)
+            {
+                if (m_messageReceivedEvent)
+                {
+                    m_messageReceivedEvent(m_inputConnection, args);
+                }
+
+                break;
+            }
+        }
     }
 
 }

@@ -16,12 +16,15 @@ import "MidiUmpMessageTypeEnum.idl";
 
 import "IMidiEndpointMessageProcessingPlugin.idl";
 import "IMidiEndpointMessageListener.idl";
+import "IMidiMessageReceivedEventSource.idl";
 
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [default_interface]
-    runtimeclass MidiMessageTypeEndpointListener : IMidiEndpointMessageProcessingPlugin, IMidiEndpointMessageListener
+    runtimeclass MidiMessageTypeEndpointListener :  IMidiEndpointMessageProcessingPlugin, 
+                                                    IMidiEndpointMessageListener, 
+                                                    IMidiMessageReceivedEventSource
     {
         MidiMessageTypeEndpointListener();
 

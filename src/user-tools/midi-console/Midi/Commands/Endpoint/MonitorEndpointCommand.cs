@@ -21,7 +21,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
     internal class MonitorEndpointCommand : Command<MonitorEndpointCommand.Settings>
     {
-        public sealed class Settings : EndpointCommandSettings
+        public sealed class Settings : MessageListenerCommandSettings
         {
             [LocalizedDescription("ParameterMonitorEndpointDirectionDescription")]
             [CommandOption("-d|--direction")]

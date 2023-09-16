@@ -11,6 +11,8 @@ MIDI_IDL_IMPORT
 
 import "MidiTransportInformation.idl";
 import "MidiServicePingResponseSummary.idl";
+import "MidiDeviceMetadataCache.idl";
+import "MidiGlobalCache.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -24,6 +26,9 @@ namespace Windows.Devices.Midi2
 
         // list all the installed transports like Virtual, USB, BLE1, etc
         static IVectorView<MidiTransportInformation> GetInstalledTransports();
-    }
+
+        static MidiDeviceMetadataCache DeviceMetadataCache{ get; };
+        static MidiGlobalCache GlobalCache{ get; };
+}
 }
 

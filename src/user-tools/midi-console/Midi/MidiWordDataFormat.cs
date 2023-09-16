@@ -10,7 +10,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
     {
         Hex = 16,
         Decimal = 10,
-        Octal = 8,
+        /*Octal = 8, */
         Binary = 2,
     }
 

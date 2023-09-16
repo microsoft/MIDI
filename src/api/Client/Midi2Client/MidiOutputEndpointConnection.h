@@ -29,7 +29,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static winrt::hstring GetDeviceSelector() noexcept { return L"System.Devices.InterfaceClassGuid:=\"{3705DC2B-17A7-4452-98CE-BF12C6F48A0B}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True"; }
 
-        winrt::hstring DeviceId() const noexcept { return m_outputDeviceId; }
 
         _Success_(return == true)
         bool InternalInitialize(

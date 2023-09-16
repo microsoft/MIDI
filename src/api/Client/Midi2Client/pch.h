@@ -40,21 +40,30 @@
 #include "midi_ump.h"
 
 namespace foundation = ::winrt::Windows::Foundation;
+namespace collections = ::winrt::Windows::Foundation::Collections;
+
 namespace internal = ::Windows::Devices::Midi2::Internal;
 
+
+#include "MidiGroup.h"
+#include "MidiChannel.h"
+
+// TODO: Consider changing these to midi2impl and midi2proj
+namespace implementation = winrt::Windows::Devices::Midi2::implementation;
+namespace midi2 = ::winrt::Windows::Devices::Midi2;
 
 #include "MidiUmp32.h"
 #include "MidiUmp64.h"
 #include "MidiUmp96.h"
 #include "MidiUmp128.h"
 
-#include "MidiGroup.h"
-#include "MidiChannel.h"
-
 #include "MidiFunctionBlock.h"
 #include "MidiGroupTerminalBlock.h"
 #include "MidiEndpointInformation.h"
 #include "MidiUniqueId.h"
+
+#include "MidiDeviceMetadataCache.h"
+#include "MidiGlobalCache.h"
 
 #include "MidiInputEndpointConnection.h"
 #include "MidiOutputEndpointConnection.h"
@@ -76,6 +85,3 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 #include "MidiService.h"
 
 
-// TODO: Consider changing these to midi2impl and midi2proj
-namespace implementation = winrt::Windows::Devices::Midi2::implementation;
-namespace midi2 = ::winrt::Windows::Devices::Midi2;

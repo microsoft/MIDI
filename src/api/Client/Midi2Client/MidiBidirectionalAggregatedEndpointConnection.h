@@ -40,9 +40,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         MidiBidirectionalAggregatedEndpointConnection() = default;
         ~MidiBidirectionalAggregatedEndpointConnection();
 
-        winrt::hstring InputDeviceId() const noexcept { return m_inputDeviceId; }
-        winrt::hstring OutputDeviceId() const noexcept { return m_outputDeviceId; }
-
         STDMETHOD(Callback)(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position) override
         {
             return CallbackImpl(*this, data, size, position);
@@ -62,5 +59,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     private:
+
     };
 }

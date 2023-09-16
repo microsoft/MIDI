@@ -2,7 +2,7 @@
      xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"
      xmlns:netfx="http://wixtoolset.org/schemas/v4/wxs/netfx">
 
-    <?define StagingSourceRootFolder=..\..\..\build\staging ?>
+    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\staging ?>
 
     <Package 
           Name="Windows MIDI Services"
@@ -11,7 +11,10 @@
           UpgradeCode="5f3a293b-09fb-4129-99b1-1a4d67cfd57c">
        
         <MediaTemplate EmbedCab="yes" />
-               
+
+        <!--<Binary Id="RegistryActions.dll" SourceFile="$(StagingSourceRootFolder)\RegistryActions.dll" /> -->
+        <Binary Id="RegistryCustomActionsLib" SourceFile="RegistryCustomActions.CA.dll"  />
+
         <!-- Install Windows Service -->
      
         <!-- Transport and other Service Plugins -->
@@ -48,7 +51,7 @@
                             Name="MidiSrv" 
                             Wait="yes" />
 
-            <File Source="$(StagingSourceRootFolder)\api\x64\MidiSrv.pdb" />
+            <!--<File Source="$(StagingSourceRootFolder)\api\x64\MidiSrv.pdb" /> -->
 
         </Component>                  
         
@@ -58,13 +61,15 @@
                    Directory="API_INSTALLFOLDER"
                    Guid="dc48ab14-dd46-4ff2-8d59-10b9a8215c7e">
             <File Source="$(StagingSourceRootFolder)\api\x64\Windows.Devices.Midi2.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\x64\Windows.Devices.Midi2.pdb" />
+            <!--<File Source="$(StagingSourceRootFolder)\api\x64\Windows.Devices.Midi2.pdb" />-->
             <File Source="$(StagingSourceRootFolder)\api\x64\Windows.Devices.Midi2.pri" />
         </Component>
 
         <Component Id="WindowsAPIRegistration"
                    Directory="API_INSTALLFOLDER"
-                   Guid="fa0230b9-824a-4c5f-b4e4-396433baa962">                   
+                   Guid="fa0230b9-824a-4c5f-b4e4-396433baa962"
+                   >
+            
             <!-- API Component Activation - WinRT -->
             <!-- NOTE: You can't write to these keys until you take ownership in the registry for the ActivatableClassId key under WindowsRuntime -->
 
@@ -81,6 +86,29 @@
 
             <!-- Install Tools: Console app -->
             <File Source="$(StagingSourceRootFolder)\midi-console\x64\midi.exe" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\x64\midi.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\x64\midi.deps.json" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\x64\midi.runtimeconfig.json" />
+
+            <!-- C# / WinRT -->
+            <File Source="$(StagingSourceRootFolder)\midi-console\x64\WinRT.Runtime.dll" />
+
+            <!-- WinRT Projections -->
+            <File Source="$(StagingSourceRootFolder)\midi-console\x64\Microsoft.Windows.SDK.NET.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\x64\Windows.Devices.Midi2.NET.dll" />
+
+            <!-- Spectre Console -->
+            <File Source="$(StagingSourceRootFolder)\midi-console\x64\Spectre.Console.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\x64\Spectre.Console.Cli.dll" />
+
+            <!-- Other .NET libs -->
+            <File Source="$(StagingSourceRootFolder)\midi-console\x64\System.CodeDom.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\x64\System.Diagnostics.EventLog.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\x64\System.Diagnostics.EventLog.Messages.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\x64\System.Management.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\x64\System.ServiceProcess.ServiceController.dll" />
+
+
 
             <!-- Add folder to path -->
             <Environment Id="AddConsoleAppToSystemPath"
@@ -103,6 +131,23 @@
 
         </Component>
 
+        <CustomAction 
+            Id="GrantRegistryPermissions"
+            Return="check"
+            Execute="immediate"
+            BinaryRef="RegistryCustomActionsLib"
+            DllEntry="GrantPermissions"
+            Impersonate="yes"
+            />
+
+        <CustomAction 
+            Id="ResetRegistryPermissions"
+            Return="check"
+            Execute="immediate"
+            BinaryRef="RegistryCustomActionsLib"
+            DllEntry="ReturnToDefaultPermissions" 
+            Impersonate="yes"
+            />
 
 
         <Feature Id="WindowsMIDIServices">
@@ -116,5 +161,15 @@
             <ComponentRef Id="SettingsAppExe"/>
         </Feature>
 
-      </Package>
+
+        <InstallExecuteSequence>
+            <Custom Action="GrantRegistryPermissions" After="InstallFiles" />
+            
+            <Custom Action="ResetRegistryPermissions" Before="InstallFinalize"/>
+        </InstallExecuteSequence>
+
+
+
+
+    </Package>
 </Wix>

@@ -16,6 +16,7 @@ MIDI_IDL_IMPORT
 import "MidiUmpMessageTypeEnum.idl";
 import "MidiUmpPacketTypeEnum.idl";
 import "MidiGroup.idl";
+import "MidiChannel.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -32,6 +33,12 @@ namespace Windows.Devices.Midi2
 
         static Boolean MessageTypeHasGroupField(MidiUmpMessageType messageType);
         static UInt32 ReplaceGroup(UInt32 word0, MidiGroup newGroup);
+        static MidiGroup GetGroup(UInt32 word0);
+
+
+        static Boolean MessageTypeHasChannelField(MidiUmpMessageType messageType);
+        static UInt32 ReplaceChannel(UInt32 word0, MidiChannel newChannel);
+        static MidiChannel GetChannel(UInt32 word0);
 
     };
 }

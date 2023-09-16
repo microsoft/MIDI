@@ -29,8 +29,8 @@ namespace Windows.Devices.Midi2
                                                        Windows.Devices.Midi2.IMidiOutputConnection
     {
         // Id from Windows. This can be used to retrieve the MidiDeviceInformation object with the PnP properties
-        String InputDeviceId{ get; };
-        String OutputDeviceId{ get; };
+        //String InputDeviceId{ get; };
+        //String OutputDeviceId{ get; };
 
     }
 }

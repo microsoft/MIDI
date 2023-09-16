@@ -32,5 +32,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
     }
 
+    internal class MessageListenerCommandSettings : EndpointCommandSettings
+    {
+        [EnumLocalizedDescription("ParameterListenerMessagesFilter", typeof(ListenerMessageTypeFilter))]
+        [CommandOption("-f|--filter")]
+        [DefaultValue(ListenerMessageTypeFilter.All)]
+        public ListenerMessageTypeFilter Filter { get; set; }
+
+
+    }
+
 
 }

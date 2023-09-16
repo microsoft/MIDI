@@ -27,7 +27,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         try
         {
             m_id = endpointInstanceId;
-            m_inputDeviceId = deviceId;
+
+            m_inputDeviceId = deviceId;     // for a true bidirectional endpoint, input and output are the same Id
             m_outputDeviceId = deviceId;
 
             WINRT_ASSERT(!DeviceId().empty());
@@ -74,7 +75,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                     DWORD mmcssTaskId{};  // TODO: Does this need to be session-wide? Probably, but it can be modified by the endpoint init, so maybe should be endpoint-local
 
                     winrt::check_hresult(m_inputAbstraction->Initialize(
-                        (LPCWSTR)(DeviceId().c_str()),
+                        (LPCWSTR)(InternalGetDeviceId().c_str()),
                         &mmcssTaskId,
                         (IMidiCallback*)(this)
                     ));

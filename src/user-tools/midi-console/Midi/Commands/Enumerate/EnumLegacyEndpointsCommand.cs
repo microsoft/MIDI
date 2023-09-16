@@ -37,7 +37,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             table.Border(TableBorder.HeavyHead);
 
-            table.AddColumn("MIDI 1.0 Endpoints for older MIDI APIs");
+            table.AddColumn("MIDI 1.0 Byte Stream Endpoints for older MIDI APIs");
 
             // Input endpoints
 

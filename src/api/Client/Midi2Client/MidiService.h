@@ -29,6 +29,22 @@ namespace winrt::Windows::Devices::Midi2::implementation
             ) noexcept;
 
         static foundation::Collections::IVectorView<midi2::MidiTransportInformation> GetInstalledTransports();
+
+
+        static midi2::MidiDeviceMetadataCache DeviceMetadataCache() noexcept 
+        { 
+            return m_deviceMetadataCache; 
+        }
+
+        static midi2::MidiGlobalCache GlobalCache() noexcept 
+        { 
+            return m_globalCache; 
+        }
+
+    private:
+        static MidiDeviceMetadataCache m_deviceMetadataCache;
+        static MidiGlobalCache m_globalCache;
+
     };
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation

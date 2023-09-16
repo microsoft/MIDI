@@ -23,9 +23,7 @@ namespace Windows::Devices::Midi2::Internal
 
     {
     public:
-        //bool SendMessageRaw(_In_ winrt::com_ptr<TEndpointAbstraction> endpoint, _In_ void* data, _In_ uint32_t sizeInBytes, _In_ internal::MidiTimestamp timestamp);
-        //bool SendUmp(_In_ winrt::com_ptr<TEndpointAbstraction> endpoint, _In_ winrt::Windows::Devices::Midi2::IMidiUmp const& ump);
-
+        winrt::hstring InputDeviceId() const noexcept { return m_inputDeviceId; }
 
         winrt::event_token MessageReceived(_In_ foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiMessageReceivedEventArgs> const& handler)
         {
