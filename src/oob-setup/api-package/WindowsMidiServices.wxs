@@ -1,6 +1,4 @@
-﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
-     xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"
-     xmlns:netfx="http://wixtoolset.org/schemas/v4/wxs/netfx">
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
 
     <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\staging ?>
 
@@ -13,7 +11,8 @@
         <MediaTemplate EmbedCab="yes" />
 
         <!--<Binary Id="RegistryActions.dll" SourceFile="$(StagingSourceRootFolder)\RegistryActions.dll" /> -->
-        <Binary Id="RegistryCustomActionsLib" SourceFile="RegistryCustomActions.CA.dll"  />
+        <!--<Binary Id="RegistryCustomActionsLib" SourceFile="RegistryCustomActions.CA.dll"  /> -->
+        <Binary Id ="RegistryCustomActionsLib" SourceFile="..\RegistryCustomActions\bin\x64\Release\net48\REgistryCustomActions.CA.dll" />
 
         <!-- Install Windows Service -->
      

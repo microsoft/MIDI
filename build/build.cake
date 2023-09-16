@@ -56,7 +56,7 @@ var settingsAppStagingDir = System.IO.Path.Combine(stagingRootDir, "midi-setting
 
 
 var setupSolutionDir = System.IO.Path.Combine(srcDir, "oob-setup");
-var setupSolutionFile = System.IO.Path.Combine(setupSolutionDir, "midi-services-setup.sln");
+//var setupSolutionFile = System.IO.Path.Combine(setupSolutionDir, "midi-services-setup.sln");
 
 var setupReleaseDir = releaseRootDir;
 
@@ -353,7 +353,7 @@ Task("BuildInstaller")
     .IsDependentOn("BuildConsoleApp")
     .DoesForEach(platformTargets, plat => 
 {
-    var buildSettings = new MSBuildSettings
+    /*var buildSettings = new MSBuildSettings
     {
         MaxCpuCount = 0,
         Configuration = configuration,
@@ -362,12 +362,26 @@ Task("BuildInstaller")
         Verbosity = Verbosity.Minimal,       
     };
 
-    MSBuild(setupSolutionFile, buildSettings);
+    MSBuild(setupSolutionFile, buildSettings); */
+
+    // have to build these projects using dotnet build, or else the nuget references just die
+
+    var mainBundleProjectDir = System.IO.Path.Combine(setupSolutionDir, "main-bundle");
+    var mainBundleProjectFile = System.IO.Path.Combine(mainBundleProjectDir, "main-bundle.wixproj");
+
+    var buildSettings = new DotNetBuildSettings
+    {
+        WorkingDirectory = mainBundleProjectDir,
+        Configuration = configuration, 
+        /*Runtime = rid,        */
+    };
+
+    DotNetBuild(mainBundleProjectDir, buildSettings);
 
     if (!DirectoryExists(setupReleaseDir))
         CreateDirectory(setupReleaseDir);
 
-    CopyFiles(System.IO.Path.Combine(setupSolutionDir, "main-bundle", "bin", plat.ToString(), configuration, "*.exe"), setupReleaseDir); 
+    CopyFiles(System.IO.Path.Combine(mainBundleProjectDir, "bin", "Release", "*.exe"), setupReleaseDir); 
 });
 
 

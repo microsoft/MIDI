@@ -73,9 +73,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             string endpointId = string.Empty;
 
-            if (!string.IsNullOrEmpty(settings.InstanceId))
+            if (!string.IsNullOrEmpty(settings.EndpointId))
             {
-                endpointId = settings.InstanceId.Trim();
+                endpointId = settings.EndpointId.Trim();
             }
             else
             {

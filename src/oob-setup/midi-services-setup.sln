@@ -7,9 +7,7 @@ Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "api-package", "api-package\
 EndProject
 Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "main-bundle", "main-bundle\main-bundle.wixproj", "{182F17E6-CF91-4D65-B767-6469D523F5AC}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sub Installers", "Sub Installers", "{6E94D945-3D96-455B-9752-5CD4BC401E2D}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RegistryCustomActions", "RegistryCustomActions\RegistryCustomActions.csproj", "{8049E08D-92F2-4BDE-B07F-BCF7DAD5F134}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RegistryCustomActions", "RegistryCustomActions\RegistryCustomActions.csproj", "{8049E08D-92F2-4BDE-B07F-BCF7DAD5F134}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -74,9 +72,6 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{E18CC5FC-F028-48A7-9343-E32A85CDF7B3} = {6E94D945-3D96-455B-9752-5CD4BC401E2D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7249E2CD-8B0D-4B7D-ACCA-FC66D43FB7ED}

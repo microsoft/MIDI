@@ -29,8 +29,8 @@ Windows.Devices.Midi2.IMidiUmpUtilityStatics | 0 | 0 | 0
 Windows.Devices.Midi2.MidiGlobalCache | 0 | 0 | 0
 Windows.Devices.Midi2.MidiGlobalInformationUpdatedEventArgs | 0 | 0 | 0
 
-Windows.Devices.Midi2.MidiDeviceInformationCache | 0 | 0 | 0
-Windows.Devices.Midi2.MidiDeviceInformationCacheUpdatedEventArgs | 0 | 0 | 0
+Windows.Devices.Midi2.MidiEndpointMetadataCache | 0 | 0 | 0
+Windows.Devices.Midi2.MidiEndpointMetadataCacheUpdatedEventArgs | 0 | 0 | 0
 
 Windows.Devices.Midi2.MidiEndpointInformationUpdatedEventArgs | 0 | 0 | 0
 Windows.Devices.Midi2.MidiEndpointInformation | 0 | 0 | 0
