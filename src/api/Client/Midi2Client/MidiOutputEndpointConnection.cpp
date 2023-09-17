@@ -17,12 +17,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Success_(return == true)
     bool MidiOutputEndpointConnection::InternalInitialize(
         _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
-        _In_ winrt::hstring const connectionId,
+        _In_ winrt::guid const connectionId,
         _In_ winrt::hstring const endpointDeviceId)
     {
         try
         {
-            m_id = connectionId;
+            m_connectionId = connectionId;
             m_outputDeviceId = endpointDeviceId;
 
 

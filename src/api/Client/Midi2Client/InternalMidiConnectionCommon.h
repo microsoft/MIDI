@@ -19,7 +19,7 @@ namespace Windows::Devices::Midi2::Internal
 
     {
     public:
-        winrt::hstring ConnectionId() const noexcept { return m_id; }
+        winrt::guid ConnectionId() const noexcept { return m_connectionId; }
         bool IsOpen() const noexcept { return m_isOpen; }
         midi2::IMidiEndpointDefinedConnectionSettings Settings() const noexcept { return m_settings; }
 
@@ -43,7 +43,7 @@ namespace Windows::Devices::Midi2::Internal
     protected:
         void IsOpen(_In_ const bool value) noexcept { m_isOpen = value; }
 
-        winrt::hstring m_id{};
+        winrt::guid m_connectionId{};
         winrt::Windows::Foundation::IInspectable m_tag{ nullptr };
         midi2::MidiEndpointConnectionSharing m_activeSharingMode
             { midi2::MidiEndpointConnectionSharing::Unknown };

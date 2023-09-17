@@ -26,7 +26,7 @@
 using namespace winrt::Windows::Devices::Midi2;
 
 
-TEST_CASE("Connected.Endpoint.CreateBidi Create bidirectional endpoint")
+TEST_CASE("Connected.Endpoint.CreateBidi Create bidirectional A endpoint")
 {
     auto settings = MidiSessionSettings::Default();
     auto session = MidiSession::CreateSession(L"Test Session Name", settings);
@@ -37,7 +37,7 @@ TEST_CASE("Connected.Endpoint.CreateBidi Create bidirectional endpoint")
 
     std::cout << "Connecting to Endpoint" << std::endl;
 
-    auto conn1 = session.ConnectBidirectionalEndpoint(LOOPBACK_BIDI_ID, nullptr);
+    auto conn1 = session.ConnectBidirectionalEndpoint(LOOPBACK_BIDI_ID_A, nullptr);
 
     REQUIRE(conn1 != nullptr);
     REQUIRE(!conn1.Id().empty());
@@ -49,20 +49,32 @@ TEST_CASE("Connected.Endpoint.CreateBidi Create bidirectional endpoint")
 
     std::cout << "Endpoint Id: " << winrt::to_string(conn1.Id()) << std::endl;
     std::cout << "Device Id: " << winrt::to_string(conn1.DeviceId()) << std::endl;
-
-    //std::for_each(
-    //    begin(session.Connections()),
-    //    end(session.Connections()),
-    //    [](const winrt::Windows::Foundation::Collections::IKeyValuePair<hstring, winrt::Windows::Devices::Midi2::MidiEndpointConnection>& kvp)
-    //    {
-    //        hstring key = kvp.Key();
-
-    //        std::cout << "Endpoint Key in Map: " << winrt::to_string(key) << std::endl;
-    //    }
-    //);
-
 }
 
+TEST_CASE("Connected.Endpoint.CreateBidi Create bidirectional B endpoint")
+{
+    auto settings = MidiSessionSettings::Default();
+    auto session = MidiSession::CreateSession(L"Test Session Name", settings);
+
+    REQUIRE((bool)(session.IsOpen()));
+
+    REQUIRE((bool)(session.Connections().Size() == 0));
+
+    std::cout << "Connecting to Endpoint" << std::endl;
+
+    auto conn1 = session.ConnectBidirectionalEndpoint(LOOPBACK_BIDI_ID_B, nullptr);
+
+    REQUIRE(conn1 != nullptr);
+    REQUIRE(!conn1.Id().empty());
+
+    REQUIRE(conn1.Open());
+    REQUIRE(conn1.IsOpen());
+
+    REQUIRE(session.Connections().Size() == 1);
+
+    std::cout << "Endpoint Id: " << winrt::to_string(conn1.Id()) << std::endl;
+    std::cout << "Device Id: " << winrt::to_string(conn1.DeviceId()) << std::endl;
+}
 
 TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message")
 {
@@ -77,9 +89,11 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message")
 
     std::cout << std::endl << "Connecting to Endpoint" << std::endl;
 
-    auto conn1 = session.ConnectBidirectionalEndpoint(LOOPBACK_BIDI_ID, nullptr);
+    auto connSend = session.ConnectBidirectionalEndpoint(LOOPBACK_BIDI_ID_A, nullptr);
+    auto connReceive = session.ConnectBidirectionalEndpoint(LOOPBACK_BIDI_ID_B, nullptr);
 
-    REQUIRE((bool)(conn1 != nullptr));
+    REQUIRE((bool)(connSend != nullptr));
+    REQUIRE((bool)(connReceive != nullptr));
 
     bool messageReceivedFlag = false;
     MidiUmp32 sentUmp;
@@ -115,9 +129,10 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message")
             allMessagesReceived.SetEvent();
         };
 
-    auto eventRevokeToken = conn1.MessageReceived(MessageReceivedHandler);
+    auto eventRevokeToken = connReceive.MessageReceived(MessageReceivedHandler);
 
-    REQUIRE(conn1.Open());
+    REQUIRE(connSend.Open());
+    REQUIRE(connReceive.Open());
 
     // send message
 
@@ -129,7 +144,7 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message")
     std::cout << " - MessageType: 0x" << std::hex << (int)(sentUmp.MessageType()) << std::endl;
     std::cout << " - First Word:  0x" << std::hex << (sentUmp.Word0()) << std::endl << std::endl;
 
-    conn1.SendUmp(sentUmp);
+    connSend.SendUmp(sentUmp);
 
 
     // Wait for incoming message
@@ -143,10 +158,11 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message")
     REQUIRE(messageReceivedFlag);
 
     // unwire event
-    conn1.MessageReceived(eventRevokeToken);
+    connReceive.MessageReceived(eventRevokeToken);
 
     // cleanup endpoint. Technically not required as session will do it
-    session.DisconnectEndpointConnection(conn1.Id());
+    session.DisconnectEndpointConnection(connSend.Id());
+    session.DisconnectEndpointConnection(connReceive.Id());
 }
 
 
@@ -169,7 +185,7 @@ TEST_CASE("Connected.Endpoint.MultipleUmpWords Send and receive multiple words")
 
     std::cout << "Connecting to Endpoint" << std::endl;
 
-    auto conn1 = session.ConnectBidirectionalEndpoint(LOOPBACK_BIDI_ID, nullptr);
+    auto conn1 = session.ConnectBidirectionalEndpoint(LOOPBACK_BIDI_ID_A, nullptr);
 
     REQUIRE((bool)(conn1 != nullptr));
 

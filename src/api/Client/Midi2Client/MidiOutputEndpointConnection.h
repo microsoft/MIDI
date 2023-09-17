@@ -33,7 +33,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         _Success_(return == true)
         bool InternalInitialize(
             _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
-            _In_ winrt::hstring const connectId,
+            _In_ winrt::guid const connectionId,
             _In_ winrt::hstring const endpointDeviceId);
 
         _Success_(return == true)

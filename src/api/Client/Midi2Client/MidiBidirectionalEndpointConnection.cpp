@@ -19,14 +19,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     bool MidiBidirectionalEndpointConnection::InternalInitialize(
         winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
-        winrt::hstring const connectionId,
+        winrt::guid const connectionId,
         winrt::hstring const endpointDeviceId, 
         midi2::MidiBidirectionalEndpointOpenOptions options
     )
     {
         try
         {
-            m_id = connectionId;
+            m_connectionId = connectionId;
 
             m_inputDeviceId = endpointDeviceId;     // for a true bidirectional endpoint, input and output are the same Id
             m_outputDeviceId = endpointDeviceId;
