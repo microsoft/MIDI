@@ -40,15 +40,11 @@ TEST_CASE("Connected.Endpoint.CreateBidi Create bidirectional A endpoint")
     auto conn1 = session.ConnectBidirectionalEndpoint(LOOPBACK_BIDI_ID_A, nullptr);
 
     REQUIRE(conn1 != nullptr);
-    REQUIRE(!conn1.Id().empty());
 
     REQUIRE(conn1.Open());
     REQUIRE(conn1.IsOpen());
 
     REQUIRE(session.Connections().Size() == 1);
-
-    std::cout << "Endpoint Id: " << winrt::to_string(conn1.Id()) << std::endl;
-    std::cout << "Device Id: " << winrt::to_string(conn1.DeviceId()) << std::endl;
 }
 
 TEST_CASE("Connected.Endpoint.CreateBidi Create bidirectional B endpoint")
@@ -65,15 +61,11 @@ TEST_CASE("Connected.Endpoint.CreateBidi Create bidirectional B endpoint")
     auto conn1 = session.ConnectBidirectionalEndpoint(LOOPBACK_BIDI_ID_B, nullptr);
 
     REQUIRE(conn1 != nullptr);
-    REQUIRE(!conn1.Id().empty());
 
     REQUIRE(conn1.Open());
     REQUIRE(conn1.IsOpen());
 
     REQUIRE(session.Connections().Size() == 1);
-
-    std::cout << "Endpoint Id: " << winrt::to_string(conn1.Id()) << std::endl;
-    std::cout << "Device Id: " << winrt::to_string(conn1.DeviceId()) << std::endl;
 }
 
 TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message")
@@ -161,8 +153,8 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message")
     connReceive.MessageReceived(eventRevokeToken);
 
     // cleanup endpoint. Technically not required as session will do it
-    session.DisconnectEndpointConnection(connSend.Id());
-    session.DisconnectEndpointConnection(connReceive.Id());
+    session.DisconnectEndpointConnection(connSend.ConnectionId());
+    session.DisconnectEndpointConnection(connReceive.ConnectionId());
 }
 
 
@@ -277,5 +269,5 @@ TEST_CASE("Connected.Endpoint.MultipleUmpWords Send and receive multiple words")
     //conn1.WordsReceived(eventRevokeToken);
 
     // cleanup endpoint. Technically not required as session will do it
-    session.DisconnectEndpointConnection(conn1.Id());
+    session.DisconnectEndpointConnection(conn1.ConnectionId());
 }

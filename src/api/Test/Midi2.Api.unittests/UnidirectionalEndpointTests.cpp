@@ -40,15 +40,12 @@ TEST_CASE("Connected.Endpoint.CreateOutput Create output endpoint")
     auto conn1 = session.ConnectOutputEndpoint(LOOPBACK_OUT_ID, nullptr);
 
     REQUIRE(conn1 != nullptr);
-    REQUIRE(!conn1.Id().empty());
 
     REQUIRE(conn1.Open());
     REQUIRE(conn1.IsOpen());
 
     REQUIRE(session.Connections().Size() == 1);
 
-    std::cout << "Endpoint Id: " << winrt::to_string(conn1.Id()) << std::endl;
-    std::cout << "Device Id: " << winrt::to_string(conn1.DeviceId()) << std::endl;
 }
 
 
@@ -66,15 +63,11 @@ TEST_CASE("Connected.Endpoint.CreateInput Create input endpoint")
     auto conn1 = session.ConnectInputEndpoint(LOOPBACK_IN_ID, nullptr);
 
     REQUIRE(conn1 != nullptr);
-    REQUIRE(!conn1.Id().empty());
 
     REQUIRE(conn1.Open());
     REQUIRE(conn1.IsOpen());
 
     REQUIRE(session.Connections().Size() == 1);
-
-    std::cout << "Endpoint Id: " << winrt::to_string(conn1.Id()) << std::endl;
-    std::cout << "Device Id: " << winrt::to_string(conn1.DeviceId()) << std::endl;
 }
 
 
@@ -164,9 +157,6 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message th
 
     connOut.SendUmp(sentUmp);
 
-
-    // Wait for incoming message
-
     // Wait for incoming message
     if (!allMessagesReceived.wait(3000))
     {
@@ -179,8 +169,8 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message th
     connIn.MessageReceived(eventRevokeToken);
 
     // cleanup endpoint. Technically not required as session will do it
-    session.DisconnectEndpointConnection(connOut.Id());
-    session.DisconnectEndpointConnection(connIn.Id());
+    session.DisconnectEndpointConnection(connOut.ConnectionId());
+    session.DisconnectEndpointConnection(connIn.ConnectionId());
 }
 
 

@@ -23,16 +23,13 @@ TEST_CASE("Connected.Session.CreateSession Create new session")
 {
     winrt::hstring sessionName = L"Test Session Name";
 
-    auto settings = MidiSessionSettings::Default();
-    auto session = MidiSession::CreateSession(sessionName, settings);
+    auto session = MidiSession::CreateSession(sessionName);
 
     REQUIRE((bool)(session != nullptr));
 
     REQUIRE((bool)(session.IsOpen()));
 
     REQUIRE((bool)(session.Name() == sessionName));
-
-    REQUIRE((bool)(session.Id().empty() == false));
 
     REQUIRE((bool)(session.Connections().Size() == 0));
 
