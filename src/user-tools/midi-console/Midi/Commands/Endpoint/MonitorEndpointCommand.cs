@@ -37,15 +37,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            MidiSession session = null;
-            IMidiEndpointConnection connection = null;
+            MidiSession? session = null;
+            IMidiEndpointConnection? connection = null;
 
 
             string endpointId = string.Empty;
 
-            if (!string.IsNullOrEmpty(settings.EndpointId))
+            if (!string.IsNullOrEmpty(settings.EndpointDeviceId))
             {
-                endpointId = settings.EndpointId.Trim().ToLower();
+                endpointId = settings.EndpointDeviceId.Trim().ToLower();
             }
             else
             {

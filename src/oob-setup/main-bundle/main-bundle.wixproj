@@ -6,6 +6,15 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <SuppressValidation>true</SuppressValidation>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <SuppressValidation>true</SuppressValidation>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <SuppressValidation>true</SuppressValidation>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <SuppressValidation>true</SuppressValidation>
+  </PropertyGroup>
   <ItemGroup>
     <Content Include="midi_installer_logo_square.png" />
   </ItemGroup>

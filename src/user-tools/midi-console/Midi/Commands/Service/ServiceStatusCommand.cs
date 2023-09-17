@@ -48,7 +48,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Service '{serviceName}' status is {controller.Status.ToString()}. You may want to restart the service or reboot."));
                 }
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Unable to find service '{serviceName}'. Is Windows MIDI Services installed?\n"));
                 return (int)MidiConsoleReturnCode.ErrorMidiServicesNotInstalled;
@@ -71,7 +71,17 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                 using (var serviceObject = new ManagementObject(new ManagementPath(string.Format("Win32_Service.Name='{0}'", serviceName))))
                 {
-                    table.Rows.Add(new[] { new Markup("Description"), new Markup(serviceObject["Description"]?.ToString()) });
+                    if (serviceObject != null) 
+                    {
+                        var desc = (string?)serviceObject.GetPropertyValue("Description");
+
+                        if (desc != null)
+                        {
+                            string description = desc.ToString();
+
+                            table.Rows.Add(new[] { new Markup("Description"), new Markup(description) });
+                        }
+                    }
                 }
 
                 table.Rows.Add(new[] { new Markup("Type"), new Markup(controller.ServiceType.ToString()) });

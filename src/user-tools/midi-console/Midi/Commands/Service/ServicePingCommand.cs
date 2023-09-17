@@ -128,7 +128,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 }
                 return 0;
             }
-            catch (System.TypeInitializationException ex)
+            catch (System.TypeInitializationException)
             {
                 AnsiConsole.Markup(AnsiMarkupFormatter.FormatError($"{Strings.ErrorPingTestFailed}: {Strings.ErrorGeneralFailReasonWinRTActivation}"));
 

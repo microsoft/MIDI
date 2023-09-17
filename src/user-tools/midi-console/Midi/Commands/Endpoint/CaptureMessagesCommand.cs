@@ -17,7 +17,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         {
             [LocalizedDescription("ParameterCaptureMessagesOutputFile")]
             [CommandArgument(0, "<Output File>")]
-            public string OutputFile { get; set; }
+            public string? OutputFile { get; set; }
 
             [LocalizedDescription("ParameterCaptureMessagesEcho")]
             [CommandOption("-e|--echo")]

@@ -57,7 +57,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         {
                             selector = MidiBidirectionalEndpointConnection.GetDeviceSelector();
                         }
-                        catch (System.TypeInitializationException ex)
+                        catch (System.TypeInitializationException)
                         {
                             AnsiConsole.Markup(AnsiMarkupFormatter.FormatError($"{Strings.ErrorEnumEndpointsFailed}: {Strings.ErrorGeneralFailReasonWinRTActivation}"));
                             return;
@@ -91,7 +91,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         {
                             selector = MidiInputEndpointConnection.GetDeviceSelector();
                         }
-                        catch (System.TypeInitializationException ex)
+                        catch (System.TypeInitializationException)
                         {
                             AnsiConsole.Markup(AnsiMarkupFormatter.FormatError($"{Strings.ErrorEnumEndpointsFailed}: {Strings.ErrorGeneralFailReasonWinRTActivation}"));
                             return;
@@ -125,7 +125,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         {
                             selector = MidiOutputEndpointConnection.GetDeviceSelector();
                         }
-                        catch (System.TypeInitializationException ex)
+                        catch (System.TypeInitializationException)
                         {
                             AnsiConsole.Markup(AnsiMarkupFormatter.FormatError($"{Strings.ErrorEnumEndpointsFailed}: {Strings.ErrorGeneralFailReasonWinRTActivation}"));
                             return;

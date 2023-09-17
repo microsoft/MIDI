@@ -20,16 +20,20 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             [LocalizedDescription("ParameterSendMessageWords")]
             [CommandArgument(1, "<MIDI Words>")]
-            public UInt32[] Words { get; init; }
+            public UInt32[]? Words { get; set; }
 
             [LocalizedDescription("ParameterSendMessageCount")]
             [CommandOption("-c|--count")]
             [DefaultValue(1)]
-            public int Count { get; init; }
+            public int Count { get; set; }
         }
 
         public override Spectre.Console.ValidationResult Validate(CommandContext context, Settings settings)
         {
+            if (settings.Words == null)
+            {
+                return Spectre.Console.ValidationResult.Error(Strings.MessageValidationErrorTooFewWords);
+            }
             if (settings.Words.Length == 0)
             {
                 return Spectre.Console.ValidationResult.Error(Strings.MessageValidationErrorTooFewWords);
@@ -73,9 +77,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             string endpointId = string.Empty;
 
-            if (!string.IsNullOrEmpty(settings.EndpointId))
+            if (!string.IsNullOrEmpty(settings.EndpointDeviceId))
             {
-                endpointId = settings.EndpointId.Trim();
+                endpointId = settings.EndpointDeviceId.Trim();
             }
             else
             {
@@ -153,20 +157,23 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             AnsiConsole.Live(table)
                 .Start(ctx =>
                 {
-                    for (uint i = 0; i < settings.Count; i++)
+                    if (settings.Words != null)
                     {
-                        UInt64 timestamp = MidiClock.GetMidiTimestamp();
-                        connection.SendUmpWordArray(timestamp, settings.Words, (UInt32)settings.Words.Count());
+                        for (uint i = 0; i < settings.Count; i++)
+                        {
+                            UInt64 timestamp = MidiClock.GetMidiTimestamp();
+                            connection.SendUmpWordArray(timestamp, settings.Words, (UInt32)settings.Words.Count());
 
-                        table.AddRow(
-                            AnsiMarkupFormatter.FormatTimestamp(timestamp), 
-                            AnsiMarkupFormatter.FormatMidiWords(settings.Words), 
-                            AnsiMarkupFormatter.FormatMessageType(MidiUmpUtility.GetMessageTypeFromFirstUmpWord(settings.Words[0]))
-                            );
+                            table.AddRow(
+                                AnsiMarkupFormatter.FormatTimestamp(timestamp), 
+                                AnsiMarkupFormatter.FormatMidiWords(settings.Words), 
+                                AnsiMarkupFormatter.FormatMessageType(MidiUmpUtility.GetMessageTypeFromFirstUmpWord(settings.Words[0]))
+                                );
 
-                        ctx.Refresh();
+                            ctx.Refresh();
 
-                        Thread.Sleep(settings.DelayBetweenMessages);
+                            Thread.Sleep(settings.DelayBetweenMessages);
+                        }
                     }
                 });
 

@@ -20,7 +20,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         {
             [LocalizedDescription("ParameterDiagnosticsReportOutputFile")]
             [CommandArgument(0, "<Output File>")]
-            public string OutputFile { get; set; }
+            public string? OutputFile { get; set; }
         }
 
         public override ValidationResult Validate(CommandContext context, Settings settings)

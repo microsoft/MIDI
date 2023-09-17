@@ -14,13 +14,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
     internal class UmpEndpointPickerEntry
     {
         public string Name { get; init; }
-        public string InstanceId { get; init; }
+        public string EndpointDeviceId { get; init; }
         public EndpointDirection Direction { get; init; }
 
-        public UmpEndpointPickerEntry(string name, string instanceId, EndpointDirection direction)
+        public UmpEndpointPickerEntry(string name, string endpointDeviceId, EndpointDirection direction)
         {
             Name = name;
-            InstanceId = instanceId;
+            EndpointDeviceId = endpointDeviceId;
             Direction = direction;
         }
 
@@ -67,7 +67,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                 if (result != null)
                 {
-                    return result?.InstanceId;
+                    return result.EndpointDeviceId;
                 }
             }
 
@@ -92,7 +92,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                 if (result != null)
                 {
-                    return result?.InstanceId;
+                    return result.EndpointDeviceId;
                 }
             }
 

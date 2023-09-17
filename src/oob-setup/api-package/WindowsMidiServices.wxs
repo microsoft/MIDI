@@ -1,24 +1,39 @@
 ﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
 
-    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\staging ?>
+    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
 
-    <Package 
+    <Package  
           Name="Windows MIDI Services"
           Manufacturer="Microsoft Corporation"
           Version="1.0.0.0"
-          UpgradeCode="5f3a293b-09fb-4129-99b1-1a4d67cfd57c">
+          UpgradeCode="5f3a293b-09fb-4129-99b1-1a4d67cfd57c"
+          >
        
         <MediaTemplate EmbedCab="yes" />
 
+        
+        <StandardDirectory Id="ProgramFiles64Folder">
+            <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
+                <Directory Id="SERVICE_INSTALLFOLDER" Name="Service" />
+                <Directory Id="API_INSTALLFOLDER" Name="API" />
+                <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
+                    <Directory Id="CONSOLEAPP_INSTALLFOLDER" Name="Console" />
+                    <Directory Id="SETTINGSAPP_INSTALLFOLDER" Name="Settings" />
+                </Directory>
+            </Directory>
+        </StandardDirectory>
+        
+
         <!--<Binary Id="RegistryActions.dll" SourceFile="$(StagingSourceRootFolder)\RegistryActions.dll" /> -->
         <!--<Binary Id="RegistryCustomActionsLib" SourceFile="RegistryCustomActions.CA.dll"  /> -->
-        <Binary Id ="RegistryCustomActionsLib" SourceFile="..\RegistryCustomActions\bin\x64\Release\net48\REgistryCustomActions.CA.dll" />
+        <Binary Id ="RegistryCustomActionsLib" SourceFile="$(env.MIDI_REPO_ROOT)src\oob-setup\RegistryCustomActions\bin\x64\Release\net48\RegistryCustomActions.CA.dll" />
 
         <!-- Install Windows Service -->
      
         <!-- Transport and other Service Plugins -->
         <!-- Setting the SelfRegCost attribute to any positive number causes DLL Self Registration -->
         <Component Id="WindowsServiceAbstractions"
+                   Bitness="always64"
                    Directory="SERVICE_INSTALLFOLDER"
                    Guid="{6a2300f5-ccae-4f61-b849-d41aefb8a999}"  >
             <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.KSAbstraction.dll"               SelfRegCost="1" Vital="true" />
@@ -29,6 +44,7 @@
         </Component>
 
         <Component Id="WindowsService"
+                   Bitness="always64"
                    Directory="SERVICE_INSTALLFOLDER"
                    Guid="6a2300f5-ccae-4f61-b849-d41aefb8a2f7" >
             <File Source="$(StagingSourceRootFolder)\api\x64\MidiSrv.exe" Id="WINDOWS_SERVICE"  Vital="true" />
@@ -57,14 +73,18 @@
         <!-- Install API -->
 
         <Component Id="WindowsAPI"
+                   Bitness="always64"
                    Directory="API_INSTALLFOLDER"
                    Guid="dc48ab14-dd46-4ff2-8d59-10b9a8215c7e">
             <File Source="$(StagingSourceRootFolder)\api\x64\Windows.Devices.Midi2.dll" Vital="true" />
+                       
+            
             <!--<File Source="$(StagingSourceRootFolder)\api\x64\Windows.Devices.Midi2.pdb" />-->
             <File Source="$(StagingSourceRootFolder)\api\x64\Windows.Devices.Midi2.pri" />
         </Component>
 
         <Component Id="WindowsAPIRegistration"
+                   Bitness="always64"
                    Directory="API_INSTALLFOLDER"
                    Guid="fa0230b9-824a-4c5f-b4e4-396433baa962"
                    >
@@ -72,7 +92,6 @@
             <!-- API Component Activation - WinRT -->
             <!-- NOTE: You can't write to these keys until you take ownership in the registry for the ActivatableClassId key under WindowsRuntime -->
 
-            <?include $(StagingSourceRootFolder)\api\x64\WinRTActivationEntries.wxi ?>
 
             <!-- API Component Activation - COM -->
         </Component>
@@ -80,6 +99,7 @@
         <!-- Install Console App -->
 
         <Component Id="ConsoleAppExe"
+                   Bitness="always64"
                    Directory="CONSOLEAPP_INSTALLFOLDER"
                    Guid="1c74ff9c-d414-4a1e-a1f8-7cf62388f3bd">
 
@@ -118,6 +138,7 @@
         <!-- Install Settings App -->
 
         <Component Id="SettingsAppExe"
+                   Bitness="always64"
                    Directory="SETTINGSAPP_INSTALLFOLDER"
                    Guid="1e903d6a-b855-44f6-b00a-8f8827617eb5">
 
@@ -130,25 +151,23 @@
 
         </Component>
 
-        <CustomAction 
-            Id="GrantRegistryPermissions"
+        <CustomAction
+            Id="WriteActivatableClassIdKeysAction"
             Return="check"
             Execute="immediate"
             BinaryRef="RegistryCustomActionsLib"
-            DllEntry="GrantPermissions"
-            Impersonate="yes"
-            />
+            DllEntry="WriteActivatableClassIdKeys"
+            Impersonate="yes"/>
 
-        <CustomAction 
-            Id="ResetRegistryPermissions"
+        <CustomAction
+            Id="EraseActivatableClassIdKeysAction"
             Return="check"
             Execute="immediate"
             BinaryRef="RegistryCustomActionsLib"
-            DllEntry="ReturnToDefaultPermissions" 
-            Impersonate="yes"
-            />
+            DllEntry="EraseActivatableClassIdKeys"
+            Impersonate="yes"/>
 
-
+        
         <Feature Id="WindowsMIDIServices">
             <ComponentRef Id="WindowsServiceAbstractions"/>
             <ComponentRef Id="WindowsService"/>
@@ -162,9 +181,8 @@
 
 
         <InstallExecuteSequence>
-            <Custom Action="GrantRegistryPermissions" After="InstallFiles" />
-            
-            <Custom Action="ResetRegistryPermissions" Before="InstallFinalize"/>
+            <Custom Action="WriteActivatableClassIdKeysAction" After="InstallFiles" Condition="(NOT Installed)" />
+            <Custom Action="EraseActivatableClassIdKeysAction" After="InstallFiles" Condition='(REMOVE="ALL")'/>
         </InstallExecuteSequence>
 
 

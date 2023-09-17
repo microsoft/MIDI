@@ -35,11 +35,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             [CommandOption("-g|--new-group-index")]
             public byte? NewGroupIndex { get; set; }
 
-
+            Settings()
+            {
+                InputFile = String.Empty;
+            }
         }
 
         public override ValidationResult Validate(CommandContext context, Settings settings)
         {
+
             if (!System.IO.File.Exists(settings.InputFile))
             {
                 return ValidationResult.Error($"File not found {settings.InputFile}.");
@@ -58,7 +62,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             return base.Validate(context, settings);
         }
 
-        private bool ValidateMessage(UInt32[] words)
+        private bool ValidateMessage(UInt32[]? words)
         {
             if (words != null && words.Length > 0 && words.Length <= 4)
             {
@@ -78,9 +82,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             string endpointId = string.Empty;
 
-            if (!string.IsNullOrEmpty(settings.EndpointId))
+            if (!string.IsNullOrEmpty(settings.EndpointDeviceId))
             {
-                endpointId = settings.EndpointId.Trim();
+                endpointId = settings.EndpointDeviceId.Trim();
             }
             else
             {
@@ -172,6 +176,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     var startingTimestamp = MidiClock.GetMidiTimestamp();
 
                     // open our data file
+
                     var fileStream = System.IO.File.OpenText(settings.InputFile);
 
                     char delimiter = (char)0;
@@ -223,13 +228,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                             if (settings.FieldDelimiter == ParseFieldDelimiter.Auto)
                                 delimiter = IdentifyFieldDelimiter(line);
 
-                            UInt32[] words;
+                            UInt32[]? words;
 
                             // ignore files with timestamps for this first version
 
                             if (ParseNextDataLine(line, delimiter, (int)settings.WordDataFormat, out words))
                             {
-                                if (ValidateMessage(words))
+                                if (words != null && ValidateMessage(words))
                                 {
                                     var timestamp = MidiClock.GetMidiTimestamp();
 
@@ -339,7 +344,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         //}
 
-        private bool ParseNextDataLine(string inputLine, char delimiter, int fromBase, out UInt32[] words)
+        private bool ParseNextDataLine(string inputLine, char delimiter, int fromBase, out UInt32[]? words)
         {
             try
             {
@@ -374,7 +379,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     return true;
                 }
             }
-            catch (Exception ex) 
+            catch (Exception) 
             {
                 //AnsiConsole.WriteException(ex);
 

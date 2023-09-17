@@ -13,8 +13,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
     internal class EndpointCommandSettings : CommandSettings
     {
         [LocalizedDescription("ParameterCommonEndpointIdDescription")]
-        [CommandArgument(0, "[Endpoint Id]")]
-        public string EndpointId { get; set; }
+        [CommandArgument(0, "[Endpoint Device Id]")]
+        public string? EndpointDeviceId { get; set; }
     }
 
     internal class SendMessageCommandSettings : EndpointCommandSettings
