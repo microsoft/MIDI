@@ -14,7 +14,7 @@ import "MidiFunctionBlockDirectionEnum.idl";
 import "MidiFunctionBlockUIHintEnum.idl";
 import "MidiGroup.idl";
 
-
+import "MidiUmp128.idl";
 
 // TODO: Verify this has everything in the spec
 
@@ -27,7 +27,8 @@ namespace Windows.Devices.Midi2
     runtimeclass MidiFunctionBlock
     {
         MidiFunctionBlock();
-
+ //       MidiFunctionBlock(String json);
+ //       MidiFunctionBlock(MidiUmp128[] functionBlockMessages);
 
         UInt8 Number{ get; };               // function block number: 0-31
         String Name{ get; };
@@ -46,5 +47,7 @@ namespace Windows.Devices.Midi2
         UInt8 MidiCIMessageVersionFormat{ get; };
 
         UInt8 MaxSysEx8Streams{ get; };
+
+ //       String GetJson();
     }
 }

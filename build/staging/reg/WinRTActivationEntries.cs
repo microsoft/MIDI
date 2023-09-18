@@ -33,6 +33,7 @@ class RegistryEntries
         new RegEntry{ ClassName="Windows.Devices.Midi2.MidiEndpointInformationConfigurator", ActivationType=0, Threading=0, TrustLevel=0  },
         new RegEntry{ ClassName="Windows.Devices.Midi2.MidiFunctionBlockEndpointListener", ActivationType=0, Threading=0, TrustLevel=0  },
         new RegEntry{ ClassName="Windows.Devices.Midi2.MidiStreamConfigurationEndpointListener", ActivationType=0, Threading=0, TrustLevel=0  },
+        new RegEntry{ ClassName="Windows.Devices.Midi2.MidiVirtualDeviceResponder", ActivationType=0, Threading=0, TrustLevel=0  },
         new RegEntry{ ClassName="Windows.Devices.Midi2.MidiMessageReceivedEventArgs", ActivationType=0, Threading=0, TrustLevel=0  },
         new RegEntry{ ClassName="Windows.Devices.Midi2.MidiBidirectionalAggregatedEndpointConnection", ActivationType=0, Threading=0, TrustLevel=0  },
         new RegEntry{ ClassName="Windows.Devices.Midi2.MidiBidirectionalEndpointConnection", ActivationType=0, Threading=0, TrustLevel=0  },

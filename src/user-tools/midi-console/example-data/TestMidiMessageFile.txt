@@ -1,0 +1,42 @@
+# This is a test file for sending UMPs through Windows MIDI Services
+# It uses auto for the field delimiter so we can have different 
+# delimiters on each line
+
+# The line above was empty. The next data line is a UMP32
+
+0x22345678
+
+# The messages aren't valid beyond their message type matching the number of words
+
+0xF1345678 0x12345678 0x03263827 0x86753099
+0xF2345678,0x12345678,0x86754321, 0x86753099
+0xF3345678|0x12345678|       0x86754321|0x86753099
+
+0x21345678
+0x42345678 0x12341234
+0x43345677 0x12341235
+0x44345676 0x12341236
+0x45345675 0x12341237
+0x26989898
+
+# The next two lines have different hex formatting
+
+41345678h 12341234h
+22989898h
+F3345678h 12345678h 86754321h 86753099h
+
+
+# The next lines have no hex formatting
+
+41345678 12341234
+22989898
+
+# The next lines have inconsistent hex formatting
+
+41345678 12341234
+0xF2345678 12345678h 86754321 0x86753099
+
+
+
+
+# bunch of empty lines above. And the file ends with a comment

@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.3" />
-    <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.1-0035" />
+    <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.1-0036" />
   </ItemGroup>
 
 </Project>

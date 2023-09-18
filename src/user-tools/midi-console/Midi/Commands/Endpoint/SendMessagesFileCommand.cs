@@ -247,7 +247,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                     }
 
                                     // send the message
-                                    connection.SendUmpWordArray(timestamp, words, (UInt32)words.Count());
+                                    connection.SendUmpWordArray(timestamp, words, 0, (byte)words.Count());
 
                                     // display the sent data
                                     table.AddRow(

@@ -54,6 +54,10 @@ Windows.Devices.Midi2.MidiEndpointInformationConfigurator | 0 | 0 | 0
 Windows.Devices.Midi2.MidiFunctionBlockEndpointListener | 0 | 0 | 0
 Windows.Devices.Midi2.MidiStreamConfigurationEndpointListener | 0 | 0 | 0
 
+# Virtual Device Message Processing Plugins
+
+Windows.Devices.Midi2.MidiVirtualDeviceResponder | 0 | 0 | 0
+
 # Events
 
 Windows.Devices.Midi2.MidiMessageReceivedEventArgs | 0 | 0 | 0

@@ -162,7 +162,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         for (uint i = 0; i < settings.Count; i++)
                         {
                             UInt64 timestamp = MidiClock.GetMidiTimestamp();
-                            connection.SendUmpWordArray(timestamp, settings.Words, (UInt32)settings.Words.Count());
+                            connection.SendUmpWordArray(timestamp, settings.Words, 0, (byte)settings.Words.Count());
 
                             table.AddRow(
                                 AnsiMarkupFormatter.FormatTimestamp(timestamp), 
