@@ -138,7 +138,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint16_t const index,
         uint32_t const data) noexcept
     {
-        return MidiUmp64(
+        return midi2::MidiUmp64(
             timestamp,
             (uint32_t)(
                 0x4 << 28 |
@@ -171,7 +171,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint8_t const dataByte12) noexcept
     {
 
-        return MidiUmp128(
+        return midi2::MidiUmp128(
             timestamp,
             (uint32_t)(
                 0x5 << 28 |
@@ -288,7 +288,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint32_t const word2Data,
         uint32_t const word3Data)
     {
-        return MidiUmp128(
+        return midi2::MidiUmp128(
             timestamp,
             (uint32_t)(
                 0xD << 28 |
@@ -314,7 +314,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint32_t const word2Data,
         uint32_t const word3Data) noexcept
     {       
-        return MidiUmp128(
+        return midi2::MidiUmp128(
             timestamp, 
             (uint32_t)(
                 0xF << 28 |

@@ -35,3 +35,24 @@ TEST_CASE("Connected.Session.CreateSession Create new session")
 
     session.Close();
 }
+
+
+TEST_CASE("Connected.Session.CreateSessionSettings Create new session with settings")
+{
+    winrt::hstring sessionName = L"Test Session Name";
+    MidiSessionSettings settings;
+    settings.UseMmcssThreads(true);
+
+
+    auto session = MidiSession::CreateSession(sessionName, settings);
+
+    REQUIRE((bool)(session != nullptr));
+
+    REQUIRE((bool)(session.IsOpen()));
+
+    REQUIRE((bool)(session.Name() == sessionName));
+
+    REQUIRE((bool)(session.Connections().Size() == 0));
+
+    session.Close();
+}
