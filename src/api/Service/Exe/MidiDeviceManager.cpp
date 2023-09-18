@@ -11,7 +11,7 @@ CMidiDeviceManager::Initialize(std::shared_ptr<CMidiPerformanceManager>& Perform
     // other registration mechanism, like a saved configuration?
     availableAbstractionLayers.push_back(__uuidof(Midi2KSAbstraction));
 
-    availableAbstractionLayers.push_back(__uuidof(Midi2SimpleLoopbackAbstraction));
+    availableAbstractionLayers.push_back(__uuidof(Midi2DiagnosticsAbstraction));
     // availableAbstractionLayers.push_back(__uuidof(Midi2NetworkMidiAbstraction));
     // availableAbstractionLayers.push_back(__uuidof(Midi2VirtualMidiAbstraction));
 
