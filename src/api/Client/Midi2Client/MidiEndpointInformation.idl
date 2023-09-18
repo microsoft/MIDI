@@ -26,7 +26,6 @@ namespace Windows.Devices.Midi2
 
         UInt8 UmpVersionMajor{ get; };
         UInt8 UmpVersionMinor{ get; };
-        String UmpVersionString{ get; };
 
         Boolean HasStaticFunctionBlocks{ get; };
         UInt8 FunctionBlockCount{ get; };

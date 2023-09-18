@@ -1,0 +1,34 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+import "MidiGlobalInformationCacheUpdatedEventArgs.idl";
+
+namespace Windows.Devices.Midi2
+{
+    [MIDI_API_CONTRACT(1)]
+    [default_interface]
+    runtimeclass MidiGlobalCache
+    {
+        // for this local cache implementation, the expiration is only checked when you attempt to get the data
+        // or you check to see if the data is present. When the back-end moves to a service, we may handle that
+        // with some sort of watcher if the expiration time is critical to track
+
+        void AddOrUpdateData(String key, String data, Windows.Foundation.DateTime expirationTime);
+        void AddOrUpdateData(String key, String data);
+
+        void RemoveData(String key);
+        String GetData(String key);
+        Boolean IsDataPresent(String key);
+
+        event Windows.Foundation.TypedEventHandler<IInspectable, MidiGlobalInformationCacheUpdatedEventArgs> GlobalInformationUpdated;
+
+    }
+}

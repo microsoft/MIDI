@@ -13,34 +13,54 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::MidiGroup> MidiGroupEndpointListener::IncludeGroups()
-    {
-        throw hresult_not_implemented();
-    }
 
+    _Use_decl_annotations_
     void MidiGroupEndpointListener::Initialize()
-    {
-        throw hresult_not_implemented();
+    {        
     }
+
+    _Use_decl_annotations_
+    void MidiGroupEndpointListener::OnEndpointConnectionOpened()
+    {        
+    }
+
+    _Use_decl_annotations_
     void MidiGroupEndpointListener::Cleanup()
-    {
-        throw hresult_not_implemented();
+    {        
     }
 
+    _Use_decl_annotations_
     void MidiGroupEndpointListener::ProcessIncomingMessage(
-        _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs const& /*args*/,
-        _Out_ bool& skipFurtherListeners, 
-        _Out_ bool& skipMainMessageReceivedEvent)
+        midi2::MidiMessageReceivedEventArgs const& args,
+        bool& skipFurtherListeners, 
+        bool& skipMainMessageReceivedEvent)
     {
+        skipFurtherListeners = m_preventCallingFurtherListeners;
+        skipMainMessageReceivedEvent = m_preventFiringMainMessageReceivedEvent;
 
-        skipFurtherListeners = false;
-        skipMainMessageReceivedEvent = false;
+        if (internal::MessageTypeHasChannelField((uint8_t)args.UmpMessageType()))
+        {
+            uint32_t word0 = args.InspectFirstWord();
 
-        throw hresult_not_implemented();
-    }
-    winrt::Windows::Foundation::IAsyncAction MidiGroupEndpointListener::ProcessIncomingMessageAsync(
-        _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs /*args*/)
-    {
-        throw hresult_not_implemented();
+            uint8_t messageGroup = internal::GetGroupIndexFromFirstWord(word0);
+
+            // check the channel against our list of channels
+            for (auto const& group : m_includedGroups)
+            {
+                if (group.Index() == messageGroup)
+                {
+                    // found it. Fire off the event and leave
+                    // events are synchronous, so the chain of calls here needs to be short
+
+                    if (m_messageReceivedEvent)
+                    {
+                        m_messageReceivedEvent(m_inputConnection, args);
+                    }
+
+                    break;
+                }
+            }
+
+        }
     }
 }

@@ -25,10 +25,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     bool MidiVirtualDeviceManager::CreateDevice(
-        hstring const& /*name*/,
+        winrt::hstring const& /*name*/,
         bool /*exclusive*/,
-        winrt::Windows::Foundation::IInspectable const& /*tag*/,
-        hstring& /*createdDeviceId*/
+        foundation::IInspectable const& /*tag*/,
+        winrt::hstring& /*createdDeviceId*/
     )
     {
         // this is just a test
@@ -39,13 +39,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     bool MidiVirtualDeviceManager::CreateEndpoint(
-        hstring const& /*parentDeviceId*/,
-        hstring const& /*name*/,
+        winrt::hstring const& /*parentDeviceId*/,
+        winrt::hstring const& /*name*/,
         winrt::Windows::Devices::Midi2::MidiEndpointType const& /*endpointType*/,
         bool /*exclusive*/,
-        winrt::Windows::Devices::Midi2::MidiProtocol const& /*protocol*/,
-        winrt::Windows::Foundation::IInspectable const& /*tag*/,
-        hstring& /*createdEndpointId*/
+        midi2::MidiProtocol const& /*protocol*/,
+        foundation::IInspectable const& /*tag*/,
+        winrt::hstring& /*createdEndpointId*/
     )
     {
         throw hresult_not_implemented();
@@ -53,7 +53,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     bool MidiVirtualDeviceManager::DeleteDeviceAndEndpoints(
-        hstring const& /*deviceId*/
+        winrt::hstring const& /*deviceId*/
     )
     {
         throw hresult_not_implemented();
@@ -61,7 +61,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     bool MidiVirtualDeviceManager::DeleteEndpoint(
-        hstring const& /*endpointId*/
+        winrt::hstring const& /*endpointId*/
     )
     {
         throw hresult_not_implemented();
@@ -69,8 +69,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     bool MidiVirtualDeviceManager::RouteConnectEndpoints(
-        hstring const& /*outputEndpointId*/,
-        hstring const& /*inputEndpointId*/
+        winrt::hstring const& /*outputEndpointId*/,
+        winrt::hstring const& /*inputEndpointId*/
     )
     {
         throw hresult_not_implemented();

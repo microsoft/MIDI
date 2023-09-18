@@ -11,7 +11,6 @@
 
 #include "catch_amalgamated.hpp"
 
-#include <iostream>
 #include <algorithm>
 
 //using namespace winrt;

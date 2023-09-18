@@ -28,7 +28,10 @@
 
 #include "MidiAbstraction.h"
 
-#include "Midi2SimpleLoopbackAbstraction.h"
+
+#include "Midi2DiagnosticsAbstraction_i.c"
+#include "Midi2DiagnosticsAbstraction.h"
+
 #include "Midi2NetworkMidiAbstraction.h"
 #include "Midi2VirtualMidiAbstraction.h"
 #include "Midi2KSAbstraction.h"
@@ -61,6 +64,5 @@ class CMidiDevicePipe;
 #include "MidiClientManager.h"
 
 #include "MidiSrv.h"
-
 
 

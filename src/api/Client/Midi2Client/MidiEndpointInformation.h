@@ -16,17 +16,31 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiEndpointInformation() = default;
 
-        hstring Name();
-        hstring ProductInstanceId();
-        uint8_t UmpVersionMajor();
-        uint8_t UmpVersionMinor();
-        hstring UmpVersionString();
-        bool HasStaticFunctionBlocks();
-        uint8_t FunctionBlockCount();
-        bool SupportsMidi10Protocol();
-        bool SupportsMidi20Protocol();
-        bool SupportsReceivingJRTimestamps();
-        bool SupportsSendingJRTimestamps();
+        winrt::hstring Name() const noexcept { return m_name; }
+        winrt::hstring ProductInstanceId() const noexcept { return m_productInstanceId; }
+        uint8_t UmpVersionMajor() const noexcept { return m_umpVersionMajor; }
+        uint8_t UmpVersionMinor() const noexcept { return m_umpVersionMinor; }
+        bool HasStaticFunctionBlocks() const noexcept { return m_hasStaticFunctionBlocks; }
+        uint8_t FunctionBlockCount() const noexcept { return m_functionBlockCount; }
+        bool SupportsMidi10Protocol() const noexcept { return m_supportsMidi10Protocol; }
+        bool SupportsMidi20Protocol() const noexcept { return m_supportsMidi20Protocol; }
+        bool SupportsReceivingJRTimestamps() const noexcept { return m_supportsReceivingJRTimestamps; }
+        bool SupportsSendingJRTimestamps() const noexcept { return m_supportsSendingJRTimestamps; }
+
+        // TODO: Internal functions to set this from the cache
+
+    private:
+        winrt::hstring m_name{};
+        winrt::hstring m_productInstanceId;
+        uint8_t m_umpVersionMajor;
+        uint8_t m_umpVersionMinor;
+        bool m_hasStaticFunctionBlocks;
+        uint8_t m_functionBlockCount;
+        bool m_supportsMidi10Protocol;
+        bool m_supportsMidi20Protocol;
+        bool m_supportsReceivingJRTimestamps;
+        bool m_supportsSendingJRTimestamps;
+
     };
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation

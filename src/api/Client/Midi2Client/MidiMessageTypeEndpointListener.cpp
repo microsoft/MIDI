@@ -12,33 +12,45 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::MidiUmpMessageType> MidiMessageTypeEndpointListener::IncludeMessageTypes()
-    {
-        throw hresult_not_implemented();
-    }
 
+    _Use_decl_annotations_
     void MidiMessageTypeEndpointListener::Initialize()
-    {
-        throw hresult_not_implemented();
-    }
-    void MidiMessageTypeEndpointListener::ProcessIncomingMessage(
-        _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs const& /*args*/,
-        _Out_ bool& skipFurtherListeners, 
-        _Out_ bool& skipMainMessageReceivedEvent)
-    {
-        skipFurtherListeners = false;
-        skipMainMessageReceivedEvent = false;
-
-        throw hresult_not_implemented();
-    }
-    winrt::Windows::Foundation::IAsyncAction MidiMessageTypeEndpointListener::ProcessIncomingMessageAsync(
-        _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs /*args*/)
-    {
-        throw hresult_not_implemented();
+    {       
     }
 
+    _Use_decl_annotations_
+    void MidiMessageTypeEndpointListener::OnEndpointConnectionOpened()
+    {
+    }
+
+    _Use_decl_annotations_
     void MidiMessageTypeEndpointListener::Cleanup()
     {
-        throw hresult_not_implemented();
     }
+
+    _Use_decl_annotations_
+    void MidiMessageTypeEndpointListener::ProcessIncomingMessage(
+        winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs const& args,
+        bool& skipFurtherListeners, 
+        bool& skipMainMessageReceivedEvent)
+    {
+        skipFurtherListeners = m_preventCallingFurtherListeners;
+        skipMainMessageReceivedEvent = m_preventFiringMainMessageReceivedEvent;
+
+        auto messageMessageType = args.UmpMessageType();
+
+        for (auto const& messageType : m_includedMessageTypes)
+        {
+            if (messageMessageType == messageType)
+            {
+                if (m_messageReceivedEvent)
+                {
+                    m_messageReceivedEvent(m_inputConnection, args);
+                }
+
+                break;
+            }
+        }
+    }
+
 }

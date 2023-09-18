@@ -18,12 +18,25 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
     {
         public sealed class Settings : CommandSettings
         {
+            [LocalizedDescription("ParameterDiagnosticsReportOutputFile")]
+            [CommandArgument(0, "<Output File>")]
+            public string? OutputFile { get; set; }
+        }
 
+        public override ValidationResult Validate(CommandContext context, Settings settings)
+        {
+            // we won't overwrite existing files. Intent is to prevent misuse of this app
+            if (System.IO.File.Exists(settings.OutputFile))
+            {
+                return ValidationResult.Error($"File already exists {settings.OutputFile}. Please choose a different name.");
+            }
+
+            return base.Validate(context, settings);
         }
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            // TODO: This code should be moved to the SDK (as C++) so the UI can use it
+            // TODO: This code should be moved to the SDK (as C++) so the UI and apps can use it
             // Either that, or just share an assembly
 
             // Keep private information out, so no machine names, IP addresses, user names, etc.

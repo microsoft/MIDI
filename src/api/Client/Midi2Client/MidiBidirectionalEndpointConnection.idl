@@ -16,40 +16,28 @@ MIDI_IDL_IMPORT
 
 import "IMidiInputConnection.idl";
 import "IMidiOutputConnection.idl";
-import "IMidiEndpointMessageListener.idl";
 import "IMidiMessageReceivedEventSource.idl";
-
-import "MidiFunctionBlock.idl";
-import "MidiEndpointInformation.idl";
-
 import "IMidiEndpointConnection.idl";
+
+import "IMidiFunctionBlockDevice.idl";
+import "IMidiEndpointInformationDevice.idl";
 
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [default_interface]
-    runtimeclass MidiBidirectionalEndpointConnection : 
+    runtimeclass MidiBidirectionalEndpointConnection : Windows.Devices.Midi2.IMidiEndpointConnection,
                                                        Windows.Devices.Midi2.IMidiInputConnection,
                                                        Windows.Devices.Midi2.IMidiMessageReceivedEventSource,
                                                        Windows.Devices.Midi2.IMidiOutputConnection,
-                                                       Windows.Devices.Midi2.IMidiEndpointConnection
-    {
-        //MidiEndpointConnection();
+                                                       Windows.Devices.Midi2.IMidiFunctionBlockDevice,
+                                                       Windows.Devices.Midi2.IMidiEndpointInformationDevice,
+                                                       Windows.Foundation.IClosable
 
+
+    {
         // Get the enumeration device selector for all compatible devices
         static String GetDeviceSelector();
-        //static String GetDeviceSelectorForLoopbackEndpoint();
 
-        IVector<IMidiEndpointMessageListener> MessageListeners{ get; };
-
-        //IVectorView<MidiFunctionBlock> FunctionBlocks{ get; };
-        //MidiEndpointInformation EndpointInformation{ get; };
-
-        //event Windows.Foundation.TypedEventHandler<IInspectable, MidiFunctionBlocksUpdatedEventArgs> FunctionBlocksUpdated;
-        //event Windows.Foundation.TypedEventHandler<IInspectable, MidiEndpointInformationUpdatedEventArgs> EndpointInformationUpdated;
-
-        // Same thing with other discovery calls, endpoint info, etc.
-
-        //Boolean Open();
     }
 }

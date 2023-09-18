@@ -1,41 +1,104 @@
-﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal">
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" 
+     xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"
+     xmlns:netfx="http://wixtoolset.org/schemas/v4/wxs/netfx"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util"
+     >
+
+    <?define DependenciesSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\dependencies ?>
 
     <!-- TODO: Gate on Arm64 or x64. No x86 installation -->
 
+    
     <!-- TODO: Gate on Windows 10 22H2 or later -->
 
-    <Bundle Name="Windows MIDI Services (Preview)" 
+    <Bundle Name="Microsoft Windows MIDI Services (Developer Preview 1)" 
           Manufacturer="Microsoft Corporation" 
           Version="1.0.0.0" 
           UpgradeCode="ecfae6e7-7186-4f41-b9d2-df17ba86c69f">
-        
+
+        <WixVariable Id="WixUIDialogBmp" Value="midi_installer_logo.bmp" />
+
+        <!-- These references are required so the searches aren't optimized out of the bundle -->
+        <util:RegistrySearchRef Id="SearchForVCRuntime" />
+        <netfx:DotNetCoreSearchRef Id="SearchForDotNet8" />
+
         <BootstrapperApplication>
-            <bal:WixStandardBootstrapperApplication LicenseUrl="https://github.com/microsoft/midi/LICENSE" Theme="hyperlinkLicense" />
+            <bal:WixStandardBootstrapperApplication LicenseUrl="https://github.com/microsoft/MIDI/blob/main/LICENSE" 
+                                                    Theme="hyperlinkLicense" 
+                                                    LogoFile="midi_installer_logo_square.png"/>
+
+        
         </BootstrapperApplication>
 
         <Chain>
-            <PackageGroupRef Id="PrereqPackages" />
+            <PackageGroupRef Id="Prerequisites" />
             <PackageGroupRef Id="MidiServicesPackages" />
         </Chain>
     </Bundle>
 
     
     <Fragment>
+
+        <!-- Check for Installed = 1-->
+        <util:RegistrySearch
+            Id="SearchForVCRuntime"
+            Variable="VCRuntimeInstalled"
+            Root="HKLM"
+            Key="SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\X64"
+            Value="Installed"
+            Result="exists"/>
+
+        <!-- Apps use .NET Core 8 -->
+        <netfx:DotNetCoreSearch
+            Id="SearchForDotNet8"
+            RuntimeType="desktop"
+            Platform="x64"
+            MajorVersion="8"
+            Variable="DotNetDesktopRuntimeVersion"
+            />
+
+        <!--<bal:Condition Message="VC Runtime not found." Condition="VCRuntimeInstalled" /> -->
+        <!-- <bal:Condition Message=".NET 8 Version not found." Condition="DotNetDesktopRuntimeVersion" /> -->
+
+        <PackageGroup Id="Prerequisites">
+            <!-- Installer custom action uses .NET 4.8. WiX doesn't support .NET non-fx -->
+            <PackageGroupRef Id="NetFx48RedistAsPrereq" />
+
+            <!-- C++ Runtime. The x64 download contains both Arm64 and X64 versions -->
+            
+            <!-- TODO: Add /quiet to both of these -->
+            
+            <ExePackage
+                DisplayName="Microsoft Visual C++ Runtime"
+                SourceFile="$(DependenciesSourceRootFolder)\vc_redist.x64.exe"
+                Compressed="yes"
+                DetectCondition="VCRuntimeInstalled"
+                InstallArguments="/install /passive /norestart /log midi_vcruntime_install_log.txt" 
+                UninstallArguments="/uninstall /passive /norestart /quiet"
+                >
+            </ExePackage>
+
+            <!-- .NET 8, latest preview as used by this installer and the projects -->
+            <ExePackage 
+                DisplayName="Microsoft .NET 8 Preview Desktop Runtime"
+                SourceFile="$(DependenciesSourceRootFolder)\dotnet8-windowsdesktop-runtime-latest-win-x64.exe"
+                Compressed="yes"
+                DetectCondition="DotNetDesktopRuntimeVersion &gt;= v8.0.0"
+                InstallArguments="/install /passive /norestart /log midi_dotnet8_install_log.txt"
+                UninstallArguments="/uninstall /passive /norestart /quiet"
+                />
+            
+        </PackageGroup>
+        
         <PackageGroup Id="MidiServicesPackages">
             <MsiPackage
                 Id="MidiServicesCoreSetup"
                 Vital="yes"
                 Permanent="no"
                 Compressed="yes"
-                SourceFile="WindowsMIDIServicesCoreSetup.msi" />
-
-            <MsiPackage
-                Id="MidiToolsSetup"
-                Vital="yes"
-                Permanent="no"
-                Compressed="yes"
-                SourceFile="WindowsMidiServicesTools.msi" />
-
+                SourceFile="WindowsMIDIServicesCoreSetup.msi">
+            </MsiPackage>
         </PackageGroup>
+        
     </Fragment>
 </Wix>

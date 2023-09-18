@@ -15,7 +15,6 @@
 
 #include "catch_amalgamated.hpp"
 
-#include <iostream>
 #include <algorithm>
 #include <Windows.h>
 
@@ -28,53 +27,44 @@ using namespace winrt::Windows::Devices::Midi2;
 
 TEST_CASE("Connected.Endpoint.CreateOutput Create output endpoint")
 {
-    auto settings = MidiSessionSettings::Default();
-    auto session = MidiSession::CreateSession(L"Test Session Name", settings);
+    auto session = MidiSession::CreateSession(L"Test Session Name");
 
     REQUIRE((bool)(session.IsOpen()));
 
     REQUIRE((bool)(session.Connections().Size() == 0));
 
-    std::cout << "Connecting to Endpoint" << std::endl;
+    std::cout << "Connecting to Loopback Out Endpoint" << std::endl;
 
     auto conn1 = session.ConnectOutputEndpoint(LOOPBACK_OUT_ID, nullptr);
 
     REQUIRE(conn1 != nullptr);
-    REQUIRE(!conn1.Id().empty());
 
     REQUIRE(conn1.Open());
     REQUIRE(conn1.IsOpen());
 
     REQUIRE(session.Connections().Size() == 1);
 
-    std::cout << "Endpoint Id: " << winrt::to_string(conn1.Id()) << std::endl;
-    std::cout << "Device Id: " << winrt::to_string(conn1.DeviceId()) << std::endl;
 }
 
 
 TEST_CASE("Connected.Endpoint.CreateInput Create input endpoint")
 {
-    auto settings = MidiSessionSettings::Default();
-    auto session = MidiSession::CreateSession(L"Test Session Name", settings);
+    auto session = MidiSession::CreateSession(L"Test Session Name");
 
     REQUIRE((bool)(session.IsOpen()));
 
     REQUIRE((bool)(session.Connections().Size() == 0));
 
-    std::cout << "Connecting to Endpoint" << std::endl;
+    std::cout << "Connecting to Loopback In Endpoint" << std::endl;
 
     auto conn1 = session.ConnectInputEndpoint(LOOPBACK_IN_ID, nullptr);
 
     REQUIRE(conn1 != nullptr);
-    REQUIRE(!conn1.Id().empty());
 
     REQUIRE(conn1.Open());
     REQUIRE(conn1.IsOpen());
 
     REQUIRE(session.Connections().Size() == 1);
-
-    std::cout << "Endpoint Id: " << winrt::to_string(conn1.Id()) << std::endl;
-    std::cout << "Device Id: " << winrt::to_string(conn1.DeviceId()) << std::endl;
 }
 
 
@@ -84,17 +74,16 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message th
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
-    auto settings = MidiSessionSettings::Default();
-    auto session = MidiSession::CreateSession(L"Test Session Name", settings);
+    auto session = MidiSession::CreateSession(L"Test Session Name");
 
     REQUIRE((bool)(session.IsOpen()));
     REQUIRE((bool)(session.Connections().Size() == 0));
 
-    std::cout << std::endl << "Connecting to Output Endpoint" << std::endl;
+    std::cout << std::endl << "Connecting to Output Endpoint for loopback test" << std::endl;
     auto connOut = session.ConnectOutputEndpoint(LOOPBACK_OUT_ID, nullptr);
     REQUIRE((bool)(connOut != nullptr));
 
-    std::cout << std::endl << "Connecting to Input Endpoint" << std::endl;
+    std::cout << std::endl << "Connecting to Input Endpoint for loopback test" << std::endl;
     auto connIn = session.ConnectInputEndpoint(LOOPBACK_IN_ID, nullptr);
     REQUIRE((bool)(connIn != nullptr));
 
@@ -164,9 +153,6 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message th
 
     connOut.SendUmp(sentUmp);
 
-
-    // Wait for incoming message
-
     // Wait for incoming message
     if (!allMessagesReceived.wait(3000))
     {
@@ -179,8 +165,8 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message th
     connIn.MessageReceived(eventRevokeToken);
 
     // cleanup endpoint. Technically not required as session will do it
-    session.DisconnectEndpointConnection(connOut.Id());
-    session.DisconnectEndpointConnection(connIn.Id());
+    session.DisconnectEndpointConnection(connOut.ConnectionId());
+    session.DisconnectEndpointConnection(connIn.ConnectionId());
 }
 
 

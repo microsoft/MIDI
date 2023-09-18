@@ -9,14 +9,17 @@
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
+// This listener captures any Function Block information messages and updates the
+// device cache with the information they contain
 
+import "IMidiEndpointMessageProcessingPlugin.idl";
 import "IMidiEndpointMessageListener.idl";
 
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [default_interface]
-    runtimeclass MidiFunctionBlockEndpointListener : IMidiEndpointMessageListener
+    runtimeclass MidiFunctionBlockEndpointListener : IMidiEndpointMessageProcessingPlugin, IMidiEndpointMessageListener
     {
         MidiFunctionBlockEndpointListener();
 

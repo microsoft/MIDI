@@ -12,9 +12,7 @@
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-import "MidiMessageReceivedEventArgs.idl";
 import "IMidiOutputConnection.idl";
-import "IMidiEndpointMessageListener.idl";
 
 namespace Windows.Devices.Midi2
 {

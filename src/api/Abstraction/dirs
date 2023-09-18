@@ -2,7 +2,6 @@ DIRS=\
     SampleAbstraction \
     KSAbstraction \
     MidiSrvAbstraction \
-    SimpleLoopbackAbstraction \
-    VirtualMidiAbstraction \
+    DiagnosticsAbstraction \
     NetworkMidiAbstraction \
-
+    VirtualMidiAbstraction \

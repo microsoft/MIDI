@@ -22,12 +22,6 @@
     <Filter Include="Internal\ServiceAccess">
       <UniqueIdentifier>{6da56400-6fd6-4457-a605-67182ec178bf}</UniqueIdentifier>
     </Filter>
-    <Filter Include="API\Endpoints\Contracts">
-      <UniqueIdentifier>{d58694e2-8c6b-4d68-9d88-90ea5a468d31}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="API\Utility">
-      <UniqueIdentifier>{b99bb6ef-1d6e-4e3b-9f03-1be7d35b49f5}</UniqueIdentifier>
-    </Filter>
     <Filter Include="API\Endpoints\Connections">
       <UniqueIdentifier>{e57d1b46-4206-4afa-8fd3-adbe3d245aa7}</UniqueIdentifier>
     </Filter>
@@ -49,20 +43,62 @@
     <Filter Include="API\Endpoints\Metadata\Endpoints">
       <UniqueIdentifier>{bce3490a-eb00-4ae7-9e49-6e31e91d70d1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="API\Endpoints\ListenersAndResponders">
-      <UniqueIdentifier>{577d9050-8eb1-416d-9d4f-17cbb58b9b47}</UniqueIdentifier>
-    </Filter>
     <Filter Include="API\Endpoints\Metadata\MUID">
       <UniqueIdentifier>{6629b1ee-8608-477e-9537-9a1f55cb770f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="API\Endpoints\Metadata\GroupTerminals">
-      <UniqueIdentifier>{3c52bf63-efe2-49f8-b72e-67ca9986e46b}</UniqueIdentifier>
     </Filter>
     <Filter Include="API\Endpoints\Connections\Options">
       <UniqueIdentifier>{3c7e0669-3b44-4eb6-803e-308b307a3474}</UniqueIdentifier>
     </Filter>
     <Filter Include="InstallSupport">
       <UniqueIdentifier>{f99f0bd4-c968-4322-a806-90aca0f9e73e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Connections\Interfaces">
+      <UniqueIdentifier>{b8034624-6df4-444b-8fe4-9bb28fe040c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Service">
+      <UniqueIdentifier>{4bae9d9e-c02c-49f6-b4a6-b8d0a1a2551c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Message Processing Plugins">
+      <UniqueIdentifier>{577d9050-8eb1-416d-9d4f-17cbb58b9b47}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Connections\Connection Types">
+      <UniqueIdentifier>{993227f1-9e5a-45f9-a830-bae5f7259b84}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Connections\Internal Implementation">
+      <UniqueIdentifier>{8596e5bc-f234-41b0-85af-9af1707e5088}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Metadata\Group Terminals">
+      <UniqueIdentifier>{3c52bf63-efe2-49f8-b72e-67ca9986e46b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Message Processing Plugins\Interfaces">
+      <UniqueIdentifier>{abf74add-24a7-428a-b6f0-738ae3fadd6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Message Processing Plugins\Stock Plugins">
+      <UniqueIdentifier>{a82088aa-e010-490c-b11d-a2797913bffd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Enumeration">
+      <UniqueIdentifier>{db470d3d-3d8b-43b9-9ceb-8f0791d044c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Metadata\Cache">
+      <UniqueIdentifier>{c81fd3bd-c657-4aa0-a900-0900a71325e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Message Processing Plugins\Stock Plugins\Convenience">
+      <UniqueIdentifier>{0d751466-e71b-4be8-965c-3af418878322}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Message Processing Plugins\Stock Plugins\Infrastructure">
+      <UniqueIdentifier>{20cf4de5-ab97-4c6a-ad6b-85179e69a90c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Messages\Types">
+      <UniqueIdentifier>{d231ff79-8155-4199-bac4-bfca4accd267}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Messages\Utility">
+      <UniqueIdentifier>{8f3d4198-ee96-4a00-bcd1-d22248ce496f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Clock">
+      <UniqueIdentifier>{b99bb6ef-1d6e-4e3b-9f03-1be7d35b49f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Metadata\Cache\Implementation">
+      <UniqueIdentifier>{a8647252-b6ea-4f33-92d6-09200731b429}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -95,9 +131,6 @@
     <ClCompile Include="MidiUmp128.cpp">
       <Filter>API\Messages</Filter>
     </ClCompile>
-    <ClCompile Include="InternalMidiMessageReceiverHelper.cpp">
-      <Filter>Internal\ServiceAccess</Filter>
-    </ClCompile>
     <ClCompile Include="trace_logging.cpp">
       <Filter>Internal\Trace</Filter>
     </ClCompile>
@@ -122,11 +155,6 @@
     <ClCompile Include="MidiEndpointInformation.cpp">
       <Filter>API\Endpoints\Metadata\Endpoints</Filter>
     </ClCompile>
-    <ClCompile Include="MidiCiProxy.cpp">
-      <Filter>API\Endpoints\ListenersAndResponders</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiSettingsService.cpp" />
-    <ClCompile Include="MidiStateService.cpp" />
     <ClCompile Include="MidiUniqueId.cpp">
       <Filter>API\Endpoints\Metadata\MUID</Filter>
     </ClCompile>
@@ -148,6 +176,48 @@
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
     <ClCompile Include="MidiVirtualDeviceManager.cpp">
       <Filter>API\Transports</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiBidirectionalAggregatedEndpointConnection.cpp">
+      <Filter>API\Endpoints\Connections</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiBidirectionalAggregatedEndpointOpenOptions.cpp">
+      <Filter>API\Endpoints\Connections\Options</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiService.cpp">
+      <Filter>API\Service</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiServicePingResponse.cpp">
+      <Filter>API\Service</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiServicePingResponseSummary.cpp">
+      <Filter>API\Service</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiTransportInformation.cpp">
+      <Filter>API\Service</Filter>
+    </ClCompile>
+    <ClCompile Include="InternalMidiConnectionCommon.cpp">
+      <Filter>API\Endpoints\Connections\Internal Implementation</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiUmpUtility.cpp">
+      <Filter>API\Messages</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiDeviceInformationCacheUpdatedEventArgs.cpp">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiGlobalInformationCacheUpdatedEventArgs.cpp">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiDeviceMetadataCache.cpp">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiGlobalCache.cpp">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiFunctionBlocksUpdatedEventArgs.cpp">
+      <Filter>API\Endpoints\Metadata\Functions</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointInformationUpdatedEventArgs.cpp">
+      <Filter>API\Endpoints\Metadata\Endpoints</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -186,12 +256,6 @@
     <ClInclude Include="MidiUmp128.h">
       <Filter>API\Messages</Filter>
     </ClInclude>
-    <ClInclude Include="InternalMidiMessageReceiverHelper.h">
-      <Filter>Internal\ServiceAccess</Filter>
-    </ClInclude>
-    <ClInclude Include="InternalMidiMessageSenderHelper.h">
-      <Filter>Internal\ServiceAccess</Filter>
-    </ClInclude>
     <ClInclude Include="trace_logging.h">
       <Filter>Internal\Trace</Filter>
     </ClInclude>
@@ -223,9 +287,6 @@
       <Filter>API\Endpoints\Metadata\Endpoints</Filter>
     </ClInclude>
     <ClInclude Include="midl_defines.h" />
-    <ClInclude Include="MidiCiProxy.h">
-      <Filter>API\Endpoints\ListenersAndResponders</Filter>
-    </ClInclude>
     <ClInclude Include="MidiUniqueId.h">
       <Filter>API\Endpoints\Metadata\MUID</Filter>
     </ClInclude>
@@ -244,14 +305,65 @@
     <ClInclude Include="MidiOutputEndpointOpenOptions.h">
       <Filter>API\Endpoints\Connections\Options</Filter>
     </ClInclude>
-    <ClInclude Include="MidiSettingsService.h">
-      <Filter>Internal</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiStateService.h">
-      <Filter>Internal</Filter>
-    </ClInclude>
     <ClInclude Include="MidiVirtualDeviceManager.h">
       <Filter>API\Transports</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiBidirectionalAggregatedEndpointConnection.h">
+      <Filter>API\Endpoints\Connections</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiBidirectionalAggregatedEndpointOpenOptions.h">
+      <Filter>API\Endpoints\Connections\Options</Filter>
+    </ClInclude>
+    <ClInclude Include="InternalMidiInputConnection.h">
+      <Filter>API\Endpoints\Connections\Internal Implementation</Filter>
+    </ClInclude>
+    <ClInclude Include="InternalMidiOutputConnection.h">
+      <Filter>API\Endpoints\Connections\Internal Implementation</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiService.h">
+      <Filter>API\Service</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiServicePingResponse.h">
+      <Filter>API\Service</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiServicePingResponseSummary.h">
+      <Filter>API\Service</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiTransportInformation.h">
+      <Filter>API\Service</Filter>
+    </ClInclude>
+    <ClInclude Include="InternalMidiConnectionCommon.h">
+      <Filter>API\Endpoints\Connections\Internal Implementation</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiUmpUtility.h">
+      <Filter>API\Messages</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiDeviceMetadataCache.h">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiDeviceInformationCacheUpdatedEventArgs.h">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiGlobalInformationCacheUpdatedEventArgs.h">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiGlobalCache.h">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
+    </ClInclude>
+    <ClInclude Include="InternalMidiEndpointInformationDevice.h">
+      <Filter>API\Endpoints\Connections\Internal Implementation</Filter>
+    </ClInclude>
+    <ClInclude Include="InternalMidiFunctionBlockDevice.h">
+      <Filter>API\Endpoints\Connections\Internal Implementation</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiFunctionBlocksUpdatedEventArgs.h">
+      <Filter>API\Endpoints\Metadata\Functions</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointInformationUpdatedEventArgs.h">
+      <Filter>API\Endpoints\Metadata\Endpoints</Filter>
+    </ClInclude>
+    <ClInclude Include="InternalMidiCache.h">
+      <Filter>API\Endpoints\Metadata\Cache\Implementation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -264,41 +376,8 @@
     <Midl Include="IMidiTransportSettingsData.idl">
       <Filter>API\Transports</Filter>
     </Midl>
-    <Midl Include="MidiUmp32.idl">
-      <Filter>API\Messages</Filter>
-    </Midl>
-    <Midl Include="MidiUmp64.idl">
-      <Filter>API\Messages</Filter>
-    </Midl>
-    <Midl Include="MidiUmp96.idl">
-      <Filter>API\Messages</Filter>
-    </Midl>
-    <Midl Include="MidiUmp128.idl">
-      <Filter>API\Messages</Filter>
-    </Midl>
-    <Midl Include="IMidiInputConnection.idl">
-      <Filter>API\Endpoints\Contracts</Filter>
-    </Midl>
-    <Midl Include="IMidiOutputConnection.idl">
-      <Filter>API\Endpoints\Contracts</Filter>
-    </Midl>
-    <Midl Include="IMidiEndpointDefinedConnectionSettings.idl">
-      <Filter>API\Endpoints\Contracts</Filter>
-    </Midl>
     <Midl Include="MidiClock.idl">
-      <Filter>API\Utility</Filter>
-    </Midl>
-    <Midl Include="MidiBidirectionalEndpointConnection.idl">
-      <Filter>API\Endpoints\Connections</Filter>
-    </Midl>
-    <Midl Include="MidiInputEndpointConnection.idl">
-      <Filter>API\Endpoints\Connections</Filter>
-    </Midl>
-    <Midl Include="MidiOutputEndpointConnection.idl">
-      <Filter>API\Endpoints\Connections</Filter>
-    </Midl>
-    <Midl Include="IMidiUmp.idl">
-      <Filter>API\Messages</Filter>
+      <Filter>API\Clock</Filter>
     </Midl>
     <Midl Include="MidiUmpMessageTypeEnum.idl">
       <Filter>API\Messages</Filter>
@@ -309,23 +388,11 @@
     <Midl Include="MidiMessageReceivedEventArgs.idl">
       <Filter>API\Endpoints\Events</Filter>
     </Midl>
-    <Midl Include="IMidiMessageReceivedEventSource.idl">
-      <Filter>API\Endpoints\Contracts</Filter>
-    </Midl>
-    <Midl Include="MidiGroupEndpointListener.idl">
-      <Filter>API\Endpoints\ListenersAndResponders</Filter>
-    </Midl>
-    <Midl Include="MidiChannelEndpointListener.idl">
-      <Filter>API\Endpoints\ListenersAndResponders</Filter>
-    </Midl>
     <Midl Include="MidiGroup.idl">
       <Filter>API\BasicTypes</Filter>
     </Midl>
     <Midl Include="MidiChannel.idl">
       <Filter>API\BasicTypes</Filter>
-    </Midl>
-    <Midl Include="MidiMessageTypeEndpointListener.idl">
-      <Filter>API\Endpoints\ListenersAndResponders</Filter>
     </Midl>
     <Midl Include="MidiFunctionBlock.idl">
       <Filter>API\Endpoints\Metadata\Functions</Filter>
@@ -339,41 +406,20 @@
     <Midl Include="MidiEndpointInformation.idl">
       <Filter>API\Endpoints\Metadata\Endpoints</Filter>
     </Midl>
-    <Midl Include="IMidiEndpointMessageListener.idl">
-      <Filter>API\Endpoints\ListenersAndResponders</Filter>
-    </Midl>
-    <Midl Include="IMidiEndpointMessageResponder.idl">
-      <Filter>API\Endpoints\ListenersAndResponders</Filter>
-    </Midl>
-    <Midl Include="MidiCIProxy.idl">
-      <Filter>API\Endpoints\ListenersAndResponders</Filter>
-    </Midl>
     <Midl Include="MidiUniqueId.idl">
       <Filter>API\Endpoints\Metadata\MUID</Filter>
-    </Midl>
-    <Midl Include="MidiMessageBuilder.idl">
-      <Filter>API\Messages</Filter>
     </Midl>
     <Midl Include="MidiSysEx8StatusEnum.idl">
       <Filter>API\Messages</Filter>
     </Midl>
-    <Midl Include="MidiEndpointInformationEndpointListener.idl">
-      <Filter>API\Endpoints\ListenersAndResponders</Filter>
-    </Midl>
-    <Midl Include="MidiStreamConfigurationEndpointListener.idl">
-      <Filter>API\Endpoints\ListenersAndResponders</Filter>
-    </Midl>
-    <Midl Include="MidiFunctionBlockEndpointListener.idl">
-      <Filter>API\Endpoints\ListenersAndResponders</Filter>
-    </Midl>
     <Midl Include="MidiGroupTerminalBlockDirectionEnum.idl">
-      <Filter>API\Endpoints\Metadata\GroupTerminals</Filter>
+      <Filter>API\Endpoints\Metadata\Group Terminals</Filter>
     </Midl>
     <Midl Include="MidiGroupTerminalBlockProtocolEnum.idl">
-      <Filter>API\Endpoints\Metadata\GroupTerminals</Filter>
+      <Filter>API\Endpoints\Metadata\Group Terminals</Filter>
     </Midl>
     <Midl Include="MidiGroupTerminalBlock.idl">
-      <Filter>API\Endpoints\Metadata\GroupTerminals</Filter>
+      <Filter>API\Endpoints\Metadata\Group Terminals</Filter>
     </Midl>
     <Midl Include="MidiBidirectionalEndpointOpenOptions.idl">
       <Filter>API\Endpoints\Connections\Options</Filter>
@@ -405,8 +451,122 @@
     <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl">
       <Filter>API\Messages</Filter>
     </Midl>
+    <Midl Include="MidiBidirectionalAggregatedEndpointOpenOptions.idl">
+      <Filter>API\Endpoints\Connections\Options</Filter>
+    </Midl>
+    <Midl Include="MidiBidirectionalAggregatedEndpointConnection.idl">
+      <Filter>API\Endpoints\Connections\Connection Types</Filter>
+    </Midl>
+    <Midl Include="MidiBidirectionalEndpointConnection.idl">
+      <Filter>API\Endpoints\Connections\Connection Types</Filter>
+    </Midl>
+    <Midl Include="MidiInputEndpointConnection.idl">
+      <Filter>API\Endpoints\Connections\Connection Types</Filter>
+    </Midl>
+    <Midl Include="MidiOutputEndpointConnection.idl">
+      <Filter>API\Endpoints\Connections\Connection Types</Filter>
+    </Midl>
+    <Midl Include="IMidiMessageReceivedEventSource.idl">
+      <Filter>API\Endpoints\Events</Filter>
+    </Midl>
     <Midl Include="IMidiEndpointConnection.idl">
-      <Filter>API\Endpoints\Contracts</Filter>
+      <Filter>API\Endpoints\Connections\Interfaces</Filter>
+    </Midl>
+    <Midl Include="IMidiEndpointDefinedConnectionSettings.idl">
+      <Filter>API\Endpoints\Connections\Interfaces</Filter>
+    </Midl>
+    <Midl Include="IMidiInputConnection.idl">
+      <Filter>API\Endpoints\Connections\Interfaces</Filter>
+    </Midl>
+    <Midl Include="IMidiOutputConnection.idl">
+      <Filter>API\Endpoints\Connections\Interfaces</Filter>
+    </Midl>
+    <Midl Include="MidiService.idl">
+      <Filter>API\Service</Filter>
+    </Midl>
+    <Midl Include="MidiServicePingResponse.idl">
+      <Filter>API\Service</Filter>
+    </Midl>
+    <Midl Include="MidiServicePingResponseSummary.idl">
+      <Filter>API\Service</Filter>
+    </Midl>
+    <Midl Include="MidiTransportInformation.idl">
+      <Filter>API\Service</Filter>
+    </Midl>
+    <Midl Include="IMidiEndpointMessageListener.idl">
+      <Filter>API\Endpoints\Message Processing Plugins\Interfaces</Filter>
+    </Midl>
+    <Midl Include="IMidiEndpointMessageProcessingPlugin.idl">
+      <Filter>API\Endpoints\Message Processing Plugins\Interfaces</Filter>
+    </Midl>
+    <Midl Include="IMidiEndpointMessageResponder.idl">
+      <Filter>API\Endpoints\Message Processing Plugins\Interfaces</Filter>
+    </Midl>
+    <Midl Include="MidiCacheUpdateTypeEnum.idl">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointMetadataCacheUpdatedEventArgs.idl">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
+    </Midl>
+    <Midl Include="MidiGlobalInformationCacheUpdatedEventArgs.idl">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointMetadataCache.idl">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
+    </Midl>
+    <Midl Include="MidiGlobalCache.idl">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
+    </Midl>
+    <Midl Include="MidiChannelEndpointListener.idl">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Convenience</Filter>
+    </Midl>
+    <Midl Include="MidiGroupEndpointListener.idl">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Convenience</Filter>
+    </Midl>
+    <Midl Include="MidiMessageTypeEndpointListener.idl">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Convenience</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointInformationConfigurator.idl">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Infrastructure</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlockEndpointListener.idl">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Infrastructure</Filter>
+    </Midl>
+    <Midl Include="MidiStreamConfigurationEndpointListener.idl">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Infrastructure</Filter>
+    </Midl>
+    <Midl Include="IMidiUmp.idl">
+      <Filter>API\Messages\Types</Filter>
+    </Midl>
+    <Midl Include="MidiUmp32.idl">
+      <Filter>API\Messages\Types</Filter>
+    </Midl>
+    <Midl Include="MidiUmp64.idl">
+      <Filter>API\Messages\Types</Filter>
+    </Midl>
+    <Midl Include="MidiUmp96.idl">
+      <Filter>API\Messages\Types</Filter>
+    </Midl>
+    <Midl Include="MidiUmp128.idl">
+      <Filter>API\Messages\Types</Filter>
+    </Midl>
+    <Midl Include="MidiUmpUtility.idl">
+      <Filter>API\Messages\Utility</Filter>
+    </Midl>
+    <Midl Include="MidiMessageBuilder.idl">
+      <Filter>API\Messages\Utility</Filter>
+    </Midl>
+    <Midl Include="IMidiFunctionBlockDevice.idl">
+      <Filter>API\Endpoints\Metadata\Functions</Filter>
+    </Midl>
+    <Midl Include="IMidiEndpointInformationDevice.idl">
+      <Filter>API\Endpoints\Metadata\Endpoints</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlocksUpdatedEventArgs.idl">
+      <Filter>API\Endpoints\Metadata\Functions</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointInformationUpdatedEventArgs.idl">
+      <Filter>API\Endpoints\Metadata\Endpoints</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
@@ -417,6 +577,11 @@
     <None Include="PropertySheet.props" />
   </ItemGroup>
   <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
   </ItemGroup>
   <ItemGroup>

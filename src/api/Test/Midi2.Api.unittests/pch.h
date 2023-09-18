@@ -5,3 +5,5 @@
 #include <winrt/Windows.Devices.Midi2.h>
 
 #include "loopback_ids.h"
+
+#include <iostream>

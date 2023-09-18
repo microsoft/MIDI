@@ -13,46 +13,78 @@ Windows.Devices.Midi2.MidiVirtualDeviceManager | 0 | 0 | 0
 
 # Messages
 
-Windows.Devices.Midi2.MidiMessageBuilder | 0 | 0 | 0
 Windows.Devices.Midi2.MidiUmp32 | 0 | 0 | 0
 Windows.Devices.Midi2.MidiUmp64 | 0 | 0 | 0
 Windows.Devices.Midi2.MidiUmp96 | 0 | 0 | 0
 Windows.Devices.Midi2.MidiUmp128 | 0 | 0 | 0
 
+Windows.Devices.Midi2.MidiMessageBuilder | 0 | 0 | 0
+Windows.Devices.Midi2.IMidiMessageBuilderStatics | 0 | 0 | 0
+
+Windows.Devices.Midi2.MidiUmpUtility | 0 | 0 | 0
+Windows.Devices.Midi2.IMidiUmpUtilityStatics | 0 | 0 | 0
+
 # Metadata
 
+Windows.Devices.Midi2.MidiGlobalCache | 0 | 0 | 0
+Windows.Devices.Midi2.MidiGlobalInformationUpdatedEventArgs | 0 | 0 | 0
+
+Windows.Devices.Midi2.MidiEndpointMetadataCache | 0 | 0 | 0
+Windows.Devices.Midi2.MidiEndpointMetadataCacheUpdatedEventArgs | 0 | 0 | 0
+
+Windows.Devices.Midi2.MidiEndpointInformationUpdatedEventArgs | 0 | 0 | 0
 Windows.Devices.Midi2.MidiEndpointInformation | 0 | 0 | 0
+
+Windows.Devices.Midi2.MidiFunctionBlocksUpdatedEventArgs | 0 | 0 | 0
 Windows.Devices.Midi2.MidiFunctionBlock | 0 | 0 | 0
+
 Windows.Devices.Midi2.MidiUniqueId | 0 | 0 | 0
+
 Windows.Devices.Midi2.MidiGroupTerminalBlock | 0 | 0 | 0
 
-# Listeners and Responders
+# Convenience Message Processing Plugins
 
 Windows.Devices.Midi2.MidiChannelEndpointListener | 0 | 0 | 0
-Windows.Devices.Midi2.MidiEndpointInformationEndpointListener | 0 | 0 | 0
-Windows.Devices.Midi2.MidiFunctionBlockEndpointListener | 0 | 0 | 0
 Windows.Devices.Midi2.MidiGroupEndpointListener | 0 | 0 | 0
 Windows.Devices.Midi2.MidiMessageTypeEndpointListener | 0 | 0 | 0
+
+# Infrastructure Message Processing Plugins
+
+Windows.Devices.Midi2.MidiEndpointInformationConfigurator | 0 | 0 | 0
+Windows.Devices.Midi2.MidiFunctionBlockEndpointListener | 0 | 0 | 0
 Windows.Devices.Midi2.MidiStreamConfigurationEndpointListener | 0 | 0 | 0
 
 # Events
 
 Windows.Devices.Midi2.MidiMessageReceivedEventArgs | 0 | 0 | 0
 
-
 # Endpoint Connections
 
+Windows.Devices.Midi2.MidiBidirectionalAggregatedEndpointConnection | 0 | 0 | 0
 Windows.Devices.Midi2.MidiBidirectionalEndpointConnection | 0 | 0 | 0
 Windows.Devices.Midi2.MidiInputEndpointConnection | 0 | 0 | 0
 Windows.Devices.Midi2.MidiOutputEndpointConnection | 0 | 0 | 0
 
 # Endpoint Open Options
 
+Windows.Devices.Midi2.MidiBidirectionalAggregatedEndpointOpenOptions | 0 | 0 | 0
 Windows.Devices.Midi2.MidiBidirectionalEndpointOpenOptions | 0 | 0 | 0
 Windows.Devices.Midi2.MidiInputEndpointOpenOptions | 0 | 0 | 0
 Windows.Devices.Midi2.MidiOutputEndpointOpenOptions | 0 | 0 | 0
 
+# Service
+
+Windows.Devices.Midi2.MidiService | 0 | 0 | 0
+Windows.Devices.Midi2.IMidiServiceStatics | 0 | 0 | 0
+
+# Clock
+
+Windows.Devices.Midi2.MidiClock | 0 | 0 | 0
+Windows.Devices.Midi2.IMidiClockStatics | 0 | 0 | 0
+
 # Basic Types
 
 Windows.Devices.Midi2.MidiChannel | 0 | 0 | 0
+Windows.Devices.Midi2.IMidiChannelStatics | 0 | 0 | 0
 Windows.Devices.Midi2.MidiGroup | 0 | 0 | 0
+Windows.Devices.Midi2.IMidiGroupStatics | 0 | 0 | 0

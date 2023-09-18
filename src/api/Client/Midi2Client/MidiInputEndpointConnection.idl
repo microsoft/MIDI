@@ -15,6 +15,8 @@ MIDI_IDL_IMPORT
 import "IMidiInputConnection.idl";
 import "IMidiMessageReceivedEventSource.idl";
 
+import "IMidiEndpointMessageProcessingPlugin.idl";
+
 import "IMidiEndpointConnection.idl";
 
 
@@ -23,18 +25,16 @@ namespace Windows.Devices.Midi2
     [MIDI_API_CONTRACT(1)]
     [default_interface]
     runtimeclass MidiInputEndpointConnection :  
+                                               Windows.Devices.Midi2.IMidiEndpointConnection,
                                                Windows.Devices.Midi2.IMidiInputConnection,
                                                Windows.Devices.Midi2.IMidiMessageReceivedEventSource,
-                                               Windows.Devices.Midi2.IMidiEndpointConnection
+                                               Windows.Foundation.IClosable
+
 
     {
         // Get the enumeration device selector for all compatible devices
         static String GetDeviceSelector();
-        //static String GetDeviceSelectorForLoopbackEndpoint();
 
- //       IVector<IMidiEndpointMessageListener> MessageListeners{ get; };
-
-        //Boolean Open();
 
     }
 }

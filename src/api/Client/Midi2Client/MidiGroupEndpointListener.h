@@ -17,42 +17,65 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiGroupEndpointListener() = default;
 
-        hstring Id() const noexcept { return m_id; }
-        void Id(hstring const& value) { m_id = internal::ToUpperTrimmedHStringCopy(value); }
+        winrt::hstring Id() const noexcept { return m_id; }
+        void Id(_In_ winrt::hstring const& value) noexcept { m_id = internal::ToUpperTrimmedHStringCopy(value); }
 
-        hstring Name() const noexcept { return m_name; }
-        void Name(_In_ hstring const& value) { m_name = internal::TrimmedHStringCopy(value); }
+        winrt::hstring Name() const noexcept { return m_name; }
+        void Name(_In_ winrt::hstring const& value) noexcept { m_name = internal::TrimmedHStringCopy(value); }
 
         bool IsEnabled() const noexcept { return m_enabled; }
         void IsEnabled(_In_ bool const& value) noexcept { m_enabled = value; }
 
-        winrt::Windows::Foundation::IInspectable Tag() const noexcept { return m_tag; }
-        void Tag(_In_ winrt::Windows::Foundation::IInspectable const& value) noexcept { m_tag = value; }
+        foundation::IInspectable Tag() const noexcept { return m_tag; }
+        void Tag(_In_ foundation::IInspectable const& value) noexcept { m_tag = value; }
 
-        winrt::Windows::Devices::Midi2::IMidiInputConnection InputConnection() const noexcept { return m_inputConnection; }
-        void InputConnection(_In_ winrt::Windows::Devices::Midi2::IMidiInputConnection const& value) noexcept { m_inputConnection = value; }
+        midi2::IMidiInputConnection InputConnection() const noexcept { return m_inputConnection; }
+        void InputConnection(_In_ midi2::IMidiInputConnection const& value) noexcept { m_inputConnection = value; }
 
-        winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::MidiGroup> IncludeGroups();
+        collections::IVector<midi2::MidiGroup> IncludeGroups() { return m_includedGroups; }
 
         void Initialize();
+        void OnEndpointConnectionOpened();
         void Cleanup();
+
+
+        void PreventFiringMainMessageReceivedEvent(_In_ bool const value) noexcept { m_preventFiringMainMessageReceivedEvent = value; }
+        bool PreventFiringMainMessageReceivedEvent() noexcept { return m_preventFiringMainMessageReceivedEvent; }
+
+        void PreventCallingFurtherListeners(_In_ bool const value) noexcept { m_preventCallingFurtherListeners = value; }
+        bool PreventCallingFurtherListeners() noexcept { return m_preventCallingFurtherListeners; }
+
+        winrt::event_token MessageReceived(_In_ foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiMessageReceivedEventArgs> const& handler)
+        {
+            return m_messageReceivedEvent.add(handler);
+        }
+
+        void MessageReceived(_In_ winrt::event_token const& token) noexcept
+        {
+            if (m_messageReceivedEvent) m_messageReceivedEvent.remove(token);
+        }
+
 
         void ProcessIncomingMessage(
             _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs const& args, 
             _Out_ bool& skipFurtherListeners, 
             _Out_ bool& skipMainMessageReceivedEvent);
 
-        winrt::Windows::Foundation::IAsyncAction ProcessIncomingMessageAsync(
-            _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs args);
-
 
     private:
-        hstring m_id{};
-        hstring m_name{};
+        winrt::hstring m_id{};
+        winrt::hstring m_name{};
         bool m_enabled{ false };
-        IInspectable m_tag{ nullptr };
-        IMidiInputConnection m_inputConnection;
+        foundation::IInspectable m_tag{ nullptr };
+        midi2::IMidiInputConnection m_inputConnection;
 
+        bool m_preventCallingFurtherListeners{ false };
+        bool m_preventFiringMainMessageReceivedEvent{ false };
+
+        collections::IVector<midi2::MidiGroup> m_includedGroups
+            { winrt::single_threaded_vector<midi2::MidiGroup>() };
+
+        winrt::event<foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;
 
     };
 }

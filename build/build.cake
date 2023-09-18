@@ -1,6 +1,5 @@
 #tool nuget:?package=NuGet.CommandLine&version=5.10
 
-
 var target = Argument("target", "Default");
 
 
@@ -33,6 +32,9 @@ string stagingDir;
 //////////////////////////////////////////////////////////////////////
 // PROJECT LOCATIONS
 //////////////////////////////////////////////////////////////////////
+///
+
+var registrySettingsStagingDir = System.IO.Path.Combine(stagingRootDir, "reg");
 
 var apiAndServiceSolutionDir = System.IO.Path.Combine(srcDir, "api");
 var apiAndServiceSolutionFile = System.IO.Path.Combine(apiAndServiceSolutionDir, "Midi2.sln");
@@ -44,8 +46,10 @@ var sdkStagingDir = System.IO.Path.Combine(stagingRootDir, "app-dev-sdk");
 
 var vsFilesDir = System.IO.Path.Combine(apiAndServiceSolutionDir, "VSFiles");
 
-var consoleAppSolutionDir = System.IO.Path.Combine(srcDir, "user-tools", "midi-console", "Midi");
-var consoleAppSolutionFile = System.IO.Path.Combine(consoleAppSolutionDir, "Midi.csproj");
+var consoleAppSolutionDir = System.IO.Path.Combine(srcDir, "user-tools", "midi-console");
+var consoleAppSolutionFile = System.IO.Path.Combine(consoleAppSolutionDir, "midi-console.sln");
+var consoleAppProjectDir = System.IO.Path.Combine(consoleAppSolutionDir, "Midi");
+var consoleAppProjectFile = System.IO.Path.Combine(consoleAppProjectDir, "Midi.csproj");
 var consoleAppStagingDir = System.IO.Path.Combine(stagingRootDir, "midi-console");
 
 var settingsAppSolutionDir = System.IO.Path.Combine(srcDir, "user-tools", "midi-settings");
@@ -54,7 +58,7 @@ var settingsAppStagingDir = System.IO.Path.Combine(stagingRootDir, "midi-setting
 
 
 var setupSolutionDir = System.IO.Path.Combine(srcDir, "oob-setup");
-var setupSolutionFile = System.IO.Path.Combine(setupSolutionDir, "WindowsMidiServicesSetup.sln");
+var setupSolutionFile = System.IO.Path.Combine(setupSolutionDir, "midi-services-setup.sln");
 
 var setupReleaseDir = releaseRootDir;
 
@@ -89,14 +93,30 @@ Task("VerifyDependencies")
 {
     // Grab latest VC runtime
 
-    //https://aka.ms/vs/17/release/vc_redist.x64.exe
+    // https://aka.ms/vs/17/release/vc_redist.x64.exe
 
+
+    // Grab lates t.NET runtime if the file isn't there. It will have a long name with a 
+    // version number, like dotnet-runtime-8.0.0-rc.1.23419.4-win-x64 so you'llneed to 
+    // rename that for the installer
+    // https://aka.ms/dotnet/8.0/preview/windowsdesktop-runtime-win-x64.exe
 
 
 
 });
 
+Task("SetupEnvironment")
+    .Does(()=>
+{
+    // TODO: Need to verify that %MIDI_REPO_ROOT% is set. If not, set it to the root \midi folder
+    var rootVariableExists = !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("MIDI_REPO_ROOT"));
 
+    if (!rootVariableExists)
+    {
+        // this will only work if this folder is located in \midi\build or some other subfolder of the root \midi folder
+        Environment.SetEnvironmentVariable("MIDI_REPO_ROOT", System.IO.Path.GetFullPath("..\\"));
+    }
+});
 
 
  Task("BuildServiceAndAPI")
@@ -134,10 +154,13 @@ Task("VerifyDependencies")
 
     // copy all the DLLs
     CopyFiles(System.IO.Path.Combine(outputDir, "*.dll"), copyToDir); 
+
+    CopyFiles(System.IO.Path.Combine(outputDir, "*.pri"), copyToDir); 
+    CopyFiles(System.IO.Path.Combine(outputDir, "*.pdb"), copyToDir); 
+
     CopyFiles(System.IO.Path.Combine(outputDir, "MidiSrv.exe"), copyToDir); 
 
     CopyFiles(System.IO.Path.Combine(outputDir, "Windows.Devices.Midi2.winmd"), copyToDir); 
-    CopyFiles(System.IO.Path.Combine(outputDir, "Windows.Devices.Midi2.pri"), copyToDir); 
 
     CopyFiles(System.IO.Path.Combine(outputDir, "WinRTActivationEntries.txt"), copyToDir); 
 });
@@ -154,14 +177,14 @@ Task("BuildApiActivationRegEntries")
     var wxiDestinationFileName = System.IO.Path.Combine(apiAndServiceStagingDir, plat.ToString(), "WinRTActivationEntries.wxi");
 
     const string parentHKLMRegKey = "SOFTWARE\\Microsoft\\WindowsRuntime\\ActivatableClassId\\";
-    const string wixWinrtLibFileName = "[API_INSTALLFOLDER]\\Windows.Devices.Midi2.dll";
+    const string wixWinrtLibFileName = "[API_INSTALLFOLDER]Windows.Devices.Midi2.dll";
 
     if (!System.IO.File.Exists(sourceFileName))
         throw new ArgumentException("Missing WinRT Activation entries file " + sourceFileName);
 
     using (StreamReader reader = System.IO.File.OpenText(sourceFileName))
     {
-        using (StreamWriter wxiWriter = System.IO.File.CreateText(wixWinrtLibFileName))            
+        using (StreamWriter wxiWriter = System.IO.File.CreateText(wxiDestinationFileName))            
         {
             wxiWriter.WriteLine("<Include xmlns=\"http://wixtoolset.org/schemas/v4/wxs\">");
 
@@ -191,7 +214,7 @@ Task("BuildApiActivationRegEntries")
                 string threading = elements[2].Trim();
                 string trustLevel = elements[3].Trim();
 
-                writer.WriteLine($"<RegistryKey Root=\"HKLM\" Key=\"{parentHKLMRegKey}{className}\">");
+                wxiWriter.WriteLine($"<RegistryKey Root=\"HKLM\" Key=\"{parentHKLMRegKey}{className}\">");
                 
                 wxiWriter.WriteLine($"    <RegistryValue Name=\"DllPath\" Type=\"string\" Value=\"{wixWinrtLibFileName}\" />");
                 wxiWriter.WriteLine($"    <RegistryValue Name=\"ActivationType\" Type=\"integer\" Value=\"{activationType}\" />");
@@ -208,6 +231,80 @@ Task("BuildApiActivationRegEntries")
     }
 
 });
+
+
+Task("BuildApiActivationRegEntriesCSharp")
+    .IsDependentOn("BuildServiceAndAPI")
+    .DoesForEach(platformTargets, plat =>
+{
+    Information("\nBuilding WinRT Activation Entries for " + plat.ToString());
+
+    // read the file of dependencies
+    var sourceFileName = System.IO.Path.Combine(apiAndServiceStagingDir, plat.ToString(), "WinRTActivationEntries.txt");
+    var csDestinationFileName = System.IO.Path.Combine(registrySettingsStagingDir, "WinRTActivationEntries.cs");
+
+//    const string parentHKLMRegKey = "SOFTWARE\\Microsoft\\WindowsRuntime\\ActivatableClassId\\";
+//    const string wixWinrtLibFileName = "[API_INSTALLFOLDER]Windows.Devices.Midi2.dll";
+
+    if (!System.IO.File.Exists(sourceFileName))
+        throw new ArgumentException("Missing WinRT Activation entries file " + sourceFileName);
+
+    using (StreamReader reader = System.IO.File.OpenText(sourceFileName))
+    {
+
+        if (!DirectoryExists(registrySettingsStagingDir))
+            CreateDirectory(registrySettingsStagingDir);
+
+        using (StreamWriter csWriter = System.IO.File.CreateText(csDestinationFileName))            
+        {
+            csWriter.WriteLine("// This file was generated by the build process");
+            csWriter.WriteLine("//");
+            csWriter.WriteLine("using RegistryCustomActions;");
+            csWriter.WriteLine("class RegistryEntries");
+            csWriter.WriteLine("{");
+            csWriter.WriteLine("    public RegEntry[] ActivationEntries = new RegEntry[]");
+            csWriter.WriteLine("    {");
+
+            string line;
+
+            while ((line = reader.ReadLine()) != null)
+            {
+                string trimmedLine = line.Trim();
+
+                if (string.IsNullOrWhiteSpace(trimmedLine) || trimmedLine.StartsWith("#"))
+                {
+                    // comment or empty line
+                    continue;
+                }
+
+                // pipe-delimited lines
+                var elements = trimmedLine.Split('|');
+
+                if (elements.Count() != 4)
+                    throw new ArgumentException("Bad line:  " + trimmedLine); 
+
+                // entries in order are
+                // ClassName | ActivationType | Threading | TrustLevel
+
+                string className = elements[0].Trim();
+                string activationType = elements[1].Trim();
+                string threading = elements[2].Trim();
+                string trustLevel = elements[3].Trim();
+
+                csWriter.WriteLine($"        new RegEntry{{ ClassName=\"{className}\", ActivationType={activationType}, Threading={threading}, TrustLevel={trustLevel}  }},");
+
+
+            }
+
+            csWriter.WriteLine("    };");
+            csWriter.WriteLine("}");
+
+
+        }
+    }
+
+});
+
 
 
 Task("PackAPIProjection")
@@ -265,12 +362,15 @@ Task("BuildConsoleApp")
 
     Information("\nBuilding MIDI console app for " + plat.ToString());
 
-    DotNetBuild(consoleAppSolutionFile, new DotNetBuildSettings
+    // update nuget packages for the entire solution. This is important for API/SDK NuGet in particular
+
+    NuGetUpdate(consoleAppSolutionFile, new NuGetUpdateSettings
     {
         WorkingDirectory = consoleAppSolutionDir,
-        Configuration = configuration
     });
 
+    // we're specifying a rid, so we need to compile the project, not the solution
+    
     string rid = "";
     if (plat == PlatformTarget.x64)
         rid = ridX64;
@@ -279,18 +379,25 @@ Task("BuildConsoleApp")
     else
         throw new ArgumentException("Invalid platform target " + plat.ToString());
 
+    DotNetBuild(consoleAppProjectFile, new DotNetBuildSettings
+    {
+        WorkingDirectory = consoleAppProjectDir,
+        Configuration = configuration, 
+        Runtime = rid,        
+    });
+
 
     // Note: Spectre.Console doesn't support trimming, so you get a huge exe.
-    // Consider making this framework-dependent once .NET 8 releasesmi
-    DotNetPublish(consoleAppSolutionFile, new DotNetPublishSettings
+    // Consider making this framework-dependent once .NET 8 releases
+    DotNetPublish(consoleAppProjectFile, new DotNetPublishSettings
     {
-        WorkingDirectory = consoleAppSolutionDir,
+        WorkingDirectory = consoleAppProjectDir,
         OutputDirectory = System.IO.Path.Combine(consoleAppStagingDir, plat.ToString()),
         Configuration = configuration,
 
-        PublishSingleFile = true,
+        PublishSingleFile = false,
         PublishTrimmed = false,
-        SelfContained = true,
+        SelfContained = false,
         Framework = frameworkVersion,
         Runtime = rid
     });
@@ -304,20 +411,25 @@ Task("BuildSettingsApp")
     .DoesForEach(platformTargets, plat =>
 {
     // TODO: Update nuget ref in settings app to the new version
+    
+    //NuGetUpdate(settingsAppSolutionFile);
+
+
 
 });
 
 
 
 Task("BuildInstaller")
+    .IsDependentOn("SetupEnvironment")
     .IsDependentOn("BuildServiceAndAPI")
-    .IsDependentOn("BuildApiActivationRegEntries")
+    .IsDependentOn("BuildApiActivationRegEntriesCSharp")
     .IsDependentOn("BuildSDK")
     .IsDependentOn("BuildSettingsApp")
     .IsDependentOn("BuildConsoleApp")
     .DoesForEach(platformTargets, plat => 
 {
-    var buildSettings = new MSBuildSettings
+    /*var buildSettings = new MSBuildSettings
     {
         MaxCpuCount = 0,
         Configuration = configuration,
@@ -326,12 +438,65 @@ Task("BuildInstaller")
         Verbosity = Verbosity.Minimal,       
     };
 
-    MSBuild(setupSolutionFile, buildSettings);
+    MSBuild(setupSolutionFile, buildSettings); */
+
+    // have to build these projects using dotnet build, or else the nuget references just die if you use MSBuild or VS
+
+    //var apiProjectDir = System.IO.Path.Combine(setupSolutionDir, "api-package");
+    //var apiProjectFile = System.IO.Path.Combine(apiProjectDir, "api-package.wixproj");
+
+    var mainBundleProjectDir = System.IO.Path.Combine(setupSolutionDir, "main-bundle");
+    //var mainBundleProjectFile = System.IO.Path.Combine(mainBundleProjectDir, "main-bundle.wixproj");
+
+    //var regActionsProjectDir = System.IO.Path.Combine(setupSolutionDir, "RegistryCustomActions");
+    //var regActionsProjectFile = System.IO.Path.Combine(regActionsProjectDir, "RegistryCustomActions.csproj");
+
+    var buildSettings = new DotNetBuildSettings
+    {
+        WorkingDirectory = mainBundleProjectDir,
+        Configuration = configuration, 
+    };
+
+            // if we don't set platform here, it always ends up as a 32 bit installer
+            // configuration 
+   // buildSettings.MSBuildSettings.Properties["Platform"] = plat;
+
+
+    // build the custom action first
+    DotNetBuild(setupSolutionFile, buildSettings);
+    
+    //CopyFiles(System.IO.Path.Combine(mainBundleProjectDir, "bin", "Release", "*.exe"), setupReleaseDir); 
+    
+
+    /*var msbuildSettings = new MSBuildSettings
+    {
+        MaxCpuCount = 0,
+        Configuration = configuration,
+        AllowPreviewVersion = allowPreviewVersionOfBuildTools,
+        PlatformTarget = plat,
+        Verbosity = Verbosity.Minimal,       
+    };
+w
+    MSBuild(regActionsProjectFile, msbuildSettings);
+    MSBuild(apiProjectFile, msbuildSettings);
+    MSBuild(mainBundleProjectFile, msbuildSettings); */
+
+    // built-in WiX support doesn't seem to work with WiX and burn bundles.
+
+    /*var buildSettings = new DotNetBuildSettings
+    {
+        WorkingDirectory = regActionsProjectDir,
+        Configuration = configuration, 
+        Runtime = rid,
+    };
+    
+    DotNetBuild(regActionsProjectFile, buildSettings); */
+
 
     if (!DirectoryExists(setupReleaseDir))
         CreateDirectory(setupReleaseDir);
 
-    CopyFiles(System.IO.Path.Combine(setupSolutionDir, "main-bundle", "bin", plat.ToString(), configuration, "*.exe"), setupReleaseDir); 
+    CopyFiles(System.IO.Path.Combine(mainBundleProjectDir, "bin", plat.ToString(), "Release", "*.exe"), setupReleaseDir); 
 });
 
 

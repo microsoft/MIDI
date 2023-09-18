@@ -11,20 +11,19 @@
 
 #include "catch_amalgamated.hpp"
 
-#include <iostream>
 #include <algorithm>
 #include <Windows.h>
 
 //using namespace winrt;
 using namespace winrt::Windows::Devices::Midi2;
 
+// TODO: Need to have a test that uses session settings
 
 TEST_CASE("Connected.Session.CreateSession Create new session")
 {
     winrt::hstring sessionName = L"Test Session Name";
 
-    auto settings = MidiSessionSettings::Default();
-    auto session = MidiSession::CreateSession(sessionName, settings);
+    auto session = MidiSession::CreateSession(sessionName);
 
     REQUIRE((bool)(session != nullptr));
 
@@ -32,7 +31,26 @@ TEST_CASE("Connected.Session.CreateSession Create new session")
 
     REQUIRE((bool)(session.Name() == sessionName));
 
-    REQUIRE((bool)(session.Id().empty() == false));
+    REQUIRE((bool)(session.Connections().Size() == 0));
+
+    session.Close();
+}
+
+
+TEST_CASE("Connected.Session.CreateSessionSettings Create new session with settings")
+{
+    winrt::hstring sessionName = L"Test Session Name";
+    MidiSessionSettings settings;
+    settings.UseMmcssThreads(true);
+
+
+    auto session = MidiSession::CreateSession(sessionName, settings);
+
+    REQUIRE((bool)(session != nullptr));
+
+    REQUIRE((bool)(session.IsOpen()));
+
+    REQUIRE((bool)(session.Name() == sessionName));
 
     REQUIRE((bool)(session.Connections().Size() == 0));
 

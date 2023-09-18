@@ -13,12 +13,14 @@ import "IMidiEndpointConnection.idl";
 import "MidiOutputEndpointConnection.idl";
 import "MidiInputEndpointConnection.idl";
 import "MidiBidirectionalEndpointConnection.idl";
+import "MidiBidirectionalAggregatedEndpointConnection.idl";
 
 import "IMidiEndpointDefinedConnectionSettings.idl";
 
 import "MidiSessionSettings.idl";
 
 import "MidiBidirectionalEndpointOpenOptions.idl";
+import "MidiBidirectionalAggregatedEndpointOpenOptions.idl";
 import "MidiInputEndpointOpenOptions.idl";
 import "MidiOutputEndpointOpenOptions.idl";
 
@@ -30,7 +32,7 @@ namespace Windows.Devices.Midi2
     [default_interface]
     runtimeclass MidiSession : Windows.Foundation.IClosable
     {
-        String Id { get; };
+        Guid Id { get; };
         String Name{ get; };
         MidiSessionSettings Settings{ get; };
 
@@ -41,18 +43,18 @@ namespace Windows.Devices.Midi2
         Boolean IsOpen { get; };
 
         // TODO: Change to IMidiEndpointConnection
-        IMapView<String, IMidiEndpointConnection> Connections{ get; };
+        IMapView<Guid, IMidiEndpointConnection> Connections{ get; };
 
         // output-only. Typically for MIDI 1.0 device/block
         MidiOutputEndpointConnection ConnectOutputEndpoint(
-            String midiEndpointId);
+            String endpointDeviceId);
 
         MidiOutputEndpointConnection ConnectOutputEndpoint(
-            String midiEndpointId, 
+            String endpointDeviceId,
             MidiOutputEndpointOpenOptions options);
 
         MidiOutputEndpointConnection ConnectOutputEndpoint(
-            String midiEndpointId,
+            String endpointDeviceId,
             MidiOutputEndpointOpenOptions options,
             IMidiEndpointDefinedConnectionSettings settings);
 
@@ -60,14 +62,14 @@ namespace Windows.Devices.Midi2
         // input-only. Typically for MIDI 1.0 device/block
 
         MidiInputEndpointConnection ConnectInputEndpoint(
-            String midiEndpointId);
+            String endpointDeviceId);
 
         MidiInputEndpointConnection ConnectInputEndpoint(
-            String midiEndpointId,
+            String endpointDeviceId,
             MidiInputEndpointOpenOptions options);
 
         MidiInputEndpointConnection ConnectInputEndpoint(
-            String midiEndpointId,
+            String endpointDeviceId,
             MidiInputEndpointOpenOptions options,
             IMidiEndpointDefinedConnectionSettings settings);
 
@@ -75,21 +77,42 @@ namespace Windows.Devices.Midi2
         // connects to a bidirectional endpoint. For MIDI 2.0 devices, this will be the norm. 
         // see notes above.
         MidiBidirectionalEndpointConnection ConnectBidirectionalEndpoint(
-            String midiEndpointId);
+            String endpointDeviceId);
 
         MidiBidirectionalEndpointConnection ConnectBidirectionalEndpoint(
-            String midiEndpointId,
+            String endpointDeviceId,
             MidiBidirectionalEndpointOpenOptions options);
 
         MidiBidirectionalEndpointConnection ConnectBidirectionalEndpoint(
-            String midiEndpointId,
+            String endpointDeviceId,
             MidiBidirectionalEndpointOpenOptions options, 
             IMidiEndpointDefinedConnectionSettings settings);
+
+
+        // Connects to separate input and output endpoints, treating them just like any bidi
+        // sending the right discovery messages, etc.
+        // The API must be able to open both input and output for this to succeed
+
+        MidiBidirectionalAggregatedEndpointConnection ConnectBidirectionalAggregatedEndpoint(
+            String inputEndpointDeviceId,
+            String outputEndpointDeviceId);
+
+        MidiBidirectionalAggregatedEndpointConnection ConnectBidirectionalAggregatedEndpoint(
+            String inputEndpointDeviceId,
+            String outputEndpointDeviceId,
+            MidiBidirectionalAggregatedEndpointOpenOptions options);
+
+        MidiBidirectionalAggregatedEndpointConnection ConnectBidirectionalAggregatedEndpoint(
+            String inputEndpointDeviceId,
+            String outputEndpointDeviceId,
+            MidiBidirectionalAggregatedEndpointOpenOptions options,
+            IMidiEndpointDefinedConnectionSettings settings);
+
 
         // note that this takes the connection instance id, not the endpoint id itself
         // This will remove a single endpoint connection instance.
 
-        void DisconnectEndpointConnection(String endpointConnectionInstanceId);
+        void DisconnectEndpointConnection(Guid endpointConnectionId);
 
         // This is associated with the session so we can session-scoped
         // lifetime / info as well as provide the session-level service interface

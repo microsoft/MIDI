@@ -13,35 +13,66 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::MidiChannel> MidiChannelEndpointListener::IncludeChannels()
-    {
-        throw hresult_not_implemented();
-    }
-
-
+    _Use_decl_annotations_
     void MidiChannelEndpointListener::Initialize()
     {
-        throw hresult_not_implemented();
+        // Nothing to do to initialize, so all good
     }
+
+    _Use_decl_annotations_
+    void MidiChannelEndpointListener::OnEndpointConnectionOpened()
+    {
+        // Nothing special to do when connection is opened, so all good
+    }
+
+    _Use_decl_annotations_
     void MidiChannelEndpointListener::Cleanup()
     {
-        throw hresult_not_implemented();
+        // No cleanup required.
     }
 
-
+    _Use_decl_annotations_
     void MidiChannelEndpointListener::ProcessIncomingMessage(
-        _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs const& /*args*/,
-        _Out_ bool& skipFurtherListeners, 
-        _Out_ bool& skipMainMessageReceivedEvent)
+        midi2::MidiMessageReceivedEventArgs const& args,
+        bool& skipFurtherListeners, 
+        bool& skipMainMessageReceivedEvent)
     {
-        skipFurtherListeners = false;
-        skipMainMessageReceivedEvent = false;
+        skipFurtherListeners = m_preventCallingFurtherListeners;
+        skipMainMessageReceivedEvent = m_preventFiringMainMessageReceivedEvent;
 
-        throw hresult_not_implemented();
-    }
-    winrt::Windows::Foundation::IAsyncAction MidiChannelEndpointListener::ProcessIncomingMessageAsync(
-        _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs args)
-    {
-        throw hresult_not_implemented();
+        if (internal::MessageTypeHasChannelField((uint8_t)args.UmpMessageType()))
+        {
+            uint32_t word0 = args.InspectFirstWord();
+
+            // check the group. If the group is not specified, we listen to all groups, but for a specific channel
+            if (m_includedGroup == nullptr ||
+                internal::GetGroupIndexFromFirstWord(word0) == m_includedGroup.Index())
+            {
+                uint8_t messageChannel = internal::GetChannelIndexFromFirstWord(word0);
+
+                // check the channel against our list of channels
+                for (auto const& channel: m_includedChannels)
+                {
+                    if (channel.Index() == messageChannel)
+                    {
+                        // found it. Fire off the event and leave
+                        // events are synchronous, so the chain of calls here needs to be short
+
+                        if (m_messageReceivedEvent)
+                        {
+                            m_messageReceivedEvent(m_inputConnection, args);
+                        }
+
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                // we're not interested in this group
+            }
+
+        }
+
     }
 }

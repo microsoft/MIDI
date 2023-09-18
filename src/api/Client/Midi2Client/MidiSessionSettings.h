@@ -17,10 +17,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiSessionSettings() = default;
 
-        static winrt::Windows::Devices::Midi2::MidiSessionSettings Default();
-
         bool UseMmcssThreads() const { return m_useMmcss; }
-        void UseMmcssThreads(_In_ bool value);
+        void UseMmcssThreads(_In_ bool const value);
 
 
     private:

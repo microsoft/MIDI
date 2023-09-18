@@ -20,7 +20,5 @@ namespace Windows.Devices.Midi2
 
         Boolean UseMmcssThreads{ get; set; };
 
-        static MidiSessionSettings Default{ get; };
-
     }
 }

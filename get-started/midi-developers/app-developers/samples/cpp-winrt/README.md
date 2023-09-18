@@ -13,7 +13,7 @@ For C++, Windows MIDI Services is only being tested with C++/WinRT, not CX or WR
 
 | Sample | Description |
 | -------| ----------- |
-| [Client SDK Basics](sdk-client-basics/) | Shows how to check for the presence of Windows MIDI Services, open a MidiSession, and connect to a MidiEndpoint |
+| [Client API Basics](api-client-basics/) | Shows how to open a MidiSession, and connect to a MidiEndpoint to send and receive messages|
 
 ## Background information
 

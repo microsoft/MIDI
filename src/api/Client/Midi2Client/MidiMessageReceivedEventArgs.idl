@@ -17,6 +17,7 @@ import "MidiUmp96.idl";
 import "MidiUmp128.idl";
 
 import "MidiUmpPacketTypeEnum.idl";
+import "MidiUmpMessageTypeEnum.idl";
 
 
 
@@ -26,16 +27,25 @@ namespace Windows.Devices.Midi2
     [default_interface]
     runtimeclass MidiMessageReceivedEventArgs
     {
-        // Type of UMP contained in the data
-        MidiUmpPacketType UmpType{ get; };
-
         MIDI_TIMESTAMP Timestamp{ get; };
 
+
+        // Type of UMP contained in the data. You can cast this to an int to get the number of words
+        MidiUmpPacketType UmpType{ get; };
+
+        // The type of message contained. This comes from the first word of the data
+        MidiUmpMessageType UmpMessageType{ get; };
+
+        // utility for code that just needs to know about the message before doing any real work
+        // message listeners often make use of this, so it cuts down on ceremony at the expense of
+        // a small amount of stack
+        UInt32 InspectFirstWord();
+        
         // Returns a new UMP. Allocation-wise, this is the most expensive, but it is also the friendliest
         IMidiUmp GetUmp();
 
-        // Fills 1-4 words. Use UmpType to see how many words are valid.
-        Boolean FillWords(out UInt32 word0, out UInt32 word1, out UInt32 word2, out UInt32 word3);
+        // Fills 1-4 words. Use the return value or UmpType to see how many words are valid 
+        UInt8 FillWords(out UInt32 word0, out UInt32 word1, out UInt32 word2, out UInt32 word3);
 
         // these are for when you have an existing UMP type and prefer not to allocate a new one
         // caller is responsible for using UmpType to pick the correct one. Parameters are references
@@ -46,11 +56,11 @@ namespace Windows.Devices.Midi2
         Boolean FillUmp128(MidiUmp128 ump);
 
         // Use existing arrays instead of allocating new ones. Array should be at least as large
-        // as the UMP being read
-        Boolean FillWordArray(ref UInt32[] words, UInt32 startIndex, out UInt32 elementsWritten);
-        Boolean FillByteArray(ref UInt8[] bytes, UInt32 startIndex, out UInt32 elementsWritten);
+        // as the UMP being read. Returns the count of elements written
+        UInt8 FillWordArray(ref UInt32[] words, UInt32 startIndex);
+        UInt8 FillByteArray(ref UInt8[] bytes, UInt32 startIndex);
 
-        // Fill a spot in an existing IMemoryBuffer controlled by the caller
-        Boolean FillBuffer(Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffset, out UInt32 bytesWritten);
+        // Fill a spot in an existing IMemoryBuffer controlled by the caller. Returns the number of bytes written
+        UInt8 FillBuffer(Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffset);
     }
 }

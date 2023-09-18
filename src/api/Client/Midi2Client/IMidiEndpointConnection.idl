@@ -16,6 +16,7 @@ MIDI_IDL_IMPORT
 import "IMidiEndpointDefinedConnectionSettings.idl";
 
 import "MidiEndpointConnectionSharingEnum.idl";
+import "IMidiEndpointMessageProcessingPlugin.idl";
 
 
 namespace Windows.Devices.Midi2
@@ -25,10 +26,8 @@ namespace Windows.Devices.Midi2
     interface IMidiEndpointConnection
     {
         // just a map key for this connection.
-        String Id{ get; };
-
-        // Id from Windows. This can be used to retrieve the MidiDeviceInformation object with the PnP properties
-        String DeviceId{ get; };
+        // originally this was a string GUID, but that was easily confused with the Endpoint Device Id
+        Guid ConnectionId{ get; };
 
         // app-supplied optional tag. Can hold whatever information they may want to show in a list
         IInspectable Tag{ get; set; };
@@ -44,5 +43,8 @@ namespace Windows.Devices.Midi2
         IMidiEndpointDefinedConnectionSettings Settings{ get; };
 
         Boolean Open();
+
+        IVector<IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins{ get; };
+
     }
 }

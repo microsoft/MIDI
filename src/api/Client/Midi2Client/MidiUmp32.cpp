@@ -15,31 +15,27 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    MidiUmp32::MidiUmp32()
-    {
-    }
-
+    _Use_decl_annotations_
     MidiUmp32::MidiUmp32(
-        _In_ internal::MidiTimestamp const timestamp, 
-        _In_ uint32_t const word0)
-        : MidiUmp32()
+        internal::MidiTimestamp const timestamp, 
+        uint32_t const word0)
     {
         m_timestamp = timestamp;
         m_ump.word0 = word0;
     }
 
     // internal constructor for reading from the service callback
-    MidiUmp32::MidiUmp32(
-        _In_ internal::MidiTimestamp timestamp, 
-        _In_ PVOID data)
-        : MidiUmp32()
+    // we needed a second function here because overload with the other
+    // constructor caused access violations when wrong one was picked
+    _Use_decl_annotations_
+    void MidiUmp32::InternalInitializeFromPointer(
+        internal::MidiTimestamp timestamp, 
+        PVOID data)
     {
-        //WINRT_ASSERT(_ump != nullptr);
-        WINRT_ASSERT(data != nullptr);
+        if (data == nullptr) return;
 
         m_timestamp = timestamp;
 
-        // need to have some safeties around this and also make sure it gets deleted
         memcpy((void*)&m_ump, data, sizeof(internal::PackedUmp32));
     }
 

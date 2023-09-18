@@ -17,10 +17,16 @@ namespace Windows.Devices.Midi2
     runtimeclass MidiClock
     {
         // gets the current MIDI timestamp
-        static UInt64 GetMidiTimestamp();
+        static MIDI_TIMESTAMP GetMidiTimestamp();
 
         // returns the units per second for the timestamp
         static UInt64 GetMidiTimestampFrequency();
+
+        // convenience function
+        static UInt64 ConvertTimestampToMicroseconds(MIDI_TIMESTAMP timestampValue);
+
+        // TODO: Consider adding a wrapper for GetSystemTimePReciseAsFileTime to enable 
+        // synchronizing timestamps to wall clock time, as much as that is possible
     }
 }
 

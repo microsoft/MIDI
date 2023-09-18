@@ -32,9 +32,27 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::Windows::Devices::Midi2::IMidiInputConnection InputConnection() const noexcept { return m_inputConnection; }
         void InputConnection(_In_ winrt::Windows::Devices::Midi2::IMidiInputConnection const& value) { m_inputConnection = value; }
 
-        winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::MidiUmpMessageType> IncludeMessageTypes();
+        foundation::Collections::IVector<winrt::Windows::Devices::Midi2::MidiUmpMessageType> IncludeMessageTypes() { return m_includedMessageTypes; }
+
+        winrt::event_token MessageReceived(_In_ foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiMessageReceivedEventArgs> const& handler)
+        {
+            return m_messageReceivedEvent.add(handler);
+        }
+
+        void MessageReceived(_In_ winrt::event_token const& token) noexcept
+        {
+            if (m_messageReceivedEvent) m_messageReceivedEvent.remove(token);
+        }
+
+        void PreventFiringMainMessageReceivedEvent(_In_ bool const value) noexcept { m_preventFiringMainMessageReceivedEvent = value; }
+        bool PreventFiringMainMessageReceivedEvent() noexcept { return m_preventFiringMainMessageReceivedEvent; }
+
+        void PreventCallingFurtherListeners(_In_ bool const value) noexcept { m_preventCallingFurtherListeners = value; }
+        bool PreventCallingFurtherListeners() noexcept { return m_preventCallingFurtherListeners; }
+
 
         void Initialize();
+        void OnEndpointConnectionOpened();
         void Cleanup();
 
         void ProcessIncomingMessage(
@@ -42,16 +60,22 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _Out_ bool& skipFurtherListeners,
             _Out_ bool& skipMainMessageReceivedEvent);
 
-        winrt::Windows::Foundation::IAsyncAction ProcessIncomingMessageAsync(
-            _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs args);
-
 
     private:
-        hstring m_id{};
-        hstring m_name{};
+        winrt::hstring m_id{};
+        winrt::hstring m_name{};
         bool m_enabled{ false };
-        IInspectable m_tag{ nullptr };
-        IMidiInputConnection m_inputConnection;
+        foundation::IInspectable m_tag{ nullptr };
+        midi2::IMidiInputConnection m_inputConnection;
+
+        bool m_preventCallingFurtherListeners{ false };
+        bool m_preventFiringMainMessageReceivedEvent{ false };
+
+        foundation::Collections::IVector<midi2::MidiUmpMessageType>
+            m_includedMessageTypes{ winrt::single_threaded_vector<midi2::MidiUmpMessageType>() };
+
+        winrt::event<foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;
+
 
     };
 }

@@ -11,19 +11,24 @@
 #include "MidiServices.h"
 #include "MidiServices.g.cpp"
 
-
 #include "midi_app_sdk_version.h"
 
 using namespace Microsoft::Devices::Midi2;
 
 namespace winrt::Microsoft::Devices::Midi2::implementation
 {
-    winrt::Microsoft::Devices::Midi2::WindowsMidiServicesCheckResult MidiServices::CheckForWindowsMidiServices()
+    winrt::Microsoft::Devices::Midi2::MidiServicesStatus MidiServices::CheckForWindowsMidiServices()
     {
-        // TODO: This will be a call to check the actual service
+        // TODO: This can't call into the SCM because that's not allowed from a WinRT lib. So instead it
+        // will need to try to call service code and return the result
 
-        return WindowsMidiServicesCheckResult::PresentAndUsable;
+        return MidiServicesStatus::PresentAndUsable;
     }
+
+
+
+
+
     hstring MidiServices::GetInstalledWindowsMidiServicesVersion()
     {
         // TODO: Temp
@@ -75,8 +80,6 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         );
 
         transports.Append(*transport2);
-
-
 
         return transports;
     }
