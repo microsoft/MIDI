@@ -100,6 +100,9 @@
     <Filter Include="API\Endpoints\Metadata\Cache\Implementation">
       <UniqueIdentifier>{a8647252-b6ea-4f33-92d6-09200731b429}</UniqueIdentifier>
     </Filter>
+    <Filter Include="API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device">
+      <UniqueIdentifier>{42159c00-f2e0-43d6-bfee-9ce7fe99dde3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -201,13 +204,7 @@
     <ClCompile Include="MidiUmpUtility.cpp">
       <Filter>API\Messages</Filter>
     </ClCompile>
-    <ClCompile Include="MidiDeviceInformationCacheUpdatedEventArgs.cpp">
-      <Filter>API\Endpoints\Metadata\Cache</Filter>
-    </ClCompile>
     <ClCompile Include="MidiGlobalInformationCacheUpdatedEventArgs.cpp">
-      <Filter>API\Endpoints\Metadata\Cache</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiDeviceMetadataCache.cpp">
       <Filter>API\Endpoints\Metadata\Cache</Filter>
     </ClCompile>
     <ClCompile Include="MidiGlobalCache.cpp">
@@ -218,6 +215,9 @@
     </ClCompile>
     <ClCompile Include="MidiEndpointInformationUpdatedEventArgs.cpp">
       <Filter>API\Endpoints\Metadata\Endpoints</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiVirtualDeviceResponder.cpp">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -338,12 +338,6 @@
     <ClInclude Include="MidiUmpUtility.h">
       <Filter>API\Messages</Filter>
     </ClInclude>
-    <ClInclude Include="MidiDeviceMetadataCache.h">
-      <Filter>API\Endpoints\Metadata\Cache</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiDeviceInformationCacheUpdatedEventArgs.h">
-      <Filter>API\Endpoints\Metadata\Cache</Filter>
-    </ClInclude>
     <ClInclude Include="MidiGlobalInformationCacheUpdatedEventArgs.h">
       <Filter>API\Endpoints\Metadata\Cache</Filter>
     </ClInclude>
@@ -364,6 +358,9 @@
     </ClInclude>
     <ClInclude Include="InternalMidiCache.h">
       <Filter>API\Endpoints\Metadata\Cache\Implementation</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualDeviceResponder.h">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -568,6 +565,9 @@
     <Midl Include="MidiEndpointInformationUpdatedEventArgs.idl">
       <Filter>API\Endpoints\Metadata\Endpoints</Filter>
     </Midl>
+    <Midl Include="MidiVirtualDeviceResponder.idl">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />
@@ -577,6 +577,7 @@
     <None Include="PropertySheet.props" />
   </ItemGroup>
   <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />

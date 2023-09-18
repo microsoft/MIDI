@@ -45,12 +45,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void PreventCallingFurtherListeners(_In_ bool const value) noexcept { m_preventCallingFurtherListeners = value; }
         bool PreventCallingFurtherListeners() noexcept { return m_preventCallingFurtherListeners; }
 
-        winrt::event_token MessageReceived(_In_ foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiMessageReceivedEventArgs> const& handler)
+        winrt::event_token MessageReceived(
+            _In_ foundation::TypedEventHandler<foundation::IInspectable, 
+            _In_ midi2::MidiMessageReceivedEventArgs> const& handler)
         {
             return m_messageReceivedEvent.add(handler);
         }
 
-        void MessageReceived(_In_ winrt::event_token const& token) noexcept
+        void MessageReceived(
+            _In_ winrt::event_token const& token) noexcept
         {
             if (m_messageReceivedEvent) m_messageReceivedEvent.remove(token);
         }
@@ -65,7 +68,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     private:
         winrt::hstring m_id{};
         winrt::hstring m_name{};
-        bool m_enabled{ false };
+        bool m_enabled{ true };
         foundation::IInspectable m_tag{ nullptr };
         midi2::IMidiInputConnection m_inputConnection;
 

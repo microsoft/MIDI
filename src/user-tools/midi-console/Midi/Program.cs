@@ -129,6 +129,14 @@ app.Configure(config =>
     });
     */
 
+    /*
+    config.AddBranch<SimulateCommandSettings>("simulate", cache =>
+    {
+        // TODO: endpoint and function block responders, including static, randomly moving at some interval, etc.
+        // include an interactive mode that has menus for changing the endpoint name etc.
+
+    });
+    */
 
     /*
     config.AddCommand<DiagnosticsReportCommand>("diagnostics-report")

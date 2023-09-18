@@ -347,6 +347,7 @@
     <ClInclude Include="MidiVirtualDeviceManager.h">
       <DependentUpon>MidiVirtualDeviceManager.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiVirtualDeviceResponder.h" />
     <ClInclude Include="midi_service_interface.h" />
     <ClInclude Include="midl_defines.h" />
     <ClInclude Include="string_util.h" />
@@ -479,6 +480,7 @@
     <ClCompile Include="MidiVirtualDeviceManager.cpp">
       <DependentUpon>MidiVirtualDeviceManager.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiVirtualDeviceResponder.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -552,6 +554,7 @@
     <Midl Include="MidiUmpUtility.idl" />
     <Midl Include="MidiUniqueId.idl" />
     <Midl Include="MidiVirtualDeviceManager.idl" />
+    <Midl Include="MidiVirtualDeviceResponder.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />
