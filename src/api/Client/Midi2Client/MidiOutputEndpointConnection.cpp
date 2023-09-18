@@ -107,19 +107,37 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
+    void MidiOutputEndpointConnection::Close()
+    {
+        if (m_closeHasBeenCalled) return;
+
+        try
+        {
+            CleanupPlugins();
+
+            if (m_outputAbstraction != nullptr)
+            {
+                m_outputAbstraction->Cleanup();
+                m_outputAbstraction = nullptr;
+            }
+
+            IsOpen(false);
+            OutputIsOpen(false);
+
+            // TODO: any event cleanup?
+
+            m_closeHasBeenCalled = true;
+        }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Exception on close");
+        }
+    }
 
     MidiOutputEndpointConnection::~MidiOutputEndpointConnection()
     {
-        if (m_outputAbstraction != nullptr)
-        {
-            m_outputAbstraction->Cleanup();
-            m_outputAbstraction = nullptr;
-        }
-
-        IsOpen(false);
-        OutputIsOpen(false);
-
-        // TODO: any event cleanup?
+        if (!m_closeHasBeenCalled)
+            Close();
     }
 
 }

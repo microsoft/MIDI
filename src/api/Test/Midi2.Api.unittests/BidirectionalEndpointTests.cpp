@@ -6,16 +6,11 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-// ----------------------------------------------------------------------------
-// This requires the version of MidiSrv with the hard-coded loopback endpoint
-// ----------------------------------------------------------------------------
-
 
 #include "pch.h"
 
 #include "catch_amalgamated.hpp"
 
-#include <iostream>
 #include <algorithm>
 #include <Windows.h>
 
@@ -28,16 +23,15 @@ using namespace winrt::Windows::Devices::Midi2;
 
 TEST_CASE("Connected.Endpoint.CreateBidi Create bidirectional A endpoint")
 {
-    auto settings = MidiSessionSettings::Default();
-    auto session = MidiSession::CreateSession(L"Test Session Name", settings);
+    auto session = MidiSession::CreateSession(L"Test Session Name");
 
     REQUIRE((bool)(session.IsOpen()));
 
     REQUIRE((bool)(session.Connections().Size() == 0));
 
-    std::cout << "Connecting to Endpoint" << std::endl;
+    std::cout << "Connecting to Bidirectional Loopback Endpoint A" << std::endl;
 
-    auto conn1 = session.ConnectBidirectionalEndpoint(LOOPBACK_BIDI_ID_A, nullptr);
+    auto conn1 = session.ConnectBidirectionalEndpoint(LOOPBACK_BIDI_ID_A);
 
     REQUIRE(conn1 != nullptr);
 
@@ -49,16 +43,15 @@ TEST_CASE("Connected.Endpoint.CreateBidi Create bidirectional A endpoint")
 
 TEST_CASE("Connected.Endpoint.CreateBidi Create bidirectional B endpoint")
 {
-    auto settings = MidiSessionSettings::Default();
-    auto session = MidiSession::CreateSession(L"Test Session Name", settings);
+    auto session = MidiSession::CreateSession(L"Test Session Name");
 
     REQUIRE((bool)(session.IsOpen()));
 
     REQUIRE((bool)(session.Connections().Size() == 0));
 
-    std::cout << "Connecting to Endpoint" << std::endl;
+    std::cout << "Connecting to Bidirectional Loopback Endpoint B" << std::endl;
 
-    auto conn1 = session.ConnectBidirectionalEndpoint(LOOPBACK_BIDI_ID_B, nullptr);
+    auto conn1 = session.ConnectBidirectionalEndpoint(LOOPBACK_BIDI_ID_B);
 
     REQUIRE(conn1 != nullptr);
 
@@ -73,16 +66,15 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message")
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
-    auto settings = MidiSessionSettings::Default();
-    auto session = MidiSession::CreateSession(L"Test Session Name", settings);
+    auto session = MidiSession::CreateSession(L"Test Session Name");
 
     REQUIRE((bool)(session.IsOpen()));
     REQUIRE((bool)(session.Connections().Size() == 0));
 
-    std::cout << std::endl << "Connecting to Endpoint" << std::endl;
+    std::cout << std::endl << "Connecting to both Loopback A and Loopback B" << std::endl;
 
-    auto connSend = session.ConnectBidirectionalEndpoint(LOOPBACK_BIDI_ID_A, nullptr);
-    auto connReceive = session.ConnectBidirectionalEndpoint(LOOPBACK_BIDI_ID_B, nullptr);
+    auto connSend = session.ConnectBidirectionalEndpoint(LOOPBACK_BIDI_ID_A);
+    auto connReceive = session.ConnectBidirectionalEndpoint(LOOPBACK_BIDI_ID_B);
 
     REQUIRE((bool)(connSend != nullptr));
     REQUIRE((bool)(connReceive != nullptr));
@@ -159,7 +151,6 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message")
 
 
 
-
 TEST_CASE("Connected.Endpoint.MultipleUmpWords Send and receive multiple words")
 {
     wil::unique_event_nothrow allMessagesReceived;
@@ -169,17 +160,18 @@ TEST_CASE("Connected.Endpoint.MultipleUmpWords Send and receive multiple words")
   //  uint64_t setupStartTimestamp = MidiClock::GetMidiTimestamp();
 
 
-    auto settings = MidiSessionSettings::Default();
-    auto session = MidiSession::CreateSession(L"Test Session Name", settings);
+    auto session = MidiSession::CreateSession(L"Test Session Name");
 
     REQUIRE((bool)(session.IsOpen()));
     REQUIRE((bool)(session.Connections().Size() == 0));
 
-    std::cout << "Connecting to Endpoint" << std::endl;
+    std::cout << "Connecting to BiDi loopback Endpoints A and B" << std::endl;
 
-    auto conn1 = session.ConnectBidirectionalEndpoint(LOOPBACK_BIDI_ID_A, nullptr);
+    auto connSend = session.ConnectBidirectionalEndpoint(LOOPBACK_BIDI_ID_A);
+    auto connReceive = session.ConnectBidirectionalEndpoint(LOOPBACK_BIDI_ID_B);
 
-    REQUIRE((bool)(conn1 != nullptr));
+    REQUIRE((bool)(connSend != nullptr));
+    REQUIRE((bool)(connReceive != nullptr));
 
     uint32_t receivedMessageCount{};
 
@@ -190,11 +182,6 @@ TEST_CASE("Connected.Endpoint.MultipleUmpWords Send and receive multiple words")
             REQUIRE((bool)(sender != nullptr));
             REQUIRE((bool)(args != nullptr));
 
-
-
-
-
-
             receivedMessageCount++;
 
             if (receivedMessageCount == numMessagesToSend)
@@ -204,19 +191,19 @@ TEST_CASE("Connected.Endpoint.MultipleUmpWords Send and receive multiple words")
 
         };
 
-    auto eventRevokeToken = conn1.MessageReceived(MessageReceivedHandler);
+    auto eventRevokeToken = connReceive.MessageReceived(MessageReceivedHandler);
 
     // open connection
-    REQUIRE(conn1.Open());
+    REQUIRE(connSend.Open());
+    REQUIRE(connReceive.Open());
 
 
     // send messages
 
-    uint32_t numBytes = 0;
-
-
     uint32_t words[]{ 0,0,0,0 };
-    uint32_t wordCount = 0;
+    uint8_t wordCount = 0;
+
+    std::cout << "Creating message" << std::endl;
 
     for (uint32_t i = 0; i < numMessagesToSend; i++)
     {
@@ -251,15 +238,23 @@ TEST_CASE("Connected.Endpoint.MultipleUmpWords Send and receive multiple words")
         break;
         }
 
-        numBytes += sizeof(uint32_t) * wordCount + sizeof(uint64_t);
-        conn1.SendUmpWordArray(timestamp, words, wordCount);
+        std::cout << "Sending UMP Word Array" << std::endl;
+
+        connSend.SendUmpWordArray(timestamp, words, 0, wordCount);
 
     }
+
+    std::cout << "Waiting for response" << std::endl;
+
     // Wait for incoming message
     if (!allMessagesReceived.wait(3000))
     {
         std::cout << "Failure waiting for messages, timed out." << std::endl;
     }
+
+    std::cout << "Finished waiting. Unwiring event" << std::endl;
+
+    connReceive.MessageReceived(eventRevokeToken);
 
 //    REQUIRE(messageReceivedFlag);
 
@@ -268,6 +263,12 @@ TEST_CASE("Connected.Endpoint.MultipleUmpWords Send and receive multiple words")
     // unwire event
     //conn1.WordsReceived(eventRevokeToken);
 
+    std::cout << "Disconnecting endpoints" << std::endl;
+
     // cleanup endpoint. Technically not required as session will do it
-    session.DisconnectEndpointConnection(conn1.ConnectionId());
+    session.DisconnectEndpointConnection(connSend.ConnectionId());
+    session.DisconnectEndpointConnection(connReceive.ConnectionId());
+
+    std::cout << "Endpoints disconnected" << std::endl;
+
 }

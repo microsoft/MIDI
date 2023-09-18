@@ -15,7 +15,7 @@
     <ClCompile Include="BidirectionalEndpointTests.cpp">
       <Filter>Tests\Infrastructure</Filter>
     </ClCompile>
-    <ClCompile Include="CacheTests.cpp">
+    <ClCompile Include="EndpointCacheTests.cpp">
       <Filter>Tests\Infrastructure</Filter>
     </ClCompile>
     <ClCompile Include="ClockTests.cpp">
@@ -35,6 +35,12 @@
     </ClCompile>
     <ClCompile Include="Benchmarks.cpp">
       <Filter>Tests\Benchmark</Filter>
+    </ClCompile>
+    <ClCompile Include="GlobalCacheTests.cpp">
+      <Filter>Tests\Infrastructure</Filter>
+    </ClCompile>
+    <ClCompile Include="BidirectionalAggregatedEndpointTests.cpp">
+      <Filter>Tests\Infrastructure</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

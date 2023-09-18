@@ -13,23 +13,28 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    struct MidiGlobalCache : MidiGlobalCacheT<MidiGlobalCache>
+    struct MidiGlobalCache : MidiGlobalCacheT<MidiGlobalCache>,
+        public internal::InternalMidiCache<std::string>
     {
         MidiGlobalCache() = default;
 
         void AddOrUpdateData(
-            _In_ winrt::hstring const& key, 
+            _In_ winrt::hstring const& propertyKey, 
             _In_ winrt::hstring const& data,
             _In_ foundation::DateTime const& expirationTime);
 
+        void AddOrUpdateData(
+            _In_ winrt::hstring const& propertyKey,
+            _In_ winrt::hstring const& data);
+
         void RemoveData(
-            _In_ winrt::hstring const& key);
+            _In_ winrt::hstring const& propertyKey);
 
         hstring GetData(
-            _In_ winrt::hstring const& key);
+            _In_ winrt::hstring const& propertyKey);
 
         bool IsDataPresent(
-            _In_ winrt::hstring const& key);
+            _In_ winrt::hstring const& propertyKey);
         
 
         winrt::event_token GlobalInformationUpdated(
@@ -42,30 +47,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
             if (m_dataUpdateEvent) m_dataUpdateEvent.remove(token);
         }
 
-
-        std::string BuildCacheKey(winrt::hstring const& key)
+        std::string BuildCacheKey(winrt::hstring const& propertyKey)
         {
-            return winrt::to_string(key);
+            return winrt::to_string(propertyKey);
         }
 
-        bool InternalIsDataPresent(std::string cacheKey)
-        {
-            if (auto result = m_cache.find(cacheKey); result != m_cache.end())
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
 
     private:
         winrt::event<foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiGlobalInformationCacheUpdatedEventArgs>> m_dataUpdateEvent;
-
-        // This is all local until we have the cache service in place
-        std::map<std::string, std::string> m_cache{};
-
 
     };
 }

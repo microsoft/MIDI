@@ -135,11 +135,45 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
+    void MidiBidirectionalAggregatedEndpointConnection::Close()
+    {
+        if (m_closeHasBeenCalled) return;
 
+        try
+        {
+            CleanupPlugins();
+
+            if (m_outputAbstraction != nullptr)
+            {
+                m_outputAbstraction->Cleanup();
+                m_outputAbstraction = nullptr;
+            }
+
+            // output and input are separate abstractions, so need to clean them both up
+            if (m_inputAbstraction != nullptr)
+            {
+                m_inputAbstraction->Cleanup();
+                m_inputAbstraction = nullptr;
+            }
+
+            IsOpen(false);
+            OutputIsOpen(false);
+            InputIsOpen(false);
+
+            // TODO: any event cleanup?
+
+            m_closeHasBeenCalled = true;
+        }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Exception on close");
+        }
+    }
 
     MidiBidirectionalAggregatedEndpointConnection::~MidiBidirectionalAggregatedEndpointConnection()
     {
-        // TODO
+        if (!m_closeHasBeenCalled)
+            Close();
     }
 
 

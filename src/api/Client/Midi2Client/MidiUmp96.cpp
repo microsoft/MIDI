@@ -28,13 +28,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     // internal constructor for reading from the service callback
     _Use_decl_annotations_
-    MidiUmp96::MidiUmp96(
+    void MidiUmp96::InternalInitializeFromPointer(
         internal::MidiTimestamp timestamp, 
         PVOID data)
-        : MidiUmp96()
     {
-      //  WINRT_ASSERT(_ump != nullptr);
-        WINRT_ASSERT(data != nullptr);
+        if (data == nullptr) return;
 
         m_timestamp = timestamp;
 

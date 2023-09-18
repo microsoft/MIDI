@@ -18,7 +18,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiService() = default;
 
-
         static midi2::MidiServicePingResponseSummary PingService(
             _In_ uint8_t const pingCount
             ) noexcept;
@@ -33,23 +32,30 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static midi2::MidiEndpointMetadataCache EndpointMetadataCache() noexcept 
         { 
-            return m_endpointMetadataCache; 
+            if (m_endpointMetadataCache == nullptr)
+                m_endpointMetadataCache = winrt::make_self<implementation::MidiEndpointMetadataCache>();
+
+            return *m_endpointMetadataCache;
         }
 
         static midi2::MidiGlobalCache GlobalCache() noexcept 
-        { 
-            return m_globalCache; 
+        {
+            if (m_globalCache == nullptr)
+                m_globalCache = winrt::make_self<implementation::MidiGlobalCache>();
+
+            return *m_globalCache;
         }
 
     private:
-        static MidiEndpointMetadataCache m_endpointMetadataCache;
-        static MidiGlobalCache m_globalCache;
+        static winrt::com_ptr<MidiEndpointMetadataCache> m_endpointMetadataCache; 
+        static winrt::com_ptr<MidiGlobalCache> m_globalCache;
+
 
     };
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation
 {
-    struct MidiService : MidiServiceT<MidiService, implementation::MidiService>
+    struct MidiService : MidiServiceT<MidiService, implementation::MidiService, winrt::static_lifetime>
     {
     };
 }

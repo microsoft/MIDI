@@ -22,8 +22,8 @@ namespace Windows.Devices.Midi2
     [default_interface]
     runtimeclass MidiOutputEndpointConnection :  
                                                 Windows.Devices.Midi2.IMidiEndpointConnection,
-                                                Windows.Devices.Midi2.IMidiOutputConnection
-
+                                                Windows.Devices.Midi2.IMidiOutputConnection,
+                                                Windows.Foundation.IClosable
     {
         // Get the enumeration device selector for all compatible devices
         static String GetDeviceSelector();

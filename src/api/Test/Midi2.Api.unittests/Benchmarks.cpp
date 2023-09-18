@@ -50,8 +50,7 @@ TEST_CASE("Connected.Benchmark.APIWords Send / receive word array through loopba
 
     uint64_t setupStartTimestamp = MidiClock::GetMidiTimestamp();
 
-    auto settings = MidiSessionSettings::Default();
-    auto session = MidiSession::CreateSession(L"Test Session Name", settings);
+    auto session = MidiSession::CreateSession(L"Test Session Name");
 
     REQUIRE((bool)(session.IsOpen()));
     REQUIRE((bool)(session.Connections().Size() == 0));
@@ -299,8 +298,7 @@ TEST_CASE("Connected.Benchmark.APIUmp Send / receive UMPs through loopback")
 
     uint64_t setupStartTimestamp = MidiClock::GetMidiTimestamp();
 
-    auto settings = MidiSessionSettings::Default();
-    auto session = MidiSession::CreateSession(L"Test Session Name", settings);
+    auto session = MidiSession::CreateSession(L"Test Session Name");
 
     REQUIRE((bool)(session.IsOpen()));
     REQUIRE((bool)(session.Connections().Size() == 0));

@@ -179,7 +179,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation
 {
-    struct MidiMessageBuilder : MidiMessageBuilderT<MidiMessageBuilder, implementation::MidiMessageBuilder>
+    struct MidiMessageBuilder : MidiMessageBuilderT<MidiMessageBuilder, implementation::MidiMessageBuilder, winrt::static_lifetime>
     {
     };
 }

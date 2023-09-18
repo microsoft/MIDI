@@ -65,7 +65,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
         _Success_(return == true)
         bool Open();
 
+        // IClosable
+        void Close();
+
+
     private:
+        bool m_closeHasBeenCalled{ false };
+
+
         // We use the InputDeviceId. InputDeviceId and OutputDeviceId 
         // are the same thing. It's a bit hokey, but many other parts
         // of the API and plugins need to have the device IDs defined at

@@ -27,7 +27,9 @@ namespace Windows.Devices.Midi2
     runtimeclass MidiInputEndpointConnection :  
                                                Windows.Devices.Midi2.IMidiEndpointConnection,
                                                Windows.Devices.Midi2.IMidiInputConnection,
-                                               Windows.Devices.Midi2.IMidiMessageReceivedEventSource
+                                               Windows.Devices.Midi2.IMidiMessageReceivedEventSource,
+                                               Windows.Foundation.IClosable
+
 
     {
         // Get the enumeration device selector for all compatible devices

@@ -27,10 +27,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // TODO: This doesn't do any bounds checking, and it should
         MidiUmp96(
             _In_ internal::MidiTimestamp const timestamp, 
-            _In_ array_view<uint32_t const> words) : MidiUmp96(timestamp, (PVOID)words.data()) {};
+            _In_ array_view<uint32_t const> words)
+        {
+            if (words.size() == 3) InternalInitializeFromPointer(timestamp, (PVOID)words.data());
+        }
+
 
         // internal
-        MidiUmp96(
+        void InternalInitializeFromPointer(
             _In_ internal::MidiTimestamp timestamp, 
             _In_ PVOID data);
 

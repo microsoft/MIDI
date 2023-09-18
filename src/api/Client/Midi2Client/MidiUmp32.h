@@ -23,7 +23,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ uint32_t const word0);
 
         // internal
-        MidiUmp32(
+        void InternalInitializeFromPointer(
             _In_ internal::MidiTimestamp const timestamp, 
             _In_ PVOID data);
 
@@ -47,7 +47,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     private:
         internal::MidiTimestamp m_timestamp{};
-
         internal::PackedUmp32 m_ump{ };
 
     };

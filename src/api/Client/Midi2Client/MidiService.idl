@@ -21,7 +21,6 @@ namespace Windows.Devices.Midi2
     runtimeclass MidiService
     {
         static MidiServicePingResponseSummary PingService(UInt8 pingCount);
-
         static MidiServicePingResponseSummary PingService(UInt8 pingCount, UInt32 timeoutMilliseconds);
 
         // list all the installed transports like Virtual, USB, BLE1, etc

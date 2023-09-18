@@ -62,7 +62,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring const& sessionName
         ) noexcept
     {
-        return CreateSession(sessionName, midi2::MidiSessionSettings::Default());
+        return CreateSession(sessionName, MidiSessionSettings());
     }
 
     // Internal method called inside the API to connect to the abstraction. Called by the code which creates
@@ -421,7 +421,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 // todo: disconnect the endpoint from the service, call Close() etc.
 
-
+                m_connections.Lookup(endpointConnectionId).as<foundation::IClosable>().Close();
 
                 m_connections.Remove(endpointConnectionId);
             }
@@ -436,6 +436,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             return;
         }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L" Unknown exception disconnecting endpoint connection");
+        }
     }
 
 
@@ -443,31 +447,30 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     void MidiSession::Close() noexcept
     {
-        // todo: need to clean up all connections, disconnect from service, etc.
+        if (!m_isOpen) return;
 
-        //std::for_each(
-        //    begin(_connections), 
-        //    end(_connections), 
-        //    [](winrt::Windows::Foundation::Collections::IKeyValuePair<hstring,midi2::MidiEndpointConnection> &kvp)
-        //        { 
-        //            // TODO: close the Endpoint at the service, remove the buffers, etc.
-        //            
-
-        //        });
-
-        m_connections.Clear();
-
-        if (m_serviceAbstraction != nullptr)
+        try
         {
-            // TODO: Call any cleanup method on the service
+            m_connections.Clear();
 
-            m_serviceAbstraction = nullptr;
+            if (m_serviceAbstraction != nullptr)
+            {
+                // TODO: Call any cleanup method on the service
+
+                m_serviceAbstraction = nullptr;
+            }
+
+            // Id is no longer valid, and session is not open. Clear these in case the client tries to use the held reference
+            //m_id.clear();
+            m_isOpen = false;
+            m_mmcssTaskId = 0;
+
+        }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Exception on close");
         }
 
-        // Id is no longer valid, and session is not open. Clear these in case the client tries to use the held reference
-        //m_id.clear();
-        m_isOpen = false;
-        m_mmcssTaskId = 0;
     }
 
 

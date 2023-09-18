@@ -29,6 +29,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
             memcpy(&m_data, data, sizeInBytes);
         }
+        else
+        {
+            // invalid UMP data
+        }
     }
 
     _Use_decl_annotations_

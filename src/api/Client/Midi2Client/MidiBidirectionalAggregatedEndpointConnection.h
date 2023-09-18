@@ -62,8 +62,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         _Success_(return == true)
         bool Open();
 
+        // IClosable
+        void Close();
 
     private:
+        bool m_closeHasBeenCalled{ false };
 
     };
 }

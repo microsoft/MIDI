@@ -16,6 +16,7 @@ using namespace winrt::Windows::Devices::Enumeration;
 // where you find types like IAsyncOperation, IInspectable, etc.
 namespace foundation = winrt::Windows::Foundation;
 
+
 int main()
 {
     winrt::init_apartment();
@@ -56,7 +57,8 @@ int main()
     {
         std::cout << "MIDI Endpoints were found:" << std::endl;
 
-        DeviceInformation selectedEndpointInformation { nullptr };
+        DeviceInformation selectedInEndpointInformation { nullptr };
+        DeviceInformation selectedOutEndpointInformation{ nullptr };
 
         for (auto const& device : endpointDevices)
         {
@@ -64,47 +66,42 @@ int main()
             std::cout << winrt::to_string(device.Name()) << std::endl;
             std::cout << "   " << winrt::to_string(device.Id()) << std::endl;
 
-
             std::string id = winrt::to_string(device.Id());
 
-            // TODO: We will have a more deterministic way of identifying the loopback device using a property
-            // or you could directly use the Id
+            // TODO: We will have a more deterministic way of identifying the loopback endpoints using a property
+            // or you could directly use the Id. The two loopback bidirectional endpoints are cross-wired together, out to in
             if (id.find("LOOPBACK_BIDI_A") != std::string::npos)
             {
-                selectedEndpointInformation = device;
-                break;
+                selectedOutEndpointInformation = device;
             }
+            else if (id.find("LOOPBACK_BIDI_B") != std::string::npos)
+            {
+                selectedInEndpointInformation = device;
+            }
+
         }
         std::cout << std::endl;
 
-        if (selectedEndpointInformation == nullptr)
+        if (selectedOutEndpointInformation == nullptr || selectedOutEndpointInformation == nullptr)
         {
-            std::cout << "No loopback endpoint found. This is not normal. Exiting." << std::endl;
+            std::cout << "Loopback endpoints were not found. This is not normal. Exiting." << std::endl;
             return 0;
         }
 
         // then you connect to the UMP endpoint
         std::cout << std::endl << "Connecting to UMP Endpoint..." << std::endl;
 
-        auto endpoint = session.ConnectBidirectionalEndpoint(selectedEndpointInformation.Id());
+        auto sendEndpoint = session.ConnectBidirectionalEndpoint(selectedOutEndpointInformation.Id());
+        std::cout << "Connected to sending endpoint: " << winrt::to_string(selectedOutEndpointInformation.Name()) << std::endl;
 
-        std::cout << "Connected to endpoint: " << winrt::to_string(selectedEndpointInformation.Name()) << std::endl;
+        auto receiveEndpoint = session.ConnectBidirectionalEndpoint(selectedInEndpointInformation.Id());
+        std::cout << "Connected to receiving endpoint: " << winrt::to_string(selectedInEndpointInformation.Name()) << std::endl;
 
-
-        // Each UMP Endpoint connection creates a number of resources for communication between the API and
-        // the service, and also for wiring up within the service itself. We do not prevent multiple
-        // connections to the same single UMP Endpoint from within the same session, but if you do so, you 
-        // want to consider the memory and processing cost associated with that.
-            
-        // After connecting, you can send and receive messages to/from the endpoint. Sending and receiving is
-        // performed one complete UMP at a time. Each message has an associated timestamp.
-            
-            
         // Wire up an event handler to receive the message. There is a single event handler type, but the
         // MidiMessageReceivedEventArgs class provides the different ways to access the data
         // Your event handlers should return quickly as they are called synchronously.
 
-        auto MessageReceivedHandler = [](foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
+        auto MessageReceivedHandler = [&](foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
             {
                 // there are several ways to get the message data from the arguments. If you want to use
                 // strongly-typed UMP classes, then you may start with the GetUmp() method. The GetXXX calls 
@@ -138,7 +135,7 @@ int main()
             };
 
         // the returned token is used to deregister the event later.
-        auto eventRevokeToken = endpoint.MessageReceived(MessageReceivedHandler);
+        auto eventRevokeToken = receiveEndpoint.MessageReceived(MessageReceivedHandler);
 
 
         std::cout << std::endl << "Opening endpoint connection (this sends out the required discovery messages which will loop back)..." << std::endl;
@@ -147,34 +144,45 @@ int main()
         // You can open the connection. Doing this will query the cache for the in-protocol 
         // endpoint information and function blocks. If not there, it will send out the requests
         // which will come back asynchronously with responses.
-        endpoint.Open();
+        sendEndpoint.Open();
+        receiveEndpoint.Open();
 
 
         std::cout << std::endl << "Creating MIDI 1.0 Channel Voice 32-bit UMP..." << std::endl;
 
-        MidiUmp32 ump32{};
-        ump32.MessageType(MidiUmpMessageType::Midi1ChannelVoice32);
+        auto ump32 = MidiMessageBuilder::BuildMidi1ChannelVoiceMessage(
+            MidiClock::GetMidiTimestamp(), // use current timestamp
+            5,      // group 5
+            Midi1ChannelVoiceMessageStatus::NoteOn,     // 9
+            3,      // channel 3
+            120,    // note 120 - hex 0x78
+            100);   // velocity 100 hex 0x64
 
         // here you would set other values in the UMP word(s)
 
         std::cout << "Sending single UMP..." << std::endl;
 
         auto ump = ump32.as<IMidiUmp>();
-        endpoint.SendUmp(ump);
+        sendEndpoint.SendUmp(ump);          // could also use the SendWords methods, etc.
 
-        std::cout << std::endl << "Wait for the sent UMP to arrive, and then press enter to cleanup." << std::endl;
+        std::cout << std::endl << " ** Wait for the sent UMP to arrive, and then press enter to cleanup. **" << std::endl;
 
         system("pause");
 
         std::cout << std::endl << "Deregistering event handler..." << std::endl;
 
         // deregister the event by passing in the revoke token
-        endpoint.MessageReceived(eventRevokeToken);
+        receiveEndpoint.MessageReceived(eventRevokeToken);
 
         std::cout << "Disconnecting UMP Endpoint Connection..." << std::endl;
 
+        // not strictly necessary, but good form. In C#/.NET, you can use the dispose pattern
+        sendEndpoint.as<winrt::Windows::Foundation::IClosable>().Close();
+        receiveEndpoint.as<winrt::Windows::Foundation::IClosable>().Close();
+
         // not strictly necessary as the session.Close() call will do it, but it's here in case you need it
-        session.DisconnectEndpointConnection(endpoint.ConnectionId());
+        session.DisconnectEndpointConnection(sendEndpoint.ConnectionId());
+        session.DisconnectEndpointConnection(receiveEndpoint.ConnectionId());
     }
     else
     {
@@ -183,7 +191,7 @@ int main()
     }
 
     // close the session, detaching all Windows MIDI Services resources and closing all connections
-    // You can also disconnect individual Endpoint Connections when you are done with them
+    // You can also disconnect individual Endpoint Connections when you are done with them, as we did above
     session.Close();
 
 }

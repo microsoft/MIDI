@@ -56,18 +56,22 @@ namespace Windows::Devices::Midi2::Internal
             _In_ uint32_t const word2,
             _In_ uint32_t const word3);
 
+
         _Success_(return == true)
         bool SendUmpWordArray(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ winrt::array_view<uint32_t const> words,
-            _In_ uint32_t const wordCount);
+            _In_ uint32_t const startIndex,
+            _In_ uint8_t const wordCount);
+
+
 
         _Success_(return == true)
         bool SendUmpBuffer(
             _In_ internal::MidiTimestamp timestamp,
             _In_ foundation::IMemoryBuffer const& buffer,
             _In_ uint32_t byteOffset,
-            _In_ uint32_t byteLength);
+            _In_ uint8_t byteLength);
 
     protected:
         winrt::hstring m_outputDeviceId{ };
@@ -89,13 +93,13 @@ namespace Windows::Devices::Midi2::Internal
         bool SendMessageRaw(
             _In_ winrt::com_ptr<TEndpointAbstraction> endpoint, 
             _In_ void* data, 
-            _In_ uint32_t sizeInBytes, 
+            _In_ uint8_t sizeInBytes, 
             _In_ internal::MidiTimestamp timestamp);
 
         _Success_(return != nullptr)
         void* GetUmpDataPointer(
             _In_ midi2::IMidiUmp const& ump, 
-            _Out_ uint32_t& dataSizeOut);
+            _Out_ uint8_t& dataSizeOut);
 
     };
 
@@ -108,7 +112,7 @@ namespace Windows::Devices::Midi2::Internal
     bool InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageRaw(
             winrt::com_ptr<TEndpointAbstraction> endpoint,
             void* data, 
-            uint32_t sizeInBytes, 
+            uint8_t sizeInBytes, 
             internal::MidiTimestamp timestamp)
     {
         try
@@ -139,7 +143,7 @@ namespace Windows::Devices::Midi2::Internal
     template <typename TEndpointAbstraction>
     void* InternalMidiOutputConnection<TEndpointAbstraction>::GetUmpDataPointer(
             midi2::IMidiUmp const& ump, 
-            uint32_t& dataSizeOut)
+            uint8_t& dataSizeOut)
     {
         void* umpDataPointer{};
         dataSizeOut = 0;
@@ -147,19 +151,22 @@ namespace Windows::Devices::Midi2::Internal
         switch (ump.UmpPacketType())
         {
         case midi2::MidiUmpPacketType::Ump32:
-            dataSizeOut = (uint32_t)sizeof(internal::PackedUmp32);
+            dataSizeOut = (uint8_t)sizeof(internal::PackedUmp32);
             umpDataPointer = ump.as<implementation::MidiUmp32>()->GetInternalUmpDataPointer();
             break;
+
         case midi2::MidiUmpPacketType::Ump64:
-            dataSizeOut = (uint32_t)sizeof(internal::PackedUmp64);
+            dataSizeOut = (uint8_t)sizeof(internal::PackedUmp64);
             umpDataPointer = ump.as<implementation::MidiUmp64>()->GetInternalUmpDataPointer();
             break;
+
         case midi2::MidiUmpPacketType::Ump96:
-            dataSizeOut = (uint32_t)sizeof(internal::PackedUmp96);
+            dataSizeOut = (uint8_t)sizeof(internal::PackedUmp96);
             umpDataPointer = ump.as<implementation::MidiUmp96>()->GetInternalUmpDataPointer();
             break;
+
         case midi2::MidiUmpPacketType::Ump128:
-            dataSizeOut = (uint32_t)sizeof(internal::PackedUmp128);
+            dataSizeOut = (uint8_t)sizeof(internal::PackedUmp128);
             umpDataPointer = ump.as<implementation::MidiUmp128>()->GetInternalUmpDataPointer();
             break;
         }
@@ -178,7 +185,7 @@ namespace Windows::Devices::Midi2::Internal
         {
             if (endpoint != nullptr)
             {
-                uint32_t umpDataSize{};
+                uint8_t umpDataSize{};
 
                 auto umpDataPointer = GetUmpDataPointer(ump, umpDataSize);
 
@@ -206,7 +213,7 @@ namespace Windows::Devices::Midi2::Internal
             const internal::MidiTimestamp timestamp,
             winrt::Windows::Foundation::IMemoryBuffer const& buffer,
             const uint32_t byteOffset,
-            const uint32_t byteLength)
+            const uint8_t byteLength)
     {
         try
         {
@@ -240,8 +247,6 @@ namespace Windows::Devices::Midi2::Internal
             // make sure we're not going to spin past the end of the buffer
             if (byteOffset + byteLength > bufferReference.Capacity())
             {
-                // TODO: Log
-
                 internal::LogGeneralError(__FUNCTION__, L"Buffer smaller than provided offset + byteLength");
 
                 return false;
@@ -267,7 +272,9 @@ namespace Windows::Devices::Midi2::Internal
     bool InternalMidiOutputConnection<TEndpointAbstraction>::SendUmpWordArray(
             internal::MidiTimestamp const timestamp,
             winrt::array_view<uint32_t const> words,
-            uint32_t const wordCount)
+            uint32_t const startIndex,
+            uint8_t const wordCount
+            )
     {
         try
         {
@@ -282,7 +289,6 @@ namespace Windows::Devices::Midi2::Internal
 
             if (!internal::IsValidSingleUmpWordCount(wordCount))
             {
-                //throw hresult_invalid_argument();
                 internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for a single UMP", wordCount, timestamp);
 
                 return false;
@@ -295,14 +301,21 @@ namespace Windows::Devices::Midi2::Internal
                 return false;
             }
 
+            if (startIndex + wordCount > words.size())
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Array start index + word count is > array size");
+
+                return false;
+            }
+
 
             if (m_outputAbstraction)
             {
-                auto umpDataSize = (uint32_t)(sizeof(uint32_t) * wordCount);
+                auto umpDataSize = (uint8_t)(sizeof(uint32_t) * wordCount);
 
                 // if the service goes down, this will fail
 
-                return SendMessageRaw(m_outputAbstraction, (void*)words.data(), umpDataSize, timestamp);
+                return SendMessageRaw(m_outputAbstraction, (void*)(words.data() + startIndex), umpDataSize, timestamp);
             }
             else
             {
@@ -318,6 +331,7 @@ namespace Windows::Devices::Midi2::Internal
             return false;
         }
     }
+
 
     _Use_decl_annotations_
     template <typename TEndpointAbstraction>
@@ -346,7 +360,7 @@ namespace Windows::Devices::Midi2::Internal
 
             if (m_outputAbstraction)
             {
-                auto umpByteCount = (uint32_t)(sizeof(internal::PackedUmp32));
+                auto umpByteCount = (uint8_t)(sizeof(internal::PackedUmp32));
 
                 // if the service goes down, this will fail
 
@@ -395,7 +409,7 @@ namespace Windows::Devices::Midi2::Internal
 
             if (m_outputAbstraction)
             {
-                auto umpByteCount = (uint32_t)(sizeof(internal::PackedUmp64));
+                auto umpByteCount = (uint8_t)(sizeof(internal::PackedUmp64));
                 internal::PackedUmp64 ump{};
 
                 ump.word0 = word0;
@@ -449,7 +463,7 @@ namespace Windows::Devices::Midi2::Internal
 
             if (m_outputAbstraction)
             {
-                auto umpByteCount = (uint32_t)(sizeof(internal::PackedUmp96));
+                auto umpByteCount = (uint8_t)(sizeof(internal::PackedUmp96));
                 internal::PackedUmp96 ump{};
 
                 ump.word0 = word0;
@@ -504,7 +518,7 @@ namespace Windows::Devices::Midi2::Internal
 
             if (m_outputAbstraction)
             {
-                auto umpByteCount = (uint32_t)(sizeof(internal::PackedUmp128));
+                auto umpByteCount = (uint8_t)(sizeof(internal::PackedUmp128));
                 internal::PackedUmp128 ump{};
 
                 ump.word0 = word0;

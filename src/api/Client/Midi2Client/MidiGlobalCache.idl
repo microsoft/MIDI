@@ -22,6 +22,8 @@ namespace Windows.Devices.Midi2
         // with some sort of watcher if the expiration time is critical to track
 
         void AddOrUpdateData(String key, String data, Windows.Foundation.DateTime expirationTime);
+        void AddOrUpdateData(String key, String data);
+
         void RemoveData(String key);
         String GetData(String key);
         Boolean IsDataPresent(String key);

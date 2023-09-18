@@ -24,7 +24,6 @@ namespace Windows.Devices.Midi2
         void AddOrUpdateData(String endpointId, String propertyKey, String data, Windows.Foundation.DateTime expirationTime);
         void AddOrUpdateData(String endpointId, String propertyKey, String data);
 
-
         void RemoveData(String endpointId, String propertyKey);
         String GetData(String endpointId, String propertyKey);
         Boolean IsDataPresent(String endpointId, String propertyKey);

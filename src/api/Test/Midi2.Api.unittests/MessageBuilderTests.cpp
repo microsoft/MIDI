@@ -39,6 +39,8 @@ TEST_CASE("Build Type 2 MIDI 1.0 Channel Voice Messages")
     // function to create this because we need to check our logic in this test
     uint32_t resultingWord0 = 0x249F717F;
 
+    std::cout << "Building MIDI 1 Channel Voice Message" << std::endl;
+
     auto ump = MidiMessageBuilder::BuildMidi1ChannelVoiceMessage(
         MidiClock::GetMidiTimestamp(), 
         grp.Index(), 
@@ -73,6 +75,8 @@ TEST_CASE("Build Type 4 MIDI 2.0 Channel Voice Messages")
     // function to create this because we need to check our logic in this test
     uint32_t resultingWord0 = 0x459F6655;
     uint32_t resultingWord1 = 0xFF7FD00B;
+
+    std::cout << "Building MIDI 2 Channel Voice Message" << std::endl;
 
     auto ump = MidiMessageBuilder::BuildMidi2ChannelVoiceMessage(
         MidiClock::GetMidiTimestamp(),

@@ -33,6 +33,12 @@ namespace Windows::Devices::Midi2::Internal
     class InternalMidiCache
 
     {
+    public:
+        ~InternalMidiCache()
+        {
+            m_cache.clear();
+        }
+
     protected:
         size_t HashData(_In_ std::string data)
         {
@@ -73,6 +79,8 @@ namespace Windows::Devices::Midi2::Internal
 
         bool InternalIsDataPresent(_In_ TKey cacheKey)
         {
+            ExpireEntryIfDue(cacheKey); // in the service impl, the service will take care of this
+
             if (auto result = m_cache.find(cacheKey); result != m_cache.end())
             {
                 return true;
@@ -83,11 +91,24 @@ namespace Windows::Devices::Midi2::Internal
             }
         }
 
-        // This is all local until we have the cache service in place
-        std::map<TKey, MidiCacheEntry> m_cache{};
+        MidiCacheEntry InternalGetCacheItem(_In_ TKey cacheKey)
+        {
+            return m_cache[cacheKey];
+        }
 
+        void InternalRemoveItem(_In_ TKey cacheKey)
+        {
+            m_cache.erase(cacheKey);
+        }
+
+        void InternalAddOrUpdateItem(_In_ TKey cacheKey, _In_ MidiCacheEntry entry)
+        {
+            m_cache[cacheKey] = entry;
+        }
 
     private:
+        // This is all local until we have the cache service in place
+        std::map<TKey, MidiCacheEntry> m_cache{};
 
 
     };

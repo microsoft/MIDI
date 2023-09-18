@@ -19,6 +19,6 @@ namespace Windows.Devices.Midi2
     {
         MidiCacheUpdateType UpdateType { get; };
 
-        String Key{ get; };
+        String PropertyKey{ get; };
     }
 }

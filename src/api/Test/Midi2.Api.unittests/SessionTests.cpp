@@ -11,13 +11,13 @@
 
 #include "catch_amalgamated.hpp"
 
-#include <iostream>
 #include <algorithm>
 #include <Windows.h>
 
 //using namespace winrt;
 using namespace winrt::Windows::Devices::Midi2;
 
+// TODO: Need to have a test that uses session settings
 
 TEST_CASE("Connected.Session.CreateSession Create new session")
 {

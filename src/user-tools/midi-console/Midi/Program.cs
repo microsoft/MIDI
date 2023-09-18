@@ -89,7 +89,6 @@ app.Configure(config =>
             .WithDescription(Strings.CommandSendMessagesFileDescription)
             ;
 
-
         endpoint.AddCommand<CaptureMessagesCommand>("capture")
             .WithAlias("record")
             .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "capture", "%USERPROFILE%\\Documents\\capture.txt", "--echo", "--annotate")
@@ -100,6 +99,35 @@ app.Configure(config =>
 
 
     }).WithAlias("ep");
+
+
+    /*
+    config.AddBranch<CacheCommandSettings>("cache", cache =>
+    {
+        // todo: commands to work with the global cache and the endpoint cache
+        // including ways to flush all cache items for a single endpoint, 
+        // way to set the value of the data for an endpoint property
+        // and then the same for global
+        // cache endpoint <endpoint id> flush
+        // cache endpoint <endpoint id> list|enumerate
+        // cache endpoint <endpoint id> set <property> <value>
+        // cache endpoint <endpoint id> set-from-file <property> <filename>
+        // TBD: provide a way to do the same for *all* endpoints in the cache?
+        // cache global flush
+        // cache global list|enumerate
+        // cache global set <property> <value>
+        // cache global set-from-file <property> <filename>
+    });
+    */
+
+    /*
+    config.AddBranch<SimulateCommandSettings>("simulate", cache =>
+    {
+        // TODO: endpoint and function block responders, including static, randomly moving at some interval, etc.
+        // include an interactive mode that has menus for changing the endpoint name etc.
+
+    });
+    */
 
 
     /*

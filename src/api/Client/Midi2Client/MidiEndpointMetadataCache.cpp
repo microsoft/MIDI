@@ -32,11 +32,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // check to see if this key already exists. Don't raise event if the data hasn't actually changed
         if (InternalIsDataPresent(cacheKey))
         {
-
             auto newHash = HashData(winrt::to_string(data));
 
             // hash here is unique enough for this use 1.0/size_t's maxvalue chance of collision
-            if (m_cache[cacheKey].dataHash == newHash)
+            if (InternalGetCacheItem(cacheKey).dataHash == newHash)
             {
                 // data has not changed. Do nothing
                 return;
@@ -50,7 +49,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
 
         // update the cache
-        m_cache[cacheKey] = CreateCacheEntry(data, expirationTime);
+        InternalAddOrUpdateItem(cacheKey, CreateCacheEntry(data, expirationTime));
 
         // raise the updated event
         if (m_dataUpdateEvent)
@@ -92,7 +91,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         if (InternalIsDataPresent(cacheKey))
         {
-            m_cache.erase(cacheKey);
+            InternalRemoveItem(cacheKey);
 
             if (m_dataUpdateEvent)
             {
@@ -107,7 +106,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
             // the data isn't there. Do nothing
         }
-
     }
 
     _Use_decl_annotations_
@@ -120,7 +118,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         if (InternalIsDataPresent(cacheKey))
         {
-            return winrt::to_hstring(m_cache[cacheKey].data);
+            return winrt::to_hstring(InternalGetCacheItem(cacheKey).data);
         }
         else
         {

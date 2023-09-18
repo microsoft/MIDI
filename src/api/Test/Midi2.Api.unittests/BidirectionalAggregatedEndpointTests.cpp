@@ -11,5 +11,11 @@
 
 #include "catch_amalgamated.hpp"
 
-using namespace winrt::Windows::Devices::Midi2;
+#include <algorithm>
+#include <Windows.h>
 
+//#include "..\api-core\ump_helpers.h"
+#include <wil\resource.h>
+
+//using namespace winrt;
+using namespace winrt::Windows::Devices::Midi2;

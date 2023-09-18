@@ -117,25 +117,42 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
+    void MidiBidirectionalEndpointConnection::Close()
+    {
+        if (m_closeHasBeenCalled) return;
 
-    // TODO: Move this logic to the base classes
+        try
+        {
+            CleanupPlugins();
+
+            if (m_inputAbstraction != nullptr)
+            {
+                m_inputAbstraction->Cleanup();
+                m_inputAbstraction = nullptr;
+            }
+
+            // output is also input, so don't call cleanup
+            m_outputAbstraction = nullptr;
+
+            IsOpen(false);
+            InputIsOpen(false);
+            OutputIsOpen(false);
+
+            // TODO: any event cleanup?
+
+            m_closeHasBeenCalled = true;
+        }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Exception on close");
+        }
+    }
 
     _Use_decl_annotations_
     MidiBidirectionalEndpointConnection::~MidiBidirectionalEndpointConnection()
     {
-        if (m_inputAbstraction != nullptr)
-        {
-            m_inputAbstraction->Cleanup();
-            m_inputAbstraction = nullptr;
-        }
-
-        m_outputAbstraction = nullptr;
-
-        IsOpen(false);
-        InputIsOpen(false);
-        OutputIsOpen(false);
-
-        // TODO: any event cleanup?
+        if (!m_closeHasBeenCalled)
+            Close();
     }
 
 }
