@@ -32,7 +32,7 @@ namespace Windows.Devices.Midi2
         // out on the endpoint. So the functions do that.
         IMapView<UInt8, MidiFunctionBlock> FunctionBlocks{ get; };
         
-        void AddFunctionBlock(MidiFunctionBlock block);
+        Boolean AddFunctionBlock(MidiFunctionBlock block);
         void UpdateFunctionBlock(MidiFunctionBlock block);
         void RemoveFunctionBlock(UInt8 functionBlockNumber);
 

@@ -30,6 +30,7 @@ namespace Windows::Devices::Midi2::Internal
         }
         catch (...)
         {
+            internal::LogGeneralError(__FUNCTION__, L"Exception setting input connection on plugins.");
         }
     }
 
@@ -50,6 +51,7 @@ namespace Windows::Devices::Midi2::Internal
         }
         catch (...)
         {
+            internal::LogGeneralError(__FUNCTION__, L"Exception setting output connection on plugins.");
         }
     }
 
@@ -64,6 +66,8 @@ namespace Windows::Devices::Midi2::Internal
             }
             catch (...)
             {
+                internal::LogGeneralError(__FUNCTION__, L"Exception initializing plugins.");
+
             }
         }
     }
@@ -79,6 +83,7 @@ namespace Windows::Devices::Midi2::Internal
             }
             catch (...)
             {
+                internal::LogGeneralError(__FUNCTION__, L"Exception calling Open on plugins.");
             }
         }
     }
@@ -94,7 +99,7 @@ namespace Windows::Devices::Midi2::Internal
             }
             catch (...)
             {
-                // eat any exceptions
+                internal::LogGeneralError(__FUNCTION__, L"Exception cleaning up plugins.");
             }
         }
     }

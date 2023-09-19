@@ -31,6 +31,10 @@ namespace Windows::Devices::Midi2::Internal
     void UnregisterTraceLogging();
 
 
+    void LogInfo(
+        _In_z_ const char* location,
+        _In_z_ const wchar_t* message) noexcept;
+
     void LogHresultError(
         _In_z_ const char* location,
         _In_z_ const wchar_t* message,

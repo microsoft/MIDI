@@ -170,7 +170,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint8_t const dataByte11,
         uint8_t const dataByte12) noexcept
     {
-
         return midi2::MidiUmp128(
             timestamp,
             (uint32_t)(
@@ -180,7 +179,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 internal::CleanupNibble(numberOfValidDataBytesThisMessage) << 16 |
                 streamId << 8 |
                 dataByte00),
-
             internal::MidiWordFromBytes(dataByte01, dataByte02, dataByte03, dataByte04),
             internal::MidiWordFromBytes(dataByte05, dataByte06, dataByte07, dataByte08),
             internal::MidiWordFromBytes(dataByte09, dataByte10, dataByte11, dataByte12)

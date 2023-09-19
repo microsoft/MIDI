@@ -219,6 +219,9 @@
     <ClCompile Include="MidiVirtualDeviceResponder.cpp">
       <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
     </ClCompile>
+    <ClCompile Include="MidiStreamMessageBuilder.cpp">
+      <Filter>API\Messages\Utility</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -362,6 +365,10 @@
     <ClInclude Include="MidiVirtualDeviceResponder.h">
       <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
     </ClInclude>
+    <ClInclude Include="MidiStreamMessageBuilder.h">
+      <Filter>API\Messages\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="dllmain.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiSession.idl">
@@ -573,6 +580,12 @@
     </Midl>
     <Midl Include="MidiFunctionBlockMidi10Enum.idl">
       <Filter>API\Endpoints\Metadata\Functions</Filter>
+    </Midl>
+    <Midl Include="MidiStreamMessageBuilder.idl">
+      <Filter>API\Messages\Utility</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDiscoveryFilterFlagsEnum.idl">
+      <Filter>API\Messages</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

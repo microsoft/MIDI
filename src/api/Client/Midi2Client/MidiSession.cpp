@@ -447,24 +447,31 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     void MidiSession::Close() noexcept
     {
+        internal::LogInfo(__FUNCTION__, L" Closing session");
+
         if (!m_isOpen) return;
 
         try
         {
-            m_connections.Clear();
-
             if (m_serviceAbstraction != nullptr)
             {
                 // TODO: Call any cleanup method on the service
+                for (auto connection : m_connections)
+                {
+                    // close the one connection
+                    connection.Value().as<foundation::IClosable>().Close();
+                }
 
                 m_serviceAbstraction = nullptr;
             }
+
+            m_connections.Clear();
 
             // Id is no longer valid, and session is not open. Clear these in case the client tries to use the held reference
             //m_id.clear();
             m_isOpen = false;
             m_mmcssTaskId = 0;
-
+            
         }
         catch (...)
         {

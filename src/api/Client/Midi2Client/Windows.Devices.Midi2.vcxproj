@@ -224,6 +224,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="dllmain.h" />
     <ClInclude Include="InternalMidiCache.h" />
     <ClInclude Include="InternalMidiConnectionCommon.h" />
     <ClInclude Include="InternalMidiEndpointInformationDevice.h" />
@@ -323,6 +324,7 @@
     <ClInclude Include="MidiStreamConfigurationEndpointListener.h">
       <DependentUpon>MidiStreamConfigurationEndpointListener.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiStreamMessageBuilder.h" />
     <ClInclude Include="MidiTransportInformation.h">
       <DependentUpon>MidiTransportInformation.idl</DependentUpon>
     </ClInclude>
@@ -456,6 +458,7 @@
     <ClCompile Include="MidiStreamConfigurationEndpointListener.cpp">
       <DependentUpon>MidiStreamConfigurationEndpointListener.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiStreamMessageBuilder.cpp" />
     <ClCompile Include="MidiTransportInformation.cpp">
       <DependentUpon>MidiTransportInformation.idl</DependentUpon>
     </ClCompile>
@@ -508,6 +511,7 @@
     <Midl Include="MidiChannel.idl" />
     <Midl Include="MidiChannelEndpointListener.idl" />
     <Midl Include="MidiClock.idl" />
+    <Midl Include="MidiEndpointDiscoveryFilterFlagsEnum.idl" />
     <Midl Include="MidiEndpointInformationUpdatedEventArgs.idl" />
     <Midl Include="MidiFunctionBlockMidi10Enum.idl" />
     <Midl Include="MidiFunctionBlocksUpdatedEventArgs.idl" />
@@ -545,6 +549,7 @@
     <Midl Include="MidiSessionSettings.idl" />
     <Midl Include="IMidiUmp.idl" />
     <Midl Include="MidiStreamConfigurationEndpointListener.idl" />
+    <Midl Include="MidiStreamMessageBuilder.idl" />
     <Midl Include="MidiSysEx8StatusEnum.idl" />
     <Midl Include="MidiTransportInformation.idl" />
     <Midl Include="MidiUmp128.idl" />
