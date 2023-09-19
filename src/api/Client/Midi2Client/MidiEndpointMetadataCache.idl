@@ -10,6 +10,7 @@
 MIDI_IDL_IMPORT
 
 import "MidiEndpointMetadataCacheUpdatedEventArgs.idl";
+import "IMidiCacheableMetadata.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -21,12 +22,19 @@ namespace Windows.Devices.Midi2
         // or you check to see if the data is present. When the back-end moves to a service, we may handle that
         // with some sort of watcher if the expiration time is critical to track
 
-        void AddOrUpdateData(String endpointId, String propertyKey, String data, Windows.Foundation.DateTime expirationTime);
-        void AddOrUpdateData(String endpointId, String propertyKey, String data);
+        [default_overload]
+        void AddOrUpdateData(String endpointDeviceId, String propertyKey, String data, Windows.Foundation.DateTime expirationTime);
 
-        void RemoveData(String endpointId, String propertyKey);
-        String GetData(String endpointId, String propertyKey);
-        Boolean IsDataPresent(String endpointId, String propertyKey);
+        [default_overload]
+        void AddOrUpdateData(String endpointDeviceId, String propertyKey, String data);
+
+        void AddOrUpdateData(String endpointDeviceId, String propertyKey, IMidiCacheableMetadata data, Windows.Foundation.DateTime expirationTime);
+        void AddOrUpdateData(String endpointDeviceId, String propertyKey, IMidiCacheableMetadata data);
+
+
+        void RemoveData(String endpointDeviceId, String propertyKey);
+        String GetData(String endpointDeviceId, String propertyKey);
+        Boolean IsDataPresent(String endpointDeviceId, String propertyKey);
 
         // TODO: Way to dump a list of all cache entries (without data, just keys, expiration, etc.)
 

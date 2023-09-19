@@ -487,6 +487,7 @@
     <ClCompile Include="trace_logging.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Midl Include="IMidiCacheableMetadata.idl" />
     <Midl Include="IMidiEndpointConnection.idl" />
     <Midl Include="IMidiEndpointInformationDevice.idl" />
     <Midl Include="IMidiEndpointMessageListener.idl" />
@@ -508,6 +509,7 @@
     <Midl Include="MidiChannelEndpointListener.idl" />
     <Midl Include="MidiClock.idl" />
     <Midl Include="MidiEndpointInformationUpdatedEventArgs.idl" />
+    <Midl Include="MidiFunctionBlockMidi10Enum.idl" />
     <Midl Include="MidiFunctionBlocksUpdatedEventArgs.idl" />
     <Midl Include="MidiGlobalCache.idl" />
     <Midl Include="MidiGlobalInformationCacheUpdatedEventArgs.idl" />

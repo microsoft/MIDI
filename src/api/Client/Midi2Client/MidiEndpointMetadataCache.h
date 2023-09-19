@@ -21,15 +21,35 @@ namespace winrt::Windows::Devices::Midi2::implementation
         MidiEndpointMetadataCache() = default;
 
         void AddOrUpdateData(
-            _In_ winrt::hstring const& deviceId,
+            _In_ winrt::hstring const& endpointDeviceId,
             _In_ winrt::hstring const& propertyKey,
             _In_ winrt::hstring const& data,
             _In_ foundation::DateTime const& expirationTime) ;
 
         void AddOrUpdateData(
-            _In_ winrt::hstring const& deviceId,
+            _In_ winrt::hstring const& endpointDeviceId,
             _In_ winrt::hstring const& propertyKey,
             _In_ winrt::hstring const& data);
+
+
+        void AddOrUpdateData(
+            _In_ winrt::hstring const& endpointDeviceId,
+            _In_ winrt::hstring const& propertyKey,
+            _In_ midi2::IMidiCacheableMetadata const& data,
+            _In_ foundation::DateTime const& expirationTime)
+        {
+            if (data != nullptr)
+                AddOrUpdateData(endpointDeviceId, propertyKey, data.GetJsonString(), expirationTime);
+        }
+
+        void AddOrUpdateData(
+            _In_ winrt::hstring const& endpointDeviceId,
+            _In_ winrt::hstring const& propertyKey,
+            _In_ midi2::IMidiCacheableMetadata const& data)
+        {
+            if (data != nullptr)
+                AddOrUpdateData(endpointDeviceId, propertyKey, data.GetJsonString());
+        }
 
 
         void RemoveData(

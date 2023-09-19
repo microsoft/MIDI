@@ -27,7 +27,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool SupportsReceivingJRTimestamps() const noexcept { return m_supportsReceivingJRTimestamps; }
         bool SupportsSendingJRTimestamps() const noexcept { return m_supportsSendingJRTimestamps; }
 
-        // TODO: Internal functions to set this from the cache
+
+        bool UpdateFromJson(_In_ winrt::Windows::Data::Json::JsonObject const json) noexcept;
+        bool UpdateFromJsonString(_In_ winrt::hstring const json) noexcept;
+        bool UpdateFromMessages(_In_ winrt::array_view<midi2::MidiUmp128 const> messages) noexcept;
+        winrt::hstring GetJsonString() noexcept;
+
 
     private:
         winrt::hstring m_name{};

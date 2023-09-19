@@ -568,6 +568,12 @@
     <Midl Include="MidiVirtualDeviceResponder.idl">
       <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
     </Midl>
+    <Midl Include="IMidiCacheableMetadata.idl">
+      <Filter>API\Endpoints\Metadata\Cache</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlockMidi10Enum.idl">
+      <Filter>API\Endpoints\Metadata\Functions</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />

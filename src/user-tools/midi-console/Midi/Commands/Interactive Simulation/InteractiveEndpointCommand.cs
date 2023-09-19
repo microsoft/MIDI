@@ -48,22 +48,22 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         private void MoveFunctionBlock(byte functionBlockId, byte newStartGroupIndex, byte newGroupSpan)
         {
-            // if not static
+            // if not static fbs in the endpoint info
         }
 
         private void UpdateFunctionBlockName(byte functionBlockId, string newName)
         {
-            // if not static
+            // if not static fbs in the endpoint info
         }
 
         private void DeactivateFunctionBlock(byte functionBlockId)
         {
-            // if not static
+            // if not static fbs in the endpoint info
         }
 
         private void ActivateFunctionBlock(byte functionBlockId)
         {
-            // if not static
+            // if not static fbs in the endpoint info
         }
 
         private void UpdateEndpointName(string newName)

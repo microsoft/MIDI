@@ -10,6 +10,7 @@
 MIDI_IDL_IMPORT
 
 import "MidiGlobalInformationCacheUpdatedEventArgs.idl";
+import "IMidiCacheableMetadata.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -21,8 +22,14 @@ namespace Windows.Devices.Midi2
         // or you check to see if the data is present. When the back-end moves to a service, we may handle that
         // with some sort of watcher if the expiration time is critical to track
 
+        [default_overload]
         void AddOrUpdateData(String key, String data, Windows.Foundation.DateTime expirationTime);
+
+        [default_overload]
         void AddOrUpdateData(String key, String data);
+
+        void AddOrUpdateData(String propertyKey, IMidiCacheableMetadata data, Windows.Foundation.DateTime expirationTime);
+        void AddOrUpdateData(String propertyKey, IMidiCacheableMetadata data);
 
         void RemoveData(String key);
         String GetData(String key);

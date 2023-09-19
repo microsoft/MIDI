@@ -10,16 +10,15 @@
 MIDI_IDL_IMPORT
 
 import "MidiUmp128.idl";
+import "IMidiCacheableMetadata.idl";
 
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [default_interface]
-    runtimeclass MidiEndpointInformation
+    runtimeclass MidiEndpointInformation : IMidiCacheableMetadata
     {
         MidiEndpointInformation();
-//        MidiEndpointInformation(String json);
-//        MidiEndpointInformation(MidiUmp128[] endpointMessages);
 
         String Name{ get; };
         String ProductInstanceId{ get; };
@@ -39,6 +38,8 @@ namespace Windows.Devices.Midi2
         Boolean SupportsReceivingJRTimestamps{ get; };
         Boolean SupportsSendingJRTimestamps{ get; };
 
-        //String GetJson();
+
+        void UpdateFromMessages(MidiUmp128[] endpointMessages);
+
     }
 }

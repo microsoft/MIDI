@@ -130,6 +130,8 @@
     <ClCompile Include="catch_amalgamated.cpp" />
     <ClCompile Include="ClockTests.cpp" />
     <ClCompile Include="BidirectionalEndpointTests.cpp" />
+    <ClCompile Include="EndpointInformationSerializationTests.cpp" />
+    <ClCompile Include="FunctionBlockSerializationTests.cpp" />
     <ClCompile Include="GlobalCacheTests.cpp" />
     <ClCompile Include="InProtocolEndpointInformationTest.cpp" />
     <ClCompile Include="InProtocolFunctionBlockInformationTest.cpp" />
@@ -145,11 +147,6 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="PropertySheet.props" />
-  </ItemGroup>
-  <ItemGroup>
-    <Manifest Include="api-core-cpp-winrt-tests.exe.manifest">
-      <DeploymentContent>true</DeploymentContent>
-    </Manifest>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Client\Midi2Client\Windows.Devices.Midi2.vcxproj">
@@ -169,5 +166,4 @@
     <Error Condition="!Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.targets'))" />
     <Error Condition="!Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.230629.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.230629.1\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
   </Target>
-
 </Project>
