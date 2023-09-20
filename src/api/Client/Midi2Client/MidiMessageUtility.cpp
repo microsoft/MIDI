@@ -7,49 +7,49 @@
 // ============================================================================
 
 #include "pch.h"
-#include "MidiUmpUtility.h"
-#include "MidiUmpUtility.g.cpp"
+#include "MidiMessageUtility.h"
+#include "MidiMessageUtility.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
-    bool MidiUmpUtility::ValidateUmp32MessageType(uint32_t const word0) noexcept
+    bool MidiMessageUtility::ValidateMessage32MessageType(uint32_t const word0) noexcept
     {
         return internal::GetUmpLengthInMidiWordsFromFirstWord(word0) == 1;
     }
 
     _Use_decl_annotations_
-    bool MidiUmpUtility::ValidateUmp64MessageType(uint32_t const word0) noexcept
+    bool MidiMessageUtility::ValidateMessage64MessageType(uint32_t const word0) noexcept
     {
         return internal::GetUmpLengthInMidiWordsFromFirstWord(word0) == 2;
     }
 
     _Use_decl_annotations_
-    bool MidiUmpUtility::ValidateUmp96MessageType(uint32_t const word0) noexcept
+    bool MidiMessageUtility::ValidateMessage96MessageType(uint32_t const word0) noexcept
     {
         return internal::GetUmpLengthInMidiWordsFromFirstWord(word0) == 3;
     }
 
     _Use_decl_annotations_
-    bool MidiUmpUtility::ValidateUmp128MessageType(uint32_t const word0) noexcept
+    bool MidiMessageUtility::ValidateMessage128MessageType(uint32_t const word0) noexcept
     {
         return internal::GetUmpLengthInMidiWordsFromFirstWord(word0) == 4;
     }
 
     _Use_decl_annotations_
-    midi2::MidiUmpMessageType MidiUmpUtility::GetMessageTypeFromFirstUmpWord(uint32_t const word0) noexcept
+    midi2::MidiMessageType MidiMessageUtility::GetMessageTypeFromFirstMessageWord(uint32_t const word0) noexcept
     {
-        return (midi2::MidiUmpMessageType)internal::GetUmpMessageTypeFromFirstWord(word0);
+        return (midi2::MidiMessageType)internal::GetUmpMessageTypeFromFirstWord(word0);
     }
 
     _Use_decl_annotations_
-    midi2::MidiUmpPacketType MidiUmpUtility::GetPacketTypeFromFirstUmpWord(uint32_t const word0) noexcept
+    midi2::MidiPacketType MidiMessageUtility::GetPacketTypeFromFirstMessageWord(uint32_t const word0) noexcept
     {
-        return (midi2::MidiUmpPacketType)internal::GetUmpLengthInMidiWordsFromFirstWord(word0);
+        return (midi2::MidiPacketType)internal::GetUmpLengthInMidiWordsFromFirstWord(word0);
     }
 
     _Use_decl_annotations_
-    midi2::MidiGroup MidiUmpUtility::GetGroup(_In_ uint32_t const word0)
+    midi2::MidiGroup MidiMessageUtility::GetGroup(_In_ uint32_t const word0)
     {
         return MidiGroup(internal::GetGroupIndexFromFirstWord(word0));
     }
@@ -57,20 +57,20 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     // It's expected for the user to check to see if the message type has a group field before calling this
     _Use_decl_annotations_
-    uint32_t MidiUmpUtility::ReplaceGroup(uint32_t const word0, midi2::MidiGroup const newGroup) noexcept
+    uint32_t MidiMessageUtility::ReplaceGroup(uint32_t const word0, midi2::MidiGroup const newGroup) noexcept
     {
         return internal::GetFirstWordWithNewGroup(word0, newGroup.Index());
     }
 
     _Use_decl_annotations_
-    bool MidiUmpUtility::MessageTypeHasGroupField(midi2::MidiUmpMessageType const messageType) noexcept
+    bool MidiMessageUtility::MessageTypeHasGroupField(midi2::MidiMessageType const messageType) noexcept
     {
         return internal::MessageTypeHasGroupField((uint8_t)messageType);
     }
 
 
     _Use_decl_annotations_
-    midi2::MidiChannel MidiUmpUtility::GetChannel(_In_ uint32_t const word0)
+    midi2::MidiChannel MidiMessageUtility::GetChannel(_In_ uint32_t const word0)
     {
         return MidiChannel(internal::GetChannelIndexFromFirstWord(word0));
     }
@@ -78,13 +78,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     // It's expected for the user to check to see if the message type has a channel field before calling this
     _Use_decl_annotations_
-    uint32_t MidiUmpUtility::ReplaceChannel(uint32_t const word0, midi2::MidiChannel const newChannel) noexcept
+    uint32_t MidiMessageUtility::ReplaceChannel(uint32_t const word0, midi2::MidiChannel const newChannel) noexcept
     {
         return internal::GetFirstWordWithNewChannel(word0, newChannel.Index());
     }
 
     _Use_decl_annotations_
-        bool MidiUmpUtility::MessageTypeHasChannelField(midi2::MidiUmpMessageType const messageType) noexcept
+        bool MidiMessageUtility::MessageTypeHasChannelField(midi2::MidiMessageType const messageType) noexcept
     {
         return internal::MessageTypeHasChannelField((uint8_t)messageType);
     }

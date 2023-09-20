@@ -9,21 +9,21 @@
 #pragma once
 #include "pch.h"
 
-#include "MidiUmp64.g.h"
+#include "MidiMessage64.g.h"
 
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    struct MidiUmp64 : MidiUmp64T<MidiUmp64>
+    struct MidiMessage64 : MidiMessage64T<MidiMessage64>
     {
-        MidiUmp64() = default;
-        MidiUmp64(
+        MidiMessage64() = default;
+        MidiMessage64(
             _In_ internal::MidiTimestamp const timestamp, 
             _In_ uint32_t const word0, 
             _In_ uint32_t const word1);
 
         // TODO: This doesn't do any bounds checking, and it should
-        MidiUmp64(
+        MidiMessage64(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ array_view<uint32_t const> words)
         {
@@ -44,14 +44,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
         internal::MidiTimestamp Timestamp() const noexcept { return m_timestamp; }
         void Timestamp(_In_ internal::MidiTimestamp value) noexcept { m_timestamp = value; }
 
-        winrt::Windows::Devices::Midi2::MidiUmpMessageType MessageType() const noexcept 
-            { return (winrt::Windows::Devices::Midi2::MidiUmpMessageType)(internal::GetUmpMessageTypeFromFirstWord(m_ump.word0)); }
+        midi2::MidiMessageType MessageType() const noexcept 
+            { return (midi2::MidiMessageType)(internal::GetUmpMessageTypeFromFirstWord(m_ump.word0)); }
 
-        void MessageType(_In_ winrt::Windows::Devices::Midi2::MidiUmpMessageType const& value) noexcept 
+        void MessageType(_In_ midi2::MidiMessageType const& value) noexcept 
             { internal::SetUmpMessageType(m_ump.word0, (uint8_t)value); }
 
-        winrt::Windows::Devices::Midi2::MidiUmpPacketType UmpPacketType() const noexcept 
-            { return winrt::Windows::Devices::Midi2::MidiUmpPacketType::Ump64; }
+        winrt::Windows::Devices::Midi2::MidiPacketType PacketType() const noexcept 
+            { return midi2::MidiPacketType::UniversalMidiPacket64; }
 
         // internal for the sending code
         internal::PackedUmp64* GetInternalUmpDataPointer() { return &m_ump; }
@@ -65,7 +65,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation
 {
-    struct MidiUmp64 : MidiUmp64T<MidiUmp64, implementation::MidiUmp64>
+    struct MidiMessage64 : MidiMessage64T<MidiMessage64, implementation::MidiMessage64>
     {
     };
 }

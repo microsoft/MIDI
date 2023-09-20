@@ -9,7 +9,7 @@
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-import "IMidiUmp.idl";
+import "IMidiUniversalPacket.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -20,18 +20,18 @@ namespace Windows.Devices.Midi2
         String OutputEndpointDeviceId{ get; };
 
         // send the UMP interface used by strongly-typed Midi Message classes in the SDK
-        Boolean SendUmp(IMidiUmp ump);
+        Boolean SendMessagePacket(IMidiUniversalPacket ump);
 
         // Uses projection-specific array conversion operators for sending data. Not all languages support this
-        Boolean SendUmpWordArray(MIDI_TIMESTAMP timestamp, UInt32[] words, UInt32 startIndex, UInt8 wordCount);
+        Boolean SendMessageWordArray(MIDI_TIMESTAMP timestamp, UInt32[] words, UInt32 startIndex, UInt8 wordCount);
 
         // sending words is a fast approach, but does work with copies of the data
-        Boolean SendUmpWords(MIDI_TIMESTAMP timestamp, UInt32 word0);
-        Boolean SendUmpWords(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1);
-        Boolean SendUmpWords(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1, UInt32 word2);
-        Boolean SendUmpWords(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
+        Boolean SendMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0);
+        Boolean SendMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1);
+        Boolean SendMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1, UInt32 word2);
+        Boolean SendMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
 
         // for sending a section of a pre-existing buffer. Used when a client app is maintaining its own memory
-        Boolean SendUmpBuffer(MIDI_TIMESTAMP timestamp, Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffset, UInt8 byteLength);
+        Boolean SendMessageBuffer(MIDI_TIMESTAMP timestamp, Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffset, UInt8 byteLength);
     }
 }

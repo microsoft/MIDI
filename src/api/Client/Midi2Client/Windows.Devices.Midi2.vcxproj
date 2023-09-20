@@ -328,20 +328,20 @@
     <ClInclude Include="MidiTransportInformation.h">
       <DependentUpon>MidiTransportInformation.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiUmp128.h">
-      <DependentUpon>MidiUmp128.idl</DependentUpon>
+    <ClInclude Include="MidiMessage128.h">
+      <DependentUpon>MidiMessage128.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiUmp32.h">
-      <DependentUpon>MidiUmp32.idl</DependentUpon>
+    <ClInclude Include="MidiMessage32.h">
+      <DependentUpon>MidiMessage32.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiUmp64.h">
-      <DependentUpon>MidiUmp64.idl</DependentUpon>
+    <ClInclude Include="MidiMessage64.h">
+      <DependentUpon>MidiMessage64.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiUmp96.h">
-      <DependentUpon>MidiUmp96.idl</DependentUpon>
+    <ClInclude Include="MidiMessage96.h">
+      <DependentUpon>MidiMessage96.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiUmpUtility.h">
-      <DependentUpon>MidiUmpUtility.idl</DependentUpon>
+    <ClInclude Include="MidiMessageUtility.h">
+      <DependentUpon>MidiMessageUtility.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiUniqueId.h">
       <DependentUpon>MidiUniqueId.idl</DependentUpon>
@@ -462,20 +462,20 @@
     <ClCompile Include="MidiTransportInformation.cpp">
       <DependentUpon>MidiTransportInformation.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiUmp128.cpp">
-      <DependentUpon>MidiUmp128.idl</DependentUpon>
+    <ClCompile Include="MidiMessage128.cpp">
+      <DependentUpon>MidiMessage128.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiUmp32.cpp">
-      <DependentUpon>MidiUmp32.idl</DependentUpon>
+    <ClCompile Include="MidiMessage32.cpp">
+      <DependentUpon>MidiMessage32.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiUmp64.cpp">
-      <DependentUpon>MidiUmp64.idl</DependentUpon>
+    <ClCompile Include="MidiMessage64.cpp">
+      <DependentUpon>MidiMessage64.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiUmp96.cpp">
-      <DependentUpon>MidiUmp96.idl</DependentUpon>
+    <ClCompile Include="MidiMessage96.cpp">
+      <DependentUpon>MidiMessage96.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiUmpUtility.cpp">
-      <DependentUpon>MidiUmpUtility.idl</DependentUpon>
+    <ClCompile Include="MidiMessageUtility.cpp">
+      <DependentUpon>MidiMessageUtility.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiUniqueId.cpp">
       <DependentUpon>MidiUniqueId.idl</DependentUpon>
@@ -547,18 +547,18 @@
     <Midl Include="MidiServicePingResponseSummary.idl" />
     <Midl Include="MidiSession.idl" />
     <Midl Include="MidiSessionSettings.idl" />
-    <Midl Include="IMidiUmp.idl" />
+    <Midl Include="IMidiUniversalPacket.idl" />
     <Midl Include="MidiStreamConfigurationEndpointListener.idl" />
     <Midl Include="MidiStreamMessageBuilder.idl" />
-    <Midl Include="MidiSysEx8StatusEnum.idl" />
+    <Midl Include="MidiSystemExclusive8StatusEnum.idl" />
     <Midl Include="MidiTransportInformation.idl" />
-    <Midl Include="MidiUmp128.idl" />
-    <Midl Include="MidiUmp32.idl" />
-    <Midl Include="MidiUmp64.idl" />
-    <Midl Include="MidiUmp96.idl" />
-    <Midl Include="MidiUmpMessageTypeEnum.idl" />
-    <Midl Include="MidiUmpPacketTypeEnum.idl" />
-    <Midl Include="MidiUmpUtility.idl" />
+    <Midl Include="MidiMessage128.idl" />
+    <Midl Include="MidiMessage32.idl" />
+    <Midl Include="MidiMessage64.idl" />
+    <Midl Include="MidiMessage96.idl" />
+    <Midl Include="MidiMessageTypeEnum.idl" />
+    <Midl Include="MidiPacketTypeEnum.idl" />
+    <Midl Include="MidiMessageUtility.idl" />
     <Midl Include="MidiUniqueId.idl" />
     <Midl Include="MidiVirtualDeviceManager.idl" />
     <Midl Include="MidiVirtualDeviceResponder.idl" />

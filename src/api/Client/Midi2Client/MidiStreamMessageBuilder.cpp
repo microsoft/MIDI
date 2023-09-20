@@ -30,14 +30,14 @@
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
-    midi2::MidiUmp128 MidiStreamMessageBuilder::BuildEndpointDiscoveryMessage(
+    midi2::MidiMessage128 MidiStreamMessageBuilder::BuildEndpointDiscoveryMessage(
          internal::MidiTimestamp const timestamp,
          uint8_t const umpVersionMajor,
          uint8_t const umpVersionMinor,
          midi2::MidiEndpointDiscoveryFilterFlags const requestFlags
         )
     {
-        return MidiMessageBuilder::BuildUmpStreamMessage(
+        return MidiMessageBuilder::BuildStreamMessage(
             timestamp, 
             MIDI_STREAM_MESSAGE_STANDARD_FORM0, 
             MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_DISCOVERY, 
@@ -50,7 +50,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    midi2::MidiUmp128 MidiStreamMessageBuilder::BuildEndpointInformationNotificationMessage(
+    midi2::MidiMessage128 MidiStreamMessageBuilder::BuildEndpointInformationNotificationMessage(
          internal::MidiTimestamp const timestamp,
          uint8_t const umpVersionMajor,
          uint8_t const umpVersionMinor,
@@ -80,7 +80,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         if (supportsSendingJitterReductionTimestamps) word1 |= 0x1;
         if (supportsReceivingJitterReductionTimestamps) word1 |= 0x2;
 
-        return MidiMessageBuilder::BuildUmpStreamMessage(
+        return MidiMessageBuilder::BuildStreamMessage(
             timestamp,
             MIDI_STREAM_MESSAGE_STANDARD_FORM0,     
             MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_INFO, 
@@ -92,7 +92,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    midi2::MidiUmp128 MidiStreamMessageBuilder::BuildDeviceIdentityNotificationMessage(
+    midi2::MidiMessage128 MidiStreamMessageBuilder::BuildDeviceIdentityNotificationMessage(
          internal::MidiTimestamp timestamp,
          uint8_t const deviceManufacturerSysExIdByte1,
          uint8_t const deviceManufacturerSysExIdByte2,
@@ -126,7 +126,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         word3 |= internal::CleanupByte7(softwareRevisionLevelByte4);
 
 
-        return MidiMessageBuilder::BuildUmpStreamMessage(
+        return MidiMessageBuilder::BuildStreamMessage(
             timestamp,
             MIDI_STREAM_MESSAGE_STANDARD_FORM0,
             MIDI_STREAM_MESSAGE_STATUS_DEVICE_IDENTITY,
@@ -138,7 +138,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    collections::IVector<midi2::MidiUmp128> MidiStreamMessageBuilder::BuildEndpointNameNotificationMessages(
+    collections::IVector<midi2::MidiMessage128> MidiStreamMessageBuilder::BuildEndpointNameNotificationMessages(
          internal::MidiTimestamp const /*timestamp*/,
          winrt::hstring const& /*name*/
     )
@@ -198,7 +198,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    collections::IVector<midi2::MidiUmp128> MidiStreamMessageBuilder::BuildEndpointProductInstanceIdNotificationMessages(
+    collections::IVector<midi2::MidiMessage128> MidiStreamMessageBuilder::BuildEndpointProductInstanceIdNotificationMessages(
         internal::MidiTimestamp const /*timestamp*/,
         winrt::hstring const& /*productInstanceId*/
     )
@@ -207,7 +207,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    midi2::MidiUmp128 MidiStreamMessageBuilder::BuildStreamConfigurationRequestMessage(
+    midi2::MidiMessage128 MidiStreamMessageBuilder::BuildStreamConfigurationRequestMessage(
         internal::MidiTimestamp const /*timestamp*/,
         uint8_t const /*protocol*/,
          bool const /*expectToReceiveJRTimestamps*/,
@@ -218,7 +218,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    midi2::MidiUmp128 MidiStreamMessageBuilder::BuildStreamConfigurationNotificationMessage(
+    midi2::MidiMessage128 MidiStreamMessageBuilder::BuildStreamConfigurationNotificationMessage(
         internal::MidiTimestamp const /*timestamp*/,
         uint8_t const /*protocol*/,
          bool const /*confirmationWillReceiveJRTimestamps*/,
@@ -229,7 +229,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    midi2::MidiUmp128 MidiStreamMessageBuilder::BuildFunctionBlockDiscoveryMessage(
+    midi2::MidiMessage128 MidiStreamMessageBuilder::BuildFunctionBlockDiscoveryMessage(
         internal::MidiTimestamp const /*timestamp*/,
         uint8_t const /*functionBlockNumber*/,
          bool const /*requestFunctionBlockInfoNotification*/,
@@ -240,7 +240,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    midi2::MidiUmp128 MidiStreamMessageBuilder::BuildFunctionInfoNotificationMessage(
+    midi2::MidiMessage128 MidiStreamMessageBuilder::BuildFunctionInfoNotificationMessage(
         internal::MidiTimestamp const /*timestamp*/,
         bool const /*active*/,
          uint8_t const /*functionBlockNumber*/,
@@ -257,7 +257,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    collections::IVector<midi2::MidiUmp128> MidiStreamMessageBuilder::BuildFunctionBlockNameNotificationMessages(
+    collections::IVector<midi2::MidiMessage128> MidiStreamMessageBuilder::BuildFunctionBlockNameNotificationMessages(
         internal::MidiTimestamp const /*timestamp*/,
         uint8_t const /*functionBlockNumber*/,
         winrt::hstring const& /*name*/

@@ -16,14 +16,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiStreamMessageBuilder() = default;
 
-        static midi2::MidiUmp128 BuildEndpointDiscoveryMessage(
+        static midi2::MidiMessage128 BuildEndpointDiscoveryMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const umpVersionMajor,
             _In_ uint8_t const umpVersionMinor,
             _In_ midi2::MidiEndpointDiscoveryFilterFlags const requestFlags
             );
 
-        static midi2::MidiUmp128 BuildEndpointInformationNotificationMessage(
+        static midi2::MidiMessage128 BuildEndpointInformationNotificationMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const umpVersionMajor,
             _In_ uint8_t const umpVersionMinor,
@@ -35,7 +35,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ bool const supportsSendingJitterReductionTimestamps
             );
 
-        static midi2::MidiUmp128 BuildDeviceIdentityNotificationMessage(
+        static midi2::MidiMessage128 BuildDeviceIdentityNotificationMessage(
             _In_ internal::MidiTimestamp timestamp,
             _In_ uint8_t const deviceManufacturerSysExIdByte1,
             _In_ uint8_t const deviceManufacturerSysExIdByte2,
@@ -50,38 +50,38 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ uint8_t const softwareRevisionLevelByte4
             );
 
-        static collections::IVector<midi2::MidiUmp128> BuildEndpointNameNotificationMessages(
+        static collections::IVector<midi2::MidiMessage128> BuildEndpointNameNotificationMessages(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ winrt::hstring const& name
             );
 
-        static collections::IVector<midi2::MidiUmp128> BuildEndpointProductInstanceIdNotificationMessages(
+        static collections::IVector<midi2::MidiMessage128> BuildEndpointProductInstanceIdNotificationMessages(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ winrt::hstring const& productInstanceId
             );
 
-        static midi2::MidiUmp128 BuildStreamConfigurationRequestMessage(
+        static midi2::MidiMessage128 BuildStreamConfigurationRequestMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const protocol,
             _In_ bool const expectToReceiveJRTimestamps,
             _In_ bool const requestToSendJRTimestamps
             );
 
-        static midi2::MidiUmp128 BuildStreamConfigurationNotificationMessage(
+        static midi2::MidiMessage128 BuildStreamConfigurationNotificationMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const protocol,
             _In_ bool const confirmationWillReceiveJRTimestamps,
             _In_ bool const confirmationSendJRTimestamps
             );
 
-        static midi2::MidiUmp128 BuildFunctionBlockDiscoveryMessage(
+        static midi2::MidiMessage128 BuildFunctionBlockDiscoveryMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const functionBlockNumber,
             _In_ bool const requestFunctionBlockInfoNotification,
             _In_ bool const requestFunctionBlockNameNotification
             );
 
-        static midi2::MidiUmp128 BuildFunctionInfoNotificationMessage(
+        static midi2::MidiMessage128 BuildFunctionInfoNotificationMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ bool const active,
             _In_ uint8_t const functionBlockNumber,
@@ -94,7 +94,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ uint8_t const maxNumberSysEx8Streams
             );
 
-        static collections::IVector<midi2::MidiUmp128> BuildFunctionBlockNameNotificationMessages(
+        static collections::IVector<midi2::MidiMessage128> BuildFunctionBlockNameNotificationMessages(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const functionBlockNumber,
             _In_ winrt::hstring const& name

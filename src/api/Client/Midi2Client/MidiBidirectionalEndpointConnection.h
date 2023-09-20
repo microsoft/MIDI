@@ -17,10 +17,10 @@
 
 #include "MidiMessageReceivedEventArgs.h"
 
-#include "MidiUmp32.h"
-#include "MidiUmp64.h"
-#include "MidiUmp96.h"
-#include "MidiUmp128.h"
+//#include "MidiUmp32.h"
+//#include "MidiUmp64.h"
+//#include "MidiUmp96.h"
+//#include "MidiUmp128.h"
 
 #include "InternalMidiConnectionCommon.h"
 #include "InternalMidiInputConnection.h"

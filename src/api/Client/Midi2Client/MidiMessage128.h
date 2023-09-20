@@ -10,32 +10,33 @@
 
 #include "pch.h"
 
-#include "MidiUmp96.g.h"
+#include "MidiMessage128.g.h"
 
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    struct MidiUmp96 : MidiUmp96T<MidiUmp96>
+    struct MidiMessage128 : MidiMessage128T<MidiMessage128>
     {
-        MidiUmp96() = default;
-        MidiUmp96(
+        MidiMessage128() = default;
+        MidiMessage128(
             _In_ internal::MidiTimestamp const timestamp, 
             _In_ uint32_t const word0, 
             _In_ uint32_t const word1, 
-            _In_ uint32_t const word2);
+            _In_ uint32_t const word2, 
+            _In_ uint32_t const word3);
 
         // TODO: This doesn't do any bounds checking, and it should
-        MidiUmp96(
+        MidiMessage128(
             _In_ internal::MidiTimestamp const timestamp, 
             _In_ array_view<uint32_t const> words)
         {
-            if (words.size() == 3) InternalInitializeFromPointer(timestamp, (PVOID)words.data());
+            if (words.size() == 4) InternalInitializeFromPointer(timestamp, (PVOID)words.data());
         }
 
 
         // internal
         void InternalInitializeFromPointer(
-            _In_ internal::MidiTimestamp timestamp, 
+            _In_ internal::MidiTimestamp const timestamp, 
             _In_ PVOID data);
 
 
@@ -47,32 +48,35 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         uint32_t Word2() const noexcept { return m_ump.word2; }
         void Word2(_In_ uint32_t value) noexcept { m_ump.word2 = value; }
+        
+        uint32_t Word3() const noexcept { return m_ump.word3; }
+        void Word3(_In_ uint32_t value) noexcept { m_ump.word3 = value; }
 
         internal::MidiTimestamp Timestamp() const noexcept { return m_timestamp; }
         void Timestamp(_In_ internal::MidiTimestamp value) noexcept { m_timestamp = value; }
 
-        winrt::Windows::Devices::Midi2::MidiUmpMessageType MessageType() const noexcept 
-            { return (winrt::Windows::Devices::Midi2::MidiUmpMessageType)(internal::GetUmpMessageTypeFromFirstWord(m_ump.word0)); }
+        midi2::MidiMessageType MessageType() const noexcept 
+            { return (midi2::MidiMessageType)(internal::GetUmpMessageTypeFromFirstWord(m_ump.word0)); }
 
-        void MessageType(_In_ winrt::Windows::Devices::Midi2::MidiUmpMessageType const& value) noexcept
+        void MessageType(_In_ midi2::MidiMessageType const& value) noexcept
             { internal::SetUmpMessageType(m_ump.word0, (uint8_t)value); }
 
-        winrt::Windows::Devices::Midi2::MidiUmpPacketType UmpPacketType() const noexcept
-            { return winrt::Windows::Devices::Midi2::MidiUmpPacketType::Ump96; }
+        midi2::MidiPacketType PacketType() const noexcept 
+            { return midi2::MidiPacketType::UniversalMidiPacket128; }
 
         // internal for the sending code
-        internal::PackedUmp96* GetInternalUmpDataPointer() { return &m_ump; }
+        internal::PackedUmp128* GetInternalUmpDataPointer() { return &m_ump; }
 
     private:
         internal::MidiTimestamp m_timestamp{};
 
-        internal::PackedUmp96 m_ump{};
+        internal::PackedUmp128 m_ump{};
 
     };
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation
 {
-    struct MidiUmp96 : MidiUmp96T<MidiUmp96, implementation::MidiUmp96>
+    struct MidiMessage128 : MidiMessage128T<MidiMessage128, implementation::MidiMessage128>
     {
     };
 }

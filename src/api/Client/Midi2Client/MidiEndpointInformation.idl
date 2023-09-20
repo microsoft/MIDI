@@ -9,7 +9,7 @@
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-import "MidiUmp128.idl";
+import "MidiMessage128.idl";
 import "IMidiCacheableMetadata.idl";
 
 namespace Windows.Devices.Midi2
@@ -26,8 +26,8 @@ namespace Windows.Devices.Midi2
         // TODO: Add sysex information from Device Identity Notification
 
 
-        UInt8 UmpVersionMajor{ get; };
-        UInt8 UmpVersionMinor{ get; };
+        UInt8 SpecificationVersionMajor{ get; };
+        UInt8 SpecificationVersionMinor{ get; };
 
         Boolean HasStaticFunctionBlocks{ get; };
         UInt8 FunctionBlockCount{ get; };
@@ -39,7 +39,7 @@ namespace Windows.Devices.Midi2
         Boolean SupportsSendingJRTimestamps{ get; };
 
 
-        void UpdateFromMessages(MidiUmp128[] endpointMessages);
+        void UpdateFromMessages(MidiMessage128[] endpointMessages);
 
     }
 }

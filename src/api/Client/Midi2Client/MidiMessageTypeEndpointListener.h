@@ -26,13 +26,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool IsEnabled() const noexcept { return m_enabled; }
         void IsEnabled(_In_ bool const& value) { m_enabled = value; }
 
-        winrt::Windows::Foundation::IInspectable Tag() const noexcept { return m_tag; }
-        void Tag(_In_ winrt::Windows::Foundation::IInspectable const& value) { m_tag = value; }
+        foundation::IInspectable Tag() const noexcept { return m_tag; }
+        void Tag(_In_ foundation::IInspectable const& value) { m_tag = value; }
 
         winrt::Windows::Devices::Midi2::IMidiInputConnection InputConnection() const noexcept { return m_inputConnection; }
         void InputConnection(_In_ winrt::Windows::Devices::Midi2::IMidiInputConnection const& value) { m_inputConnection = value; }
 
-        foundation::Collections::IVector<winrt::Windows::Devices::Midi2::MidiUmpMessageType> IncludeMessageTypes() { return m_includedMessageTypes; }
+        foundation::Collections::IVector<midi2::MidiMessageType> IncludeMessageTypes() { return m_includedMessageTypes; }
 
         winrt::event_token MessageReceived(
             _In_ foundation::TypedEventHandler<foundation::IInspectable, 
@@ -73,8 +73,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool m_preventCallingFurtherListeners{ false };
         bool m_preventFiringMainMessageReceivedEvent{ false };
 
-        foundation::Collections::IVector<midi2::MidiUmpMessageType>
-            m_includedMessageTypes{ winrt::single_threaded_vector<midi2::MidiUmpMessageType>() };
+        foundation::Collections::IVector<midi2::MidiMessageType>
+            m_includedMessageTypes{ winrt::single_threaded_vector<midi2::MidiMessageType>() };
 
         winrt::event<foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;
 

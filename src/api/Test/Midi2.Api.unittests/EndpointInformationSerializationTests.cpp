@@ -95,8 +95,8 @@ TEST_CASE("Offline.Metadata.EndpointInformation Set Json from String")
 
     REQUIRE(ep1.Name() == epName);
     REQUIRE(ep1.ProductInstanceId() == epProductInstanceId);
-    REQUIRE(ep1.UmpVersionMajor() == epUmpVersionMajor);
-    REQUIRE(ep1.UmpVersionMinor() == epUmpVersionMinor);
+    REQUIRE(ep1.SpecificationVersionMajor() == epUmpVersionMajor);
+    REQUIRE(ep1.SpecificationVersionMinor() == epUmpVersionMinor);
     REQUIRE(ep1.HasStaticFunctionBlocks() == epHasStaticFunctionBlocks);
     REQUIRE(ep1.FunctionBlockCount() == epNumberOfFunctionBlocks);
     REQUIRE(ep1.SupportsMidi20Protocol() == epMidi2ProtocolCapability);
@@ -111,8 +111,8 @@ TEST_CASE("Offline.Metadata.EndpointInformation Set Json from String")
 
     REQUIRE(ep2.Name() == epName);
     REQUIRE(ep2.ProductInstanceId() == epProductInstanceId);
-    REQUIRE(ep2.UmpVersionMajor() == epUmpVersionMajor);
-    REQUIRE(ep2.UmpVersionMinor() == epUmpVersionMinor);
+    REQUIRE(ep2.SpecificationVersionMajor() == epUmpVersionMajor);
+    REQUIRE(ep2.SpecificationVersionMinor() == epUmpVersionMinor);
     REQUIRE(ep2.HasStaticFunctionBlocks() == epHasStaticFunctionBlocks);
     REQUIRE(ep2.FunctionBlockCount() == epNumberOfFunctionBlocks);
     REQUIRE(ep2.SupportsMidi20Protocol() == epMidi2ProtocolCapability);

@@ -54,10 +54,10 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 namespace implementation = winrt::Windows::Devices::Midi2::implementation;
 namespace midi2 = ::winrt::Windows::Devices::Midi2;
 
-#include "MidiUmp32.h"
-#include "MidiUmp64.h"
-#include "MidiUmp96.h"
-#include "MidiUmp128.h"
+#include "MidiMessage32.h"
+#include "MidiMessage64.h"
+#include "MidiMessage96.h"
+#include "MidiMessage128.h"
 
 #include "MidiFunctionBlock.h"
 #include "MidiGroupTerminalBlock.h"

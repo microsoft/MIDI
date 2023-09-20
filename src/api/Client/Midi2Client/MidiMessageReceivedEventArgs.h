@@ -13,10 +13,10 @@
 
 #include "MidiMessageReceivedEventArgs.g.h"
 
-#include "MidiUmp32.h"
-#include "MidiUmp64.h"
-#include "MidiUmp96.h"
-#include "MidiUmp128.h"
+#include "MidiMessage32.h"
+#include "MidiMessage64.h"
+#include "MidiMessage96.h"
+#include "MidiMessage128.h"
 
 // TODO: Consider making this deferrable
 // https://learn.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/author-events
@@ -34,15 +34,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // internal implementation constructor
         MidiMessageReceivedEventArgs(_In_ PVOID data, _In_ UINT sizeInBytes, _In_ internal::MidiTimestamp);
 
-        ::winrt::Windows::Devices::Midi2::MidiUmpPacketType UmpType() const noexcept;
+        midi2::MidiPacketType PacketType() const noexcept;
 
-        ::winrt::Windows::Devices::Midi2::MidiUmpMessageType UmpMessageType() const noexcept;
+        midi2::MidiMessageType MessageType() const noexcept;
 
         uint32_t InspectFirstWord() const noexcept { return m_data.Word0; }
 
         internal::MidiTimestamp Timestamp() const noexcept { return m_timestamp; }
 
-        ::winrt::Windows::Devices::Midi2::IMidiUmp GetUmp();
+        midi2::IMidiUniversalPacket GetMessagePacket();
 
         uint8_t FillWords(
             _Inout_ uint32_t& word0, 
@@ -50,10 +50,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _Inout_ uint32_t& word2, 
             _Inout_ uint32_t& word3);
 
-        bool FillUmp32( _In_ ::winrt::Windows::Devices::Midi2::MidiUmp32 const& ump);
-        bool FillUmp64( _In_ ::winrt::Windows::Devices::Midi2::MidiUmp64 const& ump);
-        bool FillUmp96( _In_ ::winrt::Windows::Devices::Midi2::MidiUmp96 const& ump);
-        bool FillUmp128(_In_ ::winrt::Windows::Devices::Midi2::MidiUmp128 const& ump);
+        bool FillMessage32( _In_ midi2::MidiMessage32 const& ump);
+        bool FillMessage64( _In_ midi2::MidiMessage64 const& ump);
+        bool FillMessage96( _In_ midi2::MidiMessage96 const& ump);
+        bool FillMessage128(_In_ midi2::MidiMessage128 const& ump);
         
         uint8_t FillWordArray(
             _In_ array_view<uint32_t> words, 

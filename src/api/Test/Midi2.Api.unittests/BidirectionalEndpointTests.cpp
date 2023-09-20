@@ -80,9 +80,9 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message")
     REQUIRE((bool)(connReceive != nullptr));
 
     bool messageReceivedFlag = false;
-    MidiUmp32 sentUmp;
+    MidiMessage32 sentUmp;
 
-    auto sentMessageType = MidiUmpMessageType::Midi1ChannelVoice32;
+    auto sentMessageType = MidiMessageType::Midi1ChannelVoice32;
     auto sentTimestamp = MidiClock::GetMidiTimestamp();
 
 
@@ -92,7 +92,7 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message")
             REQUIRE((bool)(args != nullptr));
 
             // strongly typed UMP
-            auto receivedUmp = args.GetUmp();
+            auto receivedUmp = args.GetMessagePacket();
 
             REQUIRE(receivedUmp != nullptr);
 
@@ -101,10 +101,10 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message")
             REQUIRE(receivedUmp.Timestamp() == sentTimestamp);
 
             // Making an assumption on type here.
-            MidiUmp32 receivedUmp32 = receivedUmp.as<MidiUmp32>();
+            MidiMessage32 receivedUmp32 = receivedUmp.as<MidiMessage32>();
 
             std::cout << "Received message in test" << std::endl;
-            std::cout << " - UmpPacketType:     0x" << std::hex << (int)(receivedUmp32.UmpPacketType()) << std::endl;
+            std::cout << " - PacketType:        0x" << std::hex << (int)(receivedUmp32.PacketType()) << std::endl;
             std::cout << " - Timestamp:         0x" << std::hex << (receivedUmp32.Timestamp()) << std::endl;
             std::cout << " - MessageType:       0x" << std::hex << (int)(receivedUmp32.MessageType()) << std::endl;
             std::cout << " - First Word:        0x" << std::hex << (receivedUmp32.Word0()) << std::endl << std::endl;
@@ -123,12 +123,12 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message")
     sentUmp.MessageType(sentMessageType);
     sentUmp.Timestamp(sentTimestamp);
 
-    std::cout << "Sending message" << std::hex << (uint32_t)(sentUmp.UmpPacketType()) << std::endl;
+    std::cout << "Sending message" << std::hex << (uint32_t)(sentUmp.PacketType()) << std::endl;
     std::cout << " - Timestamp:   0x" << std::hex << (uint64_t)(sentUmp.Timestamp()) << std::endl;
     std::cout << " - MessageType: 0x" << std::hex << (int)(sentUmp.MessageType()) << std::endl;
     std::cout << " - First Word:  0x" << std::hex << (sentUmp.Word0()) << std::endl << std::endl;
 
-    connSend.SendUmp(sentUmp);
+    connSend.SendMessagePacket(sentUmp);
 
 
     // Wait for incoming message
@@ -214,33 +214,33 @@ TEST_CASE("Connected.Endpoint.MultipleUmpWords Send and receive multiple words")
         case 0:
         {
             words[0] = 0x20000000;
-            wordCount = (uint32_t)(MidiUmpPacketType::Ump32);
+            wordCount = (uint32_t)(MidiPacketType::UniversalMidiPacket32);
 
         }
         break;
         case 1:
         {
             words[0] = 0x40000000;
-            wordCount = (uint32_t)(MidiUmpPacketType::Ump64);
+            wordCount = (uint32_t)(MidiPacketType::UniversalMidiPacket64);
         }
         break;
         case 2:
         {
             words[0] = 0xB0000000;
-            wordCount = (uint32_t)(MidiUmpPacketType::Ump96);
+            wordCount = (uint32_t)(MidiPacketType::UniversalMidiPacket96);
         }
         break;
         case 3:
         {
             words[0] = 0xF0000000;
-            wordCount = (uint32_t)(MidiUmpPacketType::Ump128);
+            wordCount = (uint32_t)(MidiPacketType::UniversalMidiPacket128);
         }
         break;
         }
 
         std::cout << "Sending UMP Word Array" << std::endl;
 
-        connSend.SendUmpWordArray(timestamp, words, 0, wordCount);
+        connSend.SendMessageWordArray(timestamp, words, 0, wordCount);
 
     }
 

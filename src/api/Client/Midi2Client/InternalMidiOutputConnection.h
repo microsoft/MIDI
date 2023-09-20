@@ -10,10 +10,10 @@
 
 #include <pch.h>
 
-#include "MidiUmp32.h"
-#include "MidiUmp64.h"
-#include "MidiUmp96.h"
-#include "MidiUmp128.h"
+#include "MidiMessage32.h"
+#include "MidiMessage32.h"
+#include "MidiMessage32.h"
+#include "MidiMessage32.h"
 
 
 
@@ -27,29 +27,29 @@ namespace Windows::Devices::Midi2::Internal
 
 
         _Success_(return == true)
-        bool SendUmp(
-            _In_ midi2::IMidiUmp const& ump);
+        bool SendMessagePacket(
+            _In_ midi2::IMidiUniversalPacket const& ump);
 
         _Success_(return == true)
-        bool SendUmpWords(
+        bool SendMessageWords(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint32_t const word0);
 
         _Success_(return == true)
-        bool SendUmpWords(
+        bool SendMessageWords(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint32_t const word0,
             _In_ uint32_t const word1);
 
         _Success_(return == true)
-        bool SendUmpWords(
+        bool SendMessageWords(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint32_t const word0,
             _In_ uint32_t const word1,
             _In_ uint32_t const word2);
 
         _Success_(return == true)
-        bool SendUmpWords(
+        bool SendMessageWords(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint32_t const word0,
             _In_ uint32_t const word1,
@@ -58,7 +58,7 @@ namespace Windows::Devices::Midi2::Internal
 
 
         _Success_(return == true)
-        bool SendUmpWordArray(
+        bool SendMessageWordArray(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ winrt::array_view<uint32_t const> words,
             _In_ uint32_t const startIndex,
@@ -67,7 +67,7 @@ namespace Windows::Devices::Midi2::Internal
 
 
         _Success_(return == true)
-        bool SendUmpBuffer(
+        bool SendMessageBuffer(
             _In_ internal::MidiTimestamp timestamp,
             _In_ foundation::IMemoryBuffer const& buffer,
             _In_ uint32_t byteOffset,
@@ -87,7 +87,7 @@ namespace Windows::Devices::Midi2::Internal
         _Success_(return == true)
         bool SendUmpInternal(
             _In_ winrt::com_ptr<TEndpointAbstraction> endpoint, 
-            _In_ midi2::IMidiUmp const& ump);
+            _In_ midi2::IMidiUniversalPacket const& ump);
 
         _Success_(return == true)
         bool SendMessageRaw(
@@ -98,7 +98,7 @@ namespace Windows::Devices::Midi2::Internal
 
         _Success_(return != nullptr)
         void* GetUmpDataPointer(
-            _In_ midi2::IMidiUmp const& ump, 
+            _In_ midi2::IMidiUniversalPacket const& ump, 
             _Out_ uint8_t& dataSizeOut);
 
     };
@@ -142,32 +142,32 @@ namespace Windows::Devices::Midi2::Internal
     _Use_decl_annotations_
     template <typename TEndpointAbstraction>
     void* InternalMidiOutputConnection<TEndpointAbstraction>::GetUmpDataPointer(
-            midi2::IMidiUmp const& ump, 
+            midi2::IMidiUniversalPacket const& ump,
             uint8_t& dataSizeOut)
     {
         void* umpDataPointer{};
         dataSizeOut = 0;
 
-        switch (ump.UmpPacketType())
+        switch (ump.PacketType())
         {
-        case midi2::MidiUmpPacketType::Ump32:
+        case midi2::MidiPacketType::UniversalMidiPacket32:
             dataSizeOut = (uint8_t)sizeof(internal::PackedUmp32);
-            umpDataPointer = ump.as<implementation::MidiUmp32>()->GetInternalUmpDataPointer();
+            umpDataPointer = ump.as<implementation::MidiMessage32>()->GetInternalUmpDataPointer();
             break;
 
-        case midi2::MidiUmpPacketType::Ump64:
+        case midi2::MidiPacketType::UniversalMidiPacket64:
             dataSizeOut = (uint8_t)sizeof(internal::PackedUmp64);
-            umpDataPointer = ump.as<implementation::MidiUmp64>()->GetInternalUmpDataPointer();
+            umpDataPointer = ump.as<implementation::MidiMessage64>()->GetInternalUmpDataPointer();
             break;
 
-        case midi2::MidiUmpPacketType::Ump96:
+        case midi2::MidiPacketType::UniversalMidiPacket96:
             dataSizeOut = (uint8_t)sizeof(internal::PackedUmp96);
-            umpDataPointer = ump.as<implementation::MidiUmp96>()->GetInternalUmpDataPointer();
+            umpDataPointer = ump.as<implementation::MidiMessage96>()->GetInternalUmpDataPointer();
             break;
 
-        case midi2::MidiUmpPacketType::Ump128:
+        case midi2::MidiPacketType::UniversalMidiPacket128:
             dataSizeOut = (uint8_t)sizeof(internal::PackedUmp128);
-            umpDataPointer = ump.as<implementation::MidiUmp128>()->GetInternalUmpDataPointer();
+            umpDataPointer = ump.as<implementation::MidiMessage128>()->GetInternalUmpDataPointer();
             break;
         }
 
@@ -179,7 +179,7 @@ namespace Windows::Devices::Midi2::Internal
     template <typename TEndpointAbstraction>
     bool InternalMidiOutputConnection<TEndpointAbstraction>::SendUmpInternal(
             winrt::com_ptr<TEndpointAbstraction> endpoint,
-            midi2::IMidiUmp const& ump)
+            midi2::IMidiUniversalPacket const& ump)
     {
         try
         {
@@ -209,7 +209,7 @@ namespace Windows::Devices::Midi2::Internal
 
     _Use_decl_annotations_
     template <typename TEndpointAbstraction>
-    bool InternalMidiOutputConnection<TEndpointAbstraction>::SendUmpBuffer(
+    bool InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageBuffer(
             const internal::MidiTimestamp timestamp,
             winrt::Windows::Foundation::IMemoryBuffer const& buffer,
             const uint32_t byteOffset,
@@ -269,7 +269,7 @@ namespace Windows::Devices::Midi2::Internal
     // sends a single UMP's worth of words
     _Use_decl_annotations_
     template <typename TEndpointAbstraction>
-    bool InternalMidiOutputConnection<TEndpointAbstraction>::SendUmpWordArray(
+    bool InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageWordArray(
             internal::MidiTimestamp const timestamp,
             winrt::array_view<uint32_t const> words,
             uint32_t const startIndex,
@@ -335,7 +335,7 @@ namespace Windows::Devices::Midi2::Internal
 
     _Use_decl_annotations_
     template <typename TEndpointAbstraction>
-    bool InternalMidiOutputConnection<TEndpointAbstraction>::SendUmpWords(
+    bool InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageWords(
             internal::MidiTimestamp const timestamp,
             uint32_t const word0)
     {
@@ -383,7 +383,7 @@ namespace Windows::Devices::Midi2::Internal
 
     _Use_decl_annotations_
     template <typename TEndpointAbstraction>
-    bool InternalMidiOutputConnection<TEndpointAbstraction>::SendUmpWords(
+    bool InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageWords(
             internal::MidiTimestamp const timestamp,
             uint32_t const word0,
             uint32_t const word1)
@@ -436,7 +436,7 @@ namespace Windows::Devices::Midi2::Internal
 
     _Use_decl_annotations_
     template <typename TEndpointAbstraction>
-    bool InternalMidiOutputConnection<TEndpointAbstraction>::SendUmpWords(
+    bool InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageWords(
             internal::MidiTimestamp const timestamp,
             uint32_t const word0,
             uint32_t const word1,
@@ -491,7 +491,7 @@ namespace Windows::Devices::Midi2::Internal
 
     _Use_decl_annotations_
     template <typename TEndpointAbstraction>
-    bool InternalMidiOutputConnection<TEndpointAbstraction>::SendUmpWords(
+    bool InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageWords(
             internal::MidiTimestamp const timestamp,
             uint32_t const word0,
             uint32_t const word1,
@@ -548,8 +548,8 @@ namespace Windows::Devices::Midi2::Internal
 
     _Use_decl_annotations_
     template <typename TEndpointAbstraction>
-    bool InternalMidiOutputConnection<TEndpointAbstraction>::SendUmp(
-            winrt::Windows::Devices::Midi2::IMidiUmp const& ump)
+    bool InternalMidiOutputConnection<TEndpointAbstraction>::SendMessagePacket(
+            midi2::IMidiUniversalPacket const& message)
     {
         try
         {
@@ -564,7 +564,7 @@ namespace Windows::Devices::Midi2::Internal
 
             if (m_outputAbstraction)
             {
-                return SendUmpInternal(m_outputAbstraction, ump);
+                return SendUmpInternal(m_outputAbstraction, message);
             }
             else
             {

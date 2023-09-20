@@ -14,7 +14,7 @@ import "MidiFunctionBlockDirectionEnum.idl";
 import "MidiFunctionBlockUIHintEnum.idl";
 import "MidiGroup.idl";
 
-import "MidiUmp128.idl";
+import "MidiMessage128.idl";
 
 // TODO: Verify this has everything in the spec
 
@@ -44,9 +44,9 @@ namespace Windows.Devices.Midi2
 
         UInt8 MidiCIMessageVersionFormat{ get; };
 
-        UInt8 MaxSysEx8Streams{ get; };
+        UInt8 MaxSystemExclusive8Streams{ get; };
 
-        void UpdateFromMessages(MidiUmp128[] endpointMessages);
+        void UpdateFromMessages(MidiMessage128[] endpointMessages);
 
     }
 }

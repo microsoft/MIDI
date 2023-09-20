@@ -11,18 +11,19 @@ MIDI_IDL_IMPORT
 
 // wraps the UMP type so we still quickly read/write packed data appropriately
 
-import "IMidiUmp.idl";
+import "IMidiUniversalPacket.idl";
 
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
-    unsealed runtimeclass MidiUmp64 : IMidiUmp
+    unsealed runtimeclass MidiMessage96 : IMidiUniversalPacket
     {
-        MidiUmp64();
-        MidiUmp64(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1);
-        MidiUmp64(MIDI_TIMESTAMP timestamp, UInt32[] words);
+        MidiMessage96();
+        MidiMessage96(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1, UInt32 word2);
+        MidiMessage96(MIDI_TIMESTAMP timestamp, UInt32[] words);
 
         UInt32 Word0{ get; set; };
         UInt32 Word1{ get; set; };
+        UInt32 Word2{ get; set; };
     };
 }

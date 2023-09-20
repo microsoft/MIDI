@@ -30,10 +30,10 @@
 using namespace winrt::Windows::Devices::Midi2;
 
 
-auto ump32mt = MidiUmpMessageType::Midi1ChannelVoice32;
-auto ump64mt = MidiUmpMessageType::Midi2ChannelVoice64;
-auto ump96mt = MidiUmpMessageType::FutureReservedB96;
-auto ump128mt = MidiUmpMessageType::UmpStream128;
+auto ump32mt = MidiMessageType::Midi1ChannelVoice32;
+auto ump64mt = MidiMessageType::Midi2ChannelVoice64;
+auto ump96mt = MidiMessageType::FutureReservedB96;
+auto ump128mt = MidiMessageType::Stream128;
 
 
 #if false

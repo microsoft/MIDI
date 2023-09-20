@@ -23,14 +23,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::MidiFunctionBlockUIHint UIHint() const noexcept { return m_uiHint; }
         MidiFunctionBlockMidi10 Midi10Connection() const noexcept { return m_midi10Connection; }
         uint8_t MidiCIMessageVersionFormat() const noexcept { return m_midiCIMessageVersionFormat; }
-        uint8_t MaxSysEx8Streams() const noexcept { return m_maxSysEx8Streams; }
+        uint8_t MaxSystemExclusive8Streams() const noexcept { return m_maxSysEx8Streams; }
 
         uint8_t FirstGroupIndex() { return m_firstGroupIndex; }
         uint8_t NumberOfGroupsSpanned() { return m_numberOfGroupsSpanned; }
 
         bool UpdateFromJson(_In_ winrt::Windows::Data::Json::JsonObject const json) noexcept;
         bool UpdateFromJsonString(_In_ winrt::hstring const json) noexcept;
-        bool UpdateFromMessages(_In_ winrt::array_view<midi2::MidiUmp128 const> messages) noexcept;
+        bool UpdateFromMessages(_In_ winrt::array_view<midi2::MidiMessage128 const> messages) noexcept;
         winrt::hstring GetJsonString() noexcept;
 
     private:

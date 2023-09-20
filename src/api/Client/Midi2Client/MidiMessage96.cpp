@@ -7,13 +7,13 @@
 // ============================================================================
 
 #include "pch.h"
-#include "MidiUmp96.h"
-#include "MidiUmp96.g.cpp"
+#include "MidiMessage96.h"
+#include "MidiMessage96.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
-    MidiUmp96::MidiUmp96(
+    MidiMessage96::MidiMessage96(
         internal::MidiTimestamp timestamp, 
         uint32_t const word0,
         uint32_t const word1,
@@ -28,7 +28,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     // internal constructor for reading from the service callback
     _Use_decl_annotations_
-    void MidiUmp96::InternalInitializeFromPointer(
+    void MidiMessage96::InternalInitializeFromPointer(
         internal::MidiTimestamp timestamp, 
         PVOID data)
     {

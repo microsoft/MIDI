@@ -12,14 +12,13 @@ MIDI_IDL_IMPORT
 // this has the most basic message building as required in the API. For more
 // advanced message building, including specific messages, see the SDK.
 
-import "IMidiUmp.idl";
-import "MidiUmp32.idl";
-import "MidiUmp64.idl";
-import "MidiUmp96.idl";
-import "MidiUmp128.idl";
-//import "MidiGroup.idl";
+import "IMidiUniversalPacket.idl";
+import "MidiMessage32.idl";
+import "MidiMessage64.idl";
+import "MidiMessage96.idl";
+import "MidiMessage128.idl";
 
-import "MidiSysEx8StatusEnum.idl";
+import "MidiSystemExclusive8StatusEnum.idl";
 
 import "Midi1ChannelVoiceMessageStatusEnum.idl";
 import "Midi2ChannelVoiceMessageStatusEnum.idl";
@@ -33,14 +32,14 @@ namespace Windows.Devices.Midi2
         // parameters are named, where applicable, for the fields as defined in the spec.
 
         // Type 0 utility messages
-        static MidiUmp32 BuildUtilityMessage(
+        static MidiMessage32 BuildUtilityMessage(
             MIDI_TIMESTAMP timestamp, 
             /* UInt8 reserved,*/
             UInt8 status, 
             UInt32 dataOrReserved);
 
         // Type 1 System common and System Real-time messages
-        static MidiUmp32 BuildSystemMessage(
+        static MidiMessage32 BuildSystemMessage(
             MIDI_TIMESTAMP timestamp,
             UInt8 groupIndex,
             UInt8 status, 
@@ -48,7 +47,7 @@ namespace Windows.Devices.Midi2
             UInt8 midi1Byte3);
 
         // Type 2 MIDI 1.0 Channel Voice messages
-        static MidiUmp32 BuildMidi1ChannelVoiceMessage(
+        static MidiMessage32 BuildMidi1ChannelVoiceMessage(
             MIDI_TIMESTAMP timestamp,
             UInt8 groupIndex,
             Midi1ChannelVoiceMessageStatus status,
@@ -58,7 +57,7 @@ namespace Windows.Devices.Midi2
 
         // Type 3 7-bit System Exclusive. SDK has more comprehensive SysEx management as these typically span multiple messages
         [default_overload]
-        static MidiUmp64 BuildSysEx7Message(
+        static MidiMessage64 BuildSystemExclusive7Message(
             MIDI_TIMESTAMP timestamp,
             UInt8 groupIndex,
             UInt8 status, 
@@ -70,7 +69,7 @@ namespace Windows.Devices.Midi2
             UInt8 dataByte4, 
             UInt8 dataByte5);
 
-        static MidiUmp64 BuildSysEx7MessageFromArray(
+        static MidiMessage64 BuildSystemExclusive7MessageFromArray(
             MIDI_TIMESTAMP timestamp,
             UInt8 groupIndex,
             UInt8 status, 
@@ -78,7 +77,7 @@ namespace Windows.Devices.Midi2
             UInt8[] dataBytes,
             UInt32 arrayStartIndex);
 
-        static MidiUmp64 BuildSysEx7MessageFromBuffer(
+        static MidiMessage64 BuildSystemExclusive7MessageFromBuffer(
             MIDI_TIMESTAMP timestamp,
             UInt8 groupIndex,
             UInt8 status, 
@@ -87,7 +86,7 @@ namespace Windows.Devices.Midi2
             UInt32 byteOffsetInBuffer);
 
         // Type 4 MIDI 2.0 Channel Voice message
-        static MidiUmp64 BuildMidi2ChannelVoiceMessage(
+        static MidiMessage64 BuildMidi2ChannelVoiceMessage(
             MIDI_TIMESTAMP timestamp,
             UInt8 groupIndex,
             Midi2ChannelVoiceMessageStatus status, 
@@ -96,10 +95,10 @@ namespace Windows.Devices.Midi2
             UInt32 data);
 
         // Type 5 8-bit System Exclusive. SDK has more comprehensive SysEx management as these typically span multiple messages
-        static MidiUmp128 BuildSysEx8Message(
+        static MidiMessage128 BuildSystemExclusive8Message(
             MIDI_TIMESTAMP timestamp,
             UInt8 groupIndex,
-            MidiSysEx8Status status, 
+            MidiSystemExclusive8Status status, 
             UInt8 numberOfValidDataBytesThisMessage, 
             UInt8 streamId, 
             UInt8 dataByte00, 
@@ -116,19 +115,19 @@ namespace Windows.Devices.Midi2
             UInt8 dataByte11, 
             UInt8 dataByte12);
 
-        static MidiUmp128 BuildSysEx8MessageFromArray(
+        static MidiMessage128 BuildSystemExclusive8MessageFromArray(
             MIDI_TIMESTAMP timestamp,
             UInt8 groupIndex,
-            MidiSysEx8Status status, 
+            MidiSystemExclusive8Status status,
             UInt8 numberOfValidDataBytesThisMessage, 
             UInt8 streamId, 
             UInt8[] dataBytes,
             UInt32 arrayStartIndex);
 
-        static MidiUmp128 BuildSysEx8MessageFromBuffer(
+        static MidiMessage128 BuildSystemExclusive8MessageFromBuffer(
             MIDI_TIMESTAMP timestamp,
             UInt8 groupIndex,
-            MidiSysEx8Status status, 
+            MidiSystemExclusive8Status status,
             UInt8 numberOfValidDataBytesThisMessage, 
             Windows.Foundation.IMemoryBuffer buffer, 
             UInt32 byteOffsetInBuffer);
@@ -136,7 +135,7 @@ namespace Windows.Devices.Midi2
         // Type 5 Mixed Data Set Messages
 
         // Chunk header. Status = 0x8
-        static MidiUmp128 BuildMixedDataSetChunkHeaderMessage(
+        static MidiMessage128 BuildMixedDataSetChunkHeaderMessage(
             MIDI_TIMESTAMP timestamp,
             UInt8 groupIndex,
             UInt8 mdsId, 
@@ -149,7 +148,7 @@ namespace Windows.Devices.Midi2
             UInt16 subId2);
 
         // Chunk payload. Status = 0x9
-        static MidiUmp128 BuildMixedDataSetChunkDataMessage(
+        static MidiMessage128 BuildMixedDataSetChunkDataMessage(
             MIDI_TIMESTAMP timestamp,
             UInt8 groupIndex,
             UInt8 mdsId, 
@@ -168,7 +167,7 @@ namespace Windows.Devices.Midi2
             UInt8 dataByte12, 
             UInt8 dataByte13);
 
-        static MidiUmp128 BuildMixedDataSetChunkDataMessageFromArray(
+        static MidiMessage128 BuildMixedDataSetChunkDataMessageFromArray(
             MIDI_TIMESTAMP timestamp,
             UInt8 groupIndex,
             UInt8 mdsId, 
@@ -176,7 +175,7 @@ namespace Windows.Devices.Midi2
             UInt8[] dataBytes,
             UInt32 arrayStartIndex);
 
-        static MidiUmp128 BuildMixedDataSetChunkDataMessageFromBuffer(
+        static MidiMessage128 BuildMixedDataSetChunkDataMessageFromBuffer(
             MIDI_TIMESTAMP timestamp,
             UInt8 groupIndex,
             UInt8 mdsId, 
@@ -185,7 +184,7 @@ namespace Windows.Devices.Midi2
             UInt32 byteOffsetInBuffer);
 
         // Type D Flex Data message
-        static MidiUmp128 BuildFlexDataMessage(
+        static MidiMessage128 BuildFlexDataMessage(
             MIDI_TIMESTAMP timestamp,
             UInt8 groupIndex,
             UInt8 form, 
@@ -198,7 +197,7 @@ namespace Windows.Devices.Midi2
             UInt32 word3Data);
 
         // Type F stream message
-        static MidiUmp128 BuildUmpStreamMessage(
+        static MidiMessage128 BuildStreamMessage(
             MIDI_TIMESTAMP timestamp,
             UInt8 form,
             UInt16 status, 

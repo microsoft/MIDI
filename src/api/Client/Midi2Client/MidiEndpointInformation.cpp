@@ -29,7 +29,7 @@ using namespace winrt::Windows::Data::Json;
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
-    bool MidiEndpointInformation::UpdateFromMessages(winrt::array_view<midi2::MidiUmp128 const> /*messages*/) noexcept
+    bool MidiEndpointInformation::UpdateFromMessages(winrt::array_view<midi2::MidiMessage128 const> /*messages*/) noexcept
     {
         return false;
     }
@@ -86,8 +86,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         jsonObject.SetNamedValue(JSON_KEY_EP_NAME, JsonValue::CreateStringValue(Name()));
         jsonObject.SetNamedValue(JSON_KEY_EP_PID, JsonValue::CreateStringValue(ProductInstanceId()));
-        jsonObject.SetNamedValue(JSON_KEY_EP_UMPVERMAJ, JsonValue::CreateNumberValue(UmpVersionMajor()));
-        jsonObject.SetNamedValue(JSON_KEY_EP_UMPVERMIN, JsonValue::CreateNumberValue(UmpVersionMinor()));
+        jsonObject.SetNamedValue(JSON_KEY_EP_UMPVERMAJ, JsonValue::CreateNumberValue(SpecificationVersionMajor()));
+        jsonObject.SetNamedValue(JSON_KEY_EP_UMPVERMIN, JsonValue::CreateNumberValue(SpecificationVersionMinor()));
         jsonObject.SetNamedValue(JSON_KEY_EP_STATICFB, JsonValue::CreateBooleanValue(HasStaticFunctionBlocks()));
         jsonObject.SetNamedValue(JSON_KEY_EP_NUMFB, JsonValue::CreateNumberValue(FunctionBlockCount()));
         jsonObject.SetNamedValue(JSON_KEY_EP_MIDI2, JsonValue::CreateBooleanValue(SupportsMidi20Protocol()));

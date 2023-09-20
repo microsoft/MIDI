@@ -28,6 +28,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::MidiSessionSettings const& settings
         ) noexcept
     {
+        internal::LogInfo(__FUNCTION__, L" Session create ");
+
         try
         {
             auto session = winrt::make_self<implementation::MidiSession>();
@@ -70,6 +72,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     bool MidiSession::InternalStart()
     {
+        internal::LogInfo(__FUNCTION__, L" Start Session ");
+
         try
         {
             // We're talking to the service, so use the MIDI Service abstraction, not a KS or other one
@@ -121,6 +125,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::IMidiEndpointDefinedConnectionSettings const& /*settings*/
         ) noexcept
     {
+        internal::LogInfo(__FUNCTION__, L" Connecting ");
+
         try
         {
             auto normalizedDeviceId = NormalizeDeviceId(endpointDeviceId);
@@ -196,6 +202,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::IMidiEndpointDefinedConnectionSettings const& /*settings*/
         ) noexcept
     {
+        internal::LogInfo(__FUNCTION__, L" Connecting ");
+
         try
         {
             auto normalizedInputDeviceId = NormalizeDeviceId(inputEndpointDeviceId);
@@ -281,6 +289,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::IMidiEndpointDefinedConnectionSettings const& /*settings*/
         ) noexcept
     {
+        internal::LogInfo(__FUNCTION__, L" Connecting ");
+
         try
         {
             auto normalizedDeviceId = NormalizeDeviceId(deviceId);
@@ -344,6 +354,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::IMidiEndpointDefinedConnectionSettings const& /*settings*/
         ) noexcept
     {
+        internal::LogInfo(__FUNCTION__, L" Connecting ");
+
         try
         {
             auto normalizedDeviceId = NormalizeDeviceId(deviceId);
@@ -415,6 +427,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::guid const& endpointConnectionId
         ) noexcept
     {
+        internal::LogInfo(__FUNCTION__, L" Disconnect endpoint connection ");
+
         try
         {
             if (m_connections.HasKey(endpointConnectionId))

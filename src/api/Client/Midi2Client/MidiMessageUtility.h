@@ -7,30 +7,30 @@
 // ============================================================================
 
 #pragma once
-#include "MidiUmpUtility.g.h"
+#include "MidiMessageUtility.g.h"
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    struct MidiUmpUtility
+    struct MidiMessageUtility
     {
-        MidiUmpUtility() = default;
+        MidiMessageUtility() = default;
 
-        static bool ValidateUmp32MessageType(_In_ uint32_t const word0) noexcept;
-        static bool ValidateUmp64MessageType(_In_ uint32_t const word0) noexcept;
-        static bool ValidateUmp96MessageType(_In_ uint32_t const word0) noexcept;
-        static bool ValidateUmp128MessageType(_In_ uint32_t const word0) noexcept;
+        static bool ValidateMessage32MessageType(_In_ uint32_t const word0) noexcept;
+        static bool ValidateMessage64MessageType(_In_ uint32_t const word0) noexcept;
+        static bool ValidateMessage96MessageType(_In_ uint32_t const word0) noexcept;
+        static bool ValidateMessage128MessageType(_In_ uint32_t const word0) noexcept;
 
-        static midi2::MidiUmpMessageType GetMessageTypeFromFirstUmpWord(_In_ uint32_t const word0) noexcept;
-        static midi2::MidiUmpPacketType GetPacketTypeFromFirstUmpWord(_In_ uint32_t const word0) noexcept;
+        static midi2::MidiMessageType GetMessageTypeFromFirstMessageWord(_In_ uint32_t const word0) noexcept;
+        static midi2::MidiPacketType GetPacketTypeFromFirstMessageWord(_In_ uint32_t const word0) noexcept;
 
 
         // This is likely to need a change in logic as new messages are added
-        static bool MessageTypeHasGroupField(_In_ midi2::MidiUmpMessageType const messageType) noexcept;
+        static bool MessageTypeHasGroupField(_In_ midi2::MidiMessageType const messageType) noexcept;
         static uint32_t ReplaceGroup(_In_ uint32_t const word0, _In_ midi2::MidiGroup const newGroup) noexcept;
         static midi2::MidiGroup GetGroup(_In_ uint32_t const word0);
 
         // This is likely to need a change in logic as new messages are added
-        static bool MessageTypeHasChannelField(_In_ midi2::MidiUmpMessageType const messageType) noexcept;
+        static bool MessageTypeHasChannelField(_In_ midi2::MidiMessageType const messageType) noexcept;
         static uint32_t ReplaceChannel(_In_ uint32_t const word0, _In_ midi2::MidiChannel const newChannel) noexcept;
         static midi2::MidiChannel GetChannel(_In_ uint32_t const word0);
 
@@ -38,7 +38,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation
 {
-    struct MidiUmpUtility : MidiUmpUtilityT<MidiUmpUtility, implementation::MidiUmpUtility>
+    struct MidiMessageUtility : MidiMessageUtilityT<MidiMessageUtility, implementation::MidiMessageUtility, winrt::static_lifetime>
     {
     };
 }

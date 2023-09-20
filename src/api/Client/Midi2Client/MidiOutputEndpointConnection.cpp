@@ -20,6 +20,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         _In_ winrt::guid const connectionId,
         _In_ winrt::hstring const endpointDeviceId)
     {
+        internal::LogInfo(__FUNCTION__, L" Initialize ");
+
         try
         {
             m_connectionId = connectionId;
@@ -47,6 +49,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Success_(return == true)
     bool MidiOutputEndpointConnection::Open()
     {
+        internal::LogInfo(__FUNCTION__, L" Open ");
+
         if (!IsOpen())
         {
             // Activate the endpoint for this device. Will fail if the device is not a BiDi device
@@ -109,6 +113,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     void MidiOutputEndpointConnection::Close()
     {
+        internal::LogInfo(__FUNCTION__, L" Close ");
+
         if (m_closeHasBeenCalled) return;
 
         try

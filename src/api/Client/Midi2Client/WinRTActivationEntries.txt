@@ -13,16 +13,16 @@ Windows.Devices.Midi2.MidiVirtualDeviceManager | 0 | 0 | 0
 
 # Messages
 
-Windows.Devices.Midi2.MidiUmp32 | 0 | 0 | 0
-Windows.Devices.Midi2.MidiUmp64 | 0 | 0 | 0
-Windows.Devices.Midi2.MidiUmp96 | 0 | 0 | 0
-Windows.Devices.Midi2.MidiUmp128 | 0 | 0 | 0
+Windows.Devices.Midi2.MidiMessage32 | 0 | 0 | 0
+Windows.Devices.Midi2.MidiMessage64 | 0 | 0 | 0
+Windows.Devices.Midi2.MidiMessage96 | 0 | 0 | 0
+Windows.Devices.Midi2.MidiMessage128 | 0 | 0 | 0
 
 Windows.Devices.Midi2.MidiMessageBuilder | 0 | 0 | 0
 Windows.Devices.Midi2.IMidiMessageBuilderStatics | 0 | 0 | 0
 
-Windows.Devices.Midi2.MidiUmpUtility | 0 | 0 | 0
-Windows.Devices.Midi2.IMidiUmpUtilityStatics | 0 | 0 | 0
+Windows.Devices.Midi2.MidiMessageUtility | 0 | 0 | 0
+Windows.Devices.Midi2.IMidiMessageUtilityStatics | 0 | 0 | 0
 
 # Metadata
 

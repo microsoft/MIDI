@@ -9,15 +9,15 @@
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-import "IMidiUmp.idl";
+import "IMidiUniversalPacket.idl";
 
-import "MidiUmp32.idl";
-import "MidiUmp64.idl";
-import "MidiUmp96.idl";
-import "MidiUmp128.idl";
+import "MidiMessage32.idl";
+import "MidiMessage64.idl";
+import "MidiMessage96.idl";
+import "MidiMessage128.idl";
 
-import "MidiUmpPacketTypeEnum.idl";
-import "MidiUmpMessageTypeEnum.idl";
+import "MidiPacketTypeEnum.idl";
+import "MidiMessageTypeEnum.idl";
 
 
 
@@ -31,10 +31,10 @@ namespace Windows.Devices.Midi2
 
 
         // Type of UMP contained in the data. You can cast this to an int to get the number of words
-        MidiUmpPacketType UmpType{ get; };
+        MidiPacketType PacketType{ get; };
 
         // The type of message contained. This comes from the first word of the data
-        MidiUmpMessageType UmpMessageType{ get; };
+        MidiMessageType MessageType{ get; };
 
         // utility for code that just needs to know about the message before doing any real work
         // message listeners often make use of this, so it cuts down on ceremony at the expense of
@@ -42,7 +42,7 @@ namespace Windows.Devices.Midi2
         UInt32 InspectFirstWord();
         
         // Returns a new UMP. Allocation-wise, this is the most expensive, but it is also the friendliest
-        IMidiUmp GetUmp();
+        IMidiUniversalPacket GetMessagePacket();
 
         // Fills 1-4 words. Use the return value or UmpType to see how many words are valid 
         UInt8 FillWords(out UInt32 word0, out UInt32 word1, out UInt32 word2, out UInt32 word3);
@@ -50,10 +50,10 @@ namespace Windows.Devices.Midi2
         // these are for when you have an existing UMP type and prefer not to allocate a new one
         // caller is responsible for using UmpType to pick the correct one. Parameters are references
         // to existing types, but the way WinRT works, it's not as efficient as an & parameters in C++
-        Boolean FillUmp32(MidiUmp32 ump);
-        Boolean FillUmp64(MidiUmp64 ump);
-        Boolean FillUmp96(MidiUmp96 ump);
-        Boolean FillUmp128(MidiUmp128 ump);
+        Boolean FillMessage32(MidiMessage32 ump);
+        Boolean FillMessage64(MidiMessage64 ump);
+        Boolean FillMessage96(MidiMessage96 ump);
+        Boolean FillMessage128(MidiMessage128 ump);
 
         // Use existing arrays instead of allocating new ones. Array should be at least as large
         // as the UMP being read. Returns the count of elements written

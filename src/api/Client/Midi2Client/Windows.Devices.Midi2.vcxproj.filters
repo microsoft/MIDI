@@ -383,10 +383,10 @@
     <Midl Include="MidiClock.idl">
       <Filter>API\Clock</Filter>
     </Midl>
-    <Midl Include="MidiUmpMessageTypeEnum.idl">
+    <Midl Include="MidiMessageTypeEnum.idl">
       <Filter>API\Messages</Filter>
     </Midl>
-    <Midl Include="MidiUmpPacketTypeEnum.idl">
+    <Midl Include="MidiPacketTypeEnum.idl">
       <Filter>API\Messages</Filter>
     </Midl>
     <Midl Include="MidiMessageReceivedEventArgs.idl">
@@ -413,7 +413,7 @@
     <Midl Include="MidiUniqueId.idl">
       <Filter>API\Endpoints\Metadata\MUID</Filter>
     </Midl>
-    <Midl Include="MidiSysEx8StatusEnum.idl">
+    <Midl Include="MidiSystemExclusive8StatusEnum.idl">
       <Filter>API\Messages</Filter>
     </Midl>
     <Midl Include="MidiGroupTerminalBlockDirectionEnum.idl">
@@ -539,22 +539,22 @@
     <Midl Include="MidiStreamConfigurationEndpointListener.idl">
       <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Infrastructure</Filter>
     </Midl>
-    <Midl Include="IMidiUmp.idl">
+    <Midl Include="IMidiUniversalPacket.idl">
       <Filter>API\Messages\Types</Filter>
     </Midl>
-    <Midl Include="MidiUmp32.idl">
+    <Midl Include="MidiMessage32.idl">
       <Filter>API\Messages\Types</Filter>
     </Midl>
-    <Midl Include="MidiUmp64.idl">
+    <Midl Include="MidiMessage64.idl">
       <Filter>API\Messages\Types</Filter>
     </Midl>
-    <Midl Include="MidiUmp96.idl">
+    <Midl Include="MidiMessage96.idl">
       <Filter>API\Messages\Types</Filter>
     </Midl>
-    <Midl Include="MidiUmp128.idl">
+    <Midl Include="MidiMessage128.idl">
       <Filter>API\Messages\Types</Filter>
     </Midl>
-    <Midl Include="MidiUmpUtility.idl">
+    <Midl Include="MidiMessageUtility.idl">
       <Filter>API\Messages\Utility</Filter>
     </Midl>
     <Midl Include="MidiMessageBuilder.idl">

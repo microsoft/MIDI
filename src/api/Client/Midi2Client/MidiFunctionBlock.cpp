@@ -26,7 +26,7 @@ using namespace winrt::Windows::Data::Json;
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
-    bool MidiFunctionBlock::UpdateFromMessages(winrt::array_view<midi2::MidiUmp128 const> /*messages*/) noexcept
+    bool MidiFunctionBlock::UpdateFromMessages(winrt::array_view<midi2::MidiMessage128 const> /*messages*/) noexcept
     {
         return false;
     }

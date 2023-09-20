@@ -18,8 +18,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         winrt::hstring Name() const noexcept { return m_name; }
         winrt::hstring ProductInstanceId() const noexcept { return m_productInstanceId; }
-        uint8_t UmpVersionMajor() const noexcept { return m_umpVersionMajor; }
-        uint8_t UmpVersionMinor() const noexcept { return m_umpVersionMinor; }
+        uint8_t SpecificationVersionMajor() const noexcept { return m_umpVersionMajor; }
+        uint8_t SpecificationVersionMinor() const noexcept { return m_umpVersionMinor; }
         bool HasStaticFunctionBlocks() const noexcept { return m_hasStaticFunctionBlocks; }
         uint8_t FunctionBlockCount() const noexcept { return m_functionBlockCount; }
         bool SupportsMidi10Protocol() const noexcept { return m_supportsMidi10Protocol; }
@@ -30,7 +30,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         bool UpdateFromJson(_In_ winrt::Windows::Data::Json::JsonObject const json) noexcept;
         bool UpdateFromJsonString(_In_ winrt::hstring const json) noexcept;
-        bool UpdateFromMessages(_In_ winrt::array_view<midi2::MidiUmp128 const> messages) noexcept;
+        bool UpdateFromMessages(_In_ winrt::array_view<midi2::MidiMessage128 const> messages) noexcept;
         winrt::hstring GetJsonString() noexcept;
 
 

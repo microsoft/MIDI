@@ -7,28 +7,30 @@
 // ============================================================================
 
 #include "pch.h"
-
-#include "MidiUmp32.h"
-#include "MidiUmp32.g.cpp"
-
-
+#include "MidiMessage128.h"
+#include "MidiMessage128.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
-    MidiUmp32::MidiUmp32(
+    MidiMessage128::MidiMessage128(
         internal::MidiTimestamp const timestamp, 
-        uint32_t const word0)
+        uint32_t const word0, 
+        uint32_t const word1, 
+        uint32_t const word2, 
+        uint32_t const word3)
     {
         m_timestamp = timestamp;
+
         m_ump.word0 = word0;
+        m_ump.word1 = word1;
+        m_ump.word2 = word2;
+        m_ump.word3 = word3;
     }
 
     // internal constructor for reading from the service callback
-    // we needed a second function here because overload with the other
-    // constructor caused access violations when wrong one was picked
     _Use_decl_annotations_
-    void MidiUmp32::InternalInitializeFromPointer(
+    void MidiMessage128::InternalInitializeFromPointer(
         internal::MidiTimestamp timestamp, 
         PVOID data)
     {
@@ -36,7 +38,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         m_timestamp = timestamp;
 
-        memcpy((void*)&m_ump, data, sizeof(internal::PackedUmp32));
+        // need to have some safeties around this
+        memcpy((void*)&m_ump, data, sizeof(internal::PackedUmp128));
     }
 
 }
