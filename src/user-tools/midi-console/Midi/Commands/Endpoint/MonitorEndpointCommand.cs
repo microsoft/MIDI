@@ -11,6 +11,8 @@ using Windows.Devices.Midi2;
 using WinRT;
 
 using Microsoft.Devices.Midi2.ConsoleApp.Resources;
+using Windows.ApplicationModel.UserDataTasks;
+using System.Diagnostics.Eventing.Reader;
 
 namespace Microsoft.Devices.Midi2.ConsoleApp
 {
@@ -33,6 +35,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             [CommandOption("-s|--single-message")]
             [DefaultValue(false)]
             public bool SingleMessage { get; set; }
+
+            [LocalizedDescription("ParameterMonitorEndpointVerbose")]
+            [CommandOption("-v|--verbose|--details")]
+            [DefaultValue(false)]
+            public bool Verbose { get; set; }
         }
 
         public override int Execute(CommandContext context, Settings settings)
@@ -93,108 +100,179 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             }
 
 
+            if (settings.Verbose)
+            {
+                // start waiting for messages
 
-
-            // start waiting for messages
-
-            AnsiConsole.Live(table)
-                .Start(ctx =>
-                {
-                    bool firstMessageReceived = false;
-
-                    // set up the event handler
-                    IMidiMessageReceivedEventSource eventSource = (IMidiMessageReceivedEventSource)connection;
-
-                    bool continueWaiting = true;
-
-                    eventSource.MessageReceived += (s, e) =>
+                AnsiConsole.Live(table)
+                    .Start(ctx =>
                     {
-                        // TODO: Localize these
+                        UInt32 index = 0;
 
-                        if (!firstMessageReceived)
+                        bool firstMessageReceived = false;
+
+                        // set up the event handler
+                        IMidiMessageReceivedEventSource eventSource = (IMidiMessageReceivedEventSource)connection;
+
+                        bool continueWaiting = true;
+
+                        eventSource.MessageReceived += (s, e) =>
                         {
-                            table.AddColumn(Strings.TableColumnHeaderCommonTimestamp);
-                            table.AddColumn(Strings.MonitorEndpointResultTableColumnHeaderWordsReceived);
-                            table.AddColumn(Strings.TableColumnHeaderCommonMessageType);
+                            index++;
 
-                            firstMessageReceived = true;
-                        }
+                            // TODO: Localize these
 
-                        DisplayUmp(e.GetUmp(), table);
-
-                        ctx.Refresh();
-
-                        if (settings.SingleMessage)
-                        {
-                            continueWaiting = false;
-                        }
-                    };
-
-                    // open the connection
-                    connection.Open();
-
-                    while (continueWaiting)
-                    {
-                        if (Console.KeyAvailable)
-                        {
-                            var keyInfo = Console.ReadKey(false);
-                            if (keyInfo.Key == ConsoleKey.Escape)
+                            if (!firstMessageReceived)
                             {
-                                if (!firstMessageReceived)
-                                {
-                                    // TODO: we should erase the table, otherwise it leaves artifacts.
-                                    // may need to rethink how table is created
-                                }
+                                table.AddColumn(Strings.CommonTableHeaderIndex);
+                                table.AddColumn(Strings.TableColumnHeaderCommonTimestamp);
+                                table.AddColumn(Strings.MonitorEndpointResultTableColumnHeaderWordsReceived);
+                                table.AddColumn(Strings.TableColumnHeaderCommonMessageType);
 
-                                AnsiConsole.MarkupLine(Strings.MonitorEscapedPressedMessage);
-                                continueWaiting = false;
-                                break;
+                                firstMessageReceived = true;
                             }
+
+                            DisplayUmp(index, e.GetMessagePacket(), table);
+
+                            ctx.Refresh();
+
+                            if (settings.SingleMessage)
+                            {
+                                continueWaiting = false;
+                            }
+                        };
+
+                        // open the connection
+                        connection.Open();
+
+                        while (continueWaiting)
+                        {
+                            if (Console.KeyAvailable)
+                            {
+                                var keyInfo = Console.ReadKey(false);
+                                if (keyInfo.Key == ConsoleKey.Escape)
+                                {
+                                    if (!firstMessageReceived)
+                                    {
+                                        // TODO: we should erase the table, otherwise it leaves artifacts.
+                                        // may need to rethink how table is created
+                                    }
+
+                                    AnsiConsole.MarkupLine(Strings.MonitorEscapedPressedMessage);
+                                    continueWaiting = false;
+                                    break;
+                                }
+                            }
+
+                            Thread.Sleep(0);
+
+                            // todo: code to allow pressing escape to stop listening and gracefully shut down
+
+
                         }
-                        
-                        Thread.Sleep(50);
 
-                        // todo: code to allow pressing escape to stop listening and gracefully shut down
+                    });
 
 
-                    }
+            }
+            else
+            {
+                // show count only
 
-                });
+                // start waiting for messages
+
+                // TODO: May want to create some different column types for counts by message type etc.
+
+                AnsiConsole.Status()
+                    .Spinner(Spinner.Known.Arc)
+                    /*.Spinner(Spinner.Known.Grenade) */
+                    .Start("Waiting for messages...", ctx =>
+                    {
+                        UInt32 index = 0;
+
+                        // set up the event handler
+                        IMidiMessageReceivedEventSource eventSource = (IMidiMessageReceivedEventSource)connection;
+
+                        bool continueWaiting = true;
+
+                        eventSource.MessageReceived += (s, e) =>
+                        {
+                            index++;
+
+                            if (index > 1)
+                                ctx.Status($"Received {index} messages");
+                            else
+                                ctx.Status($"Received 1 message");
+
+                            ctx.Refresh();
+
+                            if (settings.SingleMessage)
+                            {
+                                continueWaiting = false;
+                            }
+                        };
+
+                        // open the connection
+                        connection.Open();
+
+                        while (continueWaiting)
+                        {
+                            if (Console.KeyAvailable)
+                            {
+                                var keyInfo = Console.ReadKey(false);
+                                if (keyInfo.Key == ConsoleKey.Escape)
+                                {
+                                    AnsiConsole.MarkupLine(Strings.MonitorEscapedPressedMessage);
+                                    continueWaiting = false;
+                                    break;
+                                }
+                            }
+
+                            Thread.Sleep(0);
+                        }
+
+                    });
+
+
+            }
+
+            
 
             return 0;
         }
 
-        private void DisplayUmp(IMidiUmp ump, Table table) 
+        private void DisplayUmp(UInt32 index, IMidiUniversalPacket ump, Table table) 
         {
             string data = string.Empty;
 
-            if (ump.UmpPacketType == MidiUmpPacketType.Ump128)
+            if (ump.PacketType == MidiPacketType.UniversalMidiPacket128)
             {
-                var ump128 = ump.As<MidiUmp128>();
+                var ump128 = ump.As<MidiMessage128>();
 
                 data = AnsiMarkupFormatter.FormatMidiWords(ump128.Word0, ump128.Word1, ump128.Word2, ump128.Word3);
             }
-            else if (ump.UmpPacketType == MidiUmpPacketType.Ump96)
+            else if (ump.PacketType == MidiPacketType.UniversalMidiPacket96)
             {
-                var ump96 = ump.As<MidiUmp96>();
+                var ump96 = ump.As<MidiMessage96>();
 
                 data = AnsiMarkupFormatter.FormatMidiWords(ump96.Word0, ump96.Word1, ump96.Word2);
             }
-            else if (ump.UmpPacketType == MidiUmpPacketType.Ump64)
+            else if (ump.PacketType == MidiPacketType.UniversalMidiPacket64)
             {
-                var ump64 = ump.As<MidiUmp64>();
+                var ump64 = ump.As<MidiMessage64>();
 
                 data = AnsiMarkupFormatter.FormatMidiWords(ump64.Word0, ump64.Word1);
             }
-            else if (ump.UmpPacketType == MidiUmpPacketType.Ump32)
+            else if (ump.PacketType == MidiPacketType.UniversalMidiPacket32)
             {
-                var ump32 = ump.As<MidiUmp32>();
+                var ump32 = ump.As<MidiMessage32>();
 
                 data = string.Format("{0:X8}", ump32.Word0);
                 data = AnsiMarkupFormatter.FormatMidiWords(ump32.Word0);
             }
 
             table.AddRow(
+                new Markup(AnsiMarkupFormatter.FormatRowIndex(index)),
                 new Markup(AnsiMarkupFormatter.FormatTimestamp(ump.Timestamp)), 
                 new Markup(data),
                 new Markup(AnsiMarkupFormatter.FormatMessageType(ump.MessageType))

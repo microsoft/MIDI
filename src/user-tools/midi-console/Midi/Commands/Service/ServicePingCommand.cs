@@ -52,7 +52,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 return Spectre.Console.ValidationResult.Error(Strings.ValidationErrorPingCountTooLow);
             }
 
-            if (settings.Count > 100)
+            if (settings.Count > 1000)
             {
                 return Spectre.Console.ValidationResult.Error(Strings.ValidationErrorPingCountTooHigh);
             }

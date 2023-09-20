@@ -26,6 +26,12 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             [CommandOption("-c|--count")]
             [DefaultValue(1)]
             public int Count { get; set; }
+
+
+            [LocalizedDescription("VERBOSE_OPTION_TODO")]
+            [CommandOption("-v|--verbose|--details")]
+            [DefaultValue(false)]
+            public bool Verbose { get; set; }
         }
 
         public override Spectre.Console.ValidationResult Validate(CommandContext context, Settings settings)
@@ -48,6 +54,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             }
 
 
+            if (settings.Count < 1)
+            {
+                return Spectre.Console.ValidationResult.Error(Strings.ValidationErrorInvalidMessageCount);
+            }
+
             return base.Validate(context, settings);
         }
 
@@ -57,7 +68,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             if (words != null && words.Length > 0 && words.Length <= 4)
             {
                 // allowed behavior is to cast the packet type to the word count
-                return (bool)((int)MidiUmpUtility.GetPacketTypeFromFirstUmpWord(words[0]) == words.Length);
+                return (bool)((int)MidiMessageUtility.GetPacketTypeFromFirstMessageWord(words[0]) == words.Length);
             }
             else
             {
@@ -148,36 +159,68 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             }
 
 
-            var table = new Table();
+            if (settings.Verbose)
+            {
+                var table = new Table();
 
-            table.AddColumn(Strings.TableColumnHeaderCommonTimestamp);
-            table.AddColumn(Strings.SendMessageResultTableColumnHeaderWordsSent);
-            table.AddColumn(Strings.TableColumnHeaderCommonMessageType);
+                table.AddColumn(Strings.TableColumnHeaderCommonTimestamp);
+                table.AddColumn(Strings.SendMessageResultTableColumnHeaderWordsSent);
+                table.AddColumn(Strings.TableColumnHeaderCommonMessageType);
 
-            AnsiConsole.Live(table)
-                .Start(ctx =>
-                {
-                    if (settings.Words != null)
+                AnsiConsole.Live(table)
+                    .Start(ctx =>
                     {
-                        for (uint i = 0; i < settings.Count; i++)
+                        if (settings.Words != null)
+                        {
+                            for (uint i = 0; i < settings.Count; i++)
+                            {
+                                UInt64 timestamp = MidiClock.GetMidiTimestamp();
+                                connection.SendMessageWordArray(timestamp, settings.Words, 0, (byte)settings.Words.Count());
+
+                                table.AddRow(
+                                    AnsiMarkupFormatter.FormatTimestamp(timestamp),
+                                    AnsiMarkupFormatter.FormatMidiWords(settings.Words),
+                                    AnsiMarkupFormatter.FormatMessageType(MidiMessageUtility.GetMessageTypeFromFirstMessageWord(settings.Words[0]))
+                                    );
+
+                                ctx.Refresh();
+
+                                Thread.Sleep(settings.DelayBetweenMessages);
+                            }
+                        }
+                    });
+
+                return 0;
+            }
+            else
+            {
+                // not verbose, so just show a counter
+
+                AnsiConsole.Progress()
+                    .Start(ctx =>
+                    {
+                        var sendTask = ctx.AddTask("[green]Sending messages[/]");
+                        sendTask.MaxValue = settings.Count;
+                        sendTask.Value = 0;
+
+                        uint messagesSent = 0;
+
+                        while (messagesSent < settings.Count)
                         {
                             UInt64 timestamp = MidiClock.GetMidiTimestamp();
-                            connection.SendUmpWordArray(timestamp, settings.Words, 0, (byte)settings.Words.Count());
+                            connection.SendMessageWordArray(timestamp, settings.Words, 0, (byte)settings.Words.Count());
 
-                            table.AddRow(
-                                AnsiMarkupFormatter.FormatTimestamp(timestamp), 
-                                AnsiMarkupFormatter.FormatMidiWords(settings.Words), 
-                                AnsiMarkupFormatter.FormatMessageType(MidiUmpUtility.GetMessageTypeFromFirstUmpWord(settings.Words[0]))
-                                );
+                            messagesSent++;
+                            sendTask.Value = messagesSent;
 
                             ctx.Refresh();
 
                             Thread.Sleep(settings.DelayBetweenMessages);
                         }
-                    }
-                });
+                    });
 
-            return 0;
+                return 0;
+            }
         }
 
     }

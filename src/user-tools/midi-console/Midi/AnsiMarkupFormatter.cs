@@ -14,7 +14,12 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
     internal class AnsiMarkupFormatter
     {
-        public static string FormatMessageType(MidiUmpMessageType messageType)
+        public static string FormatRowIndex(UInt32 index)
+        {
+            return "[grey]" + index.ToString() + "[/]";
+        }
+
+        public static string FormatMessageType(MidiMessageType messageType)
         {
             return "[darkseagreen3]" + messageType.ToString() + "[/]";
         }

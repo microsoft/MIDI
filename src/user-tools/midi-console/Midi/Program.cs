@@ -7,6 +7,11 @@ using Microsoft.Devices.Midi2.ConsoleApp.Resources;
 using Windows.Gaming.Input.ForceFeedback;
 using Windows.Devices.Midi2;
 
+
+
+Console.InputEncoding = System.Text.Encoding.UTF8;
+Console.OutputEncoding = System.Text.Encoding.UTF8;
+
 var app = new CommandApp();
 
 app.Configure(config =>

@@ -196,6 +196,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Index.
+        /// </summary>
+        internal static string CommonTableHeaderIndex {
+            get {
+                return ResourceManager.GetString("CommonTableHeaderIndex", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Enumerating endpoints failed.
         /// </summary>
         internal static string ErrorEnumEndpointsFailed {
@@ -511,6 +520,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to List all messages as they come in.
+        /// </summary>
+        internal static string ParameterMonitorEndpointVerbose {
+            get {
+                return ResourceManager.GetString("ParameterMonitorEndpointVerbose", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Number of times to send this message.
         /// </summary>
         internal static string ParameterSendMessageCount {
@@ -749,7 +767,16 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Specified ping count is too high. Please provide a value &lt;= 100..
+        ///   Looks up a localized string similar to Please provide a count &gt; 0..
+        /// </summary>
+        internal static string ValidationErrorInvalidMessageCount {
+            get {
+                return ResourceManager.GetString("ValidationErrorInvalidMessageCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specified ping count is too high. Please provide a value &lt;= 1000..
         /// </summary>
         internal static string ValidationErrorPingCountTooHigh {
             get {

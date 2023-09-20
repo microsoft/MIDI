@@ -59,20 +59,18 @@ using (var session = MidiSession.CreateSession("Sample Session"))
             // c# allows local functions. This is nicer than anonymous because we can unregister it by name
             void MessageReceivedHandler(object sender, MidiMessageReceivedEventArgs args)
             {
-                var ump = args.GetUmp();
+                var ump = args.GetMessagePacket();
 
                 Console.WriteLine();
                 Console.WriteLine("Received UMP");
                 Console.WriteLine("- Current Timestamp: " + MidiClock.GetMidiTimestamp());
                 Console.WriteLine("- UMP Timestamp:     " + ump.Timestamp);
                 Console.WriteLine("- UMP Msg Type:      " + ump.MessageType);
-                Console.WriteLine("- UMP Packet Type:   " + ump.UmpPacketType);
+                Console.WriteLine("- UMP Packet Type:   " + ump.PacketType);
 
-                // if you wish to cast the IMidiUmp to a specific Ump Type, you can do so using .as<T>.
-
-                if (ump is MidiUmp32)
+                if (ump is MidiMessage32)
                 {
-                    var ump32 = ump as MidiUmp32;
+                    var ump32 = ump as MidiMessage32;
 
                     Console.WriteLine("- Word 0:            0x{0:X}", ump32.Word0);
                 }
@@ -100,7 +98,7 @@ using (var session = MidiSession.CreateSession("Sample Session"))
                 120,    // note 120 - hex 0x78
                 100);   // velocity 100 hex 0x64
 
-            sendEndpoint.SendUmp((IMidiUmp)ump32);  // could also use the SendWords methods, etc.
+            sendEndpoint.SendMessagePacket((IMidiUniversalPacket)ump32);  // could also use the SendWords methods, etc.
 
             Console.WriteLine(" ** Wait for the message to arrive, and then press enter to cleanup. ** ");
             Console.ReadLine();

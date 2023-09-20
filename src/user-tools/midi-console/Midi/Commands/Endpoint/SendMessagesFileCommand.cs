@@ -67,7 +67,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             if (words != null && words.Length > 0 && words.Length <= 4)
             {
                 // allowed behavior is to cast the packet type to the word count
-                return (bool)((int)MidiUmpUtility.GetPacketTypeFromFirstUmpWord(words[0]) == words.Length);
+                return (bool)((int)MidiMessageUtility.GetPacketTypeFromFirstMessageWord(words[0]) == words.Length);
             }
             else
             {
@@ -240,21 +240,21 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                                     if (changeGroup)
                                     {
-                                        if (MidiUmpUtility.MessageTypeHasGroupField(MidiUmpUtility.GetMessageTypeFromFirstUmpWord(words[0])))
+                                        if (MidiMessageUtility.MessageTypeHasGroupField(MidiMessageUtility.GetMessageTypeFromFirstMessageWord(words[0])))
                                         {
-                                            words[0] = MidiUmpUtility.ReplaceGroup(words[0], newGroup);
+                                            words[0] = MidiMessageUtility.ReplaceGroup(words[0], newGroup);
                                         }
                                     }
 
                                     // send the message
-                                    connection.SendUmpWordArray(timestamp, words, 0, (byte)words.Count());
+                                    connection.SendMessageWordArray(timestamp, words, 0, (byte)words.Count());
 
                                     // display the sent data
                                     table.AddRow(
                                         AnsiMarkupFormatter.FormatGeneralNumber(lineNumber), 
                                         AnsiMarkupFormatter.FormatTimestamp(timestamp),
                                         AnsiMarkupFormatter.FormatMidiWords(words),
-                                        AnsiMarkupFormatter.FormatMessageType(MidiUmpUtility.GetMessageTypeFromFirstUmpWord(words[0]))
+                                        AnsiMarkupFormatter.FormatMessageType(MidiMessageUtility.GetMessageTypeFromFirstMessageWord(words[0]))
                                         );
 
                                     ctx.Refresh();
