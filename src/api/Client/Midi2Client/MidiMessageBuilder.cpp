@@ -24,9 +24,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return midi2::MidiMessage32(
             timestamp,
             (uint32_t)(
-                0x0 | 
+                0x00000000 |
                 internal::CleanupNibble(status) << 20 |
-                dataOrReserved) // TODO: clean up the dataOrReserved field
+                internal::CleanupInt20(dataOrReserved))
         );
 
     }
@@ -42,11 +42,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return midi2::MidiMessage32(
             timestamp,
             (uint32_t)(
-                0x1 |
+                0x1 << 28 |
                 internal::CleanupNibble(groupIndex) << 24 |
                 status << 16 |
-                midi1Byte2 << 8 |
-                midi1Byte3)
+                internal::CleanupByte7(midi1Byte2) << 8 |
+                internal::CleanupByte7(midi1Byte3))
         );
     }
 

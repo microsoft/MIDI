@@ -122,18 +122,6 @@
     <ClCompile Include="MidiClock.cpp">
       <Filter>API\Utility</Filter>
     </ClCompile>
-    <ClCompile Include="MidiUmp32.cpp">
-      <Filter>API\Messages</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiUmp64.cpp">
-      <Filter>API\Messages</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiUmp96.cpp">
-      <Filter>API\Messages</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiUmp128.cpp">
-      <Filter>API\Messages</Filter>
-    </ClCompile>
     <ClCompile Include="trace_logging.cpp">
       <Filter>Internal\Trace</Filter>
     </ClCompile>
@@ -201,9 +189,6 @@
     <ClCompile Include="InternalMidiConnectionCommon.cpp">
       <Filter>API\Endpoints\Connections\Internal Implementation</Filter>
     </ClCompile>
-    <ClCompile Include="MidiUmpUtility.cpp">
-      <Filter>API\Messages</Filter>
-    </ClCompile>
     <ClCompile Include="MidiGlobalInformationCacheUpdatedEventArgs.cpp">
       <Filter>API\Endpoints\Metadata\Cache</Filter>
     </ClCompile>
@@ -246,18 +231,6 @@
     </ClInclude>
     <ClInclude Include="MidiClock.h">
       <Filter>API\Utility</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiUmp32.h">
-      <Filter>API\Messages</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiUmp64.h">
-      <Filter>API\Messages</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiUmp96.h">
-      <Filter>API\Messages</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiUmp128.h">
-      <Filter>API\Messages</Filter>
     </ClInclude>
     <ClInclude Include="trace_logging.h">
       <Filter>Internal\Trace</Filter>
@@ -337,9 +310,6 @@
     </ClInclude>
     <ClInclude Include="InternalMidiConnectionCommon.h">
       <Filter>API\Endpoints\Connections\Internal Implementation</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiUmpUtility.h">
-      <Filter>API\Messages</Filter>
     </ClInclude>
     <ClInclude Include="MidiGlobalInformationCacheUpdatedEventArgs.h">
       <Filter>API\Endpoints\Metadata\Cache</Filter>
@@ -587,6 +557,9 @@
     <Midl Include="MidiEndpointDiscoveryFilterFlagsEnum.idl">
       <Filter>API\Messages</Filter>
     </Midl>
+    <Midl Include="MidiSendMessageResultEnum.idl">
+      <Filter>API\Endpoints\Connections</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />
@@ -596,6 +569,7 @@
     <None Include="PropertySheet.props" />
   </ItemGroup>
   <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />

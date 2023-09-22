@@ -14,17 +14,41 @@
 using namespace winrt::Windows::Devices::Midi2;
 
 
-//TEST_CASE("Build Type 0 Utility Messages")
-//{
-//    MidiMessageBuilder::BuildUtilityMessage(MidiClock::GetMidiTimestamp(), );
-//
-//    REQUIRE(false);
-//}
+TEST_CASE("Build Type 0 Utility Messages")
+{
+    uint8_t status = 0x0D;
+    uint32_t dataOrReserved = 0x00020;
+    uint32_t expectedWord0 = 0x00D00020;
 
-//TEST_CASE("Build Type 1 System Messages")
-//{
-//    REQUIRE(false);
-//}
+
+    auto message = MidiMessageBuilder::BuildUtilityMessage(
+        MidiClock::GetMidiTimestamp(),
+        status,
+        dataOrReserved
+        );
+
+    REQUIRE(message.Word0() == expectedWord0);
+}
+
+TEST_CASE("Build Type 1 System Messages")
+{
+    uint8_t group = 0x3;
+    uint8_t status = 0xD;
+    uint8_t midiByte2 = 0x3C;
+    uint8_t midiByte3 = 0x3F;
+    uint32_t expectedWord0 = 0x130D3C3F;
+
+
+    auto message = MidiMessageBuilder::BuildSystemMessage(
+        MidiClock::GetMidiTimestamp(),
+        group,
+        status,
+        midiByte2,
+        midiByte3
+        );
+
+    REQUIRE(message.Word0() == expectedWord0);
+}
 
 
 TEST_CASE("Build Type 2 MIDI 1.0 Channel Voice Messages")
@@ -98,18 +122,81 @@ TEST_CASE("Build Type 4 MIDI 2.0 Channel Voice Messages")
 //{
 //    REQUIRE(false);
 //}
-//
+
+
 //TEST_CASE("Build Type 5 Mixed Data Set Messages")
 //{
 //    REQUIRE(false);
 //}
-//
+
+
 //TEST_CASE("Build Type D Flex Data Messages")
 //{
 //    REQUIRE(false);
 //}
-//
-//TEST_CASE("Build Type F Stream Messages")
-//{
-//    REQUIRE(false);
-//}
+
+
+
+TEST_CASE("Offline.MessageBuilder.BuildStreamMessages 1")
+{
+    std::cout << "Building Stream Message 1" << std::endl;
+
+    uint8_t form = 0x3;
+    uint16_t status = 0x02;
+    uint16_t word0Remaining = 0x1234;
+    uint32_t word1 = 0x86753090;
+    uint32_t word2 = 0x03263727;
+    uint32_t word3 = 0x10203040;
+
+    uint32_t resultingWord0 = 0xFC021234;   // shifting of form to be the two high bits of the nibble changes it from 3 to C
+
+    auto ump = MidiMessageBuilder::BuildStreamMessage(
+        MidiClock::GetMidiTimestamp(),
+        form,
+        status,
+        word0Remaining,
+        word1,
+        word2,
+        word3
+    );
+
+    // verify values are in the UMP
+
+    REQUIRE(ump.Word0() == resultingWord0);
+    REQUIRE(ump.Word1() == word1);
+    REQUIRE(ump.Word2() == word2);
+    REQUIRE(ump.Word3() == word3);
+}
+
+
+TEST_CASE("Offline.MessageBuilder.BuildStreamMessages 2")
+{
+    std::cout << "Building Stream Message 2" << std::endl;
+
+    uint8_t form = 0x3;
+    uint16_t status = 0x32;
+    uint16_t word0Remaining = 0xF23F;
+    uint32_t word1 = 0x86753090;
+    uint32_t word2 = 0x03263727;
+    uint32_t word3 = 0x10203040;
+
+    uint32_t resultingWord0 = 0xFC32F23F;   // shifting of form to be the two high bits of the nibble changes it from 3 to C
+
+    auto ump = MidiMessageBuilder::BuildStreamMessage(
+        MidiClock::GetMidiTimestamp(),
+        form,
+        status,
+        word0Remaining,
+        word1,
+        word2,
+        word3
+    );
+
+    // verify values are in the UMP
+
+    REQUIRE(ump.Word0() == resultingWord0);
+    REQUIRE(ump.Word1() == word1);
+    REQUIRE(ump.Word2() == word2);
+    REQUIRE(ump.Word3() == word3);
+}
+

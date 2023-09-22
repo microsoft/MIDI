@@ -89,4 +89,19 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return internal::MessageTypeHasChannelField((uint8_t)messageType);
     }
 
+
+
+    _Use_decl_annotations_
+    uint8_t MidiMessageUtility::GetFormFromStreamMessageFirstWord(_In_ uint32_t word0) noexcept
+    {
+        return internal::GetFormFromStreamMessageFirstWord(word0);
+    }
+
+    _Use_decl_annotations_
+    uint16_t MidiMessageUtility::GetStatusFromStreamMessageFirstWord(_In_ uint32_t word0) noexcept
+    {
+        return internal::GetStatusFromStreamMessageFirstWord(word0);
+    }
+
+
 }

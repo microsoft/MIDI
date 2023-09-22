@@ -10,6 +10,7 @@
 MIDI_IDL_IMPORT
 
 import "IMidiUniversalPacket.idl";
+import "MidiSendMessageResultEnum.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -20,18 +21,19 @@ namespace Windows.Devices.Midi2
         String OutputEndpointDeviceId{ get; };
 
         // send the UMP interface used by strongly-typed Midi Message classes in the SDK
-        Boolean SendMessagePacket(IMidiUniversalPacket ump);
+        MidiSendMessageResult SendMessagePacket(IMidiUniversalPacket ump);
 
         // Uses projection-specific array conversion operators for sending data. Not all languages support this
-        Boolean SendMessageWordArray(MIDI_TIMESTAMP timestamp, UInt32[] words, UInt32 startIndex, UInt8 wordCount);
+        MidiSendMessageResult SendMessageWordArray(MIDI_TIMESTAMP timestamp, UInt32[] words, UInt32 startIndex, UInt8 wordCount);
 
         // sending words is a fast approach, but does work with copies of the data
-        Boolean SendMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0);
-        Boolean SendMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1);
-        Boolean SendMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1, UInt32 word2);
-        Boolean SendMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
+        MidiSendMessageResult SendMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0);
+        MidiSendMessageResult SendMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1);
+        MidiSendMessageResult SendMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1, UInt32 word2);
+        MidiSendMessageResult SendMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
 
         // for sending a section of a pre-existing buffer. Used when a client app is maintaining its own memory
-        Boolean SendMessageBuffer(MIDI_TIMESTAMP timestamp, Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffset, UInt8 byteLength);
+        MidiSendMessageResult SendMessageBuffer(MIDI_TIMESTAMP timestamp, Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffset, UInt8 byteLength);
+
     }
 }

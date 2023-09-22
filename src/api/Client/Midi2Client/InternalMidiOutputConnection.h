@@ -27,29 +27,29 @@ namespace Windows::Devices::Midi2::Internal
 
 
         _Success_(return == true)
-        bool SendMessagePacket(
+        midi2::MidiSendMessageResult SendMessagePacket(
             _In_ midi2::IMidiUniversalPacket const& ump);
 
         _Success_(return == true)
-        bool SendMessageWords(
+        midi2::MidiSendMessageResult SendMessageWords(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint32_t const word0);
 
         _Success_(return == true)
-        bool SendMessageWords(
+        midi2::MidiSendMessageResult SendMessageWords(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint32_t const word0,
             _In_ uint32_t const word1);
 
         _Success_(return == true)
-        bool SendMessageWords(
+        midi2::MidiSendMessageResult SendMessageWords(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint32_t const word0,
             _In_ uint32_t const word1,
             _In_ uint32_t const word2);
 
         _Success_(return == true)
-        bool SendMessageWords(
+        midi2::MidiSendMessageResult SendMessageWords(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint32_t const word0,
             _In_ uint32_t const word1,
@@ -58,7 +58,7 @@ namespace Windows::Devices::Midi2::Internal
 
 
         _Success_(return == true)
-        bool SendMessageWordArray(
+        midi2::MidiSendMessageResult SendMessageWordArray(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ winrt::array_view<uint32_t const> words,
             _In_ uint32_t const startIndex,
@@ -67,7 +67,7 @@ namespace Windows::Devices::Midi2::Internal
 
 
         _Success_(return == true)
-        bool SendMessageBuffer(
+        midi2::MidiSendMessageResult SendMessageBuffer(
             _In_ internal::MidiTimestamp timestamp,
             _In_ foundation::IMemoryBuffer const& buffer,
             _In_ uint32_t byteOffset,
@@ -85,12 +85,12 @@ namespace Windows::Devices::Midi2::Internal
         bool m_isOpen{ false };
 
         _Success_(return == true)
-        bool SendUmpInternal(
+        midi2::MidiSendMessageResult  SendUmpInternal(
             _In_ winrt::com_ptr<TEndpointAbstraction> endpoint, 
             _In_ midi2::IMidiUniversalPacket const& ump);
 
         _Success_(return == true)
-        bool SendMessageRaw(
+        midi2::MidiSendMessageResult  SendMessageRaw(
             _In_ winrt::com_ptr<TEndpointAbstraction> endpoint, 
             _In_ void* data, 
             _In_ uint8_t sizeInBytes, 
@@ -109,7 +109,7 @@ namespace Windows::Devices::Midi2::Internal
 
     _Use_decl_annotations_
     template <typename TEndpointAbstraction>
-    bool InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageRaw(
+    midi2::MidiSendMessageResult InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageRaw(
             winrt::com_ptr<TEndpointAbstraction> endpoint,
             void* data, 
             uint8_t sizeInBytes, 
@@ -121,20 +121,21 @@ namespace Windows::Devices::Midi2::Internal
             {
                 winrt::check_hresult(endpoint->SendMidiMessage(data, sizeInBytes, timestamp));
 
-                return true;
+                return midi2::MidiSendMessageResult::Success;
             }
             else
             {
                 internal::LogGeneralError(__FUNCTION__, L"endpoint is nullptr");
 
-                return false;
+                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
             }
         }
         catch (winrt::hresult_error const& ex)
         {
             internal::LogHresultError(__FUNCTION__, L"hresult error sending message. Is the service running?", ex);
 
-            return false;
+            // TOD: Handle other hresults like buffer full
+            return midi2::MidiSendMessageResult::ErrorUnexpected;
         }
     }
 
@@ -177,7 +178,7 @@ namespace Windows::Devices::Midi2::Internal
 
     _Use_decl_annotations_
     template <typename TEndpointAbstraction>
-    bool InternalMidiOutputConnection<TEndpointAbstraction>::SendUmpInternal(
+    midi2::MidiSendMessageResult InternalMidiOutputConnection<TEndpointAbstraction>::SendUmpInternal(
             winrt::com_ptr<TEndpointAbstraction> endpoint,
             midi2::IMidiUniversalPacket const& ump)
     {
@@ -195,21 +196,22 @@ namespace Windows::Devices::Midi2::Internal
             {
                 internal::LogGeneralError(__FUNCTION__, L"endpoint is nullptr");
 
-                return false;
+                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
             }
         }
         catch (winrt::hresult_error const& ex)
         {
             internal::LogHresultError(__FUNCTION__, L"hresult error sending message. Is the service running?", ex);
 
-            return false;
+            // TODO: handle buffer full and other expected hresults
+            return midi2::MidiSendMessageResult::ErrorUnexpected;
         }
     }
 
 
     _Use_decl_annotations_
     template <typename TEndpointAbstraction>
-    bool InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageBuffer(
+    midi2::MidiSendMessageResult InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageBuffer(
             const internal::MidiTimestamp timestamp,
             winrt::Windows::Foundation::IMemoryBuffer const& buffer,
             const uint32_t byteOffset,
@@ -222,7 +224,7 @@ namespace Windows::Devices::Midi2::Internal
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
 
                 // return failure if we're not open
-                return false;
+                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
             }
 
             // make sure we're sending only a single UMP
@@ -233,7 +235,7 @@ namespace Windows::Devices::Midi2::Internal
                 internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for a single UMP", sizeInWords, timestamp);
 
                 //throw hresult_invalid_argument();
-                return false;
+                return midi2::MidiSendMessageResult::ErrorInvalidMessageTypeForWordCount;
             }
 
             winrt::Windows::Foundation::IMemoryBufferReference bufferReference = buffer.CreateReference();
@@ -249,7 +251,7 @@ namespace Windows::Devices::Midi2::Internal
             {
                 internal::LogGeneralError(__FUNCTION__, L"Buffer smaller than provided offset + byteLength");
 
-                return false;
+                midi2::MidiSendMessageResult::ErrorSendDataIndexOutOfRange;
             }
 
 
@@ -261,7 +263,8 @@ namespace Windows::Devices::Midi2::Internal
         {
             internal::LogHresultError(__FUNCTION__, L"hresult exception sending message", ex);
 
-            return false;
+            // TODO: handle buffer full and other expected hresults
+            return midi2::MidiSendMessageResult::ErrorUnexpected;
         }
     }
 
@@ -269,7 +272,7 @@ namespace Windows::Devices::Midi2::Internal
     // sends a single UMP's worth of words
     _Use_decl_annotations_
     template <typename TEndpointAbstraction>
-    bool InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageWordArray(
+    midi2::MidiSendMessageResult InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageWordArray(
             internal::MidiTimestamp const timestamp,
             winrt::array_view<uint32_t const> words,
             uint32_t const startIndex,
@@ -283,7 +286,7 @@ namespace Windows::Devices::Midi2::Internal
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
 
                 // return failure if we're not open
-                return false;
+                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
             }
 
 
@@ -291,21 +294,21 @@ namespace Windows::Devices::Midi2::Internal
             {
                 internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for a single UMP", wordCount, timestamp);
 
-                return false;
+                return midi2::MidiSendMessageResult::ErrorInvalidMessageTypeForWordCount;
             }
 
             if (internal::GetUmpLengthInMidiWordsFromFirstWord(words[0]) != wordCount)
             {
                 internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for messageType", wordCount, timestamp);
 
-                return false;
+                return midi2::MidiSendMessageResult::ErrorInvalidMessageTypeForWordCount;
             }
 
             if (startIndex + wordCount > words.size())
             {
                 internal::LogGeneralError(__FUNCTION__, L"Array start index + word count is > array size");
 
-                return false;
+                midi2::MidiSendMessageResult::ErrorSendDataIndexOutOfRange;
             }
 
 
@@ -321,21 +324,22 @@ namespace Windows::Devices::Midi2::Internal
             {
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
 
-                return false;
+                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
             }
         }
         catch (winrt::hresult_error const& ex)
         {
             internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex);
 
-            return false;
+            // TODO: handle buffer full and other expected hresults
+            return midi2::MidiSendMessageResult::ErrorUnexpected;
         }
     }
 
 
     _Use_decl_annotations_
     template <typename TEndpointAbstraction>
-    bool InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageWords(
+    midi2::MidiSendMessageResult InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageWords(
             internal::MidiTimestamp const timestamp,
             uint32_t const word0)
     {
@@ -346,7 +350,7 @@ namespace Windows::Devices::Midi2::Internal
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
 
                 // return failure if we're not open
-                return false;
+                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
             }
 
 
@@ -354,7 +358,7 @@ namespace Windows::Devices::Midi2::Internal
             {
                 // mismatch between the message type and the number of words
                 internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for messageType", UMP32_WORD_COUNT, timestamp);
-                return false;
+                return midi2::MidiSendMessageResult::ErrorInvalidMessageTypeForWordCount;
             }
 
 
@@ -370,20 +374,21 @@ namespace Windows::Devices::Midi2::Internal
             {
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
 
-                return false;
+                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
             }
         }
         catch (winrt::hresult_error const& ex)
         {
             internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex);
 
-            return false;
+            // TODO: handle buffer full and other expected hresults
+            return midi2::MidiSendMessageResult::ErrorUnexpected;
         }
     }
 
     _Use_decl_annotations_
     template <typename TEndpointAbstraction>
-    bool InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageWords(
+    midi2::MidiSendMessageResult InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageWords(
             internal::MidiTimestamp const timestamp,
             uint32_t const word0,
             uint32_t const word1)
@@ -395,7 +400,7 @@ namespace Windows::Devices::Midi2::Internal
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
 
                 // return failure if we're not open
-                return false;
+                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
             }
 
 
@@ -403,7 +408,7 @@ namespace Windows::Devices::Midi2::Internal
             {
                 // mismatch between the message type and the number of words
                 internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for messageType", UMP64_WORD_COUNT, timestamp);
-                return false;
+                return midi2::MidiSendMessageResult::ErrorInvalidMessageTypeForWordCount;
             }
 
 
@@ -423,20 +428,21 @@ namespace Windows::Devices::Midi2::Internal
             {
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
 
-                return false;
+                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
             }
         }
         catch (winrt::hresult_error const& ex)
         {
             internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex);
 
-            return false;
+            // TODO: handle buffer full and other expected hresults
+            return midi2::MidiSendMessageResult::ErrorUnexpected;
         }
     }
 
     _Use_decl_annotations_
     template <typename TEndpointAbstraction>
-    bool InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageWords(
+    midi2::MidiSendMessageResult InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageWords(
             internal::MidiTimestamp const timestamp,
             uint32_t const word0,
             uint32_t const word1,
@@ -449,7 +455,7 @@ namespace Windows::Devices::Midi2::Internal
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
 
                 // return failure if we're not open
-                return false;
+                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
             }
 
 
@@ -457,7 +463,7 @@ namespace Windows::Devices::Midi2::Internal
             {
                 // mismatch between the message type and the number of words
                 internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for messageType", UMP96_WORD_COUNT, timestamp);
-                return false;
+                return midi2::MidiSendMessageResult::ErrorInvalidMessageTypeForWordCount;
             }
 
 
@@ -478,20 +484,21 @@ namespace Windows::Devices::Midi2::Internal
             {
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
 
-                return false;
+                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
             }
         }
         catch (winrt::hresult_error const& ex)
         {
             internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex);
 
-            return false;
+            // TODO: handle buffer full and other expected hresults
+            return midi2::MidiSendMessageResult::ErrorUnexpected;
         }
     }
 
     _Use_decl_annotations_
     template <typename TEndpointAbstraction>
-    bool InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageWords(
+    midi2::MidiSendMessageResult InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageWords(
             internal::MidiTimestamp const timestamp,
             uint32_t const word0,
             uint32_t const word1,
@@ -505,14 +512,14 @@ namespace Windows::Devices::Midi2::Internal
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
 
                 // return failure if we're not open
-                return false;
+                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
             }
 
 
             if (internal::GetUmpLengthInMidiWordsFromFirstWord(word0) != UMP128_WORD_COUNT)
             {
                 internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for messageType", UMP128_WORD_COUNT, timestamp);
-                return false;
+                return midi2::MidiSendMessageResult::ErrorInvalidMessageTypeForWordCount;
             }
 
 
@@ -534,21 +541,22 @@ namespace Windows::Devices::Midi2::Internal
             {
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
 
-                return false;
+                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
             }
         }
         catch (winrt::hresult_error const& ex)
         {
             internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex);
 
-            return false;
+            // TODO: handle buffer full and other expected hresults
+            return midi2::MidiSendMessageResult::ErrorUnexpected;
         }
     }
 
 
     _Use_decl_annotations_
     template <typename TEndpointAbstraction>
-    bool InternalMidiOutputConnection<TEndpointAbstraction>::SendMessagePacket(
+    midi2::MidiSendMessageResult InternalMidiOutputConnection<TEndpointAbstraction>::SendMessagePacket(
             midi2::IMidiUniversalPacket const& message)
     {
         try
@@ -558,7 +566,7 @@ namespace Windows::Devices::Midi2::Internal
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
 
                 // return failure if we're not open
-                return false;
+                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
             }
 
 
@@ -570,14 +578,16 @@ namespace Windows::Devices::Midi2::Internal
             {
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
 
-                return false;
+                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
             }
         }
         catch (winrt::hresult_error const& ex)
         {
             internal::LogHresultError(__FUNCTION__, L"hresult exception sending message. Service may be unavailable", ex);
 
-            return false;
+
+            // todo: handle buffer full and similar messages
+            return midi2::MidiSendMessageResult::ErrorUnexpected;
         }
     }
 

@@ -192,7 +192,6 @@ namespace Windows::Devices::Midi2::Internal
         case 0xF: // MidiUmpMessageType::UmpStream128      // type F
             return false;
 
-
             // all other message types are undefined, so return false until those are defined
         default:
             return false;
@@ -201,10 +200,20 @@ namespace Windows::Devices::Midi2::Internal
     }
 
 
+    inline uint32_t CleanupInt20(_In_ uint32_t const value)
+    {
+        return value & (uint32_t)0x000FFFFF;
+    }
+
+
+    inline uint16_t CleanupInt14(_In_ uint16_t const value)
+    {
+        return value & (uint16_t)0x3FFF;
+    }
 
     inline uint16_t CleanupInt10(_In_ uint16_t const value)
     {
-        return value & (uint16_t)0x3FF;
+        return value & (uint16_t)0x03FF;
     }
 
     // 7 bit byte
@@ -216,13 +225,13 @@ namespace Windows::Devices::Midi2::Internal
     // 4-bit value
     inline uint8_t CleanupNibble(_In_ uint8_t const value)
     {
-        return value & (uint8_t)0xF;
+        return value & (uint8_t)0x0F;
     }
 
     // 2-bit value
     inline uint8_t CleanupCrumb(_In_ uint8_t const value)
     {
-        return value & (uint8_t)0x3;
+        return value & (uint8_t)0x03;
     }
 
 
@@ -236,5 +245,25 @@ namespace Windows::Devices::Midi2::Internal
     {
         return (uint32_t)(byte0 << 24 | byte1 << 16 | byte2 << 8 | byte3);
     }
+
+
+    inline uint8_t GetFormFromStreamMessageFirstWord(
+        _In_ uint32_t word0
+        )
+    {
+        return (uint8_t)((word0 & 0x0C000000) >> 26);
+    }
+
+    inline uint16_t GetStatusFromStreamMessageFirstWord(
+        _In_ uint32_t word0
+        )
+    {
+        return (uint16_t)((word0 & 0x03FF0000) >> 16);
+    }
+
+
+
+
+
 
 }

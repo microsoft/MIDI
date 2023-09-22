@@ -21,7 +21,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ uint8_t const umpVersionMajor,
             _In_ uint8_t const umpVersionMinor,
             _In_ midi2::MidiEndpointDiscoveryFilterFlags const requestFlags
-            );
+            ) noexcept;
 
         static midi2::MidiMessage128 BuildEndpointInformationNotificationMessage(
             _In_ internal::MidiTimestamp const timestamp,
@@ -33,7 +33,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ bool const supportsMidi10Protocol,
             _In_ bool const supportsReceivingJitterReductionTimestamps,
             _In_ bool const supportsSendingJitterReductionTimestamps
-            );
+            ) noexcept;
 
         static midi2::MidiMessage128 BuildDeviceIdentityNotificationMessage(
             _In_ internal::MidiTimestamp timestamp,
@@ -48,12 +48,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ uint8_t const softwareRevisionLevelByte2,
             _In_ uint8_t const softwareRevisionLevelByte3,
             _In_ uint8_t const softwareRevisionLevelByte4
-            );
+            ) noexcept;
 
         static collections::IVector<midi2::MidiMessage128> BuildEndpointNameNotificationMessages(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ winrt::hstring const& name
-            );
+            ) noexcept;
 
         static collections::IVector<midi2::MidiMessage128> BuildEndpointProductInstanceIdNotificationMessages(
             _In_ internal::MidiTimestamp const timestamp,

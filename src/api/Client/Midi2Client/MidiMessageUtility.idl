@@ -40,5 +40,8 @@ namespace Windows.Devices.Midi2
         static UInt32 ReplaceChannel(UInt32 word0, MidiChannel newChannel);
         static MidiChannel GetChannel(UInt32 word0);
 
+        static UInt8 GetFormFromStreamMessageFirstWord(UInt32 word0);
+        static UInt16 GetStatusFromStreamMessageFirstWord(UInt32 word0);
+
     };
 }

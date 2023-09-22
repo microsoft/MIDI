@@ -17,15 +17,18 @@
 #define MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_DISCOVERY 0x0
 #define MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_INFO 0x1
 #define MIDI_STREAM_MESSAGE_STATUS_DEVICE_IDENTITY 0x2
+#define MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME 0x3
+#define MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID 0x4
 
 #define MIDI_STREAM_MESSAGE_STANDARD_FORM0 0x0
 
+#define MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE 0x0
 #define MIDI_STREAM_MESSAGE_MULTI_FORM_START 0x1
 #define MIDI_STREAM_MESSAGE_MULTI_FORM_CONTINUE 0x2
 #define MIDI_STREAM_MESSAGE_MULTI_FORM_END 0x3
 
 #define MIDI_STREAM_MESSAGE_ENDPOINT_NAME_MAX_LENGTH 98
-
+#define MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET 14
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
@@ -35,7 +38,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
          uint8_t const umpVersionMajor,
          uint8_t const umpVersionMinor,
          midi2::MidiEndpointDiscoveryFilterFlags const requestFlags
-        )
+        ) noexcept
     {
         return MidiMessageBuilder::BuildStreamMessage(
             timestamp, 
@@ -60,7 +63,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
          bool const supportsMidi10Protocol,
          bool const supportsReceivingJitterReductionTimestamps,
          bool const supportsSendingJitterReductionTimestamps
-    )
+    ) noexcept
     {
         uint32_t word1{ 0 };
 
@@ -105,7 +108,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
          uint8_t const softwareRevisionLevelByte2,
          uint8_t const softwareRevisionLevelByte3,
          uint8_t const softwareRevisionLevelByte4
-    )
+    ) noexcept
     {
         uint32_t word1{ 0 };
         uint32_t word2{ 0 };
@@ -137,73 +140,228 @@ namespace winrt::Windows::Devices::Midi2::implementation
             );
     }
 
+    // todo: refactor this and share with the product instance ID notification
     _Use_decl_annotations_
     collections::IVector<midi2::MidiMessage128> MidiStreamMessageBuilder::BuildEndpointNameNotificationMessages(
-         internal::MidiTimestamp const /*timestamp*/,
-         winrt::hstring const& /*name*/
-    )
+         internal::MidiTimestamp const timestamp,
+         winrt::hstring const& name
+    ) noexcept
     {
+        auto messages = winrt::single_threaded_vector<midi2::MidiMessage128>();
 
-        throw winrt::hresult_not_implemented();
+        // endpoint name is one or more UMPs, max 98 bytes. Either 1 complete message (form 0x0)
+        // or start (form 0x1, continue messages 0x2, and end 0x3)
 
-        //const int CharactersPerPacket = 14;
+        // don't process past the last allowed character
+        size_t totalCharacters = (name.size() > MIDI_STREAM_MESSAGE_ENDPOINT_NAME_MAX_LENGTH) ? MIDI_STREAM_MESSAGE_ENDPOINT_NAME_MAX_LENGTH : name.size();
+        size_t remainingCharacters = totalCharacters;
 
-        //auto messages = winrt::single_threaded_vector<midi2::MidiUmp128>();
+        // convert to 8 bit UTF-8 characters, and get the pointer to the first character
+        auto utf8Version = winrt::to_string(name);
+        char* utf8StringPointer = utf8Version.data();
 
-        //// endpoint name is one or more UMPs, max 98 bytes. Either 1 complete message (form 0x0)
-        //// or start (form 0x1, continue messages 0x2, and end 0x3)
+        size_t umpCount = totalCharacters / MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET;
+        if (totalCharacters % MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET != 0) umpCount++;
 
-        //if (name.size() > MIDI_STREAM_MESSAGE_ENDPOINT_NAME_MAX_LENGTH)
-        //{
-        //    // TODO: Truncate to max length
-        //}
+        //auto umpCount = std::ceil(totalCharacters / (double)MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET);
 
-        //uint16_t wordZeroRemainingBytes{ 0 };
-        //uint32_t additionalWords[3]{ 0 };
+        for (int currentUmp = 0; currentUmp < umpCount; currentUmp++)
+        {
+            uint8_t form;
 
-        //uint8_t* bytePointer = (byte*) &additionalWords[0];
+            // if entire string fits in a single UMP, form = 0. Otherwise
+            // the packets must have a start and end packet, and optionally, up to 5 continue packets in the middle
 
-        //for (int i = 0; i < name.size(); i++)
-        //{
-        //    int characterNumberThisPacket = i % CharactersPerPacket;
-        //    int packetNumber = i / CharactersPerPacket;
-        //    int charactersRemaining = name.size() - i;
+            if (currentUmp == 0 && umpCount == 1)
+            {
+                // everything fits in one UMP
+                form = MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE;
+            }
+            else if (currentUmp == 0 && umpCount > 1)
+            {
+                // first of > 1 UMPs
+                form = MIDI_STREAM_MESSAGE_MULTI_FORM_START;
+            }
+            else if (currentUmp == umpCount - 1)
+            {
+                // end UMP
+                form = MIDI_STREAM_MESSAGE_MULTI_FORM_END;
+            }
+            else
+            {
+                // interim UMP
+                form = MIDI_STREAM_MESSAGE_MULTI_FORM_CONTINUE;
+            }
 
-        //    // characters 1-2 go into the end two bytes of word 0
-        //    // characters 3-6 go into word 1
-        //    // characters 7-10 go into word 2
-        //    // characters 11-13 go into word 3
-        //    // max 14 characters per message, but could be fewer in any given message
+            midi2::MidiMessage128 umpProjected =             
+                midi2::MidiMessageBuilder::BuildStreamMessage(
+                    timestamp,
+                    form,
+                    MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME, 
+                    (uint16_t)0, 
+                    (uint32_t)0, 
+                    (uint32_t)0,
+                    (uint32_t)0
+                );
 
-        //    if (characterNumberThisPacket <= 2)
-        //    {
+            auto ump = winrt::get_self<implementation::MidiMessage128>(umpProjected);
+
+            byte packetBytes[MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET]{ 0 };
+
+            // endianness dependence means we can't just cast a pointer to the struct as byte* and run through it.
+            for (int i = 0; i < MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET && remainingCharacters > 0; i++)
+            { 
+                packetBytes[i] = *utf8StringPointer;
+                utf8StringPointer++;    // move along the source string
+
+                remainingCharacters--;
+            }
+
+            // convert network to native endianness when copying the bytes over. This is far uglier
+            // than just walking a pointer, but it's required here.
+
+            uint32_t word0 = ump->Word0();
+            word0 |= packetBytes[0] << 8 | packetBytes[1];  // first two characters are end of first word
+            ump->Word0(word0);
+
+            ump->Word1(
+                packetBytes[2] << 24 | 
+                packetBytes[3] << 16 | 
+                packetBytes[4] << 8 | 
+                packetBytes[5]);
+
+            ump->Word2(
+                packetBytes[6] << 24 |
+                packetBytes[7] << 16 |
+                packetBytes[8] << 8 |
+                packetBytes[9]);
+
+            ump->Word3(
+                packetBytes[10] << 24 |
+                packetBytes[11] << 16 |
+                packetBytes[12] << 8 |
+                packetBytes[13]);
 
 
+            messages.Append(umpProjected);
 
-        //    }
-        //    else
-        //    {
-        //        // last two bytes of word 0
+        }
 
+        utf8StringPointer = nullptr;
 
-
-
-        //    }
-
-
-        //    // build the message
-
-        //}
-
+        return messages;
     }
 
+    // this code should really be refactored and shared with the name notification builder
     _Use_decl_annotations_
     collections::IVector<midi2::MidiMessage128> MidiStreamMessageBuilder::BuildEndpointProductInstanceIdNotificationMessages(
-        internal::MidiTimestamp const /*timestamp*/,
-        winrt::hstring const& /*productInstanceId*/
+        internal::MidiTimestamp const timestamp,
+        winrt::hstring const& productInstanceId
     )
     {
-        throw winrt::hresult_not_implemented();
+        auto messages = winrt::single_threaded_vector<midi2::MidiMessage128>();
+
+        // endpoint name is one or more UMPs, max 98 bytes. Either 1 complete message (form 0x0)
+        // or start (form 0x1, continue messages 0x2, and end 0x3)
+
+        // don't process past the last allowed character
+        size_t totalCharacters = (productInstanceId.size() > MIDI_STREAM_MESSAGE_ENDPOINT_NAME_MAX_LENGTH) ? MIDI_STREAM_MESSAGE_ENDPOINT_NAME_MAX_LENGTH : productInstanceId.size();
+        size_t remainingCharacters = totalCharacters;
+
+        // convert to 8 bit UTF-8 characters, and get the pointer to the first character
+        auto utf8Version = winrt::to_string(productInstanceId);
+        char* utf8StringPointer = utf8Version.data();
+
+        size_t umpCount = totalCharacters / MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET;
+        if (totalCharacters % MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET != 0) umpCount++;
+
+        //auto umpCount = std::ceil(totalCharacters / (double)MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET);
+
+        for (int currentUmp = 0; currentUmp < umpCount; currentUmp++)
+        {
+            uint8_t form;
+
+            // if entire string fits in a single UMP, form = 0. Otherwise
+            // the packets must have a start and end packet, and optionally, up to 5 continue packets in the middle
+
+            if (currentUmp == 0 && umpCount == 1)
+            {
+                // everything fits in one UMP
+                form = MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE;
+            }
+            else if (currentUmp == 0 && umpCount > 1)
+            {
+                // first of > 1 UMPs
+                form = MIDI_STREAM_MESSAGE_MULTI_FORM_START;
+            }
+            else if (currentUmp == umpCount - 1)
+            {
+                // end UMP
+                form = MIDI_STREAM_MESSAGE_MULTI_FORM_END;
+            }
+            else
+            {
+                // interim UMP
+                form = MIDI_STREAM_MESSAGE_MULTI_FORM_CONTINUE;
+            }
+
+            midi2::MidiMessage128 umpProjected =
+                midi2::MidiMessageBuilder::BuildStreamMessage(
+                    timestamp,
+                    form,
+                    MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID,
+                    (uint16_t)0,
+                    (uint32_t)0,
+                    (uint32_t)0,
+                    (uint32_t)0
+                );
+
+            auto ump = winrt::get_self<implementation::MidiMessage128>(umpProjected);
+
+            byte packetBytes[MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET]{ 0 };
+
+            // endianness dependence means we can't just cast a pointer to the struct as byte* and run through it.
+            for (int i = 0; i < MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET && remainingCharacters > 0; i++)
+            {
+                packetBytes[i] = *utf8StringPointer;
+                utf8StringPointer++;    // move along the source string
+
+                remainingCharacters--;
+            }
+
+            // convert network to native endianness when copying the bytes over. This is far uglier
+            // than just walking a pointer, but it's required here.
+
+            uint32_t word0 = ump->Word0();
+            word0 |= packetBytes[0] << 8 | packetBytes[1];  // first two characters are end of first word
+            ump->Word0(word0);
+
+            ump->Word1(
+                packetBytes[2] << 24 |
+                packetBytes[3] << 16 |
+                packetBytes[4] << 8 |
+                packetBytes[5]);
+
+            ump->Word2(
+                packetBytes[6] << 24 |
+                packetBytes[7] << 16 |
+                packetBytes[8] << 8 |
+                packetBytes[9]);
+
+            ump->Word3(
+                packetBytes[10] << 24 |
+                packetBytes[11] << 16 |
+                packetBytes[12] << 8 |
+                packetBytes[13]);
+
+
+            messages.Append(umpProjected);
+
+        }
+
+        utf8StringPointer = nullptr;
+
+        return messages;
     }
 
     _Use_decl_annotations_

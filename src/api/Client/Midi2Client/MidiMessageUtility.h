@@ -34,6 +34,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         static uint32_t ReplaceChannel(_In_ uint32_t const word0, _In_ midi2::MidiChannel const newChannel) noexcept;
         static midi2::MidiChannel GetChannel(_In_ uint32_t const word0);
 
+        static uint8_t GetFormFromStreamMessageFirstWord(_In_ uint32_t word0) noexcept;
+        static uint16_t GetStatusFromStreamMessageFirstWord(_In_ uint32_t word0) noexcept;
+
     };
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation
