@@ -11,24 +11,93 @@
 #include "MidiFunctionBlock.h"
 #include "MidiFunctionBlock.g.cpp"
 
-#define JSON_KEY_FB_NUMBER L"functionBlockNumber"
-#define JSON_KEY_FB_NAME L"name"
-#define JSON_KEY_FB_ACTIVE L"active"
-#define JSON_KEY_FB_UIHINT L"uiHint"
-#define JSON_KEY_FB_MIDI10 L"midi10"
-#define JSON_KEY_FB_DIRECTION L"direction"
-#define JSON_KEY_FB_FIRSTGROUP L"firstGroupIndex"
-#define JSON_KEY_FB_NUMGROUPSSPANNED L"numberOfGroupsSpanned"
-#define JSON_KEY_FB_MIDICIFORMAT L"midiCIMessageFormat"
 
 using namespace winrt::Windows::Data::Json;
+
+
+// TEMP
+//#include <iostream>
+
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
-    bool MidiFunctionBlock::UpdateFromMessages(winrt::array_view<midi2::MidiMessage128 const> /*messages*/) noexcept
+    bool MidiFunctionBlock::UpdateFromMessages(collections::IIterable<midi2::MidiMessage128> messages) noexcept
     {
-        return false;
+        auto nameMessages{ winrt::single_threaded_vector<midi2::MidiMessage128>() };
+
+        //std::cout << __FUNCTION__ << " enter" << std::endl;
+
+        for (auto message : messages)
+        {
+            if (MidiMessageUtility::GetMessageTypeFromFirstMessageWord(message.Word0()) != MidiMessageType::Stream128)
+            {
+                // list contains non-stream messages. Abort.
+                return false;
+            }
+
+            switch (MidiMessageUtility::GetStatusFromStreamMessageFirstWord(message.Word0()))
+            {
+            case (MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_INFO_NOTIFICATION):
+
+                //std::cout << __FUNCTION__ << " info block notification" << std::endl;
+
+                if (MidiMessageUtility::GetFormFromStreamMessageFirstWord(message.Word0()) == MIDI_STREAM_MESSAGE_STANDARD_FORM0)
+                {
+                    //std::cout << __FUNCTION__ << " form is correct. Setting info." << std::endl;
+
+                    // word 0: active function block or not
+                    m_isActive = internal::GetFunctionBlockActiveFlagFromInfoNotificationFirstWord(message.Word0());
+
+                    // word 0: function block number
+                    m_number = internal::GetFunctionBlockNumberFromInfoNotificationFirstWord(message.Word0());
+
+                    // word 0: ui hint
+                    m_uiHint = (midi2::MidiFunctionBlockUIHint)internal::GetFunctionBlockUIHintFromInfoNotificationFirstWord(message.Word0());
+
+                    // word 0: MIDI 1.0 settings
+                    m_midi10Connection = (midi2::MidiFunctionBlockMidi10)internal::GetFunctionBlockMidi10FromInfoNotificationFirstWord(message.Word0());
+
+                    // word 0: direction
+                    m_direction = (midi2::MidiFunctionBlockDirection)internal::GetFunctionBlockDirectionFromInfoNotificationFirstWord(message.Word0());
+
+                    // word 1: first group
+                    m_firstGroupIndex = internal::GetFunctionBlockFirstGroupFromInfoNotificationSecondWord(message.Word1());
+
+                    // word 1: number of groups spanned
+                    m_numberOfGroupsSpanned = internal::GetFunctionBlockNumberOfGroupsFromInfoNotificationSecondWord(message.Word1());
+
+                    // word 2: MIDI CI Message Version / Form
+                    m_midiCIMessageVersionFormat = internal::GetFunctionBlockMidiCIVersionFromInfoNotificationSecondWord(message.Word1());
+
+                    // word 2: maximum number of SysEx8 streams
+                    m_maxSysEx8Streams = internal::GetFunctionBlockMaxSysex8StreamsFromInfoNotificationSecondWord(message.Word1());
+                }
+                else
+                {
+                    //std::cout << __FUNCTION__ << " Form not recognized." << std::endl;
+                    // we don't recognize this form. Abort.
+                    return false;
+                }
+                break;
+
+            case (MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION):
+                //std::cout << __FUNCTION__ << " name notification" << std::endl;
+                nameMessages.Append(message);
+                break;
+
+            default:
+                // we don't recognize the message status, so abort
+                return false;
+            }
+
+            if (nameMessages.Size() > 0)
+            {
+                m_name = MidiStreamMessageBuilder::ParseFunctionBlockNameNotificationMessages(nameMessages);
+            }
+        }
+
+        return true;
     }
 
     _Use_decl_annotations_

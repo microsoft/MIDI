@@ -30,21 +30,21 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         bool UpdateFromJson(_In_ winrt::Windows::Data::Json::JsonObject const json) noexcept;
         bool UpdateFromJsonString(_In_ winrt::hstring const json) noexcept;
-        bool UpdateFromMessages(_In_ winrt::array_view<midi2::MidiMessage128 const> messages) noexcept;
+        bool UpdateFromMessages(_In_ collections::IIterable<midi2::MidiMessage128> messages) noexcept;
         winrt::hstring GetJsonString() noexcept;
 
     private:
-        uint8_t m_number;
-        winrt::hstring m_name;
-        bool m_isActive;
+        uint8_t m_number{};
+        winrt::hstring m_name{};
+        bool m_isActive{ false };
         MidiFunctionBlockDirection m_direction;
         MidiFunctionBlockUIHint m_uiHint;
         MidiFunctionBlockMidi10 m_midi10Connection;
-        uint8_t m_midiCIMessageVersionFormat;
-        uint8_t m_maxSysEx8Streams;
+        uint8_t m_midiCIMessageVersionFormat{};
+        uint8_t m_maxSysEx8Streams{ 0 };
 
-        uint8_t m_firstGroupIndex;
-        uint8_t m_numberOfGroupsSpanned;
+        uint8_t m_firstGroupIndex{ 0 };
+        uint8_t m_numberOfGroupsSpanned{ 0 };
 
     };
 }

@@ -21,6 +21,7 @@
 //#include "..\api-core\ump_helpers.h"
 #include <wil\resource.h>
 
+#include <iomanip>
 
 
 //using namespace winrt;
@@ -109,5 +110,80 @@ TEST_CASE("Offline.Metadata.FunctionBlock Set Json from String")
     REQUIRE(fb2.FirstGroupIndex() == fbFirstGroup);
     REQUIRE(fb2.NumberOfGroupsSpanned() == fbNumGroupsSpanned);
     REQUIRE(fb2.MidiCIMessageVersionFormat() == fbMidiCIMessageVersionFormat);
+
+}
+
+
+
+TEST_CASE("Offline.Metadata.FunctionBlock Get from Message")
+{   
+    std::cout << std::endl;
+    std::cout << "(Get from Message) Building Function Block Info Notification" << std::endl;
+
+    bool active{ true };
+    uint8_t functionBlockNumber{ 31 };
+    MidiFunctionBlockUIHint uiHint{ MidiFunctionBlockUIHint::Sender };                
+    MidiFunctionBlockMidi10 midi10{ MidiFunctionBlockMidi10::Not10 };  
+    MidiFunctionBlockDirection direction{ MidiFunctionBlockDirection::Bidirectional }; 
+
+    uint8_t firstGroup{ 1 };
+    uint8_t numberOfGroups{ 8 };
+    uint8_t midiCIVersionFormat{ 1 };
+    uint8_t maxNumberOfSysEx8Streams{ 1 };
+
+    winrt::hstring name = L"A Function Block";
+
+    auto ump = MidiStreamMessageBuilder::BuildFunctionBlockInfoNotificationMessage(
+        MidiClock::GetMidiTimestamp(),
+        active,
+        functionBlockNumber,
+        uiHint,
+        midi10,
+        direction,
+        firstGroup,
+        numberOfGroups,
+        midiCIVersionFormat,
+        maxNumberOfSysEx8Streams
+    );
+
+    auto messages = MidiStreamMessageBuilder::BuildFunctionBlockNameNotificationMessages(
+        MidiClock::GetMidiTimestamp(),
+        functionBlockNumber,
+        name
+    );
+
+    // add the info notification to the name notification
+    messages.Append(ump);
+
+
+    for (auto message : messages)
+    {
+        std::cout << "   Function Block Message:"  
+            << " 0x" << std::hex << std::setw(8) << std::setfill('0') << message.Word0()
+            << " 0x" << std::hex << std::setw(8) << std::setfill('0') << message.Word1() 
+            << std::endl;
+
+        std::cout << "   - Status: 0x" << std::hex << (int)MidiMessageUtility::GetStatusFromStreamMessageFirstWord(message.Word0()) << std::endl;
+        std::cout << "   - Form:   0x" << std::hex << (int)MidiMessageUtility::GetFormFromStreamMessageFirstWord(message.Word0()) << std::endl;
+        std::cout << std::endl;
+    }
+
+    MidiFunctionBlock block{};
+
+    bool success = block.UpdateFromMessages(messages);
+
+    REQUIRE(success);
+
+    REQUIRE(block.Name() == name);
+
+    REQUIRE(block.Number() == functionBlockNumber);
+    REQUIRE(block.Midi10Connection() == midi10);
+    REQUIRE(block.UIHint() == uiHint);
+    REQUIRE(block.Direction() == direction);
+    REQUIRE(block.FirstGroupIndex() == firstGroup);
+    REQUIRE(block.NumberOfGroupsSpanned() == numberOfGroups);
+    REQUIRE(block.MidiCIMessageVersionFormat() == midiCIVersionFormat);
+    REQUIRE(block.MaxSystemExclusive8Streams() == maxNumberOfSysEx8Streams);
+    REQUIRE(block.IsActive() == active);
 
 }

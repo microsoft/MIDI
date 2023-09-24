@@ -46,7 +46,7 @@ namespace Windows.Devices.Midi2
 
         UInt8 MaxSystemExclusive8Streams{ get; };
 
-        void UpdateFromMessages(MidiMessage128[] endpointMessages);
+        Boolean UpdateFromMessages(Windows.Foundation.Collections.IIterable<MidiMessage128> functionBlockMessages);
 
     }
 }

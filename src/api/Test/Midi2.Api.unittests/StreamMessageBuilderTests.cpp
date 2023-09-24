@@ -14,6 +14,16 @@
 using namespace winrt::Windows::Devices::Midi2;
 
 
+#define MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_DISCOVERY 0x00
+#define MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_INFO_NOTIFICATION 0x01
+#define MIDI_STREAM_MESSAGE_STATUS_DEVICE_IDENTITY_NOTIFICATION 0x02
+#define MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION 0x03
+#define MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID_NOTIFICATION 0x04
+#define MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_REQUEST 0x05
+#define MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_NOTIFICATION 0x06
+
+
+
 TEST_CASE("Offline.StreamMessageBuilder.BuildEndpointNameNotification.LongName")
 {
     winrt::hstring name = L"This is an endpoint name that is longer than the supported 98 characters for an endpoint name in MIDI 2";
@@ -48,7 +58,7 @@ TEST_CASE("Offline.StreamMessageBuilder.BuildEndpointNameNotification.LongName")
         std::cout << "Stream word0 0x" << std::hex << messages.GetAt(i).Word0() << std::endl;
 
         // verify status    
-        REQUIRE(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(i).Word0()) == 0x03);
+        REQUIRE(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(i).Word0()) == MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION);
 
         // verify form is correct
         if (i == 0)
@@ -69,6 +79,11 @@ TEST_CASE("Offline.StreamMessageBuilder.BuildEndpointNameNotification.LongName")
     }
 
     // reverse it back into a string and verify
+
+    auto s = MidiStreamMessageBuilder::ParseEndpointNameNotificationMessages(messages);
+    std::cout << "Parsed: '" << winrt::to_string(s) << "'" << std::endl;
+    REQUIRE(s == L"This is an endpoint name that is longer than the supported 98 characters for an endpoint name in M");
+
 
 }
 
@@ -103,16 +118,20 @@ TEST_CASE("Offline.StreamMessageBuilder.BuildEndpointNameNotification.MediumName
 
 
     // verify status is correct
-    REQUIRE(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(0).Word0()) == 0x03);
+    REQUIRE(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(0).Word0()) == MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION);
     REQUIRE(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(0).Word0()) == 0x01);
 
-    REQUIRE(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(1).Word0()) == 0x03);
+    REQUIRE(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(1).Word0()) == MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION);
     REQUIRE(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(1).Word0()) == 0x03);
 
     // verify form is correct
 
     // reverse it back into a string and verify
 
+
+    auto s = MidiStreamMessageBuilder::ParseEndpointNameNotificationMessages(messages);
+    std::cout << "Parsed: '" << winrt::to_string(s) << "'" << std::endl;
+    REQUIRE(s == name);
 }
 
 TEST_CASE("Offline.StreamMessageBuilder.BuildEndpointNameNotification.ShortName")
@@ -147,26 +166,29 @@ TEST_CASE("Offline.StreamMessageBuilder.BuildEndpointNameNotification.ShortName"
 
 
     // verify status is correct
-    REQUIRE(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(0).Word0()) == 0x03);
+    REQUIRE(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(0).Word0()) == MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION);
 
     // verify form is correct
     REQUIRE(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(0).Word0()) == 0x00);
 
     // reverse it back into a string and verify
+    auto s = MidiStreamMessageBuilder::ParseEndpointNameNotificationMessages(messages);
+    std::cout << "Parsed: '" << winrt::to_string(s) << "'" << std::endl;
+    REQUIRE(s == name);
 
 }
 
 
 
 
-TEST_CASE("Offline.StreamMessageBuilder.BuildEndpointProductInstanceIdNotification.Short")
+TEST_CASE("Offline.StreamMessageBuilder.BuildProductInstanceIdNotification.Short")
 {
     winrt::hstring productInstanceId = L"ABC123";
     int expectedPacketCount = 1;
 
     std::cout << "Testing endpoint Id: " << winrt::to_string(productInstanceId) << std::endl;
 
-    auto messages = MidiStreamMessageBuilder::BuildEndpointProductInstanceIdNotificationMessages(
+    auto messages = MidiStreamMessageBuilder::BuildProductInstanceIdNotificationMessages(
         MidiClock::GetMidiTimestamp(),
         productInstanceId
     );
@@ -191,11 +213,13 @@ TEST_CASE("Offline.StreamMessageBuilder.BuildEndpointProductInstanceIdNotificati
 
 
     // verify status is correct
-    REQUIRE(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(0).Word0()) == 0x04);
+    REQUIRE(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(0).Word0()) == MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID_NOTIFICATION);
 
     // verify form is correct
     REQUIRE(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(0).Word0()) == 0x00);
 
     // reverse it back into a string and verify
+
+
 
 }

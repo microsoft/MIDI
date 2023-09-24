@@ -55,7 +55,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ winrt::hstring const& name
             ) noexcept;
 
-        static collections::IVector<midi2::MidiMessage128> BuildEndpointProductInstanceIdNotificationMessages(
+        static collections::IVector<midi2::MidiMessage128> BuildProductInstanceIdNotificationMessages(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ winrt::hstring const& productInstanceId
             );
@@ -74,14 +74,25 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ bool const confirmationSendJRTimestamps
             );
 
+
+        static winrt::hstring ParseEndpointNameNotificationMessages(
+            _In_ collections::IVector<midi2::MidiMessage128> messages
+        );
+
+        static winrt::hstring ParseProductInstanceIdNotificationMessages(
+            _In_ collections::IVector<midi2::MidiMessage128> messages
+        );
+
+
+        // function blocks
+
         static midi2::MidiMessage128 BuildFunctionBlockDiscoveryMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const functionBlockNumber,
-            _In_ bool const requestFunctionBlockInfoNotification,
-            _In_ bool const requestFunctionBlockNameNotification
+            _In_ midi2::MidiFunctionBlockDiscoveryFilterFlags requestFlags
             );
 
-        static midi2::MidiMessage128 BuildFunctionInfoNotificationMessage(
+        static midi2::MidiMessage128 BuildFunctionBlockInfoNotificationMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ bool const active,
             _In_ uint8_t const functionBlockNumber,
@@ -99,6 +110,35 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ uint8_t const functionBlockNumber,
             _In_ winrt::hstring const& name
             );
+
+
+        static winrt::hstring ParseFunctionBlockNameNotificationMessages(
+            _In_ collections::IVector<midi2::MidiMessage128> messages
+            );
+
+
+
+
+    private:
+
+        static collections::IVector<midi2::MidiMessage128> MidiStreamMessageBuilder::BuildSplitTextMessages(
+            _In_ internal::MidiTimestamp const timestamp,
+            _In_ uint8_t const status,
+            _In_ uint16_t const word0Remainder,
+            _In_ uint8_t const maxCharacters,
+            _In_ uint8_t const maxCharactersPerPacket,
+            _In_ winrt::hstring const& text);
+
+
+        inline static void AppendCharToString(
+            _In_ std::string& s, 
+            _In_ uint8_t ch
+            )
+        {
+            if (ch != 0)
+                s += ch;
+        }
+
     };
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation

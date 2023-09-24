@@ -51,6 +51,9 @@
     <ClCompile Include="StreamMessageBuilderTests.cpp">
       <Filter>Tests\Utility</Filter>
     </ClCompile>
+    <ClCompile Include="FunctionBlockMessageBuilderTests.cpp">
+      <Filter>Tests\Utility</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

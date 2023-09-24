@@ -10,25 +10,9 @@
 #include "MidiStreamMessageBuilder.h"
 #include "MidiStreamMessageBuilder.g.cpp"
 
-// this is just to make intent clear
-#define MIDI_RESERVED_WORD (uint32_t)0
-#define MIDI_RESERVED_FIELD 0
 
-#define MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_DISCOVERY 0x0
-#define MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_INFO 0x1
-#define MIDI_STREAM_MESSAGE_STATUS_DEVICE_IDENTITY 0x2
-#define MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME 0x3
-#define MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID 0x4
 
-#define MIDI_STREAM_MESSAGE_STANDARD_FORM0 0x0
 
-#define MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE 0x0
-#define MIDI_STREAM_MESSAGE_MULTI_FORM_START 0x1
-#define MIDI_STREAM_MESSAGE_MULTI_FORM_CONTINUE 0x2
-#define MIDI_STREAM_MESSAGE_MULTI_FORM_END 0x3
-
-#define MIDI_STREAM_MESSAGE_ENDPOINT_NAME_MAX_LENGTH 98
-#define MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET 14
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
@@ -86,7 +70,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return MidiMessageBuilder::BuildStreamMessage(
             timestamp,
             MIDI_STREAM_MESSAGE_STANDARD_FORM0,     
-            MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_INFO, 
+            MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_INFO_NOTIFICATION, 
             (uint16_t)umpVersionMajor << 8 | umpVersionMinor, // ump major is msb, ump minor is lsb
             word1, 
             MIDI_RESERVED_WORD,      // reserved word2   
@@ -132,7 +116,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return MidiMessageBuilder::BuildStreamMessage(
             timestamp,
             MIDI_STREAM_MESSAGE_STANDARD_FORM0,
-            MIDI_STREAM_MESSAGE_STATUS_DEVICE_IDENTITY,
+            MIDI_STREAM_MESSAGE_STATUS_DEVICE_IDENTITY_NOTIFICATION,
             MIDI_RESERVED_FIELD,
             word1,
             word2,
@@ -140,124 +124,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
             );
     }
 
-    // todo: refactor this and share with the product instance ID notification
+
+
+
     _Use_decl_annotations_
-    collections::IVector<midi2::MidiMessage128> MidiStreamMessageBuilder::BuildEndpointNameNotificationMessages(
-         internal::MidiTimestamp const timestamp,
-         winrt::hstring const& name
-    ) noexcept
-    {
-        auto messages = winrt::single_threaded_vector<midi2::MidiMessage128>();
-
-        // endpoint name is one or more UMPs, max 98 bytes. Either 1 complete message (form 0x0)
-        // or start (form 0x1, continue messages 0x2, and end 0x3)
-
-        // don't process past the last allowed character
-        size_t totalCharacters = (name.size() > MIDI_STREAM_MESSAGE_ENDPOINT_NAME_MAX_LENGTH) ? MIDI_STREAM_MESSAGE_ENDPOINT_NAME_MAX_LENGTH : name.size();
-        size_t remainingCharacters = totalCharacters;
-
-        // convert to 8 bit UTF-8 characters, and get the pointer to the first character
-        auto utf8Version = winrt::to_string(name);
-        char* utf8StringPointer = utf8Version.data();
-
-        size_t umpCount = totalCharacters / MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET;
-        if (totalCharacters % MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET != 0) umpCount++;
-
-        //auto umpCount = std::ceil(totalCharacters / (double)MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET);
-
-        for (int currentUmp = 0; currentUmp < umpCount; currentUmp++)
-        {
-            uint8_t form;
-
-            // if entire string fits in a single UMP, form = 0. Otherwise
-            // the packets must have a start and end packet, and optionally, up to 5 continue packets in the middle
-
-            if (currentUmp == 0 && umpCount == 1)
-            {
-                // everything fits in one UMP
-                form = MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE;
-            }
-            else if (currentUmp == 0 && umpCount > 1)
-            {
-                // first of > 1 UMPs
-                form = MIDI_STREAM_MESSAGE_MULTI_FORM_START;
-            }
-            else if (currentUmp == umpCount - 1)
-            {
-                // end UMP
-                form = MIDI_STREAM_MESSAGE_MULTI_FORM_END;
-            }
-            else
-            {
-                // interim UMP
-                form = MIDI_STREAM_MESSAGE_MULTI_FORM_CONTINUE;
-            }
-
-            midi2::MidiMessage128 umpProjected =             
-                midi2::MidiMessageBuilder::BuildStreamMessage(
-                    timestamp,
-                    form,
-                    MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME, 
-                    (uint16_t)0, 
-                    (uint32_t)0, 
-                    (uint32_t)0,
-                    (uint32_t)0
-                );
-
-            auto ump = winrt::get_self<implementation::MidiMessage128>(umpProjected);
-
-            byte packetBytes[MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET]{ 0 };
-
-            // endianness dependence means we can't just cast a pointer to the struct as byte* and run through it.
-            for (int i = 0; i < MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET && remainingCharacters > 0; i++)
-            { 
-                packetBytes[i] = *utf8StringPointer;
-                utf8StringPointer++;    // move along the source string
-
-                remainingCharacters--;
-            }
-
-            // convert network to native endianness when copying the bytes over. This is far uglier
-            // than just walking a pointer, but it's required here.
-
-            uint32_t word0 = ump->Word0();
-            word0 |= packetBytes[0] << 8 | packetBytes[1];  // first two characters are end of first word
-            ump->Word0(word0);
-
-            ump->Word1(
-                packetBytes[2] << 24 | 
-                packetBytes[3] << 16 | 
-                packetBytes[4] << 8 | 
-                packetBytes[5]);
-
-            ump->Word2(
-                packetBytes[6] << 24 |
-                packetBytes[7] << 16 |
-                packetBytes[8] << 8 |
-                packetBytes[9]);
-
-            ump->Word3(
-                packetBytes[10] << 24 |
-                packetBytes[11] << 16 |
-                packetBytes[12] << 8 |
-                packetBytes[13]);
-
-
-            messages.Append(umpProjected);
-
-        }
-
-        utf8StringPointer = nullptr;
-
-        return messages;
-    }
-
-    // this code should really be refactored and shared with the name notification builder
-    _Use_decl_annotations_
-    collections::IVector<midi2::MidiMessage128> MidiStreamMessageBuilder::BuildEndpointProductInstanceIdNotificationMessages(
+    collections::IVector<midi2::MidiMessage128> MidiStreamMessageBuilder::BuildSplitTextMessages(
         internal::MidiTimestamp const timestamp,
-        winrt::hstring const& productInstanceId
-    )
+        uint8_t const status, 
+        uint16_t const word0Remainder, 
+        uint8_t const maxCharacters,
+        uint8_t const maxCharactersPerPacket,
+        winrt::hstring const& text)
     {
         auto messages = winrt::single_threaded_vector<midi2::MidiMessage128>();
 
@@ -265,17 +142,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // or start (form 0x1, continue messages 0x2, and end 0x3)
 
         // don't process past the last allowed character
-        size_t totalCharacters = (productInstanceId.size() > MIDI_STREAM_MESSAGE_ENDPOINT_NAME_MAX_LENGTH) ? MIDI_STREAM_MESSAGE_ENDPOINT_NAME_MAX_LENGTH : productInstanceId.size();
+        size_t totalCharacters = (text.size() > maxCharacters) ? maxCharacters : text.size();
         size_t remainingCharacters = totalCharacters;
 
         // convert to 8 bit UTF-8 characters, and get the pointer to the first character
-        auto utf8Version = winrt::to_string(productInstanceId);
+        auto utf8Version = winrt::to_string(text);
         char* utf8StringPointer = utf8Version.data();
 
-        size_t umpCount = totalCharacters / MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET;
-        if (totalCharacters % MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET != 0) umpCount++;
-
-        //auto umpCount = std::ceil(totalCharacters / (double)MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET);
+        size_t umpCount = totalCharacters / maxCharactersPerPacket;
+        if (totalCharacters % maxCharactersPerPacket != 0) umpCount++;
 
         for (int currentUmp = 0; currentUmp < umpCount; currentUmp++)
         {
@@ -309,19 +184,20 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 midi2::MidiMessageBuilder::BuildStreamMessage(
                     timestamp,
                     form,
-                    MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID,
-                    (uint16_t)0,
+                    status,
+                    word0Remainder,
                     (uint32_t)0,
                     (uint32_t)0,
                     (uint32_t)0
                 );
 
             auto ump = winrt::get_self<implementation::MidiMessage128>(umpProjected);
-
-            byte packetBytes[MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET]{ 0 };
+            
+            // allocate for the most we ever see
+            byte packetBytes[14]{ 0 };
 
             // endianness dependence means we can't just cast a pointer to the struct as byte* and run through it.
-            for (int i = 0; i < MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET && remainingCharacters > 0; i++)
+            for (int i = 0; i < maxCharactersPerPacket && remainingCharacters > 0; i++)
             {
                 packetBytes[i] = *utf8StringPointer;
                 utf8StringPointer++;    // move along the source string
@@ -332,28 +208,46 @@ namespace winrt::Windows::Devices::Midi2::implementation
             // convert network to native endianness when copying the bytes over. This is far uglier
             // than just walking a pointer, but it's required here.
 
+            // figure out where in the first word we start. This differs by status. We use the
+            // max characters per packet to figure this out
+            uint8_t characterCountFirstWord = maxCharactersPerPacket % 4;
+
+
+            uint8_t currentIndex = 0;
+
             uint32_t word0 = ump->Word0();
-            word0 |= packetBytes[0] << 8 | packetBytes[1];  // first two characters are end of first word
+
+            if (characterCountFirstWord == 2)
+            {
+                word0 |= packetBytes[currentIndex++] << 8;
+            }
+
+            if (characterCountFirstWord >= 1)
+            {
+                word0 |= packetBytes[currentIndex++];
+            }
+
             ump->Word0(word0);
 
+            // remaining packets are filled with the data we have
+
             ump->Word1(
-                packetBytes[2] << 24 |
-                packetBytes[3] << 16 |
-                packetBytes[4] << 8 |
-                packetBytes[5]);
+                packetBytes[currentIndex++] << 24 |
+                packetBytes[currentIndex++] << 16 |
+                packetBytes[currentIndex++] << 8 |
+                packetBytes[currentIndex++]);
 
             ump->Word2(
-                packetBytes[6] << 24 |
-                packetBytes[7] << 16 |
-                packetBytes[8] << 8 |
-                packetBytes[9]);
+                packetBytes[currentIndex++] << 24 |
+                packetBytes[currentIndex++] << 16 |
+                packetBytes[currentIndex++] << 8 |
+                packetBytes[currentIndex++]);
 
             ump->Word3(
-                packetBytes[10] << 24 |
-                packetBytes[11] << 16 |
-                packetBytes[12] << 8 |
-                packetBytes[13]);
-
+                packetBytes[currentIndex++] << 24 |
+                packetBytes[currentIndex++] << 16 |
+                packetBytes[currentIndex++] << 8 |
+                packetBytes[currentIndex++]);
 
             messages.Append(umpProjected);
 
@@ -362,66 +256,309 @@ namespace winrt::Windows::Devices::Midi2::implementation
         utf8StringPointer = nullptr;
 
         return messages;
+
+    }
+
+
+
+    // todo: refactor this and share with the product instance ID notification
+    _Use_decl_annotations_
+    collections::IVector<midi2::MidiMessage128> MidiStreamMessageBuilder::BuildEndpointNameNotificationMessages(
+         internal::MidiTimestamp const timestamp,
+         winrt::hstring const& name
+    ) noexcept
+    {
+        return BuildSplitTextMessages(
+            timestamp,
+            MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION,
+            (uint16_t)0,
+            MIDI_STREAM_MESSAGE_ENDPOINT_NAME_MAX_LENGTH,
+            MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET,
+            name
+        );
+    }
+
+    // this code should really be refactored and shared with the name notification builder
+    _Use_decl_annotations_
+    collections::IVector<midi2::MidiMessage128> MidiStreamMessageBuilder::BuildProductInstanceIdNotificationMessages(
+        internal::MidiTimestamp const timestamp,
+        winrt::hstring const& productInstanceId
+    )
+    {
+        return BuildSplitTextMessages(
+            timestamp,
+            MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID_NOTIFICATION,
+            (uint16_t)0,
+            MIDI_STREAM_MESSAGE_PRODUCT_INSTANCE_ID_MAX_LENGTH,
+            MIDI_STREAM_MESSAGE_PRODUCT_INSTANCE_ID_CHARACTERS_PER_PACKET,
+            productInstanceId
+        );
+
     }
 
     _Use_decl_annotations_
     midi2::MidiMessage128 MidiStreamMessageBuilder::BuildStreamConfigurationRequestMessage(
-        internal::MidiTimestamp const /*timestamp*/,
-        uint8_t const /*protocol*/,
-         bool const /*expectToReceiveJRTimestamps*/,
-         bool const /*requestToSendJRTimestamps*/
+        internal::MidiTimestamp const timestamp,
+        uint8_t const protocol,
+        bool const expectToReceiveJRTimestamps,
+        bool const requestToSendJRTimestamps
     )
     {
-        throw winrt::hresult_not_implemented();
+        uint16_t word0Remaining{ 0 };
+
+        word0Remaining |= ((uint16_t)protocol << 8);
+
+        if (expectToReceiveJRTimestamps)
+            word0Remaining |= 0x02;     // second bit
+
+        if (requestToSendJRTimestamps)
+            word0Remaining |= 0x01;     // first bit
+
+        return MidiMessageBuilder::BuildStreamMessage(
+            timestamp,
+            MIDI_STREAM_MESSAGE_STANDARD_FORM0,
+            MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_REQUEST,
+            word0Remaining,
+            MIDI_RESERVED_WORD,
+            MIDI_RESERVED_WORD,
+            MIDI_RESERVED_WORD
+        );
+
     }
 
     _Use_decl_annotations_
     midi2::MidiMessage128 MidiStreamMessageBuilder::BuildStreamConfigurationNotificationMessage(
-        internal::MidiTimestamp const /*timestamp*/,
-        uint8_t const /*protocol*/,
-         bool const /*confirmationWillReceiveJRTimestamps*/,
-         bool const /*confirmationSendJRTimestamps*/
+        internal::MidiTimestamp const timestamp,
+        uint8_t const protocol,
+         bool const confirmationWillReceiveJRTimestamps,
+         bool const confirmationSendJRTimestamps
     )
     {
-        throw winrt::hresult_not_implemented();
+        uint16_t word0Remaining{ 0 };
+
+        word0Remaining |= ((uint16_t)protocol << 8);
+
+        if (confirmationWillReceiveJRTimestamps)
+            word0Remaining |= 0x02;     // second bit
+
+        if (confirmationSendJRTimestamps)
+            word0Remaining |= 0x01;     // first bit
+
+        return MidiMessageBuilder::BuildStreamMessage(
+            timestamp,
+            MIDI_STREAM_MESSAGE_STANDARD_FORM0,
+            MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_NOTIFICATION,
+            word0Remaining,
+            MIDI_RESERVED_WORD,
+            MIDI_RESERVED_WORD,
+            MIDI_RESERVED_WORD
+        );
     }
 
     _Use_decl_annotations_
     midi2::MidiMessage128 MidiStreamMessageBuilder::BuildFunctionBlockDiscoveryMessage(
-        internal::MidiTimestamp const /*timestamp*/,
-        uint8_t const /*functionBlockNumber*/,
-         bool const /*requestFunctionBlockInfoNotification*/,
-         bool const /*requestFunctionBlockNameNotification*/
-    )
+        internal::MidiTimestamp const timestamp,
+        uint8_t const functionBlockNumber,
+        midi2::MidiFunctionBlockDiscoveryFilterFlags const requestFlags
+        )
     {
-        throw winrt::hresult_not_implemented();
+        uint16_t word0Remaining{ 0 };
+
+        word0Remaining |= ((uint16_t)functionBlockNumber << 8);
+
+        word0Remaining |= (uint8_t)requestFlags;
+
+        return MidiMessageBuilder::BuildStreamMessage(
+            timestamp,
+            MIDI_STREAM_MESSAGE_STANDARD_FORM0,
+            MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_NOTIFICATION,
+            word0Remaining,
+            MIDI_RESERVED_WORD,
+            MIDI_RESERVED_WORD,
+            MIDI_RESERVED_WORD
+        );
     }
 
     _Use_decl_annotations_
-    midi2::MidiMessage128 MidiStreamMessageBuilder::BuildFunctionInfoNotificationMessage(
-        internal::MidiTimestamp const /*timestamp*/,
-        bool const /*active*/,
-         uint8_t const /*functionBlockNumber*/,
-         midi2::MidiFunctionBlockUIHint const& /*uiHint*/,
-         midi2::MidiFunctionBlockMidi10 const& /*midi10*/,
-         midi2::MidiFunctionBlockDirection const& /*direction*/,
-         uint8_t const /*firstGroup*/,
-         uint8_t const /*numberOfGroups*/,
-         uint8_t const /*midiCIVersionFormat*/,
-         uint8_t const /*maxNumberSysEx8Streams*/
+    midi2::MidiMessage128 MidiStreamMessageBuilder::BuildFunctionBlockInfoNotificationMessage(
+        internal::MidiTimestamp const timestamp,
+        bool const active,
+        uint8_t const functionBlockNumber,
+        midi2::MidiFunctionBlockUIHint const& uiHint,
+        midi2::MidiFunctionBlockMidi10 const& midi10,
+        midi2::MidiFunctionBlockDirection const& direction,
+        uint8_t const firstGroup,
+        uint8_t const numberOfGroups,
+        uint8_t const midiCIVersionFormat,
+        uint8_t const maxNumberSysEx8Streams
     )
     {
-        throw winrt::hresult_not_implemented();
+        uint16_t word0Remaining{ 0 };
+        uint32_t word1{ 0 };
+
+
+        word0Remaining |= (uint16_t)internal::CleanupByte7(functionBlockNumber) << 8;
+        word0Remaining |= (uint16_t)uiHint << 4;
+        word0Remaining |= (uint16_t)midi10 << 2;
+        word0Remaining |= (uint16_t)direction;
+
+        if (active)
+        {
+            word0Remaining |= 0x8000;
+        }
+
+        word1 =
+            (uint32_t)firstGroup << 24 |
+            (uint32_t)numberOfGroups << 16 |
+            (uint32_t)midiCIVersionFormat << 8 |
+            (uint32_t)maxNumberSysEx8Streams;
+
+
+        return MidiMessageBuilder::BuildStreamMessage(
+            timestamp,
+            MIDI_STREAM_MESSAGE_STANDARD_FORM0,
+            MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_INFO_NOTIFICATION,
+            word0Remaining,
+            word1,
+            MIDI_RESERVED_WORD,
+            MIDI_RESERVED_WORD
+            );
+
     }
 
     _Use_decl_annotations_
     collections::IVector<midi2::MidiMessage128> MidiStreamMessageBuilder::BuildFunctionBlockNameNotificationMessages(
-        internal::MidiTimestamp const /*timestamp*/,
-        uint8_t const /*functionBlockNumber*/,
-        winrt::hstring const& /*name*/
+        internal::MidiTimestamp const timestamp,
+        uint8_t const functionBlockNumber,
+        winrt::hstring const& name
     ) 
     {
-        throw winrt::hresult_not_implemented();
+        // fb notifications include the function block number as the second
+        // to last byte
+        uint16_t word0Remainder = (uint16_t)functionBlockNumber << 8;
+
+        return BuildSplitTextMessages(
+            timestamp,
+            MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION,
+            word0Remainder,
+            MIDI_STREAM_MESSAGE_FUNCTION_BLOCK_NAME_MAX_LENGTH,
+            MIDI_STREAM_MESSAGE_FUNCTION_BLOCK_NAME_CHARACTERS_PER_PACKET,
+            name
+        );
+    }
+
+
+
+
+#define MIDI_WORD_CHAR0(w) (uint8_t)((w & 0xFF000000) >> 24)
+#define MIDI_WORD_CHAR1(w) (uint8_t)((w & 0x00FF0000) >> 16)
+#define MIDI_WORD_CHAR2(w) (uint8_t)((w & 0x0000FF00) >> 8)
+#define MIDI_WORD_CHAR3(w) (uint8_t)(w & 0x000000FF)
+
+
+    _Use_decl_annotations_
+    winrt::hstring MidiStreamMessageBuilder::ParseFunctionBlockNameNotificationMessages(
+        collections::IVector<midi2::MidiMessage128> messages
+        )
+    {
+        std::string s{};
+
+        for (auto message : messages)
+        {
+            // verify that the message form is correct (begin/[continue]/end or just complete)
+
+            // verify the status is correct
+
+            AppendCharToString(s, MIDI_WORD_CHAR3(message.Word0()));
+
+            AppendCharToString(s, MIDI_WORD_CHAR0(message.Word1()));
+            AppendCharToString(s, MIDI_WORD_CHAR1(message.Word1()));
+            AppendCharToString(s, MIDI_WORD_CHAR2(message.Word1()));
+            AppendCharToString(s, MIDI_WORD_CHAR3(message.Word1()));
+
+            AppendCharToString(s, MIDI_WORD_CHAR0(message.Word2()));
+            AppendCharToString(s, MIDI_WORD_CHAR1(message.Word2()));
+            AppendCharToString(s, MIDI_WORD_CHAR2(message.Word2()));
+            AppendCharToString(s, MIDI_WORD_CHAR3(message.Word2()));
+
+            AppendCharToString(s, MIDI_WORD_CHAR0(message.Word3()));
+            AppendCharToString(s, MIDI_WORD_CHAR1(message.Word3()));
+            AppendCharToString(s, MIDI_WORD_CHAR2(message.Word3()));
+            AppendCharToString(s, MIDI_WORD_CHAR3(message.Word3()));
+        }
+
+        return winrt::to_hstring(s);
+
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring MidiStreamMessageBuilder::ParseEndpointNameNotificationMessages(
+        collections::IVector<midi2::MidiMessage128> messages
+        )
+    {
+        std::string s{};
+
+        for (auto message : messages)
+        {
+            // verify that the message form is correct (begin/[continue]/end or just complete)
+
+            // verify the status is correct
+
+            AppendCharToString(s, MIDI_WORD_CHAR2(message.Word0()));
+            AppendCharToString(s, MIDI_WORD_CHAR3(message.Word0()));
+
+            AppendCharToString(s, MIDI_WORD_CHAR0(message.Word1()));
+            AppendCharToString(s, MIDI_WORD_CHAR1(message.Word1()));
+            AppendCharToString(s, MIDI_WORD_CHAR2(message.Word1()));
+            AppendCharToString(s, MIDI_WORD_CHAR3(message.Word1()));
+
+            AppendCharToString(s, MIDI_WORD_CHAR0(message.Word2()));
+            AppendCharToString(s, MIDI_WORD_CHAR1(message.Word2()));
+            AppendCharToString(s, MIDI_WORD_CHAR2(message.Word2()));
+            AppendCharToString(s, MIDI_WORD_CHAR3(message.Word2()));
+
+            AppendCharToString(s, MIDI_WORD_CHAR0(message.Word3()));
+            AppendCharToString(s, MIDI_WORD_CHAR1(message.Word3()));
+            AppendCharToString(s, MIDI_WORD_CHAR2(message.Word3()));
+            AppendCharToString(s, MIDI_WORD_CHAR3(message.Word3()));
+        }
+
+        return winrt::to_hstring(s);
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring MidiStreamMessageBuilder::ParseProductInstanceIdNotificationMessages(
+        collections::IVector<midi2::MidiMessage128> messages
+        )
+    {
+        std::string s{};
+
+        for (auto message : messages)
+        {
+            // verify that the message form is correct (begin/[continue]/end or just complete)
+
+            // verify the status is correct
+
+            AppendCharToString(s, MIDI_WORD_CHAR2(message.Word0()));
+            AppendCharToString(s, MIDI_WORD_CHAR3(message.Word0()));
+
+            AppendCharToString(s, MIDI_WORD_CHAR0(message.Word1()));
+            AppendCharToString(s, MIDI_WORD_CHAR1(message.Word1()));
+            AppendCharToString(s, MIDI_WORD_CHAR2(message.Word1()));
+            AppendCharToString(s, MIDI_WORD_CHAR3(message.Word1()));
+
+            AppendCharToString(s, MIDI_WORD_CHAR0(message.Word2()));
+            AppendCharToString(s, MIDI_WORD_CHAR1(message.Word2()));
+            AppendCharToString(s, MIDI_WORD_CHAR2(message.Word2()));
+            AppendCharToString(s, MIDI_WORD_CHAR3(message.Word2()));
+
+            AppendCharToString(s, MIDI_WORD_CHAR0(message.Word3()));
+            AppendCharToString(s, MIDI_WORD_CHAR1(message.Word3()));
+            AppendCharToString(s, MIDI_WORD_CHAR2(message.Word3()));
+            AppendCharToString(s, MIDI_WORD_CHAR3(message.Word3()));
+        }
+
+        return winrt::to_hstring(s);
     }
 
 

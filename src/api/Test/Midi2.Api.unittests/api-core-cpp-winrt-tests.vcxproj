@@ -131,6 +131,7 @@
     <ClCompile Include="ClockTests.cpp" />
     <ClCompile Include="BidirectionalEndpointTests.cpp" />
     <ClCompile Include="EndpointInformationSerializationTests.cpp" />
+    <ClCompile Include="FunctionBlockMessageBuilderTests.cpp" />
     <ClCompile Include="FunctionBlockSerializationTests.cpp" />
     <ClCompile Include="GlobalCacheTests.cpp" />
     <ClCompile Include="InProtocolEndpointInformationTest.cpp" />

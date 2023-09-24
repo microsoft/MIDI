@@ -264,6 +264,73 @@ namespace Windows::Devices::Midi2::Internal
 
 
 
+    inline bool GetFunctionBlockActiveFlagFromInfoNotificationFirstWord(
+        _In_ uint32_t word0
+        )
+    {
+        // high bit on the second 16 bit half of the first word
+        return (bool)((word0 & 0x00008000) > 0);
+    }
+
+    inline uint8_t GetFunctionBlockNumberFromInfoNotificationFirstWord(
+        _In_ uint32_t word0
+    )
+    {
+        return (uint8_t)((word0 & 0x00007F00) >> 8);
+    }
+
+    inline uint8_t GetFunctionBlockUIHintFromInfoNotificationFirstWord(
+        _In_ uint32_t word0
+    )
+    {
+        return (uint8_t)((word0 & 0x00000030) >> 4);
+    }
+
+    inline uint8_t GetFunctionBlockMidi10FromInfoNotificationFirstWord(
+        _In_ uint32_t word0
+    )
+    {
+        return (uint8_t)((word0 & 0x0000000C) >> 2);
+    }
+
+    inline uint8_t GetFunctionBlockDirectionFromInfoNotificationFirstWord(
+        _In_ uint32_t word0
+    )
+    {
+        return (uint8_t)(word0 & 0x00000003);
+    }
+
+
+
+  
+
+    inline uint8_t GetFunctionBlockFirstGroupFromInfoNotificationSecondWord(
+        _In_ uint32_t word1
+        )
+    {
+        return (uint8_t)((word1 & 0xFF000000) >> 24);
+    }
+
+    inline uint8_t GetFunctionBlockNumberOfGroupsFromInfoNotificationSecondWord(
+        _In_ uint32_t word1
+    )
+    {
+        return (uint8_t)((word1 & 0x00FF0000) >> 16);
+    }
+
+    inline uint8_t GetFunctionBlockMidiCIVersionFromInfoNotificationSecondWord(
+        _In_ uint32_t word1
+    )
+    {
+        return (uint8_t)((word1 & 0x0000FF00) >> 8);
+    }
+
+    inline uint8_t GetFunctionBlockMaxSysex8StreamsFromInfoNotificationSecondWord(
+        _In_ uint32_t word1
+    )
+    {
+        return (uint8_t)(word1 & 0x000000FF);
+    }
 
 
 }

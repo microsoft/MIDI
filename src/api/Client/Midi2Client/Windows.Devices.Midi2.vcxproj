@@ -247,12 +247,12 @@
     <ClInclude Include="MidiEndpointMetadataCacheUpdatedEventArgs.h">
       <DependentUpon>MidiEndpointMetadataCacheUpdatedEventArgs.idl</DependentUpon>
     </ClInclude>
-      <ClInclude Include="MidiEndpointInformationUpdatedEventArgs.h">
-          <DependentUpon>MidiEndpointInformationUpdatedEventArgs.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiFunctionBlocksUpdatedEventArgs.h">
-          <DependentUpon>MidiFunctionBlocksUpdatedEventArgs.idl</DependentUpon>
-      </ClInclude>
+    <ClInclude Include="MidiEndpointInformationUpdatedEventArgs.h">
+      <DependentUpon>MidiEndpointInformationUpdatedEventArgs.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiFunctionBlocksUpdatedEventArgs.h">
+      <DependentUpon>MidiFunctionBlocksUpdatedEventArgs.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiGlobalCache.h">
       <DependentUpon>MidiGlobalCache.idl</DependentUpon>
     </ClInclude>
@@ -328,9 +328,9 @@
     <ClInclude Include="MidiStreamConfigurationEndpointListener.h">
       <DependentUpon>MidiStreamConfigurationEndpointListener.idl</DependentUpon>
     </ClInclude>
-      <ClInclude Include="MidiStreamMessageBuilder.h">
-          <DependentUpon>MidiStreamMessageBuilder.idl</DependentUpon>
-      </ClInclude>
+    <ClInclude Include="MidiStreamMessageBuilder.h">
+      <DependentUpon>MidiStreamMessageBuilder.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiTransportInformation.h">
       <DependentUpon>MidiTransportInformation.idl</DependentUpon>
     </ClInclude>
@@ -355,10 +355,11 @@
     <ClInclude Include="MidiVirtualDeviceManager.h">
       <DependentUpon>MidiVirtualDeviceManager.idl</DependentUpon>
     </ClInclude>
-      <ClInclude Include="MidiVirtualDeviceResponder.h">
-          <DependentUpon>MidiVirtualDeviceResponder.idl</DependentUpon>
-      </ClInclude>
+    <ClInclude Include="MidiVirtualDeviceResponder.h">
+      <DependentUpon>MidiVirtualDeviceResponder.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="midi_service_interface.h" />
+    <ClInclude Include="midi_stream_message_defs.h" />
     <ClInclude Include="midl_defines.h" />
     <ClInclude Include="string_util.h" />
     <ClInclude Include="trace_logging.h" />
@@ -386,12 +387,12 @@
     <ClCompile Include="MidiEndpointMetadataCacheUpdatedEventArgs.cpp">
       <DependentUpon>MidiEndpointMetadataCacheUpdatedEventArgs.idl</DependentUpon>
     </ClCompile>
-      <ClCompile Include="MidiEndpointInformationUpdatedEventArgs.cpp">
-          <DependentUpon>MidiEndpointInformationUpdatedEventArgs.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiFunctionBlocksUpdatedEventArgs.cpp">
-          <DependentUpon>MidiFunctionBlocksUpdatedEventArgs.idl</DependentUpon>
-      </ClCompile>
+    <ClCompile Include="MidiEndpointInformationUpdatedEventArgs.cpp">
+      <DependentUpon>MidiEndpointInformationUpdatedEventArgs.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiFunctionBlocksUpdatedEventArgs.cpp">
+      <DependentUpon>MidiFunctionBlocksUpdatedEventArgs.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiGlobalCache.cpp">
       <DependentUpon>MidiGlobalCache.idl</DependentUpon>
     </ClCompile>
@@ -470,9 +471,9 @@
     <ClCompile Include="MidiStreamConfigurationEndpointListener.cpp">
       <DependentUpon>MidiStreamConfigurationEndpointListener.idl</DependentUpon>
     </ClCompile>
-      <ClCompile Include="MidiStreamMessageBuilder.cpp">
-          <DependentUpon>MidiStreamMessageBuilder.idl</DependentUpon>
-      </ClCompile>
+    <ClCompile Include="MidiStreamMessageBuilder.cpp">
+      <DependentUpon>MidiStreamMessageBuilder.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiTransportInformation.cpp">
       <DependentUpon>MidiTransportInformation.idl</DependentUpon>
     </ClCompile>
@@ -497,9 +498,9 @@
     <ClCompile Include="MidiVirtualDeviceManager.cpp">
       <DependentUpon>MidiVirtualDeviceManager.idl</DependentUpon>
     </ClCompile>
-      <ClCompile Include="MidiVirtualDeviceResponder.cpp">
-          <DependentUpon>MidiVirtualDeviceResponder.idl</DependentUpon>
-      </ClCompile>
+    <ClCompile Include="MidiVirtualDeviceResponder.cpp">
+      <DependentUpon>MidiVirtualDeviceResponder.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -529,6 +530,7 @@
     <Midl Include="MidiClock.idl" />
     <Midl Include="MidiEndpointDiscoveryFilterFlagsEnum.idl" />
     <Midl Include="MidiEndpointInformationUpdatedEventArgs.idl" />
+    <Midl Include="MidiFunctionBlockDiscoveryFilterFlagsEnum.idl" />
     <Midl Include="MidiFunctionBlockMidi10Enum.idl" />
     <Midl Include="MidiFunctionBlocksUpdatedEventArgs.idl" />
     <Midl Include="MidiGlobalCache.idl" />

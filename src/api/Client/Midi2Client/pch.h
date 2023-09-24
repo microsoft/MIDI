@@ -54,6 +54,8 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 namespace implementation = winrt::Windows::Devices::Midi2::implementation;
 namespace midi2 = ::winrt::Windows::Devices::Midi2;
 
+#include "midi_stream_message_defs.h"
+
 #include "MidiMessage32.h"
 #include "MidiMessage64.h"
 #include "MidiMessage96.h"

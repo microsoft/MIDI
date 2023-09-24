@@ -17,6 +17,7 @@ import "MidiFunctionBlockUIHintEnum.idl";
 import "MidiFunctionBlockMidi10Enum.idl";
 import "MidiFunctionBlockDirectionEnum.idl";
 import "MidiEndpointDiscoveryFilterFlagsEnum.idl";
+import "MidiFunctionBlockDiscoveryFilterFlagsEnum.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -62,10 +63,23 @@ namespace Windows.Devices.Midi2
             String name
             );
 
-        static IVector<MidiMessage128> BuildEndpointProductInstanceIdNotificationMessages(
+        static IVector<MidiMessage128> BuildProductInstanceIdNotificationMessages(
             MIDI_TIMESTAMP timestamp,
             String productInstanceId
             );
+
+
+
+        static String ParseEndpointNameNotificationMessages(
+            IVector<MidiMessage128> messages
+        );
+
+        static String ParseProductInstanceIdNotificationMessages(
+            IVector<MidiMessage128> messages
+        );
+
+
+
 
         static MidiMessage128 BuildStreamConfigurationRequestMessage(
             MIDI_TIMESTAMP timestamp,
@@ -81,14 +95,16 @@ namespace Windows.Devices.Midi2
             Boolean confirmationSendJRTimestamps
             );
 
+
+        // Function blocks
+
         static MidiMessage128 BuildFunctionBlockDiscoveryMessage(
             MIDI_TIMESTAMP timestamp,
             UInt8 functionBlockNumber,
-            Boolean requestFunctionBlockInfoNotification,
-            Boolean requestFunctionBlockNameNotification
+            MidiFunctionBlockDiscoveryFilterFlags requestFlags
             );
 
-        static MidiMessage128 BuildFunctionInfoNotificationMessage(
+        static MidiMessage128 BuildFunctionBlockInfoNotificationMessage(
             MIDI_TIMESTAMP timestamp,
             Boolean active,
             UInt8 functionBlockNumber,
@@ -106,5 +122,10 @@ namespace Windows.Devices.Midi2
             UInt8 functionBlockNumber,
             String name
             );
+
+        static String ParseFunctionBlockNameNotificationMessages(
+            IVector<MidiMessage128> messages
+            );
+
     };
 }

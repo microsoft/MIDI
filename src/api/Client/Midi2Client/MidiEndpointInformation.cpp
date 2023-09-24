@@ -11,17 +11,6 @@
 #include "MidiEndpointInformation.g.cpp"
 
 
-#define JSON_KEY_EP_NAME L"name"
-#define JSON_KEY_EP_PID L"productInstanceId"
-#define JSON_KEY_EP_UMPVERMAJ L"umpVersionMajor"
-#define JSON_KEY_EP_UMPVERMIN L"umpVersionMinor"
-#define JSON_KEY_EP_STATICFB L"staticFunctionBlocks"
-#define JSON_KEY_EP_NUMFB L"numberOfFunctionBlocks"
-#define JSON_KEY_EP_MIDI2 L"midi2ProtocolCapability"
-#define JSON_KEY_EP_MIDI1 L"midi1ProtocolCapability"
-#define JSON_KEY_EP_RECJR L"receiveJRTimestampCapability"
-#define JSON_KEY_EP_SENDJR L"sendJRTimestampCapability"
-
 // TODO: DeviceIdentity information like sysex id, device family, etc
 
 using namespace winrt::Windows::Data::Json;
@@ -29,7 +18,7 @@ using namespace winrt::Windows::Data::Json;
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
-    bool MidiEndpointInformation::UpdateFromMessages(winrt::array_view<midi2::MidiMessage128 const> /*messages*/) noexcept
+    bool MidiEndpointInformation::UpdateFromMessages(collections::IIterable<midi2::MidiMessage128> /*messages*/) noexcept
     {
         return false;
     }

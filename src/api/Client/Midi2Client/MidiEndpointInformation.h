@@ -9,7 +9,6 @@
 #pragma once
 #include "MidiEndpointInformation.g.h"
 
-
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     struct MidiEndpointInformation : MidiEndpointInformationT<MidiEndpointInformation>
@@ -30,7 +29,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         bool UpdateFromJson(_In_ winrt::Windows::Data::Json::JsonObject const json) noexcept;
         bool UpdateFromJsonString(_In_ winrt::hstring const json) noexcept;
-        bool UpdateFromMessages(_In_ winrt::array_view<midi2::MidiMessage128 const> messages) noexcept;
+        bool UpdateFromMessages(_In_ collections::IIterable<midi2::MidiMessage128> messages) noexcept;
         winrt::hstring GetJsonString() noexcept;
 
 
