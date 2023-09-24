@@ -19,12 +19,10 @@ namespace Windows::Devices::Midi2::Internal
     class InternalMidiFunctionBlockDevice
     {
     public:
-        void RequestUpdatedFunctionBlocks()
+        bool RequestUpdatedFunctionBlocks()
         {
             // TODO
         }
-
-        bool IsFunctionBlockInformationValid() { return m_isFunctionBlockInformationValid; }
 
         collections::IVectorView<midi2::MidiFunctionBlock> FunctionBlocks() { return m_functionBlocks.GetView(); }
 
@@ -40,7 +38,6 @@ namespace Windows::Devices::Midi2::Internal
         }
 
     private:
-        bool m_isFunctionBlockInformationValid{ false };
 
         winrt::event<foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiFunctionBlocksUpdatedEventArgs>> m_informationUpdatedEvent;
 

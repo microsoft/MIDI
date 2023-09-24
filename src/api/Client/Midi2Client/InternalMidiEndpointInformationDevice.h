@@ -19,12 +19,12 @@ namespace Windows::Devices::Midi2::Internal
     class InternalMidiEndpointInformationDevice
     {
     public:
-        void RequestUpdatedEndpointInformation()
+        bool RequestUpdatedEndpointInformation()
         {
             // TODO
         }
 
-        bool IsEndpointInformationValid() { return m_isEndpointInformationValid; }
+        bool IsEndpointInformationAvailable() { return m_isEndpointInformationValid; }
 
         midi2::MidiEndpointInformation EndpointInformation() { return m_endpointInformation; }
 

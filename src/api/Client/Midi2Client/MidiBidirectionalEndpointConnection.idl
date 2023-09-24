@@ -19,8 +19,13 @@ import "IMidiOutputConnection.idl";
 import "IMidiMessageReceivedEventSource.idl";
 import "IMidiEndpointConnection.idl";
 
-import "IMidiFunctionBlockDevice.idl";
-import "IMidiEndpointInformationDevice.idl";
+import "MidiFunctionBlock.idl";
+import "MidiFunctionBlocksUpdatedEventARgs.idl";
+
+import "MidiEndpointInformation.idl";
+import "MidiEndpointInformationUpdatedEventArgs.idl";
+
+import "MidiStreamConfigurationRequestedSettings.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -30,14 +35,30 @@ namespace Windows.Devices.Midi2
                                                        Windows.Devices.Midi2.IMidiInputConnection,
                                                        Windows.Devices.Midi2.IMidiMessageReceivedEventSource,
                                                        Windows.Devices.Midi2.IMidiOutputConnection,
-                                                       Windows.Devices.Midi2.IMidiFunctionBlockDevice,
-                                                       Windows.Devices.Midi2.IMidiEndpointInformationDevice,
                                                        Windows.Foundation.IClosable
-
 
     {
         // Get the enumeration device selector for all compatible devices
         static String GetDeviceSelector();
 
+        bool RequestUpdatedFunctionBlocks();
+        IVectorView<MidiFunctionBlock> FunctionBlocks{ get; };
+
+        // uncomment this and implement if decided we need it
+        //bool RenegotiateStreamConfiguration(MidiStreamConfigurationRequestedSettings settings);
+
+
+        // callback for when a function block is updated comes in
+        event Windows.Foundation.TypedEventHandler<IInspectable, MidiFunctionBlocksUpdatedEventArgs> FunctionBlocksUpdated;
+
+
+        bool RequestUpdatedEndpointInformation();
+        Boolean IsEndpointInformationAvailable{ get; };
+        MidiEndpointInformation EndpointInformation{ get; };
+
+        // callback for when a endpoint update comes in
+        event Windows.Foundation.TypedEventHandler<IInspectable, MidiEndpointInformationUpdatedEventArgs> EndpointInformationUpdated;
     }
+
+
 }

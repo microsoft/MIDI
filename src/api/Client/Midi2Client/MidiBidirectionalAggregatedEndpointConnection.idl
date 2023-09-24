@@ -18,8 +18,6 @@ import "IMidiOutputConnection.idl";
 import "IMidiMessageReceivedEventSource.idl";
 import "IMidiEndpointConnection.idl";
 
-import "IMidiFunctionBlockDevice.idl";
-import "IMidiEndpointInformationDevice.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -29,8 +27,6 @@ namespace Windows.Devices.Midi2
                                                                  Windows.Devices.Midi2.IMidiInputConnection,
                                                                  Windows.Devices.Midi2.IMidiMessageReceivedEventSource,
                                                                  Windows.Devices.Midi2.IMidiOutputConnection,
-                                                                 Windows.Devices.Midi2.IMidiFunctionBlockDevice,
-                                                                 Windows.Devices.Midi2.IMidiEndpointInformationDevice,
                                                                  Windows.Foundation.IClosable
     {
 

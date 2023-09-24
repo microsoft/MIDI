@@ -506,7 +506,6 @@
     <Midl Include="IMidiBidirectionalEndpointOpenOptionsUser.idl" />
     <Midl Include="IMidiCacheableMetadata.idl" />
     <Midl Include="IMidiEndpointConnection.idl" />
-    <Midl Include="IMidiEndpointInformationDevice.idl" />
     <Midl Include="IMidiEndpointMessageListener.idl" />
     <Midl Include="IMidiEndpointMessageProcessingPlugin.idl" />
     <Midl Include="IMidiEndpointMessageResponder.idl" />
