@@ -60,6 +60,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::MidiPacketType PacketType() const noexcept
             { return midi2::MidiPacketType::UniversalMidiPacket96; }
 
+
+        // IStringable
+        winrt::hstring ToString();
+
+
+
         // internal for the sending code
         internal::PackedUmp96* GetInternalUmpDataPointer() { return &m_ump; }
 

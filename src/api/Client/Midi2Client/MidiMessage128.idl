@@ -16,7 +16,7 @@ import "IMidiUniversalPacket.idl";
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
-    unsealed runtimeclass MidiMessage128 : IMidiUniversalPacket
+    unsealed runtimeclass MidiMessage128 : IMidiUniversalPacket, Windows.Foundation.IStringable
     {
         MidiMessage128();
         MidiMessage128(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);

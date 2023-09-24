@@ -235,9 +235,6 @@
     <ClInclude Include="MidiBidirectionalAggregatedEndpointConnection.h">
       <DependentUpon>MidiBidirectionalAggregatedEndpointConnection.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiBidirectionalAggregatedEndpointOpenOptions.h">
-      <DependentUpon>MidiBidirectionalAggregatedEndpointOpenOptions.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiBidirectionalEndpointConnection.h">
       <DependentUpon>MidiBidirectionalEndpointConnection.idl</DependentUpon>
     </ClInclude>
@@ -328,6 +325,7 @@
     <ClInclude Include="MidiStreamConfigurationEndpointListener.h">
       <DependentUpon>MidiStreamConfigurationEndpointListener.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiStreamConfigurationRequestedSettings.h" />
     <ClInclude Include="MidiStreamMessageBuilder.h">
       <DependentUpon>MidiStreamMessageBuilder.idl</DependentUpon>
     </ClInclude>
@@ -374,9 +372,6 @@
     <ClCompile Include="InternalMidiConnectionCommon.cpp" />
     <ClCompile Include="MidiBidirectionalAggregatedEndpointConnection.cpp">
       <DependentUpon>MidiBidirectionalAggregatedEndpointConnection.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiBidirectionalAggregatedEndpointOpenOptions.cpp">
-      <DependentUpon>MidiBidirectionalAggregatedEndpointOpenOptions.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiBidirectionalEndpointConnection.cpp">
       <DependentUpon>MidiBidirectionalEndpointConnection.idl</DependentUpon>
@@ -471,6 +466,7 @@
     <ClCompile Include="MidiStreamConfigurationEndpointListener.cpp">
       <DependentUpon>MidiStreamConfigurationEndpointListener.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiStreamConfigurationRequestedSettings.cpp" />
     <ClCompile Include="MidiStreamMessageBuilder.cpp">
       <DependentUpon>MidiStreamMessageBuilder.idl</DependentUpon>
     </ClCompile>
@@ -507,6 +503,7 @@
     <ClCompile Include="trace_logging.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Midl Include="IMidiBidirectionalEndpointOpenOptionsUser.idl" />
     <Midl Include="IMidiCacheableMetadata.idl" />
     <Midl Include="IMidiEndpointConnection.idl" />
     <Midl Include="IMidiEndpointInformationDevice.idl" />
@@ -521,7 +518,6 @@
     <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl" />
     <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl" />
     <Midl Include="MidiBidirectionalAggregatedEndpointConnection.idl" />
-    <Midl Include="MidiBidirectionalAggregatedEndpointOpenOptions.idl" />
     <Midl Include="MidiBidirectionalEndpointConnection.idl" />
     <Midl Include="MidiBidirectionalEndpointOpenOptions.idl" />
     <Midl Include="MidiCacheUpdateTypeEnum.idl" />
@@ -568,6 +564,7 @@
     <Midl Include="MidiSessionSettings.idl" />
     <Midl Include="IMidiUniversalPacket.idl" />
     <Midl Include="MidiStreamConfigurationEndpointListener.idl" />
+    <Midl Include="MidiStreamConfigurationRequestedSettings.idl" />
     <Midl Include="MidiStreamMessageBuilder.idl" />
     <Midl Include="MidiSystemExclusive8StatusEnum.idl" />
     <Midl Include="MidiTransportInformation.idl" />

@@ -32,6 +32,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::IMidiInputConnection InputConnection() const noexcept { return m_inputConnection; }
         void InputConnection(_In_ midi2::IMidiInputConnection const& value) noexcept { m_inputConnection = value; }
 
+        midi2::IMidiOutputConnection OutputConnection() const noexcept { return m_outputConnection; }
+        void OutputConnection(_In_ midi2::IMidiOutputConnection const& value) noexcept { m_outputConnection = value; }
+
+        midi2::MidiBidirectionalEndpointOpenOptions BidirectionalEndpointOpenOptions() const noexcept { return m_openOptions; }
+        void BidirectionalEndpointOpenOptions(midi2::MidiBidirectionalEndpointOpenOptions const& value) noexcept { m_openOptions = value; }
+
+
         void ProcessIncomingMessage(
             _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs const& args,
             _Out_ bool& skipFurtherListeners,
@@ -42,6 +49,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void OnEndpointConnectionOpened();
         void Cleanup();
 
+        void RestartDiscoveryAndNegotiation();
+
 
     private:
         winrt::hstring m_id{};
@@ -49,6 +58,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool m_enabled{ false };
         foundation::IInspectable m_tag{ nullptr };
         midi2::IMidiInputConnection m_inputConnection;
+        midi2::IMidiOutputConnection m_outputConnection;
+        midi2::MidiBidirectionalEndpointOpenOptions m_openOptions;
+
     };
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation

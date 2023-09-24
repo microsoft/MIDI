@@ -198,7 +198,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     midi2::MidiBidirectionalAggregatedEndpointConnection MidiSession::ConnectBidirectionalAggregatedEndpoint(
         winrt::hstring const& inputEndpointDeviceId,
         winrt::hstring const& outputEndpointDeviceId ,
-        midi2::MidiBidirectionalAggregatedEndpointOpenOptions const& /*options*/,
+        midi2::MidiBidirectionalEndpointOpenOptions const& /*options*/,
         midi2::IMidiEndpointDefinedConnectionSettings const& /*settings*/
         ) noexcept
     {
@@ -257,7 +257,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     midi2::MidiBidirectionalAggregatedEndpointConnection MidiSession::ConnectBidirectionalAggregatedEndpoint(
         winrt::hstring const& inputEndpointDeviceId,
         winrt::hstring const& outputEndpointDeviceId,
-        midi2::MidiBidirectionalAggregatedEndpointOpenOptions const& options
+        midi2::MidiBidirectionalEndpointOpenOptions const& options
         ) noexcept
     {
         return ConnectBidirectionalAggregatedEndpoint(inputEndpointDeviceId, outputEndpointDeviceId, options, nullptr);

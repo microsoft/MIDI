@@ -11,6 +11,8 @@ MIDI_IDL_IMPORT
 
 import "MidiEndpointConnectionSharingPreferenceEnum.idl";
 
+import "MidiStreamConfigurationRequestedSettings.idl";
+
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
@@ -19,10 +21,20 @@ namespace Windows.Devices.Midi2
     {
         MidiBidirectionalEndpointOpenOptions();
 
-        Boolean DisableAutomaticEndpointDiscoveryMessages{ get; set; };
-        Boolean DisableAutomaticFunctionBlockInfoMessages{ get; set; };
-
         MidiEndpointConnectionSharingPreference ConnectionSharingPreference{ get; set; };
 
+        // stream configuration options
+        Boolean DisableAutomaticEndpointDiscoveryMessages{ get; set; };
+        Boolean DisableAutomaticStreamConfiguration{ get; set; };
+
+        Boolean DisableAutomaticFunctionBlockInfoMessages{ get; set; };
+
+        // may need an option to force discovery and negotiation even if there
+        // are values in the cache
+        
+
+        
+        // this has all the settings we use in stream configuration
+        MidiStreamConfigurationRequestedSettings RequestedStreamConfiguration{ get; set; };
    }
 }

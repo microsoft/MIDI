@@ -30,6 +30,8 @@
 
 
 #include <stdint.h>
+#include <sstream>
+#include <iomanip>
 
 // internal
 #include "trace_logging.h"
@@ -77,7 +79,7 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 #include "MidiInputEndpointOpenOptions.h"
 #include "MidiOutputEndpointOpenOptions.h"
 #include "MidiBidirectionalEndpointOpenOptions.h"
-#include "MidiBidirectionalAggregatedEndpointOpenOptions.h"
+//#include "MidiBidirectionalAggregatedEndpointOpenOptions.h"
 
 #include "MidiMessageReceivedEventArgs.h"
 

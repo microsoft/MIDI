@@ -26,6 +26,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool SupportsReceivingJRTimestamps() const noexcept { return m_supportsReceivingJRTimestamps; }
         bool SupportsSendingJRTimestamps() const noexcept { return m_supportsSendingJRTimestamps; }
 
+        midi2::MidiProtocol ConfiguredProtocol() const noexcept { return m_configuredProtocol; }
+
 
         bool UpdateFromJson(_In_ winrt::Windows::Data::Json::JsonObject const json) noexcept;
         bool UpdateFromJsonString(_In_ winrt::hstring const json) noexcept;
@@ -44,6 +46,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool m_supportsMidi20Protocol;
         bool m_supportsReceivingJRTimestamps;
         bool m_supportsSendingJRTimestamps;
+
+        midi2::MidiProtocol m_configuredProtocol;
 
     };
 }

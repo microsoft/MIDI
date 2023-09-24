@@ -21,7 +21,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     void MidiEndpointInformationConfigurator::OnEndpointConnectionOpened()
     {
-        // TODO: Send out discovery messages
+        RestartDiscoveryAndNegotiation();
+
+
+
+
     }
 
     _Use_decl_annotations_
@@ -42,5 +46,27 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         throw hresult_not_implemented();
     }
+
+
+
+    _Use_decl_annotations_
+    void MidiEndpointInformationConfigurator::RestartDiscoveryAndNegotiation()
+    {
+        throw hresult_not_implemented();
+
+
+        // see UMP spec page 37 for this process for protocol negotiation
+        // the OS here is Device 1
+
+        // send out endpoint discovery asking for endpoint info and stream configuration
+
+        // process incoming 
+
+        // Request configuration based on the conneciton open options
+        // 
+
+    }
+
+
 
 }

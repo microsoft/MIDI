@@ -41,4 +41,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
+
+    winrt::hstring MidiMessage96::ToString()
+    {
+        std::stringstream stream;
+
+        stream << "64-bit MIDI message:"
+            << " 0x" << std::hex << std::setw(8) << std::setfill('0') << Word0()
+            << " 0x" << std::hex << std::setw(8) << std::setfill('0') << Word1()
+            << " 0x" << std::hex << std::setw(8) << std::setfill('0') << Word2();
+
+        return winrt::to_hstring(stream.str());
+    }
+
 }

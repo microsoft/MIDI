@@ -1,29 +1,25 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+// Custom event sinks to provide MIDI 1.0 port-like views into the stream for 
+// incoming messages
+
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-// wraps the UMP type so we still quickly read/write packed data appropriately
-
-import "IMidiUniversalPacket.idl";
+import "MidiBidirectionalEndpointOpenOptions.idl";
 
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
-    unsealed runtimeclass MidiMessage32 : IMidiUniversalPacket, Windows.Foundation.IStringable
+    [MIDI_INTERFACE_UUID("8ef0557e-1a53-4ab2-ab80-d36f1a16f33b",1.0)]
+    interface IMidiBidirectionalEndpointOpenOptionsUser
     {
-        MidiMessage32();
-        MidiMessage32(MIDI_TIMESTAMP timestamp, UInt32 word0);
-
-        UInt32 Word0{ get; set; };
-    };
+        MidiBidirectionalEndpointOpenOptions BidirectionalEndpointOpenOptions { get; set; };
+    }
 }
-
-
-

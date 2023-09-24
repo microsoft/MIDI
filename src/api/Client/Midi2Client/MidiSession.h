@@ -96,13 +96,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::Windows::Devices::Midi2::MidiBidirectionalAggregatedEndpointConnection ConnectBidirectionalAggregatedEndpoint(
             _In_ winrt::hstring const& inputEndpointDeviceId,
             _In_ winrt::hstring const& outputEndpointDeviceId,
-            _In_ midi2::MidiBidirectionalAggregatedEndpointOpenOptions const& options
+            _In_ midi2::MidiBidirectionalEndpointOpenOptions const& options
         ) noexcept;
 
         winrt::Windows::Devices::Midi2::MidiBidirectionalAggregatedEndpointConnection ConnectBidirectionalAggregatedEndpoint(
             _In_ winrt::hstring const& inputEndpointDeviceId,
             _In_ winrt::hstring const& outputEndpointDeviceId,
-            _In_ midi2::MidiBidirectionalAggregatedEndpointOpenOptions const& options,
+            _In_ midi2::MidiBidirectionalEndpointOpenOptions const& options,
             _In_ midi2::IMidiEndpointDefinedConnectionSettings const& settings
         ) noexcept;
 

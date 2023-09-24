@@ -53,6 +53,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::Windows::Devices::Midi2::MidiPacketType PacketType() const noexcept 
             { return midi2::MidiPacketType::UniversalMidiPacket64; }
 
+
+        // IStringable
+        winrt::hstring ToString();
+
+
+
         // internal for the sending code
         internal::PackedUmp64* GetInternalUmpDataPointer() { return &m_ump; }
 
