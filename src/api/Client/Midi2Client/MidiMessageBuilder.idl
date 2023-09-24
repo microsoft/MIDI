@@ -69,21 +69,6 @@ namespace Windows.Devices.Midi2
             UInt8 dataByte4, 
             UInt8 dataByte5);
 
-        static MidiMessage64 BuildSystemExclusive7MessageFromArray(
-            MIDI_TIMESTAMP timestamp,
-            UInt8 groupIndex,
-            UInt8 status, 
-            UInt8 numberOfBytes, 
-            UInt8[] dataBytes,
-            UInt32 arrayStartIndex);
-
-        static MidiMessage64 BuildSystemExclusive7MessageFromBuffer(
-            MIDI_TIMESTAMP timestamp,
-            UInt8 groupIndex,
-            UInt8 status, 
-            UInt8 numberOfBytes, 
-            Windows.Foundation.IMemoryBuffer buffer, 
-            UInt32 byteOffsetInBuffer);
 
         // Type 4 MIDI 2.0 Channel Voice message
         static MidiMessage64 BuildMidi2ChannelVoiceMessage(
@@ -114,23 +99,6 @@ namespace Windows.Devices.Midi2
             UInt8 dataByte10, 
             UInt8 dataByte11, 
             UInt8 dataByte12);
-
-        static MidiMessage128 BuildSystemExclusive8MessageFromArray(
-            MIDI_TIMESTAMP timestamp,
-            UInt8 groupIndex,
-            MidiSystemExclusive8Status status,
-            UInt8 numberOfValidDataBytesThisMessage, 
-            UInt8 streamId, 
-            UInt8[] dataBytes,
-            UInt32 arrayStartIndex);
-
-        static MidiMessage128 BuildSystemExclusive8MessageFromBuffer(
-            MIDI_TIMESTAMP timestamp,
-            UInt8 groupIndex,
-            MidiSystemExclusive8Status status,
-            UInt8 numberOfValidDataBytesThisMessage, 
-            Windows.Foundation.IMemoryBuffer buffer, 
-            UInt32 byteOffsetInBuffer);
 
         // Type 5 Mixed Data Set Messages
 
@@ -166,22 +134,6 @@ namespace Windows.Devices.Midi2
             UInt8 dataByte11, 
             UInt8 dataByte12, 
             UInt8 dataByte13);
-
-        static MidiMessage128 BuildMixedDataSetChunkDataMessageFromArray(
-            MIDI_TIMESTAMP timestamp,
-            UInt8 groupIndex,
-            UInt8 mdsId, 
-            UInt8 numberOfValidDataBytesThisMessage, 
-            UInt8[] dataBytes,
-            UInt32 arrayStartIndex);
-
-        static MidiMessage128 BuildMixedDataSetChunkDataMessageFromBuffer(
-            MIDI_TIMESTAMP timestamp,
-            UInt8 groupIndex,
-            UInt8 mdsId, 
-            UInt8 numberOfValidDataBytesThisMessage, 
-            Windows.Foundation.IMemoryBuffer buffer, 
-            UInt32 byteOffsetInBuffer);
 
         // Type D Flex Data message
         static MidiMessage128 BuildFlexDataMessage(

@@ -105,29 +105,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     }
 
-    _Use_decl_annotations_
-    midi2::MidiMessage64 MidiMessageBuilder::BuildSystemExclusive7MessageFromArray(
-        internal::MidiTimestamp const /*timestamp*/,
-        uint8_t const /*groupIndex*/,
-        uint8_t const /*status*/,
-        uint8_t const /*numberOfBytes*/,
-        array_view<uint8_t const> const /*dataBytes*/,
-        uint32_t const /*arrayStartIndex*/)
-    {
-        throw hresult_not_implemented();
-    }
-
-    _Use_decl_annotations_
-    midi2::MidiMessage64 MidiMessageBuilder::BuildSystemExclusive7MessageFromBuffer(
-        internal::MidiTimestamp const /*timestamp*/,
-        uint8_t const /*groupIndex*/,
-        uint8_t const /*status*/,
-        uint8_t const /*numberOfBytes*/,
-        foundation::IMemoryBuffer const& /*buffer*/,
-        uint32_t const /*byteOffsetInBuffer*/)
-    {
-        throw hresult_not_implemented();
-    }
 
     _Use_decl_annotations_
     midi2::MidiMessage64 MidiMessageBuilder::BuildMidi2ChannelVoiceMessage(
@@ -185,93 +162,117 @@ namespace winrt::Windows::Devices::Midi2::implementation
             );
     }
 
-    _Use_decl_annotations_
-    midi2::MidiMessage128 MidiMessageBuilder::BuildSystemExclusive8MessageFromArray(
-        internal::MidiTimestamp const /*timestamp*/,
-        uint8_t const /*groupIndex*/,
-        midi2::MidiSystemExclusive8Status const& /*status*/,
-        uint8_t const /*numberOfValidDataBytesThisMessage*/,
-        uint8_t const /*streamId*/,
-        array_view<uint8_t const> const /*dataBytes*/,
-        uint32_t const /*arrayStartIndex*/)
-    {
-        throw hresult_not_implemented();
-    }
-
-    _Use_decl_annotations_
-    midi2::MidiMessage128 MidiMessageBuilder::BuildSystemExclusive8MessageFromBuffer(
-        internal::MidiTimestamp const /*timestamp*/,
-        uint8_t const /*groupIndex*/,
-        midi2::MidiSystemExclusive8Status const& /*status*/,
-        uint8_t const /*numberOfValidDataBytesThisMessage*/,
-        foundation::IMemoryBuffer const& /*buffer*/,
-        uint32_t const /*byteOffsetInBuffer*/)
-    {
-        throw hresult_not_implemented();
-    }
 
     _Use_decl_annotations_
     midi2::MidiMessage128 MidiMessageBuilder::BuildMixedDataSetChunkHeaderMessage(
-        internal::MidiTimestamp const /*timestamp*/,
-        uint8_t const /*groupIndex*/,
-        uint8_t const /*mdsId*/,
-        uint16_t const /*numberValidDataBytesInThisChunk*/,
-        uint16_t const /*numberChunksInMixedDataSet*/,
-        uint16_t const /*numberOfThisChunk*/,
-        uint16_t const /*manufacturerId*/,
-        uint16_t const /*deviceId*/,
-        uint16_t const /*subId1*/,
-        uint16_t const /*subId2*/)
+        internal::MidiTimestamp const timestamp,
+        uint8_t const groupIndex,
+        uint8_t const mdsId,
+        uint16_t const numberValidDataBytesInThisChunk,
+        uint16_t const numberChunksInMixedDataSet,
+        uint16_t const numberOfThisChunk,
+        uint16_t const manufacturerId,
+        uint16_t const deviceId,
+        uint16_t const subId1,
+        uint16_t const subId2)
     {
-        throw hresult_not_implemented();
+        uint32_t word0{ 0 };
+        uint32_t word1{ 0 };
+        uint32_t word2{ 0 };
+        uint32_t word3{ 0 };
+
+        // message type is 5. status is 8
+        word0 = 
+            0x5 << 28 |
+            internal::CleanupNibble(groupIndex) << 24 |
+            0x8 << 20 | 
+            internal::CleanupNibble(mdsId) << 16 |
+            numberValidDataBytesInThisChunk;
+
+        word1 =
+            numberChunksInMixedDataSet << 16 |
+            numberOfThisChunk;
+
+        word2 =
+            manufacturerId << 16 |
+            deviceId;
+
+        word3 =
+            subId1 << 16 |
+            subId2;
+
+
+        return midi2::MidiMessage128(
+            timestamp,
+            word0,
+            word1,
+            word2,
+            word3
+            );
     }
 
     _Use_decl_annotations_
     midi2::MidiMessage128 MidiMessageBuilder::BuildMixedDataSetChunkDataMessage(
-        internal::MidiTimestamp const /*timestamp*/,
-        uint8_t const /*groupIndex*/,
-        uint8_t const /*mdsId*/,
-        uint8_t const /*dataByte00*/,
-        uint8_t const /*dataByte01*/,
-        uint8_t const /*dataByte02*/,
-        uint8_t const /*dataByte03*/,
-        uint8_t const /*dataByte04*/,
-        uint8_t const /*dataByte05*/,
-        uint8_t const /*dataByte06*/,
-        uint8_t const /*dataByte07*/,
-        uint8_t const /*dataByte08*/,
-        uint8_t const /*dataByte09*/,
-        uint8_t const /*dataByte10*/,
-        uint8_t const /*dataByte11*/,
-        uint8_t const /*dataByte12*/,
-        uint8_t const /*dataByte13*/)
+        internal::MidiTimestamp const timestamp,
+        uint8_t const groupIndex,
+        uint8_t const mdsId,
+        uint8_t const dataByte00,
+        uint8_t const dataByte01,
+        uint8_t const dataByte02,
+        uint8_t const dataByte03,
+        uint8_t const dataByte04,
+        uint8_t const dataByte05,
+        uint8_t const dataByte06,
+        uint8_t const dataByte07,
+        uint8_t const dataByte08,
+        uint8_t const dataByte09,
+        uint8_t const dataByte10,
+        uint8_t const dataByte11,
+        uint8_t const dataByte12,
+        uint8_t const dataByte13)
     {
-        throw hresult_not_implemented();
+        uint32_t word0{ 0 };
+        uint32_t word1{ 0 };
+        uint32_t word2{ 0 };
+        uint32_t word3{ 0 };
+
+        // message type is 5. status is 8
+        word0 =
+            0x5 << 28 |
+            internal::CleanupNibble(groupIndex) << 24 |
+            0x9 << 20 |
+            internal::CleanupNibble(mdsId) << 16 |
+            dataByte00 << 8 |
+            dataByte01;
+
+        word1 =
+            dataByte02 << 24 |
+            dataByte03 << 16 |
+            dataByte04 << 8 |
+            dataByte05;
+
+        word2 =
+            dataByte06 << 24 |
+            dataByte07 << 16 |
+            dataByte08 << 8 |
+            dataByte09;
+
+        word3 =
+            dataByte10 << 24 |
+            dataByte11 << 16 |
+            dataByte12 << 8 |
+            dataByte13;
+
+
+        return midi2::MidiMessage128(
+            timestamp,
+            word0,
+            word1,
+            word2,
+            word3
+            );
     }
 
-    _Use_decl_annotations_
-    midi2::MidiMessage128 MidiMessageBuilder::BuildMixedDataSetChunkDataMessageFromArray(
-        internal::MidiTimestamp const /*timestamp*/,
-        uint8_t const /*groupIndex*/,
-        uint8_t const /*mdsId*/,
-        uint8_t const /*numberOfValidDataBytesThisMessage*/,
-        array_view<uint8_t const> const /*dataBytes*/,
-        uint32_t const /*arrayStartIndex*/)
-    {
-        throw hresult_not_implemented();
-    }
-
-    _Use_decl_annotations_
-    midi2::MidiMessage128 MidiMessageBuilder::BuildMixedDataSetChunkDataMessageFromBuffer(
-        internal::MidiTimestamp const /*timestamp*/,
-        uint8_t const /*groupIndex*/,
-        uint8_t const /*mdsId*/,
-        uint8_t const /*numberOfValidDataBytesThisMessage*/,
-        foundation::IMemoryBuffer const& /*buffer*/,
-        uint32_t const /*byteOffsetInBuffer*/)
-    {
-        throw hresult_not_implemented();
-    }
 
     _Use_decl_annotations_
     midi2::MidiMessage128 MidiMessageBuilder::BuildFlexDataMessage(
@@ -300,6 +301,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
             word2Data,
             word3Data
         );
+
+
     }
 
     _Use_decl_annotations_

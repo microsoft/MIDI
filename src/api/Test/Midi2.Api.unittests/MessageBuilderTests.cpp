@@ -200,3 +200,71 @@ TEST_CASE("Offline.MessageBuilder.BuildStreamMessages 2")
     REQUIRE(ump.Word3() == word3);
 }
 
+
+TEST_CASE("Offline.MessageBuilder.BuildMixedDatasetHeader")
+{
+    std::cout << "Building Mixed Dataset Header" << std::endl;
+
+    uint8_t group{ 0xA };
+    uint8_t mdsId{ 0xD };
+    uint16_t numberOfValidBytesInChunk{ 0x0099 };
+    uint16_t numberOfChunksInDatSet{ 8 };
+    uint16_t numberOfThisChunk{ 7 };
+    uint16_t manufacturerId{ 0x5150 };
+    uint16_t deviceId{ 0x1984 };
+    uint16_t subId1{ 0x0326 };
+    uint16_t subId2{ 0x3827 };
+
+    uint32_t resultingWord0 = 0x5A8D0099;
+    uint32_t resultingWord1 = 0x00080007;
+    uint32_t resultingWord2 = 0x51501984;
+    uint32_t resultingWord3 = 0x03263827;
+
+    auto ump = MidiMessageBuilder::BuildMixedDataSetChunkHeaderMessage(
+        MidiClock::GetMidiTimestamp(),
+        group,
+        mdsId,
+        numberOfValidBytesInChunk,
+        numberOfChunksInDatSet,
+        numberOfThisChunk,
+        manufacturerId,
+        deviceId,
+        subId1,
+        subId2
+        );
+
+    // verify values are in the UMP
+
+    REQUIRE(ump.Word0() == resultingWord0);
+    REQUIRE(ump.Word1() == resultingWord1);
+    REQUIRE(ump.Word2() == resultingWord2);
+    REQUIRE(ump.Word3() == resultingWord3);
+}
+
+
+TEST_CASE("Offline.MessageBuilder.BuildMixedDatasetPayload")
+{
+    std::cout << "Building Mixed Dataset Payload" << std::endl;
+
+    uint8_t group{ 0xA };
+    uint8_t mdsId{ 0xD };
+
+    uint32_t resultingWord0 = 0x5A9D0102;
+    uint32_t resultingWord1 = 0x03040506;
+    uint32_t resultingWord2 = 0x0708090A;
+    uint32_t resultingWord3 = 0x0B0C0D0E;
+
+    auto ump = MidiMessageBuilder::BuildMixedDataSetChunkDataMessage(
+        MidiClock::GetMidiTimestamp(),
+        group,
+        mdsId,
+        0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E
+    );
+
+    // verify values are in the UMP
+
+    REQUIRE(ump.Word0() == resultingWord0);
+    REQUIRE(ump.Word1() == resultingWord1);
+    REQUIRE(ump.Word2() == resultingWord2);
+    REQUIRE(ump.Word3() == resultingWord3);
+}
