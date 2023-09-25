@@ -8,37 +8,46 @@
 
 
 #include "pch.h"
-#include "MidiStreamConfigurationEndpointListener.h"
-#include "MidiStreamConfigurationEndpointListener.g.cpp"
+#include "MidiEndpointMetadataEndpointListener.h"
+#include "MidiEndpointMetadataEndpointListener.g.cpp"
 
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    void MidiStreamConfigurationEndpointListener::Initialize()
+    void MidiEndpointMetadataEndpointListener::Initialize()
     {
         throw hresult_not_implemented();
     }
 
-    void MidiStreamConfigurationEndpointListener::OnEndpointConnectionOpened()
+    void MidiEndpointMetadataEndpointListener::OnEndpointConnectionOpened()
     {
         throw hresult_not_implemented();
     }
 
-    void MidiStreamConfigurationEndpointListener::Cleanup()
+    void MidiEndpointMetadataEndpointListener::Cleanup()
     {
         throw hresult_not_implemented();
     }
 
     _Use_decl_annotations_
-    void MidiStreamConfigurationEndpointListener::ProcessIncomingMessage(
-        midi2::MidiMessageReceivedEventArgs const& /*args*/,
+    void MidiEndpointMetadataEndpointListener::ProcessIncomingMessage(
+        midi2::MidiMessageReceivedEventArgs const& args,
         bool& skipFurtherListeners,
         bool& skipMainMessageReceivedEvent)
     {
         skipFurtherListeners = false;
         skipMainMessageReceivedEvent = false;
 
-        throw hresult_not_implemented();
+        
+        if (args.MessageType() == MidiMessageType::Stream128)
+        {
+            // Handle Device Identity Notification Message
+
+            // Handle Endpoint Name Notification Message
+
+            // Handle Product Instance Id notification Message
+        }
+
     }
 
 }

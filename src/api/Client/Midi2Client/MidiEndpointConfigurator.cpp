@@ -56,7 +56,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         // send out endpoint discovery asking for endpoint info and stream configuration
 
-        // process incoming 
+        // process incoming endpoint info notification
 
         // Request configuration based on the connection open options
         // 

@@ -42,7 +42,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         if (internal::MessageTypeHasChannelField((uint8_t)args.MessageType()))
         {
-            uint32_t word0 = args.InspectFirstWord();
+            uint32_t word0 = args.PeekFirstWord();
 
             // check the group. If the group is not specified, we listen to all groups, but for a specific channel
             if (m_includedGroup == nullptr ||

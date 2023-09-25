@@ -42,15 +42,29 @@ namespace winrt::Windows::Devices::Midi2::implementation
             m_options = options;
 
 
-            // TODO: Add any automatic handlers if the options allow for it
+            // TODO: Add any other automatic handlers if the options allow for it
 
-            if (!options.DisableAutomaticEndpointDiscoveryMessages())
+            if (!options.DisableAutomaticStreamConfiguration())
             {
-                //auto configurator = winrt::make<MidiEndpointConfigurator>();
+                auto configurator = winrt::make_self<implementation::MidiEndpointConfigurator>();
 
-
-                //m_messageProcessingPlugins.Append(*configurator);
+                m_messageProcessingPlugins.Append(*configurator);
             }
+
+            if (!options.DisableAutomaticEndpointMetadataHandling())
+            {
+                auto plug = winrt::make_self<implementation::MidiEndpointMetadataEndpointListener>();
+
+                m_messageProcessingPlugins.Append(*plug);
+            }
+
+            if (!options.DisableAutomaticFunctionBlockMetadataHandling())
+            {
+                auto plugin = winrt::make_self<implementation::MidiFunctionBlockEndpointListener>();
+
+                m_messageProcessingPlugins.Append(*plugin);
+            }
+
 
             IMidiInputConnection input = *this;
             IMidiOutputConnection output = *this;

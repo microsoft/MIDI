@@ -17,11 +17,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
     public:
         MidiBidirectionalEndpointOpenOptions() = default;
 
-        bool DisableAutomaticEndpointDiscoveryMessages() { return m_disableAutomaticEndpointDiscoveryMessages; }
-        void DisableAutomaticEndpointDiscoveryMessages(_In_ bool const value) { m_disableAutomaticEndpointDiscoveryMessages = value; }
+        bool DisableAutomaticEndpointMetadataHandling() { return m_disableAutomaticEndpointMetadataHandling; }
+        void DisableAutomaticEndpointMetadataHandling(_In_ bool const value) { m_disableAutomaticEndpointMetadataHandling = value; }
         
-        bool DisableAutomaticFunctionBlockInfoMessages() { return m_disableAutomaticFunctionBlockInfoMessages; }
-        void DisableAutomaticFunctionBlockInfoMessages(_In_ bool const value) { m_disableAutomaticFunctionBlockInfoMessages = value; }
+        bool DisableAutomaticFunctionBlockMetadataHandling() { return m_disableAutomaticFunctionBlockMetadataHandling; }
+        void DisableAutomaticFunctionBlockMetadataHandling(_In_ bool const value) { m_disableAutomaticFunctionBlockMetadataHandling = value; }
 
         bool DisableAutomaticStreamConfiguration() { return m_disableAutomaticStreamConfiguration; }
         void DisableAutomaticStreamConfiguration(_In_ bool const value) { m_disableAutomaticStreamConfiguration = value; }
@@ -35,8 +35,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void RequestedStreamConfiguration(_In_ midi2::MidiStreamConfigurationRequestedSettings const& value) { m_streamRequestedConfigurationSettings = value; }
 
     private:
-        bool m_disableAutomaticEndpointDiscoveryMessages = false;
-        bool m_disableAutomaticFunctionBlockInfoMessages = false;
+        bool m_disableAutomaticEndpointMetadataHandling = false;
+        bool m_disableAutomaticFunctionBlockMetadataHandling = false;
         bool m_disableAutomaticStreamConfiguration = false;
 
         midi2::MidiStreamConfigurationRequestedSettings m_streamRequestedConfigurationSettings;

@@ -38,7 +38,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         midi2::MidiMessageType MessageType() const noexcept;
 
-        uint32_t InspectFirstWord() const noexcept { return m_data.Word0; }
+        uint32_t PeekFirstWord() const noexcept { return m_data.Word0; }
 
         internal::MidiTimestamp Timestamp() const noexcept { return m_timestamp; }
 

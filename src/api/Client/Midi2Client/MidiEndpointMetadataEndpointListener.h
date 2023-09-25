@@ -7,16 +7,16 @@
 // ============================================================================
 
 #pragma once
-#include "MidiStreamConfigurationEndpointListener.g.h"
+#include "MidiEndpointMetadataEndpointListener.g.h"
 
 #include "string_util.h"
 
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    struct MidiStreamConfigurationEndpointListener : MidiStreamConfigurationEndpointListenerT<MidiStreamConfigurationEndpointListener>
+    struct MidiEndpointMetadataEndpointListener : MidiEndpointMetadataEndpointListenerT<MidiEndpointMetadataEndpointListener>
     {
-        MidiStreamConfigurationEndpointListener() = default;
+        MidiEndpointMetadataEndpointListener() = default;
 
         hstring Id() const noexcept { return m_id; }
         void Id(_In_ hstring const& value) noexcept { m_id = internal::ToUpperTrimmedHStringCopy(value); }
@@ -53,7 +53,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation
 {
-    struct MidiStreamConfigurationEndpointListener : MidiStreamConfigurationEndpointListenerT<MidiStreamConfigurationEndpointListener, implementation::MidiStreamConfigurationEndpointListener>
+    struct MidiEndpointMetadataEndpointListener : MidiEndpointMetadataEndpointListenerT<MidiEndpointMetadataEndpointListener, implementation::MidiEndpointMetadataEndpointListener>
     {
     };
 }

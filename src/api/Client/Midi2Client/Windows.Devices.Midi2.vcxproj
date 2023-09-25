@@ -322,8 +322,8 @@
     <ClInclude Include="MidiSessionSettings.h">
       <DependentUpon>MidiSessionSettings.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiStreamConfigurationEndpointListener.h">
-      <DependentUpon>MidiStreamConfigurationEndpointListener.idl</DependentUpon>
+    <ClInclude Include="MidiEndpointMetadataEndpointListener.h">
+      <DependentUpon>MidiEndpointMetadataEndpointListener.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiStreamConfigurationRequestedSettings.h" />
     <ClInclude Include="MidiStreamMessageBuilder.h">
@@ -463,8 +463,8 @@
     <ClCompile Include="MidiSession.cpp">
       <DependentUpon>MidiSession.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiStreamConfigurationEndpointListener.cpp">
-      <DependentUpon>MidiStreamConfigurationEndpointListener.idl</DependentUpon>
+    <ClCompile Include="MidiEndpointMetadataEndpointListener.cpp">
+      <DependentUpon>MidiEndpointMetadataEndpointListener.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiStreamConfigurationRequestedSettings.cpp" />
     <ClCompile Include="MidiStreamMessageBuilder.cpp">
@@ -562,7 +562,7 @@
     <Midl Include="MidiSession.idl" />
     <Midl Include="MidiSessionSettings.idl" />
     <Midl Include="IMidiUniversalPacket.idl" />
-    <Midl Include="MidiStreamConfigurationEndpointListener.idl" />
+    <Midl Include="MidiEndpointMetadataEndpointListener.idl" />
     <Midl Include="MidiStreamConfigurationRequestedSettings.idl" />
     <Midl Include="MidiStreamMessageBuilder.idl" />
     <Midl Include="MidiSystemExclusive8StatusEnum.idl" />

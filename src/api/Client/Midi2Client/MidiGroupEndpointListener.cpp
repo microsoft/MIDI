@@ -38,9 +38,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         skipFurtherListeners = m_preventCallingFurtherListeners;
         skipMainMessageReceivedEvent = m_preventFiringMainMessageReceivedEvent;
 
-        if (internal::MessageTypeHasChannelField((uint8_t)args.MessageType()))
+        if (internal::MessageTypeHasGroupField((uint8_t)args.MessageType()))
         {
-            uint32_t word0 = args.InspectFirstWord();
+            uint32_t word0 = args.PeekFirstWord();
 
             uint8_t messageGroup = internal::GetGroupIndexFromFirstWord(word0);
 

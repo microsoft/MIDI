@@ -24,10 +24,10 @@ namespace Windows.Devices.Midi2
         MidiEndpointConnectionSharingPreference ConnectionSharingPreference{ get; set; };
 
         // stream configuration options
-        Boolean DisableAutomaticEndpointDiscoveryMessages{ get; set; };
         Boolean DisableAutomaticStreamConfiguration{ get; set; };
 
-        Boolean DisableAutomaticFunctionBlockInfoMessages{ get; set; };
+        Boolean DisableAutomaticEndpointMetadataHandling{ get; set; };
+        Boolean DisableAutomaticFunctionBlockMetadataHandling{ get; set; };
 
         // may need an option to force discovery and negotiation even if there
         // are values in the cache

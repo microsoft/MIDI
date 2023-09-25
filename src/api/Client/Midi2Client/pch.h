@@ -79,7 +79,10 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 #include "MidiInputEndpointOpenOptions.h"
 #include "MidiOutputEndpointOpenOptions.h"
 #include "MidiBidirectionalEndpointOpenOptions.h"
-//#include "MidiBidirectionalAggregatedEndpointOpenOptions.h"
+
+#include "MidiEndpointConfigurator.h"
+#include "MidiFunctionBlockEndpointListener.h"
+#include "MidiEndpointMetadataEndpointListener.h"
 
 #include "MidiMessageReceivedEventArgs.h"
 
@@ -89,5 +92,4 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 #include "MidiServicePingResponseSummary.h"
 #include "MidiTransportInformation.h"
 #include "MidiService.h"
-
 

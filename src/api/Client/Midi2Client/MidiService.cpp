@@ -60,8 +60,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         // we don't want any automatic plugins or messages
         MidiBidirectionalEndpointOpenOptions options;
-        options.DisableAutomaticEndpointDiscoveryMessages(true);
-        options.DisableAutomaticFunctionBlockInfoMessages(true);
+        options.DisableAutomaticStreamConfiguration(true);
+        options.DisableAutomaticEndpointMetadataHandling(true);
+        options.DisableAutomaticFunctionBlockMetadataHandling(true);
 
         // This ID must be consistent with what the service is set up to use.
 

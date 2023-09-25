@@ -39,7 +39,7 @@ namespace Windows.Devices.Midi2
         // utility for code that just needs to know about the message before doing any real work
         // message listeners often make use of this, so it cuts down on ceremony at the expense of
         // a small amount of stack
-        UInt32 InspectFirstWord();
+        UInt32 PeekFirstWord();
         
         // Returns a new UMP. Allocation-wise, this is the most expensive, but it is also the friendliest
         IMidiUniversalPacket GetMessagePacket();

@@ -17,9 +17,9 @@ namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [default_interface]
-    runtimeclass MidiStreamConfigurationEndpointListener : IMidiEndpointMessageProcessingPlugin, IMidiEndpointMessageListener
+    runtimeclass MidiEndpointMetadataEndpointListener : IMidiEndpointMessageProcessingPlugin, IMidiEndpointMessageListener
     {
-        MidiStreamConfigurationEndpointListener();
+        MidiEndpointMetadataEndpointListener();
 
     }
 }
