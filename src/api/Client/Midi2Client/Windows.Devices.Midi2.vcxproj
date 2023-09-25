@@ -292,8 +292,8 @@
     <ClInclude Include="MidiEndpointInformation.h">
       <DependentUpon>MidiEndpointInformation.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiEndpointInformationConfigurator.h">
-      <DependentUpon>MidiEndpointInformationConfigurator.idl</DependentUpon>
+    <ClInclude Include="MidiEndpointConfigurator.h">
+      <DependentUpon>MidiEndpointConfigurator.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiFunctionBlock.h">
       <DependentUpon>MidiFunctionBlock.idl</DependentUpon>
@@ -430,8 +430,8 @@
     <ClCompile Include="MidiEndpointInformation.cpp">
       <DependentUpon>MidiEndpointInformation.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiEndpointInformationConfigurator.cpp">
-      <DependentUpon>MidiEndpointInformationConfigurator.idl</DependentUpon>
+    <ClCompile Include="MidiEndpointConfigurator.cpp">
+      <DependentUpon>MidiEndpointConfigurator.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiFunctionBlock.cpp">
       <DependentUpon>MidiFunctionBlock.idl</DependentUpon>
@@ -503,7 +503,7 @@
     <ClCompile Include="trace_logging.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="IMidiBidirectionalEndpointOpenOptionsUser.idl" />
+    <Midl Include="IMidiEndpointConfiguratorPlugin.idl" />
     <Midl Include="IMidiCacheableMetadata.idl" />
     <Midl Include="IMidiEndpointConnection.idl" />
     <Midl Include="IMidiEndpointMessageListener.idl" />
@@ -535,7 +535,7 @@
     <Midl Include="MidiEndpointConnectionSharingEnum.idl" />
     <Midl Include="MidiEndpointConnectionSharingPreferenceEnum.idl" />
     <Midl Include="MidiEndpointInformation.idl" />
-    <Midl Include="MidiEndpointInformationConfigurator.idl" />
+    <Midl Include="MidiEndpointConfigurator.idl" />
     <Midl Include="MidiEndpointTypeEnum.idl" />
     <Midl Include="MidiFunctionBlock.idl" />
     <Midl Include="MidiFunctionBlockDirectionEnum.idl" />

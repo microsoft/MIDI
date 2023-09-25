@@ -7,36 +7,32 @@
 // ============================================================================
 
 #include "pch.h"
-#include "MidiEndpointInformationConfigurator.h"
-#include "MidiEndpointInformationConfigurator.g.cpp"
+#include "MidiEndpointConfigurator.h"
+#include "MidiEndpointConfigurator.g.cpp"
 
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
-    void MidiEndpointInformationConfigurator::Initialize()
+    void MidiEndpointConfigurator::Initialize()
     {
     }
 
     _Use_decl_annotations_
-    void MidiEndpointInformationConfigurator::OnEndpointConnectionOpened()
+    void MidiEndpointConfigurator::OnEndpointConnectionOpened()
     {
-        RestartDiscoveryAndNegotiation();
-
-
-
 
     }
 
     _Use_decl_annotations_
-    void MidiEndpointInformationConfigurator::Cleanup()
+    void MidiEndpointConfigurator::Cleanup()
     {
     }
 
 
 
     _Use_decl_annotations_
-    void MidiEndpointInformationConfigurator::ProcessIncomingMessage(
+    void MidiEndpointConfigurator::ProcessIncomingMessage(
         midi2::MidiMessageReceivedEventArgs const& /*args*/,
         bool& skipFurtherListeners,
         bool& skipMainMessageReceivedEvent)
@@ -50,7 +46,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     _Use_decl_annotations_
-    void MidiEndpointInformationConfigurator::RestartDiscoveryAndNegotiation()
+    bool MidiEndpointConfigurator::Negotiate()
     {
         throw hresult_not_implemented();
 
@@ -62,11 +58,16 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         // process incoming 
 
-        // Request configuration based on the conneciton open options
+        // Request configuration based on the connection open options
         // 
 
     }
 
+    _Use_decl_annotations_
+    bool MidiEndpointConfigurator::RequestFunctionBlocks()
+    {
+        throw hresult_not_implemented();
+    }
 
 
 }

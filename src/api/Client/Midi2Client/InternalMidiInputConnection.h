@@ -35,8 +35,23 @@ namespace Windows::Devices::Midi2::Internal
             if (m_messageReceivedEvent) m_messageReceivedEvent.remove(token);
         }
 
+        winrt::Windows::Foundation::Collections::IVector<midi2::IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins() const noexcept
+        {
+            return m_messageProcessingPlugins;
+        }
 
     protected:
+
+        void SetInputConnectionOnPlugins(_In_ midi2::IMidiInputConnection const inputConnection) noexcept;
+        void SetOutputConnectionOnPlugins(_In_ midi2::IMidiOutputConnection const outputConnection) noexcept;
+
+        void SetRequestedStreamConfigurationOnPlugins(_In_ midi2::MidiStreamConfigurationRequestedSettings const settings) noexcept;
+
+        void InitializePlugins() noexcept;
+        void CallOnConnectionOpenedOnPlugins() noexcept;
+        void CleanupPlugins() noexcept;
+
+
         winrt::hstring m_inputDeviceId{ };
 
         winrt::com_ptr<TEndpointAbstraction> m_inputAbstraction{ nullptr };
@@ -46,14 +61,14 @@ namespace Windows::Devices::Midi2::Internal
 
         HRESULT CallbackImpl(_In_ foundation::IInspectable eventSource, _In_ PVOID data, _In_ UINT size, _In_ LONGLONG timestamp);
 
+        foundation::Collections::IVector<midi2::IMidiEndpointMessageProcessingPlugin>
+            m_messageProcessingPlugins{ winrt::single_threaded_vector<midi2::IMidiEndpointMessageProcessingPlugin>() };
+
     private:
         bool m_isOpen{ false };
 
 
         winrt::event<foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;
-
-        foundation::Collections::IVector<midi2::IMidiEndpointMessageProcessingPlugin>
-            m_messageProcessingPlugins{ winrt::single_threaded_vector<midi2::IMidiEndpointMessageProcessingPlugin>() };
 
     };
 
@@ -128,5 +143,131 @@ namespace Windows::Devices::Midi2::Internal
         }
     }
 
+
+
+
+
+
+
+
+    _Use_decl_annotations_
+    template<typename TEndpointAbstraction>
+    void InternalMidiInputConnection<TEndpointAbstraction>::SetInputConnectionOnPlugins(midi2::IMidiInputConnection inputConnection) noexcept
+    {
+        try
+        {
+            for (const auto& plugin : m_messageProcessingPlugins)
+            {
+                auto listener = plugin.try_as<midi2::IMidiEndpointMessageListener>();
+
+                if (listener != nullptr)
+                {
+                    listener.InputConnection(inputConnection);
+                }
+            }
+        }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Exception setting input connection on plugins.");
+        }
+    }
+
+    _Use_decl_annotations_
+    template<typename TEndpointAbstraction>
+    void InternalMidiInputConnection<TEndpointAbstraction>::SetOutputConnectionOnPlugins(midi2::IMidiOutputConnection outputConnection) noexcept
+    {
+        try
+        {
+            for (const auto& plugin : m_messageProcessingPlugins)
+            {
+                auto responder = plugin.try_as<midi2::IMidiEndpointMessageResponder>();
+
+                if (responder != nullptr)
+                {
+                    responder.OutputConnection(outputConnection);
+                }
+            }
+        }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Exception setting output connection on plugins.");
+        }
+    }
+
+    _Use_decl_annotations_
+    template<typename TEndpointAbstraction>
+    void InternalMidiInputConnection<TEndpointAbstraction>::SetRequestedStreamConfigurationOnPlugins(midi2::MidiStreamConfigurationRequestedSettings settings) noexcept
+    {
+        try
+        {
+            for (const auto& plugin : m_messageProcessingPlugins)
+            {
+                auto configurator = plugin.try_as<midi2::IMidiEndpointConfiguratorPlugin>();
+
+                if (configurator != nullptr)
+                {
+                    configurator.RequestedStreamConfiguration(settings);
+                }
+            }
+        }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Exception setting requested stream configuration.");
+        }
+    }
+
+
+
+    _Use_decl_annotations_
+    template<typename TEndpointAbstraction>
+    void InternalMidiInputConnection<TEndpointAbstraction>::InitializePlugins() noexcept
+    {
+        for (const auto& plugin : m_messageProcessingPlugins)
+        {
+            try
+            {
+                plugin.Initialize();
+            }
+            catch (...)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Exception initializing plugins.");
+
+            }
+        }
+    }
+
+    _Use_decl_annotations_
+    template<typename TEndpointAbstraction>
+    void InternalMidiInputConnection<TEndpointAbstraction>::CallOnConnectionOpenedOnPlugins() noexcept
+    {
+        for (const auto& plugin : m_messageProcessingPlugins)
+        {
+            try
+            {
+                plugin.OnEndpointConnectionOpened();
+            }
+            catch (...)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Exception calling Open on plugins.");
+            }
+        }
+    }
+
+    _Use_decl_annotations_
+    template<typename TEndpointAbstraction>
+    void InternalMidiInputConnection<TEndpointAbstraction>::CleanupPlugins() noexcept
+    {
+        for (const auto& plugin : m_messageProcessingPlugins)
+        {
+            try
+            {
+                plugin.Cleanup();
+            }
+            catch (...)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Exception cleaning up plugins.");
+            }
+        }
+    }
 
 }

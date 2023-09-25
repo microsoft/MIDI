@@ -39,9 +39,27 @@ namespace winrt::Windows::Devices::Midi2::implementation
             m_serviceAbstraction = serviceAbstraction;
 
             // TODO: Read any settings we need for this endpoint
+            m_options = options;
 
 
             // TODO: Add any automatic handlers if the options allow for it
+
+            if (!options.DisableAutomaticEndpointDiscoveryMessages())
+            {
+                //auto configurator = winrt::make<MidiEndpointConfigurator>();
+
+
+                //m_messageProcessingPlugins.Append(*configurator);
+            }
+
+            IMidiInputConnection input = *this;
+            IMidiOutputConnection output = *this;
+
+            SetInputConnectionOnPlugins(input);
+            SetOutputConnectionOnPlugins(output);
+            SetRequestedStreamConfigurationOnPlugins(options.RequestedStreamConfiguration());
+
+            InitializePlugins();
 
 
             return true;

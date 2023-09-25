@@ -13,21 +13,22 @@ MIDI_IDL_IMPORT
 import "IMidiEndpointMessageProcessingPlugin.idl";
 import "IMidiEndpointMessageListener.idl";
 import "IMidiEndpointMessageResponder.idl";
-import "IMidiBidirectionalEndpointOpenOptionsUser.idl";
+import "IMidiEndpointConfiguratorPlugin.idl";
 
+import "MidiStreamConfigurationRequestedSettings.idl";
 
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [default_interface]
-    runtimeclass MidiEndpointInformationConfigurator : IMidiEndpointMessageProcessingPlugin, 
-                                                       IMidiEndpointMessageListener, 
-                                                       IMidiEndpointMessageResponder,
-                                                       IMidiBidirectionalEndpointOpenOptionsUser
+    runtimeclass MidiEndpointConfigurator : IMidiEndpointMessageProcessingPlugin, 
+                                            IMidiEndpointMessageListener, 
+                                            IMidiEndpointMessageResponder,
+                                            IMidiEndpointConfiguratorPlugin
     {
-        MidiEndpointInformationConfigurator();
+        MidiEndpointConfigurator();
 
-        void RestartDiscoveryAndNegotiation();
+
     }
 
 

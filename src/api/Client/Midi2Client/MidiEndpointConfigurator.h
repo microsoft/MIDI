@@ -7,15 +7,15 @@
 // ============================================================================
 
 #pragma once
-#include "MidiEndpointInformationConfigurator.g.h"
+#include "MidiEndpointConfigurator.g.h"
 
 #include "string_util.h"
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    struct MidiEndpointInformationConfigurator : MidiEndpointInformationConfiguratorT<MidiEndpointInformationConfigurator>
+    struct MidiEndpointConfigurator : MidiEndpointConfiguratorT<MidiEndpointConfigurator>
     {
-        MidiEndpointInformationConfigurator() = default;
+        MidiEndpointConfigurator() = default;
 
         hstring Id() const noexcept { return m_id; }
         void Id(_In_ hstring const& value) noexcept { m_id = internal::ToUpperTrimmedHStringCopy(value); }
@@ -35,21 +35,24 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::IMidiOutputConnection OutputConnection() const noexcept { return m_outputConnection; }
         void OutputConnection(_In_ midi2::IMidiOutputConnection const& value) noexcept { m_outputConnection = value; }
 
-        midi2::MidiBidirectionalEndpointOpenOptions BidirectionalEndpointOpenOptions() const noexcept { return m_openOptions; }
-        void BidirectionalEndpointOpenOptions(midi2::MidiBidirectionalEndpointOpenOptions const& value) noexcept { m_openOptions = value; }
+        //midi2::MidiBidirectionalEndpointOpenOptions BidirectionalEndpointOpenOptions() const noexcept { return m_openOptions; }
+        //void BidirectionalEndpointOpenOptions(midi2::MidiBidirectionalEndpointOpenOptions const& value) noexcept { m_openOptions = value; }
 
+        midi2::MidiStreamConfigurationRequestedSettings RequestedStreamConfiguration() const noexcept { return m_configurationRequested; }
+        void RequestedStreamConfiguration(_In_ midi2::MidiStreamConfigurationRequestedSettings const& value) noexcept { m_configurationRequested = value; }
 
         void ProcessIncomingMessage(
             _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs const& args,
             _Out_ bool& skipFurtherListeners,
             _Out_ bool& skipMainMessageReceivedEvent);
 
-
         void Initialize();
         void OnEndpointConnectionOpened();
         void Cleanup();
 
-        void RestartDiscoveryAndNegotiation();
+        bool Negotiate();
+
+        bool RequestFunctionBlocks();
 
 
     private:
@@ -57,15 +60,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring m_name{};
         bool m_enabled{ false };
         foundation::IInspectable m_tag{ nullptr };
-        midi2::IMidiInputConnection m_inputConnection;
-        midi2::IMidiOutputConnection m_outputConnection;
-        midi2::MidiBidirectionalEndpointOpenOptions m_openOptions;
+        midi2::IMidiInputConnection m_inputConnection{ nullptr };
+        midi2::IMidiOutputConnection m_outputConnection{ nullptr };
+        midi2::MidiStreamConfigurationRequestedSettings m_configurationRequested{ nullptr };
+
+        //midi2::MidiBidirectionalEndpointOpenOptions m_openOptions;
 
     };
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation
 {
-    struct MidiEndpointInformationConfigurator : MidiEndpointInformationConfiguratorT<MidiEndpointInformationConfigurator, implementation::MidiEndpointInformationConfigurator>
+    struct MidiEndpointConfigurator : MidiEndpointConfiguratorT<MidiEndpointConfigurator, implementation::MidiEndpointConfigurator>
     {
     };
 }

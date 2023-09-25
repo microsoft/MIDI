@@ -119,7 +119,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         try
         {
-            CleanupPlugins();
+            //CleanupPlugins();
 
             if (m_outputAbstraction != nullptr)
             {

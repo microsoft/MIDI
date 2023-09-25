@@ -21,7 +21,7 @@ namespace Windows::Devices::Midi2::Internal
     public:
         bool RequestUpdatedFunctionBlocks()
         {
-            // TODO
+            // TODO: check to see if we have a function block requester plugin. If so, call it.
         }
 
         collections::IVectorView<midi2::MidiFunctionBlock> FunctionBlocks() { return m_functionBlocks.GetView(); }

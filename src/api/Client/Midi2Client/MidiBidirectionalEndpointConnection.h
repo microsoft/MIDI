@@ -72,6 +72,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     private:
         bool m_closeHasBeenCalled{ false };
 
+        midi2::MidiBidirectionalEndpointOpenOptions m_options;
 
         // We use the InputDeviceId. InputDeviceId and OutputDeviceId 
         // are the same thing. It's a bit hokey, but many other parts

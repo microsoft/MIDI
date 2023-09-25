@@ -14,7 +14,7 @@
 #include "MidiOutputEndpointConnection.h"
 #include "MidiBidirectionalEndpointConnection.h"
 
-#include "MidiEndpointInformationConfigurator.h"
+#include "MidiEndpointConfigurator.h"
 
 #include "string_util.h"
 

@@ -30,5 +30,7 @@ namespace Windows.Devices.Midi2
                                                                  Windows.Foundation.IClosable
     {
 
+        IVector<IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins{ get; };
+
     }
 }

@@ -19,10 +19,13 @@ namespace Windows::Devices::Midi2::Internal
     class InternalMidiEndpointInformationDevice
     {
     public:
-        bool RequestUpdatedEndpointInformation()
+        bool RequestEndpointInformation()
         {
-            // TODO
+            // TODO: check to see if we have an endpoint requester plugin. If so, call it.
         }
+
+
+
 
         bool IsEndpointInformationAvailable() { return m_isEndpointInformationValid; }
 

@@ -41,7 +41,7 @@ namespace Windows.Devices.Midi2
         // Get the enumeration device selector for all compatible devices
         static String GetDeviceSelector();
 
-        bool RequestUpdatedFunctionBlocks();
+        //Boolean RequestUpdatedFunctionBlocks();
         IVectorView<MidiFunctionBlock> FunctionBlocks{ get; };
 
         // uncomment this and implement if decided we need it
@@ -52,12 +52,16 @@ namespace Windows.Devices.Midi2
         event Windows.Foundation.TypedEventHandler<IInspectable, MidiFunctionBlocksUpdatedEventArgs> FunctionBlocksUpdated;
 
 
-        bool RequestUpdatedEndpointInformation();
+        //Boolean RequestUpdatedEndpointInformation();
         Boolean IsEndpointInformationAvailable{ get; };
         MidiEndpointInformation EndpointInformation{ get; };
 
         // callback for when a endpoint update comes in
         event Windows.Foundation.TypedEventHandler<IInspectable, MidiEndpointInformationUpdatedEventArgs> EndpointInformationUpdated;
+
+
+        IVector<IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins{ get; };
+
     }
 
 
