@@ -16,6 +16,7 @@ Abstract:
 
 #define PAGED_CODE_SEG __declspec(code_seg("PAGE"))
 #define INIT_CODE_SEG __declspec(code_seg("INIT"))
+#define NONPAGED_CODE_SEG __declspec(code_seg("NOPAGE"))
 
 #ifdef __cplusplus
 extern "C" {

@@ -8,7 +8,7 @@ typedef struct _LOOPBACK_MESSAGE
 {
     LIST_ENTRY ListEntry;
     ULONG Size;
-    UCHAR Buffer[1];
+    UINT8 Buffer[1];
 } LOOPBACK_MESSAGE, *PLOOPBACK_MESSAGE;
 
 typedef struct _SINGLE_BUFFER_MAPPING

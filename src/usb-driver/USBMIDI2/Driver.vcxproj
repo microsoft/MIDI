@@ -179,6 +179,7 @@
     <ClInclude Include="NewDelete.h" />
     <ClInclude Include="Pch.h" />
     <ClInclude Include="Trace.h" />
+    <ClInclude Include="ump.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Driver.cpp" />

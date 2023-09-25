@@ -30,6 +30,29 @@ Environment:
 extern "C" {
 #endif
 
+// Maximum number of groups per UMP endpoint or virual cables for USB MIDI 1.0
+#define MAX_NUM_GROUPS_CABLES 16
+
+//
+// Structures to aid in conversion between USB MIDI 1.0 and UMP
+//
+    typedef struct MIDI_STREAM_t
+    {
+        UINT8       buffer[4];
+        UINT8       index;
+        UINT8       total;
+    } MIDI_STREAM_TYPE;
+
+    typedef struct
+    {
+        UINT8       wordCount;
+        union ump_device
+        {
+            UINT32  umpWords[4];
+            UINT8   umpBytes[sizeof(UINT32) * 4];
+        } umpData;
+    } UMP_PACKET;
+
 //
 // Define device context.
 //
@@ -40,8 +63,12 @@ typedef struct _DEVICE_CONTEXT {
 
     WDFUSBINTERFACE             UsbControlInterface;
     WDFUSBINTERFACE             UsbMIDIStreamingInterface;
-    UCHAR                       UsbMIDIStreamingAlt;
+    UINT8                       UsbMIDIStreamingAlt;
     ULONG                       UsbDeviceTraits;
+
+    // Buffers and information for USB MIDI 1.0 and UMP translations
+    bool                        midi1IsInSysex[MAX_NUM_GROUPS_CABLES];
+    MIDI_STREAM_TYPE            midi1OutSysex[MAX_NUM_GROUPS_CABLES];
 
     // Pipes
     // Currently setup for single endpoint pair - need to consider for multiple endpoint pairs
@@ -125,6 +152,31 @@ PAGED_CODE_SEG
 NTSTATUS
 USBMIDI2DriverEnumeratePipes(
     _In_ WDFDEVICE    Device
+);
+
+//
+// Function to complete read on IN Pipe
+//
+_Must_inspect_result_
+__drv_maxIRQL(PASSIVE_LEVEL)
+NONPAGED_CODE_SEG
+VOID USBMIDI2DriverEvtReadComplete(
+    _In_    WDFUSBPIPE Pipe,
+    _In_    WDFMEMORY  Buffer,
+    _In_    size_t     NumBytesTransferred,
+    _In_    WDFCONTEXT Context
+);
+
+//
+// Function to handle failed read on IN Pipe
+//
+_Must_inspect_result_
+__drv_maxIRQL(PASSIVE_LEVEL)
+NONPAGED_CODE_SEG
+BOOLEAN USBMIDI2DriverEvtReadFailed(
+    WDFUSBPIPE      Pipe,
+    NTSTATUS        status,
+    USBD_STATUS     UsbdStatus
 );
 
 #endif // _DEVICE_H_
