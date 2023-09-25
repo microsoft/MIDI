@@ -53,6 +53,20 @@ extern "C" {
         } umpData;
     } UMP_PACKET;
 
+    //
+    // Structure to buffer read data between USB continuous reader
+    // and EvtIoRead callback from framework. Implements as a ring
+    // buffer.
+    //
+    typedef struct READ_RING_t
+    {
+        WDFMEMORY   RingBufMemory;
+        size_t      ringBufSize;
+        size_t      ringBufHead;
+        size_t      ringBufTail;
+    } READ_RING_TYPE, * PREAD_RING_TYPE;
+#define USBUMPDRIVER_RING_BUF_SIZE 256  // twice size of HS USB buffer
+
 //
 // Define device context.
 //
@@ -78,6 +92,9 @@ typedef struct _DEVICE_CONTEXT {
     WDFUSBPIPE                  MidiOutPipe;        // out to device
     WDF_USB_PIPE_TYPE           MidiOutPipeType;    // Bulk or Interrupt
     ULONG                       MidiOutMaxSize;     // maximum transfer size
+
+    // Read Ring Buffer
+    READ_RING_TYPE              ReadRingBuf;
 
     //
     // The folloiwng fileds are used to store device configuration information
@@ -173,10 +190,97 @@ VOID USBMIDI2DriverEvtReadComplete(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NONPAGED_CODE_SEG
-BOOLEAN USBMIDI2DriverEvtReadFailed(
+BOOLEAN 
+USBMIDI2DriverEvtReadFailed(
     WDFUSBPIPE      Pipe,
     NTSTATUS        status,
     USBD_STATUS     UsbdStatus
+);
+
+//
+// Helper function to queue read data to be picked up by
+// IoEvtRead routine.
+//
+_Must_inspect_result_
+__drv_maxIRQL(PASSIVE_LEVEL)
+NONPAGED_CODE_SEG
+BOOLEAN 
+USBMIDI2DriverFillReadQueue(
+    _In_    PUINT32             pBuffer,
+    _In_    size_t              bufferSize,
+    _In_    PDEVICE_CONTEXT     pDeviceContext
+);
+
+//
+// Function callback for read request
+//
+_Must_inspect_result_
+__drv_maxIRQL(PASSIVE_LEVEL)
+NONPAGED_CODE_SEG
+VOID
+USBMIDI2DriverEvtIoRead(
+    _In_ WDFQUEUE         Queue,
+    _In_ WDFREQUEST       Request,
+    _In_ size_t           Length
+);
+
+//
+// Function callback for write request
+//
+_Must_inspect_result_
+__drv_maxIRQL(PASSIVE_LEVEL)
+NONPAGED_CODE_SEG
+VOID
+USBUMPDriverEvtIoWrite(
+    _In_ WDFQUEUE         Queue,
+    _In_ WDFREQUEST       Request,
+    _In_ size_t           Length
+);
+
+_Must_inspect_result_
+__drv_maxIRQL(PASSIVE_LEVEL)
+NONPAGED_CODE_SEG
+BOOLEAN
+USBMIDI2DriverSendToUSB(
+    _In_ WDFREQUEST         usbRequest,
+    _In_ WDFMEMORY          reqMemory,
+    _In_ WDFUSBPIPE         pipe,
+    _In_ size_t             Length,
+    _In_ PDEVICE_CONTEXT    pDeviceContext,
+    _In_ BOOLEAN            deleteRequest
+);
+
+_Must_inspect_result_
+__drv_maxIRQL(PASSIVE_LEVEL)
+NONPAGED_CODE_SEG
+VOID
+USBMIDI2DriverEvtRequestWriteCompletionRoutineDelete(
+    _In_ WDFREQUEST                  Request,
+    _In_ WDFIOTARGET                 Target,
+    _In_ PWDF_REQUEST_COMPLETION_PARAMS CompletionParams,
+    _In_ WDFCONTEXT                  Context
+);
+
+_Must_inspect_result_
+__drv_maxIRQL(PASSIVE_LEVEL)
+NONPAGED_CODE_SEG
+VOID
+USBMIDI2DriverEvtRequestWriteCompletionRoutineDelete(
+    _In_ WDFREQUEST                  Request,
+    _In_ WDFIOTARGET                 Target,
+    _In_ PWDF_REQUEST_COMPLETION_PARAMS CompletionParams,
+    _In_ WDFCONTEXT                  Context
+);
+
+_Must_inspect_result_
+__drv_maxIRQL(PASSIVE_LEVEL)
+NONPAGED_CODE_SEG
+VOID
+USBMIDI2DriverEvtRequestWriteCompletionRoutine(
+    _In_ WDFREQUEST                  Request,
+    _In_ WDFIOTARGET                 Target,
+    _In_ PWDF_REQUEST_COMPLETION_PARAMS CompletionParams,
+    _In_ WDFCONTEXT                  Context
 );
 
 #endif // _DEVICE_H_

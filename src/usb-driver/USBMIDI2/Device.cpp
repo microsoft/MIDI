@@ -1354,12 +1354,26 @@ Return Value:
                     pkts[numIndex++] = umpPacket.umpData.umpWords[pktCount];
                 }
             }
+
+            // Submit any data written
+            if (numIndex)
+            {
+                if (!USBMIDI2DriverFillReadQueue(
+                    (PUINT32)pWorkingBuffer,
+                    numIndex,
+                    pDeviceContext
+                ))
+                {
+                    TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                        "Error submitting to read queue prep buffer.\n");
+                    goto ReadCompleteExit;
+                }
+            }
         }
         else
         {
             // Send Memory to Read Queue
-#if 0
-            if (!USBUMPDriverFillReadQueue(
+            if (!USBMIDI2DriverFillReadQueue(
                 (PUINT32)pReceivedBuffer,
                 NumBytesTransferred / sizeof(UINT32),
                 pDeviceContext
@@ -1369,7 +1383,6 @@ Return Value:
                     "Error submitting to read queue prep buffer.\n");
                 goto ReadCompleteExit;
             }
-#endif
         }
     }
 
@@ -1418,4 +1431,456 @@ Return Value:
         UsbdStatus);
 
     return TRUE;
+}
+
+NONPAGED_CODE_SEG
+BOOLEAN USBMIDI2DriverFillReadQueue(
+    _In_    PUINT32             pBuffer,
+    _In_    size_t              bufferSize,
+    _In_    PDEVICE_CONTEXT     pDeviceContext
+)
+/*++
+Routine Description:
+
+    Helper routine to fill ring buffer with new information to be picked up by
+    the IoEvtRead routine.
+
+Arguments:
+
+    pBuffer - buffer to copy
+    bufferSize - the number of bytes in the buffer filled.
+    Context - the driver context
+
+Return Value:
+
+    true if successful
+
+--*/
+{
+    PREAD_RING_TYPE     pRing;
+    size_t              index;
+    size_t              ringRemain;
+    PUINT32             pRingBuffer;
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
+
+    // Check parameters passed
+    if (!pBuffer)
+        return false;
+
+    // For convenience
+    pRing = &pDeviceContext->ReadRingBuf;
+    pRingBuffer = (PUINT32)WdfMemoryGetBuffer(pRing->RingBufMemory, NULL);
+    index = 0;
+
+    // Determine if currently processing read IO
+    // TODO: Need to figure out how to enable / disable this processing
+    if (true && bufferSize)
+    {
+        // Determine size of buffer remaining
+        ringRemain = (pRing->ringBufTail > pRing->ringBufHead)
+            ? pRing->ringBufTail - pRing->ringBufHead
+            : pRing->ringBufSize - pRing->ringBufHead + pRing->ringBufTail;
+
+        // Is there not enough room to add to buffer
+        if (bufferSize > ringRemain)
+        {
+            TraceEvents(TRACE_LEVEL_WARNING, TRACE_DEVICE,
+                "Warning, not enough room in ring buffer. Data lost.\n");
+            // TODO - go through the buffer and remove old data, making sure to not split up
+            // any UMP data making invalid data stream.
+            // this may require spin lock protection, TBD
+            // for now, just fail
+            return false;
+        }
+
+        // Place data into ring buffer
+        index = pRing->ringBufHead;
+        for (size_t count = 0; count < bufferSize; count++)
+        {
+            pRingBuffer[index] = pBuffer[count];
+            index = (index + 1) % pRing->ringBufSize;
+        }
+        pRing->ringBufHead = index;
+    }
+    else
+    {
+        // probably should clear the ring buffer if there is no
+        // IO needed.
+    }
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
+
+    return true;
+}
+
+NONPAGED_CODE_SEG
+VOID
+USBMIDI2DriverEvtIoRead(
+    _In_ WDFQUEUE         Queue,
+    _In_ WDFREQUEST       Request,
+    _In_ size_t           Length
+)
+/*++
+
+Routine Description:
+
+    Called by the framework when it receives Read or Write requests.
+
+Arguments:
+
+    Queue - Default queue handle
+    Request - Handle to the read/write request
+    Length - Length of the data buffer associated with the request.
+                 The default property of the queue is to not dispatch
+                 zero length read & write requests to the driver and
+                 complete is with status success. So we will never get
+                 a zero length request.
+
+Return Value:Amy
+
+
+--*/
+{
+    NTSTATUS                    status;
+    PDEVICE_CONTEXT             pDeviceContext;
+    size_t                      requestSize;
+    size_t                      numCopied = 0;
+    PUINT32                     requestBuffer;
+    WDFMEMORY                   requestMemory;
+    PREAD_RING_TYPE             pRing;
+    PUINT32                     pRingBuf;
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
+
+    pDeviceContext = GetDeviceContext(WdfIoQueueGetDevice(Queue));
+    pRing = &pDeviceContext->ReadRingBuf;
+    pRingBuf = (PUINT32)WdfMemoryGetBuffer(pRing->RingBufMemory, NULL);
+
+    // First check passed parameters
+    requestSize = Length / sizeof(UINT32);
+    if (!requestSize)
+    {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+            "%!FUNC! parameter invalid. Insufficient Length %d.\n", Length);
+        status = STATUS_INVALID_PARAMETER;
+        goto IoEvtReadExit;
+    }
+
+    // Get request buffer to write into
+    status = WdfRequestRetrieveOutputMemory(Request, &requestMemory);
+    if (!NT_SUCCESS(status)) {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+            "WdfRequestRetrieveOutputMemory failed %!STATUS!\n", status);
+        goto IoEvtReadExit;
+    }
+    requestBuffer = (PUINT32)WdfMemoryGetBuffer(requestMemory, NULL);
+
+    // Transfer available data into available request buffer
+    while ((pRing->ringBufTail != pRing->ringBufHead) && (numCopied < requestSize))
+    {
+        requestBuffer[numCopied++] = pRingBuf[pRing->ringBufTail++];
+        pRing->ringBufTail %= pRing->ringBufSize;
+    }
+
+IoEvtReadExit:
+    if (!NT_SUCCESS(status))
+    {
+        WdfRequestCompleteWithInformation(Request, status, 0);
+    }
+    else
+    {
+        WdfRequestCompleteWithInformation(Request, status, numCopied * sizeof(UINT32));
+    }
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
+
+    return;
+}
+
+NONPAGED_CODE_SEG
+VOID
+USBUMPDriverEvtIoWrite(
+    _In_ WDFQUEUE         Queue,
+    _In_ WDFREQUEST       Request,
+    _In_ size_t           Length
+)
+/*++
+
+Routine Description:
+
+    Called by the framework when it receives Write requests.
+
+Arguments:
+
+    Queue - Default queue handle
+    Request - Handle to the read/write request
+    Length - Length of the data buffer associated with the request.
+                 The default property of the queue is to not dispatch
+                 zero length read & write requests to the driver and
+                 complete is with status success. So we will never get
+                 a zero length request.
+
+Return Value:Amy
+
+
+--*/
+{
+    NTSTATUS                status;
+    WDFMEMORY               reqMemory;
+    PDEVICE_CONTEXT         pDeviceContext = NULL;
+    WDFUSBPIPE              pipe = NULL;
+    PUCHAR                  pBuffer;
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
+
+    pDeviceContext = GetDeviceContext(WdfIoQueueGetDevice(Queue));
+    ASSERT(!pDeviceContext);
+
+    pipe = pDeviceContext->MidiOutPipe;
+    ASSERT(!pipe);
+
+    // 
+    // General Error Checking
+    // 
+    if (Length % sizeof(UINT32)) // expected data is UINT32 array
+    {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+            "%!FUNC! determined error in past data size not being UIN32 divisible.\n");
+        status = STATUS_INVALID_PARAMETER;
+        goto DriverEvtIoWriteExit;
+    }
+
+    // Get memory to work with
+    status = WdfRequestRetrieveInputMemory(Request, &reqMemory);
+    if (!NT_SUCCESS(status))
+    {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "%!FUNC! WdfRequestRetrieveInputBuffer failed\n");
+        goto DriverEvtIoWriteExit;
+    }
+    pBuffer = (PUCHAR)WdfMemoryGetBuffer(reqMemory, NULL);
+
+    // Check type of device connected to
+    if (!pDeviceContext->UsbMIDIStreamingAlt)
+    {
+        //
+        // Need to convert from UMP to USB MIDI 1.0 as a USB MIDI 1.0 device connected
+        //
+    }
+    else
+    {
+        //
+        // UMP device, just pass along
+        //
+        if (Length > pDeviceContext->MidiOutMaxSize)
+        {
+            // we need to split up the data as too big for single USB URB
+        }
+        else
+        {
+            if (!USBMIDI2DriverSendToUSB(
+                Request,
+                reqMemory,
+                pipe,
+                Length,
+                pDeviceContext,
+                false   // Complete the request
+            ))
+            {
+                goto DriverEvtIoWriteExit;
+            }
+        }
+    }
+
+DriverEvtIoWriteExit:
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
+}
+
+NONPAGED_CODE_SEG
+BOOLEAN USBMIDI2DriverSendToUSB(
+    _In_ WDFREQUEST         usbRequest,
+    _In_ WDFMEMORY          reqMemory,
+    _In_ WDFUSBPIPE         pipe,
+    _In_ size_t             Length,
+    _In_ PDEVICE_CONTEXT    pDeviceContext,
+    _In_ BOOLEAN            deleteRequest
+)
+{
+    NTSTATUS        status;
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
+
+    status = WdfUsbTargetPipeFormatRequestForWrite(pipe,
+        usbRequest,
+        reqMemory,
+        NULL); // Offset
+    if (!NT_SUCCESS(status)) {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+            "WdfUsbTargetPipeFormatRequestForWrite failed 0x%x\n", status);
+        goto SendToUSBExit;
+    }
+
+    WdfRequestSetCompletionRoutine(
+        usbRequest,
+        (deleteRequest) ? USBMIDI2DriverEvtRequestWriteCompletionRoutineDelete
+        : USBMIDI2DriverEvtRequestWriteCompletionRoutine,
+        pipe);
+
+    //
+    // Send the request asynchronously.
+    //
+    if (WdfRequestSend(usbRequest, WdfUsbTargetPipeGetIoTarget(pipe), WDF_NO_SEND_OPTIONS) == FALSE) {
+        //
+        // Framework couldn't send the request for some reason.
+        //
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "WdfRequestSend failed\n");
+        status = WdfRequestGetStatus(usbRequest);
+        goto SendToUSBExit;
+    }
+
+SendToUSBExit:
+    TraceEvents(TRACE_LEVEL_VERBOSE, TRACE_DEVICE, "<-- USBUMPExpEvtIoWrite\n");
+
+    if (!NT_SUCCESS(status)) {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+            "%!FUNC! write to USB error with status: 0x%x\n", status);
+        if (!deleteRequest)
+        {
+            WdfRequestCompleteWithInformation(usbRequest, status, 0);
+        }
+        // else object will be managed by calling function
+
+        return(false);
+    }
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
+
+    return true;
+}
+
+NONPAGED_CODE_SEG
+VOID
+USBMIDI2DriverEvtRequestWriteCompletionRoutineDelete(
+    _In_ WDFREQUEST                  Request,
+    _In_ WDFIOTARGET                 Target,
+    _In_ PWDF_REQUEST_COMPLETION_PARAMS CompletionParams,
+    _In_ WDFCONTEXT                  Context
+)
+/*++
+
+Routine Description:
+
+    This is the completion routine for writes
+    If the irp completes with success, we check if we
+    need to recirculate this irp for another stage of
+    transfer.
+
+Arguments:
+
+    Context - Driver supplied context
+    Device - Device handle
+    Request - Request handle
+    Params - request completion params
+
+Return Value:
+    None
+
+--*/
+{
+    NTSTATUS    status;
+    size_t      bytesWritten = 0;
+    PWDF_USB_REQUEST_COMPLETION_PARAMS usbCompletionParams;
+
+    UNREFERENCED_PARAMETER(Target);
+    UNREFERENCED_PARAMETER(Context);
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
+
+    status = CompletionParams->IoStatus.Status;
+
+    //
+    // For usb devices, we should look at the Usb.Completion param.
+    //
+    usbCompletionParams = CompletionParams->Parameters.Usb.Completion;
+
+    bytesWritten = usbCompletionParams->Parameters.PipeWrite.Length;
+
+    if (NT_SUCCESS(status)) {
+        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
+            "Number of bytes written: %I64d\n", (INT64)bytesWritten);
+    }
+    else {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+            "Write failed: request Status 0x%x UsbdStatus 0x%x\n",
+            status, usbCompletionParams->UsbdStatus);
+    }
+
+    //WdfRequestCompleteWithInformation(Request, status, bytesWritten);
+    WdfObjectDelete(Request);
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
+
+    return;
+}
+
+NONPAGED_CODE_SEG
+VOID
+USBMIDI2DriverEvtRequestWriteCompletionRoutine(
+    _In_ WDFREQUEST                  Request,
+    _In_ WDFIOTARGET                 Target,
+    _In_ PWDF_REQUEST_COMPLETION_PARAMS CompletionParams,
+    _In_ WDFCONTEXT                  Context
+)
+/*++
+
+Routine Description:
+
+    This is the completion routine for writes
+    If the irp completes with success, we check if we
+    need to recirculate this irp for another stage of
+    transfer.
+
+Arguments:
+
+    Context - Driver supplied context
+    Device - Device handle
+    Request - Request handle
+    Params - request completion params
+
+Return Value:
+    None
+
+--*/
+{
+    NTSTATUS    status;
+    size_t      bytesWritten = 0;
+    PWDF_USB_REQUEST_COMPLETION_PARAMS usbCompletionParams;
+
+    UNREFERENCED_PARAMETER(Target);
+    UNREFERENCED_PARAMETER(Context);
+
+
+    status = CompletionParams->IoStatus.Status;
+
+    //
+    // For usb devices, we should look at the Usb.Completion param.
+    //
+    usbCompletionParams = CompletionParams->Parameters.Usb.Completion;
+
+    bytesWritten = usbCompletionParams->Parameters.PipeWrite.Length;
+
+    if (NT_SUCCESS(status)) {
+        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
+            "Number of bytes written: %I64d\n", (INT64)bytesWritten);
+    }
+    else {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+            "Write failed: request Status 0x%x UsbdStatus 0x%x\n",
+            status, usbCompletionParams->UsbdStatus);
+    }
+
+    WdfRequestCompleteWithInformation(Request, status, bytesWritten);
+    //WdfObjectDelete(Request);
+
+    return;
 }
