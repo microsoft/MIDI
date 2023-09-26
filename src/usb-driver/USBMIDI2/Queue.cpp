@@ -25,7 +25,7 @@ SOFTWARE.
 
 Module Name:
 
-    queue.c
+    queue.cpp
 
 Abstract:
 
@@ -40,11 +40,11 @@ Environment:
 #include "driver.h"
 
 #include "Trace.h"
-#include "Queue.tmh"
+//#include "Queue.tmh"
 
 PAGED_CODE_SEG
 NTSTATUS
-USBMIDI1DriverQueueInitialize(
+USBMIDI2DriverQueueInitialize(
     _In_ WDFDEVICE Device
     )
 /*++
@@ -75,7 +75,7 @@ Return Value:
     PDEVICE_CONTEXT         pDeviceContext;
     PAGED_CODE();
     
-    pDeviceContext = DeviceGetContext(Device);
+    pDeviceContext = GetDeviceContext(Device);
 
     //
     // Configure a default queue so that requests that are not
@@ -87,8 +87,8 @@ Return Value:
         WdfIoQueueDispatchParallel
         );
 
-    queueConfig.EvtIoDeviceControl = USBUMPDriverEvtIoDeviceControl;
-    queueConfig.EvtIoStop = USBUMPDriverEvtIoStop;
+    queueConfig.EvtIoDeviceControl = USBMIDI2DriverEvtIoDeviceControl;
+    queueConfig.EvtIoStop = USBMIDI2DriverEvtIoStop;
 
     status = WdfIoQueueCreate(
                  Device,
@@ -98,7 +98,7 @@ Return Value:
                  );
 
     if( !NT_SUCCESS(status) ) {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_QUEUE, "WdfIoQueueCreate failed %!STATUS!", status);
+//        TraceEvents(TRACE_LEVEL_ERROR, TRACE_QUEUE, "WdfIoQueueCreate failed %!STATUS!", status);
         return status;
     }
 
@@ -112,8 +112,8 @@ Return Value:
         &queueConfig,
         WdfIoQueueDispatchSequential
     );
-    queueConfig.EvtIoWrite = USBUMPDriverEvtIoWrite;
-    queueConfig.EvtIoStop = USBUMPDriverEvtIoStop;
+    queueConfig.EvtIoWrite = USBMIDI2DriverEvtIoWrite;
+    queueConfig.EvtIoStop = USBMIDI2DriverEvtIoStop;
 
     status = WdfIoQueueCreate(
         Device,
@@ -123,7 +123,7 @@ Return Value:
     );
 
     if (!NT_SUCCESS(status)) {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_QUEUE, "WdfIoQueueCreate failed %!STATUS!", status);
+//        TraceEvents(TRACE_LEVEL_ERROR, TRACE_QUEUE, "WdfIoQueueCreate failed %!STATUS!", status);
         return status;
     }
 
@@ -134,8 +134,8 @@ Return Value:
     );
     if (!NT_SUCCESS(status))
     {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_QUEUE,
-            "WdfDeviceConfigureDispatching failed 0x%x\n", status);
+//        TraceEvents(TRACE_LEVEL_ERROR, TRACE_QUEUE,
+//            "WdfDeviceConfigureDispatching failed 0x%x\n", status);
         return status;
     }
 
@@ -149,8 +149,8 @@ Return Value:
         &queueConfig,
         WdfIoQueueDispatchSequential
     );
-    queueConfig.EvtIoRead = USBUMPDriverEvtIoRead;
-    queueConfig.EvtIoStop = USBUMPDriverEvtIoStop;
+    queueConfig.EvtIoRead = USBMIDI2DriverEvtIoRead;
+    queueConfig.EvtIoStop = USBMIDI2DriverEvtIoStop;
 
     status = WdfIoQueueCreate(
         Device,
@@ -160,7 +160,7 @@ Return Value:
     );
 
     if (!NT_SUCCESS(status)) {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_QUEUE, "WdfIoQueueCreate failed %!STATUS!", status);
+//        TraceEvents(TRACE_LEVEL_ERROR, TRACE_QUEUE, "WdfIoQueueCreate failed %!STATUS!", status);
         return status;
     }
 
@@ -171,8 +171,8 @@ Return Value:
     );
     if (!NT_SUCCESS(status))
     {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_QUEUE,
-            "WdfDeviceConfigureDispatching failed 0x%x\n", status);
+//        TraceEvents(TRACE_LEVEL_ERROR, TRACE_QUEUE,
+//            "WdfDeviceConfigureDispatching failed 0x%x\n", status);
         return status;
     }
 
@@ -182,7 +182,7 @@ Return Value:
 
 PAGED_CODE_SEG
 VOID
-USBMIDI1DriverEvtIoDeviceControl(
+USBMIDI2DriverEvtIoDeviceControl(
     _In_ WDFQUEUE Queue,
     _In_ WDFREQUEST Request,
     _In_ size_t OutputBufferLength,
@@ -224,16 +224,16 @@ Return Value:
     size_t              bufLength;
     UINT32              deviceType;
 
-    TraceEvents(TRACE_LEVEL_INFORMATION, 
-                TRACE_QUEUE, 
-                "%!FUNC! Queue 0x%p, Request 0x%p OutputBufferLength %d InputBufferLength %d IoControlCode %d", 
-                Queue, Request, (int) OutputBufferLength, (int) InputBufferLength, IoControlCode);
+//    TraceEvents(TRACE_LEVEL_INFORMATION, 
+//                TRACE_QUEUE, 
+//                "%!FUNC! Queue 0x%p, Request 0x%p OutputBufferLength %d InputBufferLength %d IoControlCode %d", 
+//                Queue, Request, (int) OutputBufferLength, (int) InputBufferLength, IoControlCode);
 
     //
     // Initialize variables for use
     //
     Device = WdfIoQueueGetDevice(Queue);
-    pDeviceContext = DeviceGetContext(Device);
+    pDeviceContext = GetDeviceContext(Device);
     deviceType = (UINT32)pDeviceContext->UsbMIDIStreamingAlt;
 
     //
@@ -241,15 +241,15 @@ Return Value:
     //
     switch (IoControlCode)
     {
-    case IOCTL_USBUMPDRIVER_GET_CONFIG_DESCRIPTOR:
+    case IOCTL_USBMIDI2DRIVER_GET_CONFIG_DESCRIPTOR:
         if (pDeviceContext->DeviceConfigDescriptorMemory) {
 
             pMemBuffer = WdfMemoryGetBuffer(pDeviceContext->DeviceConfigDescriptorMemory, &length);
 
             status = WdfRequestRetrieveOutputBuffer(Request, length, &ioBuffer, &bufLength);
             if (!NT_SUCCESS(status)) {
-                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
-                    "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
+//                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
+//                    "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
                 break;
             }
 
@@ -265,15 +265,15 @@ Return Value:
         }
         break;
 
-    case IOCTL_USBUMPDRIVER_GET_MFGNAME:
+    case IOCTL_USBMIDI2DRIVER_GET_MFGNAME:
         if (pDeviceContext->DeviceManfMemory) {
 
             pMemBuffer = WdfMemoryGetBuffer(pDeviceContext->DeviceManfMemory, &length);
 
             status = WdfRequestRetrieveOutputBuffer(Request, length, &ioBuffer, &bufLength);
             if (!NT_SUCCESS(status)) {
-                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
-                    "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
+//                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
+//                    "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
                 break;
             }
 
@@ -289,15 +289,15 @@ Return Value:
         }
         break;
 
-    case IOCTL_USBUMPDRIVER_GET_DEVICENAME:
+    case IOCTL_USBMIDI2DRIVER_GET_DEVICENAME:
         if (pDeviceContext->DeviceNameMemory) {
 
             pMemBuffer = WdfMemoryGetBuffer(pDeviceContext->DeviceNameMemory, &length);
 
             status = WdfRequestRetrieveOutputBuffer(Request, length, &ioBuffer, &bufLength);
             if (!NT_SUCCESS(status)) {
-                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
-                    "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
+//                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
+//                    "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
                 break;
             }
 
@@ -313,14 +313,14 @@ Return Value:
         }
         break;
 
-    case IOCTL_USBUMPDRIVER_GET_SERIALNUM:
+    case IOCTL_USBMIDI2DRIVER_GET_SERIALNUM:
         if (pDeviceContext->DeviceSNMemory) {
             pMemBuffer = WdfMemoryGetBuffer(pDeviceContext->DeviceSNMemory, &length);
 
             status = WdfRequestRetrieveOutputBuffer(Request, length, &ioBuffer, &bufLength);
             if (!NT_SUCCESS(status)) {
-                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
-                    "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
+//                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
+//                    "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
                 break;
             }
 
@@ -336,11 +336,11 @@ Return Value:
         }
         break;
 
-    case IOCTL_USBUMPDRIVER_GET_GTBDUMP:
+    case IOCTL_USBMIDI2DRIVER_GET_GTBDUMP:
         status = WdfRequestRetrieveOutputBuffer(Request, length, &ioBuffer, &bufLength);
         if (!NT_SUCCESS(status)) {
-            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
-                "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
+//            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
+//                "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
             break;
         }
 
@@ -358,14 +358,14 @@ Return Value:
         }
         break;
 
-    case IOCTL_USBUMPDRIVER_GET_DEVICETYPE:
+    case IOCTL_USBMIDI2DRIVER_GET_DEVICETYPE:
         pMemBuffer = (PVOID)&deviceType;
         length = sizeof(UINT32);
 
         status = WdfRequestRetrieveOutputBuffer(Request, length, &ioBuffer, &bufLength);
         if (!NT_SUCCESS(status)) {
-            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
-                "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
+//            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
+//                "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
             break;
         }
 
@@ -389,7 +389,7 @@ Return Value:
 
 PAGED_CODE_SEG
 VOID
-USBMIDI1DriverEvtIoStop(
+USBMIDI2DriverEvtIoStop(
     _In_ WDFQUEUE Queue,
     _In_ WDFREQUEST Request,
     _In_ ULONG ActionFlags
@@ -417,10 +417,10 @@ Return Value:
 
 --*/
 {
-    TraceEvents(TRACE_LEVEL_INFORMATION, 
-                TRACE_QUEUE, 
-                "%!FUNC! Queue 0x%p, Request 0x%p ActionFlags %d", 
-                Queue, Request, ActionFlags);
+//    TraceEvents(TRACE_LEVEL_INFORMATION, 
+//                TRACE_QUEUE, 
+//                "%!FUNC! Queue 0x%p, Request 0x%p ActionFlags %d", 
+//                Queue, Request, ActionFlags);
 
     //
     // In most cases, the EvtIoStop callback function completes, cancels, or postpones

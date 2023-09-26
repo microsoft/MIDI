@@ -25,7 +25,7 @@ SOFTWARE.
 
 Module Name:
 
-    device.c - Device handling events for example driver.
+    device.cpp - Device handling events for USBMIDI2 driver.
 
 Abstract:
 
@@ -184,6 +184,16 @@ Return Value:
     devCtx->ExcludeD3Cold = WdfFalse;
 
     //
+    // Initialize Queues and IO Package
+    // 
+    status = USBMIDI2DriverQueueInitialize(device);
+    if (!NT_SUCCESS(status))
+    {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DRIVER, "USBMIDI2DriverQueueInitialize failed %!STATUS!", status);
+        goto exit;
+    }
+
+    // 
     // Allow ACX to add any post-requirement it needs on this device.
     //
     ACX_DEVICE_CONFIG_INIT(&devCfg);
@@ -1602,7 +1612,7 @@ IoEvtReadExit:
 
 NONPAGED_CODE_SEG
 VOID
-USBUMPDriverEvtIoWrite(
+USBMIDI2DriverEvtIoWrite(
     _In_ WDFQUEUE         Queue,
     _In_ WDFREQUEST       Request,
     _In_ size_t           Length

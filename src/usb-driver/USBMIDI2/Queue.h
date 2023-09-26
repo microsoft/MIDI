@@ -61,7 +61,7 @@ _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 PAGED_CODE_SEG
 NTSTATUS
-USBMIDI1DriverQueueInitialize(
+USBMIDI2DriverQueueInitialize(
     _In_ WDFDEVICE Device
     );
 
@@ -70,11 +70,11 @@ USBMIDI1DriverQueueInitialize(
 //
 __drv_maxIRQL(PASSIVE_LEVEL)
 PAGED_CODE_SEG
-EVT_WDF_IO_QUEUE_IO_DEVICE_CONTROL USBMIDI1DriverEvtIoDeviceControl;
+EVT_WDF_IO_QUEUE_IO_DEVICE_CONTROL USBMIDI2DriverEvtIoDeviceControl;
 
 __drv_maxIRQL(PASSIVE_LEVEL)
 PAGED_CODE_SEG
-EVT_WDF_IO_QUEUE_IO_STOP USBMIDI1DriverEvtIoStop;
+EVT_WDF_IO_QUEUE_IO_STOP USBMIDI2DriverEvtIoStop;
 
 /* make internal prototypes usable from C++ */
 #ifdef __cplusplus

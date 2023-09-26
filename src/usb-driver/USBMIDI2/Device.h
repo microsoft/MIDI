@@ -22,6 +22,8 @@ Environment:
 
 --*/
 
+#include "Public.h"
+
 #pragma once
 
 /* make prototypes usable from C++ */
@@ -227,7 +229,7 @@ USBMIDI2DriverEvtIoRead(
 __drv_maxIRQL(PASSIVE_LEVEL)
 NONPAGED_CODE_SEG
 VOID
-USBUMPDriverEvtIoWrite(
+USBMIDI2DriverEvtIoWrite(
     _In_ WDFQUEUE         Queue,
     _In_ WDFREQUEST       Request,
     _In_ size_t           Length
