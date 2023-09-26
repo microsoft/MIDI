@@ -50,11 +50,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _Inout_ uint32_t& word2, 
             _Inout_ uint32_t& word3);
 
-        bool FillMessage32( _In_ midi2::MidiMessage32 const& ump);
-        bool FillMessage64( _In_ midi2::MidiMessage64 const& ump);
-        bool FillMessage96( _In_ midi2::MidiMessage96 const& ump);
-        bool FillMessage128(_In_ midi2::MidiMessage128 const& ump);
+        bool FillMessage32( _In_ midi2::MidiMessage32 const& message);
+        bool FillMessage64( _In_ midi2::MidiMessage64 const& message);
+        bool FillMessage96( _In_ midi2::MidiMessage96 const& message);
+        bool FillMessage128(_In_ midi2::MidiMessage128 const& message);
         
+        uint8_t FillMessageStruct(_Inout_ midi2::MidiMessageStruct message);
+
         uint8_t FillWordArray(
             _In_ array_view<uint32_t> words, 
             _In_ uint32_t const startIndex);

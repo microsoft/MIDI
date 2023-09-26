@@ -22,7 +22,7 @@ import "MidiFunctionBlockDiscoveryFilterFlagsEnum.idl";
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
-    runtimeclass MidiStreamMessageBuilder
+    static runtimeclass MidiStreamMessageBuilder
     {
         static MidiMessage128 BuildEndpointDiscoveryMessage(
             MIDI_TIMESTAMP timestamp,

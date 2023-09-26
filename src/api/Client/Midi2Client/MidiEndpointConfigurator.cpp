@@ -47,14 +47,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool& skipMainMessageReceivedEvent)
     {
         skipFurtherListeners = false;
-        //skipMainMessageReceivedEvent = false;
+        skipMainMessageReceivedEvent = false;
 
 
 
 
 
 
-        throw hresult_not_implemented();
+        
     }
 
 
@@ -62,7 +62,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     bool MidiEndpointConfigurator::Negotiate()
     {
-        throw hresult_not_implemented();
+        return false;
 
 
         // see UMP spec page 37 for this process for protocol negotiation
@@ -78,10 +78,22 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    bool MidiEndpointConfigurator::RequestFunctionBlocks()
+    bool MidiEndpointConfigurator::RequestAllFunctionBlocks()
     {
-        throw hresult_not_implemented();
+        return RequestSingleFunctionBlock(0xFF);       // 0xFF is flag for "all"
     }
 
+    _Use_decl_annotations_
+    bool MidiEndpointConfigurator::RequestSingleFunctionBlock(uint8_t functionBlockNumber)
+    {
+        auto request = MidiStreamMessageBuilder::BuildFunctionBlockDiscoveryMessage(
+            MidiClock::GetMidiTimestamp(),
+            functionBlockNumber,
+            midi2::MidiFunctionBlockDiscoveryFilterFlags::RequestFunctionBlockInformation | midi2::MidiFunctionBlockDiscoveryFilterFlags::RequestFunctionBlockName
+        );
+
+        // eating the status here probably isn't all that cool a thing to do
+        return m_outputConnection.SendMessagePacket(request) == MidiSendMessageResult::Success;
+    }
 
 }

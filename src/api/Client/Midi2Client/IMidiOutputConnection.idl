@@ -9,19 +9,24 @@
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
+import "IMidiEndpointConnection.idl";
+
 import "IMidiUniversalPacket.idl";
 import "MidiSendMessageResultEnum.idl";
+import "MidiMessageStruct.idl";
 
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [MIDI_INTERFACE_UUID("8b71d1b8-c239-4b88-8142-05ee5118d41e",1.0)]
-    interface IMidiOutputConnection
+    interface IMidiOutputConnection requires IMidiEndpointConnection
     {
         String OutputEndpointDeviceId{ get; };
 
         // send the UMP interface used by strongly-typed Midi Message classes in the SDK
-        MidiSendMessageResult SendMessagePacket(IMidiUniversalPacket ump);
+        MidiSendMessageResult SendMessagePacket(IMidiUniversalPacket message);
+
+        MidiSendMessageResult SendMessageStruct(MIDI_TIMESTAMP timestamp, ref const MidiMessageStruct message, UInt8 wordCount);
 
         // Uses projection-specific array conversion operators for sending data. Not all languages support this
         MidiSendMessageResult SendMessageWordArray(MIDI_TIMESTAMP timestamp, UInt32[] words, UInt32 startIndex, UInt8 wordCount);

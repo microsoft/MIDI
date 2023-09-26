@@ -21,18 +21,23 @@
 MIDI_IDL_IMPORT
 
 import "MidiBidirectionalEndpointOpenOptions.idl";
+import "IMidiEndpointMessageProcessingPlugin.idl";
+import "IMidiEndpointMessageListener.idl";
+import "IMidiEndpointMessageResponder.idl";
 
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [MIDI_INTERFACE_UUID("8ef0557e-1a53-4ab2-ab80-d36f1a16f33b",1.0)]
-    interface IMidiEndpointConfiguratorPlugin
+    interface IMidiEndpointConfiguratorPlugin requires IMidiEndpointMessageProcessingPlugin, IMidiEndpointMessageListener, IMidiEndpointMessageResponder
     {
         MidiStreamConfigurationRequestedSettings RequestedStreamConfiguration { get; set; };
 
         void Negotiate();
 
-        Boolean RequestFunctionBlocks();
+        Boolean RequestAllFunctionBlocks();
+        Boolean RequestSingleFunctionBlock(UInt8 functionBlockNumber);
+
         //Boolean RequestEndpointInformation();
     }
 }

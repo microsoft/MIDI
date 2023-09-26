@@ -30,6 +30,14 @@ namespace Windows::Devices::Midi2::Internal
         midi2::MidiSendMessageResult SendMessagePacket(
             _In_ midi2::IMidiUniversalPacket const& ump);
 
+
+        _Success_(return == true)
+        midi2::MidiSendMessageResult SendMessageStruct(
+            _In_ internal::MidiTimestamp timestamp,
+            _In_ midi2::MidiMessageStruct const& message,
+            _In_ uint8_t wordCount);
+
+
         _Success_(return == true)
         midi2::MidiSendMessageResult SendMessageWords(
             _In_ internal::MidiTimestamp const timestamp,
@@ -80,6 +88,17 @@ namespace Windows::Devices::Midi2::Internal
         void OutputIsOpen(_In_ bool const isOpen) noexcept { m_isOpen = isOpen; }
         bool OutputIsOpen() const noexcept { return m_isOpen; }
 
+        bool ValidateUmp(_In_ uint32_t word0, _In_ uint8_t wordCount)
+        {
+            if (!internal::IsValidSingleUmpWordCount(wordCount))
+                return false;
+
+            if (!internal::GetUmpLengthInMidiWordsFromFirstWord(word0) != wordCount)
+                return false;
+
+            return true;
+        }
+
     private:
 
         bool m_isOpen{ false };
@@ -117,8 +136,18 @@ namespace Windows::Devices::Midi2::Internal
     {
         try
         {
+            if (!m_isOpen)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
+
+                // return failure if we're not open
+                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
+            }
+
+
             if (endpoint != nullptr)
             {
+
                 winrt::check_hresult(endpoint->SendMidiMessage(data, sizeInBytes, timestamp));
 
                 return midi2::MidiSendMessageResult::Success;
@@ -139,6 +168,25 @@ namespace Windows::Devices::Midi2::Internal
         }
     }
 
+
+    _Use_decl_annotations_
+    template <typename TEndpointAbstraction>
+    midi2::MidiSendMessageResult InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageStruct(
+        internal::MidiTimestamp timestamp,
+        midi2::MidiMessageStruct const& message,
+        uint8_t wordCount)
+    {
+        if (!ValidateUmp(message.Word0, wordCount))
+        {
+            internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for this UMP", wordCount, timestamp);
+
+            return midi2::MidiSendMessageResult::ErrorInvalidMessageTypeForWordCount;
+        }
+
+        auto byteLength = (uint8_t)(wordCount * sizeof(uint32_t));
+
+        return SendMessageRaw(m_outputAbstraction, (void*)(&message), byteLength, timestamp);
+    }
 
     _Use_decl_annotations_
     template <typename TEndpointAbstraction>
@@ -230,6 +278,7 @@ namespace Windows::Devices::Midi2::Internal
             // make sure we're sending only a single UMP
             uint32_t sizeInWords = byteLength / sizeof(uint32_t);
 
+
             if (!internal::IsValidSingleUmpWordCount(sizeInWords))
             {
                 internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for a single UMP", sizeInWords, timestamp);
@@ -290,19 +339,13 @@ namespace Windows::Devices::Midi2::Internal
             }
 
 
-            if (!internal::IsValidSingleUmpWordCount(wordCount))
+            if (wordCount < 1 || !ValidateUmp(words[0], wordCount))
             {
-                internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for a single UMP", wordCount, timestamp);
+                internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for this UMP", wordCount, timestamp);
 
                 return midi2::MidiSendMessageResult::ErrorInvalidMessageTypeForWordCount;
             }
 
-            if (internal::GetUmpLengthInMidiWordsFromFirstWord(words[0]) != wordCount)
-            {
-                internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for messageType", wordCount, timestamp);
-
-                return midi2::MidiSendMessageResult::ErrorInvalidMessageTypeForWordCount;
-            }
 
             if (startIndex + wordCount > words.size())
             {

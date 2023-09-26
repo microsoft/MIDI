@@ -21,7 +21,7 @@ import "MidiChannel.idl";
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
-    runtimeclass MidiMessageUtility
+    static runtimeclass MidiMessageUtility
     {
         static Boolean ValidateMessage32MessageType(UInt32 word0);
         static Boolean ValidateMessage64MessageType(UInt32 word0);

@@ -13,12 +13,14 @@ MIDI_IDL_IMPORT
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
+    [flags]
     enum MidiEndpointDiscoveryFilterFlags
     {
-        RequestEndpointInformation = 0x1,
-        RequestDeviceIdentity = 0x2,
-        RequestEndpointName = 0x4,
-        RequestProductInstanceId = 0x8,
-        RequestStreamConfiguration = 0x10,
+        None = 0x00000000,
+        RequestEndpointInformation = 0x00000001,
+        RequestDeviceIdentity = 0x00000002,
+        RequestEndpointName = 0x00000004,
+        RequestProductInstanceId = 0x00000008,
+        RequestStreamConfiguration = 0x00000010,
     };
 }

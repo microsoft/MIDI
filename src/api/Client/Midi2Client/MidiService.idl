@@ -18,7 +18,7 @@ namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [default_interface]
-    runtimeclass MidiService
+    static runtimeclass MidiService
     {
         static MidiServicePingResponseSummary PingService(UInt8 pingCount);
         static MidiServicePingResponseSummary PingService(UInt8 pingCount, UInt32 timeoutMilliseconds);

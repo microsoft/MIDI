@@ -82,6 +82,33 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
+    uint8_t MidiMessageReceivedEventArgs::FillMessageStruct(
+        _Inout_ midi2::MidiMessageStruct message
+        )
+    {
+        auto wordCount = GetValidMessageWordCount();
+
+        message.Word0 = m_data.Word0;
+
+        if (wordCount >= 2)
+        {
+            message.Word1 = m_data.Word1;
+        }
+
+        if (wordCount >= 3)
+        {
+            message.Word2 = m_data.Word2;
+        }
+
+        if (wordCount >= 4)
+        {
+            message.Word3 = m_data.Word3;
+        }
+
+        return wordCount;
+    }
+
+    _Use_decl_annotations_
     uint8_t MidiMessageReceivedEventArgs::FillWords(
         uint32_t& word0, 
         uint32_t& word1, 

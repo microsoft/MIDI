@@ -548,6 +548,7 @@
     <Midl Include="MidiGroupTerminalBlockProtocolEnum.idl" />
     <Midl Include="MidiInputEndpointConnection.idl" />
     <Midl Include="MidiInputEndpointOpenOptions.idl" />
+    <Midl Include="MidiMessageStruct.idl" />
     <Midl Include="MidiMessageBuilder.idl" />
     <Midl Include="MidiMessageReceivedEventArgs.idl" />
     <Midl Include="IMidiEndpointDefinedConnectionSettings.idl" />

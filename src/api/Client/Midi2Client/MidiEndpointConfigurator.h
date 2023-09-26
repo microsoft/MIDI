@@ -52,8 +52,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         bool Negotiate();
 
-        bool RequestFunctionBlocks();
 
+        bool RequestAllFunctionBlocks();
+
+        bool RequestSingleFunctionBlock(
+            _In_ uint8_t functionBlockNumber);
 
     private:
         winrt::hstring m_id{};
