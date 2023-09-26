@@ -30,6 +30,7 @@ Environment:
 extern "C" {
 #endif
 
+#include <ntifs.h>
 #include <ntddk.h>
 #include <wdf.h>
 #include <usb.h>

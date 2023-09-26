@@ -37,6 +37,7 @@ Environment:
 
 --*/
 
+#include "Pch.h"
 #include "driver.h"
 
 #include "Trace.h"
@@ -185,8 +186,8 @@ VOID
 USBMIDI2DriverEvtIoDeviceControl(
     _In_ WDFQUEUE Queue,
     _In_ WDFREQUEST Request,
-    _In_ size_t OutputBufferLength,
-    _In_ size_t InputBufferLength,
+    _In_ size_t /* OutputBufferLength */,
+    _In_ size_t /* InputBufferLength */,
     _In_ ULONG IoControlCode
     )
 /*++
@@ -390,9 +391,9 @@ Return Value:
 PAGED_CODE_SEG
 VOID
 USBMIDI2DriverEvtIoStop(
-    _In_ WDFQUEUE Queue,
-    _In_ WDFREQUEST Request,
-    _In_ ULONG ActionFlags
+    _In_ WDFQUEUE /* Queue */,
+    _In_ WDFREQUEST /* Request */,
+    _In_ ULONG /* ActionFlags */
 )
 /*++
 

@@ -28,7 +28,7 @@ extern "C" {
 
 
 #include <initguid.h>
-#include "ntifs.h"
+#include <ntifs.h>
 #include <ntddk.h>
 #include <windef.h>
 #include <ks.h>

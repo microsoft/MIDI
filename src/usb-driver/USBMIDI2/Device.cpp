@@ -1066,6 +1066,8 @@ Return Value:
     }
 #endif
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
+
+    return STATUS_SUCCESS;
 }
 
 NONPAGED_CODE_SEG

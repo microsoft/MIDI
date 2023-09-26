@@ -1,3 +1,5 @@
+#pragma once
+
 /************************************************************************************
 Copyright 2023 Association of Musical Electronics Industry
 Copyright 2023 Microsoft
