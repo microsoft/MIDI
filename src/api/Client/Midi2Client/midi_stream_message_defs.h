@@ -41,6 +41,11 @@
 #define MIDI_STREAM_MESSAGE_PRODUCT_INSTANCE_ID_CHARACTERS_PER_PACKET 14
 
 
+#define MIDI_CACHE_PROPERTY_ENDPOINT_PRODUCT_INSTANCE_ID L"Endpoint.ProductInstanceId"
+#define MIDI_CACHE_PROPERTY_ENDPOINT_NAME L"Endpoint.Name"
+#define MIDI_CACHE_PROPERTY_ENDPOINT_DEVICE_IDENTITY L"Endpoint.DeviceIdentity"
+
+
 // function block serialization
 
 #define JSON_KEY_FB_NUMBER L"functionBlockNumber"

@@ -23,24 +23,24 @@ namespace Windows.Devices.Midi2
         // with some sort of watcher if the expiration time is critical to track
 
         [default_overload]
-        void AddOrUpdateData(String endpointDeviceId, String propertyKey, String data, Windows.Foundation.DateTime expirationTime);
+        static void AddOrUpdateData(String endpointDeviceId, String propertyKey, String data, Windows.Foundation.DateTime expirationTime);
 
         [default_overload]
-        void AddOrUpdateData(String endpointDeviceId, String propertyKey, String data);
+        static void AddOrUpdateData(String endpointDeviceId, String propertyKey, String data);
 
-        void AddOrUpdateData(String endpointDeviceId, String propertyKey, IMidiCacheableMetadata data, Windows.Foundation.DateTime expirationTime);
-        void AddOrUpdateData(String endpointDeviceId, String propertyKey, IMidiCacheableMetadata data);
+        static void AddOrUpdateData(String endpointDeviceId, String propertyKey, IMidiCacheableMetadata data, Windows.Foundation.DateTime expirationTime);
+        static void AddOrUpdateData(String endpointDeviceId, String propertyKey, IMidiCacheableMetadata data);
 
 
-        void RemoveData(String endpointDeviceId, String propertyKey);
-        String GetData(String endpointDeviceId, String propertyKey);
-        Boolean IsDataPresent(String endpointDeviceId, String propertyKey);
+        static void RemoveData(String endpointDeviceId, String propertyKey);
+        static String GetData(String endpointDeviceId, String propertyKey);
+        static Boolean IsDataPresent(String endpointDeviceId, String propertyKey);
 
         // TODO: Way to dump a list of all cache entries (without data, just keys, expiration, etc.)
 
         // TODO: Depending on what could be cached from CI, we may need to also allow group and channel keys, or perhaps MUID keys
 
-        event Windows.Foundation.TypedEventHandler<IInspectable, MidiEndpointMetadataCacheUpdatedEventArgs> DeviceInformationUpdated;
+        static event Windows.Foundation.TypedEventHandler<IInspectable, MidiEndpointMetadataCacheUpdatedEventArgs> DeviceInformationUpdated;
     }
 }
 

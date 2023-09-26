@@ -22,22 +22,20 @@ TEST_CASE("Offline.Cache.Global Basics")
         winrt::hstring propertyKey = L"TEST_KEY";
         winrt::hstring data = L"{ Some Test Data }";
 
-        REQUIRE_NOTHROW(MidiService::GlobalCache());
-
         std::cout << " - Add item" << std::endl;
 
         // add item to the cache
-        MidiService::GlobalCache().AddOrUpdateData(propertyKey, data);
+        MidiGlobalCache::AddOrUpdateData(propertyKey, data);
 
         // get the item back from the cache
 
         std::cout << " - Is data present" << std::endl;
 
-        REQUIRE(MidiService::GlobalCache().IsDataPresent(propertyKey));
+        REQUIRE(MidiGlobalCache::IsDataPresent(propertyKey));
 
         std::cout << " - Get data" << std::endl;
 
-        auto retrievedData = MidiService::GlobalCache().GetData(propertyKey);
+        auto retrievedData = MidiGlobalCache::GetData(propertyKey);
 
         std::cout << " - Comparison" << std::endl;
 

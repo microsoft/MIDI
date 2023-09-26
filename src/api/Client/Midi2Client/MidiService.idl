@@ -26,8 +26,6 @@ namespace Windows.Devices.Midi2
         // list all the installed transports like Virtual, USB, BLE1, etc
         static IVectorView<MidiTransportInformation> GetInstalledTransports();
 
-        static MidiEndpointMetadataCache EndpointMetadataCache{ get; };
-        static MidiGlobalCache GlobalCache{ get; };
-}
+    }
 }
 

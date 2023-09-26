@@ -20,19 +20,19 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiEndpointMetadataCache() = default;
 
-        void AddOrUpdateData(
+        static void AddOrUpdateData(
             _In_ winrt::hstring const& endpointDeviceId,
             _In_ winrt::hstring const& propertyKey,
             _In_ winrt::hstring const& data,
             _In_ foundation::DateTime const& expirationTime) ;
 
-        void AddOrUpdateData(
+        static void AddOrUpdateData(
             _In_ winrt::hstring const& endpointDeviceId,
             _In_ winrt::hstring const& propertyKey,
             _In_ winrt::hstring const& data);
 
 
-        void AddOrUpdateData(
+        static void AddOrUpdateData(
             _In_ winrt::hstring const& endpointDeviceId,
             _In_ winrt::hstring const& propertyKey,
             _In_ midi2::IMidiCacheableMetadata const& data,
@@ -42,7 +42,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 AddOrUpdateData(endpointDeviceId, propertyKey, data.GetJsonString(), expirationTime);
         }
 
-        void AddOrUpdateData(
+        static void AddOrUpdateData(
             _In_ winrt::hstring const& endpointDeviceId,
             _In_ winrt::hstring const& propertyKey,
             _In_ midi2::IMidiCacheableMetadata const& data)
@@ -51,44 +51,42 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 AddOrUpdateData(endpointDeviceId, propertyKey, data.GetJsonString());
         }
 
-
-        void RemoveData(
+        static void RemoveData(
             _In_ winrt::hstring const& deviceId, 
             _In_ winrt::hstring const& propertyKey) ;
         
-        hstring GetData(
+        static hstring GetData(
             _In_ winrt::hstring const& deviceId, 
             _In_ winrt::hstring const& propertyKey) ;
         
-        bool IsDataPresent(
+        static bool IsDataPresent(
             _In_ winrt::hstring const& deviceId, 
             _In_ winrt::hstring const& propertyKey) ;
 
-        winrt::event_token DeviceInformationUpdated(
+        static winrt::event_token DeviceInformationUpdated(
             _In_ foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiEndpointMetadataCacheUpdatedEventArgs> const& handler)
         {
             return m_dataUpdateEvent.add(handler);
         }
-        void DeviceInformationUpdated(_In_ winrt::event_token const& token) noexcept
+        static void DeviceInformationUpdated(_In_ winrt::event_token const& token) noexcept
         {
             if (m_dataUpdateEvent) m_dataUpdateEvent.remove(token);
         }
 
-        std::tuple<std::string, std::string> BuildCacheKey(
+        static std::tuple<std::string, std::string> BuildCacheKey(
             _In_ winrt::hstring const& deviceId, 
             _In_ winrt::hstring const& key)
         {
             return std::tuple<std::string, std::string>(winrt::to_string(deviceId), winrt::to_string(key));
         }
 
-
-
-
-
     private:
-        winrt::event<foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiEndpointMetadataCacheUpdatedEventArgs>> m_dataUpdateEvent;
-
-
-
+        static winrt::event<foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiEndpointMetadataCacheUpdatedEventArgs>> m_dataUpdateEvent;
+    };
+}
+namespace winrt::Windows::Devices::Midi2::factory_implementation
+{
+    struct MidiEndpointMetadataCache : MidiEndpointMetadataCacheT<MidiEndpointMetadataCache, implementation::MidiEndpointMetadataCache, winrt::static_lifetime>
+    {
     };
 }

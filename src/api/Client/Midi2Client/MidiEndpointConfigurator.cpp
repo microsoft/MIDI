@@ -21,6 +21,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     void MidiEndpointConfigurator::OnEndpointConnectionOpened()
     {
+        bool infoFoundInCache = false;
+
+        // TODO: do we already have cached info? 
+
+        if (!infoFoundInCache)
+        {
+            // No cached info. Send out the negotiation requests and go through the full process
+            Negotiate();
+        }
 
     }
 
@@ -38,7 +47,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool& skipMainMessageReceivedEvent)
     {
         skipFurtherListeners = false;
-        skipMainMessageReceivedEvent = false;
+        //skipMainMessageReceivedEvent = false;
+
+
+
+
+
 
         throw hresult_not_implemented();
     }

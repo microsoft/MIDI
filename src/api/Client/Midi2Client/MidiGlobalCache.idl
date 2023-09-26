@@ -23,19 +23,19 @@ namespace Windows.Devices.Midi2
         // with some sort of watcher if the expiration time is critical to track
 
         [default_overload]
-        void AddOrUpdateData(String key, String data, Windows.Foundation.DateTime expirationTime);
+        static void AddOrUpdateData(String key, String data, Windows.Foundation.DateTime expirationTime);
 
         [default_overload]
-        void AddOrUpdateData(String key, String data);
+        static void AddOrUpdateData(String key, String data);
 
-        void AddOrUpdateData(String propertyKey, IMidiCacheableMetadata data, Windows.Foundation.DateTime expirationTime);
-        void AddOrUpdateData(String propertyKey, IMidiCacheableMetadata data);
+        static void AddOrUpdateData(String propertyKey, IMidiCacheableMetadata data, Windows.Foundation.DateTime expirationTime);
+        static void AddOrUpdateData(String propertyKey, IMidiCacheableMetadata data);
 
-        void RemoveData(String key);
-        String GetData(String key);
-        Boolean IsDataPresent(String key);
+        static void RemoveData(String key);
+        static String GetData(String key);
+        static Boolean IsDataPresent(String key);
 
-        event Windows.Foundation.TypedEventHandler<IInspectable, MidiGlobalInformationCacheUpdatedEventArgs> GlobalInformationUpdated;
+        static event Windows.Foundation.TypedEventHandler<IInspectable, MidiGlobalInformationCacheUpdatedEventArgs> GlobalInformationUpdated;
 
     }
 }

@@ -18,17 +18,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiGlobalCache() = default;
 
-        void AddOrUpdateData(
+        static void AddOrUpdateData(
             _In_ winrt::hstring const& propertyKey, 
             _In_ winrt::hstring const& data,
             _In_ foundation::DateTime const& expirationTime);
 
-        void AddOrUpdateData(
+        static void AddOrUpdateData(
             _In_ winrt::hstring const& propertyKey,
             _In_ winrt::hstring const& data);
 
 
-        void AddOrUpdateData(
+        static void AddOrUpdateData(
             _In_ winrt::hstring const& propertyKey,
             _In_ midi2::IMidiCacheableMetadata const& data,
             _In_ foundation::DateTime const& expirationTime)
@@ -37,7 +37,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 AddOrUpdateData(propertyKey, data.GetJsonString(), expirationTime);
         }
 
-        void AddOrUpdateData(
+        static void AddOrUpdateData(
             _In_ winrt::hstring const& propertyKey,
             _In_ midi2::IMidiCacheableMetadata const& data)
         {
@@ -48,34 +48,41 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
-        void RemoveData(
+        static void RemoveData(
             _In_ winrt::hstring const& propertyKey);
 
-        hstring GetData(
+        static hstring GetData(
             _In_ winrt::hstring const& propertyKey);
 
-        bool IsDataPresent(
+        static bool IsDataPresent(
             _In_ winrt::hstring const& propertyKey);
         
 
-        winrt::event_token GlobalInformationUpdated(
+        static winrt::event_token GlobalInformationUpdated(
             _In_ foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiGlobalInformationCacheUpdatedEventArgs> const& handler)
         {
             return m_dataUpdateEvent.add(handler);
         }
-        void GlobalInformationUpdated(_In_ winrt::event_token const& token) noexcept
+        static void GlobalInformationUpdated(
+            _In_ winrt::event_token const& token) noexcept
         {
             if (m_dataUpdateEvent) m_dataUpdateEvent.remove(token);
         }
 
-        std::string BuildCacheKey(winrt::hstring const& propertyKey)
+        static std::string BuildCacheKey(
+            _In_ winrt::hstring const& propertyKey)
         {
             return winrt::to_string(propertyKey);
         }
 
-
     private:
-        winrt::event<foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiGlobalInformationCacheUpdatedEventArgs>> m_dataUpdateEvent;
+        static winrt::event<foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiGlobalInformationCacheUpdatedEventArgs>> m_dataUpdateEvent;
 
+    };
+}
+namespace winrt::Windows::Devices::Midi2::factory_implementation
+{
+    struct MidiGlobalCache : MidiGlobalCacheT<MidiGlobalCache, implementation::MidiGlobalCache, winrt::static_lifetime>
+    {
     };
 }

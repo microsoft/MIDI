@@ -16,17 +16,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
 {
     void MidiEndpointMetadataEndpointListener::Initialize()
     {
-        throw hresult_not_implemented();
     }
 
     void MidiEndpointMetadataEndpointListener::OnEndpointConnectionOpened()
     {
-        throw hresult_not_implemented();
     }
 
     void MidiEndpointMetadataEndpointListener::Cleanup()
     {
-        throw hresult_not_implemented();
     }
 
     _Use_decl_annotations_
@@ -35,19 +32,160 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool& skipFurtherListeners,
         bool& skipMainMessageReceivedEvent)
     {
-        skipFurtherListeners = false;
-        skipMainMessageReceivedEvent = false;
+        auto endpointNameMessages = winrt::single_threaded_vector<midi2::MidiMessage128>();
+        auto productInstanceIdMessages = winrt::single_threaded_vector<midi2::MidiMessage128>();
 
-        
         if (args.MessageType() == MidiMessageType::Stream128)
         {
+            uint32_t word0 = args.PeekFirstWord();
+
             // Handle Device Identity Notification Message
 
-            // Handle Endpoint Name Notification Message
+            if (internal::GetStatusFromStreamMessageFirstWord(word0) == MIDI_STREAM_MESSAGE_STATUS_DEVICE_IDENTITY_NOTIFICATION &&
+                internal::GetFormFromStreamMessageFirstWord(word0) == MIDI_STREAM_MESSAGE_STANDARD_FORM0)
+            {
+                // TODO: Handle device identity notification
 
-            // Handle Product Instance Id notification Message
+
+                skipFurtherListeners = true;
+                skipMainMessageReceivedEvent = true;
+            }
+
+            else if (internal::GetStatusFromStreamMessageFirstWord(word0) == MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID_NOTIFICATION)
+            {
+                // Handle function block name notifications. Need to pile these up until we get the ending form
+
+                if (internal::GetFormFromStreamMessageFirstWord(word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_START)
+                {
+                    // start a new name. Empty out the vector in case it had anything in it
+                    productInstanceIdMessages.Clear();
+                    productInstanceIdMessages.Append(args.GetMessagePacket().as<midi2::MidiMessage128>());
+
+                    skipFurtherListeners = true;
+                    skipMainMessageReceivedEvent = true;
+                }
+
+                else if (internal::GetFormFromStreamMessageFirstWord(word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_CONTINUE)
+                {
+                    // continue the name
+                    productInstanceIdMessages.Append(args.GetMessagePacket().as<midi2::MidiMessage128>());
+
+                    skipFurtherListeners = true;
+                    skipMainMessageReceivedEvent = true;
+                }
+
+                else if (internal::GetFormFromStreamMessageFirstWord(word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_END)
+                {
+                    // ending form. Process the name
+
+                    productInstanceIdMessages.Append(args.GetMessagePacket().as<midi2::MidiMessage128>());
+
+                    auto id = MidiStreamMessageBuilder::ParseProductInstanceIdNotificationMessages(productInstanceIdMessages);
+
+                    //  save name information to the cache
+
+                    MidiEndpointMetadataCache::AddOrUpdateData(
+                        m_inputConnection.InputEndpointDeviceId(),
+                        MIDI_CACHE_PROPERTY_ENDPOINT_PRODUCT_INSTANCE_ID,
+                        id
+                        );
+
+                    skipFurtherListeners = true;
+                    skipMainMessageReceivedEvent = true;
+                }
+
+                else if (internal::GetFormFromStreamMessageFirstWord(word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE)
+                {
+                    // complete in one packet
+
+                    productInstanceIdMessages.Clear();
+                    productInstanceIdMessages.Append(args.GetMessagePacket().as<midi2::MidiMessage128>());
+
+                    auto id = MidiStreamMessageBuilder::ParseProductInstanceIdNotificationMessages(productInstanceIdMessages);
+
+                    // save name information to the cache
+
+                    MidiEndpointMetadataCache::AddOrUpdateData(
+                        m_inputConnection.InputEndpointDeviceId(),
+                        MIDI_CACHE_PROPERTY_ENDPOINT_PRODUCT_INSTANCE_ID,
+                        id
+                        );
+
+                    skipFurtherListeners = true;
+                    skipMainMessageReceivedEvent = true;
+                }
+            }
+
+            else if (internal::GetStatusFromStreamMessageFirstWord(word0) == MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION)
+            {
+                // Handle function block name notifications. Need to pile these up until we get the ending form
+
+                if (internal::GetFormFromStreamMessageFirstWord(word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_START)
+                {
+                    // start a new name. Empty out the vector in case it had anything in it
+                    endpointNameMessages.Clear();
+                    endpointNameMessages.Append(args.GetMessagePacket().as<midi2::MidiMessage128>());
+
+                    skipFurtherListeners = true;
+                    skipMainMessageReceivedEvent = true;
+
+                }
+
+                else if (internal::GetFormFromStreamMessageFirstWord(word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_CONTINUE)
+                {
+                    // continue the name
+                    endpointNameMessages.Append(args.GetMessagePacket().as<midi2::MidiMessage128>());
+
+                    skipFurtherListeners = true;
+                    skipMainMessageReceivedEvent = true;
+                }
+
+                else if (internal::GetFormFromStreamMessageFirstWord(word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_END)
+                {
+                    // ending form. Process the name
+
+                    endpointNameMessages.Append(args.GetMessagePacket().as<midi2::MidiMessage128>());
+
+                    auto endpointName = MidiStreamMessageBuilder::ParseProductInstanceIdNotificationMessages(endpointNameMessages);
+
+                    // save name to the cache
+
+                    MidiEndpointMetadataCache::AddOrUpdateData(
+                        m_inputConnection.InputEndpointDeviceId(),
+                        MIDI_CACHE_PROPERTY_ENDPOINT_NAME,
+                        endpointName
+                        );
+
+                    skipFurtherListeners = true;
+                    skipMainMessageReceivedEvent = true;
+                }
+
+                else if (internal::GetFormFromStreamMessageFirstWord(word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE)
+                {
+                    // complete in one packet
+
+                    endpointNameMessages.Clear();
+                    endpointNameMessages.Append(args.GetMessagePacket().as<midi2::MidiMessage128>());
+
+                    auto endpointName = MidiStreamMessageBuilder::ParseProductInstanceIdNotificationMessages(endpointNameMessages);
+
+                    // save name to the cache
+
+                    MidiEndpointMetadataCache::AddOrUpdateData(
+                        m_inputConnection.InputEndpointDeviceId(),
+                        MIDI_CACHE_PROPERTY_ENDPOINT_NAME,
+                        endpointName
+                        );
+
+                    skipFurtherListeners = true;
+                    skipMainMessageReceivedEvent = true;
+                }
+            }
+
+
+
         }
-
+        
     }
 
 }

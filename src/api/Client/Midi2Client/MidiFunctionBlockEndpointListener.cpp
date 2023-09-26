@@ -17,19 +17,16 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     void MidiFunctionBlockEndpointListener::Initialize()
     {
-        throw hresult_not_implemented();
     }
 
     _Use_decl_annotations_
     void MidiFunctionBlockEndpointListener::OnEndpointConnectionOpened()
     {
-        throw hresult_not_implemented();
     }
 
     _Use_decl_annotations_
     void MidiFunctionBlockEndpointListener::Cleanup()
     {
-        throw hresult_not_implemented();
     }
 
     _Use_decl_annotations_
@@ -41,7 +38,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         skipFurtherListeners = false;
         skipMainMessageReceivedEvent = false;
 
-        // TODO: Vector for function block name messages
         auto nameMessages = winrt::single_threaded_vector<midi2::MidiMessage128>();
 
 
@@ -52,7 +48,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             if (internal::GetStatusFromStreamMessageFirstWord(word0) == MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_INFO_NOTIFICATION && 
                 internal::GetFormFromStreamMessageFirstWord(word0) == MIDI_STREAM_MESSAGE_STANDARD_FORM0)
             {
-                // Handle function block info notification
+                // TODO: Handle function block info notification
 
             }
             else if (internal::GetStatusFromStreamMessageFirstWord(word0) == MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_INFO_NOTIFICATION)

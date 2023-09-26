@@ -17,10 +17,6 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    winrt::com_ptr<MidiEndpointMetadataCache> MidiService::m_endpointMetadataCache{ nullptr };
-    winrt::com_ptr<MidiGlobalCache> MidiService::m_globalCache{ nullptr };
-
-
 
     _Use_decl_annotations_
     midi2::MidiServicePingResponseSummary MidiService::PingService(uint8_t const pingCount, uint32_t timeoutMilliseconds) noexcept
