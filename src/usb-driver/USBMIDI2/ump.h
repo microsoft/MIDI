@@ -193,6 +193,7 @@ enum
 };
 
 /// MIDI Interface Header Descriptor
+#pragma pack(push)
 #pragma pack(1)
 typedef struct
 {

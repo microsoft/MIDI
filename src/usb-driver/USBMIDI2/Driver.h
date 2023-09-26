@@ -30,11 +30,15 @@ Environment:
 extern "C" {
 #endif
 
+#include <ntddk.h>
 #include <wdf.h>
 #include <usb.h>
 #include <usbdlib.h>
 #include <wdfusb.h>
+
 #include <acx.h>
+#include "Queue.h"
+
 #include "Trace.h"
 
 // Simple MIN MIDI 2 driver

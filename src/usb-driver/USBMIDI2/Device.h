@@ -22,8 +22,7 @@ Environment:
 
 --*/
 
-#ifndef _DEVICE_H_
-#define _DEVICE_H_
+#pragma once
 
 /* make prototypes usable from C++ */
 #ifdef __cplusplus
@@ -174,7 +173,6 @@ USBMIDI2DriverEnumeratePipes(
 //
 // Function to complete read on IN Pipe
 //
-_Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NONPAGED_CODE_SEG
 VOID USBMIDI2DriverEvtReadComplete(
@@ -214,7 +212,6 @@ USBMIDI2DriverFillReadQueue(
 //
 // Function callback for read request
 //
-_Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NONPAGED_CODE_SEG
 VOID
@@ -227,7 +224,6 @@ USBMIDI2DriverEvtIoRead(
 //
 // Function callback for write request
 //
-_Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NONPAGED_CODE_SEG
 VOID
@@ -250,7 +246,6 @@ USBMIDI2DriverSendToUSB(
     _In_ BOOLEAN            deleteRequest
 );
 
-_Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NONPAGED_CODE_SEG
 VOID
@@ -261,7 +256,6 @@ USBMIDI2DriverEvtRequestWriteCompletionRoutineDelete(
     _In_ WDFCONTEXT                  Context
 );
 
-_Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NONPAGED_CODE_SEG
 VOID
@@ -272,7 +266,6 @@ USBMIDI2DriverEvtRequestWriteCompletionRoutineDelete(
     _In_ WDFCONTEXT                  Context
 );
 
-_Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NONPAGED_CODE_SEG
 VOID
@@ -282,5 +275,3 @@ USBMIDI2DriverEvtRequestWriteCompletionRoutine(
     _In_ PWDF_REQUEST_COMPLETION_PARAMS CompletionParams,
     _In_ WDFCONTEXT                  Context
 );
-
-#endif // _DEVICE_H_

@@ -569,7 +569,6 @@ Return Value:
     WDF_OBJECT_ATTRIBUTES                   deviceConfigAttrib;
     UINT8                                   numInterfaces;
     USB_INTERFACE_DESCRIPTOR                interfaceDescriptor;
-    WDFUSBPIPE                              pipe;
     PWDF_USB_INTERFACE_SETTING_PAIR         pSettingPairs = NULL;
     WDF_USB_DEVICE_SELECT_CONFIG_PARAMS     configParams;
     WDF_OBJECT_ATTRIBUTES                   objectAttributes;
@@ -976,7 +975,6 @@ Return Value:
     UINT8                                   numberConfiguredPipes;
     WDFUSBPIPE                              pipe;
     WDF_USB_PIPE_INFORMATION                pipeInfo;
-    PWDF_USB_INTERFACE_SETTING_PAIR         pSettingPairs = NULL;
     WDF_USB_CONTINUOUS_READER_CONFIG        readerConfig;
 
     PAGED_CODE();
@@ -1094,7 +1092,11 @@ Return Value:
     PUINT8              pWorkingBuffer;
     UMP_PACKET          umpPacket;
 
+    Pipe;
+
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
+
+    umpPacket.wordCount = 0;
 
     // Confirm there is data to process
     if (NumBytesTransferred)
@@ -1136,7 +1138,7 @@ Return Value:
             pWorkingBuffer = (PUINT8)WdfMemoryGetBuffer(workingBuffer, NULL);
 
             // We process into working buffer based on UINT32s
-            UINT16 numAvail = workingBufferSize / sizeof(UINT32);
+            UINT16 numAvail = (UINT16)workingBufferSize / sizeof(UINT32);
             UINT16 numIndex = 0;
 
             // Process received data as UINT32 Packets
@@ -1562,7 +1564,7 @@ Return Value:Amy
     if (!requestSize)
     {
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-            "%!FUNC! parameter invalid. Insufficient Length %d.\n", Length);
+            "%!FUNC! parameter invalid. Insufficient Length %d.\n", (int)Length);
         status = STATUS_INVALID_PARAMETER;
         goto IoEvtReadExit;
     }
@@ -1641,10 +1643,8 @@ Return Value:Amy
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
     pDeviceContext = GetDeviceContext(WdfIoQueueGetDevice(Queue));
-    ASSERT(!pDeviceContext);
 
     pipe = pDeviceContext->MidiOutPipe;
-    ASSERT(!pipe);
 
     // 
     // General Error Checking
@@ -1672,7 +1672,7 @@ Return Value:Amy
         //
         // Need to convert from UMP to USB MIDI 1.0 as a USB MIDI 1.0 device connected
         //
-        UINT numWords = Length / sizeof(UINT32);
+        UINT numWords = (UINT)Length / sizeof(UINT32);
         UINT numProcessed = 0;
         PUINT32 words = (PUINT32)pBuffer;
         while (numProcessed < numWords)
@@ -1812,15 +1812,6 @@ Return Value:Amy
                     numWordsNeeded++; // add word for any remaining sysex data
                 }
                 umpWritePacket.wordCount = numWordsNeeded;
-
-#if 0
-                // is there enough fifo?
-                if ((tu_fifo_remaining(&ump->tx_ff) / 4) < numWordsNeeded)
-                {
-                    goto exitWrite; // if not enough, then we need to let everything else run to clear up some room
-                    // and then try again
-                }
-#endif
 
                 UINT8 sysexCount = 0;
                 UINT8 sysexWordCount = 0;
@@ -2024,6 +2015,8 @@ BOOLEAN USBMIDI2DriverSendToUSB(
 )
 {
     NTSTATUS        status;
+    pDeviceContext;
+    Length;
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
