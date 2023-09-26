@@ -1631,6 +1631,12 @@ Return Value:Amy
     PDEVICE_CONTEXT         pDeviceContext = NULL;
     WDFUSBPIPE              pipe = NULL;
     PUCHAR                  pBuffer;
+    PUCHAR                  pWriteBuffer = NULL;
+    size_t                  writeBufferIndex = 0;
+    WDFREQUEST              usbRequest = NULL;
+    WDFMEMORY               writeMemory = NULL;
+    PUINT32                 pWriteWords = NULL;
+    WDF_OBJECT_ATTRIBUTES   writeMemoryAttributes;
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
@@ -1666,6 +1672,317 @@ Return Value:Amy
         //
         // Need to convert from UMP to USB MIDI 1.0 as a USB MIDI 1.0 device connected
         //
+        UINT numWords = Length / sizeof(UINT32);
+        UINT numProcessed = 0;
+        PUINT32 words = (PUINT32)pBuffer;
+        while (numProcessed < numWords)
+        {
+            UMP_PACKET umpPacket;
+            UMP_PACKET umpWritePacket;  // used as storage to translate to USB MIDI 1.0
+
+            umpPacket.wordCount = 0;
+
+            // First determine the size of UMP packet based on message type
+            umpPacket.umpData.umpWords[0] = words[numProcessed];
+            switch (umpPacket.umpData.umpBytes[0] & UMP_MT_MASK)
+            {
+            case UMP_MT_UTILITY:
+            case UMP_MT_SYSTEM:
+            case UMP_MT_MIDI1_CV:
+            case 0x60: // undefined
+            case 0x70: // undefined
+                umpPacket.wordCount = 1;
+                break;
+
+            case UMP_MT_DATA_64:
+            case UMP_MT_MIDI2_CV:
+            case 0x80: // undefined
+            case 0x90: // undefined
+            case 0xa0: // undefined
+                umpPacket.wordCount = 2;
+                break;
+
+            case 0xb0: // undefined
+            case 0xc0: // undefined
+                umpPacket.wordCount = 3;
+                break;
+
+            case UMP_MT_DATA_128:
+            case UMP_MT_FLEX_128:
+            case UMP_MT_STREAM_128:
+            case 0xe0: // undefined
+                umpPacket.wordCount = 4;
+                break;
+
+            default:
+                // Unhandled or corrupt data, force to move on
+                numProcessed++;
+                continue;
+            }
+
+            // Confirm have enough data for full packet
+            if ((numWords - numProcessed) < umpPacket.wordCount)
+            {
+                // If not, let system populate more
+                goto DriverEvtIoWriteExit;
+            }
+            // Get rest of words if needed for UMP Packet
+            for (int count = 1; count < umpPacket.wordCount; count++)
+            {
+                umpPacket.umpData.umpWords[count] = words[numProcessed + count];
+            }
+
+            UINT8 cbl_num = umpPacket.umpData.umpBytes[0] & UMP_GROUP_MASK; // if used, cable num is group block num
+
+            switch (umpPacket.umpData.umpBytes[0] & UMP_MT_MASK)
+            {
+            case UMP_MT_SYSTEM:  // System Common messages
+                umpWritePacket.wordCount = 1; // All types are single USB UMP 1.0 message
+                // Now need to determine number of bytes for CIN
+                switch (umpPacket.umpData.umpBytes[1])
+                {
+                case UMP_SYSTEM_TUNE_REQ:
+                case UMP_SYSTEM_TIMING_CLK:
+                case UMP_SYSTEM_START:
+                case UMP_SYSTEM_CONTINUE:
+                case UMP_SYSTEM_STOP:
+                case UMP_SYSTEM_ACTIVE_SENSE:
+                case UMP_SYSTEM_RESET:
+                    umpWritePacket.umpData.umpBytes[0] = (cbl_num << 4) | MIDI_CIN_SYSEX_END_1BYTE;
+                    break;
+
+                case UMP_SYSTEM_MTC:
+                case UMP_SYSTEM_SONG_SELECT:
+                    umpWritePacket.umpData.umpBytes[0] = (cbl_num << 4) | MIDI_CIN_SYSCOM_2BYTE;
+                    break;
+
+                case UMP_SYSTEM_SONG_POS_PTR:
+                    umpWritePacket.umpData.umpBytes[0] = (cbl_num << 4) | MIDI_CIN_SYSCOM_3BYTE;
+                    break;
+
+                default:
+                    umpWritePacket.wordCount = 0;
+                    break;
+                }
+
+                // Copy over actual data
+                for (int count = 1; count < 4; count++)
+                {
+                    umpWritePacket.umpData.umpBytes[count] = umpPacket.umpData.umpBytes[count];
+                }
+                break;
+
+            case UMP_MT_MIDI1_CV:
+                umpWritePacket.wordCount = 1;
+                umpWritePacket.umpData.umpBytes[0] = (cbl_num << 4) | ((umpPacket.umpData.umpBytes[1] & 0xf0) >> 4);
+                for (int count = 1; count < 4; count++)
+                {
+                    umpWritePacket.umpData.umpBytes[count] = umpPacket.umpData.umpBytes[count];
+                }
+                break;
+
+            case UMP_MT_DATA_64:
+            {
+                bool bEndSysex = false;
+
+                // Determine if sysex will end after this message
+                switch (umpPacket.umpData.umpBytes[1] & UMP_SYSEX7_STATUS_MASK)
+                {
+                case UMP_SYSEX7_COMPLETE:
+                    pDeviceContext->midi1OutSysex[cbl_num].index = 1;
+                case UMP_SYSEX7_END:
+                    bEndSysex = true;
+                    break;
+
+                case UMP_SYSEX7_START:
+                    pDeviceContext->midi1OutSysex[cbl_num].index = 1;
+                default:
+                    bEndSysex = false;
+                    break;
+                }
+
+                // determine the size
+                UINT8 sysexSize = umpPacket.umpData.umpBytes[1] & UMP_SYSEX7_SIZE_MASK;
+
+                // determine the number of USB MIDI 1 packets to be created
+                UINT8 numWordsNeeded = (sysexSize + pDeviceContext->midi1OutSysex[cbl_num].index - 1) / 3;
+                UINT8 numBytesRemain = (sysexSize + pDeviceContext->midi1OutSysex[cbl_num].index - 1) % 3;
+                if (bEndSysex && numBytesRemain)
+                {
+                    numWordsNeeded++; // add word for any remaining sysex data
+                }
+                umpWritePacket.wordCount = numWordsNeeded;
+
+#if 0
+                // is there enough fifo?
+                if ((tu_fifo_remaining(&ump->tx_ff) / 4) < numWordsNeeded)
+                {
+                    goto exitWrite; // if not enough, then we need to let everything else run to clear up some room
+                    // and then try again
+                }
+#endif
+
+                UINT8 sysexCount = 0;
+                UINT8 sysexWordCount = 0;
+                while (sysexCount < sysexSize && sysexWordCount < numWordsNeeded)
+                {
+                    pDeviceContext->midi1OutSysex[cbl_num].buffer[pDeviceContext->midi1OutSysex[cbl_num].index++] = umpPacket.umpData.umpBytes[2 + sysexCount++];
+
+                    // is current packet build full
+                    if (pDeviceContext->midi1OutSysex[cbl_num].index == 4)
+                    {
+                        pDeviceContext->midi1OutSysex[cbl_num].buffer[0] = (cbl_num << 4);
+                        if (bEndSysex)
+                        {
+                            if (sysexCount == sysexSize)
+                            {
+                                pDeviceContext->midi1OutSysex[cbl_num].buffer[0] |= MIDI_CIN_SYSEX_END_3BYTE;
+                            }
+                            else
+                            {
+                                pDeviceContext->midi1OutSysex[cbl_num].buffer[0] |= MIDI_CIN_SYSEX_START;
+                            }
+                        }
+                        else
+                        {
+                            pDeviceContext->midi1OutSysex[cbl_num].buffer[0] |= MIDI_CIN_SYSEX_START;
+                        }
+
+                        // Fill Word into write packet and reset index
+                        umpWritePacket.umpData.umpWords[sysexWordCount++] = *(PUINT32)&pDeviceContext->midi1OutSysex[cbl_num].buffer;
+                        pDeviceContext->midi1OutSysex[cbl_num].index = 1;
+                    }
+                }
+
+                // Determine if need to terminate current word
+                if (bEndSysex && numBytesRemain)
+                {
+                    // Fill rest of buffer
+                    while (pDeviceContext->midi1OutSysex[cbl_num].index < 4) // WRONG LOGIC HERE
+                    {
+                        pDeviceContext->midi1OutSysex[cbl_num].buffer[pDeviceContext->midi1OutSysex[cbl_num].index++] = 0x00;
+                    }
+                    switch (numBytesRemain)
+                    {
+                    case 1:
+                        pDeviceContext->midi1OutSysex[cbl_num].buffer[0] = (cbl_num << 4) | MIDI_CIN_SYSEX_END_1BYTE;
+                        break;
+
+                    case 2:
+                        pDeviceContext->midi1OutSysex[cbl_num].buffer[0] = (cbl_num << 4) | MIDI_CIN_SYSEX_END_2BYTE;
+                        break;
+
+                    default:
+                        // should never get here, but use full packet in error
+                        pDeviceContext->midi1OutSysex[cbl_num].buffer[0] = (cbl_num << 4) | MIDI_CIN_SYSEX_END_3BYTE;
+                    }
+
+                    // Fill Word into write packet
+                    umpWritePacket.umpData.umpWords[sysexWordCount++] = *(PUINT32)&pDeviceContext->midi1OutSysex[cbl_num].buffer;
+                    pDeviceContext->midi1OutSysex[cbl_num].index = 1;
+                }
+                break;
+            }
+
+            default:
+                // Not handled so ignore
+                numProcessed += umpPacket.wordCount;
+                umpWritePacket.wordCount = 0;
+            }
+
+            if (umpWritePacket.wordCount)
+            {
+                numProcessed += umpPacket.wordCount;
+
+                // If currently no write buffer, create one
+                if (!pWriteBuffer)
+                {
+                    // Create Request
+                    status = WdfRequestCreate(
+                        NULL,       // attributes
+                        WdfUsbTargetPipeGetIoTarget(pipe),
+                        &usbRequest    // retuest object
+                    );
+                    if (!NT_SUCCESS(status))
+                    {
+                        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                            "%!FUNC! Error creating request for USB Write with status: 0x%x", status);
+                        goto DriverEvtIoWriteExit;
+                    }
+
+                    WDF_OBJECT_ATTRIBUTES_INIT(&writeMemoryAttributes);
+                    writeMemoryAttributes.ParentObject = usbRequest;
+
+                    // Create Memory Object
+                    status = WdfMemoryCreate(
+                        &writeMemoryAttributes,
+                        NonPagedPool,
+                        USBMIDI_POOLTAG,
+                        pDeviceContext->MidiOutMaxSize,
+                        &writeMemory,
+                        NULL
+                    );
+                    if (!NT_SUCCESS(status))
+                    {
+                        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                            "%!FUNC! could not create WdfMemory with status: 0x%x.\n", status);
+                        goto DriverEvtIoWriteExit;
+                    }
+                    pWriteBuffer = (PUCHAR)WdfMemoryGetBuffer(writeMemory, NULL);
+                    pWriteWords = (PUINT32)pWriteBuffer;
+                }
+
+                // Write into buffer
+                for (int count = 0; count < umpWritePacket.wordCount; count++)
+                {
+                    pWriteWords[writeBufferIndex++] = umpWritePacket.umpData.umpWords[count];
+                }
+
+                if (writeBufferIndex == pDeviceContext->MidiOutMaxSize)
+                {
+                    // Write to buffer
+                    if (!USBMIDI2DriverSendToUSB(
+                        usbRequest,
+                        writeMemory,
+                        pipe,
+                        writeBufferIndex,
+                        pDeviceContext,
+                        true    // delete this request when complete
+                    ))
+                    {
+                        goto DriverEvtIoWriteExit;
+                    }
+
+                    // Indicate new buffer needed
+                    pWriteBuffer = NULL;
+                    writeBufferIndex = 0;
+                }
+            }
+        }
+
+        // Check if anything leftover to write to USB
+        if (writeBufferIndex)
+        {
+            // Write to buffer
+            if (!USBMIDI2DriverSendToUSB(
+                usbRequest,
+                writeMemory,
+                pipe,
+                writeBufferIndex,
+                pDeviceContext,
+                true    // delete this request when complete
+            ))
+            {
+                goto DriverEvtIoWriteExit;
+            }
+
+            // Indicate new buffer needed
+            pWriteBuffer = NULL;
+            writeBufferIndex = 0;
+        }
+
+        // Indicate we are done with the request
+        WdfRequestCompleteWithInformation(Request, STATUS_SUCCESS, Length);
     }
     else
     {
