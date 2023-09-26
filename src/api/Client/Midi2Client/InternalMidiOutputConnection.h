@@ -93,7 +93,7 @@ namespace Windows::Devices::Midi2::Internal
             if (!internal::IsValidSingleUmpWordCount(wordCount))
                 return false;
 
-            if (!internal::GetUmpLengthInMidiWordsFromFirstWord(word0) != wordCount)
+            if (internal::GetUmpLengthInMidiWordsFromFirstWord(word0) != wordCount)
                 return false;
 
             return true;
@@ -185,6 +185,7 @@ namespace Windows::Devices::Midi2::Internal
 
         auto byteLength = (uint8_t)(wordCount * sizeof(uint32_t));
 
+        // TODO: is enddianness ok here?
         return SendMessageRaw(m_outputAbstraction, (void*)(&message), byteLength, timestamp);
     }
 

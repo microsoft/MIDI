@@ -38,27 +38,27 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             m_serviceAbstraction = serviceAbstraction;
 
-            // TODO: Read any settings we need for this endpoint
+            
             m_options = options;
 
 
             // TODO: Add any other automatic handlers if the options allow for it
 
-            if (!options.DisableAutomaticStreamConfiguration())
+            if (options == nullptr || !options.DisableAutomaticStreamConfiguration())
             {
                 auto configurator = winrt::make_self<implementation::MidiEndpointConfigurator>();
 
                 m_messageProcessingPlugins.Append(*configurator);
             }
 
-            if (!options.DisableAutomaticEndpointMetadataHandling())
+            if (options == nullptr || !options.DisableAutomaticEndpointMetadataHandling())
             {
                 auto plug = winrt::make_self<implementation::MidiEndpointMetadataEndpointListener>();
 
                 m_messageProcessingPlugins.Append(*plug);
             }
 
-            if (!options.DisableAutomaticFunctionBlockMetadataHandling())
+            if (options == nullptr || !options.DisableAutomaticFunctionBlockMetadataHandling())
             {
                 auto plugin = winrt::make_self<implementation::MidiFunctionBlockEndpointListener>();
 
@@ -71,7 +71,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             SetInputConnectionOnPlugins(input);
             SetOutputConnectionOnPlugins(output);
-            SetRequestedStreamConfigurationOnPlugins(options.RequestedStreamConfiguration());
+
+            if (options != nullptr)
+            {
+                SetRequestedStreamConfigurationOnPlugins(options.RequestedStreamConfiguration());
+            }
 
             InitializePlugins();
 

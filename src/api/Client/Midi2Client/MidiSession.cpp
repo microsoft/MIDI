@@ -132,28 +132,20 @@ namespace winrt::Windows::Devices::Midi2::implementation
             auto normalizedDeviceId = NormalizeDeviceId(endpointDeviceId);
             auto endpointConnection = winrt::make_self<implementation::MidiBidirectionalEndpointConnection>();
 
+            // default options
+            midi2::MidiBidirectionalEndpointOpenOptions fixedOptions{ };
+
+            if (options != nullptr)
+            {
+                fixedOptions = options;
+            }
+
             // generate internal endpoint Id
             auto connectionInstanceId = foundation::GuidHelper::CreateNewGuid();
 
-            if (endpointConnection->InternalInitialize(m_serviceAbstraction, connectionInstanceId, normalizedDeviceId, options))
+            if (endpointConnection->InternalInitialize(m_serviceAbstraction, connectionInstanceId, normalizedDeviceId, fixedOptions))
             {
                 m_connections.Insert(connectionInstanceId, (const midi2::IMidiEndpointConnection)(*endpointConnection));
-
-                // TODO: This value needs to come from configuration for this endpoint. It comes from
-                // the user settings property store, and then the open options
-                bool autoHandleEndpointMessages = true;
-
-                if (autoHandleEndpointMessages)
-                {
-                    //auto endpointInformationListener = winrt::make_self<implementation::MidiEndpointInformationEndpointListener>();
-
-                    //endpointInformationListener->Id(L"auto_EndpointInformationListener");
-                    //endpointInformationListener->Name(L"Automatic Endpoint Information Message Handler");
-                    //endpointInformationListener->InputConnection(endpointConnection.as<IMidiInputConnection>());
-                    //endpointInformationListener->Initialize();
-                    //                   
-                    //endpointConnection->MessageListeners().Append(*endpointInformationListener);
-                }
 
                 return *endpointConnection;
             }
