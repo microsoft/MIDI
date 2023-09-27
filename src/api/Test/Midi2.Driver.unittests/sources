@@ -1,0 +1,44 @@
+TARGETNAME = Midi2.Driver.unittests
+TARGETTYPE = DYNLINK
+TARGET_DESTINATION = wextest\DnM\taef\midi
+DLLENTRY=_DllMainCRTStartup
+DLLDEF=
+TEST_CODE = 1
+
+MSC_WARNING_LEVEL=/W4 /WX
+MSC_OPTIMIZATION=/Odi
+
+USE_CPPWINRT=1
+
+C_DEFINES=$(C_DEFINES) -DUNICODE -D_UNICODE
+
+SOURCES = \
+    Midi2DriverTests.cpp \
+    Midi2DriverTests.rc
+
+INCLUDES = \
+    $(INCLUDES); \
+    ..\inc; \
+    ..\..\idl; \
+    ..\..\inc; \
+    $(OBJ_PATH)\..\..\idl\$(O); \
+    $(ONECORE_TAEF_INC_PATH); \
+    $(ONECORE_INTERNAL_SDK_INC_PATH); \
+    $(ONECOREUAPSHELL_INTERNAL_INC_PATH_L); \
+    
+TARGETLIBS = \
+    $(TARGETLIBS) \
+    $(OBJ_PATH)\..\..\libs\midikscommon\$(O)\midikscommon.lib \
+    $(OBJ_PATH)\..\libs\midiksenum\$(O)\midiksenum.lib \
+    $(OBJ_PATH)\..\..\libs\midiks\$(O)\midiks.lib \
+    $(OBJ_PATH)\..\libs\miditestcommon\$(O)\miditestcommon.lib \
+    $(ONECORE_EXTERNAL_SDK_LIB_VPATH)\onecoreuap.lib \
+    $(ONECORE_TAEF_LIB_PATH)\Wex.Common.lib \
+    $(ONECORE_TAEF_LIB_PATH)\Wex.Logger.lib \
+    $(ONECOREUAP_EXTERNAL_SDK_LIB_PATH)\ksuser.lib \
+    $(ONECOREUAP_EXTERNAL_SDK_LIB_PATH)\avrt.lib \
+    $(OBJ_PATH)\..\..\libs\midixproc\$(O)\midixproc.lib \
+
+UNIVERSAL_TEST=1
+UNIVERSAL_TEST_TARGET_DESTINATION_SUBDIRECTORY=AudioCore
+UNIVERSAL_TEST_PUBLISH_METADATA=internal

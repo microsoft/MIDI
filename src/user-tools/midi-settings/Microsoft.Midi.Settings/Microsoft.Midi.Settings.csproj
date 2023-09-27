@@ -54,6 +54,7 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0" />
+    <PackageReference Include="Microsoft.Devices.Midi2.Core" Version="1.0.0-preview.1-0094" />
     <PackageReference Include="Microsoft.Devices.Midi2.Core.CS" Version="0.1.6-prerelease" />
     <PackageReference Include="Microsoft.Devices.Midi2.Setups.CS" Version="0.1.5-prerelease" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />

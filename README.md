@@ -97,6 +97,8 @@ We encourage you to begin building your products using the information in this r
 
 For planning purposes, we expect to have a first version of the full MIDI 2.0 stack out near the end of this year. We'll update everyone as that gets more solid.
 
+[MIDI Association article on building MIDI 2.0 USB devices](https://midi.org/midi-articles/building-a-usb-midi-2-0-device-part-1)
+
 ## License
 
 * See [LICENSE](LICENSE)

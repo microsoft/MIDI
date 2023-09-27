@@ -1,0 +1,25 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+
+// This interface requires you to also implement IMidiEndpointMessageListener
+
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+import "IMidiOutputConnection.idl";
+
+namespace Windows.Devices.Midi2
+{
+    [MIDI_API_CONTRACT(1)]
+    [MIDI_INTERFACE_UUID("3f4a7cc3-baf6-4e4c-b4c4-c7ee38af2049",1.0)]
+    interface IMidiEndpointMessageResponder
+    {
+        IMidiOutputConnection OutputConnection{ get; set; };
+    }
+}

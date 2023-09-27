@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Windows.Devices.Midi2.1.0.0-preview.1-0011\build\native\Windows.Devices.Midi2.props" Condition="Exists('..\packages\Windows.Devices.Midi2.1.0.0-preview.1-0011\build\native\Windows.Devices.Midi2.props')" />
   <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.props')" />
   <PropertyGroup Label="Globals">
     <ProjectName>Microsoft.Devices.Midi2.Core</ProjectName>
@@ -77,6 +78,12 @@
     <DesktopCompatible>true</DesktopCompatible>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <DesktopCompatible>true</DesktopCompatible>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <DesktopCompatible>true</DesktopCompatible>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">
     <DesktopCompatible>true</DesktopCompatible>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -157,11 +164,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="MidiChannelEndpointListener.h" />
+    <ClInclude Include="MidiCIPropertyRequestedEventArgs.h" />
     <ClInclude Include="MidiEndpointDisplayFormatter.h">
       <DependentUpon>MidiEndpointDisplayFormatter.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiGroupEndpointListener.h" />
     <ClInclude Include="MidiHighResolutionValueDisplayFormatter.h">
       <DependentUpon>MidiHighResolutionValueDisplayFormatter.idl</DependentUpon>
     </ClInclude>
@@ -171,14 +177,20 @@
     <ClInclude Include="MidiEndpointInformation.h">
       <DependentUpon>MidiEndpointInformation.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiFunctionBlock.h">
-      <DependentUpon>MidiFunctionBlock.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiGroupTerminalBlock.h">
       <DependentUpon>MidiGroupTerminalBlock.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiDeviceInformation.h">
       <DependentUpon>MidiDeviceInformation.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiMessageBufferHelper.h">
+      <DependentUpon>MidiMessageBufferHelper.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiMessageBufferReader.h">
+      <DependentUpon>MidiMessageBufferReader.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiMessageBufferWriter.h">
+      <DependentUpon>MidiMessageBufferWriter.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiMessageTranslator.h">
       <DependentUpon>MidiMessageTranslator.idl</DependentUpon>
@@ -186,31 +198,22 @@
     <ClInclude Include="MidiServices.h">
       <DependentUpon>MidiServices.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiVirtualDevice.h" />
     <ClInclude Include="midi_app_sdk_version.h">
-    </ClInclude>
-    <ClInclude Include="MidiTransportInformation.h">
-      <DependentUpon>MidiTransportInformation.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="midi_sdk_inproc_loopback_simulator.h" />
     <ClInclude Include="ump_helpers.h" />
     <ClInclude Include="MidiUmpUtilities.h">
       <DependentUpon>MidiUmpUtilities.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiChannel.h">
-      <DependentUpon>MidiChannel.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiGroup.h">
-      <DependentUpon>MidiGroup.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Generated Files\module.g.cpp" />
-    <ClCompile Include="MidiChannelEndpointListener.cpp" />
+    <ClCompile Include="MidiCIPropertyRequestedEventArgs.cpp" />
     <ClCompile Include="MidiEndpointDisplayFormatter.cpp">
       <DependentUpon>MidiEndpointDisplayFormatter.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiGroupEndpointListener.cpp" />
     <ClCompile Include="MidiHighResolutionValueDisplayFormatter.cpp">
       <DependentUpon>MidiHighResolutionValueDisplayFormatter.idl</DependentUpon>
     </ClCompile>
@@ -220,14 +223,20 @@
     <ClCompile Include="MidiEndpointInformation.cpp">
       <DependentUpon>MidiEndpointInformation.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiFunctionBlock.cpp">
-      <DependentUpon>MidiFunctionBlock.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiGroupTerminalBlock.cpp">
       <DependentUpon>MidiGroupTerminalBlock.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiDeviceInformation.cpp">
       <DependentUpon>MidiDeviceInformation.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiMessageBufferHelper.cpp">
+      <DependentUpon>MidiMessageBufferHelper.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiMessageBufferReader.cpp">
+      <DependentUpon>MidiMessageBufferReader.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiMessageBufferWriter.cpp">
+      <DependentUpon>MidiMessageBufferWriter.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiMessageTranslator.cpp">
       <DependentUpon>MidiMessageTranslator.idl</DependentUpon>
@@ -235,43 +244,32 @@
     <ClCompile Include="MidiServices.cpp">
       <DependentUpon>MidiServices.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiTransportInformation.cpp">
-      <DependentUpon>MidiTransportInformation.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiUmpUtilities.cpp">
       <DependentUpon>MidiUmpUtilities.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiChannel.cpp">
-      <DependentUpon>MidiChannel.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiGroup.cpp">
-      <DependentUpon>MidiGroup.idl</DependentUpon>
-    </ClCompile>
+    <ClCompile Include="MidiVirtualDevice.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="IMidiEndpointListener.idl" />
     <Midl Include="IMidiTransportSettingsData.idl" />
-    <Midl Include="MidiChannel.idl" />
-    <Midl Include="MidiChannelEndpointListener.idl" />
+    <Midl Include="MidiCIPropertyRequestedEventArgs.idl" />
+    <Midl Include="MidiVirtualDevice.idl" />
     <Midl Include="MidiEndpointInformation.idl" />
     <Midl Include="MidiEndpointDataFormatEnum.idl" />
-    <Midl Include="MidiFunctionBlockDirectionEnum.idl" />
-    <Midl Include="MidiGroupEndpointListener.idl" />
     <Midl Include="MidiHighResolutionValueDisplayFormatter.idl" />
+    <Midl Include="MidiMessageBufferHelper.idl" />
+    <Midl Include="MidiMessageBufferReader.idl" />
+    <Midl Include="MidiMessageBufferWriter.idl" />
     <Midl Include="MidiMessageTranslator.idl" />
     <Midl Include="MidiDeviceInformation.idl" />
     <Midl Include="MidiEndpointDisplayFormatter.idl" />
-    <Midl Include="MidiFunctionBlock.idl" />
-    <Midl Include="MidiFunctionBlockUIHintEnum.idl" />
-    <Midl Include="MidiGroup.idl" />
     <Midl Include="MidiGroupTerminalBlock.idl" />
     <Midl Include="MidiLocalizedStrings.idl" />
     <Midl Include="MidiServices.idl" />
-    <Midl Include="MidiTransportInformation.idl" />
     <Midl Include="MidiUmpUtilities.idl" />
+    <Midl Include="MidiServicesStatusEnum.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-sdk.def" />
@@ -284,14 +282,10 @@
     <PRIResource Include="..\..\shared\strings\en-US\MidiEntities.resw" />
     <PRIResource Include="..\..\shared\strings\en-US\MidiMessageResources.resw" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\app-dev-api\api-core\Windows.Devices.Midi2.vcxproj">
-      <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.targets')" />
+    <Import Project="..\packages\Windows.Devices.Midi2.1.0.0-preview.1-0011\build\native\Windows.Devices.Midi2.targets" Condition="Exists('..\packages\Windows.Devices.Midi2.1.0.0-preview.1-0011\build\native\Windows.Devices.Midi2.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -299,5 +293,7 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.props'))" />
     <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.targets'))" />
+    <Error Condition="!Exists('..\packages\Windows.Devices.Midi2.1.0.0-preview.1-0011\build\native\Windows.Devices.Midi2.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Windows.Devices.Midi2.1.0.0-preview.1-0011\build\native\Windows.Devices.Midi2.props'))" />
+    <Error Condition="!Exists('..\packages\Windows.Devices.Midi2.1.0.0-preview.1-0011\build\native\Windows.Devices.Midi2.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Windows.Devices.Midi2.1.0.0-preview.1-0011\build\native\Windows.Devices.Midi2.targets'))" />
   </Target>
 </Project>

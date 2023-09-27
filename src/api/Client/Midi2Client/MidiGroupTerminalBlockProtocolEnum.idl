@@ -1,0 +1,32 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+// Group terminal blocks are being phased out in favor of Function Blocks, but
+// will still be found in devices. See MIDI implementation guide and 
+// documentation to better understand the relationship between Group Terminal
+// Blocks and Function Blocks
+
+
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+
+namespace Windows.Devices.Midi2
+{
+    [MIDI_API_CONTRACT(1)]
+    enum MidiGroupTerminalBlockProtocol
+    {
+        Unknown = 0x00,
+        Midi1Ump64 = 0x01,
+        Midi1Ump64WithJitterReduction = 0x02,
+        Midi1Ump128 = 0x03,
+        Midi1Ump128WithJitterReduction = 0x04,
+        Midi2 = 0x11,
+        Midi2WithJitterReduction = 0x12
+    };
+}

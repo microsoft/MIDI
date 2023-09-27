@@ -1,0 +1,36 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+// Convenience listener for apps which want to pay attention only to certain
+// types of messages. For example, only channel voice messages, or only sysex
+
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+import "MidiGroup.idl";
+import "MidiChannel.idl";
+
+import "MidiUmpMessageTypeEnum.idl";
+
+import "IMidiEndpointMessageProcessingPlugin.idl";
+import "IMidiEndpointMessageListener.idl";
+import "IMidiMessageReceivedEventSource.idl";
+
+namespace Windows.Devices.Midi2
+{
+    [MIDI_API_CONTRACT(1)]
+    [default_interface]
+    runtimeclass MidiMessageTypeEndpointListener :  IMidiEndpointMessageProcessingPlugin, 
+                                                    IMidiEndpointMessageListener, 
+                                                    IMidiMessageReceivedEventSource
+    {
+        MidiMessageTypeEndpointListener();
+
+        IVector<MidiUmpMessageType> IncludeMessageTypes{ get; };
+    }
+}
