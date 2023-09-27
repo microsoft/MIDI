@@ -1,0 +1,227 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes'?>
+
+<!--
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+-->
+
+<!-- This file is not yet complete -->
+
+
+<identity
+    xmlns="urn:Microsoft.CompPlat/ManifestSchema.v1.00"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    buildWow="false"
+    namespace="Windows.Devices.Midi2"
+    name="Windows MIDI Services"
+    owner="Microsoft"
+    >
+
+    <files>
+        <!-- TODO: Need to provide the x64, Arm64, Arm64EC separate directories -->
+
+        <!-- API DLL required for all systems -->
+        <file
+            destinationDir="%programfiles%\Microsoft\MIDI 2.0\"
+            source="$(build.nttree)\Windows.Devices.Midi2.dll" />
+
+        <!-- Windows Service required for all systems -->
+        <file
+            destinationDir="%programfiles%\Microsoft\MIDI 2.0\"
+            source="$(build.nttree)\MidiSrv.exe" />
+
+        <!-- TODO: Copy the transport DLLs -->
+        
+        <!-- TODO: Copy the usb driver? -->
+    </files>
+
+    <COM>
+        <winRTInProcServer
+            path="%programfiles%\Microsoft\MIDI 2.0\Windows.Devices.Midi2.dll">
+
+            <classes>
+                <!-- TODO: Revisit trust level in these types once we have cache and MIDI setups in place -->
+                <!-- Is "Full" required to talk to the service? This setting has impacts on UWP and packaged apps -->
+
+                <!-- Session Management -->
+                <class
+                    activatableClassId="Windows.Devices.Midi2.MidiSession"
+                    threading="Both"
+                    trustLevel="Full"
+                    />
+                <class
+                    activatableClassId="Windows.Devices.Midi2.MidiSessionSettings"
+                    threading="Both"
+                    trustLevel="Base"
+                    />
+
+                <!-- Messages -->
+                <class
+                    activatableClassId="Windows.Devices.Midi2.MidiMessageBuilder"
+                    threading="Both"
+                    trustLevel="Full"
+                    />
+                <class
+                    activatableClassId="Windows.Devices.Midi2.MidiUmp32"
+                    threading="Both"
+                    trustLevel="Base"
+                    />
+                <class
+                    activatableClassId="Windows.Devices.Midi2.MidiUmp64"
+                    threading="Both"
+                    trustLevel="Base"
+                    />
+                <class
+                    activatableClassId="Windows.Devices.Midi2.MidiUmp96"
+                    threading="Both"
+                    trustLevel="Base"
+                    />
+                <class
+                    activatableClassId="Windows.Devices.Midi2.MidiUmp128"
+                    threading="Both"
+                    trustLevel="Base"
+                    />
+
+                <!-- Metadata -->
+                <class
+                    activatableClassId="Windows.Devices.Midi2.MidiEndpointInformation"
+                    threading="Both"
+                    trustLevel="Base"
+                    />
+                <class
+                    activatableClassId="Windows.Devices.Midi2.MidiFunctionBlock"
+                    threading="Both"
+                    trustLevel="Base"
+                    />
+                <class
+                    activatableClassId="Windows.Devices.Midi2.MidiUniqueId"
+                    threading="Both"
+                    trustLevel="Base"
+                    />
+
+                <!-- Listeners and Responders -->
+                <class
+                    activatableClassId="Windows.Devices.Midi2.MidiChannelEndpointListener"
+                    threading="Both"
+                    trustLevel="Base"
+                    />
+                <class
+                    activatableClassId="Windows.Devices.Midi2.MidiEndpointInformationEndpointListener"
+                    threading="Both"
+                    trustLevel="Base"
+                    />
+                <class
+                    activatableClassId="Windows.Devices.Midi2.MidiFunctionBlockEndpointListener"
+                    threading="Both"
+                    trustLevel="Base"
+                    />
+                <class
+                    activatableClassId="Windows.Devices.Midi2.MidiGroupEndpointListener"
+                    threading="Both"
+                    trustLevel="Base"
+                    />
+                <class
+                    activatableClassId="Windows.Devices.Midi2.MidiMessageTypeEndpointListener"
+                    threading="Both"
+                    trustLevel="Base"
+                    />
+                <class
+                    activatableClassId="Windows.Devices.Midi2.MidiStreamConfigurationEndpointListener"
+                    threading="Both"
+                    trustLevel="Base"
+                    />
+
+                <!-- Events -->
+                <class
+                    activatableClassId="Windows.Devices.Midi2.MidiMessageReceivedEventArgs"
+                    threading="Both"
+                    trustLevel="Base"
+                    />
+
+                <!-- Endpoint Connections -->
+                <class
+                    activatableClassId="Windows.Devices.Midi2.MidiBidirectionalEndpointConnection"
+                    threading="Both"
+                    trustLevel="Full"
+                    />
+                <class
+                    activatableClassId="Windows.Devices.Midi2.MidiEndpointConnection"
+                    threading="Both"
+                    trustLevel="Full"
+                    />
+                <class
+                    activatableClassId="Windows.Devices.Midi2.MidiInputEndpointConnection"
+                    threading="Both"
+                    trustLevel="Full"
+                    />
+                <class
+                    activatableClassId="Windows.Devices.Midi2.MidiOutputEndpointConnection"
+                    threading="Both"
+                    trustLevel="Full"
+                    />
+
+                <!-- Basic types -->
+                <class
+                    activatableClassId="Windows.Devices.Midi2.MidiChannel"
+                    threading="Both"
+                    trustLevel="Base"
+                    />
+                <class
+                    activatableClassId="Windows.Devices.Midi2.MidiGroup"
+                    threading="Both"
+                    trustLevel="Base"
+                    />
+
+            </classes>
+
+        </winRTInProcServer>
+
+        <inProcServer>
+            <!-- TODO: COM entries for all this so it can be consumed by Delphi and others -->
+
+        </inProcServer>
+        
+    </COM>
+
+    <drivers>
+        <!-- TODO: USB MIDI 2.0 Driver entry -->
+        <!--
+        <inf source="$(build.nttree)\\usbmidi2.inf"/>
+        -->
+    </drivers>
+
+
+    <service
+        description="Service for routing incoming and outgoing MIDI messages"
+        displayName="Windows MIDI Services"
+        imagePath="%programfiles%\Microsoft\MIDI 2.0\midisrv.exe"
+        objectName="LocalSystem"
+        name="midisrv">
+        
+        <!-- TODO: Service entry including the start trigger and the additional attributes needed above-->
+
+        <!-- 
+        <serviceTrigger
+            action="start"
+            subtype="RPC_INTERFACE_EVENT"
+            type="NetworkEndpointEvent"
+            >
+        -->
+
+    </service>
+    
+    <!-- TODO: Service entry? Service COM interface entries? -->
+    
+    <!-- TODO: Transport plugins entries -->
+
+    <!-- TODO: Any other required registry entries? Setup information? Other config? -->
+
+    <!-- TODO: Store app/OSApp packages for the tools -->
+
+</identity>

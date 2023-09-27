@@ -1,0 +1,4 @@
+DIRS=\
+    Midi2Client \
+    #MidiRT \
+    #WinMM \

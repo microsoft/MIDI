@@ -1,0 +1,361 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppDescription" xml:space="preserve">
+    <value>Utility application for interacting with Windows MIDI Services from the command line. Requires that Windows MIDI Services is installed and enabled on the PC.</value>
+  </data>
+  <data name="AppShortName" xml:space="preserve">
+    <value>MIDI Console</value>
+  </data>
+  <data name="AppTitle" xml:space="preserve">
+    <value>Microsoft Windows MIDI Services Console</value>
+  </data>
+  <data name="CommandDiagnosticsReportDescription" xml:space="preserve">
+    <value>Generate a report, typically for a support request, or for use when filing a bug</value>
+  </data>
+  <data name="CommandEndpointDescription" xml:space="preserve">
+    <value>Perform operations on a single endpoint, including reporting details, sending messages, monitoring, and more. If you leave out the Instance Id, you will be prompted to select from a list.</value>
+  </data>
+  <data name="CommandEnumerateDescription" xml:space="preserve">
+    <value>Enumerate (list) endpoints and transports</value>
+  </data>
+  <data name="CommandEnumerateEndpointsDescription" xml:space="preserve">
+    <value>List MIDI UMP endpoints visible to Windows MIDI Services-aware applications</value>
+  </data>
+  <data name="CommandEnumerateLegacyEndpointsDescription" xml:space="preserve">
+    <value>List MIDI 1.0 endpoints as seen in apps using older MIDI APIs</value>
+  </data>
+  <data name="CommandEnumerateTransportPluginsDescription" xml:space="preserve">
+    <value>List all MIDI transport plugins installed on this PC.</value>
+  </data>
+  <data name="CommandMonitorEndpointDescription" xml:space="preserve">
+    <value>Monitors a UMP endpoint for incoming messages</value>
+  </data>
+  <data name="CommandSendMessageDescription" xml:space="preserve">
+    <value>Send a single message to a UMP endpoint as a list of up to four 32 bit MIDI words</value>
+  </data>
+  <data name="CommandSendMessagesFileDescription" xml:space="preserve">
+    <value>Sends a text file of UMP MIDI words to the specified endpoint. See arguments and options for format and delimiters.</value>
+  </data>
+  <data name="CommandServiceDescription" xml:space="preserve">
+    <value>Perform operations on the service, such as checking to see if it is running, pinging the standard ping loopback, etc.</value>
+  </data>
+  <data name="CommandServicePingDescription" xml:space="preserve">
+    <value>Ping the MIDI Windows Service</value>
+  </data>
+  <data name="CommandServiceStatusDescription" xml:space="preserve">
+    <value>Check to see if the Windows Service is running</value>
+  </data>
+  <data name="ErrorEnumEndpointsFailed" xml:space="preserve">
+    <value>Enumerating endpoints failed</value>
+  </data>
+  <data name="ErrorGeneralFailReasonWinRTActivation" xml:space="preserve">
+    <value>The WinRT types could not be activated. Is Windows MIDI Services installed?</value>
+  </data>
+  <data name="ErrorPingTestFailed" xml:space="preserve">
+    <value>Ping test failed</value>
+  </data>
+  <data name="ErrorPingTestFailReasonSummaryNull" xml:space="preserve">
+    <value>Ping result summary is null</value>
+  </data>
+  <data name="ErrorUnableToCreateEndpointConnection" xml:space="preserve">
+    <value>Unable to create endpoint connection. Is the endpoint Id correct? Is the type of endpoint correct?</value>
+  </data>
+  <data name="ErrorUnableToCreateSession" xml:space="preserve">
+    <value>Unable to create session.</value>
+  </data>
+  <data name="ErrorUnableToOpenEndpoint" xml:space="preserve">
+    <value>Unable to open specified endpoint.</value>
+  </data>
+  <data name="GenericAverage" xml:space="preserve">
+    <value>Average</value>
+  </data>
+  <data name="GenericClockTicks" xml:space="preserve">
+    <value>clock ticks</value>
+  </data>
+  <data name="GenericCount" xml:space="preserve">
+    <value>Count</value>
+  </data>
+  <data name="GenericResponses" xml:space="preserve">
+    <value>responses</value>
+  </data>
+  <data name="GenericTotal" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="MessageValidationErrorInvalidUmp" xml:space="preserve">
+    <value>The data does not result in a valid UMP</value>
+  </data>
+  <data name="MessageValidationErrorTooFewWords" xml:space="preserve">
+    <value>Please provide at least one valid 32-bit MIDI word</value>
+  </data>
+  <data name="MessageValidationErrorTooManyWords" xml:space="preserve">
+    <value>Please provide up to four valid 32-bit MIDI words, comprising a single valid UMP.</value>
+  </data>
+  <data name="MonitorEndpointResultTableColumnHeaderTimestamp" xml:space="preserve">
+    <value>Timestamp</value>
+  </data>
+  <data name="MonitorEndpointResultTableColumnHeaderWordsReceived" xml:space="preserve">
+    <value>MIDI Words Received</value>
+  </data>
+  <data name="MonitorEscapedPressedMessage" xml:space="preserve">
+    <value>Escape key pressed. Monitoring terminated.</value>
+  </data>
+  <data name="MonitorMonitoringOnEndpointLabel" xml:space="preserve">
+    <value>Monitoring incoming messages on</value>
+  </data>
+  <data name="MonitorPressEscapeToStopMonitoringMessage" xml:space="preserve">
+    <value>Press escape to stop monitoring.</value>
+  </data>
+  <data name="MonitorSessionNameSuffix" xml:space="preserve">
+    <value>Monitor</value>
+  </data>
+  <data name="ParameterCaptureMessagesAnnotate" xml:space="preserve">
+    <value>True to annotate key messages written to the file. Annotations begin with the # sign and are written on the line before the UMP line.</value>
+  </data>
+  <data name="ParameterCaptureMessagesEcho" xml:space="preserve">
+    <value>True to echo the incoming messages to the screen. False to simply show capture progress.</value>
+  </data>
+  <data name="ParameterCaptureMessagesFieldDelimiter" xml:space="preserve">
+    <value>Delimiter to separate fields. Valid values include:</value>
+  </data>
+  <data name="ParameterCaptureMessagesFieldFormat" xml:space="preserve">
+    <value>Format for the fields. Hex prefix is "0x", suffix is "h". Decimal values do not have leading zeroes. Valid values include:</value>
+  </data>
+  <data name="ParameterCaptureMessagesFilter" xml:space="preserve">
+    <value>Filter for the messages. Valid values include:</value>
+  </data>
+  <data name="ParameterCaptureMessagesIncludeTimestamps" xml:space="preserve">
+    <value>True to include the timestamp as the first field for each message.</value>
+  </data>
+  <data name="ParameterCaptureMessagesOutputFile" xml:space="preserve">
+    <value>Name of the file to write to. The file must not already exist.</value>
+  </data>
+  <data name="ParameterCommonEndpointIdDescription" xml:space="preserve">
+    <value>Endpoint Id (also called a Device Instance Id) of the endpoint as used in Windows.Devices.Enumeration. This includes the MIDI interface GUID at the end of the string. You can find the Endpoint Ids by enumerating endpoints through this app. If you leave off the Id, we'll re-enumerate them and provide a list for you to pick from.</value>
+  </data>
+  <data name="ParameterEnumEndpointsDirection" xml:space="preserve">
+    <value>The direction of data flow for the endpoints to list</value>
+  </data>
+  <data name="ParameterEnumEndpointsIncludeEndpointId" xml:space="preserve">
+    <value>Include the UMP Endpoint Id in the output</value>
+  </data>
+  <data name="ParameterEnumLegacyEndpointsDirection" xml:space="preserve">
+    <value>The direction of data flow for the endpoints to list</value>
+  </data>
+  <data name="ParameterEnumLegacyEndpointsIncludeEndpointId" xml:space="preserve">
+    <value>Include the MIDI 1.0 Endpoint Id (the Port Id) in the output</value>
+  </data>
+  <data name="ParameterMonitorEndpointDirectionDescription" xml:space="preserve">
+    <value>The direction of the endpoint referenced by the Id. If this doesn't match the endpoint type, the connection will fail.</value>
+  </data>
+  <data name="ParameterMonitorEndpointSingleMessage" xml:space="preserve">
+    <value>Wait for a single incoming message only</value>
+  </data>
+  <data name="ParameterSendMessageCount" xml:space="preserve">
+    <value>Number of times to send this message</value>
+  </data>
+  <data name="ParameterSendMessageDelayBetweenMessages" xml:space="preserve">
+    <value>Delay, in milliseconds, between messages. This is an approximate delay. Specify 0 for no delay.</value>
+  </data>
+  <data name="ParameterSendMessageEndpointDirectionDescription" xml:space="preserve">
+    <value>The direction of the endpoint referenced by the Id. If this doesn't match the endpoint type, the connection will fail.</value>
+  </data>
+  <data name="ParameterSendMessagesFileCommandFile" xml:space="preserve">
+    <value>Path and filename of the text file to send. This can include lines which begin with # for a comment, or are completely empty for spacing. Remaining lines must be valid delimited hexadecimal UMP words.</value>
+  </data>
+  <data name="ParameterSendMessagesFileFieldDelimiter" xml:space="preserve">
+    <value>Delimiter between fields. Set to "Auto" to have this evaluated for each line. Valid values include:</value>
+  </data>
+  <data name="ParameterSendMessagesFileReplaceGroup" xml:space="preserve">
+    <value>For non-stream messages, replace the second nibble with the specified new group index. Helpful when sending previously-recorded SysEx to a new group.</value>
+  </data>
+  <data name="ParameterSendMessagesFileVerbose" xml:space="preserve">
+    <value>Verbose output as the messages are sent</value>
+  </data>
+  <data name="ParameterSendMessageWordFormat" xml:space="preserve">
+    <value>Data format for the individual words. Valid values include:</value>
+  </data>
+  <data name="ParameterSendMessageWords" xml:space="preserve">
+    <value>32-bit MIDI words, typically in hexadecimal 0x00000000 format. Use the parameter name in front of each word sent.</value>
+  </data>
+  <data name="ParameterServicePingCount" xml:space="preserve">
+    <value>Number of times to ping the MIDI Windows Service</value>
+  </data>
+  <data name="ParameterServicePingTimeout" xml:space="preserve">
+    <value>Total ping timeout in milliseconds. Does not include the session and connection creation and teardown time.</value>
+  </data>
+  <data name="ParameterServicePingVerbose" xml:space="preserve">
+    <value>True to show details from each ping request and response.</value>
+  </data>
+  <data name="ParameterServiceStatusVerbose" xml:space="preserve">
+    <value>Report additional details about the service</value>
+  </data>
+  <data name="PingResultTableColumnHeaderPing" xml:space="preserve">
+    <value>Ping</value>
+  </data>
+  <data name="PingResultTableColumnHeaderReceiveTimestamp" xml:space="preserve">
+    <value>Receive
+Timestamp</value>
+  </data>
+  <data name="PingResultTableColumnHeaderRoundTripMicroseconds" xml:space="preserve">
+    <value>Round Trip
+Microseconds</value>
+  </data>
+  <data name="PingResultTableColumnHeaderRoundTripTicks" xml:space="preserve">
+    <value>Round Trip
+Ticks</value>
+  </data>
+  <data name="PingResultTableColumnHeaderSendTimestamp" xml:space="preserve">
+    <value>Send
+Timestamp</value>
+  </data>
+  <data name="SendMessageResultTableColumnHeaderTimestamp" xml:space="preserve">
+    <value>Timestamp</value>
+  </data>
+  <data name="SendMessageResultTableColumnHeaderWordsSent" xml:space="preserve">
+    <value>MIDI Words Sent</value>
+  </data>
+  <data name="SendMessageSendingThroughEndpointLabel" xml:space="preserve">
+    <value>Sending MIDI message(s) through</value>
+  </data>
+  <data name="SendMessageSessionNameSuffix" xml:space="preserve">
+    <value>Sender</value>
+  </data>
+  <data name="StatusCreatingSessionAndOpeningEndpoint" xml:space="preserve">
+    <value>Creating session and opening endpoint...</value>
+  </data>
+  <data name="TableColumnHeaderCommonMessageType" xml:space="preserve">
+    <value>Message Type</value>
+  </data>
+  <data name="TableColumnHeaderCommonTimestamp" xml:space="preserve">
+    <value>Timestamp</value>
+  </data>
+  <data name="ValidationErrorInvalidGroup" xml:space="preserve">
+    <value>The specified group index is invalid. Specify a group index between 0 and 15.</value>
+  </data>
+  <data name="ValidationErrorPingCountTooHigh" xml:space="preserve">
+    <value>Specified ping count is too high. Please provide a value &lt;= 100.</value>
+  </data>
+  <data name="ValidationErrorPingCountTooLow" xml:space="preserve">
+    <value>Specified ping count is too low. Please provide a value &gt; 0.</value>
+  </data>
+  <data name="ValidationErrorPingTimeoutTooLow" xml:space="preserve">
+    <value>Specified timeout is too low. Please provide a value &gt;= 10ms.</value>
+  </data>
+</root>

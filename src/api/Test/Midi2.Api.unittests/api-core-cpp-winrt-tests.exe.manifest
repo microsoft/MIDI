@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
+    <assemblyIdentity version="1.0.0.0" name="sdk-core-cpp-winrt-tests.exe"/>
+    <file name="Windows.Devices.Midi2.dll">
+        
+        <!-- These aren't needed inside Visual Studio -->
+        <activatableClass name="Windows.Devices.Midi2.DummyTestClass" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+        <activatableClass name="Windows.Devices.Midi2.MidiSession" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass name="Windows.Devices.Midi2.MidiSessionSettings" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+        <activatableClass name="Windows.Devices.Midi2.MidiUmpWithTimestamp" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass name="Windows.Devices.Midi2.MidiUmpMessageType" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+        <activatableClass name="Windows.Devices.Midi2.MidiUmp32" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass name="Windows.Devices.Midi2.MidiUmp64" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass name="Windows.Devices.Midi2.MidiUmp96" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass name="Windows.Devices.Midi2.MidiUmp128" threadingModel="both" xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    </file>
+</assembly>
+

@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows10.0.20348.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <StartupObject></StartupObject>
+    <AssemblyName>midi</AssemblyName>
+    <RootNamespace>Microsoft.Devices.Midi2.ConsoleApp</RootNamespace>
+    <!--<PlatformTarget>x64, arm64</PlatformTarget>-->
+    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+
+      <PublishSingleFile>true</PublishSingleFile>
+      <SelfContained>true</SelfContained>
+      <PublishTrimmed>true</PublishTrimmed>
+      <Platforms>ARM64;x64</Platforms>
+      <!--<RuntimeIdentifiers>win10-x64;win10-arm64</RuntimeIdentifiers>-->
+
+      <!-- Needed for System.Management for viewing service details -->
+      <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+      
+      <!-- Without this, the build script gets "NETSDK1083: The specified RuntimeIdentifier 'win10-x64' is not recognized" -->
+      <UseRidGraph>true</UseRidGraph>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.3" />
+    <PackageReference Include="Spectre.Console" Version="0.47.1-preview.0.23" />
+    <PackageReference Include="Spectre.Console.Cli" Version="0.47.1-preview.0.23" />
+    <PackageReference Include="System.Management" Version="8.0.0-rc.1.23419.4" />
+    <PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.0-rc.1.23419.4" />
+    <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.1-0036" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Resources\Strings.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Strings.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\Strings.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Strings.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

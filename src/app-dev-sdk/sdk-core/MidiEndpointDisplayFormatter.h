@@ -16,9 +16,9 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         MidiEndpointDisplayFormatter() = default;
 
-        static hstring FormatGroupWithFunctionBlocks(winrt::Microsoft::Devices::Midi2::MidiGroup const& group, winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiFunctionBlock> const&, bool abbreviatedVersion);
-        static hstring FormatAllGroupOptionWithFunctionBlocks(winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::Devices::Midi2::MidiFunctionBlock> const& blocks, bool abbreviatedVersion);
-        static hstring FormatChannel(winrt::Microsoft::Devices::Midi2::MidiChannel const& channel, bool abbreviatedVersion);
+        static hstring FormatGroupWithFunctionBlocks(winrt::Windows::Devices::Midi2::MidiGroup const& group, winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::MidiFunctionBlock> const&, bool abbreviatedVersion);
+        static hstring FormatAllGroupOptionWithFunctionBlocks(winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::MidiFunctionBlock> const& blocks, bool abbreviatedVersion);
+        static hstring FormatChannel(winrt::Windows::Devices::Midi2::MidiChannel const& channel, bool abbreviatedVersion);
     };
 }
 namespace winrt::Microsoft::Devices::Midi2::factory_implementation

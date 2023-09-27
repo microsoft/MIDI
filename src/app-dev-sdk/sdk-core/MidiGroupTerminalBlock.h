@@ -20,7 +20,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         hstring Name();
         winrt::Microsoft::Devices::Midi2::MidiGroupTerminalBlockDirection Direction();
         winrt::Microsoft::Devices::Midi2::MidiGroupTerminalBlockProtocol Protocol();
-        winrt::Windows::Foundation::Collections::IVectorView<winrt::Microsoft::Devices::Midi2::MidiGroup> IncludedGroups();
+        winrt::Windows::Foundation::Collections::IVectorView<winrt::Windows::Devices::Midi2::MidiGroup> IncludedGroups();
         uint16_t MaxDeviceInputBandwidthIn4KBSecondUnits();
         uint16_t MaxDeviceOutputBandwidthIn4KBSecondUnits();
     };

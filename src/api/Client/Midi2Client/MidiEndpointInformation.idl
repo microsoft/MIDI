@@ -1,0 +1,44 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+import "MidiUmp128.idl";
+
+namespace Windows.Devices.Midi2
+{
+    [MIDI_API_CONTRACT(1)]
+    [default_interface]
+    runtimeclass MidiEndpointInformation
+    {
+        MidiEndpointInformation();
+//        MidiEndpointInformation(String json);
+//        MidiEndpointInformation(MidiUmp128[] endpointMessages);
+
+        String Name{ get; };
+        String ProductInstanceId{ get; };
+
+        // TODO: Add sysex information from Device Identity Notification
+
+
+        UInt8 UmpVersionMajor{ get; };
+        UInt8 UmpVersionMinor{ get; };
+
+        Boolean HasStaticFunctionBlocks{ get; };
+        UInt8 FunctionBlockCount{ get; };
+
+        Boolean SupportsMidi10Protocol{ get; };
+        Boolean SupportsMidi20Protocol{ get; };
+
+        Boolean SupportsReceivingJRTimestamps{ get; };
+        Boolean SupportsSendingJRTimestamps{ get; };
+
+        //String GetJson();
+    }
+}

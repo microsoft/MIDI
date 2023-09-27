@@ -11,7 +11,6 @@
 // documentation to better understand the relationship between Group Terminal
 // Blocks and Function Blocks
 
-import "MidiGroup.idl";
     
 namespace Microsoft.Devices.Midi2
 {
@@ -49,7 +48,7 @@ namespace Microsoft.Devices.Midi2
 
         // rather than number of groups and a start group, we just have a vector of groups
         // here to make it flexible and to be consistent with what we do for function blocks
-        IVectorView<MidiGroup> IncludedGroups{ get; };
+        IVectorView<Windows.Devices.Midi2.MidiGroup> IncludedGroups{ get; };
 
         // Note: 0x0000 is unknown or not fixed
         // 0x0001 is 31.24kb/s

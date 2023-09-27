@@ -38,11 +38,15 @@
     <Filter Include="SDK\Listeners">
       <UniqueIdentifier>{163e6eab-50a4-49ba-8cc5-3dcebbe6bb11}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SDK\Messages\Buffer">
+      <UniqueIdentifier>{7f998efe-71c4-4ad0-8215-d9536c879c45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\CI">
+      <UniqueIdentifier>{a8eac16b-2d26-4ccb-bc3b-90ded9db0596}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="MidiChannel.cpp" />
-    <ClCompile Include="MidiGroup.cpp" />
     <ClCompile Include="Generated Files\module.g.cpp" />
     <ClCompile Include="MidiServices.cpp" />
     <ClCompile Include="MidiHighResolutionValueDisplayFormatter.cpp">
@@ -51,17 +55,24 @@
     <ClCompile Include="MidiTransportInformation.cpp">
       <Filter>SDK\Transports</Filter>
     </ClCompile>
-    <ClCompile Include="MidiChannelEndpointListener.cpp">
-      <Filter>SDK\Listeners</Filter>
+    <ClCompile Include="MidiMessageBufferHelper.cpp">
+      <Filter>SDK\Messages\Buffer</Filter>
     </ClCompile>
-    <ClCompile Include="MidiGroupEndpointListener.cpp">
-      <Filter>SDK\Listeners</Filter>
+    <ClCompile Include="MidiMessageBufferReader.cpp">
+      <Filter>SDK\Messages\Buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessageBufferWriter.cpp">
+      <Filter>SDK\Messages\Buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiCIPropertyRequestedEventArgs.cpp">
+      <Filter>SDK\CI</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiVirtualDevice.cpp">
+      <Filter>SDK\CI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
-    <ClInclude Include="MidiChannel.h" />
-    <ClInclude Include="MidiGroup.h" />
     <ClInclude Include="MidiServices.h" />
     <ClInclude Include="midi_app_sdk_version.h">
       <Filter>Internal</Filter>
@@ -78,11 +89,20 @@
     <ClInclude Include="midi_sdk_inproc_loopback_simulator.h">
       <Filter>Internal</Filter>
     </ClInclude>
-    <ClInclude Include="MidiChannelEndpointListener.h">
-      <Filter>SDK\Listeners</Filter>
+    <ClInclude Include="MidiMessageBufferHelper.h">
+      <Filter>SDK\Messages\Buffer</Filter>
     </ClInclude>
-    <ClInclude Include="MidiGroupEndpointListener.h">
-      <Filter>SDK\Listeners</Filter>
+    <ClInclude Include="MidiMessageBufferReader.h">
+      <Filter>SDK\Messages\Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessageBufferWriter.h">
+      <Filter>SDK\Messages\Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiCIPropertyRequestedEventArgs.h">
+      <Filter>SDK\CI</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualDevice.h">
+      <Filter>SDK\CI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -95,17 +115,8 @@
     <Midl Include="MidiDeviceInformation.idl">
       <Filter>SDK\Enumeration</Filter>
     </Midl>
-    <Midl Include="MidiFunctionBlock.idl">
-      <Filter>SDK\Endpoints</Filter>
-    </Midl>
     <Midl Include="MidiEndpointDisplayFormatter.idl">
       <Filter>SDK\Display</Filter>
-    </Midl>
-    <Midl Include="MidiFunctionBlockDirectionEnum.idl">
-      <Filter>SDK\Endpoints</Filter>
-    </Midl>
-    <Midl Include="MidiFunctionBlockUIHintEnum.idl">
-      <Filter>SDK\Endpoints</Filter>
     </Midl>
     <Midl Include="MidiEndpointInformation.idl">
       <Filter>SDK\Endpoints</Filter>
@@ -113,20 +124,11 @@
     <Midl Include="MidiLocalizedStrings.idl">
       <Filter>SDK\Display</Filter>
     </Midl>
-    <Midl Include="MidiGroup.idl">
-      <Filter>SDK</Filter>
-    </Midl>
-    <Midl Include="MidiChannel.idl">
-      <Filter>SDK</Filter>
-    </Midl>
     <Midl Include="MidiServices.idl">
       <Filter>SDK</Filter>
     </Midl>
     <Midl Include="MidiHighResolutionValueDisplayFormatter.idl">
       <Filter>SDK\Display</Filter>
-    </Midl>
-    <Midl Include="MidiTransportInformation.idl">
-      <Filter>SDK\Transports</Filter>
     </Midl>
     <Midl Include="IMidiTransportSettingsData.idl">
       <Filter>SDK\Transports</Filter>
@@ -137,14 +139,23 @@
     <Midl Include="MidiGroupTerminalBlock.idl">
       <Filter>SDK\Enumeration</Filter>
     </Midl>
-    <Midl Include="IMidiEndpointListener.idl">
-      <Filter>SDK\Listeners</Filter>
+    <Midl Include="MidiMessageBufferReader.idl">
+      <Filter>SDK\Messages\Buffer</Filter>
     </Midl>
-    <Midl Include="MidiGroupEndpointListener.idl">
-      <Filter>SDK\Listeners</Filter>
+    <Midl Include="MidiMessageBufferWriter.idl">
+      <Filter>SDK\Messages\Buffer</Filter>
     </Midl>
-    <Midl Include="MidiChannelEndpointListener.idl">
-      <Filter>SDK\Listeners</Filter>
+    <Midl Include="MidiMessageBufferHelper.idl">
+      <Filter>SDK\Messages\Buffer</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualDevice.idl">
+      <Filter>SDK\CI</Filter>
+    </Midl>
+    <Midl Include="MidiCIPropertyRequestedEventArgs.idl">
+      <Filter>SDK\CI</Filter>
+    </Midl>
+    <Midl Include="MidiServicesStatusEnum.idl">
+      <Filter>SDK</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
