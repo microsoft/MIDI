@@ -126,6 +126,7 @@ Return Value:
     WDFDEVICE                           device = nullptr;
     PDEVICE_CONTEXT                     devCtx;
     WDF_PNPPOWER_EVENT_CALLBACKS        pnpPowerCallbacks;
+    WDF_OBJECT_ATTRIBUTES               memoryAttributes;
 
     UNREFERENCED_PARAMETER(Driver);
 
@@ -191,6 +192,32 @@ Return Value:
     {
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DRIVER, "USBMIDI2DriverQueueInitialize failed %!STATUS!", status);
         goto exit;
+    }
+
+    //
+    // Initialize ring buffer used with continuous reader on USB Hardware
+    //
+    if (NT_SUCCESS(status)) {
+        //
+        // Create memory for Ring buffer
+        //
+        WDF_OBJECT_ATTRIBUTES_INIT(&memoryAttributes);
+        memoryAttributes.ParentObject = device;
+        status = WdfMemoryCreate(
+            &memoryAttributes,
+            NonPagedPool,
+            USBMIDI_POOLTAG,
+            USBMIDI2DRIVER_RING_BUF_SIZE * sizeof(UINT32),
+            &devCtx->ReadRingBuf.RingBufMemory,
+            NULL
+        );
+        devCtx->ReadRingBuf.ringBufSize = USBMIDI2DRIVER_RING_BUF_SIZE;
+        if (!NT_SUCCESS(status))
+        {
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                "WdfMemoryCreate failed for ring buffer.\n");
+            return status;
+        }
     }
 
     // 

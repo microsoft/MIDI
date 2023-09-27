@@ -41,7 +41,7 @@ Environment:
 #include "driver.h"
 
 #include "Trace.h"
-//#include "Queue.tmh"
+#include "Queue.tmh"
 
 PAGED_CODE_SEG
 NTSTATUS
@@ -99,7 +99,7 @@ Return Value:
                  );
 
     if( !NT_SUCCESS(status) ) {
-//        TraceEvents(TRACE_LEVEL_ERROR, TRACE_QUEUE, "WdfIoQueueCreate failed %!STATUS!", status);
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_QUEUE, "WdfIoQueueCreate failed %!STATUS!", status);
         return status;
     }
 
@@ -124,7 +124,7 @@ Return Value:
     );
 
     if (!NT_SUCCESS(status)) {
-//        TraceEvents(TRACE_LEVEL_ERROR, TRACE_QUEUE, "WdfIoQueueCreate failed %!STATUS!", status);
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_QUEUE, "WdfIoQueueCreate failed %!STATUS!", status);
         return status;
     }
 
@@ -135,8 +135,8 @@ Return Value:
     );
     if (!NT_SUCCESS(status))
     {
-//        TraceEvents(TRACE_LEVEL_ERROR, TRACE_QUEUE,
-//            "WdfDeviceConfigureDispatching failed 0x%x\n", status);
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_QUEUE,
+            "WdfDeviceConfigureDispatching failed 0x%x\n", status);
         return status;
     }
 
@@ -161,7 +161,7 @@ Return Value:
     );
 
     if (!NT_SUCCESS(status)) {
-//        TraceEvents(TRACE_LEVEL_ERROR, TRACE_QUEUE, "WdfIoQueueCreate failed %!STATUS!", status);
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_QUEUE, "WdfIoQueueCreate failed %!STATUS!", status);
         return status;
     }
 
@@ -172,8 +172,8 @@ Return Value:
     );
     if (!NT_SUCCESS(status))
     {
-//        TraceEvents(TRACE_LEVEL_ERROR, TRACE_QUEUE,
-//            "WdfDeviceConfigureDispatching failed 0x%x\n", status);
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_QUEUE,
+            "WdfDeviceConfigureDispatching failed 0x%x\n", status);
         return status;
     }
 
@@ -225,10 +225,10 @@ Return Value:
     size_t              bufLength;
     UINT32              deviceType;
 
-//    TraceEvents(TRACE_LEVEL_INFORMATION, 
-//                TRACE_QUEUE, 
-//                "%!FUNC! Queue 0x%p, Request 0x%p OutputBufferLength %d InputBufferLength %d IoControlCode %d", 
-//                Queue, Request, (int) OutputBufferLength, (int) InputBufferLength, IoControlCode);
+    TraceEvents(TRACE_LEVEL_INFORMATION, 
+                TRACE_QUEUE, 
+                "%!FUNC! Queue 0x%p, Request 0x%p IoControlCode %d", 
+                Queue, Request, IoControlCode);
 
     //
     // Initialize variables for use
@@ -249,8 +249,8 @@ Return Value:
 
             status = WdfRequestRetrieveOutputBuffer(Request, length, &ioBuffer, &bufLength);
             if (!NT_SUCCESS(status)) {
-//                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
-//                    "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
+                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
+                    "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
                 break;
             }
 
@@ -273,8 +273,8 @@ Return Value:
 
             status = WdfRequestRetrieveOutputBuffer(Request, length, &ioBuffer, &bufLength);
             if (!NT_SUCCESS(status)) {
-//                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
-//                    "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
+                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
+                    "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
                 break;
             }
 
@@ -297,8 +297,8 @@ Return Value:
 
             status = WdfRequestRetrieveOutputBuffer(Request, length, &ioBuffer, &bufLength);
             if (!NT_SUCCESS(status)) {
-//                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
-//                    "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
+                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
+                    "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
                 break;
             }
 
@@ -320,8 +320,8 @@ Return Value:
 
             status = WdfRequestRetrieveOutputBuffer(Request, length, &ioBuffer, &bufLength);
             if (!NT_SUCCESS(status)) {
-//                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
-//                    "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
+                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
+                    "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
                 break;
             }
 
@@ -340,8 +340,8 @@ Return Value:
     case IOCTL_USBMIDI2DRIVER_GET_GTBDUMP:
         status = WdfRequestRetrieveOutputBuffer(Request, length, &ioBuffer, &bufLength);
         if (!NT_SUCCESS(status)) {
-//            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
-//                "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
+                "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
             break;
         }
 
@@ -365,8 +365,8 @@ Return Value:
 
         status = WdfRequestRetrieveOutputBuffer(Request, length, &ioBuffer, &bufLength);
         if (!NT_SUCCESS(status)) {
-//            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
-//                "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_QUEUE,
+                "%!FUNC! Queue 0x%p, WdfReqesutRetriveOutputBuffer failed!\n", Queue);
             break;
         }
 

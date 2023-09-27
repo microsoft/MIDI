@@ -66,7 +66,7 @@ extern "C" {
         size_t      ringBufHead;
         size_t      ringBufTail;
     } READ_RING_TYPE, * PREAD_RING_TYPE;
-#define USBUMPDRIVER_RING_BUF_SIZE 256  // twice size of HS USB buffer
+#define USBMIDI2DRIVER_RING_BUF_SIZE 256  // twice size of HS USB buffer
 
 //
 // Define device context.
