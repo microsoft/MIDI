@@ -10,19 +10,14 @@
 MIDI_IDL_IMPORT
 
 
+
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
-    [flags]
-    enum MidiEndpointDiscoveryFilterFlags
+    [default_interface]
+    runtimeclass MidiStreamConfigurationCompleteEventArgs
     {
-        None = 0x00000000,
-        RequestEndpointInformation = 0x00000001,
-        RequestDeviceIdentity = 0x00000002,
-        RequestEndpointName = 0x00000004,
-        RequestProductInstanceId = 0x00000008,
-        RequestStreamConfiguration = 0x00000010,
-
         
-    };
+
+    }
 }

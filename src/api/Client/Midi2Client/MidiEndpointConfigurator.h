@@ -44,19 +44,22 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void ProcessIncomingMessage(
             _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs const& args,
             _Out_ bool& skipFurtherListeners,
-            _Out_ bool& skipMainMessageReceivedEvent);
+            _Out_ bool& skipMainMessageReceivedEvent) noexcept;
 
-        void Initialize();
-        void OnEndpointConnectionOpened();
-        void Cleanup();
+        void Initialize() noexcept;
+        void OnEndpointConnectionOpened() noexcept;
+        void Cleanup() noexcept;
 
-        bool Negotiate();
+        bool BeginDiscovery() noexcept;
 
+        bool BeginNegotiation() noexcept;
+        
+        //bool RequestStreamConfiguration() noexcept;
 
-        bool RequestAllFunctionBlocks();
+        bool RequestAllFunctionBlocks() noexcept;
 
         bool RequestSingleFunctionBlock(
-            _In_ uint8_t functionBlockNumber);
+            _In_ uint8_t functionBlockNumber) noexcept;
 
     private:
         winrt::hstring m_id{};

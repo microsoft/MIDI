@@ -26,6 +26,7 @@ import "MidiEndpointInformation.idl";
 import "MidiEndpointInformationUpdatedEventArgs.idl";
 
 import "MidiStreamConfigurationRequestedSettings.idl";
+import "MidiStreamConfigurationCompleteEventArgs.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -48,19 +49,25 @@ namespace Windows.Devices.Midi2
         //bool RenegotiateStreamConfiguration(MidiStreamConfigurationRequestedSettings settings);
 
 
-        // callback for when a function block is updated comes in
-        event Windows.Foundation.TypedEventHandler<IInspectable, MidiFunctionBlocksUpdatedEventArgs> FunctionBlocksUpdated;
-
 
         //Boolean RequestUpdatedEndpointInformation();
         Boolean IsEndpointInformationAvailable{ get; };
         MidiEndpointInformation EndpointInformation{ get; };
 
+
+        IVector<IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins{ get; };
+
+
+
+        // callback for when a function block is updated comes in
+        event Windows.Foundation.TypedEventHandler<IInspectable, MidiFunctionBlocksUpdatedEventArgs> FunctionBlocksUpdated;
+
         // callback for when a endpoint update comes in
         event Windows.Foundation.TypedEventHandler<IInspectable, MidiEndpointInformationUpdatedEventArgs> EndpointInformationUpdated;
 
+        // callback for when stream configuration is complete
+        event Windows.Foundation.TypedEventHandler<IInspectable, MidiStreamConfigurationCompleteEventArgs> StreamConfigurationComplete;
 
-        IVector<IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins{ get; };
 
     }
 

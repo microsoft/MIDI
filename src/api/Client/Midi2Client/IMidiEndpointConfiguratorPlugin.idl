@@ -33,10 +33,13 @@ namespace Windows.Devices.Midi2
     {
         MidiStreamConfigurationRequestedSettings RequestedStreamConfiguration { get; set; };
 
-        void Negotiate();
+        void BeginDiscovery();
+        void BeginNegotiation();
 
         Boolean RequestAllFunctionBlocks();
         Boolean RequestSingleFunctionBlock(UInt8 functionBlockNumber);
+
+        //Boolean RequestStreamConfiguration();
 
         //Boolean RequestEndpointInformation();
     }

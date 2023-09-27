@@ -38,7 +38,7 @@ namespace Windows.Devices.Midi2
         MidiSendMessageResult SendMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
 
         // for sending a section of a pre-existing buffer. Used when a client app is maintaining its own memory
-        MidiSendMessageResult SendMessageBuffer(MIDI_TIMESTAMP timestamp, Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffset, UInt8 byteLength);
+//        MidiSendMessageResult SendMessageBuffer(MIDI_TIMESTAMP timestamp, Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffset, UInt8 byteLength);
 
     }
 }

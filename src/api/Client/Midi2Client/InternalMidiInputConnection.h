@@ -35,6 +35,19 @@ namespace Windows::Devices::Midi2::Internal
             if (m_messageReceivedEvent) m_messageReceivedEvent.remove(token);
         }
 
+
+        winrt::event_token StreamConfigurationComplete(_In_ foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiStreamConfigurationCompleteEventArgs> const& handler)
+        {
+            return m_streamConfigurationCompleteEvent.add(handler);
+        }
+
+        void StreamConfigurationComplete(_In_ winrt::event_token const& token) noexcept
+        {
+            if (m_streamConfigurationCompleteEvent) m_streamConfigurationCompleteEvent.remove(token);
+        }
+
+
+
         winrt::Windows::Foundation::Collections::IVector<midi2::IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins() const noexcept
         {
             return m_messageProcessingPlugins;
@@ -69,6 +82,7 @@ namespace Windows::Devices::Midi2::Internal
 
 
         winrt::event<foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;
+        winrt::event<foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiStreamConfigurationCompleteEventArgs>> m_streamConfigurationCompleteEvent;
 
     };
 

@@ -17,9 +17,14 @@ Windows.Devices.Midi2.MidiMessage32 | 0 | 0 | 0
 Windows.Devices.Midi2.MidiMessage64 | 0 | 0 | 0
 Windows.Devices.Midi2.MidiMessage96 | 0 | 0 | 0
 Windows.Devices.Midi2.MidiMessage128 | 0 | 0 | 0
+Windows.Devices.Midi2.MidiMessageStruct | 0 | 0 | 0
+
 
 Windows.Devices.Midi2.MidiMessageBuilder | 0 | 0 | 0
 Windows.Devices.Midi2.IMidiMessageBuilderStatics | 0 | 0 | 0
+
+Windows.Devices.Midi2.MidiStreamMessageBuilder | 0 | 0 | 0
+Windows.Devices.Midi2.IMidiStreamMessageBuilderStatics | 0 | 0 | 0
 
 Windows.Devices.Midi2.MidiMessageUtility | 0 | 0 | 0
 Windows.Devices.Midi2.IMidiMessageUtilityStatics | 0 | 0 | 0
@@ -27,9 +32,11 @@ Windows.Devices.Midi2.IMidiMessageUtilityStatics | 0 | 0 | 0
 # Metadata
 
 Windows.Devices.Midi2.MidiGlobalCache | 0 | 0 | 0
+Windows.Devices.Midi2.IMidiGlobalCacheStatics | 0 | 0 | 0
 Windows.Devices.Midi2.MidiGlobalInformationUpdatedEventArgs | 0 | 0 | 0
 
 Windows.Devices.Midi2.MidiEndpointMetadataCache | 0 | 0 | 0
+Windows.Devices.Midi2.IMidiEndpointMetadataCacheStatics | 0 | 0 | 0
 Windows.Devices.Midi2.MidiEndpointMetadataCacheUpdatedEventArgs | 0 | 0 | 0
 
 Windows.Devices.Midi2.MidiEndpointInformationUpdatedEventArgs | 0 | 0 | 0
@@ -50,9 +57,9 @@ Windows.Devices.Midi2.MidiMessageTypeEndpointListener | 0 | 0 | 0
 
 # Infrastructure Message Processing Plugins
 
-Windows.Devices.Midi2.MidiEndpointInformationConfigurator | 0 | 0 | 0
+Windows.Devices.Midi2.MidiEndpointConfigurator | 0 | 0 | 0
 Windows.Devices.Midi2.MidiFunctionBlockEndpointListener | 0 | 0 | 0
-Windows.Devices.Midi2.MidiStreamConfigurationEndpointListener | 0 | 0 | 0
+Windows.Devices.Midi2.MidiEndpointMetadataEndpointListener | 0 | 0 | 0
 
 # Virtual Device Message Processing Plugins
 

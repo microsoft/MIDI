@@ -18,6 +18,7 @@ import "IMidiOutputConnection.idl";
 import "IMidiMessageReceivedEventSource.idl";
 import "IMidiEndpointConnection.idl";
 
+import "MidiStreamConfigurationCompleteEventArgs.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -31,6 +32,5 @@ namespace Windows.Devices.Midi2
     {
 
         IVector<IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins{ get; };
-
     }
 }

@@ -333,4 +333,67 @@ namespace Windows::Devices::Midi2::Internal
     }
 
 
+
+
+
+
+    inline uint8_t GetEndpointInfoNotificationUmpVersionMajorFirstWord(
+        _In_ uint32_t word0
+    )
+    {
+        return (uint8_t)((word0 & 0x0000FF00) >> 8);
+    }
+
+    inline uint8_t GetEndpointInfoNotificationUmpVersionMinorFirstWord(
+        _In_ uint32_t word0
+    )
+    {
+        return (uint8_t)(word0 & 0x000000FF);
+    }
+
+    inline bool GetEndpointInfoNotificationStaticFunctionBlocksFlagFromSecondWord(
+        _In_ uint32_t word1
+    )
+    {
+        // highest bit is this flag
+        return (bool)((word1 & 0x80000000) > 0);
+    }
+
+    inline uint8_t GetEndpointInfoNotificationNumberOfFunctionBlocksFromSecondWord(
+        _In_ uint32_t word1
+    )
+    {
+        return (uint8_t)((word1 & 0x7F000000) >> 24);
+    }
+
+    inline bool GetEndpointInfoNotificationMidi2ProtocolCapabilityFromSecondWord(
+        _In_ uint32_t word1
+    )
+    {
+        return (bool)((word1 & 0x00000200) > 0);
+    }
+
+    inline bool GetEndpointInfoNotificationMidi1ProtocolCapabilityFromSecondWord(
+        _In_ uint32_t word1
+    )
+    {
+        return (bool)((word1 & 0x00000100) > 0);
+    }
+
+    inline bool GetEndpointInfoNotificationReceiveJRTimestampCapabilityFromSecondWord(
+        _In_ uint32_t word1
+    )
+    {
+        return (bool)((word1 & 0x00000002) > 0);
+    }
+
+    inline bool GetEndpointInfoNotificationTransmitJRTimestampCapabilityFromSecondWord(
+        _In_ uint32_t word1
+    )
+    {
+        return (bool)((word1 & 0x00000001) > 0);
+    }
+
+
+
 }

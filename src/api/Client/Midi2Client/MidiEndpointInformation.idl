@@ -44,6 +44,7 @@ namespace Windows.Devices.Midi2
 
 
         Boolean UpdateFromMessages(Windows.Foundation.Collections.IIterable<MidiMessage128> endpointMessages);
+        Boolean UpdateFromInfoNotificationMessage(MidiMessage128 endpointMessage);
 
     }
 }
