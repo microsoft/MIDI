@@ -115,7 +115,7 @@ StreamEngine::HandleIo()
     {
         // application is sending a midi message out, this is traditionally called
         // midi out.            
-        PVOID waitObjects[] = { m_WriteEvent, m_ThreadExitEvent.get() };
+        PVOID waitObjects[] = { m_ThreadExitEvent.get(), m_WriteEvent  };
 
         do
         {
@@ -142,6 +142,8 @@ StreamEngine::HandleIo()
                     {
                         ULONG bytesToCopy = 0;
                         ULONG bytesAvailable = 0;
+
+                        KeResetEvent(m_WriteEvent);
 
                         // Retrieve the midi out position for the buffer we are reading from. The data between the read position
                         // and write position is valid. (read position is our last read position, write position is their last written).
