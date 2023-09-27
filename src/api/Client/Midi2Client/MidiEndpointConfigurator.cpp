@@ -56,7 +56,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 // the endpoint info notification, when requested, is a required part of the 
                 // MIDI 2.0 protocol. If we don't get one it's not a MIDI 2.0 implementation.
-                if (MidiMessageUtility::GetStatusFromStreamMessageFirstWord(args.PeekFirstWord()) == MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_INFO_NOTIFICATION)
+                if (MidiMessageUtility::GetStatusFromStreamMessageFirstWord(args.PeekFirstWord()) == 
+                    MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_INFO_NOTIFICATION)
                 {
                     skipFurtherListeners = true;
                     skipMainMessageReceivedEvent = true;
@@ -77,16 +78,22 @@ namespace winrt::Windows::Devices::Midi2::implementation
                     {
                         RequestAllFunctionBlocks();
                     }
-                    else
-                    {
-                    }
                 }
-                else if (MidiMessageUtility::GetStatusFromStreamMessageFirstWord(args.PeekFirstWord()) == MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_NOTIFICATION)
+                else if (MidiMessageUtility::GetStatusFromStreamMessageFirstWord(args.PeekFirstWord()) == 
+                    MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_NOTIFICATION)
                 {
+                    skipFurtherListeners = true;
+                    skipMainMessageReceivedEvent = true;
+
                     // TODO: Check to see if this is the protocol we want. If not, send a stream configuration request for what we want, assuming
                     // the info notification (if we have received it) supports what we want.
 
                     // TODO: Don't let this go into an infinite loop. One ping only :).
+
+
+
+
+
 
 
                 }
@@ -139,11 +146,24 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     bool MidiEndpointConfigurator::BeginNegotiation() noexcept
     {
+        try
+        {
+            auto request = MidiStreamMessageBuilder::BuildStreamConfigurationRequestMessage(
+                MidiClock::GetMidiTimestamp(),
+                (uint8_t)m_configurationRequested.PreferredMidiProtocol(), 
+                m_configurationRequested.RequestEndpointReceiveJitterReductionTimestamps(),
+                m_configurationRequested.RequestEndpointTransmitJitterReductionTimestamps()
+           );
 
-        // TODO
+            // eating the status here probably isn't all that cool a thing to do
+            return m_outputConnection.SendMessagePacket(request) == MidiSendMessageResult::Success;
+        }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L" exception beginning negotiation.");
 
-
-        return false;
+            return false;
+        }
     }
 
 
