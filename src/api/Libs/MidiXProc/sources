@@ -1,0 +1,22 @@
+ARM64X_EC_ENABLED=1
+
+TARGETNAME = MidiXProc
+TARGETTYPE = LIBRARY
+
+MSC_WARNING_LEVEL=/W4 /WX
+
+USE_CPPWINRT=1
+
+C_DEFINES=$(C_DEFINES) -DUNICODE -D_UNICODE
+
+SOURCES = \
+    MidiXProc.cpp \
+
+INCLUDES = \
+    $(INCLUDES); \
+    ..\..\idl; \
+    ..\..\inc; \
+    $(OBJ_PATH)\..\..\idl\$(O); \
+    $(ONECORE_INTERNAL_SDK_INC_PATH); \
+    $(ONECOREUAPSHELL_INTERNAL_INC_PATH_L); \
+

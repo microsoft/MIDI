@@ -1,0 +1,49 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+// This class enables 
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+
+import "IMidiEndpointMessageProcessingPlugin.idl";
+import "IMidiEndpointMessageListener.idl";
+import "IMidiEndpointMessageResponder.idl";
+
+import "MidiFunctionBlock.idl";
+import "MidiEndpointInformation.idl";
+
+namespace Windows.Devices.Midi2
+{
+    [MIDI_API_CONTRACT(1)]
+    [default_interface]
+    runtimeclass MidiVirtualDeviceResponder :   IMidiEndpointMessageProcessingPlugin, 
+                                                IMidiEndpointMessageListener, 
+                                                IMidiEndpointMessageResponder
+    {
+        MidiVirtualDeviceResponder();
+
+        // This is a view because all modifications require sending notifications
+        // out on the endpoint. So the functions do that.
+        IMapView<UInt8, MidiFunctionBlock> FunctionBlocks{ get; };
+        
+        void AddFunctionBlock(MidiFunctionBlock block);
+        void UpdateFunctionBlock(MidiFunctionBlock block);
+        void RemoveFunctionBlock(UInt8 functionBlockNumber);
+
+        MidiEndpointInformation EndpointInformation{ get; set; };
+
+        // true if you want the stream / function block etc. messages automatically handled
+        // and then removed from the stream. False if the endpoint should still raise
+        // MessageReceived events for those messages
+        Boolean SuppressHandledMessages{ get; set; };
+
+
+        // TODO: MIDI CI / Profiles etc.
+    }
+}

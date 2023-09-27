@@ -1,0 +1,32 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+
+import "oaidl.idl";
+import "ocidl.idl";
+import "unknwn.idl";
+
+import "MidiAbstraction.idl";
+import "MidiDeviceManagerInterface.idl";    // for MidiFlow
+
+
+[
+    uuid(42af54fc-9aba-4fe8-8ea2-d32d2a333a0c),
+    version(1.0),
+]
+library Midi2VirtualMidiAbstractionLib
+{
+    importlib("stdole2.tlb");
+
+    [uuid(8feaad91-70e1-4a19-997a-377720a719c1), version(1.0)]
+    coclass Midi2VirtualMidiAbstraction
+    {
+        [default] interface IMidiAbstraction;
+    }
+};
+

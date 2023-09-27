@@ -12,16 +12,12 @@
 		<MidiNativeLibs Include="$(MSBuildThisFileDirectory)\..\..\runtimes\win10-$(Platform)\native\*.pri" />
 	</ItemGroup>
 
-			<!-- 			Inputs="winrt\Microsoft.Devices.Midi2.h" BeforeTargets="BeforeBuild;BeforeRebuild" -->
 	<Target Name="Setup MIDI Services SDK Reference"
 			BeforeTargets="BeforeBuild;BeforeResolveReferences">
 
 		<ItemGroup Label="CopyMidiServicesSDKReferenceFiles">
-			<Reference Include="$(MSBuildThisFileDirectory)..\..\lib\uap10.0\Microsoft.Devices.Midi2.winmd">
+			<Reference Include="$(MSBuildThisFileDirectory)..\..\ref\win10-x64\uap10.0\Microsoft.Devices.Midi2.winmd">
 				<Implementation>Microsoft.Devices.Midi2.dll</Implementation>
-			</Reference>
-			<Reference Include="$(MSBuildThisFileDirectory)..\..\lib\uap10.0\Windows.Devices.Midi2.winmd">
-				<Implementation>Windows.Devices.Midi2.dll</Implementation>
 			</Reference>
 		</ItemGroup>
 

@@ -1,0 +1,74 @@
+{
+    "endpointInformation": {
+        "name": "Pete's Test Device",
+        "productInstanceId": "3263827",
+        "umpVersionMajor": 2,
+        "umpVersionMinor": 1, 
+        "staticFunctionBlocks": false,
+        "numberOfFunctionBlocks": 5,
+        "midi2ProtocolCapability": true,
+        "midi1ProtocolCapability": true,
+        "receiveJRTimestampCapability": true,
+        "sendJRTimestampCapability": true        
+    },
+    "deviceIdentity": {
+        "manufacturerSysExIdByte1": 0,
+        "manufacturerSysExIdByte2": 0,
+        "manufacturerSysExIdByte3": 0,
+        "deviceFamilyLsb": 0,
+        "deviceFamilyMsb": 0,
+        "deviceFamilyModelLsb": 0,
+        "deviceFamilyModelMsb": 0,
+        "softwareRevisionLevelByte1": 0,
+        "softwareRevisionLevelByte2": 0,
+        "softwareRevisionLevelByte3": 0,
+        "softwareRevisionLevelByte4": 0
+    },
+    "functionBlocks": 
+    [
+        {
+            "functionBlockNumber": 0,
+            "name": "Keyboard",
+            "active": true,
+            "uiHint": 2,
+            "midi10": 0,
+            "direction": 3,
+            "firstGroupIndex": 0,
+            "numberOfGroupsSpanned" : 1,
+            "midiCIMessageFormat": 1
+        },
+        {
+            "functionBlockNumber": 1,
+            "name": "Synthesizer",
+            "active": true,
+            "uiHint": 3,
+            "midi10": 0,
+            "direction": 3,
+            "firstGroupIndex": 5,
+            "numberOfGroupsSpanned" : 3,
+            "midiCIMessageFormat": 1
+        },
+        {
+            "functionBlockNumber": 2,
+            "name": "Sequencer",
+            "active": true,
+            "uiHint": 3,
+            "midi10": 0,
+            "direction": 3,
+            "firstGroupIndex": 7,
+            "numberOfGroupsSpanned" : 2,
+            "midiCIMessageFormat": 1
+        },
+        {
+            "functionBlockNumber": 5,
+            "name": "Inactive Block",
+            "active": false,
+            "uiHint": 3,
+            "midi10": 0,
+            "direction": 3,
+            "firstGroupIndex": 15,
+            "numberOfGroupsSpanned" : 1,
+            "midiCIMessageFormat": 1
+        }
+    ]
+}

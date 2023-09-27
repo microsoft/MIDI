@@ -1,0 +1,80 @@
+{
+    "$schema": "http://universaltest/schema/testmddefinition-5.json",
+    "Description": "MIDI2 Abstraction Unittests",
+    "Package": {
+        "ComponentName": "AudioCore",
+        "SubComponentName": "MIDI2-Abstraction-Unittests"
+    },
+    "Execution": {
+        "TestModule": "Midi2.Abstraction.unittests.dll",
+        "Type": "TAEF",
+        "TestModuleDestinationPath": "AudioTests",
+        "Parameter": "/miniDumpOnTimeout",
+        "ExecutionTimeoutInMinutes": "10"
+    },
+    "Dependencies": {
+        "Packages": [
+            "Microsoft.UnifiedDriverDeployer",
+            "Microsoft-OnecoreUAP-Drivers-MinMidi"
+        ],
+        "DriverPackages": [
+            "Microsoft-OnecoreUAP-Drivers-MinMidi"
+        ],
+        "Files": [
+            {
+                "SourcePath": "$(BASEDIR)\\tools\\testroot.cer",
+                "DestinationFolderPath": "$$(TEST_DEPLOY_BIN)"
+            },
+            {
+                "SourcePath": "$(BASEDIR)\\tools\\sha2-testroot.cer",
+                "DestinationFolderPath": "$$(TEST_DEPLOY_BIN)"
+            }
+        ]
+    },
+    "Plugins": [
+        {
+            "Type": "Microsoft.TestInfrastructure.UniversalTest.TestMD.Plugins.BcdEdit.BcdEditPlugin",
+            "Name": "Turn on testsigning",
+            "File": "",
+            "Parameters": {
+                "$schema": "http://universaltest/schema/plugins/Microsoft.TestInfrastructure.UniversalTest.TestMD.Plugins.BcdEdit.BcdEditPlugin-1.json",
+                "TestSigning": [
+                    {
+                        "Value": "on"
+                    }
+                ]
+            }
+        },
+        {
+            "Type": "Microsoft.TestInfrastructure.UniversalTest.TestMD.Plugins.Certificates.CertificatesPlugin",
+            "Name": "Install test certificate",
+            "File": "",
+            "Parameters": {
+                "$schema": "http://universaltest/schema/plugins/Microsoft.TestInfrastructure.UniversalTest.TestMD.Plugins.Certificates.CertificatesPlugin-1.json",
+                "Certificates": [
+                    {
+                        "CertificateFileName": "testroot.cer",
+                        "StoreName": "root",
+                        "RegistryLocation": "localMachine"
+                    },
+                    {
+                        "CertificateFileName": "sha2-testroot.cer",
+                        "StoreName": "root",
+                        "RegistryLocation": "localMachine"
+                    }
+                ]
+            }
+        },
+        {
+            "Type": "Microsoft.TestInfrastructure.UniversalTest.TestMD.Plugins.DriverInstall.DriverInstallPlugin",
+            "Name": "Driver Installation Plugin",
+            "File": "",
+            "Parameters": {
+                "$schema": "http://universaltest/schema/plugins/Microsoft.TestInfrastructure.UniversalTest.TestMD.Plugins.DriverInstall.DriverInstallPlugin-1.json"
+            }
+        },
+        {
+            "File": "$(PROJECT_ROOT)\\mf\\drt\\taef\\common\\AppVerifier.testmd.pluginlist"
+        }
+    ]
+}

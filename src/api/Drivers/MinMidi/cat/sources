@@ -1,0 +1,12 @@
+!undef C_DEFINES
+
+TARGETTYPE = CATALOG
+TARGETNAME = MinMidi
+TARGET_DESTINATION=retail
+
+CATALOG_PE_TRUSTED=1
+
+SOURCES = \
+    $(OBJECT_ROOT)\avcore\midi2\drivers\minmidi\driver\$(O)\MinMidi.inf \
+    $(OBJECT_ROOT)\avcore\midi2\drivers\minmidi\driver\$(O)\MinMidi.sys \
+

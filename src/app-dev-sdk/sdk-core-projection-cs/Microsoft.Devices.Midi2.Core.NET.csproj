@@ -9,10 +9,30 @@
   </PropertyGroup>
 
 	<PropertyGroup>
-		
-		<!-- TODO: Remove Windows.Devices.Midi2 when it goes in-box -->
-		
-		<CsWinRTIncludes>Microsoft.Devices.Midi2;Windows.Devices.Midi2</CsWinRTIncludes>
+        <CsWinRTInputs>
+            $(OutDir)..\..\api\VSFiles\x64\Release\PublishedWinMD\Windows.Devices.Midi2.winmd;
+        </CsWinRTInputs>
+
+        <CsWinRTPrivateProjection>true</CsWinRTPrivateProjection>
+        <CsWinRTIncludesPrivate>
+            Windows.Devices.Midi2;
+        </CsWinRTIncludesPrivate>
+
+        <CsWinRTIncludes>
+            Microsoft.Devices.Midi2;
+        </CsWinRTIncludes>
+
+        <CsWinRTExcludes>
+            foo
+        </CsWinRTExcludes>
+
+        <CsWinRTExcludesPrivate>
+            foo
+        </CsWinRTExcludesPrivate>
+
+        <CsWinRTEnableLogging>true</CsWinRTEnableLogging>
+
+        <CsWinRTGenerateProjection>true</CsWinRTGenerateProjection>
 		<CsWinRTGeneratedFilesDir>$(OutDir)</CsWinRTGeneratedFilesDir>
 	</PropertyGroup>
 
@@ -22,11 +42,19 @@
 		<OutputPath>$(GeneratedNugetDir)</OutputPath>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<AssemblyName>Microsoft.Devices.Midi2.NET</AssemblyName>
-		<PackageOutputPath>..\..\..\publish\app-dev-sdk\</PackageOutputPath>
+		<PackageOutputPath>
+            ..\..\..\publish\app-dev-sdk\
+        </PackageOutputPath>
 	</PropertyGroup>
 
+
+    <PropertyGroup Label="Configuration">
+        <DesktopCompatible>true</DesktopCompatible>
+    </PropertyGroup>
+    
 	<ItemGroup>
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.3" />
+    <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.1-0011" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,8 +64,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\app-dev-api\api-core\Windows.Devices.Midi2.vcxproj" />
     <ProjectReference Include="..\sdk-core\Microsoft.Devices.Midi2.Core.vcxproj" />
   </ItemGroup>
 
+   
 </Project>
