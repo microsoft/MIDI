@@ -23,9 +23,6 @@
             </Directory>
         </StandardDirectory>
 
-        <StandardDirectory Id="ProgramMenuFolder">
-            
-        </StandardDirectory>
 
         <!--<Binary Id="RegistryActions.dll" SourceFile="$(StagingSourceRootFolder)\RegistryActions.dll" /> -->
         <!--<Binary Id="RegistryCustomActionsLib" SourceFile="RegistryCustomActions.CA.dll"  /> -->
@@ -236,7 +233,7 @@
         </Component>
 
 
-        <DirectoryRef Id="ProgramMenuFolder">
+        <StandardDirectory Id="ProgramMenuFolder">
             <Component Id="SettingsAppShortcut" Guid="c71be7ba-f0b6-483e-a409-e40985e90117">
                 <Shortcut Id="ApplicationStartMenuShortcut"
                           Name="MIDI Settings"
@@ -244,7 +241,7 @@
                           Target="[#MidiSettings.exe]"
                           WorkingDirectory="SETTINGSAPP_INSTALLFOLDER" />
             </Component>
-        </DirectoryRef>
+        </StandardDirectory>
         
 
         <CustomAction

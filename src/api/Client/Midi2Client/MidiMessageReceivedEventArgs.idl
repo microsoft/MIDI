@@ -30,7 +30,6 @@ namespace Windows.Devices.Midi2
     {
         MIDI_TIMESTAMP Timestamp{ get; };
 
-
         // Type of UMP contained in the data. You can cast this to an int to get the number of words
         MidiPacketType PacketType{ get; };
 

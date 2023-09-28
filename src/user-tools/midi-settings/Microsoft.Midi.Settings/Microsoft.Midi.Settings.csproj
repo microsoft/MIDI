@@ -43,9 +43,15 @@
 	  <AssemblyName>MidiSettings</AssemblyName>
 	</PropertyGroup>
 
+	<ItemGroup>
+	  <Content Remove="Assets\DIN_Settings.ico" />
+	  <Content Remove="Assets\DIN_Settings.png" />
+	</ItemGroup>
+
 
 		
   <ItemGroup>
+    <None Remove="Styles\DefaultFont.xaml" />
     <None Remove="Styles\MessageTemplates.xaml" />
     <None Remove="Views\DevicesPage.xaml" />
     <None Remove="Views\ManagementSessionsPage.xaml" />
@@ -93,6 +99,9 @@
     <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <Page Update="Styles\DefaultFont.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="Styles\MessageTemplates.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -150,9 +159,7 @@
         <ItemGroup>
             <MyXamlEmbededItems Include="@(_LayoutFile)" Condition="'%(Extension)' == '.xbf' or '%(Extension)' == '.xaml'" />
         </ItemGroup>
-        <Copy SourceFiles="@(MyXamlEmbededItems)" 
-              DestinationFiles="@(MyXamlEmbededItems->'$(IntermediateOutputPath)embed\%(RecursiveDir)%(Filename)%(Extension)')" 
-              SkipUnchangedFiles="true" />
+        <Copy SourceFiles="@(MyXamlEmbededItems)" DestinationFiles="@(MyXamlEmbededItems->'$(IntermediateOutputPath)embed\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
         <ReadLinesFromFile File="$(_EmbedFileResfilePath)">
             <Output TaskParameter="Lines" ItemName="ItemsFromFile" />
         </ReadLinesFromFile>

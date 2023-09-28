@@ -3,13 +3,13 @@ using Microsoft.UI.Xaml.Media;
 
 namespace Microsoft.Midi.Settings;
 
-public sealed partial class MainWindow : WindowEx
+public sealed partial class MainWindow : Microsoft.UI.Xaml.Window
 {
     public MainWindow()
     {
         InitializeComponent();
 
-        AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets/DIN.png"));
+        AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets/DIN_Settings.png"));
         Content = null;
         Title = "AppDisplayName".GetLocalized();
 
