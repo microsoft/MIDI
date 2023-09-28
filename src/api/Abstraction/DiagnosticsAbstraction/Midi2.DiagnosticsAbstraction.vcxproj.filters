@@ -86,11 +86,11 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include="Midi2.DiagnosticsAbstraction.rgs">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="Midi2.DiagnosticsAbstraction.def" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">
