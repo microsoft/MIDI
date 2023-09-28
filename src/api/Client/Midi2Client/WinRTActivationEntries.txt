@@ -11,6 +11,11 @@ Windows.Devices.Midi2.IMidiSessionStatics | 0 | 0 | 0
 Windows.Devices.Midi2.MidiSessionSettings | 0 | 0 | 0
 Windows.Devices.Midi2.MidiVirtualDeviceManager | 0 | 0 | 0
 
+# Enumeration
+
+Windows.Devices.Midi2.MidiEndpointDeviceInformation | 0 | 0 | 0
+Windows.Devices.Midi2.MidiEndpointDeviceWatcher | 0 | 0 | 0
+
 # Messages
 
 Windows.Devices.Midi2.MidiMessage32 | 0 | 0 | 0

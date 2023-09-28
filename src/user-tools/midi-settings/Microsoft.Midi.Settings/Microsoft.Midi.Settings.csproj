@@ -1,35 +1,46 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-	    <TargetFramework>net7.0-windows10.0.22621.0</TargetFramework>
+	    <TargetFramework>net8.0-windows10.0.20348.0</TargetFramework>
 		<TargetPlatformMinVersion>10.0.20348.0</TargetPlatformMinVersion>
-		
-        <RootNamespace>Microsoft.Midi.Settings</RootNamespace>
+        <Nullable>enable</Nullable>
+        <RootNamespace>Microsoft.Devices.Midi2.Settings</RootNamespace>
+        
         <ApplicationIcon>Assets/WindowIcon.ico</ApplicationIcon>
         <ApplicationManifest>app.manifest</ApplicationManifest>
 		<Platforms>x64;arm64</Platforms>
 		<RuntimeIdentifiers>win10-x64;win10-arm64</RuntimeIdentifiers>
         <PublishProfile>Properties\PublishProfiles\win10-$(Platform).pubxml</PublishProfile>
 	    <ImplicitUsings>enable</ImplicitUsings>
-	    <Nullable>enable</Nullable>
-	    <UseWinUI>true</UseWinUI>
+	    
+        <UseWinUI>true</UseWinUI>
         <EnableMsixTooling>true</EnableMsixTooling>
+        <WindowsPackageType>None</WindowsPackageType>
 		
 		<PackageCertificateThumbprint>DAC77297934678914CC6B107CE26743135B68C64</PackageCertificateThumbprint>
 	    <PackageCertificateKeyFile>Microsoft.Midi.Settings_TemporaryKey.pfx</PackageCertificateKeyFile>
-	
-	    
-		<!--<ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>-->
+
+        <!-- Needed for System.Management for viewing service details -->
+        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+
+        <!-- Without this, the build script gets "NETSDK1083: The specified RuntimeIdentifier 'win10-x64' is not recognized" -->
+        <UseRidGraph>true</UseRidGraph>
+
+
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+        <!--<ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>-->
 	
 	    <!--<WindowsSdkPackageVersion>10.0.20348.28</WindowsSdkPackageVersion>-->
 	    <!--<WindowsSdkPackageVersion>10.0.22621.29</WindowsSdkPackageVersion>-->
 	</PropertyGroup>
 
-	<PropertyGroup>
-		<!--<CsWinRTIncludes>Microsoft.Devices.Midi2</CsWinRTIncludes>-->
+	<PropertyGroup><!--<CsWinRTIncludes>Microsoft.Devices.Midi2</CsWinRTIncludes>-->
 		<!--<CsWinRTGeneratedFilesDir>$(OutDir)</CsWinRTGeneratedFilesDir>-->
 		<!--<CsWinRTExcludes></CsWinRTExcludes> -->
 		<!--<CsWinRTExcludesPrivate></CsWinRTExcludesPrivate> -->
+	
+	  <AssemblyName>MidiSettings</AssemblyName>
 	</PropertyGroup>
 
 
@@ -53,22 +64,25 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0" />
-    <PackageReference Include="Microsoft.Devices.Midi2.Core" Version="1.0.0-preview.1-0094" />
-    <PackageReference Include="Microsoft.Devices.Midi2.Core.CS" Version="0.1.6-prerelease" />
-    <PackageReference Include="Microsoft.Devices.Midi2.Setups.CS" Version="0.1.5-prerelease" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0-rc.1.23419.4" />
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.3" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.3.230502000" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.4.230913002" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="2.0.9" />
-    <PackageReference Include="WinUIEx" Version="2.2" />
+      
+      <PackageReference Include="System.Management" Version="8.0.0-rc.1.23419.4" />
+      <PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.0-rc.1.23419.4" />
+      <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+      <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.1-0042" />
+
+      <PackageReference Include="WinUIEx" Version="2.3.1" />
 
 	  
-    <PackageReference Include="CommunityToolkit.Common" Version="8.2.0" />
+    <PackageReference Include="CommunityToolkit.Common" Version="8.2.1" />
 	<PackageReference Include="CommunityToolkit.Labs.WinUI.SettingsControls" Version="0.0.18" />
     <PackageReference Include="CommunityToolkit.WinUI.UI.Animations" Version="7.1.2" />
     <PackageReference Include="CommunityToolkit.WinUI.UI.Controls" Version="7.1.2" />
-    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.25387-preview" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.25936-preview" />
   </ItemGroup>
 
   <ItemGroup>
@@ -128,5 +142,36 @@
   </PropertyGroup>
 
 
+
+    <!-- Thanks to https://github.com/microsoft/WindowsAppSDK/discussions/1248 -->
+    <!-- WinUI apps create a resources.pri which is needed to run no matter what, but unpackaged apps 
+         fail to embed any of the resources in them. So this does that and works with the automated build. -->
+    <Target Name="AddWinUIEmbeddedItems" BeforeTargets="_GenerateProjectPriFileCore" AfterTargets="_CalculateInputsForGenerateProjectPriFileCore">
+        <ItemGroup>
+            <MyXamlEmbededItems Include="@(_LayoutFile)" Condition="'%(Extension)' == '.xbf' or '%(Extension)' == '.xaml'" />
+        </ItemGroup>
+        <Copy SourceFiles="@(MyXamlEmbededItems)" 
+              DestinationFiles="@(MyXamlEmbededItems->'$(IntermediateOutputPath)embed\%(RecursiveDir)%(Filename)%(Extension)')" 
+              SkipUnchangedFiles="true" />
+        <ReadLinesFromFile File="$(_EmbedFileResfilePath)">
+            <Output TaskParameter="Lines" ItemName="ItemsFromFile" />
+        </ReadLinesFromFile>
+        <ItemGroup>
+            <MyEmbeddedFileList Include="@(ItemsFromFile)" />
+            <MyEmbeddedFileList Include="@(MyXamlEmbededItems->'%(Filename)%(Extension)')" />
+        </ItemGroup>
+        <WriteLinesToFile File="$(_EmbedFileResfilePath)" Lines="@(MyEmbeddedFileList)" Overwrite="true" Encoding="Unicode" />
+    </Target>
+
+
+    <!-- WinUI app won't run without resources.pri, but publish doesn't normally include it -->
+    <Target Name="PublishPriFile" AfterTargets="ComputeFilesToPublish">
+        <ItemGroup>
+            <ResolvedFileToPublish Include="$(Outdir)resources.pri">
+                <RelativePath>$(Outdir)resources.pri</RelativePath>
+                <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+            </ResolvedFileToPublish>
+        </ItemGroup>
+    </Target>
 
 </Project>

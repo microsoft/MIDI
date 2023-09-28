@@ -41,7 +41,12 @@
 #include "memory_buffer.h"
 
 // shared
-#include "midi_ump.h"
+#include "midi_ump.h"   // general shared
+
+
+//#include <wil/resource.h>
+//#include <devpropdef.h> // required by MidiDefs.h
+//#include "MidiDefs.h"   // from the service inc folder
 
 namespace foundation = ::winrt::Windows::Foundation;
 namespace collections = ::winrt::Windows::Foundation::Collections;

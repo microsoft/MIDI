@@ -103,6 +103,9 @@
     <Filter Include="API\Messages\Enum">
       <UniqueIdentifier>{63ad72dd-0c2d-4539-86d7-8c527c249e3e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="API\Enumeration">
+      <UniqueIdentifier>{0a50ea56-af07-4bca-82f2-0b409820ef1d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -203,6 +206,12 @@
     </ClCompile>
     <ClCompile Include="MidiStreamMessageBuilder.cpp">
       <Filter>API\Messages\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceInformation.cpp">
+      <Filter>API\Enumeration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
+      <Filter>API\Enumeration</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -334,6 +343,12 @@
     </ClInclude>
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="midi_stream_message_defs.h" />
+    <ClInclude Include="MidiEndpointDeviceInformation.h">
+      <Filter>API\Enumeration</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceWatcher.h">
+      <Filter>API\Enumeration</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiSession.idl">
@@ -564,6 +579,18 @@
     <Midl Include="MidiStreamConfigurationCompleteEventArgs.idl">
       <Filter>API\Endpoints\Events</Filter>
     </Midl>
+    <Midl Include="MidiEndpointNativeDataFormatEnum.idl">
+      <Filter>API\Transports</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformation.idl">
+      <Filter>API\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDevicePurposeEnum.idl">
+      <Filter>API\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceWatcher.idl">
+      <Filter>API\Enumeration</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />
@@ -573,6 +600,8 @@
     <None Include="PropertySheet.props" />
   </ItemGroup>
   <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />

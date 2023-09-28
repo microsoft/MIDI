@@ -1,0 +1,31 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+import "MidiEndpointDeviceInformation.idl";
+
+namespace Windows.Devices.Midi2
+{
+    [MIDI_API_CONTRACT(1)]
+    [default_interface]
+    runtimeclass MidiEndpointDeviceWatcher
+    {
+        MidiEndpointDeviceWatcher();
+
+        void Start();
+        void Stop();
+
+        Windows.Foundation.Collections.IMap<String, MidiEndpointDeviceInformation> EndpointDevices{ get; };
+
+        // TODO: Need events for data updates. No point in making the map observable because the entities aren't
+
+    }
+}

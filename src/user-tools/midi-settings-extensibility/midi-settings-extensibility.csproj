@@ -1,19 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net7.0-windows10.0.20348.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<TargetFramework>net7.0-windows10.0.20348.0</TargetFramework>
+		<TargetFramework>net8.0-windows10.0.20348.0</TargetFramework>
 		<TargetPlatformMinVersion>10.0.20348.0</TargetPlatformMinVersion>
 		<RootNamespace>Microsoft.Midi.Settings.Extensibility</RootNamespace>
 		<AssemblyName>Microsoft.Midi.Settings.Extensibility</AssemblyName>
 		<UseWinUI>true</UseWinUI>
 		<PlatformTarget>x64</PlatformTarget>
 		<Platforms>AnyCPU;x64;ARM64</Platforms>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
-		<ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>		
-	</PropertyGroup>
+
+        <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
+
+        <!-- Without this, the build script gets "NETSDK1083: The specified RuntimeIdentifier 'win10-x64' is not recognized" -->
+        <UseRidGraph>true</UseRidGraph>
+        <EnableCoreMrtTooling>false</EnableCoreMrtTooling>
+    </PropertyGroup>
 
 	<PropertyGroup>
 		<!--<CsWinRTIncludes>Microsoft.Devices.Midi2</CsWinRTIncludes>-->

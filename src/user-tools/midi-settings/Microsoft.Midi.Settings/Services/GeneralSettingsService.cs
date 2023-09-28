@@ -18,7 +18,7 @@ namespace Microsoft.Midi.Settings.Services
         private const string ShowDeveloperOptions_SettingsKey = "ShowDeveloperOptions";
         private bool _showDeveloperOptions;
 
-        public event EventHandler SettingsChanged;
+        public event EventHandler? SettingsChanged;
 
         public GeneralSettingsService(ILocalSettingsService localSettingsService)
         {
@@ -37,7 +37,7 @@ namespace Microsoft.Midi.Settings.Services
                     value = WindowsDeveloperModeHelper.IsDeveloperModeEnabled;
                 }
 
-                SaveShowDeveloperOptionsFromSettingsAsync(value);
+                SaveShowDeveloperOptionsFromSettingsAsync(value).Wait();
                 _showDeveloperOptions = value;
 
                 SettingsChanged?.Invoke(this, EventArgs.Empty);

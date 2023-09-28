@@ -241,6 +241,8 @@
     <ClInclude Include="MidiBidirectionalEndpointOpenOptions.h">
       <DependentUpon>MidiBidirectionalEndpointOpenOptions.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceInformation.h" />
+    <ClInclude Include="MidiEndpointDeviceWatcher.h" />
     <ClInclude Include="MidiEndpointMetadataCacheUpdatedEventArgs.h">
       <DependentUpon>MidiEndpointMetadataCacheUpdatedEventArgs.idl</DependentUpon>
     </ClInclude>
@@ -381,6 +383,8 @@
     <ClCompile Include="MidiBidirectionalEndpointOpenOptions.cpp">
       <DependentUpon>MidiBidirectionalEndpointOpenOptions.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceInformation.cpp" />
+    <ClCompile Include="MidiEndpointDeviceWatcher.cpp" />
     <ClCompile Include="MidiEndpointMetadataCacheUpdatedEventArgs.cpp">
       <DependentUpon>MidiEndpointMetadataCacheUpdatedEventArgs.idl</DependentUpon>
     </ClCompile>
@@ -527,8 +531,12 @@
     <Midl Include="MidiChannel.idl" />
     <Midl Include="MidiChannelEndpointListener.idl" />
     <Midl Include="MidiClock.idl" />
+    <Midl Include="MidiEndpointDeviceInformation.idl" />
+    <Midl Include="MidiEndpointDevicePurposeEnum.idl" />
+    <Midl Include="MidiEndpointDeviceWatcher.idl" />
     <Midl Include="MidiEndpointDiscoveryFilterFlagsEnum.idl" />
     <Midl Include="MidiEndpointInformationUpdatedEventArgs.idl" />
+    <Midl Include="MidiEndpointNativeDataFormatEnum.idl" />
     <Midl Include="MidiFunctionBlockDiscoveryFilterFlagsEnum.idl" />
     <Midl Include="MidiFunctionBlockMidi10Enum.idl" />
     <Midl Include="MidiFunctionBlocksUpdatedEventArgs.idl" />

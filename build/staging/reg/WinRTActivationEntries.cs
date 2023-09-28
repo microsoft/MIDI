@@ -9,6 +9,8 @@ class RegistryEntries
         new RegEntry{ ClassName="Windows.Devices.Midi2.IMidiSessionStatics", ActivationType=0, Threading=0, TrustLevel=0  },
         new RegEntry{ ClassName="Windows.Devices.Midi2.MidiSessionSettings", ActivationType=0, Threading=0, TrustLevel=0  },
         new RegEntry{ ClassName="Windows.Devices.Midi2.MidiVirtualDeviceManager", ActivationType=0, Threading=0, TrustLevel=0  },
+        new RegEntry{ ClassName="Windows.Devices.Midi2.MidiEndpointDeviceInformation", ActivationType=0, Threading=0, TrustLevel=0  },
+        new RegEntry{ ClassName="Windows.Devices.Midi2.MidiEndpointDeviceWatcher", ActivationType=0, Threading=0, TrustLevel=0  },
         new RegEntry{ ClassName="Windows.Devices.Midi2.MidiMessage32", ActivationType=0, Threading=0, TrustLevel=0  },
         new RegEntry{ ClassName="Windows.Devices.Midi2.MidiMessage64", ActivationType=0, Threading=0, TrustLevel=0  },
         new RegEntry{ ClassName="Windows.Devices.Midi2.MidiMessage96", ActivationType=0, Threading=0, TrustLevel=0  },

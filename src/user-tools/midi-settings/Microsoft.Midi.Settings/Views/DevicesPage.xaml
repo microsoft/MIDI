@@ -6,6 +6,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Microsoft.Midi.Settings.Views"
+    xmlns:labs="using:CommunityToolkit.Labs.WinUI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
@@ -17,11 +18,30 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Vertical">
-            <TextBlock TextWrapping="WrapWholeWords" Margin="3" Text="This is a developer prototype and is not necessarily indicative of how the production app will appear or operate." />
-            <TextBlock TextWrapping="WrapWholeWords" Margin="3" Text="Click the button below to create a single network UMP Endpoint. After you do that, go to the Traffic Monitor page and click the 'Monitor on Screen' button. At that point, start sending UMP messages from your Network MIDI 2.0 device to the advertised Windows MIDI Endpoint." />
-        </StackPanel>
+        <ItemsControl x:Name="UmpEndpointsList" Grid.Row="2">
+
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <labs:SettingsExpander
+                        Description="Device name"
+                        Header="ID?"
+                        IsExpanded="True">
+                        <labs:SettingsExpander.HeaderIcon>
+                            <FontIcon Glyph="&#xe713;" />
+                        </labs:SettingsExpander.HeaderIcon>
+
+                        
+                    </labs:SettingsExpander>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+
         
+        
+        </ItemsControl>
+        
+
+
+
         <!--<Grid Grid.Row="1">
             <Button x:Name="TempCreateNetworkEndpoint" Click="TempCreateNetworkEndpoint_Click" Content="Create Network MIDI 2.0 Server Host and Endpoint"
                 HorizontalAlignment="Left" VerticalAlignment="Top" Margin="20" 

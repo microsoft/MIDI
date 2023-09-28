@@ -87,7 +87,17 @@
                 InstallArguments="/install /passive /norestart /log midi_dotnet8_install_log.txt"
                 UninstallArguments="/uninstall /passive /norestart /quiet"
                 />
-            
+
+            <!-- WinUI / Windows App SDK. This is required, but also has no uninstall option -->
+            <ExePackage
+                DisplayName="Microsoft Windows App Runtime"
+                SourceFile="$(DependenciesSourceRootFolder)\winui\WindowsAppRuntimeInstall-x64.exe"
+                Compressed="yes"
+                InstallArguments="--quiet"
+                Permanent="true"
+                >
+            </ExePackage>
+
         </PackageGroup>
         
         <PackageGroup Id="MidiServicesPackages">

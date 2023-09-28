@@ -1,17 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <TargetFramework>net8.0-windows10.0.20348.0</TargetFramework>
-    <RootNamespace>Microsoft.Midi.Settings.Core</RootNamespace>
-	  <Platforms>AnyCPU;x64;x86</Platforms>
-	  <Platforms>x86;x64;arm64;AnyCPU</Platforms>
-	  <ImplicitUsings>enable</ImplicitUsings>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
 
       <!-- Without this, the build script gets "NETSDK1083: The specified RuntimeIdentifier 'win10-x64' is not recognized" -->
       <UseRidGraph>true</UseRidGraph>
       <EnableCoreMrtTooling>false</EnableCoreMrtTooling>
+
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.1-0042" />
   </ItemGroup>
+
 </Project>
