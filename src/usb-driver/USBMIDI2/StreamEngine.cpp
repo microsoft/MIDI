@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 #include "Pch.h"
 
+#include "Trace.h"
+#include "StreamEngine.tmh"
+
 // The same filter instance may not be used for both midi
 // pin instances, so storing the pins on the filter for the
 // pins to share will not work.
@@ -99,8 +102,7 @@ _Use_decl_annotations_
 void
 StreamEngine::WorkerThread(
     _In_ PVOID context
-    )
-{
+    ){
     PAGED_CODE();
     auto streamEngine = reinterpret_cast<StreamEngine*>(context);
     streamEngine->HandleIo();
@@ -258,6 +260,83 @@ StreamEngine::HandleIo()
                         // There's enough space available, calculate our write position
                         PVOID startingWriteAddress = (PVOID)(((PBYTE)g_MidiInStreamEngine->m_KernelBufferMapping.Buffer1.m_BufferClientAddress)+midiInWritePosition);
 
+                        // This is a Hack for now - write to the USB IO
+                        // 
+                        // Build the USB Request
+                        WDFREQUEST request;
+                        WDFMEMORY  reqMemory;
+                        WDFDEVICE device = nullptr;
+                        WDF_OBJECT_ATTRIBUTES attributes;
+#if 0
+                        device = AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin));
+                        devCtx = GetDeviceContext(device);
+
+                        // Create memory for request to send
+                        WDF_OBJECT_ATTRIBUTES_INIT(&attributes);
+                        status = WdfMemoryCreate(
+                            &attributes,
+                            NonPagedPool,
+                            DRIVER_TAG,
+                            bytesToCopy - sizeof(PUMPDATAFORMAT),
+                            &reqMemory,
+                            NULL
+                        );
+                        if (!NT_SUCCESS(status))
+                        {
+                            break;
+                        }
+
+
+                        // Copy into memory the data to send
+                        status = WdfMemoryCopyFromBuffer(
+                            reqMemory,
+                            0,
+                            (PCHAR)startingReadAddress + sizeof(PUMPDATAFORMAT),
+                            bytesToCopy - sizeof(PUMPDATAFORMAT)
+                        );
+                        if (!NT_SUCCESS(status))
+                        {
+                            break;
+                        }
+
+                        // Prepare to send to USB driver
+                        status = WdfRequestCreate(
+                            NULL,
+                            NULL,
+                            &request
+                        );
+                        if (!NT_SUCCESS(status))
+                        {
+                            break;
+                        }
+                        status = WdfIoTargetFormatRequestForWrite(
+                            WdfDeviceGetIoTarget(device),
+                            request,
+                            reqMemory,
+                            NULL,
+                            NULL
+                        );
+                        if (!NT_SUCCESS(status))
+                        {
+                            break;
+                        }
+
+                        // Set completion routine
+                        WdfRequestSetCompletionRoutine(
+                            request,
+                            streamWriteIOCompletion,
+                            NULL
+                        );
+
+                        if (WdfRequestSend(
+                            request,
+                            WdfDeviceGetIoTarget(device),
+                            WDF_NO_SEND_OPTIONS) == FALSE)
+                        {
+                            status = WdfRequestGetStatus(request);
+                            break;
+                        }
+#endif
                         // copy the data. This works (reading/writing past the end of the buffer)
                         // because we have mapped the same buffer twice, so reading or writing
                         // past the end has the effect of looping around. We're safe to do this
@@ -307,6 +386,21 @@ StreamEngine::HandleIo()
 
     m_ThreadExitedEvent.set();
     PsTerminateSystemThread(status);
+}
+
+VOID
+streamWriteIOCompletion(
+    _In_
+    WDFREQUEST Request,
+    _In_
+    WDFIOTARGET Target,
+    _In_
+    PWDF_REQUEST_COMPLETION_PARAMS Params,
+    _In_
+    WDFCONTEXT Context
+)
+{
+    WdfRequestComplete(Request, NULL);
 }
 
 _Use_decl_annotations_
