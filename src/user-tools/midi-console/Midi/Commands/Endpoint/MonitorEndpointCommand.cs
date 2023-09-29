@@ -16,10 +16,6 @@ using System.Diagnostics.Eventing.Reader;
 
 namespace Microsoft.Devices.Midi2.ConsoleApp
 {
-    // commands to check the health of Windows MIDI Services on this PC
-    // will check for MIDI services
-    // will attempt a loopback test
-
 
     internal class MonitorEndpointCommand : Command<MonitorEndpointCommand.Settings>
     {
@@ -36,11 +32,21 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             [DefaultValue(false)]
             public bool SingleMessage { get; set; }
 
+
             [LocalizedDescription("ParameterMonitorEndpointVerbose")]
             [CommandOption("-v|--verbose|--details")]
             [DefaultValue(false)]
             public bool Verbose { get; set; }
         }
+
+
+        public override Spectre.Console.ValidationResult Validate(CommandContext context, Settings settings)
+        {
+            // TODO: Validate endpoint 
+
+            return ValidationResult.Success();
+        }
+
 
         public override int Execute(CommandContext context, Settings settings)
         {
@@ -96,6 +102,10 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             else if (connection == null)
             {
                 AnsiConsole.WriteLine(Strings.ErrorUnableToOpenEndpoint);
+
+                if (session != null)
+                    session.Dispose();
+
                 return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
             }
 
@@ -236,7 +246,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             }
 
-            
+            if (session != null)
+                session.Dispose();
 
             return 0;
         }

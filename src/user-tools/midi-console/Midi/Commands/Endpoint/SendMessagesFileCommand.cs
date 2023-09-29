@@ -145,11 +145,17 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToCreateEndpointConnection));
 
+                if (session != null)
+                    session.Dispose();
+
                 return (int)MidiConsoleReturnCode.ErrorCreatingEndpointConnection;
             }
             else if (!openSuccess)
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToOpenEndpoint));
+
+                if (session != null)
+                    session.Dispose();
 
                 return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
             }
@@ -297,7 +303,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 });
 
 
-
+            if (session != null)
+                session.Dispose();
 
             return (int)MidiConsoleReturnCode.Success;
         }
