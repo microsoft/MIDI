@@ -260,14 +260,15 @@ StreamEngine::HandleIo()
                         // There's enough space available, calculate our write position
                         PVOID startingWriteAddress = (PVOID)(((PBYTE)g_MidiInStreamEngine->m_KernelBufferMapping.Buffer1.m_BufferClientAddress)+midiInWritePosition);
 
+#if 0
                         // This is a Hack for now - write to the USB IO
                         // 
                         // Build the USB Request
-                        WDFREQUEST request;
-                        WDFMEMORY  reqMemory;
-                        WDFDEVICE device = nullptr;
-                        WDF_OBJECT_ATTRIBUTES attributes;
-#if 0
+                        WDFREQUEST streamRequest;
+                        WDFMEMORY  streamReqMemory;
+                        WDFDEVICE streamDevice = nullptr;
+                        WDF_OBJECT_ATTRIBUTES streamAttributes;
+
                         device = AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin));
                         devCtx = GetDeviceContext(device);
 
@@ -387,7 +388,7 @@ StreamEngine::HandleIo()
     m_ThreadExitedEvent.set();
     PsTerminateSystemThread(status);
 }
-
+#if 0
 VOID
 streamWriteIOCompletion(
     _In_
@@ -402,6 +403,7 @@ streamWriteIOCompletion(
 {
     WdfRequestComplete(Request, NULL);
 }
+#endif
 
 _Use_decl_annotations_
 NTSTATUS

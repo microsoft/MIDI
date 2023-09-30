@@ -609,7 +609,7 @@ Return Value:
     PWDF_USB_INTERFACE_SETTING_PAIR         pSettingPairs = NULL;
     WDF_USB_DEVICE_SELECT_CONFIG_PARAMS     configParams;
     WDF_OBJECT_ATTRIBUTES                   objectAttributes;
-    PUSB_STRING_DESCRIPTOR                  pTempBuffer = NULL;
+    PWCHAR                                  pTempBuffer = NULL;
     WDF_REQUEST_SEND_OPTIONS                reqOptions;
     USHORT                                  numChars = 0;
 
@@ -831,6 +831,59 @@ Return Value:
         if (!NT_SUCCESS(status))
         {
             TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Manufacturer string.\n");
+            return(status);
+        }
+    }
+
+    // Device Product Name
+    if (deviceDescriptor.iProduct)
+    {
+        WDF_REQUEST_SEND_OPTIONS_INIT(&reqOptions, WDF_REQUEST_SEND_OPTION_SYNCHRONOUS);
+        WDF_REQUEST_SEND_OPTIONS_SET_TIMEOUT(&reqOptions, WDF_REL_TIMEOUT_IN_SEC(USB_REQ_TIMEOUT_SEC));
+
+        status = WdfUsbTargetDeviceQueryString(
+            pDeviceContext->UsbDevice,
+            NULL,
+            &reqOptions,
+            NULL,
+            &numChars,
+            deviceDescriptor.iProduct,
+            MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
+        );
+        if (!NT_SUCCESS(status))
+        {
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Product Name string size.\n");
+            return(status);
+        }
+
+        WDF_OBJECT_ATTRIBUTES_INIT(&deviceConfigAttrib);
+        deviceConfigAttrib.ParentObject = pDeviceContext->UsbDevice;
+        status = WdfMemoryCreate(
+            &deviceConfigAttrib,
+            PagedPool,
+            USBMIDI_POOLTAG,
+            (size_t)((numChars + 1) * sizeof(WCHAR)),
+            &pDeviceContext->DeviceProductNameMemory,
+            (PVOID*)&pTempBuffer
+        );
+        if (!NT_SUCCESS(status))
+        {
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error allocating memory for Product Name.\n");
+            return(status);
+        }
+        RtlZeroMemory(pTempBuffer, (size_t)((numChars + 1) * sizeof(WCHAR)));
+        status = WdfUsbTargetDeviceQueryString(
+            pDeviceContext->UsbDevice,
+            NULL,
+            &reqOptions,
+            (PUSHORT)pTempBuffer,
+            &numChars,
+            deviceDescriptor.iProduct,
+            MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
+        );
+        if (!NT_SUCCESS(status))
+        {
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Product Name string.\n");
             return(status);
         }
     }

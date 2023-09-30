@@ -103,6 +103,7 @@ typedef struct _DEVICE_CONTEXT {
     // 
     WDFMEMORY                       DeviceConfigDescriptorMemory;
     WDFMEMORY                       DeviceManfMemory;
+    WDFMEMORY                       DeviceProductNameMemory;
     WDFMEMORY                       DeviceNameMemory;
     WDFMEMORY                       DeviceSNMemory;
     WDFMEMORY                       DeviceGTBMemory;
