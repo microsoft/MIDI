@@ -77,7 +77,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            MidiSession? session = null;
             IMidiOutputConnection? connection = null;
 
             string endpointId = string.Empty;
@@ -95,15 +94,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             AnsiConsole.MarkupLine(Strings.SendMessageSendingThroughEndpointLabel + ": " + AnsiMarkupFormatter.FormatDeviceInstanceId(endpointId));
             AnsiConsole.WriteLine();
 
+            // todo: update loc strings
+            using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
+
             bool openSuccess = false;
 
             AnsiConsole.Status()
                 .Start(Strings.StatusCreatingSessionAndOpeningEndpoint, ctx =>
                 {
                     ctx.Spinner(Spinner.Known.Star);
-
-                    // todo: update loc strings
-                    session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
 
 
                     if (session != null)

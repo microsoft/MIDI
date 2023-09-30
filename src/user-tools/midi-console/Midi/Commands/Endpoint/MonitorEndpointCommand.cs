@@ -50,7 +50,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            MidiSession? session = null;
             IMidiEndpointConnection? connection = null;
 
 
@@ -73,13 +72,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             var table = new Table();
 
 
+            using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.MonitorSessionNameSuffix}");
 
             AnsiConsole.Status()
                 .Start(Strings.StatusCreatingSessionAndOpeningEndpoint, ctx =>
                 {
                     ctx.Spinner(Spinner.Known.Star);
 
-                    session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.MonitorSessionNameSuffix}");
 
                     if (session != null)
                     {
@@ -102,10 +101,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             else if (connection == null)
             {
                 AnsiConsole.WriteLine(Strings.ErrorUnableToOpenEndpoint);
-
-                if (session != null)
-                    session.Dispose();
-
                 return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
             }
 
@@ -245,9 +240,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
 
             }
-
-            if (session != null)
-                session.Dispose();
 
             return 0;
         }

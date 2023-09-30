@@ -83,8 +83,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            MidiSession? session = null;
-
             IMidiOutputConnection? connection = null;
 
             string endpointId = string.Empty;
@@ -103,13 +101,14 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             bool openSuccess = false;
 
+            // todo: update loc strings
+            using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
+
+
             AnsiConsole.Status()
                 .Start(Strings.StatusCreatingSessionAndOpeningEndpoint, ctx =>
                 {
                     ctx.Spinner(Spinner.Known.Star);
-
-                    session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
-
 
                     if (session != null)
                     {
@@ -149,21 +148,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             else if (connection == null)
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToCreateEndpointConnection));
-
-                if (session != null)
-                    session.Dispose();
-
-
                 return (int)MidiConsoleReturnCode.ErrorCreatingEndpointConnection;
             }
             else if (!openSuccess)
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToOpenEndpoint));
-
-                if (session != null)
-                    session.Dispose();
-
-
                 return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
             }
 
@@ -202,10 +191,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         }
                     });
 
-
-                if (session != null)
-                    session.Dispose();
-
                 return 0;
             }
             else
@@ -234,10 +219,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                             Thread.Sleep(settings.DelayBetweenMessages);
                         }
                     });
-
-                if (session != null)
-                    session.Dispose();
-
 
                 return 0;
             }
