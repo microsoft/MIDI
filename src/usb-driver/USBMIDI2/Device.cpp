@@ -423,16 +423,28 @@ EvtDeviceD0Entry(
     _In_  WDF_POWER_DEVICE_STATE PreviousState
     )
 {
-    UNREFERENCED_PARAMETER(Device);
+    NTSTATUS status;
+    PDEVICE_CONTEXT devCtx;
+
     UNREFERENCED_PARAMETER(PreviousState);
 
     PAGED_CODE();
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
-    
+
+    devCtx = GetDeviceContext(Device);
+    ASSERT(devCtx != nullptr);
+
+    status = WdfIoTargetStart(WdfUsbTargetPipeGetIoTarget(devCtx->MidiInPipe));
+    if (!NT_SUCCESS(status))
+    {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+            "%!FUNC! Could not start interrupt pipe failed 0x%x", status);
+    }
+
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
-    return STATUS_SUCCESS;
+    return status;
 }
 
 _Use_decl_annotations_
@@ -445,10 +457,14 @@ EvtDeviceD0Exit(
 {
     NTSTATUS        status = STATUS_SUCCESS;
     POWER_ACTION    powerAction;
+    PDEVICE_CONTEXT         devCtx;
 
     PAGED_CODE();
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
+
+    devCtx = GetDeviceContext(Device);
+    ASSERT(devCtx != nullptr);
 
     powerAction = WdfDeviceGetSystemPowerAction(Device);
 
@@ -457,12 +473,8 @@ EvtDeviceD0Exit(
     //
     if (TargetState == WdfPowerDeviceD3 && powerAction == PowerActionNone)
     {
-        PDEVICE_CONTEXT         devCtx;
         WDF_TRI_STATE           excludeD3Cold = WdfTrue;
         ACX_DX_EXIT_LATENCY     latency;
-
-        devCtx = GetDeviceContext(Device);
-        ASSERT(devCtx != nullptr);
         
         //
         // Get the current exit latency.
@@ -488,6 +500,11 @@ EvtDeviceD0Exit(
             }
         }
     }
+
+    WdfIoTargetStop(
+        WdfUsbTargetPipeGetIoTarget(devCtx->MidiInPipe),
+        WdfIoTargetCancelSentIo
+    );
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
@@ -570,6 +587,11 @@ Return Value:
     }
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
+
+    //
+    // Stop WPP Tracing
+    //
+    WPP_CLEANUP(WdfDriverWdmGetDriverObject((WDFDRIVER)WdfDevice));
 }
 
 PAGED_CODE_SEG

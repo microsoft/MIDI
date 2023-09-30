@@ -260,7 +260,6 @@ StreamEngine::HandleIo()
                         // There's enough space available, calculate our write position
                         PVOID startingWriteAddress = (PVOID)(((PBYTE)g_MidiInStreamEngine->m_KernelBufferMapping.Buffer1.m_BufferClientAddress)+midiInWritePosition);
 
-#if 0
                         // This is a Hack for now - write to the USB IO
                         // 
                         // Build the USB Request
@@ -269,17 +268,16 @@ StreamEngine::HandleIo()
                         WDFDEVICE streamDevice = nullptr;
                         WDF_OBJECT_ATTRIBUTES streamAttributes;
 
-                        device = AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin));
-                        devCtx = GetDeviceContext(device);
+                        streamDevice = AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin));
 
                         // Create memory for request to send
-                        WDF_OBJECT_ATTRIBUTES_INIT(&attributes);
+                        WDF_OBJECT_ATTRIBUTES_INIT(&streamAttributes);
                         status = WdfMemoryCreate(
-                            &attributes,
+                            &streamAttributes,
                             NonPagedPool,
                             DRIVER_TAG,
                             bytesToCopy - sizeof(PUMPDATAFORMAT),
-                            &reqMemory,
+                            &streamReqMemory,
                             NULL
                         );
                         if (!NT_SUCCESS(status))
@@ -290,7 +288,7 @@ StreamEngine::HandleIo()
 
                         // Copy into memory the data to send
                         status = WdfMemoryCopyFromBuffer(
-                            reqMemory,
+                            streamReqMemory,
                             0,
                             (PCHAR)startingReadAddress + sizeof(PUMPDATAFORMAT),
                             bytesToCopy - sizeof(PUMPDATAFORMAT)
@@ -304,16 +302,16 @@ StreamEngine::HandleIo()
                         status = WdfRequestCreate(
                             NULL,
                             NULL,
-                            &request
+                            &streamRequest
                         );
                         if (!NT_SUCCESS(status))
                         {
                             break;
                         }
                         status = WdfIoTargetFormatRequestForWrite(
-                            WdfDeviceGetIoTarget(device),
-                            request,
-                            reqMemory,
+                            WdfDeviceGetIoTarget(streamDevice),
+                            streamRequest,
+                            streamReqMemory,
                             NULL,
                             NULL
                         );
@@ -321,23 +319,23 @@ StreamEngine::HandleIo()
                         {
                             break;
                         }
-
+#if 0
                         // Set completion routine
                         WdfRequestSetCompletionRoutine(
-                            request,
+                            streamRequest,
                             streamWriteIOCompletion,
                             NULL
                         );
-
+#endif
                         if (WdfRequestSend(
-                            request,
-                            WdfDeviceGetIoTarget(device),
+                            streamRequest,
+                            WdfDeviceGetIoTarget(streamDevice),
                             WDF_NO_SEND_OPTIONS) == FALSE)
                         {
-                            status = WdfRequestGetStatus(request);
+                            status = WdfRequestGetStatus(streamRequest);
                             break;
                         }
-#endif
+
                         // copy the data. This works (reading/writing past the end of the buffer)
                         // because we have mapped the same buffer twice, so reading or writing
                         // past the end has the effect of looping around. We're safe to do this
