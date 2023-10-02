@@ -410,6 +410,27 @@ Return Value:
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
+    NTSTATUS status;
+    PDEVICE_CONTEXT devCtx = GetDeviceContext(Device);
+
+    // Detach the circuit before removal
+    status = AcxDeviceDetachCircuit(Device, devCtx->Midi);
+    if (!NT_SUCCESS(status))
+    {
+        ASSERT(FALSE);
+        goto exit;
+    }
+
+    // Remove the circuit
+    status = AcxDeviceRemoveCircuit(Device, devCtx->Midi);
+    if (!NT_SUCCESS(status))
+    {
+        ASSERT(FALSE);
+        goto exit;
+    }
+    devCtx->Midi = nullptr;
+
+exit:
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
     return STATUS_SUCCESS;
@@ -1474,7 +1495,8 @@ Return Value:
             // Submit any data written
             if (numIndex)
             {
-                if (!USBMIDI2DriverFillReadQueue(
+                if (!pDeviceContext->pMidiStreamEngine
+                    || !pDeviceContext->pMidiStreamEngine->FillReadStream(
                     (PUINT32)pWorkingBuffer,
                     numIndex,
                     pDeviceContext
@@ -1489,7 +1511,8 @@ Return Value:
         else
         {
             // Send Memory to Read Queue
-            if (!USBMIDI2DriverFillReadQueue(
+            if (!pDeviceContext->pMidiStreamEngine
+                || !pDeviceContext->pMidiStreamEngine->FillReadStream(
                 (PUINT32)pReceivedBuffer,
                 NumBytesTransferred / sizeof(UINT32),
                 pDeviceContext
@@ -1765,17 +1788,6 @@ Return Value:Amy
         status = STATUS_INVALID_PARAMETER;
         goto DriverIoWriteExit;
     }
-
-#if 0
-    // Get memory to work with
-    status = WdfRequestRetrieveInputMemory(Request, &reqMemory);
-    if (!NT_SUCCESS(status))
-    {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "%!FUNC! WdfRequestRetrieveInputBuffer failed\n");
-        goto DriverIoWriteExit;
-    }
-    pBuffer = (PUCHAR)WdfMemoryGetBuffer(reqMemory, NULL);
-#endif
 
     pBuffer = (PUCHAR)BufferStart;
 
