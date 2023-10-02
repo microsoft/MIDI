@@ -66,8 +66,8 @@ namespace Windows::Devices::Midi2::Internal
 
     // Callback handler from the Midi Service endpoint abstraction
 
-    _Use_decl_annotations_
     template<typename TEndpointAbstraction>
+    _Use_decl_annotations_
     HRESULT InternalMidiInputConnection<TEndpointAbstraction>::CallbackImpl(
             foundation::IInspectable eventSource, 
             PVOID data, 

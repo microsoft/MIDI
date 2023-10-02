@@ -13,18 +13,15 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    _Use_decl_annotations_
     void MidiEndpointInformationConfigurator::Initialize()
     {
     }
 
-    _Use_decl_annotations_
     void MidiEndpointInformationConfigurator::OnEndpointConnectionOpened()
     {
         // TODO: Send out discovery messages
     }
 
-    _Use_decl_annotations_
     void MidiEndpointInformationConfigurator::Cleanup()
     {
     }

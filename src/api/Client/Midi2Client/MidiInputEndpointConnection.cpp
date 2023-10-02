@@ -24,7 +24,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             m_connectionId = connectionId;
             m_inputDeviceId = endpointDeviceId;
 
-            WINRT_ASSERT(!DeviceId().empty());
+            WINRT_ASSERT(!m_inputDeviceId.empty());
             WINRT_ASSERT(serviceAbstraction != nullptr);
 
             m_serviceAbstraction = serviceAbstraction;

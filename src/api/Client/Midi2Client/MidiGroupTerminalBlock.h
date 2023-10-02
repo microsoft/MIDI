@@ -27,10 +27,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
     private:
         winrt::hstring m_id{};
         winrt::hstring m_name{};
-        midi2::MidiGroupTerminalBlockDirection m_direction;
-        midi2::MidiGroupTerminalBlockProtocol m_protocol;
-        uint16_t m_maxDeviceInputBandwidthIn4KBSecondUnits{};
-        uint16_t m_maxDeviceOutputBandwidthIn4KBSecondUnits{};
+        midi2::MidiGroupTerminalBlockDirection m_direction{ 0 };
+        midi2::MidiGroupTerminalBlockProtocol m_protocol{ 0 };
+        uint16_t m_maxDeviceInputBandwidthIn4KBSecondUnits{ 0 };
+        uint16_t m_maxDeviceOutputBandwidthIn4KBSecondUnits{ 0 };
 
         collections::IVector<midi2::MidiGroup> m_includedGroups
             { winrt::single_threaded_vector<midi2::MidiGroup>() };

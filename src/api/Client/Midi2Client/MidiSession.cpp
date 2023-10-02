@@ -67,7 +67,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     // Internal method called inside the API to connect to the abstraction. Called by the code which creates
     // the session instance
-    _Use_decl_annotations_
     bool MidiSession::InternalStart()
     {
         try
@@ -400,6 +399,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return ConnectInputEndpoint(deviceId, options, nullptr);
     }
 
+    _Use_decl_annotations_
     midi2::MidiInputEndpointConnection MidiSession::ConnectInputEndpoint(
         winrt::hstring const& deviceId
         ) noexcept
@@ -444,7 +444,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
-    _Use_decl_annotations_
     void MidiSession::Close() noexcept
     {
         if (!m_isOpen) return;
@@ -474,7 +473,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
-    _Use_decl_annotations_
     MidiSession::~MidiSession() noexcept
     {
         if (m_isOpen)
