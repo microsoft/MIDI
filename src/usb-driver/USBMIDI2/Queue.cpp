@@ -103,44 +103,6 @@ Return Value:
         return status;
     }
 
-
-    //
-    // Configure a write queue to queue UMP formatted data to be sent
-    // to USB device. This queue should be set to output of Kernel Streaming
-    // freamework.
-    //
-    WDF_IO_QUEUE_CONFIG_INIT(
-        &queueConfig,
-        WdfIoQueueDispatchSequential
-    );
-    queueConfig.EvtIoWrite = USBMIDI2DriverEvtIoWrite;
-    queueConfig.EvtIoStop = USBMIDI2DriverEvtIoStop;
-
-    status = WdfIoQueueCreate(
-        Device,
-        &queueConfig,
-        WDF_NO_OBJECT_ATTRIBUTES,
-        &queue
-    );
-
-    if (!NT_SUCCESS(status)) {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_QUEUE, "WdfIoQueueCreate failed %!STATUS!", status);
-        return status;
-    }
-
-    status = WdfDeviceConfigureRequestDispatching(
-        Device,
-        queue,
-        WdfRequestTypeWrite
-    );
-    if (!NT_SUCCESS(status))
-    {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_QUEUE,
-            "WdfDeviceConfigureDispatching failed 0x%x\n", status);
-        return status;
-    }
-
-
 //
 // Configure a read queue to queue to place read or converted UMP data
 // from USB device. This queue should be set to input of Kernel Streaming

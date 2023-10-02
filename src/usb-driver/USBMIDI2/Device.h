@@ -224,16 +224,15 @@ USBMIDI2DriverEvtIoRead(
     _In_ size_t           Length
 );
 
-//
-// Function callback for write request
-//
+// 
+// Aid Function for USB Write
 __drv_maxIRQL(PASSIVE_LEVEL)
 NONPAGED_CODE_SEG
 VOID
-USBMIDI2DriverEvtIoWrite(
-    _In_ WDFQUEUE         Queue,
-    _In_ WDFREQUEST       Request,
-    _In_ size_t           Length
+USBMIDI2DriverIoWrite(
+    _In_ WDFDEVICE  Device,
+    _In_ PVOID      BufferStart,
+    _In_ size_t     numBytes
 );
 
 _Must_inspect_result_

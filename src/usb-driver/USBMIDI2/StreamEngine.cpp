@@ -260,80 +260,15 @@ StreamEngine::HandleIo()
                         // There's enough space available, calculate our write position
                         PVOID startingWriteAddress = (PVOID)(((PBYTE)g_MidiInStreamEngine->m_KernelBufferMapping.Buffer1.m_BufferClientAddress)+midiInWritePosition);
 
-                        // This is a Hack for now - write to the USB IO
-                        // 
-                        // Build the USB Request
-                        WDFREQUEST streamRequest;
-                        WDFMEMORY  streamReqMemory;
-                        WDFDEVICE streamDevice = nullptr;
-                        WDF_OBJECT_ATTRIBUTES streamAttributes;
-
-                        streamDevice = AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin));
-
-                        // Create memory for request to send
-                        WDF_OBJECT_ATTRIBUTES_INIT(&streamAttributes);
-                        status = WdfMemoryCreate(
-                            &streamAttributes,
-                            NonPagedPool,
-                            DRIVER_TAG,
-                            bytesToCopy - sizeof(PUMPDATAFORMAT),
-                            &streamReqMemory,
-                            NULL
-                        );
-                        if (!NT_SUCCESS(status))
+                        // Send relevant buffer to USB
+                        PUMPDATAFORMAT thisData = (PUMPDATAFORMAT)startingReadAddress;
+                        if (thisData->ByteCount)
                         {
-                            break;
-                        }
-
-
-                        // Copy into memory the data to send
-                        status = WdfMemoryCopyFromBuffer(
-                            streamReqMemory,
-                            0,
-                            (PCHAR)startingReadAddress + sizeof(PUMPDATAFORMAT),
-                            bytesToCopy - sizeof(PUMPDATAFORMAT)
-                        );
-                        if (!NT_SUCCESS(status))
-                        {
-                            break;
-                        }
-
-                        // Prepare to send to USB driver
-                        status = WdfRequestCreate(
-                            NULL,
-                            NULL,
-                            &streamRequest
-                        );
-                        if (!NT_SUCCESS(status))
-                        {
-                            break;
-                        }
-                        status = WdfIoTargetFormatRequestForWrite(
-                            WdfDeviceGetIoTarget(streamDevice),
-                            streamRequest,
-                            streamReqMemory,
-                            NULL,
-                            NULL
-                        );
-                        if (!NT_SUCCESS(status))
-                        {
-                            break;
-                        }
-#if 0
-                        // Set completion routine
-                        WdfRequestSetCompletionRoutine(
-                            streamRequest,
-                            streamWriteIOCompletion,
-                            NULL
-                        );
-#endif
-                        if (WdfRequestSend(
-                            streamRequest,
-                            WdfDeviceGetIoTarget(streamDevice),
-                            WDF_NO_SEND_OPTIONS) == FALSE)
-                        {
-                            status = WdfRequestGetStatus(streamRequest);
-                            break;
+                            USBMIDI2DriverIoWrite(
+                                AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)),
+                                (PUCHAR)startingReadAddress + sizeof(UMPDATAFORMAT),
+                                thisData->ByteCount
+                            );
                         }
 
                         // copy the data. This works (reading/writing past the end of the buffer)

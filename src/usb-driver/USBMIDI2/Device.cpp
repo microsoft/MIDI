@@ -1716,26 +1716,22 @@ IoEvtReadExit:
 
 NONPAGED_CODE_SEG
 VOID
-USBMIDI2DriverEvtIoWrite(
-    _In_ WDFQUEUE         Queue,
-    _In_ WDFREQUEST       Request,
-    _In_ size_t           Length
+USBMIDI2DriverIoWrite(
+    _In_ WDFDEVICE  Device,
+    _In_ PVOID      BufferStart,
+    _In_ size_t     numBytes
 )
 /*++
 
 Routine Description:
 
-    Called by the framework when it receives Write requests.
+    Called by Pin to write data to USB (USB OUT).
 
 Arguments:
 
-    Queue - Default queue handle
-    Request - Handle to the read/write request
-    Length - Length of the data buffer associated with the request.
-                 The default property of the queue is to not dispatch
-                 zero length read & write requests to the driver and
-                 complete is with status success. So we will never get
-                 a zero length request.
+    Device      The WDFDevice intstance
+    BufferStart pointer to start of buffer to copy
+    numBytes    The number of bytes to transfer
 
 Return Value:Amy
 
@@ -1743,7 +1739,6 @@ Return Value:Amy
 --*/
 {
     NTSTATUS                status;
-    WDFMEMORY               reqMemory;
     PDEVICE_CONTEXT         pDeviceContext = NULL;
     WDFUSBPIPE              pipe = NULL;
     PUCHAR                  pBuffer;
@@ -1756,29 +1751,33 @@ Return Value:Amy
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
-    pDeviceContext = GetDeviceContext(WdfIoQueueGetDevice(Queue));
+    pDeviceContext = GetDeviceContext(Device);
 
     pipe = pDeviceContext->MidiOutPipe;
 
     // 
     // General Error Checking
     // 
-    if (Length % sizeof(UINT32)) // expected data is UINT32 array
+    if (numBytes % sizeof(UINT32)) // expected data is UINT32 array
     {
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
             "%!FUNC! determined error in past data size not being UIN32 divisible.\n");
         status = STATUS_INVALID_PARAMETER;
-        goto DriverEvtIoWriteExit;
+        goto DriverIoWriteExit;
     }
 
+#if 0
     // Get memory to work with
     status = WdfRequestRetrieveInputMemory(Request, &reqMemory);
     if (!NT_SUCCESS(status))
     {
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "%!FUNC! WdfRequestRetrieveInputBuffer failed\n");
-        goto DriverEvtIoWriteExit;
+        goto DriverIoWriteExit;
     }
     pBuffer = (PUCHAR)WdfMemoryGetBuffer(reqMemory, NULL);
+#endif
+
+    pBuffer = (PUCHAR)BufferStart;
 
     // Check type of device connected to
     if (!pDeviceContext->UsbMIDIStreamingAlt)
@@ -1786,7 +1785,7 @@ Return Value:Amy
         //
         // Need to convert from UMP to USB MIDI 1.0 as a USB MIDI 1.0 device connected
         //
-        UINT numWords = (UINT)Length / sizeof(UINT32);
+        UINT numWords = (UINT)numBytes / sizeof(UINT32);
         UINT numProcessed = 0;
         PUINT32 words = (PUINT32)pBuffer;
         while (numProcessed < numWords)
@@ -1838,7 +1837,7 @@ Return Value:Amy
             if ((numWords - numProcessed) < umpPacket.wordCount)
             {
                 // If not, let system populate more
-                goto DriverEvtIoWriteExit;
+                goto DriverIoWriteExit;
             }
             // Get rest of words if needed for UMP Packet
             for (int count = 1; count < umpPacket.wordCount; count++)
@@ -2012,7 +2011,7 @@ Return Value:Amy
                     {
                         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
                             "%!FUNC! Error creating request for USB Write with status: 0x%x", status);
-                        goto DriverEvtIoWriteExit;
+                        goto DriverIoWriteExit;
                     }
 
                     WDF_OBJECT_ATTRIBUTES_INIT(&writeMemoryAttributes);
@@ -2031,7 +2030,7 @@ Return Value:Amy
                     {
                         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
                             "%!FUNC! could not create WdfMemory with status: 0x%x.\n", status);
-                        goto DriverEvtIoWriteExit;
+                        goto DriverIoWriteExit;
                     }
                     pWriteBuffer = (PUCHAR)WdfMemoryGetBuffer(writeMemory, NULL);
                     pWriteWords = (PUINT32)pWriteBuffer;
@@ -2055,7 +2054,7 @@ Return Value:Amy
                         true    // delete this request when complete
                     ))
                     {
-                        goto DriverEvtIoWriteExit;
+                        goto DriverIoWriteExit;
                     }
 
                     // Indicate new buffer needed
@@ -2078,43 +2077,95 @@ Return Value:Amy
                 true    // delete this request when complete
             ))
             {
-                goto DriverEvtIoWriteExit;
+                goto DriverIoWriteExit;
             }
 
             // Indicate new buffer needed
             pWriteBuffer = NULL;
             writeBufferIndex = 0;
         }
-
-        // Indicate we are done with the request
-        WdfRequestCompleteWithInformation(Request, STATUS_SUCCESS, Length);
     }
     else
     {
         //
         // UMP device, just pass along
         //
-        if (Length > pDeviceContext->MidiOutMaxSize)
+        size_t transferPos = 0;
+        size_t thisTransferSize = 0;
+
+        while (transferPos < numBytes)
         {
-            // we need to split up the data as too big for single USB URB
-        }
-        else
-        {
+            thisTransferSize = numBytes - transferPos;
+
+            // Enusre not bigger than max
+            if (thisTransferSize > pDeviceContext->MidiOutMaxSize)
+            {
+                thisTransferSize = pDeviceContext->MidiOutMaxSize;
+            }
+
+            // Create request, buffer and copy data into buffer
+            // Create Request
+            status = WdfRequestCreate(
+                NULL,       // attributes
+                WdfUsbTargetPipeGetIoTarget(pipe),
+                &usbRequest    // retuest object
+            );
+            if (!NT_SUCCESS(status))
+            {
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                    "%!FUNC! Error creating request for USB Write with status: 0x%x", status);
+                goto DriverIoWriteExit;
+            }
+
+            WDF_OBJECT_ATTRIBUTES_INIT(&writeMemoryAttributes);
+            writeMemoryAttributes.ParentObject = usbRequest;
+
+            // Create Memory Object
+            status = WdfMemoryCreate(
+                &writeMemoryAttributes,
+                NonPagedPool,
+                USBMIDI_POOLTAG,
+                pDeviceContext->MidiOutMaxSize,
+                &writeMemory,
+                NULL
+            );
+            if (!NT_SUCCESS(status))
+            {
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                    "%!FUNC! could not create WdfMemory with status: 0x%x.\n", status);
+                goto DriverIoWriteExit;
+            }
+
+            // Copy necessary data into the buffer
+            status = WdfMemoryCopyFromBuffer(
+                writeMemory,
+                transferPos,
+                BufferStart,
+                thisTransferSize
+            );
+            if (!NT_SUCCESS(status))
+            {
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                    "%!FUNC! could not copy data into WdfMemory: 0x%x.\n", status);
+                goto DriverIoWriteExit;
+            }
+
+            // Transfer to USB
             if (!USBMIDI2DriverSendToUSB(
-                Request,
-                reqMemory,
+                usbRequest,
+                writeMemory,
                 pipe,
-                Length,
+                writeBufferIndex,
                 pDeviceContext,
-                false   // Complete the request
+                true    // delete this request when complete
             ))
             {
-                goto DriverEvtIoWriteExit;
+                goto DriverIoWriteExit;
             }
         }
     }
 
-DriverEvtIoWriteExit:
+DriverIoWriteExit:
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 }
 
