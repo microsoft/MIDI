@@ -1796,7 +1796,7 @@ Return Value:Amy
             umpPacket.wordCount = 0;
 
             // First determine the size of UMP packet based on message type
-            umpPacket.umpData.umpWords[0] = words[numProcessed];
+            umpPacket.umpData.umpWords[0] = RtlUlongByteSwap(words[numProcessed]);
             switch (umpPacket.umpData.umpBytes[0] & UMP_MT_MASK)
             {
             case UMP_MT_UTILITY:
@@ -1842,7 +1842,7 @@ Return Value:Amy
             // Get rest of words if needed for UMP Packet
             for (int count = 1; count < umpPacket.wordCount; count++)
             {
-                umpPacket.umpData.umpWords[count] = words[numProcessed + count];
+                umpPacket.umpData.umpWords[count] = RtlUlongByteSwap(words[numProcessed + count]);
             }
 
             UINT8 cbl_num = umpPacket.umpData.umpBytes[0] & UMP_GROUP_MASK; // if used, cable num is group block num
