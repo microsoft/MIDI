@@ -109,6 +109,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.NetworkMidiAbstraction", "Abstraction\NetworkMidiAbstraction\Midi2.NetworkMidiAbstraction.vcxproj", "{7E618284-6AA0-4FCE-9E4A-D895A5EE8E3C}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.VirtualMidiAbstraction", "Abstraction\VirtualMidiAbstraction\Midi2.VirtualMidiAbstraction.vcxproj", "{03009B2B-E3E8-49DC-A0D6-0FA90AE3B15B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{EFB7CF90-7DEF-44CF-868A-191CA30E0FCF} = {EFB7CF90-7DEF-44CF-868A-191CA30E0FCF}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Transport Abstractions", "Transport Abstractions", "{69CC5CD9-47DC-4118-A3C7-E0D071407185}"
 EndProject
@@ -139,6 +142,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "api-core-cpp-winrt-tests", "Test\Midi2.Api.unittests\api-core-cpp-winrt-tests.vcxproj", "{C0832244-31E8-45E1-9BAE-971557A5841B}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.DiagnosticsAbstraction", "Abstraction\DiagnosticsAbstraction\Midi2.DiagnosticsAbstraction.vcxproj", "{093852BE-32B8-4EB8-814E-91410FFDB4F6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{EFB7CF90-7DEF-44CF-868A-191CA30E0FCF} = {EFB7CF90-7DEF-44CF-868A-191CA30E0FCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MinMidi2", "Drivers\MinMidi2\Driver\Driver.vcxproj", "{2AD0622B-D47A-4CC1-9493-459730F442BE}"
 EndProject
