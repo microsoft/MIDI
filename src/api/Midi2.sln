@@ -146,7 +146,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.DiagnosticsAbstractio
 		{EFB7CF90-7DEF-44CF-868A-191CA30E0FCF} = {EFB7CF90-7DEF-44CF-868A-191CA30E0FCF}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MinMidi2", "Drivers\MinMidi2\Driver\Driver.vcxproj", "{2AD0622B-D47A-4CC1-9493-459730F442BE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MinMidi2", "Drivers\MinMidi2\Driver\MinMidi2.vcxproj", "{2AD0622B-D47A-4CC1-9493-459730F442BE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
