@@ -21,10 +21,11 @@ Environment:
     Kernel mode
 
 --*/
+#pragma once
 
 #include "Public.h"
-
-#pragma once
+#include "Common.h"
+#include "StreamEngine.h"
 
 /* make prototypes usable from C++ */
 #ifdef __cplusplus
@@ -101,16 +102,17 @@ typedef struct _DEVICE_CONTEXT {
     // The folloiwng fileds are used to store device configuration information
     // relevant to the connected device.
     // 
-    WDFMEMORY                       DeviceConfigDescriptorMemory;
-    WDFMEMORY                       DeviceManfMemory;
-    WDFMEMORY                       DeviceProductNameMemory;
-    WDFMEMORY                       DeviceNameMemory;
-    WDFMEMORY                       DeviceSNMemory;
-    WDFMEMORY                       DeviceGTBMemory;
+    WDFMEMORY                   DeviceConfigDescriptorMemory;
+    WDFMEMORY                   DeviceManfMemory;
+    WDFMEMORY                   DeviceProductNameMemory;
+    WDFMEMORY                   DeviceNameMemory;
+    WDFMEMORY                   DeviceSNMemory;
+    WDFMEMORY                   DeviceGTBMemory;
 
-    // Read Ring Buffer
-    //READ_RING_TYPE              ReadRingBuf;
-
+    //
+    // Streaming Engine
+    //
+    StreamEngine*               pMidiStreamEngine;
 } DEVICE_CONTEXT, *PDEVICE_CONTEXT;
 
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(DEVICE_CONTEXT, GetDeviceContext)

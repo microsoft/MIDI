@@ -15,7 +15,7 @@
 // InstancesPossible on the in/out pins must not exceed 1 when
 // doing loopback.
 wil::fast_mutex_with_critical_region *g_MidiInLock {nullptr};
-StreamEngine* g_MidiInStreamEngine {nullptr};
+//StreamEngine* g_MidiInStreamEngine {nullptr};
 
 // UMP 32 is 4 bytes
 #define MINIMUM_UMP_DATASIZE 4
@@ -116,6 +116,8 @@ StreamEngine::HandleIo()
     // This implememtation loops the midi out data back to midi in.
     NTSTATUS status = STATUS_SUCCESS;
 
+    DEVICE_CONTEXT* pDevCtx = GetDeviceContext(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)));
+
     // start with the even reset to indicate that the thread is running
     m_ThreadExitedEvent.clear();
 
@@ -139,14 +141,14 @@ StreamEngine::HandleIo()
 
                     // In order to loopback data, we have to have a midi in pin.
                     // The job of this lock is to synchronize availability and
-                    // state of g_MidiInStreamEngine, so it must be held for the duration of
-                    // use of g_MidiInStreamEngine. There should be very little contention,
+                    // state of pMidiStreamEngine in Device Context (g_MidiInStreamEngine), so it must be held for the duration of
+                    // use of pMidiStreamEngine in Device Context (g_MidiInStreamEngine). There should be very little contention,
                     // as the only other time this is used is when midi in
                     // transitions between run and paused.
                     auto lock = g_MidiInLock->acquire();
 
                     // we have a write event, there should be data available to move.
-                    if (nullptr != g_MidiInStreamEngine)
+                    if (nullptr != pDevCtx->pMidiStreamEngine)
                     {
                         ULONG bytesAvailableToRead = 0;
                         ULONG bytesAvailable = 0;
@@ -211,8 +213,8 @@ StreamEngine::HandleIo()
                         // and read position is empty. (read position is their last read position, write position is our last written).
                         // retrieve our write position first since we know it won't be changing, and their read position second,
                         // so we can have as much free space as possible.
-                        ULONG midiInWritePosition = (ULONG)InterlockedCompareExchange((LONG*)g_MidiInStreamEngine->m_WriteRegister, 0, 0);
-                        ULONG midiInReadPosition = (ULONG)InterlockedCompareExchange((LONG*)g_MidiInStreamEngine->m_ReadRegister, 0, 0);
+                        ULONG midiInWritePosition = (ULONG)InterlockedCompareExchange((LONG*)pDevCtx->pMidiStreamEngine->m_WriteRegister, 0, 0);
+                        ULONG midiInReadPosition = (ULONG)InterlockedCompareExchange((LONG*)pDevCtx->pMidiStreamEngine->m_ReadRegister, 0, 0);
 
                         // Now we need to calculate the available space, taking into account the looping
                         // buffer.
@@ -221,7 +223,7 @@ StreamEngine::HandleIo()
                             // if the read position is less than the write position, then the difference between
                             // the read and write position is the buffer in use, same as above. So, the total
                             // buffer size minus the used buffer gives us the available space.
-                            bytesAvailable = g_MidiInStreamEngine->m_BufferSize - (midiInWritePosition - midiInReadPosition);
+                            bytesAvailable = pDevCtx->pMidiStreamEngine->m_BufferSize - (midiInWritePosition - midiInReadPosition);
                         }
                         else
                         {
@@ -258,7 +260,7 @@ StreamEngine::HandleIo()
                         }
 
                         // There's enough space available, calculate our write position
-                        PVOID startingWriteAddress = (PVOID)(((PBYTE)g_MidiInStreamEngine->m_KernelBufferMapping.Buffer1.m_BufferClientAddress)+midiInWritePosition);
+                        PVOID startingWriteAddress = (PVOID)(((PBYTE)pDevCtx->pMidiStreamEngine->m_KernelBufferMapping.Buffer1.m_BufferClientAddress)+midiInWritePosition);
 
                         // Send relevant buffer to USB
                         PUMPDATAFORMAT thisData = (PUMPDATAFORMAT)startingReadAddress;
@@ -287,7 +289,7 @@ StreamEngine::HandleIo()
                         // now calculate the new position that the buffer has been written up to.
                         // this will be the original write position, plus the bytes copied, again modululs
                         // the buffer size to take into account the loop.
-                        ULONG finalWritePosition = (midiInWritePosition + bytesToCopy) % g_MidiInStreamEngine->m_BufferSize;
+                        ULONG finalWritePosition = (midiInWritePosition + bytesToCopy) % pDevCtx->pMidiStreamEngine->m_BufferSize;
 
                         // finalize by advancing the registers and setting the write event
 
@@ -295,8 +297,8 @@ StreamEngine::HandleIo()
                         InterlockedExchange((LONG *)m_ReadRegister, finalReadPosition);
 
                         // advance the write position for the loopback and signal that there's data available
-                        InterlockedExchange((LONG *)g_MidiInStreamEngine->m_WriteRegister, finalWritePosition);
-                        KeSetEvent(g_MidiInStreamEngine->m_WriteEvent, 0, 0);
+                        InterlockedExchange((LONG *)pDevCtx->pMidiStreamEngine->m_WriteRegister, finalWritePosition);
+                        KeSetEvent(pDevCtx->pMidiStreamEngine->m_WriteEvent, 0, 0);
                     }
                     else
                     {
@@ -321,22 +323,6 @@ StreamEngine::HandleIo()
     m_ThreadExitedEvent.set();
     PsTerminateSystemThread(status);
 }
-#if 0
-VOID
-streamWriteIOCompletion(
-    _In_
-    WDFREQUEST Request,
-    _In_
-    WDFIOTARGET Target,
-    _In_
-    PWDF_REQUEST_COMPLETION_PARAMS Params,
-    _In_
-    WDFCONTEXT Context
-)
-{
-    WdfRequestComplete(Request, NULL);
-}
-#endif
 
 _Use_decl_annotations_
 NTSTATUS
@@ -410,6 +396,7 @@ NTSTATUS
 StreamEngine::Pause()
 {
     NTSTATUS status = STATUS_UNSUCCESSFUL;
+    DEVICE_CONTEXT* pDevCtx = GetDeviceContext(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)));
 
     PAGED_CODE();
 
@@ -451,8 +438,9 @@ StreamEngine::Pause()
         // So when we transition midi in from run to paused, acquire the lock that
         // protects g_MidiInStreamEngine and clear g_MidiInStreamEngine to stop the loopback data
         // flowing.
+        // TBD - this mechanism needs to change in case where device can be destroyed
         auto lock = g_MidiInLock->acquire();
-        g_MidiInStreamEngine = nullptr;
+        pDevCtx->pMidiStreamEngine = nullptr;
     }
 
     //
@@ -471,6 +459,7 @@ NTSTATUS
 StreamEngine::Run()
 {
     NTSTATUS status = STATUS_UNSUCCESSFUL;
+    DEVICE_CONTEXT* pDevCtx = GetDeviceContext(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)));
 
     PAGED_CODE();
 
@@ -519,8 +508,9 @@ StreamEngine::Run()
         // So when we transition midi in from paused to run, acquire the lock that
         // protects g_MidiInStreamEngine and set g_MidiInStreamEngine to start the loopback data
         // flowing.
+        // TBD this mechanism must be changed in case where multiple instances
         auto lock = g_MidiInLock->acquire();
-        g_MidiInStreamEngine = this;
+        pDevCtx->pMidiStreamEngine = this;
     }
 
     //
