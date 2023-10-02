@@ -2162,6 +2162,9 @@ Return Value:Amy
             {
                 goto DriverIoWriteExit;
             }
+
+            // Increment position
+            transferPos += thisTransferSize;
         }
     }
 
