@@ -1490,7 +1490,7 @@ Return Value:
                 PUINT32 pkts = (UINT32*)pWorkingBuffer;
                 for (int pktCount = 0; pktCount < umpPacket.wordCount; pktCount++)
                 {
-                    pkts[numIndex++] = umpPacket.umpData.umpWords[pktCount];
+                    pkts[numIndex++] = RtlUlongByteSwap(umpPacket.umpData.umpWords[pktCount]);
                 }
             }
 
@@ -1514,12 +1514,36 @@ Return Value:
         }
         else
         {
+            // Create working buffer to byte exchange into
+            status = WdfMemoryCreate(
+                NULL,       // attributes
+                NonPagedPool,
+                NULL,       // Pool Tag
+                NumBytesTransferred,
+                &workingBuffer,
+                NULL
+            );
+            if (!NT_SUCCESS(status))
+            {
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                    "Error creating working buffer for USB MIDI 1.0 to UMP conversion.\n");
+                goto ReadCompleteExit;
+            }
+            PUINT32 pWriteBuffer = (PUINT32)WdfMemoryGetBuffer(workingBuffer, NULL);
+            PUINT32 pReadBuffer = (PUINT32)pReceivedBuffer;
+            
+            // Swap bytes based on UINT32
+            for (int count = 0; count < (NumBytesTransferred / sizeof(UINT32)); count++)
+            {
+                pWriteBuffer[count] = RtlUlongByteSwap(pReadBuffer[count]);
+            }
+
             // Send Memory to Read Queue
 //            if (!pDeviceContext->pMidiStreamEngine
 //                || !pDeviceContext->pMidiStreamEngine->FillReadStream(
             if (!g_MidiInStreamEngine
                 || !g_MidiInStreamEngine->FillReadStream(
-                (PUINT32)pReceivedBuffer,
+                (PUINT32)pWriteBuffer,
                 NumBytesTransferred / sizeof(UINT32),
                 pDeviceContext
             ))
@@ -2154,18 +2178,12 @@ Return Value:Amy
                 goto DriverIoWriteExit;
             }
 
-            // Copy necessary data into the buffer
-            status = WdfMemoryCopyFromBuffer(
-                writeMemory,
-                transferPos,
-                BufferStart,
-                thisTransferSize
-            );
-            if (!NT_SUCCESS(status))
+            // Copy necessary data into the buffer performing byte swap
+            PUINT32 pWriteMem = (PUINT32)WdfMemoryGetBuffer(writeMemory, NULL);
+            PUINT32 pReadMem = (PUINT32)&pBuffer[transferPos];
+            for (int count = 0; count < (thisTransferSize / sizeof(UINT32)); count++)
             {
-                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                    "%!FUNC! could not copy data into WdfMemory: 0x%x.\n", status);
-                goto DriverIoWriteExit;
+                pWriteMem[count] = RtlUlongByteSwap(pReadMem[count]);
             }
 
             // Transfer to USB
