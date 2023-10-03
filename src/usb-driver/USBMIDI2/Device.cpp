@@ -1263,16 +1263,14 @@ Return Value:
                 NULL,       // Pool Tag
                 workingBufferSize,
                 &workingBuffer,
-                NULL
+                &(PVOID)pWorkingBuffer
             );
-
             if (!NT_SUCCESS(status))
             {
                 TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
                     "Error creating working buffer for USB MIDI 1.0 to UMP conversion.\n");
                 goto ReadCompleteExit;
             }
-            pWorkingBuffer = (PUINT8)WdfMemoryGetBuffer(workingBuffer, NULL);
 
             // We process into working buffer based on UINT32s
             UINT16 numAvail = (UINT16)workingBufferSize / sizeof(UINT32);
@@ -1482,8 +1480,8 @@ Return Value:
                 case MIDI_CIN_CABLE_EVENT:
                     // These are reserved for future use and will not be translated, drop data with no processing
                 default:
-                    // Error or not handled
-                    break;
+                    // Not valid USB MIDI 1.0 transfer or NULL, skip
+                    continue;
                 }
 
                 // write to packets
@@ -2084,7 +2082,7 @@ Return Value:Amy
                     pWriteWords[writeBufferIndex++] = umpWritePacket.umpData.umpWords[count];
                 }
 
-                if (writeBufferIndex == pDeviceContext->MidiOutMaxSize)
+                if (writeBufferIndex == pDeviceContext->MidiOutMaxSize) // LOGIC ERROR
                 {
                     // Write to buffer
                     if (!USBMIDI2DriverSendToUSB(
@@ -2109,6 +2107,8 @@ Return Value:Amy
         // Check if anything leftover to write to USB
         if (writeBufferIndex)
         {
+            // NEED TO FILL REST OF BUFFER WITH NULL
+            // 
             // Write to buffer
             if (!USBMIDI2DriverSendToUSB(
                 usbRequest,
