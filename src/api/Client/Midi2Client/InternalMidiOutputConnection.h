@@ -107,8 +107,8 @@ namespace Windows::Devices::Midi2::Internal
     // implementation must be in header (or otherwise included) for template classes
 
 
-    _Use_decl_annotations_
     template <typename TEndpointAbstraction>
+    _Use_decl_annotations_
     bool InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageRaw(
             winrt::com_ptr<TEndpointAbstraction> endpoint,
             void* data, 
@@ -139,8 +139,8 @@ namespace Windows::Devices::Midi2::Internal
     }
 
 
-    _Use_decl_annotations_
     template <typename TEndpointAbstraction>
+    _Use_decl_annotations_
     void* InternalMidiOutputConnection<TEndpointAbstraction>::GetUmpDataPointer(
             midi2::IMidiUmp const& ump, 
             uint8_t& dataSizeOut)
@@ -175,8 +175,8 @@ namespace Windows::Devices::Midi2::Internal
     }
 
 
-    _Use_decl_annotations_
     template <typename TEndpointAbstraction>
+    _Use_decl_annotations_
     bool InternalMidiOutputConnection<TEndpointAbstraction>::SendUmpInternal(
             winrt::com_ptr<TEndpointAbstraction> endpoint,
             midi2::IMidiUmp const& ump)
@@ -188,6 +188,13 @@ namespace Windows::Devices::Midi2::Internal
                 uint8_t umpDataSize{};
 
                 auto umpDataPointer = GetUmpDataPointer(ump, umpDataSize);
+
+                if (umpDataPointer == nullptr)
+                {
+                    internal::LogGeneralError(__FUNCTION__, L"endpoint data pointer is nullptr");
+
+                    return false;
+                }
 
                 return SendMessageRaw(endpoint, umpDataPointer, umpDataSize, ump.Timestamp());
             }
@@ -207,8 +214,8 @@ namespace Windows::Devices::Midi2::Internal
     }
 
 
-    _Use_decl_annotations_
     template <typename TEndpointAbstraction>
+    _Use_decl_annotations_
     bool InternalMidiOutputConnection<TEndpointAbstraction>::SendUmpBuffer(
             const internal::MidiTimestamp timestamp,
             winrt::Windows::Foundation::IMemoryBuffer const& buffer,
@@ -267,8 +274,8 @@ namespace Windows::Devices::Midi2::Internal
 
 
     // sends a single UMP's worth of words
-    _Use_decl_annotations_
     template <typename TEndpointAbstraction>
+    _Use_decl_annotations_
     bool InternalMidiOutputConnection<TEndpointAbstraction>::SendUmpWordArray(
             internal::MidiTimestamp const timestamp,
             winrt::array_view<uint32_t const> words,
@@ -333,8 +340,8 @@ namespace Windows::Devices::Midi2::Internal
     }
 
 
-    _Use_decl_annotations_
     template <typename TEndpointAbstraction>
+    _Use_decl_annotations_
     bool InternalMidiOutputConnection<TEndpointAbstraction>::SendUmpWords(
             internal::MidiTimestamp const timestamp,
             uint32_t const word0)
@@ -381,8 +388,8 @@ namespace Windows::Devices::Midi2::Internal
         }
     }
 
-    _Use_decl_annotations_
     template <typename TEndpointAbstraction>
+    _Use_decl_annotations_
     bool InternalMidiOutputConnection<TEndpointAbstraction>::SendUmpWords(
             internal::MidiTimestamp const timestamp,
             uint32_t const word0,
@@ -434,8 +441,8 @@ namespace Windows::Devices::Midi2::Internal
         }
     }
 
-    _Use_decl_annotations_
     template <typename TEndpointAbstraction>
+    _Use_decl_annotations_
     bool InternalMidiOutputConnection<TEndpointAbstraction>::SendUmpWords(
             internal::MidiTimestamp const timestamp,
             uint32_t const word0,
@@ -489,8 +496,8 @@ namespace Windows::Devices::Midi2::Internal
         }
     }
 
-    _Use_decl_annotations_
     template <typename TEndpointAbstraction>
+    _Use_decl_annotations_
     bool InternalMidiOutputConnection<TEndpointAbstraction>::SendUmpWords(
             internal::MidiTimestamp const timestamp,
             uint32_t const word0,
@@ -546,8 +553,8 @@ namespace Windows::Devices::Midi2::Internal
     }
 
 
-    _Use_decl_annotations_
     template <typename TEndpointAbstraction>
+    _Use_decl_annotations_
     bool InternalMidiOutputConnection<TEndpointAbstraction>::SendUmp(
             winrt::Windows::Devices::Midi2::IMidiUmp const& ump)
     {

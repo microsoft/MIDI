@@ -125,12 +125,12 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.simpleloopbackabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.simpleloopbackabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -169,12 +169,12 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.simpleloopbackabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.simpleloopbackabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -213,7 +213,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.simpleloopbackabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -237,7 +237,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.simpleloopbackabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -281,23 +281,23 @@
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
     <Midl Include="MidiSrvRPC.idl">
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">4</WarningLevel>
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">4</WarningLevel>
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4</WarningLevel>
     </Midl>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.230411.1\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.230411.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
+    <Import Project="..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.230824.2\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.230824.2\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.230411.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.230411.1\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
+    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.230824.2\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.230824.2\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
   </Target>
 </Project>

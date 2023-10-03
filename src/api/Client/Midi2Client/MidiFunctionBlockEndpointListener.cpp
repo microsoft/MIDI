@@ -14,19 +14,16 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    _Use_decl_annotations_
     void MidiFunctionBlockEndpointListener::Initialize()
     {
         throw hresult_not_implemented();
     }
 
-    _Use_decl_annotations_
     void MidiFunctionBlockEndpointListener::OnEndpointConnectionOpened()
     {
         throw hresult_not_implemented();
     }
 
-    _Use_decl_annotations_
     void MidiFunctionBlockEndpointListener::Cleanup()
     {
         throw hresult_not_implemented();

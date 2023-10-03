@@ -47,8 +47,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool m_success{ false };
         winrt::hstring m_failureReason{};
 
-        internal::MidiTimestamp m_totalPingMidiClockTicks;
-        internal::MidiTimestamp m_averagePingMidiClockTicks;
+        internal::MidiTimestamp m_totalPingMidiClockTicks{ 0 };
+        internal::MidiTimestamp m_averagePingMidiClockTicks{ 0 };
 
         foundation::Collections::IVector<midi2::MidiServicePingResponse>
             m_responses { winrt::single_threaded_vector<midi2::MidiServicePingResponse>() };

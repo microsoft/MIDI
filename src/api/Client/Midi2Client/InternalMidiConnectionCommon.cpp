@@ -53,7 +53,6 @@ namespace Windows::Devices::Midi2::Internal
         }
     }
 
-    _Use_decl_annotations_
     void InternalMidiConnectionCommon::InitializePlugins()
     {
         for (const auto& plugin : m_messageProcessingPlugins)
@@ -68,7 +67,6 @@ namespace Windows::Devices::Midi2::Internal
         }
     }
 
-    _Use_decl_annotations_
     void InternalMidiConnectionCommon::CallOnConnectionOpenedOnPlugins()
     {
         for (const auto& plugin : m_messageProcessingPlugins)
@@ -83,7 +81,6 @@ namespace Windows::Devices::Midi2::Internal
         }
     }
 
-    _Use_decl_annotations_
     void InternalMidiConnectionCommon::CleanupPlugins()
     {
         for (const auto& plugin : m_messageProcessingPlugins)

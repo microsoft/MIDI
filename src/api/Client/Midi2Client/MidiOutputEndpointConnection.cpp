@@ -26,7 +26,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             m_outputDeviceId = endpointDeviceId;
 
 
-            WINRT_ASSERT(!DeviceId().empty());
+            WINRT_ASSERT(!m_outputDeviceId.empty());
             WINRT_ASSERT(serviceAbstraction != nullptr);
 
             m_serviceAbstraction = serviceAbstraction;

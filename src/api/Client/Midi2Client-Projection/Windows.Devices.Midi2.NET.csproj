@@ -21,6 +21,8 @@
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 		<AssemblyName>Windows.Devices.Midi2.NET</AssemblyName>
 		<PackageOutputPath>..\..\VSFiles\PublishedApiNuGet\</PackageOutputPath>
+		<BaseIntermediateOutputPath>$(SolutionDir)VSFiles\intermediate\</BaseIntermediateOutputPath>
+		<BaseOutputPath>$(SolutionDir)VSFiles\</BaseOutputPath>
 	</PropertyGroup>
 
 	<ItemGroup>

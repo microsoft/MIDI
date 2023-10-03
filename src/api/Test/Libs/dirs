@@ -1,6 +1,0 @@
-DIRS=\
-    MidiTestCommon \
-    MidiKSEnum \
-    MidiSWEnum \
-
-
