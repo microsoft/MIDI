@@ -43,6 +43,8 @@ Environment:
 #include "Trace.h"
 #include "Device.tmh"
 
+extern StreamEngine* g_MidiInStreamEngine;
+
 UNICODE_STRING g_RegistryPath = {0};      // This is used to store the registry settings path for the driver
 
 _Use_decl_annotations_
@@ -410,6 +412,27 @@ Return Value:
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
+    NTSTATUS status;
+    PDEVICE_CONTEXT devCtx = GetDeviceContext(Device);
+
+    // Detach the circuit before removal
+    status = AcxDeviceDetachCircuit(Device, devCtx->Midi);
+    if (!NT_SUCCESS(status))
+    {
+        ASSERT(FALSE);
+        goto exit;
+    }
+
+    // Remove the circuit
+    status = AcxDeviceRemoveCircuit(Device, devCtx->Midi);
+    if (!NT_SUCCESS(status))
+    {
+        ASSERT(FALSE);
+        goto exit;
+    }
+    devCtx->Midi = nullptr;
+
+exit:
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
     return STATUS_SUCCESS;
@@ -1240,16 +1263,14 @@ Return Value:
                 NULL,       // Pool Tag
                 workingBufferSize,
                 &workingBuffer,
-                NULL
+                &(PVOID)pWorkingBuffer
             );
-
             if (!NT_SUCCESS(status))
             {
                 TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
                     "Error creating working buffer for USB MIDI 1.0 to UMP conversion.\n");
                 goto ReadCompleteExit;
             }
-            pWorkingBuffer = (PUINT8)WdfMemoryGetBuffer(workingBuffer, NULL);
 
             // We process into working buffer based on UINT32s
             UINT16 numAvail = (UINT16)workingBufferSize / sizeof(UINT32);
@@ -1459,22 +1480,25 @@ Return Value:
                 case MIDI_CIN_CABLE_EVENT:
                     // These are reserved for future use and will not be translated, drop data with no processing
                 default:
-                    // Error or not handled
-                    break;
+                    // Not valid USB MIDI 1.0 transfer or NULL, skip
+                    continue;
                 }
 
                 // write to packets
                 PUINT32 pkts = (UINT32*)pWorkingBuffer;
                 for (int pktCount = 0; pktCount < umpPacket.wordCount; pktCount++)
                 {
-                    pkts[numIndex++] = umpPacket.umpData.umpWords[pktCount];
+                    pkts[numIndex++] = RtlUlongByteSwap(umpPacket.umpData.umpWords[pktCount]);
                 }
             }
 
             // Submit any data written
             if (numIndex)
             {
-                if (!USBMIDI2DriverFillReadQueue(
+//                if (!pDeviceContext->pMidiStreamEngine
+//                    || !pDeviceContext->pMidiStreamEngine->FillReadStream(
+                if (!g_MidiInStreamEngine
+                    || !g_MidiInStreamEngine->FillReadStream(
                     (PUINT32)pWorkingBuffer,
                     numIndex,
                     pDeviceContext
@@ -1488,9 +1512,36 @@ Return Value:
         }
         else
         {
+            // Create working buffer to byte exchange into
+            status = WdfMemoryCreate(
+                NULL,       // attributes
+                NonPagedPool,
+                NULL,       // Pool Tag
+                NumBytesTransferred,
+                &workingBuffer,
+                NULL
+            );
+            if (!NT_SUCCESS(status))
+            {
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                    "Error creating working buffer for USB MIDI 1.0 to UMP conversion.\n");
+                goto ReadCompleteExit;
+            }
+            PUINT32 pWriteBuffer = (PUINT32)WdfMemoryGetBuffer(workingBuffer, NULL);
+            PUINT32 pReadBuffer = (PUINT32)pReceivedBuffer;
+            
+            // Swap bytes based on UINT32
+            for (int count = 0; count < (NumBytesTransferred / sizeof(UINT32)); count++)
+            {
+                pWriteBuffer[count] = RtlUlongByteSwap(pReadBuffer[count]);
+            }
+
             // Send Memory to Read Queue
-            if (!USBMIDI2DriverFillReadQueue(
-                (PUINT32)pReceivedBuffer,
+//            if (!pDeviceContext->pMidiStreamEngine
+//                || !pDeviceContext->pMidiStreamEngine->FillReadStream(
+            if (!g_MidiInStreamEngine
+                || !g_MidiInStreamEngine->FillReadStream(
+                (PUINT32)pWriteBuffer,
                 NumBytesTransferred / sizeof(UINT32),
                 pDeviceContext
             ))
@@ -1766,17 +1817,6 @@ Return Value:Amy
         goto DriverIoWriteExit;
     }
 
-#if 0
-    // Get memory to work with
-    status = WdfRequestRetrieveInputMemory(Request, &reqMemory);
-    if (!NT_SUCCESS(status))
-    {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "%!FUNC! WdfRequestRetrieveInputBuffer failed\n");
-        goto DriverIoWriteExit;
-    }
-    pBuffer = (PUCHAR)WdfMemoryGetBuffer(reqMemory, NULL);
-#endif
-
     pBuffer = (PUCHAR)BufferStart;
 
     // Check type of device connected to
@@ -2042,14 +2082,14 @@ Return Value:Amy
                     pWriteWords[writeBufferIndex++] = umpWritePacket.umpData.umpWords[count];
                 }
 
-                if (writeBufferIndex == pDeviceContext->MidiOutMaxSize)
+                if ((writeBufferIndex*sizeof(UINT32)) == pDeviceContext->MidiOutMaxSize)
                 {
                     // Write to buffer
                     if (!USBMIDI2DriverSendToUSB(
                         usbRequest,
                         writeMemory,
                         pipe,
-                        writeBufferIndex,
+                        writeBufferIndex*sizeof(UINT32),
                         pDeviceContext,
                         true    // delete this request when complete
                     ))
@@ -2067,12 +2107,14 @@ Return Value:Amy
         // Check if anything leftover to write to USB
         if (writeBufferIndex)
         {
+            // NEED TO FILL REST OF BUFFER WITH NULL
+            // 
             // Write to buffer
             if (!USBMIDI2DriverSendToUSB(
                 usbRequest,
                 writeMemory,
                 pipe,
-                writeBufferIndex,
+                writeBufferIndex*sizeof(UINT32),
                 pDeviceContext,
                 true    // delete this request when complete
             ))
@@ -2136,18 +2178,12 @@ Return Value:Amy
                 goto DriverIoWriteExit;
             }
 
-            // Copy necessary data into the buffer
-            status = WdfMemoryCopyFromBuffer(
-                writeMemory,
-                transferPos,
-                BufferStart,
-                thisTransferSize
-            );
-            if (!NT_SUCCESS(status))
+            // Copy necessary data into the buffer performing byte swap
+            PUINT32 pWriteMem = (PUINT32)WdfMemoryGetBuffer(writeMemory, NULL);
+            PUINT32 pReadMem = (PUINT32)&pBuffer[transferPos];
+            for (int count = 0; count < (thisTransferSize / sizeof(UINT32)); count++)
             {
-                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                    "%!FUNC! could not copy data into WdfMemory: 0x%x.\n", status);
-                goto DriverIoWriteExit;
+                pWriteMem[count] = RtlUlongByteSwap(pReadMem[count]);
             }
 
             // Transfer to USB
@@ -2155,7 +2191,7 @@ Return Value:Amy
                 usbRequest,
                 writeMemory,
                 pipe,
-                writeBufferIndex,
+                thisTransferSize,
                 pDeviceContext,
                 true    // delete this request when complete
             ))
@@ -2184,10 +2220,17 @@ BOOLEAN USBMIDI2DriverSendToUSB(
 {
     NTSTATUS        status;
     pDeviceContext;
-    Length;
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
+    // Pad out unusded data
+    PUCHAR pBuffer = (PUCHAR)WdfMemoryGetBuffer(reqMemory, NULL);
+    while (Length < (size_t)pDeviceContext->MidiOutMaxSize)
+    {
+        pBuffer[Length++] = NULL;
+    }
+
+    // Send to USB Pipe
     status = WdfUsbTargetPipeFormatRequestForWrite(pipe,
         usbRequest,
         reqMemory,

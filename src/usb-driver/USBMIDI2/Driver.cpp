@@ -63,6 +63,8 @@ DriverUnload(
 
     Return Value:
 
+NOTE: Consider putting globals into context and using context cleanup
+
     --*/
 {
     PAGED_CODE(); 

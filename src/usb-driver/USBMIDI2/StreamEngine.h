@@ -98,6 +98,16 @@ public:
         _In_ PKSMIDILOOPED_EVENT    Buffer
         );
 
+    _Must_inspect_result_
+    __drv_maxIRQL(PASSIVE_LEVEL)
+    NONPAGED_CODE_SEG
+    bool
+    FillReadStream(
+        _In_    PUINT32             pBuffer,
+        _In_    size_t              bufferSize,
+        _In_    WDFCONTEXT          Context
+    );
+
 private:
 
     static KSTART_ROUTINE WorkerThread;
