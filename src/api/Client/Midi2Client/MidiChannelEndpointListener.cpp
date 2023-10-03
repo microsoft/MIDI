@@ -13,19 +13,16 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    _Use_decl_annotations_
     void MidiChannelEndpointListener::Initialize()
     {
         // Nothing to do to initialize, so all good
     }
 
-    _Use_decl_annotations_
     void MidiChannelEndpointListener::OnEndpointConnectionOpened()
     {
         // Nothing special to do when connection is opened, so all good
     }
 
-    _Use_decl_annotations_
     void MidiChannelEndpointListener::Cleanup()
     {
         // No cleanup required.

@@ -13,17 +13,14 @@
 namespace winrt::Windows::Devices::Midi2::implementation
 {
 
-    _Use_decl_annotations_
     void MidiMessageTypeEndpointListener::Initialize()
     {       
     }
 
-    _Use_decl_annotations_
     void MidiMessageTypeEndpointListener::OnEndpointConnectionOpened()
     {
     }
 
-    _Use_decl_annotations_
     void MidiMessageTypeEndpointListener::Cleanup()
     {
     }

@@ -35,7 +35,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
-    _Use_decl_annotations_
     midi2::MidiUmpPacketType MidiMessageReceivedEventArgs::UmpType() const noexcept
     {
         // a type 0 ump with no data is just the noop, and is perfectly valid, so we always run this
@@ -43,14 +42,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return (MidiUmpPacketType)(internal::GetUmpLengthInMidiWordsFromFirstWord(m_data.Word0));
     }
 
-    _Use_decl_annotations_
     midi2::MidiUmpMessageType MidiMessageReceivedEventArgs::UmpMessageType() const noexcept
     {
         return (MidiUmpMessageType)(internal::GetUmpMessageTypeFromFirstWord(m_data.Word0));
     }
 
 
-    _Use_decl_annotations_
     midi2::IMidiUmp MidiMessageReceivedEventArgs::GetUmp()
     {
         auto wordCount = GetValidMessageWordCount();

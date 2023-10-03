@@ -59,7 +59,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
 
         // we don't want any automatic plugins or messages
-        MidiBidirectionalEndpointOpenOptions options;
+        auto options = winrt::make<MidiBidirectionalEndpointOpenOptions>();
         options.DisableAutomaticEndpointDiscoveryMessages(true);
         options.DisableAutomaticFunctionBlockInfoMessages(true);
 
@@ -207,8 +207,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return PingService(pingCount, pingCount * 20 + 1000);
     }
 
-
-    _Use_decl_annotations_
     foundation::Collections::IVectorView<midi2::MidiTransportInformation> MidiService::GetInstalledTransports()
     {
         // TODO: Need to implement GetInstalledTransports. For now, return an empty collection instead of throwing

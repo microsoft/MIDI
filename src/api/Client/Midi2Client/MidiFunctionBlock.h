@@ -31,15 +31,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // TODO Function to init values
 
     private:
-        uint8_t m_number;
+        uint8_t m_number{ 0 };
         winrt::hstring m_name;
-        bool m_isActive;
-        MidiFunctionBlockDirection m_direction;
-        MidiFunctionBlockUIHint m_uiHint;
-        bool m_isMidi10Connection;
-        bool m_isBandwidthRestricted;
-        uint8_t m_midiCIMessageVersionFormat;
-        uint8_t m_maxSysEx8Streams;
+        bool m_isActive{ false };
+        MidiFunctionBlockDirection m_direction{ 0 };
+        MidiFunctionBlockUIHint m_uiHint{ 0 };
+        bool m_isMidi10Connection{ false };
+        bool m_isBandwidthRestricted{ false };
+        uint8_t m_midiCIMessageVersionFormat{ 0 };
+        uint8_t m_maxSysEx8Streams{ 0 };
 
         collections::IVector<midi2::MidiGroup>
             m_includedGroups{ winrt::single_threaded_vector<midi2::MidiGroup>() };

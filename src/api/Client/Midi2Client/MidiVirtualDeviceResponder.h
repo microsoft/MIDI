@@ -43,7 +43,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         void AddFunctionBlock(_In_ midi2::MidiFunctionBlock const& block);
         void UpdateFunctionBlock(_In_ midi2::MidiFunctionBlock const& block);
-        void RemoveFunctionBlock(uint8_t functionBlockNumber);
+        void RemoveFunctionBlock(_In_ uint8_t functionBlockNumber);
 
         midi2::MidiEndpointInformation EndpointInformation();
         void EndpointInformation(_In_ midi2::MidiEndpointInformation const& value);
