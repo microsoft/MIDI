@@ -35,7 +35,7 @@ namespace Windows::Devices::Midi2::Internal
     struct PackedPingRequestUmp
     {
         std::uint32_t Word0 { INTERNAL_PING_REQUEST_UMP_WORD0 };
-        std::uint64_t PingId;
+        std::uint64_t PingId{ 0 };
         std::uint32_t Padding { 0 };
 
     };

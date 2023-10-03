@@ -51,7 +51,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     midi2::MidiGroup MidiMessageUtility::GetGroup(_In_ uint32_t const word0)
     {
-        return MidiGroup(internal::GetGroupIndexFromFirstWord(word0));
+        auto group = winrt::make<MidiGroup>(internal::GetGroupIndexFromFirstWord(word0));
+        return group;
     }
 
 
@@ -72,7 +73,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     midi2::MidiChannel MidiMessageUtility::GetChannel(_In_ uint32_t const word0)
     {
-        return MidiChannel(internal::GetChannelIndexFromFirstWord(word0));
+        auto channel = winrt::make<MidiChannel>(internal::GetChannelIndexFromFirstWord(word0));
+        return channel;
     }
 
 

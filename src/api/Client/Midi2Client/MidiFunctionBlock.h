@@ -34,13 +34,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring GetJsonString() noexcept;
 
     private:
-        uint8_t m_number{};
-        winrt::hstring m_name{};
+        uint8_t m_number{ 0 };
+        winrt::hstring m_name;
         bool m_isActive{ false };
         MidiFunctionBlockDirection m_direction;
         MidiFunctionBlockUIHint m_uiHint;
         MidiFunctionBlockMidi10 m_midi10Connection;
-        uint8_t m_midiCIMessageVersionFormat{};
+        uint8_t m_midiCIMessageVersionFormat{ 0 };
         uint8_t m_maxSysEx8Streams{ 0 };
 
         uint8_t m_firstGroupIndex{ 0 };

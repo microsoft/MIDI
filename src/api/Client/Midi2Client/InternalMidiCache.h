@@ -25,7 +25,7 @@ namespace Windows::Devices::Midi2::Internal
         // if you change this from system_clock to something else, you need to change the other code in the base cache class
         std::chrono::time_point<std::chrono::system_clock> expiration;
         std::string data;                   // we only use string data. It's all UTF8 json
-        size_t dataHash;
+        size_t dataHash{ 0 };
     };
 
 

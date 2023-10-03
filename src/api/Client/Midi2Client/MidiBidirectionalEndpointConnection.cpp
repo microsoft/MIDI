@@ -33,7 +33,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
             m_inputDeviceId = endpointDeviceId;     // for a true bidirectional endpoint, input and output are the same Id
             m_outputDeviceId = endpointDeviceId;
 
-            WINRT_ASSERT(!DeviceId().empty());
+            WINRT_ASSERT(!m_inputDeviceId.empty());
+            WINRT_ASSERT(!m_outputDeviceId.empty());
             WINRT_ASSERT(serviceAbstraction != nullptr);
 
             m_serviceAbstraction = serviceAbstraction;
@@ -190,7 +191,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
-    _Use_decl_annotations_
     MidiBidirectionalEndpointConnection::~MidiBidirectionalEndpointConnection()
     {
         if (!m_closeHasBeenCalled)

@@ -39,14 +39,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
     private:
         winrt::hstring m_name{};
         winrt::hstring m_productInstanceId;
-        uint8_t m_umpVersionMajor;
-        uint8_t m_umpVersionMinor;
-        bool m_hasStaticFunctionBlocks;
-        uint8_t m_functionBlockCount;
-        bool m_supportsMidi10Protocol;
-        bool m_supportsMidi20Protocol;
-        bool m_supportsReceivingJRTimestamps;
-        bool m_supportsSendingJRTimestamps;
+        uint8_t m_umpVersionMajor{ 0 };
+        uint8_t m_umpVersionMinor{ 0 };
+        bool m_hasStaticFunctionBlocks{ false };
+        uint8_t m_functionBlockCount{ 0 };
+        bool m_supportsMidi10Protocol{ false };
+        bool m_supportsMidi20Protocol{ false };
+        bool m_supportsReceivingJRTimestamps{ false };
+        bool m_supportsSendingJRTimestamps{ false };
 
         midi2::MidiProtocol m_configuredProtocol;
 

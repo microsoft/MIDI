@@ -37,7 +37,6 @@ namespace Windows::Devices::Midi2::Internal
         //g_LoggingProviderMatchAnyKeyword = matchAnyKeyword;
     }
 
-    _Use_decl_annotations_
     void RegisterTraceLogging()
     {
         // HRESULT hr = S_OK;
@@ -60,7 +59,6 @@ namespace Windows::Devices::Midi2::Internal
         //};
     }
 
-    _Use_decl_annotations_
     void UnregisterTraceLogging()
     {
         TraceLoggingUnregister(g_hLoggingProvider);

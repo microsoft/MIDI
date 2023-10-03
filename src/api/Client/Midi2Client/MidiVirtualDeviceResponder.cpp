@@ -62,7 +62,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         throw hresult_not_implemented();
     }
 
-    _Use_decl_annotations_
     midi2::MidiEndpointInformation MidiVirtualDeviceResponder::EndpointInformation()
     {
         throw hresult_not_implemented();
@@ -75,19 +74,16 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
-    _Use_decl_annotations_
     void MidiVirtualDeviceResponder::Initialize()
     {
         throw hresult_not_implemented();
     }
 
-    _Use_decl_annotations_
     void MidiVirtualDeviceResponder::OnEndpointConnectionOpened()
     {
         throw hresult_not_implemented();
     }
 
-    _Use_decl_annotations_
     void MidiVirtualDeviceResponder::Cleanup()
     {
         throw hresult_not_implemented();
