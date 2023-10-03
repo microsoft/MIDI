@@ -2082,14 +2082,14 @@ Return Value:Amy
                     pWriteWords[writeBufferIndex++] = umpWritePacket.umpData.umpWords[count];
                 }
 
-                if (writeBufferIndex == pDeviceContext->MidiOutMaxSize) // LOGIC ERROR
+                if ((writeBufferIndex*sizeof(UINT32)) == pDeviceContext->MidiOutMaxSize)
                 {
                     // Write to buffer
                     if (!USBMIDI2DriverSendToUSB(
                         usbRequest,
                         writeMemory,
                         pipe,
-                        writeBufferIndex,
+                        writeBufferIndex*sizeof(UINT32),
                         pDeviceContext,
                         true    // delete this request when complete
                     ))
@@ -2114,7 +2114,7 @@ Return Value:Amy
                 usbRequest,
                 writeMemory,
                 pipe,
-                writeBufferIndex,
+                writeBufferIndex*sizeof(UINT32),
                 pDeviceContext,
                 true    // delete this request when complete
             ))
@@ -2191,7 +2191,7 @@ Return Value:Amy
                 usbRequest,
                 writeMemory,
                 pipe,
-                writeBufferIndex,
+                thisTransferSize,
                 pDeviceContext,
                 true    // delete this request when complete
             ))
@@ -2220,10 +2220,17 @@ BOOLEAN USBMIDI2DriverSendToUSB(
 {
     NTSTATUS        status;
     pDeviceContext;
-    Length;
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
+    // Pad out unusded data
+    PUCHAR pBuffer = (PUCHAR)WdfMemoryGetBuffer(reqMemory, NULL);
+    while (Length < (size_t)pDeviceContext->MidiOutMaxSize)
+    {
+        pBuffer[Length++] = NULL;
+    }
+
+    // Send to USB Pipe
     status = WdfUsbTargetPipeFormatRequestForWrite(pipe,
         usbRequest,
         reqMemory,
