@@ -556,7 +556,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Path and filename of the text file to send. This can include lines which begin with # for a comment, or are completely empty for spacing. Remaining lines must be valid delimited hexadecimal UMP words..
+        ///   Looks up a localized string similar to Path and filename of the text file to send. This can include lines which begin with # for a comment, or are completely empty for spacing. Remaining lines must be valid delimited (big-endian) hexadecimal UMP words..
         /// </summary>
         internal static string ParameterSendMessagesFileCommandFile {
             get {
@@ -601,7 +601,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 32-bit MIDI words, typically in hexadecimal 0x00000000 format. Use the parameter name in front of each word sent..
+        ///   Looks up a localized string similar to 32-bit MIDI words, typically in hexadecimal 0x00000000 format. Big-endian, same as the MIDI protocol wire format. Use the parameter name in front of each word sent..
         /// </summary>
         internal static string ParameterSendMessageWords {
             get {
