@@ -28,7 +28,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         if (!infoFoundInCache)
         {
             // No cached info. Send out the negotiation requests and go through the full process
-            BeginNegotiation();
+            BeginDiscovery();
         }
 
     }
@@ -85,13 +85,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
                     skipFurtherListeners = true;
                     skipMainMessageReceivedEvent = true;
 
+                    bool isProtocolWhatWeWant = false;
+
                     // TODO: Check to see if this is the protocol we want. If not, send a stream configuration request for what we want, assuming
                     // the info notification (if we have received it) supports what we want.
 
                     // TODO: Don't let this go into an infinite loop. One ping only :).
-
-
-
+                    
+                    if (!isProtocolWhatWeWant)
+                    {
+                        BeginNegotiation();
+                    }
 
 
 
