@@ -43,6 +43,8 @@ Environment:
 #include "Trace.h"
 #include "Device.tmh"
 
+extern StreamEngine* g_MidiInStreamEngine;
+
 UNICODE_STRING g_RegistryPath = {0};      // This is used to store the registry settings path for the driver
 
 _Use_decl_annotations_
@@ -1495,8 +1497,10 @@ Return Value:
             // Submit any data written
             if (numIndex)
             {
-                if (!pDeviceContext->pMidiStreamEngine
-                    || !pDeviceContext->pMidiStreamEngine->FillReadStream(
+//                if (!pDeviceContext->pMidiStreamEngine
+//                    || !pDeviceContext->pMidiStreamEngine->FillReadStream(
+                if (!g_MidiInStreamEngine
+                    || !g_MidiInStreamEngine->FillReadStream(
                     (PUINT32)pWorkingBuffer,
                     numIndex,
                     pDeviceContext
@@ -1511,8 +1515,10 @@ Return Value:
         else
         {
             // Send Memory to Read Queue
-            if (!pDeviceContext->pMidiStreamEngine
-                || !pDeviceContext->pMidiStreamEngine->FillReadStream(
+//            if (!pDeviceContext->pMidiStreamEngine
+//                || !pDeviceContext->pMidiStreamEngine->FillReadStream(
+            if (!g_MidiInStreamEngine
+                || !g_MidiInStreamEngine->FillReadStream(
                 (PUINT32)pReceivedBuffer,
                 NumBytesTransferred / sizeof(UINT32),
                 pDeviceContext

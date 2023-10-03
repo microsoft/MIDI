@@ -15,7 +15,7 @@
 // InstancesPossible on the in/out pins must not exceed 1 when
 // doing loopback.
 wil::fast_mutex_with_critical_region *g_MidiInLock {nullptr};
-//StreamEngine* g_MidiInStreamEngine {nullptr};
+StreamEngine* g_MidiInStreamEngine {nullptr};
 
 // UMP 32 is 4 bytes
 #define MINIMUM_UMP_DATASIZE 4
@@ -149,7 +149,8 @@ StreamEngine::HandleIo()
                     auto lock = g_MidiInLock->acquire();
 
                     // we have a write event, there should be data available to move.
-                    if (nullptr != pDevCtx->pMidiStreamEngine)
+//                    if (nullptr != pDevCtx->pMidiStreamEngine)
+                    if (nullptr != g_MidiInStreamEngine)
                     {
                         ULONG bytesAvailableToRead = 0;
                         ULONG bytesAvailable = 0;
@@ -360,14 +361,17 @@ Return Value:
 
     // Current mechanism to determine if currently processing data is that
     // the StreamEngine is not null. TBD this mechanism needs to be fixed.
-    if (pDevCtx->pMidiStreamEngine)
+//    if (pDevCtx->pMidiStreamEngine)
+    if (g_MidiInStreamEngine)
     {
         // Retrieve the midi in position for the buffer that we are writing to. The data between the write position
         // and read position is empty. (read position is their last read position, write position is our last written).
         // retrieve our write position first since we know it won't be changing, and their read position second,
         // so we can have as much free space as possible.
-        ULONG midiInWritePosition = (ULONG)InterlockedCompareExchange((LONG*)pDevCtx->pMidiStreamEngine->m_WriteRegister, 0, 0);
-        ULONG midiInReadPosition = (ULONG)InterlockedCompareExchange((LONG*)pDevCtx->pMidiStreamEngine->m_ReadRegister, 0, 0);
+//        ULONG midiInWritePosition = (ULONG)InterlockedCompareExchange((LONG*)pDevCtx->pMidiStreamEngine->m_WriteRegister, 0, 0);
+//        ULONG midiInReadPosition = (ULONG)InterlockedCompareExchange((LONG*)pDevCtx->pMidiStreamEngine->m_ReadRegister, 0, 0);
+        ULONG midiInWritePosition = (ULONG)InterlockedCompareExchange((LONG*)g_MidiInStreamEngine->m_WriteRegister, 0, 0);
+        ULONG midiInReadPosition = (ULONG)InterlockedCompareExchange((LONG*)g_MidiInStreamEngine->m_ReadRegister, 0, 0);
 
         // Check enough space to write into
         ULONG bytesToCopy = ((ULONG)bufferSize * sizeof(UINT32))  + (ULONG)sizeof(UMPDATAFORMAT);
@@ -380,7 +384,8 @@ Return Value:
             // if the read position is less than the write position, then the difference between
             // the read and write position is the buffer in use, same as above. So, the total
             // buffer size minus the used buffer gives us the available space.
-            bytesAvailable = pDevCtx->pMidiStreamEngine->m_BufferSize - (midiInWritePosition - midiInReadPosition);
+//            bytesAvailable = pDevCtx->pMidiStreamEngine->m_BufferSize - (midiInWritePosition - midiInReadPosition);
+            bytesAvailable = g_MidiInStreamEngine->m_BufferSize - (midiInWritePosition - midiInReadPosition);
         }
         else
         {
@@ -405,7 +410,8 @@ Return Value:
         }
 
         // There's enough space available, calculate our write position
-        PVOID startingWriteAddress = (PVOID)(((PBYTE)pDevCtx->pMidiStreamEngine->m_KernelBufferMapping.Buffer1.m_BufferClientAddress) + midiInWritePosition);
+//        PVOID startingWriteAddress = (PVOID)(((PBYTE)pDevCtx->pMidiStreamEngine->m_KernelBufferMapping.Buffer1.m_BufferClientAddress) + midiInWritePosition);
+        PVOID startingWriteAddress = (PVOID)(((PBYTE)g_MidiInStreamEngine->m_KernelBufferMapping.Buffer1.m_BufferClientAddress) + midiInWritePosition);
         PUMPDATAFORMAT pUMP = (PUMPDATAFORMAT)startingWriteAddress;
         PUINT32 pWriteData = (PUINT32)((PUCHAR)startingWriteAddress + sizeof(UMPDATAFORMAT));
 
@@ -421,13 +427,16 @@ Return Value:
         // now calculate the new position that the buffer has been written up to.
         // this will be the original write position, plus the bytes copied, again modululs
         // the buffer size to take into account the loop.
-        ULONG finalWritePosition = (midiInWritePosition + bytesToCopy) % pDevCtx->pMidiStreamEngine->m_BufferSize;
+//        ULONG finalWritePosition = (midiInWritePosition + bytesToCopy) % pDevCtx->pMidiStreamEngine->m_BufferSize;
+        ULONG finalWritePosition = (midiInWritePosition + bytesToCopy) % g_MidiInStreamEngine->m_BufferSize;
 
         // finalize by advancing the registers and setting the write event
 
         // advance the write position for the loopback and signal that there's data available
-        InterlockedExchange((LONG*)pDevCtx->pMidiStreamEngine->m_WriteRegister, finalWritePosition);
-        KeSetEvent(pDevCtx->pMidiStreamEngine->m_WriteEvent, 0, 0);
+//        InterlockedExchange((LONG*)pDevCtx->pMidiStreamEngine->m_WriteRegister, finalWritePosition);
+//        KeSetEvent(pDevCtx->pMidiStreamEngine->m_WriteEvent, 0, 0);
+        InterlockedExchange((LONG*)g_MidiInStreamEngine->m_WriteRegister, finalWritePosition);
+        KeSetEvent(g_MidiInStreamEngine->m_WriteEvent, 0, 0);
     }
     else
     {
@@ -555,7 +564,8 @@ StreamEngine::Pause()
         // flowing.
         // TBD - this mechanism needs to change in case where device can be destroyed
         auto lock = g_MidiInLock->acquire();
-        pDevCtx->pMidiStreamEngine = nullptr;
+//        pDevCtx->pMidiStreamEngine = nullptr;
+        g_MidiInStreamEngine = nullptr;
     }
 
     //
@@ -625,7 +635,8 @@ StreamEngine::Run()
         // flowing.
         // TBD this mechanism must be changed in case where multiple instances
         auto lock = g_MidiInLock->acquire();
-        pDevCtx->pMidiStreamEngine = this;
+//        pDevCtx->pMidiStreamEngine = this;
+        g_MidiInStreamEngine = this;
     }
 
     //
