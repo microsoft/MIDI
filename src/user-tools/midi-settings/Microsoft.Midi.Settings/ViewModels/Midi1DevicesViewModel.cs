@@ -33,12 +33,12 @@ namespace Microsoft.Midi.Settings.ViewModels
             EnumerateDevices();
         }
 
-        private async void GetParentDevice(DeviceInformation di)
+        private void GetParentDevice(DeviceInformation di)
         {
             //
         }
 
-        private async void DumpProperties(DeviceInformation di)
+        private void DumpProperties(DeviceInformation di)
         {
             System.Diagnostics.Debug.WriteLine("----");
             System.Diagnostics.Debug.WriteLine("MIDI props");
@@ -57,8 +57,9 @@ namespace Microsoft.Midi.Settings.ViewModels
         {
             System.Diagnostics.Debug.WriteLine("   Generic props");
 
-            string id = di.Properties["System.Devices.DeviceInstanceId"].ToString().Replace("\\", "\\\\");
-
+#pragma warning disable 8602
+            string id = di.Properties.GetValueOrDefault("System.Devices.DeviceInstanceId", string.Empty).ToString().Replace("\\", "\\\\");
+#pragma warning restore 8602
             string query = "System.Devices.DeviceInstanceId:=\"" + id + "\"";
 
             System.Diagnostics.Debug.WriteLine("   query:" + query);
@@ -122,7 +123,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         }
 
-        private async Task<Midi1ParentDeviceInformation> GetMidiDeviceParentAsync(string midiDeviceInstanceId)
+        private async Task<Midi1ParentDeviceInformation?> GetMidiDeviceParentAsync(string midiDeviceInstanceId)
         {
             const string systemContainerId = "00000000-0000-0000-ffff-ffffffffffff";
             const string localSystemName = "Local System";
@@ -135,8 +136,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             //    DumpProperties(device);
 
-            string containerId = actualDevice.Properties["System.Devices.ContainerId"]?.ToString();
-            string parentId = actualDevice.Properties["System.Devices.Parent"]?.ToString();
+            string containerId = actualDevice.Properties.GetValueOrDefault("System.Devices.ContainerId", Guid.Empty).ToString();
+            string parentId = (string)actualDevice.Properties.GetValueOrDefault("System.Devices.Parent", string.Empty);
 
             Midi1ParentDeviceInformation? parent = null;
 
@@ -232,42 +233,51 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             var inputDevices = await DeviceInformation.FindAllAsync(MidiInPort.GetDeviceSelector());
 
-            foreach (var device in inputDevices)
+            if (inputDevices != null)
             {
-                var parent = await GetMidiDeviceParentAsync(device.Properties["System.Devices.DeviceInstanceId"].ToString());
-
-                var port = new Midi1PortInformation()
+                foreach (var device in inputDevices)
                 {
-                    ContainerId = parent.Id,
-                    Id = device.Id,
-                    Name = device.Name,
-                    PortDirection = Midi1PortDirection.Input,
-                    DeviceInstanceId = device.Properties["System.Devices.DeviceInstanceId"].ToString()
+#pragma warning disable 8602, 8601, 8604
+                    var parent = await GetMidiDeviceParentAsync(device.Properties.GetValueOrDefault("System.Devices.DeviceInstanceId", string.Empty).ToString());
 
-                };
+                    var port = new Midi1PortInformation()
+                    {
+                        ContainerId = parent.Id,
+                        Id = device.Id,
+                        Name = device.Name,
+                        PortDirection = Midi1PortDirection.Input,
+                        DeviceInstanceId = device.Properties.GetValueOrDefault("System.Devices.DeviceInstanceId", string.Empty).ToString()
 
-                parent.Ports.Add(port);
+                    };
+#pragma warning restore 8602, 8601, 8604
 
+                    parent.Ports.Add(port);
+
+                }
             }
-
             // output devices
 
             var outputDevices = await DeviceInformation.FindAllAsync(MidiOutPort.GetDeviceSelector());
 
-            foreach (var device in outputDevices)
+            if (outputDevices != null)
             {
-                var parent = await GetMidiDeviceParentAsync(device.Properties["System.Devices.DeviceInstanceId"].ToString());
+                foreach (var device in outputDevices)
+                {
+#pragma warning disable 8602, 8601, 8604
+                    var parent = await GetMidiDeviceParentAsync(device.Properties.GetValueOrDefault("System.Devices.DeviceInstanceId", string.Empty).ToString());
 
-                var port = new Midi1PortInformation()
-                { 
-                    ContainerId = parent.Id, 
-                    Id = device.Id, 
-                    Name = device.Name, 
-                    PortDirection = Midi1PortDirection.Output,
-                    DeviceInstanceId = device.Properties["System.Devices.DeviceInstanceId"].ToString()
-                };
+                    var port = new Midi1PortInformation()
+                    {
+                        ContainerId = (string.IsNullOrEmpty(parent.Id) ? string.Empty : parent.Id),
+                        Id = device.Id,
+                        Name = device.Name,
+                        PortDirection = Midi1PortDirection.Output,
+                        DeviceInstanceId = device.Properties.GetValueOrDefault("System.Devices.DeviceInstanceId", string.Empty).ToString()
+                    };
+#pragma warning restore 8602, 8601, 8604
 
-                parent.Ports.Add(port);
+                    parent.Ports.Add(port);
+                }
             }
         }
 
@@ -275,27 +285,42 @@ namespace Microsoft.Midi.Settings.ViewModels
 
     public enum Midi1PortDirection
     {
-        Input = 0,
-        Output = 1
+        Unknown = 0,
+        Input = 1,
+        Output = 2
     }
 
     public class Midi1ParentDeviceInformation
     {
+        public Midi1ParentDeviceInformation()
+        {
+            Id = string.Empty;
+            Name = string.Empty;
+        }
         public string Id { get; internal set; }
 
         public string Name { get; internal set; }
-        public ObservableCollection<Midi1PortInformation> Ports { get; internal set; } = new ObservableCollection<Midi1PortInformation>();
+        public ObservableCollection<Midi1PortInformation> Ports { get; internal init; } = new ObservableCollection<Midi1PortInformation>();
 
     }
 
     public class Midi1PortInformation
     {
-        public string Name { get; internal set; }
-        public string Id { get; internal set; }
-        public string DeviceInstanceId { get; internal set; }
-        public Midi1PortDirection PortDirection { get; internal set; }
+        public Midi1PortInformation()
+        {
+            Name = string.Empty;
+            Id = string.Empty;
+            DeviceInstanceId = string.Empty;
+            ContainerId = string.Empty;
+            PortDirection = Midi1PortDirection.Unknown;
+        }
 
-        public string ContainerId { get; internal set; }
+        public string Name { get; internal init; }
+        public string Id { get; internal init; }
+        public string DeviceInstanceId { get; internal init; }
+        public Midi1PortDirection PortDirection { get; internal init; }
+
+        public string ContainerId { get; internal init; }
 
     }
 

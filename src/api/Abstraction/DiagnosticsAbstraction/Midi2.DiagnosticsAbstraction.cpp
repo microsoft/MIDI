@@ -84,7 +84,13 @@ CMidi2DiagnosticsAbstraction::Activate(
     }
     else
     {
-        OutputDebugString(L"" __FUNCTION__ " Returning E_NOINTERFACE. Was an interface added that isn't handled in the Abstraction?");
+       TraceLoggingWrite(
+           MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
+           __FUNCTION__ " Returning E_NOINTERFACE. Was an interface added that isn't handled in the Abstraction?",
+           TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+           TraceLoggingValue(__FUNCTION__),
+           TraceLoggingPointer(this, "this")
+        );
 
         return E_NOINTERFACE;
     }

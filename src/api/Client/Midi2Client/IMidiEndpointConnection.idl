@@ -44,7 +44,6 @@ namespace Windows.Devices.Midi2
 
         Boolean Open();
 
-        IVector<IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins{ get; };
 
     }
 }

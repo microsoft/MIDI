@@ -17,5 +17,5 @@ public:
 class MidiSWDeviceEnum
 {
 public:
-    static HRESULT EnumerateDevices(std::vector<std::unique_ptr<MIDIU_DEVICE>>& Devices, std::function<bool(PMIDIU_DEVICE)>&& Predicate);
+    static HRESULT EnumerateDevices(_In_ std::vector<std::unique_ptr<MIDIU_DEVICE>>&, _In_ std::function<bool(PMIDIU_DEVICE)>&&);
 };

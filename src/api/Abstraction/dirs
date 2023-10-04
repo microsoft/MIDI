@@ -1,7 +1,0 @@
-DIRS=\
-    SampleAbstraction \
-    KSAbstraction \
-    MidiSrvAbstraction \
-    DiagnosticsAbstraction \
-    NetworkMidiAbstraction \
-    VirtualMidiAbstraction \

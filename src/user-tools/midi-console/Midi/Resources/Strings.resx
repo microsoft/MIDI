@@ -162,6 +162,9 @@
   <data name="CommandServiceStatusDescription" xml:space="preserve">
     <value>Check to see if the Windows Service is running</value>
   </data>
+  <data name="CommonTableHeaderIndex" xml:space="preserve">
+    <value>Index</value>
+  </data>
   <data name="ErrorEnumEndpointsFailed" xml:space="preserve">
     <value>Enumerating endpoints failed</value>
   </data>
@@ -267,6 +270,9 @@
   <data name="ParameterMonitorEndpointSingleMessage" xml:space="preserve">
     <value>Wait for a single incoming message only</value>
   </data>
+  <data name="ParameterMonitorEndpointVerbose" xml:space="preserve">
+    <value>List all messages as they come in</value>
+  </data>
   <data name="ParameterSendMessageCount" xml:space="preserve">
     <value>Number of times to send this message</value>
   </data>
@@ -277,7 +283,7 @@
     <value>The direction of the endpoint referenced by the Id. If this doesn't match the endpoint type, the connection will fail.</value>
   </data>
   <data name="ParameterSendMessagesFileCommandFile" xml:space="preserve">
-    <value>Path and filename of the text file to send. This can include lines which begin with # for a comment, or are completely empty for spacing. Remaining lines must be valid delimited hexadecimal UMP words.</value>
+    <value>Path and filename of the text file to send. This can include lines which begin with # for a comment, or are completely empty for spacing. Remaining lines must be valid delimited (big-endian) hexadecimal UMP words.</value>
   </data>
   <data name="ParameterSendMessagesFileFieldDelimiter" xml:space="preserve">
     <value>Delimiter between fields. Set to "Auto" to have this evaluated for each line. Valid values include:</value>
@@ -292,7 +298,7 @@
     <value>Data format for the individual words. Valid values include:</value>
   </data>
   <data name="ParameterSendMessageWords" xml:space="preserve">
-    <value>32-bit MIDI words, typically in hexadecimal 0x00000000 format. Use the parameter name in front of each word sent.</value>
+    <value>32-bit MIDI words, typically in hexadecimal 0x00000000 format. Big-endian, same as the MIDI protocol wire format. Use the parameter name in front of each word sent.</value>
   </data>
   <data name="ParameterServicePingCount" xml:space="preserve">
     <value>Number of times to ping the MIDI Windows Service</value>
@@ -340,6 +346,9 @@ Timestamp</value>
   <data name="StatusCreatingSessionAndOpeningEndpoint" xml:space="preserve">
     <value>Creating session and opening endpoint...</value>
   </data>
+  <data name="TableColumnHeaderCommonDetailedMessageType" xml:space="preserve">
+    <value>Specific Type</value>
+  </data>
   <data name="TableColumnHeaderCommonMessageType" xml:space="preserve">
     <value>Message Type</value>
   </data>
@@ -349,8 +358,11 @@ Timestamp</value>
   <data name="ValidationErrorInvalidGroup" xml:space="preserve">
     <value>The specified group index is invalid. Specify a group index between 0 and 15.</value>
   </data>
+  <data name="ValidationErrorInvalidMessageCount" xml:space="preserve">
+    <value>Please provide a count &gt; 0.</value>
+  </data>
   <data name="ValidationErrorPingCountTooHigh" xml:space="preserve">
-    <value>Specified ping count is too high. Please provide a value &lt;= 100.</value>
+    <value>Specified ping count is too high. Please provide a value &lt;= 1000.</value>
   </data>
   <data name="ValidationErrorPingCountTooLow" xml:space="preserve">
     <value>Specified ping count is too low. Please provide a value &gt; 0.</value>

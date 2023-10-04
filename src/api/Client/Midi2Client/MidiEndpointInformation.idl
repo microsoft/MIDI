@@ -9,26 +9,29 @@
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-import "MidiUmp128.idl";
+import "MidiMessage128.idl";
+import "IMidiCacheableMetadata.idl";
+import "MidiProtocolEnum.idl";
 
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [default_interface]
-    runtimeclass MidiEndpointInformation
+    runtimeclass MidiEndpointInformation : IMidiCacheableMetadata
     {
         MidiEndpointInformation();
-//        MidiEndpointInformation(String json);
-//        MidiEndpointInformation(MidiUmp128[] endpointMessages);
 
         String Name{ get; };
         String ProductInstanceId{ get; };
 
+        MidiProtocol ConfiguredProtocol{ get; };
+
+
         // TODO: Add sysex information from Device Identity Notification
 
 
-        UInt8 UmpVersionMajor{ get; };
-        UInt8 UmpVersionMinor{ get; };
+        UInt8 SpecificationVersionMajor{ get; };
+        UInt8 SpecificationVersionMinor{ get; };
 
         Boolean HasStaticFunctionBlocks{ get; };
         UInt8 FunctionBlockCount{ get; };
@@ -39,6 +42,9 @@ namespace Windows.Devices.Midi2
         Boolean SupportsReceivingJRTimestamps{ get; };
         Boolean SupportsSendingJRTimestamps{ get; };
 
-        //String GetJson();
+
+        Boolean UpdateFromMessages(Windows.Foundation.Collections.IIterable<MidiMessage128> endpointMessages);
+        Boolean UpdateFromInfoNotificationMessage(MidiMessage128 endpointMessage);
+
     }
 }

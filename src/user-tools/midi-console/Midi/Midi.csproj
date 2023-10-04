@@ -22,15 +22,16 @@
       
       <!-- Without this, the build script gets "NETSDK1083: The specified RuntimeIdentifier 'win10-x64' is not recognized" -->
       <UseRidGraph>true</UseRidGraph>
+      <AssemblyVersion></AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.3" />
-    <PackageReference Include="Spectre.Console" Version="0.47.1-preview.0.23" />
-    <PackageReference Include="Spectre.Console.Cli" Version="0.47.1-preview.0.23" />
+    <PackageReference Include="Spectre.Console" Version="0.47.1-preview.0.26" />
+    <PackageReference Include="Spectre.Console.Cli" Version="0.47.1-preview.0.26" />
     <PackageReference Include="System.Management" Version="8.0.0-rc.1.23419.4" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.0-rc.1.23419.4" />
-    <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.1-0036" />
+    <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.2-0045" />
   </ItemGroup>
 
   <ItemGroup>

@@ -348,3 +348,6 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+build/dependencies/winui/WindowsAppRuntimeInstall-x64.exe
+build/dependencies/winui/WindowsAppRuntimeInstall-arm64.exe
+*.zip

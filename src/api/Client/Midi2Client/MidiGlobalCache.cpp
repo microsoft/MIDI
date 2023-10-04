@@ -16,6 +16,9 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
+    winrt::event<foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiGlobalInformationCacheUpdatedEventArgs>> 
+        MidiGlobalCache::m_dataUpdateEvent;
+
 
     _Use_decl_annotations_
     void MidiGlobalCache::AddOrUpdateData(
@@ -57,7 +60,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             args->InternalInitialize(updateType, propertyKey);
 
-            m_dataUpdateEvent((foundation::IInspectable)*this, *args);
+            m_dataUpdateEvent((foundation::IInspectable)nullptr, *args);
         }
     }
 
@@ -96,7 +99,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                 args->InternalInitialize(MidiCacheUpdateType::Removed, propertyKey);
 
-                m_dataUpdateEvent((foundation::IInspectable)*this, *args);
+                m_dataUpdateEvent((foundation::IInspectable)nullptr, *args);
             }
         }
         else

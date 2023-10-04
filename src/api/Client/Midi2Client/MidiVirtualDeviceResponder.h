@@ -39,17 +39,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void OutputConnection(_In_ midi2::IMidiOutputConnection const& value) { m_outputConnection = value; }
 
 
-        winrt::Windows::Foundation::Collections::IMapView<uint8_t, midi2::MidiFunctionBlock> FunctionBlocks();
+        collections::IMapView<uint8_t, midi2::MidiFunctionBlock> FunctionBlocks() { return m_functionBlocks.GetView(); }
 
-        void AddFunctionBlock(_In_ midi2::MidiFunctionBlock const& block);
+        bool AddFunctionBlock(_In_ midi2::MidiFunctionBlock const& block);
         void UpdateFunctionBlock(_In_ midi2::MidiFunctionBlock const& block);
-        void RemoveFunctionBlock(uint8_t functionBlockNumber);
+        void RemoveFunctionBlock(_In_ uint8_t functionBlockNumber);
 
         midi2::MidiEndpointInformation EndpointInformation();
         void EndpointInformation(_In_ midi2::MidiEndpointInformation const& value);
 
-        bool SuppressHandledMessages();
-        void SuppressHandledMessages(_In_ bool const value);
+        bool SuppressHandledMessages() { return m_suppressHandledMessages; }
+        void SuppressHandledMessages(_In_ bool const value) { m_suppressHandledMessages = value; }
 
         void Initialize();
         void OnEndpointConnectionOpened();
@@ -68,6 +68,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         foundation::IInspectable m_tag{ nullptr };
         midi2::IMidiInputConnection m_inputConnection;
         midi2::IMidiOutputConnection m_outputConnection;
+
+        bool m_suppressHandledMessages{ true };
+
+        collections::IMap<uint8_t, midi2::MidiFunctionBlock> m_functionBlocks { winrt::single_threaded_map<uint8_t, midi2::MidiFunctionBlock>() };
     };
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation

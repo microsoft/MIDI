@@ -28,16 +28,7 @@ namespace Windows::Devices::Midi2::Internal
         foundation::IInspectable Tag() const noexcept { return m_tag; }
         void Tag(_In_ foundation::IInspectable value) noexcept { m_tag = value; }
 
-        winrt::Windows::Foundation::Collections::IVector<midi2::IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins() const noexcept
-            { return m_messageProcessingPlugins; }
 
-
-        void SetInputConnectionOnPlugins(_In_ midi2::IMidiInputConnection const inputConnection);
-        void SetOutputConnectionOnPlugins(_In_ midi2::IMidiOutputConnection const outputConnection);
-
-        void InitializePlugins();
-        void CallOnConnectionOpenedOnPlugins();
-        void CleanupPlugins();
 
 
     protected:
@@ -53,14 +44,11 @@ namespace Windows::Devices::Midi2::Internal
         winrt::com_ptr<IMidiAbstraction> m_serviceAbstraction{ nullptr };
 
 
-        foundation::Collections::IVector<midi2::IMidiEndpointMessageProcessingPlugin>
-            m_messageProcessingPlugins{ winrt::single_threaded_vector<midi2::IMidiEndpointMessageProcessingPlugin>() };
-
         _Success_(return == true)
         bool ActivateMidiStream(
             _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
             _In_ const IID& iid,
-            _Out_ void** iface);
+            _Out_ void** iface) noexcept;
 
     private:
         bool m_isOpen{ false };

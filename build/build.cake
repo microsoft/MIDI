@@ -54,6 +54,10 @@ var consoleAppStagingDir = System.IO.Path.Combine(stagingRootDir, "midi-console"
 
 var settingsAppSolutionDir = System.IO.Path.Combine(srcDir, "user-tools", "midi-settings");
 var settingsAppSolutionFile = System.IO.Path.Combine(settingsAppSolutionDir, "midi-settings.sln");
+
+var settingsAppProjectDir = System.IO.Path.Combine(settingsAppSolutionDir, "Microsoft.Midi.Settings");
+var settingsAppProjectFile = System.IO.Path.Combine(settingsAppProjectDir, "Microsoft.Midi.Settings.csproj");
+
 var settingsAppStagingDir = System.IO.Path.Combine(stagingRootDir, "midi-settings");
 
 
@@ -414,7 +418,50 @@ Task("BuildSettingsApp")
     
     //NuGetUpdate(settingsAppSolutionFile);
 
+    // TODO: Update nuget ref in console app to the new version
+   
 
+    Information("\nBuilding MIDI settings app for " + plat.ToString());
+
+    // update nuget packages for the entire solution. This is important for API/SDK NuGet in particular
+
+    //NuGetUpdate(settingsAppSolutionFile, new NuGetUpdateSettings
+    //{
+    //    WorkingDirectory = settingsAppSolutionDir,
+    //});
+
+    // we're specifying a rid, so we need to compile the project, not the solution
+    
+    string rid = "";
+    if (plat == PlatformTarget.x64)
+        rid = ridX64;
+    else if (plat == PlatformTarget.ARM64)
+        rid = ridArm64;
+    else
+        throw new ArgumentException("Invalid platform target " + plat.ToString());
+
+    DotNetBuild(settingsAppProjectFile, new DotNetBuildSettings
+    {
+        WorkingDirectory = settingsAppSolutionDir,
+        Configuration = configuration, 
+        Runtime = rid,        
+    });
+
+
+    DotNetPublish(settingsAppProjectFile, new DotNetPublishSettings
+    {
+        WorkingDirectory = settingsAppSolutionDir,
+        OutputDirectory = System.IO.Path.Combine(settingsAppStagingDir, plat.ToString()),
+        Configuration = configuration,
+
+        Runtime = rid,
+        PublishSingleFile = false,
+        PublishTrimmed = false,
+        SelfContained = false,
+        Framework = frameworkVersion
+    });
+
+    // WinUI makes me manually copy this over. If not for the hacked-in post-build step, would need all the .xbf files as well
 
 });
 

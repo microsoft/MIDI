@@ -26,6 +26,12 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             [CommandOption("-c|--count")]
             [DefaultValue(1)]
             public int Count { get; set; }
+
+
+            [LocalizedDescription("VERBOSE_OPTION_TODO")]
+            [CommandOption("-v|--verbose|--details")]
+            [DefaultValue(false)]
+            public bool Verbose { get; set; }
         }
 
         public override Spectre.Console.ValidationResult Validate(CommandContext context, Settings settings)
@@ -48,6 +54,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             }
 
 
+            if (settings.Count < 1)
+            {
+                return Spectre.Console.ValidationResult.Error(Strings.ValidationErrorInvalidMessageCount);
+            }
+
             return base.Validate(context, settings);
         }
 
@@ -57,7 +68,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             if (words != null && words.Length > 0 && words.Length <= 4)
             {
                 // allowed behavior is to cast the packet type to the word count
-                return (bool)((int)MidiUmpUtility.GetPacketTypeFromFirstUmpWord(words[0]) == words.Length);
+                return (bool)((int)MidiMessageUtility.GetPacketTypeFromFirstMessageWord(words[0]) == words.Length);
             }
             else
             {
@@ -72,7 +83,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            MidiSession? session = null;
             IMidiOutputConnection? connection = null;
 
             string endpointId = string.Empty;
@@ -91,13 +101,30 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             bool openSuccess = false;
 
+            // when this goes out of scope, it will dispose of the session, which closes the connections
+            using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
+
+            var bidiOpenOptions = new MidiBidirectionalEndpointOpenOptions();
+
+
+            if (settings.AutoProtocolNegotiation == false)
+            {
+                bidiOpenOptions.DisableAutomaticStreamConfiguration = true;
+            }
+
+            if (settings.AutoDiscovery == false)
+            {
+                bidiOpenOptions.DisableAutomaticEndpointMetadataHandling = true;
+                bidiOpenOptions.DisableAutomaticFunctionBlockMetadataHandling = true;
+            }
+
+
+
+
             AnsiConsole.Status()
                 .Start(Strings.StatusCreatingSessionAndOpeningEndpoint, ctx =>
                 {
                     ctx.Spinner(Spinner.Known.Star);
-
-                    session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
-
 
                     if (session != null)
                     {
@@ -105,7 +132,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                         if (endpointDirection == EndpointDirection.Bidirectional)
                         {
-                            connection = session.ConnectBidirectionalEndpoint(endpointId);
+                            connection = session.ConnectBidirectionalEndpoint(endpointId, bidiOpenOptions);
                         }
                         else if (endpointDirection == EndpointDirection.Out)
                         {
@@ -137,47 +164,83 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             else if (connection == null)
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToCreateEndpointConnection));
-
                 return (int)MidiConsoleReturnCode.ErrorCreatingEndpointConnection;
             }
             else if (!openSuccess)
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToOpenEndpoint));
-
                 return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
             }
 
 
-            var table = new Table();
+            if (settings.Verbose)
+            {
+                var table = new Table();
 
-            table.AddColumn(Strings.TableColumnHeaderCommonTimestamp);
-            table.AddColumn(Strings.SendMessageResultTableColumnHeaderWordsSent);
-            table.AddColumn(Strings.TableColumnHeaderCommonMessageType);
+                table.AddColumn(Strings.TableColumnHeaderCommonTimestamp);
+                table.AddColumn(Strings.SendMessageResultTableColumnHeaderWordsSent);
+                table.AddColumn(Strings.TableColumnHeaderCommonMessageType);
+                table.AddColumn(Strings.TableColumnHeaderCommonDetailedMessageType);
 
-            AnsiConsole.Live(table)
-                .Start(ctx =>
-                {
-                    if (settings.Words != null)
+                AnsiConsole.Live(table)
+                    .Start(ctx =>
                     {
-                        for (uint i = 0; i < settings.Count; i++)
+                        if (settings.Words != null)
+                        {
+                            for (uint i = 0; i < settings.Count; i++)
+                            {
+                                UInt64 timestamp = MidiClock.GetMidiTimestamp();
+                                var sendResult = connection.SendMessageWordArray(timestamp, settings.Words, 0, (byte)settings.Words.Count());
+
+                                // TODO: check for error or other result
+
+                                
+
+                                table.AddRow(
+                                    AnsiMarkupFormatter.FormatTimestamp(timestamp),
+                                    AnsiMarkupFormatter.FormatMidiWords(settings.Words),
+                                    AnsiMarkupFormatter.FormatMessageType(MidiMessageUtility.GetMessageTypeFromFirstMessageWord(settings.Words[0])),
+                                    AnsiMarkupFormatter.FormatDetailedMessageType(MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(settings.Words[0]))
+                                    );
+
+                                ctx.Refresh();
+
+                                Thread.Sleep(settings.DelayBetweenMessages);
+                            }
+                        }
+                    });
+
+                return 0;
+            }
+            else
+            {
+                // not verbose, so just show a counter
+
+                AnsiConsole.Progress()
+                    .Start(ctx =>
+                    {
+                        var sendTask = ctx.AddTask("[green]Sending messages[/]");
+                        sendTask.MaxValue = settings.Count;
+                        sendTask.Value = 0;
+
+                        uint messagesSent = 0;
+
+                        while (messagesSent < settings.Count)
                         {
                             UInt64 timestamp = MidiClock.GetMidiTimestamp();
-                            connection.SendUmpWordArray(timestamp, settings.Words, 0, (byte)settings.Words.Count());
+                            connection.SendMessageWordArray(timestamp, settings.Words, 0, (byte)settings.Words.Count());
 
-                            table.AddRow(
-                                AnsiMarkupFormatter.FormatTimestamp(timestamp), 
-                                AnsiMarkupFormatter.FormatMidiWords(settings.Words), 
-                                AnsiMarkupFormatter.FormatMessageType(MidiUmpUtility.GetMessageTypeFromFirstUmpWord(settings.Words[0]))
-                                );
+                            messagesSent++;
+                            sendTask.Value = messagesSent;
 
                             ctx.Refresh();
 
                             Thread.Sleep(settings.DelayBetweenMessages);
                         }
-                    }
-                });
+                    });
 
-            return 0;
+                return 0;
+            }
         }
 
     }

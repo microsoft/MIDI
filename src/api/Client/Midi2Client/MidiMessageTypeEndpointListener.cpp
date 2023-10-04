@@ -13,17 +13,14 @@
 namespace winrt::Windows::Devices::Midi2::implementation
 {
 
-    _Use_decl_annotations_
     void MidiMessageTypeEndpointListener::Initialize()
     {       
     }
 
-    _Use_decl_annotations_
     void MidiMessageTypeEndpointListener::OnEndpointConnectionOpened()
     {
     }
 
-    _Use_decl_annotations_
     void MidiMessageTypeEndpointListener::Cleanup()
     {
     }
@@ -37,7 +34,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         skipFurtherListeners = m_preventCallingFurtherListeners;
         skipMainMessageReceivedEvent = m_preventFiringMainMessageReceivedEvent;
 
-        auto messageMessageType = args.UmpMessageType();
+        auto messageMessageType = args.MessageType();
 
         for (auto const& messageType : m_includedMessageTypes)
         {

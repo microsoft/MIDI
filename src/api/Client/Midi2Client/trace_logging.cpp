@@ -37,7 +37,6 @@ namespace Windows::Devices::Midi2::Internal
         //g_LoggingProviderMatchAnyKeyword = matchAnyKeyword;
     }
 
-    _Use_decl_annotations_
     void RegisterTraceLogging()
     {
         // HRESULT hr = S_OK;
@@ -60,7 +59,6 @@ namespace Windows::Devices::Midi2::Internal
         //};
     }
 
-    _Use_decl_annotations_
     void UnregisterTraceLogging()
     {
         TraceLoggingUnregister(g_hLoggingProvider);
@@ -101,6 +99,23 @@ namespace Windows::Devices::Midi2::Internal
             TraceLoggingWideString(message, "Message")
         );
     }
+
+    void LogInfo(
+        _In_z_ const char* location,
+        _In_z_ const wchar_t* message) noexcept
+    {
+        TraceLoggingWrite(
+            g_hLoggingProvider,
+            "MIDI.Info",
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingKeyword(TRACE_KEYWORD_API),
+            TraceLoggingString(location, "Location"),
+            TraceLoggingWideString(message, "Message")
+        );
+    }
+
+
+
 
     _Use_decl_annotations_
     void LogUmpDataValidationError(

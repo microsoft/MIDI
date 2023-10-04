@@ -21,28 +21,31 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool IsActive() const noexcept { return m_isActive; }
         midi2::MidiFunctionBlockDirection Direction() const noexcept { return m_direction; }
         midi2::MidiFunctionBlockUIHint UIHint() const noexcept { return m_uiHint; }
-        bool IsMidi10Connection() const noexcept { return m_isMidi10Connection; }
-        bool IsBandwidthRestricted() const noexcept { return m_isBandwidthRestricted; }
+        MidiFunctionBlockMidi10 Midi10Connection() const noexcept { return m_midi10Connection; }
         uint8_t MidiCIMessageVersionFormat() const noexcept { return m_midiCIMessageVersionFormat; }
-        uint8_t MaxSysEx8Streams() const noexcept { return m_maxSysEx8Streams; }
+        uint8_t MaxSystemExclusive8Streams() const noexcept { return m_maxSysEx8Streams; }
 
-        collections::IVectorView<midi2::MidiGroup> IncludedGroups() { return m_includedGroups.GetView(); }
+        uint8_t FirstGroupIndex() { return m_firstGroupIndex; }
+        uint8_t NumberOfGroupsSpanned() { return m_numberOfGroupsSpanned; }
 
-        // TODO Function to init values
+        bool UpdateFromJson(_In_ winrt::Windows::Data::Json::JsonObject const json) noexcept;
+        bool UpdateFromJsonString(_In_ winrt::hstring const json) noexcept;
+        bool UpdateFromMessages(_In_ collections::IIterable<midi2::MidiMessage128> messages) noexcept;
+        winrt::hstring GetJsonString() noexcept;
 
     private:
-        uint8_t m_number;
+        uint8_t m_number{ 0 };
         winrt::hstring m_name;
-        bool m_isActive;
+        bool m_isActive{ false };
         MidiFunctionBlockDirection m_direction;
         MidiFunctionBlockUIHint m_uiHint;
-        bool m_isMidi10Connection;
-        bool m_isBandwidthRestricted;
-        uint8_t m_midiCIMessageVersionFormat;
-        uint8_t m_maxSysEx8Streams;
+        MidiFunctionBlockMidi10 m_midi10Connection;
+        uint8_t m_midiCIMessageVersionFormat{ 0 };
+        uint8_t m_maxSysEx8Streams{ 0 };
 
-        collections::IVector<midi2::MidiGroup>
-            m_includedGroups{ winrt::single_threaded_vector<midi2::MidiGroup>() };
+        uint8_t m_firstGroupIndex{ 0 };
+        uint8_t m_numberOfGroupsSpanned{ 0 };
+
     };
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation

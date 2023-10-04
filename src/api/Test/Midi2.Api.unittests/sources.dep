@@ -1,6 +1,0 @@
-BUILD_PASS0_CONSUMES= \
-    avcore\midi2\client\midi2client|PASS0 \
-
-PUBLIC_PASS0_CONSUMES= \
-    onecoreuap\merged\winmetadata\sdkmetadata|PASS0 \
-

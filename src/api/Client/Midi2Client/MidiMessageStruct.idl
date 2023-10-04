@@ -1,0 +1,26 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+// bare-bones maximum size structure for holding MIDI message data. This has some
+// speed advantage in that it can be used as a ref parameter, where as other types
+// cannot. Note that this type does not contain the timestamp field.
+
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+namespace Windows.Devices.Midi2
+{
+    [MIDI_API_CONTRACT(1)]
+    struct MidiMessageStruct
+    {
+        UInt32 Word0;
+        UInt32 Word1;
+        UInt32 Word2;
+        UInt32 Word3;
+    };
+}

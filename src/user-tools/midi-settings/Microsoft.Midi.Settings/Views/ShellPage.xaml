@@ -8,6 +8,9 @@
     xmlns:behaviors="using:Microsoft.Midi.Settings.Behaviors"
     xmlns:i="using:Microsoft.Xaml.Interactivity"
     xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
+    Typography.Kerning="True"
+    Typography.StylisticSet20="True"
+    Typography.DiscretionaryLigatures="True"
     Loaded="OnLoaded">
 
     <Page.Resources>
@@ -34,14 +37,14 @@
 
 
         <!-- Watermark -->
-        <TextBlock Text="PROTOTYPE" FontSize="250" 
+        <!--<TextBlock Text="PROTOTYPE" FontSize="250" 
                    HorizontalAlignment="Center" VerticalAlignment="Center" 
                    Foreground="{ThemeResource SystemAccentColor}" Opacity=".10"
                    RenderTransformOrigin="0.5, 0.5">
             <TextBlock.RenderTransform>
                 <RotateTransform Angle="-35" />
             </TextBlock.RenderTransform>
-        </TextBlock>
+        </TextBlock>-->
 
         <NavigationView
             x:Name="NavigationViewControl"
@@ -84,17 +87,10 @@
 
             <NavigationView.MenuItems>
 
-                <NavigationViewItemHeader x:Uid="Shell_Midi1ApiNavHeader"/>
-
-                <NavigationViewItem x:Uid="Shell_Midi1ApiDevices" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.Midi1DevicesViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe88e;"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-
                 <NavigationViewItemHeader x:Uid="Shell_MidiServicesNavHeader"/>
 
-                <NavigationViewItem x:Uid="Shell_Setup" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.SetupViewModel">
+                <NavigationViewItem x:Uid="Shell_Setup" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.SetupViewModel"
+                                    >
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe838;"/>
                     </NavigationViewItem.Icon>
@@ -150,6 +146,17 @@
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe912;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+
+
+                <NavigationViewItemHeader x:Uid="Shell_Midi1ApiNavHeader"/>
+
+                <NavigationViewItem x:Uid="Shell_Midi1ApiDevices" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.Midi1DevicesViewModel">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe88e;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+
 
                 <NavigationViewItemHeader x:Uid="Shell_MoreNavHeader"/>
 

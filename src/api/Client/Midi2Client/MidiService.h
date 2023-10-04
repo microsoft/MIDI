@@ -29,26 +29,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static foundation::Collections::IVectorView<midi2::MidiTransportInformation> GetInstalledTransports();
 
-
-        static midi2::MidiEndpointMetadataCache EndpointMetadataCache() noexcept 
-        { 
-            if (m_endpointMetadataCache == nullptr)
-                m_endpointMetadataCache = winrt::make_self<implementation::MidiEndpointMetadataCache>();
-
-            return *m_endpointMetadataCache;
-        }
-
-        static midi2::MidiGlobalCache GlobalCache() noexcept 
-        {
-            if (m_globalCache == nullptr)
-                m_globalCache = winrt::make_self<implementation::MidiGlobalCache>();
-
-            return *m_globalCache;
-        }
-
     private:
-        static winrt::com_ptr<MidiEndpointMetadataCache> m_endpointMetadataCache; 
-        static winrt::com_ptr<MidiGlobalCache> m_globalCache;
+
 
 
     };

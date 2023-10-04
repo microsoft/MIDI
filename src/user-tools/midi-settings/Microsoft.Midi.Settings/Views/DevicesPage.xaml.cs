@@ -41,7 +41,7 @@ namespace Microsoft.Midi.Settings.Views
         }
 
         // this code needs to be moved to the ViewModel
-        private async void TempCreateNetworkEndpoint_Click(object sender, RoutedEventArgs e)
+        private void TempCreateNetworkEndpoint_Click(object sender, RoutedEventArgs e)
         {
             //if (!AppState.Current.HasActiveMidiSession)
             //{

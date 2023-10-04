@@ -109,23 +109,23 @@ int main()
                 // keep the result around in a variable if you plan to refer to it multiple times. In 
                 // contrast, the FillXXX functions will update values in provided (pre-allocated) types
                 // passed in to the functions.
-                auto ump = args.GetUmp();
+                auto ump = args.GetMessagePacket();
 
                 std::cout << std::endl;
                 std::cout << "Received UMP" << std::endl;
                 std::cout << "- Current Timestamp: " << std::dec << MidiClock::GetMidiTimestamp() << std::endl;
                 std::cout << "- UMP Timestamp:     " << std::dec << ump.Timestamp() << std::endl;
                 std::cout << "- UMP Msg Type:      0x" << std::hex << (uint32_t)ump.MessageType() << std::endl;
-                std::cout << "- UMP Packet Type:   0x" << std::hex << (uint32_t)ump.UmpPacketType() << std::endl;
+                std::cout << "- UMP Packet Type:   0x" << std::hex << (uint32_t)ump.PacketType() << std::endl;
                   
 
                 // if you wish to cast the IMidiUmp to a specific Ump Type, you can do so using .as<T> WinRT extension
 
-                if (ump.UmpPacketType() == MidiUmpPacketType::Ump32)
+                if (ump.PacketType() == MidiPacketType::UniversalMidiPacket32)
                 {
                     // we'll use the Ump32 type here. This is a runtimeclass that the strongly-typed 
                     // 32-bit messages derive from. There are also MidiUmp64/96/128 classes.
-                    auto ump32 = ump.as<MidiUmp32>();
+                    auto ump32 = ump.as<MidiMessage32>();
 
                     std::cout << "- Word 0:            0x" << std::hex << ump32.Word0() << std::endl;
                 }
@@ -162,8 +162,8 @@ int main()
 
         std::cout << "Sending single UMP..." << std::endl;
 
-        auto ump = ump32.as<IMidiUmp>();
-        sendEndpoint.SendUmp(ump);          // could also use the SendWords methods, etc.
+        auto ump = ump32.as<IMidiUniversalPacket>();
+        sendEndpoint.SendMessagePacket(ump);          // could also use the SendWords methods, etc.
 
         std::cout << std::endl << " ** Wait for the sent UMP to arrive, and then press enter to cleanup. **" << std::endl;
 

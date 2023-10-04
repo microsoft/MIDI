@@ -31,7 +31,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
 
     private:
-        midi2::MidiCacheUpdateType m_updateType;
+        midi2::MidiCacheUpdateType m_updateType{ 0 };
         winrt::hstring m_endpointDeviceId{};
         winrt::hstring m_propertyKey{};
     };

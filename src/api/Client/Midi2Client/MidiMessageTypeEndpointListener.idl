@@ -15,7 +15,7 @@ MIDI_IDL_IMPORT
 import "MidiGroup.idl";
 import "MidiChannel.idl";
 
-import "MidiUmpMessageTypeEnum.idl";
+import "MidiMessageTypeEnum.idl";
 
 import "IMidiEndpointMessageProcessingPlugin.idl";
 import "IMidiEndpointMessageListener.idl";
@@ -31,6 +31,6 @@ namespace Windows.Devices.Midi2
     {
         MidiMessageTypeEndpointListener();
 
-        IVector<MidiUmpMessageType> IncludeMessageTypes{ get; };
+        IVector<MidiMessageType> IncludeMessageTypes{ get; };
     }
 }

@@ -57,7 +57,7 @@ DriverEntry(
 Routine Description:
     DriverEntry initializes the driver and is the first routine called by the
     system after the driver is loaded. DriverEntry specifies the other entry
-    points in the function driver, such as EvtDevice and DriverUnload.
+    points in the function driver, suopych as EvtDevice and DriverUnload.
 
 Parameters Description:
 
@@ -93,8 +93,7 @@ Return Value:
     // Register a cleanup callback so that we can call WPP_CLEANUP when
     // the framework driver object is deleted during driver unload.
     //
-    WDF_OBJECT_ATTRIBUTES_INIT(&attributes);
-    attributes.EvtCleanupCallback = USBUMPDriverEvtDriverContextCleanup;
+    WDF_OBJECT_ATTRIBUTES_INIT(&attributes);  attributes.EvtCleanupCallback = USBUMPDriverEvtDriverContextCleanup;
 
     WDF_DRIVER_CONFIG_INIT(&config,
                            USBUMPDriverEvtDeviceAdd

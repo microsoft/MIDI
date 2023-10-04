@@ -26,8 +26,12 @@
 #include <winrt/Windows.Storage.Streams.h>
 #include <winrt/Windows.Storage.h>
 
+#include <winrt/Windows.Data.Json.h>
+
 
 #include <stdint.h>
+#include <sstream>
+#include <iomanip>
 
 // internal
 #include "trace_logging.h"
@@ -37,7 +41,12 @@
 #include "memory_buffer.h"
 
 // shared
-#include "midi_ump.h"
+#include "midi_ump.h"   // general shared
+
+
+//#include <wil/resource.h>
+//#include <devpropdef.h> // required by MidiDefs.h
+//#include "MidiDefs.h"   // from the service inc folder
 
 namespace foundation = ::winrt::Windows::Foundation;
 namespace collections = ::winrt::Windows::Foundation::Collections;
@@ -52,10 +61,12 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 namespace implementation = winrt::Windows::Devices::Midi2::implementation;
 namespace midi2 = ::winrt::Windows::Devices::Midi2;
 
-#include "MidiUmp32.h"
-#include "MidiUmp64.h"
-#include "MidiUmp96.h"
-#include "MidiUmp128.h"
+#include "midi_stream_message_defs.h"
+
+#include "MidiMessage32.h"
+#include "MidiMessage64.h"
+#include "MidiMessage96.h"
+#include "MidiMessage128.h"
 
 #include "MidiFunctionBlock.h"
 #include "MidiGroupTerminalBlock.h"
@@ -73,7 +84,10 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 #include "MidiInputEndpointOpenOptions.h"
 #include "MidiOutputEndpointOpenOptions.h"
 #include "MidiBidirectionalEndpointOpenOptions.h"
-#include "MidiBidirectionalAggregatedEndpointOpenOptions.h"
+
+#include "MidiEndpointConfigurator.h"
+#include "MidiFunctionBlockEndpointListener.h"
+#include "MidiEndpointMetadataEndpointListener.h"
 
 #include "MidiMessageReceivedEventArgs.h"
 
@@ -83,5 +97,4 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 #include "MidiServicePingResponseSummary.h"
 #include "MidiTransportInformation.h"
 #include "MidiService.h"
-
 

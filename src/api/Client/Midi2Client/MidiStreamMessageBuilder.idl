@@ -1,0 +1,131 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+
+import "IMidiUniversalPacket.idl";
+import "MidiMessage128.idl";
+
+import "MidiFunctionBlockUIHintEnum.idl";
+import "MidiFunctionBlockMidi10Enum.idl";
+import "MidiFunctionBlockDirectionEnum.idl";
+import "MidiEndpointDiscoveryFilterFlagsEnum.idl";
+import "MidiFunctionBlockDiscoveryFilterFlagsEnum.idl";
+
+namespace Windows.Devices.Midi2
+{
+    [MIDI_API_CONTRACT(1)]
+    static runtimeclass MidiStreamMessageBuilder
+    {
+        static MidiMessage128 BuildEndpointDiscoveryMessage(
+            MIDI_TIMESTAMP timestamp,
+            UInt8 umpVersionMajor,
+            UInt8 umpVersionMinor,
+            MidiEndpointDiscoveryFilterFlags requestFlags
+            );
+
+        static MidiMessage128 BuildEndpointInformationNotificationMessage(
+            MIDI_TIMESTAMP timestamp,
+            UInt8 umpVersionMajor,
+            UInt8 umpVersionMinor,
+            Boolean hasStaticFunctionBlocks,
+            UInt8 numberOfFunctionBlocks,
+            Boolean supportsMidi20Protocol,
+            Boolean supportsMidi10Protocol,
+            Boolean supportsReceivingJitterReductionTimestamps,
+            Boolean supportsSendingJitterReductionTimestamps
+            );
+
+        static MidiMessage128 BuildDeviceIdentityNotificationMessage(
+            MIDI_TIMESTAMP timestamp,
+            UInt8 deviceManufacturerSysExIdByte1,
+            UInt8 deviceManufacturerSysExIdByte2,
+            UInt8 deviceManufacturerSysExIdByte3,
+            UInt8 deviceFamilyLsb,
+            UInt8 deviceFamilyMsb,
+            UInt8 deviceFamilyModelNumberLsb,
+            UInt8 deviceFamilyModelNumberMsb,
+            UInt8 softwareRevisionLevelByte1,
+            UInt8 softwareRevisionLevelByte2,
+            UInt8 softwareRevisionLevelByte3,
+            UInt8 softwareRevisionLevelByte4
+            );
+
+        static IVector<MidiMessage128> BuildEndpointNameNotificationMessages(
+            MIDI_TIMESTAMP timestamp,
+            String name
+            );
+
+        static IVector<MidiMessage128> BuildProductInstanceIdNotificationMessages(
+            MIDI_TIMESTAMP timestamp,
+            String productInstanceId
+            );
+
+
+
+        static String ParseEndpointNameNotificationMessages(
+            IVector<MidiMessage128> messages
+        );
+
+        static String ParseProductInstanceIdNotificationMessages(
+            IVector<MidiMessage128> messages
+        );
+
+
+
+
+        static MidiMessage128 BuildStreamConfigurationRequestMessage(
+            MIDI_TIMESTAMP timestamp,
+            UInt8 protocol,
+            Boolean expectToReceiveJRTimestamps,
+            Boolean requestToSendJRTimestamps
+            );
+
+        static MidiMessage128 BuildStreamConfigurationNotificationMessage(
+            MIDI_TIMESTAMP timestamp,
+            UInt8 protocol,
+            Boolean confirmationWillReceiveJRTimestamps,
+            Boolean confirmationSendJRTimestamps
+            );
+
+
+        // Function blocks
+
+        static MidiMessage128 BuildFunctionBlockDiscoveryMessage(
+            MIDI_TIMESTAMP timestamp,
+            UInt8 functionBlockNumber,
+            MidiFunctionBlockDiscoveryFilterFlags requestFlags
+            );
+
+        static MidiMessage128 BuildFunctionBlockInfoNotificationMessage(
+            MIDI_TIMESTAMP timestamp,
+            Boolean active,
+            UInt8 functionBlockNumber,
+            MidiFunctionBlockUIHint uiHint,
+            MidiFunctionBlockMidi10 midi10,
+            MidiFunctionBlockDirection direction,
+            UInt8 firstGroup,
+            UInt8 numberOfGroups,
+            UInt8 midiCIVersionFormat,
+            UInt8 maxNumberSysEx8Streams
+            );
+
+        static IVector<MidiMessage128> BuildFunctionBlockNameNotificationMessages(
+            MIDI_TIMESTAMP timestamp,
+            UInt8 functionBlockNumber,
+            String name
+            );
+
+        static String ParseFunctionBlockNameNotificationMessages(
+            IVector<MidiMessage128> messages
+            );
+
+    };
+}
