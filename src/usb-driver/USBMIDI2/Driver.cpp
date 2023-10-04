@@ -25,7 +25,7 @@ SOFTWARE.
 
 Module Name:
 
-    driver.c
+    Driver.cpp
 
 Abstract:
 

@@ -1,5 +1,3 @@
-#pragma once
-
 /************************************************************************************
 Copyright 2023 Association of Musical Electronics Industry
 Copyright 2023 Microsoft
@@ -39,6 +37,8 @@ Environment:
     user and kernel
 
 --*/
+
+#pragma once
 
 //
 // Define an Interface Guid so that app can find the device and talk to it.
