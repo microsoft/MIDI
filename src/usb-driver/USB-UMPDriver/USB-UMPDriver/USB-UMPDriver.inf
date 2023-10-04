@@ -31,7 +31,9 @@ WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with
 
 [Standard.NT$ARCH$]
 %USB-UMPDriver.DeviceDesc%=USB-UMPDriver_Device, USB\VID_CAFE&PID_4001
-%USB-UMPDriver.DeviceDesc%=USB-UMPDriver_Device, USB\VID_13B2&PID_0065
+; %USB-UMPDriver.DeviceDesc%=USB-UMPDriver_Device, USB\VID_13B2&PID_0065
+; %USB-UMPDriver.DeviceDesc%=USB-UMPDriver_Device, USB\Class_01&SubClass_03&Prot_00
+
 
 [USB-UMPDriver_Device.NT]
 CopyFiles=Drivers_Dir
@@ -81,7 +83,7 @@ KmdfLibraryVersion = $KMDFVERSION$
 
 [Strings]
 SPSVCINST_ASSOCSERVICE= 0x00000002
-ManufacturerName="<Your manufacturer name>" ;TODO: Replace with your manufacturer name
+ManufacturerName="AmeNote" ;TODO: Replace with your manufacturer name
 ClassName="Universal Serial Bus devices"
 DiskName = "USB-UMPDriver Installation Disk"
 USB-UMPDriver.DeviceDesc = "USB-UMPDriver Device"

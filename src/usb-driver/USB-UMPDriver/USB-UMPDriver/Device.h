@@ -44,14 +44,26 @@ Environment:
 
 EXTERN_C_START
 
+#define MAX_NUM_GROUPS_CABLES 16
+
 //
-// Structure to aid in conversion of USB MIDI 1.0 to UMP
+// Structures to aid in conversion between USB MIDI 1.0 and UMP
 typedef struct MIDI_STREAM_t
 {
     UCHAR       buffer[4];
     UCHAR       index;
     UCHAR       total;
 } MIDI_STREAM_TYPE;
+
+typedef struct
+{
+    uint8_t   wordCount;
+    union ump_device
+    {
+        uint32_t  umpWords[4];
+        uint8_t   umpBytes[sizeof(uint32_t) * 4];
+    } umpData;
+} UMP_PACKET;
 
 //
 // Structure to buffer read data between USB continuous reader
@@ -90,6 +102,10 @@ typedef struct _DEVICE_CONTEXT
 
     // Read Ring Buffer
     READ_RING_TYPE              ReadRingBuf;
+
+    // Buffers and information for USB MIDI 1.0 and UMP translations
+    bool                        midi1IsInSysex[MAX_NUM_GROUPS_CABLES];
+    MIDI_STREAM_TYPE            midi1OutSysex[MAX_NUM_GROUPS_CABLES];
 
     // Utility for converting MIDI 1.0 <-> MIDI 2.0
     // Currently part of MIDI Association protected materials, to be released to Public soon
