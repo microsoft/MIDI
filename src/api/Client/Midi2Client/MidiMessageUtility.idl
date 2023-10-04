@@ -18,6 +18,9 @@ import "MidiPacketTypeEnum.idl";
 import "MidiGroup.idl";
 import "MidiChannel.idl";
 
+import "Midi1ChannelVoiceMessageStatusEnum.idl";
+import "Midi2ChannelVoiceMessageStatusEnum.idl";
+
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
@@ -35,6 +38,22 @@ namespace Windows.Devices.Midi2
         static UInt32 ReplaceGroup(UInt32 word0, MidiGroup newGroup);
         static MidiGroup GetGroup(UInt32 word0);
 
+        static UInt8 GetStatusFromUtilityMessage(UInt32 word0);
+        static Midi1ChannelVoiceMessageStatus GetStatusFromMidi1ChannelVoiceMessage(UInt32 word0);
+        static Midi2ChannelVoiceMessageStatus GetStatusFromMidi2ChannelVoiceMessageFirstWord(UInt32 word0);
+        
+
+        static UInt8 GetStatusBankFromFlexDataMessageFirstWord(UInt32 word0);
+        static UInt8 GetStatusFromFlexDataMessageFirstWord(UInt32 word0);
+
+        static UInt8 GetStatusFromSystemCommonMessage(UInt32 word0);
+
+        static UInt8 GetStatusFromDataMessage64FirstWord(UInt32 word0);
+        static UInt8 GetNumberOfBytesFromDataMessage64FirstWord(UInt32 word0);
+
+        static UInt8 GetStatusFromDataMessage128FirstWord(UInt32 word0);
+        static UInt8 GetNumberOfBytesFromDataMessage128FirstWord(UInt32 word0);
+
 
         static Boolean MessageTypeHasChannelField(MidiMessageType messageType);
         static UInt32 ReplaceChannel(UInt32 word0, MidiChannel newChannel);
@@ -42,6 +61,9 @@ namespace Windows.Devices.Midi2
 
         static UInt8 GetFormFromStreamMessageFirstWord(UInt32 word0);
         static UInt16 GetStatusFromStreamMessageFirstWord(UInt32 word0);
+
+
+        static String GetMessageFriendlyNameFromFirstWord(UInt32 word0);
 
     };
 }

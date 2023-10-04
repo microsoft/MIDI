@@ -24,6 +24,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         static midi2::MidiPacketType GetPacketTypeFromFirstMessageWord(_In_ uint32_t const word0) noexcept;
 
 
+
         // This is likely to need a change in logic as new messages are added
         static bool MessageTypeHasGroupField(_In_ midi2::MidiMessageType const messageType) noexcept;
         static uint32_t ReplaceGroup(_In_ uint32_t const word0, _In_ midi2::MidiGroup const newGroup) noexcept;
@@ -34,8 +35,29 @@ namespace winrt::Windows::Devices::Midi2::implementation
         static uint32_t ReplaceChannel(_In_ uint32_t const word0, _In_ midi2::MidiChannel const newChannel) noexcept;
         static midi2::MidiChannel GetChannel(_In_ uint32_t const word0);
 
-        static uint8_t GetFormFromStreamMessageFirstWord(_In_ uint32_t word0) noexcept;
-        static uint16_t GetStatusFromStreamMessageFirstWord(_In_ uint32_t word0) noexcept;
+        static uint8_t GetFormFromStreamMessageFirstWord(_In_ uint32_t const word0) noexcept;
+        static uint16_t GetStatusFromStreamMessageFirstWord(_In_ uint32_t const word0) noexcept;
+        static uint8_t GetStatusFromSystemCommonMessage(_In_ uint32_t const word0) noexcept;
+
+        static uint8_t GetStatusFromDataMessage64FirstWord(_In_ uint32_t const word0) noexcept;
+        static uint8_t GetNumberOfBytesFromDataMessage64FirstWord(_In_ uint32_t const word0) noexcept;
+
+        static uint8_t GetStatusFromDataMessage128FirstWord(_In_ uint32_t const word0) noexcept;
+        static uint8_t GetNumberOfBytesFromDataMessage128FirstWord(_In_ uint32_t const word0) noexcept;
+
+
+        static winrt::hstring GetMessageFriendlyNameFromFirstWord(_In_ uint32_t const word0) noexcept;
+
+
+        static uint8_t GetStatusFromUtilityMessage(_In_ uint32_t const word0) noexcept;
+
+        static Midi1ChannelVoiceMessageStatus GetStatusFromMidi1ChannelVoiceMessage(_In_ uint32_t const word0) noexcept;
+        static Midi2ChannelVoiceMessageStatus GetStatusFromMidi2ChannelVoiceMessageFirstWord(_In_ uint32_t const word0) noexcept;
+        
+
+        static uint8_t GetStatusBankFromFlexDataMessageFirstWord(_In_ uint32_t const word0) noexcept;
+        static uint8_t GetStatusFromFlexDataMessageFirstWord(_In_ uint32_t const word0) noexcept;
+
 
     };
 }

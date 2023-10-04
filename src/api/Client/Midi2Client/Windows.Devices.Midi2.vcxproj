@@ -241,8 +241,12 @@
     <ClInclude Include="MidiBidirectionalEndpointOpenOptions.h">
       <DependentUpon>MidiBidirectionalEndpointOpenOptions.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiEndpointDeviceInformation.h" />
-    <ClInclude Include="MidiEndpointDeviceWatcher.h" />
+      <ClInclude Include="MidiEndpointDeviceInformation.h">
+          <DependentUpon>MidiEndpointDeviceInformation.idl</DependentUpon>
+      </ClInclude>
+      <ClInclude Include="MidiEndpointDeviceWatcher.h">
+          <DependentUpon>MidiEndpointDeviceWatcher.idl</DependentUpon>
+      </ClInclude>
     <ClInclude Include="MidiEndpointMetadataCacheUpdatedEventArgs.h">
       <DependentUpon>MidiEndpointMetadataCacheUpdatedEventArgs.idl</DependentUpon>
     </ClInclude>
@@ -383,8 +387,12 @@
     <ClCompile Include="MidiBidirectionalEndpointOpenOptions.cpp">
       <DependentUpon>MidiBidirectionalEndpointOpenOptions.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiEndpointDeviceInformation.cpp" />
-    <ClCompile Include="MidiEndpointDeviceWatcher.cpp" />
+      <ClCompile Include="MidiEndpointDeviceInformation.cpp">
+          <DependentUpon>MidiEndpointDeviceInformation.idl</DependentUpon>
+      </ClCompile>
+      <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
+          <DependentUpon>MidiEndpointDeviceWatcher.idl</DependentUpon>
+      </ClCompile>
     <ClCompile Include="MidiEndpointMetadataCacheUpdatedEventArgs.cpp">
       <DependentUpon>MidiEndpointMetadataCacheUpdatedEventArgs.idl</DependentUpon>
     </ClCompile>

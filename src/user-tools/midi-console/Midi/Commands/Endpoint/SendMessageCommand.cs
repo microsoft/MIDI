@@ -101,8 +101,24 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             bool openSuccess = false;
 
-            // todo: update loc strings
+            // when this goes out of scope, it will dispose of the session, which closes the connections
             using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
+
+            var bidiOpenOptions = new MidiBidirectionalEndpointOpenOptions();
+
+
+            if (settings.AutoProtocolNegotiation == false)
+            {
+                bidiOpenOptions.DisableAutomaticStreamConfiguration = true;
+            }
+
+            if (settings.AutoDiscovery == false)
+            {
+                bidiOpenOptions.DisableAutomaticEndpointMetadataHandling = true;
+                bidiOpenOptions.DisableAutomaticFunctionBlockMetadataHandling = true;
+            }
+
+
 
 
             AnsiConsole.Status()
@@ -116,7 +132,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                         if (endpointDirection == EndpointDirection.Bidirectional)
                         {
-                            connection = session.ConnectBidirectionalEndpoint(endpointId);
+                            connection = session.ConnectBidirectionalEndpoint(endpointId, bidiOpenOptions);
                         }
                         else if (endpointDirection == EndpointDirection.Out)
                         {
@@ -164,6 +180,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 table.AddColumn(Strings.TableColumnHeaderCommonTimestamp);
                 table.AddColumn(Strings.SendMessageResultTableColumnHeaderWordsSent);
                 table.AddColumn(Strings.TableColumnHeaderCommonMessageType);
+                table.AddColumn(Strings.TableColumnHeaderCommonDetailedMessageType);
 
                 AnsiConsole.Live(table)
                     .Start(ctx =>
@@ -177,11 +194,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                                 // TODO: check for error or other result
 
+                                
 
                                 table.AddRow(
                                     AnsiMarkupFormatter.FormatTimestamp(timestamp),
                                     AnsiMarkupFormatter.FormatMidiWords(settings.Words),
-                                    AnsiMarkupFormatter.FormatMessageType(MidiMessageUtility.GetMessageTypeFromFirstMessageWord(settings.Words[0]))
+                                    AnsiMarkupFormatter.FormatMessageType(MidiMessageUtility.GetMessageTypeFromFirstMessageWord(settings.Words[0])),
+                                    AnsiMarkupFormatter.FormatDetailedMessageType(MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(settings.Words[0]))
                                     );
 
                                 ctx.Refresh();

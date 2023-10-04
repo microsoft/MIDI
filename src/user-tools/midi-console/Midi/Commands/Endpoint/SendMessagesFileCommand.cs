@@ -18,7 +18,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         public sealed class Settings : SendMessageCommandSettings
         {
             [LocalizedDescription("ParameterSendMessagesFileCommandFile")]
-            [CommandArgument(2, "<Input File>")]
+            [CommandArgument(1, "<Input File>")]
             public string InputFile { get; set; }
 
             [EnumLocalizedDescription("ParameterSendMessagesFileFieldDelimiter", typeof(ParseFieldDelimiter))]
@@ -33,17 +33,16 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             [LocalizedDescription("ParameterSendMessagesFileReplaceGroup")]
             [CommandOption("-g|--new-group-index")]
-            public byte? NewGroupIndex { get; set; }
+            public int? NewGroupIndex { get; set; }
 
-            Settings()
-            {
-                InputFile = String.Empty;
-            }
+            //Settings()
+            //{
+            //    InputFile = String.Empty;
+            //}
         }
 
         public override ValidationResult Validate(CommandContext context, Settings settings)
         {
-
             if (!System.IO.File.Exists(settings.InputFile))
             {
                 return ValidationResult.Error($"File not found {settings.InputFile}.");
@@ -169,10 +168,12 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             AnsiConsole.Live(table)
                 .Start(ctx =>
                 {
+                    // TODO: Localize these
                     table.AddColumn("Line");               
                     table.AddColumn("Timestamp");          // a file with a timestamp isn't useful, really. But we could support an offset like +value
                     table.AddColumn("Sent Data");
                     table.AddColumn("Message Type");
+                    table.AddColumn("Specific Type");
 
                     ctx.Refresh();
                     //AnsiConsole.WriteLine("Created table");
@@ -254,12 +255,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                     // send the message
                                     connection.SendMessageWordArray(timestamp, words, 0, (byte)words.Count());
 
+                                    string detailedMessageType = MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(words[0]);
+
                                     // display the sent data
                                     table.AddRow(
                                         AnsiMarkupFormatter.FormatGeneralNumber(lineNumber), 
                                         AnsiMarkupFormatter.FormatTimestamp(timestamp),
                                         AnsiMarkupFormatter.FormatMidiWords(words),
-                                        AnsiMarkupFormatter.FormatMessageType(MidiMessageUtility.GetMessageTypeFromFirstMessageWord(words[0]))
+                                        AnsiMarkupFormatter.FormatMessageType(MidiMessageUtility.GetMessageTypeFromFirstMessageWord(words[0])),
+                                        AnsiMarkupFormatter.FormatDetailedMessageType(MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(words[0]))
                                         );
 
                                     ctx.Refresh();

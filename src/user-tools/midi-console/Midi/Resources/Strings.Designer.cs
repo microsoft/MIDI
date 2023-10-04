@@ -740,6 +740,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Specific Type.
+        /// </summary>
+        internal static string TableColumnHeaderCommonDetailedMessageType {
+            get {
+                return ResourceManager.GetString("TableColumnHeaderCommonDetailedMessageType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Message Type.
         /// </summary>
         internal static string TableColumnHeaderCommonMessageType {

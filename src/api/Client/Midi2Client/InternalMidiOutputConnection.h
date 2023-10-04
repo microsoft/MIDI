@@ -126,8 +126,8 @@ namespace Windows::Devices::Midi2::Internal
     // implementation must be in header (or otherwise included) for template classes
 
 
-    template <typename TEndpointAbstraction>
     _Use_decl_annotations_
+    template <typename TEndpointAbstraction>
     midi2::MidiSendMessageResult InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageRaw(
             winrt::com_ptr<TEndpointAbstraction> endpoint,
             void* data, 
@@ -189,27 +189,9 @@ namespace Windows::Devices::Midi2::Internal
         return SendMessageRaw(m_outputAbstraction, (void*)(&message), byteLength, timestamp);
     }
 
-    template <typename TEndpointAbstraction>
-    midi2::MidiSendMessageResult InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageStruct(
-        internal::MidiTimestamp timestamp,
-        midi2::MidiMessageStruct const& message,
-        uint8_t wordCount)
-    {
-        if (!ValidateUmp(message.Word0, wordCount))
-        {
-            internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for this UMP", wordCount, timestamp);
 
-            return midi2::MidiSendMessageResult::ErrorInvalidMessageTypeForWordCount;
-        }
-
-        auto byteLength = (uint8_t)(wordCount * sizeof(uint32_t));
-
-        // TODO: is enddianness ok here?
-        return SendMessageRaw(m_outputAbstraction, (void*)(&message), byteLength, timestamp);
-    }
-
-    template <typename TEndpointAbstraction>
     _Use_decl_annotations_
+    template <typename TEndpointAbstraction>
     void* InternalMidiOutputConnection<TEndpointAbstraction>::GetUmpDataPointer(
             midi2::IMidiUniversalPacket const& ump,
             uint8_t& dataSizeOut)
@@ -262,7 +244,7 @@ namespace Windows::Devices::Midi2::Internal
                 {
                     internal::LogGeneralError(__FUNCTION__, L"endpoint data pointer is nullptr");
 
-                    return false;
+                    return midi2::MidiSendMessageResult::ErrorInvalidMessageOther;
                 }
 
                 return SendMessageRaw(endpoint, umpDataPointer, umpDataSize, ump.Timestamp());
@@ -286,7 +268,7 @@ namespace Windows::Devices::Midi2::Internal
 
     template <typename TEndpointAbstraction>
     _Use_decl_annotations_
-    midi2::MidiSendMessageResult InternalMidiOutputConnection<TEndpointAbstraction>::SendUmpBuffer(
+    midi2::MidiSendMessageResult InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageBuffer(
             const internal::MidiTimestamp timestamp,
             winrt::Windows::Foundation::IMemoryBuffer const& buffer,
             const uint32_t byteOffset,
@@ -348,7 +330,7 @@ namespace Windows::Devices::Midi2::Internal
     // sends a single UMP's worth of words
     template <typename TEndpointAbstraction>
     _Use_decl_annotations_
-    midi2::MidiSendMessageResult  InternalMidiOutputConnection<TEndpointAbstraction>::SendUmpWordArray(
+    midi2::MidiSendMessageResult InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageWordArray(
             internal::MidiTimestamp const timestamp,
             winrt::array_view<uint32_t const> words,
             uint32_t const startIndex,

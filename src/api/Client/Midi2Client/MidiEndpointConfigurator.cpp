@@ -71,7 +71,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                     // TODO: remove any function block information we already have cached
 
                     // Request function blocks. Those are received by another listener
-                    // We only request function blocks after we've recieved the info notification
+                    // We only request function blocks after we've received the info notification
                     // with a function block count > 0
 
                     if (info.FunctionBlockCount() > 0)

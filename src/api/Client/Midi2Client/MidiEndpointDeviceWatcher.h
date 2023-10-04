@@ -18,7 +18,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void Start();
         void Stop();
 
-        collections::IMap<hstring, midi2::MidiEndpointDeviceInformation> EndpointDevices();
+        collections::IMap<winrt::hstring, midi2::MidiEndpointDeviceInformation> EndpointDevices();
     };
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation

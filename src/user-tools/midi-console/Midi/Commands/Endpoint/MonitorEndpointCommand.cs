@@ -71,7 +71,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             var table = new Table();
 
-
+            // when this goes out of scope, it will dispose of the session, which closes the connections
             using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.MonitorSessionNameSuffix}");
 
             AnsiConsole.Status()
@@ -125,14 +125,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         {
                             index++;
 
-                            // TODO: Localize these
-
                             if (!firstMessageReceived)
                             {
                                 table.AddColumn(Strings.CommonTableHeaderIndex);
                                 table.AddColumn(Strings.TableColumnHeaderCommonTimestamp);
                                 table.AddColumn(Strings.MonitorEndpointResultTableColumnHeaderWordsReceived);
                                 table.AddColumn(Strings.TableColumnHeaderCommonMessageType);
+                                table.AddColumn(Strings.TableColumnHeaderCommonDetailedMessageType);
 
                                 firstMessageReceived = true;
                             }
@@ -274,11 +273,14 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 data = AnsiMarkupFormatter.FormatMidiWords(ump32.Word0);
             }
 
+            string detailedMessageType = MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(ump.PeekFirstWord());
+
             table.AddRow(
                 new Markup(AnsiMarkupFormatter.FormatRowIndex(index)),
                 new Markup(AnsiMarkupFormatter.FormatTimestamp(ump.Timestamp)), 
                 new Markup(data),
-                new Markup(AnsiMarkupFormatter.FormatMessageType(ump.MessageType))
+                new Markup(AnsiMarkupFormatter.FormatMessageType(ump.MessageType)), 
+                new Markup(AnsiMarkupFormatter.FormatDetailedMessageType(detailedMessageType))
                 );
 
         }

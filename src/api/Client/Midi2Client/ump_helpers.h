@@ -15,6 +15,14 @@
 #define MIDIWORDNIBBLE3(x) ((uint8_t)((x & 0x00F00000) >> 20))
 #define MIDIWORDNIBBLE4(x) ((uint8_t)((x & 0x000F0000) >> 16))
 
+
+#define MIDIWORDBYTE1(x) ((uint8_t)((x & 0xFF000000) >> 24))
+#define MIDIWORDBYTE2(x) ((uint8_t)((x & 0x00FF0000) >> 16))
+#define MIDIWORDBYTE3(x) ((uint8_t)((x & 0x0000FF00) >> 8))
+#define MIDIWORDBYTE4(x) ((uint8_t)((x & 0x000000FF)))
+
+
+
 #define UMP32_WORD_COUNT 1
 #define UMP64_WORD_COUNT 2
 #define UMP96_WORD_COUNT 3
@@ -22,7 +30,7 @@
 
 namespace Windows::Devices::Midi2::Internal
 {
-    inline std::uint8_t GetUmpLengthInMidiWordsFromMessageType(_In_ const std::uint8_t messageType)
+    inline std::uint8_t GetUmpLengthInMidiWordsFromMessageType(_In_ const std::uint8_t messageType) noexcept
     {
         switch (messageType & 0x0F)
         {
@@ -58,7 +66,7 @@ namespace Windows::Devices::Midi2::Internal
     
 
 
-    inline void SetUmpMessageType(_In_ std::uint32_t& firstWord, _In_ const uint8_t messageType)
+    inline void SetUmpMessageType(_In_ std::uint32_t& firstWord, _In_ const uint8_t messageType) noexcept
     {
         // first four bits of the word is the message type
 
@@ -67,18 +75,18 @@ namespace Windows::Devices::Midi2::Internal
         firstWord = (firstWord & 0x0FFFFFFF) | t;
     }
 
-    inline std::uint8_t GetUmpMessageTypeFromFirstWord(_In_ const std::uint32_t firstWord)
+    inline std::uint8_t GetUmpMessageTypeFromFirstWord(_In_ const std::uint32_t firstWord) noexcept
     {
         return (uint8_t)(MIDIWORDNIBBLE1(firstWord));
     }
 
-    inline std::uint8_t GetUmpLengthInMidiWordsFromFirstWord(_In_ const std::uint32_t firstWord)
+    inline std::uint8_t GetUmpLengthInMidiWordsFromFirstWord(_In_ const std::uint32_t firstWord) noexcept
     {
         return GetUmpLengthInMidiWordsFromMessageType(GetUmpMessageTypeFromFirstWord(firstWord));
     }
 
 
-    inline std::uint8_t GetUmpLengthInBytesFromFirstWord(_In_ const std::uint32_t firstWord)
+    inline std::uint8_t GetUmpLengthInBytesFromFirstWord(_In_ const std::uint32_t firstWord) noexcept
     {
         return (uint8_t)(GetUmpLengthInMidiWordsFromFirstWord(firstWord) * sizeof(uint32_t));
     }
@@ -92,14 +100,14 @@ namespace Windows::Devices::Midi2::Internal
 #define MIDI_MESSAGE_CHANNEL_BITSHIFT 16
 
 
-    inline std::uint8_t GetGroupIndexFromFirstWord(_In_ const std::uint32_t firstWord)
+    inline std::uint8_t GetGroupIndexFromFirstWord(_In_ const std::uint32_t firstWord) noexcept
     {
         return (uint8_t)((firstWord & MIDI_MESSAGE_GROUP_WORD_DATA_MASK) >> MIDI_MESSAGE_GROUP_BITSHIFT);
     }
 
 
     // assumes the caller has already checked to see if the message type has a group field. Otherwise, this will stomp on their data
-    inline std::uint32_t GetFirstWordWithNewGroup(_In_ std::uint32_t const firstWord, _In_ std::uint8_t const groupIndex)
+    inline std::uint32_t GetFirstWordWithNewGroup(_In_ std::uint32_t const firstWord, _In_ std::uint8_t const groupIndex) noexcept
     {
         if (groupIndex > 15)
             return firstWord;
@@ -116,7 +124,7 @@ namespace Windows::Devices::Midi2::Internal
 
     // NOTE: This check needs to change when new message types are added. The WinRT enum will need to change as well.
 
-    inline bool MessageTypeHasGroupField(_In_ std::uint8_t messageType)
+    inline bool MessageTypeHasGroupField(_In_ std::uint8_t messageType) noexcept
     {
         switch (messageType)
         {
@@ -147,14 +155,14 @@ namespace Windows::Devices::Midi2::Internal
         }
     }
 
-    inline std::uint8_t GetChannelIndexFromFirstWord(_In_ const std::uint32_t firstWord)
+    inline std::uint8_t GetChannelIndexFromFirstWord(_In_ const std::uint32_t firstWord) noexcept
     {
         return (uint8_t)((firstWord & MIDI_MESSAGE_CHANNEL_WORD_DATA_MASK) >> MIDI_MESSAGE_CHANNEL_BITSHIFT);
     }
 
 
     // assumes the caller has already checked to see if the message type has a group field. Otherwise, this will stomp on their data
-    inline std::uint32_t GetFirstWordWithNewChannel(_In_ std::uint32_t const firstWord, _In_ std::uint8_t const channelIndex)
+    inline std::uint32_t GetFirstWordWithNewChannel(_In_ std::uint32_t const firstWord, _In_ std::uint8_t const channelIndex) noexcept
     {
         if (channelIndex > 15)
             return firstWord;
@@ -169,7 +177,7 @@ namespace Windows::Devices::Midi2::Internal
         return newWord | channelValue;
     }
 
-    inline bool MessageTypeHasChannelField(_In_ std::uint8_t messageType)
+    inline bool MessageTypeHasChannelField(_In_ std::uint8_t messageType) noexcept
     {
         switch (messageType)
         {
@@ -200,63 +208,63 @@ namespace Windows::Devices::Midi2::Internal
     }
 
 
-    inline uint32_t CleanupInt20(_In_ uint32_t const value)
+    inline uint32_t CleanupInt20(_In_ uint32_t const value) noexcept
     {
         return value & (uint32_t)0x000FFFFF;
     }
 
 
-    inline uint16_t CleanupInt14(_In_ uint16_t const value)
+    inline uint16_t CleanupInt14(_In_ uint16_t const value) noexcept
     {
         return value & (uint16_t)0x3FFF;
     }
 
-    inline uint16_t CleanupInt10(_In_ uint16_t const value)
+    inline uint16_t CleanupInt10(_In_ uint16_t const value) noexcept
     {
         return value & (uint16_t)0x03FF;
     }
 
     // 7 bit byte
-    inline uint8_t CleanupByte7(_In_ uint8_t const value)
+    inline uint8_t CleanupByte7(_In_ uint8_t const value) noexcept
     {
         return value & (uint8_t)0x7F;
     }
 
     // 4-bit value
-    inline uint8_t CleanupNibble(_In_ uint8_t const value)
+    inline uint8_t CleanupNibble(_In_ uint8_t const value) noexcept
     {
         return value & (uint8_t)0x0F;
     }
 
     // 2-bit value
-    inline uint8_t CleanupCrumb(_In_ uint8_t const value)
+    inline uint8_t CleanupCrumb(_In_ uint8_t const value) noexcept
     {
         return value & (uint8_t)0x03;
     }
 
 
-    // in order from msb to lsb
+    // in order from msb to lsb. Avoids endian issues
     inline uint32_t MidiWordFromBytes(
-        _In_ uint8_t byte0,
-        _In_ uint8_t byte1,
-        _In_ uint8_t byte2,
-        _In_ uint8_t byte3
-        )
+        _In_ uint8_t const byte0,
+        _In_ uint8_t const byte1,
+        _In_ uint8_t const byte2,
+        _In_ uint8_t const byte3
+        ) noexcept
     {
         return (uint32_t)(byte0 << 24 | byte1 << 16 | byte2 << 8 | byte3);
     }
 
 
     inline uint8_t GetFormFromStreamMessageFirstWord(
-        _In_ uint32_t word0
-        )
+        _In_ uint32_t const word0
+        ) noexcept
     {
         return (uint8_t)((word0 & 0x0C000000) >> 26);
     }
 
     inline uint16_t GetStatusFromStreamMessageFirstWord(
-        _In_ uint32_t word0
-        )
+        _In_ uint32_t const word0
+        ) noexcept
     {
         return (uint16_t)((word0 & 0x03FF0000) >> 16);
     }
@@ -265,37 +273,37 @@ namespace Windows::Devices::Midi2::Internal
 
 
     inline bool GetFunctionBlockActiveFlagFromInfoNotificationFirstWord(
-        _In_ uint32_t word0
-        )
+        _In_ uint32_t const word0
+        ) noexcept
     {
         // high bit on the second 16 bit half of the first word
         return (bool)((word0 & 0x00008000) > 0);
     }
 
     inline uint8_t GetFunctionBlockNumberFromInfoNotificationFirstWord(
-        _In_ uint32_t word0
-    )
+        _In_ uint32_t const word0
+    ) noexcept
     {
         return (uint8_t)((word0 & 0x00007F00) >> 8);
     }
 
     inline uint8_t GetFunctionBlockUIHintFromInfoNotificationFirstWord(
-        _In_ uint32_t word0
-    )
+        _In_ uint32_t const word0
+    ) noexcept
     {
         return (uint8_t)((word0 & 0x00000030) >> 4);
     }
 
     inline uint8_t GetFunctionBlockMidi10FromInfoNotificationFirstWord(
-        _In_ uint32_t word0
-    )
+        _In_ uint32_t const word0
+    ) noexcept
     {
         return (uint8_t)((word0 & 0x0000000C) >> 2);
     }
 
     inline uint8_t GetFunctionBlockDirectionFromInfoNotificationFirstWord(
-        _In_ uint32_t word0
-    )
+        _In_ uint32_t const word0
+    ) noexcept
     {
         return (uint8_t)(word0 & 0x00000003);
     }
@@ -305,29 +313,29 @@ namespace Windows::Devices::Midi2::Internal
   
 
     inline uint8_t GetFunctionBlockFirstGroupFromInfoNotificationSecondWord(
-        _In_ uint32_t word1
-        )
+        _In_ uint32_t const word1
+        ) noexcept
     {
         return (uint8_t)((word1 & 0xFF000000) >> 24);
     }
 
     inline uint8_t GetFunctionBlockNumberOfGroupsFromInfoNotificationSecondWord(
-        _In_ uint32_t word1
-    )
+        _In_ uint32_t const word1
+    ) noexcept
     {
         return (uint8_t)((word1 & 0x00FF0000) >> 16);
     }
 
     inline uint8_t GetFunctionBlockMidiCIVersionFromInfoNotificationSecondWord(
-        _In_ uint32_t word1
-    )
+        _In_ uint32_t const word1
+    ) noexcept
     {
         return (uint8_t)((word1 & 0x0000FF00) >> 8);
     }
 
     inline uint8_t GetFunctionBlockMaxSysex8StreamsFromInfoNotificationSecondWord(
-        _In_ uint32_t word1
-    )
+        _In_ uint32_t const word1
+    ) noexcept
     {
         return (uint8_t)(word1 & 0x000000FF);
     }
@@ -338,62 +346,112 @@ namespace Windows::Devices::Midi2::Internal
 
 
     inline uint8_t GetEndpointInfoNotificationUmpVersionMajorFirstWord(
-        _In_ uint32_t word0
-    )
+        _In_ uint32_t const word0
+    ) noexcept
     {
         return (uint8_t)((word0 & 0x0000FF00) >> 8);
     }
 
     inline uint8_t GetEndpointInfoNotificationUmpVersionMinorFirstWord(
-        _In_ uint32_t word0
-    )
+        _In_ uint32_t const word0
+    ) noexcept
     {
         return (uint8_t)(word0 & 0x000000FF);
     }
 
     inline bool GetEndpointInfoNotificationStaticFunctionBlocksFlagFromSecondWord(
-        _In_ uint32_t word1
-    )
+        _In_ uint32_t const word1
+    ) noexcept
     {
         // highest bit is this flag
         return (bool)((word1 & 0x80000000) > 0);
     }
 
     inline uint8_t GetEndpointInfoNotificationNumberOfFunctionBlocksFromSecondWord(
-        _In_ uint32_t word1
-    )
+        _In_ uint32_t const word1
+    ) noexcept
     {
         return (uint8_t)((word1 & 0x7F000000) >> 24);
     }
 
     inline bool GetEndpointInfoNotificationMidi2ProtocolCapabilityFromSecondWord(
-        _In_ uint32_t word1
-    )
+        _In_ uint32_t const word1
+    ) noexcept
     {
         return (bool)((word1 & 0x00000200) > 0);
     }
 
     inline bool GetEndpointInfoNotificationMidi1ProtocolCapabilityFromSecondWord(
-        _In_ uint32_t word1
-    )
+        _In_ uint32_t const word1
+    ) noexcept
     {
         return (bool)((word1 & 0x00000100) > 0);
     }
 
     inline bool GetEndpointInfoNotificationReceiveJRTimestampCapabilityFromSecondWord(
-        _In_ uint32_t word1
-    )
+        _In_ uint32_t const word1
+    ) noexcept
     {
         return (bool)((word1 & 0x00000002) > 0);
     }
 
     inline bool GetEndpointInfoNotificationTransmitJRTimestampCapabilityFromSecondWord(
-        _In_ uint32_t word1
-    )
+        _In_ uint32_t const word1
+    ) noexcept
     {
         return (bool)((word1 & 0x00000001) > 0);
     }
 
 
+
+    inline uint8_t GetStatusFromUmp32FirstWord(_In_ uint32_t const word0) noexcept
+    {
+        return MIDIWORDNIBBLE3(word0);
+    }
+
+    // MIDI 1 and MIDI 2
+    inline uint8_t GetStatusFromChannelVoiceMessage(_In_ uint32_t const word0) noexcept
+    {
+        return MIDIWORDNIBBLE3(word0);
+    }
+
+    
+
+
+    inline uint8_t GetStatusBankFromFlexDataMessageFirstWord(_In_ uint32_t const word0) noexcept
+    {
+        return MIDIWORDBYTE3(word0);
+    }
+
+    inline uint8_t GetStatusFromFlexDataMessageFirstWord(_In_ uint32_t const word0) noexcept
+    {
+        return MIDIWORDBYTE4(word0);
+    }
+
+
+    inline uint8_t GetStatusFromSystemCommonMessage(_In_ uint32_t const word0) noexcept
+    {
+        return MIDIWORDBYTE2(word0);
+    }
+
+    inline uint8_t GetStatusFromDataMessage64FirstWord(_In_ uint32_t const word0) noexcept
+    {
+        return MIDIWORDNIBBLE3(word0);
+    }
+
+    inline uint8_t GetNumberOfBytesFromDataMessage64FirstWord(_In_ uint32_t const word0) noexcept
+    {
+        return MIDIWORDNIBBLE4(word0);
+    }
+
+    inline uint8_t GetStatusFromDataMessage128FirstWord(_In_ uint32_t const word0) noexcept
+    {
+        return MIDIWORDNIBBLE3(word0);
+    }
+
+    inline uint8_t GetNumberOfBytesFromDataMessage128FirstWord(_In_ uint32_t const word0) noexcept
+    {
+        return MIDIWORDNIBBLE4(word0);
+    }
 
 }

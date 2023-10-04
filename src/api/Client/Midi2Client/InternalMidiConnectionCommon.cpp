@@ -13,88 +13,88 @@
 
 namespace Windows::Devices::Midi2::Internal
 {
-    _Use_decl_annotations_
-    void InternalMidiConnectionCommon::SetInputConnectionOnPlugins(midi2::IMidiInputConnection inputConnection)
-    {
-        try
-        {
-            for (const auto& plugin : m_messageProcessingPlugins)
-            {
-                auto listener = plugin.try_as<midi2::IMidiEndpointMessageListener>();
+    //_Use_decl_annotations_
+    //void InternalMidiConnectionCommon::SetInputConnectionOnPlugins(midi2::IMidiInputConnection inputConnection)
+    //{
+    //    try
+    //    {
+    //        for (const auto& plugin : m_messageProcessingPlugins)
+    //        {
+    //            auto listener = plugin.try_as<midi2::IMidiEndpointMessageListener>();
 
-                if (listener != nullptr)
-                {
-                    listener.InputConnection(inputConnection);
-                }
-            }
-        }
-        catch (...)
-        {
-        }
-    }
+    //            if (listener != nullptr)
+    //            {
+    //                listener.InputConnection(inputConnection);
+    //            }
+    //        }
+    //    }
+    //    catch (...)
+    //    {
+    //    }
+    //}
 
-    _Use_decl_annotations_
-    void InternalMidiConnectionCommon::SetOutputConnectionOnPlugins(midi2::IMidiOutputConnection outputConnection)
-    {
-        try
-        {
-            for (const auto& plugin : m_messageProcessingPlugins)
-            {
-                auto responder = plugin.try_as<midi2::IMidiEndpointMessageResponder>();
+    //_Use_decl_annotations_
+    //void InternalMidiConnectionCommon::SetOutputConnectionOnPlugins(midi2::IMidiOutputConnection outputConnection)
+    //{
+    //    try
+    //    {
+    //        for (const auto& plugin : m_messageProcessingPlugins)
+    //        {
+    //            auto responder = plugin.try_as<midi2::IMidiEndpointMessageResponder>();
 
-                if (responder != nullptr)
-                {
-                    responder.OutputConnection(outputConnection);
-                }
-            }
-        }
-        catch (...)
-        {
-        }
-    }
+    //            if (responder != nullptr)
+    //            {
+    //                responder.OutputConnection(outputConnection);
+    //            }
+    //        }
+    //    }
+    //    catch (...)
+    //    {
+    //    }
+    //}
 
-    void InternalMidiConnectionCommon::InitializePlugins()
-    {
-        for (const auto& plugin : m_messageProcessingPlugins)
-        {
-            try
-            {
-                plugin.Initialize();
-            }
-            catch (...)
-            {
-            }
-        }
-    }
+    //void InternalMidiConnectionCommon::InitializePlugins()
+    //{
+    //    for (const auto& plugin : m_messageProcessingPlugins)
+    //    {
+    //        try
+    //        {
+    //            plugin.Initialize();
+    //        }
+    //        catch (...)
+    //        {
+    //        }
+    //    }
+    //}
 
-    void InternalMidiConnectionCommon::CallOnConnectionOpenedOnPlugins()
-    {
-        for (const auto& plugin : m_messageProcessingPlugins)
-        {
-            try
-            {
-                plugin.OnEndpointConnectionOpened();
-            }
-            catch (...)
-            {
-            }
-        }
-    }
+    //void InternalMidiConnectionCommon::CallOnConnectionOpenedOnPlugins()
+    //{
+    //    for (const auto& plugin : m_messageProcessingPlugins)
+    //    {
+    //        try
+    //        {
+    //            plugin.OnEndpointConnectionOpened();
+    //        }
+    //        catch (...)
+    //        {
+    //        }
+    //    }
+    //}
 
-    void InternalMidiConnectionCommon::CleanupPlugins()
-    {
-        for (const auto& plugin : m_messageProcessingPlugins)
-        {
-            try
-            {
-                plugin.Cleanup();
-            }
-            catch (...)
-            {
-                // eat any exceptions
-            }
-        }
-    }
+    //void InternalMidiConnectionCommon::CleanupPlugins()
+    //{
+    //    for (const auto& plugin : m_messageProcessingPlugins)
+    //    {
+    //        try
+    //        {
+    //            plugin.Cleanup();
+    //        }
+    //        catch (...)
+    //        {
+    //            // eat any exceptions
+    //        }
+    //    }
+    //}
 
     _Use_decl_annotations_
     bool InternalMidiConnectionCommon::ActivateMidiStream(

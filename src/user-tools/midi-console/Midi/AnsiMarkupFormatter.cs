@@ -24,6 +24,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             return "[darkseagreen3]" + messageType.ToString() + "[/]";
         }
 
+        public static string FormatDetailedMessageType(string detailedMessageType)
+        {
+            return "[steelblue1_1]" + detailedMessageType + "[/]";
+        }
+
 
         public static string FormatAppTitle(string title)
         {

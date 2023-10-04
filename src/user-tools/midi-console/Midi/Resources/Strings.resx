@@ -346,6 +346,9 @@ Timestamp</value>
   <data name="StatusCreatingSessionAndOpeningEndpoint" xml:space="preserve">
     <value>Creating session and opening endpoint...</value>
   </data>
+  <data name="TableColumnHeaderCommonDetailedMessageType" xml:space="preserve">
+    <value>Specific Type</value>
+  </data>
   <data name="TableColumnHeaderCommonMessageType" xml:space="preserve">
     <value>Message Type</value>
   </data>

@@ -45,7 +45,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // IStringable
         winrt::hstring ToString();
 
-
+        uint32_t PeekFirstWord() { return Word0(); }
 
         // internal for the sending code
         internal::PackedUmp32* GetInternalUmpDataPointer() { return &m_ump; }

@@ -164,8 +164,8 @@ namespace Windows::Devices::Midi2::Internal
 
 
 
-    _Use_decl_annotations_
     template<typename TEndpointAbstraction>
+    _Use_decl_annotations_
     void InternalMidiInputConnection<TEndpointAbstraction>::SetInputConnectionOnPlugins(midi2::IMidiInputConnection inputConnection) noexcept
     {
         try
@@ -186,8 +186,8 @@ namespace Windows::Devices::Midi2::Internal
         }
     }
 
-    _Use_decl_annotations_
     template<typename TEndpointAbstraction>
+    _Use_decl_annotations_
     void InternalMidiInputConnection<TEndpointAbstraction>::SetOutputConnectionOnPlugins(midi2::IMidiOutputConnection outputConnection) noexcept
     {
         try
@@ -208,8 +208,8 @@ namespace Windows::Devices::Midi2::Internal
         }
     }
 
-    _Use_decl_annotations_
     template<typename TEndpointAbstraction>
+    _Use_decl_annotations_
     void InternalMidiInputConnection<TEndpointAbstraction>::SetRequestedStreamConfigurationOnPlugins(midi2::MidiStreamConfigurationRequestedSettings settings) noexcept
     {
         try
@@ -232,8 +232,8 @@ namespace Windows::Devices::Midi2::Internal
 
 
 
-    _Use_decl_annotations_
     template<typename TEndpointAbstraction>
+    _Use_decl_annotations_
     void InternalMidiInputConnection<TEndpointAbstraction>::InitializePlugins() noexcept
     {
         for (const auto& plugin : m_messageProcessingPlugins)
@@ -250,8 +250,8 @@ namespace Windows::Devices::Midi2::Internal
         }
     }
 
-    _Use_decl_annotations_
     template<typename TEndpointAbstraction>
+    _Use_decl_annotations_
     void InternalMidiInputConnection<TEndpointAbstraction>::CallOnConnectionOpenedOnPlugins() noexcept
     {
         for (const auto& plugin : m_messageProcessingPlugins)
@@ -267,8 +267,8 @@ namespace Windows::Devices::Midi2::Internal
         }
     }
 
-    _Use_decl_annotations_
     template<typename TEndpointAbstraction>
+    _Use_decl_annotations_
     void InternalMidiInputConnection<TEndpointAbstraction>::CleanupPlugins() noexcept
     {
         for (const auto& plugin : m_messageProcessingPlugins)

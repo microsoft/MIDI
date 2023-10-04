@@ -79,7 +79,7 @@
       <PackageReference Include="System.Management" Version="8.0.0-rc.1.23419.4" />
       <PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.0-rc.1.23419.4" />
       <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
-      <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.1-0042" />
+      <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.2-0044" />
 
       <PackageReference Include="WinUIEx" Version="2.3.1" />
 
