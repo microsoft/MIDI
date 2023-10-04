@@ -1,0 +1,32 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+namespace Windows.Devices.Midi2
+{
+    [MIDI_API_CONTRACT(1)]
+    enum MidiSendMessageResult
+    {
+        Success = 0x0,
+
+        ErrorBufferFull = 0x1000,
+
+        ErrorInvalidMessageTypeForWordCount = 0x2000,
+        ErrorInvalidMessageOther = 0x2FFF,
+
+        ErrorSendDataIndexOutOfRange = 0x3000,
+
+        // TODO: Possibly have service unavailable and others
+        ErrorEndpointConnectionClosedOrInvalid = 0x5000,
+
+
+        ErrorUnexpected = 0xFFFF,
+    };
+}

@@ -26,6 +26,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
+            internal::LogInfo(__FUNCTION__, L" Initialize ");
+
             m_connectionId = connectionId;
 
             m_inputDeviceId = inputEndpointDeviceId;
@@ -55,6 +57,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Success_(return == true)
     bool MidiBidirectionalAggregatedEndpointConnection::Open()
     {
+        internal::LogInfo(__FUNCTION__, L" Open ");
+
         if (!IsOpen())
         {
             // Activate the endpoint for this device. Will fail if the device is not a BiDi device
@@ -137,6 +141,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     void MidiBidirectionalAggregatedEndpointConnection::Close()
     {
+        internal::LogInfo(__FUNCTION__, L" Close ");
+
         if (m_closeHasBeenCalled) return;
 
         try

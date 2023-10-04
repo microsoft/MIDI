@@ -120,11 +120,11 @@ Sending and receiving functions in the API include multiple ways of sending and 
 
 | Type | Description |
 | ----- | -- |
-| IMidiUmp | Interface common across all message types. |
-| MidiUmp32 | 32 bit (single 32-bit word) UMP |
-| MidiUmp64 | 64 bit (two 32-bit words) UMP |
-| MidiUmp96 | 96 bit (three 32-bit words) UMP |
-| MidiUmp128 | 128 bit (four 32-bit words) UMP |
+| IMidiUniversalPacket | Interface common across all message types. |
+| MidiMessage32 | 32 bit (single 32-bit word) UMP |
+| MidiMessage64 | 64 bit (two 32-bit words) UMP |
+| MidiMessage96 | 96 bit (three 32-bit words) UMP |
+| MidiMessage128 | 128 bit (four 32-bit words) UMP |
 
 For the most part, we do not provide strongly-typed message types in the API as that is a moving target, and many applications also include their own message creation and processing functions. If there's demand for strongly-typed messages, we may provide them in the SDK.
 
@@ -134,7 +134,7 @@ Although we know there are many native libraries which can do message manipulati
 
 | Type | Description |
 | ----- | -- |
-| MidiUmpUtility | A set of utilities for manipulating UMP data. |
+| MidiMessageUtility | A set of utilities for manipulating UMP data. |
 | MidiMessageBuilder | Builder for the major types of messages. This doesn't include builders for every possible message, as that is evolving. We may add that to the SDK. This builder is typically where you'd want to start when creating new messages. |
 
 ## Metadata

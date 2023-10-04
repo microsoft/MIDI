@@ -1,0 +1,46 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+// For implementing this interface to make sense, it requires you also implement 
+// IMidiEndpointMessageListener/Responder interfaces and of course, the 
+// IMidiEndpointMessageProcessingPlugin interface
+//
+// This interface exists so we have a contract-based way to handle all the MIDI 2.0
+// protocol / stream / endpoint negotiation and metadata gathering. This way, if
+// some change comes along in the future and we don't catch up (in time), or if
+// there's a new change in development, others can create their own plugins to 
+// handle the negotiation.
+
+
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+import "MidiBidirectionalEndpointOpenOptions.idl";
+import "IMidiEndpointMessageProcessingPlugin.idl";
+import "IMidiEndpointMessageListener.idl";
+import "IMidiEndpointMessageResponder.idl";
+
+namespace Windows.Devices.Midi2
+{
+    [MIDI_API_CONTRACT(1)]
+    [MIDI_INTERFACE_UUID("8ef0557e-1a53-4ab2-ab80-d36f1a16f33b",1.0)]
+    interface IMidiEndpointConfiguratorPlugin requires IMidiEndpointMessageProcessingPlugin, IMidiEndpointMessageListener, IMidiEndpointMessageResponder
+    {
+        MidiStreamConfigurationRequestedSettings RequestedStreamConfiguration { get; set; };
+
+        void BeginDiscovery();
+        void BeginNegotiation();
+
+        Boolean RequestAllFunctionBlocks();
+        Boolean RequestSingleFunctionBlock(UInt8 functionBlockNumber);
+
+        //Boolean RequestStreamConfiguration();
+
+        //Boolean RequestEndpointInformation();
+    }
+}

@@ -1,0 +1,25 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+namespace Windows.Devices.Midi2
+{
+    // can be cast to the size in MIDI Words.
+
+    [MIDI_API_CONTRACT(1)]
+    enum MidiPacketType
+    {
+        UnknownOrInvalid = 0,
+        UniversalMidiPacket32 = 1,
+        UniversalMidiPacket64 = 2,
+        UniversalMidiPacket96 = 3,
+        UniversalMidiPacket128 = 4,
+    };
+}

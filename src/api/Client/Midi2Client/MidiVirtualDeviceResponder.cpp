@@ -14,15 +14,39 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    winrt::Windows::Foundation::Collections::IMapView<uint8_t, midi2::MidiFunctionBlock> MidiVirtualDeviceResponder::FunctionBlocks()
-    {
-        throw hresult_not_implemented();
-    }
-
 
     _Use_decl_annotations_
-    void MidiVirtualDeviceResponder::AddFunctionBlock(midi2::MidiFunctionBlock const& /*block*/)
+    bool MidiVirtualDeviceResponder::AddFunctionBlock(midi2::MidiFunctionBlock const& block)
     {
+        // add to list if there isn't already a one in that spot
+
+        if (m_functionBlocks.HasKey(block.Number()))
+        {
+            // we already have a function block with this number
+            return false;
+        }
+        else
+        {
+            // add to the list
+
+            m_functionBlocks.Insert(block.Number(), block);
+        }
+
+
+        if (m_enabled)
+        {
+
+            // send out function block info messages
+
+            // send out function block name messages
+
+            // TODO: Set up a builder for these types of messages. The multi-part ones will create an array of UMPs given the string
+            // and the common parameters
+
+
+        }
+
+
         throw hresult_not_implemented();
     }
 
@@ -49,16 +73,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         throw hresult_not_implemented();
     }
 
-    bool MidiVirtualDeviceResponder::SuppressHandledMessages()
-    {
-        throw hresult_not_implemented();
-    }
-
-    _Use_decl_annotations_
-    void MidiVirtualDeviceResponder::SuppressHandledMessages(bool /*value*/)
-    {
-        throw hresult_not_implemented();
-    }
 
     void MidiVirtualDeviceResponder::Initialize()
     {

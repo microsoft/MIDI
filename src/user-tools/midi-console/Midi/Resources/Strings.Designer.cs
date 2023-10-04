@@ -196,6 +196,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Index.
+        /// </summary>
+        internal static string CommonTableHeaderIndex {
+            get {
+                return ResourceManager.GetString("CommonTableHeaderIndex", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Enumerating endpoints failed.
         /// </summary>
         internal static string ErrorEnumEndpointsFailed {
@@ -511,6 +520,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to List all messages as they come in.
+        /// </summary>
+        internal static string ParameterMonitorEndpointVerbose {
+            get {
+                return ResourceManager.GetString("ParameterMonitorEndpointVerbose", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Number of times to send this message.
         /// </summary>
         internal static string ParameterSendMessageCount {
@@ -538,7 +556,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Path and filename of the text file to send. This can include lines which begin with # for a comment, or are completely empty for spacing. Remaining lines must be valid delimited hexadecimal UMP words..
+        ///   Looks up a localized string similar to Path and filename of the text file to send. This can include lines which begin with # for a comment, or are completely empty for spacing. Remaining lines must be valid delimited (big-endian) hexadecimal UMP words..
         /// </summary>
         internal static string ParameterSendMessagesFileCommandFile {
             get {
@@ -583,7 +601,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 32-bit MIDI words, typically in hexadecimal 0x00000000 format. Use the parameter name in front of each word sent..
+        ///   Looks up a localized string similar to 32-bit MIDI words, typically in hexadecimal 0x00000000 format. Big-endian, same as the MIDI protocol wire format. Use the parameter name in front of each word sent..
         /// </summary>
         internal static string ParameterSendMessageWords {
             get {
@@ -722,6 +740,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Specific Type.
+        /// </summary>
+        internal static string TableColumnHeaderCommonDetailedMessageType {
+            get {
+                return ResourceManager.GetString("TableColumnHeaderCommonDetailedMessageType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Message Type.
         /// </summary>
         internal static string TableColumnHeaderCommonMessageType {
@@ -749,7 +776,16 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Specified ping count is too high. Please provide a value &lt;= 100..
+        ///   Looks up a localized string similar to Please provide a count &gt; 0..
+        /// </summary>
+        internal static string ValidationErrorInvalidMessageCount {
+            get {
+                return ResourceManager.GetString("ValidationErrorInvalidMessageCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specified ping count is too high. Please provide a value &lt;= 1000..
         /// </summary>
         internal static string ValidationErrorPingCountTooHigh {
             get {

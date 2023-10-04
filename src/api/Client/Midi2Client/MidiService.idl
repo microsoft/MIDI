@@ -18,7 +18,7 @@ namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [default_interface]
-    runtimeclass MidiService
+    static runtimeclass MidiService
     {
         static MidiServicePingResponseSummary PingService(UInt8 pingCount);
         static MidiServicePingResponseSummary PingService(UInt8 pingCount, UInt32 timeoutMilliseconds);
@@ -26,8 +26,6 @@ namespace Windows.Devices.Midi2
         // list all the installed transports like Virtual, USB, BLE1, etc
         static IVectorView<MidiTransportInformation> GetInstalledTransports();
 
-        static MidiEndpointMetadataCache EndpointMetadataCache{ get; };
-        static MidiGlobalCache GlobalCache{ get; };
-}
+    }
 }
 

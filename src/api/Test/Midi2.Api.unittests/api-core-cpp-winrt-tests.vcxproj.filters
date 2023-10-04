@@ -42,6 +42,18 @@
     <ClCompile Include="BidirectionalAggregatedEndpointTests.cpp">
       <Filter>Tests\Infrastructure</Filter>
     </ClCompile>
+    <ClCompile Include="FunctionBlockSerializationTests.cpp">
+      <Filter>Tests\Metadata</Filter>
+    </ClCompile>
+    <ClCompile Include="EndpointInformationSerializationTests.cpp">
+      <Filter>Tests\Metadata</Filter>
+    </ClCompile>
+    <ClCompile Include="StreamMessageBuilderTests.cpp">
+      <Filter>Tests\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="FunctionBlockMessageBuilderTests.cpp">
+      <Filter>Tests\Utility</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -75,9 +87,9 @@
     <Filter Include="Tests\Benchmark">
       <UniqueIdentifier>{708f04b2-9086-47aa-8cdd-026e943a3500}</UniqueIdentifier>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <Manifest Include="api-core-cpp-winrt-tests.exe.manifest" />
+    <Filter Include="Tests\Metadata">
+      <UniqueIdentifier>{64150c5b-2f8c-483e-b614-83c75b26791a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />

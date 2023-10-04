@@ -40,14 +40,14 @@ namespace Windows::Devices::Midi2::Internal
         }
 
     protected:
-        size_t HashData(_In_ std::string data)
+        static size_t HashData(_In_ std::string data)
         {
             std::hash<std::string> hasher;
 
             return hasher(data);
         }
 
-        MidiCacheEntry CreateCacheEntry(
+        static MidiCacheEntry CreateCacheEntry(
             _In_ winrt::hstring const data, 
             _In_ foundation::DateTime const expiration)
         {
@@ -62,7 +62,7 @@ namespace Windows::Devices::Midi2::Internal
             return entry;
         }
 
-        void ExpireEntryIfDue(_In_ TKey cacheKey)
+        static void ExpireEntryIfDue(_In_ TKey cacheKey)
         {
             if (auto result = m_cache.find(cacheKey); result != m_cache.end())
             {
@@ -77,7 +77,7 @@ namespace Windows::Devices::Midi2::Internal
             }
         }
 
-        bool InternalIsDataPresent(_In_ TKey cacheKey)
+        static bool InternalIsDataPresent(_In_ TKey cacheKey)
         {
             ExpireEntryIfDue(cacheKey); // in the service impl, the service will take care of this
 
@@ -91,26 +91,31 @@ namespace Windows::Devices::Midi2::Internal
             }
         }
 
-        MidiCacheEntry InternalGetCacheItem(_In_ TKey cacheKey)
+        static MidiCacheEntry InternalGetCacheItem(_In_ TKey cacheKey)
         {
             return m_cache[cacheKey];
         }
 
-        void InternalRemoveItem(_In_ TKey cacheKey)
+        static void InternalRemoveItem(_In_ TKey cacheKey)
         {
             m_cache.erase(cacheKey);
         }
 
-        void InternalAddOrUpdateItem(_In_ TKey cacheKey, _In_ MidiCacheEntry entry)
+        static void InternalAddOrUpdateItem(_In_ TKey cacheKey, _In_ MidiCacheEntry entry)
         {
             m_cache[cacheKey] = entry;
         }
 
     private:
         // This is all local until we have the cache service in place
-        std::map<TKey, MidiCacheEntry> m_cache{};
+        static std::map<TKey, MidiCacheEntry> m_cache;
 
 
     };
 
+
+
+
+    template<typename TKey> 
+    std::map<TKey, MidiCacheEntry> InternalMidiCache<TKey>::m_cache;
 }

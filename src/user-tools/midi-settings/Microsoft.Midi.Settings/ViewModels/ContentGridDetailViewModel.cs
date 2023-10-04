@@ -22,7 +22,7 @@ public class ContentGridDetailViewModel : ObservableRecipient, INavigationAware
         _sampleDataService = sampleDataService;
     }
 
-    public async void OnNavigatedTo(object parameter)
+    public void OnNavigatedTo(object parameter)
     {
         //if (parameter is long orderID)
         //{

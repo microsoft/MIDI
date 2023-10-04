@@ -1,0 +1,69 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+// this simply checks that the UMP packet type aligns with the number of words
+// Beyond that, the API generally does not care what's in the UMP. This enables
+// new messages to be defined without breaking the API
+
+import "MidiMessageTypeEnum.idl";
+import "MidiPacketTypeEnum.idl";
+import "MidiGroup.idl";
+import "MidiChannel.idl";
+
+import "Midi1ChannelVoiceMessageStatusEnum.idl";
+import "Midi2ChannelVoiceMessageStatusEnum.idl";
+
+namespace Windows.Devices.Midi2
+{
+    [MIDI_API_CONTRACT(1)]
+    static runtimeclass MidiMessageUtility
+    {
+        static Boolean ValidateMessage32MessageType(UInt32 word0);
+        static Boolean ValidateMessage64MessageType(UInt32 word0);
+        static Boolean ValidateMessage96MessageType(UInt32 word0);
+        static Boolean ValidateMessage128MessageType(UInt32 word0);
+
+        static MidiMessageType GetMessageTypeFromFirstMessageWord(UInt32 word0);
+        static MidiPacketType GetPacketTypeFromFirstMessageWord(UInt32 word0);
+
+        static Boolean MessageTypeHasGroupField(MidiMessageType messageType);
+        static UInt32 ReplaceGroup(UInt32 word0, MidiGroup newGroup);
+        static MidiGroup GetGroup(UInt32 word0);
+
+        static UInt8 GetStatusFromUtilityMessage(UInt32 word0);
+        static Midi1ChannelVoiceMessageStatus GetStatusFromMidi1ChannelVoiceMessage(UInt32 word0);
+        static Midi2ChannelVoiceMessageStatus GetStatusFromMidi2ChannelVoiceMessageFirstWord(UInt32 word0);
+        
+
+        static UInt8 GetStatusBankFromFlexDataMessageFirstWord(UInt32 word0);
+        static UInt8 GetStatusFromFlexDataMessageFirstWord(UInt32 word0);
+
+        static UInt8 GetStatusFromSystemCommonMessage(UInt32 word0);
+
+        static UInt8 GetStatusFromDataMessage64FirstWord(UInt32 word0);
+        static UInt8 GetNumberOfBytesFromDataMessage64FirstWord(UInt32 word0);
+
+        static UInt8 GetStatusFromDataMessage128FirstWord(UInt32 word0);
+        static UInt8 GetNumberOfBytesFromDataMessage128FirstWord(UInt32 word0);
+
+
+        static Boolean MessageTypeHasChannelField(MidiMessageType messageType);
+        static UInt32 ReplaceChannel(UInt32 word0, MidiChannel newChannel);
+        static MidiChannel GetChannel(UInt32 word0);
+
+        static UInt8 GetFormFromStreamMessageFirstWord(UInt32 word0);
+        static UInt16 GetStatusFromStreamMessageFirstWord(UInt32 word0);
+
+
+        static String GetMessageFriendlyNameFromFirstWord(UInt32 word0);
+
+    };
+}

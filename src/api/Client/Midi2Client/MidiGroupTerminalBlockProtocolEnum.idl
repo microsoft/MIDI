@@ -22,10 +22,10 @@ namespace Windows.Devices.Midi2
     enum MidiGroupTerminalBlockProtocol
     {
         Unknown = 0x00,
-        Midi1Ump64 = 0x01,
-        Midi1Ump64WithJitterReduction = 0x02,
-        Midi1Ump128 = 0x03,
-        Midi1Ump128WithJitterReduction = 0x04,
+        Midi1Message64 = 0x01,
+        Midi1Message64WithJitterReduction = 0x02,
+        Midi1Message128 = 0x03,
+        Midi1Message128WithJitterReduction = 0x04,
         Midi2 = 0x11,
         Midi2WithJitterReduction = 0x12
     };

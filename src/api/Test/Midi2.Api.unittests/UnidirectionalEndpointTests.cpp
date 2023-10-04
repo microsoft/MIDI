@@ -94,7 +94,7 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message th
     bool messageReceivedFlag = false;
 
     auto sentTimestamp = MidiClock::GetMidiTimestamp();
-    auto sentMessageType = MidiUmpMessageType::Midi1ChannelVoice32;
+    auto sentMessageType = MidiMessageType::Midi1ChannelVoice32;
     auto sentUmp = MidiMessageBuilder::BuildMidi1ChannelVoiceMessage(
         sentTimestamp, 
         5, 
@@ -114,7 +114,7 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message th
             if (args.Timestamp() == sentTimestamp)
             {
                 // strongly typed UMP
-                auto receivedUmp = args.GetUmp();
+                auto receivedUmp = args.GetMessagePacket();
 
                 REQUIRE(receivedUmp != nullptr);
 
@@ -122,10 +122,10 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message th
                 REQUIRE(receivedUmp.MessageType() == sentMessageType);
 
                 // Making an assumption on type here.
-                MidiUmp32 receivedUmp32 = receivedUmp.as<MidiUmp32>();
+                MidiMessage32 receivedUmp32 = receivedUmp.as<MidiMessage32>();
 
                 std::cout << "Received message in test" << std::endl;
-                std::cout << " - UmpPacketType:     0x" << std::hex << (int)(receivedUmp32.UmpPacketType()) << std::endl;
+                std::cout << " - UmpPacketType:     0x" << std::hex << (int)(receivedUmp32.PacketType()) << std::endl;
                 std::cout << " - Timestamp:         0x" << std::hex << (receivedUmp32.Timestamp()) << std::endl;
                 std::cout << " - MessageType:       0x" << std::hex << (int)(receivedUmp32.MessageType()) << std::endl;
                 std::cout << " - First Word:        0x" << std::hex << (receivedUmp32.Word0()) << std::endl << std::endl;
@@ -146,12 +146,12 @@ TEST_CASE("Connected.Endpoint.SingleUmp Send and receive single Ump32 message th
     sentUmp.MessageType(sentMessageType);
     sentUmp.Timestamp(sentTimestamp);
 
-    std::cout << "Sending message" << std::hex << (uint32_t)(sentUmp.UmpPacketType()) << std::endl;
+    std::cout << "Sending message" << std::hex << (uint32_t)(sentUmp.PacketType()) << std::endl;
     std::cout << " - Timestamp:   0x" << std::hex << (uint64_t)(sentUmp.Timestamp()) << std::endl;
     std::cout << " - MessageType: 0x" << std::hex << (int)(sentUmp.MessageType()) << std::endl;
     std::cout << " - First Word:  0x" << std::hex << (sentUmp.Word0()) << std::endl << std::endl;
 
-    connOut.SendUmp(sentUmp);
+    connOut.SendMessagePacket(sentUmp);
 
     // Wait for incoming message
     if (!allMessagesReceived.wait(3000))

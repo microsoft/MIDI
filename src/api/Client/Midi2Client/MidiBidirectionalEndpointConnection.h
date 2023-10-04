@@ -17,10 +17,10 @@
 
 #include "MidiMessageReceivedEventArgs.h"
 
-#include "MidiUmp32.h"
-#include "MidiUmp64.h"
-#include "MidiUmp96.h"
-#include "MidiUmp128.h"
+//#include "MidiUmp32.h"
+//#include "MidiUmp64.h"
+//#include "MidiUmp96.h"
+//#include "MidiUmp128.h"
 
 #include "InternalMidiConnectionCommon.h"
 #include "InternalMidiInputConnection.h"
@@ -47,9 +47,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static hstring GetDeviceSelector() noexcept { return L"System.Devices.InterfaceClassGuid:=\"{E7CCE071-3C03-423f-88D3-F1045D02552B}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True"; }
 
-        //winrt::hstring InputEndpointDeviceId() const noexcept { return InternalGetDeviceId(); }
-        //winrt::hstring OutputEndpointDeviceId() const noexcept { return InternalGetDeviceId(); } // will be the same as input
-
         STDMETHOD(Callback)(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position) override
         {
             return CallbackImpl(*this, data, size, position);
@@ -72,6 +69,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     private:
         bool m_closeHasBeenCalled{ false };
 
+        midi2::MidiBidirectionalEndpointOpenOptions m_options;
 
         // We use the InputDeviceId. InputDeviceId and OutputDeviceId 
         // are the same thing. It's a bit hokey, but many other parts

@@ -32,7 +32,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         public ObservableCollection<string> AllChannels { get; } = new ObservableCollection<string>();
 
 
-        public ICommand MonitorOnScreenCommand
+        public ICommand? MonitorOnScreenCommand
         {
             get;
         }

@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows10.0.20348.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+      <!-- Without this, the build script gets "NETSDK1083: The specified RuntimeIdentifier 'win10-x64' is not recognized" -->
+      <UseRidGraph>true</UseRidGraph>
+      <EnableCoreMrtTooling>false</EnableCoreMrtTooling>
+
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.2-0044" />
+  </ItemGroup>
+
+</Project>

@@ -13,7 +13,7 @@ public class FieldUnsignedNumericDecimalFormatConverter : IValueConverter
     {
         if (value is null)
         {
-            return null;
+            return System.Convert.ChangeType(0, targetType);
         }
 
         try

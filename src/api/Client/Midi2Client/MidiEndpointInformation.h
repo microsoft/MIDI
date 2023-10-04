@@ -9,7 +9,6 @@
 #pragma once
 #include "MidiEndpointInformation.g.h"
 
-
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     struct MidiEndpointInformation : MidiEndpointInformationT<MidiEndpointInformation>
@@ -18,8 +17,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         winrt::hstring Name() const noexcept { return m_name; }
         winrt::hstring ProductInstanceId() const noexcept { return m_productInstanceId; }
-        uint8_t UmpVersionMajor() const noexcept { return m_umpVersionMajor; }
-        uint8_t UmpVersionMinor() const noexcept { return m_umpVersionMinor; }
+        uint8_t SpecificationVersionMajor() const noexcept { return m_umpVersionMajor; }
+        uint8_t SpecificationVersionMinor() const noexcept { return m_umpVersionMinor; }
         bool HasStaticFunctionBlocks() const noexcept { return m_hasStaticFunctionBlocks; }
         uint8_t FunctionBlockCount() const noexcept { return m_functionBlockCount; }
         bool SupportsMidi10Protocol() const noexcept { return m_supportsMidi10Protocol; }
@@ -27,7 +26,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool SupportsReceivingJRTimestamps() const noexcept { return m_supportsReceivingJRTimestamps; }
         bool SupportsSendingJRTimestamps() const noexcept { return m_supportsSendingJRTimestamps; }
 
-        // TODO: Internal functions to set this from the cache
+        midi2::MidiProtocol ConfiguredProtocol() const noexcept { return m_configuredProtocol; }
+
+
+        bool UpdateFromJson(_In_ winrt::Windows::Data::Json::JsonObject const json) noexcept;
+        bool UpdateFromJsonString(_In_ winrt::hstring const json) noexcept;
+        bool UpdateFromMessages(_In_ collections::IIterable<midi2::MidiMessage128> messages) noexcept;
+        bool UpdateFromInfoNotificationMessage(_In_ midi2::MidiMessage128 messages) noexcept;
+        winrt::hstring GetJsonString() noexcept;
+
 
     private:
         winrt::hstring m_name{};
@@ -40,6 +47,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool m_supportsMidi20Protocol{ false };
         bool m_supportsReceivingJRTimestamps{ false };
         bool m_supportsSendingJRTimestamps{ false };
+
+        midi2::MidiProtocol m_configuredProtocol;
 
     };
 }

@@ -20,7 +20,6 @@ import "IMidiEndpointDefinedConnectionSettings.idl";
 import "MidiSessionSettings.idl";
 
 import "MidiBidirectionalEndpointOpenOptions.idl";
-import "MidiBidirectionalAggregatedEndpointOpenOptions.idl";
 import "MidiInputEndpointOpenOptions.idl";
 import "MidiOutputEndpointOpenOptions.idl";
 
@@ -100,12 +99,12 @@ namespace Windows.Devices.Midi2
         MidiBidirectionalAggregatedEndpointConnection ConnectBidirectionalAggregatedEndpoint(
             String inputEndpointDeviceId,
             String outputEndpointDeviceId,
-            MidiBidirectionalAggregatedEndpointOpenOptions options);
+            MidiBidirectionalEndpointOpenOptions options);
 
         MidiBidirectionalAggregatedEndpointConnection ConnectBidirectionalAggregatedEndpoint(
             String inputEndpointDeviceId,
             String outputEndpointDeviceId,
-            MidiBidirectionalAggregatedEndpointOpenOptions options,
+            MidiBidirectionalEndpointOpenOptions options,
             IMidiEndpointDefinedConnectionSettings settings);
 
 

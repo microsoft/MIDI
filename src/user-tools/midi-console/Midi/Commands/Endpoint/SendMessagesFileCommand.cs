@@ -18,7 +18,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         public sealed class Settings : SendMessageCommandSettings
         {
             [LocalizedDescription("ParameterSendMessagesFileCommandFile")]
-            [CommandArgument(2, "<Input File>")]
+            [CommandArgument(1, "<Input File>")]
             public string InputFile { get; set; }
 
             [EnumLocalizedDescription("ParameterSendMessagesFileFieldDelimiter", typeof(ParseFieldDelimiter))]
@@ -33,17 +33,16 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             [LocalizedDescription("ParameterSendMessagesFileReplaceGroup")]
             [CommandOption("-g|--new-group-index")]
-            public byte? NewGroupIndex { get; set; }
+            public int? NewGroupIndex { get; set; }
 
-            Settings()
-            {
-                InputFile = String.Empty;
-            }
+            //Settings()
+            //{
+            //    InputFile = String.Empty;
+            //}
         }
 
         public override ValidationResult Validate(CommandContext context, Settings settings)
         {
-
             if (!System.IO.File.Exists(settings.InputFile))
             {
                 return ValidationResult.Error($"File not found {settings.InputFile}.");
@@ -67,7 +66,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             if (words != null && words.Length > 0 && words.Length <= 4)
             {
                 // allowed behavior is to cast the packet type to the word count
-                return (bool)((int)MidiUmpUtility.GetPacketTypeFromFirstUmpWord(words[0]) == words.Length);
+                return (bool)((int)MidiMessageUtility.GetPacketTypeFromFirstMessageWord(words[0]) == words.Length);
             }
             else
             {
@@ -77,7 +76,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            MidiSession? session = null;
             IMidiOutputConnection? connection = null;
 
             string endpointId = string.Empty;
@@ -95,15 +93,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             AnsiConsole.MarkupLine(Strings.SendMessageSendingThroughEndpointLabel + ": " + AnsiMarkupFormatter.FormatDeviceInstanceId(endpointId));
             AnsiConsole.WriteLine();
 
+            // todo: update loc strings
+            using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
+
             bool openSuccess = false;
 
             AnsiConsole.Status()
                 .Start(Strings.StatusCreatingSessionAndOpeningEndpoint, ctx =>
                 {
                     ctx.Spinner(Spinner.Known.Star);
-
-                    // todo: update loc strings
-                    session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
 
 
                     if (session != null)
@@ -145,11 +143,17 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToCreateEndpointConnection));
 
+                if (session != null)
+                    session.Dispose();
+
                 return (int)MidiConsoleReturnCode.ErrorCreatingEndpointConnection;
             }
             else if (!openSuccess)
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToOpenEndpoint));
+
+                if (session != null)
+                    session.Dispose();
 
                 return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
             }
@@ -164,10 +168,12 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             AnsiConsole.Live(table)
                 .Start(ctx =>
                 {
+                    // TODO: Localize these
                     table.AddColumn("Line");               
                     table.AddColumn("Timestamp");          // a file with a timestamp isn't useful, really. But we could support an offset like +value
                     table.AddColumn("Sent Data");
                     table.AddColumn("Message Type");
+                    table.AddColumn("Specific Type");
 
                     ctx.Refresh();
                     //AnsiConsole.WriteLine("Created table");
@@ -240,21 +246,24 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                                     if (changeGroup)
                                     {
-                                        if (MidiUmpUtility.MessageTypeHasGroupField(MidiUmpUtility.GetMessageTypeFromFirstUmpWord(words[0])))
+                                        if (MidiMessageUtility.MessageTypeHasGroupField(MidiMessageUtility.GetMessageTypeFromFirstMessageWord(words[0])))
                                         {
-                                            words[0] = MidiUmpUtility.ReplaceGroup(words[0], newGroup);
+                                            words[0] = MidiMessageUtility.ReplaceGroup(words[0], newGroup);
                                         }
                                     }
 
                                     // send the message
-                                    connection.SendUmpWordArray(timestamp, words, 0, (byte)words.Count());
+                                    connection.SendMessageWordArray(timestamp, words, 0, (byte)words.Count());
+
+                                    string detailedMessageType = MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(words[0]);
 
                                     // display the sent data
                                     table.AddRow(
                                         AnsiMarkupFormatter.FormatGeneralNumber(lineNumber), 
                                         AnsiMarkupFormatter.FormatTimestamp(timestamp),
                                         AnsiMarkupFormatter.FormatMidiWords(words),
-                                        AnsiMarkupFormatter.FormatMessageType(MidiUmpUtility.GetMessageTypeFromFirstUmpWord(words[0]))
+                                        AnsiMarkupFormatter.FormatMessageType(MidiMessageUtility.GetMessageTypeFromFirstMessageWord(words[0])),
+                                        AnsiMarkupFormatter.FormatDetailedMessageType(MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(words[0]))
                                         );
 
                                     ctx.Refresh();
@@ -297,7 +306,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 });
 
 
-
+            if (session != null)
+                session.Dispose();
 
             return (int)MidiConsoleReturnCode.Success;
         }

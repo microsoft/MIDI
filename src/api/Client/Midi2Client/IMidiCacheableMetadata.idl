@@ -1,0 +1,23 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+namespace Windows.Devices.Midi2
+{
+    [MIDI_API_CONTRACT(1)]
+    [MIDI_INTERFACE_UUID("b41ddd03-14e6-47cc-be3a-1567659c87d1",1.0)]
+    interface IMidiCacheableMetadata
+    {
+        String GetJsonString();
+
+        Boolean UpdateFromJsonString(String json);
+        Boolean UpdateFromJson(Windows.Data.Json.JsonObject json);
+}
+}

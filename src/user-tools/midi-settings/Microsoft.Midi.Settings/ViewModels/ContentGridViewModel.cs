@@ -16,7 +16,7 @@ public class ContentGridViewModel : ObservableRecipient, INavigationAware
     private readonly INavigationService _navigationService;
     private readonly ISampleDataService _sampleDataService;
 
-    public ICommand ItemClickCommand
+    public ICommand? ItemClickCommand
     {
         get;
     }
@@ -31,7 +31,7 @@ public class ContentGridViewModel : ObservableRecipient, INavigationAware
 //        ItemClickCommand = new RelayCommand<SampleOrder>(OnItemClick);
     }
 
-    public async void OnNavigatedTo(object parameter)
+    public void OnNavigatedTo(object parameter)
     {
         //Source.Clear();
 

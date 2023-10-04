@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TODO:
+1. Find and replace "SimpleTraceLoggingProvider" with the name of your provider.
+2. See TODO below to update GUID for your event provider
+-->
+<WindowsPerformanceRecorder Version="1.0" Author="Microsoft Corporation" Copyright="Microsoft Corporation" Company="Microsoft Corporation">
+  <Profiles>
+    <EventCollector Id="EventCollector_MidiSrvSimple" Name="Windows MIDI Services Events">
+      <BufferSize Value="128" />
+      <Buffers Value="64" />
+    </EventCollector>
+
+    <EventProvider Id="EventProvider_MidiSrv" Name="*Microsoft.Windows.Midi2.MidiSrv"/>
+    <EventProvider Id="EventProvider_MidiSrvAbstraction" Name="*Microsoft.Windows.Midi2.MidiSrvAbstraction"/>
+    <EventProvider Id="EventProvider_KSAbstraction" Name="*Microsoft.Windows.Midi2.KSAbstraction"/>
+    <EventProvider Id="EventProvider_DiagnosticsAbstraction" Name="*Microsoft.Windows.Midi2.DiagnosticsAbstraction"/>
+    <EventProvider Id="EventProvider_SampleAbstraction" Name="*Microsoft.Windows.Midi2.SampleAbstraction"/>
+    <EventProvider Id="EventProvider_VirtualMidiAbstraction" Name="*Microsoft.Windows.Midi2.VirtualMidiAbstraction"/>
+    <EventProvider Id="EventProvider_API" Name="*Windows.Devices.Midi2.Api"/>
+
+     <Profile Id="MidiSrv.Verbose.File" Name="MidiSrv" DetailLevel="Verbose" Description="Windows MIDI Services trace profile" LoggingMode="File">
+      <Collectors>
+        <EventCollectorId Value="EventCollector_MidiSrvSimple">
+          <EventProviders>
+            <EventProviderId Value="EventProvider_MidiSrv"/>
+            <EventProviderId Value="EventProvider_MidiSrvAbstraction"/>
+            <EventProviderId Value="EventProvider_KSAbstraction"/>
+            <EventProviderId Value="EventProvider_DiagnosticsAbstraction"/>
+            <EventProviderId Value="EventProvider_SampleAbstraction"/>
+            <EventProviderId Value="EventProvider_VirtualMidiAbstraction"/>
+            <EventProviderId Value="EventProvider_API"/>
+          </EventProviders>
+        </EventCollectorId>
+      </Collectors>
+    </Profile>
+
+  </Profiles>
+</WindowsPerformanceRecorder>

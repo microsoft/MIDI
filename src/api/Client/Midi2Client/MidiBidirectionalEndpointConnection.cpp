@@ -24,6 +24,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::MidiBidirectionalEndpointOpenOptions options
     )
     {
+        internal::LogInfo(__FUNCTION__, L" Initialize ");
+
         try
         {
             m_connectionId = connectionId;
@@ -37,10 +39,46 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             m_serviceAbstraction = serviceAbstraction;
 
-            // TODO: Read any settings we need for this endpoint
+            
+            m_options = options;
 
 
-            // TODO: Add any automatic handlers if the options allow for it
+            // TODO: Add any other automatic handlers if the options allow for it
+
+            if (options == nullptr || !options.DisableAutomaticStreamConfiguration())
+            {
+                auto configurator = winrt::make_self<implementation::MidiEndpointConfigurator>();
+
+                m_messageProcessingPlugins.Append(*configurator);
+            }
+
+            if (options == nullptr || !options.DisableAutomaticEndpointMetadataHandling())
+            {
+                auto plug = winrt::make_self<implementation::MidiEndpointMetadataEndpointListener>();
+
+                m_messageProcessingPlugins.Append(*plug);
+            }
+
+            if (options == nullptr || !options.DisableAutomaticFunctionBlockMetadataHandling())
+            {
+                auto plugin = winrt::make_self<implementation::MidiFunctionBlockEndpointListener>();
+
+                m_messageProcessingPlugins.Append(*plugin);
+            }
+
+
+            IMidiInputConnection input = *this;
+            IMidiOutputConnection output = *this;
+
+            SetInputConnectionOnPlugins(input);
+            SetOutputConnectionOnPlugins(output);
+
+            if (options != nullptr)
+            {
+                SetRequestedStreamConfigurationOnPlugins(options.RequestedStreamConfiguration());
+            }
+
+            InitializePlugins();
 
 
             return true;
@@ -57,6 +95,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     bool MidiBidirectionalEndpointConnection::Open()
     {
+        internal::LogInfo(__FUNCTION__, L" Open ");
+
         if (!IsOpen())
         {
             // Activate the endpoint for this device. Will fail if the device is not a BiDi device
@@ -120,6 +160,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     void MidiBidirectionalEndpointConnection::Close()
     {
+        internal::LogInfo(__FUNCTION__, L" Close ");
+
         if (m_closeHasBeenCalled) return;
 
         try

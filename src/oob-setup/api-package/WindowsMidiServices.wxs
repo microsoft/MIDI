@@ -22,7 +22,7 @@
                 </Directory>
             </Directory>
         </StandardDirectory>
-        
+
 
         <!--<Binary Id="RegistryActions.dll" SourceFile="$(StagingSourceRootFolder)\RegistryActions.dll" /> -->
         <!--<Binary Id="RegistryCustomActionsLib" SourceFile="RegistryCustomActions.CA.dll"  /> -->
@@ -142,14 +142,107 @@
                    Directory="SETTINGSAPP_INSTALLFOLDER"
                    Guid="1e903d6a-b855-44f6-b00a-8f8827617eb5">
 
-            <!-- Install Tools: Settings app -->
+            <File Id="MidiSettings.exe" 
+                  Source="$(StagingSourceRootFolder)\midi-settings\x64\MidiSettings.exe" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Midi.Settings.Core.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\MidiSettings.dll" />
+            <!--<File Source="$(StagingSourceRootFolder)\midi-settings\x64\MidiSettings.pri" />-->
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\resources.pri" />
 
-            <!--     <File Source="$(StagingSourceRootFolder)\midi-settings\x64\midi-settings.exe" /> -->
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\MidiSettings.runtimeconfig.json" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\appsettings.json" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\WinRT.Runtime.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Windows.Devices.Midi2.NET.dll" />
 
-            <!-- TODO: Add icon -->
+            
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\ColorCode.Core.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\ColorCode.WinUI.dll" />
+            
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\CommunityToolkit.Common.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\CommunityToolkit.Labs.WinUI.SettingsControls.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\CommunityToolkit.Mvvm.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\CommunityToolkit.WinUI.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\CommunityToolkit.WinUI.UI.Animations.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\CommunityToolkit.WinUI.UI.Controls.Core.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\CommunityToolkit.WinUI.UI.Controls.DataGrid.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\CommunityToolkit.WinUI.UI.Controls.Input.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\CommunityToolkit.WinUI.UI.Controls.Layout.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\CommunityToolkit.WinUI.UI.Controls.Markdown.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\CommunityToolkit.WinUI.UI.Controls.Media.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\CommunityToolkit.WinUI.UI.Controls.Primitives.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\CommunityToolkit.WinUI.UI.dll" />
 
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.Configuration.Abstractions.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.Configuration.Binder.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.Configuration.CommandLine.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.Configuration.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.Configuration.EnvironmentVariables.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.Configuration.FileExtensions.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.Configuration.Json.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.Configuration.UserSecrets.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.DependencyInjection.Abstractions.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.DependencyInjection.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.Diagnostics.Abstractions.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.Diagnostics.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.FileProviders.Abstractions.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.FileProviders.Physical.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.FileSystemGlobbing.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.Hosting.Abstractions.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.Hosting.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.Logging.Abstractions.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.Logging.Configuration.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.Logging.Console.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.Logging.Debug.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.Logging.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.Logging.EventLog.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.Logging.EventSource.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.Options.ConfigurationExtensions.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.Options.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Extensions.Primitives.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Graphics.Canvas.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Graphics.Canvas.Interop.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.InteractiveExperiences.Projection.dll" />
 
+            
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Windows.ApplicationModel.DynamicDependency.Projection.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Windows.ApplicationModel.Resources.Projection.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Windows.AppLifecycle.Projection.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Windows.AppNotifications.Builder.Projection.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Windows.AppNotifications.Projection.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Windows.PushNotifications.Projection.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Windows.SDK.NET.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Windows.Security.AccessControl.Projection.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Windows.System.Power.Projection.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Windows.System.Projection.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Windows.Widgets.Providers.Projection.dll" />
+            
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.WindowsAppRuntime.Bootstrap.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.WindowsAppRuntime.Bootstrap.Net.dll" />
+            
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.WinUI.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Xaml.Interactions.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Xaml.Interactivity.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Newtonsoft.Json.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\System.CodeDom.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\System.Diagnostics.EventLog.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\System.Diagnostics.EventLog.Messages.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\System.Management.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\System.ServiceProcess.ServiceController.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\WinUIEx.dll" />
         </Component>
+
+
+        <StandardDirectory Id="ProgramMenuFolder">
+            <Component Id="SettingsAppShortcut" Guid="c71be7ba-f0b6-483e-a409-e40985e90117">
+                <Shortcut Id="ApplicationStartMenuShortcut"
+                          Name="MIDI Settings"
+                          Description="Windows MIDI Services Settings and Tools"
+                          Target="[#MidiSettings.exe]"
+                          WorkingDirectory="SETTINGSAPP_INSTALLFOLDER" />
+            </Component>
+        </StandardDirectory>
+        
 
         <CustomAction
             Id="WriteActivatableClassIdKeysAction"
@@ -177,6 +270,7 @@
             <ComponentRef Id="ConsoleAppExe"/>
 
             <ComponentRef Id="SettingsAppExe"/>
+            <ComponentRef Id="SettingsAppShortcut"/>
         </Feature>
 
 

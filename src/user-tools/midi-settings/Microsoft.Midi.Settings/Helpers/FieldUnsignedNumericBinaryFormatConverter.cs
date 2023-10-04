@@ -13,12 +13,12 @@ public class FieldUnsignedNumericBinaryFormatConverter : IValueConverter
     {
         if (value is null)
         {
-            return null;
+            return System.Convert.ChangeType(0, targetType);
         }
 
         if (parameter is null)
         {
-            return null;
+            return System.Convert.ChangeType(0, targetType);
         }
 
         // Retrieve the number of digits specified in the parameter
@@ -26,7 +26,7 @@ public class FieldUnsignedNumericBinaryFormatConverter : IValueConverter
 
         if (string.IsNullOrEmpty(digitsString))
         {
-            return null;
+            return System.Convert.ChangeType(0, targetType);
         }
 
         try

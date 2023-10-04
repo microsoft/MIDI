@@ -48,33 +48,102 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         private void MoveFunctionBlock(byte functionBlockId, byte newStartGroupIndex, byte newGroupSpan)
         {
-            // if not static
+            // if not static fbs in the endpoint info
         }
 
         private void UpdateFunctionBlockName(byte functionBlockId, string newName)
         {
-            // if not static
+            // if not static fbs in the endpoint info
         }
 
         private void DeactivateFunctionBlock(byte functionBlockId)
         {
-            // if not static
+            // if not static fbs in the endpoint info
         }
 
         private void ActivateFunctionBlock(byte functionBlockId)
         {
-            // if not static
+            // if not static fbs in the endpoint info
+        }
+
+        private void UpdateEndpointInfo()
+        {
+            // send out endpoint info update
         }
 
         private void UpdateEndpointName(string newName)
         {
-
+            // send out endpoint name update
         }
 
         private void UpdateEndpointProductInstanceId(string newProductInstanceId)
         {
+            // send out product instance id update
+        }
+
+
+        // TODO: Need to localize these strings
+        private void ShowMainMenu()
+        {
+            var result = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("Please select an option")
+                    .AddChoices(new[]
+                    {
+                        "View Configuration",
+                        "Update Endpoint Info",
+                        "Update Endpoint Product Instance Id",
+                        "Function Block Sub-menu",
+                        "Shut down Device and Exit"
+                    }
+                    ));
+
+            
+        }
+
+        // TODO: Need to localize these strings
+        private void ShowFunctionBlockMenu(MidiFunctionBlock block)
+        {
+            var result = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("Please select an option")
+                    .AddChoices(new[]
+                    {
+                        "Toggle Function Block Active State",
+                        "Update Function Block Name",
+                        "Move Function Block",
+                        "Function Block Sub-menu",
+                        "Back to main menu"
+                    }
+                    ));
+        }
+
+
+        private void ShowUpdateEndpointInfoPrompts()
+        {
+            // prompt for MIDI 1.0 compat
+
+            // prompt for MIDI 2.0 compat
+
+            // prompt for UMP version major
+
+            // prompt for ump version minor
+
+            // prompt for RX Jitter Reduction Timestamps
+
+            // prompt for TX Jitter Reduction Timestamps
+
+            // number of function blocks needs to remain fixed. Same with static or dynamic function blocks
 
         }
+
+        private void ShowUpdateDeviceIdentityPrompts()
+        {
+            // prompt for the sysex Ids, device family, device family model, software revision bytes
+        }
+
+
+
 
     }
 }

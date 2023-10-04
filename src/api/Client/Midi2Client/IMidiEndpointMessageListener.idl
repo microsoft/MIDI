@@ -14,12 +14,13 @@ MIDI_IDL_IMPORT
 
 import "MidiMessageReceivedEventArgs.idl";
 import "IMidiInputConnection.idl";
+import "IMidiEndpointMessageProcessingPlugin.idl";
 
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [MIDI_INTERFACE_UUID("38d87ced-b820-41bd-9a44-d43a19c1dfcb",1.0)]
-    interface IMidiEndpointMessageListener
+    interface IMidiEndpointMessageListener requires IMidiEndpointMessageProcessingPlugin
     {
         IMidiInputConnection InputConnection{ get; set; }; 
 
@@ -33,4 +34,5 @@ namespace Windows.Devices.Midi2
             out Boolean skipMainMessageReceivedEvent);
 
     }
+
 }

@@ -24,17 +24,14 @@ TEST_CASE("Offline.Cache.Endpoint Basics")
         winrt::hstring data = L"{ Some Test Data }";
 
 
-        REQUIRE_NOTHROW(MidiService::EndpointMetadataCache());
-
-
         // add item to the cache
-        MidiService::EndpointMetadataCache().AddOrUpdateData(endpointDeviceId, propertyKey, data);
+        MidiEndpointMetadataCache::AddOrUpdateData(endpointDeviceId, propertyKey, data);
 
-        REQUIRE(MidiService::EndpointMetadataCache().IsDataPresent(endpointDeviceId, propertyKey));
+        REQUIRE(MidiEndpointMetadataCache::IsDataPresent(endpointDeviceId, propertyKey));
 
         // get the item back from the cache
 
-        auto retrievedData = MidiService::EndpointMetadataCache().GetData(endpointDeviceId, propertyKey);
+        auto retrievedData = MidiEndpointMetadataCache::GetData(endpointDeviceId, propertyKey);
 
         REQUIRE(retrievedData == data);
 

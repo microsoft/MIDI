@@ -37,7 +37,7 @@ public partial class App : Application
         return service;
     }
 
-    public static WindowEx MainWindow { get; } = new MainWindow();
+    public static Window MainWindow { get; } = new MainWindow();
 
     public App()
     {

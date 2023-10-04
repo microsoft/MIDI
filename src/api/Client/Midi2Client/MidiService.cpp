@@ -17,10 +17,6 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    winrt::com_ptr<MidiEndpointMetadataCache> MidiService::m_endpointMetadataCache{ nullptr };
-    winrt::com_ptr<MidiGlobalCache> MidiService::m_globalCache{ nullptr };
-
-
 
     _Use_decl_annotations_
     midi2::MidiServicePingResponseSummary MidiService::PingService(uint8_t const pingCount, uint32_t timeoutMilliseconds) noexcept
@@ -58,10 +54,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
             return *responseSummary;
         }
 
-        // we don't want any automatic plugins or messages
-        auto options = winrt::make<MidiBidirectionalEndpointOpenOptions>();
-        options.DisableAutomaticEndpointDiscoveryMessages(true);
-        options.DisableAutomaticFunctionBlockInfoMessages(true);
+        MidiBidirectionalEndpointOpenOptions options;
+        
+        options.DisableAutomaticStreamConfiguration(true);
+        options.DisableAutomaticEndpointMetadataHandling(true);
+        options.DisableAutomaticFunctionBlockMetadataHandling(true);
 
         // This ID must be consistent with what the service is set up to use.
 
@@ -161,7 +158,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             pings[pingIndex] = response;
 
             // send the ping
-            endpoint.SendUmpWords(timestamp, request.Word0, pingSourceId, pingIndex, request.Padding);
+            endpoint.SendMessageWords(timestamp, request.Word0, pingSourceId, pingIndex, request.Padding);
 
             Sleep(0);
         }
@@ -194,8 +191,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
             responseSummary->InternalSetTotals(totalPing, averagePing);
         }
 
-        // unwire the event and close the session. The endpoint connection is disconnected with the session
+        // unwire the event and close the session.
         endpoint.MessageReceived(eventRevokeToken);
+
+        // not strictly necessary
+        session.DisconnectEndpointConnection(endpoint.ConnectionId());
+
         session.Close();
 
         return *responseSummary;

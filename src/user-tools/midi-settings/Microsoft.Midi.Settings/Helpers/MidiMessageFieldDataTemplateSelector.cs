@@ -11,35 +11,36 @@ namespace Microsoft.Midi.Settings.Helpers;
 public class MidiMessageFieldDataTemplateSelector : DataTemplateSelector
 
 {
-    public DataTemplate DataNormal
+
+    public DataTemplate? DataNormal
     {
         get; set;
     }
-    public DataTemplate DataAlternate
+    public DataTemplate? DataAlternate
     {
         get; set;
     }
 
-    public DataTemplate MessageType
+    public DataTemplate? MessageType
     {
         get; set;
     }
-    public DataTemplate Opcode
-    {
-        get; set;
-    }
-
-    public DataTemplate Channel
+    public DataTemplate? Opcode
     {
         get; set;
     }
 
-    public DataTemplate Group
+    public DataTemplate? Channel
     {
         get; set;
     }
 
-    public DataTemplate Reserved
+    public DataTemplate? Group
+    {
+        get; set;
+    }
+
+    public DataTemplate? Reserved
     {
         get; set;
     }
@@ -48,6 +49,7 @@ public class MidiMessageFieldDataTemplateSelector : DataTemplateSelector
     {
         var vm = item as MidiMessageFieldViewModel;
 
+#pragma warning disable 8603
         if (vm != null)
         {
             if (vm.IsReserved) return Reserved;
@@ -69,6 +71,9 @@ public class MidiMessageFieldDataTemplateSelector : DataTemplateSelector
         {
             return DataNormal;
         }
+
+#pragma warning restore 8603
+
     }
 
 }

@@ -142,6 +142,9 @@
     <ClCompile Include="catch_amalgamated.cpp" />
     <ClCompile Include="ClockTests.cpp" />
     <ClCompile Include="BidirectionalEndpointTests.cpp" />
+    <ClCompile Include="EndpointInformationSerializationTests.cpp" />
+    <ClCompile Include="FunctionBlockMessageBuilderTests.cpp" />
+    <ClCompile Include="FunctionBlockSerializationTests.cpp" />
     <ClCompile Include="GlobalCacheTests.cpp" />
     <ClCompile Include="InProtocolEndpointInformationTest.cpp" />
     <ClCompile Include="InProtocolFunctionBlockInformationTest.cpp" />
@@ -151,17 +154,13 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SessionTests.cpp" />
+    <ClCompile Include="StreamMessageBuilderTests.cpp" />
     <ClCompile Include="UmpTests.cpp" />
     <ClCompile Include="UnidirectionalEndpointTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="PropertySheet.props" />
-  </ItemGroup>
-  <ItemGroup>
-    <Manifest Include="api-core-cpp-winrt-tests.exe.manifest">
-      <DeploymentContent>true</DeploymentContent>
-    </Manifest>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Client\Midi2Client\Windows.Devices.Midi2.vcxproj">
