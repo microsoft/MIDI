@@ -610,11 +610,6 @@ Return Value:
     }
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
-
-    //
-    // Stop WPP Tracing
-    //
-    WPP_CLEANUP(WdfDriverWdmGetDriverObject((WDFDRIVER)WdfDevice));
 }
 
 PAGED_CODE_SEG
