@@ -306,15 +306,35 @@ StreamEngine::HandleIo()
 #endif
                         // Send relevant buffer to USB
                         PUMPDATAFORMAT thisData = (PUMPDATAFORMAT)startingReadAddress;
-                        if (thisData->ByteCount > sizeof(UMPDATAFORMAT))
+                        if (thisData->ByteCount)
                         {
                             USBMIDI2DriverIoWrite(
                                 AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)),
                                 (PUCHAR)startingReadAddress + sizeof(UMPDATAFORMAT),
-                                thisData->ByteCount - sizeof(UMPDATAFORMAT)
+                                thisData->ByteCount
                             );
                         }
+#if 0
+                        // copy the data. This works (reading/writing past the end of the buffer)
+                        // because we have mapped the same buffer twice, so reading or writing
+                        // past the end has the effect of looping around. We're safe to do this
+                        // up to the client address plus 2x the buffer size, which will never happen
+                        // because everything above is constrained to the single buffer plus a little bit
+                        // of overlap.
+                        RtlCopyMemory
+                        (
+                            startingWriteAddress,
+                            startingReadAddress,
+                            bytesToCopy
+                        );
 
+                        // now calculate the new position that the buffer has been written up to.
+                        // this will be the original write position, plus the bytes copied, again modululs
+                        // the buffer size to take into account the loop.
+                        ULONG finalWritePosition = (midiInWritePosition + bytesToCopy) % pDevCtx->pMidiStreamEngine->m_BufferSize;
+
+                        // finalize by advancing the registers and setting the write event
+#endif
                         // advance our read position
                         InterlockedExchange((LONG *)m_ReadRegister, finalReadPosition);
 

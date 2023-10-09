@@ -2215,6 +2215,11 @@ BOOLEAN USBMIDI2DriverSendToUSB(
 {
     NTSTATUS        status;
     pDeviceContext;
+    WDFMEMORY_OFFSET offset;
+
+    // define the offset
+    offset.BufferLength = Length;
+    offset.BufferOffset = 0;
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
@@ -2229,7 +2234,7 @@ BOOLEAN USBMIDI2DriverSendToUSB(
     status = WdfUsbTargetPipeFormatRequestForWrite(pipe,
         usbRequest,
         reqMemory,
-        NULL); // Offset
+        &offset); // Offset
     if (!NT_SUCCESS(status)) {
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
             "WdfUsbTargetPipeFormatRequestForWrite failed 0x%x\n", status);
