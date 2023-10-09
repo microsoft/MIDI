@@ -87,6 +87,10 @@ CMidi2LoopbackMidiBiDi::Cleanup()
         TraceLoggingPointer(this, "this")
         );
 
+
+    if (m_loopbackMidiDevice != nullptr) m_loopbackMidiDevice->Cleanup();
+    if (m_pingMidiDevice != nullptr) m_pingMidiDevice->Cleanup();
+
     m_callback = nullptr;
     m_loopbackMidiDevice = nullptr;
     m_pingMidiDevice = nullptr;

@@ -152,7 +152,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         size_t umpCount = totalCharacters / maxCharactersPerPacket;
         if (totalCharacters % maxCharactersPerPacket != 0) umpCount++;
 
-        for (int currentUmp = 0; currentUmp < umpCount; currentUmp++)
+        for (size_t currentUmp = 0; currentUmp < umpCount; currentUmp++)
         {
             uint8_t form;
 
@@ -194,10 +194,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
             auto ump = winrt::get_self<implementation::MidiMessage128>(umpProjected);
             
             // allocate for the most we ever see
-            byte packetBytes[14]{ 0 };
+            uint8_t packetBytes[14]{ 0 };
 
             // endianness dependence means we can't just cast a pointer to the struct as byte* and run through it.
-            for (int i = 0; i < maxCharactersPerPacket && remainingCharacters > 0; i++)
+            for (uint8_t i = 0; i < maxCharactersPerPacket && remainingCharacters > 0; i++)
             {
                 packetBytes[i] = *utf8StringPointer;
                 utf8StringPointer++;    // move along the source string
@@ -330,8 +330,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     midi2::MidiMessage128 MidiStreamMessageBuilder::BuildStreamConfigurationNotificationMessage(
         internal::MidiTimestamp const timestamp,
         uint8_t const protocol,
-         bool const confirmationWillReceiveJRTimestamps,
-         bool const confirmationSendJRTimestamps
+        bool const confirmationWillReceiveJRTimestamps,
+        bool const confirmationSendJRTimestamps
     )
     {
         uint16_t word0Remaining{ 0 };

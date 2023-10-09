@@ -24,6 +24,7 @@ public:
         _In_ UINT32,
         _In_ LONGLONG);
 
+    void Cleanup();
 
     MidiLoopbackBidiDevice();
     ~MidiLoopbackBidiDevice();

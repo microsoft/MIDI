@@ -40,6 +40,11 @@ HRESULT MidiLoopbackBidiDevice::SendMidiMessageFromBToA(
 }
 
 
+void MidiLoopbackBidiDevice::Cleanup()
+{
+    m_callbackA = nullptr;
+    m_callbackB = nullptr;
+}
 
 void MidiLoopbackBidiDevice::SetCallbackA(_In_ IMidiCallback* callback)
 {
@@ -56,6 +61,5 @@ MidiLoopbackBidiDevice::MidiLoopbackBidiDevice() = default;
 
 MidiLoopbackBidiDevice::~MidiLoopbackBidiDevice()
 {
-    m_callbackA = nullptr;
-    m_callbackB = nullptr;
+    Cleanup();
 }

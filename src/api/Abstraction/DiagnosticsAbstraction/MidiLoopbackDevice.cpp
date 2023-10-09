@@ -25,6 +25,11 @@ HRESULT MidiLoopbackDevice::SendMidiMessage(
 }
 
 
+void MidiLoopbackDevice::Cleanup()
+{
+    m_callback = nullptr;
+}
+
 void MidiLoopbackDevice::SetCallback(_In_ IMidiCallback* callback)
 {
     m_callback = callback;
@@ -34,5 +39,5 @@ MidiLoopbackDevice::MidiLoopbackDevice() = default;
 
 MidiLoopbackDevice::~MidiLoopbackDevice()
 {
-    m_callback = nullptr;
+    Cleanup();
 }

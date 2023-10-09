@@ -51,8 +51,10 @@ CMidi2LoopbackMidiIn::Cleanup()
         TraceLoggingPointer(this, "this")
         );
 
+
+    if (m_midiDevice != nullptr) m_midiDevice->Cleanup();
+
     m_callback = nullptr;
-    m_midiDevice = nullptr;
 
     return S_OK;
 }
