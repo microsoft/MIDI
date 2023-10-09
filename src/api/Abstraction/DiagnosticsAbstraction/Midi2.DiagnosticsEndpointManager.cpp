@@ -38,8 +38,8 @@ CMidi2DiagnosticsEndpointManager::Initialize(
 
     RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
 
-    m_transportAbstractionId = __uuidof(Midi2DiagnosticsAbstraction);    // this is needed so MidiSrv can instantiate the correct transport
-    m_containerId = m_transportAbstractionId;                               // we use the transport ID as the container ID for convenience
+    m_transportAbstractionId = __uuidof(Midi2DiagnosticsAbstraction);   // this is needed so MidiSrv can instantiate the correct transport
+    m_containerId = m_transportAbstractionId;                           // we use the transport ID as the container ID for convenience
 
     RETURN_IF_FAILED(CreateParentDevice());
 
@@ -59,7 +59,15 @@ CMidi2DiagnosticsEndpointManager::Initialize(
 
 void SwMidiParentDeviceCreateCallback(__in HSWDEVICE /*hSwDevice*/, __in HRESULT CreationResult, __in_opt PVOID pContext, __in_opt PCWSTR pszDeviceInstanceId)
 {
+    if (pContext == nullptr)
+    {
+        // TODO: Should log this.
+
+        return;
+    }
+
     PPARENTDEVICECREATECONTEXT creationContext = (PPARENTDEVICECREATECONTEXT)pContext;
+   
 
     // interface registration has started, assumefailure
     creationContext->MidiParentDevice->SwDeviceState = SWDEVICESTATE::Failed;  

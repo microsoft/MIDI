@@ -310,6 +310,69 @@ Task("BuildApiActivationRegEntriesCSharp")
 });
 
 
+Task("BuildApiActivationRegEntriesInternal")
+    .IsDependentOn("BuildServiceAndAPI")
+    .DoesForEach(platformTargets, plat =>
+{
+    Information("\nBuilding WinRT Internaml XML Activation Entries for " + plat.ToString());
+
+    // read the file of dependencies
+    var sourceFileName = System.IO.Path.Combine(apiAndServiceStagingDir, plat.ToString(), "WinRTActivationEntries.txt");
+    var destinationFileName = System.IO.Path.Combine(registrySettingsStagingDir, "WinRTActivationEntries.xml");
+
+    if (!System.IO.File.Exists(sourceFileName))
+        throw new ArgumentException("Missing WinRT Activation entries file " + sourceFileName);
+
+    using (StreamReader reader = System.IO.File.OpenText(sourceFileName))
+    {
+
+        if (!DirectoryExists(registrySettingsStagingDir))
+            CreateDirectory(registrySettingsStagingDir);
+
+        using (StreamWriter writer = System.IO.File.CreateText(destinationFileName))            
+        {
+            string line;
+
+            while ((line = reader.ReadLine()) != null)
+            {
+                string trimmedLine = line.Trim();
+
+                if (string.IsNullOrWhiteSpace(trimmedLine) || trimmedLine.StartsWith("#"))
+                {
+                    // comment or empty line
+                    continue;
+                }
+
+                // pipe-delimited lines
+                var elements = trimmedLine.Split('|');
+
+                if (elements.Count() != 4)
+                    throw new ArgumentException("Bad line:  " + trimmedLine); 
+
+                // entries in order are
+                // ClassName | ActivationType | Threading | TrustLevel
+
+                string className = elements[0].Trim();
+                var activationType = int.Parse(elements[1].Trim());
+                var threading = int.Parse(elements[2].Trim());
+                var trustLevel = int.Parse(elements[3].Trim());
+
+                // TODO: Need to read the values from the file. These are hard-coded right now.
+                string threadingEnum = "Both";  // STA / MTA / Both
+                string trustLevelEnum = "Base";     // Base / Partial / Full
+
+                writer.WriteLine("          <class");
+                writer.WriteLine($"             activatableClassId=\"{className}\"");
+                writer.WriteLine($"             threading=\"{threadingEnum}\"");
+                writer.WriteLine($"             trustLevel=\"{trustLevelEnum}\"");
+                writer.WriteLine($"             />");
+            }
+
+        }   
+    }
+
+});
+
 
 Task("PackAPIProjection")
     .IsDependentOn("BuildServiceAndAPI")
@@ -555,6 +618,7 @@ w
 
 Task("Default")
     .IsDependentOn("Clean")
+    .IsDependentOn("BuildApiActivationRegEntriesInternal")
     .IsDependentOn("BuildInstaller");
 
 

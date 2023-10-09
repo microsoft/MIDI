@@ -21,7 +21,7 @@ using namespace winrt::Windows::Devices::Midi2;
 TEST_CASE("Offline.StreamMessageBuilder.BuildFunctionBlockNameNotification.LongName")
 {
     winrt::hstring name = L"This is an function block name that is longer than the supported 91 characters for a function block name in MIDI 2";
-    int expectedPacketCount = 7;
+    uint32_t expectedPacketCount = 7;
 
     uint8_t functionBlockNumber{ 5 };
 
@@ -49,7 +49,7 @@ TEST_CASE("Offline.StreamMessageBuilder.BuildFunctionBlockNameNotification.LongN
     }
 
 
-    for (int i = 0; i < messages.Size(); i++)
+    for (uint32_t i = 0; i < messages.Size(); i++)
     {
         std::cout << "Stream word0 0x" << std::hex << messages.GetAt(i).Word0() << std::endl;
 
@@ -93,7 +93,7 @@ TEST_CASE("Offline.StreamMessageBuilder.BuildFunctionBlockNameNotification.LongN
 TEST_CASE("Offline.StreamMessageBuilder.BuildFunctionBlockNameNotification.MediumName")
 {
     winrt::hstring name = L"A medium-sized name";
-    int expectedPacketCount = 2;
+    uint32_t expectedPacketCount = 2;
 
     uint8_t functionBlockNumber{ 5 };
 

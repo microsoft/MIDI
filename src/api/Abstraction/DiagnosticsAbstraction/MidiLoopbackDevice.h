@@ -21,6 +21,8 @@ public:
     MidiLoopbackDevice();
     ~MidiLoopbackDevice();
 
+    void Cleanup();
+
 private:
     IMidiCallback* m_callback;
 

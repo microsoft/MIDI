@@ -44,6 +44,9 @@ TEST_CASE("Connected.Endpoint.CreateOutput Create output endpoint")
 
     REQUIRE(session.Connections().Size() == 1);
 
+    session.DisconnectEndpointConnection(conn1.ConnectionId());
+
+
 }
 
 
@@ -65,6 +68,9 @@ TEST_CASE("Connected.Endpoint.CreateInput Create input endpoint")
     REQUIRE(conn1.IsOpen());
 
     REQUIRE(session.Connections().Size() == 1);
+
+    session.DisconnectEndpointConnection(conn1.ConnectionId());
+
 }
 
 

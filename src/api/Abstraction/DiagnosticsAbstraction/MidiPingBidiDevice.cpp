@@ -41,9 +41,14 @@ void MidiPingBidiDevice::SetCallback(_In_ IMidiCallback* callback)
     m_callback = callback;
 }
 
+void MidiPingBidiDevice::Cleanup()
+{
+    m_callback = nullptr;
+}
+
 MidiPingBidiDevice::MidiPingBidiDevice() = default;
 
 MidiPingBidiDevice::~MidiPingBidiDevice()
 {
-    m_callback = nullptr;
+    Cleanup();
 }

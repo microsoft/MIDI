@@ -19,6 +19,8 @@ public:
         _In_ LONGLONG);
 
 
+    void Cleanup();
+
     MidiPingBidiDevice();
     ~MidiPingBidiDevice();
 
