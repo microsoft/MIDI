@@ -35,7 +35,10 @@ typedef struct
     DWORD data4;
 } UMP128;
 
-extern UMP128 g_MidiTestData;
+extern UMP32 g_MidiTestData_32;
+extern UMP64 g_MidiTestData_64;
+extern UMP96 g_MidiTestData_96;
+extern UMP128 g_MidiTestData_128;
 
 void PrintMidiMessage(_In_ PVOID, _In_ UINT32, _In_ UINT32, _In_ LONGLONG);
 

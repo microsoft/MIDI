@@ -72,13 +72,13 @@ void Midi2DriverTests::TestMidiIO(BOOL Cyclic)
     LOG_OUTPUT(L"Writing midi data");
 
     QueryPerformanceCounter(&position);
-    VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData, sizeof(UMP32), position.QuadPart));
+    VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), position.QuadPart));
     QueryPerformanceCounter(&position);
-    VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData, sizeof(UMP64), position.QuadPart));
+    VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_64, sizeof(UMP64), position.QuadPart));
     QueryPerformanceCounter(&position);
-    VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData, sizeof(UMP96), position.QuadPart));
+    VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_96, sizeof(UMP96), position.QuadPart));
     QueryPerformanceCounter(&position);
-    VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData, sizeof(UMP128), position.QuadPart));
+    VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_128, sizeof(UMP128), position.QuadPart));
 
     // wait for up to 30 seconds for all the messages
     if(!allMessagesReceived.wait(30000))
@@ -130,9 +130,9 @@ void Midi2DriverTests::TestMidiIO_ManyMessages(BOOL Cyclic)
     {
         midiMessagesReceived++;
 
-        if (0 != memcmp(payload, &g_MidiTestData, min(payloadSize, sizeof(g_MidiTestData))))
+        if (0 != memcmp(payload, &g_MidiTestData_128, min(payloadSize, sizeof(UMP128))))
         {
-            PrintMidiMessage(payload, payloadSize, sizeof(UMP32), payloadPosition);
+            PrintMidiMessage(payload, payloadSize, sizeof(UMP128), payloadPosition);
         }
 
         if (midiMessagesReceived == expectedMessageCount)
@@ -172,7 +172,7 @@ void Midi2DriverTests::TestMidiIO_ManyMessages(BOOL Cyclic)
     for (UINT i = 0; i < expectedMessageCount; i++)
     {
         QueryPerformanceCounter(&position);
-        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData, sizeof(UMP128), position.QuadPart));
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_128, sizeof(UMP128), position.QuadPart));
     }
 
     // wait for up to 30 seconds for all the messages
@@ -361,7 +361,7 @@ void Midi2DriverTests::TestMidiIO_Latency(BOOL Cyclic, BOOL DelayedMessages)
         LONGLONG sendLatency {0};
 
         QueryPerformanceCounter(&qpcBefore);
-        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void*) &g_MidiTestData, sizeof(UMP32), qpcBefore.QuadPart));
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void*) &g_MidiTestData_32, sizeof(UMP32), qpcBefore.QuadPart));
         QueryPerformanceCounter(&qpcAfter);
 
         // track the min, max, and average time that the send call took,

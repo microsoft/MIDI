@@ -16,7 +16,11 @@
 // internal build (using Razzle)
 
 #define MIDI_API_CONTRACT(n) contract(Windows.Foundation.UniversalApiContract, n) 
-#define MIDI_IDL_IMPORT import "Windows.Foundation.idl";
+
+#define MIDI_IDL_IMPORT \
+import "Windows.Foundation.idl"; \
+import "Windows.Data.Json.idl"; \
+
 #define MIDI_INTERFACE_UUID(u,v) uuid(u)
 
 #else

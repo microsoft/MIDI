@@ -92,10 +92,10 @@ void MidiAbstractionTests::TestMidiAbstraction(REFIID Iid, BOOL IncludeMidiOne)
     VERIFY_SUCCEEDED(midiOutDevice->Initialize(midiOutInstanceId.c_str(), &mmcssTaskId));
 
     LOG_OUTPUT(L"Writing midi data");
-    VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage((void *) &g_MidiTestData, sizeof(UMP32), 0));
-    VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage((void *) &g_MidiTestData, sizeof(UMP64), 0));
-    VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage((void *) &g_MidiTestData, sizeof(UMP96), 0));
-    VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage((void *) &g_MidiTestData, sizeof(UMP128), 0));
+    VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), 0));
+    VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage((void *) &g_MidiTestData_64, sizeof(UMP64), 0));
+    VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage((void *) &g_MidiTestData_96, sizeof(UMP96), 0));
+    VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage((void *) &g_MidiTestData_128, sizeof(UMP128), 0));
 
     // wait for up to 30 seconds for all the messages
     if(!allMessagesReceived.wait(30000))
@@ -310,10 +310,10 @@ void MidiAbstractionTests::TestMidiAbstractionBiDi(REFIID Iid)
     VERIFY_SUCCEEDED(midiBiDiDevice->Initialize(midiBiDirectionalInstanceId.c_str(), &mmcssTaskId, this));
 
     LOG_OUTPUT(L"Writing midi data");
-    VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void *) &g_MidiTestData, sizeof(UMP32), 0));
-    VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void *) &g_MidiTestData, sizeof(UMP64), 0));
-    VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void *) &g_MidiTestData, sizeof(UMP96), 0));
-    VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void *) &g_MidiTestData, sizeof(UMP128), 0));
+    VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), 0));
+    VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void *) &g_MidiTestData_64, sizeof(UMP64), 0));
+    VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void *) &g_MidiTestData_96, sizeof(UMP96), 0));
+    VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void *) &g_MidiTestData_128, sizeof(UMP128), 0));
 
     // wait for up to 30 seconds for all the messages
     if(!allMessagesReceived.wait(30000))
@@ -504,7 +504,7 @@ void MidiAbstractionTests::TestMidiIO_Latency(REFIID Iid, BOOL DelayedMessages)
         LONGLONG sendLatency{0};
 
         QueryPerformanceCounter(&qpcBefore);
-        VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void*)&g_MidiTestData, sizeof(UMP32), qpcBefore.QuadPart));
+        VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void*)&g_MidiTestData_32, sizeof(UMP32), qpcBefore.QuadPart));
         QueryPerformanceCounter(&qpcAfter);
 
         // track the min, max, and average time that the send call took,
@@ -623,7 +623,11 @@ void MidiAbstractionTests::TestMidiSrvIOSlowMessages_Latency()
     TestMidiIO_Latency(__uuidof(Midi2MidiSrvAbstraction), TRUE);
 }
 
-UMP128 g_MidiTestData2 = { 0x00, 0x00, 0x5678, 0xbaadf00d, 0xdeadbeef, 0xd000000d };
+UMP32 g_MidiTestData2_32 = {0x21, 0x00, 0x5678 };
+UMP64 g_MidiTestData2_64 = {0x41, 0x00, 0x5678, 0xbaadf00d };
+UMP96 g_MidiTestData2_96 = {0xb1, 0x00, 0x5678, 0xbaadf00d, 0xdeadbeef };
+UMP128 g_MidiTestData2_128 = {0xF1, 0x00, 0x5678, 0xbaadf00d, 0xdeadbeef, 0xd000000d };
+
 
 void MidiAbstractionTests::TestMidiSrv_MultiClient()
 {
@@ -720,21 +724,21 @@ void MidiAbstractionTests::TestMidiSrv_MultiClient()
     VERIFY_SUCCEEDED(midiOutDevice2->Initialize(midiOutInstanceId.c_str(), &mmcssTaskId));
 
     LOG_OUTPUT(L"Writing midi data");
-    VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&g_MidiTestData, sizeof(UMP32), 0));
+    VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&g_MidiTestData_32, sizeof(UMP32), 0));
     //Sleep(0);
-    VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage((void*)&g_MidiTestData2, sizeof(UMP32), 0));
+    VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage((void*)&g_MidiTestData2_32, sizeof(UMP32), 0));
     //Sleep(0);
-    VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&g_MidiTestData, sizeof(UMP64), 0));
+    VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&g_MidiTestData_64, sizeof(UMP64), 0));
     //Sleep(0);
-    VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage((void*)&g_MidiTestData2, sizeof(UMP64), 0));
+    VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage((void*)&g_MidiTestData2_64, sizeof(UMP64), 0));
     //Sleep(0);
-    VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&g_MidiTestData, sizeof(UMP96), 0));
+    VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&g_MidiTestData_96, sizeof(UMP96), 0));
     //Sleep(0);
-    VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage((void*)&g_MidiTestData2, sizeof(UMP96), 0));
+    VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage((void*)&g_MidiTestData2_96, sizeof(UMP96), 0));
     //Sleep(0);
-    VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&g_MidiTestData, sizeof(UMP128), 0));
+    VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&g_MidiTestData_128, sizeof(UMP128), 0));
     //Sleep(0);
-    VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage((void*)&g_MidiTestData2, sizeof(UMP128), 0));
+    VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage((void*)&g_MidiTestData2_128, sizeof(UMP128), 0));
     //Sleep(0);
 
     // wait for up to 30 seconds for all the messages

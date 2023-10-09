@@ -1,0 +1,80 @@
+<?xml version="1.0" standalone="yes"?>
+<WindowsPerformanceRecorder Version="1.0" Author="" Team="" Comments="" Company="Microsoft Corporation" Copyright="Microsoft Corporation" Tag="">
+  <Profiles>
+    <!-- Collector for system tracing -->
+    <SystemCollector Id="SystemCollector" Name="System Collector">
+      <BufferSize Value="256" />
+      <Buffers Value="3" PercentageOfTotalMemory="true" MaximumBufferSpace="256" />
+    </SystemCollector>
+    <EventCollector Id="PagedPoolCollector" Name="PagedPoolCollector">
+      <BufferSize Value="256" />
+      <Buffers Value="3" PercentageOfTotalMemory="true" MaximumBufferSpace="64" />
+    </EventCollector>
+    <EventCollector Id="NonpagedPoolCollector" Name="NonpagedPoolCollector">
+      <BufferSize Value="256" />
+      <Buffers Value="3" PercentageOfTotalMemory="true" MaximumBufferSpace="64" />
+    </EventCollector>
+    <SystemProvider Id="SystemProvider">
+      <Keywords>
+        <Keyword Value="CpuConfig" />
+        <Keyword Value="CSwitch" />
+        <Keyword Value="DiskIO" />
+        <Keyword Value="DPC" />
+        <Keyword Value="HardFaults" />
+        <Keyword Value="Interrupt" />
+        <Keyword Value="KernelQueue" />
+        <Keyword Value="Loader" />
+        <Keyword Value="Power" />
+        <Keyword Value="ProcessThread" />
+        <Keyword Value="ReadyThread" />
+        <Keyword Value="SampledProfile" />
+        <Keyword Value="WDFDPC" />
+        <Keyword Value="WDFInterrupt" />
+      </Keywords>
+      <Stacks>
+        <Stack Value="CSwitch" />
+        <Stack Value="ProcessCreate" />
+        <Stack Value="ProcessDelete" />
+        <Stack Value="ReadyThread" />
+        <Stack Value="SampledProfile" />
+        <Stack Value="ThreadCreate" />
+        <Stack Value="ThreadDelete" />
+      </Stacks>
+    </SystemProvider>
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.MidiSrv" Name="f42d2441-aac3-5216-0150-3c0f50006b64" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.MidiSrvAbstraction" Name="6e9d2090-31a4-5a2c-da35-fd606d7d6ac3" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.KSAbstraction" Name="62a41de5-442c-5fe3-c088-1138121d82a8" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.DiagnosticsAbstraction" Name="29251cdc-995a-53e6-b1a3-fe11e7ffe893" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.VirtualMidiAbstraction" Name="9ce595de-7672-55c3-6529-204eaae0bd29" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.NetworkMidiAbstraction" Name="ee50a899-6caf-526c-e261-1f00403716f3" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Windows.Devices.Midi2.Api" Name="5c055d9e-0ac2-58ee-f647-c1f00339a6ec" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="WPP/usbmidi2.sys" Name="d360bed7-f0d2-4547-aa66-bbfbeb53db7e" Level="5" NonPagedMemory="true">
+      <Keywords>
+        <Keyword Value="0x7FFFFFFF" />
+      </Keywords>
+    </EventProvider>
+    <Profile Id="midi.Verbose.Memory" LoggingMode="Memory" Name="midi" DetailLevel="Verbose" Description="midi profile">
+      <Collectors>
+        <SystemCollectorId Value="SystemCollector">
+          <SystemProviderId Value="SystemProvider" />
+        </SystemCollectorId>
+        <EventCollectorId Value="PagedPoolCollector">
+          <EventProviders>
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.MidiSrv" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.MidiSrvAbstraction" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.KSAbstraction" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.DiagnosticsAbstraction" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.VirtualMidiAbstraction" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.NetworkMidiAbstraction" />
+            <EventProviderId Value="TraceLogging/Windows.Devices.Midi2.Api" />
+          </EventProviders>
+        </EventCollectorId>
+        <EventCollectorId Value="NonpagedPoolCollector">
+          <EventProviders>
+            <EventProviderId Value="WPP/usbmidi2.sys" />
+          </EventProviders>
+        </EventCollectorId>
+      </Collectors>
+    </Profile>
+  </Profiles>
+</WindowsPerformanceRecorder>
