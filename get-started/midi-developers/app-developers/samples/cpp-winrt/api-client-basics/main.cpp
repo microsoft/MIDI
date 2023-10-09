@@ -10,7 +10,7 @@
 
 using namespace winrt::Windows::Devices::Midi2;        // API
 
-// standated WinRT enumeration support. This is how you find attached devices.
+// standard WinRT enumeration support. This is how you find attached devices.
 using namespace winrt::Windows::Devices::Enumeration;
 
 // where you find types like IAsyncOperation, IInspectable, etc.
@@ -163,7 +163,7 @@ int main()
         std::cout << "Sending single UMP..." << std::endl;
 
         auto ump = ump32.as<IMidiUniversalPacket>();
-        sendEndpoint.SendMessagePacket(ump);          // could also use the SendWords methods, etc.
+        auto sendResult = sendEndpoint.SendMessagePacket(ump);          // could also use the SendWords methods, etc.
 
         std::cout << std::endl << " ** Wait for the sent UMP to arrive, and then press enter to cleanup. **" << std::endl;
 

@@ -135,6 +135,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
             responseSummary->InternalSetFailed(L"Endpoint open failed. The service may be unavailable.");
             endpoint.MessageReceived(eventRevokeToken);
 
+            session.DisconnectEndpointConnection(endpoint.ConnectionId());
+
             return *responseSummary;
         }
 
