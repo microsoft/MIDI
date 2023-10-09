@@ -36,6 +36,10 @@ INCLUDES = \
     ..\..\inc; \
     $(OBJ_PATH)\..\..\idl\$(O); \
     $(OBJ_PATH)\..\..\abstraction\midisrvabstraction\$(O); \
+    $(CONVERGED_SDK_INC_PATH); \
+    $(ONECOREUAP_INTERNAL_SDK_INC_PATH); \
+    $(ONECORE_INTERNAL_SDK_INC_PATH); \
+    $(ONECORE_EXTERNAL_SDK_INC_PATH); \
 
 SOURCES = \
 	IMidiCacheableMetadata.idl \
@@ -164,8 +168,8 @@ SOURCES = \
 	MidiUniqueId.cpp \
 	MidiVirtualDeviceManager.cpp \
 	MidiVirtualDeviceResponder.cpp \
-	pch.cpp \
 	trace_logging.cpp \
+	Windows.Devices.Midi2.rc \
 
 TARGETLIBS = \
     $(TARGETLIBS) \

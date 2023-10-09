@@ -6,8 +6,10 @@
 
 #include "MidiTestCommon.h"
 
-// filler data, not a real midi message but meets ump format and size
-UMP128 g_MidiTestData = {0x12, 0xBD, 0x1234, 0xbaadf00d, 0xdeadbeef, 0xd000000d };
+UMP32 g_MidiTestData_32 = {0x21, 0xAA, 0x1234 };
+UMP64 g_MidiTestData_64 = {0x41, 0xBB, 0x1234, 0xbaadf00d };
+UMP96 g_MidiTestData_96 = {0xb1, 0xCC, 0x1234, 0xbaadf00d, 0xdeadbeef };
+UMP128 g_MidiTestData_128 = {0xF1, 0xDD, 0x1234, 0xbaadf00d, 0xdeadbeef, 0xd000000d };
 
 _Use_decl_annotations_
 void PrintMidiMessage(PVOID Payload, UINT32 PayloadSize, UINT32 ExpectedPayloadSize, LONGLONG PayloadPosition)

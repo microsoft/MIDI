@@ -93,7 +93,7 @@ CMidi2VirtualMidiAbstraction::Activate(
         }
 
         // TODO: Not sure if this is the right pattern for this or not. There's no detach call here, so does this leak?
-        RETURN_IF_FAILED(m_endpointManager.query_to(Riid, Interface));
+        RETURN_IF_FAILED(m_endpointManager->QueryInterface(Riid, Interface));
     }
 
     else

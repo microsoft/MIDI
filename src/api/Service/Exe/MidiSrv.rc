@@ -1,0 +1,21 @@
+//
+//    Copyright (C) Microsoft.  All rights reserved.
+//
+
+#include <windows.h>
+#include <ntverp.h>
+#include "resource.h"
+
+#define VER_FILETYPE    VFT_APP
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Windows Midi Service"
+#define VER_INTERNALNAME_STR        "midisrv.exe"
+#define VER_ORIGINALFILENAME_STR    "midisrv.exe"
+
+#include "common.ver"
+
+STRINGTABLE
+BEGIN
+   IDS_MIDISRV_SERVICEDISPLAYNAME   "Windows MIDI Service"
+   IDS_MIDISRV_SERVICEDESCRIPTION   "Service for routing incoming and outgoing MIDI messages"
+END
