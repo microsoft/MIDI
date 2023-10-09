@@ -35,11 +35,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     private:
         uint8_t m_number{ 0 };
-        winrt::hstring m_name;
+        winrt::hstring m_name{};
         bool m_isActive{ false };
-        MidiFunctionBlockDirection m_direction;
-        MidiFunctionBlockUIHint m_uiHint;
-        MidiFunctionBlockMidi10 m_midi10Connection;
+        midi2::MidiFunctionBlockDirection m_direction{midi2::MidiFunctionBlockDirection::Undefined};
+        midi2::MidiFunctionBlockUIHint m_uiHint{midi2::MidiFunctionBlockUIHint::Unknown};
+        midi2::MidiFunctionBlockMidi10 m_midi10Connection{midi2::MidiFunctionBlockMidi10::Reserved};
         uint8_t m_midiCIMessageVersionFormat{ 0 };
         uint8_t m_maxSysEx8Streams{ 0 };
 

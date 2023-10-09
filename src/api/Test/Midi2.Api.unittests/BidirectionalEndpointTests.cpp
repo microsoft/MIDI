@@ -39,6 +39,8 @@ TEST_CASE("Connected.Endpoint.CreateBidi Create bidirectional A endpoint")
     REQUIRE(conn1.IsOpen());
 
     REQUIRE(session.Connections().Size() == 1);
+
+    session.DisconnectEndpointConnection(conn1.ConnectionId());
 }
 
 TEST_CASE("Connected.Endpoint.CreateBidi Create bidirectional B endpoint")
@@ -59,6 +61,8 @@ TEST_CASE("Connected.Endpoint.CreateBidi Create bidirectional B endpoint")
     REQUIRE(conn1.IsOpen());
 
     REQUIRE(session.Connections().Size() == 1);
+
+    session.DisconnectEndpointConnection(conn1.ConnectionId());
 }
 
 
@@ -89,7 +93,7 @@ TEST_CASE("Connected.Endpoint.SingleUmpStruct Send and receive single Ump64 stru
     bool messageReceivedFlag = false;
     MidiMessageStruct sentUmp;
 
-    auto sentMessageType = MidiMessageType::Midi2ChannelVoice64;
+ //   auto sentMessageType = MidiMessageType::Midi2ChannelVoice64;
     auto sentTimestamp = MidiClock::GetMidiTimestamp();
 
     auto MessageReceivedHandler = [&](winrt::Windows::Foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)

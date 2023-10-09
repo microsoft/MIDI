@@ -417,9 +417,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
                     break;
                 default:
                     return L"Flex Data Unknown";
+
                 }
             }
-            return L"Flex Data Unknown";
 
         case MidiMessageType::FutureReservedE128:
             return L"Type E Unknown";
@@ -453,8 +453,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
             // this is here just to satisfy the compiler because it doesn't understand 4-bit values
             return L"Unknown";
         };
-
-        return L"Unknown";
 
 
     }

@@ -126,8 +126,8 @@ namespace Windows::Devices::Midi2::Internal
     // implementation must be in header (or otherwise included) for template classes
 
 
-    _Use_decl_annotations_
     template <typename TEndpointAbstraction>
+    _Use_decl_annotations_
     midi2::MidiSendMessageResult InternalMidiOutputConnection<TEndpointAbstraction>::SendMessageRaw(
             winrt::com_ptr<TEndpointAbstraction> endpoint,
             void* data, 
@@ -190,8 +190,8 @@ namespace Windows::Devices::Midi2::Internal
     }
 
 
-    _Use_decl_annotations_
     template <typename TEndpointAbstraction>
+    _Use_decl_annotations_
     void* InternalMidiOutputConnection<TEndpointAbstraction>::GetUmpDataPointer(
             midi2::IMidiUniversalPacket const& ump,
             uint8_t& dataSizeOut)
