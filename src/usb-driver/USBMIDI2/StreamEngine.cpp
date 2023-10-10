@@ -157,8 +157,6 @@ StreamEngine::HandleIo()
     // This implememtation loops the midi out data back to midi in.
     NTSTATUS status = STATUS_SUCCESS;
 
-    DEVICE_CONTEXT* pDevCtx = GetDeviceContext(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)));
-
     // start with the even reset to indicate that the thread is running
     m_ThreadExitedEvent.clear();
 
@@ -193,7 +191,6 @@ StreamEngine::HandleIo()
                     if (nullptr != g_MidiInStreamEngine)
                     {
                         ULONG bytesAvailableToRead = 0;
-                        ULONG bytesAvailable = 0;
 
                         KeResetEvent(m_WriteEvent);
 
@@ -383,7 +380,9 @@ Return Value:
             pWriteData[count] = pBuffer[count];
         }
 
-        pUMP->Position = 0; // current timestamp?
+//        LARGE_INTEGER tempPosition = KeQueryPerformanceCounter(NULL);
+//        pUMP->Position = (LONGLONG)tempPosition.QuadPart;
+        pUMP->Position = 0;
         pUMP->ByteCount = (ULONG)bufferSize * (ULONG)sizeof(UINT32);
 
         // now calculate the new position that the buffer has been written up to.
@@ -482,7 +481,6 @@ NTSTATUS
 StreamEngine::Pause()
 {
     NTSTATUS status = STATUS_UNSUCCESSFUL;
-    DEVICE_CONTEXT* pDevCtx = GetDeviceContext(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)));
 
     PAGED_CODE();
 
@@ -546,7 +544,6 @@ NTSTATUS
 StreamEngine::Run()
 {
     NTSTATUS status = STATUS_UNSUCCESSFUL;
-    DEVICE_CONTEXT* pDevCtx = GetDeviceContext(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)));
 
     PAGED_CODE();
 
