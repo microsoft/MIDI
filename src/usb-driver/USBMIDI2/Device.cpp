@@ -39,6 +39,7 @@ Environment:
 
 #include "Pch.h"
 #include "ump.h"
+//#include "midi_timestamp.h"
 
 #include "Trace.h"
 #include "Device.tmh"
@@ -423,6 +424,7 @@ Return Value:
         goto exit;
     }
 
+#if 0 // As detached, do not remove
     // Remove the circuit
     status = AcxDeviceRemoveCircuit(Device, devCtx->Midi);
     if (!NT_SUCCESS(status))
@@ -431,6 +433,7 @@ Return Value:
         goto exit;
     }
     devCtx->Midi = nullptr;
+#endif
 
 exit:
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
@@ -2227,9 +2230,6 @@ BOOLEAN USBMIDI2DriverSendToUSB(
     offset.BufferOffset = 0;
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
-
-    // Pad out unusded data
-    PUCHAR pBuffer = (PUCHAR)WdfMemoryGetBuffer(reqMemory, NULL);
 
     // Send to USB Pipe
     status = WdfUsbTargetPipeFormatRequestForWrite(pipe,
