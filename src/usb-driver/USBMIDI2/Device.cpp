@@ -1494,8 +1494,6 @@ Return Value:
             // Submit any data written
             if (numIndex)
             {
-//                if (!pDeviceContext->pMidiStreamEngine
-//                    || !pDeviceContext->pMidiStreamEngine->FillReadStream(
                 if (!g_MidiInStreamEngine
                     || !g_MidiInStreamEngine->FillReadStream(
                     (PUINT32)pWorkingBuffer,
@@ -1536,8 +1534,6 @@ Return Value:
             }
 
             // Send Memory to Read Queue
-//            if (!pDeviceContext->pMidiStreamEngine
-//                || !pDeviceContext->pMidiStreamEngine->FillReadStream(
             if (!g_MidiInStreamEngine
                 || !g_MidiInStreamEngine->FillReadStream(
                 (PUINT32)pWriteBuffer,
@@ -2234,10 +2230,6 @@ BOOLEAN USBMIDI2DriverSendToUSB(
 
     // Pad out unusded data
     PUCHAR pBuffer = (PUCHAR)WdfMemoryGetBuffer(reqMemory, NULL);
-    while (Length < (size_t)pDeviceContext->MidiOutMaxSize)
-    {
-        pBuffer[Length++] = NULL;
-    }
 
     // Send to USB Pipe
     status = WdfUsbTargetPipeFormatRequestForWrite(pipe,
