@@ -51,7 +51,7 @@ _Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 CopyRegistrySettingsPath(
-    _In_ PUNICODE_STRING RegistryPath
+    PUNICODE_STRING RegistryPath
     )
 /*++
 
@@ -97,8 +97,8 @@ _Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 EvtBusDeviceAdd(
-    _In_    WDFDRIVER        Driver,
-    _Inout_ PWDFDEVICE_INIT  DeviceInit
+    WDFDRIVER        Driver,
+    PWDFDEVICE_INIT  DeviceInit
     )
 /*++
 Routine Description:
@@ -207,7 +207,7 @@ Return Value:
         memoryAttributes.ParentObject = device;
         status = WdfMemoryCreate(
             &memoryAttributes,
-            NonPagedPool,
+            NonPagedPoolNx,
             USBMIDI_POOLTAG,
             USBMIDI2DRIVER_RING_BUF_SIZE * sizeof(UINT32),
             &devCtx->ReadRingBuf.RingBufMemory,
@@ -264,9 +264,9 @@ _Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 EvtDevicePrepareHardware(
-    _In_ WDFDEVICE      Device,
-    _In_ WDFCMRESLIST   ResourceList,
-    _In_ WDFCMRESLIST   ResourceListTranslated
+    WDFDEVICE      Device,
+    WDFCMRESLIST   ResourceList,
+    WDFCMRESLIST   ResourceListTranslated
     )
 /*++
 
@@ -385,8 +385,8 @@ _Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 EvtDeviceReleaseHardware(
-    _In_ WDFDEVICE      Device,
-    _In_ WDFCMRESLIST   ResourceListTranslated
+    WDFDEVICE      Device,
+    WDFCMRESLIST   ResourceListTranslated
     )
 /*++
 
@@ -442,8 +442,8 @@ _Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS 
 EvtDeviceD0Entry(
-    _In_  WDFDEVICE Device,
-    _In_  WDF_POWER_DEVICE_STATE PreviousState
+    WDFDEVICE Device,
+    WDF_POWER_DEVICE_STATE PreviousState
     )
 {
     NTSTATUS status;
@@ -474,8 +474,8 @@ _Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS 
 EvtDeviceD0Exit(
-    _In_  WDFDEVICE Device,
-    _In_  WDF_POWER_DEVICE_STATE TargetState
+    WDFDEVICE Device,
+    WDF_POWER_DEVICE_STATE TargetState
     )
 {
     NTSTATUS        status = STATUS_SUCCESS;
@@ -538,7 +538,7 @@ _Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 SetPowerPolicy(
-    _In_ WDFDEVICE Device
+    WDFDEVICE Device
     )
 {
     NTSTATUS                status = STATUS_SUCCESS;
@@ -573,10 +573,11 @@ exit:
     return status;
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 VOID
 EvtDeviceContextCleanup(
-    _In_ WDFOBJECT      WdfDevice
+    WDFOBJECT      WdfDevice
    )
 /*++
 
@@ -612,10 +613,11 @@ Return Value:
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 USBMIDI2DriverSelectInterface(
-    _In_ WDFDEVICE    Device
+    WDFDEVICE    Device
 )
 /*++
 
@@ -742,7 +744,7 @@ Return Value:
     deviceConfigAttrib.ParentObject = pDeviceContext->UsbDevice;
     status = WdfMemoryCreate(
         &deviceConfigAttrib,
-        NonPagedPool,
+        NonPagedPoolNx,
         USBMIDI_POOLTAG,
         configurationDescriptorSize,
         &pDeviceContext->DeviceConfigDescriptorMemory,
@@ -1077,10 +1079,11 @@ SelectExit:
     return status;
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 USBMIDI2DriverEnumeratePipes(
-    _In_ WDFDEVICE    Device
+    WDFDEVICE    Device
 )
 /*++
 
@@ -1190,12 +1193,13 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
+_Use_decl_annotations_
 NONPAGED_CODE_SEG
 VOID USBMIDI2DriverEvtReadComplete(
-    _In_    WDFUSBPIPE Pipe,
-    _In_    WDFMEMORY  Buffer,
-    _In_    size_t     NumBytesTransferred,
-    _In_    WDFCONTEXT Context
+    WDFUSBPIPE Pipe,
+    WDFMEMORY  Buffer,
+    size_t     NumBytesTransferred,
+    WDFCONTEXT Context
 )
 /*++
 Routine Description:
@@ -1254,7 +1258,7 @@ Return Value:
             // making sure that overall size even on 32 bit words.
             status = WdfMemoryCreate(
                 NULL,       // attributes
-                NonPagedPool,
+                NonPagedPoolNx,
                 NULL,       // Pool Tag
                 workingBufferSize,
                 &workingBuffer,
@@ -1510,7 +1514,7 @@ Return Value:
             // Create working buffer to byte exchange into
             status = WdfMemoryCreate(
                 NULL,       // attributes
-                NonPagedPool,
+                NonPagedPoolNx,
                 NULL,       // Pool Tag
                 NumBytesTransferred,
                 &workingBuffer,
@@ -1562,6 +1566,7 @@ ReadCompleteExit:
     return;
 }
 
+_Use_decl_annotations_
 NONPAGED_CODE_SEG
 BOOLEAN USBMIDI2DriverEvtReadFailed(
     WDFUSBPIPE      Pipe,
@@ -1595,11 +1600,12 @@ Return Value:
     return TRUE;
 }
 
+_Use_decl_annotations_
 NONPAGED_CODE_SEG
 BOOLEAN USBMIDI2DriverFillReadQueue(
-    _In_    PUINT32             pBuffer,
-    _In_    size_t              bufferSize,
-    _In_    PDEVICE_CONTEXT     pDeviceContext
+    PUINT32             pBuffer,
+    size_t              bufferSize,
+    PDEVICE_CONTEXT     pDeviceContext
 )
 /*++
 Routine Description:
@@ -1676,12 +1682,13 @@ Return Value:
     return true;
 }
 
+_Use_decl_annotations_
 NONPAGED_CODE_SEG
 VOID
 USBMIDI2DriverEvtIoRead(
-    _In_ WDFQUEUE         Queue,
-    _In_ WDFREQUEST       Request,
-    _In_ size_t           Length
+    WDFQUEUE         Queue,
+    WDFREQUEST       Request,
+    size_t           Length
 )
 /*++
 
@@ -1760,12 +1767,13 @@ IoEvtReadExit:
     return;
 }
 
+_Use_decl_annotations_
 NONPAGED_CODE_SEG
 VOID
 USBMIDI2DriverIoWrite(
-    _In_ WDFDEVICE  Device,
-    _In_ PVOID      BufferStart,
-    _In_ size_t     numBytes
+    WDFDEVICE  Device,
+    PVOID      BufferStart,
+    size_t     numBytes
 )
 /*++
 
@@ -2055,7 +2063,7 @@ Return Value:Amy
                     // Create Memory Object
                     status = WdfMemoryCreate(
                         &writeMemoryAttributes,
-                        NonPagedPool,
+                        NonPagedPoolNx,
                         USBMIDI_POOLTAG,
                         pDeviceContext->MidiOutMaxSize,
                         &writeMemory,
@@ -2160,7 +2168,7 @@ Return Value:Amy
             // Create Memory Object
             status = WdfMemoryCreate(
                 &writeMemoryAttributes,
-                NonPagedPool,
+                NonPagedPoolNx,
                 USBMIDI_POOLTAG,
                 pDeviceContext->MidiOutMaxSize,
                 &writeMemory,
@@ -2203,14 +2211,15 @@ DriverIoWriteExit:
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 }
 
+_Use_decl_annotations_
 NONPAGED_CODE_SEG
 BOOLEAN USBMIDI2DriverSendToUSB(
-    _In_ WDFREQUEST         usbRequest,
-    _In_ WDFMEMORY          reqMemory,
-    _In_ WDFUSBPIPE         pipe,
-    _In_ size_t             Length,
-    _In_ PDEVICE_CONTEXT    pDeviceContext,
-    _In_ BOOLEAN            deleteRequest
+    WDFREQUEST         usbRequest,
+    WDFMEMORY          reqMemory,
+    WDFUSBPIPE         pipe,
+    size_t             Length,
+    PDEVICE_CONTEXT    pDeviceContext,
+    BOOLEAN            deleteRequest
 )
 {
     NTSTATUS        status;
@@ -2279,13 +2288,14 @@ SendToUSBExit:
     return true;
 }
 
+_Use_decl_annotations_
 NONPAGED_CODE_SEG
 VOID
 USBMIDI2DriverEvtRequestWriteCompletionRoutineDelete(
-    _In_ WDFREQUEST                  Request,
-    _In_ WDFIOTARGET                 Target,
-    _In_ PWDF_REQUEST_COMPLETION_PARAMS CompletionParams,
-    _In_ WDFCONTEXT                  Context
+    WDFREQUEST                  Request,
+    WDFIOTARGET                 Target,
+    PWDF_REQUEST_COMPLETION_PARAMS CompletionParams,
+    WDFCONTEXT                  Context
 )
 /*++
 
@@ -2344,13 +2354,14 @@ Return Value:
     return;
 }
 
+_Use_decl_annotations_
 NONPAGED_CODE_SEG
 VOID
 USBMIDI2DriverEvtRequestWriteCompletionRoutine(
-    _In_ WDFREQUEST                  Request,
-    _In_ WDFIOTARGET                 Target,
-    _In_ PWDF_REQUEST_COMPLETION_PARAMS CompletionParams,
-    _In_ WDFCONTEXT                  Context
+    WDFREQUEST                  Request,
+    WDFIOTARGET                 Target,
+    PWDF_REQUEST_COMPLETION_PARAMS CompletionParams,
+    WDFCONTEXT                  Context
 )
 /*++
 

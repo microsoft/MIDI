@@ -84,6 +84,7 @@ StreamEngine::~StreamEngine()
     Cleanup();
 }
 
+_Use_decl_annotations_
 NTSTATUS
 StreamEngine::Cleanup()
 {
@@ -140,7 +141,7 @@ StreamEngine::Cleanup()
 _Use_decl_annotations_
 void
 StreamEngine::WorkerThread(
-    _In_ PVOID context
+    PVOID context
     ){
     PAGED_CODE();
     auto streamEngine = reinterpret_cast<StreamEngine*>(context);
@@ -369,9 +370,9 @@ StreamEngine::HandleIo()
 _Use_decl_annotations_
 bool
 StreamEngine::FillReadStream(
-    _In_    PUINT32             pBuffer,
-    _In_    size_t              bufferSize,
-    _In_    WDFCONTEXT          Context
+    PUINT32             pBuffer,
+    size_t              bufferSize,
+    WDFCONTEXT          Context
 )
 /*++
 Routine Description:
@@ -691,11 +692,11 @@ exit:
 _Use_decl_annotations_
 NTSTATUS
 StreamEngine::GetSingleBufferMapping(
-    _In_ UINT32 BufferSize,
-    _In_ KPROCESSOR_MODE Mode,
-    _In_ BOOL LockPages,
-    _In_opt_ PSINGLE_BUFFER_MAPPING BaseMapping,
-    _Inout_ PSINGLE_BUFFER_MAPPING Mapping
+    UINT32 BufferSize,
+    KPROCESSOR_MODE Mode,
+    BOOL LockPages,
+    PSINGLE_BUFFER_MAPPING BaseMapping,
+    PSINGLE_BUFFER_MAPPING Mapping
     )
 {
     PAGED_CODE();
@@ -762,7 +763,7 @@ StreamEngine::GetSingleBufferMapping(
 _Use_decl_annotations_
 NTSTATUS
 StreamEngine::CleanupSingleBufferMapping(
-    _Inout_ PSINGLE_BUFFER_MAPPING Mapping
+    PSINGLE_BUFFER_MAPPING Mapping
     )
 {
     PAGED_CODE();
@@ -815,10 +816,10 @@ StreamEngine::CleanupSingleBufferMapping(
 _Use_decl_annotations_
 NTSTATUS
 StreamEngine::GetDoubleBufferMapping(
-    _In_ UINT32 BufferSize,
-    _In_ KPROCESSOR_MODE Mode,
-    _In_opt_ PSINGLE_BUFFER_MAPPING BaseMapping,
-    _Inout_ PDOUBLE_BUFFER_MAPPING Mapping
+    UINT32 BufferSize,
+    KPROCESSOR_MODE Mode,
+    PSINGLE_BUFFER_MAPPING BaseMapping,
+    PDOUBLE_BUFFER_MAPPING Mapping
     )
 {
 
@@ -997,8 +998,8 @@ StreamEngine::CleanupDoubleBufferMapping(
 _Use_decl_annotations_
 NTSTATUS
 StreamEngine::GetLoopedStreamingBuffer(
-    _In_ ULONG BufferSize,
-    _Inout_ PKSMIDILOOPED_BUFFER  Buffer
+    ULONG BufferSize,
+    PKSMIDILOOPED_BUFFER  Buffer
     )
 {
     // handle incoming property call to retrieve the looped streaming buffer.
@@ -1057,7 +1058,7 @@ StreamEngine::GetLoopedStreamingBuffer(
 _Use_decl_annotations_
 NTSTATUS
 StreamEngine::GetLoopedStreamingRegisters(
-    _Inout_ PKSMIDILOOPED_REGISTERS   Buffer
+    PKSMIDILOOPED_REGISTERS   Buffer
     )
 {
     // handle incoming property call to retrieve the looped streaming registers.
@@ -1101,7 +1102,7 @@ StreamEngine::GetLoopedStreamingRegisters(
 _Use_decl_annotations_
 NTSTATUS
 StreamEngine::SetLoopedStreamingNotificationEvent(
-    _In_ PKSMIDILOOPED_EVENT    Buffer
+    PKSMIDILOOPED_EVENT    Buffer
     )
 {
     // handle incoming property call to set the looped streaming events.

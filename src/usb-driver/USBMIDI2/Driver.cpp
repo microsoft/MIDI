@@ -46,10 +46,11 @@ Environment:
 
 extern wil::fast_mutex_with_critical_region *g_MidiInLock;
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 void
 DriverUnload(
-    _In_ WDFDRIVER Driver
+    WDFDRIVER Driver
     )
     /*++
 
@@ -101,8 +102,8 @@ _Use_decl_annotations_
 INIT_CODE_SEG
 NTSTATUS
 DriverEntry(
-    _In_ PDRIVER_OBJECT  DriverObject,
-    _In_ PUNICODE_STRING RegistryPath
+    PDRIVER_OBJECT  DriverObject,
+    PUNICODE_STRING RegistryPath
     )
     /*++
 

@@ -62,10 +62,11 @@ KSDATAFORMAT g_MidiFormat =
 
 DEFINE_GUID(MIDI_COMPONENT_GUID,    0xb0eb4f78, 0xfaa7, 0x4f28, 0x8f, 0x08, 0x9b, 0xf4, 0x16, 0x7f, 0x99, 0xfc);
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 VOID
 EvtPinContextCleanup(
-    _In_ WDFOBJECT      Pin
+    WDFOBJECT      Pin
    )
 /*++
 
@@ -96,7 +97,7 @@ _Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 AddMidi(
-    _In_ WDFDEVICE      Device
+    WDFDEVICE      Device
     )
 {
     NTSTATUS            status;
@@ -134,8 +135,8 @@ _Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 CreateMidiCircuit(
-    _In_     WDFDEVICE      Device,
-    _Out_    ACXCIRCUIT *   Circuit
+    WDFDEVICE      Device,
+    ACXCIRCUIT *   Circuit
     )
 /*++
 
@@ -464,12 +465,13 @@ exit:
     return status;
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 EvtCircuitPowerUp (
-    _In_ WDFDEVICE  Device,
-    _In_ ACXCIRCUIT Circuit,
-    _In_ WDF_POWER_DEVICE_STATE PreviousState
+    WDFDEVICE  Device,
+    ACXCIRCUIT Circuit,
+    WDF_POWER_DEVICE_STATE PreviousState
     )
 {
     UNREFERENCED_PARAMETER(Device);
@@ -485,12 +487,13 @@ EvtCircuitPowerUp (
     return STATUS_SUCCESS;
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 EvtCircuitPowerDown (
-    _In_ WDFDEVICE  Device,
-    _In_ ACXCIRCUIT Circuit,
-    _In_ WDF_POWER_DEVICE_STATE TargetState
+    WDFDEVICE  Device,
+    ACXCIRCUIT Circuit,
+    WDF_POWER_DEVICE_STATE TargetState
     )
 {
     UNREFERENCED_PARAMETER(Device);

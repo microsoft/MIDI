@@ -75,16 +75,17 @@ static ACX_PROPERTY_ITEM MidiStreamProperties[] =
 
 static ULONG MidiStreamPropertiesCount = SIZEOF_ARRAY(MidiStreamProperties);
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 EvtCircuitCreateStream(
-    _In_    WDFDEVICE       Device,
-    _In_    ACXCIRCUIT      Circuit,
-    _In_    ACXPIN          Pin,
-    _In_    PACXSTREAM_INIT StreamInit,
-    _In_    ACXDATAFORMAT   StreamFormat,
-    _In_    const GUID    * SignalProcessingMode,
-    _In_    ACXOBJECTBAG    VarArguments
+    WDFDEVICE       Device,
+    ACXCIRCUIT      Circuit,
+    ACXPIN          Pin,
+    PACXSTREAM_INIT StreamInit,
+    ACXDATAFORMAT   StreamFormat,
+    const GUID    * SignalProcessingMode,
+    ACXOBJECTBAG    VarArguments
     )
 /*++
 
@@ -208,11 +209,12 @@ exit:
     return status;
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 VOID
 EvtMidiGetLoopedStreamingBufferCallback(
-    _In_    WDFOBJECT   Object,
-    _In_    WDFREQUEST  Request
+    WDFOBJECT   Object,
+    WDFREQUEST  Request
     )
 {
     NTSTATUS                    status = STATUS_NOT_SUPPORTED;
@@ -323,11 +325,12 @@ exit:
     WdfRequestCompleteWithInformation(Request, status, outDataCb);
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 VOID
 EvtMidiGetLoopedStreamingRegistersCallback(
-    _In_    WDFOBJECT   Object,
-    _In_    WDFREQUEST  Request
+    WDFOBJECT   Object,
+    WDFREQUEST  Request
     )
 {
     NTSTATUS                    status = STATUS_NOT_SUPPORTED;
@@ -422,11 +425,12 @@ exit:
     WdfRequestCompleteWithInformation(Request, status, outDataCb);
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 VOID
 EvtMidiSetLoopedStreamingNotificationEventCallback(
-    _In_    WDFOBJECT   Object,
-    _In_    WDFREQUEST  Request
+    WDFOBJECT   Object,
+    WDFREQUEST  Request
     )
 {
     NTSTATUS                    status = STATUS_NOT_SUPPORTED;
@@ -521,20 +525,22 @@ exit:
     WdfRequestCompleteWithInformation(Request, status, outDataCb);
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 VOID
 EvtStreamDestroy(
-    _In_ WDFOBJECT Object
+    WDFOBJECT Object
     )
 {
     PAGED_CODE();
     UNREFERENCED_PARAMETER(Object);
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 VOID
 EvtStreamCleanup(
-    _In_ WDFOBJECT Object
+    WDFOBJECT Object
     )
 {
     PMIDI_STREAM_CONTEXT streamCtx = nullptr;
@@ -592,10 +598,11 @@ EvtStreamCleanup(
     }
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 EvtStreamPrepareHardware(
-    _In_ ACXSTREAM Stream
+    ACXSTREAM Stream
     )
 {
     PMIDI_STREAM_CONTEXT ctx;
@@ -608,10 +615,11 @@ EvtStreamPrepareHardware(
     return streamEngine->PrepareHardware();
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 EvtStreamReleaseHardware(
-    _In_ ACXSTREAM Stream
+    ACXSTREAM Stream
     )
 {
     PMIDI_STREAM_CONTEXT ctx;
@@ -624,10 +632,11 @@ EvtStreamReleaseHardware(
     return streamEngine->ReleaseHardware();
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 EvtStreamRun(
-    _In_ ACXSTREAM Stream
+    ACXSTREAM Stream
     )
 {
     PMIDI_STREAM_CONTEXT ctx;
@@ -641,10 +650,11 @@ EvtStreamRun(
 }
 
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 EvtStreamPause(
-    _In_ ACXSTREAM Stream
+    ACXSTREAM Stream
     )
 {
     PMIDI_STREAM_CONTEXT ctx;
@@ -661,10 +671,10 @@ _Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 AttachToCallerProcess(
-    _In_        WDFREQUEST        Request,
-    _Out_       KAPC_STATE      * ApcState,
-    _Out_       BOOLEAN         * Attached,
-    _Out_opt_   PEPROCESS       * Process
+    WDFREQUEST        Request,
+    KAPC_STATE      * ApcState,
+    BOOLEAN         * Attached,
+    PEPROCESS       * Process
     )
 {
     NTSTATUS    status              = STATUS_SUCCESS;
@@ -712,9 +722,9 @@ _Use_decl_annotations_
 PAGED_CODE_SEG
 VOID
 AttachToProcess(
-    _In_    PEPROCESS       Process,
-    _Out_   KAPC_STATE    * ApcState,
-    _Out_   BOOLEAN       * Attached
+    PEPROCESS       Process,
+    KAPC_STATE    * ApcState,
+    BOOLEAN       * Attached
     )
 {
     PAGED_CODE();
@@ -736,7 +746,7 @@ _Use_decl_annotations_
 PAGED_CODE_SEG
 VOID
 RestoreProcess(
-    _In_ KAPC_STATE * ApcState
+    KAPC_STATE * ApcState
     )
 {
     PAGED_CODE();

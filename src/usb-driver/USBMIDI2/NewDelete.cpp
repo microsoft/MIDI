@@ -72,7 +72,6 @@ operator delete[](
     }
 }
 
-_Use_decl_annotations_
 void __cdecl
 operator delete(
     PVOID pVoid,
@@ -85,7 +84,6 @@ operator delete(
     }
 }
 
-_Use_decl_annotations_
 void __cdecl
 operator delete[](
     PVOID pVoid,
