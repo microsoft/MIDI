@@ -232,9 +232,9 @@ __drv_maxIRQL(PASSIVE_LEVEL)
 NONPAGED_CODE_SEG
 BOOLEAN 
 USBMIDI2DriverFillReadQueue(
-    _In_    PUINT32             pBuffer,
-    _In_    size_t              bufferSize,
-    _In_    PDEVICE_CONTEXT     pDeviceContext
+    _In_reads_(bufferSize)  PUINT32             pBuffer,
+    _In_                    size_t              bufferSize,
+    _In_                    PDEVICE_CONTEXT     pDeviceContext
 );
 
 //

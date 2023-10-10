@@ -1265,7 +1265,7 @@ Return Value:
                 NULL,       // Pool Tag
                 workingBufferSize,
                 &workingBuffer,
-                &(PVOID)pWorkingBuffer
+                (PVOID *)&pWorkingBuffer
             );
             if (!NT_SUCCESS(status))
             {
@@ -1279,7 +1279,7 @@ Return Value:
             UINT16 numIndex = 0;
 
             // Process received data as UINT32 Packets
-            for (int byteCount = 0; byteCount < NumBytesTransferred; byteCount += 4)
+            for (size_t byteCount = 0; byteCount < NumBytesTransferred; byteCount += 4)
             {
                 // Get current packet buffer
                 PUINT8 pBuffer = &pReceivedBuffer[byteCount];
@@ -1488,7 +1488,7 @@ Return Value:
 
                 // write to packets
                 PUINT32 pkts = (UINT32*)pWorkingBuffer;
-                for (int pktCount = 0; pktCount < umpPacket.wordCount; pktCount++)
+                for (UINT8 pktCount = 0; pktCount < umpPacket.wordCount; pktCount++)
                 {
                     pkts[numIndex++] = RtlUlongByteSwap(umpPacket.umpData.umpWords[pktCount]);
                 }
@@ -1531,7 +1531,7 @@ Return Value:
             PUINT32 pReadBuffer = (PUINT32)pReceivedBuffer;
             
             // Swap bytes based on UINT32
-            for (int count = 0; count < (NumBytesTransferred / sizeof(UINT32)); count++)
+            for (size_t count = 0; count < (NumBytesTransferred / sizeof(UINT32)); count++)
             {
                 pWriteBuffer[count] = RtlUlongByteSwap(pReadBuffer[count]);
             }
