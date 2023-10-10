@@ -1533,7 +1533,7 @@ Return Value:
             // Swap bytes based on UINT32
             for (size_t count = 0; count < (NumBytesTransferred / sizeof(UINT32)); count++)
             {
-                pWriteBuffer[count] = RtlUlongByteSwap(pReadBuffer[count]);
+                pWriteBuffer[count] = pReadBuffer[count];   // USB is Little Endian
             }
 
             // Send Memory to Read Queue
@@ -2185,7 +2185,7 @@ Return Value:Amy
             PUINT32 pReadMem = (PUINT32)&pBuffer[transferPos];
             for (int count = 0; count < (thisTransferSize / sizeof(UINT32)); count++)
             {
-                pWriteMem[count] = RtlUlongByteSwap(pReadMem[count]);
+                pWriteMem[count] = pReadMem[count];     // USB is Little Endian format
             }
 
             // Transfer to USB
