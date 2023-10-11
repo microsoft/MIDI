@@ -35,7 +35,7 @@
 
   <ItemGroup>
     <Reference Include="Windows.Devices.Midi2">
-      <HintPath>..\..\..\..\..\..\..\foo\winmd\Windows.Devices.Midi2.winmd</HintPath>
+      <HintPath>..\..\..\..\..\..\..\foo\amd64fre\Windows.Devices.Midi2.winmd</HintPath>
       <IsWinMDFile>true</IsWinMDFile>
     </Reference>
   </ItemGroup>

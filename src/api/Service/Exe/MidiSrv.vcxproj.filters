@@ -45,6 +45,9 @@
     <ClCompile Include="MidiDevicePipe.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MidiEndpointMetadataManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -72,6 +75,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Inc\MidiDevicePipe.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointMetadataManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

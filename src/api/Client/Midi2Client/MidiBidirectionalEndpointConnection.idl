@@ -58,7 +58,6 @@ namespace Windows.Devices.Midi2
         IVector<IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins{ get; };
 
 
-
         // callback for when a function block is updated comes in
         event Windows.Foundation.TypedEventHandler<IInspectable, MidiFunctionBlocksUpdatedEventArgs> FunctionBlocksUpdated;
 

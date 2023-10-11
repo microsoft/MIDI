@@ -6,6 +6,8 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+// A version of this code will be moved into the service instead of local to the in-proc API
+
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
