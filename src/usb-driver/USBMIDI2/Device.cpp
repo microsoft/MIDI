@@ -461,11 +461,19 @@ EvtDeviceD0Entry(
     devCtx = GetDeviceContext(Device);
     ASSERT(devCtx != nullptr);
 
-    status = WdfIoTargetStart(WdfUsbTargetPipeGetIoTarget(devCtx->MidiInPipe));
-    if (!NT_SUCCESS(status))
+    if (devCtx->MidiInPipe)
     {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-            "%!FUNC! Could not start interrupt pipe failed 0x%x", status);
+        status = WdfIoTargetStart(WdfUsbTargetPipeGetIoTarget(devCtx->MidiInPipe));
+        if (!NT_SUCCESS(status))
+        {
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                "%!FUNC! Could not start interrupt pipe failed 0x%x", status);
+        }
+    }
+    else
+    {
+        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
+            "%!FUNC! Could not start interrupt pipe as no MidiInPipe");
     }
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
@@ -527,10 +535,13 @@ EvtDeviceD0Exit(
         }
     }
 
-    WdfIoTargetStop(
-        WdfUsbTargetPipeGetIoTarget(devCtx->MidiInPipe),
-        WdfIoTargetCancelSentIo
-    );
+    if (devCtx->MidiInPipe)
+    {
+        WdfIoTargetStop(
+            WdfUsbTargetPipeGetIoTarget(devCtx->MidiInPipe),
+            WdfIoTargetCancelSentIo
+        );
+    }
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
@@ -1807,6 +1818,13 @@ Return Value:Amy
     pDeviceContext = GetDeviceContext(Device);
 
     pipe = pDeviceContext->MidiOutPipe;
+    if (!pipe)
+    {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+            "%!FUNC! cannot execute without valid MidiOutPipe.\n");
+        status = STATUS_INVALID_PARAMETER;
+        goto DriverIoWriteExit;
+    }
 
     // 
     // General Error Checking
