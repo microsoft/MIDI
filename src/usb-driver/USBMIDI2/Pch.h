@@ -37,20 +37,6 @@ Environment:
 
 --*/
 
-/*++
-
-Copyright (c) Microsoft Corporation. All rights reserved.
-
-Module Name:
-
-    Pch.h
-
-Abstract:
-
-    Precompiled header.
-
---*/
-
 #pragma once
 
 #define PAGED_CODE_SEG __declspec(code_seg("PAGE"))
