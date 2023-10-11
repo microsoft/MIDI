@@ -963,11 +963,12 @@ Return Value:
     //
     numInterfaces = WdfUsbTargetDeviceGetNumInterfaces(pDeviceContext->UsbDevice);
     // Setup store for setting pairs for use later
-    if (numInterfaces >= 2)
+    if (numInterfaces)
     {
+        // We only need to hold one interface
         pSettingPairs = (PWDF_USB_INTERFACE_SETTING_PAIR)ExAllocatePool2(
             POOL_FLAG_PAGED,
-            sizeof(WDF_USB_INTERFACE_SETTING_PAIR) * numInterfaces,
+            sizeof(WDF_USB_INTERFACE_SETTING_PAIR),
             USBMIDI_POOLTAG
         );
     }
@@ -979,88 +980,75 @@ Return Value:
         return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
-    // We expect at least two interfaces (and only currently support two)
-    // an Audio Control interface and the MIDI interface
-    if (numInterfaces < 2)
-    {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-            "Number of interfaces, %d, less than expected.\n", numInterfaces);
-        status = STATUS_SEVERITY_ERROR;
-        goto SelectExit;
-    }
+    // NOTE: Although the specification states that MIDI interface needs
+    // an accompany Audio Control interface the Audio Control is not
+    // used and many manufacturers do not include it or if combined
+    // with audio interface, only have control with audio interface.
+    // Therefore we will skip audio control interface.
 
-    // Load and configure pipes for first interface which should be the control interface
-    pDeviceContext->UsbControlInterface = WdfUsbTargetDeviceGetInterface(
-        pDeviceContext->UsbDevice,
-        0
-    );
-
-    // Check that is control interface
-    WdfUsbInterfaceGetDescriptor(
-        pDeviceContext->UsbControlInterface,
-        0,
-        &interfaceDescriptor
-    );
-    if (interfaceDescriptor.bInterfaceClass != 1 /*AUDIO*/
-        || interfaceDescriptor.bInterfaceSubClass != 1 /*AUDIO_CONTROL*/)
+    // Search for MIDI Interface
+    pDeviceContext->UsbMIDIStreamingInterface = NULL;
+    for (UINT8 interfaceCount = 0; interfaceCount < numInterfaces; interfaceCount++)
     {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Device detected does not have AUDIO_CONTROL interface as expected\n");
-        status = STATUS_SEVERITY_ERROR;
-        goto SelectExit;
-    }
+        // Get the Interface
+        WDFUSBINTERFACE usbInterface = WdfUsbTargetDeviceGetInterface(
+            pDeviceContext->UsbDevice,
+            interfaceCount
+        );
 
-    // Setup setting pairs for control interface
-    pSettingPairs[0].UsbInterface = pDeviceContext->UsbControlInterface;
-    pSettingPairs[0].SettingIndex = 0;
-
-    // Check that next interface is MIDI Streaming Interface
-    pDeviceContext->UsbMIDIStreamingInterface = WdfUsbTargetDeviceGetInterface(
-        pDeviceContext->UsbDevice,
-        1
-    );
-    // First look if an alternate interface available
-    WdfUsbInterfaceGetDescriptor(
-        pDeviceContext->UsbMIDIStreamingInterface,
-        1,  //alternate interface 1 - see USB Device Class Definition for MIDI Devices, Version 2.0 - Section 3.1
-        &interfaceDescriptor
-    );
-    // If alternate interface 1 does not exist, then the length will be null
-    if (interfaceDescriptor.bLength)
-    {
-        if (interfaceDescriptor.bInterfaceClass != 1 /*AUDIO*/
-            || interfaceDescriptor.bInterfaceSubClass != 3 /*MIDI STREAMING*/
-            || interfaceDescriptor.bInterfaceProtocol != 0) /*UNUSED*/
-        {
-            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                "Device Class/SubClass/Protocol not 1/3/0 as expected.\n");
-            status = STATUS_SEVERITY_ERROR;
-            goto SelectExit;
-        }
-        pDeviceContext->UsbMIDIStreamingAlt = 1;    // store that alternate interface
-    }
-    else
-    {
-        // As no additional alternate interface, work to select default 0
+        // See if there is an alternate interface
         WdfUsbInterfaceGetDescriptor(
-            pDeviceContext->UsbMIDIStreamingInterface,
-            0, //alternate interface 0, default - see USB Device Class Definition for MIDI Devices
+            usbInterface,
+            1,  // alternate interface
             &interfaceDescriptor
         );
-        if (!interfaceDescriptor.bLength /*error fetching descriptor*/
-            || interfaceDescriptor.bInterfaceClass != 1 /*AUDIO*/
-            || interfaceDescriptor.bInterfaceSubClass != 3 /*MIDI STREAMING*/
-            || interfaceDescriptor.bInterfaceProtocol != 0) /*UNUSED*/
+        if (interfaceDescriptor.bLength)
         {
-            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                "Device Class/SubClass/Protocol not 1/3/0 as expected.\n");
-            status = STATUS_SEVERITY_ERROR;
-            goto SelectExit;
+            if (interfaceDescriptor.bInterfaceClass == 1 /*AUDIO*/
+                && interfaceDescriptor.bInterfaceSubClass == 3 /*MIDI STREAMING*/
+                )
+            {
+                pDeviceContext->UsbMIDIStreamingAlt = 1;    // alternate interface
+            }
+            else
+            {
+                continue; // Not MIDI so continue to next interface
+            }
         }
-        pDeviceContext->UsbMIDIStreamingAlt = 0;    // store that original interface
+        else
+        {
+            WdfUsbInterfaceGetDescriptor(
+                usbInterface,
+                0,  // MIDI 1.0 Interface?
+                &interfaceDescriptor
+            );
+            if (interfaceDescriptor.bLength && interfaceDescriptor.bInterfaceClass == 1 /*AUDIO*/
+                && interfaceDescriptor.bInterfaceSubClass == 3 /*MIDI STREAMING*/
+                )
+            {
+                pDeviceContext->UsbMIDIStreamingAlt = 0;    // MIDI 1.0 Interface
+            }
+            else
+            {
+                continue;   // Not MIDI so continue to next interface
+            }
+        }
+
+        // If here, then is a MIDI interface
+        pDeviceContext->UsbMIDIStreamingInterface = usbInterface;
     }
+
+    // Did we find a USB MIDI Interface?
+    if (!pDeviceContext->UsbMIDIStreamingInterface)
+    {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+            "No USB MIDI Interface Found.\n");
+        return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+
     // Setup settings pairs for MIDI streaming interface
-    pSettingPairs[1].UsbInterface = pDeviceContext->UsbMIDIStreamingInterface;
-    pSettingPairs[1].SettingIndex = pDeviceContext->UsbMIDIStreamingAlt;
+    pSettingPairs->UsbInterface = pDeviceContext->UsbMIDIStreamingInterface;
+    pSettingPairs->SettingIndex = pDeviceContext->UsbMIDIStreamingAlt;
 
     // Prepare to select interface
     WDF_USB_DEVICE_SELECT_CONFIG_PARAMS_INIT_MULTIPLE_INTERFACES(
