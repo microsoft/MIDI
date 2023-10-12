@@ -21,6 +21,8 @@
 
 #define TRACE_KEYWORD_API         0x0000000000000001
 
+using namespace std;
+
 namespace Windows::Devices::Midi2::Internal
 {
     TRACELOGGING_DECLARE_PROVIDER(g_hLoggingProvider);

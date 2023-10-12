@@ -34,7 +34,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Midi2Client\Windows.Devices.Midi2.vcxproj" />
+    <Reference Include="Windows.Devices.Midi2">
+      <HintPath>..\..\..\..\..\..\..\foo\winmd\Windows.Devices.Midi2.winmd</HintPath>
+      <IsWinMDFile>true</IsWinMDFile>
+    </Reference>
   </ItemGroup>
 
 </Project>

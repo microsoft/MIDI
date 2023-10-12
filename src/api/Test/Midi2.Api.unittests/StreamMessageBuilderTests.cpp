@@ -27,7 +27,7 @@ using namespace winrt::Windows::Devices::Midi2;
 TEST_CASE("Offline.StreamMessageBuilder.BuildEndpointNameNotification.LongName")
 {
     winrt::hstring name = L"This is an endpoint name that is longer than the supported 98 characters for an endpoint name in MIDI 2";
-    int expectedPacketCount = 7;
+    uint32_t expectedPacketCount = 7;
 
 
     std::cout << "Testing endpoint Name: " << winrt::to_string(name) << std::endl;
@@ -53,7 +53,7 @@ TEST_CASE("Offline.StreamMessageBuilder.BuildEndpointNameNotification.LongName")
     }
 
 
-    for (int i = 0; i < messages.Size(); i++)
+    for (uint32_t i = 0; i < messages.Size(); i++)
     {
         std::cout << "Stream word0 0x" << std::hex << messages.GetAt(i).Word0() << std::endl;
 
@@ -91,7 +91,7 @@ TEST_CASE("Offline.StreamMessageBuilder.BuildEndpointNameNotification.LongName")
 TEST_CASE("Offline.StreamMessageBuilder.BuildEndpointNameNotification.MediumName")
 {
     winrt::hstring name = L"This is medium-sized";
-    int expectedPacketCount = 2;
+    uint32_t expectedPacketCount = 2;
 
     std::cout << "Testing endpoint Name: " << winrt::to_string(name) << std::endl;
 
@@ -137,7 +137,7 @@ TEST_CASE("Offline.StreamMessageBuilder.BuildEndpointNameNotification.MediumName
 TEST_CASE("Offline.StreamMessageBuilder.BuildEndpointNameNotification.ShortName")
 {
     winrt::hstring name = L"Short";
-    int expectedPacketCount = 1;
+    uint32_t expectedPacketCount = 1;
 
     std::cout << "Testing endpoint Name: " << winrt::to_string(name) << std::endl;
 
@@ -184,7 +184,7 @@ TEST_CASE("Offline.StreamMessageBuilder.BuildEndpointNameNotification.ShortName"
 TEST_CASE("Offline.StreamMessageBuilder.BuildProductInstanceIdNotification.Short")
 {
     winrt::hstring productInstanceId = L"ABC123";
-    int expectedPacketCount = 1;
+    uint32_t expectedPacketCount = 1;
 
     std::cout << "Testing endpoint Id: " << winrt::to_string(productInstanceId) << std::endl;
 

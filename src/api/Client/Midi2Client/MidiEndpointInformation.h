@@ -48,7 +48,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool m_supportsReceivingJRTimestamps{ false };
         bool m_supportsSendingJRTimestamps{ false };
 
-        midi2::MidiProtocol m_configuredProtocol;
+        midi2::MidiProtocol m_configuredProtocol{midi2::MidiProtocol::Default};
 
     };
 }

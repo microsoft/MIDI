@@ -55,8 +55,12 @@ CMidi2PingMidiBiDi::Cleanup()
         TraceLoggingPointer(this, "this")
     );
 
-    m_callback = nullptr;
+
+    if (m_midiDevice != nullptr) m_midiDevice->Cleanup();
+
     m_midiDevice = nullptr;
+
+    m_callback = nullptr;
 
     return S_OK;
 }

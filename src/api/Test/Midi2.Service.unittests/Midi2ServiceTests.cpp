@@ -266,10 +266,10 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
 
     LOG_OUTPUT(L"Writing midi data");
     messagesExpected = 4;
-    VERIFY_SUCCEEDED(midiPump->SendMidiMessage((void*)&g_MidiTestData, sizeof(UMP32), 0));
-    VERIFY_SUCCEEDED(midiPump->SendMidiMessage((void*)&g_MidiTestData, sizeof(UMP64), 0));
-    VERIFY_SUCCEEDED(midiPump->SendMidiMessage((void*)&g_MidiTestData, sizeof(UMP96), 0));
-    VERIFY_SUCCEEDED(midiPump->SendMidiMessage((void*)&g_MidiTestData, sizeof(UMP128), 0));
+    VERIFY_SUCCEEDED(midiPump->SendMidiMessage((void*)&g_MidiTestData_32, sizeof(UMP32), 0));
+    VERIFY_SUCCEEDED(midiPump->SendMidiMessage((void*)&g_MidiTestData_64, sizeof(UMP64), 0));
+    VERIFY_SUCCEEDED(midiPump->SendMidiMessage((void*)&g_MidiTestData_96, sizeof(UMP96), 0));
+    VERIFY_SUCCEEDED(midiPump->SendMidiMessage((void*)&g_MidiTestData_128, sizeof(UMP128), 0));
 
     VERIFY_IS_TRUE(allMessagesReceived.wait(5000));
 
