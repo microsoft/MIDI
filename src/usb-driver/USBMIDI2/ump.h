@@ -342,7 +342,7 @@ typedef struct
   midi2_desc_group_terminal_block_t block;
 } midi2_cs_interface_desc_group_terminal_blocks_t;
 
-/// MIDI 2 Group Terminal Blocks Descriptor with one group terminal block
+/// MIDI 2 Group Terminal Blocks Descriptor with multiple terminal blocks
 #define midi2_cs_interface_desc_group_terminal_blocks_n_t(group_terminal_block_num) \
   struct {       \
     midi2_desc_group_terminal_block_header_t header;            \
