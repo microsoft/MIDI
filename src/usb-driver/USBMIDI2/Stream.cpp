@@ -550,69 +550,14 @@ EvtMidi2NativeDataFormatCallback(
 {
     NTSTATUS                    status = STATUS_NOT_SUPPORTED;
     ACXSTREAM                   stream = (ACXSTREAM)Object;
-    PMIDI_STREAM_CONTEXT        streamCtx = nullptr;
     ACX_REQUEST_PARAMETERS      params;
     ULONG_PTR                   outDataCb = 0;
-    KAPC_STATE                  processApcState = {0};
-    BOOLEAN                     processAttached = FALSE;
-    PEPROCESS                   process = nullptr;
 
     PAGED_CODE();
-
-    ASSERT(stream);
-    streamCtx = GetMidiStreamContext(stream);
-    ASSERT(streamCtx);
-    ASSERT(streamCtx->StreamEngine);
 
     ACX_REQUEST_PARAMETERS_INIT(&params);
     AcxRequestGetParameters(Request, &params);
 
-    ASSERT(params.Type == AcxRequestTypeProperty);
-    ASSERT(params.Parameters.Property.Verb == AcxPropertyVerbGet);
-    ASSERT(params.Parameters.Property.Control == nullptr);
-    ASSERT(params.Parameters.Property.ControlCb == 0);
-    ASSERT(params.Parameters.Property.Value != nullptr);
-    ASSERT(params.Parameters.Property.ValueCb == sizeof(KSMIDILOOPED_REGISTERS));
-
-    //
-    // Basic validation (ACX validated this already).
-    //
-    if (nullptr != params.Parameters.Property.Control ||
-        params.Parameters.Property.ControlCb != 0 ||
-        nullptr == params.Parameters.Property.Value ||
-        params.Parameters.Property.ValueCb < sizeof(KSMIDILOOPED_REGISTERS) ||
-        nullptr == streamCtx->StreamEngine)
-    {
-        ASSERT(FALSE);
-        outDataCb = 0;
-        status = STATUS_INVALID_PARAMETER;
-        goto exit;
-    }
-
-    //
-    // Make sure we are running in the caller original process.
-    //
-    status = AttachToCallerProcess(Request, &processApcState, &processAttached, &process);
-    if (!NT_SUCCESS(status))
-    {
-        ASSERT(FALSE);
-        outDataCb = 0;
-        goto exit;
-    }
-
-    // Make sure process is the original one.
-    if (streamCtx->Process != process)
-    {
-        status = STATUS_INVALID_DEVICE_STATE;
-        ASSERT(FALSE);
-        outDataCb = 0;
-        goto exit;
-    }
-
-    // CHECK: fill in the output buffer with either
-    // KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET or KSDATAFORMAT_SUBTYPE_MIDI
-	// NOTE: because this property was declared in MidiStreamProperties, as
-	// requiring a GUID, the framework handles buffer size negotiation.
     WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxStreamGetCircuit(stream));
     PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
 
@@ -625,15 +570,9 @@ EvtMidi2NativeDataFormatCallback(
         RtlCopyMemory(params.Parameters.Property.Value, &KSDATAFORMAT_SUBTYPE_MIDI, sizeof(GUID));
     }
 
-	// return the amount of buffer actually used.
+    // return the amount of buffer actually used.
     outDataCb = sizeof(GUID);
     status = STATUS_SUCCESS;
-
-exit:
-    if (processAttached)
-    {
-        RestoreProcess(&processApcState);
-    }
 
     WdfRequestCompleteWithInformation(Request, status, outDataCb);
 }
@@ -642,112 +581,55 @@ _Use_decl_annotations_
 PAGED_CODE_SEG
 VOID
 EvtMidi2GroupTerminalBlocksCallback(
-    WDFOBJECT   Object,
+    WDFOBJECT   /* Object */,
     WDFREQUEST  Request
     )
 {
     NTSTATUS                    status = STATUS_NOT_SUPPORTED;
-    ACXSTREAM                   stream = (ACXSTREAM)Object;
-    PMIDI_STREAM_CONTEXT        streamCtx = nullptr;
     ACX_REQUEST_PARAMETERS      params;
     ULONG_PTR                   outDataCb = 0;
     ULONG                       minValueSize;
-    KAPC_STATE                  processApcState = {0};
-    BOOLEAN                     processAttached = FALSE;
-    PEPROCESS                   process = nullptr;
 
     PAGED_CODE();
-
-    ASSERT(stream);
-    streamCtx = GetMidiStreamContext(stream);
-    ASSERT(streamCtx);
-    ASSERT(streamCtx->StreamEngine);
 
     ACX_REQUEST_PARAMETERS_INIT(&params);
     AcxRequestGetParameters(Request, &params);
 
-    ASSERT(params.Type == AcxRequestTypeProperty);
-    ASSERT(params.Parameters.Property.Verb == AcxPropertyVerbGet);
-    ASSERT(params.Parameters.Property.Control == nullptr);
-    ASSERT(params.Parameters.Property.ControlCb == 0);
-    ASSERT(params.Parameters.Property.Value != nullptr);
-    ASSERT(params.Parameters.Property.ValueCb == sizeof(KSMIDILOOPED_REGISTERS));
+    // The size of the buffer provided by the caller
+    ULONG valueCb = params.Parameters.Property.ValueCb;
 
-    //
-    // Basic validation (ACX validated this already).
-    //
-    if (nullptr != params.Parameters.Property.Control ||
-        params.Parameters.Property.ControlCb != 0 ||
-        nullptr == params.Parameters.Property.Value ||
-        params.Parameters.Property.ValueCb < sizeof(KSMIDILOOPED_REGISTERS) ||
-        nullptr == streamCtx->StreamEngine)
+    // TODO: set minValueSize to the required size of the group
+    // terminal block data.
+    minValueSize = MAX_PATH;
+
+    // The following is required because the buffer size
+    // is variable. If the size of the data buffer provided is 0, the
+    // required size is returned to the caller.
+    if (valueCb == 0)
     {
-        ASSERT(FALSE);
+        outDataCb = minValueSize;
+        status = STATUS_BUFFER_OVERFLOW;
+        goto exit;
+    }
+    else if (valueCb < minValueSize)
+    {
+        // if a buffer was provided by the caller, but it is
+        // too small, fail.
         outDataCb = 0;
-        status = STATUS_INVALID_PARAMETER;
+        status = STATUS_BUFFER_TOO_SMALL;
         goto exit;
     }
 
-    //
-    // Make sure we are running in the caller original process.
-    //
-    status = AttachToCallerProcess(Request, &processApcState, &processAttached, &process);
-    if (!NT_SUCCESS(status))
-    {
-        ASSERT(FALSE);
-        outDataCb = 0;
-        goto exit;
-    }
+    // TODO: copy the data to the output buffer, copying a 255 byte
+    // empty buffer as a placeholer.
+    BYTE data[MAX_PATH] {0};
+    RtlCopyMemory(params.Parameters.Property.Value, &data, minValueSize);
 
-    // Make sure process is the original one.
-    if (streamCtx->Process != process)
-    {
-        status = STATUS_INVALID_DEVICE_STATE;
-        ASSERT(FALSE);
-        outDataCb = 0;
-        goto exit;
-    }
-
-	// The size of the buffer provided by the caller
-	ULONG valueCb = params.Parameters.Property.ValueCb;
-
-	// TODO: set minValueSize to the required size of the group
-	// terminal block data.
-	minValueSize = MAX_PATH;
-
-	// The following is required because the buffer size
-	// is variable. If the size of the data buffer provided is 0, the
-	// required size is returned to the caller.
-	if (valueCb == 0)
-	{
-		outDataCb = minValueSize;
-		status = STATUS_BUFFER_OVERFLOW;
-		goto exit;
-	}
-	else if (valueCb < minValueSize)
-	{
-		// if a buffer was provided by the caller, but it is
-		// too small, fail.
-		outDataCb = 0;
-		status = STATUS_BUFFER_TOO_SMALL;
-		goto exit;
-	}
-
-	// TODO: copy the data to the output buffer, copying a 255 byte
-	// empty buffer as a placeholer.
-	BYTE data[MAX_PATH] {0};
-	RtlCopyMemory(params.Parameters.Property.Value, &data, minValueSize);
-
-	// return the amount of buffer actually used.
+    // return the amount of buffer actually used.
     outDataCb = minValueSize;
     status = STATUS_SUCCESS;
 
 exit:
-    if (processAttached)
-    {
-        RestoreProcess(&processApcState);
-    }
-
     WdfRequestCompleteWithInformation(Request, status, outDataCb);
 }
 
