@@ -968,13 +968,14 @@ Return Value:
         // We only need to hold one interface
         pSettingPairs = (PWDF_USB_INTERFACE_SETTING_PAIR)ExAllocatePool2(
             POOL_FLAG_PAGED,
-            sizeof(WDF_USB_INTERFACE_SETTING_PAIR),
+            sizeof(WDF_USB_INTERFACE_SETTING_PAIR) * numInterfaces,
             USBMIDI_POOLTAG
         );
     }
     // Confirm memory declared properly
     if (!pSettingPairs)
     {
+        status = STATUS_SEVERITY_ERROR;
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
             "Insufficient Resources\n");
         return(STATUS_INSUFFICIENT_RESOURCES);
@@ -1012,6 +1013,20 @@ Return Value:
             }
             else
             {
+                if (interfaceDescriptor.bInterfaceClass == 1 /*AUDIO*/
+                    && interfaceDescriptor.bInterfaceSubClass == 1 /*AUDIO CONTROL*/)
+                {
+                    pDeviceContext->UsbControlInterface = usbInterface;
+                    pSettingPairs[interfaceCount].UsbInterface = pDeviceContext->UsbControlInterface;
+                    pSettingPairs[interfaceCount].SettingIndex = 1;
+                }
+                else
+                {
+                    // Unknown interface so error
+                    TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Device detected has an unknown interface.\n");
+                    status = STATUS_SEVERITY_ERROR;
+                    goto SelectExit;
+                }
                 continue; // Not MIDI so continue to next interface
             }
         }
@@ -1030,12 +1045,30 @@ Return Value:
             }
             else
             {
+                if (interfaceDescriptor.bLength && interfaceDescriptor.bInterfaceClass == 1 /*AUDIO*/
+                    && interfaceDescriptor.bInterfaceSubClass == 1 /*AUDIO CONTROL*/)
+                {
+                    pDeviceContext->UsbControlInterface = usbInterface;
+                    pSettingPairs[interfaceCount].UsbInterface = pDeviceContext->UsbControlInterface;
+                    pSettingPairs[interfaceCount].SettingIndex = 0;
+                }
+                else
+                {
+                    // Unknown interface so error
+                    TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Device detected has an unknown interface.\n");
+                    status = STATUS_SEVERITY_ERROR;
+                    goto SelectExit;
+                }
                 continue;   // Not MIDI so continue to next interface
             }
         }
 
         // If here, then is a MIDI interface
         pDeviceContext->UsbMIDIStreamingInterface = usbInterface;
+
+        // Setup settings pairs for MIDI streaming interface
+        pSettingPairs[interfaceCount].UsbInterface = pDeviceContext->UsbMIDIStreamingInterface;
+        pSettingPairs[interfaceCount].SettingIndex = pDeviceContext->UsbMIDIStreamingAlt;
     }
 
     // Did we find a USB MIDI Interface?
@@ -1045,10 +1078,6 @@ Return Value:
             "No USB MIDI Interface Found.\n");
         return(STATUS_INSUFFICIENT_RESOURCES);
     }
-
-    // Setup settings pairs for MIDI streaming interface
-    pSettingPairs->UsbInterface = pDeviceContext->UsbMIDIStreamingInterface;
-    pSettingPairs->SettingIndex = pDeviceContext->UsbMIDIStreamingAlt;
 
     // Prepare to select interface
     WDF_USB_DEVICE_SELECT_CONFIG_PARAMS_INIT_MULTIPLE_INTERFACES(
