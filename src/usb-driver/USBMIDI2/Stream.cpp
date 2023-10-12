@@ -83,7 +83,7 @@ static ACX_PROPERTY_ITEM MidiStreamProperties[] =
     {
         &KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
         KSPROPERTY_MIDI2_GROUP_TERMINAL_BLOCKS,
-        ACX_PROPERTY_ITEM_FLAG_SET,
+        ACX_PROPERTY_ITEM_FLAG_GET,
         EvtMidi2GroupTerminalBlocksCallback,
     },
 };
