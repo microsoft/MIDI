@@ -34,14 +34,14 @@ DEFINE_GUID(DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI, 0xe7cce071, 0x3c03, 0x423f, 0
 // and https://learn.microsoft.com/en-us/windows/win32/properties/propdesc-schema-entry
 
 #define STRING_PKEY_MIDI_AbstractionLayer L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},1"
-DEFINE_DEVPROPKEY(PKEY_MIDI_AbstractionLayer, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 1);     // DEVPROP_TYPE_UINT64
+DEFINE_DEVPROPKEY(PKEY_MIDI_AbstractionLayer, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 1);     // DEVPROP_TYPE_GUID
 
 #define STRING_PKEY_MIDI_AssociatedUMP L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},2"
 DEFINE_DEVPROPKEY(PKEY_MIDI_AssociatedUMP, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 2);     // DEVPROP_TYPE_UINT64
 
 // Provided as a property for convenience. BLE, NET, USB, etc.
 #define STRING_PKEY_MIDI_TransportMnemonic L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},10"
-DEFINE_DEVPROPKEY(PKEY_MIDI_TransportMnemonic, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 10);     // DEVPROP_TYPE_string
+DEFINE_DEVPROPKEY(PKEY_MIDI_TransportMnemonic, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 10);     // DEVPROP_TYPE_STRING
 
 // true if this device is a standard MIDI 2loopback device or part of a loopback pair of devices
 #define STRING_PKEY_MIDI_UmpLoopback L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},20"
@@ -62,7 +62,18 @@ DEFINE_DEVPROPKEY(PKEY_MIDI_SupportsMultiClient, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9
 #define STRING_PKEY_MIDI_UmpPing L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},23"
 DEFINE_DEVPROPKEY(PKEY_MIDI_UmpPing, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 23);     // DEVPROP_TYPE_BOOLEAN
 
+#define STRING_PKEY_MIDI_NativeDataFormat L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},24"
+DEFINE_DEVPROPKEY(PKEY_MIDI_NativeDataFormat, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 24);     // DEVPROP_TYPE_GUID
+
+#define STRING_PKEY_MIDI_IN_GroupTerminalBlocks L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},25"
+DEFINE_DEVPROPKEY(PKEY_MIDI_IN_GroupTerminalBlocks, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 25);     // DEVPROP_TYPE_BINARY
+
+#define STRING_PKEY_MIDI_OUT_GroupTerminalBlocks L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},26"
+DEFINE_DEVPROPKEY(PKEY_MIDI_OUT_GroupTerminalBlocks, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 26);     // DEVPROP_TYPE_BINARY
+
 #define HRESULT_FROM_RPCSTATUS(status) status == RPC_S_OK ? S_OK : MAKE_HRESULT(SEVERITY_ERROR, FACILITY_RPC, status)
 
 #define SAFE_CLOSEHANDLE(h) if (h) { CloseHandle(h); h = NULL; }
+
+
 

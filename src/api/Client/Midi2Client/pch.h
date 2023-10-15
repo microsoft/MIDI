@@ -63,6 +63,10 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 
 #include "midi_stream_message_defs.h"
 
+#include <Devpropdef.h>
+#include "MidiDefs.h"
+
+
 #include "MidiMessage32.h"
 #include "MidiMessage64.h"
 #include "MidiMessage96.h"

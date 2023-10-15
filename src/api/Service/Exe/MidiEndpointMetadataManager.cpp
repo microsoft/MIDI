@@ -13,10 +13,14 @@ HRESULT CMidiEndpointMetadataManager::Initialize(
 	return S_OK;
 }
 
-
-_Use_decl_annotations_
 HRESULT CMidiEndpointMetadataManager::BeginDiscovery()
 {
+	// check to see if data is already in cache
+	// if the data is there, then we just exit
+
+	// otherwise, send the endpoint discovery to start things off
+
+
 	return S_OK;
 }
 
@@ -25,14 +29,21 @@ _Use_decl_annotations_
 HRESULT CMidiEndpointMetadataManager::BeginNegotiation(
 	uint8_t /*preferredMidiProtocolVersion*/)
 {
+
+	// if the cached endpoint protocol is different from what we prefer
+	// then negotiate the new protocol. Do this only once for any given
+	// negotiation session.
+
 	return S_OK;
 }
 
 
 
-_Use_decl_annotations_
 HRESULT CMidiEndpointMetadataManager::Cleanup()
 {
+
+	// clear cache and tear everything down
+
 	return S_OK;
 }
 
@@ -44,5 +55,10 @@ HRESULT CMidiEndpointMetadataManager::Callback(
     LONGLONG /*Position*/
 )
 {
+	// handle incoming messages
+
+
+
+
 	return S_OK;
 }

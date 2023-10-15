@@ -30,8 +30,11 @@ namespace Windows.Devices.Midi2
         static String UniversalMidiPacketInputInterfaceClassId{ get; };
         static String UniversalMidiPacketOutInterfaceClassId{ get; };
 
+        static IVectorView<String> GetAdditionalPropertiesList();
+
         String Id { get; };
         
+        Windows.Devices.Enumeration.DeviceInformation DeviceInformation{ get; };
 
 
         // manufacturer, model, etc. come from the parent device, and so are not duplicated here.

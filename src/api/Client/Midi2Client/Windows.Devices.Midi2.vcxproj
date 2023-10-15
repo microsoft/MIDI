@@ -277,6 +277,12 @@
     <ClInclude Include="MidiOutputEndpointOpenOptions.h">
       <DependentUpon>MidiOutputEndpointOpenOptions.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiProfile.h">
+        <DependentUpon>MidiProfile.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiProperty.h">
+        <DependentUpon>MidiProperty.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiService.h">
       <DependentUpon>MidiService.idl</DependentUpon>
     </ClInclude>
@@ -422,6 +428,12 @@
     </ClCompile>
     <ClCompile Include="MidiOutputEndpointOpenOptions.cpp">
       <DependentUpon>MidiOutputEndpointOpenOptions.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiProfile.cpp">
+        <DependentUpon>MidiProfile.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiProperty.cpp">
+        <DependentUpon>MidiProperty.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiService.cpp">
       <DependentUpon>MidiService.idl</DependentUpon>
@@ -575,6 +587,8 @@
     <Midl Include="MidiMessageTypeEndpointListener.idl" />
     <Midl Include="MidiOutputEndpointConnection.idl" />
     <Midl Include="MidiOutputEndpointOpenOptions.idl" />
+    <Midl Include="MidiProfile.idl" />
+    <Midl Include="MidiProperty.idl" />
     <Midl Include="MidiProtocolEnum.idl" />
     <Midl Include="MidiSendMessageResultEnum.idl" />
     <Midl Include="MidiService.idl" />

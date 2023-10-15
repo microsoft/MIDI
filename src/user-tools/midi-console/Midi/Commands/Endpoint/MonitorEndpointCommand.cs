@@ -105,9 +105,14 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             }
 
 
+            // TODO: This table rendering is too slow. Just output text lines
+            // TODO: Centralize message rendering elsewhere. Pad columns as needed
+
             if (settings.Verbose)
             {
                 // start waiting for messages
+
+                MidiMessageStruct msg;
 
                 AnsiConsole.Live(table)
                     .Start(ctx =>
@@ -136,7 +141,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                 firstMessageReceived = true;
                             }
 
-                            DisplayUmp(index, e.GetMessagePacket(), table);
+                            var numWords = e.FillMessageStruct(out msg);
+
+                            DisplayUmp(index, msg, numWords, e.MessageType, e.Timestamp, table);
 
                             ctx.Refresh();
 
@@ -243,43 +250,36 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             return 0;
         }
 
-        private void DisplayUmp(UInt32 index, IMidiUniversalPacket ump, Table table) 
+        private void DisplayUmp(UInt32 index, MidiMessageStruct ump, byte numWords, MidiMessageType messageType, UInt64 timestamp, Table table) 
         {
             string data = string.Empty;
 
-            if (ump.PacketType == MidiPacketType.UniversalMidiPacket128)
+            if (numWords == 4)
             {
-                var ump128 = ump.As<MidiMessage128>();
-
-                data = AnsiMarkupFormatter.FormatMidiWords(ump128.Word0, ump128.Word1, ump128.Word2, ump128.Word3);
+                data = AnsiMarkupFormatter.FormatMidiWords(ump.Word0, ump.Word1, ump.Word2, ump.Word3);
             }
-            else if (ump.PacketType == MidiPacketType.UniversalMidiPacket96)
+            else if (numWords == 3)
             {
-                var ump96 = ump.As<MidiMessage96>();
-
-                data = AnsiMarkupFormatter.FormatMidiWords(ump96.Word0, ump96.Word1, ump96.Word2);
+                data = AnsiMarkupFormatter.FormatMidiWords(ump.Word0, ump.Word1, ump.Word2);
             }
-            else if (ump.PacketType == MidiPacketType.UniversalMidiPacket64)
+            else if (numWords == 2)
             {
-                var ump64 = ump.As<MidiMessage64>();
-
-                data = AnsiMarkupFormatter.FormatMidiWords(ump64.Word0, ump64.Word1);
+                data = AnsiMarkupFormatter.FormatMidiWords(ump.Word0, ump.Word1);
             }
-            else if (ump.PacketType == MidiPacketType.UniversalMidiPacket32)
+            else if (numWords == 1)
             {
-                var ump32 = ump.As<MidiMessage32>();
-
-                data = string.Format("{0:X8}", ump32.Word0);
-                data = AnsiMarkupFormatter.FormatMidiWords(ump32.Word0);
+                data = AnsiMarkupFormatter.FormatMidiWords(ump.Word0);
             }
 
-            string detailedMessageType = MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(ump.PeekFirstWord());
+            string detailedMessageType = MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(ump.Word0);
+
+
 
             table.AddRow(
                 new Markup(AnsiMarkupFormatter.FormatRowIndex(index)),
-                new Markup(AnsiMarkupFormatter.FormatTimestamp(ump.Timestamp)), 
+                new Markup(AnsiMarkupFormatter.FormatTimestamp(timestamp)), 
                 new Markup(data),
-                new Markup(AnsiMarkupFormatter.FormatMessageType(ump.MessageType)), 
+                new Markup(AnsiMarkupFormatter.FormatMessageType(messageType)), 
                 new Markup(AnsiMarkupFormatter.FormatDetailedMessageType(detailedMessageType))
                 );
 

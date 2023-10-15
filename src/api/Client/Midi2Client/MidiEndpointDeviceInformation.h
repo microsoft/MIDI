@@ -20,6 +20,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         static winrt::hstring UniversalMidiPacketInputInterfaceClassId() noexcept { return L"" /* STRING_DEVINTERFACE_UNIVERSALMIDIPACKET_INPUT */ ; }
         static winrt::hstring UniversalMidiPacketOutInterfaceClassId() noexcept { return L"" /* STRING_DEVINTERFACE_UNIVERSALMIDIPACKET_OUTPUT */ ; }
 
+        static collections::IVectorView<winrt::hstring> GetAdditionalPropertiesList() noexcept;
+
         winrt::hstring Id() noexcept { return m_id; }
         winrt::hstring ParentDeviceId() noexcept { return m_parentDeviceId; }
         winrt::hstring ContainerId() noexcept { return m_containerId; }
@@ -43,6 +45,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void InternalUpdateFromDeviceInformation(_In_ Windows::Devices::Enumeration::DeviceInformation const& info) noexcept;
         void InternalUpdate(_In_ winrt::hstring const& deviceId) noexcept;
 
+        Windows::Devices::Enumeration::DeviceInformation DeviceInformation() noexcept { return m_deviceInformation; }
+
         // TODO: will also need a func to update from JSON
 
     private:
@@ -65,6 +69,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::MidiEndpointDevicePurpose m_endpointPurpose{};
 
         collections::IVector<midi2::MidiGroupTerminalBlock> m_groupTerminalBlocks{ winrt::single_threaded_vector<midi2::MidiGroupTerminalBlock>() };
+
+        winrt::Windows::Devices::Enumeration::DeviceInformation m_deviceInformation{ nullptr };
 
     };
 }

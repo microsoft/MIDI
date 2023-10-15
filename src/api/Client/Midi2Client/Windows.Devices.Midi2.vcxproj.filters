@@ -106,6 +106,15 @@
     <Filter Include="API\Enumeration">
       <UniqueIdentifier>{0a50ea56-af07-4bca-82f2-0b409820ef1d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="API\CI">
+      <UniqueIdentifier>{f8290fcb-7ad6-44a2-ac8a-e16d0cae7b64}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\CI\Profiles">
+      <UniqueIdentifier>{c36a2266-bc88-427c-9c39-0574802a6f10}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\CI\Property Exchange">
+      <UniqueIdentifier>{5a082154-f6a6-4d09-be45-cc69e5ecf609}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -212,6 +221,12 @@
     </ClCompile>
     <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
       <Filter>API\Enumeration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiProfile.cpp">
+      <Filter>API\CI\Profiles</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiProperty.cpp">
+      <Filter>API\CI\Property Exchange</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -348,6 +363,12 @@
     </ClInclude>
     <ClInclude Include="MidiEndpointDeviceWatcher.h">
       <Filter>API\Enumeration</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiProfile.h">
+      <Filter>API\CI\Profiles</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiProperty.h">
+      <Filter>API\CI\Property Exchange</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -590,6 +611,12 @@
     </Midl>
     <Midl Include="MidiEndpointDeviceWatcher.idl">
       <Filter>API\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiProfile.idl">
+      <Filter>API\CI\Profiles</Filter>
+    </Midl>
+    <Midl Include="MidiProperty.idl">
+      <Filter>API\CI\Property Exchange</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

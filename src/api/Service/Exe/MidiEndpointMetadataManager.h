@@ -1,31 +1,28 @@
 #pragma once
 
+#include <map>
+
 
 // TODO: Need to define a callback or event to tell the client that some data was updated
 // Although initial protocol negotiation happens at the start, it can be re-requested at
 // any time. Additionally, function block and endpoint info notifications can happen at 
 // any time. Name updates should 
 
-struct FunctionBlockMetadata
+
+// todo: need to bring over all the relevant message types and make them work here. Same 
+// with builders for those types. Have a shared def file
+// todo: move this enum out to a shared file
+enum MidiFunctionBlockDiscoveryFilterFlags
 {
-    std::string Name;
-
-
-};
-
-struct EndpointMetadata
-{
-    std::string Name;
-};
-
-struct DeviceManufacturerMetadata
-{
-
+    None = 0x00000000,
+    RequestFunctionBlockInformation = 0x00000001,
+    RequestFunctionBlockName = 0x00000002,
 };
 
 
 
-// intent is to instantiate one of these for each connected device endpoint
+// intent is to instantiate one of these for each connected unique device endpoint.
+//
 
 class CMidiEndpointMetadataManager : public Microsoft::WRL::RuntimeClass<
     Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
@@ -49,8 +46,9 @@ public:
     // the connected UMP endpoint is reporting
     HRESULT BeginNegotiation(_In_ uint8_t preferredMidiProtocolVersion);
 
-
     HRESULT Cleanup();
+
+ //   std::string GetAllMetadataJson();
 
 
     STDMETHOD(Callback)(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
@@ -58,7 +56,10 @@ public:
     // TODO: Callback or other approach for endpoint name update so we can update PnP
 
 private:
+    // All metadata is cached as strings (for names/ids) or JSON (for structures)
 
+    // map is property key and then json data
+    std::map<std::string, std::string> m_endpointMetadata;
 
 
 };

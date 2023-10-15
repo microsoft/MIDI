@@ -104,3 +104,8 @@ Windows.Devices.Midi2.MidiChannel | 0 | 0 | 0
 Windows.Devices.Midi2.IMidiChannelStatics | 0 | 0 | 0
 Windows.Devices.Midi2.MidiGroup | 0 | 0 | 0
 Windows.Devices.Midi2.IMidiGroupStatics | 0 | 0 | 0
+
+# MIDI CI
+
+Windows.Devices.Midi2.MidiProfile | 0 | 0 | 0
+Windows.Devices.Midi2.MidiProperty | 0 | 0 | 0
