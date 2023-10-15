@@ -43,10 +43,11 @@ Environment:
 #include "Trace.h"
 #include "Queue.tmh"
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 USBMIDI2DriverQueueInitialize(
-    _In_ WDFDEVICE Device
+    WDFDEVICE Device
     )
 /*++
 
@@ -143,14 +144,15 @@ Return Value:
     return status;
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 VOID
 USBMIDI2DriverEvtIoDeviceControl(
-    _In_ WDFQUEUE Queue,
-    _In_ WDFREQUEST Request,
-    _In_ size_t /* OutputBufferLength */,
-    _In_ size_t /* InputBufferLength */,
-    _In_ ULONG IoControlCode
+    WDFQUEUE Queue,
+    WDFREQUEST Request,
+    size_t /* OutputBufferLength */,
+    size_t /* InputBufferLength */,
+    ULONG IoControlCode
     )
 /*++
 
@@ -350,12 +352,13 @@ Return Value:
     return;
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 VOID
 USBMIDI2DriverEvtIoStop(
-    _In_ WDFQUEUE /* Queue */,
-    _In_ WDFREQUEST /* Request */,
-    _In_ ULONG /* ActionFlags */
+    WDFQUEUE /* Queue */,
+    WDFREQUEST /* Request */,
+    ULONG /* ActionFlags */
 )
 /*++
 

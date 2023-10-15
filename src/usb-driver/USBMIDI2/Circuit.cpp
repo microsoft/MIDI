@@ -1,3 +1,26 @@
+/************************************************************************************
+Copyright 2023 Association of Musical Electronics Industry
+Copyright 2023 Microsoft
+Driver source code developed by AmeNote. Some components Copyright 2023 AmeNote Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+************************************************************************************/
 /*++
 
     THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
@@ -39,10 +62,11 @@ KSDATAFORMAT g_MidiFormat =
 
 DEFINE_GUID(MIDI_COMPONENT_GUID,    0xb0eb4f78, 0xfaa7, 0x4f28, 0x8f, 0x08, 0x9b, 0xf4, 0x16, 0x7f, 0x99, 0xfc);
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 VOID
 EvtPinContextCleanup(
-    _In_ WDFOBJECT      Pin
+    WDFOBJECT      Pin
    )
 /*++
 
@@ -73,7 +97,7 @@ _Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 AddMidi(
-    _In_ WDFDEVICE      Device
+    WDFDEVICE      Device
     )
 {
     NTSTATUS            status;
@@ -111,8 +135,8 @@ _Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 CreateMidiCircuit(
-    _In_     WDFDEVICE      Device,
-    _Out_    ACXCIRCUIT *   Circuit
+    WDFDEVICE      Device,
+    ACXCIRCUIT *   Circuit
     )
 /*++
 
@@ -441,12 +465,13 @@ exit:
     return status;
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 EvtCircuitPowerUp (
-    _In_ WDFDEVICE  Device,
-    _In_ ACXCIRCUIT Circuit,
-    _In_ WDF_POWER_DEVICE_STATE PreviousState
+    WDFDEVICE  Device,
+    ACXCIRCUIT Circuit,
+    WDF_POWER_DEVICE_STATE PreviousState
     )
 {
     UNREFERENCED_PARAMETER(Device);
@@ -462,12 +487,13 @@ EvtCircuitPowerUp (
     return STATUS_SUCCESS;
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 EvtCircuitPowerDown (
-    _In_ WDFDEVICE  Device,
-    _In_ ACXCIRCUIT Circuit,
-    _In_ WDF_POWER_DEVICE_STATE TargetState
+    WDFDEVICE  Device,
+    ACXCIRCUIT Circuit,
+    WDF_POWER_DEVICE_STATE TargetState
     )
 {
     UNREFERENCED_PARAMETER(Device);

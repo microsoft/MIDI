@@ -1,3 +1,27 @@
+/************************************************************************************
+Copyright 2023 Association of Musical Electronics Industry
+Copyright 2023 Microsoft
+Driver source code developed by AmeNote. Some components Copyright 2023 AmeNote Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+************************************************************************************/
+
 // Copyright (c) Microsoft Corporation. All rights reserved.
 #pragma once
 
@@ -48,6 +72,16 @@ typedef struct {
 } KSMIDILOOPED_BUFFER_PROPERTY, *PKSMIDILOOPED_BUFFER_PROPERTY;
 
 #endif
+
+#define STATIC_KSPROPSETID_MIDI2_ENDPOINT_INFORMATION\
+			0x814552d, 0x2a1e, 0x48fe, 0x9f, 0xbd, 0x70, 0xac, 0x67, 0x91, 0x7, 0x55
+		DEFINE_GUIDSTRUCT("0814552D-2A1E-48FE-9FBD-70AC67910755", KSPROPSETID_MIDI2_ENDPOINT_INFORMATION);
+#define KSPROPSETID_MIDI2_ENDPOINT_INFORMATION DEFINE_GUIDNAMED(KSPROPSETID_MIDI2_ENDPOINT_INFORMATION)
+
+typedef enum {
+	KSPROPERTY_MIDI2_NATIVEDATAFORMAT,
+	KSPROPERTY_MIDI2_GROUP_TERMINAL_BLOCKS
+} KSPROPERTY_MIDI2_ENDPOINT_INFORMATION;
 
 #define PAGED_CODE_SEG __declspec(code_seg("PAGE"))
 #define INIT_CODE_SEG __declspec(code_seg("INIT"))

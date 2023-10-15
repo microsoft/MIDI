@@ -1,3 +1,42 @@
+/************************************************************************************
+Copyright 2023 Association of Musical Electronics Industry
+Copyright 2023 Microsoft
+Driver source code developed by AmeNote. Some components Copyright 2023 AmeNote Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+************************************************************************************/
+/*++
+
+Module Name:
+
+    SteamEngine.cpp - Class code file for StreamEngine class used to manage Pins
+                      for the driver.
+
+Abstract:
+
+   This file contains the stream Pins and support routines.
+
+Environment:
+
+    Kernel-mode Driver Framework
+
+--*/
 // Copyright (c) Microsoft Corporation. All rights reserved.
 #include "Pch.h"
 
@@ -45,6 +84,7 @@ StreamEngine::~StreamEngine()
     Cleanup();
 }
 
+_Use_decl_annotations_
 NTSTATUS
 StreamEngine::Cleanup()
 {
@@ -101,7 +141,7 @@ StreamEngine::Cleanup()
 _Use_decl_annotations_
 void
 StreamEngine::WorkerThread(
-    _In_ PVOID context
+    PVOID context
     ){
     PAGED_CODE();
     auto streamEngine = reinterpret_cast<StreamEngine*>(context);
@@ -116,8 +156,6 @@ StreamEngine::HandleIo()
     // when cyclic buffering is being used.
     // This implememtation loops the midi out data back to midi in.
     NTSTATUS status = STATUS_SUCCESS;
-
-    DEVICE_CONTEXT* pDevCtx = GetDeviceContext(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)));
 
     // start with the even reset to indicate that the thread is running
     m_ThreadExitedEvent.clear();
@@ -153,7 +191,6 @@ StreamEngine::HandleIo()
                     if (nullptr != g_MidiInStreamEngine)
                     {
                         ULONG bytesAvailableToRead = 0;
-                        ULONG bytesAvailable = 0;
 
                         KeResetEvent(m_WriteEvent);
 
@@ -211,60 +248,6 @@ StreamEngine::HandleIo()
                             break;
                         }
 
-                        // Retrieve the midi in position for the buffer that we are writing to. The data between the write position
-                        // and read position is empty. (read position is their last read position, write position is our last written).
-                        // retrieve our write position first since we know it won't be changing, and their read position second,
-                        // so we can have as much free space as possible.
-                        //ULONG midiInWritePosition = (ULONG)InterlockedCompareExchange((LONG*)pDevCtx->pMidiStreamEngine->m_WriteRegister, 0, 0);
-                        //ULONG midiInReadPosition = (ULONG)InterlockedCompareExchange((LONG*)pDevCtx->pMidiStreamEngine->m_ReadRegister, 0, 0);
-
-                        // Now we need to calculate the available space, taking into account the looping
-                        // buffer.
-#if 0
-                        if (midiInReadPosition <= midiInWritePosition)
-                        {
-                            // if the read position is less than the write position, then the difference between
-                            // the read and write position is the buffer in use, same as above. So, the total
-                            // buffer size minus the used buffer gives us the available space.
-                            bytesAvailable = pDevCtx->pMidiStreamEngine->m_BufferSize - (midiInWritePosition - midiInReadPosition);
-                        }
-                        else
-                        {
-                            // we looped around, the write position is behind the read position.
-                            // The difference between the read position and the write position
-                            // is the available space, which is exactly what we want.
-                            bytesAvailable = midiInReadPosition - midiInWritePosition;
-                        }
-
-                        // Note, if we fill the buffer up 100%, then write position == read position,
-                        // which is the same as when the buffer is empty and everything in the buffer
-                        // would be lost.
-                        // Reserve 1 byte so that when the buffer is full the write position will trail
-                        // the read position.
-                        // Because of this reserve, and the above calculation, the true bytesAvailable 
-                        // count can never be 0.
-                        ASSERT(bytesAvailable != 0);
-                        bytesAvailable--;
-
-                        if (bytesToCopy > bytesAvailable)
-                        {
-                            // We have a problem. We have data to move, but there
-                            // isn't enough buffer available to do it. The client is not reading data,
-                            // or not reading it fast enough.
-
-                            // TBD: need to log a glitch event if this happens, so we can
-                            // track it.
-
-                            // Two options, either retry, or drop the data.
-                            // For reliability purposes of testing, retry.
-                            KeSetEvent(m_WriteEvent, 0, 0);
-                            // InterlockedExchange((LONG*)m_ReadRegister, finalReadPosition);
-                            break;
-                        }
-
-                        // There's enough space available, calculate our write position
-                        PVOID startingWriteAddress = (PVOID)(((PBYTE)pDevCtx->pMidiStreamEngine->m_KernelBufferMapping.Buffer1.m_BufferClientAddress)+midiInWritePosition);
-#endif
                         // Send relevant buffer to USB
                         PUMPDATAFORMAT thisData = (PUMPDATAFORMAT)startingReadAddress;
                         if (thisData->ByteCount)
@@ -275,33 +258,9 @@ StreamEngine::HandleIo()
                                 thisData->ByteCount
                             );
                         }
-#if 0
-                        // copy the data. This works (reading/writing past the end of the buffer)
-                        // because we have mapped the same buffer twice, so reading or writing
-                        // past the end has the effect of looping around. We're safe to do this
-                        // up to the client address plus 2x the buffer size, which will never happen
-                        // because everything above is constrained to the single buffer plus a little bit
-                        // of overlap.
-                        RtlCopyMemory
-                        (
-                            startingWriteAddress,
-                            startingReadAddress,
-                            bytesToCopy
-                        );
 
-                        // now calculate the new position that the buffer has been written up to.
-                        // this will be the original write position, plus the bytes copied, again modululs
-                        // the buffer size to take into account the loop.
-                        ULONG finalWritePosition = (midiInWritePosition + bytesToCopy) % pDevCtx->pMidiStreamEngine->m_BufferSize;
-
-                        // finalize by advancing the registers and setting the write event
-#endif
                         // advance our read position
                         InterlockedExchange((LONG *)m_ReadRegister, finalReadPosition);
-
-                        // advance the write position for the loopback and signal that there's data available
-                        //InterlockedExchange((LONG *)pDevCtx->pMidiStreamEngine->m_WriteRegister, finalWritePosition);
-                        //KeSetEvent(pDevCtx->pMidiStreamEngine->m_WriteEvent, 0, 0);
                     }
                     else
                     {
@@ -330,9 +289,9 @@ StreamEngine::HandleIo()
 _Use_decl_annotations_
 bool
 StreamEngine::FillReadStream(
-    _In_    PUINT32             pBuffer,
-    _In_    size_t              bufferSize,
-    _In_    WDFCONTEXT          Context
+    PUINT32             pBuffer,
+    size_t              bufferSize,
+    WDFCONTEXT          Context
 )
 /*++
 Routine Description:
@@ -421,7 +380,9 @@ Return Value:
             pWriteData[count] = pBuffer[count];
         }
 
-        pUMP->Position = 0; // current timestamp?
+//        LARGE_INTEGER tempPosition = KeQueryPerformanceCounter(NULL);
+//        pUMP->Position = (LONGLONG)tempPosition.QuadPart;
+        pUMP->Position = 0;
         pUMP->ByteCount = (ULONG)bufferSize * (ULONG)sizeof(UINT32);
 
         // now calculate the new position that the buffer has been written up to.
@@ -520,7 +481,6 @@ NTSTATUS
 StreamEngine::Pause()
 {
     NTSTATUS status = STATUS_UNSUCCESSFUL;
-    DEVICE_CONTEXT* pDevCtx = GetDeviceContext(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)));
 
     PAGED_CODE();
 
@@ -584,7 +544,6 @@ NTSTATUS
 StreamEngine::Run()
 {
     NTSTATUS status = STATUS_UNSUCCESSFUL;
-    DEVICE_CONTEXT* pDevCtx = GetDeviceContext(AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)));
 
     PAGED_CODE();
 
@@ -652,11 +611,11 @@ exit:
 _Use_decl_annotations_
 NTSTATUS
 StreamEngine::GetSingleBufferMapping(
-    _In_ UINT32 BufferSize,
-    _In_ KPROCESSOR_MODE Mode,
-    _In_ BOOL LockPages,
-    _In_opt_ PSINGLE_BUFFER_MAPPING BaseMapping,
-    _Inout_ PSINGLE_BUFFER_MAPPING Mapping
+    UINT32 BufferSize,
+    KPROCESSOR_MODE Mode,
+    BOOL LockPages,
+    PSINGLE_BUFFER_MAPPING BaseMapping,
+    PSINGLE_BUFFER_MAPPING Mapping
     )
 {
     PAGED_CODE();
@@ -723,7 +682,7 @@ StreamEngine::GetSingleBufferMapping(
 _Use_decl_annotations_
 NTSTATUS
 StreamEngine::CleanupSingleBufferMapping(
-    _Inout_ PSINGLE_BUFFER_MAPPING Mapping
+    PSINGLE_BUFFER_MAPPING Mapping
     )
 {
     PAGED_CODE();
@@ -776,10 +735,10 @@ StreamEngine::CleanupSingleBufferMapping(
 _Use_decl_annotations_
 NTSTATUS
 StreamEngine::GetDoubleBufferMapping(
-    _In_ UINT32 BufferSize,
-    _In_ KPROCESSOR_MODE Mode,
-    _In_opt_ PSINGLE_BUFFER_MAPPING BaseMapping,
-    _Inout_ PDOUBLE_BUFFER_MAPPING Mapping
+    UINT32 BufferSize,
+    KPROCESSOR_MODE Mode,
+    PSINGLE_BUFFER_MAPPING BaseMapping,
+    PDOUBLE_BUFFER_MAPPING Mapping
     )
 {
 
@@ -958,8 +917,8 @@ StreamEngine::CleanupDoubleBufferMapping(
 _Use_decl_annotations_
 NTSTATUS
 StreamEngine::GetLoopedStreamingBuffer(
-    _In_ ULONG BufferSize,
-    _Inout_ PKSMIDILOOPED_BUFFER  Buffer
+    ULONG BufferSize,
+    PKSMIDILOOPED_BUFFER  Buffer
     )
 {
     // handle incoming property call to retrieve the looped streaming buffer.
@@ -1018,7 +977,7 @@ StreamEngine::GetLoopedStreamingBuffer(
 _Use_decl_annotations_
 NTSTATUS
 StreamEngine::GetLoopedStreamingRegisters(
-    _Inout_ PKSMIDILOOPED_REGISTERS   Buffer
+    PKSMIDILOOPED_REGISTERS   Buffer
     )
 {
     // handle incoming property call to retrieve the looped streaming registers.
@@ -1062,7 +1021,7 @@ StreamEngine::GetLoopedStreamingRegisters(
 _Use_decl_annotations_
 NTSTATUS
 StreamEngine::SetLoopedStreamingNotificationEvent(
-    _In_ PKSMIDILOOPED_EVENT    Buffer
+    PKSMIDILOOPED_EVENT    Buffer
     )
 {
     // handle incoming property call to set the looped streaming events.
