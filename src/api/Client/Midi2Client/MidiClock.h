@@ -26,7 +26,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
             auto freq = GetMidiTimestampFrequency();
 
-            return (float)((timestampValue * 1000000) / freq);
+            return (float)((timestampValue * 1000000.0f) / freq);
         }
 
         static float ConvertTimestampToMilliseconds(
@@ -34,7 +34,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
             auto freq = GetMidiTimestampFrequency();
 
-            return (float)((timestampValue * 1000) / freq);
+            return (float)((timestampValue * 1000.0f) / freq);
         }
 
 
