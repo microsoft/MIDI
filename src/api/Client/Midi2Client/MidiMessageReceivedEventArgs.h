@@ -55,7 +55,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool FillMessage96( _In_ midi2::MidiMessage96 const& message);
         bool FillMessage128(_In_ midi2::MidiMessage128 const& message);
         
-        uint8_t FillMessageStruct(_Inout_ midi2::MidiMessageStruct message);
+        uint8_t FillMessageStruct(_Inout_ midi2::MidiMessageStruct& message);
 
         uint8_t FillWordArray(
             _In_ array_view<uint32_t> words, 

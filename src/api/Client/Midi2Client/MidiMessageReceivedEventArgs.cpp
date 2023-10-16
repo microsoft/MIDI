@@ -83,7 +83,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     uint8_t MidiMessageReceivedEventArgs::FillMessageStruct(
-        midi2::MidiMessageStruct message
+        midi2::MidiMessageStruct& message
         )
     {
         auto wordCount = GetValidMessageWordCount();

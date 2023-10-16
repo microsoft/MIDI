@@ -263,3 +263,13 @@
              threading="Both"
              trustLevel="Base"
              />
+          <class
+             activatableClassId="Windows.Devices.Midi2.MidiProfile"
+             threading="Both"
+             trustLevel="Base"
+             />
+          <class
+             activatableClassId="Windows.Devices.Midi2.MidiProperty"
+             threading="Both"
+             trustLevel="Base"
+             />

@@ -278,10 +278,10 @@
       <DependentUpon>MidiOutputEndpointOpenOptions.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiProfile.h">
-        <DependentUpon>MidiProfile.idl</DependentUpon>
+      <DependentUpon>MidiProfile.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiProperty.h">
-        <DependentUpon>MidiProperty.idl</DependentUpon>
+      <DependentUpon>MidiProperty.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiService.h">
       <DependentUpon>MidiService.idl</DependentUpon>
@@ -373,6 +373,7 @@
     <ClInclude Include="midi_service_interface.h" />
     <ClInclude Include="midi_stream_message_defs.h" />
     <ClInclude Include="midl_defines.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="string_util.h" />
     <ClInclude Include="trace_logging.h" />
     <ClInclude Include="ump_helpers.h" />
@@ -430,10 +431,10 @@
       <DependentUpon>MidiOutputEndpointOpenOptions.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiProfile.cpp">
-        <DependentUpon>MidiProfile.idl</DependentUpon>
+      <DependentUpon>MidiProfile.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiProperty.cpp">
-        <DependentUpon>MidiProperty.idl</DependentUpon>
+      <DependentUpon>MidiProperty.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiService.cpp">
       <DependentUpon>MidiService.idl</DependentUpon>
@@ -623,6 +624,9 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="WinRTActivationEntries.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Windows.Devices.Midi2.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

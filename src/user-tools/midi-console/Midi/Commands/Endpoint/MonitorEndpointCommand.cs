@@ -100,91 +100,75 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             }
             else if (connection == null)
             {
-                AnsiConsole.WriteLine(Strings.ErrorUnableToOpenEndpoint);
-                return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
+                AnsiConsole.WriteLine(Strings.ErrorUnableToCreateEndpointConnection);
+                return (int)MidiConsoleReturnCode.ErrorCreatingEndpointConnection;
             }
-
-
-            // TODO: This table rendering is too slow. Just output text lines
-            // TODO: Centralize message rendering elsewhere. Pad columns as needed
 
             if (settings.Verbose)
             {
+                UInt64 startTimestamp = 0;
+
                 // start waiting for messages
 
                 MidiMessageStruct msg;
 
-                AnsiConsole.Live(table)
-                    .Start(ctx =>
+                UInt32 index = 0;
+
+                //bool firstMessageReceived = false;
+
+                // set up the event handler
+                IMidiMessageReceivedEventSource eventSource = (IMidiMessageReceivedEventSource)connection;
+
+                bool continueWaiting = true;
+
+                eventSource.MessageReceived += (s, e) =>
+                {
+                    if (startTimestamp == 0)
                     {
-                        UInt32 index = 0;
+                        // gets timestamp of first message we receive and uses that so all others are an offset
+                        startTimestamp = e.Timestamp;    
+                    }
 
-                        bool firstMessageReceived = false;
+                    //Console.WriteLine("DEBUG: MessageReceived");
+                    index++;
 
-                        // set up the event handler
-                        IMidiMessageReceivedEventSource eventSource = (IMidiMessageReceivedEventSource)connection;
+                    var numWords = e.FillMessageStruct(out msg);
 
-                        bool continueWaiting = true;
+                    AnsiConsoleOutput.DisplayMidiMessage(msg, numWords, e.Timestamp - startTimestamp, index);
 
-                        eventSource.MessageReceived += (s, e) =>
+                    if (settings.SingleMessage)
+                    {
+                        continueWaiting = false;
+                    }
+                };
+
+
+                // open the connection
+                if (connection.Open())
+                {
+                    while (continueWaiting)
+                    {
+                        if (Console.KeyAvailable)
                         {
-                            index++;
-
-                            if (!firstMessageReceived)
+                            var keyInfo = Console.ReadKey(false);
+                            if (keyInfo.Key == ConsoleKey.Escape)
                             {
-                                table.AddColumn(Strings.CommonTableHeaderIndex);
-                                table.AddColumn(Strings.TableColumnHeaderCommonTimestamp);
-                                table.AddColumn(Strings.MonitorEndpointResultTableColumnHeaderWordsReceived);
-                                table.AddColumn(Strings.TableColumnHeaderCommonMessageType);
-                                table.AddColumn(Strings.TableColumnHeaderCommonDetailedMessageType);
-
-                                firstMessageReceived = true;
-                            }
-
-                            var numWords = e.FillMessageStruct(out msg);
-
-                            DisplayUmp(index, msg, numWords, e.MessageType, e.Timestamp, table);
-
-                            ctx.Refresh();
-
-                            if (settings.SingleMessage)
-                            {
+                                AnsiConsole.MarkupLine(Strings.MonitorEscapedPressedMessage);
                                 continueWaiting = false;
+                                break;
                             }
-                        };
-
-                        // open the connection
-                        connection.Open();
-
-                        while (continueWaiting)
-                        {
-                            if (Console.KeyAvailable)
-                            {
-                                var keyInfo = Console.ReadKey(false);
-                                if (keyInfo.Key == ConsoleKey.Escape)
-                                {
-                                    if (!firstMessageReceived)
-                                    {
-                                        // TODO: we should erase the table, otherwise it leaves artifacts.
-                                        // may need to rethink how table is created
-                                    }
-
-                                    AnsiConsole.MarkupLine(Strings.MonitorEscapedPressedMessage);
-                                    continueWaiting = false;
-                                    break;
-                                }
-                            }
-
-                            Thread.Sleep(0);
-
-                            // todo: code to allow pressing escape to stop listening and gracefully shut down
-
-
                         }
 
-                    });
+                        Thread.Sleep(0);
+                    }
+                }
+                else
+                {
+                    AnsiConsole.WriteLine(Strings.ErrorUnableToOpenEndpoint);
+                    return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
+                }
 
-
+                session.DisconnectEndpointConnection(connection.ConnectionId);
             }
             else
             {
@@ -250,40 +234,40 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             return 0;
         }
 
-        private void DisplayUmp(UInt32 index, MidiMessageStruct ump, byte numWords, MidiMessageType messageType, UInt64 timestamp, Table table) 
-        {
-            string data = string.Empty;
+        //private void DisplayUmp(UInt32 index, MidiMessageStruct ump, byte numWords, MidiMessageType messageType, UInt64 timestamp, Table table) 
+        //{
+        //    string data = string.Empty;
 
-            if (numWords == 4)
-            {
-                data = AnsiMarkupFormatter.FormatMidiWords(ump.Word0, ump.Word1, ump.Word2, ump.Word3);
-            }
-            else if (numWords == 3)
-            {
-                data = AnsiMarkupFormatter.FormatMidiWords(ump.Word0, ump.Word1, ump.Word2);
-            }
-            else if (numWords == 2)
-            {
-                data = AnsiMarkupFormatter.FormatMidiWords(ump.Word0, ump.Word1);
-            }
-            else if (numWords == 1)
-            {
-                data = AnsiMarkupFormatter.FormatMidiWords(ump.Word0);
-            }
+        //    if (numWords == 4)
+        //    {
+        //        data = AnsiMarkupFormatter.FormatMidiWords(ump.Word0, ump.Word1, ump.Word2, ump.Word3);
+        //    }
+        //    else if (numWords == 3)
+        //    {
+        //        data = AnsiMarkupFormatter.FormatMidiWords(ump.Word0, ump.Word1, ump.Word2);
+        //    }
+        //    else if (numWords == 2)
+        //    {
+        //        data = AnsiMarkupFormatter.FormatMidiWords(ump.Word0, ump.Word1);
+        //    }
+        //    else if (numWords == 1)
+        //    {
+        //        data = AnsiMarkupFormatter.FormatMidiWords(ump.Word0);
+        //    }
 
-            string detailedMessageType = MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(ump.Word0);
+        //    string detailedMessageType = MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(ump.Word0);
 
 
 
-            table.AddRow(
-                new Markup(AnsiMarkupFormatter.FormatRowIndex(index)),
-                new Markup(AnsiMarkupFormatter.FormatTimestamp(timestamp)), 
-                new Markup(data),
-                new Markup(AnsiMarkupFormatter.FormatMessageType(messageType)), 
-                new Markup(AnsiMarkupFormatter.FormatDetailedMessageType(detailedMessageType))
-                );
+        //    table.AddRow(
+        //        new Markup(AnsiMarkupFormatter.FormatRowIndex(index)),
+        //        new Markup(AnsiMarkupFormatter.FormatTimestamp(timestamp)), 
+        //        new Markup(data),
+        //        new Markup(AnsiMarkupFormatter.FormatMessageType(messageType)), 
+        //        new Markup(AnsiMarkupFormatter.FormatDetailedMessageType(detailedMessageType))
+        //        );
 
-        }
+        //}
 
 
     }

@@ -115,6 +115,9 @@
     <Filter Include="API\CI\Property Exchange">
       <UniqueIdentifier>{5a082154-f6a6-4d09-be45-cc69e5ecf609}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{3360af9e-3363-4faf-861f-7d778c66bf70}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -370,6 +373,7 @@
     <ClInclude Include="MidiProperty.h">
       <Filter>API\CI\Property Exchange</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiSession.idl">
@@ -643,5 +647,10 @@
     <Text Include="WinRTActivationEntries.txt">
       <Filter>InstallSupport</Filter>
     </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Windows.Devices.Midi2.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>
