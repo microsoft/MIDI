@@ -50,9 +50,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            IMidiEndpointConnection? connection = null;
-
-
             string endpointId = string.Empty;
 
             if (!string.IsNullOrEmpty(settings.EndpointDeviceId))
@@ -74,41 +71,24 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             // when this goes out of scope, it will dispose of the session, which closes the connections
             using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.MonitorSessionNameSuffix}");
 
-            AnsiConsole.Status()
-                .Start(Strings.StatusCreatingSessionAndOpeningEndpoint, ctx =>
-                {
-                    ctx.Spinner(Spinner.Known.Star);
-
-
-                    if (session != null)
-                    {
-                        if (settings.EndpointDirection == EndpointDirectionInputs.Bidirectional)
-                        {
-                            connection = session.ConnectBidirectionalEndpoint(endpointId);
-                        }
-                        else if (settings.EndpointDirection == EndpointDirectionInputs.In)
-                        {
-                            connection = session.ConnectInputEndpoint(endpointId);
-                        }
-                    }
-                });
-
             if (session == null)
             {
                 AnsiConsole.WriteLine(Strings.ErrorUnableToCreateSession);
                 return (int)MidiConsoleReturnCode.ErrorCreatingSession;
             }
-            else if (connection == null)
+
+            using var connection = session.ConnectBidirectionalEndpoint(endpointId);
+
+            if (connection == null)
             {
                 AnsiConsole.WriteLine(Strings.ErrorUnableToCreateEndpointConnection);
                 return (int)MidiConsoleReturnCode.ErrorCreatingEndpointConnection;
             }
 
+
             if (settings.Verbose)
             {
                 UInt64 startTimestamp = 0;
-
-                // start waiting for messages
 
                 MidiMessageStruct msg;
 
@@ -116,12 +96,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                 //bool firstMessageReceived = false;
 
-                // set up the event handler
-                IMidiMessageReceivedEventSource eventSource = (IMidiMessageReceivedEventSource)connection;
-
                 bool continueWaiting = true;
 
-                eventSource.MessageReceived += (s, e) =>
+                connection.MessageReceived += (s, e) =>
                 {
                     if (startTimestamp == 0)
                     {
@@ -151,6 +128,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         if (Console.KeyAvailable)
                         {
                             var keyInfo = Console.ReadKey(false);
+
                             if (keyInfo.Key == ConsoleKey.Escape)
                             {
                                 AnsiConsole.MarkupLine(Strings.MonitorEscapedPressedMessage);

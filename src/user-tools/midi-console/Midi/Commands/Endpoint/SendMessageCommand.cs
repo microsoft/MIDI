@@ -161,6 +161,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     }
                 });
 
+            session.DisconnectEndpointConnection(connection.ConnectionId);
+
             return (int)MidiConsoleReturnCode.Success;
         }
 
