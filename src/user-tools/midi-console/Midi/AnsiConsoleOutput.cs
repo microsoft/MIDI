@@ -11,7 +11,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 {
     internal class AnsiConsoleOutput
     {
-        public static void DisplayMidiMessage(MidiMessageStruct ump, uint numWords, UInt64 deltaTimestamp, uint index)
+        public static void DisplayMidiMessage(MidiMessageStruct ump, uint numWords, UInt64 timestamp, uint index)
         {
             string data = string.Empty;
 
@@ -40,19 +40,36 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             word0Text = string.Format("{0:X8}", ump.Word0);
 
-            const string messageLineFormat = 
+            const string messageLineFormat =
                 "[grey]{0,7}[/] | " +
-                "[darkseagreen2]{1,12:F2}[/] µs | " +
+                "[darkseagreen2]{1,16:F2}[/] µs | " +
                 "[deepskyblue1]{2,8}[/] [deepskyblue2]{3,8}[/] [deepskyblue3]{4,8}[/] [deepskyblue4]{5,8}[/] | " +
                 "[steelblue1_1]{6,-20}[/]";
 
+
             AnsiConsole.MarkupLine(
-                messageLineFormat, 
-                index, 
-                MidiClock.ConvertTimestampToMicroseconds(deltaTimestamp), 
+                messageLineFormat,
+                index,
+                MidiClock.ConvertTimestampToMicroseconds(timestamp),
                 word0Text, word1Text, word2Text, word3Text,
                 detailedMessageType
-                ) ;
+                );
+
+
+            //const string messageLineFormat =
+            //    "[grey]{0,7}[/] | " +
+            //    "[darkseagreen2]{1,12:F2}[/] µs | " +
+            //    "[deepskyblue1]{2,8}[/] [deepskyblue2]{3,8}[/] [deepskyblue3]{4,8}[/] [deepskyblue4]{5,8}[/] | " +
+            //    "[steelblue1_1]{6,-20}[/]";
+
+            //AnsiConsole.MarkupLine(
+            //    messageLineFormat, 
+            //    index, 
+            //    MidiClock.ConvertTimestampToMicroseconds(deltaTimestamp), 
+            //    word0Text, word1Text, word2Text, word3Text,
+            //    detailedMessageType
+            //    ) ;
+
 
         }
 

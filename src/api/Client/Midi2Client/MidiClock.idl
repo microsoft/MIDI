@@ -23,8 +23,8 @@ namespace Windows.Devices.Midi2
         static UInt64 GetMidiTimestampFrequency();
 
         // convenience function
-        static Single ConvertTimestampToMicroseconds(MIDI_TIMESTAMP timestampValue);
-        static Single ConvertTimestampToMilliseconds(MIDI_TIMESTAMP timestampValue);
+        static Double ConvertTimestampToMicroseconds(MIDI_TIMESTAMP timestampValue);
+        static Double ConvertTimestampToMilliseconds(MIDI_TIMESTAMP timestampValue);
 
         // TODO: Consider adding a wrapper for GetSystemTimePreciseAsFileTime to enable 
         // synchronizing timestamps to wall clock time, as much as that is possible

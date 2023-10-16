@@ -111,7 +111,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                     var numWords = e.FillMessageStruct(out msg);
 
-                    AnsiConsoleOutput.DisplayMidiMessage(msg, numWords, e.Timestamp - startTimestamp, index);
+                    //AnsiConsoleOutput.DisplayMidiMessage(msg, numWords, e.Timestamp - startTimestamp, index);
+                    AnsiConsoleOutput.DisplayMidiMessage(msg, numWords, e.Timestamp, index);
 
                     if (settings.SingleMessage)
                     {

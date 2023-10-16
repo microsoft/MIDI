@@ -21,20 +21,20 @@ namespace winrt::Windows::Devices::Midi2::implementation
         static uint64_t GetMidiTimestampFrequency() { return ::Windows::Devices::Midi2::Internal::Shared::GetMidiTimestampFrequency(); }
 
 
-        static float ConvertTimestampToMicroseconds(
+        static double ConvertTimestampToMicroseconds(
             _In_ internal::MidiTimestamp const timestampValue)
         {
             auto freq = GetMidiTimestampFrequency();
 
-            return (float)((timestampValue * 1000000.0f) / freq);
+            return (double)((timestampValue * (double)1000000.0) / freq);
         }
 
-        static float ConvertTimestampToMilliseconds(
+        static double ConvertTimestampToMilliseconds(
             _In_ internal::MidiTimestamp const timestampValue)
         {
             auto freq = GetMidiTimestampFrequency();
 
-            return (float)((timestampValue * 1000.0f) / freq);
+            return (double)((timestampValue * (double)1000.0) / freq);
         }
 
 
