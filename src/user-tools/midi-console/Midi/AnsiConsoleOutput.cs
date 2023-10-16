@@ -41,7 +41,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             word0Text = string.Format("{0:X8}", ump.Word0);
 
             const string messageLineFormat =
-                "[grey]{0,7}[/] | " +
+                "[grey]{0,8}[/] | " +
                 "[darkseagreen2]{1,16:F2}[/] µs | " +
                 "[deepskyblue1]{2,8}[/] [deepskyblue2]{3,8}[/] [deepskyblue3]{4,8}[/] [deepskyblue4]{5,8}[/] | " +
                 "[steelblue1_1]{6,-20}[/]";
