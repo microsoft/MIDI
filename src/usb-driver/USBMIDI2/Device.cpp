@@ -449,7 +449,7 @@ EvtDeviceD0Entry(
     WDF_POWER_DEVICE_STATE PreviousState
     )
 {
-    NTSTATUS status;
+    NTSTATUS status = STATUS_SUCCESS;
     PDEVICE_CONTEXT devCtx;
 
     UNREFERENCED_PARAMETER(PreviousState);
@@ -1254,10 +1254,15 @@ Return Value:
     PDEVICE_CONTEXT     pDeviceContext = (PDEVICE_CONTEXT)Context;
     NTSTATUS            status;
     PUINT8              pReceivedBuffer;
-    WDFMEMORY           workingBuffer = NULL;
-    size_t              workingBufferSize;
-    PUINT8              pWorkingBuffer;
+    PUINT32             pReceivedWords;
     UMP_PACKET          umpPacket;
+    UINT32              receivedIndex = 0;
+    UINT32              receivedNumWords;
+    struct
+    {
+        UMPDATAFORMAT   umpHeader;
+        UINT32          umpData[4];
+    } UMP_Packet_Struct;
 
     Pipe;
 
@@ -1277,300 +1282,94 @@ Return Value:
             goto ReadCompleteExit;
         }
 
-        pReceivedBuffer = (PUCHAR)WdfMemoryGetBuffer(Buffer, NULL);
+        receivedNumWords = (UINT32)(NumBytesTransferred / sizeof(UINT32));
+        pReceivedBuffer = (PUINT8)WdfMemoryGetBuffer(Buffer, NULL);
+        pReceivedWords = (PUINT32)pReceivedBuffer;
 
-        // If Alt setting 0 then we need to process into URB packets for USB MIDI 1.0 to UMP
-        if (!pDeviceContext->UsbMIDIStreamingAlt)
+        while (receivedIndex < receivedNumWords)
         {
-            // Create a working buffer
-            workingBufferSize = ((NumBytesTransferred * 2) / sizeof(UINT32)) * sizeof(UINT32);
-            // For now assume that could wind up with twice
-            // size in converting from USB MIDI 1.0 to UMP
-            // making sure that overall size even on 32 bit words.
-            status = WdfMemoryCreate(
-                NULL,       // attributes
-                NonPagedPoolNx,
-                NULL,       // Pool Tag
-                workingBufferSize,
-                &workingBuffer,
-                (PVOID *)&pWorkingBuffer
-            );
-            if (!NT_SUCCESS(status))
+            // Do not need to process any NULL data (NOOP in UMP)
+            if (!pReceivedWords[receivedIndex])
             {
-                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                    "Error creating working buffer for USB MIDI 1.0 to UMP conversion.\n");
-                goto ReadCompleteExit;
+                receivedIndex++;
+                continue;
             }
 
-            // We process into working buffer based on UINT32s
-            UINT16 numAvail = (UINT16)workingBufferSize / sizeof(UINT32);
-            UINT16 numIndex = 0;
-
-            // Process received data as UINT32 Packets
-            for (size_t byteCount = 0; byteCount < NumBytesTransferred; byteCount += 4)
+            // If not alternate indicating USB MIDI 1.0
+            if (!pDeviceContext->UsbMIDIStreamingAlt)
             {
-                // Get current packet buffer
-                PUINT8 pBuffer = &pReceivedBuffer[byteCount];
-
-                // Determine packet cable number from group
+                // Need Cable Number
+                PUINT8 pBuffer = (PUINT8)&pReceivedWords[receivedIndex];
                 UINT8 cbl_num = (pBuffer[0] & 0xf0) >> 4;
 
-                // ***Process data into MIDI1 data format***
-                UINT8 code_index = pBuffer[0] & 0x0f;
-
-                // Handle special case of single byte data
-                if (code_index == MIDI_CIN_1BYTE_DATA && (pBuffer[1] & 0x80))
+                // Convert to UMP, skipping if indicated not processed
+                if (!USBMIDI1ToUMP(
+                    &pReceivedWords[receivedIndex++],
+                    &pDeviceContext->midi1IsInSysex[cbl_num],
+                    &umpPacket))
                 {
-                    switch (pBuffer[1])
-                    {
-                    case UMP_SYSTEM_TUNE_REQ:
-                    case UMP_SYSTEM_TIMING_CLK:
-                    case UMP_SYSTEM_START:
-                    case UMP_SYSTEM_CONTINUE:
-                    case UMP_SYSTEM_STOP:
-                    case UMP_SYSTEM_ACTIVE_SENSE:
-                    case UMP_SYSTEM_RESET:
-                        code_index = MIDI_CIN_SYSEX_END_1BYTE;
-                        break;
-
-                    default:
-                        break;
-                    }
-                }
-
-                switch (code_index)
-                {
-                case MIDI_CIN_SYSEX_START:
-                    // Needs more space, confirm available
-                    if (!(numIndex + 1 < numAvail))
-                    {
-                        continue;
-                    }
-
-                    umpPacket.umpData.umpBytes[0] = UMP_MT_DATA_64 | cbl_num;   // Message Type and group
-
-                    // As this is start of SYSEX, need to set status to indicate so and copy 3 bytes of data
-                    umpPacket.umpData.umpBytes[1] = UMP_SYSEX7_START | 3;
-
-                    // Set that in SYSEX
-                    pDeviceContext->midi1IsInSysex[cbl_num] = true;
-
-                    // Copy in rest of data
-                    for (int count = 1; count < 4; count++)
-                    {
-                        umpPacket.umpData.umpBytes[count + 1] = pBuffer[count];
-                    }
-                    // Pad rest of data
-                    umpPacket.umpData.umpBytes[5] = 0x00;
-                    umpPacket.umpData.umpBytes[6] = 0x00;
-                    umpPacket.umpData.umpBytes[7] = 0x00;
-
-                    umpPacket.wordCount = 2;
-                    break;
-
-                case MIDI_CIN_SYSEX_END_1BYTE: // or single byte System Common
-                    // Determine if a system common
-                    if ((pBuffer[1] & 0x80) // most significant bit set and not sysex
-                        && (pBuffer[1] != MIDI_STATUS_SYSEX_END))
-                    {
-                        umpPacket.umpData.umpBytes[0] = UMP_MT_SYSTEM | cbl_num;
-                        umpPacket.umpData.umpBytes[1] = pBuffer[1];
-                        umpPacket.umpData.umpBytes[2] = 0x00;
-                        umpPacket.umpData.umpBytes[3] = 0x00;
-                        umpPacket.wordCount = 1;
-                        break;
-                    }
-
-                    // Sysex so 64 bit message Needs more space, confirm available
-                    if (!(numIndex + 1 < numAvail))
-                    {
-                        // not enough space need to error out or add more
-                        continue;
-                    }
-
-                    umpPacket.umpData.umpBytes[0] = UMP_MT_DATA_64 | cbl_num;
-
-                    // Determine if complete based on if currently in SYSEX
-                    if (pDeviceContext->midi1IsInSysex[cbl_num])
-                    {
-                        umpPacket.umpData.umpBytes[1] = UMP_SYSEX7_END | 1;
-                        pDeviceContext->midi1IsInSysex[cbl_num] = false; // we are done with SYSEX
-                    }
-                    else
-                    {
-                        umpPacket.umpData.umpBytes[1] = UMP_SYSEX7_COMPLETE | 1;
-                    }
-
-                    // Copy in the data, assumes the original USB MIDI 1.0 data has padded data
-                    for (int count = 1; count < 4; count++)
-                    {
-                        umpPacket.umpData.umpBytes[count + 1] = pBuffer[count];
-                    }
-
-                    umpPacket.wordCount = 2;
-                    break;
-
-                case MIDI_CIN_SYSEX_END_2BYTE:
-                    // Needs more space, confirm available
-                    if (!(numIndex + 1 < numAvail))
-                    {
-                        // not enough space need to error out or add more
-                        continue;
-                    }
-
-                    umpPacket.umpData.umpBytes[0] = UMP_MT_DATA_64 | cbl_num;
-
-                    // Determine if complete based on if currently in SYSEX
-                    if (pDeviceContext->midi1IsInSysex[cbl_num])
-                    {
-                        umpPacket.umpData.umpBytes[1] = UMP_SYSEX7_END | 2;
-                        pDeviceContext->midi1IsInSysex[cbl_num] = false; // we are done with SYSEX
-                    }
-                    else
-                    {
-                        umpPacket.umpData.umpBytes[1] = UMP_SYSEX7_COMPLETE | 2;
-                    }
-
-                    // Copy in the data, assumes the original USB MIDI 1.0 data has padded data
-                    for (int count = 1; count < 4; count++)
-                    {
-                        umpPacket.umpData.umpBytes[count + 1] = pBuffer[count];
-                    }
-                    // Pad rest of data
-                    umpPacket.umpData.umpBytes[6] = 0x00;
-                    umpPacket.umpData.umpBytes[7] = 0x00;
-
-                    umpPacket.wordCount = 2;
-                    break;
-
-                case MIDI_CIN_SYSEX_END_3BYTE:
-                    // Needs more space, confirm available
-                    if (!(numIndex + 1 < numAvail))
-                    {
-                        // not enough space need to error out or add more
-                        continue;
-                    }
-
-                    umpPacket.umpData.umpBytes[0] = UMP_MT_DATA_64 | cbl_num;
-
-                    // Determine if complete based on if currently in SYSEX
-                    if (pDeviceContext->midi1IsInSysex[cbl_num])
-                    {
-                        umpPacket.umpData.umpBytes[1] = UMP_SYSEX7_END | 3;
-                        pDeviceContext->midi1IsInSysex[cbl_num] = false; // we are done with SYSEX
-                    }
-                    else
-                    {
-                        umpPacket.umpData.umpBytes[1] = UMP_SYSEX7_COMPLETE | 3;
-                    }
-
-                    // Copy in the data, assumes the original USB MIDI 1.0 data has padded data
-                    for (int count = 1; count < 4; count++)
-                    {
-                        umpPacket.umpData.umpBytes[count + 1] = pBuffer[count];
-                    }
-                    // Pad rest of data
-                    umpPacket.umpData.umpBytes[6] = 0x00;
-                    umpPacket.umpData.umpBytes[7] = 0x00;
-
-                    umpPacket.wordCount = 2;
-                    break;
-
-                    // MIDI1 Channel Voice Messages
-                case MIDI_CIN_NOTE_ON:
-                case MIDI_CIN_NOTE_OFF:
-                case MIDI_CIN_POLY_KEYPRESS:
-                case MIDI_CIN_CONTROL_CHANGE:
-                case MIDI_CIN_PROGRAM_CHANGE:
-                case MIDI_CIN_CHANNEL_PRESSURE:
-                case MIDI_CIN_PITCH_BEND_CHANGE:
-                    umpPacket.umpData.umpBytes[0] = UMP_MT_MIDI1_CV | cbl_num; // message type 2
-                    pDeviceContext->midi1IsInSysex[cbl_num] = false; // ensure we end any current sysex packets, other layers need to handle error
-
-                    // Copy in rest of data
-                    for (int count = 1; count < 4; count++)
-                    {
-                        umpPacket.umpData.umpBytes[count] = pBuffer[count];
-                    }
-
-                    umpPacket.wordCount = 1;
-                    break;
-
-                case MIDI_CIN_SYSCOM_2BYTE:
-                case MIDI_CIN_SYSCOM_3BYTE:
-                    umpPacket.umpData.umpBytes[0] = UMP_MT_SYSTEM | cbl_num;
-                    for (int count = 1; count < 4; count++)
-                    {
-                        umpPacket.umpData.umpBytes[count] = pBuffer[count];
-                    }
-                    umpPacket.wordCount = 1;
-                    break;
-
-                case MIDI_CIN_MISC:
-                case MIDI_CIN_CABLE_EVENT:
-                    // These are reserved for future use and will not be translated, drop data with no processing
-                default:
-                    // Not valid USB MIDI 1.0 transfer or NULL, skip
                     continue;
                 }
 
-                // write to packets
-                PUINT32 pkts = (UINT32*)pWorkingBuffer;
-                for (UINT8 pktCount = 0; pktCount < umpPacket.wordCount; pktCount++)
+                // Convert Data into buffer to pass
+                UMP_Packet_Struct.umpHeader.Position = NULL;    // For now allow service to tag time
+                UMP_Packet_Struct.umpHeader.ByteCount = umpPacket.wordCount * sizeof(UINT32);
+                for (UINT8 swapCount = 0; swapCount < umpPacket.wordCount; swapCount++)
                 {
-                    pkts[numIndex++] = RtlUlongByteSwap(umpPacket.umpData.umpWords[pktCount]);
+                    UMP_Packet_Struct.umpData[swapCount] = RtlUlongByteSwap(umpPacket.umpData.umpWords[swapCount]);
                 }
             }
-
-            // Submit any data written
-            if (numIndex)
+            else
             {
-                if (!g_MidiInStreamEngine
-                    || !g_MidiInStreamEngine->FillReadStream(
-                    (PUINT32)pWorkingBuffer,
-                    numIndex,
-                    pDeviceContext
-                ))
+                // Put data into buffer to pass
+                UMP_Packet_Struct.umpHeader.Position = NULL;    // For now allow service to tag time
+                // TODO: Processing for JR Timestamps
+                umpPacket.wordCount = 0;                        // use to store information
+
+                PUINT8 pWord = (PUINT8)&pReceivedWords[receivedIndex];
+
+                // Determine amount of data to copy based on message type
+                switch (pWord[3] & 0xf0)
                 {
-                    TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                        "Error submitting to read queue prep buffer.\n");
-                    goto ReadCompleteExit;
+                case UMP_MT_UTILITY:
+                case UMP_MT_SYSTEM:
+                case UMP_MT_MIDI1_CV:
+                    umpPacket.wordCount = 1;
+                    break;
+
+                case UMP_MT_DATA_64:
+                case UMP_MT_MIDI2_CV:
+                    umpPacket.wordCount = 2;
+                    break;
+
+                case UMP_MT_DATA_128:
+                case UMP_MT_FLEX_128:
+                case UMP_MT_STREAM_128:
+                    umpPacket.wordCount = 4;
+                        break;
+
+                default:
+                    // Could not process packet so skip current word and try with next one
+                    receivedIndex++;
+                    continue;
                 }
-            }
-        }
-        else
-        {
-            // Create working buffer to byte exchange into
-            status = WdfMemoryCreate(
-                NULL,       // attributes
-                NonPagedPoolNx,
-                NULL,       // Pool Tag
-                NumBytesTransferred,
-                &workingBuffer,
-                NULL
-            );
-            if (!NT_SUCCESS(status))
-            {
-                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                    "Error creating working buffer for USB MIDI 1.0 to UMP conversion.\n");
-                goto ReadCompleteExit;
-            }
-            PUINT32 pWriteBuffer = (PUINT32)WdfMemoryGetBuffer(workingBuffer, NULL);
-            PUINT32 pReadBuffer = (PUINT32)pReceivedBuffer;
-            
-            // Swap bytes based on UINT32
-            for (size_t count = 0; count < (NumBytesTransferred / sizeof(UINT32)); count++)
-            {
-                pWriteBuffer[count] = pReadBuffer[count];   // USB is Little Endian
+                UMP_Packet_Struct.umpHeader.ByteCount = umpPacket.wordCount * sizeof(UINT32);
+
+                // Copy appropriate data
+                RtlCopyMemory(
+                    (PVOID)&UMP_Packet_Struct.umpData,
+                    (PVOID)&pReceivedWords[receivedIndex],
+                    UMP_Packet_Struct.umpHeader.ByteCount
+                );
+                receivedIndex += umpPacket.wordCount;
             }
 
-            // Send Memory to Read Queue
+            // Send to circuit
             if (!g_MidiInStreamEngine
                 || !g_MidiInStreamEngine->FillReadStream(
-                (PUINT32)pWriteBuffer,
-                NumBytesTransferred / sizeof(UINT32),
-                pDeviceContext
-            ))
+                    (PUINT8)&UMP_Packet_Struct,
+                    (size_t)(UMP_Packet_Struct.umpHeader.ByteCount) + sizeof(UMPDATAFORMAT)
+                ))
             {
                 TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
                     "Error submitting to read queue prep buffer.\n");
@@ -1580,17 +1379,235 @@ Return Value:
     }
 
 ReadCompleteExit:
-    if (workingBuffer)
-    {
-        // if we created a working buffer, be sure to get rid of it
-        WdfObjectDelete(workingBuffer);
-    }
-
     // The continuous reader takes care of completion of event and clearing buffer
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
     return;
+}
+
+
+// TODO: Put into dedicated library file
+_Use_decl_annotations_
+NONPAGED_CODE_SEG
+BOOL
+USBMIDI1ToUMP(
+    _In_    PUINT32         usbMidi1Pkt,
+    _Inout_ bool*           pbIsInSysex,
+    _Out_   PUMP_PACKET     umpPkt
+)
+/*++
+Routine Description:
+
+    Helper routine to handle conversion of USB MIDI 1.0 32 bit word packet
+    to UMP formatted packet. The routine will only populate UMP message
+    types 1: System, 2: MIDI 1.0 Channel Voice, and 3: 64 bit data (SYSEX)
+    messages. It is rsponsibility of other routines to convert between
+    MIDI 2.0 Channel voice if needed.
+
+Arguments:
+
+    usbMidi1Pkt:    The USB MIDI 1.0 packet presented as a 32 bit word
+    pbIsInSysex:    Reference to boolean variable where to store if processing
+                    a SYSEX message or not. Note that calling funciton is
+                    responsible to maintain this state for each USB MIDI 1.0
+                    data stream to process. The intial value should be false.
+    umpPkt:         Reference to data location to create UMP packet into. Note
+                    that for optimizations, the data beyond wordCount is not
+                    cleared, therefore calling function should not process beyond
+                    wordCount or zero any additional dataspace.
+
+Return Value:
+
+    bool:           Indicates true of umpPkt is ready, false otherwise.
+
+--*/
+{
+    // Checked passed parameters
+    if (!usbMidi1Pkt || !pbIsInSysex || !umpPkt)
+    {
+        return false;
+    }
+
+    PUCHAR pBuffer = (PUCHAR)usbMidi1Pkt;
+    umpPkt->wordCount = 0;
+
+    // Determine packet cable number from group
+    UINT8 cbl_num = (pBuffer[0] & 0xf0) >> 4;
+
+    // USB MIDI 1.0 uses a CIN as an identifier for packet, grab CIN.
+    UINT8 code_index = pBuffer[0] & 0x0f;
+
+    // Handle special case of single byte data
+    if (code_index == MIDI_CIN_1BYTE_DATA && (pBuffer[1] & 0x80))
+    {
+        switch (pBuffer[1])
+        {
+        case UMP_SYSTEM_TUNE_REQ:
+        case UMP_SYSTEM_TIMING_CLK:
+        case UMP_SYSTEM_START:
+        case UMP_SYSTEM_CONTINUE:
+        case UMP_SYSTEM_STOP:
+        case UMP_SYSTEM_ACTIVE_SENSE:
+        case UMP_SYSTEM_RESET:
+            code_index = MIDI_CIN_SYSEX_END_1BYTE;
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    switch (code_index)
+    {
+    case MIDI_CIN_SYSEX_START:
+        umpPkt->umpData.umpBytes[0] = UMP_MT_DATA_64 | cbl_num;   // Message Type and group
+
+        // As this is start of SYSEX, need to set status to indicate so and copy 3 bytes of data
+        umpPkt->umpData.umpBytes[1] = UMP_SYSEX7_START | 3;
+
+        // Set that in SYSEX
+        *pbIsInSysex = true;
+
+        // Copy in rest of data
+        for (int count = 1; count < 4; count++)
+        {
+            umpPkt->umpData.umpBytes[count + 1] = pBuffer[count];
+        }
+        // Pad rest of data
+        umpPkt->umpData.umpBytes[5] = 0x00;
+        umpPkt->umpData.umpBytes[6] = 0x00;
+        umpPkt->umpData.umpBytes[7] = 0x00;
+
+        umpPkt->wordCount = 2;
+        break;
+
+    case MIDI_CIN_SYSEX_END_1BYTE: // or single byte System Common
+        // Determine if a system common
+        if ((pBuffer[1] & 0x80) // most significant bit set and not sysex
+            && (pBuffer[1] != MIDI_STATUS_SYSEX_END))
+        {
+            umpPkt->umpData.umpBytes[0] = UMP_MT_SYSTEM | cbl_num;
+            umpPkt->umpData.umpBytes[1] = pBuffer[1];
+            umpPkt->umpData.umpBytes[2] = 0x00;
+            umpPkt->umpData.umpBytes[3] = 0x00;
+            umpPkt->wordCount = 1;
+            break;
+        }
+
+        umpPkt->umpData.umpBytes[0] = UMP_MT_DATA_64 | cbl_num;
+
+        // Determine if complete based on if currently in SYSEX
+        if (*pbIsInSysex)
+        {
+            umpPkt->umpData.umpBytes[1] = UMP_SYSEX7_END | 1;
+            *pbIsInSysex = false; // we are done with SYSEX
+        }
+        else
+        {
+            umpPkt->umpData.umpBytes[1] = UMP_SYSEX7_COMPLETE | 1;
+        }
+
+        // Copy in the data, assumes the original USB MIDI 1.0 data has padded data
+        for (int count = 1; count < 4; count++)
+        {
+            umpPkt->umpData.umpBytes[count + 1] = pBuffer[count];
+        }
+
+        umpPkt->wordCount = 2;
+        break;
+
+    case MIDI_CIN_SYSEX_END_2BYTE:
+        umpPkt->umpData.umpBytes[0] = UMP_MT_DATA_64 | cbl_num;
+
+        // Determine if complete based on if currently in SYSEX
+        if (*pbIsInSysex)
+        {
+            umpPkt->umpData.umpBytes[1] = UMP_SYSEX7_END | 2;
+            *pbIsInSysex = false; // we are done with SYSEX
+        }
+        else
+        {
+            umpPkt->umpData.umpBytes[1] = UMP_SYSEX7_COMPLETE | 2;
+        }
+
+        // Copy in the data, assumes the original USB MIDI 1.0 data has padded data
+        for (int count = 1; count < 4; count++)
+        {
+            umpPkt->umpData.umpBytes[count + 1] = pBuffer[count];
+        }
+        // Pad rest of data
+        umpPkt->umpData.umpBytes[6] = 0x00;
+        umpPkt->umpData.umpBytes[7] = 0x00;
+
+        umpPkt->wordCount = 2;
+        break;
+
+    case MIDI_CIN_SYSEX_END_3BYTE:
+        umpPkt->umpData.umpBytes[0] = UMP_MT_DATA_64 | cbl_num;
+
+        // Determine if complete based on if currently in SYSEX
+        if (*pbIsInSysex)
+        {
+            umpPkt->umpData.umpBytes[1] = UMP_SYSEX7_END | 3;
+            *pbIsInSysex = false; // we are done with SYSEX
+        }
+        else
+        {
+            umpPkt->umpData.umpBytes[1] = UMP_SYSEX7_COMPLETE | 3;
+        }
+
+        // Copy in the data, assumes the original USB MIDI 1.0 data has padded data
+        for (int count = 1; count < 4; count++)
+        {
+            umpPkt->umpData.umpBytes[count + 1] = pBuffer[count];
+        }
+        // Pad rest of data
+        umpPkt->umpData.umpBytes[6] = 0x00;
+        umpPkt->umpData.umpBytes[7] = 0x00;
+
+        umpPkt->wordCount = 2;
+        break;
+
+        // MIDI1 Channel Voice Messages
+    case MIDI_CIN_NOTE_ON:
+    case MIDI_CIN_NOTE_OFF:
+    case MIDI_CIN_POLY_KEYPRESS:
+    case MIDI_CIN_CONTROL_CHANGE:
+    case MIDI_CIN_PROGRAM_CHANGE:
+    case MIDI_CIN_CHANNEL_PRESSURE:
+    case MIDI_CIN_PITCH_BEND_CHANGE:
+        umpPkt->umpData.umpBytes[0] = UMP_MT_MIDI1_CV | cbl_num; // message type 2
+        *pbIsInSysex = false; // ensure we end any current sysex packets, other layers need to handle error
+
+        // Copy in rest of data
+        for (int count = 1; count < 4; count++)
+        {
+            umpPkt->umpData.umpBytes[count] = pBuffer[count];
+        }
+
+        umpPkt->wordCount = 1;
+        break;
+
+    case MIDI_CIN_SYSCOM_2BYTE:
+    case MIDI_CIN_SYSCOM_3BYTE:
+        umpPkt->umpData.umpBytes[0] = UMP_MT_SYSTEM | cbl_num;
+        for (int count = 1; count < 4; count++)
+        {
+            umpPkt->umpData.umpBytes[count] = pBuffer[count];
+        }
+        umpPkt->wordCount = 1;
+        break;
+
+    case MIDI_CIN_MISC:
+    case MIDI_CIN_CABLE_EVENT:
+        // These are reserved for future use and will not be translated, drop data with no processing
+    default:
+        // Not valid USB MIDI 1.0 transfer or NULL, skip
+        return false;
+    }
+
+    return true;
 }
 
 _Use_decl_annotations_

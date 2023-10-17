@@ -76,7 +76,7 @@ extern "C" {
             UINT32  umpWords[4];
             UINT8   umpBytes[sizeof(UINT32) * 4];
         } umpData;
-    } UMP_PACKET;
+    } UMP_PACKET, *PUMP_PACKET;
 
     //
     // Structure to buffer read data between USB continuous reader
@@ -301,4 +301,14 @@ USBMIDI2DriverEvtRequestWriteCompletionRoutine(
     _In_ WDFIOTARGET                 Target,
     _In_ PWDF_REQUEST_COMPLETION_PARAMS CompletionParams,
     _In_ WDFCONTEXT                  Context
+);
+
+// TODO: Put into dedicated library file
+__drv_maxIRQL(PASSIVE_LEVEL)
+NONPAGED_CODE_SEG
+BOOL
+USBMIDI1ToUMP(
+    _In_    PUINT32        usbMidi1Pkt,
+    _Inout_ bool           *pbIsInSysex,
+    _Out_   PUMP_PACKET    umpPkt
 );

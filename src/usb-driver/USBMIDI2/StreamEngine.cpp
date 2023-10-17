@@ -289,9 +289,8 @@ StreamEngine::HandleIo()
 _Use_decl_annotations_
 bool
 StreamEngine::FillReadStream(
-    PUINT32             pBuffer,
-    size_t              bufferSize,
-    WDFCONTEXT          Context
+    PUINT8  pBuffer,
+    size_t  bufferSize
 )
 /*++
 Routine Description:
@@ -312,10 +311,8 @@ Return Value:
 {
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
-    PDEVICE_CONTEXT pDevCtx = (PDEVICE_CONTEXT)Context;
-
     // Check parameters passed
-    if (!pBuffer || !pDevCtx)
+    if (!pBuffer)
         return false;
 
     // Current mechanism to determine if currently processing data is that
@@ -332,8 +329,8 @@ Return Value:
         ULONG midiInWritePosition = (ULONG)InterlockedCompareExchange((LONG*)g_MidiInStreamEngine->m_WriteRegister, 0, 0);
         ULONG midiInReadPosition = (ULONG)InterlockedCompareExchange((LONG*)g_MidiInStreamEngine->m_ReadRegister, 0, 0);
 
+
         // Check enough space to write into
-        ULONG bytesToCopy = ((ULONG)bufferSize * sizeof(UINT32))  + (ULONG)sizeof(UMPDATAFORMAT);
         ULONG bytesAvailable = 0;
 
         // Now we need to calculate the available space, taking into account the looping
@@ -353,7 +350,7 @@ Return Value:
             // is the available space, which is exactly what we want.
             bytesAvailable = midiInReadPosition - midiInWritePosition;
         }
-        if (bytesToCopy > bytesAvailable)
+        if (bufferSize > bytesAvailable)
         {
             // We have a problem. We have data to move, but there
             // isn't enough buffer available to do it. The client is not reading data,
@@ -371,25 +368,19 @@ Return Value:
         // There's enough space available, calculate our write position
 //        PVOID startingWriteAddress = (PVOID)(((PBYTE)pDevCtx->pMidiStreamEngine->m_KernelBufferMapping.Buffer1.m_BufferClientAddress) + midiInWritePosition);
         PVOID startingWriteAddress = (PVOID)(((PBYTE)g_MidiInStreamEngine->m_KernelBufferMapping.Buffer1.m_BufferClientAddress) + midiInWritePosition);
-        PUMPDATAFORMAT pUMP = (PUMPDATAFORMAT)startingWriteAddress;
-        PUINT32 pWriteData = (PUINT32)((PUCHAR)startingWriteAddress + sizeof(UMPDATAFORMAT));
 
-        // Copy the data and set the parameters
-        for (int count = 0; count < bufferSize; count++)
-        {
-            pWriteData[count] = pBuffer[count];
-        }
-
-//        LARGE_INTEGER tempPosition = KeQueryPerformanceCounter(NULL);
-//        pUMP->Position = (LONGLONG)tempPosition.QuadPart;
-        pUMP->Position = 0;
-        pUMP->ByteCount = (ULONG)bufferSize * (ULONG)sizeof(UINT32);
+        // Copy the data
+        RtlCopyMemory(
+            (PVOID)startingWriteAddress,
+            (PVOID)pBuffer,
+            bufferSize
+        );
 
         // now calculate the new position that the buffer has been written up to.
         // this will be the original write position, plus the bytes copied, again modululs
         // the buffer size to take into account the loop.
 //        ULONG finalWritePosition = (midiInWritePosition + bytesToCopy) % pDevCtx->pMidiStreamEngine->m_BufferSize;
-        ULONG finalWritePosition = (midiInWritePosition + bytesToCopy) % g_MidiInStreamEngine->m_BufferSize;
+        ULONG finalWritePosition = (midiInWritePosition + bufferSize) % g_MidiInStreamEngine->m_BufferSize;
 
         // finalize by advancing the registers and setting the write event
 
