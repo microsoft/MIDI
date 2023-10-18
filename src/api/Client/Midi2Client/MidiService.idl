@@ -11,8 +11,6 @@ MIDI_IDL_IMPORT
 
 import "MidiTransportInformation.idl";
 import "MidiServicePingResponseSummary.idl";
-import "MidiEndpointMetadataCache.idl";
-import "MidiGlobalCache.idl";
 
 namespace Windows.Devices.Midi2
 {

@@ -17,8 +17,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static midi2::MidiEndpointDeviceInformation CreateFromId(_In_ winrt::hstring const& id) noexcept;
         static winrt::hstring UniversalMidiPacketBidirectionalInterfaceClassId() noexcept { return L"" /* STRING_DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI */; }
-        static winrt::hstring UniversalMidiPacketInputInterfaceClassId() noexcept { return L"" /* STRING_DEVINTERFACE_UNIVERSALMIDIPACKET_INPUT */ ; }
-        static winrt::hstring UniversalMidiPacketOutInterfaceClassId() noexcept { return L"" /* STRING_DEVINTERFACE_UNIVERSALMIDIPACKET_OUTPUT */ ; }
 
         static collections::IVectorView<winrt::hstring> GetAdditionalPropertiesList() noexcept;
 
@@ -39,6 +37,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::MidiEndpointNativeDataFormat NativeDataFormat() noexcept { return m_endpointNativeDataFormat; }
         midi2::MidiEndpointDevicePurpose EndpointPurpose() noexcept { return m_endpointPurpose; }
 
+        midi2::MidiEndpointInformation EndpointInformation() noexcept { return m_endpointInformation; }
+
+        collections::IVectorView<midi2::MidiFunctionBlock> FunctionBlocks() noexcept { return m_functionBlocks.GetView(); }
+
         collections::IVectorView<midi2::MidiGroupTerminalBlock> GroupTerminalBlocks() noexcept { return m_groupTerminalBlocks.GetView(); }
 
 
@@ -47,7 +49,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         Windows::Devices::Enumeration::DeviceInformation DeviceInformation() noexcept { return m_deviceInformation; }
 
-        // TODO: will also need a func to update from JSON
+        
 
     private:
         winrt::hstring m_id{};
@@ -68,7 +70,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::MidiEndpointNativeDataFormat m_endpointNativeDataFormat{};
         midi2::MidiEndpointDevicePurpose m_endpointPurpose{};
 
+        midi2::MidiEndpointInformation m_endpointInformation{ nullptr };
+
         collections::IVector<midi2::MidiGroupTerminalBlock> m_groupTerminalBlocks{ winrt::single_threaded_vector<midi2::MidiGroupTerminalBlock>() };
+        collections::IVector<midi2::MidiFunctionBlock> m_functionBlocks{ winrt::single_threaded_vector<midi2::MidiFunctionBlock>() };
 
         winrt::Windows::Devices::Enumeration::DeviceInformation m_deviceInformation{ nullptr };
 

@@ -66,5 +66,9 @@ namespace Windows.Devices.Midi2
 
         // Fill a spot in an existing IMemoryBuffer controlled by the caller. Returns the number of bytes written
         UInt8 FillBuffer(Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffset);
+
+
+
+
     }
 }

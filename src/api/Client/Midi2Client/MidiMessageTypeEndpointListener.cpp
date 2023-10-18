@@ -27,7 +27,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     void MidiMessageTypeEndpointListener::ProcessIncomingMessage(
-        winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs const& args,
+        midi2::MidiMessageReceivedEventArgs const& args,
         bool& skipFurtherListeners, 
         bool& skipMainMessageReceivedEvent)
     {
@@ -42,7 +42,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 if (m_messageReceivedEvent)
                 {
-                    m_messageReceivedEvent(m_inputConnection, args);
+                    m_messageReceivedEvent(m_endpointConnection, args);
                 }
 
                 break;

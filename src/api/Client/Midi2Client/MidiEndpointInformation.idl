@@ -10,14 +10,13 @@
 MIDI_IDL_IMPORT
 
 import "MidiMessage128.idl";
-import "IMidiCacheableMetadata.idl";
 import "MidiProtocolEnum.idl";
 
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [default_interface]
-    runtimeclass MidiEndpointInformation : IMidiCacheableMetadata
+    runtimeclass MidiEndpointInformation
     {
         MidiEndpointInformation();
 

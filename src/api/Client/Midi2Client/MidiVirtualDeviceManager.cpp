@@ -41,7 +41,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     bool MidiVirtualDeviceManager::CreateEndpoint(
         winrt::hstring const& /*parentDeviceId*/,
         winrt::hstring const& /*name*/,
-        winrt::Windows::Devices::Midi2::MidiEndpointType const& /*endpointType*/,
+        midi2::MidiEndpointType const& /*endpointType*/,
         bool /*exclusive*/,
         midi2::MidiProtocol const& /*protocol*/,
         foundation::IInspectable const& /*tag*/,

@@ -36,18 +36,7 @@ Windows.Devices.Midi2.IMidiMessageUtilityStatics | 0 | 0 | 0
 
 # Metadata
 
-Windows.Devices.Midi2.MidiGlobalCache | 0 | 0 | 0
-Windows.Devices.Midi2.IMidiGlobalCacheStatics | 0 | 0 | 0
-Windows.Devices.Midi2.MidiGlobalInformationUpdatedEventArgs | 0 | 0 | 0
-
-Windows.Devices.Midi2.MidiEndpointMetadataCache | 0 | 0 | 0
-Windows.Devices.Midi2.IMidiEndpointMetadataCacheStatics | 0 | 0 | 0
-Windows.Devices.Midi2.MidiEndpointMetadataCacheUpdatedEventArgs | 0 | 0 | 0
-
-Windows.Devices.Midi2.MidiEndpointInformationUpdatedEventArgs | 0 | 0 | 0
 Windows.Devices.Midi2.MidiEndpointInformation | 0 | 0 | 0
-
-Windows.Devices.Midi2.MidiFunctionBlocksUpdatedEventArgs | 0 | 0 | 0
 Windows.Devices.Midi2.MidiFunctionBlock | 0 | 0 | 0
 
 Windows.Devices.Midi2.MidiUniqueId | 0 | 0 | 0
@@ -76,16 +65,11 @@ Windows.Devices.Midi2.MidiMessageReceivedEventArgs | 0 | 0 | 0
 
 # Endpoint Connections
 
-Windows.Devices.Midi2.MidiBidirectionalAggregatedEndpointConnection | 0 | 0 | 0
-Windows.Devices.Midi2.MidiBidirectionalEndpointConnection | 0 | 0 | 0
-Windows.Devices.Midi2.MidiInputEndpointConnection | 0 | 0 | 0
-Windows.Devices.Midi2.MidiOutputEndpointConnection | 0 | 0 | 0
+Windows.Devices.Midi2.MidiEndpointConnection | 0 | 0 | 0
 
 # Endpoint Open Options
 
-Windows.Devices.Midi2.MidiBidirectionalEndpointOpenOptions | 0 | 0 | 0
-Windows.Devices.Midi2.MidiInputEndpointOpenOptions | 0 | 0 | 0
-Windows.Devices.Midi2.MidiOutputEndpointOpenOptions | 0 | 0 | 0
+Windows.Devices.Midi2.MidiEndpointConnectionOptions | 0 | 0 | 0
 Windows.Devices.Midi2.MidiStreamConfigurationSettings | 0 | 0 | 0
 
 # Service

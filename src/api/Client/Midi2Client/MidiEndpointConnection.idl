@@ -1,0 +1,81 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+// This is the moral equivalent of a "port" in MIDI 1.0. MIDI 2.0 UMP Endpoints are
+// almost always bidirectional. This is the main entity that applications will use
+// after creating a session
+
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+
+import "IMidiMessageReceivedEventSource.idl";
+
+import "MidiStreamConfigurationRequestedSettings.idl";
+
+import "IMidiEndpointMessageProcessingPlugin.idl";
+import "MidiSendMessageResultEnum.idl";
+
+import "IMidiEndpointDefinedConnectionSettings.idl";
+
+namespace Windows.Devices.Midi2
+{
+    [MIDI_API_CONTRACT(1)]
+    [default_interface]
+    runtimeclass MidiEndpointConnection : Windows.Devices.Midi2.IMidiMessageReceivedEventSource,
+                                          Windows.Foundation.IClosable
+
+    {
+        // Get the enumeration device selector for all compatible devices
+        static String GetDeviceSelector();
+
+        // just a map key for this connection.
+        // originally this was a string GUID, but that was easily confused with the Endpoint Device Id
+        Guid ConnectionId{ get; };
+
+        String EndpointDeviceId{ get; };
+
+        // app-supplied optional tag. Can hold whatever information they may want to show in a list
+        IInspectable Tag{ get; set; };
+
+        // true if this endpoint connection is actually connected.
+        // here for cases when the app holds on to an instance of this outside of the map
+        Boolean IsOpen{ get; };
+
+
+        IMidiEndpointDefinedConnectionSettings Settings{ get; };
+
+        Boolean Open();
+
+
+        IVector<IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins{ get; };
+
+
+
+        // send the UMP interface used by strongly-typed Midi Message classes in the SDK
+        MidiSendMessageResult SendMessagePacket(IMidiUniversalPacket message);
+
+        MidiSendMessageResult SendMessageStruct(MIDI_TIMESTAMP timestamp, ref const MidiMessageStruct message, UInt8 wordCount);
+
+        // Uses projection-specific array conversion operators for sending data. Not all languages support this
+        MidiSendMessageResult SendMessageWordArray(MIDI_TIMESTAMP timestamp, UInt32[] words, UInt32 startIndex, UInt8 wordCount);
+
+        // sending words is a fast approach, but does work with copies of the data
+        MidiSendMessageResult SendMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0);
+        MidiSendMessageResult SendMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1);
+        MidiSendMessageResult SendMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1, UInt32 word2);
+        MidiSendMessageResult SendMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
+
+        // for sending a section of a pre-existing buffer. Used when a client app is maintaining its own memory
+        MidiSendMessageResult SendMessageBuffer(MIDI_TIMESTAMP timestamp, Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffset, UInt8 byteLength);
+
+
+    }
+
+
+}
