@@ -11,8 +11,6 @@ MIDI_IDL_IMPORT
 
 import "MidiTransportInformation.idl";
 import "MidiServicePingResponseSummary.idl";
-import "MidiEndpointMetadataCache.idl";
-import "MidiGlobalCache.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -25,6 +23,13 @@ namespace Windows.Devices.Midi2
 
         // list all the installed transports like Virtual, USB, BLE1, etc
         static IVectorView<MidiTransportInformation> GetInstalledTransports();
+
+
+        // for the first release, this will always return false. But developers want to be able
+        // to code with this in mind in the future, without changing code/logic
+
+        static Boolean IsMessageSchedulingEnabled{ get; };
+
 
     }
 }

@@ -51,7 +51,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                     if (m_messageReceivedEvent)
                     {
-                        m_messageReceivedEvent(m_inputConnection, args);
+                        m_messageReceivedEvent(m_endpointConnection, args);
                     }
 
                     break;

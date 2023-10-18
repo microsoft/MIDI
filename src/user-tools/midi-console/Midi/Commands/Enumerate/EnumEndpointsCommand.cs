@@ -20,11 +20,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
     {
         public sealed class Settings : CommandSettings
         {
-            [LocalizedDescription("ParameterEnumEndpointsDirection")]
-            [CommandOption("-d|--direction")]
-            [DefaultValue(EndpointDirection.All)]
-            public EndpointDirection EndpointDirection { get; set; }
-
             [LocalizedDescription("ParameterEnumEndpointsIncludeEndpointId")]
             [CommandOption("-i|--include-endpoint-id")]
             [DefaultValue(true)]
@@ -49,105 +44,35 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                     // Bidirectional endpoints
 
-                    if (settings.EndpointDirection == EndpointDirection.All || settings.EndpointDirection == EndpointDirection.Bidirectional)
+                    string selector = string.Empty;
+
+                    try
                     {
-                        string selector = string.Empty;
-
-                        try
-                        {
-                            selector = MidiBidirectionalEndpointConnection.GetDeviceSelector();
-                        }
-                        catch (System.TypeInitializationException)
-                        {
-                            AnsiConsole.Markup(AnsiMarkupFormatter.FormatError($"{Strings.ErrorEnumEndpointsFailed}: {Strings.ErrorGeneralFailReasonWinRTActivation}"));
-                            return;
-                        }
-
-                        var endpoints = DeviceInformation.FindAllAsync(selector)
-                            .GetAwaiter().GetResult();
-
-                        if (endpoints.Count > 0)
-                        {
-                            atLeastOneEndpointFound = true;
-
-                            foreach (var endpointInfo in endpoints)
-                            {
-                                DisplayEndpointInformationFormatted(table, settings, endpointInfo, "UMP MIDI 2.0 Bidirectional");
-                            }
-                        }
-                        else
-                        {
-                            table.AddRow("No bidirectional endpoints.");
-                        }
+                        selector = MidiEndpointConnection.GetDeviceSelector();
+                    }
+                    catch (System.TypeInitializationException)
+                    {
+                        AnsiConsole.Markup(AnsiMarkupFormatter.FormatError($"{Strings.ErrorEnumEndpointsFailed}: {Strings.ErrorGeneralFailReasonWinRTActivation}"));
+                        return;
                     }
 
-                    // Input endpoints
-
-                    if (settings.EndpointDirection == EndpointDirection.All || settings.EndpointDirection == EndpointDirection.In)
-                    {
-                        string selector = string.Empty;
-
-                        try
-                        {
-                            selector = MidiInputEndpointConnection.GetDeviceSelector();
-                        }
-                        catch (System.TypeInitializationException)
-                        {
-                            AnsiConsole.Markup(AnsiMarkupFormatter.FormatError($"{Strings.ErrorEnumEndpointsFailed}: {Strings.ErrorGeneralFailReasonWinRTActivation}"));
-                            return;
-                        }
-
-                        var endpoints = DeviceInformation.FindAllAsync(selector)
+                    var endpoints = DeviceInformation.FindAllAsync(selector)
                         .GetAwaiter().GetResult();
 
-                        if (endpoints.Count > 0)
-                        {
-                            atLeastOneEndpointFound = true;
-
-                            foreach (var endpointInfo in endpoints)
-                            {
-                                DisplayEndpointInformationFormatted(table, settings, endpointInfo, "UMP MIDI In");
-                            }
-                        }
-                        else
-                        {
-                            table.AddRow("No input endpoints.");
-                        }
-                    }
-
-                    // Output endpoints
-
-                    if (settings.EndpointDirection == EndpointDirection.All || settings.EndpointDirection == EndpointDirection.Out)
+                    if (endpoints.Count > 0)
                     {
-                        string selector = string.Empty;
+                        atLeastOneEndpointFound = true;
 
-                        try
+                        foreach (var endpointInfo in endpoints)
                         {
-                            selector = MidiOutputEndpointConnection.GetDeviceSelector();
-                        }
-                        catch (System.TypeInitializationException)
-                        {
-                            AnsiConsole.Markup(AnsiMarkupFormatter.FormatError($"{Strings.ErrorEnumEndpointsFailed}: {Strings.ErrorGeneralFailReasonWinRTActivation}"));
-                            return;
-                        }
-
-                        var endpoints = DeviceInformation.FindAllAsync(selector)
-                        .GetAwaiter().GetResult();
-
-                        if (endpoints.Count > 0)
-                        {
-                            atLeastOneEndpointFound = true;
-
-                            foreach (var endpointInfo in endpoints)
-                            {
-                                DisplayEndpointInformationFormatted(table, settings, endpointInfo, "UMP MIDI Out");
-                            }
-                        }
-                        else
-                        {
-                            table.AddRow("No output endpoints.");
+                            DisplayEndpointInformationFormatted(table, settings, endpointInfo, "UMP Bidirectional");
                         }
                     }
+                    else
+                    {
+                        table.AddRow("No bidirectional endpoints.");
+                    }
+
 
                     AnsiConsole.Write(table);
                 });

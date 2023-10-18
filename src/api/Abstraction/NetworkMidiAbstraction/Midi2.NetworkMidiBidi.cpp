@@ -72,25 +72,7 @@ CMidi2NetworkMidiBiDi::SendMidiMessage(
         return E_FAIL;
     }
 
-    //// copy the data
 
-    //auto data = std::make_unique<byte[]>(size);
-
-    //std::memcpy((void*)(data.get()), message, size);
-
-
-    //uint32_t firstWord = *(uint32_t*)message;
-
-    //std::wstringstream ss;
-
-    //ss << "CMidi2SampleMidiBiDi::SendMidiMessage. Received timestamp: " << std::hex << position << ", Size: " << size << ", First word: " << firstWord;
-    //OutputDebugString(ss.str().c_str());
-
-    //// resend it. "position" is the timestamp
-
-    //_callback->Callback(data.get(), size, position);
-
-    //OutputDebugString(L"CMidi2SampleMidiBiDi::SendMidiMessage Callback message sent");
 
 
     m_callback->Callback(message, size, position);

@@ -16,13 +16,6 @@ using namespace Microsoft::WRL::Wrappers;
 
 #define MAX_DEVICE_ID_LEN 200 // size in chars
 
-//
-// KsMidiPort properties
-// These properties are related to the SWD created for a MIDI port
-//
-//DEFINE_DEVPROPKEY(DEVPKEY_KsMidiPort_KsFilterInterfaceId, 0x2bf8a79a, 0x79ff, 0x49bc, 0x91, 0x26, 0x37, 0x28, 0x15, 0xb1, 0x53, 0xc8, 1);     // DEVPROP_TYPE_STRING
-//DEFINE_DEVPROPKEY(DEVPKEY_KsMidiPort_KsPinId, 0x2bf8a79a, 0x79ff, 0x49bc, 0x91, 0x26, 0x37, 0x28, 0x15, 0xb1, 0x53, 0xc8, 2);     // DEVPROP_TYPE_UINT32
-//DEFINE_DEVPROPKEY(DEVPKEY_Midi_Device_Tag, 0xc659a048, 0x9933, 0x4ec2, 0xa8, 0xc4, 0x5c, 0xcc, 0x98, 0x8e, 0xc9, 0xf5, 1);     // DEVPROP_TYPE_UINT64
 
 _Use_decl_annotations_
 HRESULT

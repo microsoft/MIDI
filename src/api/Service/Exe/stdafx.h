@@ -53,6 +53,8 @@
 #include "MidiDeviceManager.h"
 #include "MidiXProc.h"
 
+#include "MidiEndpointMetadataManager.h"
+
 // MidiDevicePipe holds MidiClientPipe(s) that it is connected to.
 // MidiClientPipe holds a MidiDevicePipe that it is connected to.
 // declare these prior to including the headers.

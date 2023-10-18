@@ -77,6 +77,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         }
 
 
+
         public static string FormatMidiWords(params UInt32[] words)
         {
             string output = string.Empty;
@@ -91,6 +92,10 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             return output.Trim();
         }
+
+
+
+
 
 
     }

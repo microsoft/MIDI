@@ -29,7 +29,7 @@ app.Configure(config =>
             .WithAlias("ump")
             .WithAlias("endpoints")
             .WithDescription(Strings.CommandEnumerateEndpointsDescription)
-            .WithExample("enumerate", "ump-endpoints", "--direction", "all")
+            .WithExample("enumerate", "ump-endpoints")
             ;
 
         enumerate.AddCommand<EnumLegacyEndpointsCommand>("bytestream-endpoints")

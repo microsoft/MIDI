@@ -15,6 +15,8 @@ import "MidiProtocolEnum.idl";
 import "MidiEndpointNativeDataFormatEnum.idl";
 import "MidiEndpointDevicePurposeEnum.idl";
 import "MidiEndpointDeviceWatcher.idl";
+import "MidiFunctionBlock.idl";
+import "MidiEndpointInformation.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -27,11 +29,12 @@ namespace Windows.Devices.Midi2
 //        static MidiEndpointDeviceWatcher CreateWatcher();
 
         static String UniversalMidiPacketBidirectionalInterfaceClassId{ get; };
-        static String UniversalMidiPacketInputInterfaceClassId{ get; };
-        static String UniversalMidiPacketOutInterfaceClassId{ get; };
+
+        static IVectorView<String> GetAdditionalPropertiesList();
 
         String Id { get; };
         
+        Windows.Devices.Enumeration.DeviceInformation DeviceInformation{ get; };
 
 
         // manufacturer, model, etc. come from the parent device, and so are not duplicated here.
@@ -61,8 +64,12 @@ namespace Windows.Devices.Midi2
         // whether or not this is an upgrade MIDI 1.0 device
         MidiEndpointNativeDataFormat NativeDataFormat{ get; };
 
-        // group terminal blocks
+        // group terminal blocks and function blocks
         IVectorView<MidiGroupTerminalBlock> GroupTerminalBlocks{ get; };
+        IVectorView<MidiFunctionBlock> FunctionBlocks{ get; };
+
+        // Endpoint metadata 
+        MidiEndpointInformation EndpointInformation{ get; };
 
         // If this is a diagnostic endpoint
         MidiEndpointDevicePurpose EndpointPurpose{ get; };

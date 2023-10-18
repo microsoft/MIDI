@@ -9,19 +9,13 @@
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-import "IMidiEndpointConnection.idl";
-import "MidiOutputEndpointConnection.idl";
-import "MidiInputEndpointConnection.idl";
-import "MidiBidirectionalEndpointConnection.idl";
-import "MidiBidirectionalAggregatedEndpointConnection.idl";
+import "MidiEndpointConnection.idl";
 
 import "IMidiEndpointDefinedConnectionSettings.idl";
 
 import "MidiSessionSettings.idl";
 
-import "MidiBidirectionalEndpointOpenOptions.idl";
-import "MidiInputEndpointOpenOptions.idl";
-import "MidiOutputEndpointOpenOptions.idl";
+import "MidiEndpointConnectionOptions.idl";
 
 import "MidiVirtualDeviceManager.idl";
 
@@ -41,75 +35,24 @@ namespace Windows.Devices.Midi2
 
         Boolean IsOpen { get; };
 
-        // TODO: Change to IMidiEndpointConnection
-        IMapView<Guid, IMidiEndpointConnection> Connections{ get; };
+        // Having this list here allows us to be able to close
+        // all connections with the session. Also convenient for
+        // consuming code to use this table.
+        IMapView<Guid, MidiEndpointConnection> Connections{ get; };
 
-        // output-only. Typically for MIDI 1.0 device/block
-        MidiOutputEndpointConnection ConnectOutputEndpoint(
+        MidiEndpointConnection CreateEndpointConnection(
             String endpointDeviceId);
 
-        MidiOutputEndpointConnection ConnectOutputEndpoint(
+        MidiEndpointConnection CreateEndpointConnection(
             String endpointDeviceId,
-            MidiOutputEndpointOpenOptions options);
+            MidiEndpointConnectionOptions options);
 
-        MidiOutputEndpointConnection ConnectOutputEndpoint(
+        MidiEndpointConnection CreateEndpointConnection(
             String endpointDeviceId,
-            MidiOutputEndpointOpenOptions options,
+            MidiEndpointConnectionOptions options,
             IMidiEndpointDefinedConnectionSettings settings);
 
-
-        // input-only. Typically for MIDI 1.0 device/block
-
-        MidiInputEndpointConnection ConnectInputEndpoint(
-            String endpointDeviceId);
-
-        MidiInputEndpointConnection ConnectInputEndpoint(
-            String endpointDeviceId,
-            MidiInputEndpointOpenOptions options);
-
-        MidiInputEndpointConnection ConnectInputEndpoint(
-            String endpointDeviceId,
-            MidiInputEndpointOpenOptions options,
-            IMidiEndpointDefinedConnectionSettings settings);
-
-
-        // connects to a bidirectional endpoint. For MIDI 2.0 devices, this will be the norm. 
-        // see notes above.
-        MidiBidirectionalEndpointConnection ConnectBidirectionalEndpoint(
-            String endpointDeviceId);
-
-        MidiBidirectionalEndpointConnection ConnectBidirectionalEndpoint(
-            String endpointDeviceId,
-            MidiBidirectionalEndpointOpenOptions options);
-
-        MidiBidirectionalEndpointConnection ConnectBidirectionalEndpoint(
-            String endpointDeviceId,
-            MidiBidirectionalEndpointOpenOptions options, 
-            IMidiEndpointDefinedConnectionSettings settings);
-
-
-        // Connects to separate input and output endpoints, treating them just like any bidi
-        // sending the right discovery messages, etc.
-        // The API must be able to open both input and output for this to succeed
-
-        MidiBidirectionalAggregatedEndpointConnection ConnectBidirectionalAggregatedEndpoint(
-            String inputEndpointDeviceId,
-            String outputEndpointDeviceId);
-
-        MidiBidirectionalAggregatedEndpointConnection ConnectBidirectionalAggregatedEndpoint(
-            String inputEndpointDeviceId,
-            String outputEndpointDeviceId,
-            MidiBidirectionalEndpointOpenOptions options);
-
-        MidiBidirectionalAggregatedEndpointConnection ConnectBidirectionalAggregatedEndpoint(
-            String inputEndpointDeviceId,
-            String outputEndpointDeviceId,
-            MidiBidirectionalEndpointOpenOptions options,
-            IMidiEndpointDefinedConnectionSettings settings);
-
-
-        // note that this takes the connection instance id, not the endpoint id itself
-        // This will remove a single endpoint connection instance.
+        // This will close and remove a single endpoint connection instance.
 
         void DisconnectEndpointConnection(Guid endpointConnectionId);
 

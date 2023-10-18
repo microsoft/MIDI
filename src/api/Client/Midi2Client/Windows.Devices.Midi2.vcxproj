@@ -225,21 +225,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="dllmain.h" />
-    <ClInclude Include="InternalMidiCache.h" />
-    <ClInclude Include="InternalMidiConnectionCommon.h" />
-    <ClInclude Include="InternalMidiEndpointInformationDevice.h" />
-    <ClInclude Include="InternalMidiFunctionBlockDevice.h" />
-    <ClInclude Include="InternalMidiInputConnection.h" />
-    <ClInclude Include="InternalMidiOutputConnection.h" />
     <ClInclude Include="memory_buffer.h" />
-    <ClInclude Include="MidiBidirectionalAggregatedEndpointConnection.h">
-      <DependentUpon>MidiBidirectionalAggregatedEndpointConnection.idl</DependentUpon>
+    <ClInclude Include="MidiEndpointConnection.h">
+      <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiBidirectionalEndpointConnection.h">
-      <DependentUpon>MidiBidirectionalEndpointConnection.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiBidirectionalEndpointOpenOptions.h">
-      <DependentUpon>MidiBidirectionalEndpointOpenOptions.idl</DependentUpon>
+    <ClInclude Include="MidiEndpointConnectionOptions.h">
+      <DependentUpon>MidiEndpointConnectionOptions.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiEndpointDeviceInformation.h">
       <DependentUpon>MidiEndpointDeviceInformation.idl</DependentUpon>
@@ -247,35 +238,20 @@
     <ClInclude Include="MidiEndpointDeviceWatcher.h">
       <DependentUpon>MidiEndpointDeviceWatcher.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiEndpointMetadataCacheUpdatedEventArgs.h">
-      <DependentUpon>MidiEndpointMetadataCacheUpdatedEventArgs.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiEndpointInformationUpdatedEventArgs.h">
       <DependentUpon>MidiEndpointInformationUpdatedEventArgs.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiFunctionBlocksUpdatedEventArgs.h">
-      <DependentUpon>MidiFunctionBlocksUpdatedEventArgs.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiGlobalCache.h">
-      <DependentUpon>MidiGlobalCache.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiGlobalInformationCacheUpdatedEventArgs.h">
-      <DependentUpon>MidiGlobalInformationCacheUpdatedEventArgs.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiGroupTerminalBlock.h">
       <DependentUpon>MidiGroupTerminalBlock.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiInputEndpointOpenOptions.h">
-      <DependentUpon>MidiInputEndpointOpenOptions.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiMessageBuilder.h">
       <DependentUpon>MidiMessageBuilder.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiEndpointMetadataCache.h">
-      <DependentUpon>MidiEndpointMetadataCache.idl</DependentUpon>
+    <ClInclude Include="MidiProfile.h">
+      <DependentUpon>MidiProfile.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiOutputEndpointOpenOptions.h">
-      <DependentUpon>MidiOutputEndpointOpenOptions.idl</DependentUpon>
+    <ClInclude Include="MidiProperty.h">
+      <DependentUpon>MidiProperty.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiService.h">
       <DependentUpon>MidiService.idl</DependentUpon>
@@ -298,14 +274,8 @@
     <ClInclude Include="MidiEndpointInformation.h">
       <DependentUpon>MidiEndpointInformation.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiEndpointConfigurator.h">
-      <DependentUpon>MidiEndpointConfigurator.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiFunctionBlock.h">
       <DependentUpon>MidiFunctionBlock.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiFunctionBlockEndpointListener.h">
-      <DependentUpon>MidiFunctionBlockEndpointListener.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiGroup.h">
       <DependentUpon>MidiGroup.idl</DependentUpon>
@@ -313,23 +283,14 @@
     <ClInclude Include="MidiGroupEndpointListener.h">
       <DependentUpon>MidiGroupEndpointListener.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiInputEndpointConnection.h">
-      <DependentUpon>MidiInputEndpointConnection.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiMessageReceivedEventArgs.h">
       <DependentUpon>MidiMessageReceivedEventArgs.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiMessageTypeEndpointListener.h">
       <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiOutputEndpointConnection.h">
-      <DependentUpon>MidiOutputEndpointConnection.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiSessionSettings.h">
       <DependentUpon>MidiSessionSettings.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiEndpointMetadataEndpointListener.h">
-      <DependentUpon>MidiEndpointMetadataEndpointListener.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiStreamConfigurationRequestedSettings.h">
       <DependentUpon>MidiStreamConfigurationRequestedSettings.idl</DependentUpon>
@@ -367,6 +328,7 @@
     <ClInclude Include="midi_service_interface.h" />
     <ClInclude Include="midi_stream_message_defs.h" />
     <ClInclude Include="midl_defines.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="string_util.h" />
     <ClInclude Include="trace_logging.h" />
     <ClInclude Include="ump_helpers.h" />
@@ -377,15 +339,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
-    <ClCompile Include="InternalMidiConnectionCommon.cpp" />
-    <ClCompile Include="MidiBidirectionalAggregatedEndpointConnection.cpp">
-      <DependentUpon>MidiBidirectionalAggregatedEndpointConnection.idl</DependentUpon>
+    <ClCompile Include="MidiEndpointConnection.cpp">
+      <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiBidirectionalEndpointConnection.cpp">
-      <DependentUpon>MidiBidirectionalEndpointConnection.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiBidirectionalEndpointOpenOptions.cpp">
-      <DependentUpon>MidiBidirectionalEndpointOpenOptions.idl</DependentUpon>
+    <ClCompile Include="MidiEndpointConnectionOptions.cpp">
+      <DependentUpon>MidiEndpointConnectionOptions.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiEndpointDeviceInformation.cpp">
       <DependentUpon>MidiEndpointDeviceInformation.idl</DependentUpon>
@@ -393,35 +351,20 @@
     <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
       <DependentUpon>MidiEndpointDeviceWatcher.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiEndpointMetadataCacheUpdatedEventArgs.cpp">
-      <DependentUpon>MidiEndpointMetadataCacheUpdatedEventArgs.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiEndpointInformationUpdatedEventArgs.cpp">
       <DependentUpon>MidiEndpointInformationUpdatedEventArgs.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiFunctionBlocksUpdatedEventArgs.cpp">
-      <DependentUpon>MidiFunctionBlocksUpdatedEventArgs.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiGlobalCache.cpp">
-      <DependentUpon>MidiGlobalCache.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiGlobalInformationCacheUpdatedEventArgs.cpp">
-      <DependentUpon>MidiGlobalInformationCacheUpdatedEventArgs.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiGroupTerminalBlock.cpp">
       <DependentUpon>MidiGroupTerminalBlock.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiInputEndpointOpenOptions.cpp">
-      <DependentUpon>MidiInputEndpointOpenOptions.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiMessageBuilder.cpp">
       <DependentUpon>MidiMessageBuilder.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiEndpointMetadataCache.cpp">
-      <DependentUpon>MidiEndpointMetadataCache.idl</DependentUpon>
+    <ClCompile Include="MidiProfile.cpp">
+      <DependentUpon>MidiProfile.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiOutputEndpointOpenOptions.cpp">
-      <DependentUpon>MidiOutputEndpointOpenOptions.idl</DependentUpon>
+    <ClCompile Include="MidiProperty.cpp">
+      <DependentUpon>MidiProperty.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiService.cpp">
       <DependentUpon>MidiService.idl</DependentUpon>
@@ -444,14 +387,8 @@
     <ClCompile Include="MidiEndpointInformation.cpp">
       <DependentUpon>MidiEndpointInformation.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiEndpointConfigurator.cpp">
-      <DependentUpon>MidiEndpointConfigurator.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiFunctionBlock.cpp">
       <DependentUpon>MidiFunctionBlock.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiFunctionBlockEndpointListener.cpp">
-      <DependentUpon>MidiFunctionBlockEndpointListener.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiGroup.cpp">
       <DependentUpon>MidiGroup.idl</DependentUpon>
@@ -459,26 +396,17 @@
     <ClCompile Include="MidiGroupEndpointListener.cpp">
       <DependentUpon>MidiGroupEndpointListener.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiInputEndpointConnection.cpp">
-      <DependentUpon>MidiInputEndpointConnection.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiMessageReceivedEventArgs.cpp">
       <DependentUpon>MidiMessageReceivedEventArgs.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiMessageTypeEndpointListener.cpp">
       <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiOutputEndpointConnection.cpp">
-      <DependentUpon>MidiOutputEndpointConnection.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiSessionSettings.cpp">
       <DependentUpon>MidiSessionSettings.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiSession.cpp">
       <DependentUpon>MidiSession.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiEndpointMetadataEndpointListener.cpp">
-      <DependentUpon>MidiEndpointMetadataEndpointListener.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiStreamConfigurationRequestedSettings.cpp">
       <DependentUpon>MidiStreamConfigurationRequestedSettings.idl</DependentUpon>
@@ -519,23 +447,13 @@
     <ClCompile Include="trace_logging.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="IMidiEndpointConfiguratorPlugin.idl" />
-    <Midl Include="IMidiCacheableMetadata.idl" />
-    <Midl Include="IMidiEndpointConnection.idl" />
-    <Midl Include="IMidiEndpointMessageListener.idl" />
     <Midl Include="IMidiEndpointMessageProcessingPlugin.idl" />
-    <Midl Include="IMidiEndpointMessageResponder.idl" />
-    <Midl Include="IMidiFunctionBlockDevice.idl" />
-    <Midl Include="IMidiInputConnection.idl" />
     <Midl Include="IMidiMessageReceivedEventSource.idl" />
-    <Midl Include="IMidiOutputConnection.idl" />
     <Midl Include="IMidiTransportSettingsData.idl" />
     <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl" />
     <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl" />
-    <Midl Include="MidiBidirectionalAggregatedEndpointConnection.idl" />
-    <Midl Include="MidiBidirectionalEndpointConnection.idl" />
-    <Midl Include="MidiBidirectionalEndpointOpenOptions.idl" />
-    <Midl Include="MidiCacheUpdateTypeEnum.idl" />
+    <Midl Include="MidiEndpointConnection.idl" />
+    <Midl Include="MidiEndpointConnectionOptions.idl" />
     <Midl Include="MidiChannel.idl" />
     <Midl Include="MidiChannelEndpointListener.idl" />
     <Midl Include="MidiClock.idl" />
@@ -547,34 +465,25 @@
     <Midl Include="MidiEndpointNativeDataFormatEnum.idl" />
     <Midl Include="MidiFunctionBlockDiscoveryFilterFlagsEnum.idl" />
     <Midl Include="MidiFunctionBlockMidi10Enum.idl" />
-    <Midl Include="MidiFunctionBlocksUpdatedEventArgs.idl" />
-    <Midl Include="MidiGlobalCache.idl" />
-    <Midl Include="MidiGlobalInformationCacheUpdatedEventArgs.idl" />
-    <Midl Include="MidiEndpointMetadataCache.idl" />
-    <Midl Include="MidiEndpointMetadataCacheUpdatedEventArgs.idl" />
     <Midl Include="MidiEndpointConnectionSharingEnum.idl" />
     <Midl Include="MidiEndpointConnectionSharingPreferenceEnum.idl" />
     <Midl Include="MidiEndpointInformation.idl" />
-    <Midl Include="MidiEndpointConfigurator.idl" />
     <Midl Include="MidiEndpointTypeEnum.idl" />
     <Midl Include="MidiFunctionBlock.idl" />
     <Midl Include="MidiFunctionBlockDirectionEnum.idl" />
-    <Midl Include="MidiFunctionBlockEndpointListener.idl" />
     <Midl Include="MidiFunctionBlockUIHintEnum.idl" />
     <Midl Include="MidiGroup.idl" />
     <Midl Include="MidiGroupEndpointListener.idl" />
     <Midl Include="MidiGroupTerminalBlock.idl" />
     <Midl Include="MidiGroupTerminalBlockDirectionEnum.idl" />
     <Midl Include="MidiGroupTerminalBlockProtocolEnum.idl" />
-    <Midl Include="MidiInputEndpointConnection.idl" />
-    <Midl Include="MidiInputEndpointOpenOptions.idl" />
     <Midl Include="MidiMessageStruct.idl" />
     <Midl Include="MidiMessageBuilder.idl" />
     <Midl Include="MidiMessageReceivedEventArgs.idl" />
     <Midl Include="IMidiEndpointDefinedConnectionSettings.idl" />
     <Midl Include="MidiMessageTypeEndpointListener.idl" />
-    <Midl Include="MidiOutputEndpointConnection.idl" />
-    <Midl Include="MidiOutputEndpointOpenOptions.idl" />
+    <Midl Include="MidiProfile.idl" />
+    <Midl Include="MidiProperty.idl" />
     <Midl Include="MidiProtocolEnum.idl" />
     <Midl Include="MidiSendMessageResultEnum.idl" />
     <Midl Include="MidiService.idl" />
@@ -583,7 +492,6 @@
     <Midl Include="MidiSession.idl" />
     <Midl Include="MidiSessionSettings.idl" />
     <Midl Include="IMidiUniversalPacket.idl" />
-    <Midl Include="MidiEndpointMetadataEndpointListener.idl" />
     <Midl Include="MidiStreamConfigurationCompleteEventArgs.idl" />
     <Midl Include="MidiStreamConfigurationRequestedSettings.idl" />
     <Midl Include="MidiStreamMessageBuilder.idl" />
@@ -609,6 +517,9 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="WinRTActivationEntries.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Windows.Devices.Midi2.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

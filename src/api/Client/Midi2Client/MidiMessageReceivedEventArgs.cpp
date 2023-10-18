@@ -32,10 +32,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
         else
         {
             // invalid UMP data
+
+            internal::LogGeneralError(__FUNCTION__, L"Invalid UMP data");
+
         }
     }
 
-    _Use_decl_annotations_
     midi2::MidiPacketType MidiMessageReceivedEventArgs::PacketType() const noexcept
     {
         // a type 0 ump with no data is just the noop, and is perfectly valid, so we always run this
@@ -43,14 +45,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return (MidiPacketType)(internal::GetUmpLengthInMidiWordsFromFirstWord(m_data.Word0));
     }
 
-    _Use_decl_annotations_
     midi2::MidiMessageType MidiMessageReceivedEventArgs::MessageType() const noexcept
     {
         return (MidiMessageType)(internal::GetUmpMessageTypeFromFirstWord(m_data.Word0));
     }
 
 
-    _Use_decl_annotations_
     midi2::IMidiUniversalPacket MidiMessageReceivedEventArgs::GetMessagePacket()
     {
         auto wordCount = GetValidMessageWordCount();
@@ -83,7 +83,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     uint8_t MidiMessageReceivedEventArgs::FillMessageStruct(
-        _Inout_ midi2::MidiMessageStruct message
+        midi2::MidiMessageStruct& message
         )
     {
         auto wordCount = GetValidMessageWordCount();
@@ -138,7 +138,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    bool MidiMessageReceivedEventArgs::FillMessage32(midi2::MidiMessage32 const& ump)
+    bool MidiMessageReceivedEventArgs::FillMessage32(
+        midi2::MidiMessage32 const& ump)
     {
         if (ump == nullptr)
         {
@@ -166,7 +167,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    bool MidiMessageReceivedEventArgs::FillMessage64(midi2::MidiMessage64 const& ump)
+    bool MidiMessageReceivedEventArgs::FillMessage64(
+        midi2::MidiMessage64 const& ump)
     {
         if (ump == nullptr)
         {
@@ -194,7 +196,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    bool MidiMessageReceivedEventArgs::FillMessage96(midi2::MidiMessage96 const& ump)
+    bool MidiMessageReceivedEventArgs::FillMessage96(
+        midi2::MidiMessage96 const& ump)
     {
         if (ump == nullptr)
         {
@@ -222,7 +225,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    bool MidiMessageReceivedEventArgs::FillMessage128(midi2::MidiMessage128 const& ump)
+    bool MidiMessageReceivedEventArgs::FillMessage128(
+        midi2::MidiMessage128 const& ump)
     {
         if (ump == nullptr)
         {

@@ -25,6 +25,8 @@ public:
         _In_ LONGLONG);
 
     void Cleanup();
+    void CleanupA();
+    void CleanupB();
 
     MidiLoopbackBidiDevice();
     ~MidiLoopbackBidiDevice();

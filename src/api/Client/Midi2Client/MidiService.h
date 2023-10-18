@@ -29,6 +29,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static foundation::Collections::IVectorView<midi2::MidiTransportInformation> GetInstalledTransports();
 
+        // This will always return false for the first revs of Windows MIDI Services
+        // but software developers want to use a property to identify when the feature
+        // is enabled, without having to code new logic later.
+        static bool IsMessageSchedulingEnabled() noexcept { return false; }
+
     private:
 
 

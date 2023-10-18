@@ -188,9 +188,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
             case 0x2:
                 return L"Jitter Reduction Timestamp";
             case 0x3:
-                return L"Delta Clockstamp Ticks Per Quarter Note";
+                return L"Delta Ticks Per Quarter Note";
             case 0x4:
-                return L"Delta Clockstamp Ticks Since Last Event";
+                return L"Delta Ticks Since Last Event";
 
             default:
                 return L"Utility Unknown";
@@ -257,7 +257,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 return L"MIDI 1.0 Pitch Bend";
 
             default:
-                return L"MIDI 1.0 Channel Voice Unknown";
+                return L"MIDI 1.0 Channel Voice";
             }
             break;
 
@@ -265,16 +265,16 @@ namespace winrt::Windows::Devices::Midi2::implementation
             switch (GetStatusFromDataMessage64FirstWord(word0))
             {
             case 0x0:
-                return L"System Exclusive 7-bit Complete";
+                return L"SysEx 7-bit Complete";
             case 0x1:
-                return L"System Exclusive 7-bit Start";
+                return L"SysEx 7-bit Start";
             case 0x2:
-                return L"System Exclusive 7-bit Continue";
+                return L"SysEx 7-bit Continue";
             case 0x3:
-                return L"System Exclusive 7-bit End";
+                return L"SysEx 7-bit End";
 
             default:
-                return L"Data Message 64 Unknown";
+                return L"Data Message 64";
             }
             break;
 
@@ -311,7 +311,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 return L"MIDI 2.0 Pitch Bend";
 
             default:
-                return L"MIDI 2.0 Channel Voice Unknown";
+                return L"MIDI 2.0 Channel Voice";
             }
             break;
 
@@ -319,18 +319,18 @@ namespace winrt::Windows::Devices::Midi2::implementation
             switch (GetStatusFromDataMessage128FirstWord(word0))
             {
             case 0x0:
-                return L"System Exclusive 8-bit Complete";
+                return L"SysEx 8-bit Complete";
             case 0x1:
-                return L"System Exclusive 8-bit Start";
+                return L"SysEx 8-bit Start";
             case 0x2:
-                return L"System Exclusive 8-bit Continue";
+                return L"SysEx 8-bit Continue";
             case 0x3:
-                return L"System Exclusive 8-bit End";
+                return L"SysEx 8-bit End";
 
             case 0x8:
                 return L"Mixed Data Set Header";
             case 0x9:
-                return L"Mised Data Set Payload";
+                return L"Mixed Data Set Payload";
 
             default:
                 return L"Data Message Unknown";
@@ -369,7 +369,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                     switch (status)
                     {
                     case 0x00:
-                        return L"Unknown Metadata Text Event";
+                        return L"Metadata Text Event Status 0x00";
                     case 0x01:
                         return L"Project Name";
                     case 0x02:
@@ -395,14 +395,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
                     case 0x0C:
                         return L"Recording / Concert Location";
                     default:
-                        return L"Unknown Flex Data with Bank 0x01";
+                        return L"Flex Data with Bank 0x01";
                     }
                     break;
                 case 0x02:
                     switch (status)
                     {
                     case 0x00:
-                        return L"Unknown Performance Text Event";
+                        return L"Performance Text Event Status 0x00";
                     case 0x01:
                         return L"Lyrics";
                     case 0x02:
@@ -412,7 +412,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                     case 0x04:
                         return L"Ruby Language";
                     default:
-                        return L"Unknown Flex Data with Bank 0x02";
+                        return L"Flex Data with Bank 0x02";
                     }
                     break;
                 default:

@@ -17,10 +17,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiMessageTypeEndpointListener() = default;
 
-        hstring Id() const noexcept { return m_id; }
+        winrt::hstring Id() const noexcept { return m_id; }
         void Id(hstring const& value) { m_id = internal::ToUpperTrimmedHStringCopy(value); }
 
-        hstring Name() const noexcept { return m_name; }
+        winrt::hstring Name() const noexcept { return m_name; }
         void Name(_In_ hstring const& value) { m_name = internal::TrimmedHStringCopy(value); }
 
         bool IsEnabled() const noexcept { return m_enabled; }
@@ -29,10 +29,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         foundation::IInspectable Tag() const noexcept { return m_tag; }
         void Tag(_In_ foundation::IInspectable const& value) { m_tag = value; }
 
-        winrt::Windows::Devices::Midi2::IMidiInputConnection InputConnection() const noexcept { return m_inputConnection; }
-        void InputConnection(_In_ winrt::Windows::Devices::Midi2::IMidiInputConnection const& value) { m_inputConnection = value; }
+        midi2::MidiEndpointConnection Connection() const noexcept { return m_endpointConnection; }
+        void Connection(_In_ midi2::MidiEndpointConnection const& value) noexcept { m_endpointConnection = value; }
 
-        foundation::Collections::IVector<midi2::MidiMessageType> IncludeMessageTypes() { return m_includedMessageTypes; }
+
+        collections::IVector<midi2::MidiMessageType> IncludeMessageTypes() { return m_includedMessageTypes; }
 
         winrt::event_token MessageReceived(
             _In_ foundation::TypedEventHandler<foundation::IInspectable, 
@@ -58,7 +59,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void Cleanup();
 
         void ProcessIncomingMessage(
-            _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs const& args,
+            _In_ midi2::MidiMessageReceivedEventArgs const& args,
             _Out_ bool& skipFurtherListeners,
             _Out_ bool& skipMainMessageReceivedEvent);
 
@@ -68,7 +69,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring m_name{};
         bool m_enabled{ true };
         foundation::IInspectable m_tag{ nullptr };
-        midi2::IMidiInputConnection m_inputConnection;
+        midi2::MidiEndpointConnection m_endpointConnection{ nullptr };
 
         bool m_preventCallingFurtherListeners{ false };
         bool m_preventFiringMainMessageReceivedEvent{ false };

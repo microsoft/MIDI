@@ -18,14 +18,13 @@ import "MidiMessage128.idl";
 
 // TODO: Verify this has everything in the spec
 
-import "IMidiCacheableMetadata.idl";
 import "MidiFunctionBlockMidi10Enum.idl";
 
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [default_interface]
-    runtimeclass MidiFunctionBlock : IMidiCacheableMetadata
+    runtimeclass MidiFunctionBlock
     {
         MidiFunctionBlock();
 
