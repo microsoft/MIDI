@@ -18,6 +18,8 @@ using namespace winrt::Windows::Devices::Midi2;
 
 void MidiFunctionBlockMessageBuilderTests::TestBuildFunctionBlockNameNotificationLong()
 {
+    LOG_OUTPUT(L"Test long function block name");
+
     winrt::hstring name = L"This is an function block name that is longer than the supported 91 characters for a function block name in MIDI 2";
     uint32_t expectedPacketCount = 7;
 
@@ -87,6 +89,8 @@ void MidiFunctionBlockMessageBuilderTests::TestBuildFunctionBlockNameNotificatio
 
 void MidiFunctionBlockMessageBuilderTests::TestBuildFunctionBlockNameNotificationMedium()
 {
+    LOG_OUTPUT(L"Test medium function block name");
+
     winrt::hstring name = L"A medium-sized name";
     uint32_t expectedPacketCount = 2;
 
@@ -139,7 +143,7 @@ void MidiFunctionBlockMessageBuilderTests::TestBuildFunctionBlockNameNotificatio
 
 void MidiFunctionBlockMessageBuilderTests::TestBuildFunctionBlockInfoNotification()
 {
-    std::cout << "Building Function Block Info Notification" << std::endl;
+    LOG_OUTPUT(L"Building Function Block Info Notification");
 
     bool active{ true };
     uint8_t functionBlockNumber{ 5 };

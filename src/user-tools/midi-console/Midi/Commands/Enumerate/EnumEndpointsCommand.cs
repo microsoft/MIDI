@@ -48,7 +48,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                     try
                     {
-                        selector = MidiBidirectionalEndpointConnection.GetDeviceSelector();
+                        selector = MidiEndpointConnection.GetDeviceSelector();
                     }
                     catch (System.TypeInitializationException)
                     {

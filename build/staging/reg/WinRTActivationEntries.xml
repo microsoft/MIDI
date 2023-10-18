@@ -84,47 +84,7 @@
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiGlobalCache"
-             threading="Both"
-             trustLevel="Base"
-             />
-          <class
-             activatableClassId="Windows.Devices.Midi2.IMidiGlobalCacheStatics"
-             threading="Both"
-             trustLevel="Base"
-             />
-          <class
-             activatableClassId="Windows.Devices.Midi2.MidiGlobalInformationUpdatedEventArgs"
-             threading="Both"
-             trustLevel="Base"
-             />
-          <class
-             activatableClassId="Windows.Devices.Midi2.MidiEndpointMetadataCache"
-             threading="Both"
-             trustLevel="Base"
-             />
-          <class
-             activatableClassId="Windows.Devices.Midi2.IMidiEndpointMetadataCacheStatics"
-             threading="Both"
-             trustLevel="Base"
-             />
-          <class
-             activatableClassId="Windows.Devices.Midi2.MidiEndpointMetadataCacheUpdatedEventArgs"
-             threading="Both"
-             trustLevel="Base"
-             />
-          <class
-             activatableClassId="Windows.Devices.Midi2.MidiEndpointInformationUpdatedEventArgs"
-             threading="Both"
-             trustLevel="Base"
-             />
-          <class
              activatableClassId="Windows.Devices.Midi2.MidiEndpointInformation"
-             threading="Both"
-             trustLevel="Base"
-             />
-          <class
-             activatableClassId="Windows.Devices.Midi2.MidiFunctionBlocksUpdatedEventArgs"
              threading="Both"
              trustLevel="Base"
              />
@@ -184,37 +144,12 @@
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiBidirectionalAggregatedEndpointConnection"
+             activatableClassId="Windows.Devices.Midi2.MidiEndpointConnection"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiBidirectionalEndpointConnection"
-             threading="Both"
-             trustLevel="Base"
-             />
-          <class
-             activatableClassId="Windows.Devices.Midi2.MidiInputEndpointConnection"
-             threading="Both"
-             trustLevel="Base"
-             />
-          <class
-             activatableClassId="Windows.Devices.Midi2.MidiOutputEndpointConnection"
-             threading="Both"
-             trustLevel="Base"
-             />
-          <class
-             activatableClassId="Windows.Devices.Midi2.MidiBidirectionalEndpointOpenOptions"
-             threading="Both"
-             trustLevel="Base"
-             />
-          <class
-             activatableClassId="Windows.Devices.Midi2.MidiInputEndpointOpenOptions"
-             threading="Both"
-             trustLevel="Base"
-             />
-          <class
-             activatableClassId="Windows.Devices.Midi2.MidiOutputEndpointOpenOptions"
+             activatableClassId="Windows.Devices.Midi2.MidiEndpointConnectionOptions"
              threading="Both"
              trustLevel="Base"
              />

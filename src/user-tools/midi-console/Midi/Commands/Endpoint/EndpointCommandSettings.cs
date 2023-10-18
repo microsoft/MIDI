@@ -29,15 +29,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         [DefaultValue(MidiWordDataFormat.Hex)]
         public MidiWordDataFormat WordDataFormat { get; set; }
 
-        [LocalizedDescription("TODO ParameterSendMessageAutoNegotiation")]
-        [CommandOption("-n|--auto-negotiation")]
-        [DefaultValue(true)]
-        public bool AutoProtocolNegotiation { get; set; }
+        //[LocalizedDescription("TODO ParameterSendMessageAutoNegotiation")]
+        //[CommandOption("-n|--auto-negotiation")]
+        //[DefaultValue(true)]
+        //public bool AutoProtocolNegotiation { get; set; }
 
-        [LocalizedDescription("TODO ParameterSendMessageAutoDiscovery")]
-        [CommandOption("-y|--auto-discovery")]
-        [DefaultValue(true)]
-        public bool AutoDiscovery { get; set; }
+        //[LocalizedDescription("TODO ParameterSendMessageAutoDiscovery")]
+        //[CommandOption("-y|--auto-discovery")]
+        //[DefaultValue(true)]
+        //public bool AutoDiscovery { get; set; }
 
     }
 

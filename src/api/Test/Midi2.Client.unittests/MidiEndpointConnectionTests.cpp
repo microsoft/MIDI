@@ -20,13 +20,15 @@ using namespace winrt::Windows::Devices::Midi2;
 
 void MidiEndpointConnectionTests::TestCreateBiDiLoopbackA()
 {
+    LOG_OUTPUT(L"TestCreateBiDiLoopbackA **********************************************************************");
+
     auto session = MidiSession::CreateSession(L"Test Session Name");
 
     VERIFY_IS_TRUE(session.IsOpen());
 
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
-    std::cout << "Connecting to Bidirectional Loopback Endpoint A" << std::endl;
+    LOG_OUTPUT(L"Connecting to Bidirectional Loopback Endpoint A");
 
     auto conn1 = session.CreateEndpointConnection(LOOPBACK_BIDI_ID_A);
 
@@ -43,12 +45,14 @@ void MidiEndpointConnectionTests::TestCreateBiDiLoopbackA()
 
 void MidiEndpointConnectionTests::TestCreateBiDiLoopbackB()
 {
+    LOG_OUTPUT(L"TestCreateBiDiLoopbackB **********************************************************************");
+
     auto session = MidiSession::CreateSession(L"Test Session Name");
 
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
-    std::cout << "Connecting to Bidirectional Loopback Endpoint B" << std::endl;
+    LOG_OUTPUT(L"Connecting to Bidirectional Loopback Endpoint B");
 
     auto conn1 = session.CreateEndpointConnection(LOOPBACK_BIDI_ID_B);
 
@@ -65,6 +69,8 @@ void MidiEndpointConnectionTests::TestCreateBiDiLoopbackB()
 
 void MidiEndpointConnectionTests::TestSendAndReceiveUmpStruct()
 {
+    LOG_OUTPUT(L"TestSendAndReceiveUmpStruct **********************************************************************");
+
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
@@ -73,8 +79,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmpStruct()
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
-
-    std::cout << std::endl << "Connecting to both Loopback A and Loopback B" << std::endl;
+    LOG_OUTPUT(L"Connecting to both Loopback A and Loopback B");
 
     MidiEndpointConnectionOptions options;
 
@@ -147,6 +152,8 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmpStruct()
 
 void MidiEndpointConnectionTests::TestSendAndReceiveUmp32()
 {
+    LOG_OUTPUT(L"TestSendAndReceiveUmp32 **********************************************************************");
+
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
@@ -243,6 +250,8 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmp32()
 
 void MidiEndpointConnectionTests::TestSendAndReceiveWords()
 {
+    LOG_OUTPUT(L"TestSendAndReceiveWords **********************************************************************");
+
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
@@ -256,7 +265,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWords()
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
 
-    std::cout << "Connecting to BiDi loopback Endpoints A and B" << std::endl;
+    LOG_OUTPUT(L"Connecting to BiDi loopback Endpoints A and B");
 
 
     MidiEndpointConnectionOptions options;

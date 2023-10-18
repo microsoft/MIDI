@@ -11,7 +11,7 @@ using (var session = MidiSession.CreateSession("Sample Session"))
 {
     Console.WriteLine("Creating Device Selector.");
 
-    var deviceSelector = MidiBidirectionalEndpointConnection.GetDeviceSelector();
+    var deviceSelector = MidiEndpointConnection.GetDeviceSelector();
 
     Console.WriteLine("Enumerating through Windows.Devices.Enumeration.");
 
@@ -23,8 +23,8 @@ using (var session = MidiSession.CreateSession("Sample Session"))
     {
         Console.WriteLine("Devices found:");
 
-        DeviceInformation selectedOutEndpointInformation = null;
-        DeviceInformation selectedInEndpointInformation = null;
+        DeviceInformation? selectedOutEndpointInformation = null;
+        DeviceInformation? selectedInEndpointInformation = null;
 
         foreach (var device in endpointDevices)
         {
@@ -53,8 +53,8 @@ using (var session = MidiSession.CreateSession("Sample Session"))
         Console.WriteLine("Connecting to Receiver UMP Endpoint: " + selectedInEndpointInformation.Name);
 
 
-        using (var sendEndpoint = session.ConnectBidirectionalEndpoint(selectedOutEndpointInformation.Id))
-        using (var receiveEndpoint = session.ConnectBidirectionalEndpoint(selectedInEndpointInformation.Id))
+        using (var sendEndpoint = session.CreateEndpointConnection(selectedOutEndpointInformation.Id))
+        using (var receiveEndpoint = session.CreateEndpointConnection(selectedInEndpointInformation.Id))
         {
             // c# allows local functions. This is nicer than anonymous because we can unregister it by name
             void MessageReceivedHandler(object sender, MidiMessageReceivedEventArgs args)
@@ -67,12 +67,14 @@ using (var session = MidiSession.CreateSession("Sample Session"))
                 Console.WriteLine("- UMP Timestamp:     " + ump.Timestamp);
                 Console.WriteLine("- UMP Msg Type:      " + ump.MessageType);
                 Console.WriteLine("- UMP Packet Type:   " + ump.PacketType);
+                Console.WriteLine("- Message:           " + MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(args.PeekFirstWord()));
 
                 if (ump is MidiMessage32)
                 {
                     var ump32 = ump as MidiMessage32;
 
-                    Console.WriteLine("- Word 0:            0x{0:X}", ump32.Word0);
+                    if (ump32 != null)
+                        Console.WriteLine("- Word 0:            0x{0:X}", ump32.Word0);
                 }
             };
 

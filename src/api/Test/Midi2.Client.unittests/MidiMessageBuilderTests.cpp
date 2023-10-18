@@ -19,6 +19,8 @@ void MidiMessageBuilderTests::TestBuildType0UtilityMessages()
     uint32_t dataOrReserved = 0x00020;
     uint32_t expectedWord0 = 0x00D00020;
 
+    LOG_OUTPUT(L"Building Utility Message");
+
     auto message = MidiMessageBuilder::BuildUtilityMessage(
         MidiClock::GetMidiTimestamp(),
         status,
@@ -36,6 +38,7 @@ void MidiMessageBuilderTests::TestBuildType1SystemMessages()
     uint8_t midiByte3 = 0x3F;
     uint32_t expectedWord0 = 0x130D3C3F;
 
+    LOG_OUTPUT(L"Building System Message");
 
     auto message = MidiMessageBuilder::BuildSystemMessage(
         MidiClock::GetMidiTimestamp(),
@@ -60,7 +63,7 @@ void MidiMessageBuilderTests::TestBuildType2Midi1ChannelVoiceMessages()
     // function to create this because we need to check our logic in this test
     uint32_t resultingWord0 = 0x249F717F;
 
-    std::cout << "Building MIDI 1 Channel Voice Message" << std::endl;
+    LOG_OUTPUT(L"Building MIDI 1 Channel Voice Message");
 
     auto ump = MidiMessageBuilder::BuildMidi1ChannelVoiceMessage(
         MidiClock::GetMidiTimestamp(),
@@ -91,7 +94,7 @@ void MidiMessageBuilderTests::TestBuildType4Midi2ChannelVoiceMessages()
     uint32_t resultingWord0 = 0x459F6655;
     uint32_t resultingWord1 = 0xFF7FD00B;
 
-    std::cout << "Building MIDI 2 Channel Voice Message" << std::endl;
+    LOG_OUTPUT(L"Building MIDI 2 Channel Voice Message");
 
     auto ump = MidiMessageBuilder::BuildMidi2ChannelVoiceMessage(
         MidiClock::GetMidiTimestamp(),
@@ -110,7 +113,7 @@ void MidiMessageBuilderTests::TestBuildType4Midi2ChannelVoiceMessages()
 
 void MidiMessageBuilderTests::TestBuildTypeFStreamMessages1()
 {
-    std::cout << "Building Stream Message 1" << std::endl;
+    LOG_OUTPUT(L"Building Stream Message 1");
 
     uint8_t form = 0x3;
     uint16_t status = 0x02;
@@ -141,7 +144,7 @@ void MidiMessageBuilderTests::TestBuildTypeFStreamMessages1()
 
 void MidiMessageBuilderTests::TestBuildTypeFStreamMessages2()
 {
-    std::cout << "Building Stream Message 2" << std::endl;
+    LOG_OUTPUT(L"Building Stream Message 2");
 
     uint8_t form = 0x3;
     uint16_t status = 0x32;
@@ -172,7 +175,7 @@ void MidiMessageBuilderTests::TestBuildTypeFStreamMessages2()
 
 void MidiMessageBuilderTests::TestBuildMixedDatasetHeaderMessage()
 {
-    std::cout << "Building Mixed Dataset Header" << std::endl;
+    LOG_OUTPUT(L"Building Mixed Dataset Header");
 
     uint8_t group{ 0xA };
     uint8_t mdsId{ 0xD };
@@ -212,7 +215,7 @@ void MidiMessageBuilderTests::TestBuildMixedDatasetHeaderMessage()
 
 void MidiMessageBuilderTests::TestBuildMixedDatasetPayloadMessage()
 {
-    std::cout << "Building Mixed Dataset Payload" << std::endl;
+    LOG_OUTPUT(L"Building Mixed Dataset Payload");
 
     uint8_t group{ 0xA };
     uint8_t mdsId{ 0xD };

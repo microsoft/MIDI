@@ -71,11 +71,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             }
         }
 
-        private void SendSingleMessage(IMidiOutputConnection endpoint, UInt32[] words)
-        {
-
-        }
-
         public override int Execute(CommandContext context, Settings settings)
         {
             string endpointId = string.Empty;
@@ -97,21 +92,19 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             // when this goes out of scope, it will dispose of the session, which closes the connections
             using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
 
-            var bidiOpenOptions = new MidiBidirectionalEndpointOpenOptions();
+            var bidiOpenOptions = new MidiEndpointConnectionOptions();
 
 
-            if (settings.AutoProtocolNegotiation == false)
-            {
-                bidiOpenOptions.DisableAutomaticStreamConfiguration = true;
-            }
+            //if (settings.AutoProtocolNegotiation == false)
+            //{
+            //    bidiOpenOptions.DisableAutomaticStreamConfiguration = true;
+            //}
 
-            if (settings.AutoDiscovery == false)
-            {
-                bidiOpenOptions.DisableAutomaticEndpointMetadataHandling = true;
-                bidiOpenOptions.DisableAutomaticFunctionBlockMetadataHandling = true;
-            }
-
-
+            //if (settings.AutoDiscovery == false)
+            //{
+            //    bidiOpenOptions.DisableAutomaticEndpointMetadataHandling = true;
+            //    bidiOpenOptions.DisableAutomaticFunctionBlockMetadataHandling = true;
+            //}
 
 
             if (session == null)
@@ -120,8 +113,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 return (int)MidiConsoleReturnCode.ErrorCreatingSession;
             }
 
-            using var connection = session.ConnectBidirectionalEndpoint(endpointId, bidiOpenOptions);
-
+            using var connection = session.CreateEndpointConnection(endpointId, bidiOpenOptions);
             if (connection != null)
             {
                 openSuccess = connection.Open();

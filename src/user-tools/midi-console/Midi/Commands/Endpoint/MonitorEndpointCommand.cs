@@ -70,15 +70,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             // when this goes out of scope, it will dispose of the session, which closes the connections
             using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.MonitorSessionNameSuffix}");
-
             if (session == null)
             {
                 AnsiConsole.WriteLine(Strings.ErrorUnableToCreateSession);
                 return (int)MidiConsoleReturnCode.ErrorCreatingSession;
             }
 
-            using var connection = session.ConnectBidirectionalEndpoint(endpointId);
-
+            using var connection = session.CreateEndpointConnection(endpointId);
             if (connection == null)
             {
                 AnsiConsole.WriteLine(Strings.ErrorUnableToCreateEndpointConnection);

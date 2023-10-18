@@ -33,7 +33,7 @@ auto ump128mt = MidiMessageType::Stream128;
 
 void MidiBenchmarks::BenchmarkSendReceiveWordArray()
 {
-    std::cout << std::endl << "API Words benchmark" << std::endl;
+    LOG_OUTPUT(L"API Words benchmark **********************************************************************");
 
     uint32_t numMessagesToSend = 1000;
     uint32_t receivedMessageCount{};
@@ -284,7 +284,7 @@ void MidiBenchmarks::BenchmarkSendReceiveWordArray()
 
 void MidiBenchmarks::BenchmarkSendReceiveUmpRuntimeClass()
 {
-    std::cout << std::endl << "API UMP benchmark" << std::endl;
+    LOG_OUTPUT(L"API UMP benchmark **********************************************************************");
 
     uint32_t numMessagesToSend = 1000;
     uint32_t receivedMessageCount{};

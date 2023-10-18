@@ -53,8 +53,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         {
             var choices = new List<UmpEndpointPickerEntry>();
 
-            LoadChoices(choices, MidiBidirectionalEndpointConnection.GetDeviceSelector(), EndpointDirection.Bidirectional);
-            LoadChoices(choices, MidiInputEndpointConnection.GetDeviceSelector(), EndpointDirection.In);
+            LoadChoices(choices, MidiEndpointConnection.GetDeviceSelector(), EndpointDirection.Bidirectional);
 
             if (choices.Count > 0)
             {
@@ -78,8 +77,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         {
             var choices = new List<UmpEndpointPickerEntry>();
 
-            LoadChoices(choices, MidiBidirectionalEndpointConnection.GetDeviceSelector(), EndpointDirection.Bidirectional);
-            LoadChoices(choices, MidiOutputEndpointConnection.GetDeviceSelector(), EndpointDirection.Out);
+            LoadChoices(choices, MidiEndpointConnection.GetDeviceSelector(), EndpointDirection.Bidirectional);
 
             if (choices.Count > 0)
             {

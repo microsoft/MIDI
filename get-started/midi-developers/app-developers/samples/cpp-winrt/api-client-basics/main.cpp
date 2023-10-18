@@ -21,8 +21,6 @@ int main()
 {
     winrt::init_apartment();
 
-    std::cout << "Checking for MIDI Services..." << std::endl;
-
     // create the MIDI session, giving us access to Windows MIDI Services. An app may open 
     // more than one session. If so, the session name should be meaningful to the user, like
     // the name of a browser tab, or a project.
@@ -38,7 +36,7 @@ int main()
 
     std::cout << std::endl << "Creating Device Selector..." << std::endl;
 
-    winrt::hstring deviceSelector = MidiBidirectionalEndpointConnection::GetDeviceSelector();
+    winrt::hstring deviceSelector = MidiEndpointConnection::GetDeviceSelector();
 
     // Enumerate UMP endpoints. Note that per C++, main cannot be a co-routine,
     // so we can't just co_await this async call, but instead use the C++/WinRT Extension "get()". 
@@ -91,10 +89,10 @@ int main()
         // then you connect to the UMP endpoint
         std::cout << std::endl << "Connecting to UMP Endpoint..." << std::endl;
 
-        auto sendEndpoint = session.ConnectBidirectionalEndpoint(selectedOutEndpointInformation.Id());
+        auto sendEndpoint = session.CreateEndpointConnection(selectedOutEndpointInformation.Id());
         std::cout << "Connected to sending endpoint: " << winrt::to_string(selectedOutEndpointInformation.Name()) << std::endl;
 
-        auto receiveEndpoint = session.ConnectBidirectionalEndpoint(selectedInEndpointInformation.Id());
+        auto receiveEndpoint = session.CreateEndpointConnection(selectedInEndpointInformation.Id());
         std::cout << "Connected to receiving endpoint: " << winrt::to_string(selectedInEndpointInformation.Name()) << std::endl;
 
         // Wire up an event handler to receive the message. There is a single event handler type, but the
@@ -117,7 +115,7 @@ int main()
                 std::cout << "- UMP Timestamp:     " << std::dec << ump.Timestamp() << std::endl;
                 std::cout << "- UMP Msg Type:      0x" << std::hex << (uint32_t)ump.MessageType() << std::endl;
                 std::cout << "- UMP Packet Type:   0x" << std::hex << (uint32_t)ump.PacketType() << std::endl;
-                  
+                std::cout << "- Message:           " << winrt::to_string(MidiMessageUtility::GetMessageFriendlyNameFromFirstWord(args.PeekFirstWord())) << std::endl;
 
                 // if you wish to cast the IMidiUmp to a specific Ump Type, you can do so using .as<T> WinRT extension
 
@@ -176,13 +174,10 @@ int main()
 
         std::cout << "Disconnecting UMP Endpoint Connection..." << std::endl;
 
-        // not strictly necessary, but good form. In C#/.NET, you can use the dispose pattern
-        sendEndpoint.as<winrt::Windows::Foundation::IClosable>().Close();
-        receiveEndpoint.as<winrt::Windows::Foundation::IClosable>().Close();
 
-        // not strictly necessary as the session.Close() call will do it, but it's here in case you need it
         session.DisconnectEndpointConnection(sendEndpoint.ConnectionId());
         session.DisconnectEndpointConnection(receiveEndpoint.ConnectionId());
+
     }
     else
     {

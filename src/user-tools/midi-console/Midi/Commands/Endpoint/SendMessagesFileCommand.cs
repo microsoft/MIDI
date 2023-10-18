@@ -76,8 +76,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            IMidiOutputConnection? connection = null;
-
             string endpointId = string.Empty;
 
             if (!string.IsNullOrEmpty(settings.EndpointDeviceId))
@@ -93,67 +91,25 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             AnsiConsole.MarkupLine(Strings.SendMessageSendingThroughEndpointLabel + ": " + AnsiMarkupFormatter.FormatDeviceInstanceId(endpointId));
             AnsiConsole.WriteLine();
 
-            // todo: update loc strings
             using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
-
-            bool openSuccess = false;
-
-            AnsiConsole.Status()
-                .Start(Strings.StatusCreatingSessionAndOpeningEndpoint, ctx =>
-                {
-                    ctx.Spinner(Spinner.Known.Star);
-
-
-                    if (session != null)
-                    {
-                        var endpointDirection = EndpointUtility.GetUmpEndpointTypeFromInstanceId(endpointId);
-
-                        if (endpointDirection == EndpointDirection.Bidirectional)
-                        {
-                            connection = session.ConnectBidirectionalEndpoint(endpointId);
-                        }
-                        else if (endpointDirection == EndpointDirection.Out)
-                        {
-                            connection = session.ConnectOutputEndpoint(endpointId);
-                        }
-                    }
-
-                    if (connection != null)
-                    {
-                        openSuccess = false;
-
-                        if (connection is MidiBidirectionalEndpointConnection)
-                        {
-                            openSuccess = ((MidiBidirectionalEndpointConnection)(connection)).Open();
-                        }
-                        else if (connection is MidiOutputEndpointConnection)
-                        {
-                            openSuccess = ((MidiOutputEndpointConnection)(connection)).Open();
-                        }
-
-                    }
-                });
-
             if (session == null)
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToCreateSession));
                 return (int)MidiConsoleReturnCode.ErrorCreatingSession;
             }
-            else if (connection == null)
+
+            using var connection = session.CreateEndpointConnection(endpointId) ;
+            if (connection == null)
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToCreateEndpointConnection));
 
-                if (session != null)
-                    session.Dispose();
-
                 return (int)MidiConsoleReturnCode.ErrorCreatingEndpointConnection;
             }
-            else if (!openSuccess)
+
+            bool openSuccess = openSuccess = connection.Open(); ;
+            if (!openSuccess)
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToOpenEndpoint));
-
-                if (session != null)
-                    session.Dispose();
 
                 return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
             }
