@@ -65,11 +65,118 @@ DEFINE_DEVPROPKEY(PKEY_MIDI_UmpPing, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6
 #define STRING_PKEY_MIDI_NativeDataFormat L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},24"
 DEFINE_DEVPROPKEY(PKEY_MIDI_NativeDataFormat, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 24);     // DEVPROP_TYPE_GUID
 
+
 #define STRING_PKEY_MIDI_IN_GroupTerminalBlocks L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},25"
 DEFINE_DEVPROPKEY(PKEY_MIDI_IN_GroupTerminalBlocks, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 25);     // DEVPROP_TYPE_BINARY
 
 #define STRING_PKEY_MIDI_OUT_GroupTerminalBlocks L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},26"
 DEFINE_DEVPROPKEY(PKEY_MIDI_OUT_GroupTerminalBlocks, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 26);     // DEVPROP_TYPE_BINARY
+
+
+// In-protocol Endpoint information ==================================================================
+
+#define STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},50"
+DEFINE_DEVPROPKEY(PKEY_MIDI_EndpointSupportsMidi2Protocol, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 50);     // DEVPROP_TYPE_BOOLEAN
+
+#define STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},51"
+DEFINE_DEVPROPKEY(PKEY_MIDI_EndpointSupportsMidi1Protocol, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 51);     // DEVPROP_TYPE_BOOLEAN
+
+#define STRING_PKEY_MIDI_EndpointSupportsReceivingJRTimestamps L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},52"
+DEFINE_DEVPROPKEY(PKEY_MIDI_EndpointSupportsReceivingJRTimestamps, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 52);     // DEVPROP_TYPE_BOOLEAN
+
+#define STRING_PKEY_MIDI_EndpointSupportsSendingJRTimestamps L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},53"
+DEFINE_DEVPROPKEY(PKEY_MIDI_EndpointSupportsSendingJRTimestamps, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 53);     // DEVPROP_TYPE_BOOLEAN
+
+#define STRING_PKEY_MIDI_EndpointUmpVersionMajor L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},54"
+DEFINE_DEVPROPKEY(PKEY_MIDI_EndpointUmpVersionMajor, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 54);     // DEVPROP_TYPE_BYTE
+
+#define STRING_PKEY_MIDI_EndpointUmpVersionMinor L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},55"
+DEFINE_DEVPROPKEY(PKEY_MIDI_EndpointUmpVersionMinor, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 55);     // DEVPROP_TYPE_BYTE
+
+// name provided by the endpoint through endpoint discovery
+#define STRING_PKEY_MIDI_EndpointProvidedName L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},56"
+DEFINE_DEVPROPKEY(PKEY_MIDI_EndpointProvidedName, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 56);     // DEVPROP_TYPE_STRING
+
+// Product instance Id provided by the endpoint through endpoint discovery
+#define STRING_PKEY_MIDI_EndpointProvidedProductInstanceId L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},57"
+DEFINE_DEVPROPKEY(PKEY_MIDI_EndpointProvidedProductInstanceId, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 57);     // DEVPROP_TYPE_STRING
+
+
+// full list of function blocks for this ump endpoint
+#define STRING_PKEY_MIDI_FunctionBlocks L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},58"
+DEFINE_DEVPROPKEY(PKEY_MIDI_FunctionBlocks, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 58);     // DEVPROP_TYPE_BINARY
+
+// true if function blocks are static
+#define STRING_PKEY_MIDI_FunctionBlocksAreStatic L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},59"
+DEFINE_DEVPROPKEY(PKEY_MIDI_FunctionBlocksAreStatic, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 59);     // DEVPROP_TYPE_BOOLEAN
+
+// full list of function blocks for this ump endpoint
+#define STRING_PKEY_MIDI_DeviceIdentification L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},60"
+DEFINE_DEVPROPKEY(PKEY_MIDI_DeviceIdentification, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 60);     // DEVPROP_TYPE_BINARY
+
+
+
+
+// Structures for properties ================================================================
+
+// for PKEY_MIDI_DeviceIdentification
+struct MidiDeviceIdentityProperty
+{
+    uint16_t Reserved0{ 0 };
+    uint8_t Reserved1{ 0 };
+
+    uint8_t ManufacturerSysExIdByte1{ 0 };
+    uint8_t ManufacturerSysExIdByte2{ 0 };
+    uint8_t ManufacturerSysExIdByte3{ 0 };
+
+    uint8_t DeviceFamilyLsb{ 0 };
+    uint8_t DeviceFamilyMsb{ 0 };
+
+    uint8_t DeviceFamilyModelNumberLsb{ 0 };
+    uint8_t DeviceFamilyModelNumberMsb{ 0 };
+
+    uint8_t SoftwareRevisionLevelByte1{ 0 };
+    uint8_t SoftwareRevisionLevelByte2{ 0 };
+    uint8_t SoftwareRevisionLevelByte3{ 0 };
+    uint8_t SoftwareRevisionLevelByte4{ 0 };
+};
+
+// TODO: double check this number
+#define MIDI_FUNCTION_BLOCK_NAME_MAX_LENGTH 96
+
+// for PKEY_MIDI_FunctionBlocks
+// these properties are raw from the messages, with the exception of the name
+// which is assembled from multiple in-protocol messages. Name is utf8 encoded.
+struct MidiDevicePropertyFunctionBlock
+{
+    bool IsActive{ false };
+    uint8_t BlockNumber{0};
+    uint8_t Direction{0};
+    uint8_t Midi1{0};
+    uint8_t UIHint{0};
+    uint8_t FirstGroup{0};
+    uint8_t NumberOfGroupsSpanned{0};
+    uint8_t MidiCIMessageVersionFormat{0};
+    uint8_t MaxSysEx8Streams{0};
+
+    // +1 because we zero-terminate the name even though it's fixed max length
+    // most function blocks will have much shorter names. Should we instead have
+    // a more complicated variable-length scheme here?
+    char Name[MIDI_FUNCTION_BLOCK_NAME_MAX_LENGTH+1]{0};
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #define HRESULT_FROM_RPCSTATUS(status) status == RPC_S_OK ? S_OK : MAKE_HRESULT(SEVERITY_ERROR, FACILITY_RPC, status)
 
