@@ -45,8 +45,8 @@ CMidi2DiagnosticsEndpointManager::Initialize(
 
     RETURN_IF_FAILED(CreateLoopbackEndpoint(DEFAULT_LOOPBACK_BIDI_A_ID, DEFAULT_LOOPBACK_BIDI_A_NAME, MidiFlow::MidiFlowBidirectional));
     RETURN_IF_FAILED(CreateLoopbackEndpoint(DEFAULT_LOOPBACK_BIDI_B_ID, DEFAULT_LOOPBACK_BIDI_B_NAME, MidiFlow::MidiFlowBidirectional));
-    RETURN_IF_FAILED(CreateLoopbackEndpoint(DEFAULT_LOOPBACK_OUT_ID, DEFAULT_LOOPBACK_OUT_NAME, MidiFlow::MidiFlowOut));
-    RETURN_IF_FAILED(CreateLoopbackEndpoint(DEFAULT_LOOPBACK_IN_ID, DEFAULT_LOOPBACK_IN_NAME, MidiFlow::MidiFlowIn));
+//    RETURN_IF_FAILED(CreateLoopbackEndpoint(DEFAULT_LOOPBACK_OUT_ID, DEFAULT_LOOPBACK_OUT_NAME, MidiFlow::MidiFlowOut));
+//    RETURN_IF_FAILED(CreateLoopbackEndpoint(DEFAULT_LOOPBACK_IN_ID, DEFAULT_LOOPBACK_IN_NAME, MidiFlow::MidiFlowIn));
 
     RETURN_IF_FAILED(CreatePingEndpoint(DEFAULT_PING_BIDI_ID, DEFAULT_PING_BIDI_NAME, MidiFlow::MidiFlowBidirectional));
 
@@ -131,6 +131,15 @@ CMidi2DiagnosticsEndpointManager::CreateParentDevice()
     m_parentDevice->SwDeviceState = SWDEVICESTATE::CreatePending;
 
     //m_parentDevice->InstanceId = createInfo->pszInstanceId;
+    
+    DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
+
+    DEVPROPERTY deviceDevProperties[] = {
+        {{DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue},
+        {{DEVPKEY_Device_NoConnectSound, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue}
+    };
 
 
     std::wstring rootDeviceId = LOOPBACK_PARENT_ROOT;
@@ -142,8 +151,8 @@ CMidi2DiagnosticsEndpointManager::CreateParentDevice()
         enumeratorName.c_str(),             // this really should come from the service
         rootDeviceId.c_str(),               // root device
         createInfo, 
-        0,                                  // count of properties
-        NULL,                               // pointer to properties
+        ARRAYSIZE(deviceDevProperties),     // count of properties
+        (DEVPROPERTY*)deviceDevProperties,  // pointer to properties
         SwMidiParentDeviceCreateCallback,   // callback
         &creationContext,
         wil::out_param(m_parentDevice->SwDevice)));
@@ -185,13 +194,16 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(_In_ std::wstring const
         {{PKEY_MIDI_TransportMnemonic, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_STRING, static_cast<ULONG>((mnemonic.length() + 1) * sizeof(WCHAR)), (PVOID)mnemonic.c_str()},
         {{DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),& devPropTrue}
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),& devPropTrue},
+        {{DEVPKEY_Device_NoConnectSound, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue}
     };
-
 
     DEVPROPERTY deviceDevProperties[] = {
         {{DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue}
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue},
+        {{DEVPKEY_Device_NoConnectSound, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue}
     };
 
     SW_DEVICE_CREATE_INFO createInfo = {};
@@ -235,13 +247,19 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(_In_ std::wstring const ins
         {{PKEY_MIDI_SupportsMultiClient, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue},
         {{PKEY_MIDI_TransportMnemonic, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((mnemonic.length() + 1) * sizeof(WCHAR)), (PVOID)mnemonic.c_str()}
+            DEVPROP_TYPE_STRING, static_cast<ULONG>((mnemonic.length() + 1) * sizeof(WCHAR)), (PVOID)mnemonic.c_str()},
+        {{DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue},
+        {{DEVPKEY_Device_NoConnectSound, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue}
     };
 
 
     DEVPROPERTY deviceDevProperties[] = {
         {{DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue}
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue},
+        {{DEVPKEY_Device_NoConnectSound, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue}
     };
 
     SW_DEVICE_CREATE_INFO createInfo = {};

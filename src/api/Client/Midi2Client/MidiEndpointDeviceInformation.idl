@@ -30,6 +30,10 @@ namespace Windows.Devices.Midi2
 
         static String UniversalMidiPacketBidirectionalInterfaceClassId{ get; };
 
+        static String DiagnosticsLoopbackEndpointAId{ get; };
+        static String DiagnosticsLoopbackEndpointBId{ get; };
+
+
         static IVectorView<String> GetAdditionalPropertiesList();
 
         String Id { get; };
