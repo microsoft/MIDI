@@ -16,7 +16,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         // TODO
         return nullptr;
-
     }
 
 
@@ -66,26 +65,34 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     collections::IVectorView<midi2::MidiEndpointDeviceInformation> MidiEndpointDeviceInformation::FindAll(bool includeDiagnosticsEndpoints)
     {
-        auto devices = Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(
-            MidiEndpointConnection::GetDeviceSelector(),
-            GetAdditionalPropertiesList()
-            ).get();
-
         auto midiDevices = winrt::single_threaded_vector<midi2::MidiEndpointDeviceInformation>();
 
-        if (devices != nullptr)
+        try
         {
-            for (auto const& di : devices)
+            auto devices = Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(
+                MidiEndpointConnection::GetDeviceSelector(),
+                GetAdditionalPropertiesList()
+            ).get();
+
+
+            if (devices != nullptr)
             {
-                auto endpointInfo = winrt::make_self<MidiEndpointDeviceInformation>();
-
-                endpointInfo->InternalUpdateFromDeviceInformation(di);
-
-                if (endpointInfo->EndpointPurpose() == MidiEndpointDevicePurpose::NormalMessageEndpoint || includeDiagnosticsEndpoints)
+                for (auto const& di : devices)
                 {
-                    midiDevices.Append(*endpointInfo);
+                    auto endpointInfo = winrt::make_self<MidiEndpointDeviceInformation>();
+
+                    endpointInfo->InternalUpdateFromDeviceInformation(di);
+
+                    if (endpointInfo->EndpointPurpose() == MidiEndpointDevicePurpose::NormalMessageEndpoint || includeDiagnosticsEndpoints)
+                    {
+                        midiDevices.Append(*endpointInfo);
+                    }
                 }
             }
+        }
+        catch (...)
+        {
+            // TODO: Log this
         }
 
         return midiDevices.GetView();
@@ -121,40 +128,40 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         if (info != nullptr)
         {
-            auto nativeDataFormat = info.Properties().Lookup(STRING_PKEY_MIDI_NativeDataFormat);
+            //auto nativeDataFormat = info.Properties().Lookup(STRING_PKEY_MIDI_NativeDataFormat);
 
-            auto transportMnemonic = info.Properties().Lookup(STRING_PKEY_MIDI_TransportMnemonic);
-            auto isLoopback = info.Properties().Lookup(STRING_PKEY_MIDI_UmpLoopback);
-            auto isPing = info.Properties().Lookup(STRING_PKEY_MIDI_UmpPing);
+            //auto transportMnemonic = info.Properties().Lookup(STRING_PKEY_MIDI_TransportMnemonic);
+            //auto isLoopback = info.Properties().Lookup(STRING_PKEY_MIDI_UmpLoopback);
+            //auto isPing = info.Properties().Lookup(STRING_PKEY_MIDI_UmpPing);
 
-            auto uniqueIdentifier = info.Properties().Lookup(STRING_PKEY_MIDI_UniqueIdentifier);
+            //auto uniqueIdentifier = info.Properties().Lookup(STRING_PKEY_MIDI_UniqueIdentifier);
 
-            auto supportsMidi2Protocol = info.Properties().Lookup(STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol);
-            auto supportsMidi1Protocol = info.Properties().Lookup(STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol);
-            auto supportsReceivingJRTimestamps = info.Properties().Lookup(STRING_PKEY_MIDI_EndpointSupportsReceivingJRTimestamps);
-            auto supportsSendingJRTimestamps = info.Properties().Lookup(STRING_PKEY_MIDI_EndpointSupportsSendingJRTimestamps);
-            auto umpVersionMajor = info.Properties().Lookup(STRING_PKEY_MIDI_EndpointUmpVersionMajor);
-            auto umpVersionMinor = info.Properties().Lookup(STRING_PKEY_MIDI_EndpointUmpVersionMinor);
-            auto endpointProvidedName = info.Properties().Lookup(STRING_PKEY_MIDI_EndpointProvidedName);
-            auto endpointProvidedProductInstanceId = info.Properties().Lookup(STRING_PKEY_MIDI_EndpointProvidedProductInstanceId);
-            auto deviceIdentificationBin = info.Properties().Lookup(STRING_PKEY_MIDI_DeviceIdentification);
-
-
-            // user-supplied info
-            auto userSuppliedName = info.Properties().Lookup(STRING_PKEY_MIDI_UserSuppliedEndpointName);
-            auto userSuppliedDescription = info.Properties().Lookup(STRING_PKEY_MIDI_UserSuppliedDescription);
-            auto userSuppliedImagePath = info.Properties().Lookup(STRING_PKEY_MIDI_UserSuppliedImagePath);
+            //auto supportsMidi2Protocol = info.Properties().Lookup(STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol);
+            //auto supportsMidi1Protocol = info.Properties().Lookup(STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol);
+            //auto supportsReceivingJRTimestamps = info.Properties().Lookup(STRING_PKEY_MIDI_EndpointSupportsReceivingJRTimestamps);
+            //auto supportsSendingJRTimestamps = info.Properties().Lookup(STRING_PKEY_MIDI_EndpointSupportsSendingJRTimestamps);
+            //auto umpVersionMajor = info.Properties().Lookup(STRING_PKEY_MIDI_EndpointUmpVersionMajor);
+            //auto umpVersionMinor = info.Properties().Lookup(STRING_PKEY_MIDI_EndpointUmpVersionMinor);
+            //auto endpointProvidedName = info.Properties().Lookup(STRING_PKEY_MIDI_EndpointProvidedName);
+            //auto endpointProvidedProductInstanceId = info.Properties().Lookup(STRING_PKEY_MIDI_EndpointProvidedProductInstanceId);
+            //auto deviceIdentificationBin = info.Properties().Lookup(STRING_PKEY_MIDI_DeviceIdentification);
 
 
-            // Group Terminal Blocks
-            auto groupTerminalsInBin = info.Properties().Lookup(STRING_PKEY_MIDI_IN_GroupTerminalBlocks);
-            auto groupTerminalsOutBin = info.Properties().Lookup(STRING_PKEY_MIDI_OUT_GroupTerminalBlocks);
+            //// user-supplied info
+            //auto userSuppliedName = info.Properties().Lookup(STRING_PKEY_MIDI_UserSuppliedEndpointName);
+            //auto userSuppliedDescription = info.Properties().Lookup(STRING_PKEY_MIDI_UserSuppliedDescription);
+            //auto userSuppliedImagePath = info.Properties().Lookup(STRING_PKEY_MIDI_UserSuppliedImagePath);
+
+
+            //// Group Terminal Blocks
+            //auto groupTerminalsInBin = info.Properties().Lookup(STRING_PKEY_MIDI_IN_GroupTerminalBlocks);
+            //auto groupTerminalsOutBin = info.Properties().Lookup(STRING_PKEY_MIDI_OUT_GroupTerminalBlocks);
 
 
 
-            // Function Blocks
-            auto functionBlocksAreStatic = info.Properties().Lookup(STRING_PKEY_MIDI_FunctionBlocksAreStatic);
-            auto functionBlocksBin = info.Properties().Lookup(STRING_PKEY_MIDI_FunctionBlocks);
+            //// Function Blocks
+            //auto functionBlocksAreStatic = info.Properties().Lookup(STRING_PKEY_MIDI_FunctionBlocksAreStatic);
+            //auto functionBlocksBin = info.Properties().Lookup(STRING_PKEY_MIDI_FunctionBlocks);
 
 
 
