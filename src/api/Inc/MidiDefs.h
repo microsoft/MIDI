@@ -118,6 +118,15 @@ DEFINE_DEVPROPKEY(PKEY_MIDI_DeviceIdentification, 0x3f114a6a, 0x11fa, 0x4bd0, 0x
 
 
 
+#define STRING_PKEY_MIDI_UserSuppliedImagePath L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},61"
+DEFINE_DEVPROPKEY(PKEY_MIDI_UserSuppliedImagePath, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 61);     // DEVPROP_TYPE_STRING
+
+#define STRING_PKEY_MIDI_UserSuppliedDescription L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},62"
+DEFINE_DEVPROPKEY(PKEY_MIDI_UserSuppliedDescription, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 62);     // DEVPROP_TYPE_STRING
+
+#define STRING_PKEY_MIDI_UserSuppliedEndpointName L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},63"
+DEFINE_DEVPROPKEY(PKEY_MIDI_UserSuppliedEndpointName, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 63);     // DEVPROP_TYPE_STRING
+
 
 // Structures for properties ================================================================
 

@@ -44,8 +44,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void UpdateFunctionBlock(_In_ midi2::MidiFunctionBlock const& block);
         void RemoveFunctionBlock(_In_ uint8_t functionBlockNumber);
 
-        midi2::MidiEndpointInformation EndpointInformation();
-        void EndpointInformation(_In_ midi2::MidiEndpointInformation const& value);
+        //midi2::MidiEndpointInformation EndpointInformation();
+        //void EndpointInformation(_In_ midi2::MidiEndpointInformation const& value);
 
         bool SuppressHandledMessages() { return m_suppressHandledMessages; }
         void SuppressHandledMessages(_In_ bool const value) { m_suppressHandledMessages = value; }

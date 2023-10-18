@@ -37,11 +37,8 @@ Windows.Devices.Midi2.IMidiMessageUtilityStatics | 0 | 0 | 0
 
 # Metadata
 
-Windows.Devices.Midi2.MidiEndpointInformation | 0 | 0 | 0
 Windows.Devices.Midi2.MidiFunctionBlock | 0 | 0 | 0
-
 Windows.Devices.Midi2.MidiUniqueId | 0 | 0 | 0
-
 Windows.Devices.Midi2.MidiGroupTerminalBlock | 0 | 0 | 0
 
 # Convenience Message Processing Plugins

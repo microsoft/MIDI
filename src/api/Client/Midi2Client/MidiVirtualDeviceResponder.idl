@@ -14,7 +14,7 @@ MIDI_IDL_IMPORT
 import "IMidiEndpointMessageProcessingPlugin.idl";
 
 import "MidiFunctionBlock.idl";
-import "MidiEndpointInformation.idl";
+//import "MidiEndpointInformation.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -32,7 +32,7 @@ namespace Windows.Devices.Midi2
         void UpdateFunctionBlock(MidiFunctionBlock block);
         void RemoveFunctionBlock(UInt8 functionBlockNumber);
 
-        MidiEndpointInformation EndpointInformation{ get; set; };
+ //       MidiEndpointInformation EndpointInformation{ get; set; };
 
         // true if you want the stream / function block etc. messages automatically handled
         // and then removed from the stream. False if the endpoint should still raise

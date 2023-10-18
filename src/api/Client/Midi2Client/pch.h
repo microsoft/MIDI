@@ -72,7 +72,6 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 
 #include "MidiFunctionBlock.h"
 #include "MidiGroupTerminalBlock.h"
-#include "MidiEndpointInformation.h"
 #include "MidiUniqueId.h"
 
 #include "MidiEndpointConnection.h"

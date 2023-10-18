@@ -14,9 +14,8 @@ import "MidiEndpointTypeEnum.idl";
 import "MidiProtocolEnum.idl";
 import "MidiEndpointNativeDataFormatEnum.idl";
 import "MidiEndpointDevicePurposeEnum.idl";
-import "MidiEndpointDeviceWatcher.idl";
+//import "MidiEndpointDeviceWatcher.idl";
 import "MidiFunctionBlock.idl";
-import "MidiEndpointInformation.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -25,8 +24,8 @@ namespace Windows.Devices.Midi2
     runtimeclass MidiEndpointDeviceInformation
     {
         static MidiEndpointDeviceInformation CreateFromId(String id);
-
-//        static MidiEndpointDeviceWatcher CreateWatcher();
+        //static MidiEndpointDeviceWatcher CreateWatcher();
+        static IVectorView<MidiEndpointDeviceInformation> FindAll(Boolean includeDiagnosticsEndpoints);
 
         //static String UniversalMidiPacketBidirectionalInterfaceClassId{ get; };
 
@@ -40,30 +39,43 @@ namespace Windows.Devices.Midi2
         
         Windows.Devices.Enumeration.DeviceInformation DeviceInformation{ get; };
 
-
-        // manufacturer, model, etc. come from the parent device, and so are not duplicated here.
+        Windows.Devices.Enumeration.DeviceInformation GetParentDeviceInformation();
         String ParentDeviceId{ get; };
+        //String ContainerId{ get; };
 
-        String ContainerId{ get; };
+        // We surface all the names here, but use a hierarchy to decide which Name we show as the Name property
 
-        // user supplied name, if provided (defaults to device name otherwise)
-        String Name{ get; };
+        String Name{ get; };                        // user supplied name, if provided (defaults to device name otherwise)
+        String TransportSuppliedName{ get; };       // device/transport supplied name, from pnp
+        String EndpointSuppliedName{ get; };        // name supplied by the in-protocol endpoint information, if available
+        String UserSuppliedName{ get; };            // name supplied by the user, if available
 
-        // device/transport supplied name, from pnp
-        String TransportSuppliedName{ get; };
+
+        String ProductInstanceId{ get; };           // 
+
+
+        UInt8 SpecificationVersionMajor{ get; };
+        UInt8 SpecificationVersionMinor{ get; };
+
+        Boolean HasStaticFunctionBlocks{ get; };
+
+        Boolean SupportsMidi10Protocol{ get; };
+        Boolean SupportsMidi20Protocol{ get; };
+        MidiProtocol ConfiguredProtocol{ get; };    // MIDI 1.0 or MIDI 2.0 for this endpoint
+
+        Boolean SupportsReceivingJRTimestamps{ get; };
+        Boolean SupportsSendingJRTimestamps{ get; };
+
 
         // transport type
         String TransportId{ get; };
 
         // unique Id like iSerialNumber
-        Boolean HasUniqueIdentifier{ get; };
         String UniqueIdentifier{ get; };
 
         // whether or not this supports multi-client use
         Boolean SupportsMultiClient{ get; };
 
-        // ump endpoint type (int/out/bidi)
-        MidiEndpointType EndpointType{ get; };
 
         // whether or not this is an upgrade MIDI 1.0 device
         MidiEndpointNativeDataFormat NativeDataFormat{ get; };
@@ -72,15 +84,9 @@ namespace Windows.Devices.Midi2
         IVectorView<MidiGroupTerminalBlock> GroupTerminalBlocks{ get; };
         IVectorView<MidiFunctionBlock> FunctionBlocks{ get; };
 
-        // Endpoint metadata 
-        MidiEndpointInformation EndpointInformation{ get; };
-
         // If this is a diagnostic endpoint
         MidiEndpointDevicePurpose EndpointPurpose{ get; };
 
-
-        // property bag of all other properties
-        // TODO
 
 
         // The settings app allows the user to add some metadata, like a description
