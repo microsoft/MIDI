@@ -1,3 +1,41 @@
+/************************************************************************************
+Copyright 2023 Association of Musical Electronics Industry
+Copyright 2023 Microsoft
+Driver source code developed by AmeNote. Some components Copyright 2023 AmeNote Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+************************************************************************************/
+/*++
+
+Module Name:
+
+    Steam.cpp - Routines for creating and establishing ACX Circuit
+
+Abstract:
+
+   This file contains ACX support routines for Circuit.
+
+Environment:
+
+    Kernel-mode Driver Framework
+
+--*/
 // Copyright (c) Microsoft Corporation. All rights reserved.
 
 #include "Pch.h"
@@ -33,20 +71,36 @@ static ACX_PROPERTY_ITEM MidiStreamProperties[] =
         0,
         sizeof(KSMIDILOOPED_EVENT)
     },
+    {
+        &KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
+        KSPROPERTY_MIDI2_NATIVEDATAFORMAT,
+        ACX_PROPERTY_ITEM_FLAG_GET,
+        EvtMidi2NativeDataFormatCallback,
+        0,
+        0,
+        sizeof(GUID)
+    },
+    {
+        &KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
+        KSPROPERTY_MIDI2_GROUP_TERMINAL_BLOCKS,
+        ACX_PROPERTY_ITEM_FLAG_GET,
+        EvtMidi2GroupTerminalBlocksCallback,
+    },
 };
 
 static ULONG MidiStreamPropertiesCount = SIZEOF_ARRAY(MidiStreamProperties);
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 EvtCircuitCreateStream(
-    _In_    WDFDEVICE       Device,
-    _In_    ACXCIRCUIT      Circuit,
-    _In_    ACXPIN          Pin,
-    _In_    PACXSTREAM_INIT StreamInit,
-    _In_    ACXDATAFORMAT   StreamFormat,
-    _In_    const GUID    * SignalProcessingMode,
-    _In_    ACXOBJECTBAG    VarArguments
+    WDFDEVICE       Device,
+    ACXCIRCUIT      Circuit,
+    ACXPIN          Pin,
+    PACXSTREAM_INIT StreamInit,
+    ACXDATAFORMAT   StreamFormat,
+    const GUID    * SignalProcessingMode,
+    ACXOBJECTBAG    VarArguments
     )
 /*++
 
@@ -170,11 +224,12 @@ exit:
     return status;
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 VOID
 EvtMidiGetLoopedStreamingBufferCallback(
-    _In_    WDFOBJECT   Object,
-    _In_    WDFREQUEST  Request
+    WDFOBJECT   Object,
+    WDFREQUEST  Request
     )
 {
     NTSTATUS                    status = STATUS_NOT_SUPPORTED;
@@ -285,11 +340,12 @@ exit:
     WdfRequestCompleteWithInformation(Request, status, outDataCb);
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 VOID
 EvtMidiGetLoopedStreamingRegistersCallback(
-    _In_    WDFOBJECT   Object,
-    _In_    WDFREQUEST  Request
+    WDFOBJECT   Object,
+    WDFREQUEST  Request
     )
 {
     NTSTATUS                    status = STATUS_NOT_SUPPORTED;
@@ -384,11 +440,12 @@ exit:
     WdfRequestCompleteWithInformation(Request, status, outDataCb);
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 VOID
 EvtMidiSetLoopedStreamingNotificationEventCallback(
-    _In_    WDFOBJECT   Object,
-    _In_    WDFREQUEST  Request
+    WDFOBJECT   Object,
+    WDFREQUEST  Request
     )
 {
     NTSTATUS                    status = STATUS_NOT_SUPPORTED;
@@ -483,20 +540,115 @@ exit:
     WdfRequestCompleteWithInformation(Request, status, outDataCb);
 }
 
+_Use_decl_annotations_
+PAGED_CODE_SEG
+VOID
+EvtMidi2NativeDataFormatCallback(
+    WDFOBJECT   Object,
+    WDFREQUEST  Request
+    )
+{
+    NTSTATUS                    status = STATUS_NOT_SUPPORTED;
+    ACXSTREAM                   stream = (ACXSTREAM)Object;
+    ACX_REQUEST_PARAMETERS      params;
+    ULONG_PTR                   outDataCb = 0;
+
+    PAGED_CODE();
+
+    ACX_REQUEST_PARAMETERS_INIT(&params);
+    AcxRequestGetParameters(Request, &params);
+
+    WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxStreamGetCircuit(stream));
+    PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
+
+    if (pDevCtx->UsbMIDIStreamingAlt)
+    {
+        RtlCopyMemory(params.Parameters.Property.Value, &KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET, sizeof(GUID));
+    }
+    else
+    {
+        RtlCopyMemory(params.Parameters.Property.Value, &KSDATAFORMAT_SUBTYPE_MIDI, sizeof(GUID));
+    }
+
+    // return the amount of buffer actually used.
+    outDataCb = sizeof(GUID);
+    status = STATUS_SUCCESS;
+
+    WdfRequestCompleteWithInformation(Request, status, outDataCb);
+}
+
+_Use_decl_annotations_
+PAGED_CODE_SEG
+VOID
+EvtMidi2GroupTerminalBlocksCallback(
+    WDFOBJECT   /* Object */,
+    WDFREQUEST  Request
+    )
+{
+    NTSTATUS                    status = STATUS_NOT_SUPPORTED;
+    ACX_REQUEST_PARAMETERS      params;
+    ULONG_PTR                   outDataCb = 0;
+    ULONG                       minValueSize;
+
+    PAGED_CODE();
+
+    ACX_REQUEST_PARAMETERS_INIT(&params);
+    AcxRequestGetParameters(Request, &params);
+
+    // The size of the buffer provided by the caller
+    ULONG valueCb = params.Parameters.Property.ValueCb;
+
+    // TODO: set minValueSize to the required size of the group
+    // terminal block data.
+    minValueSize = MAX_PATH;
+
+    // The following is required because the buffer size
+    // is variable. If the size of the data buffer provided is 0, the
+    // required size is returned to the caller.
+    if (valueCb == 0)
+    {
+        outDataCb = minValueSize;
+        status = STATUS_BUFFER_OVERFLOW;
+        goto exit;
+    }
+    else if (valueCb < minValueSize)
+    {
+        // if a buffer was provided by the caller, but it is
+        // too small, fail.
+        outDataCb = 0;
+        status = STATUS_BUFFER_TOO_SMALL;
+        goto exit;
+    }
+
+    // TODO: copy the data to the output buffer, copying a 255 byte
+    // empty buffer as a placeholer.
+    BYTE data[MAX_PATH] {0};
+    RtlCopyMemory(params.Parameters.Property.Value, &data, minValueSize);
+
+    // return the amount of buffer actually used.
+    outDataCb = minValueSize;
+    status = STATUS_SUCCESS;
+
+exit:
+    WdfRequestCompleteWithInformation(Request, status, outDataCb);
+}
+
+_Use_decl_annotations_
 PAGED_CODE_SEG
 VOID
 EvtStreamDestroy(
-    _In_ WDFOBJECT Object
+    WDFOBJECT Object
     )
 {
     PAGED_CODE();
     UNREFERENCED_PARAMETER(Object);
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 VOID
 EvtStreamCleanup(
-    _In_ WDFOBJECT Object
+    WDFOBJECT Object
     )
 {
     PMIDI_STREAM_CONTEXT streamCtx = nullptr;
@@ -554,10 +706,11 @@ EvtStreamCleanup(
     }
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 EvtStreamPrepareHardware(
-    _In_ ACXSTREAM Stream
+    ACXSTREAM Stream
     )
 {
     PMIDI_STREAM_CONTEXT ctx;
@@ -570,10 +723,11 @@ EvtStreamPrepareHardware(
     return streamEngine->PrepareHardware();
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 EvtStreamReleaseHardware(
-    _In_ ACXSTREAM Stream
+    ACXSTREAM Stream
     )
 {
     PMIDI_STREAM_CONTEXT ctx;
@@ -586,10 +740,11 @@ EvtStreamReleaseHardware(
     return streamEngine->ReleaseHardware();
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 EvtStreamRun(
-    _In_ ACXSTREAM Stream
+    ACXSTREAM Stream
     )
 {
     PMIDI_STREAM_CONTEXT ctx;
@@ -603,10 +758,11 @@ EvtStreamRun(
 }
 
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 EvtStreamPause(
-    _In_ ACXSTREAM Stream
+    ACXSTREAM Stream
     )
 {
     PMIDI_STREAM_CONTEXT ctx;
@@ -623,10 +779,10 @@ _Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 AttachToCallerProcess(
-    _In_        WDFREQUEST        Request,
-    _Out_       KAPC_STATE      * ApcState,
-    _Out_       BOOLEAN         * Attached,
-    _Out_opt_   PEPROCESS       * Process
+    WDFREQUEST        Request,
+    KAPC_STATE      * ApcState,
+    BOOLEAN         * Attached,
+    PEPROCESS       * Process
     )
 {
     NTSTATUS    status              = STATUS_SUCCESS;
@@ -674,9 +830,9 @@ _Use_decl_annotations_
 PAGED_CODE_SEG
 VOID
 AttachToProcess(
-    _In_    PEPROCESS       Process,
-    _Out_   KAPC_STATE    * ApcState,
-    _Out_   BOOLEAN       * Attached
+    PEPROCESS       Process,
+    KAPC_STATE    * ApcState,
+    BOOLEAN       * Attached
     )
 {
     PAGED_CODE();
@@ -698,7 +854,7 @@ _Use_decl_annotations_
 PAGED_CODE_SEG
 VOID
 RestoreProcess(
-    _In_ KAPC_STATE * ApcState
+    KAPC_STATE * ApcState
     )
 {
     PAGED_CODE();

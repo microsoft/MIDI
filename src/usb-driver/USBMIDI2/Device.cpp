@@ -39,6 +39,7 @@ Environment:
 
 #include "Pch.h"
 #include "ump.h"
+//#include "midi_timestamp.h"
 
 #include "Trace.h"
 #include "Device.tmh"
@@ -51,7 +52,7 @@ _Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 CopyRegistrySettingsPath(
-    _In_ PUNICODE_STRING RegistryPath
+    PUNICODE_STRING RegistryPath
     )
 /*++
 
@@ -97,8 +98,8 @@ _Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 EvtBusDeviceAdd(
-    _In_    WDFDRIVER        Driver,
-    _Inout_ PWDFDEVICE_INIT  DeviceInit
+    WDFDRIVER        Driver,
+    PWDFDEVICE_INIT  DeviceInit
     )
 /*++
 Routine Description:
@@ -207,7 +208,7 @@ Return Value:
         memoryAttributes.ParentObject = device;
         status = WdfMemoryCreate(
             &memoryAttributes,
-            NonPagedPool,
+            NonPagedPoolNx,
             USBMIDI_POOLTAG,
             USBMIDI2DRIVER_RING_BUF_SIZE * sizeof(UINT32),
             &devCtx->ReadRingBuf.RingBufMemory,
@@ -264,9 +265,9 @@ _Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 EvtDevicePrepareHardware(
-    _In_ WDFDEVICE      Device,
-    _In_ WDFCMRESLIST   ResourceList,
-    _In_ WDFCMRESLIST   ResourceListTranslated
+    WDFDEVICE      Device,
+    WDFCMRESLIST   ResourceList,
+    WDFCMRESLIST   ResourceListTranslated
     )
 /*++
 
@@ -385,8 +386,8 @@ _Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 EvtDeviceReleaseHardware(
-    _In_ WDFDEVICE      Device,
-    _In_ WDFCMRESLIST   ResourceListTranslated
+    WDFDEVICE      Device,
+    WDFCMRESLIST   ResourceListTranslated
     )
 /*++
 
@@ -423,6 +424,7 @@ Return Value:
         goto exit;
     }
 
+#if 0 // As detached, do not remove
     // Remove the circuit
     status = AcxDeviceRemoveCircuit(Device, devCtx->Midi);
     if (!NT_SUCCESS(status))
@@ -431,6 +433,7 @@ Return Value:
         goto exit;
     }
     devCtx->Midi = nullptr;
+#endif
 
 exit:
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
@@ -442,8 +445,8 @@ _Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS 
 EvtDeviceD0Entry(
-    _In_  WDFDEVICE Device,
-    _In_  WDF_POWER_DEVICE_STATE PreviousState
+    WDFDEVICE Device,
+    WDF_POWER_DEVICE_STATE PreviousState
     )
 {
     NTSTATUS status;
@@ -458,11 +461,19 @@ EvtDeviceD0Entry(
     devCtx = GetDeviceContext(Device);
     ASSERT(devCtx != nullptr);
 
-    status = WdfIoTargetStart(WdfUsbTargetPipeGetIoTarget(devCtx->MidiInPipe));
-    if (!NT_SUCCESS(status))
+    if (devCtx->MidiInPipe)
     {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-            "%!FUNC! Could not start interrupt pipe failed 0x%x", status);
+        status = WdfIoTargetStart(WdfUsbTargetPipeGetIoTarget(devCtx->MidiInPipe));
+        if (!NT_SUCCESS(status))
+        {
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                "%!FUNC! Could not start interrupt pipe failed 0x%x", status);
+        }
+    }
+    else
+    {
+        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
+            "%!FUNC! Could not start interrupt pipe as no MidiInPipe");
     }
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
@@ -474,8 +485,8 @@ _Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS 
 EvtDeviceD0Exit(
-    _In_  WDFDEVICE Device,
-    _In_  WDF_POWER_DEVICE_STATE TargetState
+    WDFDEVICE Device,
+    WDF_POWER_DEVICE_STATE TargetState
     )
 {
     NTSTATUS        status = STATUS_SUCCESS;
@@ -524,10 +535,13 @@ EvtDeviceD0Exit(
         }
     }
 
-    WdfIoTargetStop(
-        WdfUsbTargetPipeGetIoTarget(devCtx->MidiInPipe),
-        WdfIoTargetCancelSentIo
-    );
+    if (devCtx->MidiInPipe)
+    {
+        WdfIoTargetStop(
+            WdfUsbTargetPipeGetIoTarget(devCtx->MidiInPipe),
+            WdfIoTargetCancelSentIo
+        );
+    }
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
@@ -538,7 +552,7 @@ _Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 SetPowerPolicy(
-    _In_ WDFDEVICE Device
+    WDFDEVICE Device
     )
 {
     NTSTATUS                status = STATUS_SUCCESS;
@@ -573,10 +587,11 @@ exit:
     return status;
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 VOID
 EvtDeviceContextCleanup(
-    _In_ WDFOBJECT      WdfDevice
+    WDFOBJECT      WdfDevice
    )
 /*++
 
@@ -610,17 +625,13 @@ Return Value:
     }
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
-
-    //
-    // Stop WPP Tracing
-    //
-    WPP_CLEANUP(WdfDriverWdmGetDriverObject((WDFDRIVER)WdfDevice));
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 USBMIDI2DriverSelectInterface(
-    _In_ WDFDEVICE    Device
+    WDFDEVICE    Device
 )
 /*++
 
@@ -747,7 +758,7 @@ Return Value:
     deviceConfigAttrib.ParentObject = pDeviceContext->UsbDevice;
     status = WdfMemoryCreate(
         &deviceConfigAttrib,
-        NonPagedPool,
+        NonPagedPoolNx,
         USBMIDI_POOLTAG,
         configurationDescriptorSize,
         &pDeviceContext->DeviceConfigDescriptorMemory,
@@ -952,8 +963,9 @@ Return Value:
     //
     numInterfaces = WdfUsbTargetDeviceGetNumInterfaces(pDeviceContext->UsbDevice);
     // Setup store for setting pairs for use later
-    if (numInterfaces >= 2)
+    if (numInterfaces)
     {
+        // We only need to hold one interface
         pSettingPairs = (PWDF_USB_INTERFACE_SETTING_PAIR)ExAllocatePool2(
             POOL_FLAG_PAGED,
             sizeof(WDF_USB_INTERFACE_SETTING_PAIR) * numInterfaces,
@@ -963,93 +975,109 @@ Return Value:
     // Confirm memory declared properly
     if (!pSettingPairs)
     {
+        status = STATUS_SEVERITY_ERROR;
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
             "Insufficient Resources\n");
         return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
-    // We expect at least two interfaces (and only currently support two)
-    // an Audio Control interface and the MIDI interface
-    if (numInterfaces < 2)
-    {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-            "Number of interfaces, %d, less than expected.\n", numInterfaces);
-        status = STATUS_SEVERITY_ERROR;
-        goto SelectExit;
-    }
+    // NOTE: Although the specification states that MIDI interface needs
+    // an accompany Audio Control interface the Audio Control is not
+    // used and many manufacturers do not include it or if combined
+    // with audio interface, only have control with audio interface.
+    // Therefore we will skip audio control interface.
 
-    // Load and configure pipes for first interface which should be the control interface
-    pDeviceContext->UsbControlInterface = WdfUsbTargetDeviceGetInterface(
-        pDeviceContext->UsbDevice,
-        0
-    );
-
-    // Check that is control interface
-    WdfUsbInterfaceGetDescriptor(
-        pDeviceContext->UsbControlInterface,
-        0,
-        &interfaceDescriptor
-    );
-    if (interfaceDescriptor.bInterfaceClass != 1 /*AUDIO*/
-        || interfaceDescriptor.bInterfaceSubClass != 1 /*AUDIO_CONTROL*/)
+    // Search for MIDI Interface
+    pDeviceContext->UsbMIDIStreamingInterface = NULL;
+    for (UINT8 interfaceCount = 0; interfaceCount < numInterfaces; interfaceCount++)
     {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Device detected does not have AUDIO_CONTROL interface as expected\n");
-        status = STATUS_SEVERITY_ERROR;
-        goto SelectExit;
-    }
+        // Get the Interface
+        WDFUSBINTERFACE usbInterface = WdfUsbTargetDeviceGetInterface(
+            pDeviceContext->UsbDevice,
+            interfaceCount
+        );
 
-    // Setup setting pairs for control interface
-    pSettingPairs[0].UsbInterface = pDeviceContext->UsbControlInterface;
-    pSettingPairs[0].SettingIndex = 0;
-
-    // Check that next interface is MIDI Streaming Interface
-    pDeviceContext->UsbMIDIStreamingInterface = WdfUsbTargetDeviceGetInterface(
-        pDeviceContext->UsbDevice,
-        1
-    );
-    // First look if an alternate interface available
-    WdfUsbInterfaceGetDescriptor(
-        pDeviceContext->UsbMIDIStreamingInterface,
-        1,  //alternate interface 1 - see USB Device Class Definition for MIDI Devices, Version 2.0 - Section 3.1
-        &interfaceDescriptor
-    );
-    // If alternate interface 1 does not exist, then the length will be null
-    if (interfaceDescriptor.bLength)
-    {
-        if (interfaceDescriptor.bInterfaceClass != 1 /*AUDIO*/
-            || interfaceDescriptor.bInterfaceSubClass != 3 /*MIDI STREAMING*/
-            || interfaceDescriptor.bInterfaceProtocol != 0) /*UNUSED*/
-        {
-            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                "Device Class/SubClass/Protocol not 1/3/0 as expected.\n");
-            status = STATUS_SEVERITY_ERROR;
-            goto SelectExit;
-        }
-        pDeviceContext->UsbMIDIStreamingAlt = 1;    // store that alternate interface
-    }
-    else
-    {
-        // As no additional alternate interface, work to select default 0
+        // See if there is an alternate interface
         WdfUsbInterfaceGetDescriptor(
-            pDeviceContext->UsbMIDIStreamingInterface,
-            0, //alternate interface 0, default - see USB Device Class Definition for MIDI Devices
+            usbInterface,
+            1,  // alternate interface
             &interfaceDescriptor
         );
-        if (!interfaceDescriptor.bLength /*error fetching descriptor*/
-            || interfaceDescriptor.bInterfaceClass != 1 /*AUDIO*/
-            || interfaceDescriptor.bInterfaceSubClass != 3 /*MIDI STREAMING*/
-            || interfaceDescriptor.bInterfaceProtocol != 0) /*UNUSED*/
+        if (interfaceDescriptor.bLength)
         {
-            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                "Device Class/SubClass/Protocol not 1/3/0 as expected.\n");
-            status = STATUS_SEVERITY_ERROR;
-            goto SelectExit;
+            if (interfaceDescriptor.bInterfaceClass == 1 /*AUDIO*/
+                && interfaceDescriptor.bInterfaceSubClass == 3 /*MIDI STREAMING*/
+                )
+            {
+                pDeviceContext->UsbMIDIStreamingAlt = 1;    // alternate interface
+            }
+            else
+            {
+                if (interfaceDescriptor.bInterfaceClass == 1 /*AUDIO*/
+                    && interfaceDescriptor.bInterfaceSubClass == 1 /*AUDIO CONTROL*/)
+                {
+                    pDeviceContext->UsbControlInterface = usbInterface;
+                    pSettingPairs[interfaceCount].UsbInterface = pDeviceContext->UsbControlInterface;
+                    pSettingPairs[interfaceCount].SettingIndex = 1;
+                }
+                else
+                {
+                    // Unknown interface so error
+                    TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Device detected has an unknown interface.\n");
+                    status = STATUS_SEVERITY_ERROR;
+                    goto SelectExit;
+                }
+                continue; // Not MIDI so continue to next interface
+            }
         }
-        pDeviceContext->UsbMIDIStreamingAlt = 0;    // store that original interface
+        else
+        {
+            WdfUsbInterfaceGetDescriptor(
+                usbInterface,
+                0,  // MIDI 1.0 Interface?
+                &interfaceDescriptor
+            );
+            if (interfaceDescriptor.bLength && interfaceDescriptor.bInterfaceClass == 1 /*AUDIO*/
+                && interfaceDescriptor.bInterfaceSubClass == 3 /*MIDI STREAMING*/
+                )
+            {
+                pDeviceContext->UsbMIDIStreamingAlt = 0;    // MIDI 1.0 Interface
+            }
+            else
+            {
+                if (interfaceDescriptor.bLength && interfaceDescriptor.bInterfaceClass == 1 /*AUDIO*/
+                    && interfaceDescriptor.bInterfaceSubClass == 1 /*AUDIO CONTROL*/)
+                {
+                    pDeviceContext->UsbControlInterface = usbInterface;
+                    pSettingPairs[interfaceCount].UsbInterface = pDeviceContext->UsbControlInterface;
+                    pSettingPairs[interfaceCount].SettingIndex = 0;
+                }
+                else
+                {
+                    // Unknown interface so error
+                    TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Device detected has an unknown interface.\n");
+                    status = STATUS_SEVERITY_ERROR;
+                    goto SelectExit;
+                }
+                continue;   // Not MIDI so continue to next interface
+            }
+        }
+
+        // If here, then is a MIDI interface
+        pDeviceContext->UsbMIDIStreamingInterface = usbInterface;
+
+        // Setup settings pairs for MIDI streaming interface
+        pSettingPairs[interfaceCount].UsbInterface = pDeviceContext->UsbMIDIStreamingInterface;
+        pSettingPairs[interfaceCount].SettingIndex = pDeviceContext->UsbMIDIStreamingAlt;
     }
-    // Setup settings pairs for MIDI streaming interface
-    pSettingPairs[1].UsbInterface = pDeviceContext->UsbMIDIStreamingInterface;
-    pSettingPairs[1].SettingIndex = pDeviceContext->UsbMIDIStreamingAlt;
+
+    // Did we find a USB MIDI Interface?
+    if (!pDeviceContext->UsbMIDIStreamingInterface)
+    {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+            "No USB MIDI Interface Found.\n");
+        return(STATUS_INSUFFICIENT_RESOURCES);
+    }
 
     // Prepare to select interface
     WDF_USB_DEVICE_SELECT_CONFIG_PARAMS_INIT_MULTIPLE_INTERFACES(
@@ -1082,10 +1110,11 @@ SelectExit:
     return status;
 }
 
+_Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
 USBMIDI2DriverEnumeratePipes(
-    _In_ WDFDEVICE    Device
+    WDFDEVICE    Device
 )
 /*++
 
@@ -1195,12 +1224,13 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
+_Use_decl_annotations_
 NONPAGED_CODE_SEG
 VOID USBMIDI2DriverEvtReadComplete(
-    _In_    WDFUSBPIPE Pipe,
-    _In_    WDFMEMORY  Buffer,
-    _In_    size_t     NumBytesTransferred,
-    _In_    WDFCONTEXT Context
+    WDFUSBPIPE Pipe,
+    WDFMEMORY  Buffer,
+    size_t     NumBytesTransferred,
+    WDFCONTEXT Context
 )
 /*++
 Routine Description:
@@ -1259,11 +1289,11 @@ Return Value:
             // making sure that overall size even on 32 bit words.
             status = WdfMemoryCreate(
                 NULL,       // attributes
-                NonPagedPool,
+                NonPagedPoolNx,
                 NULL,       // Pool Tag
                 workingBufferSize,
                 &workingBuffer,
-                &(PVOID)pWorkingBuffer
+                (PVOID *)&pWorkingBuffer
             );
             if (!NT_SUCCESS(status))
             {
@@ -1277,7 +1307,7 @@ Return Value:
             UINT16 numIndex = 0;
 
             // Process received data as UINT32 Packets
-            for (int byteCount = 0; byteCount < NumBytesTransferred; byteCount += 4)
+            for (size_t byteCount = 0; byteCount < NumBytesTransferred; byteCount += 4)
             {
                 // Get current packet buffer
                 PUINT8 pBuffer = &pReceivedBuffer[byteCount];
@@ -1486,7 +1516,7 @@ Return Value:
 
                 // write to packets
                 PUINT32 pkts = (UINT32*)pWorkingBuffer;
-                for (int pktCount = 0; pktCount < umpPacket.wordCount; pktCount++)
+                for (UINT8 pktCount = 0; pktCount < umpPacket.wordCount; pktCount++)
                 {
                     pkts[numIndex++] = RtlUlongByteSwap(umpPacket.umpData.umpWords[pktCount]);
                 }
@@ -1495,8 +1525,6 @@ Return Value:
             // Submit any data written
             if (numIndex)
             {
-//                if (!pDeviceContext->pMidiStreamEngine
-//                    || !pDeviceContext->pMidiStreamEngine->FillReadStream(
                 if (!g_MidiInStreamEngine
                     || !g_MidiInStreamEngine->FillReadStream(
                     (PUINT32)pWorkingBuffer,
@@ -1515,7 +1543,7 @@ Return Value:
             // Create working buffer to byte exchange into
             status = WdfMemoryCreate(
                 NULL,       // attributes
-                NonPagedPool,
+                NonPagedPoolNx,
                 NULL,       // Pool Tag
                 NumBytesTransferred,
                 &workingBuffer,
@@ -1531,14 +1559,12 @@ Return Value:
             PUINT32 pReadBuffer = (PUINT32)pReceivedBuffer;
             
             // Swap bytes based on UINT32
-            for (int count = 0; count < (NumBytesTransferred / sizeof(UINT32)); count++)
+            for (size_t count = 0; count < (NumBytesTransferred / sizeof(UINT32)); count++)
             {
-                pWriteBuffer[count] = RtlUlongByteSwap(pReadBuffer[count]);
+                pWriteBuffer[count] = pReadBuffer[count];   // USB is Little Endian
             }
 
             // Send Memory to Read Queue
-//            if (!pDeviceContext->pMidiStreamEngine
-//                || !pDeviceContext->pMidiStreamEngine->FillReadStream(
             if (!g_MidiInStreamEngine
                 || !g_MidiInStreamEngine->FillReadStream(
                 (PUINT32)pWriteBuffer,
@@ -1567,6 +1593,7 @@ ReadCompleteExit:
     return;
 }
 
+_Use_decl_annotations_
 NONPAGED_CODE_SEG
 BOOLEAN USBMIDI2DriverEvtReadFailed(
     WDFUSBPIPE      Pipe,
@@ -1600,11 +1627,12 @@ Return Value:
     return TRUE;
 }
 
+_Use_decl_annotations_
 NONPAGED_CODE_SEG
 BOOLEAN USBMIDI2DriverFillReadQueue(
-    _In_    PUINT32             pBuffer,
-    _In_    size_t              bufferSize,
-    _In_    PDEVICE_CONTEXT     pDeviceContext
+    PUINT32             pBuffer,
+    size_t              bufferSize,
+    PDEVICE_CONTEXT     pDeviceContext
 )
 /*++
 Routine Description:
@@ -1681,12 +1709,13 @@ Return Value:
     return true;
 }
 
+_Use_decl_annotations_
 NONPAGED_CODE_SEG
 VOID
 USBMIDI2DriverEvtIoRead(
-    _In_ WDFQUEUE         Queue,
-    _In_ WDFREQUEST       Request,
-    _In_ size_t           Length
+    WDFQUEUE         Queue,
+    WDFREQUEST       Request,
+    size_t           Length
 )
 /*++
 
@@ -1765,12 +1794,13 @@ IoEvtReadExit:
     return;
 }
 
+_Use_decl_annotations_
 NONPAGED_CODE_SEG
 VOID
 USBMIDI2DriverIoWrite(
-    _In_ WDFDEVICE  Device,
-    _In_ PVOID      BufferStart,
-    _In_ size_t     numBytes
+    WDFDEVICE  Device,
+    PVOID      BufferStart,
+    size_t     numBytes
 )
 /*++
 
@@ -1805,6 +1835,13 @@ Return Value:Amy
     pDeviceContext = GetDeviceContext(Device);
 
     pipe = pDeviceContext->MidiOutPipe;
+    if (!pipe)
+    {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+            "%!FUNC! cannot execute without valid MidiOutPipe.\n");
+        status = STATUS_INVALID_PARAMETER;
+        goto DriverIoWriteExit;
+    }
 
     // 
     // General Error Checking
@@ -2060,7 +2097,7 @@ Return Value:Amy
                     // Create Memory Object
                     status = WdfMemoryCreate(
                         &writeMemoryAttributes,
-                        NonPagedPool,
+                        NonPagedPoolNx,
                         USBMIDI_POOLTAG,
                         pDeviceContext->MidiOutMaxSize,
                         &writeMemory,
@@ -2165,7 +2202,7 @@ Return Value:Amy
             // Create Memory Object
             status = WdfMemoryCreate(
                 &writeMemoryAttributes,
-                NonPagedPool,
+                NonPagedPoolNx,
                 USBMIDI_POOLTAG,
                 pDeviceContext->MidiOutMaxSize,
                 &writeMemory,
@@ -2183,7 +2220,7 @@ Return Value:Amy
             PUINT32 pReadMem = (PUINT32)&pBuffer[transferPos];
             for (int count = 0; count < (thisTransferSize / sizeof(UINT32)); count++)
             {
-                pWriteMem[count] = RtlUlongByteSwap(pReadMem[count]);
+                pWriteMem[count] = pReadMem[count];     // USB is Little Endian format
             }
 
             // Transfer to USB
@@ -2208,33 +2245,32 @@ DriverIoWriteExit:
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 }
 
+_Use_decl_annotations_
 NONPAGED_CODE_SEG
 BOOLEAN USBMIDI2DriverSendToUSB(
-    _In_ WDFREQUEST         usbRequest,
-    _In_ WDFMEMORY          reqMemory,
-    _In_ WDFUSBPIPE         pipe,
-    _In_ size_t             Length,
-    _In_ PDEVICE_CONTEXT    pDeviceContext,
-    _In_ BOOLEAN            deleteRequest
+    WDFREQUEST         usbRequest,
+    WDFMEMORY          reqMemory,
+    WDFUSBPIPE         pipe,
+    size_t             Length,
+    PDEVICE_CONTEXT    pDeviceContext,
+    BOOLEAN            deleteRequest
 )
 {
     NTSTATUS        status;
     pDeviceContext;
+    WDFMEMORY_OFFSET offset;
+
+    // define the offset
+    offset.BufferLength = Length;
+    offset.BufferOffset = 0;
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
-
-    // Pad out unusded data
-    PUCHAR pBuffer = (PUCHAR)WdfMemoryGetBuffer(reqMemory, NULL);
-    while (Length < (size_t)pDeviceContext->MidiOutMaxSize)
-    {
-        pBuffer[Length++] = NULL;
-    }
 
     // Send to USB Pipe
     status = WdfUsbTargetPipeFormatRequestForWrite(pipe,
         usbRequest,
         reqMemory,
-        NULL); // Offset
+        &offset); // Offset
     if (!NT_SUCCESS(status)) {
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
             "WdfUsbTargetPipeFormatRequestForWrite failed 0x%x\n", status);
@@ -2279,13 +2315,14 @@ SendToUSBExit:
     return true;
 }
 
+_Use_decl_annotations_
 NONPAGED_CODE_SEG
 VOID
 USBMIDI2DriverEvtRequestWriteCompletionRoutineDelete(
-    _In_ WDFREQUEST                  Request,
-    _In_ WDFIOTARGET                 Target,
-    _In_ PWDF_REQUEST_COMPLETION_PARAMS CompletionParams,
-    _In_ WDFCONTEXT                  Context
+    WDFREQUEST                  Request,
+    WDFIOTARGET                 Target,
+    PWDF_REQUEST_COMPLETION_PARAMS CompletionParams,
+    WDFCONTEXT                  Context
 )
 /*++
 
@@ -2344,13 +2381,14 @@ Return Value:
     return;
 }
 
+_Use_decl_annotations_
 NONPAGED_CODE_SEG
 VOID
 USBMIDI2DriverEvtRequestWriteCompletionRoutine(
-    _In_ WDFREQUEST                  Request,
-    _In_ WDFIOTARGET                 Target,
-    _In_ PWDF_REQUEST_COMPLETION_PARAMS CompletionParams,
-    _In_ WDFCONTEXT                  Context
+    WDFREQUEST                  Request,
+    WDFIOTARGET                 Target,
+    PWDF_REQUEST_COMPLETION_PARAMS CompletionParams,
+    WDFCONTEXT                  Context
 )
 /*++
 
