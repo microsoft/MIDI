@@ -49,12 +49,6 @@ Windows.Devices.Midi2.MidiChannelEndpointListener | 0 | 0 | 0
 Windows.Devices.Midi2.MidiGroupEndpointListener | 0 | 0 | 0
 Windows.Devices.Midi2.MidiMessageTypeEndpointListener | 0 | 0 | 0
 
-# Infrastructure Message Processing Plugins
-
-Windows.Devices.Midi2.MidiEndpointConfigurator | 0 | 0 | 0
-Windows.Devices.Midi2.MidiFunctionBlockEndpointListener | 0 | 0 | 0
-Windows.Devices.Midi2.MidiEndpointMetadataEndpointListener | 0 | 0 | 0
-
 # Virtual Device Message Processing Plugins
 
 Windows.Devices.Midi2.MidiVirtualDeviceResponder | 0 | 0 | 0

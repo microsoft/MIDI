@@ -119,21 +119,6 @@
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiEndpointConfigurator"
-             threading="Both"
-             trustLevel="Base"
-             />
-          <class
-             activatableClassId="Windows.Devices.Midi2.MidiFunctionBlockEndpointListener"
-             threading="Both"
-             trustLevel="Base"
-             />
-          <class
-             activatableClassId="Windows.Devices.Midi2.MidiEndpointMetadataEndpointListener"
-             threading="Both"
-             trustLevel="Base"
-             />
-          <class
              activatableClassId="Windows.Devices.Midi2.MidiVirtualDeviceResponder"
              threading="Both"
              trustLevel="Base"
