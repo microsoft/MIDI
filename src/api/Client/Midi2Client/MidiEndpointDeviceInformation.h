@@ -17,10 +17,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static midi2::MidiEndpointDeviceInformation CreateFromId(_In_ winrt::hstring const& id) noexcept;
 
-        static winrt::hstring UniversalMidiPacketBidirectionalInterfaceClassId() noexcept { return L"" /* STRING_DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI */; }
+        //static winrt::hstring UniversalMidiPacketBidirectionalInterfaceClassId() noexcept { return L"" /* STRING_DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI */; }
 
-        static winrt::hstring DiagnosticsLoopbackEndpointAId() noexcept { return LOOPBACK_BIDI_ID_A; }
-        static winrt::hstring DiagnosticsLoopbackEndpointBId() noexcept { return LOOPBACK_BIDI_ID_B; }
+        static winrt::hstring DiagnosticsLoopbackAEndpointId() noexcept { return LOOPBACK_BIDI_ID_A; }
+        static winrt::hstring DiagnosticsLoopbackBEndpointId() noexcept { return LOOPBACK_BIDI_ID_B; }
 
 
         static collections::IVectorView<winrt::hstring> GetAdditionalPropertiesList() noexcept;

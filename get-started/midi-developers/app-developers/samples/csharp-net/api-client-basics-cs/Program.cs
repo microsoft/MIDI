@@ -9,114 +9,71 @@ Console.WriteLine("Creating session");
 
 using (var session = MidiSession.CreateSession("Sample Session"))
 {
-    Console.WriteLine("Creating Device Selector.");
+    var endpointAId = MidiEndpointDeviceInformation.DiagnosticsLoopbackAEndpointId;
+    var endpointBId = MidiEndpointDeviceInformation.DiagnosticsLoopbackBEndpointId;
 
-    var deviceSelector = MidiEndpointConnection.GetDeviceSelector();
+    Console.WriteLine("Connecting to Sender UMP Endpoint: " + endpointAId);
+    Console.WriteLine("Connecting to Receiver UMP Endpoint: " + endpointBId);
 
-    Console.WriteLine("Enumerating through Windows.Devices.Enumeration.");
 
-    var endpointDevices = await DeviceInformation.FindAllAsync(deviceSelector);
-
-    // this currently requires you have a USB MIDI 1.0 device. If you have nothing connected, just remove this check for now
-    // That will change once MIDI 2.0 device selectors have been created
-    if (endpointDevices.Count > 0)
+    using (var sendEndpoint = session.CreateEndpointConnection(endpointAId))
+    using (var receiveEndpoint = session.CreateEndpointConnection(endpointBId))
     {
-        Console.WriteLine("Devices found:");
-
-        DeviceInformation? selectedOutEndpointInformation = null;
-        DeviceInformation? selectedInEndpointInformation = null;
-
-        foreach (var device in endpointDevices)
+        // c# allows local functions. This is nicer than anonymous because we can unregister it by name
+        void MessageReceivedHandler(object sender, MidiMessageReceivedEventArgs args)
         {
-            Console.WriteLine("  " + device.Name);
-            Console.WriteLine("    " + device.Id);
+            var ump = args.GetMessagePacket();
+
             Console.WriteLine();
+            Console.WriteLine("Received UMP");
+            Console.WriteLine("- Current Timestamp: " + MidiClock.GetMidiTimestamp());
+            Console.WriteLine("- UMP Timestamp:     " + ump.Timestamp);
+            Console.WriteLine("- UMP Msg Type:      " + ump.MessageType);
+            Console.WriteLine("- UMP Packet Type:   " + ump.PacketType);
+            Console.WriteLine("- Message:           " + MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(args.PeekFirstWord()));
 
-            // we'll have a more deterministic way to do this in the future
-            if (device.Id.Contains("LOOPBACK_BIDI_A"))
+            if (ump is MidiMessage32)
             {
-                selectedOutEndpointInformation = device;
+                var ump32 = ump as MidiMessage32;
+
+                if (ump32 != null)
+                    Console.WriteLine("- Word 0:            0x{0:X}", ump32.Word0);
             }
-            else if (device.Id.Contains("LOOPBACK_BIDI_B"))
-            {
-                selectedInEndpointInformation = device;
-            }
-        }
+        };
 
-        if (selectedOutEndpointInformation == null || selectedInEndpointInformation == null)
-        {
-            Console.WriteLine("Loopback endpoints were not found. This is not normal. Exiting");
-            return;
-        }
+        receiveEndpoint.MessageReceived += MessageReceivedHandler;
 
-        Console.WriteLine("Connecting to Sender UMP Endpoint: " + selectedOutEndpointInformation.Name);
-        Console.WriteLine("Connecting to Receiver UMP Endpoint: " + selectedInEndpointInformation.Name);
+        Console.WriteLine("Opening endpoint connection (this sends out the required discovery messages which will loop back)..");
+
+        // once you have wired up all your event handlers, added any filters/listeners, etc.
+        // You can open the connection. Doing this will query the cache for the in-protocol 
+        // endpoint information and function blocks. If not there, it will send out the requests
+        // which will come back asynchronously with responses.
+        receiveEndpoint.Open();
+        sendEndpoint.Open();
 
 
-        using (var sendEndpoint = session.CreateEndpointConnection(selectedOutEndpointInformation.Id))
-        using (var receiveEndpoint = session.CreateEndpointConnection(selectedInEndpointInformation.Id))
-        {
-            // c# allows local functions. This is nicer than anonymous because we can unregister it by name
-            void MessageReceivedHandler(object sender, MidiMessageReceivedEventArgs args)
-            {
-                var ump = args.GetMessagePacket();
+        Console.WriteLine("Creating MIDI 1.0 Channel Voice 32-bit UMP...");
 
-                Console.WriteLine();
-                Console.WriteLine("Received UMP");
-                Console.WriteLine("- Current Timestamp: " + MidiClock.GetMidiTimestamp());
-                Console.WriteLine("- UMP Timestamp:     " + ump.Timestamp);
-                Console.WriteLine("- UMP Msg Type:      " + ump.MessageType);
-                Console.WriteLine("- UMP Packet Type:   " + ump.PacketType);
-                Console.WriteLine("- Message:           " + MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(args.PeekFirstWord()));
+        var ump32 = MidiMessageBuilder.BuildMidi1ChannelVoiceMessage(
+            MidiClock.GetMidiTimestamp(), // use current timestamp
+            5,      // group 5
+            Midi1ChannelVoiceMessageStatus.NoteOn,  // 9
+            3,      // channel 3
+            120,    // note 120 - hex 0x78
+            100);   // velocity 100 hex 0x64
 
-                if (ump is MidiMessage32)
-                {
-                    var ump32 = ump as MidiMessage32;
+        sendEndpoint.SendMessagePacket((IMidiUniversalPacket)ump32);  // could also use the SendWords methods, etc.
 
-                    if (ump32 != null)
-                        Console.WriteLine("- Word 0:            0x{0:X}", ump32.Word0);
-                }
-            };
+        Console.WriteLine(" ** Wait for the message to arrive, and then press enter to cleanup. ** ");
+        Console.ReadLine();
 
-            receiveEndpoint.MessageReceived += MessageReceivedHandler;
+        // you should unregister the event handler as well
+        receiveEndpoint.MessageReceived -= MessageReceivedHandler;
 
-            Console.WriteLine("Opening endpoint connection (this sends out the required discovery messages which will loop back)..");
-
-            // once you have wired up all your event handlers, added any filters/listeners, etc.
-            // You can open the connection. Doing this will query the cache for the in-protocol 
-            // endpoint information and function blocks. If not there, it will send out the requests
-            // which will come back asynchronously with responses.
-            receiveEndpoint.Open();
-            sendEndpoint.Open();
-
-
-            Console.WriteLine("Creating MIDI 1.0 Channel Voice 32-bit UMP...");
-
-            var ump32 = MidiMessageBuilder.BuildMidi1ChannelVoiceMessage(
-                MidiClock.GetMidiTimestamp(), // use current timestamp
-                5,      // group 5
-                Midi1ChannelVoiceMessageStatus.NoteOn,  // 9
-                3,      // channel 3
-                120,    // note 120 - hex 0x78
-                100);   // velocity 100 hex 0x64
-
-            sendEndpoint.SendMessagePacket((IMidiUniversalPacket)ump32);  // could also use the SendWords methods, etc.
-
-            Console.WriteLine(" ** Wait for the message to arrive, and then press enter to cleanup. ** ");
-            Console.ReadLine();
-
-            // you should unregister the event handler as well
-            receiveEndpoint.MessageReceived -= MessageReceivedHandler;
-
-            // not strictly necessary
-            session.DisconnectEndpointConnection(sendEndpoint.ConnectionId);
-            session.DisconnectEndpointConnection(receiveEndpoint.ConnectionId);
-        }
-
-    }
-    else
-    {
-        Console.WriteLine("No MIDI Endpoints were found.");
+        // not strictly necessary
+        session.DisconnectEndpointConnection(sendEndpoint.ConnectionId);
+        session.DisconnectEndpointConnection(receiveEndpoint.ConnectionId);
     }
 
 }

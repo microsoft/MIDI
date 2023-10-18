@@ -14,6 +14,7 @@ Windows.Devices.Midi2.MidiVirtualDeviceManager | 0 | 0 | 0
 # Enumeration
 
 Windows.Devices.Midi2.MidiEndpointDeviceInformation | 0 | 0 | 0
+Windows.Devices.Midi2.IMidiEndpointDeviceInformationStatics | 0 | 0 | 0
 Windows.Devices.Midi2.MidiEndpointDeviceWatcher | 0 | 0 | 0
 
 # Messages
@@ -60,6 +61,7 @@ Windows.Devices.Midi2.MidiMessageReceivedEventArgs | 0 | 0 | 0
 # Endpoint Connections
 
 Windows.Devices.Midi2.MidiEndpointConnection | 0 | 0 | 0
+Windows.Devices.Midi2.IMidiEndpointConnectionStatics | 0 | 0 | 0
 
 # Endpoint Open Options
 

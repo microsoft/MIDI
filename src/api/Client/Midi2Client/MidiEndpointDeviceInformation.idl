@@ -28,10 +28,10 @@ namespace Windows.Devices.Midi2
 
 //        static MidiEndpointDeviceWatcher CreateWatcher();
 
-        static String UniversalMidiPacketBidirectionalInterfaceClassId{ get; };
+        //static String UniversalMidiPacketBidirectionalInterfaceClassId{ get; };
 
-        static String DiagnosticsLoopbackEndpointAId{ get; };
-        static String DiagnosticsLoopbackEndpointBId{ get; };
+        static String DiagnosticsLoopbackAEndpointId{ get; };
+        static String DiagnosticsLoopbackBEndpointId{ get; };
 
 
         static IVectorView<String> GetAdditionalPropertiesList();
