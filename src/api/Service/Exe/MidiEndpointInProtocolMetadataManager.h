@@ -3,12 +3,6 @@
 #include <map>
 
 
-// TODO: Need to define a callback or event to tell the client that some data was updated
-// Although initial protocol negotiation happens at the start, it can be re-requested at
-// any time. Additionally, function block and endpoint info notifications can happen at 
-// any time. Name updates should 
-
-
 // todo: need to bring over all the relevant message types and make them work here. Same 
 // with builders for those types. Have a shared def file
 // todo: move this enum out to a shared file
@@ -24,42 +18,48 @@ enum MidiFunctionBlockDiscoveryFilterFlags
 // intent is to instantiate one of these for each connected unique device endpoint.
 //
 
-class CMidiEndpointMetadataManager : public Microsoft::WRL::RuntimeClass<
+class CMidiEndpointInProtocolMetadataManager : public Microsoft::WRL::RuntimeClass<
     Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
     IMidiCallback>
 {
 public:
 
-    CMidiEndpointMetadataManager() {}
-    ~CMidiEndpointMetadataManager() {}
+    CMidiEndpointInProtocolMetadataManager() {}
+    ~CMidiEndpointInProtocolMetadataManager() {}
 
     HRESULT Initialize(
         _In_ std::shared_ptr<IMidiBiDi>& endpointBiDi, 
         _In_ PCWSTR endpointDeviceId,
+        _In_ uint8_t preferredMidiProtocolVersion,
         _In_ bool handleProtocolNegotiation,
         _In_ bool handleFunctionBlocks);
 
-    // discovery gets all the endpoint information and also requests the function blocks
-    HRESULT BeginDiscovery();
+    // performs all the protocol negotiation required and then
+    // requests endpoint info and function blocks. Updates the
+    // SWD with the metadata from the discovery. Returns S_OK
+    // when all the initial discovery is complete
+    HRESULT ConfigureMidi2Device(
+        _In_ uint16_t timeoutMsPerAttempt, 
+        _In_ uint8_t retryCount);
 
-    // protocol negotiation happens when the preferred MIDI protocol differs from what
-    // the connected UMP endpoint is reporting
-    HRESULT BeginNegotiation(_In_ uint8_t preferredMidiProtocolVersion);
+
+    // TODO: need to have something that will listen for additional
+    // function blocks or endpoint info notifications and update
+    // the SWD. This can come at any-time, so this would live as
+    // long as the endpoint does
+
 
     HRESULT Cleanup();
-
- //   std::string GetAllMetadataJson();
 
 
     STDMETHOD(Callback)(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
 
-    // TODO: Callback or other approach for endpoint name update so we can update PnP
 
 private:
     // All metadata is cached as strings (for names/ids) or JSON (for structures)
 
     // map is property key and then json data
-    std::map<std::string, std::string> m_endpointMetadata;
+    //std::map<std::string, std::string> m_endpointMetadata;
 
 
 };

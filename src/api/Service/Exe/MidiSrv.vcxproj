@@ -262,7 +262,7 @@
     <ClCompile Include="MidiClientPipe.cpp" />
     <ClCompile Include="MidiDeviceManager.cpp" />
     <ClCompile Include="MidiDevicePipe.cpp" />
-    <ClCompile Include="MidiEndpointMetadataManager.cpp" />
+    <ClCompile Include="MidiEndpointInProtocolMetadataManager.cpp" />
     <ClCompile Include="MidiPerformanceManager.cpp" />
     <ClCompile Include="MidiProcessManager.cpp" />
     <ClCompile Include="MidiService.cpp" />
@@ -279,7 +279,7 @@
     <ClInclude Include="..\Inc\MidiProcessManager.h" />
     <ClInclude Include="..\Inc\MidiSrv.h" />
     <ClInclude Include="..\Inc\MidiTelemetry.h" />
-    <ClInclude Include="MidiEndpointMetadataManager.h" />
+    <ClInclude Include="MidiEndpointInProtocolMetadataManager.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
