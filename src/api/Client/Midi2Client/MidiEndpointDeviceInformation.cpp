@@ -122,63 +122,149 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
+
     _Use_decl_annotations_
-    void MidiEndpointDeviceInformation::InternalUpdateFromDeviceInformation(
-        Windows::Devices::Enumeration::DeviceInformation const& info) noexcept
+    winrt::hstring MidiEndpointDeviceInformation::GetStringProperty(
+        winrt::hstring key,
+        winrt::hstring defaultValue) const noexcept
     {
-        if (info != nullptr)
+        if (m_deviceInformation == nullptr) return defaultValue;
+
+        try
         {
-            //auto nativeDataFormat = info.Properties().Lookup(STRING_PKEY_MIDI_NativeDataFormat);
-
-            //auto transportMnemonic = info.Properties().Lookup(STRING_PKEY_MIDI_TransportMnemonic);
-            //auto isLoopback = info.Properties().Lookup(STRING_PKEY_MIDI_UmpLoopback);
-            //auto isPing = info.Properties().Lookup(STRING_PKEY_MIDI_UmpPing);
-
-            //auto uniqueIdentifier = info.Properties().Lookup(STRING_PKEY_MIDI_UniqueIdentifier);
-
-            //auto supportsMidi2Protocol = info.Properties().Lookup(STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol);
-            //auto supportsMidi1Protocol = info.Properties().Lookup(STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol);
-            //auto supportsReceivingJRTimestamps = info.Properties().Lookup(STRING_PKEY_MIDI_EndpointSupportsReceivingJRTimestamps);
-            //auto supportsSendingJRTimestamps = info.Properties().Lookup(STRING_PKEY_MIDI_EndpointSupportsSendingJRTimestamps);
-            //auto umpVersionMajor = info.Properties().Lookup(STRING_PKEY_MIDI_EndpointUmpVersionMajor);
-            //auto umpVersionMinor = info.Properties().Lookup(STRING_PKEY_MIDI_EndpointUmpVersionMinor);
-            //auto endpointProvidedName = info.Properties().Lookup(STRING_PKEY_MIDI_EndpointProvidedName);
-            //auto endpointProvidedProductInstanceId = info.Properties().Lookup(STRING_PKEY_MIDI_EndpointProvidedProductInstanceId);
-            //auto deviceIdentificationBin = info.Properties().Lookup(STRING_PKEY_MIDI_DeviceIdentification);
-
-
-            //// user-supplied info
-            //auto userSuppliedName = info.Properties().Lookup(STRING_PKEY_MIDI_UserSuppliedEndpointName);
-            //auto userSuppliedDescription = info.Properties().Lookup(STRING_PKEY_MIDI_UserSuppliedDescription);
-            //auto userSuppliedImagePath = info.Properties().Lookup(STRING_PKEY_MIDI_UserSuppliedImagePath);
-
-
-            //// Group Terminal Blocks
-            //auto groupTerminalsInBin = info.Properties().Lookup(STRING_PKEY_MIDI_IN_GroupTerminalBlocks);
-            //auto groupTerminalsOutBin = info.Properties().Lookup(STRING_PKEY_MIDI_OUT_GroupTerminalBlocks);
-
-
-
-            //// Function Blocks
-            //auto functionBlocksAreStatic = info.Properties().Lookup(STRING_PKEY_MIDI_FunctionBlocksAreStatic);
-            //auto functionBlocksBin = info.Properties().Lookup(STRING_PKEY_MIDI_FunctionBlocks);
-
-
-
-            m_deviceInformation = info;
-            m_id = info.Id();
-            m_name = info.Name();   // todo: fold in from settings
-            m_transportSuppliedName = info.Name();
-            //m_parentDeviceId = info.
-
+            return winrt::unbox_value<winrt::hstring>(m_deviceInformation.Properties().Lookup(key));
+        }
+        catch (...)
+        {
+            return defaultValue;
         }
     }
 
     _Use_decl_annotations_
-    void MidiEndpointDeviceInformation::InternalUpdate(
-        winrt::hstring const& /*deviceId*/) noexcept
+    uint8_t MidiEndpointDeviceInformation::GetByteProperty(
+        winrt::hstring key,
+        uint8_t defaultValue) const noexcept
     {
+        if (m_deviceInformation == nullptr) return defaultValue;
 
+        try
+        {
+            return winrt::unbox_value<uint8_t>(m_deviceInformation.Properties().Lookup(key));
+        }
+        catch (...)
+        {
+            return defaultValue;
+        }
+    }
+
+    _Use_decl_annotations_
+    bool MidiEndpointDeviceInformation::GetBoolProperty(
+        winrt::hstring key,
+        bool defaultValue) const noexcept
+    {
+        if (m_deviceInformation == nullptr) return defaultValue;
+
+        try
+        {
+            return (bool)(m_deviceInformation.Properties().Lookup(key));
+        }
+        catch (...)
+        {
+            return defaultValue;
+        }
+    }
+
+
+    winrt::hstring MidiEndpointDeviceInformation::Id() const noexcept
+    { 
+        if (m_deviceInformation != nullptr)
+        {
+            return m_deviceInformation.Id();
+        }
+        else
+        {
+            return L"";
+        }
+    }
+
+    winrt::hstring MidiEndpointDeviceInformation::ParentDeviceId() const noexcept
+    {
+        // TODO
+
+        return L"";
+    }
+
+
+    winrt::hstring MidiEndpointDeviceInformation::Name() const noexcept
+    {
+        // user-supplied name trumps all others
+        if (UserSuppliedName() != L"") return UserSuppliedName();
+
+        // endpoint name discovered in-protocol is next highest
+        if (EndpointSuppliedName() != L"") return EndpointSuppliedName();
+
+        // transport-supplied name is last
+        if (TransportSuppliedName() != L"") return TransportSuppliedName();
+
+        // this is typically the same as the transport-supplied name
+        if (m_deviceInformation != nullptr)
+            return m_deviceInformation.Name();
+
+        return L"Unknown";
+    }
+
+    midi2::MidiEndpointNativeDataFormat MidiEndpointDeviceInformation::NativeDataFormat() const noexcept
+    {
+        // TODO
+        return midi2::MidiEndpointNativeDataFormat::Unknown;
+    }
+
+    midi2::MidiEndpointDevicePurpose MidiEndpointDeviceInformation::EndpointPurpose() const noexcept
+    {
+        // TODO
+        return midi2::MidiEndpointDevicePurpose::NormalMessageEndpoint;
+
+    }
+
+    midi2::MidiProtocol MidiEndpointDeviceInformation::ConfiguredProtocol() const noexcept
+    {
+        // TODO
+        return midi2::MidiProtocol::Default;
+    }
+
+
+    collections::IVectorView<midi2::MidiFunctionBlock> MidiEndpointDeviceInformation::FunctionBlocks() const noexcept
+    {
+        collections::IVector<midi2::MidiFunctionBlock> blocks{ winrt::single_threaded_vector<midi2::MidiFunctionBlock>() };
+
+        // TODO: Populate from property
+
+        return blocks.GetView();
+    }
+
+
+    collections::IVectorView<midi2::MidiGroupTerminalBlock> MidiEndpointDeviceInformation::GroupTerminalBlocks() const noexcept
+    {
+        collections::IVector<midi2::MidiGroupTerminalBlock> blocks{ winrt::single_threaded_vector<midi2::MidiGroupTerminalBlock>() };
+
+        // TODO: Populate from property
+
+        return blocks.GetView();
+    }
+
+
+
+
+
+
+    _Use_decl_annotations_
+    void MidiEndpointDeviceInformation::InternalUpdateFromDeviceInformation(
+        winrt::Windows::Devices::Enumeration::DeviceInformation const& info) noexcept
+    {
+        if (info != nullptr)
+        {
+            m_deviceInformation = info;
+        }
     }
 
 
