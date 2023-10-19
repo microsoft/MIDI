@@ -238,9 +238,6 @@
     <ClInclude Include="MidiEndpointDeviceWatcher.h">
       <DependentUpon>MidiEndpointDeviceWatcher.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiEndpointInformationUpdatedEventArgs.h">
-      <DependentUpon>MidiEndpointInformationUpdatedEventArgs.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiGroupTerminalBlock.h">
       <DependentUpon>MidiGroupTerminalBlock.idl</DependentUpon>
     </ClInclude>
@@ -270,9 +267,6 @@
     </ClInclude>
     <ClInclude Include="MidiClock.h">
       <DependentUpon>MidiClock.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiEndpointInformation.h">
-      <DependentUpon>MidiEndpointInformation.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiFunctionBlock.h">
       <DependentUpon>MidiFunctionBlock.idl</DependentUpon>
@@ -351,9 +345,6 @@
     <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
       <DependentUpon>MidiEndpointDeviceWatcher.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiEndpointInformationUpdatedEventArgs.cpp">
-      <DependentUpon>MidiEndpointInformationUpdatedEventArgs.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiGroupTerminalBlock.cpp">
       <DependentUpon>MidiGroupTerminalBlock.idl</DependentUpon>
     </ClCompile>
@@ -383,9 +374,6 @@
     </ClCompile>
     <ClCompile Include="MidiClock.cpp">
       <DependentUpon>MidiClock.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiEndpointInformation.cpp">
-      <DependentUpon>MidiEndpointInformation.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiFunctionBlock.cpp">
       <DependentUpon>MidiFunctionBlock.idl</DependentUpon>
@@ -461,13 +449,11 @@
     <Midl Include="MidiEndpointDevicePurposeEnum.idl" />
     <Midl Include="MidiEndpointDeviceWatcher.idl" />
     <Midl Include="MidiEndpointDiscoveryFilterFlagsEnum.idl" />
-    <Midl Include="MidiEndpointInformationUpdatedEventArgs.idl" />
     <Midl Include="MidiEndpointNativeDataFormatEnum.idl" />
     <Midl Include="MidiFunctionBlockDiscoveryFilterFlagsEnum.idl" />
     <Midl Include="MidiFunctionBlockMidi10Enum.idl" />
     <Midl Include="MidiEndpointConnectionSharingEnum.idl" />
     <Midl Include="MidiEndpointConnectionSharingPreferenceEnum.idl" />
-    <Midl Include="MidiEndpointInformation.idl" />
     <Midl Include="MidiEndpointTypeEnum.idl" />
     <Midl Include="MidiFunctionBlock.idl" />
     <Midl Include="MidiFunctionBlockDirectionEnum.idl" />

@@ -10,11 +10,11 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{fb9d8e00-e6e5-42fa-93b5-efe40dc66c04}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>api_client_basics</RootNamespace>
+    <RootNamespace>api_enum_endpoints</RootNamespace>
     <WindowsTargetPlatformVersion Condition=" '$(WindowsTargetPlatformVersion)' == '' ">10.0.20348.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformMinVersion>10.0.20348.0</WindowsTargetPlatformMinVersion>
     <CppWinRTEnableDefaultCopyLocalFalse>true</CppWinRTEnableDefaultCopyLocalFalse>
-    <ProjectName>api-client-basics-cpp</ProjectName>
+    <ProjectName>api-enum-endpoints-cpp</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <ItemGroup Label="ProjectConfigurations">

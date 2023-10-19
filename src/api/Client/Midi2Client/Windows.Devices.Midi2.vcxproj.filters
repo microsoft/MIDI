@@ -113,15 +113,6 @@
     <ClCompile Include="MidiSessionSettings.cpp">
       <Filter>SDK\Session</Filter>
     </ClCompile>
-    <ClCompile Include="MidiBidirectionalEndpointConnection.cpp">
-      <Filter>API\Endpoints</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiInputEndpointConnection.cpp">
-      <Filter>API\Endpoints</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiOutputEndpointConnection.cpp">
-      <Filter>API\Endpoints</Filter>
-    </ClCompile>
     <ClCompile Include="MidiClock.cpp">
       <Filter>API\Utility</Filter>
     </ClCompile>
@@ -158,21 +149,9 @@
     <ClCompile Include="MidiGroupTerminalBlock.cpp">
       <Filter>API\Endpoints\Metadata\GroupTerminals</Filter>
     </ClCompile>
-    <ClCompile Include="MidiBidirectionalEndpointOpenOptions.cpp">
-      <Filter>API\Endpoints\Connections\Options</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiInputEndpointOpenOptions.cpp">
-      <Filter>API\Endpoints\Connections\Options</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiOutputEndpointOpenOptions.cpp">
-      <Filter>API\Endpoints\Connections\Options</Filter>
-    </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
     <ClCompile Include="MidiVirtualDeviceManager.cpp">
       <Filter>API\Transports</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiBidirectionalAggregatedEndpointConnection.cpp">
-      <Filter>API\Endpoints\Connections</Filter>
     </ClCompile>
     <ClCompile Include="MidiService.cpp">
       <Filter>API\Service</Filter>
@@ -185,15 +164,6 @@
     </ClCompile>
     <ClCompile Include="MidiTransportInformation.cpp">
       <Filter>API\Service</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiGlobalInformationCacheUpdatedEventArgs.cpp">
-      <Filter>API\Endpoints\Metadata\Cache</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiGlobalCache.cpp">
-      <Filter>API\Endpoints\Metadata\Cache</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiFunctionBlocksUpdatedEventArgs.cpp">
-      <Filter>API\Endpoints\Metadata\Functions</Filter>
     </ClCompile>
     <ClCompile Include="MidiEndpointInformationUpdatedEventArgs.cpp">
       <Filter>API\Endpoints\Metadata\Endpoints</Filter>
@@ -228,15 +198,6 @@
     </ClInclude>
     <ClInclude Include="midi_service_interface.h">
       <Filter>Internal\ServiceAccess</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiBidirectionalEndpointConnection.h">
-      <Filter>API\Endpoints</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiInputEndpointConnection.h">
-      <Filter>API\Endpoints</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiOutputEndpointConnection.h">
-      <Filter>API\Endpoints</Filter>
     </ClInclude>
     <ClInclude Include="MidiClock.h">
       <Filter>API\Utility</Filter>
@@ -281,20 +242,8 @@
     <ClInclude Include="MidiGroupTerminalBlock.h">
       <Filter>API\Endpoints\Metadata\GroupTerminals</Filter>
     </ClInclude>
-    <ClInclude Include="MidiBidirectionalEndpointOpenOptions.h">
-      <Filter>API\Endpoints\Connections\Options</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiInputEndpointOpenOptions.h">
-      <Filter>API\Endpoints\Connections\Options</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiOutputEndpointOpenOptions.h">
-      <Filter>API\Endpoints\Connections\Options</Filter>
-    </ClInclude>
     <ClInclude Include="MidiVirtualDeviceManager.h">
       <Filter>API\Transports</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiBidirectionalAggregatedEndpointConnection.h">
-      <Filter>API\Endpoints\Connections</Filter>
     </ClInclude>
     <ClInclude Include="MidiService.h">
       <Filter>API\Service</Filter>
@@ -307,15 +256,6 @@
     </ClInclude>
     <ClInclude Include="MidiTransportInformation.h">
       <Filter>API\Service</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiGlobalInformationCacheUpdatedEventArgs.h">
-      <Filter>API\Endpoints\Metadata\Cache</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiGlobalCache.h">
-      <Filter>API\Endpoints\Metadata\Cache</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiFunctionBlocksUpdatedEventArgs.h">
-      <Filter>API\Endpoints\Metadata\Functions</Filter>
     </ClInclude>
     <ClInclude Include="MidiEndpointInformationUpdatedEventArgs.h">
       <Filter>API\Endpoints\Metadata\Endpoints</Filter>
@@ -372,9 +312,6 @@
     </Midl>
     <Midl Include="MidiFunctionBlockUIHintEnum.idl">
       <Filter>API\Endpoints\Metadata\Functions</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointInformation.idl">
-      <Filter>API\Endpoints\Metadata\Endpoints</Filter>
     </Midl>
     <Midl Include="MidiUniqueId.idl">
       <Filter>API\Endpoints\Metadata\MUID</Filter>
@@ -459,9 +396,6 @@
     </Midl>
     <Midl Include="MidiMessageBuilder.idl">
       <Filter>API\Messages\Utility</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointInformationUpdatedEventArgs.idl">
-      <Filter>API\Endpoints\Metadata\Endpoints</Filter>
     </Midl>
     <Midl Include="MidiVirtualDeviceResponder.idl">
       <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>

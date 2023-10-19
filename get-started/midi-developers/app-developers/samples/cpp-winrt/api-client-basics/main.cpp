@@ -29,161 +29,97 @@ int main()
 
     auto session = MidiSession::CreateSession(L"Sample Session");
 
-    // you can ask for MIDI 1.0 Byte Stream devices, MIDI 2.0 UMP devices, or both. Note that Some MIDI 2.0
-    // endpoints may have MIDI 1.0 function blocks in them, so this is endpoint/device-level only.
-    // Note that every device uses UMP through this API, but it can be helpful to know when a device is
-    // a MIDI 1.0 device at the main interface level.
+    auto endpointAId = MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId();
+    auto endpointBId = MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId();
 
-    std::cout << std::endl << "Creating Device Selector..." << std::endl;
+    auto sendEndpoint = session.CreateEndpointConnection(endpointAId);
+    std::cout << "Connected to sending endpoint: " << winrt::to_string(endpointAId) << std::endl;
 
-    winrt::hstring deviceSelector = MidiEndpointConnection::GetDeviceSelector();
+    auto receiveEndpoint = session.CreateEndpointConnection(endpointBId);
+    std::cout << "Connected to receiving endpoint: " << winrt::to_string(endpointBId) << std::endl;
 
-    // Enumerate UMP endpoints. Note that per C++, main cannot be a co-routine,
-    // so we can't just co_await this async call, but instead use the C++/WinRT Extension "get()". 
-    // We may end up wrapping this enumeration code into another class to instantly transform to 
-    // MidiDeviceInformation instances, and to simplify calling code (reducing need for apps to
-    // incorporate async handling).
+    // Wire up an event handler to receive the message. There is a single event handler type, but the
+    // MidiMessageReceivedEventArgs class provides the different ways to access the data
+    // Your event handlers should return quickly as they are called synchronously.
 
-    std::cout << std::endl << "Enumerating through Windows::Devices::Enumeration..." << std::endl;
-
-    foundation::IAsyncOperation<DeviceInformationCollection> op = DeviceInformation::FindAllAsync(deviceSelector);
-    DeviceInformationCollection endpointDevices = op.get();
-
-    // this currently requires you have a USB MIDI 1.0 device. If you have nothing connected, just remove this check for now
-    // That will change once MIDI 2.0 device selectors have been created
-    if (endpointDevices.Size() > 0)
-    {
-        std::cout << "MIDI Endpoints were found:" << std::endl;
-
-        DeviceInformation selectedInEndpointInformation { nullptr };
-        DeviceInformation selectedOutEndpointInformation{ nullptr };
-
-        for (auto const& device : endpointDevices)
+    auto MessageReceivedHandler = [&](foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
         {
+            // there are several ways to get the message data from the arguments. If you want to use
+            // strongly-typed UMP classes, then you may start with the GetUmp() method. The GetXXX calls 
+            // are all generating something within the function, so you want to call them once and then
+            // keep the result around in a variable if you plan to refer to it multiple times. In 
+            // contrast, the FillXXX functions will update values in provided (pre-allocated) types
+            // passed in to the functions.
+            auto ump = args.GetMessagePacket();
+
             std::cout << std::endl;
-            std::cout << winrt::to_string(device.Name()) << std::endl;
-            std::cout << "   " << winrt::to_string(device.Id()) << std::endl;
+            std::cout << "Received UMP" << std::endl;
+            std::cout << "- Current Timestamp: " << std::dec << MidiClock::GetMidiTimestamp() << std::endl;
+            std::cout << "- UMP Timestamp:     " << std::dec << ump.Timestamp() << std::endl;
+            std::cout << "- UMP Msg Type:      0x" << std::hex << (uint32_t)ump.MessageType() << std::endl;
+            std::cout << "- UMP Packet Type:   0x" << std::hex << (uint32_t)ump.PacketType() << std::endl;
+            std::cout << "- Message:           " << winrt::to_string(MidiMessageUtility::GetMessageFriendlyNameFromFirstWord(args.PeekFirstWord())) << std::endl;
 
-            std::string id = winrt::to_string(device.Id());
+            // if you wish to cast the IMidiUmp to a specific Ump Type, you can do so using .as<T> WinRT extension
 
-            // TODO: We will have a more deterministic way of identifying the loopback endpoints using a property
-            // or you could directly use the Id. The two loopback bidirectional endpoints are cross-wired together, out to in
-            if (id.find("LOOPBACK_BIDI_A") != std::string::npos)
+            if (ump.PacketType() == MidiPacketType::UniversalMidiPacket32)
             {
-                selectedOutEndpointInformation = device;
+                // we'll use the Ump32 type here. This is a runtimeclass that the strongly-typed 
+                // 32-bit messages derive from. There are also MidiUmp64/96/128 classes.
+                auto ump32 = ump.as<MidiMessage32>();
+
+                std::cout << "- Word 0:            0x" << std::hex << ump32.Word0() << std::endl;
             }
-            else if (id.find("LOOPBACK_BIDI_B") != std::string::npos)
-            {
-                selectedInEndpointInformation = device;
-            }
 
-        }
-        std::cout << std::endl;
+            std::cout << std::endl;
 
-        if (selectedOutEndpointInformation == nullptr || selectedOutEndpointInformation == nullptr)
-        {
-            std::cout << "Loopback endpoints were not found. This is not normal. Exiting." << std::endl;
-            return 0;
-        }
+        };
 
-        // then you connect to the UMP endpoint
-        std::cout << std::endl << "Connecting to UMP Endpoint..." << std::endl;
-
-        auto sendEndpoint = session.CreateEndpointConnection(selectedOutEndpointInformation.Id());
-        std::cout << "Connected to sending endpoint: " << winrt::to_string(selectedOutEndpointInformation.Name()) << std::endl;
-
-        auto receiveEndpoint = session.CreateEndpointConnection(selectedInEndpointInformation.Id());
-        std::cout << "Connected to receiving endpoint: " << winrt::to_string(selectedInEndpointInformation.Name()) << std::endl;
-
-        // Wire up an event handler to receive the message. There is a single event handler type, but the
-        // MidiMessageReceivedEventArgs class provides the different ways to access the data
-        // Your event handlers should return quickly as they are called synchronously.
-
-        auto MessageReceivedHandler = [&](foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
-            {
-                // there are several ways to get the message data from the arguments. If you want to use
-                // strongly-typed UMP classes, then you may start with the GetUmp() method. The GetXXX calls 
-                // are all generating something within the function, so you want to call them once and then
-                // keep the result around in a variable if you plan to refer to it multiple times. In 
-                // contrast, the FillXXX functions will update values in provided (pre-allocated) types
-                // passed in to the functions.
-                auto ump = args.GetMessagePacket();
-
-                std::cout << std::endl;
-                std::cout << "Received UMP" << std::endl;
-                std::cout << "- Current Timestamp: " << std::dec << MidiClock::GetMidiTimestamp() << std::endl;
-                std::cout << "- UMP Timestamp:     " << std::dec << ump.Timestamp() << std::endl;
-                std::cout << "- UMP Msg Type:      0x" << std::hex << (uint32_t)ump.MessageType() << std::endl;
-                std::cout << "- UMP Packet Type:   0x" << std::hex << (uint32_t)ump.PacketType() << std::endl;
-                std::cout << "- Message:           " << winrt::to_string(MidiMessageUtility::GetMessageFriendlyNameFromFirstWord(args.PeekFirstWord())) << std::endl;
-
-                // if you wish to cast the IMidiUmp to a specific Ump Type, you can do so using .as<T> WinRT extension
-
-                if (ump.PacketType() == MidiPacketType::UniversalMidiPacket32)
-                {
-                    // we'll use the Ump32 type here. This is a runtimeclass that the strongly-typed 
-                    // 32-bit messages derive from. There are also MidiUmp64/96/128 classes.
-                    auto ump32 = ump.as<MidiMessage32>();
-
-                    std::cout << "- Word 0:            0x" << std::hex << ump32.Word0() << std::endl;
-                }
-
-                std::cout << std::endl;
-
-            };
-
-        // the returned token is used to deregister the event later.
-        auto eventRevokeToken = receiveEndpoint.MessageReceived(MessageReceivedHandler);
+    // the returned token is used to deregister the event later.
+    auto eventRevokeToken = receiveEndpoint.MessageReceived(MessageReceivedHandler);
 
 
-        std::cout << std::endl << "Opening endpoint connection (this sends out the required discovery messages which will loop back)..." << std::endl;
+    std::cout << std::endl << "Opening endpoint connection (this sends out the required discovery messages which will loop back)..." << std::endl;
 
-        // once you have wired up all your event handlers, added any filters/listeners, etc.
-        // You can open the connection. Doing this will query the cache for the in-protocol 
-        // endpoint information and function blocks. If not there, it will send out the requests
-        // which will come back asynchronously with responses.
-        sendEndpoint.Open();
-        receiveEndpoint.Open();
-
-
-        std::cout << std::endl << "Creating MIDI 1.0 Channel Voice 32-bit UMP..." << std::endl;
-
-        auto ump32 = MidiMessageBuilder::BuildMidi1ChannelVoiceMessage(
-            MidiClock::GetMidiTimestamp(), // use current timestamp
-            5,      // group 5
-            Midi1ChannelVoiceMessageStatus::NoteOn,     // 9
-            3,      // channel 3
-            120,    // note 120 - hex 0x78
-            100);   // velocity 100 hex 0x64
-
-        // here you would set other values in the UMP word(s)
-
-        std::cout << "Sending single UMP..." << std::endl;
-
-        auto ump = ump32.as<IMidiUniversalPacket>();
-        auto sendResult = sendEndpoint.SendMessagePacket(ump);          // could also use the SendWords methods, etc.
-
-        std::cout << std::endl << " ** Wait for the sent UMP to arrive, and then press enter to cleanup. **" << std::endl;
-
-        system("pause");
-
-        std::cout << std::endl << "Deregistering event handler..." << std::endl;
-
-        // deregister the event by passing in the revoke token
-        receiveEndpoint.MessageReceived(eventRevokeToken);
-
-        std::cout << "Disconnecting UMP Endpoint Connection..." << std::endl;
+    // once you have wired up all your event handlers, added any filters/listeners, etc.
+    // You can open the connection. Doing this will query the cache for the in-protocol 
+    // endpoint information and function blocks. If not there, it will send out the requests
+    // which will come back asynchronously with responses.
+    sendEndpoint.Open();
+    receiveEndpoint.Open();
 
 
-        session.DisconnectEndpointConnection(sendEndpoint.ConnectionId());
-        session.DisconnectEndpointConnection(receiveEndpoint.ConnectionId());
+    std::cout << std::endl << "Creating MIDI 1.0 Channel Voice 32-bit UMP..." << std::endl;
 
-    }
-    else
-    {
-        // no MIDI endpoints found. We'll just bail here
-        std::cout << "No MIDI Endpoints were found." << std::endl;
-    }
+    auto ump32 = MidiMessageBuilder::BuildMidi1ChannelVoiceMessage(
+        MidiClock::GetMidiTimestamp(), // use current timestamp
+        5,      // group 5
+        Midi1ChannelVoiceMessageStatus::NoteOn,     // 9
+        3,      // channel 3
+        120,    // note 120 - hex 0x78
+        100);   // velocity 100 hex 0x64
+
+    // here you would set other values in the UMP word(s)
+
+    std::cout << "Sending single UMP..." << std::endl;
+
+    auto ump = ump32.as<IMidiUniversalPacket>();
+    auto sendResult = sendEndpoint.SendMessagePacket(ump);          // could also use the SendWords methods, etc.
+
+    std::cout << std::endl << " ** Wait for the sent UMP to arrive, and then press enter to cleanup. **" << std::endl;
+
+    system("pause");
+
+    std::cout << std::endl << "Deregistering event handler..." << std::endl;
+
+    // deregister the event by passing in the revoke token
+    receiveEndpoint.MessageReceived(eventRevokeToken);
+
+    std::cout << "Disconnecting UMP Endpoint Connection..." << std::endl;
+
+
+    session.DisconnectEndpointConnection(sendEndpoint.ConnectionId());
+    session.DisconnectEndpointConnection(receiveEndpoint.ConnectionId());
 
     // close the session, detaching all Windows MIDI Services resources and closing all connections
     // You can also disconnect individual Endpoint Connections when you are done with them, as we did above

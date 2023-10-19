@@ -24,6 +24,11 @@
              trustLevel="Base"
              />
           <class
+             activatableClassId="Windows.Devices.Midi2.IMidiEndpointDeviceInformationStatics"
+             threading="Both"
+             trustLevel="Base"
+             />
+          <class
              activatableClassId="Windows.Devices.Midi2.MidiEndpointDeviceWatcher"
              threading="Both"
              trustLevel="Base"
@@ -84,11 +89,6 @@
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiEndpointInformation"
-             threading="Both"
-             trustLevel="Base"
-             />
-          <class
              activatableClassId="Windows.Devices.Midi2.MidiFunctionBlock"
              threading="Both"
              trustLevel="Base"
@@ -130,6 +130,11 @@
              />
           <class
              activatableClassId="Windows.Devices.Midi2.MidiEndpointConnection"
+             threading="Both"
+             trustLevel="Base"
+             />
+          <class
+             activatableClassId="Windows.Devices.Midi2.IMidiEndpointConnectionStatics"
              threading="Both"
              trustLevel="Base"
              />

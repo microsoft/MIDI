@@ -47,9 +47,6 @@
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="loopback_ids.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MidiBenchmarks.h">
       <Filter>Header Files</Filter>
     </ClInclude>

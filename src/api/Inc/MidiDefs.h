@@ -94,10 +94,12 @@ DEFINE_DEVPROPKEY(PKEY_MIDI_EndpointUmpVersionMajor, 0x3f114a6a, 0x11fa, 0x4bd0,
 DEFINE_DEVPROPKEY(PKEY_MIDI_EndpointUmpVersionMinor, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 55);     // DEVPROP_TYPE_BYTE
 
 // name provided by the endpoint through endpoint discovery
+// Note that it is supplied by protocol as utf8, and we need to convert to unicode
 #define STRING_PKEY_MIDI_EndpointProvidedName L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},56"
 DEFINE_DEVPROPKEY(PKEY_MIDI_EndpointProvidedName, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 56);     // DEVPROP_TYPE_STRING
 
 // Product instance Id provided by the endpoint through endpoint discovery
+// Note that it is supplied by protocol as utf8, and we need to convert to unicode
 #define STRING_PKEY_MIDI_EndpointProvidedProductInstanceId L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},57"
 DEFINE_DEVPROPKEY(PKEY_MIDI_EndpointProvidedProductInstanceId, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 57);     // DEVPROP_TYPE_STRING
 
@@ -114,6 +116,26 @@ DEFINE_DEVPROPKEY(PKEY_MIDI_FunctionBlocksAreStatic, 0x3f114a6a, 0x11fa, 0x4bd0,
 #define STRING_PKEY_MIDI_DeviceIdentification L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},60"
 DEFINE_DEVPROPKEY(PKEY_MIDI_DeviceIdentification, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 60);     // DEVPROP_TYPE_BINARY
 
+
+
+#define STRING_PKEY_MIDI_UserSuppliedImagePath L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},61"
+DEFINE_DEVPROPKEY(PKEY_MIDI_UserSuppliedImagePath, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 61);     // DEVPROP_TYPE_STRING
+
+#define STRING_PKEY_MIDI_UserSuppliedDescription L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},62"
+DEFINE_DEVPROPKEY(PKEY_MIDI_UserSuppliedDescription, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 62);     // DEVPROP_TYPE_STRING
+
+#define STRING_PKEY_MIDI_UserSuppliedEndpointName L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},63"
+DEFINE_DEVPROPKEY(PKEY_MIDI_UserSuppliedEndpointName, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 63);     // DEVPROP_TYPE_STRING
+
+// this is the device-supplied name in the case of device-based transports
+// we have a copy here because we may rewrite FriendlyName
+#define STRING_PKEY_MIDI_TransportSuppliedEndpointName L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},64"
+DEFINE_DEVPROPKEY(PKEY_MIDI_TransportSuppliedEndpointName, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 64);     // DEVPROP_TYPE_STRING
+
+
+// TODO: Add in the other properties like
+// - Should receive MIDI clock
+// - 
 
 
 
@@ -150,30 +172,24 @@ struct MidiDeviceIdentityProperty
 struct MidiDevicePropertyFunctionBlock
 {
     bool IsActive{ false };
-    uint8_t BlockNumber{0};
-    uint8_t Direction{0};
-    uint8_t Midi1{0};
-    uint8_t UIHint{0};
-    uint8_t FirstGroup{0};
-    uint8_t NumberOfGroupsSpanned{0};
-    uint8_t MidiCIMessageVersionFormat{0};
-    uint8_t MaxSysEx8Streams{0};
+    uint8_t BlockNumber{ 0 };
+    uint8_t Reserved0{ 0 };         // unused in UMP 1.1
+    uint8_t Direction{ 0 };
+    uint8_t Midi1{ 0 };
+    uint8_t UIHint{ 0 };
+    uint8_t FirstGroup{ 0 };
+    uint8_t NumberOfGroupsSpanned{ 0 };
+    uint8_t MidiCIMessageVersionFormat{ 0 };
+    uint8_t MaxSysEx8Streams{ 0 };
+
+    uint32_t Reserved1{ 0 };        // unused in UMP 1.1
+    uint32_t Reserved2{ 0 };        // unused in UMP 1.1
 
     // +1 because we zero-terminate the name even though it's fixed max length
     // most function blocks will have much shorter names. Should we instead have
     // a more complicated variable-length scheme here?
     char Name[MIDI_FUNCTION_BLOCK_NAME_MAX_LENGTH+1]{0};
 };
-
-
-
-
-
-
-
-
-
-
 
 
 
