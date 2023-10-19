@@ -13,6 +13,17 @@
 #define MAXIMUM_UMP_DATASIZE 16
 
 //
+// Registry keys for global configuration. The settings app can write to some of these, so including in MidiDefs
+//
+#define MIDI_ROOT_REG_KEY L"Software\\Microsoft\\Windows MIDI Services"
+#define MIDI_ROOT_TRANSPORT_PLUGINS_REG_KEY MIDI_ROOT_REG_KEY L"\\Transport Plugins"
+#define MIDI_ROOT_ENDPOINT_PROCESSING_PLUGINS_REG_KEY MIDI_ROOT_REG_KEY L"\\Endpoint Processing Plugins"
+#define MIDI_PLUGIN_ENABLED_REG_VALUE L"Enabled"
+#define MIDI_PLUGIN_CLSID_REG_VALUE L"CLSID"
+
+
+
+//
 // Defining new interface categories
 //
 #define STRING_DEVINTERFACE_UNIVERSALMIDIPACKET_INPUT L"{AE174174-6396-4DEE-AC9E-1E9C6F403230}"

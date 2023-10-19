@@ -1,17 +1,24 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 #include "stdafx.h"
 
+
+
+
 _Use_decl_annotations_
 HRESULT
-CMidiDeviceManager::Initialize(std::shared_ptr<CMidiPerformanceManager>& PerformanceManager)
+CMidiDeviceManager::Initialize(
+    std::shared_ptr<CMidiPerformanceManager>& PerformanceManager, 
+    std::shared_ptr<CMidiConfigurationManager>& configurationManager)
 {
-    std::vector<GUID> availableAbstractionLayers;
+    // Get the enabled abstraction layers from the registry
+    std::vector<GUID> availableAbstractionLayers = configurationManager->GetEnabledAbstractionLayers();
 
     // TODO: retrieve a list of available abstraction layers from the registry or some
     // other registration mechanism, like a saved configuration?
-    availableAbstractionLayers.push_back(__uuidof(Midi2KSAbstraction));
+    //availableAbstractionLayers.push_back(__uuidof(Midi2KSAbstraction));
 
-    availableAbstractionLayers.push_back(__uuidof(Midi2DiagnosticsAbstraction));
+
+    //availableAbstractionLayers.push_back(__uuidof(Midi2DiagnosticsAbstraction));
     // availableAbstractionLayers.push_back(__uuidof(Midi2NetworkMidiAbstraction));
     // availableAbstractionLayers.push_back(__uuidof(Midi2VirtualMidiAbstraction));
 
@@ -174,57 +181,63 @@ CMidiDeviceManager::ActivateEndpointInternal
 
     std::wstring emptyString = L"";
 
-    interfaceProperties.push_back({ {PKEY_MIDI_SupportsMultiClient, DEVPROP_STORE_SYSTEM, nullptr },
-        DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
+    try
+    {
+        interfaceProperties.push_back({ {PKEY_MIDI_SupportsMultiClient, DEVPROP_STORE_SYSTEM, nullptr },
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
 
-    interfaceProperties.push_back({ {DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
-        DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
+        interfaceProperties.push_back({ {DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
 
-    interfaceProperties.push_back({ {DEVPKEY_Device_NoConnectSound, DEVPROP_STORE_SYSTEM, nullptr},
-        DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
+        interfaceProperties.push_back({ {DEVPKEY_Device_NoConnectSound, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
 
-    interfaceProperties.push_back({ {PKEY_MIDI_EndpointSupportsMidi2Protocol, DEVPROP_STORE_SYSTEM, nullptr},
-        DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse });
+        interfaceProperties.push_back({ {PKEY_MIDI_EndpointSupportsMidi2Protocol, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse });
 
-    interfaceProperties.push_back({ {PKEY_MIDI_EndpointSupportsMidi1Protocol, DEVPROP_STORE_SYSTEM, nullptr},
-        DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse });
+        interfaceProperties.push_back({ {PKEY_MIDI_EndpointSupportsMidi1Protocol, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse });
 
-    interfaceProperties.push_back({ {PKEY_MIDI_EndpointSupportsReceivingJRTimestamps, DEVPROP_STORE_SYSTEM, nullptr},
-        DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse });
+        interfaceProperties.push_back({ {PKEY_MIDI_EndpointSupportsReceivingJRTimestamps, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse });
 
-    interfaceProperties.push_back({ {PKEY_MIDI_EndpointSupportsSendingJRTimestamps, DEVPROP_STORE_SYSTEM, nullptr},
-        DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse });
+        interfaceProperties.push_back({ {PKEY_MIDI_EndpointSupportsSendingJRTimestamps, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse });
 
-    interfaceProperties.push_back({ {PKEY_MIDI_EndpointUmpVersionMajor, DEVPROP_STORE_SYSTEM, nullptr},
-        DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(zeroByte)), &zeroByte });
+        interfaceProperties.push_back({ {PKEY_MIDI_EndpointUmpVersionMajor, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(zeroByte)), &zeroByte });
 
-    interfaceProperties.push_back({ {PKEY_MIDI_EndpointUmpVersionMinor, DEVPROP_STORE_SYSTEM, nullptr},
-        DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(zeroByte)), &zeroByte });
+        interfaceProperties.push_back({ {PKEY_MIDI_EndpointUmpVersionMinor, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(zeroByte)), &zeroByte });
 
-    interfaceProperties.push_back({ {PKEY_MIDI_EndpointProvidedName, DEVPROP_STORE_SYSTEM, nullptr},
-        DEVPROP_TYPE_STRING, static_cast<ULONG>((emptyString.length() + 1) * sizeof(WCHAR)), (PVOID)emptyString.c_str() });
+        interfaceProperties.push_back({ {PKEY_MIDI_EndpointProvidedName, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_STRING, static_cast<ULONG>((emptyString.length() + 1) * sizeof(WCHAR)), (PVOID)emptyString.c_str() });
 
-    interfaceProperties.push_back({ {PKEY_MIDI_EndpointProvidedProductInstanceId, DEVPROP_STORE_SYSTEM, nullptr},
-        DEVPROP_TYPE_STRING, static_cast<ULONG>((emptyString.length() + 1) * sizeof(WCHAR)), (PVOID)emptyString.c_str() });
+        interfaceProperties.push_back({ {PKEY_MIDI_EndpointProvidedProductInstanceId, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_STRING, static_cast<ULONG>((emptyString.length() + 1) * sizeof(WCHAR)), (PVOID)emptyString.c_str() });
 
-    interfaceProperties.push_back({ {PKEY_MIDI_FunctionBlocksAreStatic, DEVPROP_STORE_SYSTEM, nullptr},
-        DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)),&devPropFalse });
+        interfaceProperties.push_back({ {PKEY_MIDI_FunctionBlocksAreStatic, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)),&devPropFalse });
 
-    //interfaceProperties.push_back({ {PKEY_MIDI_FunctionBlocks, DEVPROP_STORE_SYSTEM, nullptr},
-    //    DEVPROP_TYPE_BINARY, static_cast<ULONG>(0), &functionBlockCount });
+        //interfaceProperties.push_back({ {PKEY_MIDI_FunctionBlocks, DEVPROP_STORE_SYSTEM, nullptr},
+        //    DEVPROP_TYPE_BINARY, static_cast<ULONG>(0), &functionBlockCount });
 
-    //interfaceProperties.push_back({ {PKEY_MIDI_DeviceIdentification, DEVPROP_STORE_SYSTEM, nullptr},
-    //    DEVPROP_TYPE_BINARY, static_cast<ULONG>(0),  });
+        //interfaceProperties.push_back({ {PKEY_MIDI_DeviceIdentification, DEVPROP_STORE_SYSTEM, nullptr},
+        //    DEVPROP_TYPE_BINARY, static_cast<ULONG>(0),  });
 
-    interfaceProperties.push_back({ {PKEY_MIDI_UserSuppliedImagePath, DEVPROP_STORE_SYSTEM, nullptr},
-        DEVPROP_TYPE_STRING, static_cast<ULONG>((emptyString.length() + 1) * sizeof(WCHAR)), (PVOID)emptyString.c_str() });
+        interfaceProperties.push_back({ {PKEY_MIDI_UserSuppliedImagePath, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_STRING, static_cast<ULONG>((emptyString.length() + 1) * sizeof(WCHAR)), (PVOID)emptyString.c_str() });
 
-    interfaceProperties.push_back({ {PKEY_MIDI_UserSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
-        DEVPROP_TYPE_STRING, static_cast<ULONG>((emptyString.length() + 1) * sizeof(WCHAR)), (PVOID)emptyString.c_str() });
+        interfaceProperties.push_back({ {PKEY_MIDI_UserSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_STRING, static_cast<ULONG>((emptyString.length() + 1) * sizeof(WCHAR)), (PVOID)emptyString.c_str() });
 
-    interfaceProperties.push_back({ {PKEY_MIDI_UserSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
-        DEVPROP_TYPE_STRING, static_cast<ULONG>((emptyString.length() + 1) * sizeof(WCHAR)), (PVOID)emptyString.c_str() });
-
+        interfaceProperties.push_back({ {PKEY_MIDI_UserSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_STRING, static_cast<ULONG>((emptyString.length() + 1) * sizeof(WCHAR)), (PVOID)emptyString.c_str() });
+    }
+    catch (...)
+    {
+        // TODO: Log
+    }
 
 
     midiPort->InstanceId = CreateInfo->pszInstanceId;

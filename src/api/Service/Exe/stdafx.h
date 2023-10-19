@@ -47,9 +47,11 @@
 #include <Devpkey.h>
 #include "MidiDefs.h"
 
+
 #include "MidiTelemetry.h"
 #include "MidiPerformanceManager.h"
 #include "MidiProcessManager.h"
+#include "MidiConfigurationManager.h"
 #include "MidiDeviceManager.h"
 #include "MidiXProc.h"
 
@@ -64,6 +66,8 @@ class CMidiDevicePipe;
 #include "MidiDevicePipe.h"
 #include "MidiClientPipe.h"
 #include "MidiClientManager.h"
+
+
 
 #include "MidiSrv.h"
 
