@@ -166,7 +166,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         try
         {
-            return (bool)(m_deviceInformation.Properties().Lookup(key));
+            return winrt::unbox_value<bool>(m_deviceInformation.Properties().Lookup(key));
         }
         catch (...)
         {

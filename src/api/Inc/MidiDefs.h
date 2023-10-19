@@ -127,6 +127,17 @@ DEFINE_DEVPROPKEY(PKEY_MIDI_UserSuppliedDescription, 0x3f114a6a, 0x11fa, 0x4bd0,
 #define STRING_PKEY_MIDI_UserSuppliedEndpointName L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},63"
 DEFINE_DEVPROPKEY(PKEY_MIDI_UserSuppliedEndpointName, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 63);     // DEVPROP_TYPE_STRING
 
+// this is the device-supplied name in the case of device-based transports
+// we have a copy here because we may rewrite FriendlyName
+#define STRING_PKEY_MIDI_TransportSuppliedEndpointName L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},64"
+DEFINE_DEVPROPKEY(PKEY_MIDI_TransportSuppliedEndpointName, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 64);     // DEVPROP_TYPE_STRING
+
+
+// TODO: Add in the other properties like
+// - Should receive MIDI clock
+// - 
+
+
 
 // Structures for properties ================================================================
 

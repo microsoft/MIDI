@@ -27,11 +27,10 @@ namespace Windows.Devices.Midi2
         //static MidiEndpointDeviceWatcher CreateWatcher();
         static IVectorView<MidiEndpointDeviceInformation> FindAll(Boolean includeDiagnosticsEndpoints);
 
-        //static String UniversalMidiPacketBidirectionalInterfaceClassId{ get; };
-
         static String DiagnosticsLoopbackAEndpointId{ get; };
         static String DiagnosticsLoopbackBEndpointId{ get; };
 
+        static String EndpointInterfaceClass{ get; };
 
         static IVectorView<String> GetAdditionalPropertiesList();
 
@@ -66,6 +65,7 @@ namespace Windows.Devices.Midi2
         Boolean SupportsReceivingJRTimestamps{ get; };
         Boolean SupportsSendingJRTimestamps{ get; };
 
+        // TODO: MIDI Device Id (sysex stuff)
 
         // transport type
         String TransportId{ get; };
@@ -94,7 +94,6 @@ namespace Windows.Devices.Midi2
         String Description{ get; };
 
         // png icon supplied by the user
-        // TODO
         String ImagePath{ get; };
 
 

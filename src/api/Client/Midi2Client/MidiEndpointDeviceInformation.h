@@ -21,6 +21,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static winrt::hstring DiagnosticsLoopbackAEndpointId() noexcept { return LOOPBACK_BIDI_ID_A; }
         static winrt::hstring DiagnosticsLoopbackBEndpointId() noexcept { return LOOPBACK_BIDI_ID_B; }
+        static winrt::hstring EndpointInterfaceClass() noexcept { return STRING_DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI; }
 
         static midi2::MidiEndpointDeviceWatcher CreateWatcher(_In_ bool includeDiagnosticsEndpoints);
         static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll(_In_ bool includeDiagnosticsEndpoints);
@@ -68,6 +69,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool SupportsSendingJRTimestamps() const noexcept { return GetBoolProperty(STRING_PKEY_MIDI_EndpointSupportsSendingJRTimestamps, false); }
 
         midi2::MidiProtocol ConfiguredProtocol() const noexcept;
+
+        // TODO: MIDI Device Id (sysex stuff)
 
 
         void InternalUpdateFromDeviceInformation(_In_ winrt::Windows::Devices::Enumeration::DeviceInformation const& info) noexcept;
