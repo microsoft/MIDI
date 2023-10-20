@@ -21,6 +21,15 @@
 #define MIDI_PLUGIN_ENABLED_REG_VALUE L"Enabled"
 #define MIDI_PLUGIN_CLSID_REG_VALUE L"CLSID"
 
+#define MIDI_CONFIG_FILE_REG_VALUE L"CurrentConfig"
+
+// we force this root so the service can't be told to open some other random file on the system
+#define MIDI_CONFIG_FILE_FOLDER L"%localappdata%\\Microsoft\\MIDI\\"
+
+#define MIDI_CONFIG_JSON_HEADER_OBJECT L"header"
+#define MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT L"transportPluginSettings"
+#define MIDI_CONFIG_JSON_ENDPOINT_PROCESSING_PLUGIN_SETTINGS_OBJECT L"endpointProcessingPluginSettings"
+#define MIDI_CONFIG_JSON_ENDPOINT_SETTINGS_OBJECT L"endpointSettings"
 
 
 //

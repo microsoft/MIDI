@@ -76,7 +76,7 @@ CMidi2VirtualMidiAbstraction::Activate(
 
     // IMidiEndpointManager and IMidiApiEndpointManagerExtension are interfaces implemented by the same class
     // We want to make sure we're always returning the same instance for these calls
-    else if (__uuidof(IMidiEndpointManager) == Riid || __uuidof(IMidiApiEndpointManagerExtension) == Riid)
+    else if (__uuidof(IMidiEndpointManager) == Riid/* || __uuidof(IMidiApiEndpointManagerExtension) == Riid*/)
     {
         TraceLoggingWrite(
             MidiVirtualMidiAbstractionTelemetryProvider::Provider(),

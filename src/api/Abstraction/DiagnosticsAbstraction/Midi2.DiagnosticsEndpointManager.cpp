@@ -24,7 +24,9 @@ GUID AbstractionLayerGUID = __uuidof(Midi2DiagnosticsAbstraction);
 _Use_decl_annotations_
 HRESULT
 CMidi2DiagnosticsEndpointManager::Initialize(
-    IUnknown* midiDeviceManager
+    IUnknown* midiDeviceManager,
+    LPCWSTR /*configurationJson*/
+
 )
 {
     TraceLoggingWrite(

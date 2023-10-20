@@ -10,26 +10,26 @@ CMidiDeviceManager::Initialize(
     std::shared_ptr<CMidiPerformanceManager>& PerformanceManager, 
     std::shared_ptr<CMidiConfigurationManager>& configurationManager)
 {
+    m_ConfigurationManager = configurationManager;
+
+
     // Get the enabled abstraction layers from the registry
-    std::vector<GUID> availableAbstractionLayers = configurationManager->GetEnabledAbstractionLayers();
-
-    // TODO: retrieve a list of available abstraction layers from the registry or some
-    // other registration mechanism, like a saved configuration?
-    //availableAbstractionLayers.push_back(__uuidof(Midi2KSAbstraction));
-
-
-    //availableAbstractionLayers.push_back(__uuidof(Midi2DiagnosticsAbstraction));
-    // availableAbstractionLayers.push_back(__uuidof(Midi2NetworkMidiAbstraction));
-    // availableAbstractionLayers.push_back(__uuidof(Midi2VirtualMidiAbstraction));
+    std::vector<GUID> availableAbstractionLayers = m_ConfigurationManager->GetEnabledTransportAbstractionLayers();
 
     for (auto const& AbstractionLayer : availableAbstractionLayers)
     {
         wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
         wil::com_ptr_nothrow<IMidiEndpointManager> endpointManager;
 
+        // provide the initial settings for these transports
+        // TODO: Still need a way to send updates to them without restarting the service or the abstraction
+        // but that requires a pipe all the way down to the client to send up that configuration block
+        auto transportSettingsJson = m_ConfigurationManager->GetConfigurationForTransportAbstraction(AbstractionLayer);
+
+
         RETURN_IF_FAILED(CoCreateInstance(AbstractionLayer, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
         RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiEndpointManager), (void**)&endpointManager));
-        RETURN_IF_FAILED(endpointManager->Initialize((IUnknown*)this));
+        RETURN_IF_FAILED(endpointManager->Initialize((IUnknown*)this, transportSettingsJson.c_str()));
 
         m_MidiEndpointManagers.emplace(AbstractionLayer, std::move(endpointManager));
     }

@@ -87,6 +87,7 @@ private:
     );
 
     std::shared_ptr<CMidiPerformanceManager> m_PerformanceManager;
+    std::shared_ptr<CMidiConfigurationManager> m_ConfigurationManager;
     std::map<GUID, wil::com_ptr_nothrow<IMidiEndpointManager>, GUIDCompare> m_MidiEndpointManagers;
  
     wil::critical_section m_MidiPortsLock;

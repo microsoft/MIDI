@@ -20,7 +20,9 @@ using namespace Microsoft::WRL::Wrappers;
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiEndpointManager::Initialize(
-    IUnknown* midiDeviceManager
+    IUnknown* midiDeviceManager,
+    LPCWSTR /*configurationJson*/
+
 )
 {
     OutputDebugString(L"" __FUNCTION__ " Enter");

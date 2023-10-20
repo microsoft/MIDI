@@ -27,7 +27,8 @@ using namespace Microsoft::WRL::Wrappers;
 _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiEndpointManager::Initialize(
-    IUnknown* midiDeviceManager
+    IUnknown* midiDeviceManager, 
+    LPCWSTR /*configurationJson*/
 )
 {
     OutputDebugString(L"" __FUNCTION__ " Enter");
@@ -300,15 +301,15 @@ CMidi2VirtualMidiEndpointManager::Cleanup()
 }
 
 
-
-_Use_decl_annotations_
-HRESULT
-CMidi2VirtualMidiEndpointManager::ApplyConfiguration(
-    LPCWSTR /*configurationJson*/,
-    LPWSTR /*resultJson*/
-)
-{
-    return E_NOTIMPL;
-}
+//
+//_Use_decl_annotations_
+//HRESULT
+//CMidi2VirtualMidiEndpointManager::ApplyConfiguration(
+//    LPCWSTR /*configurationJson*/,
+//    LPWSTR /*resultJson*/
+//)
+//{
+//    return E_NOTIMPL;
+//}
 
 
