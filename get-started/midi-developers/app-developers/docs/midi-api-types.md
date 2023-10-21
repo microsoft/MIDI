@@ -17,16 +17,16 @@ The developer preview is **not supported for deployment to end-user / customer m
 The Endpoint Device Id (also referred to as a Device Id) is the way we identify individual devices and interfaces in Windows. 
 
 Example for one of the built-in loopback endpoints: 
-`\\?\SWD#MIDISRV#MIDIU_DEFAULT_LOOPBACK_BIDI_A#{e7cce071-3c03-423f-88d3-f1045d02552b}`
+`\\?\SWD#MIDISRV#MIDIU_LOOPBACK_A#{e7cce071-3c03-423f-88d3-f1045d02552b}`
 
 | Part | Description |
 | ----- | -- |
 | SWD | Software device |
 | MIDISRV | The name of the enumerator. For Windows MIDI Services, this is the MidiSrv Windows Service |
-| MIDIU_DEFAULT_LOOPBACK_BIDI_A | Arbitrary identification string provided by the transport |
+| MIDIU_LOOPBACK_A | Arbitrary unique identification string provided by the transport |
 | GUID | The interface Id. There are three interfaces defined for UMP: In, Out, and BiDi. |
 
-If you look at the device in Device Manager, and look at Details/Device Instance Path, you'll see all of the information here except for the interface Id. When you enumerate devices through Windows::Devices::Enumeration, the interface Id is included.
+If you look at the device in Device Manager, and look at Details/Device Instance Path, you'll see all of the information here except for the interface Id. When you enumerate devices through Windows::Devices::Enumeration, the interface Id is included and required.
 
 We don't recommend parsing these strings. If there's information you need about the device which is not contained in the properties, please let us know and we'll look into whether or not we can create a custom property to hold that.
 
@@ -69,12 +69,7 @@ For details, see the samples under \get-started\midi-developers\app-developers\s
 
 | Type | Description |
 | ----- | -- |
-| MidiBidirectionalEndpointConnection | The primary UMP connection type for sending and receiving messages. It handles MIDI 2.0 protocol work such as endpoint discovery, function block discovery, and setting protocol. |
-| MidiInputEndpointConnection | In case we have transports which only expose an input connection |
-| MidiOutputEndpointConnection | In case we have transports which only expose an output connection |
-| MidiBidirectionalAggregatedEndpointConnection | If you have input and output devices, but need to aggregate them to treat them like a bidirectional endpoint connection, use this class. |
-
-Each of these classes has a Settings class optionally used for configuring them. In addition, there's an endpoint-defined settings class which the SDK can build upon to provide transport-specific settings for connecting (like an IP address, for example). The API simply sends the JSON up to the service for that type of setting.
+| MidiEndpointConnection | The primary UMP connection type for sending and receiving messages. In cases where a device is unidirectional (a MIDI 1.0 bytestream device, for example) only the relevant direction will function as expected. However, for simplicity in enumeration for apps, we've consolidated to a single endpoint connection type. |
 
 | Type | Description |
 | ----- | -- |
@@ -88,11 +83,9 @@ You could use these as simple app-to-app MIDI, but given that these are multi-cl
 
 | Type | Description |
 | ----- | -- |
-| Loopback UMP Endpoint A (BiDi) | Messages sent out on this arrive on Endpoint B's input  |
-| Loopback UMP Endpoint B (BiDi) | Messages sent out on this arrive on Endpoint A's input|
-| Loopback UMP Endpoint (Out) | Messages sent out here arrive on the loopback In endpoint |
-| Loopback UMP Endpoint (In) | Messages arriving from the loopback out endpoint |
-| Ping UMP Endpoint (BiDi) | This is for internal use. The MidiService::PingService method uses this to test the connection to the Windows Service. You can see this in action in the MIDI Console app |
+| Loopback UMP Endpoint A (MIDI 2.0) | Messages sent out on this arrive on Endpoint B's input  |
+| Loopback UMP Endpoint B (MIDI 2.0) | Messages sent out on this arrive on Endpoint A's input|
+| Ping UMP Endpoint (Internal) | This is for internal use. The MidiService::PingService method uses this to test the connection to the Windows Service. You can see this in action in the MIDI Console app |
 
 ### Endpoint Message Plugins
 
@@ -106,13 +99,11 @@ To help, there are plugins which implement `IMidiEndpointMessageProcessingPlugin
 | ----- | -- |
 | MidiGroupEndpointListener | Fires off the `MidiMessageReceived event only for messages from groups in the provided list |
 | MidiChannelEndpointListener | Fires off the `MidiMessageReceived` event only for messages which contain channel information, and where that channel is in the provided list. Optionally, a group may also be provided to limit to a single incoming group.  |
-| MidiMessageTypeEndpointListener | |
+| MidiMessageTypeEndpointListener | FIres off the `MidiMessageReceived` event only for specific message types |
 
 In all of those cases, the application would simply wire up to the `MidiMessageReceived` event in the listener and then add it to the plugin for the endpoint rather than the primary one on the endpoint connection itself.
 
 Listener instances are 1:1 with endpoint connections. We don't support using the same listener on multiple endpoints.
-
-The other types of plugins are used for internal infrastructure. For example, the `MidiEndpointInformationConfigurator`, the `MidiFunctionBlockEndpointListener`, and the `MidiStreamConfigurationEndpointListener` are all used to initiate device queries, catch incoming changes in endpoint information, and update the cache information for the endpoint. 
 
 ## Messages
 
@@ -125,6 +116,7 @@ Sending and receiving functions in the API include multiple ways of sending and 
 | MidiMessage64 | 64 bit (two 32-bit words) UMP |
 | MidiMessage96 | 96 bit (three 32-bit words) UMP |
 | MidiMessage128 | 128 bit (four 32-bit words) UMP |
+| MidiMessageStruct | 128 bit UMP simple structure. Use this when you don't need any of the other conveniences of UMP manipulation. Functions which fill this return the number of valid words written to it. The state of all other words are undefined. |
 
 For the most part, we do not provide strongly-typed message types in the API as that is a moving target, and many applications also include their own message creation and processing functions. If there's demand for strongly-typed messages, we may provide them in the SDK.
 
@@ -143,16 +135,15 @@ The in-protocol metadata is a bit odd compared to how we normally set up devices
 
 | Type | Description |
 | ----- | -- |
-| MidiEndpointInformation | Aggregate of all the MIDI Endpoint message information discovered through the stream messages |
 | MidiFunctionBlock | A single function block for the UMP Endpoint |
 | MidiGroupTerminalBlock | Unlike the other metadata, this is provided at device enumeration time, and is specific to USB. |
-| MidiEndpointMetadataCache | Applications generally don't need to interact with this. It's public to allow plugins to function |
-| MidiGlobalCache | Applications generally don't need to interact with this. It's public to allow plugins to function |
 
-> Important: For the developer preview, the cache is local to the API instance, and is not shared across applications. When the cache service is available, we'll rewire to use that, which will share the information across all applications
 
 ## Enumeration
 
-Finally, we have enumeration. For that, use the built-in `Windows::Devices::Enumeration` namespace using the device selectors provided by the endpoint connection types.
+Finally, we have enumeration. Of course, enumeration will work through standard Windows::Devices::Enumeration. However, for ease of accessing all of the custom properties, which must be requested at enumeration time, and for parsing the Function Block, Group Terminal Block, and other binary data, we've created specialized versions of the enumeration classes.
 
-Because we're adding additional properties to the devices, we're considering the best ways to expose them to you. We may end up with some enumeration wrappers in the SDK which request the correct property Ids when enumerating, and interpret the results.
+| Type | Description |
+| ----- | -- |
+| MidiEndpointDeviceInformation | Replacement for DeviceInformation. No async calls required. Includes the superset of known custom properties for MIDI devices. |
+| MidiEndpointDeviceWatcher | Replacement for the DeviceWatcher. No async calls required. |
