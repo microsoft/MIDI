@@ -41,11 +41,14 @@ namespace Windows.Devices.Midi2
         UInt8 FirstGroupIndex{ get; };
         UInt8 NumberOfGroupsSpanned{ get; };
 
+        Boolean IncludesGroup(MidiGroup group);
+
+
         UInt8 MidiCIMessageVersionFormat{ get; };
 
         UInt8 MaxSystemExclusive8Streams{ get; };
 
-        Boolean UpdateFromMessages(Windows.Foundation.Collections.IIterable<MidiMessage128> functionBlockMessages);
+        Boolean UpdateFromJson(Windows.Data.Json.JsonObject json);
 
     }
 }

@@ -38,9 +38,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                     var table = new Table();
 
-                    table.Border(TableBorder.HeavyHead);
+                    table.Border(TableBorder.Rounded);
 
-                    table.AddColumn("UMP Endpoints for Windows MIDI Services");
+                    table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("UMP Endpoints for Windows MIDI Services"));
 
                     // Bidirectional endpoints
 
@@ -92,7 +92,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         {
             table.AddRow(new Markup(AnsiMarkupFormatter.FormatEndpointName(endpointInfo.Name)));
 
-            table.AddRow(endpointType);
+            //table.AddRow(endpointType);
 
             if (settings.IncludeId)
             {

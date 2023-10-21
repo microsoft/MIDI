@@ -47,8 +47,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         [CommandOption("-f|--filter")]
         [DefaultValue(ListenerMessageTypeFilter.All)]
         public ListenerMessageTypeFilter Filter { get; set; }
-
-
     }
 
 

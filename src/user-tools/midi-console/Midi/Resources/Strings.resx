@@ -132,6 +132,9 @@
   <data name="CommandEndpointDescription" xml:space="preserve">
     <value>Perform operations on a single endpoint, including reporting details, sending messages, monitoring, and more. If you leave out the Instance Id, you will be prompted to select from a list.</value>
   </data>
+  <data name="CommandEndpointPropertiesDescription" xml:space="preserve">
+    <value>List out all properties for a given endpoint</value>
+  </data>
   <data name="CommandEnumerateDescription" xml:space="preserve">
     <value>Enumerate (list) endpoints and transports</value>
   </data>

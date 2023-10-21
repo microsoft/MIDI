@@ -30,9 +30,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
         winrt::hstring Id() const noexcept;
-        winrt::hstring ParentDeviceId() const noexcept;
+        winrt::guid ContainerId() const noexcept { return GetGuidProperty(L"System.Devices.ContainerId", winrt::guid{}); }
+        winrt::hstring DeviceInstanceId() const noexcept { return GetStringProperty(L"System.Devices.DeviceInstanceId", L""); }
 
         winrt::Windows::Devices::Enumeration::DeviceInformation GetParentDeviceInformation();
+        winrt::Windows::Devices::Enumeration::DeviceInformation GetContainerInformation();
+
         winrt::Windows::Devices::Enumeration::DeviceInformation DeviceInformation() noexcept { return m_deviceInformation; }
 
         winrt::hstring Name() const noexcept;
@@ -46,7 +49,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring Description() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UserSuppliedDescription, L""); }
         winrt::hstring LargeImagePath() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UserSuppliedLargeImagePath, L""); }
         winrt::hstring SmallImagePath() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UserSuppliedSmallImagePath, L""); }
-
 
         winrt::hstring UniqueIdentifier() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UniqueIdentifier, L"");}
 
@@ -81,6 +83,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring GetStringProperty(
             _In_ winrt::hstring key,
             _In_ winrt::hstring defaultValue) const noexcept;
+
+        winrt::guid GetGuidProperty(
+            _In_ winrt::hstring key,
+            _In_ winrt::guid defaultValue) const noexcept;
 
         uint8_t GetByteProperty(
             _In_ winrt::hstring key,

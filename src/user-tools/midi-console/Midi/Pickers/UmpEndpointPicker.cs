@@ -11,7 +11,7 @@ using Microsoft.Devices.Midi2.ConsoleApp.Resources;
 
 namespace Microsoft.Devices.Midi2.ConsoleApp
 {
-    internal class UmpEndpointPickerEntry
+    internal class UmpEndpointPickerEntry : IComparable<UmpEndpointPickerEntry>
     {
         public string Name { get; init; }
         public string EndpointDeviceId { get; init; }
@@ -29,6 +29,14 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             return Name;
 
         }
+
+        // for sorting
+        public int CompareTo(UmpEndpointPickerEntry? other)
+        {
+            if (other == null) return 1;
+
+            return this.Name.CompareTo(other.Name);
+        }
     }
 
     internal class UmpEndpointPicker
@@ -45,6 +53,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 {
                     choices.Add(new UmpEndpointPickerEntry(endpoint.Name, endpoint.Id, direction));
                 }
+
+                choices.Sort();
             }
         }
 

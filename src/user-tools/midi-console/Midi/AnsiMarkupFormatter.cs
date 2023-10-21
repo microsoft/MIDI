@@ -76,6 +76,10 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             return "[olive]" + d.ToString() + "[/]";
         }
 
+        public static string FormatTableColumnHeading(string heading)
+        {
+            return "[steelblue1]" + heading + "[/]";
+        }
 
 
         public static string FormatMidiWords(params UInt32[] words)

@@ -10,7 +10,6 @@
 MIDI_IDL_IMPORT
 
 import "MidiGroupTerminalBlock.idl";
-import "MidiEndpointTypeEnum.idl";
 import "MidiProtocolEnum.idl";
 import "MidiEndpointNativeDataFormatEnum.idl";
 import "MidiEndpointDevicePurposeEnum.idl";
@@ -39,8 +38,14 @@ namespace Windows.Devices.Midi2
         Windows.Devices.Enumeration.DeviceInformation DeviceInformation{ get; };
 
         Windows.Devices.Enumeration.DeviceInformation GetParentDeviceInformation();
-        String ParentDeviceId{ get; };
-        //String ContainerId{ get; };
+        Windows.Devices.Enumeration.DeviceInformation GetContainerInformation();
+
+
+        //String ParentDeviceId{ get; };
+        Guid ContainerId{ get; };
+        String DeviceInstanceId{ get; };
+
+        //String ParentDeviceInstanceId{ get; };
 
         // We surface all the names here, but use a hierarchy to decide which Name we show as the Name property
 

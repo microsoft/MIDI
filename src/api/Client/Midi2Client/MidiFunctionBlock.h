@@ -18,6 +18,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         uint8_t Number() const noexcept { return m_number; }
         winrt::hstring Name() const noexcept { return m_name; }
+
         bool IsActive() const noexcept { return m_isActive; }
         midi2::MidiFunctionBlockDirection Direction() const noexcept { return m_direction; }
         midi2::MidiFunctionBlockUIHint UIHint() const noexcept { return m_uiHint; }
@@ -27,6 +28,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         uint8_t FirstGroupIndex() { return m_firstGroupIndex; }
         uint8_t NumberOfGroupsSpanned() { return m_numberOfGroupsSpanned; }
+
+        bool IncludesGroup(_In_ midi2::MidiGroup const& group) { return group.Index() >= FirstGroupIndex() && group.Index() < FirstGroupIndex() + NumberOfGroupsSpanned(); }
 
         bool UpdateFromJson(_In_ winrt::Windows::Data::Json::JsonObject const json) noexcept;
         bool UpdateFromJsonString(_In_ winrt::hstring const json) noexcept;

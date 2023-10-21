@@ -224,4 +224,17 @@ struct MidiDevicePropertyFunctionBlock
 #define SAFE_CLOSEHANDLE(h) if (h) { CloseHandle(h); h = NULL; }
 
 
+// note that this produces a GUID with uppercase letters and enclosing braces
+inline std::wstring GuidToString(_In_ GUID guid)
+{
+    LPOLESTR str;
+    StringFromCLSID(guid, &str);
+
+    // TODO: Is this copying or acquiring?
+    std::wstring guidString{ str };
+
+    ::CoTaskMemFree(str);
+
+    return guidString;
+}
 

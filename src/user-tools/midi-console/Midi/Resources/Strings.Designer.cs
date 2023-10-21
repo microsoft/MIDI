@@ -106,6 +106,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to List out all properties for a given endpoint.
+        /// </summary>
+        internal static string CommandEndpointPropertiesDescription {
+            get {
+                return ResourceManager.GetString("CommandEndpointPropertiesDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Enumerate (list) endpoints and transports.
         /// </summary>
         internal static string CommandEnumerateDescription {

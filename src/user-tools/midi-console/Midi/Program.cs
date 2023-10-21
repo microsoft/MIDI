@@ -102,6 +102,13 @@ app.Configure(config =>
             .WithDescription(Strings.CommandMonitorEndpointDescription)
             ;
 
+        endpoint.AddCommand<EndpointPropertiesCommand>("properties")
+            .WithAlias("props")
+            .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "properties")
+            .WithDescription(Strings.CommandEndpointPropertiesDescription)
+            ;
+
+
 
     }).WithAlias("ep");
 

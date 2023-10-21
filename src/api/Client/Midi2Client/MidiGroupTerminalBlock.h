@@ -16,30 +16,35 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiGroupTerminalBlock() = default;
 
-        winrt::hstring Id() { return m_id; }
+        uint8_t Number() { return m_number; }
         winrt::hstring Name() { return m_name; }
         midi2::MidiGroupTerminalBlockDirection Direction() { return m_direction; }
         midi2::MidiGroupTerminalBlockProtocol Protocol() { return m_protocol; }
-        collections::IVectorView<midi2::MidiGroup> IncludedGroups() { return m_includedGroups.GetView(); }
+
+        uint8_t FirstGroupIndex() { return m_firstGroupIndex; }
+        uint8_t NumberOfGroupsSpanned() { return m_numberOfGroupsSpanned; }
+        bool IncludesGroup(_In_ midi2::MidiGroup const& group) { return group.Index() >= FirstGroupIndex() && group.Index() < FirstGroupIndex() + NumberOfGroupsSpanned(); }
+
+
         uint16_t MaxDeviceInputBandwidthIn4KBSecondUnits() { return m_maxDeviceInputBandwidthIn4KBSecondUnits; }
         uint16_t MaxDeviceOutputBandwidthIn4KBSecondUnits() { return m_maxDeviceOutputBandwidthIn4KBSecondUnits; }
 
     private:
-        winrt::hstring m_id{};
+        uint8_t m_number{};
         winrt::hstring m_name{};
-        midi2::MidiGroupTerminalBlockDirection m_direction{ 0 };
+        midi2::MidiGroupTerminalBlockDirection m_direction{ MidiGroupTerminalBlockDirection::Bidirectional };
         midi2::MidiGroupTerminalBlockProtocol m_protocol{ 0 };
         uint16_t m_maxDeviceInputBandwidthIn4KBSecondUnits{ 0 };
         uint16_t m_maxDeviceOutputBandwidthIn4KBSecondUnits{ 0 };
 
-        collections::IVector<midi2::MidiGroup> m_includedGroups
-            { winrt::single_threaded_vector<midi2::MidiGroup>() };
+        uint8_t m_firstGroupIndex{ 0 };
+        uint8_t m_numberOfGroupsSpanned{ 0 };
 
     };
 }
-namespace winrt::Windows::Devices::Midi2::factory_implementation
-{
-    struct MidiGroupTerminalBlock : MidiGroupTerminalBlockT<MidiGroupTerminalBlock, implementation::MidiGroupTerminalBlock>
-    {
-    };
-}
+//namespace winrt::Windows::Devices::Midi2::factory_implementation
+//{
+//    struct MidiGroupTerminalBlock : MidiGroupTerminalBlockT<MidiGroupTerminalBlock, implementation::MidiGroupTerminalBlock>
+//    {
+//    };
+//}
