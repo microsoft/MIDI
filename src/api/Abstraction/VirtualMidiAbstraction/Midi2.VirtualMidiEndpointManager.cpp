@@ -16,19 +16,13 @@ using namespace Microsoft::WRL::Wrappers;
 
 #define MAX_DEVICE_ID_LEN 200 // size in chars
 
-//
-// KsMidiPort properties
-// These properties are related to the SWD created for a MIDI port
-//
-//DEFINE_DEVPROPKEY(DEVPKEY_KsMidiPort_KsFilterInterfaceId, 0x2bf8a79a, 0x79ff, 0x49bc, 0x91, 0x26, 0x37, 0x28, 0x15, 0xb1, 0x53, 0xc8, 1);     // DEVPROP_TYPE_STRING
-//DEFINE_DEVPROPKEY(DEVPKEY_KsMidiPort_KsPinId, 0x2bf8a79a, 0x79ff, 0x49bc, 0x91, 0x26, 0x37, 0x28, 0x15, 0xb1, 0x53, 0xc8, 2);     // DEVPROP_TYPE_UINT32
-//DEFINE_DEVPROPKEY(DEVPKEY_Midi_Device_Tag, 0xc659a048, 0x9933, 0x4ec2, 0xa8, 0xc4, 0x5c, 0xcc, 0x98, 0x8e, 0xc9, 0xf5, 1);     // DEVPROP_TYPE_UINT64
+GUID AbstractionLayerGUID = __uuidof(Midi2VirtualMidiAbstraction);
 
 _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiEndpointManager::Initialize(
     IUnknown* midiDeviceManager, 
-    LPCWSTR /*configurationJson*/
+    LPCWSTR configurationJson
 )
 {
     OutputDebugString(L"" __FUNCTION__ " Enter");
@@ -44,9 +38,33 @@ CMidi2VirtualMidiEndpointManager::Initialize(
 
     RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
 
+    m_transportAbstractionId = AbstractionLayerGUID;   // this is needed so MidiSrv can instantiate the correct transport
+    m_containerId = m_transportAbstractionId;                           // we use the transport ID as the container ID for convenience
+
+
+    if (configurationJson != nullptr)
+    {
+        try
+        {
+            OutputDebugString(configurationJson);
+
+            m_jsonObject = json::JsonObject::Parse(configurationJson);
+        }
+        catch (...)
+        {
+            OutputDebugString(L"Exception processing json for virtual MIDI abstraction");
+        }
+
+    }
+    else
+    {
+        OutputDebugString(L"Configuration json is null for virtual MIDI abstraction");
+    }
+
 
     RETURN_IF_FAILED(CreateParentDevice());
- //   RETURN_IF_FAILED(CreateEndpoint());
+    RETURN_IF_FAILED(CreateConfiguredEndpoints(configurationJson));
+
 
     return S_OK;
 }
@@ -54,51 +72,38 @@ CMidi2VirtualMidiEndpointManager::Initialize(
 
 
 
-void SwMidiParentDeviceCreateCallback(__in HSWDEVICE /*hSwDevice*/, __in HRESULT CreationResult, __in_opt PVOID pContext, __in_opt PCWSTR /* pszDeviceInstanceId */)
+void SwMidiParentDeviceCreateCallback(__in HSWDEVICE /*hSwDevice*/, __in HRESULT CreationResult, __in_opt PVOID pContext, __in_opt PCWSTR pszDeviceInstanceId)
 {
-    OutputDebugString(L"" __FUNCTION__ " Enter");
+    if (pContext == nullptr)
+    {
+        // TODO: Should log this.
 
+        return;
+    }
 
     PPARENTDEVICECREATECONTEXT creationContext = (PPARENTDEVICECREATECONTEXT)pContext;
 
-    // interface registration has started, assume
-    // failure
-    creationContext->MidiParentDevice->SwDeviceState = SWDEVICESTATE::Failed;
 
-    
+    // interface registration has started, assume failure
+    creationContext->MidiParentDevice->SwDeviceState = SWDEVICESTATE::Failed;
 
     LOG_IF_FAILED(CreationResult);
 
-    //if (SUCCEEDED(CreationResult))
-    //{
-    //    CreationResult = SwDeviceInterfaceRegister(
-    //        hSwDevice,
-    //        &(creationContext->MidiPort->InterfaceCategory),
-    //        nullptr,
-    //        creationContext->IntPropertyCount,
-    //        creationContext->InterfaceDevProperties,
-    //        TRUE,
-    //        wil::out_param(creationContext->MidiPort->DeviceInterfaceId));
-    //    LOG_IF_FAILED(CreationResult);
-    //}
-
     if (SUCCEEDED(CreationResult))
     {
-        OutputDebugString(L"" __FUNCTION__ " - CreationResult indicates success");
-
         // success, mark the port as created
         creationContext->MidiParentDevice->SwDeviceState = SWDEVICESTATE::Created;
+
+        // get the new device instance ID. This is usually modified from what we started with
+        creationContext->MidiParentDevice->InstanceId = std::wstring(pszDeviceInstanceId);
     }
     else
     {
-        OutputDebugString(L"" __FUNCTION__ " - CreationResult indicates FAILURE");
+        OutputDebugString(L"" __FUNCTION__ " - CreationResult FAILURE");
     }
 
     // success or failure, signal we have completed.
     creationContext->creationCompleted.SetEvent();
-
-    OutputDebugString(L"" __FUNCTION__ " Exit");
-
 }
 
 
@@ -106,12 +111,10 @@ void SwMidiParentDeviceCreateCallback(__in HSWDEVICE /*hSwDevice*/, __in HRESULT
 HRESULT
 CMidi2VirtualMidiEndpointManager::CreateParentDevice()
 {
-    OutputDebugString(L"" __FUNCTION__ " Enter");
-
     // the parent device parameters are set by the transport (this)
 
-    std::wstring parentDeviceName{ L"MIDI 2.0 Virtual Transport" };
-    std::wstring parentDeviceId{ L"MIDIU_VIRTUAL_TRANSPORT" };
+    std::wstring parentDeviceName{ TRANSPORT_PARENT_DEVICE_NAME };
+    std::wstring parentDeviceId{ TRANSPORT_PARENT_ID };
 
     SW_DEVICE_CREATE_INFO CreateInfo = {};
     CreateInfo.cbSize = sizeof(CreateInfo);
@@ -123,9 +126,6 @@ CMidi2VirtualMidiEndpointManager::CreateParentDevice()
 
     if (m_parentDevice != nullptr)
     {
-        // already created
-        OutputDebugString(L"" __FUNCTION__ " - Parent already created.");
-
         return S_OK;
     }
 
@@ -145,47 +145,29 @@ CMidi2VirtualMidiEndpointManager::CreateParentDevice()
 
     m_parentDevice->SwDeviceState = SWDEVICESTATE::CreatePending;
 
-    m_parentDevice->InstanceId = createInfo->pszInstanceId;
-    //midiPort->MidiFlow = MidiFlow;
+    //m_parentDevice->InstanceId = createInfo->pszInstanceId;
 
-    //const GUID* interfaceCategory;
-    //if (MidiFlow == MidiFlow::MidiFlowOut)
-    //{
-    //    interfaceCategory = &DEVINTERFACE_UNIVERSALMIDIPACKET_OUTPUT;
-    //}
-    //else if (MidiFlow == MidiFlow::MidiFlowIn)
-    //{
-    //    interfaceCategory = &DEVINTERFACE_UNIVERSALMIDIPACKET_INPUT;
-    //}
-    //else if (MidiFlow == MidiFlow::MidiFlowBidirectional)
-    //{
-    //    interfaceCategory = &DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI;
-    //}
-    //else
-    //{
-    //    RETURN_IF_FAILED(E_UNEXPECTED);
-    //}
+    DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
 
-    //    midiPort->InterfaceCategory = *interfaceCategory;
+    DEVPROPERTY deviceDevProperties[] = {
+        {{DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue},
+        {{DEVPKEY_Device_NoConnectSound, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue}
+    };
 
-    OutputDebugString(L"" __FUNCTION__ " -- Calling SwDeviceCreate");
 
-    GUID transportAbstractionId = __uuidof(Midi2VirtualMidiAbstraction);
+    std::wstring rootDeviceId = LOOPBACK_PARENT_ROOT;
+    std::wstring enumeratorName = TRANSPORT_ENUMERATOR;
 
-    // we use the GUID for this transport COM object as the container id
-    GUID containerId = transportAbstractionId;
-
-    std::wstring rootDeviceId = L"HTREE\\ROOT\\0";
-    std::wstring enumeratorName = L"MidiSrv";
-
-    createInfo->pContainerId = &containerId;
+    createInfo->pContainerId = &m_containerId;
 
     RETURN_IF_FAILED(SwDeviceCreate(
-        L"MidiSrv",                         // this really should come from the service
+        enumeratorName.c_str(),             // this really should come from the service
         rootDeviceId.c_str(),               // root device
-        createInfo, 
-        0,                                  // count of properties
-        NULL,                               // pointer to properties
+        createInfo,
+        ARRAYSIZE(deviceDevProperties),     // count of properties
+        (DEVPROPERTY*)deviceDevProperties,  // pointer to properties
         SwMidiParentDeviceCreateCallback,   // callback
         &creationContext,
         wil::out_param(m_parentDevice->SwDevice)));
@@ -193,91 +175,127 @@ CMidi2VirtualMidiEndpointManager::CreateParentDevice()
     // wait for creation to complete
     creationContext.creationCompleted.wait();
 
-       
-
     // confirm we were able to register the interface
     RETURN_HR_IF(E_FAIL, m_parentDevice->SwDeviceState != SWDEVICESTATE::Created);
-
-    // success, transfer the midiPort to the list
- //   m_MidiPorts.push_back(std::move(midiPort));
-
-    OutputDebugString(L"" __FUNCTION__ " Exit");
 
     return S_OK;
 }
 
 
+#define MIDI_VIRTUAL_ENDPOINTS_ARRAY_KEY L"endpoints"
 
+#define MIDI_VIRTUAL_ENDPOINT_PROPERTY_KEY L"key"
+#define MIDI_VIRTUAL_ENDPOINT_PROPERTY_NAME L"name"
+#define MIDI_VIRTUAL_ENDPOINT_PROPERTY_UNIQUEID L"uniqueIdentifier"
+#define MIDI_VIRTUAL_ENDPOINT_PROPERTY_MULTICLIENT L"supportsMultClient"
+
+_Use_decl_annotations_
+HRESULT
+CMidi2VirtualMidiEndpointManager::CreateConfiguredEndpoints(std::wstring configurationJson)
+{
+    // if nothing to configure, that's ok
+    if (configurationJson.empty()) return S_OK;
+
+    try
+    {
+        auto jsonObject = json::JsonObject::Parse(configurationJson);
+
+        auto endpoints = jsonObject.GetNamedArray(MIDI_VIRTUAL_ENDPOINTS_ARRAY_KEY);
+
+        for (auto endpointElement : endpoints)
+        {
+            // GetObjectW here is because wingdi redefines it to GetObject. It's a stupid preprocessor conflict
+            try
+            {
+                auto endpoint = endpointElement.GetObjectW();
+
+              //  auto key = endpoint.GetNamedString(MIDI_VIRTUAL_ENDPOINT_PROPERTY_KEY, L"");
+                auto name = endpoint.GetNamedString(MIDI_VIRTUAL_ENDPOINT_PROPERTY_NAME, L"");
+                auto uniqueIdentifier = endpoint.GetNamedString(MIDI_VIRTUAL_ENDPOINT_PROPERTY_UNIQUEID, L"");
+             //   auto supportsMultiClient = endpoint.GetNamedBoolean(MIDI_VIRTUAL_ENDPOINT_PROPERTY_MULTICLIENT, true);
+
+                auto instanceId = TRANSPORT_MNEMONIC L"_" + uniqueIdentifier;
+
+                // TODO: Need to add this to the table for routing, and also add the other properties to the function
+                CreateEndpoint((std::wstring)instanceId, (std::wstring)name);
+            }
+            catch (...)
+            {
+                // couldn't get an object. Garbage data
+                OutputDebugString(L"" __FUNCTION__ " Exception getting endpoint properties from json");
+            }
+        }
+
+    }
+    catch (...)
+    {
+        // exception parsing the json. It's likely empty or malformed
+
+        OutputDebugString(L"" __FUNCTION__ " Exception parsing JSON");
+
+        TraceLoggingWrite(
+            MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this")
+        );
+
+        return E_FAIL;
+    }
+
+    return S_OK;
+}
 
 // this will be called from the runtime endpoint creation interface
 
+_Use_decl_annotations_
 HRESULT 
-CMidi2VirtualMidiEndpointManager::CreateEndpoint()
+CMidi2VirtualMidiEndpointManager::CreateEndpoint(std::wstring const instanceId, std::wstring const name)
 {
-    OutputDebugString(L"" __FUNCTION__ " Enter");
-
-    //std::hash<std::wstring> hasher;
-    //std::wstring hash;
-
-    // Each instance should be stored in a endpoint manager-scoped vector of open endpoints
-
-    std::wstring deviceName{ L"MIDI 2.0 Loopback 0001" };
-    std::wstring deviceId{ L"MIDIU_LOOPBACK_BIDI" };
-
-    //hash = std::to_wstring(hasher(deviceId));
-
-    // hard-coding a number at the moment. will need to calculate this later.
-    std::wstring deviceInstanceId{ L"MIDIU_LOOPBACK_BIDI_INST.0001" };
-
-
-    OutputDebugString(deviceName.c_str());
-    OutputDebugString(deviceId.c_str());
-    OutputDebugString(deviceInstanceId.c_str());
-    OutputDebugString(m_parentDevice->InstanceId.c_str());
-
-
     //put all of the devproperties we want into arrays and pass into ActivateEndpoint:
 
-    OutputDebugString(L"" __FUNCTION__ " - Setting interface dev properties");
-    
-    // this name property will be provided by the API
-    DEVPROPERTY interfaceDevProperties[] = {
-        {{DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((deviceName.length() + 1) * sizeof(WCHAR)), (PVOID)deviceName.c_str()}
-    };
+    std::wstring mnemonic(TRANSPORT_MNEMONIC);
+    MidiFlow const flow = MidiFlow::MidiFlowBidirectional;
 
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
 
-    OutputDebugString(L"" __FUNCTION__ " - Setting device dev properties");
+    DEVPROPERTY interfaceDevProperties[] = {
+        {{DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_STRING, static_cast<ULONG>((name.length() + 1) * sizeof(WCHAR)), (PVOID)name.c_str()},
+        {{PKEY_MIDI_TransportSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_STRING, static_cast<ULONG>((name.length() + 1) * sizeof(WCHAR)), (PVOID)name.c_str()},
+        {{PKEY_MIDI_UmpLoopback, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue},
+        {{PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_GUID, static_cast<ULONG>(sizeof(GUID)), (PVOID)&AbstractionLayerGUID },        // essential to instantiate the right endpoint types
+        {{PKEY_MIDI_TransportMnemonic, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_STRING, static_cast<ULONG>((mnemonic.length() + 1) * sizeof(WCHAR)), (PVOID)mnemonic.c_str()},
+    };
 
     DEVPROPERTY deviceDevProperties[] = {
         {{DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue}
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue},
+        {{DEVPKEY_Device_NoConnectSound, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue}
     };
 
     SW_DEVICE_CREATE_INFO createInfo = {};
     createInfo.cbSize = sizeof(createInfo);
 
-    createInfo.pszInstanceId = deviceInstanceId.c_str();
+    createInfo.pszInstanceId = instanceId.c_str();
     createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
-    createInfo.pszDeviceDescription = deviceName.c_str();
+    createInfo.pszDeviceDescription = name.c_str();
 
-    OutputDebugString(L"" __FUNCTION__ " - Activating Endpoint");
 
-    // MIDISRV here comes from the service. If that changes, it needs
-    // to be changed here as well.
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
-        (std::wstring(L"SWD\\MIDISRV\\") + m_parentDevice->InstanceId).c_str(),     // parent instance Id
-        true,                                                                       // UMP-only
-        MidiFlow::MidiFlowBidirectional,                                            // MIDI Flow
+        std::wstring(m_parentDevice->InstanceId).c_str(),       // parent instance Id
+        true,                                                   // UMP-only
+        flow,                                                   // MIDI Flow
         ARRAYSIZE(interfaceDevProperties),
         ARRAYSIZE(deviceDevProperties),
         (PVOID)interfaceDevProperties,
         (PVOID)deviceDevProperties,
         (PVOID)&createInfo));
-
-
-    OutputDebugString(L"" __FUNCTION__ " Exit");
 
     return S_OK;
 }

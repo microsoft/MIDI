@@ -11,6 +11,8 @@
 #include <winrt/Windows.Storage.h>
 #include <winrt/Windows.Storage.Streams.h>
 
+namespace json = ::winrt::Windows::Data::Json;
+
 #include <strsafe.h>
 #include <wrl\module.h>
 #include <wrl\event.h>

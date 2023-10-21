@@ -88,6 +88,9 @@
     <ClInclude Include="MidiVirtualRouter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="abstraction_defs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Midi2.VirtualMidiAbstraction.rc">

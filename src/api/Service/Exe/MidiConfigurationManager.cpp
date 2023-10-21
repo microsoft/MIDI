@@ -5,7 +5,7 @@
 #define MAX_KEY_LENGTH 255
 #define MAX_VALUE_NAME 16383
 
-// TODO: Refactor these two methods and abstract out the registry code
+// TODO: Refactor these two methods and abstract out the registry code. Do this once wil adds the enumeration helpers to the NuGet
 std::vector<GUID> CMidiConfigurationManager::GetEnabledTransportAbstractionLayers() const noexcept
 {
     //OutputDebugString(L"GetEnabledAbstractionLayers");
@@ -148,7 +148,7 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledTransportAbstractionLayer
     return availableAbstractionLayers;
 }
 
-// TODO: Refactor these two methods and abstract out the registry code
+// TODO: Refactor these two methods and abstract out the registry code. Do this once wil adds the enumeration helpers to the NuGet
 std::vector<GUID> CMidiConfigurationManager::GetEnabledEndpointProcessingAbstractionLayers() const noexcept
 {
     //OutputDebugString(L"GetEnabledAbstractionLayers");
@@ -291,14 +291,17 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledEndpointProcessingAbstrac
     return availableAbstractionLayers;
 }
 
-
+// this gets just the file name, not the full path
 std::wstring CMidiConfigurationManager::GetCurrentConfigurationFileName() noexcept
 {
     std::wstring keyPath = MIDI_ROOT_REG_KEY;
 
     try
     {
-        auto val = wil::reg::get_value<std::wstring>(HKEY_LOCAL_MACHINE, keyPath.c_str(), MIDI_CONFIG_FILE_REG_VALUE);
+        auto val = wil::reg::get_value<std::wstring>(
+            HKEY_LOCAL_MACHINE, 
+            keyPath.c_str(), 
+            MIDI_CONFIG_FILE_REG_VALUE);
 
 
         if (!val.empty())
@@ -330,11 +333,21 @@ std::wstring CMidiConfigurationManager::GetCurrentConfigurationFileName() noexce
 
 HRESULT CMidiConfigurationManager::Initialize()
 {
+    OutputDebugString(L"" __FUNCTION__);
+
     // load the current configuration
 
     auto fileName = GetCurrentConfigurationFileName();
 
-    fileName = MIDI_CONFIG_FILE_FOLDER + fileName;
+    OutputDebugString(L"Config file name before expansion");
+    OutputDebugString((MIDI_CONFIG_FILE_FOLDER + fileName).c_str());
+
+    // expanding this requires that the service is impersonating the current user.
+    // WinRT doesn't support relative paths or unexpanded 
+    fileName = ExpandPath(MIDI_CONFIG_FILE_FOLDER) + fileName;
+
+    OutputDebugString(L"Config file name after expansion");
+    OutputDebugString(fileName.c_str());
 
     if (!fileName.empty())
     {
@@ -342,43 +355,57 @@ HRESULT CMidiConfigurationManager::Initialize()
 
         try
         {
+            OutputDebugString(L"Opening json config file");
+
             // try to open the file
             auto file = winrt::Windows::Storage::StorageFile::GetFileFromPathAsync(fileName).get();
 
             // try to read the text from the file
             fileContents = winrt::Windows::Storage::FileIO::ReadTextAsync(file).get();
 
+
+            OutputDebugString(L"" __FUNCTION__);
+            OutputDebugString(fileContents.c_str());
         }
         catch (...)
         {
+            OutputDebugString(L"Exception opening json config file");
+
             // file does not exist or we can't open it
             // we don't fail if no configuration file, we just don't config anything
+
+            // TODO: Need to log this
 
             return S_OK;
         }
         
         if (!fileContents.empty())
         {
+            OutputDebugString(L"Config file contents are NOT empty");
+
             // parse out the JSON.
             // If the JSON is bad, we still just run. We just don't config.
             // Config is a privilege, not a right, and is certainly not essential :)
 
             try
             {
-                m_jsonObject = winrt::Windows::Data::Json::JsonObject::Parse(fileContents);
+                m_jsonObject = json::JsonObject::Parse(fileContents);
             }
             CATCH_LOG()
+        }
+        else
+        {
+            OutputDebugString(L"Config file contents are empty");
         }
 
     }
     else
     {
         // config file is missing
+        OutputDebugString(L"Config file is missing");
 
         return S_OK;
     }
-
-
 
     return S_OK;
 }
@@ -387,7 +414,11 @@ HRESULT CMidiConfigurationManager::Initialize()
 _Use_decl_annotations_
 std::wstring CMidiConfigurationManager::GetConfigurationForTransportAbstraction(GUID abstractionGuid) const noexcept
 {
+    OutputDebugString(L"" __FUNCTION__);
+
     auto key = GuidToString(abstractionGuid);
+
+    OutputDebugString(key.c_str());
 
     if (m_jsonObject != nullptr)
     {
@@ -400,7 +431,11 @@ std::wstring CMidiConfigurationManager::GetConfigurationForTransportAbstraction(
             {
                 auto thisPlugin = plugins.GetNamedObject(key);
 
-                return (std::wstring)thisPlugin.Stringify();
+                std::wstring jsonString = (std::wstring)thisPlugin.Stringify();
+
+                OutputDebugString(jsonString.c_str());
+
+                return jsonString;
             }
         }
     }
@@ -413,7 +448,11 @@ std::wstring CMidiConfigurationManager::GetConfigurationForTransportAbstraction(
 _Use_decl_annotations_
 std::wstring CMidiConfigurationManager::GetConfigurationForEndpointProcessingAbstraction(GUID abstractionGuid) const noexcept
 {
+    OutputDebugString(L"" __FUNCTION__);
+
     auto key = GuidToString(abstractionGuid);
+
+    OutputDebugString(key.c_str());
 
     if (m_jsonObject != nullptr)
     {
@@ -426,28 +465,11 @@ std::wstring CMidiConfigurationManager::GetConfigurationForEndpointProcessingAbs
             {
                 auto thisPlugin = plugins.GetNamedObject(key);
 
-                return (std::wstring)thisPlugin.Stringify();
-            }
-        }
-    }
+                std::wstring jsonString = (std::wstring)thisPlugin.Stringify();
 
-    return L"";
-}
+                OutputDebugString(jsonString.c_str());
 
-_Use_decl_annotations_
-std::wstring CMidiConfigurationManager::GetConfigurationForEndpoint(std::wstring instanceId) const noexcept
-{
-    if (m_jsonObject != nullptr)
-    {
-        if (m_jsonObject.HasKey(winrt::to_hstring(MIDI_CONFIG_JSON_ENDPOINT_SETTINGS_OBJECT)))
-        {
-            auto transports = m_jsonObject.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_SETTINGS_OBJECT);
-
-            if (transports.HasKey(instanceId))
-            {
-                auto thisTransport = transports.GetNamedObject(instanceId);
-
-                return (std::wstring)thisTransport.Stringify();
+                return jsonString;
             }
         }
     }

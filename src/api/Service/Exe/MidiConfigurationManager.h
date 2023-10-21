@@ -25,33 +25,43 @@ public:
     std::wstring GetConfigurationForEndpointProcessingAbstraction(
         _In_ GUID abstractionGuid) const noexcept;
 
-    // full instance Id including the interface guid, exactly 
-    // as seen using Windows::Devices::Enumeration
-    std::wstring GetConfigurationForEndpoint(
-        _In_ std::wstring instanceId) const noexcept;
-
     HRESULT Cleanup() noexcept;
 
 private:
     std::wstring GetCurrentConfigurationFileName() noexcept;
 
-    winrt::Windows::Data::Json::JsonObject m_jsonObject{ nullptr };
+    json::JsonObject m_jsonObject{ nullptr };
+
+
+    // this works as long as the path is not user-specific. If we decide to store in 
+    // user's local app settings or something, then we need to impersonate before
+    // calling this function
+    inline std::wstring ExpandPath(_In_ std::wstring sourcePath) const
+    {
+        wchar_t expanded[MAX_PATH + 1]{ 0 };
+
+        /*auto numChars = */ ExpandEnvironmentStrings(sourcePath.c_str(), (LPWSTR)&expanded, MAX_PATH + 1);
+
+        return std::wstring(expanded);
+    }
+
+    // this should probably be in a shared place
+    // note that this produces a GUID with uppercase letters and enclosing braces
+    inline std::wstring GuidToString(_In_ GUID guid) const
+    {
+        LPOLESTR str;
+        StringFromCLSID(guid, &str);
+
+        // TODO: Is this copying or acquiring?
+        std::wstring guidString{ str };
+
+        ::CoTaskMemFree(str);
+
+        return guidString;
+    }
 
 };
 
 
 
-// this could be moved to someplace better
 
-inline std::wstring GuidToString(_In_ GUID guid)
-{
-    LPOLESTR str;
-    StringFromCLSID(guid, &str);
-
-    // TODO: Is this copying or acquiring?
-    std::wstring guidString{ str };
-
-    ::CoTaskMemFree(str);
-
-    return guidString;
-}

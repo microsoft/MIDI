@@ -94,7 +94,8 @@ namespace Windows.Devices.Midi2
         String Description{ get; };
 
         // png icon supplied by the user
-        String ImagePath{ get; };
+        String LargeImagePath{ get; };
+        String SmallImagePath{ get; };
 
 
         

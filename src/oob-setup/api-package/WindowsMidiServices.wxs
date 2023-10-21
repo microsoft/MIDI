@@ -22,6 +22,18 @@
                 </Directory>
             </Directory>
         </StandardDirectory>
+        
+        <StandardDirectory Id="CommonAppDataFolder">
+            <Directory Name="Microsoft">
+                <Directory Name="MIDI">
+                    <Component Id="Permission.SharedAppDataFolder" Guid="{CFF49B6C-54CA-47F9-A1EF-62CD7C542D78}">
+                        <CreateFolder>
+                            <Permission GenericAll="yes" User="Everyone"/>
+                        </CreateFolder>
+                    </Component>
+                </Directory>
+            </Directory>
+        </StandardDirectory>
 
 
         <Binary Id ="RegistryCustomActionsLib" SourceFile="$(env.MIDI_REPO_ROOT)src\oob-setup\RegistryCustomActions\bin\x64\Release\net48\RegistryCustomActions.CA.dll" />
@@ -253,6 +265,8 @@
             <ComponentRef Id="WindowsService"/>
             <ComponentRef Id="WindowsAPI"/>
             <ComponentRef Id="WindowsAPIRegistration"/>
+
+            <ComponentRef Id="Permission.SharedAppDataFolder"/>
 
             <ComponentRef Id="ConsoleAppExe"/>
 

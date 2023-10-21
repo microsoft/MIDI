@@ -192,6 +192,8 @@ CMidiDeviceManager::ActivateEndpointInternal
         interfaceProperties.push_back({ {DEVPKEY_Device_NoConnectSound, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
 
+
+        // from endpoint discovery ============
         interfaceProperties.push_back({ {PKEY_MIDI_EndpointSupportsMidi2Protocol, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse });
 
@@ -219,13 +221,22 @@ CMidiDeviceManager::ActivateEndpointInternal
         interfaceProperties.push_back({ {PKEY_MIDI_FunctionBlocksAreStatic, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)),&devPropFalse });
 
-        //interfaceProperties.push_back({ {PKEY_MIDI_FunctionBlocks, DEVPROP_STORE_SYSTEM, nullptr},
-        //    DEVPROP_TYPE_BINARY, static_cast<ULONG>(0), &functionBlockCount });
-
         //interfaceProperties.push_back({ {PKEY_MIDI_DeviceIdentification, DEVPROP_STORE_SYSTEM, nullptr},
         //    DEVPROP_TYPE_BINARY, static_cast<ULONG>(0),  });
 
-        interfaceProperties.push_back({ {PKEY_MIDI_UserSuppliedImagePath, DEVPROP_STORE_SYSTEM, nullptr},
+
+        // from function block discovery =============================
+
+        //interfaceProperties.push_back({ {PKEY_MIDI_FunctionBlocks, DEVPROP_STORE_SYSTEM, nullptr},
+        //    DEVPROP_TYPE_BINARY, static_cast<ULONG>(0), &functionBlockCount });
+
+
+        // from settings app =============================
+
+        interfaceProperties.push_back({ {PKEY_MIDI_UserSuppliedLargeImagePath, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_STRING, static_cast<ULONG>((emptyString.length() + 1) * sizeof(WCHAR)), (PVOID)emptyString.c_str() });
+
+        interfaceProperties.push_back({ {PKEY_MIDI_UserSuppliedSmallImagePath, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_STRING, static_cast<ULONG>((emptyString.length() + 1) * sizeof(WCHAR)), (PVOID)emptyString.c_str() });
 
         interfaceProperties.push_back({ {PKEY_MIDI_UserSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},

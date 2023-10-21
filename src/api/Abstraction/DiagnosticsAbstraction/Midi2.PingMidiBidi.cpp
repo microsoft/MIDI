@@ -10,8 +10,6 @@
 #include "pch.h"
 #include "midi2.DiagnosticsAbstraction.h"
 
-#include "diagnostics_defs.h"
-
 
 _Use_decl_annotations_
 HRESULT

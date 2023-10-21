@@ -10,8 +10,6 @@
 #include "pch.h"
 #include "midi2.DiagnosticsAbstraction.h"
 
-#include "diagnostics_defs.h"
-
 using namespace wil;
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
@@ -40,7 +38,7 @@ CMidi2DiagnosticsEndpointManager::Initialize(
 
     RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
 
-    m_transportAbstractionId = __uuidof(Midi2DiagnosticsAbstraction);   // this is needed so MidiSrv can instantiate the correct transport
+    m_transportAbstractionId = AbstractionLayerGUID;   // this is needed so MidiSrv can instantiate the correct transport
     m_containerId = m_transportAbstractionId;                           // we use the transport ID as the container ID for convenience
 
     RETURN_IF_FAILED(CreateParentDevice());
@@ -176,7 +174,7 @@ CMidi2DiagnosticsEndpointManager::CreateParentDevice()
 
 _Use_decl_annotations_
 HRESULT 
-CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(_In_ std::wstring const instanceId, _In_ std::wstring const name, _In_ MidiFlow const flow)
+CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(std::wstring const instanceId, std::wstring const name, MidiFlow const flow)
 {
     //put all of the devproperties we want into arrays and pass into ActivateEndpoint:
 
