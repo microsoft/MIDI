@@ -28,6 +28,7 @@ namespace Windows.Devices.Midi2
 
         static String DiagnosticsLoopbackAEndpointId{ get; };
         static String DiagnosticsLoopbackBEndpointId{ get; };
+        //static String DiagnosticsPingEndpointId{ get; };      // don't expose in IDL
 
         static String EndpointInterfaceClass{ get; };
 

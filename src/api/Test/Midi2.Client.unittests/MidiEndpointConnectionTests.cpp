@@ -30,7 +30,7 @@ void MidiEndpointConnectionTests::TestCreateBiDiLoopbackA()
 
     LOG_OUTPUT(L"Connecting to Bidirectional Loopback Endpoint A");
 
-    auto conn1 = session.CreateEndpointConnection(LOOPBACK_BIDI_ID_A);
+    auto conn1 = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_A);
 
     VERIFY_IS_NOT_NULL(conn1);
 
@@ -54,7 +54,7 @@ void MidiEndpointConnectionTests::TestCreateBiDiLoopbackB()
 
     LOG_OUTPUT(L"Connecting to Bidirectional Loopback Endpoint B");
 
-    auto conn1 = session.CreateEndpointConnection(LOOPBACK_BIDI_ID_B);
+    auto conn1 = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_B);
 
     VERIFY_IS_NOT_NULL(conn1);
 
@@ -83,8 +83,8 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmpStruct()
 
     MidiEndpointConnectionOptions options;
 
-    auto connSend = session.CreateEndpointConnection(LOOPBACK_BIDI_ID_A, options);
-    auto connReceive = session.CreateEndpointConnection(LOOPBACK_BIDI_ID_B, options);
+    auto connSend = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_A, options);
+    auto connReceive = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_B, options);
 
     VERIFY_IS_NOT_NULL(connSend);
     VERIFY_IS_NOT_NULL(connReceive);
@@ -168,8 +168,8 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmp32()
 
     MidiEndpointConnectionOptions options;
 
-    auto connSend = session.CreateEndpointConnection(LOOPBACK_BIDI_ID_A, options);
-    auto connReceive = session.CreateEndpointConnection(LOOPBACK_BIDI_ID_B, options);
+    auto connSend = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_A, options);
+    auto connReceive = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_B, options);
 
     VERIFY_IS_NOT_NULL(connSend);
     VERIFY_IS_NOT_NULL(connReceive);
@@ -270,8 +270,8 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWords()
 
     MidiEndpointConnectionOptions options;
 
-    auto connSend = session.CreateEndpointConnection(LOOPBACK_BIDI_ID_A, options);
-    auto connReceive = session.CreateEndpointConnection(LOOPBACK_BIDI_ID_B, options);
+    auto connSend = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_A, options);
+    auto connReceive = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_B, options);
 
     VERIFY_IS_NOT_NULL(connSend);
     VERIFY_IS_NOT_NULL(connReceive);

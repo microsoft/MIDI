@@ -45,8 +45,8 @@ void MidiBenchmarks::BenchmarkSendReceiveWordArray()
 
     auto session = MidiSession::CreateSession(L"Benchmark Session");
 
-    auto connSend = session.CreateEndpointConnection(LOOPBACK_BIDI_ID_A);
-    auto connReceive = session.CreateEndpointConnection(LOOPBACK_BIDI_ID_B);
+    auto connSend = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_A);
+    auto connReceive = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_B);
 
     VERIFY_IS_NOT_NULL(connSend);
     VERIFY_IS_NOT_NULL(connReceive);
@@ -296,8 +296,8 @@ void MidiBenchmarks::BenchmarkSendReceiveUmpRuntimeClass()
 
     auto session = MidiSession::CreateSession(L"Benchmark Session");
 
-    auto connSend = session.CreateEndpointConnection(LOOPBACK_BIDI_ID_A, nullptr);
-    auto connReceive = session.CreateEndpointConnection(LOOPBACK_BIDI_ID_B, nullptr);
+    auto connSend = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_A, nullptr);
+    auto connReceive = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_B, nullptr);
 
     VERIFY_IS_NOT_NULL(connSend);
     VERIFY_IS_NOT_NULL(connReceive);

@@ -56,8 +56,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         return;
                     }
 
-                    var endpoints = DeviceInformation.FindAllAsync(selector)
-                        .GetAwaiter().GetResult();
+                    var endpoints = MidiEndpointDeviceInformation.FindAll(true);
 
                     if (endpoints.Count > 0)
                     {
@@ -88,7 +87,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         }
 
 
-        private void DisplayEndpointInformationFormatted(Table table, Settings settings, DeviceInformation endpointInfo, string endpointType)
+        private void DisplayEndpointInformationFormatted(Table table, Settings settings, MidiEndpointDeviceInformation endpointInfo, string endpointType)
         {
             table.AddRow(new Markup(AnsiMarkupFormatter.FormatEndpointName(endpointInfo.Name)));
 

@@ -165,14 +165,16 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     collections::IVectorView<midi2::MidiEndpointDeviceInformation> MidiEndpointDeviceInformation::FindAll(bool includeDiagnosticsEndpoints)
     {
-        auto midiDevices = winrt::single_threaded_vector<midi2::MidiEndpointDeviceInformation>();
+        //auto midiDevices = winrt::single_threaded_vector<midi2::MidiEndpointDeviceInformation>();
+
+        std::vector<midi2::MidiEndpointDeviceInformation> midiDevices{};
 
         try
         {
             auto devices = Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(
                 MidiEndpointConnection::GetDeviceSelector(),
                 GetAdditionalPropertiesList(),
-                winrt::Windows::Devices::Enumeration::DeviceInformationKind::Device
+                winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface
             ).get();
 
 
@@ -186,7 +188,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                     if (endpointInfo->EndpointPurpose() == MidiEndpointDevicePurpose::NormalMessageEndpoint || includeDiagnosticsEndpoints)
                     {
-                        midiDevices.Append(*endpointInfo);
+                        midiDevices.push_back(*endpointInfo);
                     }
                 }
             }
@@ -196,7 +198,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
             // TODO: Log this
         }
 
-        return midiDevices.GetView();
+        // return a sorted list. Sorting the winrt types directly doesn't really work
+        std::sort(begin(midiDevices), end(midiDevices),
+            [](const auto& device1, const auto& device2)
+            {
+                return device1.Name() < device2.Name();
+            }
+        );
+
+        auto winrtCollection = winrt::single_threaded_observable_vector<midi2::MidiEndpointDeviceInformation>(std::move(midiDevices));
+
+        return winrtCollection.GetView();
     }
 
 

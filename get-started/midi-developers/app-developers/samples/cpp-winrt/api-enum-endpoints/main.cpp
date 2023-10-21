@@ -39,8 +39,17 @@ int main()
         std::cout << "Identification" << std::endl;
         std::cout << "- Name:    " << winrt::to_string(endpoint.Name()) << std::endl;
         std::cout << "- Id:      " << winrt::to_string(endpoint.Id()) << std::endl;
-        std::cout << "- Parent:  " << winrt::to_string(endpoint.ParentDeviceId()) << std::endl;
 
+        auto parent = endpoint.GetParentDeviceInformation();
+
+        if (parent != nullptr)
+        {
+            std::cout << "- Parent:  " << winrt::to_string(parent.Id()) << std::endl;
+        }
+        else
+        {
+            std::cout << "- Parent:  Unknown" <<std::endl;
+        }
 
         if (endpoint.EndpointPurpose() == MidiEndpointDevicePurpose::NormalMessageEndpoint)
         {
