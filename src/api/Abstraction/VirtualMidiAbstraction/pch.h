@@ -13,6 +13,11 @@
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
+#include <winrt/Windows.Data.Json.h>
+
+namespace json = ::winrt::Windows::Data::Json;
+
+
 #include <assert.h>
 #include <devioctl.h>
 #include <wrl\implements.h>
@@ -51,6 +56,7 @@
 
 #include "strsafe.h"
 
+#include "abstraction_defs.h"
 
 #include "Midi2VirtualMidiAbstraction_i.c"
 #include "Midi2VirtualMidiAbstraction.h"

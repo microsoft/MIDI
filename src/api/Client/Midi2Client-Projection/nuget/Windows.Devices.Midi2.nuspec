@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
 	<metadata>
 		<id>Windows.Devices.Midi2</id>
-		<version>1.0.0-preview.2-0070</version>
+		<version>1.0.0-preview.2-0072</version>
 		<authors>Microsoft Corporation</authors>
 		<description>Windows MIDI Services API. Minimum package necessary to use Windows MIDI Services from an app on a PC that has Windows MIDI Services installed.</description>
 		<license type="expression">MIT</license>

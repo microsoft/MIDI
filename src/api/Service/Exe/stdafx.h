@@ -7,6 +7,12 @@
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 
+#include <winrt/Windows.Data.Json.h>
+#include <winrt/Windows.Storage.h>
+#include <winrt/Windows.Storage.Streams.h>
+
+namespace json = ::winrt::Windows::Data::Json;
+
 #include <strsafe.h>
 #include <wrl\module.h>
 #include <wrl\event.h>
@@ -47,9 +53,11 @@
 #include <Devpkey.h>
 #include "MidiDefs.h"
 
+
 #include "MidiTelemetry.h"
 #include "MidiPerformanceManager.h"
 #include "MidiProcessManager.h"
+#include "MidiConfigurationManager.h"
 #include "MidiDeviceManager.h"
 #include "MidiXProc.h"
 
@@ -64,6 +72,8 @@ class CMidiDevicePipe;
 #include "MidiDevicePipe.h"
 #include "MidiClientPipe.h"
 #include "MidiClientManager.h"
+
+
 
 #include "MidiSrv.h"
 

@@ -114,26 +114,30 @@ interface IMidiBiDi : IUnknown
 interface IMidiEndpointManager : IUnknown
 {
     HRESULT Initialize(
-        [in] IUnknown* midiDeviceManager
+        [in] IUnknown* midiDeviceManager,
+        [in] LPCWSTR configurationJson
     );
 
     HRESULT Cleanup();
 };
-// This interface exists so apps can create endpoints through the API
-// typically the EndpointManager implements this if API-driven device/endpoint
-// creation is supported. Optional for any transport abstraction. Required for
-// virtual / app-to-app MIDI
-[
-    object,
-    local,
-    uuid(0b56f71c-75b0-4209-8fdc-5cebe8815726),
-    pointer_default(unique)
-]
-interface IMidiApiEndpointManagerExtension : IUnknown
-{
-    HRESULT ApplyConfiguration(         // IMidiEndpointManager could also include a function like this for changing device/endpoint names etc. TBD.
-        [in]LPCWSTR configurationJson,  // typically this contains specs for one or more endpoints and any routing
-        [out]LPWSTR resultJson         // contains Ids of created endpoints, or other status info.
-    );
 
-};
+
+
+//// This interface exists so apps can create endpoints through the API
+//// typically the EndpointManager implements this if API-driven device/endpoint
+//// creation is supported. Optional for any transport abstraction. Required for
+//// virtual / app-to-app MIDI
+//[
+//    object,
+//    local,
+//    uuid(0b56f71c-75b0-4209-8fdc-5cebe8815726),
+//    pointer_default(unique)
+//]
+//interface IMidiApiEndpointManagerExtension : IUnknown
+//{
+//    HRESULT ApplyConfiguration(         // IMidiEndpointManager could also include a function like this for changing device/endpoint names etc. TBD.
+//        [in]LPCWSTR configurationJson,  // typically this contains specs for one or more endpoints and any routing
+//        [out]LPWSTR resultJson         // contains Ids of created endpoints, or other status info.
+//    );
+//
+//};

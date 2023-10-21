@@ -13,6 +13,28 @@
 #define MAXIMUM_UMP_DATASIZE 16
 
 //
+// Registry keys for global configuration. The settings app can write to some of these, so including in MidiDefs
+//
+#define MIDI_ROOT_REG_KEY L"Software\\Microsoft\\Windows MIDI Services"
+#define MIDI_ROOT_TRANSPORT_PLUGINS_REG_KEY MIDI_ROOT_REG_KEY L"\\Transport Plugins"
+#define MIDI_ROOT_ENDPOINT_PROCESSING_PLUGINS_REG_KEY MIDI_ROOT_REG_KEY L"\\Endpoint Processing Plugins"
+#define MIDI_PLUGIN_ENABLED_REG_VALUE L"Enabled"
+#define MIDI_PLUGIN_CLSID_REG_VALUE L"CLSID"
+
+#define MIDI_CONFIG_FILE_REG_VALUE L"CurrentConfig"
+
+// we force this root so the service can't be told to open some other random file on the system
+// note that this is a restricted folder. The installer has to create this folder for us and
+// give rights to the users in the system so the service *and* the setup applications can 
+// read/write there.
+#define MIDI_CONFIG_FILE_FOLDER L"%ALLUSERSPROFILE%\\Microsoft\\MIDI\\"
+
+#define MIDI_CONFIG_JSON_HEADER_OBJECT L"header"
+#define MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT L"endpointTransportPluginSettings"
+#define MIDI_CONFIG_JSON_ENDPOINT_PROCESSING_PLUGIN_SETTINGS_OBJECT L"endpointProcessingPluginSettings"
+
+
+//
 // Defining new interface categories
 //
 #define STRING_DEVINTERFACE_UNIVERSALMIDIPACKET_INPUT L"{AE174174-6396-4DEE-AC9E-1E9C6F403230}"
@@ -118,19 +140,22 @@ DEFINE_DEVPROPKEY(PKEY_MIDI_DeviceIdentification, 0x3f114a6a, 0x11fa, 0x4bd0, 0x
 
 
 
-#define STRING_PKEY_MIDI_UserSuppliedImagePath L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},61"
-DEFINE_DEVPROPKEY(PKEY_MIDI_UserSuppliedImagePath, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 61);     // DEVPROP_TYPE_STRING
+#define STRING_PKEY_MIDI_UserSuppliedLargeImagePath L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},61"
+DEFINE_DEVPROPKEY(PKEY_MIDI_UserSuppliedLargeImagePath, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 61);     // DEVPROP_TYPE_STRING
 
-#define STRING_PKEY_MIDI_UserSuppliedDescription L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},62"
-DEFINE_DEVPROPKEY(PKEY_MIDI_UserSuppliedDescription, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 62);     // DEVPROP_TYPE_STRING
+#define STRING_PKEY_MIDI_UserSuppliedSmallImagePath L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},62"
+DEFINE_DEVPROPKEY(PKEY_MIDI_UserSuppliedSmallImagePath, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 62);     // DEVPROP_TYPE_STRING
 
-#define STRING_PKEY_MIDI_UserSuppliedEndpointName L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},63"
-DEFINE_DEVPROPKEY(PKEY_MIDI_UserSuppliedEndpointName, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 63);     // DEVPROP_TYPE_STRING
+#define STRING_PKEY_MIDI_UserSuppliedDescription L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},63"
+DEFINE_DEVPROPKEY(PKEY_MIDI_UserSuppliedDescription, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 63);     // DEVPROP_TYPE_STRING
+
+#define STRING_PKEY_MIDI_UserSuppliedEndpointName L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},64"
+DEFINE_DEVPROPKEY(PKEY_MIDI_UserSuppliedEndpointName, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 64);     // DEVPROP_TYPE_STRING
 
 // this is the device-supplied name in the case of device-based transports
 // we have a copy here because we may rewrite FriendlyName
-#define STRING_PKEY_MIDI_TransportSuppliedEndpointName L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},64"
-DEFINE_DEVPROPKEY(PKEY_MIDI_TransportSuppliedEndpointName, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 64);     // DEVPROP_TYPE_STRING
+#define STRING_PKEY_MIDI_TransportSuppliedEndpointName L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},65"
+DEFINE_DEVPROPKEY(PKEY_MIDI_TransportSuppliedEndpointName, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 65);     // DEVPROP_TYPE_STRING
 
 
 // TODO: Add in the other properties like

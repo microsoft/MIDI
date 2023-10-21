@@ -48,9 +48,15 @@ CMidiSrv::Initialize()
     m_ClientManager = std::make_shared<CMidiClientManager>();
     RETURN_IF_NULL_ALLOC(m_ClientManager);
 
+    m_ConfigurationManager = std::make_shared<CMidiConfigurationManager>();
+    RETURN_IF_NULL_ALLOC(m_ConfigurationManager);
+
+
+
     RETURN_IF_FAILED(m_PerformanceManager->Initialize());
     RETURN_IF_FAILED(m_ProcessManager->Initialize());
-    RETURN_IF_FAILED(m_DeviceManager->Initialize(m_PerformanceManager));
+    RETURN_IF_FAILED(m_ConfigurationManager->Initialize());
+    RETURN_IF_FAILED(m_DeviceManager->Initialize(m_PerformanceManager, m_ConfigurationManager));
     RETURN_IF_FAILED(m_ClientManager->Initialize(m_PerformanceManager, m_ProcessManager, m_DeviceManager));
 
     wil::unique_hlocal rpcSecurityDescriptor;
@@ -104,6 +110,12 @@ CMidiSrv::Cleanup()
     {
         RETURN_IF_FAILED(m_ProcessManager->Cleanup());
         m_ProcessManager.reset();
+    }
+
+    if (m_ConfigurationManager)
+    {
+        RETURN_IF_FAILED(m_ConfigurationManager->Cleanup());
+        m_ConfigurationManager.reset();
     }
 
     return S_OK;

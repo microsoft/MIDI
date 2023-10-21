@@ -64,7 +64,8 @@ int main()
         std::cout << std::endl << "User-supplied Metadata" << std::endl;
         std::cout << "- User-supplied Name: " << winrt::to_string(endpoint.UserSuppliedName()) << std::endl;
         std::cout << "- Description:        " << winrt::to_string(endpoint.Description()) << std::endl;
-        std::cout << "- Image Path:         " << winrt::to_string(endpoint.ImagePath()) << std::endl;
+        std::cout << "- Small Image Path:   " << winrt::to_string(endpoint.SmallImagePath()) << std::endl;
+        std::cout << "- Large Image Path:   " << winrt::to_string(endpoint.LargeImagePath()) << std::endl;
 
         std::cout << std::endl << "Endpoint Supported Capabilities" << std::endl;
         std::cout << "- UMP Major.Minor:   " << endpoint.SpecificationVersionMajor() << "." << endpoint.SpecificationVersionMinor() << std::endl;

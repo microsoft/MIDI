@@ -28,7 +28,8 @@ using namespace Microsoft::WRL::Wrappers;
 _Use_decl_annotations_
 HRESULT
 CMidi2KSMidiEndpointManager::Initialize(
-    IUnknown* midiDeviceManager
+    IUnknown* midiDeviceManager,
+    LPCWSTR /*configurationJson*/
 )
 {
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);

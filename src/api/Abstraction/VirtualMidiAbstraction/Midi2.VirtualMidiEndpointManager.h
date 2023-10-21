@@ -24,41 +24,34 @@ using unique_swd_string = wil::unique_any<PWSTR, decltype(&::SwMemFree), ::SwMem
 class MidiUmpEndpointInfo
 {
 public:
-    std::wstring Id; // the filter InterfaceId
-    std::wstring InstanceId; // the MIDI instance id
-    std::wstring ParentInstanceId; // The instance id of the parent device
-    std::wstring Name; // friendly name for this device
-    //INT32 PinId{ 0 };
-    //BOOL Standard{ FALSE };
-    //BOOL Cyclic{ FALSE };
-    //BOOL UMP{ TRUE };
+    std::wstring Id{};                  // the filter InterfaceId
+    std::wstring InstanceId{};          // the MIDI instance id
+    std::wstring ParentInstanceId{};    // The instance id of the parent device
+    std::wstring Name{};                // friendly name for this device
     MidiFlow Flow{ MidiFlowBidirectional };
+
+    // TODO: Pointer to the interface?
+
 };
 
 class MidiEndpointParentDeviceInfo
 {
 public:
-    GUID InterfaceCategory;
-    SWDEVICESTATE SwDeviceState;         // SWD creation state
-    unique_hswdevice SwDevice;           // Handle to the SWD created for the MIDI port
-    unique_swd_string DeviceInterfaceId; // SWD interface ID for the MIDI port
-    std::wstring InstanceId;
+    GUID InterfaceCategory{};
+    SWDEVICESTATE SwDeviceState{ SWDEVICESTATE::NotCreated };   // SWD creation state
+    unique_hswdevice SwDevice{};                                // Handle to the SWD created for the MIDI port
+    unique_swd_string DeviceInterfaceId{};                      // SWD interface ID for the MIDI port
+    std::wstring InstanceId{};
+    std::wstring Name{};                                        // friendly name for this device
 
-//    std::wstring Id; // the filter InterfaceId
-    std::wstring Name; // friendly name for this device
-    //INT32 PinId{ 0 };
-    //BOOL Standard{ FALSE };
-    //BOOL Cyclic{ FALSE };
-    //BOOL UMP{ TRUE };
-    //MidiFlow Flow{ MidiFlowBidirectional };
 };
 
 typedef struct _PARENTDEVICECREATECONTEXT
 {
-    MidiEndpointParentDeviceInfo* MidiParentDevice;
+    MidiEndpointParentDeviceInfo* MidiParentDevice{ nullptr };
     wil::unique_event creationCompleted{ wil::EventOptions::None };
-    DEVPROPERTY* InterfaceDevProperties;
-    ULONG IntPropertyCount;
+    DEVPROPERTY* InterfaceDevProperties{ nullptr };
+    ULONG IntPropertyCount{};
 } PARENTDEVICECREATECONTEXT, * PPARENTDEVICECREATECONTEXT;
 
 
@@ -72,23 +65,26 @@ typedef struct _PARENTDEVICECREATECONTEXT
 class CMidi2VirtualMidiEndpointManager :
     public Microsoft::WRL::RuntimeClass<
         Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-        IMidiEndpointManager, 
-        IMidiApiEndpointManagerExtension>
+        IMidiEndpointManager>
 
 {
 public:
-    STDMETHOD(Initialize(_In_ IUnknown*));
+    STDMETHOD(Initialize(_In_ IUnknown*, _In_ LPCWSTR));
     STDMETHOD(Cleanup)();
 
-    STDMETHOD(ApplyConfiguration(
-        _In_ LPCWSTR configurationJson,
-        _Out_ LPWSTR resultJson
-    ));
+    //STDMETHOD(ApplyConfiguration(
+    //    _In_ LPCWSTR configurationJson,
+    //    _Out_ LPWSTR resultJson
+    //));
 
 
 private:
+    GUID m_containerId{};
+    GUID m_transportAbstractionId{};
 
-    HRESULT CreateEndpoint();
+    HRESULT CreateEndpoint(_In_ std::wstring const instanceId, _In_ std::wstring const name);
+
+    HRESULT CreateConfiguredEndpoints(_In_ std::wstring configurationJson);
     HRESULT CreateParentDevice();
 
     wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
@@ -98,5 +94,5 @@ private:
 
     std::unique_ptr<MidiEndpointParentDeviceInfo> m_parentDevice{ nullptr };
 
-
+    json::JsonObject m_jsonObject{ nullptr };
 };
