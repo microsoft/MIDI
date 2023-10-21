@@ -189,6 +189,24 @@ CMidi2VirtualMidiEndpointManager::CreateParentDevice()
 #define MIDI_VIRTUAL_ENDPOINT_PROPERTY_UNIQUEID L"uniqueIdentifier"
 #define MIDI_VIRTUAL_ENDPOINT_PROPERTY_MULTICLIENT L"supportsMultClient"
 
+#define MIDI_JSON_ADD_NODE L"add"
+#define MIDI_JSON_UPDATE_NODE L"update"
+#define MIDI_JSON_REMOVE_NODE L"remove"
+
+
+json::JsonObject GetAddNode(json::JsonObject parent)
+{
+    if (parent.HasKey(MIDI_JSON_ADD_NODE))
+    {
+        return parent.GetNamedObject(MIDI_JSON_ADD_NODE);
+    }
+    else
+    {
+        return nullptr;
+    }
+
+}
+
 _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiEndpointManager::CreateConfiguredEndpoints(std::wstring configurationJson)
@@ -200,31 +218,45 @@ CMidi2VirtualMidiEndpointManager::CreateConfiguredEndpoints(std::wstring configu
     {
         auto jsonObject = json::JsonObject::Parse(configurationJson);
 
-        auto endpoints = jsonObject.GetNamedArray(MIDI_VIRTUAL_ENDPOINTS_ARRAY_KEY);
 
-        for (auto endpointElement : endpoints)
+        // check to see if we have an "add" node. No point in checking for "update" or "remove" for initial configuration
+        auto addNode = GetAddNode(jsonObject);
+
+        if (addNode != nullptr && addNode.HasKey(MIDI_VIRTUAL_ENDPOINTS_ARRAY_KEY))
         {
-            // GetObjectW here is because wingdi redefines it to GetObject. It's a stupid preprocessor conflict
-            try
+            auto endpoints = addNode.GetNamedArray(MIDI_VIRTUAL_ENDPOINTS_ARRAY_KEY);
+
+            for (auto endpointElement : endpoints)
             {
-                auto endpoint = endpointElement.GetObjectW();
+                // GetObjectW here is because wingdi redefines it to GetObject. It's a stupid preprocessor conflict
+                try
+                {
+                    auto endpoint = endpointElement.GetObjectW();
 
-              //  auto key = endpoint.GetNamedString(MIDI_VIRTUAL_ENDPOINT_PROPERTY_KEY, L"");
-                auto name = endpoint.GetNamedString(MIDI_VIRTUAL_ENDPOINT_PROPERTY_NAME, L"");
-                auto uniqueIdentifier = endpoint.GetNamedString(MIDI_VIRTUAL_ENDPOINT_PROPERTY_UNIQUEID, L"");
-             //   auto supportsMultiClient = endpoint.GetNamedBoolean(MIDI_VIRTUAL_ENDPOINT_PROPERTY_MULTICLIENT, true);
+                    //  auto key = endpoint.GetNamedString(MIDI_VIRTUAL_ENDPOINT_PROPERTY_KEY, L"");
+                    auto name = endpoint.GetNamedString(MIDI_VIRTUAL_ENDPOINT_PROPERTY_NAME, L"");
+                    auto uniqueIdentifier = endpoint.GetNamedString(MIDI_VIRTUAL_ENDPOINT_PROPERTY_UNIQUEID, L"");
+                    //   auto supportsMultiClient = endpoint.GetNamedBoolean(MIDI_VIRTUAL_ENDPOINT_PROPERTY_MULTICLIENT, true);
 
-                auto instanceId = TRANSPORT_MNEMONIC L"_" + uniqueIdentifier;
+                    auto instanceId = TRANSPORT_MNEMONIC L"_" + uniqueIdentifier;
 
-                // TODO: Need to add this to the table for routing, and also add the other properties to the function
-                CreateEndpoint((std::wstring)instanceId, (std::wstring)name);
-            }
-            catch (...)
-            {
-                // couldn't get an object. Garbage data
-                OutputDebugString(L"" __FUNCTION__ " Exception getting endpoint properties from json");
+                    // TODO: Need to add this to the table for routing, and also add the other properties to the function
+                    CreateEndpoint((std::wstring)instanceId, (std::wstring)name);
+                }
+                catch (...)
+                {
+                    // couldn't get an object. Garbage data
+                    OutputDebugString(L"" __FUNCTION__ " Exception getting endpoint properties from json");
+
+                    return E_FAIL;
+                }
             }
         }
+        else
+        {
+            // nothing to add
+        }
+
 
     }
     catch (...)

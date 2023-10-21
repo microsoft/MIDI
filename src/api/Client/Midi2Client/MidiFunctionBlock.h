@@ -27,9 +27,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint8_t MaxSystemExclusive8Streams() const noexcept { return m_maxSysEx8Streams; }
 
         uint8_t FirstGroupIndex() { return m_firstGroupIndex; }
-        uint8_t NumberOfGroupsSpanned() { return m_numberOfGroupsSpanned; }
+        uint8_t GroupCount() { return m_numberOfGroupsSpanned; }
 
-        bool IncludesGroup(_In_ midi2::MidiGroup const& group) { return group.Index() >= FirstGroupIndex() && group.Index() < FirstGroupIndex() + NumberOfGroupsSpanned(); }
+        bool IncludesGroup(_In_ midi2::MidiGroup const& group) { return group.Index() >= FirstGroupIndex() && group.Index() < FirstGroupIndex() + GroupCount(); }
 
         bool UpdateFromJson(_In_ winrt::Windows::Data::Json::JsonObject const json) noexcept;
         bool UpdateFromJsonString(_In_ winrt::hstring const json) noexcept;

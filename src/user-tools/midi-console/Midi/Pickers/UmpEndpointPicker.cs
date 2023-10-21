@@ -15,13 +15,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
     {
         public string Name { get; init; }
         public string EndpointDeviceId { get; init; }
-        public EndpointDirection Direction { get; init; }
 
-        public UmpEndpointPickerEntry(string name, string endpointDeviceId, EndpointDirection direction)
+        public UmpEndpointPickerEntry(string name, string endpointDeviceId)
         {
             Name = name;
             EndpointDeviceId = endpointDeviceId;
-            Direction = direction;
         }
 
         public override string ToString()
@@ -41,17 +39,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
     internal class UmpEndpointPicker
     {
-        private static void LoadChoices(List<UmpEndpointPickerEntry> choices, string selector, EndpointDirection direction)
+        private static void LoadChoices(List<UmpEndpointPickerEntry> choices)
         {
-            var endpoints = DeviceInformation.FindAllAsync(selector)
-                .GetAwaiter()
-                .GetResult();
+            var endpoints = MidiEndpointDeviceInformation.FindAll(MidiEndpointDeviceInformationSortOrder.Name, true);
 
             if (endpoints != null)
             {
                 foreach (var endpoint in endpoints)
                 {
-                    choices.Add(new UmpEndpointPickerEntry(endpoint.Name, endpoint.Id, direction));
+                    choices.Add(new UmpEndpointPickerEntry(endpoint.Name, endpoint.Id));
                 }
 
                 choices.Sort();
@@ -59,17 +55,17 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         }
 
 
-        public static string PickInput()
+        public static string PickEndpoint()
         {
             var choices = new List<UmpEndpointPickerEntry>();
 
-            LoadChoices(choices, MidiEndpointConnection.GetDeviceSelector(), EndpointDirection.Bidirectional);
+            LoadChoices(choices);
 
             if (choices.Count > 0)
             {
                 var result = AnsiConsole.Prompt(
                     new SelectionPrompt<UmpEndpointPickerEntry>()
-                        .Title("Please select an output endpoint")
+                        .Title("Please select an endpoint")
                         .AddChoices(choices)
                     );
 
@@ -83,29 +79,5 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             return string.Empty;
         }
 
-        public static string PickOutput()
-        {
-            var choices = new List<UmpEndpointPickerEntry>();
-
-            LoadChoices(choices, MidiEndpointConnection.GetDeviceSelector(), EndpointDirection.Bidirectional);
-
-            if (choices.Count > 0)
-            {
-                var result = AnsiConsole.Prompt(
-                    new SelectionPrompt<UmpEndpointPickerEntry>()
-                        .Title("Please select an output endpoint")
-                        .AddChoices(choices)
-                    );
-
-
-                if (result != null)
-                {
-                    return result.EndpointDeviceId;
-                }
-            }
-
-            return string.Empty;
-
-        }
     }
 }

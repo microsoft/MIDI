@@ -446,6 +446,7 @@
     <Midl Include="MidiChannelEndpointListener.idl" />
     <Midl Include="MidiClock.idl" />
     <Midl Include="MidiEndpointDeviceInformation.idl" />
+    <Midl Include="MidiEndpointDeviceInformationSortOrderEnum.idl" />
     <Midl Include="MidiEndpointDevicePurposeEnum.idl" />
     <Midl Include="MidiEndpointDeviceWatcher.idl" />
     <Midl Include="MidiEndpointDiscoveryFilterFlagsEnum.idl" />

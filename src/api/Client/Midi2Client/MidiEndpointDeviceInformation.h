@@ -27,7 +27,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         static winrt::hstring EndpointInterfaceClass() noexcept { return STRING_DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI; }
 
         static midi2::MidiEndpointDeviceWatcher CreateWatcher(_In_ bool includeDiagnosticsEndpoints);
-        static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll(_In_ bool includeDiagnosticsEndpoints);
+
+        static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll(_In_ midi2::MidiEndpointDeviceInformationSortOrder sortOrder, _In_ bool includeDiagnosticsEndpoints);
+        static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll(_In_ midi2::MidiEndpointDeviceInformationSortOrder sortOrder);
+        static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll();
 
         static collections::IVectorView<winrt::hstring> GetAdditionalPropertiesList() noexcept;
 

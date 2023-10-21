@@ -33,7 +33,7 @@ namespace Windows.Devices.Midi2
         MidiGroupTerminalBlockProtocol Protocol { get; };
 
         UInt8 FirstGroupIndex{ get; };
-        UInt8 NumberOfGroupsSpanned{ get; };
+        UInt8 GroupCount{ get; };
 
         Boolean IncludesGroup(MidiGroup group);
 

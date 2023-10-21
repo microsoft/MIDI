@@ -84,7 +84,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             }
             else
             {
-                endpointId = UmpEndpointPicker.PickOutput();
+                endpointId = UmpEndpointPicker.PickEndpoint();
             }
 
             // TODO: Update loc strings

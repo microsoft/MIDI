@@ -163,7 +163,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    collections::IVectorView<midi2::MidiEndpointDeviceInformation> MidiEndpointDeviceInformation::FindAll(bool includeDiagnosticsEndpoints)
+    collections::IVectorView<midi2::MidiEndpointDeviceInformation> MidiEndpointDeviceInformation::FindAll(midi2::MidiEndpointDeviceInformationSortOrder sortOrder, bool includeDiagnosticsEndpoints)
     {
         //auto midiDevices = winrt::single_threaded_vector<midi2::MidiEndpointDeviceInformation>();
 
@@ -186,7 +186,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                     endpointInfo->InternalUpdateFromDeviceInformation(di);
 
-                    if (endpointInfo->EndpointPurpose() == MidiEndpointDevicePurpose::NormalMessageEndpoint || includeDiagnosticsEndpoints)
+                    // only include if we are allowing diagnostics endpoints OR if this is a normal endpoint
+                    if (includeDiagnosticsEndpoints || endpointInfo->EndpointPurpose() == MidiEndpointDevicePurpose::NormalMessageEndpoint)
                     {
                         midiDevices.push_back(*endpointInfo);
                     }
@@ -198,19 +199,69 @@ namespace winrt::Windows::Devices::Midi2::implementation
             // TODO: Log this
         }
 
-        // return a sorted list. Sorting the winrt types directly doesn't really work
-        std::sort(begin(midiDevices), end(midiDevices),
-            [](const auto& device1, const auto& device2)
-            {
-                return device1.Name() < device2.Name();
-            }
-        );
+
+        switch (sortOrder)
+        {
+        case MidiEndpointDeviceInformationSortOrder::Name:
+            std::sort(begin(midiDevices), end(midiDevices),
+                [](const auto& device1, const auto& device2)
+                {
+                    return device1.Name() < device2.Name();
+                });
+            break;
+
+        case MidiEndpointDeviceInformationSortOrder::DeviceInstanceId:
+            std::sort(begin(midiDevices), end(midiDevices),
+                [](const auto& device1, const auto& device2)
+                {
+                    return device1.DeviceInstanceId() < device2.DeviceInstanceId();
+                });
+            break;
+
+        case MidiEndpointDeviceInformationSortOrder::ContainerThenName:
+            std::sort(begin(midiDevices), end(midiDevices),
+                [](const auto& device1, const auto& device2)
+                {
+                    if (device1.ContainerId() == device2.ContainerId())
+                        return device1.Name() < device2.Name();
+
+                    return device1.ContainerId() < device2.ContainerId();
+                });
+            break;
+
+        case MidiEndpointDeviceInformationSortOrder::ContainerThenDeviceInstanceId:
+            std::sort(begin(midiDevices), end(midiDevices),
+                [](const auto& device1, const auto& device2)
+                {
+                    if (device1.ContainerId() == device2.ContainerId())
+                        return device1.DeviceInstanceId() < device2.DeviceInstanceId();
+
+                    return device1.ContainerId() < device2.ContainerId();
+                });
+            break;
+
+        case MidiEndpointDeviceInformationSortOrder::None:
+            // do nothing
+            break;
+
+        }
 
         auto winrtCollection = winrt::single_threaded_observable_vector<midi2::MidiEndpointDeviceInformation>(std::move(midiDevices));
 
         return winrtCollection.GetView();
     }
 
+    _Use_decl_annotations_
+    collections::IVectorView<midi2::MidiEndpointDeviceInformation> MidiEndpointDeviceInformation::FindAll(midi2::MidiEndpointDeviceInformationSortOrder sortOrder)
+    {
+        return FindAll(sortOrder, false);
+    }
+
+    _Use_decl_annotations_
+    collections::IVectorView<midi2::MidiEndpointDeviceInformation> MidiEndpointDeviceInformation::FindAll()
+    {
+        return FindAll(midi2::MidiEndpointDeviceInformationSortOrder::Name);
+    }
 
 
     _Use_decl_annotations_

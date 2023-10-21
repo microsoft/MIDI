@@ -81,7 +81,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             }
             else
             {
-                endpointId = UmpEndpointPicker.PickOutput();
+                endpointId = UmpEndpointPicker.PickEndpoint();
             }
 
             AnsiConsole.MarkupLine(Strings.SendMessageSendingThroughEndpointLabel + ": " + AnsiMarkupFormatter.FormatDeviceInstanceId(endpointId));

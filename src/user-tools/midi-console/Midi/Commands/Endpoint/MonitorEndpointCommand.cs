@@ -58,7 +58,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             }
             else
             {
-                endpointId = UmpEndpointPicker.PickInput();
+                endpointId = UmpEndpointPicker.PickEndpoint();
             }
 
 

@@ -56,7 +56,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         return;
                     }
 
-                    var endpoints = MidiEndpointDeviceInformation.FindAll(true);
+                    var endpoints = MidiEndpointDeviceInformation.FindAll(MidiEndpointDeviceInformationSortOrder.Name, true);
 
                     if (endpoints.Count > 0)
                     {
@@ -95,7 +95,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             if (settings.IncludeId)
             {
-                table.AddRow(new Markup(AnsiMarkupFormatter.FormatDeviceInstanceId(endpointInfo.Id)));
+                table.AddRow(new Markup(AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointInfo.Id)));
             }
 
             table.AddEmptyRow();

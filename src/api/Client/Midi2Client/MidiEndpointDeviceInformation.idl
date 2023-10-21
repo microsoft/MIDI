@@ -16,6 +16,8 @@ import "MidiEndpointDevicePurposeEnum.idl";
 //import "MidiEndpointDeviceWatcher.idl";
 import "MidiFunctionBlock.idl";
 
+import "MidiEndpointDeviceInformationSortOrderEnum.idl";
+
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
@@ -24,7 +26,10 @@ namespace Windows.Devices.Midi2
     {
         static MidiEndpointDeviceInformation CreateFromId(String id);
         //static MidiEndpointDeviceWatcher CreateWatcher();
-        static IVectorView<MidiEndpointDeviceInformation> FindAll(Boolean includeDiagnosticsEndpoints);
+
+        static IVectorView<MidiEndpointDeviceInformation> FindAll();
+        static IVectorView<MidiEndpointDeviceInformation> FindAll(MidiEndpointDeviceInformationSortOrder sortOrder);
+        static IVectorView<MidiEndpointDeviceInformation> FindAll(MidiEndpointDeviceInformationSortOrder sortOrder, Boolean includeDiagnosticsEndpoints);
 
         static String DiagnosticsLoopbackAEndpointId{ get; };
         static String DiagnosticsLoopbackBEndpointId{ get; };

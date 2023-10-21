@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.Devices.Midi2;
 using Windows.Devices.Enumeration;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Microsoft.Devices.Midi2.ConsoleApp
 {
@@ -41,7 +42,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             }
             else
             {
-                endpointId = UmpEndpointPicker.PickInput();
+                endpointId = UmpEndpointPicker.PickEndpoint();
             }
 
             var table = new Table();
@@ -54,13 +55,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("Identification"), "");
             table.AddRow("Name", AnsiMarkupFormatter.FormatEndpointName(di.Name));
-            table.AddRow("Id", AnsiMarkupFormatter.FormatDeviceInstanceId(di.Id));
+            table.AddRow("Id", AnsiMarkupFormatter.FormatFullEndpointInterfaceId(di.Id));
 
             if (settings.Verbose)
             {
-                table.AddRow("Kind", di.DeviceInformation.Kind.ToString());
+                table.AddRow("Kind", AnsiMarkupFormatter.FormatDeviceKind(di.DeviceInformation.Kind));
                 table.AddRow("Purpose", di.EndpointPurpose.ToString());
-                table.AddRow("Container Id", di.ContainerId.ToString());
+                table.AddRow("Container Id", AnsiMarkupFormatter.FormatContainerId(di.ContainerId.ToString()));
                 table.AddRow("Device Instance Id", AnsiMarkupFormatter.FormatDeviceInstanceId(di.DeviceInstanceId));
             }
 
@@ -68,16 +69,16 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             {
                 table.AddEmptyRow();
                 table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("Endpoint Metadata"), "");
-                table.AddRow("Product Instance Id", di.ProductInstanceId);
+                table.AddRow("Product Instance Id", AnsiMarkupFormatter.EscapeString(di.ProductInstanceId));
                 table.AddRow("Endpoint-Supplied Name", AnsiMarkupFormatter.FormatEndpointName(di.EndpointSuppliedName));
             }
 
             table.AddEmptyRow();
             table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("User Data"), "");
             table.AddRow("User-Supplied Name", AnsiMarkupFormatter.FormatEndpointName(di.UserSuppliedName));
-            table.AddRow("Description", di.Description);
-            table.AddRow("Small Image Path", di.SmallImagePath);
-            table.AddRow("Large Image Path", di.LargeImagePath);
+            table.AddRow("Description", AnsiMarkupFormatter.EscapeString(di.Description));
+            table.AddRow("Small Image Path", AnsiMarkupFormatter.EscapeString(di.SmallImagePath));
+            table.AddRow("Large Image Path", AnsiMarkupFormatter.EscapeString(di.LargeImagePath));
 
             table.AddEmptyRow();
             table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("Capabilities"), "");
@@ -93,8 +94,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 table.AddEmptyRow();
                 table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("Transport Information"), "");
                 table.AddRow("Transport-supplied Name", AnsiMarkupFormatter.FormatEndpointName(di.TransportSuppliedName));
-                table.AddRow("Transport Id", di.TransportId);
-                table.AddRow("Transport Mnemonic", di.TransportMnemonic);
+                table.AddRow("Transport Id", AnsiMarkupFormatter.EscapeString(di.TransportId));
+                table.AddRow("Transport Mnemonic", AnsiMarkupFormatter.EscapeString(di.TransportMnemonic));
                 table.AddRow("Native Data Format", di.NativeDataFormat.ToString());
             }
 
@@ -108,9 +109,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 table.AddEmptyRow();
                 table.AddRow("Block", functionBlock.Number.ToString());
                 table.AddRow("Active", functionBlock.IsActive.ToString());
-                table.AddRow("Name", functionBlock.Name);
+                table.AddRow("Name", AnsiMarkupFormatter.EscapeString(functionBlock.Name));
                 table.AddRow("First Group Index", functionBlock.FirstGroupIndex.ToString());
-                table.AddRow("Group Span", functionBlock.NumberOfGroupsSpanned.ToString());
+                table.AddRow("Group Span", functionBlock.GroupCount.ToString());
 
                 if (settings.Verbose)
                 {
@@ -149,20 +150,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 table.AddEmptyRow();
                 table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("All Properties"), "");
 
-                foreach (string key in di.DeviceInformation.Properties.Keys)
-                {
-                    object value;
-                    bool worked = di.DeviceInformation.Properties.TryGetValue(key, out value);
-
-                    if (worked && value != null)
-                    {
-                        table.AddRow(key, value.ToString());
-                    }
-                    else
-                    {
-                        table.AddRow(key, "<Unknown>");
-                    }
-                }
+                DisplayProperties(table, di.DeviceInformation.Properties);
             }
 
             // container
@@ -176,25 +164,12 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             {
 
                 table.AddRow("Name", AnsiMarkupFormatter.FormatEndpointName(containerInfo.Name));
-                table.AddRow("Id", AnsiMarkupFormatter.FormatDeviceInstanceId(containerInfo.Id));
-                table.AddRow("Kind", containerInfo.Kind.ToString());
+                table.AddRow("Id", AnsiMarkupFormatter.FormatContainerId(containerInfo.Id));
+                table.AddRow("Kind", AnsiMarkupFormatter.FormatDeviceKind(containerInfo.Kind));
 
                 if (settings.Verbose)
                 {
-                    foreach (string key in containerInfo.Properties.Keys)
-                    {
-                        object value;
-                        bool worked = containerInfo.Properties.TryGetValue(key, out value);
-
-                        if (worked && value != null)
-                        {
-                            table.AddRow(key, ""); // value.ToString());
-                        }
-                        else
-                        {
-                            table.AddRow(key, "<Unknown>");
-                        }
-                    }
+                    DisplayProperties(table, containerInfo.Properties);
                 }
             }
             else
@@ -225,24 +200,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                     table.AddRow("Name", AnsiMarkupFormatter.FormatEndpointName(parentInfo.Name));
                     table.AddRow("Id", AnsiMarkupFormatter.FormatDeviceInstanceId(parentInfo.Id));
-                    table.AddRow("Kind", parentInfo.Kind.ToString());
+                    table.AddRow("Kind", AnsiMarkupFormatter.FormatDeviceKind(parentInfo.Kind));
 
                     if (settings.Verbose)
                     {
-                        foreach (string key in parentInfo.Properties.Keys)
-                        {
-                            object value;
-                            bool worked = parentInfo.Properties.TryGetValue(key, out value);
-
-                            if (worked && value != null)
-                            {
-                                table.AddRow(key, value.ToString());
-                            }
-                            else
-                            {
-                                table.AddRow(key, "<Unknown>");
-                            }
-                        }
+                        DisplayProperties(table, parentInfo.Properties);
                     }
                 }
                 else
@@ -260,6 +222,51 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             return (int)(MidiConsoleReturnCode.Success);
         }
+
+
+
+
+        private void DisplayProperties(Table table, IReadOnlyDictionary<string, object> properties)
+        {
+            foreach (string key in properties.Keys)
+            {
+                object value;
+                bool found = properties.TryGetValue(key, out value);
+
+                if (found)
+                {
+                    if (value != null)
+                    {
+                        if (key == "System.ItemNameDisplay")
+                        {
+                            table.AddRow(key, AnsiMarkupFormatter.FormatEndpointName(value.ToString()));
+                        }
+                        else if (key == "System.Devices.DeviceInstanceId")
+                        {
+                            table.AddRow(key, AnsiMarkupFormatter.FormatDeviceInstanceId(value.ToString()));
+                        }
+                        else if (key == "System.Devices.Parent")
+                        {
+                            table.AddRow(key, AnsiMarkupFormatter.FormatDeviceParentId(value.ToString()));
+                        }
+                        else if (key == "System.Devices.ContainerId")
+                        {
+                            table.AddRow(key, AnsiMarkupFormatter.FormatContainerId(value.ToString()));
+                        }
+                        else
+                        {
+                            table.AddRow(key, AnsiMarkupFormatter.EscapeString(value.ToString()));
+                        }
+
+                    }
+                    else
+                    {
+                        table.AddRow(key, "[grey35]null[/]");
+                    }
+                }
+            }
+        }
+
 
 
 

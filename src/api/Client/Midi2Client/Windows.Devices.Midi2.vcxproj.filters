@@ -439,6 +439,9 @@
     <Midl Include="MidiFunctionBlockDirectionEnum.idl">
       <Filter>API\Endpoints\Metadata\Blocks</Filter>
     </Midl>
+    <Midl Include="MidiEndpointDeviceInformationSortOrderEnum.idl">
+      <Filter>API\Enumeration</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />

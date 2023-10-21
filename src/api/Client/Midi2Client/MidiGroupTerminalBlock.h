@@ -22,8 +22,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::MidiGroupTerminalBlockProtocol Protocol() { return m_protocol; }
 
         uint8_t FirstGroupIndex() { return m_firstGroupIndex; }
-        uint8_t NumberOfGroupsSpanned() { return m_numberOfGroupsSpanned; }
-        bool IncludesGroup(_In_ midi2::MidiGroup const& group) { return group.Index() >= FirstGroupIndex() && group.Index() < FirstGroupIndex() + NumberOfGroupsSpanned(); }
+        uint8_t GroupCount() { return m_numberOfGroupsSpanned; }
+        bool IncludesGroup(_In_ midi2::MidiGroup const& group) { return group.Index() >= FirstGroupIndex() && group.Index() < FirstGroupIndex() + GroupCount(); }
 
 
         uint16_t MaxDeviceInputBandwidthIn4KBSecondUnits() { return m_maxDeviceInputBandwidthIn4KBSecondUnits; }
