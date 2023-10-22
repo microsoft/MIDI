@@ -63,7 +63,9 @@ public:
         _In_ ULONG,
         _In_ PVOID,
         _In_ PVOID,
-        _In_ PVOID
+        _In_ PVOID,
+        _Out_ PWSTR,
+        _In_ ULONG
     );
     STDMETHOD(DeactivateEndpoint)(_In_ PCWSTR);
     STDMETHOD(RemoveEndpoint)(_In_ PCWSTR);

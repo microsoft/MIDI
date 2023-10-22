@@ -281,7 +281,6 @@
     <ClCompile Include="Midi2.VirtualMidiIn.cpp" />
     <ClCompile Include="Midi2.VirtualMidiOut.cpp" />
     <ClCompile Include="MidiDeviceTable.cpp" />
-    <ClCompile Include="MidiVirtualRouter.cpp" />
     <ClCompile Include="pch.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -301,7 +300,7 @@
     <ClInclude Include="Midi2.VirtualMidiIn.h" />
     <ClInclude Include="Midi2.VirtualMidiOut.h" />
     <ClInclude Include="MidiDeviceTable.h" />
-    <ClInclude Include="MidiVirtualRouter.h" />
+    <ClInclude Include="MidiRoute.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
   </ItemGroup>

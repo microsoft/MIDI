@@ -88,7 +88,9 @@ CMidiDeviceManager::ActivateEndpoint
     ULONG DevPropertyCount,
     PVOID InterfaceDevProperties,
     PVOID DeviceDevProperties,
-    PVOID CreateInfo
+    PVOID CreateInfo,
+    PWSTR CreatedDeviceInterfaceId,
+    ULONG CreatedDeviceInterfaceIdBufferSize
 )
 {
     auto lock = m_MidiPortsLock.lock();
@@ -135,6 +137,14 @@ CMidiDeviceManager::ActivateEndpoint
                 RETURN_IF_FAILED(ActivateEndpointInternal(ParentInstanceId, deviceInterfaceId.c_str(), TRUE, MidiFlow, IntPropertyCount, DevPropertyCount, (DEVPROPERTY*)InterfaceDevProperties, (DEVPROPERTY*)DeviceDevProperties, (SW_DEVICE_CREATE_INFO*)CreateInfo, nullptr));
             }
         }
+
+        // return the created device interface Id. This is needed for anything that will 
+        // do a match in the Ids from Windows.Devices.Enumeration
+        if (CreatedDeviceInterfaceId != nullptr)
+        {
+            deviceInterfaceId.copy(CreatedDeviceInterfaceId, CreatedDeviceInterfaceIdBufferSize);
+        }
+
 
         cleanupOnFailure.release();
     }

@@ -319,6 +319,9 @@ CMidi2VirtualMidiEndpointManager::CreateEndpoint(std::wstring const instanceId, 
     createInfo.pszDeviceDescription = name.c_str();
 
 
+    const ULONG deviceInterfaceIdMaxSize = 255;
+    wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
+
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
         std::wstring(m_parentDevice->InstanceId).c_str(),       // parent instance Id
         true,                                                   // UMP-only
@@ -327,7 +330,14 @@ CMidi2VirtualMidiEndpointManager::CreateEndpoint(std::wstring const instanceId, 
         ARRAYSIZE(deviceDevProperties),
         (PVOID)interfaceDevProperties,
         (PVOID)deviceDevProperties,
-        (PVOID)&createInfo));
+        (PVOID)&createInfo,
+        (LPWSTR)&newDeviceInterfaceId,
+        deviceInterfaceIdMaxSize));
+
+
+    // store the created device in the device table, along with the interface id
+
+
 
     return S_OK;
 }

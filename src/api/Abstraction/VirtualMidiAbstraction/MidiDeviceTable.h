@@ -12,9 +12,16 @@
 
 // thread-safe meyers singleton for storing the devices we'll use
 
-// for simple loopback, no need for a map or anything like we'll use 
-// for other transports. We have only two devices: One is for BiDi, 
-// the other is for In/Out, so just keep them as member variables.
+
+struct MidiVirtualDeviceEntry
+{
+    GUID key;                                   // this is the key that is used in config before there's any SWD to refer to
+
+    std::string InstanceId;                     // the part of the instance ID we (mostly) control
+
+    std::shared_ptr<IMidiBiDi> MidiDeviceBiDi;
+
+};
 
 
 class MidiDeviceTable

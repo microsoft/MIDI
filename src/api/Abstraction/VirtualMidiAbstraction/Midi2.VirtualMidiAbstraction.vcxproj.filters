@@ -39,9 +39,6 @@
     <ClCompile Include="MidiDeviceTable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MidiVirtualRouter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Midi2VirtualMidiAbstraction.idl">
@@ -85,10 +82,10 @@
     <ClInclude Include="MidiDeviceTable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MidiVirtualRouter.h">
+    <ClInclude Include="abstraction_defs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="abstraction_defs.h">
+    <ClInclude Include="MidiRoute.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

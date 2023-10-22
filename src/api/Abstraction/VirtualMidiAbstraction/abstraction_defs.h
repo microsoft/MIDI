@@ -15,8 +15,8 @@
 
 // TODO: Names should be moved to .rc for localization
 
-#define TRANSPORT_PARENT_ID L"MIDIU_VIRTUAL_TRANSPORT"
-#define TRANSPORT_PARENT_DEVICE_NAME L"MIDI 2.0 Virtual Transport"
+#define TRANSPORT_PARENT_ID L"MIDIU_VIRT_TRANSPORT"
+#define TRANSPORT_PARENT_DEVICE_NAME L"Virtual Transport (MIDI 2.0)"
 
 
 #define LOOPBACK_PARENT_ROOT L"HTREE\\ROOT\\0"

@@ -210,6 +210,9 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(std::wstring const inst
     createInfo.pszDeviceDescription = name.c_str();
 
 
+    const ULONG deviceInterfaceIdMaxSize = 255;
+    wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
+
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
         std::wstring(m_parentDevice->InstanceId).c_str(),       // parent instance Id
         true,                                                   // UMP-only
@@ -218,7 +221,11 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(std::wstring const inst
         ARRAYSIZE(deviceDevProperties),
         (PVOID)interfaceDevProperties,
         (PVOID)deviceDevProperties,
-        (PVOID)&createInfo));
+        (PVOID)&createInfo,
+        (LPWSTR)&newDeviceInterfaceId,
+        deviceInterfaceIdMaxSize));
+
+    // todo: store the interface id and use it for matches later instead of the current partial string match
 
     return S_OK;
 }
@@ -262,6 +269,9 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(_In_ std::wstring const ins
     createInfo.pszDeviceDescription = name.c_str();
 
 
+    const ULONG deviceInterfaceIdMaxSize = 255;
+    wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
+
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
         std::wstring(m_parentDevice->InstanceId).c_str(),       // parent instance Id
         true,                                                   // UMP-only
@@ -270,7 +280,11 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(_In_ std::wstring const ins
         ARRAYSIZE(deviceDevProperties),
         (PVOID)interfaceDevProperties,
         (PVOID)deviceDevProperties,
-        (PVOID)&createInfo));
+        (PVOID)&createInfo,
+        (LPWSTR)&newDeviceInterfaceId,
+        deviceInterfaceIdMaxSize));
+
+    // TODO: Get the device interface id and store it for comparison later.
 
     return S_OK;
 }

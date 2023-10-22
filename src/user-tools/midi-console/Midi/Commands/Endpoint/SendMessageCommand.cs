@@ -94,19 +94,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             var bidiOpenOptions = new MidiEndpointConnectionOptions();
 
-
-            //if (settings.AutoProtocolNegotiation == false)
-            //{
-            //    bidiOpenOptions.DisableAutomaticStreamConfiguration = true;
-            //}
-
-            //if (settings.AutoDiscovery == false)
-            //{
-            //    bidiOpenOptions.DisableAutomaticEndpointMetadataHandling = true;
-            //    bidiOpenOptions.DisableAutomaticFunctionBlockMetadataHandling = true;
-            //}
-
-
             if (session == null)
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToCreateSession));

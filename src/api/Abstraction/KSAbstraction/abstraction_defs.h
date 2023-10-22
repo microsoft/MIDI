@@ -8,3 +8,7 @@
 
 #pragma once
 
+
+#define TRANSPORT_MNEMONIC L"KS"
+
+#define TRANSPORT_ENUMERATOR L"MIDISRV"

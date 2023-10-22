@@ -49,6 +49,9 @@ namespace json = ::winrt::Windows::Data::Json;
 #include <winmeta.h>
 #include <TraceLoggingProvider.h>
 
+#include <vector>
+#include <string>
+
 #include "SWDevice.h"
 #include <initguid.h>
 #include "setupapi.h"
@@ -69,6 +72,8 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "MidiDefs.h"
 #include "MidiXProc.h"
 
+
+#include "MidiRoute.h"
 
 #include "Midi2.VirtualMidiAbstraction.h"
 #include "Midi2.VirtualMidiIn.h"

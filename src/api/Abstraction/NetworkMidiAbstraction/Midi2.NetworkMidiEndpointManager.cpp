@@ -258,18 +258,22 @@ CMidi2NetworkMidiEndpointManager::CreateEndpoint()
 
     OutputDebugString(L"" __FUNCTION__ " - Activating Endpoint");
 
-    // MIDISRV here comes from the service. If that changes, it needs
-    // to be changed here as well.
+    const ULONG deviceInterfaceIdMaxSize = 255;
+    wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
+    
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
-        (std::wstring(L"SWD\\MIDISRV\\") + m_parentDevice->InstanceId).c_str(),     // parent instance Id
-        true,                                                                       // UMP-only
-        MidiFlow::MidiFlowBidirectional,                                            // MIDI Flow
+        std::wstring(m_parentDevice->InstanceId).c_str(),       // parent instance Id
+        true,                                                   // UMP-only
+        MidiFlow::MidiFlowBidirectional,                        // MIDI Flow bidi only
         ARRAYSIZE(interfaceDevProperties),
         ARRAYSIZE(deviceDevProperties),
         (PVOID)interfaceDevProperties,
         (PVOID)deviceDevProperties,
-        (PVOID)&createInfo));
+        (PVOID)&createInfo,
+        (LPWSTR)&newDeviceInterfaceId,
+        deviceInterfaceIdMaxSize));
 
+    // TODO: store the deviceInterfaceId returned here and use as a key for lookup later
 
     OutputDebugString(L"" __FUNCTION__ " Exit");
 
