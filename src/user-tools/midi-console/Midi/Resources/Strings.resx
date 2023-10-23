@@ -371,7 +371,7 @@ Timestamp</value>
     <value>Please provide a count &gt; 0.</value>
   </data>
   <data name="ValidationErrorPingCountTooHigh" xml:space="preserve">
-    <value>Specified ping count is too high. Please provide a value &lt;= 1000.</value>
+    <value>Specified ping count is too high. Please provide a value &lt;= 255.</value>
   </data>
   <data name="ValidationErrorPingCountTooLow" xml:space="preserve">
     <value>Specified ping count is too low. Please provide a value &gt; 0.</value>

@@ -25,12 +25,12 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             // TODO: Consider changing this to a command argument instead of an option
             [LocalizedDescription("ParameterServicePingCount")]
             [CommandOption("-c|--count")]
-            [DefaultValue(10)]
+            [DefaultValue(20)]
             public int Count { get; set; }
 
             [LocalizedDescription("ParameterServicePingTimeout")]
             [CommandOption("-t|--timeout")]
-            [DefaultValue(5000)]
+            [DefaultValue(10000)]
             public int Timeout { get; set; }
 
             [LocalizedDescription("ParameterServicePingVerbose")]
@@ -52,7 +52,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 return Spectre.Console.ValidationResult.Error(Strings.ValidationErrorPingCountTooLow);
             }
 
-            if (settings.Count > 1000)
+            if (settings.Count > 255)
             {
                 return Spectre.Console.ValidationResult.Error(Strings.ValidationErrorPingCountTooHigh);
             }
@@ -102,7 +102,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                 double deltaMicroseconds = (double)(response.ClientDeltaTimestamp * 1000000) / freq;
 
                                 table.AddRow(
-                                    new Text(response.Index.ToString()),
+                                    new Text((response.Index + 1).ToString()),
                                     new Markup(AnsiMarkupFormatter.FormatTimestamp(response.ClientSendMidiTimestamp)),
                                     new Markup(AnsiMarkupFormatter.FormatTimestamp(response.ClientReceiveMidiTimestamp)),
                                     new Markup(AnsiMarkupFormatter.FormatGeneralNumber(response.ClientDeltaTimestamp)),

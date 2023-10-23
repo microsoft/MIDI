@@ -812,7 +812,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Specified ping count is too high. Please provide a value &lt;= 1000..
+        ///   Looks up a localized string similar to Specified ping count is too high. Please provide a value &lt;= 255..
         /// </summary>
         internal static string ValidationErrorPingCountTooHigh {
             get {
