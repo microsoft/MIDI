@@ -187,6 +187,18 @@ USBMIDI2DriverSelectInterface(
     _In_ WDFDEVICE    Device
 );
 
+// Forward Declartion of helper functions
+//
+// Function to Fetch and parse Group Terminal Block information
+//
+_Must_inspect_result_
+__drv_maxIRQL(PASSIVE_LEVEL)
+PAGED_CODE_SEG
+NTSTATUS
+USBMIDI2DriverGetGTB(
+    _In_ WDFDEVICE    Device
+);
+
 //
 // Function to connect and prepare pipes for use
 //
