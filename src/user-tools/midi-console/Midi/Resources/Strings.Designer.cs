@@ -106,6 +106,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to List out all properties for a given endpoint.
+        /// </summary>
+        internal static string CommandEndpointPropertiesDescription {
+            get {
+                return ResourceManager.GetString("CommandEndpointPropertiesDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Enumerate (list) endpoints and transports.
         /// </summary>
         internal static string CommandEnumerateDescription {
@@ -480,6 +489,24 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         internal static string ParameterEnumEndpointsIncludeEndpointId {
             get {
                 return ResourceManager.GetString("ParameterEnumEndpointsIncludeEndpointId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Include the diagnostic loopback endpoints.
+        /// </summary>
+        internal static string ParameterEnumEndpointsIncludeLoopbackEndpoints {
+            get {
+                return ResourceManager.GetString("ParameterEnumEndpointsIncludeLoopbackEndpoints", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Include more details for each endpoint.
+        /// </summary>
+        internal static string ParameterEnumEndpointsVerboseOutput {
+            get {
+                return ResourceManager.GetString("ParameterEnumEndpointsVerboseOutput", resourceCulture);
             }
         }
         

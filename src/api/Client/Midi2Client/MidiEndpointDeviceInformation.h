@@ -19,20 +19,32 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         //static winrt::hstring UniversalMidiPacketBidirectionalInterfaceClassId() noexcept { return L"" /* STRING_DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI */; }
 
-        static winrt::hstring DiagnosticsLoopbackAEndpointId() noexcept { return LOOPBACK_BIDI_ID_A; }
-        static winrt::hstring DiagnosticsLoopbackBEndpointId() noexcept { return LOOPBACK_BIDI_ID_B; }
+        // these would be more robust if they did an enumeration lookup on the loopback/ping properties
+        static winrt::hstring DiagnosticsLoopbackAEndpointId() noexcept { return MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_A; }
+        static winrt::hstring DiagnosticsLoopbackBEndpointId() noexcept { return MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_B; }
+        static winrt::hstring DiagnosticsInternalPingEndpointId() noexcept { return MIDI_DIAGNOSTICS_PING_BIDI_ID; }
+
         static winrt::hstring EndpointInterfaceClass() noexcept { return STRING_DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI; }
 
         static midi2::MidiEndpointDeviceWatcher CreateWatcher(_In_ bool includeDiagnosticsEndpoints);
-        static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll(_In_ bool includeDiagnosticsEndpoints);
+
+        static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll(
+            _In_ midi2::MidiEndpointDeviceInformationSortOrder const& sortOrder, 
+            _In_ midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept;
+        static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll(
+            _In_ midi2::MidiEndpointDeviceInformationSortOrder const& sortOrder) noexcept;
+        static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll() noexcept;
 
         static collections::IVectorView<winrt::hstring> GetAdditionalPropertiesList() noexcept;
 
 
         winrt::hstring Id() const noexcept;
-        winrt::hstring ParentDeviceId() const noexcept;
+        winrt::guid ContainerId() const noexcept { return GetGuidProperty(L"System.Devices.ContainerId", winrt::guid{}); }
+        winrt::hstring DeviceInstanceId() const noexcept { return GetStringProperty(L"System.Devices.DeviceInstanceId", L""); }
 
         winrt::Windows::Devices::Enumeration::DeviceInformation GetParentDeviceInformation();
+        winrt::Windows::Devices::Enumeration::DeviceInformation GetContainerInformation();
+
         winrt::Windows::Devices::Enumeration::DeviceInformation DeviceInformation() noexcept { return m_deviceInformation; }
 
         winrt::hstring Name() const noexcept;
@@ -47,10 +59,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring LargeImagePath() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UserSuppliedLargeImagePath, L""); }
         winrt::hstring SmallImagePath() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UserSuppliedSmallImagePath, L""); }
 
-
         winrt::hstring UniqueIdentifier() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UniqueIdentifier, L"");}
 
-        bool SupportsMultiClient() const noexcept { return GetBoolProperty(STRING_PKEY_MIDI_SupportsMultiClient, true); }
+        bool SupportsMultiClient() const noexcept { return GetBoolProperty(STRING_PKEY_MIDI_SupportsMulticlient, true); }
 
         midi2::MidiEndpointNativeDataFormat NativeDataFormat() const noexcept;
         midi2::MidiEndpointDevicePurpose EndpointPurpose() const noexcept;
@@ -81,6 +92,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring GetStringProperty(
             _In_ winrt::hstring key,
             _In_ winrt::hstring defaultValue) const noexcept;
+
+        winrt::guid GetGuidProperty(
+            _In_ winrt::hstring key,
+            _In_ winrt::guid defaultValue) const noexcept;
 
         uint8_t GetByteProperty(
             _In_ winrt::hstring key,

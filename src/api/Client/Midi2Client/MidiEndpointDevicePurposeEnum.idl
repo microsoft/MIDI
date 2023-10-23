@@ -16,6 +16,8 @@ namespace Windows.Devices.Midi2
     {
         NormalMessageEndpoint = 0,
 
+        VirtualDeviceResponder = 100,
+
         // TODO: Should we include General MIDI Synth in here?
 
         DiagnosticLoopback = 500,

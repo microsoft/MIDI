@@ -55,7 +55,7 @@
 #define JSON_KEY_FB_MIDI10 L"midi10"
 #define JSON_KEY_FB_DIRECTION L"direction"
 #define JSON_KEY_FB_FIRSTGROUP L"firstGroupIndex"
-#define JSON_KEY_FB_NUMGROUPSSPANNED L"numberOfGroupsSpanned"
+#define JSON_KEY_FB_NUMGROUPSSPANNED L"countGroupsSpanned"
 #define JSON_KEY_FB_MIDICIFORMAT L"midiCIMessageFormat"
 
 

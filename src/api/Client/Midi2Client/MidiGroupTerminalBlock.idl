@@ -21,25 +21,21 @@ MIDI_IDL_IMPORT
 
 namespace Windows.Devices.Midi2
 {
-
     [MIDI_API_CONTRACT(1)]
     [default_interface]
     runtimeclass MidiGroupTerminalBlock
     {
-        MidiGroupTerminalBlock();
+        UInt8 Number{ get; };
 
-        String Id{ get; };
-
-        // this is essentially the string referred to by iBlockItem
         String Name{ get; };
 
         MidiGroupTerminalBlockDirection Direction { get; };
         MidiGroupTerminalBlockProtocol Protocol { get; };
 
-        // rather than number of groups and a start group, we just have a vector of groups
-        // here to make it flexible and to be consistent with what we do for function blocks
-        IVectorView<MidiGroup> IncludedGroups{ get; };
-        // TODO: After removing IsActive from the Group type, do we need to track it separately?
+        UInt8 FirstGroupIndex{ get; };
+        UInt8 GroupCount{ get; };
+
+        Boolean IncludesGroup(MidiGroup group);
 
 
         // Note: 0x0000 is unknown or not fixed

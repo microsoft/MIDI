@@ -82,7 +82,16 @@ private:
     GUID m_containerId{};
     GUID m_transportAbstractionId{};
 
-    HRESULT CreateEndpoint(_In_ std::wstring const instanceId, _In_ std::wstring const name);
+    HRESULT CreateEndpoint(
+        _In_ std::wstring const instanceId,
+        _In_ std::wstring const uniqueId,
+        _In_ bool const multiclient,
+        _In_ bool const isVirtualEndpointResponder,
+        _In_ std::wstring const name,
+        _In_ std::wstring const largeImagePath,
+        _In_ std::wstring const smallImagePath,
+        _In_ std::wstring const description
+    );
 
     HRESULT CreateConfiguredEndpoints(_In_ std::wstring configurationJson);
     HRESULT CreateParentDevice();

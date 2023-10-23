@@ -9,9 +9,6 @@
 #pragma once
 #include "MidiService.g.h"
 
-// is this id truly static? It would be more robust to do a enum query to find it
-#define PING_SERVICE_BIDI_ENDPOINT_ID L"\\\\?\\SWD#MIDISRV#MIDIU_PING_BIDI#{e7cce071-3c03-423f-88d3-f1045d02552b}"
-
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     struct MidiService : MidiServiceT<MidiService>

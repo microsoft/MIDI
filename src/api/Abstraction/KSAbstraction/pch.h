@@ -45,6 +45,8 @@
 
 #include "strsafe.h"
 
+#include "abstraction_defs.h"
+
 #include "Midi2KSAbstraction_i.c"
 #include "Midi2KSAbstraction.h"
 

@@ -30,7 +30,13 @@ int main()
 
     std::cout << "Enumerating endpoints..." << std::endl;
 
-    auto endpoints = MidiEndpointDeviceInformation::FindAll(includeDiagnosticsEndpoints);
+    auto endpoints = MidiEndpointDeviceInformation::FindAll(
+        MidiEndpointDeviceInformationSortOrder::Name,
+        MidiEndpointDeviceInformationFilter::IncludeClientByteStreamNative |
+        MidiEndpointDeviceInformationFilter::IncludeClientUmpNative |
+        MidiEndpointDeviceInformationFilter::IncludeDiagnosticLoopback |
+        MidiEndpointDeviceInformationFilter::IncludeVirtualDeviceResponder
+    );
 
     std::cout << endpoints.Size() << " endpoints returned" << std::endl << std::endl;
 
@@ -39,12 +45,25 @@ int main()
         std::cout << "Identification" << std::endl;
         std::cout << "- Name:    " << winrt::to_string(endpoint.Name()) << std::endl;
         std::cout << "- Id:      " << winrt::to_string(endpoint.Id()) << std::endl;
-        std::cout << "- Parent:  " << winrt::to_string(endpoint.ParentDeviceId()) << std::endl;
 
+        auto parent = endpoint.GetParentDeviceInformation();
+
+        if (parent != nullptr)
+        {
+            std::cout << "- Parent:  " << winrt::to_string(parent.Id()) << std::endl;
+        }
+        else
+        {
+            std::cout << "- Parent:  Unknown" <<std::endl;
+        }
 
         if (endpoint.EndpointPurpose() == MidiEndpointDevicePurpose::NormalMessageEndpoint)
         {
             std::cout << "- Purpose: Application MIDI Traffic" << std::endl;
+        }
+        else if (endpoint.EndpointPurpose() == MidiEndpointDevicePurpose::VirtualDeviceResponder)
+        {
+            std::cout << "- Purpose: Virtual Device Responder" << std::endl;
         }
         else if (endpoint.EndpointPurpose() == MidiEndpointDevicePurpose::DiagnosticLoopback)
         {
@@ -53,6 +72,10 @@ int main()
         else if (endpoint.EndpointPurpose() == MidiEndpointDevicePurpose::DiagnosticPing)
         {
             std::cout << "- Purpose: Internal Diagnostics Ping" << std::endl;
+        }
+        else
+        {
+            std::cout << "- Purpose: Unknown" << std::endl;
         }
 
         std::cout << std::endl << "Endpoint Metadata" << std::endl;

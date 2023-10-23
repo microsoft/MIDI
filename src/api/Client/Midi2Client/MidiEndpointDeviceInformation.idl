@@ -10,12 +10,14 @@
 MIDI_IDL_IMPORT
 
 import "MidiGroupTerminalBlock.idl";
-import "MidiEndpointTypeEnum.idl";
 import "MidiProtocolEnum.idl";
 import "MidiEndpointNativeDataFormatEnum.idl";
 import "MidiEndpointDevicePurposeEnum.idl";
 //import "MidiEndpointDeviceWatcher.idl";
 import "MidiFunctionBlock.idl";
+
+import "MidiEndpointDeviceInformationSortOrderEnum.idl";
+import "MidiEndpointDeviceInformationFilterEnum.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -25,10 +27,14 @@ namespace Windows.Devices.Midi2
     {
         static MidiEndpointDeviceInformation CreateFromId(String id);
         //static MidiEndpointDeviceWatcher CreateWatcher();
-        static IVectorView<MidiEndpointDeviceInformation> FindAll(Boolean includeDiagnosticsEndpoints);
+
+        static IVectorView<MidiEndpointDeviceInformation> FindAll();
+        static IVectorView<MidiEndpointDeviceInformation> FindAll(MidiEndpointDeviceInformationSortOrder sortOrder);
+        static IVectorView<MidiEndpointDeviceInformation> FindAll(MidiEndpointDeviceInformationSortOrder sortOrder, MidiEndpointDeviceInformationFilter endpointFilter);
 
         static String DiagnosticsLoopbackAEndpointId{ get; };
         static String DiagnosticsLoopbackBEndpointId{ get; };
+        //static String DiagnosticsPingEndpointId{ get; };      // don't expose in IDL
 
         static String EndpointInterfaceClass{ get; };
 
@@ -39,8 +45,14 @@ namespace Windows.Devices.Midi2
         Windows.Devices.Enumeration.DeviceInformation DeviceInformation{ get; };
 
         Windows.Devices.Enumeration.DeviceInformation GetParentDeviceInformation();
-        String ParentDeviceId{ get; };
-        //String ContainerId{ get; };
+        Windows.Devices.Enumeration.DeviceInformation GetContainerInformation();
+
+
+        //String ParentDeviceId{ get; };
+        Guid ContainerId{ get; };
+        String DeviceInstanceId{ get; };
+
+        //String ParentDeviceInstanceId{ get; };
 
         // We surface all the names here, but use a hierarchy to decide which Name we show as the Name property
 
@@ -87,8 +99,6 @@ namespace Windows.Devices.Midi2
 
         // If this is a diagnostic endpoint
         MidiEndpointDevicePurpose EndpointPurpose{ get; };
-
-
 
         // The settings app allows the user to add some metadata, like a description
         String Description{ get; };

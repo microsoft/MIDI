@@ -224,7 +224,6 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="dllmain.h" />
     <ClInclude Include="memory_buffer.h" />
     <ClInclude Include="MidiEndpointConnection.h">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
@@ -446,22 +445,23 @@
     <Midl Include="MidiChannelEndpointListener.idl" />
     <Midl Include="MidiClock.idl" />
     <Midl Include="MidiEndpointDeviceInformation.idl" />
+    <Midl Include="MidiEndpointDeviceInformationFilterEnum.idl" />
+    <Midl Include="MidiEndpointDeviceInformationSortOrderEnum.idl" />
     <Midl Include="MidiEndpointDevicePurposeEnum.idl" />
     <Midl Include="MidiEndpointDeviceWatcher.idl" />
     <Midl Include="MidiEndpointDiscoveryFilterFlagsEnum.idl" />
     <Midl Include="MidiEndpointNativeDataFormatEnum.idl" />
+    <Midl Include="MidiFunctionBlockDirectionEnum.idl" />
     <Midl Include="MidiFunctionBlockDiscoveryFilterFlagsEnum.idl" />
     <Midl Include="MidiFunctionBlockMidi10Enum.idl" />
     <Midl Include="MidiEndpointConnectionSharingEnum.idl" />
     <Midl Include="MidiEndpointConnectionSharingPreferenceEnum.idl" />
-    <Midl Include="MidiEndpointTypeEnum.idl" />
     <Midl Include="MidiFunctionBlock.idl" />
-    <Midl Include="MidiFunctionBlockDirectionEnum.idl" />
+    <Midl Include="MidiGroupTerminalBlockDirectionEnum.idl" />
     <Midl Include="MidiFunctionBlockUIHintEnum.idl" />
     <Midl Include="MidiGroup.idl" />
     <Midl Include="MidiGroupEndpointListener.idl" />
     <Midl Include="MidiGroupTerminalBlock.idl" />
-    <Midl Include="MidiGroupTerminalBlockDirectionEnum.idl" />
     <Midl Include="MidiGroupTerminalBlockProtocolEnum.idl" />
     <Midl Include="MidiMessageStruct.idl" />
     <Midl Include="MidiMessageBuilder.idl" />

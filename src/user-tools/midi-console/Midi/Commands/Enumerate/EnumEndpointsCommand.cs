@@ -24,6 +24,17 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             [CommandOption("-i|--include-endpoint-id")]
             [DefaultValue(true)]
             public bool IncludeId { get; set; }
+
+            [LocalizedDescription("ParameterEnumEndpointsIncludeLoopbackEndpoints")]
+            [CommandOption("-l|--include-loopback")]
+            [DefaultValue(false)]
+            public bool IncludeDiagnosticLoopback { get; set; }
+
+            [LocalizedDescription("ParameterEnumEndpointsVerboseOutput")]
+            [CommandOption("-v|--verbose|--details")]
+            [DefaultValue(false)]
+            public bool Verbose { get; set; }
+
         }
 
         public override int Execute(CommandContext context, Settings settings)
@@ -38,9 +49,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                     var table = new Table();
 
-                    table.Border(TableBorder.HeavyHead);
+                    table.Border(TableBorder.Rounded);
 
-                    table.AddColumn("UMP Endpoints for Windows MIDI Services");
+                    table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("UMP Endpoints for Windows MIDI Services"));
 
                     // Bidirectional endpoints
 
@@ -56,8 +67,19 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         return;
                     }
 
-                    var endpoints = DeviceInformation.FindAllAsync(selector)
-                        .GetAwaiter().GetResult();
+                    MidiEndpointDeviceInformationFilter filter = 
+                        MidiEndpointDeviceInformationFilter.IncludeClientByteStreamNative | 
+                        MidiEndpointDeviceInformationFilter.IncludeClientUmpNative;
+
+                    if (settings.IncludeDiagnosticLoopback)
+                    {
+                        filter |= MidiEndpointDeviceInformationFilter.IncludeDiagnosticLoopback;
+                    }
+
+                    var endpoints = MidiEndpointDeviceInformation.FindAll(
+                        MidiEndpointDeviceInformationSortOrder.Name,
+                        filter
+                        );
 
                     if (endpoints.Count > 0)
                     {
@@ -70,7 +92,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     }
                     else
                     {
-                        table.AddRow("No bidirectional endpoints.");
+                        table.AddRow("No matching endpoints found.");
                     }
 
 
@@ -88,15 +110,22 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         }
 
 
-        private void DisplayEndpointInformationFormatted(Table table, Settings settings, DeviceInformation endpointInfo, string endpointType)
+        private void DisplayEndpointInformationFormatted(Table table, Settings settings, MidiEndpointDeviceInformation endpointInfo, string endpointType)
         {
             table.AddRow(new Markup(AnsiMarkupFormatter.FormatEndpointName(endpointInfo.Name)));
 
-            table.AddRow(endpointType);
-
             if (settings.IncludeId)
             {
-                table.AddRow(new Markup(AnsiMarkupFormatter.FormatDeviceInstanceId(endpointInfo.Id)));
+                table.AddRow(new Markup(AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointInfo.Id)));
+            }
+
+            if (settings.Verbose)
+            {
+                if (!string.IsNullOrEmpty(endpointInfo.Description))
+                {
+                    table.AddRow(new Markup(AnsiMarkupFormatter.EscapeString(endpointInfo.Description)));
+                }
+
             }
 
             table.AddEmptyRow();

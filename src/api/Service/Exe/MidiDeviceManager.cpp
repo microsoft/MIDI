@@ -46,8 +46,11 @@ typedef struct _CREATECONTEXT
     ULONG IntPropertyCount{ 0 };
 } CREATECONTEXT, * PCREATECONTEXT;
 
-void SwMidiPortCreateCallback(__in HSWDEVICE hSwDevice, __in HRESULT CreationResult, __in_opt PVOID pContext, __in_opt PCWSTR /* pszDeviceInstanceId */)
+void SwMidiPortCreateCallback(__in HSWDEVICE hSwDevice, __in HRESULT CreationResult, __in PVOID pContext, __in_opt PCWSTR /* pszDeviceInstanceId */)
 {
+    // fix code analysis complaint
+    if (pContext == nullptr) return;
+
     PCREATECONTEXT creationContext = (PCREATECONTEXT)pContext;
 
     // interface registration has started, assume
@@ -88,7 +91,9 @@ CMidiDeviceManager::ActivateEndpoint
     ULONG DevPropertyCount,
     PVOID InterfaceDevProperties,
     PVOID DeviceDevProperties,
-    PVOID CreateInfo
+    PVOID CreateInfo,
+    PWSTR CreatedDeviceInterfaceId,
+    ULONG CreatedDeviceInterfaceIdCharCount
 )
 {
     auto lock = m_MidiPortsLock.lock();
@@ -104,13 +109,20 @@ CMidiDeviceManager::ActivateEndpoint
         return false;
     }) != m_MidiPorts.end();
 
+
+    if (CreatedDeviceInterfaceId != nullptr && CreatedDeviceInterfaceIdCharCount > 0)
+    {
+        CreatedDeviceInterfaceId[CreatedDeviceInterfaceIdCharCount - 1] = (wchar_t)0;
+    }
+
+
     if (alreadyActivated)
     {
         return S_FALSE;
     }
     else
     {
-        std::wstring deviceInterfaceId;
+        std::wstring deviceInterfaceId{ 0 };
 
         auto cleanupOnFailure = wil::scope_exit([&]()
         {
@@ -136,10 +148,21 @@ CMidiDeviceManager::ActivateEndpoint
             }
         }
 
-        cleanupOnFailure.release();
-    }
+        // return the created device interface Id. This is needed for anything that will 
+        // do a match in the Ids from Windows.Devices.Enumeration
+        if (CreatedDeviceInterfaceId != nullptr && CreatedDeviceInterfaceIdCharCount > 0)
+        {
+            //memset((byte*)CreatedDeviceInterfaceId, 0, CreatedDeviceInterfaceIdBufferSize * sizeof(wchar_t));
+            deviceInterfaceId.copy(CreatedDeviceInterfaceId, CreatedDeviceInterfaceIdCharCount - 1);
 
-    return S_OK;
+            CreatedDeviceInterfaceId[CreatedDeviceInterfaceIdCharCount - 1] = (wchar_t)0;
+        }
+
+        cleanupOnFailure.release();
+
+        return S_OK;
+
+    }
 }
 
 _Use_decl_annotations_
@@ -172,83 +195,24 @@ CMidiDeviceManager::ActivateEndpointInternal
                    DEVPROP_TYPE_STRING, static_cast<ULONG>((wcslen(AssociatedInstanceId) + 1) * sizeof(WCHAR)), (PVOID)AssociatedInstanceId });
     }
 
-    // Additional metadata properties added here to avoid having to add them in every transport
-    // and to ensure they are registered under the same identity that is creating the device
-    // Several of these are later updated through discovery, user-supplied json metadata, etc.
+
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
-    DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
-    uint8_t zeroByte = 0;
 
-    std::wstring emptyString = L"";
+    interfaceProperties.push_back({ {DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
+        DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
 
-    try
-    {
-        interfaceProperties.push_back({ {PKEY_MIDI_SupportsMultiClient, DEVPROP_STORE_SYSTEM, nullptr },
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
+    interfaceProperties.push_back({ {DEVPKEY_Device_NoConnectSound, DEVPROP_STORE_SYSTEM, nullptr},
+        DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
 
-        interfaceProperties.push_back({ {DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
+    //// get the MidiSrv filename so we can specify the icons
+    //TCHAR szFileName[MAX_PATH];
+    //GetModuleFileName(NULL, szFileName, MAX_PATH);
 
-        interfaceProperties.push_back({ {DEVPKEY_Device_NoConnectSound, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
+    //std::wstring interfaceIconPath(szFileName);
+    //interfaceIconPath += L", " + std::to_wstring(IDI_ENDPOINT_DEVICE_ICON);
 
-
-        // from endpoint discovery ============
-        interfaceProperties.push_back({ {PKEY_MIDI_EndpointSupportsMidi2Protocol, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse });
-
-        interfaceProperties.push_back({ {PKEY_MIDI_EndpointSupportsMidi1Protocol, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse });
-
-        interfaceProperties.push_back({ {PKEY_MIDI_EndpointSupportsReceivingJRTimestamps, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse });
-
-        interfaceProperties.push_back({ {PKEY_MIDI_EndpointSupportsSendingJRTimestamps, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse });
-
-        interfaceProperties.push_back({ {PKEY_MIDI_EndpointUmpVersionMajor, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(zeroByte)), &zeroByte });
-
-        interfaceProperties.push_back({ {PKEY_MIDI_EndpointUmpVersionMinor, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(zeroByte)), &zeroByte });
-
-        interfaceProperties.push_back({ {PKEY_MIDI_EndpointProvidedName, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((emptyString.length() + 1) * sizeof(WCHAR)), (PVOID)emptyString.c_str() });
-
-        interfaceProperties.push_back({ {PKEY_MIDI_EndpointProvidedProductInstanceId, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((emptyString.length() + 1) * sizeof(WCHAR)), (PVOID)emptyString.c_str() });
-
-        interfaceProperties.push_back({ {PKEY_MIDI_FunctionBlocksAreStatic, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)),&devPropFalse });
-
-        //interfaceProperties.push_back({ {PKEY_MIDI_DeviceIdentification, DEVPROP_STORE_SYSTEM, nullptr},
-        //    DEVPROP_TYPE_BINARY, static_cast<ULONG>(0),  });
-
-
-        // from function block discovery =============================
-
-        //interfaceProperties.push_back({ {PKEY_MIDI_FunctionBlocks, DEVPROP_STORE_SYSTEM, nullptr},
-        //    DEVPROP_TYPE_BINARY, static_cast<ULONG>(0), &functionBlockCount });
-
-
-        // from settings app =============================
-
-        interfaceProperties.push_back({ {PKEY_MIDI_UserSuppliedLargeImagePath, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((emptyString.length() + 1) * sizeof(WCHAR)), (PVOID)emptyString.c_str() });
-
-        interfaceProperties.push_back({ {PKEY_MIDI_UserSuppliedSmallImagePath, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((emptyString.length() + 1) * sizeof(WCHAR)), (PVOID)emptyString.c_str() });
-
-        interfaceProperties.push_back({ {PKEY_MIDI_UserSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((emptyString.length() + 1) * sizeof(WCHAR)), (PVOID)emptyString.c_str() });
-
-        interfaceProperties.push_back({ {PKEY_MIDI_UserSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((emptyString.length() + 1) * sizeof(WCHAR)), (PVOID)emptyString.c_str() });
-    }
-    catch (...)
-    {
-        // TODO: Log
-    }
+    //interfaceProperties.push_back({{PKEY_Devices_GlyphIcon, DEVPROP_STORE_SYSTEM, nullptr},
+    //    DEVPROP_TYPE_STRING, static_cast<ULONG>(interfaceIconPath.length() + 1) * sizeof(WCHAR), (PVOID)interfaceIconPath.c_str()});
 
 
     midiPort->InstanceId = CreateInfo->pszInstanceId;
@@ -308,6 +272,7 @@ CMidiDeviceManager::ActivateEndpointInternal
         SwMidiPortCreateCallback,
         &creationContext,
         wil::out_param(midiPort->SwDevice));
+
     if (SUCCEEDED(midiPort->hr))
     {
         // wait for creation to complete

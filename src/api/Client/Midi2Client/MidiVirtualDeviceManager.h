@@ -26,7 +26,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool CreateEndpoint(
             _In_ winrt::hstring const& parentDeviceId,
             _In_ winrt::hstring const& name,
-            _In_ midi2::MidiEndpointType const& endpointType,
             _In_ bool exclusive,
             _In_ midi2::MidiProtocol const& protocol,
             _In_opt_ winrt::Windows::Foundation::IInspectable const& tag,

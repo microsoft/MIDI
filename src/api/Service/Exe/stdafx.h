@@ -34,6 +34,8 @@ namespace json = ::winrt::Windows::Data::Json;
 
 #include "MidiAbstraction.h"
 
+#include "resource.h"
+#include "propkey.h"
 
 #include "Midi2DiagnosticsAbstraction_i.c"
 #include "Midi2DiagnosticsAbstraction.h"

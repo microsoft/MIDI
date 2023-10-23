@@ -87,6 +87,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                             // show table of the ping results
 
                             var table = new Table();
+                            table.Border(TableBorder.Rounded);
 
                             table.AddColumn(Strings.PingResultTableColumnHeaderPing);
                             table.AddColumn(Strings.PingResultTableColumnHeaderSendTimestamp);

@@ -81,7 +81,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             }
             else
             {
-                endpointId = UmpEndpointPicker.PickOutput();
+                endpointId = UmpEndpointPicker.PickEndpoint();
             }
 
             AnsiConsole.MarkupLine(Strings.SendMessageSendingThroughEndpointLabel + ": " + AnsiMarkupFormatter.FormatDeviceInstanceId(endpointId));
@@ -93,19 +93,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
 
             var bidiOpenOptions = new MidiEndpointConnectionOptions();
-
-
-            //if (settings.AutoProtocolNegotiation == false)
-            //{
-            //    bidiOpenOptions.DisableAutomaticStreamConfiguration = true;
-            //}
-
-            //if (settings.AutoDiscovery == false)
-            //{
-            //    bidiOpenOptions.DisableAutomaticEndpointMetadataHandling = true;
-            //    bidiOpenOptions.DisableAutomaticFunctionBlockMetadataHandling = true;
-            //}
-
 
             if (session == null)
             {

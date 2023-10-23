@@ -181,6 +181,11 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(std::wstring const inst
     std::wstring mnemonic(TRANSPORT_MNEMONIC);
 
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
+    DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
+    BYTE nativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
+
+    std::wstring description = L"Diagnostics loopback endpoint. For testing purposes.";
+
 
     DEVPROPERTY interfaceDevProperties[] = {
         {{DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
@@ -188,7 +193,14 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(std::wstring const inst
         {{PKEY_MIDI_TransportSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_STRING, static_cast<ULONG>((name.length() + 1) * sizeof(WCHAR)), (PVOID)name.c_str()},
         {{PKEY_MIDI_UmpLoopback, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),(PVOID)& devPropTrue},
+        {{PKEY_MIDI_UmpPing, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)),(PVOID)&devPropFalse},
+        {{PKEY_MIDI_UserSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_STRING, static_cast<ULONG>((description.length() + 1) * sizeof(WCHAR)), (PVOID)description.c_str() },
+        {{PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(BYTE)), (PVOID)&nativeDataFormat},
+
         {{PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_GUID, static_cast<ULONG>(sizeof(GUID)), (PVOID)&AbstractionLayerGUID },        // essential to instantiate the right endpoint types
         {{PKEY_MIDI_TransportMnemonic, DEVPROP_STORE_SYSTEM, nullptr},
@@ -210,6 +222,9 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(std::wstring const inst
     createInfo.pszDeviceDescription = name.c_str();
 
 
+    const ULONG deviceInterfaceIdMaxSize = 255;
+    wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
+
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
         std::wstring(m_parentDevice->InstanceId).c_str(),       // parent instance Id
         true,                                                   // UMP-only
@@ -218,7 +233,11 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(std::wstring const inst
         ARRAYSIZE(deviceDevProperties),
         (PVOID)interfaceDevProperties,
         (PVOID)deviceDevProperties,
-        (PVOID)&createInfo));
+        (PVOID)&createInfo,
+        (LPWSTR)&newDeviceInterfaceId,
+        deviceInterfaceIdMaxSize));
+
+    // todo: store the interface id and use it for matches later instead of the current partial string match
 
     return S_OK;
 }
@@ -232,6 +251,11 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(_In_ std::wstring const ins
     std::wstring mnemonic(TRANSPORT_MNEMONIC);
 
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
+    DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
+    BYTE nativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
+
+
+    std::wstring description = L"Internal UMP Ping endpoint. Do not send messages to this endpoint.";
 
     DEVPROPERTY interfaceDevProperties[] = {
         {{DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
@@ -241,7 +265,13 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(_In_ std::wstring const ins
         {{PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_GUID, static_cast<ULONG>(sizeof(GUID)), (PVOID)&AbstractionLayerGUID },        // essential to instantiate the right endpoint types
         {{PKEY_MIDI_UmpPing, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),(PVOID)& devPropTrue},
+        {{PKEY_MIDI_UmpLoopback, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)),(PVOID)&devPropFalse},
+        {{PKEY_MIDI_UserSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_STRING, static_cast<ULONG>((description.length() + 1) * sizeof(WCHAR)), (PVOID)description.c_str() },
+        {{PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(BYTE)), (PVOID)&nativeDataFormat},
         {{PKEY_MIDI_TransportMnemonic, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_STRING, static_cast<ULONG>((mnemonic.length() + 1) * sizeof(WCHAR)), (PVOID)mnemonic.c_str()}
     };
@@ -262,6 +292,9 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(_In_ std::wstring const ins
     createInfo.pszDeviceDescription = name.c_str();
 
 
+    const ULONG deviceInterfaceIdMaxSize = 255;
+    wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
+
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
         std::wstring(m_parentDevice->InstanceId).c_str(),       // parent instance Id
         true,                                                   // UMP-only
@@ -270,7 +303,11 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(_In_ std::wstring const ins
         ARRAYSIZE(deviceDevProperties),
         (PVOID)interfaceDevProperties,
         (PVOID)deviceDevProperties,
-        (PVOID)&createInfo));
+        (PVOID)&createInfo,
+        (LPWSTR)&newDeviceInterfaceId,
+        deviceInterfaceIdMaxSize));
+
+    // TODO: Get the device interface id and store it for comparison later.
 
     return S_OK;
 }

@@ -95,7 +95,16 @@ namespace Microsoft.Midi.Settings.ViewModels
             System.Diagnostics.Debug.WriteLine("query:" + query);
 
             //var devices = await DeviceInformation.FindAllAsync(query, null, DeviceInformationKind.DeviceInterface);
-            var devices = await DeviceInformation.FindAllAsync(null, new[] { "System.Devices.Parent", "System.Devices.DeviceManufacturer", "System.Devices.HardwareIds", "System.Devices.ModelName", "System.Devices.InterfaceClassGuid" }, DeviceInformationKind.Device);
+            var devices = await DeviceInformation.FindAllAsync(
+                null, new[] 
+                { 
+                    "System.Devices.Parent", 
+                    "System.Devices.DeviceManufacturer", 
+                    "System.Devices.HardwareIds", 
+                    "System.Devices.ModelName", 
+                    "System.Devices.InterfaceClassGuid" 
+                }, 
+                DeviceInformationKind.Device);
 
             if (devices != null && devices.Count > 0)
             {

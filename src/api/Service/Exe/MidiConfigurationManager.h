@@ -45,20 +45,7 @@ private:
         return std::wstring(expanded);
     }
 
-    // this should probably be in a shared place
-    // note that this produces a GUID with uppercase letters and enclosing braces
-    inline std::wstring GuidToString(_In_ GUID guid) const
-    {
-        LPOLESTR str;
-        StringFromCLSID(guid, &str);
 
-        // TODO: Is this copying or acquiring?
-        std::wstring guidString{ str };
-
-        ::CoTaskMemFree(str);
-
-        return guidString;
-    }
 
 };
 
