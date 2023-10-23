@@ -28,7 +28,7 @@ namespace Windows::Devices::Midi2::Internal
 
     extern GUID g_LoggingProviderActivityId;
 
-    extern bool g_traceLoggingRegistered;
+ //   extern bool g_traceLoggingRegistered;
 
     void RegisterTraceLogging();
     void UnregisterTraceLogging();

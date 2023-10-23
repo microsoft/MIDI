@@ -66,7 +66,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             string messageLineFormat =
                 "[grey]{0,8}[/] \u2502 " +
                 "[darkseagreen2]{1,19:N0}[/] \u2502 " +
-                "[darkseagreen2]{2,10:F4}[/] " + unitLabel + " \u2502 " +
+                "[darkseagreen2]{2,10:F2}[/] " + unitLabel + " \u2502 " +
                 "[deepskyblue1]{3,8}[/] [deepskyblue2]{4,8}[/] [deepskyblue3]{5,8}[/] [deepskyblue4]{6,8}[/] \u2502 " +
                 "[steelblue1_1]{7,-20}[/]";
 

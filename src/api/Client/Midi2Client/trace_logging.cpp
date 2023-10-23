@@ -85,7 +85,7 @@ namespace Windows::Devices::Midi2::Internal
 
         if (!g_traceLoggingRegistered) RegisterTraceLogging();
 
-        TraceLoggingWrite()
+        TraceLoggingWrite(
             g_hLoggingProvider,
             "MIDI.HresultError",
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
