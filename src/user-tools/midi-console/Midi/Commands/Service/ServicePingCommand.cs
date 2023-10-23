@@ -81,6 +81,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     if (pingResult.Success)
                     {
                         // show the summary
+                        var freq = MidiClock.GetMidiTimestampFrequency();
 
                         if (settings.Verbose)
                         {
@@ -91,32 +92,54 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                             table.AddColumn(Strings.PingResultTableColumnHeaderPing);
                             table.AddColumn(Strings.PingResultTableColumnHeaderSendTimestamp);
+                            table.AddColumn(Strings.PingResultTableColumnHeaderServiceTimestamp);
                             table.AddColumn(Strings.PingResultTableColumnHeaderReceiveTimestamp);
+                            table.AddColumn(Strings.PingResultTableColumnHeaderServiceBreakdown);
                             table.AddColumn(Strings.PingResultTableColumnHeaderRoundTripTicks);
                             table.AddColumn(Strings.PingResultTableColumnHeaderRoundTripMicroseconds);
+                            table.AddColumn(Strings.PingResultTableColumnHeaderRoundTripMilliseconds);
 
-                            var freq = MidiClock.GetMidiTimestampFrequency();
 
                             foreach (var response in pingResult.Responses)
                             {
                                 double deltaMicroseconds = (double)(response.ClientDeltaTimestamp * 1000000) / freq;
+                                double deltaMilliseconds = (double)(response.ClientDeltaTimestamp * 1000) / freq;
+
+                                UInt64 sendToServiceTicks = response.ServiceReportedMidiTimestamp - response.ClientSendMidiTimestamp;
+                                UInt64 receiveFromServiceTicks = response.ClientReceiveMidiTimestamp - response.ServiceReportedMidiTimestamp;
 
                                 table.AddRow(
                                     new Text((response.Index + 1).ToString()),
                                     new Markup(AnsiMarkupFormatter.FormatTimestamp(response.ClientSendMidiTimestamp)),
+                                    new Markup(AnsiMarkupFormatter.FormatTimestamp(response.ServiceReportedMidiTimestamp)),
                                     new Markup(AnsiMarkupFormatter.FormatTimestamp(response.ClientReceiveMidiTimestamp)),
+                                    new Markup(AnsiMarkupFormatter.FormatGeneralNumber(sendToServiceTicks) + " / " + AnsiMarkupFormatter.FormatGeneralNumber(receiveFromServiceTicks)),
                                     new Markup(AnsiMarkupFormatter.FormatGeneralNumber(response.ClientDeltaTimestamp)),
-                                    new Markup(AnsiMarkupFormatter.FormatGeneralNumber(deltaMicroseconds))
+                                    new Markup(AnsiMarkupFormatter.FormatGeneralNumber(deltaMicroseconds)),
+                                    new Markup(AnsiMarkupFormatter.FormatGeneralNumber(deltaMilliseconds))
                                     );
                             }
 
                             AnsiConsole.Write(table);
                         }
 
-                        AnsiConsole.MarkupLine($" {Strings.GenericCount}: {AnsiMarkupFormatter.FormatGeneralNumber(pingResult.Responses.Count)} {Strings.GenericResponses}");
-                        AnsiConsole.MarkupLine($" {Strings.GenericTotal}: {AnsiMarkupFormatter.FormatGeneralNumber(pingResult.TotalPingRoundTripMidiClock)} {Strings.GenericClockTicks}");
-                        AnsiConsole.MarkupLine($" {Strings.GenericAverage}: {AnsiMarkupFormatter.FormatGeneralNumber(pingResult.AveragePingRoundTripMidiClock)} {Strings.GenericClockTicks}");
+                        double averageMicroseconds = (double)(pingResult.AveragePingRoundTripMidiClock * 1000000) / freq;
+                        double averageMilliseconds = (double)(pingResult.AveragePingRoundTripMidiClock * 1000) / freq;
 
+                        var summaryTable = new Table();
+                        summaryTable.Border(TableBorder.None);
+
+                        summaryTable.AddColumn("").LeftAligned();
+                        summaryTable.AddColumn("").RightAligned();
+                        summaryTable.AddColumn("").LeftAligned();
+
+                        summaryTable.AddRow(Strings.GenericCount, AnsiMarkupFormatter.FormatGeneralNumber(pingResult.Responses.Count), Strings.GenericResponses);
+                        summaryTable.AddRow(Strings.GenericTotal, AnsiMarkupFormatter.FormatGeneralNumber(pingResult.TotalPingRoundTripMidiClock), Strings.GenericClockTicks);
+                        summaryTable.AddRow(Strings.GenericAverage, AnsiMarkupFormatter.FormatGeneralNumber(pingResult.AveragePingRoundTripMidiClock), Strings.GenericClockTicks);
+                        summaryTable.AddRow(Strings.GenericAverage, AnsiMarkupFormatter.FormatGeneralNumber(averageMicroseconds), Strings.GenericMicroseconds);
+                        summaryTable.AddRow(Strings.GenericAverage, AnsiMarkupFormatter.FormatGeneralNumber(averageMilliseconds), Strings.GenericMilliseconds);
+
+                        AnsiConsole.Write(summaryTable);
                     }
                     else
                     {

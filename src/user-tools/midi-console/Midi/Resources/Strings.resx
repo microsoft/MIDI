@@ -198,6 +198,12 @@
   <data name="GenericCount" xml:space="preserve">
     <value>Count</value>
   </data>
+  <data name="GenericMicroseconds" xml:space="preserve">
+    <value>microseconds</value>
+  </data>
+  <data name="GenericMilliseconds" xml:space="preserve">
+    <value>milliseconds</value>
+  </data>
   <data name="GenericResponses" xml:space="preserve">
     <value>responses</value>
   </data>
@@ -325,19 +331,38 @@
     <value>Ping</value>
   </data>
   <data name="PingResultTableColumnHeaderReceiveTimestamp" xml:space="preserve">
-    <value>Receive
+    <value>Client
+Receive
 Timestamp</value>
   </data>
   <data name="PingResultTableColumnHeaderRoundTripMicroseconds" xml:space="preserve">
-    <value>Round Trip
+    <value>Client
+Round Trip
 Microseconds</value>
   </data>
+  <data name="PingResultTableColumnHeaderRoundTripMilliseconds" xml:space="preserve">
+    <value>Client
+Round Trip
+Milliseconds</value>
+  </data>
   <data name="PingResultTableColumnHeaderRoundTripTicks" xml:space="preserve">
-    <value>Round Trip
-Ticks</value>
+    <value>Client
+Round Trip
+System Ticks</value>
   </data>
   <data name="PingResultTableColumnHeaderSendTimestamp" xml:space="preserve">
-    <value>Send
+    <value>Client
+Send
+Timestamp</value>
+  </data>
+  <data name="PingResultTableColumnHeaderServiceBreakdown" xml:space="preserve">
+    <value>Service
+Receive/Send
+System Ticks</value>
+  </data>
+  <data name="PingResultTableColumnHeaderServiceTimestamp" xml:space="preserve">
+    <value>Service
+Receive
 Timestamp</value>
   </data>
   <data name="SendMessageResultTableColumnHeaderTimestamp" xml:space="preserve">
