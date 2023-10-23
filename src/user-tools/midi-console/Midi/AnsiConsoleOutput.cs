@@ -11,7 +11,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 {
     internal class AnsiConsoleOutput
     {
-        public static void DisplayMidiMessage(MidiMessageStruct ump, uint numWords, double offsetMilliseconds, UInt64 timestamp, uint index)
+        public static void DisplayMidiMessage(MidiMessageStruct ump, uint numWords, double offsetMicroseconds, UInt64 timestamp, uint index)
         {
             string data = string.Empty;
 
@@ -40,10 +40,33 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             word0Text = string.Format("{0:X8}", ump.Word0);
 
-            const string messageLineFormat =
+            const string offsetUnitMicroseconds = "μs";
+            const string offsetUnitMilliseconds = "ms";
+            const string offsetUnitSeconds = "s ";
+
+            double offsetValue;
+            string unitLabel;
+
+            if (offsetMicroseconds > 1000000)
+            {
+                unitLabel = offsetUnitSeconds;
+                offsetValue = offsetMicroseconds / 1000000;
+            }
+            else if (offsetMicroseconds > 1000)
+            {
+                unitLabel = offsetUnitMilliseconds;
+                offsetValue = offsetMicroseconds / 1000;
+            }
+            else
+            {
+                unitLabel = offsetUnitMicroseconds;
+                offsetValue = offsetMicroseconds;
+            }
+
+            string messageLineFormat =
                 "[grey]{0,8}[/] \u2502 " +
                 "[darkseagreen2]{1,19:N0}[/] \u2502 " +
-                "[darkseagreen2]{2,10:F4}[/] ms \u2502 " +
+                "[darkseagreen2]{2,10:F4}[/] " + unitLabel + " \u2502 " +
                 "[deepskyblue1]{3,8}[/] [deepskyblue2]{4,8}[/] [deepskyblue3]{5,8}[/] [deepskyblue4]{6,8}[/] \u2502 " +
                 "[steelblue1_1]{7,-20}[/]";
 
@@ -52,7 +75,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 messageLineFormat,
                 index,
                 timestamp,
-                offsetMilliseconds,
+                offsetValue,
                 word0Text, word1Text, word2Text, word3Text,
                 detailedMessageType
                 );
