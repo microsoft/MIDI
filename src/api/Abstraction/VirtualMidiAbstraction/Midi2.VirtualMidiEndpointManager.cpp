@@ -47,17 +47,21 @@ CMidi2VirtualMidiEndpointManager::Initialize(
     {
         try
         {
-         //   OutputDebugString(configurationJson);
+            std::wstring json{ configurationJson };
 
-            m_jsonObject = json::JsonObject::Parse(configurationJson);
+            if (!json.empty())
+            {
+                m_jsonObject = json::JsonObject::Parse(json);
 
-            RETURN_IF_FAILED(CreateConfiguredEndpoints(configurationJson));
+                LOG_IF_FAILED(CreateConfiguredEndpoints(json));
+            }
         }
         catch (...)
         {
             OutputDebugString(L"Exception processing json for virtual MIDI abstraction");
 
-            return E_FAIL;
+            // we return S_OK here because otherwise this prevents the service from starting up.
+            return S_OK;
         }
 
     }
