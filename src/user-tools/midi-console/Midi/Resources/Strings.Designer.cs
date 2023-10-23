@@ -493,6 +493,24 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Include the diagnostic loopback endpoints.
+        /// </summary>
+        internal static string ParameterEnumEndpointsIncludeLoopbackEndpoints {
+            get {
+                return ResourceManager.GetString("ParameterEnumEndpointsIncludeLoopbackEndpoints", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Include more details for each endpoint.
+        /// </summary>
+        internal static string ParameterEnumEndpointsVerboseOutput {
+            get {
+                return ResourceManager.GetString("ParameterEnumEndpointsVerboseOutput", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The direction of data flow for the endpoints to list.
         /// </summary>
         internal static string ParameterEnumLegacyEndpointsDirection {

@@ -50,117 +50,165 @@ DEFINE_GUID(DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI, 0xe7cce071, 0x3c03, 0x423f, 0
 // Defining common midi interface properties
 //
 
-// NOTE: Becuase these use GUID/PID format, they cannot be used in Windows.Devices.Enumeration AQS filter strings in WinRT
+// NOTE: Because these use GUID/PID format, they cannot be used in Windows.Devices.Enumeration AQS filter strings in WinRT
 // We should probably create a .prodesc schema per these links, if they can even be applied to devices
 //     https://learn.microsoft.com/en-us/windows/win32/properties/building-property-handlers-property-schemas
 // and https://learn.microsoft.com/en-us/windows/win32/properties/propdesc-schema-entry
 
-#define STRING_PKEY_MIDI_AbstractionLayer L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},1"
-DEFINE_DEVPROPKEY(PKEY_MIDI_AbstractionLayer, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 1);     // DEVPROP_TYPE_GUID
+#define MIDI_STRING_PKEY_GUID L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD}"
+#define DEFINE_MIDIDEVPROPKEY(k, i) DEFINE_DEVPROPKEY(k, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, i)
 
-#define STRING_PKEY_MIDI_AssociatedUMP L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},2"
-DEFINE_DEVPROPKEY(PKEY_MIDI_AssociatedUMP, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 2);     // DEVPROP_TYPE_UINT64
+
+
+// required so MidiSrv knows which abstraction layer to call into for any given endpoint
+#define STRING_PKEY_MIDI_AbstractionLayer MIDI_STRING_PKEY_GUID L",1"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_AbstractionLayer, 1); // DEVPROP_TYPE_GUID
 
 // Provided as a property for convenience. BLE, NET, USB, etc.
-#define STRING_PKEY_MIDI_TransportMnemonic L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},10"
-DEFINE_DEVPROPKEY(PKEY_MIDI_TransportMnemonic, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 10);     // DEVPROP_TYPE_STRING
+#define STRING_PKEY_MIDI_TransportMnemonic MIDI_STRING_PKEY_GUID L",2"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_TransportMnemonic, 2);     // DEVPROP_TYPE_STRING
 
-// true if this device is a standard MIDI 2loopback device or part of a loopback pair of devices
-#define STRING_PKEY_MIDI_UmpLoopback L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},20"
-DEFINE_DEVPROPKEY(PKEY_MIDI_UmpLoopback, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 20);     // DEVPROP_TYPE_BOOLEAN
+#define MIDI_PROP_NATIVEDATAFORMAT_BYTESTREAM (uint8_t)0x01
+#define MIDI_PROP_NATIVEDATAFORMAT_UMP (uint8_t)0x02
 
+// The data format that the connected device uses to talk to the abstraction layer
+// For a MIDI 1 device, it is MIDI_NATIVEDATAFORMAT_BYTESTREAM
+// For a MIDI 2 device, it is MIDI_NATIVEDATAFORMAT_UMP
+#define STRING_PKEY_MIDI_NativeDataFormat MIDI_STRING_PKEY_GUID L",3"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_NativeDataFormat, 3);     // DEVPROP_TYPE_BYTE uint8_t
 
 // The unique ID for the device. Not all transports supply this. Some do as ProductInstanceId. Some as iSerialNumber
-#define STRING_PKEY_MIDI_UniqueIdentifier L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},21"
-DEFINE_DEVPROPKEY(PKEY_MIDI_UniqueIdentifier, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 21);     // DEVPROP_TYPE_STRING
+#define STRING_PKEY_MIDI_UniqueIdentifier MIDI_STRING_PKEY_GUID L",4"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UniqueIdentifier, 4);     // DEVPROP_TYPE_STRING
 
 // True if the device supports multi-client. Especially in the case of app-to-app MIDI, there are times when an
 // endpoint should be exclusive to the app that creates/opens it. There may be other cases where we know a
 // transport shouldn't use multi-client for endpoints (this is up for discussion in the Network MIDI 2.0 Working Group, for example)
-#define STRING_PKEY_MIDI_SupportsMultiClient L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},22"
-DEFINE_DEVPROPKEY(PKEY_MIDI_SupportsMultiClient, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 22);     // DEVPROP_TYPE_BOOLEAN
+#define STRING_PKEY_MIDI_SupportsMulticlient MIDI_STRING_PKEY_GUID L",5"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_SupportsMulticlient, 5);     // DEVPROP_TYPE_BOOLEAN
 
-// true if this device is the standard ping Bidi device
-#define STRING_PKEY_MIDI_UmpPing L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},23"
-DEFINE_DEVPROPKEY(PKEY_MIDI_UmpPing, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 23);     // DEVPROP_TYPE_BOOLEAN
-
-#define STRING_PKEY_MIDI_NativeDataFormat L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},24"
-DEFINE_DEVPROPKEY(PKEY_MIDI_NativeDataFormat, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 24);     // DEVPROP_TYPE_GUID
-
-
-#define STRING_PKEY_MIDI_IN_GroupTerminalBlocks L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},25"
-DEFINE_DEVPROPKEY(PKEY_MIDI_IN_GroupTerminalBlocks, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 25);     // DEVPROP_TYPE_BINARY
-
-#define STRING_PKEY_MIDI_OUT_GroupTerminalBlocks L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},26"
-DEFINE_DEVPROPKEY(PKEY_MIDI_OUT_GroupTerminalBlocks, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 26);     // DEVPROP_TYPE_BINARY
-
-
-// In-protocol Endpoint information ==================================================================
-
-#define STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},50"
-DEFINE_DEVPROPKEY(PKEY_MIDI_EndpointSupportsMidi2Protocol, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 50);     // DEVPROP_TYPE_BOOLEAN
-
-#define STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},51"
-DEFINE_DEVPROPKEY(PKEY_MIDI_EndpointSupportsMidi1Protocol, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 51);     // DEVPROP_TYPE_BOOLEAN
-
-#define STRING_PKEY_MIDI_EndpointSupportsReceivingJRTimestamps L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},52"
-DEFINE_DEVPROPKEY(PKEY_MIDI_EndpointSupportsReceivingJRTimestamps, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 52);     // DEVPROP_TYPE_BOOLEAN
-
-#define STRING_PKEY_MIDI_EndpointSupportsSendingJRTimestamps L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},53"
-DEFINE_DEVPROPKEY(PKEY_MIDI_EndpointSupportsSendingJRTimestamps, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 53);     // DEVPROP_TYPE_BOOLEAN
-
-#define STRING_PKEY_MIDI_EndpointUmpVersionMajor L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},54"
-DEFINE_DEVPROPKEY(PKEY_MIDI_EndpointUmpVersionMajor, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 54);     // DEVPROP_TYPE_BYTE
-
-#define STRING_PKEY_MIDI_EndpointUmpVersionMinor L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},55"
-DEFINE_DEVPROPKEY(PKEY_MIDI_EndpointUmpVersionMinor, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 55);     // DEVPROP_TYPE_BYTE
-
-// name provided by the endpoint through endpoint discovery
-// Note that it is supplied by protocol as utf8, and we need to convert to unicode
-#define STRING_PKEY_MIDI_EndpointProvidedName L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},56"
-DEFINE_DEVPROPKEY(PKEY_MIDI_EndpointProvidedName, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 56);     // DEVPROP_TYPE_STRING
-
-// Product instance Id provided by the endpoint through endpoint discovery
-// Note that it is supplied by protocol as utf8, and we need to convert to unicode
-#define STRING_PKEY_MIDI_EndpointProvidedProductInstanceId L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},57"
-DEFINE_DEVPROPKEY(PKEY_MIDI_EndpointProvidedProductInstanceId, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 57);     // DEVPROP_TYPE_STRING
-
-
-// full list of function blocks for this ump endpoint
-#define STRING_PKEY_MIDI_FunctionBlocks L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},58"
-DEFINE_DEVPROPKEY(PKEY_MIDI_FunctionBlocks, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 58);     // DEVPROP_TYPE_BINARY
-
-// true if function blocks are static
-#define STRING_PKEY_MIDI_FunctionBlocksAreStatic L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},59"
-DEFINE_DEVPROPKEY(PKEY_MIDI_FunctionBlocksAreStatic, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 59);     // DEVPROP_TYPE_BOOLEAN
-
-// full list of function blocks for this ump endpoint
-#define STRING_PKEY_MIDI_DeviceIdentification L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},60"
-DEFINE_DEVPROPKEY(PKEY_MIDI_DeviceIdentification, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 60);     // DEVPROP_TYPE_BINARY
-
-
-
-#define STRING_PKEY_MIDI_UserSuppliedLargeImagePath L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},61"
-DEFINE_DEVPROPKEY(PKEY_MIDI_UserSuppliedLargeImagePath, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 61);     // DEVPROP_TYPE_STRING
-
-#define STRING_PKEY_MIDI_UserSuppliedSmallImagePath L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},62"
-DEFINE_DEVPROPKEY(PKEY_MIDI_UserSuppliedSmallImagePath, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 62);     // DEVPROP_TYPE_STRING
-
-#define STRING_PKEY_MIDI_UserSuppliedDescription L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},63"
-DEFINE_DEVPROPKEY(PKEY_MIDI_UserSuppliedDescription, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 63);     // DEVPROP_TYPE_STRING
-
-#define STRING_PKEY_MIDI_UserSuppliedEndpointName L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},64"
-DEFINE_DEVPROPKEY(PKEY_MIDI_UserSuppliedEndpointName, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 64);     // DEVPROP_TYPE_STRING
 
 // this is the device-supplied name in the case of device-based transports
 // we have a copy here because we may rewrite FriendlyName
-#define STRING_PKEY_MIDI_TransportSuppliedEndpointName L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD},65"
-DEFINE_DEVPROPKEY(PKEY_MIDI_TransportSuppliedEndpointName, 0x3f114a6a, 0x11fa, 0x4bd0, 0x9d, 0x2c, 0x6b, 0x77, 0x80, 0xcd, 0x80, 0xad, 65);     // DEVPROP_TYPE_STRING
+#define STRING_PKEY_MIDI_TransportSuppliedEndpointName MIDI_STRING_PKEY_GUID L",14"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_TransportSuppliedEndpointName, 14);     // DEVPROP_TYPE_STRING
+
+
+// USB / KS Properties ============================================================================
+// Starts at 50
+
+// TODO: May need to combine these into one, depending on what comes back from the driver
+#define STRING_PKEY_MIDI_IN_GroupTerminalBlocks MIDI_STRING_PKEY_GUID L",50"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_IN_GroupTerminalBlocks, 50);     // DEVPROP_TYPE_BINARY
+
+#define STRING_PKEY_MIDI_OUT_GroupTerminalBlocks MIDI_STRING_PKEY_GUID L",51"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_OUT_GroupTerminalBlocks, 51);     // DEVPROP_TYPE_BINARY
+
+#define STRING_PKEY_MIDI_AssociatedUMP MIDI_STRING_PKEY_GUID L",52"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_AssociatedUMP, 52);     // DEVPROP_TYPE_UINT64
+
+
+
+// Major Known Endpoint Types =====================================================================
+// Starts at 100
+
+// true if this is the device-side of a virtual device. This is not what the client should connect to
+#define STRING_PKEY_MIDI_IsVirtualDeviceResponder MIDI_STRING_PKEY_GUID L",100"
+DEFINE_MIDIDEVPROPKEY(PKEY_PKEY_MIDI_IsVirtualDeviceResponder, 100);     // DEVPROP_TYPE_BOOLEAN
+
+// true if this device is the standard internal ping Bidi device
+#define STRING_PKEY_MIDI_UmpPing MIDI_STRING_PKEY_GUID L",101"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UmpPing, 101);     // DEVPROP_TYPE_BOOLEAN
+
+// true if this device is a standard MIDI 2loopback device or part of a loopback pair of devices
+#define STRING_PKEY_MIDI_UmpLoopback MIDI_STRING_PKEY_GUID L",102"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UmpLoopback, 102);     // DEVPROP_TYPE_BOOLEAN
+
+
+// In-protocol Endpoint information ================================================================
+// Starts at 150
+
+#define STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol MIDI_STRING_PKEY_GUID L",150"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointSupportsMidi2Protocol, 150);     // DEVPROP_TYPE_BOOLEAN
+
+#define STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol MIDI_STRING_PKEY_GUID L",151"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointSupportsMidi1Protocol, 151);     // DEVPROP_TYPE_BOOLEAN
+
+#define STRING_PKEY_MIDI_EndpointSupportsReceivingJRTimestamps MIDI_STRING_PKEY_GUID L",152"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointSupportsReceivingJRTimestamps, 152);     // DEVPROP_TYPE_BOOLEAN
+
+#define STRING_PKEY_MIDI_EndpointSupportsSendingJRTimestamps MIDI_STRING_PKEY_GUID L",153"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointSupportsSendingJRTimestamps, 153);     // DEVPROP_TYPE_BOOLEAN
+
+#define STRING_PKEY_MIDI_EndpointUmpVersionMajor MIDI_STRING_PKEY_GUID L",154"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointUmpVersionMajor, 154);     // DEVPROP_TYPE_BYTE
+
+#define STRING_PKEY_MIDI_EndpointUmpVersionMinor MIDI_STRING_PKEY_GUID L",155"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointUmpVersionMinor, 155);     // DEVPROP_TYPE_BYTE
+
+// name provided by the endpoint through endpoint discovery
+// Note that it is supplied by protocol as utf8, and we need to convert to unicode
+#define STRING_PKEY_MIDI_EndpointProvidedName MIDI_STRING_PKEY_GUID L",156"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointProvidedName, 156);     // DEVPROP_TYPE_STRING
+
+// Product instance Id provided by the endpoint through endpoint discovery
+// Note that it is supplied by protocol as utf8, and we need to convert to unicode
+#define STRING_PKEY_MIDI_EndpointProvidedProductInstanceId MIDI_STRING_PKEY_GUID L",157"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointProvidedProductInstanceId, 157);     // DEVPROP_TYPE_STRING
+
+// full list of function blocks for this ump endpoint
+#define STRING_PKEY_MIDI_FunctionBlocks MIDI_STRING_PKEY_GUID L",158"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_FunctionBlocks, 158);     // DEVPROP_TYPE_BINARY
+
+// true if function blocks are static
+#define STRING_PKEY_MIDI_FunctionBlocksAreStatic MIDI_STRING_PKEY_GUID L",159"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_FunctionBlocksAreStatic, 159);     // DEVPROP_TYPE_BOOLEAN
+
+// binary device information structure holding sysex id etc.
+#define STRING_PKEY_MIDI_DeviceIdentification MIDI_STRING_PKEY_GUID L",160"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_DeviceIdentification, 160);     // DEVPROP_TYPE_BINARY
+
+#define MIDI_PROP_CONFIGURED_PROTOCOL_MIDI1 (uint8_t)0x01
+#define MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2 (uint8_t)0x02
+
+#define STRING_PKEY_MIDI_EndpointConfiguredProtocol MIDI_STRING_PKEY_GUID L",161"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointConfiguredProtocol, 161);     // DEVPROP_TYPE_BYTE
+
+
+
+
+// User-supplied metadata ==================================================================
+// Starts at 500
+
+#define STRING_PKEY_MIDI_UserSuppliedEndpointName MIDI_STRING_PKEY_GUID L",500"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UserSuppliedEndpointName, 500);     // DEVPROP_TYPE_STRING
+
+// large image of most any size. Mostly used just by the settings app
+#define STRING_PKEY_MIDI_UserSuppliedLargeImagePath MIDI_STRING_PKEY_GUID L",501"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UserSuppliedLargeImagePath, 501);     // DEVPROP_TYPE_STRING
+
+// 32x32 image
+#define STRING_PKEY_MIDI_UserSuppliedSmallImagePath MIDI_STRING_PKEY_GUID L",502"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UserSuppliedSmallImagePath, 502);     // DEVPROP_TYPE_STRING
+
+
+#define STRING_PKEY_MIDI_UserSuppliedDescription MIDI_STRING_PKEY_GUID L",503"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UserSuppliedDescription, 503);     // DEVPROP_TYPE_STRING
 
 
 // TODO: Add in the other properties like
 // - Should receive MIDI clock
+// - Should use MIDI clock start
+// - Should use MIDI timecode
+// - Recommended CC Automation Interval (ms)
+// - Supports MPE
+// - Requires note off translation (Mackie)
 // - 
+
+
+
+
+
 
 
 
@@ -228,13 +276,19 @@ struct MidiDevicePropertyFunctionBlock
 inline std::wstring GuidToString(_In_ GUID guid)
 {
     LPOLESTR str;
-    StringFromCLSID(guid, &str);
+    if (SUCCEEDED(StringFromCLSID(guid, &str)))
+    {
 
-    // TODO: Is this copying or acquiring?
-    std::wstring guidString{ str };
+        // TODO: Is this copying or acquiring?
+        std::wstring guidString{ str };
 
-    ::CoTaskMemFree(str);
+        ::CoTaskMemFree(str);
 
-    return guidString;
+        return guidString;
+    }
+    else
+    {
+        return L"";
+    }
 }
 

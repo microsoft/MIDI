@@ -251,7 +251,6 @@
     <ClInclude Include="MidiStreamMessageBuilder.h">
       <Filter>API\Messages\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="dllmain.h" />
     <ClInclude Include="midi_stream_message_defs.h" />
     <ClInclude Include="MidiEndpointDeviceInformation.h">
       <Filter>API\Enumeration</Filter>
@@ -440,6 +439,9 @@
       <Filter>API\Endpoints\Metadata\Blocks</Filter>
     </Midl>
     <Midl Include="MidiEndpointDeviceInformationSortOrderEnum.idl">
+      <Filter>API\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationFilterEnum.idl">
       <Filter>API\Enumeration</Filter>
     </Midl>
   </ItemGroup>

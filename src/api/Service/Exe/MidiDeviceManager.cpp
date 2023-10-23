@@ -46,8 +46,11 @@ typedef struct _CREATECONTEXT
     ULONG IntPropertyCount{ 0 };
 } CREATECONTEXT, * PCREATECONTEXT;
 
-void SwMidiPortCreateCallback(__in HSWDEVICE hSwDevice, __in HRESULT CreationResult, __in_opt PVOID pContext, __in_opt PCWSTR /* pszDeviceInstanceId */)
+void SwMidiPortCreateCallback(__in HSWDEVICE hSwDevice, __in HRESULT CreationResult, __in PVOID pContext, __in_opt PCWSTR /* pszDeviceInstanceId */)
 {
+    // fix code analysis complaint
+    if (pContext == nullptr) return;
+
     PCREATECONTEXT creationContext = (PCREATECONTEXT)pContext;
 
     // interface registration has started, assume
@@ -90,7 +93,7 @@ CMidiDeviceManager::ActivateEndpoint
     PVOID DeviceDevProperties,
     PVOID CreateInfo,
     PWSTR CreatedDeviceInterfaceId,
-    ULONG CreatedDeviceInterfaceIdBufferSize
+    ULONG CreatedDeviceInterfaceIdCharCount
 )
 {
     auto lock = m_MidiPortsLock.lock();
@@ -106,13 +109,20 @@ CMidiDeviceManager::ActivateEndpoint
         return false;
     }) != m_MidiPorts.end();
 
+
+    if (CreatedDeviceInterfaceId != nullptr && CreatedDeviceInterfaceIdCharCount > 0)
+    {
+        CreatedDeviceInterfaceId[CreatedDeviceInterfaceIdCharCount - 1] = (wchar_t)0;
+    }
+
+
     if (alreadyActivated)
     {
         return S_FALSE;
     }
     else
     {
-        std::wstring deviceInterfaceId;
+        std::wstring deviceInterfaceId{ 0 };
 
         auto cleanupOnFailure = wil::scope_exit([&]()
         {
@@ -140,16 +150,19 @@ CMidiDeviceManager::ActivateEndpoint
 
         // return the created device interface Id. This is needed for anything that will 
         // do a match in the Ids from Windows.Devices.Enumeration
-        if (CreatedDeviceInterfaceId != nullptr)
+        if (CreatedDeviceInterfaceId != nullptr && CreatedDeviceInterfaceIdCharCount > 0)
         {
-            deviceInterfaceId.copy(CreatedDeviceInterfaceId, CreatedDeviceInterfaceIdBufferSize);
+            //memset((byte*)CreatedDeviceInterfaceId, 0, CreatedDeviceInterfaceIdBufferSize * sizeof(wchar_t));
+            deviceInterfaceId.copy(CreatedDeviceInterfaceId, CreatedDeviceInterfaceIdCharCount - 1);
+
+            CreatedDeviceInterfaceId[CreatedDeviceInterfaceIdCharCount - 1] = (wchar_t)0;
         }
 
-
         cleanupOnFailure.release();
-    }
 
-    return S_OK;
+        return S_OK;
+
+    }
 }
 
 _Use_decl_annotations_
@@ -191,6 +204,15 @@ CMidiDeviceManager::ActivateEndpointInternal
     interfaceProperties.push_back({ {DEVPKEY_Device_NoConnectSound, DEVPROP_STORE_SYSTEM, nullptr},
         DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
 
+    //// get the MidiSrv filename so we can specify the icons
+    //TCHAR szFileName[MAX_PATH];
+    //GetModuleFileName(NULL, szFileName, MAX_PATH);
+
+    //std::wstring interfaceIconPath(szFileName);
+    //interfaceIconPath += L", " + std::to_wstring(IDI_ENDPOINT_DEVICE_ICON);
+
+    //interfaceProperties.push_back({{PKEY_Devices_GlyphIcon, DEVPROP_STORE_SYSTEM, nullptr},
+    //    DEVPROP_TYPE_STRING, static_cast<ULONG>(interfaceIconPath.length() + 1) * sizeof(WCHAR), (PVOID)interfaceIconPath.c_str()});
 
 
     midiPort->InstanceId = CreateInfo->pszInstanceId;
@@ -250,6 +272,7 @@ CMidiDeviceManager::ActivateEndpointInternal
         SwMidiPortCreateCallback,
         &creationContext,
         wil::out_param(midiPort->SwDevice));
+
     if (SUCCEEDED(midiPort->hr))
     {
         // wait for creation to complete

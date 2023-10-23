@@ -6,16 +6,20 @@
 #include <ntverp.h>
 #include "resource.h"
 
-#define VER_FILETYPE    VFT_APP
-#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
 #define VER_FILEDESCRIPTION_STR     "Windows Midi Service"
 #define VER_INTERNALNAME_STR        "midisrv.exe"
 #define VER_ORIGINALFILENAME_STR    "midisrv.exe"
 
 #include "common.ver"
 
+//IDI_ENDPOINT_PARENT_DEVICE_ICON     ICON "ParentDevice.ico"
+//IDI_ENDPOINT_DEVICE_ICON            ICON "EndpointDevice.ico"
+
+
 STRINGTABLE
 BEGIN
    IDS_MIDISRV_SERVICEDISPLAYNAME   "Windows MIDI Service"
-   IDS_MIDISRV_SERVICEDESCRIPTION   "Service for routing incoming and outgoing MIDI messages"
+   IDS_MIDISRV_SERVICEDESCRIPTION   "Windows MIDI Services core service for MIDI 1.0 and MIDI 2.0 message routing and device enumeration"
 END

@@ -28,6 +28,11 @@ CMidi2VirtualMidiBiDi::Initialize(
 
     m_callback = callback;
 
+
+    // TODO: Using the device Id parameter, associate with the endpoint in the endpoint device table
+
+    // may need to store a this pointer in that table as the IMidiBiDi property
+
     return S_OK;
 }
 
@@ -41,6 +46,8 @@ CMidi2VirtualMidiBiDi::Cleanup()
         TraceLoggingPointer(this, "this")
         );
 
+    // TODO: Remove the BiDi pointer from the endpoint device table
+
     m_callback = nullptr;
 
     return S_OK;
@@ -51,20 +58,10 @@ HRESULT
 CMidi2VirtualMidiBiDi::SendMidiMessage(
     PVOID message,
     UINT size,
-    LONGLONG position
+    LONGLONG /*position*/
 )
 {
-    if (m_callback == nullptr)
-    {
-        // TODO log that callback is null
-        return E_FAIL;
-    }
-
-    if (message == nullptr)
-    {
-        // TODO log that message was null
-        return E_FAIL;
-    }
+    RETURN_HR_IF_NULL(E_INVALIDARG, message);
 
     if (size < sizeof(uint32_t))
     {
@@ -72,28 +69,7 @@ CMidi2VirtualMidiBiDi::SendMidiMessage(
         return E_FAIL;
     }
 
-    //// copy the data
-
-    //auto data = std::make_unique<byte[]>(size);
-
-    //std::memcpy((void*)(data.get()), message, size);
-
-
-    //uint32_t firstWord = *(uint32_t*)message;
-
-    //std::wstringstream ss;
-
-    //ss << "CMidi2SampleMidiBiDi::SendMidiMessage. Received timestamp: " << std::hex << position << ", Size: " << size << ", First word: " << firstWord;
-    //OutputDebugString(ss.str().c_str());
-
-    //// resend it. "position" is the timestamp
-
-    //_callback->Callback(data.get(), size, position);
-
-    //OutputDebugString(L"CMidi2SampleMidiBiDi::SendMidiMessage Callback message sent");
-
-
-    m_callback->Callback(message, size, position);
+    //m_callback->Callback(message, size, position);
 
     return S_OK;
 
@@ -102,14 +78,13 @@ CMidi2VirtualMidiBiDi::SendMidiMessage(
 _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiBiDi::Callback(
-    PVOID,
-    UINT,
-    LONGLONG
+    PVOID /*message*/,
+    UINT /*size*/,
+    LONGLONG /*position*/
 )
 {
     //return E_NOTIMPL;
 
-    // just eat it for this simple loopback
     return S_OK;
 }
 

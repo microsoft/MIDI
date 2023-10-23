@@ -224,7 +224,6 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="dllmain.h" />
     <ClInclude Include="memory_buffer.h" />
     <ClInclude Include="MidiEndpointConnection.h">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
@@ -446,6 +445,7 @@
     <Midl Include="MidiChannelEndpointListener.idl" />
     <Midl Include="MidiClock.idl" />
     <Midl Include="MidiEndpointDeviceInformation.idl" />
+    <Midl Include="MidiEndpointDeviceInformationFilterEnum.idl" />
     <Midl Include="MidiEndpointDeviceInformationSortOrderEnum.idl" />
     <Midl Include="MidiEndpointDevicePurposeEnum.idl" />
     <Midl Include="MidiEndpointDeviceWatcher.idl" />

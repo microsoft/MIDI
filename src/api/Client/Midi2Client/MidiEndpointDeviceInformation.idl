@@ -17,6 +17,7 @@ import "MidiEndpointDevicePurposeEnum.idl";
 import "MidiFunctionBlock.idl";
 
 import "MidiEndpointDeviceInformationSortOrderEnum.idl";
+import "MidiEndpointDeviceInformationFilterEnum.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -29,7 +30,7 @@ namespace Windows.Devices.Midi2
 
         static IVectorView<MidiEndpointDeviceInformation> FindAll();
         static IVectorView<MidiEndpointDeviceInformation> FindAll(MidiEndpointDeviceInformationSortOrder sortOrder);
-        static IVectorView<MidiEndpointDeviceInformation> FindAll(MidiEndpointDeviceInformationSortOrder sortOrder, Boolean includeDiagnosticsEndpoints);
+        static IVectorView<MidiEndpointDeviceInformation> FindAll(MidiEndpointDeviceInformationSortOrder sortOrder, MidiEndpointDeviceInformationFilter endpointFilter);
 
         static String DiagnosticsLoopbackAEndpointId{ get; };
         static String DiagnosticsLoopbackBEndpointId{ get; };
@@ -98,8 +99,6 @@ namespace Windows.Devices.Midi2
 
         // If this is a diagnostic endpoint
         MidiEndpointDevicePurpose EndpointPurpose{ get; };
-
-
 
         // The settings app allows the user to add some metadata, like a description
         String Description{ get; };

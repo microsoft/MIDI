@@ -28,9 +28,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static midi2::MidiEndpointDeviceWatcher CreateWatcher(_In_ bool includeDiagnosticsEndpoints);
 
-        static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll(_In_ midi2::MidiEndpointDeviceInformationSortOrder sortOrder, _In_ bool includeDiagnosticsEndpoints);
-        static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll(_In_ midi2::MidiEndpointDeviceInformationSortOrder sortOrder);
-        static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll();
+        static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll(
+            _In_ midi2::MidiEndpointDeviceInformationSortOrder const& sortOrder, 
+            _In_ midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept;
+        static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll(
+            _In_ midi2::MidiEndpointDeviceInformationSortOrder const& sortOrder) noexcept;
+        static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll() noexcept;
 
         static collections::IVectorView<winrt::hstring> GetAdditionalPropertiesList() noexcept;
 
@@ -58,7 +61,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         winrt::hstring UniqueIdentifier() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UniqueIdentifier, L"");}
 
-        bool SupportsMultiClient() const noexcept { return GetBoolProperty(STRING_PKEY_MIDI_SupportsMultiClient, true); }
+        bool SupportsMultiClient() const noexcept { return GetBoolProperty(STRING_PKEY_MIDI_SupportsMulticlient, true); }
 
         midi2::MidiEndpointNativeDataFormat NativeDataFormat() const noexcept;
         midi2::MidiEndpointDevicePurpose EndpointPurpose() const noexcept;

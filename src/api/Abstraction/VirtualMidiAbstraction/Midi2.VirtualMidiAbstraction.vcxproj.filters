@@ -30,13 +30,7 @@
     <ClCompile Include="Midi2.VirtualMidiBidi.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Midi2.VirtualMidiIn.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Midi2.VirtualMidiOut.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiDeviceTable.cpp">
+    <ClCompile Include="MidiEndpointTable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -73,13 +67,7 @@
     <ClInclude Include="Midi2.VirtualMidiBidi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Midi2.VirtualMidiIn.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Midi2.VirtualMidiOut.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiDeviceTable.h">
+    <ClInclude Include="MidiEndpointTable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="abstraction_defs.h">

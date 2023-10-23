@@ -41,7 +41,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
     {
         private static void LoadChoices(List<UmpEndpointPickerEntry> choices)
         {
-            var endpoints = MidiEndpointDeviceInformation.FindAll(MidiEndpointDeviceInformationSortOrder.Name, true);
+            var endpoints = MidiEndpointDeviceInformation.FindAll(
+                MidiEndpointDeviceInformationSortOrder.Name, 
+                MidiEndpointDeviceInformationFilter.IncludeClientByteStreamNative | MidiEndpointDeviceInformationFilter.IncludeClientUmpNative | MidiEndpointDeviceInformationFilter.IncludeDiagnosticLoopback);
 
             if (endpoints != null)
             {

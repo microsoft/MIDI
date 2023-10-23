@@ -261,6 +261,12 @@
   <data name="ParameterEnumEndpointsIncludeEndpointId" xml:space="preserve">
     <value>Include the UMP Endpoint Id in the output</value>
   </data>
+  <data name="ParameterEnumEndpointsIncludeLoopbackEndpoints" xml:space="preserve">
+    <value>Include the diagnostic loopback endpoints</value>
+  </data>
+  <data name="ParameterEnumEndpointsVerboseOutput" xml:space="preserve">
+    <value>Include more details for each endpoint</value>
+  </data>
   <data name="ParameterEnumLegacyEndpointsDirection" xml:space="preserve">
     <value>The direction of data flow for the endpoints to list</value>
   </data>

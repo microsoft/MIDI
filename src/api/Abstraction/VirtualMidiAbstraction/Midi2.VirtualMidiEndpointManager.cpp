@@ -191,7 +191,7 @@ CMidi2VirtualMidiEndpointManager::CreateParentDevice()
 #define MIDI_VIRTUAL_ENDPOINT_PROPERTY_KEY L"key"
 #define MIDI_VIRTUAL_ENDPOINT_PROPERTY_NAME L"name"
 #define MIDI_VIRTUAL_ENDPOINT_PROPERTY_UNIQUEID L"uniqueIdentifier"
-#define MIDI_VIRTUAL_ENDPOINT_PROPERTY_MULTICLIENT L"supportsMultClient"
+#define MIDI_VIRTUAL_ENDPOINT_PROPERTY_MULTICLIENT L"supportsMulticlient"
 #define MIDI_VIRTUAL_ENDPOINT_PROPERTY_DESCRIPTION L"description"
 #define MIDI_VIRTUAL_ENDPOINT_PROPERTY_SMALLIMAGE L"smallImagePath"
 #define MIDI_VIRTUAL_ENDPOINT_PROPERTY_LARGEIMAGE L"largeImagePath"
@@ -265,10 +265,16 @@ CMidi2VirtualMidiEndpointManager::CreateConfiguredEndpoints(std::wstring configu
                     auto smallImage = GetStringValue(endpoint, MIDI_VIRTUAL_ENDPOINT_PROPERTY_SMALLIMAGE, L"");
                     auto largeImage = GetStringValue(endpoint, MIDI_VIRTUAL_ENDPOINT_PROPERTY_LARGEIMAGE, L"");
 
+                    bool multiclient = true; // TODO
+                    bool virtualResponder = false; // TODO
+
 
                     // TODO: Need to add this to the table for routing, and also add the other properties to the function
                     CreateEndpoint(
-                        (std::wstring)instanceId, 
+                        (std::wstring)instanceId,
+                        (std::wstring)uniqueIdentifier,
+                        multiclient,
+                        virtualResponder,
                         (std::wstring)name,
                         (std::wstring)largeImage,
                         (std::wstring)smallImage,
@@ -316,7 +322,10 @@ CMidi2VirtualMidiEndpointManager::CreateConfiguredEndpoints(std::wstring configu
 _Use_decl_annotations_
 HRESULT 
 CMidi2VirtualMidiEndpointManager::CreateEndpoint(
-    std::wstring const instanceId, 
+    std::wstring const instanceId,
+    std::wstring const uniqueId,
+    bool const multiclient,
+    bool const isVirtualEndpointResponder,
     std::wstring const name,
     std::wstring const largeImagePath,
     std::wstring const smallImagePath,
@@ -329,22 +338,47 @@ CMidi2VirtualMidiEndpointManager::CreateEndpoint(
     MidiFlow const flow = MidiFlow::MidiFlowBidirectional;
 
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
+    DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
+
+    DEVPROP_BOOLEAN devPropMulticlient = multiclient ? DEVPROP_TRUE : DEVPROP_FALSE;
+    DEVPROP_BOOLEAN devPropVirtualResponder = isVirtualEndpointResponder ? DEVPROP_TRUE : DEVPROP_FALSE;
+
+
+    BYTE nativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
 
     DEVPROPERTY interfaceDevProperties[] = {
         {{DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_STRING, static_cast<ULONG>((name.length() + 1) * sizeof(WCHAR)), (PVOID)name.c_str()},
- 
-        {{PKEY_MIDI_TransportSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((name.length() + 1) * sizeof(WCHAR)), (PVOID)name.c_str()},
-
-        {{PKEY_MIDI_UmpLoopback, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue},
-
+        
+        // essential to instantiate the right endpoint types
         {{PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_GUID, static_cast<ULONG>(sizeof(GUID)), (PVOID)&AbstractionLayerGUID },        // essential to instantiate the right endpoint types
+            DEVPROP_TYPE_GUID, static_cast<ULONG>(sizeof(GUID)), (PVOID)&AbstractionLayerGUID },        
 
         {{PKEY_MIDI_TransportMnemonic, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_STRING, static_cast<ULONG>((mnemonic.length() + 1) * sizeof(WCHAR)), (PVOID)mnemonic.c_str()},
+
+        {{PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(BYTE)), (PVOID)&nativeDataFormat},
+
+        {{PKEY_MIDI_UniqueIdentifier, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_STRING, static_cast<ULONG>((uniqueId.length() + 1) * sizeof(WCHAR)), (PVOID)uniqueId.c_str()},
+
+        {{PKEY_MIDI_SupportsMulticlient, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropMulticlient)), (PVOID)&devPropMulticlient},
+
+        {{PKEY_MIDI_TransportSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_STRING, static_cast<ULONG>((name.length() + 1) * sizeof(WCHAR)), (PVOID)name.c_str()},
+
+        {{PKEY_PKEY_MIDI_IsVirtualDeviceResponder, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropVirtualResponder)), (PVOID)&devPropVirtualResponder},
+
+
+        {{PKEY_MIDI_UmpPing, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), (PVOID)&devPropFalse},
+
+        {{PKEY_MIDI_UmpLoopback, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), (PVOID)&devPropFalse},
+
 
         {{PKEY_MIDI_UserSuppliedLargeImagePath, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_STRING, static_cast<ULONG>((largeImagePath.length() + 1) * sizeof(WCHAR)), (PVOID)largeImagePath.c_str() },
@@ -364,11 +398,10 @@ CMidi2VirtualMidiEndpointManager::CreateEndpoint(
     // Additional metadata properties added here to avoid having to add them in every transport
 // and to ensure they are registered under the same identity that is creating the device
 // Several of these are later updated through discovery, user-supplied json metadata, etc.
-    DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
-    DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
-    uint8_t zeroByte = 0;
+    //DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
+    //uint8_t zeroByte = 0;
 
-    std::wstring emptyString = L"";
+    //std::wstring emptyString = L"";
 
     //interfaceProperties.push_back({ {PKEY_MIDI_SupportsMultiClient, DEVPROP_STORE_SYSTEM, nullptr },
     //    DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });

@@ -69,7 +69,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public static string FormatDeviceKind(DeviceInformationKind kind)
         {
-            return "[orange4]" + EscapeString(kind.ToString()) + "[/]";
+            return "[lightsalmon3]" + EscapeString(kind.ToString()) + "[/]";
         }
 
         public static string FormatContainerId(string id)
