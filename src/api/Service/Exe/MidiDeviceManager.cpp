@@ -26,10 +26,13 @@ CMidiDeviceManager::Initialize(
         // but that requires a pipe all the way down to the client to send up that configuration block
         auto transportSettingsJson = m_ConfigurationManager->GetConfigurationForTransportAbstraction(AbstractionLayer);
 
+        // changed these from a return-on-fail to just log, so we don't prevent service startup
+        // due to one bad abstraction
 
-        RETURN_IF_FAILED(CoCreateInstance(AbstractionLayer, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
-        RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiEndpointManager), (void**)&endpointManager));
-        RETURN_IF_FAILED(endpointManager->Initialize((IUnknown*)this, transportSettingsJson.c_str()));
+        LOG_IF_FAILED(CoCreateInstance(AbstractionLayer, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
+        LOG_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiEndpointManager), (void**)&endpointManager));
+        
+        LOG_IF_FAILED(endpointManager->Initialize((IUnknown*)this, transportSettingsJson.c_str()));
 
         m_MidiEndpointManagers.emplace(AbstractionLayer, std::move(endpointManager));
     }
