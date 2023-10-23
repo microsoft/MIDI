@@ -11,7 +11,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 {
     internal class AnsiConsoleOutput
     {
-        public static void DisplayMidiMessage(MidiMessageStruct ump, uint numWords, UInt64 timestamp, uint index)
+        public static void DisplayMidiMessage(MidiMessageStruct ump, uint numWords, double offsetMilliseconds, UInt64 timestamp, uint index)
         {
             string data = string.Empty;
 
@@ -41,16 +41,18 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             word0Text = string.Format("{0:X8}", ump.Word0);
 
             const string messageLineFormat =
-                "[grey]{0,8}[/] | " +
-                "[darkseagreen2]{1,16:F2}[/] µs | " +
-                "[deepskyblue1]{2,8}[/] [deepskyblue2]{3,8}[/] [deepskyblue3]{4,8}[/] [deepskyblue4]{5,8}[/] | " +
-                "[steelblue1_1]{6,-20}[/]";
+                "[grey]{0,8}[/] \u2502 " +
+                "[darkseagreen2]{1,19:N0}[/] \u2502 " +
+                "[darkseagreen2]{2,10:F4}[/] ms \u2502 " +
+                "[deepskyblue1]{3,8}[/] [deepskyblue2]{4,8}[/] [deepskyblue3]{5,8}[/] [deepskyblue4]{6,8}[/] \u2502 " +
+                "[steelblue1_1]{7,-20}[/]";
 
 
             AnsiConsole.MarkupLine(
                 messageLineFormat,
                 index,
-                MidiClock.ConvertTimestampToMicroseconds(timestamp),
+                timestamp,
+                offsetMilliseconds,
                 word0Text, word1Text, word2Text, word3Text,
                 detailedMessageType
                 );
