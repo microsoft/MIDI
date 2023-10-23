@@ -89,7 +89,7 @@ namespace Windows::Devices::Midi2::Internal
             g_hLoggingProvider,
             "MIDI.HresultError",
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            TraceLoggingKeyword(TRACE_KEYWORD_API),
+            TraceLoggingKeyword(TRACE_KEYWORD_API_GENERAL),
             TraceLoggingHResult(ex.code(), "HRESULT"),
             TraceLoggingString(location, "Location"),
             TraceLoggingWideString(message, "Message"),
@@ -110,7 +110,7 @@ namespace Windows::Devices::Midi2::Internal
             g_hLoggingProvider,
             "MIDI.GeneralError",
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            TraceLoggingKeyword(TRACE_KEYWORD_API),
+            TraceLoggingKeyword(TRACE_KEYWORD_API_GENERAL),
             TraceLoggingString(location, "Location"),
             TraceLoggingWideString(message, "Message")
         );
@@ -126,14 +126,11 @@ namespace Windows::Devices::Midi2::Internal
             g_hLoggingProvider,
             "MIDI.Info",
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingKeyword(TRACE_KEYWORD_API),
+            TraceLoggingKeyword(TRACE_KEYWORD_API_GENERAL),
             TraceLoggingString(location, "Location"),
             TraceLoggingWideString(message, "Message")
         );
     }
-
-
-
 
     _Use_decl_annotations_
     void LogUmpDataValidationError(
@@ -150,7 +147,7 @@ namespace Windows::Devices::Midi2::Internal
             g_hLoggingProvider,
             "MIDI.UmpDataValidationError",
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            TraceLoggingKeyword(TRACE_KEYWORD_API),
+            TraceLoggingKeyword(TRACE_KEYWORD_API_DATA_VALIDATION),
             TraceLoggingHexUInt32(firstWord, "UMPFirstWord"),
             TraceLoggingUInt64(timestamp, "MIDITimestamp"),
             TraceLoggingString(location, "Location"),
@@ -173,7 +170,7 @@ namespace Windows::Devices::Midi2::Internal
             g_hLoggingProvider,
             "MIDI.UmpSizeValidationError",
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            TraceLoggingKeyword(TRACE_KEYWORD_API),
+            TraceLoggingKeyword(TRACE_KEYWORD_API_DATA_VALIDATION),
             TraceLoggingHexUInt32(providedSizeInWords, "ProvidedSizeInWords"),
             TraceLoggingUInt64(timestamp, "MIDITimestamp"),
             TraceLoggingString(location, "Location"),

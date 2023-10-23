@@ -33,6 +33,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     HRESULT MidiEndpointConnection::Callback(PVOID data, UINT size, LONGLONG timestamp)
     {
+        internal::LogInfo(__FUNCTION__, L"Message Received ");
+
         try
         {
             // one copy of the event args for this gets sent to all listeners and the main event
@@ -84,14 +86,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
-
-
-
-
-
-
-
-
     
     _Use_decl_annotations_
     bool MidiEndpointConnection::InternalInitialize(
@@ -101,7 +95,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::MidiEndpointConnectionOptions options
     )
     {
-        internal::LogInfo(__FUNCTION__, L" Initialize ");
+        internal::LogInfo(__FUNCTION__, L"Internal Initialize ");
 
         try
         {
@@ -133,7 +127,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     bool MidiEndpointConnection::Open()
     {
-        internal::LogInfo(__FUNCTION__, L" Open ");
+        internal::LogInfo(__FUNCTION__, L"Connection Open ");
 
         if (!IsOpen())
         {
@@ -193,7 +187,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     void MidiEndpointConnection::Close()
     {
-        internal::LogInfo(__FUNCTION__, L" Close ");
+        internal::LogInfo(__FUNCTION__, L"Connection Close ");
 
         if (m_closeHasBeenCalled) return;
 
@@ -233,6 +227,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     void MidiEndpointConnection::InitializePlugins() noexcept
     {
+        internal::LogInfo(__FUNCTION__, L"Initializing message processing plugins ");
+
         for (const auto& plugin : m_messageProcessingPlugins)
         {
             try
@@ -250,6 +246,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     void MidiEndpointConnection::CallOnConnectionOpenedOnPlugins() noexcept
     {
+        internal::LogInfo(__FUNCTION__, L"Notifying message processing plugins that the connection is opened");
+
         for (const auto& plugin : m_messageProcessingPlugins)
         {
             try
@@ -265,6 +263,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     void MidiEndpointConnection::CleanupPlugins() noexcept
     {
+        internal::LogInfo(__FUNCTION__, L"Cleaning up plugins");
+
         for (const auto& plugin : m_messageProcessingPlugins)
         {
             try
@@ -287,6 +287,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint8_t sizeInBytes,
         internal::MidiTimestamp timestamp)
     {
+        internal::LogInfo(__FUNCTION__, L"Sending message raw");
+
         try
         {
             if (!m_isOpen)
@@ -297,10 +299,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
             }
 
-
             if (endpoint != nullptr)
             {
-
                 winrt::check_hresult(endpoint->SendMidiMessage(data, sizeInBytes, timestamp));
 
                 return midi2::MidiSendMessageResult::Success;
@@ -330,6 +330,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::MidiMessageStruct const& message,
         uint8_t wordCount)
     {
+        internal::LogInfo(__FUNCTION__, L"Sending message struct");
+
         if (!ValidateUmp(message.Word0, wordCount))
         {
             internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for this UMP", wordCount, timestamp);
@@ -344,9 +346,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     _Use_decl_annotations_
-        void* MidiEndpointConnection::GetUmpDataPointer(
-            midi2::IMidiUniversalPacket const& ump,
-            uint8_t& dataSizeOut)
+    void* MidiEndpointConnection::GetUmpDataPointer(
+        midi2::IMidiUniversalPacket const& ump,
+        uint8_t& dataSizeOut)
     {
         void* umpDataPointer{};
         dataSizeOut = 0;
@@ -378,10 +380,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-        midi2::MidiSendMessageResult MidiEndpointConnection::SendUmpInternal(
-            winrt::com_ptr<IMidiBiDi> endpoint,
-            midi2::IMidiUniversalPacket const& ump)
+    midi2::MidiSendMessageResult MidiEndpointConnection::SendUmpInternal(
+        winrt::com_ptr<IMidiBiDi> endpoint,
+        midi2::IMidiUniversalPacket const& ump)
     {
+        internal::LogInfo(__FUNCTION__, L"Sending message internal");
         try
         {
             if (endpoint != nullptr)
@@ -417,12 +420,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     _Use_decl_annotations_
-        midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageBuffer(
-            const internal::MidiTimestamp timestamp,
-            winrt::Windows::Foundation::IMemoryBuffer const& buffer,
-            const uint32_t byteOffset,
-            const uint8_t byteLength)
+    midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageBuffer(
+        const internal::MidiTimestamp timestamp,
+        winrt::Windows::Foundation::IMemoryBuffer const& buffer,
+        const uint32_t byteOffset,
+        const uint8_t byteLength)
     {
+        internal::LogInfo(__FUNCTION__, L"Sending message buffer");
+
         try
         {
             if (!m_isOpen)
@@ -476,13 +481,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-        midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageWordArray(
-            internal::MidiTimestamp const timestamp,
-            winrt::array_view<uint32_t const> words,
-            uint32_t const startIndex,
-            uint8_t const wordCount
+    midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageWordArray(
+        internal::MidiTimestamp const timestamp,
+        winrt::array_view<uint32_t const> words,
+        uint32_t const startIndex,
+        uint8_t const wordCount
         )
     {
+        internal::LogInfo(__FUNCTION__, L"Sending message word array");
+
         try
         {
             if (!m_isOpen)
@@ -535,10 +542,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-        midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageWords(
-            internal::MidiTimestamp const timestamp,
-            uint32_t const word0)
+    midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageWords(
+        internal::MidiTimestamp const timestamp,
+        uint32_t const word0)
     {
+        internal::LogInfo(__FUNCTION__, L"Sending message words (1)");
+
         try
         {
             if (!m_isOpen)
@@ -584,11 +593,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     _Use_decl_annotations_
-        midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageWords(
-            internal::MidiTimestamp const timestamp,
-            uint32_t const word0,
-            uint32_t const word1)
+    midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageWords(
+        internal::MidiTimestamp const timestamp,
+        uint32_t const word0,
+        uint32_t const word1)
     {
+        internal::LogInfo(__FUNCTION__, L"Sending message words (2)");
+
         try
         {
             if (!m_isOpen)
@@ -637,12 +648,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-        midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageWords(
-            internal::MidiTimestamp const timestamp,
-            uint32_t const word0,
-            uint32_t const word1,
-            uint32_t const word2)
+    midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageWords(
+        internal::MidiTimestamp const timestamp,
+        uint32_t const word0,
+        uint32_t const word1,
+        uint32_t const word2)
     {
+        internal::LogInfo(__FUNCTION__, L"Sending message words (3)");
+
         try
         {
             if (!m_isOpen)
@@ -693,13 +706,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     _Use_decl_annotations_
-        midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageWords(
-            internal::MidiTimestamp const timestamp,
-            uint32_t const word0,
-            uint32_t const word1,
-            uint32_t const word2,
-            uint32_t const word3)
+    midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageWords(
+        internal::MidiTimestamp const timestamp,
+        uint32_t const word0,
+        uint32_t const word1,
+        uint32_t const word2,
+        uint32_t const word3)
     {
+        internal::LogInfo(__FUNCTION__, L"Sending message words (4)");
+
         try
         {
             if (!m_isOpen)
@@ -750,9 +765,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     _Use_decl_annotations_
-        midi2::MidiSendMessageResult MidiEndpointConnection::SendMessagePacket(
-            midi2::IMidiUniversalPacket const& message)
+    midi2::MidiSendMessageResult MidiEndpointConnection::SendMessagePacket(
+        midi2::IMidiUniversalPacket const& message)
     {
+        internal::LogInfo(__FUNCTION__, L"Sending message packet");
+
         try
         {
             if (!m_isOpen)
@@ -787,11 +804,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     _Use_decl_annotations_
-        bool MidiEndpointConnection::ActivateMidiStream(
-            winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
-            const IID& iid,
-            void** iface) noexcept
+    bool MidiEndpointConnection::ActivateMidiStream(
+        winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
+        const IID& iid,
+        void** iface) noexcept
     {
+        internal::LogInfo(__FUNCTION__, L"Activating MIDI Stream");
+
         try
         {
             winrt::check_hresult(serviceAbstraction->Activate(iid, iface));

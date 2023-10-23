@@ -32,6 +32,12 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             [DefaultValue(false)]
             public bool SingleMessage { get; set; }
 
+            // gap in milliseconds before restarting offset calculation
+            [LocalizedDescription("TODO ParameterMonitorEndpointGap")]
+            [CommandOption("-g|--gap")]
+            [DefaultValue(1000)]
+            public int Gap { get; set; }
+
 
             [LocalizedDescription("ParameterMonitorEndpointVerbose")]
             [CommandOption("-v|--verbose|--details")]
@@ -87,12 +93,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             if (settings.Verbose)
             {
                 UInt64 startTimestamp = 0;
+                UInt64 lastTimestamp = 0;
 
                 MidiMessageStruct msg;
 
                 UInt32 index = 0;
-
-                //bool firstMessageReceived = false;
 
                 bool continueWaiting = true;
 
@@ -104,18 +109,33 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         startTimestamp = e.Timestamp;    
                     }
 
+                    if (lastTimestamp == 0)
+                    {
+                        // gets timestamp of first message we receive and uses that so all others are an offset
+                        lastTimestamp = e.Timestamp;
+                    }
+
                     //Console.WriteLine("DEBUG: MessageReceived");
                     index++;
 
                     var numWords = e.FillMessageStruct(out msg);
 
-                    //AnsiConsoleOutput.DisplayMidiMessage(msg, numWords, e.Timestamp - startTimestamp, index);
-                    AnsiConsoleOutput.DisplayMidiMessage(msg, numWords, e.Timestamp, index);
+                    double offsetMicroseconds = 0.0;
 
                     if (settings.SingleMessage)
                     {
                         continueWaiting = false;
                     }
+                    else
+                    {
+                        // calculate offset from the last message received
+                        //offsetMilliseconds = MidiClock.ConvertTimestampToMilliseconds(e.Timestamp - startTimestamp);
+                        offsetMicroseconds = MidiClock.ConvertTimestampToMicroseconds(e.Timestamp - lastTimestamp);
+                    }
+
+                    AnsiConsoleOutput.DisplayMidiMessage(msg, numWords, offsetMicroseconds, e.Timestamp, index);
+
+                    lastTimestamp = e.Timestamp;
                 };
 
 
