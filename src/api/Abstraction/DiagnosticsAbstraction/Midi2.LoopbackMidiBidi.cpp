@@ -10,9 +10,6 @@
 #include "pch.h"
 #include "midi2.DiagnosticsAbstraction.h"
 
-#include "diagnostics_defs.h"
-
-
 _Use_decl_annotations_
 HRESULT
 CMidi2LoopbackMidiBiDi::Initialize(
@@ -88,12 +85,23 @@ CMidi2LoopbackMidiBiDi::Cleanup()
         );
 
 
-    if (m_loopbackMidiDevice != nullptr) m_loopbackMidiDevice->Cleanup();
-    if (m_pingMidiDevice != nullptr) m_pingMidiDevice->Cleanup();
+    if (m_loopbackMidiDevice != nullptr && m_isEndpointA)
+    {
+        m_loopbackMidiDevice->CleanupA();
+        m_loopbackMidiDevice = nullptr;
+    }
+    else if (m_loopbackMidiDevice != nullptr && !m_isEndpointA)
+    {
+        m_loopbackMidiDevice->CleanupB();
+        m_loopbackMidiDevice = nullptr;
+    }
+    else if (m_pingMidiDevice != nullptr && m_isPing)
+    {
+        m_pingMidiDevice->Cleanup();
+        m_pingMidiDevice = nullptr;
+    }
 
     m_callback = nullptr;
-    m_loopbackMidiDevice = nullptr;
-    m_pingMidiDevice = nullptr;
 
     return S_OK;
 }

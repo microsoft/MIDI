@@ -18,19 +18,31 @@ namespace winrt::Windows::Devices::Midi2::implementation
         MidiClock() = default;
 
         static internal::MidiTimestamp GetMidiTimestamp() { return ::Windows::Devices::Midi2::Internal::Shared::GetCurrentMidiTimestamp(); }
-        static internal::MidiTimestamp GetMidiTimestampFrequency() { return ::Windows::Devices::Midi2::Internal::Shared::GetMidiTimestampFrequency(); }
+        static uint64_t GetMidiTimestampFrequency() { return ::Windows::Devices::Midi2::Internal::Shared::GetMidiTimestampFrequency(); }
 
-        static internal::MidiTimestamp ConvertTimestampToMicroseconds(_In_ internal::MidiTimestamp const timestampValue)
+
+        static double ConvertTimestampToMicroseconds(
+            _In_ internal::MidiTimestamp const timestampValue)
         {
             auto freq = GetMidiTimestampFrequency();
 
-            return (internal::MidiTimestamp)((timestampValue * 1000000) / freq);
+            return (double)((timestampValue * (double)1000000.0) / freq);
         }
+
+        static double ConvertTimestampToMilliseconds(
+            _In_ internal::MidiTimestamp const timestampValue)
+        {
+            auto freq = GetMidiTimestampFrequency();
+
+            return (double)((timestampValue * (double)1000.0) / freq);
+        }
+
+
     };
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation
 {
-    struct MidiClock : MidiClockT<MidiClock, implementation::MidiClock>
+    struct MidiClock : MidiClockT<MidiClock, implementation::MidiClock, winrt::static_lifetime>
     {
     };
 }

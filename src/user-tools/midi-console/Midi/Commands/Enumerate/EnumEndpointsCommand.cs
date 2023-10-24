@@ -20,15 +20,21 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
     {
         public sealed class Settings : CommandSettings
         {
-            [LocalizedDescription("ParameterEnumEndpointsDirection")]
-            [CommandOption("-d|--direction")]
-            [DefaultValue(EndpointDirection.All)]
-            public EndpointDirection EndpointDirection { get; set; }
-
             [LocalizedDescription("ParameterEnumEndpointsIncludeEndpointId")]
             [CommandOption("-i|--include-endpoint-id")]
             [DefaultValue(true)]
             public bool IncludeId { get; set; }
+
+            [LocalizedDescription("ParameterEnumEndpointsIncludeLoopbackEndpoints")]
+            [CommandOption("-l|--include-loopback")]
+            [DefaultValue(false)]
+            public bool IncludeDiagnosticLoopback { get; set; }
+
+            [LocalizedDescription("ParameterEnumEndpointsVerboseOutput")]
+            [CommandOption("-v|--verbose|--details")]
+            [DefaultValue(false)]
+            public bool Verbose { get; set; }
+
         }
 
         public override int Execute(CommandContext context, Settings settings)
@@ -43,111 +49,52 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                     var table = new Table();
 
-                    table.Border(TableBorder.HeavyHead);
+                    table.Border(TableBorder.Rounded);
 
-                    table.AddColumn("UMP Endpoints for Windows MIDI Services");
+                    table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("UMP Endpoints for Windows MIDI Services"));
 
                     // Bidirectional endpoints
 
-                    if (settings.EndpointDirection == EndpointDirection.All || settings.EndpointDirection == EndpointDirection.Bidirectional)
+                    string selector = string.Empty;
+
+                    try
                     {
-                        string selector = string.Empty;
-
-                        try
-                        {
-                            selector = MidiBidirectionalEndpointConnection.GetDeviceSelector();
-                        }
-                        catch (System.TypeInitializationException)
-                        {
-                            AnsiConsole.Markup(AnsiMarkupFormatter.FormatError($"{Strings.ErrorEnumEndpointsFailed}: {Strings.ErrorGeneralFailReasonWinRTActivation}"));
-                            return;
-                        }
-
-                        var endpoints = DeviceInformation.FindAllAsync(selector)
-                            .GetAwaiter().GetResult();
-
-                        if (endpoints.Count > 0)
-                        {
-                            atLeastOneEndpointFound = true;
-
-                            foreach (var endpointInfo in endpoints)
-                            {
-                                DisplayEndpointInformationFormatted(table, settings, endpointInfo, "UMP MIDI 2.0 Bidirectional");
-                            }
-                        }
-                        else
-                        {
-                            table.AddRow("No bidirectional endpoints.");
-                        }
+                        selector = MidiEndpointConnection.GetDeviceSelector();
+                    }
+                    catch (System.TypeInitializationException)
+                    {
+                        AnsiConsole.Markup(AnsiMarkupFormatter.FormatError($"{Strings.ErrorEnumEndpointsFailed}: {Strings.ErrorGeneralFailReasonWinRTActivation}"));
+                        return;
                     }
 
-                    // Input endpoints
+                    MidiEndpointDeviceInformationFilter filter = 
+                        MidiEndpointDeviceInformationFilter.IncludeClientByteStreamNative | 
+                        MidiEndpointDeviceInformationFilter.IncludeClientUmpNative;
 
-                    if (settings.EndpointDirection == EndpointDirection.All || settings.EndpointDirection == EndpointDirection.In)
+                    if (settings.IncludeDiagnosticLoopback)
                     {
-                        string selector = string.Empty;
-
-                        try
-                        {
-                            selector = MidiInputEndpointConnection.GetDeviceSelector();
-                        }
-                        catch (System.TypeInitializationException)
-                        {
-                            AnsiConsole.Markup(AnsiMarkupFormatter.FormatError($"{Strings.ErrorEnumEndpointsFailed}: {Strings.ErrorGeneralFailReasonWinRTActivation}"));
-                            return;
-                        }
-
-                        var endpoints = DeviceInformation.FindAllAsync(selector)
-                        .GetAwaiter().GetResult();
-
-                        if (endpoints.Count > 0)
-                        {
-                            atLeastOneEndpointFound = true;
-
-                            foreach (var endpointInfo in endpoints)
-                            {
-                                DisplayEndpointInformationFormatted(table, settings, endpointInfo, "UMP MIDI In");
-                            }
-                        }
-                        else
-                        {
-                            table.AddRow("No input endpoints.");
-                        }
+                        filter |= MidiEndpointDeviceInformationFilter.IncludeDiagnosticLoopback;
                     }
 
-                    // Output endpoints
+                    var endpoints = MidiEndpointDeviceInformation.FindAll(
+                        MidiEndpointDeviceInformationSortOrder.Name,
+                        filter
+                        );
 
-                    if (settings.EndpointDirection == EndpointDirection.All || settings.EndpointDirection == EndpointDirection.Out)
+                    if (endpoints.Count > 0)
                     {
-                        string selector = string.Empty;
+                        atLeastOneEndpointFound = true;
 
-                        try
+                        foreach (var endpointInfo in endpoints)
                         {
-                            selector = MidiOutputEndpointConnection.GetDeviceSelector();
-                        }
-                        catch (System.TypeInitializationException)
-                        {
-                            AnsiConsole.Markup(AnsiMarkupFormatter.FormatError($"{Strings.ErrorEnumEndpointsFailed}: {Strings.ErrorGeneralFailReasonWinRTActivation}"));
-                            return;
-                        }
-
-                        var endpoints = DeviceInformation.FindAllAsync(selector)
-                        .GetAwaiter().GetResult();
-
-                        if (endpoints.Count > 0)
-                        {
-                            atLeastOneEndpointFound = true;
-
-                            foreach (var endpointInfo in endpoints)
-                            {
-                                DisplayEndpointInformationFormatted(table, settings, endpointInfo, "UMP MIDI Out");
-                            }
-                        }
-                        else
-                        {
-                            table.AddRow("No output endpoints.");
+                            DisplayEndpointInformationFormatted(table, settings, endpointInfo, "UMP Bidirectional");
                         }
                     }
+                    else
+                    {
+                        table.AddRow("No matching endpoints found.");
+                    }
+
 
                     AnsiConsole.Write(table);
                 });
@@ -163,15 +110,22 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         }
 
 
-        private void DisplayEndpointInformationFormatted(Table table, Settings settings, DeviceInformation endpointInfo, string endpointType)
+        private void DisplayEndpointInformationFormatted(Table table, Settings settings, MidiEndpointDeviceInformation endpointInfo, string endpointType)
         {
             table.AddRow(new Markup(AnsiMarkupFormatter.FormatEndpointName(endpointInfo.Name)));
 
-            table.AddRow(endpointType);
-
             if (settings.IncludeId)
             {
-                table.AddRow(new Markup(AnsiMarkupFormatter.FormatDeviceInstanceId(endpointInfo.Id)));
+                table.AddRow(new Markup(AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointInfo.Id)));
+            }
+
+            if (settings.Verbose)
+            {
+                if (!string.IsNullOrEmpty(endpointInfo.Description))
+                {
+                    table.AddRow(new Markup(AnsiMarkupFormatter.EscapeString(endpointInfo.Description)));
+                }
+
             }
 
             table.AddEmptyRow();

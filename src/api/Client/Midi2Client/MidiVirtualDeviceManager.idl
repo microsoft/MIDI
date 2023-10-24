@@ -9,7 +9,6 @@
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-import "MidiEndpointTypeEnum.idl";
 import "MidiProtocolEnum.idl";
 
 namespace Windows.Devices.Midi2
@@ -36,7 +35,6 @@ namespace Windows.Devices.Midi2
         Boolean CreateEndpoint(
             String parentDeviceId,
             String name,
-            MidiEndpointType endpointType,
             Boolean exclusive,
             MidiProtocol protocol,
             IInspectable tag,

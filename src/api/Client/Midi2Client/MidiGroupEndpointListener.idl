@@ -17,13 +17,12 @@ MIDI_IDL_IMPORT
 import "MidiGroup.idl";
 
 import "IMidiEndpointMessageProcessingPlugin.idl";
-import "IMidiEndpointMessageListener.idl";
 
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [default_interface]
-    runtimeclass MidiGroupEndpointListener : IMidiEndpointMessageProcessingPlugin, IMidiEndpointMessageListener
+    runtimeclass MidiGroupEndpointListener : IMidiEndpointMessageProcessingPlugin
     {
         MidiGroupEndpointListener();
 

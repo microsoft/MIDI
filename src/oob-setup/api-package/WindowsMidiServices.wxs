@@ -22,17 +22,27 @@
                 </Directory>
             </Directory>
         </StandardDirectory>
+        
+        <StandardDirectory Id="CommonAppDataFolder">
+            <Directory Name="Microsoft">
+                <Directory Name="MIDI">
+                    <Component Id="Permission.SharedAppDataFolder" Guid="{CFF49B6C-54CA-47F9-A1EF-62CD7C542D78}">
+                        <CreateFolder>
+                            <Permission GenericAll="yes" User="Everyone"/>
+                        </CreateFolder>
+                    </Component>
+                </Directory>
+            </Directory>
+        </StandardDirectory>
 
 
-        <!--<Binary Id="RegistryActions.dll" SourceFile="$(StagingSourceRootFolder)\RegistryActions.dll" /> -->
-        <!--<Binary Id="RegistryCustomActionsLib" SourceFile="RegistryCustomActions.CA.dll"  /> -->
         <Binary Id ="RegistryCustomActionsLib" SourceFile="$(env.MIDI_REPO_ROOT)src\oob-setup\RegistryCustomActions\bin\x64\Release\net48\RegistryCustomActions.CA.dll" />
-
         <!-- Install Windows Service -->
      
         <!-- Transport and other Service Plugins -->
         <!-- Setting the SelfRegCost attribute to any positive number causes DLL Self Registration -->
-        <Component Id="WindowsServiceAbstractions"
+    
+       <Component Id="WindowsServiceAbstractions"
                    Bitness="always64"
                    Directory="SERVICE_INSTALLFOLDER"
                    Guid="{6a2300f5-ccae-4f61-b849-d41aefb8a999}"  >
@@ -66,9 +76,37 @@
                             Name="MidiSrv" 
                             Wait="yes" />
 
-            <!--<File Source="$(StagingSourceRootFolder)\api\x64\MidiSrv.pdb" /> -->
+            <RegistryKey Root="HKLM"
+                         Key="SOFTWARE\Microsoft\Windows MIDI Services">
 
-        </Component>                  
+                <RegistryValue Type="string" Name="CurrentConfig" Value="Default.midiconfig.json" />
+
+                <RegistryKey Key="Endpoint Processing Plugins">
+                    <!-- TODO: Any processing plugins -->
+                </RegistryKey>
+
+                <RegistryKey Key="Transport Plugins">
+                    
+                    <RegistryKey Key="Midi2KSAbstraction">
+                        <RegistryValue Type="string" Name="CLSID" Value="{26FA740D-469C-4D33-BEB1-3885DE7D6DF1}" />
+                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
+                    </RegistryKey>
+                    
+                    <RegistryKey Key="Midi2NetworkMidiAbstraction">
+                        <RegistryValue Type="string" Name="CLSID" Value="{C95DCD1F-CDE3-4C2D-913C-528CB8A4CBE6}" />
+                        <RegistryValue Type="integer" Name="Enabled" Value="0" />
+                    </RegistryKey>
+                    
+                    <RegistryKey Key="Midi2VirtualMidiAbstraction">
+                        <RegistryValue Type="string" Name="CLSID" Value="{8FEAAD91-70E1-4A19-997A-377720A719C1}" />
+                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
+                    </RegistryKey>
+
+                </RegistryKey>
+                
+            </RegistryKey>
+            
+        </Component>     
         
         <!-- Install API -->
 
@@ -79,7 +117,6 @@
             <File Source="$(StagingSourceRootFolder)\api\x64\Windows.Devices.Midi2.dll" Vital="true" />
                        
             
-            <!--<File Source="$(StagingSourceRootFolder)\api\x64\Windows.Devices.Midi2.pdb" />-->
             <File Source="$(StagingSourceRootFolder)\api\x64\Windows.Devices.Midi2.pri" />
         </Component>
 
@@ -88,12 +125,7 @@
                    Directory="API_INSTALLFOLDER"
                    Guid="fa0230b9-824a-4c5f-b4e4-396433baa962"
                    >
-            
-            <!-- API Component Activation - WinRT -->
-            <!-- NOTE: You can't write to these keys until you take ownership in the registry for the ActivatableClassId key under WindowsRuntime -->
-
-
-            <!-- API Component Activation - COM -->
+          
         </Component>
 
         <!-- Install Console App -->
@@ -146,7 +178,6 @@
                   Source="$(StagingSourceRootFolder)\midi-settings\x64\MidiSettings.exe" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Midi.Settings.Core.dll" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\x64\MidiSettings.dll" />
-            <!--<File Source="$(StagingSourceRootFolder)\midi-settings\x64\MidiSettings.pri" />-->
             <File Source="$(StagingSourceRootFolder)\midi-settings\x64\resources.pri" />
 
             <File Source="$(StagingSourceRootFolder)\midi-settings\x64\MidiSettings.runtimeconfig.json" />
@@ -243,7 +274,6 @@
             </Component>
         </StandardDirectory>
         
-
         <CustomAction
             Id="WriteActivatableClassIdKeysAction"
             Return="check"
@@ -259,13 +289,14 @@
             BinaryRef="RegistryCustomActionsLib"
             DllEntry="EraseActivatableClassIdKeys"
             Impersonate="yes"/>
-
         
         <Feature Id="WindowsMIDIServices">
             <ComponentRef Id="WindowsServiceAbstractions"/>
             <ComponentRef Id="WindowsService"/>
             <ComponentRef Id="WindowsAPI"/>
             <ComponentRef Id="WindowsAPIRegistration"/>
+
+            <ComponentRef Id="Permission.SharedAppDataFolder"/>
 
             <ComponentRef Id="ConsoleAppExe"/>
 
@@ -278,9 +309,6 @@
             <Custom Action="WriteActivatableClassIdKeysAction" After="InstallFiles" Condition="(NOT Installed)" />
             <Custom Action="EraseActivatableClassIdKeysAction" After="InstallFiles" Condition='(REMOVE="ALL")'/>
         </InstallExecuteSequence>
-
-
-
 
     </Package>
 </Wix>

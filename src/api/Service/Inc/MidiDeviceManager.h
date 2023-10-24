@@ -51,7 +51,10 @@ public:
 
     CMidiDeviceManager() {}
     ~CMidiDeviceManager() {}
-    STDMETHOD(Initialize)(_In_ std::shared_ptr<CMidiPerformanceManager>& performanceManager);
+    STDMETHOD(Initialize)(
+        _In_ std::shared_ptr<CMidiPerformanceManager>& performanceManager,
+        _In_ std::shared_ptr<CMidiConfigurationManager>& configurationManager);
+
     STDMETHOD(ActivateEndpoint)(
         _In_ PCWSTR,
         _In_ BOOL,
@@ -60,17 +63,21 @@ public:
         _In_ ULONG,
         _In_ PVOID,
         _In_ PVOID,
-        _In_ PVOID
+        _In_ PVOID,
+        _Out_writes_opt_z_(CreatedDeviceInterfaceIdCharCount) PWSTR CreatedDeviceInterfaceId,
+        _In_ ULONG CreatedDeviceInterfaceIdCharCount
     );
     STDMETHOD(DeactivateEndpoint)(_In_ PCWSTR);
     STDMETHOD(RemoveEndpoint)(_In_ PCWSTR);
     STDMETHOD(Cleanup)();
 
+    //TODO: Method to update the properties (using SwDevicePropertySet and an array of props) for a device by its Id
+
 private:
 
     HRESULT ActivateEndpointInternal(
         _In_ PCWSTR,
-        _In_ PCWSTR,
+        _In_opt_ PCWSTR,
         _In_ BOOL,
         _In_ MidiFlow,
         _In_ ULONG,
@@ -78,10 +85,11 @@ private:
         _In_ DEVPROPERTY*,
         _In_ DEVPROPERTY*,
         _In_ SW_DEVICE_CREATE_INFO*,
-        _In_ std::wstring *
+        _In_opt_ std::wstring*
     );
 
     std::shared_ptr<CMidiPerformanceManager> m_PerformanceManager;
+    std::shared_ptr<CMidiConfigurationManager> m_ConfigurationManager;
     std::map<GUID, wil::com_ptr_nothrow<IMidiEndpointManager>, GUIDCompare> m_MidiEndpointManagers;
  
     wil::critical_section m_MidiPortsLock;

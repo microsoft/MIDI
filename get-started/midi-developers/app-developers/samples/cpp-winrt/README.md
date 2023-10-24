@@ -14,6 +14,7 @@ For C++, Windows MIDI Services is only being tested with C++/WinRT, not CX or WR
 | Sample | Description |
 | -------| ----------- |
 | [Client API Basics](api-client-basics/) | Shows how to open a MidiSession, and connect to a MidiEndpoint to send and receive messages|
+| [Enumerate Endpoints](api-enum-endpoints/) | Demonstrats enumerating endpoints, getting group terminal and function blocks, and other properties|
 
 ## Background information
 

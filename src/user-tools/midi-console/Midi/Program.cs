@@ -29,7 +29,7 @@ app.Configure(config =>
             .WithAlias("ump")
             .WithAlias("endpoints")
             .WithDescription(Strings.CommandEnumerateEndpointsDescription)
-            .WithExample("enumerate", "ump-endpoints", "--direction", "all")
+            .WithExample("enumerate", "ump-endpoints")
             ;
 
         enumerate.AddCommand<EnumLegacyEndpointsCommand>("bytestream-endpoints")
@@ -101,6 +101,13 @@ app.Configure(config =>
             .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "capture", "capture.txt", "--format", "HexWithPrefix", "--filter", "SysEx8")
             .WithDescription(Strings.CommandMonitorEndpointDescription)
             ;
+
+        endpoint.AddCommand<EndpointPropertiesCommand>("properties")
+            .WithAlias("props")
+            .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "properties")
+            .WithDescription(Strings.CommandEndpointPropertiesDescription)
+            ;
+
 
 
     }).WithAlias("ep");

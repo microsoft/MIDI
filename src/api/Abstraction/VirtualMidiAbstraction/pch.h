@@ -13,6 +13,11 @@
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
+#include <winrt/Windows.Data.Json.h>
+
+namespace json = ::winrt::Windows::Data::Json;
+
+
 #include <assert.h>
 #include <devioctl.h>
 #include <wrl\implements.h>
@@ -44,6 +49,9 @@
 #include <winmeta.h>
 #include <TraceLoggingProvider.h>
 
+#include <vector>
+#include <string>
+
 #include "SWDevice.h"
 #include <initguid.h>
 #include "setupapi.h"
@@ -51,6 +59,7 @@
 
 #include "strsafe.h"
 
+#include "abstraction_defs.h"
 
 #include "Midi2VirtualMidiAbstraction_i.c"
 #include "Midi2VirtualMidiAbstraction.h"
@@ -64,9 +73,10 @@
 #include "MidiXProc.h"
 
 
+#include "MidiRoute.h"
+#include "MidiEndpointTable.h"
+
 #include "Midi2.VirtualMidiAbstraction.h"
-#include "Midi2.VirtualMidiIn.h"
-#include "Midi2.VirtualMidiOut.h"
 #include "Midi2.VirtualMidiBiDi.h"
 #include "Midi2.VirtualMidiEndpointManager.h"
 

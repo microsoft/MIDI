@@ -308,7 +308,7 @@
     <ClInclude Include="MidiDeviceTable.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="MidiLoopbackDevice.h" />
-    <ClInclude Include="diagnostics_defs.h" />
+    <ClInclude Include="abstraction_defs.h" />
     <ClInclude Include="Midi2.DiagnosticsAbstraction.h" />
     <ClInclude Include="Midi2.DiagnosticsEndpointManager.h" />
     <ClInclude Include="Midi2.LoopbackMidiBidi.h" />

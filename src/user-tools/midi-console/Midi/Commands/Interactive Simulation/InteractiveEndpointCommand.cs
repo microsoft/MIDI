@@ -16,7 +16,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
     internal class InteractiveEndpointCommand : Command<InteractiveEndpointCommand.Settings>
     {
         //MidiVirtualDeviceResponder _responder;
-        MidiBidirectionalEndpointConnection _endpoint;
+        MidiEndpointConnection _endpoint;
 
 
         internal class Settings : CommandSettings

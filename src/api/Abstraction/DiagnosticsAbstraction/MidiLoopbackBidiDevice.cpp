@@ -15,7 +15,9 @@ HRESULT MidiLoopbackBidiDevice::SendMidiMessageFromAToB(
     _In_ UINT32 size,
     _In_ LONGLONG timestamp)
 {
-    RETURN_HR_IF_NULL(E_POINTER, m_callbackB);
+    // we don't want a fail hresult here as it just means the callback went away
+    if (m_callbackB == nullptr) return S_OK;
+
     RETURN_HR_IF_NULL(E_INVALIDARG, message);
     RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
 
@@ -30,7 +32,9 @@ HRESULT MidiLoopbackBidiDevice::SendMidiMessageFromBToA(
     _In_ UINT32 size,
     _In_ LONGLONG timestamp)
 {
-    RETURN_HR_IF_NULL(E_POINTER, m_callbackA);
+    // we don't want a fail hresult here as it just means the callback went away
+    if (m_callbackA == nullptr) return S_OK;
+
     RETURN_HR_IF_NULL(E_INVALIDARG, message);
     RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
 
@@ -42,9 +46,20 @@ HRESULT MidiLoopbackBidiDevice::SendMidiMessageFromBToA(
 
 void MidiLoopbackBidiDevice::Cleanup()
 {
+    CleanupA();
+    CleanupB();
+}
+
+void MidiLoopbackBidiDevice::CleanupA()
+{
     m_callbackA = nullptr;
+}
+
+void MidiLoopbackBidiDevice::CleanupB()
+{
     m_callbackB = nullptr;
 }
+
 
 void MidiLoopbackBidiDevice::SetCallbackA(_In_ IMidiCallback* callback)
 {

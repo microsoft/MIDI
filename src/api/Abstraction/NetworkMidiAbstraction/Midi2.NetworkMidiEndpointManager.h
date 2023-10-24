@@ -76,13 +76,20 @@ class CMidi2NetworkMidiEndpointManager :
 
 {
 public:
-    STDMETHOD(Initialize(_In_ IUnknown*));
+    STDMETHOD(Initialize(_In_ IUnknown*, _In_ LPCWSTR));
     STDMETHOD(Cleanup)();
 
 private:
+    GUID m_containerId{};
+    GUID m_transportAbstractionId{};
+
 
     HRESULT CreateEndpoint();
     HRESULT CreateParentDevice();
+
+    HRESULT CreateConfiguredEndpoints(_In_ std::wstring configurationJson);
+
+
 
     wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
 
@@ -91,5 +98,5 @@ private:
 
     std::unique_ptr<MidiEndpointParentDeviceInfo> m_parentDevice{ nullptr };
 
-
+    json::JsonObject m_jsonObject{ nullptr };
 };

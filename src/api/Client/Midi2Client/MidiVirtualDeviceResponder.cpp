@@ -62,16 +62,16 @@ namespace winrt::Windows::Devices::Midi2::implementation
         throw hresult_not_implemented();
     }
 
-    midi2::MidiEndpointInformation MidiVirtualDeviceResponder::EndpointInformation()
-    {
-        throw hresult_not_implemented();
-    }
+    //midi2::MidiEndpointInformation MidiVirtualDeviceResponder::EndpointInformation()
+    //{
+    //    throw hresult_not_implemented();
+    //}
 
-    _Use_decl_annotations_
-    void MidiVirtualDeviceResponder::EndpointInformation(midi2::MidiEndpointInformation const& /*value*/)
-    {
-        throw hresult_not_implemented();
-    }
+    //_Use_decl_annotations_
+    //void MidiVirtualDeviceResponder::EndpointInformation(midi2::MidiEndpointInformation const& /*value*/)
+    //{
+    //    throw hresult_not_implemented();
+    //}
 
 
     void MidiVirtualDeviceResponder::Initialize()

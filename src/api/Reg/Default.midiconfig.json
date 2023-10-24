@@ -1,0 +1,92 @@
+{
+    "header":
+    {
+        "_comment": "NOTE: All json keys are case-sensitive, including GUIDs.",
+        "product" : "Windows MIDI Services",
+        "fileVersion": 1.0
+    },
+    
+    "endpointTransportPluginSettings":
+    {
+        "{26FA740D-469C-4D33-BEB1-3885DE7D6DF1}":
+        {
+            "_comment": "KS MIDI (USB etc.)"
+        },
+        "{C95DCD1F-CDE3-4C2D-913C-528CB8A4CBE6}":
+        {
+            "_comment": "Network MIDI",
+            "servers":
+            [
+                {
+                    "port":"32632",
+                    "mdnsetcetc":"foo"
+                }
+            ],
+            "knownClients":
+            [
+            ]
+        },
+        "{8FEAAD91-70E1-4A19-997A-377720A719C1}":
+        {
+            "_comment": "Virtual MIDI",
+            "add":
+            {
+                "endpoints":
+                [
+                    {
+                        "key":"{425E2A7D-BE11-4AE8-A5FD-5A4201256E90}",
+                        "name":"Test Virtual MIDI A",
+                        "description":"This is my test virtual endpoint A. You can put anything in the description, like the intended use, or in the case of a physical device, location etc.",
+                        "uniqueIdentifier":"8675309",
+                        "supportsMultclient":true
+                    },
+                    {
+                        "key":"{6488885E-F3FD-4D81-8C12-D40FEFE7BECB}",
+                        "name":"Test Virtual MIDI B",
+                        "uniqueIdentifier":"3263827",
+                        "supportsMultclient":true
+                    },
+                    {
+                        "key":"{7E9BA2C6-ADF9-4A95-9249-88A33705558D}",
+                        "name":"Test Virtual MIDI C",
+                        "uniqueIdentifier":"OU812",
+                        "supportsMultclient":true
+                    },
+                    {
+                        "key":"{BD5EF465-CEFF-4423-9F9C-250E2032DECD}",
+                        "name":"FooSynth App-to-App MIDI Responder",
+                        "uniqueIdentifier":"123091823992",
+                        "supportsMultclient":false,
+                        "description":"Application-owned endpoint. Do not connect to this."
+                    },
+                    {
+                        "key":"{7421E910-E4FC-4A11-8B47-95A0E05F949A}",
+                        "name":"FooSynth App",
+                        "uniqueIdentifier":"0198230981230981",
+                        "supportsMultclient":true,
+                        "description":"Endpoint for interfacing with the FooSynth app.",
+                        "smallImagePath":"\\Images\\foosynth_small.png",
+                        "largeImagePath":"\\Images\\foosynth_large.png"
+                    }
+                ],
+                "endpointRouting":
+                [
+                    {
+                        "_comment":"Route Virtual MIDI A output to Virtual MIDI B input",
+                        "strategy":"Loop",
+                        "sourceInputKey":"{425E2A7D-BE11-4AE8-A5FD-5A4201256E90}",
+                        "destinationOutputKeys":
+                        [
+                            "{6488885E-F3FD-4D81-8C12-D40FEFE7BECB}"
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    "endpointProcessingPluginSettings":
+    {
+
+    }
+
+}

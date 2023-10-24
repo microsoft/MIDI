@@ -32,6 +32,12 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             [DefaultValue(false)]
             public bool SingleMessage { get; set; }
 
+            // gap in milliseconds before restarting offset calculation
+            [LocalizedDescription("TODO ParameterMonitorEndpointGap")]
+            [CommandOption("-g|--gap")]
+            [DefaultValue(1000)]
+            public int Gap { get; set; }
+
 
             [LocalizedDescription("ParameterMonitorEndpointVerbose")]
             [CommandOption("-v|--verbose|--details")]
@@ -50,9 +56,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            IMidiEndpointConnection? connection = null;
-
-
             string endpointId = string.Empty;
 
             if (!string.IsNullOrEmpty(settings.EndpointDeviceId))
@@ -61,7 +64,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             }
             else
             {
-                endpointId = UmpEndpointPicker.PickInput();
+                endpointId = UmpEndpointPicker.PickEndpoint();
             }
 
 
@@ -73,111 +76,96 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             // when this goes out of scope, it will dispose of the session, which closes the connections
             using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.MonitorSessionNameSuffix}");
-
-            AnsiConsole.Status()
-                .Start(Strings.StatusCreatingSessionAndOpeningEndpoint, ctx =>
-                {
-                    ctx.Spinner(Spinner.Known.Star);
-
-
-                    if (session != null)
-                    {
-                        if (settings.EndpointDirection == EndpointDirectionInputs.Bidirectional)
-                        {
-                            connection = session.ConnectBidirectionalEndpoint(endpointId);
-                        }
-                        else if (settings.EndpointDirection == EndpointDirectionInputs.In)
-                        {
-                            connection = session.ConnectInputEndpoint(endpointId);
-                        }
-                    }
-                });
-
             if (session == null)
             {
                 AnsiConsole.WriteLine(Strings.ErrorUnableToCreateSession);
                 return (int)MidiConsoleReturnCode.ErrorCreatingSession;
             }
-            else if (connection == null)
+
+            using var connection = session.CreateEndpointConnection(endpointId);
+            if (connection == null)
             {
-                AnsiConsole.WriteLine(Strings.ErrorUnableToOpenEndpoint);
-                return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
+                AnsiConsole.WriteLine(Strings.ErrorUnableToCreateEndpointConnection);
+                return (int)MidiConsoleReturnCode.ErrorCreatingEndpointConnection;
             }
 
 
             if (settings.Verbose)
             {
-                // start waiting for messages
+                UInt64 startTimestamp = 0;
+                UInt64 lastTimestamp = 0;
 
-                AnsiConsole.Live(table)
-                    .Start(ctx =>
+                MidiMessageStruct msg;
+
+                UInt32 index = 0;
+
+                bool continueWaiting = true;
+
+                connection.MessageReceived += (s, e) =>
+                {
+                    if (startTimestamp == 0)
                     {
-                        UInt32 index = 0;
+                        // gets timestamp of first message we receive and uses that so all others are an offset
+                        startTimestamp = e.Timestamp;    
+                    }
 
-                        bool firstMessageReceived = false;
+                    if (lastTimestamp == 0)
+                    {
+                        // gets timestamp of first message we receive and uses that so all others are an offset
+                        lastTimestamp = e.Timestamp;
+                    }
 
-                        // set up the event handler
-                        IMidiMessageReceivedEventSource eventSource = (IMidiMessageReceivedEventSource)connection;
+                    //Console.WriteLine("DEBUG: MessageReceived");
+                    index++;
 
-                        bool continueWaiting = true;
+                    var numWords = e.FillMessageStruct(out msg);
 
-                        eventSource.MessageReceived += (s, e) =>
+                    double offsetMicroseconds = 0.0;
+
+                    if (settings.SingleMessage)
+                    {
+                        continueWaiting = false;
+                    }
+                    else
+                    {
+                        // calculate offset from the last message received
+                        //offsetMilliseconds = MidiClock.ConvertTimestampToMilliseconds(e.Timestamp - startTimestamp);
+                        offsetMicroseconds = MidiClock.ConvertTimestampToMicroseconds(e.Timestamp - lastTimestamp);
+                    }
+
+                    AnsiConsoleOutput.DisplayMidiMessage(msg, numWords, offsetMicroseconds, e.Timestamp, index);
+
+                    lastTimestamp = e.Timestamp;
+                };
+
+
+                // open the connection
+                if (connection.Open())
+                {
+                    while (continueWaiting)
+                    {
+                        if (Console.KeyAvailable)
                         {
-                            index++;
+                            var keyInfo = Console.ReadKey(false);
 
-                            if (!firstMessageReceived)
+                            if (keyInfo.Key == ConsoleKey.Escape)
                             {
-                                table.AddColumn(Strings.CommonTableHeaderIndex);
-                                table.AddColumn(Strings.TableColumnHeaderCommonTimestamp);
-                                table.AddColumn(Strings.MonitorEndpointResultTableColumnHeaderWordsReceived);
-                                table.AddColumn(Strings.TableColumnHeaderCommonMessageType);
-                                table.AddColumn(Strings.TableColumnHeaderCommonDetailedMessageType);
-
-                                firstMessageReceived = true;
-                            }
-
-                            DisplayUmp(index, e.GetMessagePacket(), table);
-
-                            ctx.Refresh();
-
-                            if (settings.SingleMessage)
-                            {
+                                AnsiConsole.MarkupLine(Strings.MonitorEscapedPressedMessage);
                                 continueWaiting = false;
+                                break;
                             }
-                        };
-
-                        // open the connection
-                        connection.Open();
-
-                        while (continueWaiting)
-                        {
-                            if (Console.KeyAvailable)
-                            {
-                                var keyInfo = Console.ReadKey(false);
-                                if (keyInfo.Key == ConsoleKey.Escape)
-                                {
-                                    if (!firstMessageReceived)
-                                    {
-                                        // TODO: we should erase the table, otherwise it leaves artifacts.
-                                        // may need to rethink how table is created
-                                    }
-
-                                    AnsiConsole.MarkupLine(Strings.MonitorEscapedPressedMessage);
-                                    continueWaiting = false;
-                                    break;
-                                }
-                            }
-
-                            Thread.Sleep(0);
-
-                            // todo: code to allow pressing escape to stop listening and gracefully shut down
-
-
                         }
 
-                    });
+                        Thread.Sleep(0);
+                    }
+                }
+                else
+                {
+                    AnsiConsole.WriteLine(Strings.ErrorUnableToOpenEndpoint);
+                    return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
+                }
 
-
+                session.DisconnectEndpointConnection(connection.ConnectionId);
             }
             else
             {
@@ -243,47 +231,40 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             return 0;
         }
 
-        private void DisplayUmp(UInt32 index, IMidiUniversalPacket ump, Table table) 
-        {
-            string data = string.Empty;
+        //private void DisplayUmp(UInt32 index, MidiMessageStruct ump, byte numWords, MidiMessageType messageType, UInt64 timestamp, Table table) 
+        //{
+        //    string data = string.Empty;
 
-            if (ump.PacketType == MidiPacketType.UniversalMidiPacket128)
-            {
-                var ump128 = ump.As<MidiMessage128>();
+        //    if (numWords == 4)
+        //    {
+        //        data = AnsiMarkupFormatter.FormatMidiWords(ump.Word0, ump.Word1, ump.Word2, ump.Word3);
+        //    }
+        //    else if (numWords == 3)
+        //    {
+        //        data = AnsiMarkupFormatter.FormatMidiWords(ump.Word0, ump.Word1, ump.Word2);
+        //    }
+        //    else if (numWords == 2)
+        //    {
+        //        data = AnsiMarkupFormatter.FormatMidiWords(ump.Word0, ump.Word1);
+        //    }
+        //    else if (numWords == 1)
+        //    {
+        //        data = AnsiMarkupFormatter.FormatMidiWords(ump.Word0);
+        //    }
 
-                data = AnsiMarkupFormatter.FormatMidiWords(ump128.Word0, ump128.Word1, ump128.Word2, ump128.Word3);
-            }
-            else if (ump.PacketType == MidiPacketType.UniversalMidiPacket96)
-            {
-                var ump96 = ump.As<MidiMessage96>();
+        //    string detailedMessageType = MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(ump.Word0);
 
-                data = AnsiMarkupFormatter.FormatMidiWords(ump96.Word0, ump96.Word1, ump96.Word2);
-            }
-            else if (ump.PacketType == MidiPacketType.UniversalMidiPacket64)
-            {
-                var ump64 = ump.As<MidiMessage64>();
 
-                data = AnsiMarkupFormatter.FormatMidiWords(ump64.Word0, ump64.Word1);
-            }
-            else if (ump.PacketType == MidiPacketType.UniversalMidiPacket32)
-            {
-                var ump32 = ump.As<MidiMessage32>();
 
-                data = string.Format("{0:X8}", ump32.Word0);
-                data = AnsiMarkupFormatter.FormatMidiWords(ump32.Word0);
-            }
+        //    table.AddRow(
+        //        new Markup(AnsiMarkupFormatter.FormatRowIndex(index)),
+        //        new Markup(AnsiMarkupFormatter.FormatTimestamp(timestamp)), 
+        //        new Markup(data),
+        //        new Markup(AnsiMarkupFormatter.FormatMessageType(messageType)), 
+        //        new Markup(AnsiMarkupFormatter.FormatDetailedMessageType(detailedMessageType))
+        //        );
 
-            string detailedMessageType = MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(ump.PeekFirstWord());
-
-            table.AddRow(
-                new Markup(AnsiMarkupFormatter.FormatRowIndex(index)),
-                new Markup(AnsiMarkupFormatter.FormatTimestamp(ump.Timestamp)), 
-                new Markup(data),
-                new Markup(AnsiMarkupFormatter.FormatMessageType(ump.MessageType)), 
-                new Markup(AnsiMarkupFormatter.FormatDetailedMessageType(detailedMessageType))
-                );
-
-        }
+        //}
 
 
     }

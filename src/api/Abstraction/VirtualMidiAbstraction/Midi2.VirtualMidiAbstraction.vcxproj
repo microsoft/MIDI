@@ -278,10 +278,7 @@
     <ClCompile Include="Midi2.VirtualMidiAbstraction.cpp" />
     <ClCompile Include="Midi2.VirtualMidiEndpointManager.cpp" />
     <ClCompile Include="Midi2.VirtualMidiBidi.cpp" />
-    <ClCompile Include="Midi2.VirtualMidiIn.cpp" />
-    <ClCompile Include="Midi2.VirtualMidiOut.cpp" />
-    <ClCompile Include="MidiDeviceTable.cpp" />
-    <ClCompile Include="MidiVirtualRouter.cpp" />
+    <ClCompile Include="MidiEndpointTable.cpp" />
     <ClCompile Include="pch.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -293,14 +290,13 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="abstraction_defs.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="Midi2.VirtualMidiAbstraction.h" />
     <ClInclude Include="Midi2.VirtualMidiEndpointManager.h" />
     <ClInclude Include="Midi2.VirtualMidiBidi.h" />
-    <ClInclude Include="Midi2.VirtualMidiIn.h" />
-    <ClInclude Include="Midi2.VirtualMidiOut.h" />
-    <ClInclude Include="MidiDeviceTable.h" />
-    <ClInclude Include="MidiVirtualRouter.h" />
+    <ClInclude Include="MidiEndpointTable.h" />
+    <ClInclude Include="MidiRoute.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
   </ItemGroup>

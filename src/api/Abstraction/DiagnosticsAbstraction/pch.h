@@ -51,6 +51,7 @@
 
 #include "strsafe.h"
 
+#include "abstraction_defs.h"
 
 #include "Midi2DiagnosticsAbstraction_i.c"
 #include "Midi2DiagnosticsAbstraction.h"

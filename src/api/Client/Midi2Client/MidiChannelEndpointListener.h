@@ -30,8 +30,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::Windows::Foundation::IInspectable Tag() const noexcept { return m_tag; }
         void Tag(_In_ winrt::Windows::Foundation::IInspectable const& value) { m_tag = value; }
 
-        winrt::Windows::Devices::Midi2::IMidiInputConnection InputConnection() const noexcept { return m_inputConnection; }
-        void InputConnection(_In_ winrt::Windows::Devices::Midi2::IMidiInputConnection const& value) noexcept { m_inputConnection = value; }
+        midi2::MidiEndpointConnection Connection() const noexcept { return m_endpointConnection; }
+        void InputConnection(_In_ midi2::MidiEndpointConnection const& value) noexcept { m_endpointConnection = value; }
 
 
         winrt::Windows::Devices::Midi2::MidiGroup IncludeGroup() const noexcept { return m_includedGroup; }
@@ -76,7 +76,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring m_name{};
         bool m_enabled{ true };
         foundation::IInspectable m_tag{ nullptr };
-        midi2::IMidiInputConnection m_inputConnection;
+        midi2::MidiEndpointConnection m_endpointConnection{ nullptr };
 
         bool m_preventCallingFurtherListeners{ false };
         bool m_preventFiringMainMessageReceivedEvent{ false };

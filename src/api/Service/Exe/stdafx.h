@@ -7,6 +7,12 @@
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 
+#include <winrt/Windows.Data.Json.h>
+#include <winrt/Windows.Storage.h>
+#include <winrt/Windows.Storage.Streams.h>
+
+namespace json = ::winrt::Windows::Data::Json;
+
 #include <strsafe.h>
 #include <wrl\module.h>
 #include <wrl\event.h>
@@ -28,6 +34,8 @@
 
 #include "MidiAbstraction.h"
 
+#include "resource.h"
+#include "propkey.h"
 
 #include "Midi2DiagnosticsAbstraction_i.c"
 #include "Midi2DiagnosticsAbstraction.h"
@@ -47,11 +55,15 @@
 #include <Devpkey.h>
 #include "MidiDefs.h"
 
+
 #include "MidiTelemetry.h"
 #include "MidiPerformanceManager.h"
 #include "MidiProcessManager.h"
+#include "MidiConfigurationManager.h"
 #include "MidiDeviceManager.h"
 #include "MidiXProc.h"
+
+#include "MidiEndpointInProtocolMetadataManager.h"
 
 // MidiDevicePipe holds MidiClientPipe(s) that it is connected to.
 // MidiClientPipe holds a MidiDevicePipe that it is connected to.
@@ -62,6 +74,8 @@ class CMidiDevicePipe;
 #include "MidiDevicePipe.h"
 #include "MidiClientPipe.h"
 #include "MidiClientManager.h"
+
+
 
 #include "MidiSrv.h"
 

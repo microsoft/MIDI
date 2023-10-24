@@ -30,16 +30,7 @@
     <ClCompile Include="Midi2.VirtualMidiBidi.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Midi2.VirtualMidiIn.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Midi2.VirtualMidiOut.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiDeviceTable.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiVirtualRouter.cpp">
+    <ClCompile Include="MidiEndpointTable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -76,16 +67,13 @@
     <ClInclude Include="Midi2.VirtualMidiBidi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Midi2.VirtualMidiIn.h">
+    <ClInclude Include="MidiEndpointTable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Midi2.VirtualMidiOut.h">
+    <ClInclude Include="abstraction_defs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MidiDeviceTable.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiVirtualRouter.h">
+    <ClInclude Include="MidiRoute.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

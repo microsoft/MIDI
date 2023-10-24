@@ -152,7 +152,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         jsonObject.SetNamedValue(JSON_KEY_FB_MIDI10, JsonValue::CreateNumberValue((int)Midi10Connection()));
         jsonObject.SetNamedValue(JSON_KEY_FB_DIRECTION, JsonValue::CreateNumberValue((int)Direction()));
         jsonObject.SetNamedValue(JSON_KEY_FB_FIRSTGROUP, JsonValue::CreateNumberValue(FirstGroupIndex()));
-        jsonObject.SetNamedValue(JSON_KEY_FB_NUMGROUPSSPANNED, JsonValue::CreateNumberValue(NumberOfGroupsSpanned()));
+        jsonObject.SetNamedValue(JSON_KEY_FB_NUMGROUPSSPANNED, JsonValue::CreateNumberValue(GroupCount()));
         jsonObject.SetNamedValue(JSON_KEY_FB_MIDICIFORMAT, JsonValue::CreateNumberValue(MidiCIMessageVersionFormat()));
         
         return jsonObject.Stringify();

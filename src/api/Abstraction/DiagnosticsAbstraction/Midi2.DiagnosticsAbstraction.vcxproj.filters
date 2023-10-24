@@ -66,7 +66,7 @@
     <ClInclude Include="MidiDeviceTable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="diagnostics_defs.h">
+    <ClInclude Include="abstraction_defs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="pch.h">

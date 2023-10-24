@@ -35,74 +35,20 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::MidiSessionSettings Settings() const noexcept { return m_settings; }
 
 
-        foundation::Collections::IMapView<winrt::guid, midi2::IMidiEndpointConnection> Connections() { return m_connections.GetView(); }
+        foundation::Collections::IMapView<winrt::guid, midi2::MidiEndpointConnection> Connections() { return m_connections.GetView(); }
 
-        winrt::Windows::Devices::Midi2::MidiOutputEndpointConnection ConnectOutputEndpoint(
+        winrt::Windows::Devices::Midi2::MidiEndpointConnection CreateEndpointConnection(
             _In_ winrt::hstring const& endpointDeviceId
         ) noexcept;
 
-        winrt::Windows::Devices::Midi2::MidiOutputEndpointConnection ConnectOutputEndpoint(
+        winrt::Windows::Devices::Midi2::MidiEndpointConnection CreateEndpointConnection(
             _In_ winrt::hstring const& endpointDeviceId,
-            _In_ midi2::MidiOutputEndpointOpenOptions const& options
+            _In_ midi2::MidiEndpointConnectionOptions const& options
         ) noexcept;
 
-        winrt::Windows::Devices::Midi2::MidiOutputEndpointConnection ConnectOutputEndpoint(
+        winrt::Windows::Devices::Midi2::MidiEndpointConnection CreateEndpointConnection(
             _In_ winrt::hstring const& endpointDeviceId,
-            _In_ midi2::MidiOutputEndpointOpenOptions const& options,
-            _In_ midi2::IMidiEndpointDefinedConnectionSettings const& settings
-        ) noexcept;
-
-
-
-        winrt::Windows::Devices::Midi2::MidiInputEndpointConnection ConnectInputEndpoint(
-            _In_ winrt::hstring const& endpointDeviceId
-        ) noexcept;
-
-        winrt::Windows::Devices::Midi2::MidiInputEndpointConnection ConnectInputEndpoint(
-            _In_ winrt::hstring const& endpointDeviceId,
-            _In_ midi2::MidiInputEndpointOpenOptions const& options
-        ) noexcept;
-
-        winrt::Windows::Devices::Midi2::MidiInputEndpointConnection ConnectInputEndpoint(
-            _In_ winrt::hstring const& endpointDeviceId,
-            _In_ midi2::MidiInputEndpointOpenOptions const& options,
-            _In_ midi2::IMidiEndpointDefinedConnectionSettings const& settings
-        ) noexcept;
-
-
-
-        winrt::Windows::Devices::Midi2::MidiBidirectionalEndpointConnection ConnectBidirectionalEndpoint(
-            _In_ winrt::hstring const& endpointDeviceId
-        ) noexcept;
-
-        winrt::Windows::Devices::Midi2::MidiBidirectionalEndpointConnection ConnectBidirectionalEndpoint(
-            _In_ winrt::hstring const& endpointDeviceId,
-            _In_ midi2::MidiBidirectionalEndpointOpenOptions const& options
-        ) noexcept;
-
-        winrt::Windows::Devices::Midi2::MidiBidirectionalEndpointConnection ConnectBidirectionalEndpoint(
-            _In_ winrt::hstring const& endpointDeviceId,
-            _In_ midi2::MidiBidirectionalEndpointOpenOptions const& options,
-            _In_ midi2::IMidiEndpointDefinedConnectionSettings const& settings
-        ) noexcept;
-
-
-
-        winrt::Windows::Devices::Midi2::MidiBidirectionalAggregatedEndpointConnection ConnectBidirectionalAggregatedEndpoint(
-            _In_ winrt::hstring const& inputEndpointDeviceId,
-            _In_ winrt::hstring const& outputEndpointDeviceId
-        ) noexcept;
-
-        winrt::Windows::Devices::Midi2::MidiBidirectionalAggregatedEndpointConnection ConnectBidirectionalAggregatedEndpoint(
-            _In_ winrt::hstring const& inputEndpointDeviceId,
-            _In_ winrt::hstring const& outputEndpointDeviceId,
-            _In_ midi2::MidiBidirectionalEndpointOpenOptions const& options
-        ) noexcept;
-
-        winrt::Windows::Devices::Midi2::MidiBidirectionalAggregatedEndpointConnection ConnectBidirectionalAggregatedEndpoint(
-            _In_ winrt::hstring const& inputEndpointDeviceId,
-            _In_ winrt::hstring const& outputEndpointDeviceId,
-            _In_ midi2::MidiBidirectionalEndpointOpenOptions const& options,
+            _In_ midi2::MidiEndpointConnectionOptions const& options,
             _In_ midi2::IMidiEndpointDefinedConnectionSettings const& settings
         ) noexcept;
 
@@ -133,8 +79,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         winrt::com_ptr<IMidiAbstraction> m_serviceAbstraction;
 
-        collections::IMap<winrt::guid, midi2::IMidiEndpointConnection>
-            m_connections{ winrt::single_threaded_map<winrt::guid, midi2::IMidiEndpointConnection>() };
+        collections::IMap<winrt::guid, midi2::MidiEndpointConnection>
+            m_connections{ winrt::single_threaded_map<winrt::guid, midi2::MidiEndpointConnection>() };
 
 
         winrt::hstring NormalizeDeviceId(_In_ const winrt::hstring& endpointDeviceId);

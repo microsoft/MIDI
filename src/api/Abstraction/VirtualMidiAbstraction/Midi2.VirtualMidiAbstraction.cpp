@@ -20,43 +20,7 @@ CMidi2VirtualMidiAbstraction::Activate(
 
     RETURN_HR_IF(E_INVALIDARG, nullptr == Interface);
 
-   if (__uuidof(IMidiIn) == Riid)
-    {
-       OutputDebugString(L"" __FUNCTION__ " Activating IMidiIn");
-
-        TraceLoggingWrite(
-            MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- IMidiIn",
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
-            );
-
-        wil::com_ptr_nothrow<IMidiIn> midiIn;
-        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2VirtualMidiIn>(&midiIn));
-        *Interface = midiIn.detach();
-    }
-
-
-    else if (__uuidof(IMidiOut) == Riid)
-    {
-       OutputDebugString(L"" __FUNCTION__ " Activating IMidiOut");
-       
-       TraceLoggingWrite(
-            MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- IMidiOut",
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
-            );
-
-        wil::com_ptr_nothrow<IMidiOut> midiOut;
-        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2VirtualMidiOut>(&midiOut));
-        *Interface = midiOut.detach();
-    }
-
-
-    else if (__uuidof(IMidiBiDi) == Riid)
+    if (__uuidof(IMidiBiDi) == Riid)
     {
        OutputDebugString(L"" __FUNCTION__ " Activating IMidiBiDi");
 
@@ -76,7 +40,7 @@ CMidi2VirtualMidiAbstraction::Activate(
 
     // IMidiEndpointManager and IMidiApiEndpointManagerExtension are interfaces implemented by the same class
     // We want to make sure we're always returning the same instance for these calls
-    else if (__uuidof(IMidiEndpointManager) == Riid || __uuidof(IMidiApiEndpointManagerExtension) == Riid)
+    else if (__uuidof(IMidiEndpointManager) == Riid/* || __uuidof(IMidiApiEndpointManagerExtension) == Riid*/)
     {
         TraceLoggingWrite(
             MidiVirtualMidiAbstractionTelemetryProvider::Provider(),

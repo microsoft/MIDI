@@ -106,6 +106,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to List out all properties for a given endpoint.
+        /// </summary>
+        internal static string CommandEndpointPropertiesDescription {
+            get {
+                return ResourceManager.GetString("CommandEndpointPropertiesDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Enumerate (list) endpoints and transports.
         /// </summary>
         internal static string CommandEnumerateDescription {
@@ -291,6 +300,24 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         internal static string GenericCount {
             get {
                 return ResourceManager.GetString("GenericCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to microseconds.
+        /// </summary>
+        internal static string GenericMicroseconds {
+            get {
+                return ResourceManager.GetString("GenericMicroseconds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to milliseconds.
+        /// </summary>
+        internal static string GenericMilliseconds {
+            get {
+                return ResourceManager.GetString("GenericMilliseconds", resourceCulture);
             }
         }
         
@@ -484,6 +511,24 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Include the diagnostic loopback endpoints.
+        /// </summary>
+        internal static string ParameterEnumEndpointsIncludeLoopbackEndpoints {
+            get {
+                return ResourceManager.GetString("ParameterEnumEndpointsIncludeLoopbackEndpoints", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Include more details for each endpoint.
+        /// </summary>
+        internal static string ParameterEnumEndpointsVerboseOutput {
+            get {
+                return ResourceManager.GetString("ParameterEnumEndpointsVerboseOutput", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The direction of data flow for the endpoints to list.
         /// </summary>
         internal static string ParameterEnumLegacyEndpointsDirection {
@@ -655,7 +700,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Receive
+        ///   Looks up a localized string similar to Client
+        ///Receive
         ///Timestamp.
         /// </summary>
         internal static string PingResultTableColumnHeaderReceiveTimestamp {
@@ -665,7 +711,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Round Trip
+        ///   Looks up a localized string similar to Client
+        ///Round Trip
         ///Microseconds.
         /// </summary>
         internal static string PingResultTableColumnHeaderRoundTripMicroseconds {
@@ -675,8 +722,20 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Round Trip
-        ///Ticks.
+        ///   Looks up a localized string similar to Client
+        ///Round Trip
+        ///Milliseconds.
+        /// </summary>
+        internal static string PingResultTableColumnHeaderRoundTripMilliseconds {
+            get {
+                return ResourceManager.GetString("PingResultTableColumnHeaderRoundTripMilliseconds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Client
+        ///Round Trip
+        ///System Ticks.
         /// </summary>
         internal static string PingResultTableColumnHeaderRoundTripTicks {
             get {
@@ -685,12 +744,35 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Send
+        ///   Looks up a localized string similar to Client
+        ///Send
         ///Timestamp.
         /// </summary>
         internal static string PingResultTableColumnHeaderSendTimestamp {
             get {
                 return ResourceManager.GetString("PingResultTableColumnHeaderSendTimestamp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Service
+        ///Receive/Send
+        ///System Ticks.
+        /// </summary>
+        internal static string PingResultTableColumnHeaderServiceBreakdown {
+            get {
+                return ResourceManager.GetString("PingResultTableColumnHeaderServiceBreakdown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Service
+        ///Receive
+        ///Timestamp.
+        /// </summary>
+        internal static string PingResultTableColumnHeaderServiceTimestamp {
+            get {
+                return ResourceManager.GetString("PingResultTableColumnHeaderServiceTimestamp", resourceCulture);
             }
         }
         
@@ -785,7 +867,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Specified ping count is too high. Please provide a value &lt;= 1000..
+        ///   Looks up a localized string similar to Specified ping count is too high. Please provide a value &lt;= 255..
         /// </summary>
         internal static string ValidationErrorPingCountTooHigh {
             get {

@@ -7,6 +7,7 @@
 // ============================================================================
 
 #include "pch.h"
+
 #include "MidiService.h"
 #include "MidiService.g.cpp"
 
@@ -54,15 +55,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
             return *responseSummary;
         }
 
-        MidiBidirectionalEndpointOpenOptions options;
+        MidiEndpointConnectionOptions options;
         
-        options.DisableAutomaticStreamConfiguration(true);
-        options.DisableAutomaticEndpointMetadataHandling(true);
-        options.DisableAutomaticFunctionBlockMetadataHandling(true);
-
         // This ID must be consistent with what the service is set up to use.
 
-        auto endpoint = session.ConnectBidirectionalEndpoint(PING_SERVICE_BIDI_ENDPOINT_ID, options);
+        auto endpoint = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_PING_BIDI_ID, options);
 
         if (endpoint == nullptr)
         {

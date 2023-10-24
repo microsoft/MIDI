@@ -21,7 +21,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
     {
         [LocalizedDescription("ParameterSendMessageDelayBetweenMessages")]
         [CommandOption("-p|--pause|--delay")]
-        [DefaultValue(10)]
+        [DefaultValue(0)]
         public int DelayBetweenMessages { get; set; }
 
         [EnumLocalizedDescription("ParameterSendMessageWordFormat", typeof(MidiWordDataFormat))]
@@ -29,15 +29,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         [DefaultValue(MidiWordDataFormat.Hex)]
         public MidiWordDataFormat WordDataFormat { get; set; }
 
-        [LocalizedDescription("TODO ParameterSendMessageAutoNegotiation")]
-        [CommandOption("-n|--auto-negotiation")]
-        [DefaultValue(true)]
-        public bool AutoProtocolNegotiation { get; set; }
+        //[LocalizedDescription("TODO ParameterSendMessageAutoNegotiation")]
+        //[CommandOption("-n|--auto-negotiation")]
+        //[DefaultValue(true)]
+        //public bool AutoProtocolNegotiation { get; set; }
 
-        [LocalizedDescription("TODO ParameterSendMessageAutoDiscovery")]
-        [CommandOption("-y|--auto-discovery")]
-        [DefaultValue(true)]
-        public bool AutoDiscovery { get; set; }
+        //[LocalizedDescription("TODO ParameterSendMessageAutoDiscovery")]
+        //[CommandOption("-y|--auto-discovery")]
+        //[DefaultValue(true)]
+        //public bool AutoDiscovery { get; set; }
 
     }
 
@@ -47,8 +47,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         [CommandOption("-f|--filter")]
         [DefaultValue(ListenerMessageTypeFilter.All)]
         public ListenerMessageTypeFilter Filter { get; set; }
-
-
     }
 
 

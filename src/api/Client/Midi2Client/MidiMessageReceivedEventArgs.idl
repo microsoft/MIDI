@@ -44,7 +44,7 @@ namespace Windows.Devices.Midi2
         // Returns a new UMP. Allocation-wise, this is the most expensive, but it is also the friendliest
         IMidiUniversalPacket GetMessagePacket();
 
-        // Fills 1-4 words. Use the return value or UmpType to see how many words are valid 
+        // Fills 1-4 words. Use the return value or PacketType to see how many words are valid 
         UInt8 FillWords(out UInt32 word0, out UInt32 word1, out UInt32 word2, out UInt32 word3);
 
         // returns the number of valid words written. Use the return value of UmpType to see how many words are valid
@@ -66,5 +66,9 @@ namespace Windows.Devices.Midi2
 
         // Fill a spot in an existing IMemoryBuffer controlled by the caller. Returns the number of bytes written
         UInt8 FillBuffer(Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffset);
+
+
+
+
     }
 }

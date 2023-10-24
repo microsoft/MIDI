@@ -18,14 +18,13 @@ import "MidiMessage128.idl";
 
 // TODO: Verify this has everything in the spec
 
-import "IMidiCacheableMetadata.idl";
 import "MidiFunctionBlockMidi10Enum.idl";
 
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [default_interface]
-    runtimeclass MidiFunctionBlock : IMidiCacheableMetadata
+    runtimeclass MidiFunctionBlock
     {
         MidiFunctionBlock();
 
@@ -40,13 +39,16 @@ namespace Windows.Devices.Midi2
         MidiFunctionBlockMidi10 Midi10Connection{ get; };
 
         UInt8 FirstGroupIndex{ get; };
-        UInt8 NumberOfGroupsSpanned{ get; };
+        UInt8 GroupCount{ get; };
+
+        Boolean IncludesGroup(MidiGroup group);
+
 
         UInt8 MidiCIMessageVersionFormat{ get; };
 
         UInt8 MaxSystemExclusive8Streams{ get; };
 
-        Boolean UpdateFromMessages(Windows.Foundation.Collections.IIterable<MidiMessage128> functionBlockMessages);
+        Boolean UpdateFromJson(Windows.Data.Json.JsonObject json);
 
     }
 }

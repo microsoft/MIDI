@@ -1,8 +1,20 @@
 {
   "profiles": {
-    "Midi": {
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    },
+    "Monitor": {
+      "commandName": "Project",
+      "commandLineArgs": "endpoint monitor"
+    },
+    "Send-Message": {
       "commandName": "Project",
       "commandLineArgs": "endpoint send-message 0x21235678"
+    },
+    "Endpoint Properties": {
+      "commandName": "Project",
+      "commandLineArgs": "endpoint properties --verbose"
     }
   }
 }

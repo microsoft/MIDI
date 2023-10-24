@@ -28,7 +28,8 @@ using namespace Microsoft::WRL::Wrappers;
 _Use_decl_annotations_
 HRESULT
 CMidi2KSMidiEndpointManager::Initialize(
-    IUnknown* midiDeviceManager
+    IUnknown* midiDeviceManager,
+    LPCWSTR /*configurationJson*/
 )
 {
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);
@@ -67,6 +68,9 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
     std::hash<std::wstring> hasher;
     std::wstring hash;
     ULONG cPins{ 0 };
+
+    std::wstring mnemonic(TRANSPORT_MNEMONIC);
+
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
 
     auto properties = device.Properties();
@@ -241,7 +245,9 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         interfaceDevProperties.push_back({ { DEVPKEY_KsMidiPort_SupportsUMPFormat, DEVPROP_STORE_SYSTEM, nullptr },
                 DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(supportsUmp)), (PVOID)&supportsUmp });
         interfaceDevProperties.push_back({ { DEVPKEY_KsMidiPort_SupportsLooped, DEVPROP_STORE_SYSTEM, nullptr },
-                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(supportsCyclic)), (PVOID)&supportsCyclic });
+                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(supportsCyclic)), (PVOID)&supportsCyclic }),
+        interfaceDevProperties.push_back({ {PKEY_MIDI_TransportMnemonic, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_STRING, static_cast<ULONG>((mnemonic.length() + 1) * sizeof(WCHAR)), (PVOID)mnemonic.c_str() });
 
 
         // Bidirectional uses a different property for the in and out pins, since we currently require two separate ones.
@@ -269,6 +275,9 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
         createInfo.pszDeviceDescription = MidiPin->Name.c_str();
 
+        const ULONG deviceInterfaceIdMaxSize = 255;
+        wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
+
         // log telemetry in the event activating the SWD for this pin has failed,
         // but push forward with creation for other pins.
         LOG_IF_FAILED(MidiPin->SwdCreation = m_MidiDeviceManager->ActivateEndpoint(
@@ -279,7 +288,10 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
                                                             (ULONG) deviceDevProperties.size(),
                                                             (PVOID)interfaceDevProperties.data(),
                                                             (PVOID)deviceDevProperties.data(),
-                                                            (PVOID)&createInfo));
+                                                            (PVOID)&createInfo,
+                                                            (LPWSTR)&newDeviceInterfaceId,
+                                                            deviceInterfaceIdMaxSize));
+
     }
 
     // move the newMidiPins to the m_AvailableMidiPins list, which contains a list of

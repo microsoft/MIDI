@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.Devices.Enumeration;
 using Windows.Devices.Midi2;
 
 namespace Microsoft.Devices.Midi2.ConsoleApp
@@ -14,6 +15,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
     internal class AnsiMarkupFormatter
     {
+        public static string EscapeString(string s)
+        {
+            return s.Replace("[", "[[").Replace("]", "]]");
+        }
+
         public static string FormatRowIndex(UInt32 index)
         {
             return "[grey]" + index.ToString() + "[/]";
@@ -26,29 +32,29 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public static string FormatDetailedMessageType(string detailedMessageType)
         {
-            return "[steelblue1_1]" + detailedMessageType + "[/]";
+            return "[steelblue1_1]" + EscapeString(detailedMessageType) + "[/]";
         }
 
 
         public static string FormatAppTitle(string title)
         {
-            return "[deepskyblue1]" + title + "[/]";
+            return "[deepskyblue1]" + EscapeString(title) + "[/]";
         }
 
         public static string FormatAppDescription(string description)
         {
-            return "[deepskyblue2]" + description + "[/]";
+            return "[deepskyblue2]" + EscapeString(description) + "[/]";
         }
 
 
         public static string FormatError(string error)
         {
-            return "[red]" + error + "[/]";
+            return "[red]" + EscapeString(error) + "[/]";
         }
 
         public static string FormatSuccess(string message)
         {
-            return "[green]" + message + "[/]";
+            return "[green]" + EscapeString(message) + "[/]";
         }
 
         public static string FormatTimestamp(UInt64 timestamp)
@@ -58,12 +64,34 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public static string FormatDeviceInstanceId(string id)
         {
-            return "[olive]" + id.Trim() + "[/]";
+            return "[darkolivegreen3]" + EscapeString(id.Trim()) + "[/]";
         }
+
+        public static string FormatDeviceKind(DeviceInformationKind kind)
+        {
+            return "[lightsalmon3]" + EscapeString(kind.ToString()) + "[/]";
+        }
+
+        public static string FormatContainerId(string id)
+        {
+            return "[darkseagreen]" + EscapeString(id.Trim()) + "[/]";
+        }
+
+
+        public static string FormatFullEndpointInterfaceId(string id)
+        {
+            return "[olive]" + EscapeString(id.Trim()) + "[/]";
+        }
+
+        public static string FormatDeviceParentId(string id)
+        {
+            return "[orange3]" + EscapeString(id.Trim()) + "[/]";
+        }
+
 
         public static string FormatEndpointName(string name)
         {
-            return "[steelblue1_1]" + name.Trim() + "[/]";
+            return "[steelblue1_1]" + EscapeString(name.Trim()) + "[/]";
         }
 
         public static string FormatGeneralNumber(UInt64 i)
@@ -74,6 +102,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         public static string FormatGeneralNumber(double d)
         {
             return "[olive]" + d.ToString() + "[/]";
+        }
+
+        public static string FormatTableColumnHeading(string heading)
+        {
+            return "[steelblue1]" + EscapeString(heading) + "[/]";
         }
 
 
@@ -91,6 +124,10 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             return output.Trim();
         }
+
+
+
+
 
 
     }

@@ -42,11 +42,9 @@
 
 // shared
 #include "midi_ump.h"   // general shared
-
+#include "loopback_ids.h"
 
 //#include <wil/resource.h>
-//#include <devpropdef.h> // required by MidiDefs.h
-//#include "MidiDefs.h"   // from the service inc folder
 
 namespace foundation = ::winrt::Windows::Foundation;
 namespace collections = ::winrt::Windows::Foundation::Collections;
@@ -63,6 +61,10 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 
 #include "midi_stream_message_defs.h"
 
+#include <Devpropdef.h>
+#include "MidiDefs.h"
+
+
 #include "MidiMessage32.h"
 #include "MidiMessage64.h"
 #include "MidiMessage96.h"
@@ -70,24 +72,11 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 
 #include "MidiFunctionBlock.h"
 #include "MidiGroupTerminalBlock.h"
-#include "MidiEndpointInformation.h"
 #include "MidiUniqueId.h"
 
-#include "MidiEndpointMetadataCache.h"
-#include "MidiGlobalCache.h"
+#include "MidiEndpointConnection.h"
 
-#include "MidiInputEndpointConnection.h"
-#include "MidiOutputEndpointConnection.h"
-#include "MidiBidirectionalEndpointConnection.h"
-#include "MidiBidirectionalAggregatedEndpointConnection.h"
-
-#include "MidiInputEndpointOpenOptions.h"
-#include "MidiOutputEndpointOpenOptions.h"
-#include "MidiBidirectionalEndpointOpenOptions.h"
-
-#include "MidiEndpointConfigurator.h"
-#include "MidiFunctionBlockEndpointListener.h"
-#include "MidiEndpointMetadataEndpointListener.h"
+#include "MidiEndpointConnectionOptions.h"
 
 #include "MidiMessageReceivedEventArgs.h"
 
@@ -97,4 +86,3 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 #include "MidiServicePingResponseSummary.h"
 #include "MidiTransportInformation.h"
 #include "MidiService.h"
-

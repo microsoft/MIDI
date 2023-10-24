@@ -17,9 +17,8 @@
 
 // qualified with API so as not to intefere with service or SDK tracing
 #define TRACELOGGING_PROVIDER_NAME "Windows.Devices.Midi2.Api"
-
-
-#define TRACE_KEYWORD_API         0x0000000000000001
+#define TRACE_KEYWORD_API_GENERAL           0x0000000000000001
+#define TRACE_KEYWORD_API_DATA_VALIDATION   0x0000000000000002
 
 using namespace std;
 
@@ -28,6 +27,8 @@ namespace Windows::Devices::Midi2::Internal
     TRACELOGGING_DECLARE_PROVIDER(g_hLoggingProvider);
 
     extern GUID g_LoggingProviderActivityId;
+
+ //   extern bool g_traceLoggingRegistered;
 
     void RegisterTraceLogging();
     void UnregisterTraceLogging();
@@ -57,5 +58,6 @@ namespace Windows::Devices::Midi2::Internal
         _In_z_ const wchar_t* message,
         _In_ const uint32_t providedSizeInWords,
         _In_ const uint64_t timestamp) noexcept;
+
 
 }

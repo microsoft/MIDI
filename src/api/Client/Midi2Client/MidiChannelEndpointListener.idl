@@ -18,7 +18,6 @@ import "MidiGroup.idl";
 import "MidiChannel.idl";
 
 import "IMidiEndpointMessageProcessingPlugin.idl";
-import "IMidiEndpointMessageListener.idl";
 import "IMidiMessageReceivedEventSource.idl";
 
 
@@ -27,7 +26,6 @@ namespace Windows.Devices.Midi2
     [MIDI_API_CONTRACT(1)]
     [default_interface]
     runtimeclass MidiChannelEndpointListener : IMidiEndpointMessageProcessingPlugin, 
-                                               IMidiEndpointMessageListener,
                                                IMidiMessageReceivedEventSource
     {
         MidiChannelEndpointListener();

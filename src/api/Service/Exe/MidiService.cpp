@@ -4,11 +4,11 @@
 #define SVCNAME TEXT("MidiSrv")
 #define SVCDISPLAYNAME TEXT("Microsoft MIDI Service")
 
-#ifdef _DEBUG
-#define SVCDESCRIPTION TEXT("Windows MIDI Services core service (Debug Build)")
-#else
-#define SVCDESCRIPTION TEXT("Windows MIDI Services core service for MIDI 2.0 and MIDI 1.0 protocols")
-#endif
+//#ifdef _DEBUG
+//#define SVCDESCRIPTION TEXT("Windows MIDI Services core service (Debug Build)")
+//#else
+//#define SVCDESCRIPTION TEXT("Windows MIDI Services core service for MIDI 2.0 and MIDI 1.0 protocols")
+//#endif
 
 
 #define SVC_ERROR       ((DWORD)0xC0020001L)
@@ -129,18 +129,18 @@ VOID SvcInstall()
         LOG_LAST_ERROR_MSG("Starting the service failed during service install");
         return;
     }
-    // Set the service description so it's not just blank. This should be localized
-    // in the future with "@[path]dllname,-strID"
+    //// Set the service description so it's not just blank. This should be localized
+    //// in the future with "@[path]dllname,-strID"
 
-    SERVICE_DESCRIPTION info;
-    info.lpDescription = SVCDESCRIPTION;
+    //SERVICE_DESCRIPTION info;
+    //info.lpDescription = SVCDESCRIPTION;
 
-    if (!ChangeServiceConfig2(service.get(), SERVICE_CONFIG_DESCRIPTION, &info))
-    {
-        // non-fatal
-        LOG_LAST_ERROR_MSG("Changing service description failed");
-        return;
-    }
+    //if (!ChangeServiceConfig2(service.get(), SERVICE_CONFIG_DESCRIPTION, &info))
+    //{
+    //    // non-fatal
+    //    LOG_LAST_ERROR_MSG("Changing service description failed");
+    //    return;
+    //}
 }
 
 //

@@ -260,8 +260,10 @@
   <ItemGroup>
     <ClCompile Include="MidiClientManager.cpp" />
     <ClCompile Include="MidiClientPipe.cpp" />
+    <ClCompile Include="MidiConfigurationManager.cpp" />
     <ClCompile Include="MidiDeviceManager.cpp" />
     <ClCompile Include="MidiDevicePipe.cpp" />
+    <ClCompile Include="MidiEndpointInProtocolMetadataManager.cpp" />
     <ClCompile Include="MidiPerformanceManager.cpp" />
     <ClCompile Include="MidiProcessManager.cpp" />
     <ClCompile Include="MidiService.cpp" />
@@ -278,6 +280,9 @@
     <ClInclude Include="..\Inc\MidiProcessManager.h" />
     <ClInclude Include="..\Inc\MidiSrv.h" />
     <ClInclude Include="..\Inc\MidiTelemetry.h" />
+    <ClInclude Include="MidiConfigurationManager.h" />
+    <ClInclude Include="MidiEndpointInProtocolMetadataManager.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
@@ -289,6 +294,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="MidiSrv.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="EndpointDevice.ico" />
+    <Image Include="ParentDevice.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
