@@ -218,7 +218,7 @@ Return Value:
         if (!NT_SUCCESS(status))
         {
             TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                "WdfMemoryCreate failed for ring buffer.\n");
+                "WdfMemoryCreate failed for ring buffer %!STATUS!", status);
             return status;
         }
     }
@@ -332,7 +332,7 @@ Return Value:
 
         if (!NT_SUCCESS(status)) {
             TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                "WdfUsbTargetDeviceCreateWithParameters failed 0x%x", status);
+                "WdfUsbTargetDeviceCreateWithParameters failed %!STATUS!", status);
             return status;
         }
     }
@@ -344,7 +344,7 @@ Return Value:
     if (!NT_SUCCESS(status))
     {
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-            "USBMIDI2DriverSelectInterface failed 0x%x", status);
+            "USBMIDI2DriverSelectInterface failed %!STATUS!", status);
         return status;
     }
 
@@ -373,7 +373,7 @@ Return Value:
         if (!NT_SUCCESS(status))
         {
             TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                "USBMIDI2DriverGetGTB failed 0x%x", status);
+                "USBMIDI2DriverGetGTB failed %!STATUS!", status);
             return status;
         }
     }
@@ -482,7 +482,7 @@ EvtDeviceD0Entry(
         if (!NT_SUCCESS(status))
         {
             TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                "%!FUNC! Could not start interrupt pipe failed 0x%x", status);
+                "%!FUNC! Could not start interrupt pipe failed %!STATUS!", status);
         }
     }
     else
@@ -765,7 +765,7 @@ Return Value:
     );
     if (status != STATUS_BUFFER_TOO_SMALL)
     {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Configuration Descriptor Error fetching size.\n");
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Configuration Descriptor Error fetching size. %!STATUS!", status);
         return(status);
     }
 
@@ -781,7 +781,7 @@ Return Value:
     );
     if (!NT_SUCCESS(status))
     {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error allocating memory for configuration descriptor.\n");
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error allocating memory for configuration descriptor. %!STATUS!", status);
         return(status);
     }
 
@@ -793,7 +793,7 @@ Return Value:
     );
     if (!NT_SUCCESS(status))
     {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error loading configuration descriptor.\n");
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error loading configuration descriptor. %!STATUS!", status);
         return(status);
     }
 
@@ -817,7 +817,7 @@ Return Value:
         );
         if (!NT_SUCCESS(status))
         {
-            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Serial Number string size.\n");
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Serial Number string size. %!STATUS!", status);
             return(status);
         }
 
@@ -833,7 +833,7 @@ Return Value:
         );
         if (!NT_SUCCESS(status))
         {
-            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error allocating memory for Serial Number.\n");
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error allocating memory for Serial Number. %!STATUS!", status);
             return(status);
         }
         RtlZeroMemory(pTempBuffer, (size_t)((numChars + 1) * sizeof(WCHAR)));
@@ -848,7 +848,8 @@ Return Value:
         );
         if (!NT_SUCCESS(status))
         {
-            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Serial Number string.\n");
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error allocating memory for Serial Number. %!STATUS!", status);
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Serial Number string." );
             return(status);
         }
     }
@@ -870,7 +871,7 @@ Return Value:
         );
         if (!NT_SUCCESS(status))
         {
-            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Manufacturer string size.\n");
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Manufacturer string size. %!STATUS!", status);
             return(status);
         }
 
@@ -886,7 +887,7 @@ Return Value:
         );
         if (!NT_SUCCESS(status))
         {
-            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error allocating memory for Manufacturer.\n");
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error allocating memory for Manufacturer. %!STATUS!", status);
             return(status);
         }
         RtlZeroMemory(pTempBuffer, (size_t)((numChars + 1) * sizeof(WCHAR)));
@@ -901,7 +902,7 @@ Return Value:
         );
         if (!NT_SUCCESS(status))
         {
-            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Manufacturer string.\n");
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Manufacturer string %!STATUS!", status);
             return(status);
         }
     }
@@ -923,7 +924,7 @@ Return Value:
         );
         if (!NT_SUCCESS(status))
         {
-            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Product Name string size.\n");
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Product Name string size.%!STATUS!", status);
             return(status);
         }
 
@@ -939,7 +940,7 @@ Return Value:
         );
         if (!NT_SUCCESS(status))
         {
-            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error allocating memory for Product Name.\n");
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error allocating memory for Product Name. %!STATUS!", status);
             return(status);
         }
         RtlZeroMemory(pTempBuffer, (size_t)((numChars + 1) * sizeof(WCHAR)));
@@ -954,7 +955,7 @@ Return Value:
         );
         if (!NT_SUCCESS(status))
         {
-            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Product Name string.\n");
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Product Name string. %!STATUS!", status);
             return(status);
         }
     }
@@ -970,7 +971,15 @@ Return Value:
         &pDeviceContext->DeviceNameMemory);
     if (!NT_SUCCESS(status))
     {
-        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE, "Could not obtain Friendly Name String\n");
+        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE, "Could not obtain Friendly Name String. Status: 0x%x", status);
+    }
+    else
+    {
+        // As we could not get FriendlyName means we should assign a device name for unique descriptor
+        //if (pDeviceContext->DeviceProductNameMemory)
+        //{
+
+        //}
     }
 
     //
@@ -1309,7 +1318,7 @@ Return Value:
     );
     if (!NT_SUCCESS(status))
     {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error allocating temporary memory for GTB. Status: 0x%x", status);
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error allocating temporary memory for GTB. %!STATUS!", status);
         return(status);
     }
 
@@ -1326,7 +1335,7 @@ Return Value:
     );
     if (!NT_SUCCESS(status))
     {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting GTB Header. Status: 0x%x", status);
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting GTB Header. %!STATUS!", status);
         goto GetGTBExit;
     }
 
@@ -2218,7 +2227,7 @@ Return Value:Amy
                     if (!NT_SUCCESS(status))
                     {
                         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                            "%!FUNC! Error creating request for USB Write with status: 0x%x", status);
+                            "%!FUNC! Error creating request for USB Write with status: %!STATUS!", status);
                         goto DriverIoWriteExit;
                     }
 
@@ -2237,7 +2246,7 @@ Return Value:Amy
                     if (!NT_SUCCESS(status))
                     {
                         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                            "%!FUNC! could not create WdfMemory with status: 0x%x.\n", status);
+                            "%!FUNC! could not create WdfMemory with status: %!STATUS!", status);
                         goto DriverIoWriteExit;
                     }
                     pWriteBuffer = (PUCHAR)WdfMemoryGetBuffer(writeMemory, NULL);
@@ -2323,7 +2332,7 @@ Return Value:Amy
             if (!NT_SUCCESS(status))
             {
                 TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                    "%!FUNC! Error creating request for USB Write with status: 0x%x", status);
+                    "%!FUNC! Error creating request for USB Write with status: %!STATUS!", status);
                 goto DriverIoWriteExit;
             }
 
@@ -2342,7 +2351,7 @@ Return Value:Amy
             if (!NT_SUCCESS(status))
             {
                 TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                    "%!FUNC! could not create WdfMemory with status: 0x%x.\n", status);
+                    "%!FUNC! could not create WdfMemory with status: %!STATUS!", status);
                 goto DriverIoWriteExit;
             }
 
@@ -2404,7 +2413,7 @@ BOOLEAN USBMIDI2DriverSendToUSB(
         &offset); // Offset
     if (!NT_SUCCESS(status)) {
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-            "WdfUsbTargetPipeFormatRequestForWrite failed 0x%x\n", status);
+            "WdfUsbTargetPipeFormatRequestForWrite failed %!STATUS!", status);
         goto SendToUSBExit;
     }
 
@@ -2431,7 +2440,7 @@ SendToUSBExit:
 
     if (!NT_SUCCESS(status)) {
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-            "%!FUNC! write to USB error with status: 0x%x\n", status);
+            "%!FUNC! write to USB error with status: %!STATUS!", status);
         if (!deleteRequest)
         {
             WdfRequestCompleteWithInformation(usbRequest, status, 0);
