@@ -1292,14 +1292,16 @@ Return Value:
         DEFAULT_CONTROL_TRANSFER_TIMEOUT
     );
 
+    USHORT interfaceNumber = (USHORT)WdfUsbInterfaceGetInterfaceNumber(devCtx->UsbMIDIStreamingInterface);
+
     // Create setup packet
     WDF_USB_CONTROL_SETUP_PACKET_INIT_VENDOR(
         &controlSetup,
         BmRequestDeviceToHost,
-        BmRequestToDevice,
+        BmRequestToInterface,
         USB_REQUEST_GET_DESCRIPTOR,
-        0x2601,                             // Need to remove magic number
-        0
+        (USHORT)0x2601,                             // Need to remove magic number
+        interfaceNumber
     );
 
     // Create temporary memory to fetch GTB information into
