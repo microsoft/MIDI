@@ -1280,9 +1280,31 @@ Return Value:
     WDF_OBJECT_ATTRIBUTES gtbMemoryAttributes;
     WDF_REQUEST_SEND_OPTIONS sendOptions;
     ULONG bytesTransferred;
+    WDFREQUEST gtbRequest;
+    WDF_MEMORY_DESCRIPTOR gtbMemDescriptor;
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
+    // WDF Request
+    gtbMemoryAttributes.ParentObject = WdfUsbTargetDeviceGetIoTarget(devCtx->UsbDevice);
+    status = WdfRequestCreate(
+        &gtbMemoryAttributes,
+        (WDFIOTARGET)gtbMemoryAttributes.ParentObject,
+        &gtbRequest
+    );
+    if (!NT_SUCCESS(status))
+    {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error allocating REQUEST memory for GTB. %!STATUS!", status);
+        return(status);
+    }
+
+    // Input memory for request
+    WdfRequestRetrieveOutputMemory(
+        gtbRequest,
+        &gtbMemory
+    );
+
+    // Send Options
     WDF_REQUEST_SEND_OPTIONS_INIT(
         &sendOptions,
         WDF_REQUEST_SEND_OPTION_TIMEOUT
@@ -1304,27 +1326,6 @@ Return Value:
         interfaceNumber
     );
 
-    // Create temporary memory to fetch GTB information into
-    // Inital guess on memory needed
-    size_t grpTrmBlkMaxSize = sizeof(midi2_desc_group_terminal_block_header_t)
-        + sizeof(midi2_desc_group_terminal_block_t) * 16;
-    WDF_OBJECT_ATTRIBUTES_INIT(&gtbMemoryAttributes);
-    gtbMemoryAttributes.ParentObject = devCtx->UsbDevice;
-    status = WdfMemoryCreate(
-        &gtbMemoryAttributes,
-        NonPagedPoolNx,
-        USBMIDI_POOLTAG,
-        grpTrmBlkMaxSize,
-        &gtbMemory,
-        (PVOID*)pGtbHeader
-    );
-    if (!NT_SUCCESS(status))
-    {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error allocating temporary memory for GTB. %!STATUS!", status);
-        return(status);
-    }
-
-    WDF_MEMORY_DESCRIPTOR gtbMemDescriptor;
     WDF_MEMORY_DESCRIPTOR_INIT_HANDLE(&gtbMemDescriptor, gtbMemory, NULL);
 
     status = WdfUsbTargetDeviceSendControlTransferSynchronously(
@@ -1342,7 +1343,6 @@ Return Value:
     }
 
 GetGTBExit:
-    WdfObjectDelete(gtbMemory);
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
