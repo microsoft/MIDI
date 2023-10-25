@@ -27,6 +27,8 @@ CMidi2DiagnosticsEndpointManager::Initialize(
 
 )
 {
+    //OutputDebugString(L"" __FUNCTION__ " Enter");
+
     TraceLoggingWrite(
         MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,

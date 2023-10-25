@@ -13,7 +13,7 @@ class CMidi2NetworkMidiAbstractionModule : public ATL::CAtlDllModuleT< CMidi2Net
 {
 public :
     DECLARE_LIBID(LIBID_Midi2NetworkMidiAbstractionLib)
-    DECLARE_REGISTRY_APPID_RESOURCEID(IDR_MIDI2NETWORKMIDIABSTRACTION, "{c95dcd1f-cde3-4c2d-913c-528cb8a4cbe6}")
+    DECLARE_REGISTRY_APPID_RESOURCEID(IDR_MIDI2NETWORKMIDIABSTRACTION, "{4568a471-6f32-4015-b4db-9087bfb60a0b}")
 };
 
 extern class CMidi2NetworkMidiAbstractionModule _AtlModule;

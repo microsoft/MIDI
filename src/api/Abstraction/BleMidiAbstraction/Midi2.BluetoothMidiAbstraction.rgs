@@ -2,7 +2,7 @@ HKCR
 {
 	NoRemove CLSID
 	{
-		ForceRemove {8feaad91-70e1-4a19-997a-377720a719c1} = s 'Midi2BluetoothMidiAbstraction Class'
+		ForceRemove {ABD5E0B9-C38C-48B7-AA56-19D9E26BAF1B} = s 'Midi2BluetoothMidiAbstraction Class'
 		{
 			InprocServer32 = s '%MODULE%'
 			{

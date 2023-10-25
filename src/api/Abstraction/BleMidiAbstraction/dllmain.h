@@ -13,7 +13,7 @@ class CMidi2BluetoothMidiAbstractionModule : public ATL::CAtlDllModuleT< CMidi2B
 {
 public :
     DECLARE_LIBID(LIBID_Midi2BluetoothMidiAbstractionLib)
-    DECLARE_REGISTRY_APPID_RESOURCEID(IDR_MIDI2BLUETOOTHMIDIABSTRACTION, "{8feaad91-70e1-4a19-997a-377720a719c1}")
+    DECLARE_REGISTRY_APPID_RESOURCEID(IDR_MIDI2BLUETOOTHMIDIABSTRACTION, "{C6DFEA54-CB7E-43A0-9CC8-D224D839DB1B}")
 };
 
 extern class CMidi2BluetoothMidiAbstractionModule _AtlModule;

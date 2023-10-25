@@ -46,13 +46,13 @@
                    Bitness="always64"
                    Directory="SERVICE_INSTALLFOLDER"
                    Guid="{6a2300f5-ccae-4f61-b849-d41aefb8a999}"  >
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.KSAbstraction.dll"               SelfRegCost="1" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.MidiSrvAbstraction.dll"          SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.NetworkMidiAbstraction.dll"      SelfRegCost="1"/>
             <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.DiagnosticsAbstraction.dll"      SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.VirtualMidiAbstraction.dll"      SelfRegCost="1" Vital="true"/>
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.BluetoothMidiAbstraction.dll"      SelfRegCost="1" Vital="true"/>
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.VirtualPatchBayAbstraction.dll"      SelfRegCost="1" Vital="true"/>
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.KSAbstraction.dll"               SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.BluetoothMidiAbstraction.dll"    SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.NetworkMidiAbstraction.dll"      SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.VirtualMidiAbstraction.dll"      SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.VirtualPatchBayAbstraction.dll"  SelfRegCost="1" Vital="true" />
         </Component>
 
         <Component Id="WindowsService"
@@ -77,7 +77,17 @@
                             Remove="uninstall" 
                             Name="MidiSrv" 
                             Wait="yes" />
+        </Component>     
+        
 
+        <Component Id="ConfigurationRegistryEntries"
+                   Bitness="always64"
+                   Directory="SERVICE_INSTALLFOLDER"
+                   Guid="25E35CBB-4C66-4BEB-9B03-BC2E2D99317B"
+                   NeverOverwrite="true">
+                   
+            <!-- Permanent is set to "yes" because this installer is for dev builds -->
+            
             <RegistryKey Root="HKLM"
                          Key="SOFTWARE\Microsoft\Windows MIDI Services">
 
@@ -96,7 +106,7 @@
                     
                     <RegistryKey Key="Midi2NetworkMidiAbstraction">
                         <RegistryValue Type="string" Name="CLSID" Value="{C95DCD1F-CDE3-4C2D-913C-528CB8A4CBE6}" />
-                        <RegistryValue Type="integer" Name="Enabled" Value="0" />
+                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
                     </RegistryKey>
                     
                     <RegistryKey Key="Midi2VirtualMidiAbstraction">
@@ -106,26 +116,22 @@
 
                     <RegistryKey Key="Midi2VirtualPatchBayAbstraction">
                         <RegistryValue Type="string" Name="CLSID" Value="{B7C8E2D2-EE3B-4044-B9CF-6F29528AB46D}" />
-                        <RegistryValue Type="integer" Name="Enabled" Value="0" />
+                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
                     </RegistryKey>
 
                     <RegistryKey Key="Midi2BluetoothMidiAbstraction">
                         <RegistryValue Type="string" Name="CLSID" Value="{ABD5E0B9-C38C-48B7-AA56-19D9E26BAF1B}" />
-                        <RegistryValue Type="integer" Name="Enabled" Value="0" />
+                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
                     </RegistryKey>
-                    
-                
                 </RegistryKey>
-                
             </RegistryKey>
-            
-        </Component>     
+        </Component>
         
         <Component Id="ConfigurationFile"
                    Bitness="always64"
                    Directory="CONFIGURATION_FOLDER"
                    Guid="{3700BE95-FBC9-4876-B497-C328084FE7B4}"
-                   NeverOverwrite="true"
+                   NeverOverwrite="true" 
                    >
             <File Source="$(StagingSourceRootFolder)\configuration\Default.midiconfig.json" />
         </Component>
@@ -320,6 +326,7 @@
 
             <ComponentRef Id="Permission.SharedAppDataFolder"/>
             <ComponentRef Id="ConfigurationFile"/>
+            <ComponentRef Id="ConfigurationRegistryEntries"/>
 
             <ComponentRef Id="ConsoleAppExe"/>
 
