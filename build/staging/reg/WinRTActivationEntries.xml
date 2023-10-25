@@ -79,6 +79,26 @@
              trustLevel="Base"
              />
           <class
+             activatableClassId="Windows.Devices.Midi2.MidiMessageConverter"
+             threading="Both"
+             trustLevel="Base"
+             />
+          <class
+             activatableClassId="Windows.Devices.Midi2.IMidiMessageConverterStatics"
+             threading="Both"
+             trustLevel="Base"
+             />
+          <class
+             activatableClassId="Windows.Devices.Midi2.MidiMessageTranslator"
+             threading="Both"
+             trustLevel="Base"
+             />
+          <class
+             activatableClassId="Windows.Devices.Midi2.IMidiMessageTranslatorStatics"
+             threading="Both"
+             trustLevel="Base"
+             />
+          <class
              activatableClassId="Windows.Devices.Midi2.MidiMessageUtility"
              threading="Both"
              trustLevel="Base"

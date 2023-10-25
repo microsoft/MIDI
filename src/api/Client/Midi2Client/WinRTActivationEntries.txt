@@ -32,8 +32,15 @@ Windows.Devices.Midi2.IMidiMessageBuilderStatics | 0 | 0 | 0
 Windows.Devices.Midi2.MidiStreamMessageBuilder | 0 | 0 | 0
 Windows.Devices.Midi2.IMidiStreamMessageBuilderStatics | 0 | 0 | 0
 
+Windows.Devices.Midi2.MidiMessageConverter | 0 | 0 | 0
+Windows.Devices.Midi2.IMidiMessageConverterStatics | 0 | 0 | 0
+
+Windows.Devices.Midi2.MidiMessageTranslator | 0 | 0 | 0
+Windows.Devices.Midi2.IMidiMessageTranslatorStatics | 0 | 0 | 0
+
 Windows.Devices.Midi2.MidiMessageUtility | 0 | 0 | 0
 Windows.Devices.Midi2.IMidiMessageUtilityStatics | 0 | 0 | 0
+
 
 # Metadata
 

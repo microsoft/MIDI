@@ -414,7 +414,7 @@ HRESULT CMidiConfigurationManager::Initialize()
 _Use_decl_annotations_
 std::wstring CMidiConfigurationManager::GetConfigurationForTransportAbstraction(GUID abstractionGuid) const noexcept
 {
-//    OutputDebugString(L"" __FUNCTION__);
+    OutputDebugString(L"" __FUNCTION__);
 
     auto key = GuidToString(abstractionGuid);
 
@@ -433,7 +433,7 @@ std::wstring CMidiConfigurationManager::GetConfigurationForTransportAbstraction(
 
                 std::wstring jsonString = (std::wstring)thisPlugin.Stringify();
 
-                OutputDebugString(jsonString.c_str());
+                //OutputDebugString(jsonString.c_str());
 
                 return jsonString;
             }

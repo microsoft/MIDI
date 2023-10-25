@@ -243,6 +243,8 @@
     <ClInclude Include="MidiMessageBuilder.h">
       <DependentUpon>MidiMessageBuilder.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiMessageConverter.h" />
+    <ClInclude Include="MidiMessageTranslator.h" />
     <ClInclude Include="MidiProfile.h">
       <DependentUpon>MidiProfile.idl</DependentUpon>
     </ClInclude>
@@ -350,6 +352,8 @@
     <ClCompile Include="MidiMessageBuilder.cpp">
       <DependentUpon>MidiMessageBuilder.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiMessageConverter.cpp" />
+    <ClCompile Include="MidiMessageTranslator.cpp" />
     <ClCompile Include="MidiProfile.cpp">
       <DependentUpon>MidiProfile.idl</DependentUpon>
     </ClCompile>
@@ -463,10 +467,12 @@
     <Midl Include="MidiGroupEndpointListener.idl" />
     <Midl Include="MidiGroupTerminalBlock.idl" />
     <Midl Include="MidiGroupTerminalBlockProtocolEnum.idl" />
+    <Midl Include="MidiMessageConverter.idl" />
     <Midl Include="MidiMessageStruct.idl" />
     <Midl Include="MidiMessageBuilder.idl" />
     <Midl Include="MidiMessageReceivedEventArgs.idl" />
     <Midl Include="IMidiEndpointDefinedConnectionSettings.idl" />
+    <Midl Include="MidiMessageTranslator.idl" />
     <Midl Include="MidiMessageTypeEndpointListener.idl" />
     <Midl Include="MidiProfile.idl" />
     <Midl Include="MidiProperty.idl" />

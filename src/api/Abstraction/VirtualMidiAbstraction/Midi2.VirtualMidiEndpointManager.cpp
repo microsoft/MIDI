@@ -22,10 +22,10 @@ _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiEndpointManager::Initialize(
     IUnknown* midiDeviceManager, 
-    LPCWSTR configurationJson
+    LPCWSTR /*configurationJson*/
 )
 {
-//    OutputDebugString(L"" __FUNCTION__ " Enter");
+    OutputDebugString(L"" __FUNCTION__ " Enter");
 
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
@@ -43,36 +43,36 @@ CMidi2VirtualMidiEndpointManager::Initialize(
 
     RETURN_IF_FAILED(CreateParentDevice());
 
-    if (configurationJson != nullptr)
-    {
-        try
-        {
-            std::wstring json{ configurationJson };
+    //if (configurationJson != nullptr)
+    //{
+    //    try
+    //    {
+    //        std::wstring json{ configurationJson };
 
-            if (!json.empty())
-            {
-                m_jsonObject = json::JsonObject::Parse(json);
+    //        if (!json.empty())
+    //        {
+    //            m_jsonObject = json::JsonObject::Parse(json);
 
-                LOG_IF_FAILED(CreateConfiguredEndpoints(json));
-            }
-        }
-        catch (...)
-        {
-            OutputDebugString(L"Exception processing json for virtual MIDI abstraction");
+    //            LOG_IF_FAILED(CreateConfiguredEndpoints(json));
+    //        }
+    //    }
+    //    catch (...)
+    //    {
+    //        OutputDebugString(L"Exception processing json for virtual MIDI abstraction");
 
-            // we return S_OK here because otherwise this prevents the service from starting up.
-            return S_OK;
-        }
+    //        // we return S_OK here because otherwise this prevents the service from starting up.
+    //        return S_OK;
+    //    }
 
-    }
-    else
-    {
-        // empty / null is fine. We just continue on.
+    //}
+    //else
+    //{
+    //    // empty / null is fine. We just continue on.
 
-        OutputDebugString(L"Configuration json is null for virtual MIDI abstraction");
+    //    OutputDebugString(L"Configuration json is null for virtual MIDI abstraction");
 
-        return S_OK;
-    }
+    //    return S_OK;
+    //}
 
     return S_OK;
 }
