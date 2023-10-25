@@ -68,8 +68,8 @@ namespace json = ::winrt::Windows::Data::Json;
 
 #include "abstraction_defs.h"
 
-#include "Midi2VirtualMidiAbstraction_i.c"
-#include "Midi2VirtualMidiAbstraction.h"
+#include "Midi2VirtualPatchBayAbstraction_i.c"
+#include "Midi2VirtualPatchBayAbstraction.h"
 
 #include "mididevicemanagerinterface_i.c"
 #include "mididevicemanagerinterface.h"
@@ -83,7 +83,7 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "MidiRoute.h"
 #include "MidiEndpointTable.h"
 
-#include "Midi2.VirtualMidiAbstraction.h"
-#include "Midi2.VirtualMidiBiDi.h"
-#include "Midi2.VirtualMidiEndpointManager.h"
+#include "Midi2.VirtualPatchBayAbstraction.h"
+#include "Midi2.VirtualPatchBayBiDi.h"
+#include "Midi2.VirtualPatchBayEndpointManager.h"
 

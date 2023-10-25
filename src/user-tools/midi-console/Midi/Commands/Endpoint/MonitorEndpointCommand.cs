@@ -103,6 +103,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                 connection.MessageReceived += (s, e) =>
                 {
+                    // helps prevent any race conditions with main loop and its output
+                    if (!continueWaiting) return;
+
                     if (startTimestamp == 0)
                     {
                         // gets timestamp of first message we receive and uses that so all others are an offset
@@ -150,8 +153,10 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                             if (keyInfo.Key == ConsoleKey.Escape)
                             {
-                                AnsiConsole.MarkupLine(Strings.MonitorEscapedPressedMessage);
                                 continueWaiting = false;
+
+                                // leading space is because the "E" in "Escape" is often lost in the output for some reason.
+                                AnsiConsole.MarkupLine(" " + Strings.MonitorEscapedPressedMessage);
                                 break;
                             }
                         }

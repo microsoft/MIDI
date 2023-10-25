@@ -7,14 +7,13 @@
 // ============================================================================
 
 
-#define IDS_PROJNAME                    100
-#define IDR_MIDI2VIRTUALMIDIABSTRACTION          101
+#pragma once
 
-#ifdef APSTUDIO_INVOKED
-#ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        201
-#define _APS_NEXT_COMMAND_VALUE         32768
-#define _APS_NEXT_CONTROL_VALUE         201
-#define _APS_NEXT_SYMED_VALUE           106
-#endif
-#endif
+class CMidi2VirtualPatchBayAbstractionModule : public ATL::CAtlDllModuleT< CMidi2VirtualPatchBayAbstractionModule >
+{
+public :
+    DECLARE_LIBID(LIBID_Midi2VirtualPatchBayAbstractionLib)
+    DECLARE_REGISTRY_APPID_RESOURCEID(IDR_MIDI2VIRTUALPATCHBAYABSTRACTION, "{77D3C311-3A2A-4785-8CE9-D14DA987DED3}")
+};
+
+extern class CMidi2VirtualPatchBayAbstractionModule _AtlModule;

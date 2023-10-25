@@ -25,7 +25,7 @@
         
         <StandardDirectory Id="CommonAppDataFolder">
             <Directory Name="Microsoft">
-                <Directory Name="MIDI">
+                <Directory Id="CONFIGURATION_FOLDER" Name="MIDI">
                     <Component Id="Permission.SharedAppDataFolder" Guid="{CFF49B6C-54CA-47F9-A1EF-62CD7C542D78}">
                         <CreateFolder>
                             <Permission GenericAll="yes" User="Everyone"/>
@@ -50,7 +50,9 @@
             <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.MidiSrvAbstraction.dll"          SelfRegCost="1" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.NetworkMidiAbstraction.dll"      SelfRegCost="1"/>
             <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.DiagnosticsAbstraction.dll"      SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.VirtualMidiAbstraction.dll"      SelfRegCost="1"/>
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.VirtualMidiAbstraction.dll"      SelfRegCost="1" Vital="true"/>
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.BluetoothMidiAbstraction.dll"      SelfRegCost="1" Vital="true"/>
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.VirtualPatchBayAbstraction.dll"      SelfRegCost="1" Vital="true"/>
         </Component>
 
         <Component Id="WindowsService"
@@ -102,12 +104,32 @@
                         <RegistryValue Type="integer" Name="Enabled" Value="1" />
                     </RegistryKey>
 
+                    <RegistryKey Key="Midi2VirtualPatchBayAbstraction">
+                        <RegistryValue Type="string" Name="CLSID" Value="{B7C8E2D2-EE3B-4044-B9CF-6F29528AB46D}" />
+                        <RegistryValue Type="integer" Name="Enabled" Value="0" />
+                    </RegistryKey>
+
+                    <RegistryKey Key="Midi2BluetoothMidiAbstraction">
+                        <RegistryValue Type="string" Name="CLSID" Value="{ABD5E0B9-C38C-48B7-AA56-19D9E26BAF1B}" />
+                        <RegistryValue Type="integer" Name="Enabled" Value="0" />
+                    </RegistryKey>
+                    
+                
                 </RegistryKey>
                 
             </RegistryKey>
             
         </Component>     
         
+        <Component Id="ConfigurationFile"
+                   Bitness="always64"
+                   Directory="CONFIGURATION_FOLDER"
+                   Guid="{3700BE95-FBC9-4876-B497-C328084FE7B4}"
+                   NeverOverwrite="true"
+                   >
+            <File Source="$(StagingSourceRootFolder)\configuration\Default.midiconfig.json" />
+        </Component>
+
         <!-- Install API -->
 
         <Component Id="WindowsAPI"
@@ -125,8 +147,8 @@
                    Directory="API_INSTALLFOLDER"
                    Guid="fa0230b9-824a-4c5f-b4e4-396433baa962"
                    >
-          
         </Component>
+        
 
         <!-- Install Console App -->
 
@@ -297,6 +319,7 @@
             <ComponentRef Id="WindowsAPIRegistration"/>
 
             <ComponentRef Id="Permission.SharedAppDataFolder"/>
+            <ComponentRef Id="ConfigurationFile"/>
 
             <ComponentRef Id="ConsoleAppExe"/>
 
