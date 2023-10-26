@@ -93,6 +93,8 @@ private:
         _In_ std::wstring const description
     );
 
+    HRESULT EnumCompatibleBluetoothDevices();
+
     HRESULT CreateConfiguredEndpoints(_In_ std::wstring configurationJson);
     HRESULT CreateParentDevice();
 

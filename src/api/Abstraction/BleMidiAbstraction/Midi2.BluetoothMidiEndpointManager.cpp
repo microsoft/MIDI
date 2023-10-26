@@ -192,131 +192,123 @@ CMidi2BluetoothMidiEndpointManager::CreateParentDevice()
 
 #define MIDI_VIRTUAL_ENDPOINTS_ARRAY_KEY L"endpoints"
 
-#define MIDI_VIRTUAL_ENDPOINT_PROPERTY_KEY L"key"
 #define MIDI_VIRTUAL_ENDPOINT_PROPERTY_NAME L"name"
-#define MIDI_VIRTUAL_ENDPOINT_PROPERTY_UNIQUEID L"uniqueIdentifier"
-#define MIDI_VIRTUAL_ENDPOINT_PROPERTY_MULTICLIENT L"supportsMulticlient"
 #define MIDI_VIRTUAL_ENDPOINT_PROPERTY_DESCRIPTION L"description"
 #define MIDI_VIRTUAL_ENDPOINT_PROPERTY_SMALLIMAGE L"smallImagePath"
 #define MIDI_VIRTUAL_ENDPOINT_PROPERTY_LARGEIMAGE L"largeImagePath"
 
-
-
-
-#define MIDI_JSON_ADD_NODE L"add"
 #define MIDI_JSON_UPDATE_NODE L"update"
-#define MIDI_JSON_REMOVE_NODE L"remove"
 
 
-json::JsonObject GetAddNode(json::JsonObject parent)
-{
-    if (parent.HasKey(MIDI_JSON_ADD_NODE))
-    {
-        return parent.GetNamedObject(MIDI_JSON_ADD_NODE);
-    }
-    else
-    {
-        return nullptr;
-    }
-}
-
-winrt::hstring GetStringValue(json::JsonObject parent, winrt::hstring key, winrt::hstring default)
-{
-    if (parent.HasKey(key))
-    {
-        return parent.GetNamedString(key);
-    }
-    else
-    {
-        return default;
-    }
-}
+//json::JsonObject GetAddNode(json::JsonObject parent)
+//{
+//    if (parent.HasKey(MIDI_JSON_ADD_NODE))
+//    {
+//        return parent.GetNamedObject(MIDI_JSON_ADD_NODE);
+//    }
+//    else
+//    {
+//        return nullptr;
+//    }
+//}
+//
+//winrt::hstring GetStringValue(json::JsonObject parent, winrt::hstring key, winrt::hstring default)
+//{
+//    if (parent.HasKey(key))
+//    {
+//        return parent.GetNamedString(key);
+//    }
+//    else
+//    {
+//        return default;
+//    }
+//}
 
 _Use_decl_annotations_
 HRESULT
 CMidi2BluetoothMidiEndpointManager::CreateConfiguredEndpoints(std::wstring configurationJson)
 {
-    // if nothing to configure, that's ok
-    if (configurationJson.empty()) return S_OK;
+    //// if nothing to configure, that's ok
+    //if (configurationJson.empty()) return S_OK;
 
-    try
-    {
-        auto jsonObject = json::JsonObject::Parse(configurationJson);
-
-
-        // check to see if we have an "add" node. No point in checking for "update" or "remove" for initial configuration
-        auto addNode = GetAddNode(jsonObject);
-
-        if (addNode != nullptr && addNode.HasKey(MIDI_VIRTUAL_ENDPOINTS_ARRAY_KEY))
-        {
-            auto endpoints = addNode.GetNamedArray(MIDI_VIRTUAL_ENDPOINTS_ARRAY_KEY);
-
-            for (auto endpointElement : endpoints)
-            {
-                // GetObjectW here is because wingdi redefines it to GetObject. It's a stupid preprocessor conflict
-                try
-                {
-                    auto endpoint = endpointElement.GetObjectW();
-
-                    //  auto key = endpoint.GetNamedString(MIDI_VIRTUAL_ENDPOINT_PROPERTY_KEY, L"");
-                    auto name = endpoint.GetNamedString(MIDI_VIRTUAL_ENDPOINT_PROPERTY_NAME, L"");
-                    auto uniqueIdentifier = endpoint.GetNamedString(MIDI_VIRTUAL_ENDPOINT_PROPERTY_UNIQUEID, L"");
-                    //   auto supportsMultiClient = endpoint.GetNamedBoolean(MIDI_VIRTUAL_ENDPOINT_PROPERTY_MULTICLIENT, true);
-
-                    auto instanceId = TRANSPORT_MNEMONIC L"_" + uniqueIdentifier;
-
-                    auto description = GetStringValue(endpoint, MIDI_VIRTUAL_ENDPOINT_PROPERTY_DESCRIPTION, L"");
-                    auto smallImage = GetStringValue(endpoint, MIDI_VIRTUAL_ENDPOINT_PROPERTY_SMALLIMAGE, L"");
-                    auto largeImage = GetStringValue(endpoint, MIDI_VIRTUAL_ENDPOINT_PROPERTY_LARGEIMAGE, L"");
-
-                    bool multiclient = true; // TODO
-                    bool virtualResponder = false; // TODO
+    //try
+    //{
+    //    auto jsonObject = json::JsonObject::Parse(configurationJson);
 
 
-                    // TODO: Need to add this to the table for routing, and also add the other properties to the function
-                    CreateEndpoint(
-                        (std::wstring)instanceId,
-                        (std::wstring)uniqueIdentifier,
-                        multiclient,
-                        virtualResponder,
-                        (std::wstring)name,
-                        (std::wstring)largeImage,
-                        (std::wstring)smallImage,
-                        (std::wstring)description
-                    );
-                }
-                catch (...)
-                {
-                    // couldn't get an object. Garbage data
-                    OutputDebugString(L"" __FUNCTION__ " Exception getting endpoint properties from json");
+    //    // check to see if we have an "add" node. No point in checking for "update" or "remove" for initial configuration
+    //    auto addNode = GetAddNode(jsonObject);
 
-                    return E_FAIL;
-                }
-            }
-        }
-        else
-        {
-            // nothing to add
-        }
+    //    if (addNode != nullptr && addNode.HasKey(MIDI_VIRTUAL_ENDPOINTS_ARRAY_KEY))
+    //    {
+    //        auto endpoints = addNode.GetNamedArray(MIDI_VIRTUAL_ENDPOINTS_ARRAY_KEY);
+
+    //        for (auto endpointElement : endpoints)
+    //        {
+    //            // GetObjectW here is because wingdi redefines it to GetObject. It's a stupid preprocessor conflict
+    //            try
+    //            {
+    //                auto endpoint = endpointElement.GetObjectW();
+
+    //                //  auto key = endpoint.GetNamedString(MIDI_VIRTUAL_ENDPOINT_PROPERTY_KEY, L"");
+    //                auto name = endpoint.GetNamedString(MIDI_VIRTUAL_ENDPOINT_PROPERTY_NAME, L"");
+    //                auto uniqueIdentifier = endpoint.GetNamedString(MIDI_VIRTUAL_ENDPOINT_PROPERTY_UNIQUEID, L"");
+    //                //   auto supportsMultiClient = endpoint.GetNamedBoolean(MIDI_VIRTUAL_ENDPOINT_PROPERTY_MULTICLIENT, true);
+
+    //                auto instanceId = TRANSPORT_MNEMONIC L"_" + uniqueIdentifier;
+
+    //                auto description = GetStringValue(endpoint, MIDI_VIRTUAL_ENDPOINT_PROPERTY_DESCRIPTION, L"");
+    //                auto smallImage = GetStringValue(endpoint, MIDI_VIRTUAL_ENDPOINT_PROPERTY_SMALLIMAGE, L"");
+    //                auto largeImage = GetStringValue(endpoint, MIDI_VIRTUAL_ENDPOINT_PROPERTY_LARGEIMAGE, L"");
+
+    //                bool multiclient = true; // TODO
+    //                bool virtualResponder = false; // TODO
 
 
-    }
-    catch (...)
-    {
-        // exception parsing the json. It's likely empty or malformed
+    //                // TODO: Need to add this to the table for routing, and also add the other properties to the function
+    //                CreateEndpoint(
+    //                    (std::wstring)instanceId,
+    //                    (std::wstring)uniqueIdentifier,
+    //                    multiclient,
+    //                    virtualResponder,
+    //                    (std::wstring)name,
+    //                    (std::wstring)largeImage,
+    //                    (std::wstring)smallImage,
+    //                    (std::wstring)description
+    //                );
+    //            }
+    //            catch (...)
+    //            {
+    //                // couldn't get an object. Garbage data
+    //                OutputDebugString(L"" __FUNCTION__ " Exception getting endpoint properties from json");
 
-        OutputDebugString(L"" __FUNCTION__ " Exception parsing JSON. Json string follows.");
-        OutputDebugString(configurationJson.c_str());
+    //                return E_FAIL;
+    //            }
+    //        }
+    //    }
+    //    else
+    //    {
+    //        // nothing to add
+    //    }
 
-        TraceLoggingWrite(
-            MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
-            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            TraceLoggingPointer(this, "this")
-        );
 
-        return E_FAIL;
-    }
+    //}
+    //catch (...)
+    //{
+    //    // exception parsing the json. It's likely empty or malformed
+
+    //    OutputDebugString(L"" __FUNCTION__ " Exception parsing JSON. Json string follows.");
+    //    OutputDebugString(configurationJson.c_str());
+
+    //    TraceLoggingWrite(
+    //        MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+    //        __FUNCTION__,
+    //        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+    //        TraceLoggingPointer(this, "this")
+    //    );
+
+    //    return E_FAIL;
+    //}
 
     return S_OK;
 }
@@ -492,6 +484,30 @@ CMidi2BluetoothMidiEndpointManager::CreateEndpoint(
 
 
 
+// TODO: This will need to create a device watcher
+//
+// MIDI Service (UUID: 03B80E5A-EDE8-4B33-A751-6CE34EC4C700) 
+// MIDI Data I/O Characteristic(UUID: 7772E5DB-3868-4112-A1A9-F2669D106BF3)
+//
+
+#define MIDI_BLE_DATA_CHARACTERISTIC L"{7772E5DB-3868-4112-A1A9-F2669D106BF3}"
+#define MIDI_BLE_GATT_SERVICE L"{03B80E5A-EDE8-4B33-A751-6CE34EC4C700}"
+
+namespace bt = ::winrt::Windows::Devices::Bluetooth;
+
+HRESULT
+CMidi2BluetoothMidiEndpointManager::EnumCompatibleBluetoothDevices()
+{
+    winrt::guid midiServiceGuid(MIDI_BLE_GATT_SERVICE);
+
+//    bt::BluetoothLEDevice::GetGattServicesForUuidAsync(midiServiceGuid);
+
+
+    return S_OK;
+}
+
+
+
 HRESULT
 CMidi2BluetoothMidiEndpointManager::Cleanup()
 {
@@ -507,17 +523,5 @@ CMidi2BluetoothMidiEndpointManager::Cleanup()
 
     return S_OK;
 }
-
-
-//
-//_Use_decl_annotations_
-//HRESULT
-//CMidi2BluetoothMidiEndpointManager::ApplyConfiguration(
-//    LPCWSTR /*configurationJson*/,
-//    LPWSTR /*resultJson*/
-//)
-//{
-//    return E_NOTIMPL;
-//}
 
 
