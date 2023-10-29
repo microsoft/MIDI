@@ -9,7 +9,6 @@
 Windows.Devices.Midi2.MidiSession | 0 | 0 | 0
 Windows.Devices.Midi2.IMidiSessionStatics | 0 | 0 | 0
 Windows.Devices.Midi2.MidiSessionSettings | 0 | 0 | 0
-Windows.Devices.Midi2.MidiVirtualDeviceManager | 0 | 0 | 0
 
 # Enumeration
 
@@ -56,7 +55,7 @@ Windows.Devices.Midi2.MidiMessageTypeEndpointListener | 0 | 0 | 0
 
 # Virtual Device Message Processing Plugins
 
-Windows.Devices.Midi2.MidiVirtualDeviceResponder | 0 | 0 | 0
+Windows.Devices.Midi2.MidiVirtualDevice | 0 | 0 | 0
 
 # Events
 

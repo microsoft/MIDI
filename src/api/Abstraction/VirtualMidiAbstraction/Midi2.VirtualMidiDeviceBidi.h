@@ -8,7 +8,7 @@
 
 #pragma once
 
-class CMidi2VirtualMidiBiDi : 
+class CMidi2VirtualMidiDeviceBiDi : 
     public Microsoft::WRL::RuntimeClass<
         Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
         IMidiBiDi,
@@ -22,7 +22,10 @@ public:
     STDMETHOD(Cleanup)();
 
 private:
-    IMidiCallback* m_callback;
+    IMidiCallback* m_clientCallback;
+    IMidiBiDi* m_deviceBiDi;
+
+
 };
 
 

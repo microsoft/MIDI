@@ -6,23 +6,37 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-// This class enables 
+
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
 
 import "IMidiEndpointMessageProcessingPlugin.idl";
-
 import "MidiFunctionBlock.idl";
+import "MidiProperty.idl";
+import "MidiProfile.idl";
+
 //import "MidiEndpointInformation.idl";
 
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [default_interface]
-    runtimeclass MidiVirtualDeviceResponder : IMidiEndpointMessageProcessingPlugin
+    runtimeclass MidiVirtualDevice : IMidiEndpointMessageProcessingPlugin
     {
-        MidiVirtualDeviceResponder();
+        MidiVirtualDevice();
+
+        Boolean IsMidiCIDevice{ get; set; };
+
+
+        String EndpointName{ get; set; };
+        String ProductInstanceId{ get; set; };
+
+        // TODO: Other endpoint properties, including the MIDI SysEx stuff, protocol, UMP version, etc.
+
+
+        // this can only be set before the connection is opened
+        Boolean AreFunctionBlocksStatic{ get; set; };
 
         // This is a view because all modifications require sending notifications
         // out on the endpoint. So the functions do that.

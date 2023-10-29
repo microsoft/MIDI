@@ -84,6 +84,7 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "MidiEndpointTable.h"
 
 #include "Midi2.VirtualMidiAbstraction.h"
-#include "Midi2.VirtualMidiBiDi.h"
+#include "Midi2.VirtualMidiDeviceBiDi.h"
+#include "Midi2.VirtualMidiClientBiDi.h"
 #include "Midi2.VirtualMidiEndpointManager.h"
 

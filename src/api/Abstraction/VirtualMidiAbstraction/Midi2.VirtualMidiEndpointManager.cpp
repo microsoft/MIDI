@@ -43,6 +43,10 @@ CMidi2VirtualMidiEndpointManager::Initialize(
 
     RETURN_IF_FAILED(CreateParentDevice());
 
+    // Create all the device-side endpoints first
+    // Do not create the client-side endpoints until 
+
+
     //if (configurationJson != nullptr)
     //{
     //    try
@@ -234,8 +238,33 @@ winrt::hstring GetStringValue(json::JsonObject parent, winrt::hstring key, winrt
 
 _Use_decl_annotations_
 HRESULT
-CMidi2VirtualMidiEndpointManager::CreateConfiguredEndpoints(std::wstring configurationJson)
+CMidi2VirtualMidiEndpointManager::CreateClientSideEndpoint(
+    std::wstring deviceSideInstanceId)
 {
+    // look up the device in the table
+    // get the name
+
+    // discovery etc. will all happen automatically?
+    
+    // update table with correct client <-> device relationship
+
+
+
+
+}
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2VirtualMidiEndpointManager::CreateConfiguredDeviceEndpoints(std::wstring configurationJson)
+{
+    // Create the device-side endpoint
+    // 
+
+
+
+
+
     // if nothing to configure, that's ok
     if (configurationJson.empty()) return S_OK;
 

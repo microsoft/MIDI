@@ -35,6 +35,7 @@ CMidi2VirtualMidiAbstraction::Activate(
         wil::com_ptr_nothrow<IMidiBiDi> midiBiDi;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2VirtualMidiBiDi>(&midiBiDi));
         *Interface = midiBiDi.detach();
+
     }
 
 
