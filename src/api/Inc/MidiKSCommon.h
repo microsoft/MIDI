@@ -23,6 +23,15 @@ PinPropertySimple(
     _In_ ULONG   ValueSize);
 
 HRESULT
+PinPropertyAllocate(
+    _In_ HANDLE Filter,
+    _In_ ULONG   PinId,
+    _In_ REFGUID guidPropertySet,
+    _In_ ULONG   Property,
+    _Out_ PVOID   *Value,
+    _Out_opt_ ULONG   *ValueSize);
+
+HRESULT
 FilterInstantiate(
     _In_z_ const WCHAR* FilterName,
     _In_ HANDLE* FilterHandle

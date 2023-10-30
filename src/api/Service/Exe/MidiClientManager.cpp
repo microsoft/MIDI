@@ -75,6 +75,8 @@ GetEndpointAlias(_In_ LPCWSTR MidiDevice, _In_ std::wstring& Alias, _In_ MidiFlo
         // initialize the device pipe for the requested flow.
     }
 
+    std::transform(Alias.begin(), Alias.end(), Alias.begin(), ::towlower);
+
     return S_OK;
 }
 

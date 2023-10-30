@@ -188,10 +188,9 @@ CMidiDeviceManager::ActivateEndpoint
         }
 
         cleanupOnFailure.release();
-
-        return S_OK;
-
     }
+
+    return S_OK;
 }
 
 _Use_decl_annotations_

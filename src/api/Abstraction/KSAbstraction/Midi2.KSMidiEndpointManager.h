@@ -18,6 +18,11 @@ public:
     MidiFlow Flow{ MidiFlowOut };
     BOOL CreateUMPOnly{ FALSE };
     HRESULT SwdCreation{ S_OK };
+    std::unique_ptr<BYTE> GroupTerminalBlockDataOut;
+    ULONG GroupTerminalBlockDataSizeOut {0};
+    std::unique_ptr<BYTE> GroupTerminalBlockDataIn;
+    ULONG GroupTerminalBlockDataSizeIn {0};
+    GUID NativeDataFormat{0};
 } MIDI_PIN_INFO, *PMIDI_PIN_INFO;
 
 class CMidi2KSMidiEndpointManager : 
