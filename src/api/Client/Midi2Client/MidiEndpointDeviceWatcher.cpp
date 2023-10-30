@@ -15,19 +15,16 @@ namespace winrt::Windows::Devices::Midi2::implementation
 {
 
 
-    _Use_decl_annotations_
     void MidiEndpointDeviceWatcher::Start()
     {
         throw hresult_not_implemented();
     }
 
-    _Use_decl_annotations_
     void MidiEndpointDeviceWatcher::Stop()
     {
         throw hresult_not_implemented();
     }
 
-    _Use_decl_annotations_
     collections::IMap<winrt::hstring, midi2::MidiEndpointDeviceInformation> MidiEndpointDeviceWatcher::EndpointDevices()
     {
         throw hresult_not_implemented();

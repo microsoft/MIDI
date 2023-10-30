@@ -140,7 +140,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
-    _Use_decl_annotations_
     winrt::hstring MidiFunctionBlock::GetJsonString() noexcept
     {
         JsonObject jsonObject;
