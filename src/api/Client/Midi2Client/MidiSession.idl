@@ -17,7 +17,7 @@ import "MidiSessionSettings.idl";
 
 import "MidiEndpointConnectionOptions.idl";
 
-import "MidiVirtualDeviceManager.idl";
+//import "MidiVirtualDeviceManager.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -41,24 +41,35 @@ namespace Windows.Devices.Midi2
         IMapView<Guid, MidiEndpointConnection> Connections{ get; };
 
         MidiEndpointConnection CreateEndpointConnection(
-            String endpointDeviceId);
+            String endpointDeviceId
+        );
 
         MidiEndpointConnection CreateEndpointConnection(
             String endpointDeviceId,
-            MidiEndpointConnectionOptions options);
+            MidiEndpointConnectionOptions options
+        );
 
         MidiEndpointConnection CreateEndpointConnection(
             String endpointDeviceId,
             MidiEndpointConnectionOptions options,
-            IMidiEndpointDefinedConnectionSettings settings);
+            IMidiEndpointDefinedConnectionSettings settings
+        );
+
+        // creating it here helps ensure this is the only possible owner
+        // This creates the virtual device, and also adds the appropriate listener
+        // to the returned endpoint connection
+        MidiEndpointConnection CreateVirtualDeviceAndConnection(
+            String endpointName,
+            String endpointDeviceInstanceId
+            // TODO: Other pptions for creating the device. Maybe wrap this all up in an object.
+        );
 
         // This will close and remove a single endpoint connection instance.
-
         void DisconnectEndpointConnection(Guid endpointConnectionId);
 
         // This is associated with the session so we can session-scoped
         // lifetime / info as well as provide the session-level service interface
-        MidiVirtualDeviceManager VirtualDeviceManager{ get; };
+//        MidiVirtualDeviceManager VirtualDeviceManager{ get; };
 
     }
 }

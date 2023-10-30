@@ -318,9 +318,6 @@
     <Midl Include="MidiEndpointConnectionSharingEnum.idl">
       <Filter>API\Endpoints\Connections</Filter>
     </Midl>
-    <Midl Include="MidiVirtualDeviceManager.idl">
-      <Filter>API\Transports</Filter>
-    </Midl>
     <Midl Include="MidiProtocolEnum.idl">
       <Filter>API\Transports</Filter>
     </Midl>
@@ -378,7 +375,7 @@
     <Midl Include="MidiMessageBuilder.idl">
       <Filter>API\Messages\Utility</Filter>
     </Midl>
-    <Midl Include="MidiVirtualDeviceResponder.idl">
+    <Midl Include="MidiVirtualDevice.idl">
       <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
     </Midl>
     <Midl Include="MidiFunctionBlockMidi10Enum.idl">

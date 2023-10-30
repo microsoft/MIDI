@@ -8,7 +8,7 @@
 
 #pragma once
 #include "MidiSession.g.h"
-#include "MidiVirtualDeviceManager.h"
+//#include "MidiVirtualDeviceManager.h"
 
 #include "midi_service_interface.h"
 
@@ -59,7 +59,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         void Close() noexcept;   // via IClosable
 
-        midi2::MidiVirtualDeviceManager VirtualDeviceManager() const noexcept { return m_virtualDeviceManager; }
+//        midi2::MidiVirtualDeviceManager VirtualDeviceManager() const noexcept { return m_virtualDeviceManager; }
+
+
+        midi2::MidiEndpointConnection CreateVirtualDeviceAndConnection(
+            _In_ winrt::hstring endpointName,
+            _In_ winrt::hstring endpointDeviceInstanceId
+        ) noexcept;
+
 
         // internal to the API
         void SetName(_In_ winrt::hstring value) { m_name = value; }
@@ -72,7 +79,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::guid m_id{};
         winrt::hstring m_name{};
         midi2::MidiSessionSettings m_settings{ nullptr };
-        midi2::MidiVirtualDeviceManager m_virtualDeviceManager{ nullptr };
+ //       midi2::MidiVirtualDeviceManager m_virtualDeviceManager{ nullptr };
 
         bool m_useMmcss{ true };
         DWORD m_mmcssTaskId{ 0 };

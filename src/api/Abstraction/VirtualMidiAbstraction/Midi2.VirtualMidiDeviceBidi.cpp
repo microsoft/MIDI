@@ -12,7 +12,7 @@
 
 _Use_decl_annotations_
 HRESULT
-CMidi2VirtualMidiBiDi::Initialize(
+CMidi2VirtualMidiDeviceBiDi::Initialize(
     LPCWSTR,
     DWORD *,
     IMidiCallback * callback
@@ -26,19 +26,21 @@ CMidi2VirtualMidiBiDi::Initialize(
         TraceLoggingPointer(this, "this")
         );
 
-    m_callback = callback;
+    m_clientCallback = callback;
 
 
-    // TODO: Using the device Id parameter, associate with the endpoint in the endpoint device table
+    // TODO: Spin up the client endpoint
 
-    // may need to store a this pointer in that table as the IMidiBiDi property
 
     return S_OK;
 }
 
 HRESULT
-CMidi2VirtualMidiBiDi::Cleanup()
+CMidi2VirtualMidiDeviceBiDi::Cleanup()
 {
+    // TODO: Cleanup here needs additional logic to tear down the client endpoint
+    // when this endpoint goes away
+
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
@@ -46,44 +48,51 @@ CMidi2VirtualMidiBiDi::Cleanup()
         TraceLoggingPointer(this, "this")
         );
 
-    // TODO: Remove the BiDi pointer from the endpoint device table
-
-    m_callback = nullptr;
+    m_clientCallback = nullptr;
+    m_deviceBiDi = nullptr;
 
     return S_OK;
 }
 
 _Use_decl_annotations_
 HRESULT
-CMidi2VirtualMidiBiDi::SendMidiMessage(
-    PVOID message,
-    UINT size,
-    LONGLONG /*position*/
-)
-{
-    RETURN_HR_IF_NULL(E_INVALIDARG, message);
-
-    if (size < sizeof(uint32_t))
-    {
-        // TODO log that data was smaller than minimum UMP size
-        return E_FAIL;
-    }
-
-    //m_callback->Callback(message, size, position);
-
-    return S_OK;
-
-}
-
-_Use_decl_annotations_
-HRESULT
-CMidi2VirtualMidiBiDi::Callback(
+CMidi2VirtualMidiDeviceBiDi::SendMidiMessage(
     PVOID /*message*/,
     UINT /*size*/,
     LONGLONG /*position*/
 )
 {
-    //return E_NOTIMPL;
+    //// message received from the client
+
+    //RETURN_HR_IF_NULL(E_INVALIDARG, message);
+
+    //if (size < sizeof(uint32_t))
+    //{
+    //    // TODO log that data was smaller than minimum UMP size
+    //    return E_FAIL;
+    //}
+
+    //if (m_clientCallback != nullptr)
+    //{
+    //    return m_clientCallback(message, size, position);
+    //}
+
+    return S_OK;
+
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2VirtualMidiDeviceBiDi::Callback(
+    PVOID /*message*/,
+    UINT /*size*/,
+    LONGLONG /*position*/
+)
+{
+    //if (m_clientCallback != nullptr)
+    //{
+    //    return m_clientCallback->Callback(message, size, position);
+    //}
 
     return S_OK;
 }

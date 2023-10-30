@@ -22,7 +22,7 @@ void MidiMessageBuilderTests::TestBuildType0UtilityMessages()
     LOG_OUTPUT(L"Building Utility Message");
 
     auto message = MidiMessageBuilder::BuildUtilityMessage(
-        MidiClock::GetMidiTimestamp(),
+        MidiClock::Now(),
         status,
         dataOrReserved
     );
@@ -41,7 +41,7 @@ void MidiMessageBuilderTests::TestBuildType1SystemMessages()
     LOG_OUTPUT(L"Building System Message");
 
     auto message = MidiMessageBuilder::BuildSystemMessage(
-        MidiClock::GetMidiTimestamp(),
+        MidiClock::Now(),
         group,
         status,
         midiByte2,
@@ -66,7 +66,7 @@ void MidiMessageBuilderTests::TestBuildType2Midi1ChannelVoiceMessages()
     LOG_OUTPUT(L"Building MIDI 1 Channel Voice Message");
 
     auto ump = MidiMessageBuilder::BuildMidi1ChannelVoiceMessage(
-        MidiClock::GetMidiTimestamp(),
+        MidiClock::Now(),
         grp.Index(),
         status,
         ch.Index(),
@@ -97,7 +97,7 @@ void MidiMessageBuilderTests::TestBuildType4Midi2ChannelVoiceMessages()
     LOG_OUTPUT(L"Building MIDI 2 Channel Voice Message");
 
     auto ump = MidiMessageBuilder::BuildMidi2ChannelVoiceMessage(
-        MidiClock::GetMidiTimestamp(),
+        MidiClock::Now(),
         grp.Index(),
         status,
         ch.Index(),
@@ -125,7 +125,7 @@ void MidiMessageBuilderTests::TestBuildTypeFStreamMessages1()
     uint32_t resultingWord0 = 0xFC021234;   // shifting of form to be the two high bits of the nibble changes it from 3 to C
 
     auto ump = MidiMessageBuilder::BuildStreamMessage(
-        MidiClock::GetMidiTimestamp(),
+        MidiClock::Now(),
         form,
         status,
         word0Remaining,
@@ -156,7 +156,7 @@ void MidiMessageBuilderTests::TestBuildTypeFStreamMessages2()
     uint32_t resultingWord0 = 0xFC32F23F;   // shifting of form to be the two high bits of the nibble changes it from 3 to C
 
     auto ump = MidiMessageBuilder::BuildStreamMessage(
-        MidiClock::GetMidiTimestamp(),
+        MidiClock::Now(),
         form,
         status,
         word0Remaining,
@@ -193,7 +193,7 @@ void MidiMessageBuilderTests::TestBuildMixedDatasetHeaderMessage()
     uint32_t resultingWord3 = 0x03263827;
 
     auto ump = MidiMessageBuilder::BuildMixedDataSetChunkHeaderMessage(
-        MidiClock::GetMidiTimestamp(),
+        MidiClock::Now(),
         group,
         mdsId,
         numberOfValidBytesInChunk,
@@ -226,7 +226,7 @@ void MidiMessageBuilderTests::TestBuildMixedDatasetPayloadMessage()
     uint32_t resultingWord3 = 0x0B0C0D0E;
 
     auto ump = MidiMessageBuilder::BuildMixedDataSetChunkDataMessage(
-        MidiClock::GetMidiTimestamp(),
+        MidiClock::Now(),
         group,
         mdsId,
         0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E

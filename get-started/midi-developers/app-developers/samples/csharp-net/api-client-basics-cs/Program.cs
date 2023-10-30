@@ -26,7 +26,7 @@ using (var session = MidiSession.CreateSession("Sample Session"))
 
             Console.WriteLine();
             Console.WriteLine("Received UMP");
-            Console.WriteLine("- Current Timestamp: " + MidiClock.GetMidiTimestamp());
+            Console.WriteLine("- Current Timestamp: " + MidiClock.Now);
             Console.WriteLine("- UMP Timestamp:     " + ump.Timestamp);
             Console.WriteLine("- UMP Msg Type:      " + ump.MessageType);
             Console.WriteLine("- UMP Packet Type:   " + ump.PacketType);
@@ -56,7 +56,7 @@ using (var session = MidiSession.CreateSession("Sample Session"))
         Console.WriteLine("Creating MIDI 1.0 Channel Voice 32-bit UMP...");
 
         var ump32 = MidiMessageBuilder.BuildMidi1ChannelVoiceMessage(
-            MidiClock.GetMidiTimestamp(), // use current timestamp
+            MidiClock.Now, // use current timestamp
             5,      // group 5
             Midi1ChannelVoiceMessageStatus.NoteOn,  // 9
             3,      // channel 3

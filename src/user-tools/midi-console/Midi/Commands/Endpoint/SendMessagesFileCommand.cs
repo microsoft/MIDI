@@ -135,7 +135,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     //AnsiConsole.WriteLine("Created table");
 
                     // get starting timestamp for any offset
-                    var startingTimestamp = MidiClock.GetMidiTimestamp();
+                    var startingTimestamp = MidiClock.Now;
 
                     // open our data file
 
@@ -198,7 +198,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                             {
                                 if (words != null && ValidateMessage(words))
                                 {
-                                    var timestamp = MidiClock.GetMidiTimestamp();
+                                    var timestamp = MidiClock.Now;
 
                                     if (changeGroup)
                                     {

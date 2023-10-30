@@ -27,10 +27,13 @@
     <ClCompile Include="Midi2.VirtualMidiEndpointManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Midi2.VirtualMidiBidi.cpp">
+    <ClCompile Include="Midi2.VirtualMidiDeviceBidi.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MidiEndpointTable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi2.VirtualMidiClientBidi.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -64,7 +67,7 @@
     <ClInclude Include="Midi2.VirtualMidiEndpointManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Midi2.VirtualMidiBidi.h">
+    <ClInclude Include="Midi2.VirtualMidiDeviceBidi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MidiEndpointTable.h">
@@ -74,6 +77,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MidiRoute.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Midi2.VirtualMidiClientBidi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

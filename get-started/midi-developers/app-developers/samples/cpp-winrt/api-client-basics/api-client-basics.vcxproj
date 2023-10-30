@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="packages\Windows.Devices.Midi2.1.0.0-preview.2-0086\build\native\Windows.Devices.Midi2.props" Condition="Exists('packages\Windows.Devices.Midi2.1.0.0-preview.2-0086\build\native\Windows.Devices.Midi2.props')" />
+  <Import Project="packages\Windows.Devices.Midi2.1.0.0-preview.2-0090\build\native\Windows.Devices.Midi2.props" Condition="Exists('packages\Windows.Devices.Midi2.1.0.0-preview.2-0090\build\native\Windows.Devices.Midi2.props')" />
   <Import Project="packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.props')" />
   <PropertyGroup Label="Globals">
     <CppWinRTOptimized>true</CppWinRTOptimized>
@@ -150,7 +150,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.targets')" />
-    <Import Project="packages\Windows.Devices.Midi2.1.0.0-preview.2-0086\build\native\Windows.Devices.Midi2.targets" Condition="Exists('packages\Windows.Devices.Midi2.1.0.0-preview.2-0086\build\native\Windows.Devices.Midi2.targets')" />
+    <Import Project="packages\Windows.Devices.Midi2.1.0.0-preview.2-0090\build\native\Windows.Devices.Midi2.targets" Condition="Exists('packages\Windows.Devices.Midi2.1.0.0-preview.2-0090\build\native\Windows.Devices.Midi2.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -158,7 +158,7 @@
     </PropertyGroup>
     <Error Condition="!Exists('packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.props'))" />
     <Error Condition="!Exists('packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.targets'))" />
-    <Error Condition="!Exists('packages\Windows.Devices.Midi2.1.0.0-preview.2-0086\build\native\Windows.Devices.Midi2.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Windows.Devices.Midi2.1.0.0-preview.2-0086\build\native\Windows.Devices.Midi2.props'))" />
-    <Error Condition="!Exists('packages\Windows.Devices.Midi2.1.0.0-preview.2-0086\build\native\Windows.Devices.Midi2.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Windows.Devices.Midi2.1.0.0-preview.2-0086\build\native\Windows.Devices.Midi2.targets'))" />
+    <Error Condition="!Exists('packages\Windows.Devices.Midi2.1.0.0-preview.2-0090\build\native\Windows.Devices.Midi2.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Windows.Devices.Midi2.1.0.0-preview.2-0090\build\native\Windows.Devices.Midi2.props'))" />
+    <Error Condition="!Exists('packages\Windows.Devices.Midi2.1.0.0-preview.2-0090\build\native\Windows.Devices.Midi2.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Windows.Devices.Midi2.1.0.0-preview.2-0090\build\native\Windows.Devices.Midi2.targets'))" />
   </Target>
 </Project>

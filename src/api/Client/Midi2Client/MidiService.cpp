@@ -71,7 +71,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // originally I was going to use a random number for this, but using the low bits of
         // the timestamp makes more sense, and will be unique enough for this.
 
-        uint32_t pingSourceId = (uint32_t)(MidiClock::GetMidiTimestamp() & 0x00000000FFFFFFFF);
+        uint32_t pingSourceId = (uint32_t)(MidiClock::Now() & 0x00000000FFFFFFFF);
 
         wil::unique_event_nothrow allMessagesReceived;
         allMessagesReceived.create();
@@ -86,7 +86,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         auto MessageReceivedHandler = [&](foundation::IInspectable const& /*sender*/, midi2::MidiMessageReceivedEventArgs const& args)
             {
-                internal::MidiTimestamp actualReceiveEventTimestamp = MidiClock::GetMidiTimestamp();
+                internal::MidiTimestamp actualReceiveEventTimestamp = MidiClock::Now();
 
                 uint32_t word0;
                 uint32_t word1;
@@ -145,7 +145,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             auto response = winrt::make_self<implementation::MidiServicePingResponse>();
 
-            internal::MidiTimestamp timestamp = MidiClock::GetMidiTimestamp();
+            internal::MidiTimestamp timestamp = MidiClock::Now();
 
             // Add this info to the tracking before we send, so no race condition
             // granted that this adds a few ticks to add this to the collection and build the object

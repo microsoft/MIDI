@@ -276,8 +276,9 @@
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Midi2.VirtualMidiAbstraction.cpp" />
+    <ClCompile Include="Midi2.VirtualMidiClientBidi.cpp" />
     <ClCompile Include="Midi2.VirtualMidiEndpointManager.cpp" />
-    <ClCompile Include="Midi2.VirtualMidiBidi.cpp" />
+    <ClCompile Include="Midi2.VirtualMidiDeviceBidi.cpp" />
     <ClCompile Include="MidiEndpointTable.cpp" />
     <ClCompile Include="pch.cpp" />
   </ItemGroup>
@@ -293,8 +294,9 @@
     <ClInclude Include="abstraction_defs.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="Midi2.VirtualMidiAbstraction.h" />
+    <ClInclude Include="Midi2.VirtualMidiClientBidi.h" />
     <ClInclude Include="Midi2.VirtualMidiEndpointManager.h" />
-    <ClInclude Include="Midi2.VirtualMidiBidi.h" />
+    <ClInclude Include="Midi2.VirtualMidiDeviceBidi.h" />
     <ClInclude Include="MidiEndpointTable.h" />
     <ClInclude Include="MidiRoute.h" />
     <ClInclude Include="pch.h" />

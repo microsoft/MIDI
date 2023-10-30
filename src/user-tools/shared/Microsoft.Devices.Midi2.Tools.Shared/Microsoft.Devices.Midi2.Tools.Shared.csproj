@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.2-0086" />
+    <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.2-0090" />
   </ItemGroup>
 
 </Project>
