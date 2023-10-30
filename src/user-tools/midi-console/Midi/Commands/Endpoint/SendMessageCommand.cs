@@ -128,7 +128,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                     while (messagesSent < settings.Count)
                     {
-                        UInt64 timestamp = MidiClock.GetMidiTimestamp();
+                        UInt64 timestamp = MidiClock.Now;
                         connection.SendMessageWordArray(timestamp, settings.Words, 0, (byte)settings.Words.Count());
 
                         messagesSent++;

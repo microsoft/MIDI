@@ -8,15 +8,15 @@
 
 
 #include "pch.h"
-#include "MidiVirtualDeviceResponder.h"
-#include "MidiVirtualDeviceResponder.g.cpp"
+#include "MidiVirtualDevice.h"
+#include "MidiVirtualDevice.g.cpp"
 
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
 
     _Use_decl_annotations_
-    bool MidiVirtualDeviceResponder::AddFunctionBlock(midi2::MidiFunctionBlock const& block)
+    bool MidiVirtualDevice::AddFunctionBlock(midi2::MidiFunctionBlock const& block)
     {
         // add to list if there isn't already a one in that spot
 
@@ -51,13 +51,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    void MidiVirtualDeviceResponder::UpdateFunctionBlock(midi2::MidiFunctionBlock const& /*block*/)
+    void MidiVirtualDevice::UpdateFunctionBlock(midi2::MidiFunctionBlock const& /*block*/)
     {
         throw hresult_not_implemented();
     }
 
     _Use_decl_annotations_
-    void MidiVirtualDeviceResponder::RemoveFunctionBlock(uint8_t /*functionBlockNumber*/)
+    void MidiVirtualDevice::RemoveFunctionBlock(uint8_t /*functionBlockNumber*/)
     {
         throw hresult_not_implemented();
     }
@@ -74,23 +74,23 @@ namespace winrt::Windows::Devices::Midi2::implementation
     //}
 
 
-    void MidiVirtualDeviceResponder::Initialize()
+    void MidiVirtualDevice::Initialize()
     {
         throw hresult_not_implemented();
     }
 
-    void MidiVirtualDeviceResponder::OnEndpointConnectionOpened()
+    void MidiVirtualDevice::OnEndpointConnectionOpened()
     {
         throw hresult_not_implemented();
     }
 
-    void MidiVirtualDeviceResponder::Cleanup()
+    void MidiVirtualDevice::Cleanup()
     {
         throw hresult_not_implemented();
     }
 
     _Use_decl_annotations_
-    void MidiVirtualDeviceResponder::ProcessIncomingMessage(
+    void MidiVirtualDevice::ProcessIncomingMessage(
         midi2::MidiMessageReceivedEventArgs const& /*args*/,
         bool& /*skipFurtherListeners*/,
         bool& /*skipMainMessageReceivedEvent*/)

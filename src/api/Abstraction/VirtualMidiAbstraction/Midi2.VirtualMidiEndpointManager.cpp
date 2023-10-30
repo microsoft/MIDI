@@ -249,7 +249,7 @@ CMidi2VirtualMidiEndpointManager::CreateClientSideEndpoint(
     // update table with correct client <-> device relationship
 
 
-
+    return S_OK;
 
 }
 

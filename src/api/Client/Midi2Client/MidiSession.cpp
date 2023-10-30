@@ -80,13 +80,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                 // create the virtual device manager
 
-                auto virtualDeviceManager = winrt::make_self<implementation::MidiVirtualDeviceManager>();
-                if (virtualDeviceManager != nullptr)
-                {
-                    virtualDeviceManager->Initialize(m_serviceAbstraction);
-
-                    m_virtualDeviceManager = *virtualDeviceManager;
-                }
+//                auto virtualDeviceManager = winrt::make_self<implementation::MidiVirtualDeviceManager>();
+//                if (virtualDeviceManager != nullptr)
+//                {
+//                    virtualDeviceManager->Initialize(m_serviceAbstraction);
+//
+//                    m_virtualDeviceManager = *virtualDeviceManager;
+//                }
             }
             else
             {
@@ -183,7 +183,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
- 
+    _Use_decl_annotations_
+    midi2::MidiEndpointConnection MidiSession::CreateVirtualDeviceAndConnection(
+        winrt::hstring /*endpointName*/,
+        winrt::hstring /*endpointDeviceInstanceId*/
+    ) noexcept
+    {
+        // TODO
+
+        return nullptr;
+    }
+
 
 
 

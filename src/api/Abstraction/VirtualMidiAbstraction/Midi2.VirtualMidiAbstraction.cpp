@@ -32,8 +32,10 @@ CMidi2VirtualMidiAbstraction::Activate(
             TraceLoggingPointer(this, "this")
             );
 
+
+        // TODO
         wil::com_ptr_nothrow<IMidiBiDi> midiBiDi;
-        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2VirtualMidiBiDi>(&midiBiDi));
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2VirtualMidiDeviceBiDi>(&midiBiDi));
         *Interface = midiBiDi.detach();
 
     }

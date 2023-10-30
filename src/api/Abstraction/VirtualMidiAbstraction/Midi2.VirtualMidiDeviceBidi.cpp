@@ -49,7 +49,7 @@ CMidi2VirtualMidiDeviceBiDi::Cleanup()
         );
 
     m_clientCallback = nullptr;
-    m_clientBiDi = nullptr;
+    m_deviceBiDi = nullptr;
 
     return S_OK;
 }
@@ -57,25 +57,25 @@ CMidi2VirtualMidiDeviceBiDi::Cleanup()
 _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiDeviceBiDi::SendMidiMessage(
-    PVOID message,
-    UINT size,
-    LONGLONG position
+    PVOID /*message*/,
+    UINT /*size*/,
+    LONGLONG /*position*/
 )
 {
-    // message received from the client
+    //// message received from the client
 
-    RETURN_HR_IF_NULL(E_INVALIDARG, message);
+    //RETURN_HR_IF_NULL(E_INVALIDARG, message);
 
-    if (size < sizeof(uint32_t))
-    {
-        // TODO log that data was smaller than minimum UMP size
-        return E_FAIL;
-    }
+    //if (size < sizeof(uint32_t))
+    //{
+    //    // TODO log that data was smaller than minimum UMP size
+    //    return E_FAIL;
+    //}
 
-    if (m_clientCallback != nullptr)
-    {
-        return m_clientCallback(message, size, position);
-    }
+    //if (m_clientCallback != nullptr)
+    //{
+    //    return m_clientCallback(message, size, position);
+    //}
 
     return S_OK;
 

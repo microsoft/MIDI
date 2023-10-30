@@ -17,7 +17,7 @@ namespace Windows.Devices.Midi2
     runtimeclass MidiClock
     {
         // gets the current MIDI timestamp
-        static MIDI_TIMESTAMP Now;
+        static MIDI_TIMESTAMP Now{ get; };
 
         // returns the units per second for the timestamp
         static UInt64 GetMidiTimestampFrequency();

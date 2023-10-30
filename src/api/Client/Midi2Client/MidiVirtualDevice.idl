@@ -30,9 +30,11 @@ namespace Windows.Devices.Midi2
 
 
         String EndpointName{ get; set; };
-        String ProductInstanceId{ get; set; };
+        String EndpointProductInstanceId{ get; set; };
 
         // TODO: Other endpoint properties, including the MIDI SysEx stuff, protocol, UMP version, etc.
+
+        // TODO: MUID table?
 
 
         // this can only be set before the connection is opened

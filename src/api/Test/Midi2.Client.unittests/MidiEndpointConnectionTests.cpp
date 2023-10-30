@@ -93,7 +93,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmpStruct()
     MidiMessageStruct sentUmp;
 
  //   auto sentMessageType = MidiMessageType::Midi2ChannelVoice64;
-    auto sentTimestamp = MidiClock::GetMidiTimestamp();
+    auto sentTimestamp = MidiClock::Now();
 
     auto MessageReceivedHandler = [&](winrt::Windows::Foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
         {
@@ -179,7 +179,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmp32()
     MidiMessage32 sentUmp;
 
     auto sentMessageType = MidiMessageType::Midi1ChannelVoice32;
-    auto sentTimestamp = MidiClock::GetMidiTimestamp();
+    auto sentTimestamp = MidiClock::Now();
 
 
     auto MessageReceivedHandler = [&](winrt::Windows::Foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
@@ -312,7 +312,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWords()
 
     for (uint32_t i = 0; i < numMessagesToSend; i++)
     {
-        auto timestamp = MidiClock::GetMidiTimestamp();
+        auto timestamp = MidiClock::Now();
 
         switch (i % 4)
         {

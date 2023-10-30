@@ -23,7 +23,7 @@ MidiEndpointTable& MidiEndpointTable::Current()
 
 
 _Use_decl_annotations_
-wil::com_ptr_nothrow<IMidiBiDi> MidiEndpointTable::GetEndpointInterfaceForId(std::wstring const endpointDeviceId) const noexcept
+wil::com_ptr_nothrow<IMidiBiDi> MidiEndpointTable::GetDeviceEndpointInterfaceForDeviceEndpointId(std::wstring const endpointDeviceId) const noexcept
 {
     try
     {

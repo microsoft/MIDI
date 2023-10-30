@@ -68,10 +68,10 @@ CMidi2VirtualMidiClientBiDi::SendMidiMessage(
         return E_FAIL;
     }
 
-    if (m_deviceBiDi != nullptr)
+    if (m_endpointBiDi != nullptr)
     {
         // is this right, or should it be the callback?
-        return m_deviceBiDi->SendMidiMessage(message, size, position);
+        return m_endpointBiDi->SendMidiMessage(message, size, position);
     }
 
     return S_OK;

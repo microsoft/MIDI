@@ -8,16 +8,16 @@
 
 
 #pragma once
-#include "MidiVirtualDeviceResponder.g.h"
+#include "MidiVirtualDevice.g.h"
 
 #include "string_util.h"
 
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    struct MidiVirtualDeviceResponder : MidiVirtualDeviceResponderT<MidiVirtualDeviceResponder>
+    struct MidiVirtualDevice : MidiVirtualDeviceT<MidiVirtualDevice>
     {
-        MidiVirtualDeviceResponder() = default;
+        MidiVirtualDevice() = default;
 
         winrt::hstring Id() const noexcept { return m_id; }
         void Id(_In_ winrt::hstring const& value) noexcept { m_id = internal::ToUpperTrimmedHStringCopy(value); }
@@ -38,14 +38,23 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
+        bool IsMidiCIDevice() { return m_isMidiCIDevice; }
+        void IsMidiCIDevice(_In_ bool value) { m_isMidiCIDevice = value; }
+
+        
+        winrt::hstring EndpointName() { return m_endpointName; }
+        void EndpointName(_In_ winrt::hstring value) { m_endpointName = value; }
+
+        winrt::hstring EndpointProductInstanceId() { return m_endpointProductInstanceId; }
+        void EndpointProductInstanceId(_In_ winrt::hstring value) { m_endpointProductInstanceId = value; }
+
+        bool AreFunctionBlocksStatic() { return m_areFunctionBlocksStatic; }
+        void AreFunctionBlocksStatic(_In_ bool const value) { m_areFunctionBlocksStatic = value; }
         collections::IMapView<uint8_t, midi2::MidiFunctionBlock> FunctionBlocks() { return m_functionBlocks.GetView(); }
 
         bool AddFunctionBlock(_In_ midi2::MidiFunctionBlock const& block);
         void UpdateFunctionBlock(_In_ midi2::MidiFunctionBlock const& block);
         void RemoveFunctionBlock(_In_ uint8_t functionBlockNumber);
-
-        //midi2::MidiEndpointInformation EndpointInformation();
-        //void EndpointInformation(_In_ midi2::MidiEndpointInformation const& value);
 
         bool SuppressHandledMessages() { return m_suppressHandledMessages; }
         void SuppressHandledMessages(_In_ bool const value) { m_suppressHandledMessages = value; }
@@ -67,6 +76,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
         foundation::IInspectable m_tag{ nullptr };
         midi2::MidiEndpointConnection m_endpointConnection{ nullptr };
 
+        bool m_isMidiCIDevice{ false };
+        winrt::hstring m_endpointName{};
+        winrt::hstring m_endpointProductInstanceId{};
+
+        bool m_areFunctionBlocksStatic{ false };
+
         bool m_suppressHandledMessages{ true };
 
         collections::IMap<uint8_t, midi2::MidiFunctionBlock> m_functionBlocks { winrt::single_threaded_map<uint8_t, midi2::MidiFunctionBlock>() };
@@ -74,7 +89,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation
 {
-    struct MidiVirtualDeviceResponder : MidiVirtualDeviceResponderT<MidiVirtualDeviceResponder, implementation::MidiVirtualDeviceResponder>
+    struct MidiVirtualDevice : MidiVirtualDeviceT<MidiVirtualDevice, implementation::MidiVirtualDevice>
     {
     };
 }

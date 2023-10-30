@@ -17,7 +17,7 @@ import "MidiSessionSettings.idl";
 
 import "MidiEndpointConnectionOptions.idl";
 
-import "MidiVirtualDeviceManager.idl";
+//import "MidiVirtualDeviceManager.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -69,7 +69,7 @@ namespace Windows.Devices.Midi2
 
         // This is associated with the session so we can session-scoped
         // lifetime / info as well as provide the session-level service interface
-        MidiVirtualDeviceManager VirtualDeviceManager{ get; };
+//        MidiVirtualDeviceManager VirtualDeviceManager{ get; };
 
     }
 }
