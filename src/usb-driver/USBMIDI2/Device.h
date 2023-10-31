@@ -192,7 +192,7 @@ USBMIDI2DriverSelectInterface(
 // Function to Fetch and parse Group Terminal Block information
 //
 _Must_inspect_result_
-__drv_maxIRQL(PASSIVE_LEVEL)
+__drv_requiresIRQL(PASSIVE_LEVEL)
 PAGED_CODE_SEG
 NTSTATUS
 USBMIDI2DriverGetGTB(

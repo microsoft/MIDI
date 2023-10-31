@@ -601,7 +601,6 @@ EvtMidi2GroupTerminalBlocksCallback(
     ACX_REQUEST_PARAMETERS_INIT(&params);
     AcxRequestGetParameters(Request, &params);
 
-#if 0
     ACXSTREAM stream = (ACXSTREAM)Object;
     WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxStreamGetCircuit(stream));
     PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
@@ -611,7 +610,6 @@ EvtMidi2GroupTerminalBlocksCallback(
     {
         status = USBMIDI2DriverGetGTB(devCtx);
     }
-#endif
 
     // The size of the buffer provided by the caller
     ULONG valueCb = params.Parameters.Property.ValueCb;

@@ -1257,48 +1257,80 @@ Return Value:
 
 --*/
 {
-    PDEVICE_CONTEXT devCtx = GetDeviceContext(Device);
-    WDF_USB_CONTROL_SETUP_PACKET controlSetup;
-    NTSTATUS status = NULL;
-    midi2_desc_group_terminal_block_header_t* pGtbHeader = NULL;
-    WDFMEMORY gtbMemory;
-    WDF_OBJECT_ATTRIBUTES gtbMemoryAttributes;
-    WDF_REQUEST_SEND_OPTIONS sendOptions;
-    ULONG bytesTransferred;
-    WDFREQUEST gtbRequest;
-    WDF_MEMORY_DESCRIPTOR gtbMemDescriptor;
-    size_t gtbMemorySize;
+    NTSTATUS                                    status;
+    WDF_USB_CONTROL_SETUP_PACKET                controlSetupPacket;
+    WDF_REQUEST_SEND_OPTIONS                    sendOptions;
+    WDFMEMORY                                   gtbMemory = 0;
+    WDF_OBJECT_ATTRIBUTES                       gtbMemoryAttributes;
+    PVOID                                       gtbMemoryPtr;
+    size_t                                      gtbMemorySize;
+    WDF_MEMORY_DESCRIPTOR                       memoryDescriptor;
+    PDEVICE_CONTEXT                             devCtx = NULL;
+    ULONG                                       numBytesTransferred;
+    midi2_desc_group_terminal_block_header_t    gtbHeader;
 
-    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
-
-#if 0
-    //
-    // Use helper routine to fetch and parse Group Terminal Block information
-    // 
-    if (devCtx->UsbMIDIStreamingAlt)
+    if (!Device)
     {
-        // Alternate interface - thus USB MIDI 2.0 and GTB
-        status = USBMIDI2DriverGetGTB(Device);
-        if (!NT_SUCCESS(status))
-        {
-            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                "USBMIDI2DriverGetGTB failed %!STATUS!", status);
-            return status;
-        }
+        status = STATUS_INVALID_PARAMETER;
+        goto exit;
     }
-#endif
+    devCtx = GetDeviceContext(Device);
 
-    // WDF Request
-    status = WdfRequestCreate(
-        WDF_NO_OBJECT_ATTRIBUTES,
-        NULL,
-        &gtbRequest
+    // If not USB MIDI 2.0 then error, do not proceed
+    if (!devCtx->UsbMIDIStreamingAlt)
+    {
+        status = STATUS_INVALID_PARAMETER;
+        goto exit;
+    }
+
+    // First get the GTB Header to determine overall size needed
+    // 
+    // Set memory descriptor
+    WDF_MEMORY_DESCRIPTOR_INIT_BUFFER(&memoryDescriptor, (PVOID)&gtbHeader, sizeof(gtbHeader));
+
+    // Set timeout
+    WDF_REQUEST_SEND_OPTIONS_SET_TIMEOUT(
+        &sendOptions,
+        WDF_TIMEOUT_TO_SEC
+    );
+
+    // Need interface number for setup packet
+    USHORT interfaceNumber = (USHORT)WdfUsbInterfaceGetInterfaceNumber(devCtx->UsbMIDIStreamingInterface);
+
+    // Initialize setup packet
+    WDF_USB_CONTROL_SETUP_PACKET_INIT(
+        &controlSetupPacket,
+        BmRequestDeviceToHost,       // Direction of the request
+        BmRequestToInterface,
+        USB_REQUEST_GET_DESCRIPTOR,  // bRequest
+        (USHORT)0x2601,              // Value
+        interfaceNumber              // Index 
+    );
+
+    // Fetch the GTB header from device
+    status = WdfUsbTargetDeviceSendControlTransferSynchronously(
+        devCtx->UsbDevice,
+        WDF_NO_HANDLE,               // Optional WDFREQUEST
+        &sendOptions,
+        &controlSetupPacket,
+        &memoryDescriptor,           // MemoryDescriptor
+        &numBytesTransferred         // BytesTransferred 
     );
     if (!NT_SUCCESS(status))
     {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error allocating REQUEST memory for GTB. %!STATUS!", status);
-        return(status);
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting GTB Header. %!STATUS!", status);
+        status = STATUS_SUCCESS;
+        goto exit;
     }
+    if (numBytesTransferred != sizeof(gtbHeader))
+    {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "GTB Header malformed.");
+        status = STATUS_SUCCESS;
+        goto exit;
+    }
+
+    // First take a guess at size and declare memory
+    gtbMemorySize = gtbHeader.wTotalLength;
 
     // Create temporary memory for holding the GTB data from device
     WDF_OBJECT_ATTRIBUTES_INIT(&gtbMemoryAttributes);
@@ -1310,66 +1342,54 @@ Return Value:
         0,
         gtbMemorySize,
         &gtbMemory,
-        &(void*)pGtbHeader
+        &gtbMemoryPtr
     );
     if (!NT_SUCCESS(status))
     {
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error allocating memory for GTB. %!STATUS!", status);
-        return(status);
+        goto exit;
     }
 
-    // Send Options
-    WDF_REQUEST_SEND_OPTIONS_INIT(
-        &sendOptions,
-        WDF_REQUEST_SEND_OPTION_TIMEOUT
+    WDF_MEMORY_DESCRIPTOR_INIT_HANDLE(&memoryDescriptor, gtbMemory, NULL);
+
+    WDF_USB_CONTROL_SETUP_PACKET_INIT(
+        &controlSetupPacket,
+        BmRequestDeviceToHost,       // Direction of the request
+        BmRequestToInterface,
+        USB_REQUEST_GET_DESCRIPTOR,  // bRequest
+        (USHORT)0x2601,              // Value
+        interfaceNumber              // Index 
     );
+
+    // Set timeout
     WDF_REQUEST_SEND_OPTIONS_SET_TIMEOUT(
         &sendOptions,
-        DEFAULT_CONTROL_TRANSFER_TIMEOUT
+        WDF_TIMEOUT_TO_SEC
     );
 
-    USHORT interfaceNumber = (USHORT)WdfUsbInterfaceGetInterfaceNumber(devCtx->UsbControlInterface);
-
-    // Create setup packet
-    WDF_USB_CONTROL_SETUP_PACKET_INIT_VENDOR(
-        &controlSetup,
-        BmRequestDeviceToHost,
-        BmRequestToInterface,
-        USB_REQUEST_GET_DESCRIPTOR,
-        (USHORT)0x2601,                             // Need to remove magic number
-        interfaceNumber
-    );
-
-    WDF_MEMORY_DESCRIPTOR_INIT_BUFFER(&gtbMemDescriptor, (PVOID)pGtbHeader, gtbMemorySize);
-    //WDF_MEMORY_DESCRIPTOR_INIT_HANDLE(&gtbMemDescriptor, gtbMemory, NULL);
-
-    // maybe try above REQUEST
-
+    // Get the Group Terminal Block descriptor for this device
     status = WdfUsbTargetDeviceSendControlTransferSynchronously(
         devCtx->UsbDevice,
-        gtbRequest,
+        WDF_NO_HANDLE,               // Optional WDFREQUEST
         &sendOptions,
-        &controlSetup,
-        &gtbMemDescriptor,
-        &bytesTransferred
+        &controlSetupPacket,
+        &memoryDescriptor,           // MemoryDescriptor
+        &numBytesTransferred         // BytesTransferred 
     );
     if (!NT_SUCCESS(status))
     {
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting GTB Header. %!STATUS!", status);
         status = STATUS_SUCCESS;
-        goto GetGTBExit;
+        goto exit;
     }
 
-GetGTBExit:
+    ////// PARSE GTB INTO MEMORY ///////
 
-    // Clean up temporary memory
+exit:
     if (gtbMemory)
     {
         WdfObjectDelete(gtbMemory);
     }
-
-    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
-
     return status;
 }
 
