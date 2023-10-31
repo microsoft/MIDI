@@ -225,6 +225,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
+    <ClInclude Include="MidiCIMessageUtility.h" />
     <ClInclude Include="MidiEndpointConnection.h">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
     </ClInclude>
@@ -243,8 +244,12 @@
     <ClInclude Include="MidiMessageBuilder.h">
       <DependentUpon>MidiMessageBuilder.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiMessageConverter.h" />
-    <ClInclude Include="MidiMessageTranslator.h" />
+    <ClInclude Include="MidiMessageConverter.h">
+      <DependentUpon>MidiMessageConverter.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiMessageTranslator.h">
+      <DependentUpon>MidiMessageTranslator.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiProfile.h">
       <DependentUpon>MidiProfile.idl</DependentUpon>
     </ClInclude>
@@ -331,6 +336,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
+    <ClCompile Include="MidiCIMessageUtility.cpp" />
     <ClCompile Include="MidiEndpointConnection.cpp">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
     </ClCompile>
@@ -349,8 +355,12 @@
     <ClCompile Include="MidiMessageBuilder.cpp">
       <DependentUpon>MidiMessageBuilder.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiMessageConverter.cpp" />
-    <ClCompile Include="MidiMessageTranslator.cpp" />
+    <ClCompile Include="MidiMessageConverter.cpp">
+      <DependentUpon>MidiMessageConverter.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiMessageTranslator.cpp">
+      <DependentUpon>MidiMessageTranslator.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiProfile.cpp">
       <DependentUpon>MidiProfile.idl</DependentUpon>
     </ClCompile>
@@ -437,6 +447,7 @@
     <Midl Include="IMidiTransportSettingsData.idl" />
     <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl" />
     <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl" />
+    <Midl Include="MidiCIMessageUtility.idl" />
     <Midl Include="MidiEndpointConnection.idl" />
     <Midl Include="MidiEndpointConnectionOptions.idl" />
     <Midl Include="MidiChannel.idl" />

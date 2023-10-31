@@ -109,6 +109,23 @@
                 Compressed="yes"
                 SourceFile="WindowsMIDIServicesCoreSetup.msi">
             </MsiPackage>
+
+            <MsiPackage
+                Id="MidiServicesConsoleSetup"
+                Vital="yes"
+                Permanent="no"
+                Compressed="yes"
+                SourceFile="MidiConsoleAppStandAloneSetup.msi">
+            </MsiPackage>
+
+            <MsiPackage
+                Id="MidiServicesSettingsAppSetup"
+                Vital="yes"
+                Permanent="no"
+                Compressed="yes"
+                SourceFile="MidiSettingsAppStandAloneSetup.msi">
+            </MsiPackage>
+
         </PackageGroup>
         
     </Fragment>

@@ -20,6 +20,7 @@
 #define MIDI_IDL_IMPORT \
 import "Windows.Foundation.idl"; \
 import "Windows.Data.Json.idl"; \
+import "Windows.Devices.Midi.idl"; \
 
 #define MIDI_INTERFACE_UUID(u,v) uuid(u)
 
