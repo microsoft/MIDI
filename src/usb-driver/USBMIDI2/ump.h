@@ -335,19 +335,11 @@ typedef struct
   UINT16 wMaxOutputBandwidth; ///< Maximum Output Bandwidth Capability in 4KB/second
 } midi2_desc_group_terminal_block_t;
 
-/// MIDI 2 Group Terminal Blocks Descriptor with one group terminal block
-typedef struct
-{
-  midi2_desc_group_terminal_block_header_t header;
-  midi2_desc_group_terminal_block_t block;
-} midi2_cs_interface_desc_group_terminal_blocks_t;
-
 /// MIDI 2 Group Terminal Blocks Descriptor with multiple terminal blocks
-#define midi2_cs_interface_desc_group_terminal_blocks_n_t(group_terminal_block_num) \
-  struct {       \
-    midi2_desc_group_terminal_block_header_t header;            \
-    midi2_desc_group_terminal_block_t aBlock[group_terminal_block_num]; \
-  }
+typedef struct {
+    midi2_desc_group_terminal_block_header_t header;
+    midi2_desc_group_terminal_block_t aBlock[];
+} midi2_cs_interface_desc_group_terminal_blocks;
 
 #pragma pack(pop)
 

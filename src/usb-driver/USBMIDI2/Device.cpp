@@ -833,7 +833,6 @@ Return Value:
         );
         if (!NT_SUCCESS(status))
         {
-            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error allocating memory for Serial Number. %!STATUS!", status);
             TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Serial Number string." );
             return(status);
         }
@@ -1268,6 +1267,8 @@ Return Value:
     PDEVICE_CONTEXT                             devCtx = NULL;
     ULONG                                       numBytesTransferred;
     midi2_desc_group_terminal_block_header_t    gtbHeader;
+    USHORT                                      numChars;
+    WDF_REQUEST_SEND_OPTIONS                    reqOptions;
 
     if (!Device)
     {
@@ -1378,12 +1379,142 @@ Return Value:
     );
     if (!NT_SUCCESS(status))
     {
-        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting GTB Header. %!STATUS!", status);
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting GTB Data. %!STATUS!", status);
         status = STATUS_SUCCESS;
         goto exit;
     }
 
-    ////// PARSE GTB INTO MEMORY ///////
+    // Determine number of GTBs in descriptor
+    UINT numTerminalBlocks = (numBytesTransferred - (UINT)sizeof(midi2_desc_group_terminal_block_header_t))
+        / (UINT)sizeof(midi2_desc_group_terminal_block_t);
+
+    // Simple checks for valid data
+    if (!numBytesTransferred || numTerminalBlocks > 255 ||
+        ((numBytesTransferred - (UINT)sizeof(midi2_desc_group_terminal_block_header_t))
+            % (UINT)sizeof(midi2_desc_group_terminal_block_t)))
+    {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error parsing GTB Data, GTB invalid size: %d", numBytesTransferred);
+            status = STATUS_SUCCESS;
+        goto exit;
+    }
+
+    // Map GTBs from USB
+    midi2_cs_interface_desc_group_terminal_blocks* pUSBGTBs =
+        (midi2_cs_interface_desc_group_terminal_blocks *)gtbMemoryPtr;
+
+    // Determine the size of GTB Structure
+    UINT grpTermBlockStructureSize = sizeof(KSMULTIPLE_ITEM);
+    USHORT grpTermBlockStringSizes[255];
+
+    for (UINT termBlockCount = 0; termBlockCount < numTerminalBlocks; termBlockCount++)
+    {
+        grpTermBlockStructureSize += sizeof(UMP_GROUP_TERMINAL_BLOCK_HEADER);
+
+        // See if there is a string defined
+        if (pUSBGTBs->aBlock[termBlockCount].iBlockItem)
+        {
+            // Find out how large this string is
+            WDF_REQUEST_SEND_OPTIONS_INIT(&reqOptions, WDF_REQUEST_SEND_OPTION_SYNCHRONOUS);
+            WDF_REQUEST_SEND_OPTIONS_SET_TIMEOUT(&reqOptions, WDF_REL_TIMEOUT_IN_SEC(USB_REQ_TIMEOUT_SEC));
+
+            status = WdfUsbTargetDeviceQueryString(
+                devCtx->UsbDevice,
+                NULL,
+                &reqOptions,
+                NULL,
+                &numChars,
+                pUSBGTBs->aBlock[termBlockCount].iBlockItem,
+                MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
+            );
+            if (!NT_SUCCESS(status) || !numChars)
+            {
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Product Name string size.%!STATUS!", status);
+                status = STATUS_SUCCESS;
+                // Make sure we do not try to capture this string in future processing
+                pUSBGTBs->aBlock[termBlockCount].iBlockItem = 0;
+                grpTermBlockStructureSize += sizeof(WCHAR);     // give space for a null character
+                grpTermBlockStringSizes[termBlockCount] = sizeof(WCHAR);
+                continue;
+            }
+
+            // Add space for name string including null termination
+            grpTermBlockStringSizes[termBlockCount] = (numChars + 1) * (USHORT)sizeof(WCHAR);
+            grpTermBlockStructureSize += grpTermBlockStringSizes[termBlockCount];
+        }
+        else
+        {
+            // Add space for name string including null termination
+            grpTermBlockStringSizes[termBlockCount] = (USHORT)sizeof(WCHAR);
+            grpTermBlockStructureSize += grpTermBlockStringSizes[termBlockCount];
+        }
+    }
+
+    // Create memory to store GTB Parameters
+    PUCHAR pGTBPropertyBuffer;
+    WDF_OBJECT_ATTRIBUTES_INIT(&gtbMemoryAttributes);
+    gtbMemoryAttributes.ParentObject = devCtx->UsbDevice;
+    status = WdfMemoryCreate(
+        &gtbMemoryAttributes,
+        PagedPool,
+        USBMIDI_POOLTAG,
+        (size_t)grpTermBlockStructureSize,
+        &devCtx->DeviceGTBMemory,
+        (PVOID*)&pGTBPropertyBuffer
+    );
+    if (!NT_SUCCESS(status))
+    {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error allocating memory for GTB Preoperty. %!STATUS!", status);
+        return(status);
+    }
+
+    // Place KSMULTIPLE_ITEM Strucutre
+    PKSMULTIPLE_ITEM pMultiHeader = (PKSMULTIPLE_ITEM)pGTBPropertyBuffer;
+    pMultiHeader->Size = grpTermBlockStructureSize;
+    pMultiHeader->Count = numTerminalBlocks;
+    pGTBPropertyBuffer += sizeof(KSMULTIPLE_ITEM);
+
+    for (UINT termBlockCount = 0; termBlockCount < numTerminalBlocks; termBlockCount++)
+    {
+        PUMP_GROUP_TERMINAL_BLOCK_DEFINITION pThisGrpTrmBlk = (PUMP_GROUP_TERMINAL_BLOCK_DEFINITION)pGTBPropertyBuffer;
+
+        // Populate data from GTB read from USB Device
+        pThisGrpTrmBlk->GrpTrmBlock.Size =
+            (WORD)(sizeof(UMP_GROUP_TERMINAL_BLOCK_HEADER) + grpTermBlockStringSizes[termBlockCount]);
+        pThisGrpTrmBlk->GrpTrmBlock.Number = pUSBGTBs->aBlock[termBlockCount].bGrpTrmBlkID;
+        pThisGrpTrmBlk->GrpTrmBlock.Direction = pUSBGTBs->aBlock[termBlockCount].bDescriptorType;
+        pThisGrpTrmBlk->GrpTrmBlock.FirstGroupIndex = pUSBGTBs->aBlock[termBlockCount].nGroupTrm;
+        pThisGrpTrmBlk->GrpTrmBlock.GroupCount = pUSBGTBs->aBlock[termBlockCount].nNumGroupTrm;
+        pThisGrpTrmBlk->GrpTrmBlock.Protocol = pUSBGTBs->aBlock[termBlockCount].bMIDIProtocol;
+        pThisGrpTrmBlk->GrpTrmBlock.MaxInputBandwidth = pUSBGTBs->aBlock[termBlockCount].wMaxInputBandwidth;
+        pThisGrpTrmBlk->GrpTrmBlock.MaxOutputBandwidth = pUSBGTBs->aBlock[termBlockCount].wMaxOutputBandwidth;
+
+        RtlZeroMemory(&pThisGrpTrmBlk->Name, grpTermBlockStringSizes[termBlockCount]);
+
+        if (pUSBGTBs->aBlock[termBlockCount].iBlockItem)
+        {
+            USHORT stringSize = grpTermBlockStringSizes[termBlockCount];
+
+            // Fetch String descriptor from device
+            status = WdfUsbTargetDeviceQueryString(
+                devCtx->UsbDevice,
+                NULL,   // No request needed
+                NULL,   // Parent already established
+                (PUSHORT)&pThisGrpTrmBlk->Name,
+                &stringSize,
+                pUSBGTBs->aBlock[termBlockCount].iBlockItem,
+                MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
+            );
+            if (!NT_SUCCESS(status))
+            {
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Product Name string text.%!STATUS!", status);
+                status = STATUS_SUCCESS;
+                // Continue processing - string already NULL terminated blank.
+            }
+        }
+
+        // Move the pointer
+        pGTBPropertyBuffer += pThisGrpTrmBlk->GrpTrmBlock.Size;
+    }
 
 exit:
     if (gtbMemory)

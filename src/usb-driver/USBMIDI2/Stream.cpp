@@ -614,9 +614,15 @@ EvtMidi2GroupTerminalBlocksCallback(
     // The size of the buffer provided by the caller
     ULONG valueCb = params.Parameters.Property.ValueCb;
 
-    // TODO: set minValueSize to the required size of the group
     // terminal block data.
-    minValueSize = MAX_PATH;
+    PUCHAR pGrpTermBlk = NULL;
+    size_t grpTermBlkSize = 0;
+
+    if (pDevCtx->DeviceGTBMemory)
+    {
+        pGrpTermBlk = (PUCHAR)WdfMemoryGetBuffer(pDevCtx->DeviceGTBMemory, &grpTermBlkSize);
+        minValueSize = (ULONG)grpTermBlkSize;
+    }
 
     // The following is required because the buffer size
     // is variable. If the size of the data buffer provided is 0, the
@@ -636,10 +642,13 @@ EvtMidi2GroupTerminalBlocksCallback(
         goto exit;
     }
 
-    // TODO: copy the data to the output buffer, copying a 255 byte
+    // 
+    // Copy the data to the output buffer, copying a 255 byte
     // empty buffer as a placeholer.
-    BYTE data[MAX_PATH] {0};
-    RtlCopyMemory(params.Parameters.Property.Value, &data, minValueSize);
+    if (pGrpTermBlk && minValueSize)
+    {
+        RtlCopyMemory(params.Parameters.Property.Value, pGrpTermBlk, minValueSize);
+    }
 
     // return the amount of buffer actually used.
     outDataCb = minValueSize;
