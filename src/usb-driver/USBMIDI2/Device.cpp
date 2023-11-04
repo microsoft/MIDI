@@ -1292,7 +1292,7 @@ Return Value:
     // Set timeout
     WDF_REQUEST_SEND_OPTIONS_SET_TIMEOUT(
         &sendOptions,
-        WDF_TIMEOUT_TO_SEC
+        4*WDF_TIMEOUT_TO_SEC
     );
 
     // Need interface number for setup packet
@@ -1308,11 +1308,16 @@ Return Value:
         interfaceNumber              // Index 
     );
 
+    // NOTE: When using timeout, for some reason fails transfer. This originally worked, but after adding
+    // additional parsing code below, it stopped working. Tried to multiply by 4 for 4s timeout, way too long. 
+    // Still did not work. So not having timeout - this however is not a "safe" method. Needs further investigation
+    // and input. This is same for next call to transfer full GTB from device.
+    // 
     // Fetch the GTB header from device
     status = WdfUsbTargetDeviceSendControlTransferSynchronously(
         devCtx->UsbDevice,
         WDF_NO_HANDLE,               // Optional WDFREQUEST
-        &sendOptions,
+        NULL, //&sendOptions,
         &controlSetupPacket,
         &memoryDescriptor,           // MemoryDescriptor
         &numBytesTransferred         // BytesTransferred 
@@ -1365,14 +1370,14 @@ Return Value:
     // Set timeout
     WDF_REQUEST_SEND_OPTIONS_SET_TIMEOUT(
         &sendOptions,
-        WDF_TIMEOUT_TO_SEC
+        4*WDF_TIMEOUT_TO_SEC
     );
 
     // Get the Group Terminal Block descriptor for this device
     status = WdfUsbTargetDeviceSendControlTransferSynchronously(
         devCtx->UsbDevice,
         WDF_NO_HANDLE,               // Optional WDFREQUEST
-        &sendOptions,
+        NULL,//&sendOptions,
         &controlSetupPacket,
         &memoryDescriptor,           // MemoryDescriptor
         &numBytesTransferred         // BytesTransferred 
