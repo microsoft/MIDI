@@ -23,7 +23,7 @@ void MidiStreamMessageBuilderTests::TestBuildEndpointNameNotificationLong()
     std::cout << "Testing endpoint Name: " << winrt::to_string(name) << std::endl;
 
     auto messages = MidiStreamMessageBuilder::BuildEndpointNameNotificationMessages(
-        MidiClock::GetMidiTimestamp(),
+        MidiClock::Now(),
         name
     );
 
@@ -84,7 +84,7 @@ void MidiStreamMessageBuilderTests::TestBuildEndpointNameNotificationMedium()
     std::cout << "Testing endpoint Name: " << winrt::to_string(name) << std::endl;
 
     auto messages = MidiStreamMessageBuilder::BuildEndpointNameNotificationMessages(
-        MidiClock::GetMidiTimestamp(),
+        MidiClock::Now(),
         name
     );
 
@@ -131,7 +131,7 @@ void MidiStreamMessageBuilderTests::TestBuildEndpointNameNotificationShort()
     std::cout << "Testing endpoint Name: " << winrt::to_string(name) << std::endl;
 
     auto messages = MidiStreamMessageBuilder::BuildEndpointNameNotificationMessages(
-        MidiClock::GetMidiTimestamp(),
+        MidiClock::Now(),
         name
     );
 
@@ -175,7 +175,7 @@ void MidiStreamMessageBuilderTests::TestBuildProductInstanceIdNotificationShort(
     std::cout << "Testing endpoint Id: " << winrt::to_string(productInstanceId) << std::endl;
 
     auto messages = MidiStreamMessageBuilder::BuildProductInstanceIdNotificationMessages(
-        MidiClock::GetMidiTimestamp(),
+        MidiClock::Now(),
         productInstanceId
     );
 

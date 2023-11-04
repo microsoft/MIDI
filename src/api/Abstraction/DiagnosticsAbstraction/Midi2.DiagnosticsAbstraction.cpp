@@ -16,7 +16,7 @@ CMidi2DiagnosticsAbstraction::Activate(
     void **Interface
 )
 {
-//    OutputDebugString(L"" __FUNCTION__ " Enter");
+    OutputDebugString(L"" __FUNCTION__ " Enter");
 
     RETURN_HR_IF(E_INVALIDARG, nullptr == Interface);
 

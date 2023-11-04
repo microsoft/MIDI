@@ -19,7 +19,7 @@ void MidiClockTests::TestMidiClockBasics()
 {
     for (int i = 0; i < 20; i++)
     {
-        std::cout << "Timestamp: " << i << " : " << MidiClock::GetMidiTimestamp() << std::endl;
+        std::cout << "Timestamp: " << i << " : " << MidiClock::Now() << std::endl;
     }
 
     VERIFY_IS_GREATER_THAN(MidiClock::GetMidiTimestampFrequency(), (uint32_t)0);

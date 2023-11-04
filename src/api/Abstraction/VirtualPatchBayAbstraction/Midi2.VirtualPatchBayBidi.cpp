@@ -8,11 +8,11 @@
 
 
 #include "pch.h"
-#include "midi2.VirtualMidiabstraction.h"
+#include "midi2.VirtualPatchBayabstraction.h"
 
 _Use_decl_annotations_
 HRESULT
-CMidi2VirtualMidiBiDi::Initialize(
+CMidi2VirtualPatchBayBiDi::Initialize(
     LPCWSTR,
     DWORD *,
     IMidiCallback * callback
@@ -20,7 +20,7 @@ CMidi2VirtualMidiBiDi::Initialize(
 {
 
     TraceLoggingWrite(
-        MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+        MidiVirtualPatchBayAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
@@ -37,10 +37,10 @@ CMidi2VirtualMidiBiDi::Initialize(
 }
 
 HRESULT
-CMidi2VirtualMidiBiDi::Cleanup()
+CMidi2VirtualPatchBayBiDi::Cleanup()
 {
     TraceLoggingWrite(
-        MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+        MidiVirtualPatchBayAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
@@ -55,7 +55,7 @@ CMidi2VirtualMidiBiDi::Cleanup()
 
 _Use_decl_annotations_
 HRESULT
-CMidi2VirtualMidiBiDi::SendMidiMessage(
+CMidi2VirtualPatchBayBiDi::SendMidiMessage(
     PVOID message,
     UINT size,
     LONGLONG /*position*/
@@ -77,7 +77,7 @@ CMidi2VirtualMidiBiDi::SendMidiMessage(
 
 _Use_decl_annotations_
 HRESULT
-CMidi2VirtualMidiBiDi::Callback(
+CMidi2VirtualPatchBayBiDi::Callback(
     PVOID /*message*/,
     UINT /*size*/,
     LONGLONG /*position*/

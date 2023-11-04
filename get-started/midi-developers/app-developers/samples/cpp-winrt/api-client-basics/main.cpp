@@ -54,7 +54,7 @@ int main()
 
             std::cout << std::endl;
             std::cout << "Received UMP" << std::endl;
-            std::cout << "- Current Timestamp: " << std::dec << MidiClock::GetMidiTimestamp() << std::endl;
+            std::cout << "- Current Timestamp: " << std::dec << MidiClock::Now() << std::endl;
             std::cout << "- UMP Timestamp:     " << std::dec << ump.Timestamp() << std::endl;
             std::cout << "- UMP Msg Type:      0x" << std::hex << (uint32_t)ump.MessageType() << std::endl;
             std::cout << "- UMP Packet Type:   0x" << std::hex << (uint32_t)ump.PacketType() << std::endl;
@@ -92,7 +92,7 @@ int main()
     std::cout << std::endl << "Creating MIDI 1.0 Channel Voice 32-bit UMP..." << std::endl;
 
     auto ump32 = MidiMessageBuilder::BuildMidi1ChannelVoiceMessage(
-        MidiClock::GetMidiTimestamp(), // use current timestamp
+        MidiClock::Now(), // use current timestamp
         5,      // group 5
         Midi1ChannelVoiceMessageStatus::NoteOn,     // 9
         3,      // channel 3

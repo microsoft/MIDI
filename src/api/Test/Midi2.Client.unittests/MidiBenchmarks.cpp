@@ -41,7 +41,7 @@ void MidiBenchmarks::BenchmarkSendReceiveWordArray()
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
-    uint64_t setupStartTimestamp = MidiClock::GetMidiTimestamp();
+    uint64_t setupStartTimestamp = MidiClock::Now();
 
     auto session = MidiSession::CreateSession(L"Benchmark Session");
 
@@ -70,7 +70,7 @@ void MidiBenchmarks::BenchmarkSendReceiveWordArray()
             // this is to help with calculating jitter. Keep in mind that jitter will be 
             // negatively affected by our receive loop as well, but should be close enough
             // to real-world expectations
-            uint64_t currentStamp = MidiClock::GetMidiTimestamp();
+            uint64_t currentStamp = MidiClock::Now();
             uint64_t umpStamp = args.Timestamp();
             //uint64_t umpStamp = args.Timestamp();
             timestampDeltas.push_back(currentStamp - umpStamp);
@@ -95,7 +95,7 @@ void MidiBenchmarks::BenchmarkSendReceiveWordArray()
 
 
     // send messages
-    uint64_t sendingStartTimestamp = MidiClock::GetMidiTimestamp();
+    uint64_t sendingStartTimestamp = MidiClock::Now();
 
     // the distribution of messages here tries to mimic what we expect to be
     // a reasonably typical mix. In reality, almost all messages going back
@@ -153,10 +153,10 @@ void MidiBenchmarks::BenchmarkSendReceiveWordArray()
         }
 
         numBytes += sizeof(uint32_t) * wordCount + sizeof(uint64_t);
-        connSend.SendMessageWordArray(MidiClock::GetMidiTimestamp(), words, 0, (uint8_t)wordCount);
+        connSend.SendMessageWordArray(MidiClock::Now(), words, 0, (uint8_t)wordCount);
     }
 
-    uint64_t sendingFinishTimestamp = MidiClock::GetMidiTimestamp();
+    uint64_t sendingFinishTimestamp = MidiClock::Now();
 
 
     // Wait for incoming message
@@ -165,7 +165,7 @@ void MidiBenchmarks::BenchmarkSendReceiveWordArray()
         std::cout << "Failure waiting for messages, timed out." << std::endl;
     }
 
-    uint64_t endingTimestamp = MidiClock::GetMidiTimestamp();
+    uint64_t endingTimestamp = MidiClock::Now();
 
     VERIFY_ARE_EQUAL(receivedMessageCount, numMessagesToSend);
 
@@ -292,7 +292,7 @@ void MidiBenchmarks::BenchmarkSendReceiveUmpRuntimeClass()
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
-    uint64_t setupStartTimestamp = MidiClock::GetMidiTimestamp();
+    uint64_t setupStartTimestamp = MidiClock::Now();
 
     auto session = MidiSession::CreateSession(L"Benchmark Session");
 
@@ -319,7 +319,7 @@ void MidiBenchmarks::BenchmarkSendReceiveUmpRuntimeClass()
             // this is to help with calculating jitter. Keep in mind that jitter will be 
             // negatively affected by our receive loop as well, but should be close enough
             // to real-world expectations
-            uint64_t currentStamp = MidiClock::GetMidiTimestamp();
+            uint64_t currentStamp = MidiClock::Now();
             uint64_t umpStamp = args.GetMessagePacket().Timestamp();
             //uint64_t umpStamp = args.Timestamp();
             timestampDeltas.push_back(currentStamp - umpStamp);
@@ -344,7 +344,7 @@ void MidiBenchmarks::BenchmarkSendReceiveUmpRuntimeClass()
 
 
     // send messages
-    uint64_t sendingStartTimestamp = MidiClock::GetMidiTimestamp();
+    uint64_t sendingStartTimestamp = MidiClock::Now();
 
     // the distribution of messages here tries to mimic what we expect to be
     // a reasonably typical mix. In reality, almost all messages going back
@@ -408,12 +408,12 @@ void MidiBenchmarks::BenchmarkSendReceiveUmpRuntimeClass()
         break;
         }
 
-        ump.Timestamp(MidiClock::GetMidiTimestamp());
+        ump.Timestamp(MidiClock::Now());
         connSend.SendMessagePacket(ump);
 
     }
 
-    uint64_t sendingFinishTimestamp = MidiClock::GetMidiTimestamp();
+    uint64_t sendingFinishTimestamp = MidiClock::Now();
 
 
     // Wait for incoming message
@@ -423,7 +423,7 @@ void MidiBenchmarks::BenchmarkSendReceiveUmpRuntimeClass()
         std::cout << "Failure waiting for messages, timed out." << std::endl;
     }
 
-    uint64_t endingTimestamp = MidiClock::GetMidiTimestamp();
+    uint64_t endingTimestamp = MidiClock::Now();
 
     VERIFY_ARE_EQUAL(receivedMessageCount, numMessagesToSend);
 

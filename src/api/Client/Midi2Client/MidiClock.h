@@ -17,7 +17,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiClock() = default;
 
-        static internal::MidiTimestamp GetMidiTimestamp() { return ::Windows::Devices::Midi2::Internal::Shared::GetCurrentMidiTimestamp(); }
+        static internal::MidiTimestamp Now() { return ::Windows::Devices::Midi2::Internal::Shared::GetCurrentMidiTimestamp(); }
+
         static uint64_t GetMidiTimestampFrequency() { return ::Windows::Devices::Midi2::Internal::Shared::GetMidiTimestampFrequency(); }
 
 
@@ -36,8 +37,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             return (double)((timestampValue * (double)1000.0) / freq);
         }
-
-
     };
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation

@@ -75,6 +75,7 @@
                 DetectCondition="VCRuntimeInstalled"
                 InstallArguments="/install /passive /norestart /log midi_vcruntime_install_log.txt" 
                 UninstallArguments="/uninstall /passive /norestart /quiet"
+                Permanent="true"
                 >
             </ExePackage>
 

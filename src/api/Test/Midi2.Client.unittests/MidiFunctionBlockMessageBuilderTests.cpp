@@ -28,7 +28,7 @@ void MidiFunctionBlockMessageBuilderTests::TestBuildFunctionBlockNameNotificatio
     std::cout << "Testing function block Name: " << winrt::to_string(name) << std::endl;
 
     auto messages = MidiStreamMessageBuilder::BuildFunctionBlockNameNotificationMessages(
-        MidiClock::GetMidiTimestamp(),
+        MidiClock::Now(),
         functionBlockNumber,
         name
     );
@@ -99,7 +99,7 @@ void MidiFunctionBlockMessageBuilderTests::TestBuildFunctionBlockNameNotificatio
     std::cout << "Testing function block Name: " << winrt::to_string(name) << std::endl;
 
     auto messages = MidiStreamMessageBuilder::BuildFunctionBlockNameNotificationMessages(
-        MidiClock::GetMidiTimestamp(),
+        MidiClock::Now(),
         functionBlockNumber,
         name
     );
@@ -160,7 +160,7 @@ void MidiFunctionBlockMessageBuilderTests::TestBuildFunctionBlockInfoNotificatio
     uint32_t resultingWord1{ 0x06040122 };
 
     auto ump = MidiStreamMessageBuilder::BuildFunctionBlockInfoNotificationMessage(
-        MidiClock::GetMidiTimestamp(),
+        MidiClock::Now(),
         active,
         functionBlockNumber,
         uiHint,

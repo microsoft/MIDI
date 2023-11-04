@@ -21,23 +21,49 @@ CMidiDeviceManager::Initialize(
         wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
         wil::com_ptr_nothrow<IMidiEndpointManager> endpointManager;
 
-        // provide the initial settings for these transports
-        // TODO: Still need a way to send updates to them without restarting the service or the abstraction
-        // but that requires a pipe all the way down to the client to send up that configuration block
-        auto transportSettingsJson = m_ConfigurationManager->GetConfigurationForTransportAbstraction(AbstractionLayer);
+        try
+        {
+            // provide the initial settings for these transports
+            // TODO: Still need a way to send updates to them without restarting the service or the abstraction
+            // but that requires a pipe all the way down to the client to send up that configuration block
+            auto transportSettingsJson = m_ConfigurationManager->GetConfigurationForTransportAbstraction(AbstractionLayer);
 
-        // changed these from a return-on-fail to just log, so we don't prevent service startup
-        // due to one bad abstraction
+            // changed these from a return-on-fail to just log, so we don't prevent service startup
+            // due to one bad abstraction
 
-        LOG_IF_FAILED(CoCreateInstance(AbstractionLayer, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
-        LOG_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiEndpointManager), (void**)&endpointManager));
-        
-        LOG_IF_FAILED(endpointManager->Initialize((IUnknown*)this, transportSettingsJson.c_str()));
+            LOG_IF_FAILED(CoCreateInstance(AbstractionLayer, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
 
-        m_MidiEndpointManagers.emplace(AbstractionLayer, std::move(endpointManager));
+            if (midiAbstraction != nullptr)
+            {
+                LOG_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiEndpointManager), (void**)&endpointManager));
+
+                if (endpointManager != nullptr)
+                {
+                    LOG_IF_FAILED(endpointManager->Initialize((IUnknown*)this, transportSettingsJson.c_str()));
+
+                    m_MidiEndpointManagers.emplace(AbstractionLayer, std::move(endpointManager));
+
+                    OutputDebugString(__FUNCTION__ L": Transport Abstraction activated.");
+                }
+                else
+                {
+                    OutputDebugString(__FUNCTION__ L": Transport Abstraction Endpoint Manager activation failed (nullptr return).");
+                }
+            }
+            else
+            {
+                OutputDebugString(__FUNCTION__ L": Transport Abstraction activation failed (nullptr return).");
+            }
+        }
+        catch (...)
+        {
+            // TODO: Log
+            OutputDebugString(__FUNCTION__ L": Exception loading transport abstraction.");
+        }
     }
 
     m_PerformanceManager = PerformanceManager;
+
     return S_OK;
 }
 

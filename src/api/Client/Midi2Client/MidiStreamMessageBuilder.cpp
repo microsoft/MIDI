@@ -125,7 +125,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
-
+    // TODO: Add ASCII/UTF-8 encoding option
 
     _Use_decl_annotations_
     collections::IVector<midi2::MidiMessage128> MidiStreamMessageBuilder::BuildSplitTextMessages(
@@ -145,6 +145,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         size_t totalCharacters = (text.size() > maxCharacters) ? maxCharacters : text.size();
         size_t remainingCharacters = totalCharacters;
 
+        // TODO: The Product Instance Id is ASCII, not UTF-8, so need to provide some encoding
+        // information to this function
+        // 
         // convert to 8 bit UTF-8 characters, and get the pointer to the first character
         auto utf8Version = winrt::to_string(text);
         char* utf8StringPointer = utf8Version.data();
@@ -261,7 +264,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
-    // todo: refactor this and share with the product instance ID notification
+    // TODO: This is UTF-8
     _Use_decl_annotations_
     collections::IVector<midi2::MidiMessage128> MidiStreamMessageBuilder::BuildEndpointNameNotificationMessages(
          internal::MidiTimestamp const timestamp,
@@ -278,7 +281,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         );
     }
 
-    // this code should really be refactored and shared with the name notification builder
+    // TODO: This is ASCII
     _Use_decl_annotations_
     collections::IVector<midi2::MidiMessage128> MidiStreamMessageBuilder::BuildProductInstanceIdNotificationMessages(
         internal::MidiTimestamp const timestamp,
@@ -426,6 +429,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     }
 
+    // TODO: This is UTF-8
     _Use_decl_annotations_
     collections::IVector<midi2::MidiMessage128> MidiStreamMessageBuilder::BuildFunctionBlockNameNotificationMessages(
         internal::MidiTimestamp const timestamp,

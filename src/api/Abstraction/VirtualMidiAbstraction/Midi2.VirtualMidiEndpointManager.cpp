@@ -22,10 +22,10 @@ _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiEndpointManager::Initialize(
     IUnknown* midiDeviceManager, 
-    LPCWSTR configurationJson
+    LPCWSTR /*configurationJson*/
 )
 {
-//    OutputDebugString(L"" __FUNCTION__ " Enter");
+    OutputDebugString(L"" __FUNCTION__ " Enter");
 
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
@@ -43,36 +43,40 @@ CMidi2VirtualMidiEndpointManager::Initialize(
 
     RETURN_IF_FAILED(CreateParentDevice());
 
-    if (configurationJson != nullptr)
-    {
-        try
-        {
-            std::wstring json{ configurationJson };
+    // Create all the device-side endpoints first
+    // Do not create the client-side endpoints until 
 
-            if (!json.empty())
-            {
-                m_jsonObject = json::JsonObject::Parse(json);
 
-                LOG_IF_FAILED(CreateConfiguredEndpoints(json));
-            }
-        }
-        catch (...)
-        {
-            OutputDebugString(L"Exception processing json for virtual MIDI abstraction");
+    //if (configurationJson != nullptr)
+    //{
+    //    try
+    //    {
+    //        std::wstring json{ configurationJson };
 
-            // we return S_OK here because otherwise this prevents the service from starting up.
-            return S_OK;
-        }
+    //        if (!json.empty())
+    //        {
+    //            m_jsonObject = json::JsonObject::Parse(json);
 
-    }
-    else
-    {
-        // empty / null is fine. We just continue on.
+    //            LOG_IF_FAILED(CreateConfiguredEndpoints(json));
+    //        }
+    //    }
+    //    catch (...)
+    //    {
+    //        OutputDebugString(L"Exception processing json for virtual MIDI abstraction");
 
-        OutputDebugString(L"Configuration json is null for virtual MIDI abstraction");
+    //        // we return S_OK here because otherwise this prevents the service from starting up.
+    //        return S_OK;
+    //    }
 
-        return S_OK;
-    }
+    //}
+    //else
+    //{
+    //    // empty / null is fine. We just continue on.
+
+    //    OutputDebugString(L"Configuration json is null for virtual MIDI abstraction");
+
+    //    return S_OK;
+    //}
 
     return S_OK;
 }
@@ -234,8 +238,33 @@ winrt::hstring GetStringValue(json::JsonObject parent, winrt::hstring key, winrt
 
 _Use_decl_annotations_
 HRESULT
-CMidi2VirtualMidiEndpointManager::CreateConfiguredEndpoints(std::wstring configurationJson)
+CMidi2VirtualMidiEndpointManager::CreateClientSideEndpoint(
+    std::wstring deviceSideInstanceId)
 {
+    // look up the device in the table
+    // get the name
+
+    // discovery etc. will all happen automatically?
+    
+    // update table with correct client <-> device relationship
+
+
+    return S_OK;
+
+}
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2VirtualMidiEndpointManager::CreateConfiguredDeviceEndpoints(std::wstring configurationJson)
+{
+    // Create the device-side endpoint
+    // 
+
+
+
+
+
     // if nothing to configure, that's ok
     if (configurationJson.empty()) return S_OK;
 

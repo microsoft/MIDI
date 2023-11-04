@@ -177,6 +177,12 @@
     <ClCompile Include="MidiProperty.cpp">
       <Filter>API\CI\Property Exchange</Filter>
     </ClCompile>
+    <ClCompile Include="MidiMessageConverter.cpp">
+      <Filter>API\Messages\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessageTranslator.cpp">
+      <Filter>API\Messages\Utility</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -265,6 +271,12 @@
       <Filter>API\CI\Property Exchange</Filter>
     </ClInclude>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="MidiMessageConverter.h">
+      <Filter>API\Messages\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessageTranslator.h">
+      <Filter>API\Messages\Utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiSession.idl">
@@ -305,9 +317,6 @@
     </Midl>
     <Midl Include="MidiEndpointConnectionSharingEnum.idl">
       <Filter>API\Endpoints\Connections</Filter>
-    </Midl>
-    <Midl Include="MidiVirtualDeviceManager.idl">
-      <Filter>API\Transports</Filter>
     </Midl>
     <Midl Include="MidiProtocolEnum.idl">
       <Filter>API\Transports</Filter>
@@ -366,7 +375,7 @@
     <Midl Include="MidiMessageBuilder.idl">
       <Filter>API\Messages\Utility</Filter>
     </Midl>
-    <Midl Include="MidiVirtualDeviceResponder.idl">
+    <Midl Include="MidiVirtualDevice.idl">
       <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
     </Midl>
     <Midl Include="MidiFunctionBlockMidi10Enum.idl">
@@ -443,6 +452,12 @@
     </Midl>
     <Midl Include="MidiEndpointDeviceInformationFilterEnum.idl">
       <Filter>API\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiMessageConverter.idl">
+      <Filter>API\Messages\Utility</Filter>
+    </Midl>
+    <Midl Include="MidiMessageTranslator.idl">
+      <Filter>API\Messages\Utility</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

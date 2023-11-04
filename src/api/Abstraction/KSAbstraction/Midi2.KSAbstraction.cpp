@@ -9,6 +9,8 @@ CMidi2KSAbstraction::Activate(
     void **Interface
 )
 {
+    OutputDebugString(L"" __FUNCTION__ " Enter");
+
     RETURN_HR_IF(E_INVALIDARG, nullptr == Interface);
 
     if (__uuidof(IMidiIn) == Riid)

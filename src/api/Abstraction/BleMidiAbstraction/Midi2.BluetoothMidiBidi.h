@@ -8,7 +8,7 @@
 
 #pragma once
 
-class CMidi2VirtualMidiBiDi : 
+class CMidi2BluetoothMidiBiDi : 
     public Microsoft::WRL::RuntimeClass<
         Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
         IMidiBiDi,

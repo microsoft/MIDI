@@ -161,18 +161,5 @@ namespace Windows.Devices.Midi2
     
         // Currently, Type 6, 7, 8, 9, A, B, C, and E messages are reserved. When they are defined
         // we will add a new contract version with additional build functions.
-
-
-
-
-
-
-
-
-
-
-
-
-
     };
 }

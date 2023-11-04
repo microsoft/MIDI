@@ -93,8 +93,12 @@ private:
         _In_ std::wstring const description
     );
 
-    HRESULT CreateConfiguredEndpoints(_In_ std::wstring configurationJson);
+
+    HRESULT CreateConfiguredDeviceEndpoints(_In_ std::wstring configurationJson);
+    
     HRESULT CreateParentDevice();
+    HRESULT CreateClientSideEndpoint(_In_ std::wstring deviceSideInstanceId);
+
 
     wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
 
