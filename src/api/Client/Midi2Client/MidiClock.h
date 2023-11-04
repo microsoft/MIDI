@@ -17,26 +17,19 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiClock() = default;
 
-        static internal::MidiTimestamp Now() { return ::Windows::Devices::Midi2::Internal::Shared::GetCurrentMidiTimestamp(); }
+        static internal::MidiTimestamp Now();
 
-        static uint64_t GetMidiTimestampFrequency() { return ::Windows::Devices::Midi2::Internal::Shared::GetMidiTimestampFrequency(); }
+        static uint64_t TimestampFrequency();
 
+        static internal::MidiTimestamp OffsetTimestampByTicks(_In_ internal::MidiTimestamp timestampValue, _In_ int64_t offsetTicks);
+        static internal::MidiTimestamp OffsetTimestampByMicroseconds(_In_ internal::MidiTimestamp timestampValue, _In_ int64_t offsetMicroseconds);
+        static internal::MidiTimestamp OffsetTimestampByMilliseconds(_In_ internal::MidiTimestamp timestampValue, _In_ int64_t offsetMilliseconds);
 
-        static double ConvertTimestampToMicroseconds(
-            _In_ internal::MidiTimestamp const timestampValue)
-        {
-            auto freq = GetMidiTimestampFrequency();
+        static double ConvertTimestampToMicroseconds(_In_ internal::MidiTimestamp const timestampValue);
+        static double ConvertTimestampToMilliseconds(_In_ internal::MidiTimestamp const timestampValue);
 
-            return (double)((timestampValue * (double)1000000.0) / freq);
-        }
-
-        static double ConvertTimestampToMilliseconds(
-            _In_ internal::MidiTimestamp const timestampValue)
-        {
-            auto freq = GetMidiTimestampFrequency();
-
-            return (double)((timestampValue * (double)1000.0) / freq);
-        }
+    private:
+        static uint64_t m_timestampFrequency;
     };
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation

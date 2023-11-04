@@ -20,11 +20,18 @@ namespace Windows.Devices.Midi2
         static MIDI_TIMESTAMP Now{ get; };
 
         // returns the units per second for the timestamp
-        static UInt64 GetMidiTimestampFrequency();
+        static UInt64 TimestampFrequency{ get; };
 
         // convenience function
         static Double ConvertTimestampToMicroseconds(MIDI_TIMESTAMP timestampValue);
         static Double ConvertTimestampToMilliseconds(MIDI_TIMESTAMP timestampValue);
+
+        // these can offset to the future or the past, whcih is why the offset is signed
+        static MIDI_TIMESTAMP OffsetTimetampByTicks(MIDI_TIMESTAMP timestampValue, Int64 offsetTicks);
+        static MIDI_TIMESTAMP OffsetTimetampByMicroseconds(MIDI_TIMESTAMP timestampValue, Int64 offsetMicroseconds);
+        static MIDI_TIMESTAMP OffsetTimetampByMilliseconds(MIDI_TIMESTAMP timestampValue, Int64 offsetMilliseconds);
+
+
 
         // TODO: Consider adding a wrapper for GetSystemTimePreciseAsFileTime to enable 
         // synchronizing timestamps to wall clock time, as much as that is possible
