@@ -175,7 +175,6 @@
     <ClInclude Include="Device.h" />
     <ClInclude Include="Circuit.h" />
     <ClInclude Include="Public.h" />
-    <ClInclude Include="Queue.h" />
     <ClInclude Include="Stream.h" />
     <ClInclude Include="StreamEngine.h" />
     <ClInclude Include="NewDelete.h" />
@@ -187,10 +186,6 @@
     <ClCompile Include="Driver.cpp" />
     <ClCompile Include="Device.cpp" />
     <ClCompile Include="Circuit.cpp" />
-    <ClCompile Include="Queue.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="Stream.cpp" />
     <ClCompile Include="StreamEngine.cpp" />
     <ClCompile Include="NewDelete.cpp" />
