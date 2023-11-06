@@ -1,4 +1,11 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
 #include "stdafx.h"
 
 using namespace winrt::Windows::Devices::Enumeration;
@@ -57,6 +64,9 @@ CMidiDevicePipe::Initialize(
         return E_INVALIDARG;
     }
 
+    RETURN_IF_FAILED(m_messageScheduler.Initialize(this, MmcssTaskId));
+
+
     return S_OK;
 }
 
@@ -89,6 +99,8 @@ CMidiDevicePipe::Cleanup()
         m_MidiClientPipes.clear();
     }
 
+    m_messageScheduler.Cleanup();
+
     return S_OK;
 }
 
@@ -97,23 +109,49 @@ HRESULT
 CMidiDevicePipe::SendMidiMessage(
     PVOID Data,
     UINT Length,
-    LONGLONG Position
+    LONGLONG Timestamp
 )
 {
+    // TODO: plugin processing and message scheduling
+    // Check if this is a real-time message. If so, Call SendMidiMessageNow
+    // Run message through plugins (system real-time messages bypass plugins?)
+    // - The plugins may produce additional messages, or delete the message
+    // After plugin processing, check to see if timestamp is in the future. If so, queue it up for sending
+    //
+    //
+    // Also TODO: If device is currently in the middle of SysEx7, we will want to park messages that aren't allowed to interrupt that
+
+    return m_messageScheduler.ProcessIncomingMidiMessage(Data, Length, Timestamp);
+
+    //return SendMidiMessageNow(Data, Length, Timestamp);
+}
+
+
+_Use_decl_annotations_
+HRESULT
+CMidiDevicePipe::SendMidiMessageNow(
+    PVOID Data,
+    UINT Length,
+    LONGLONG Timestamp
+)
+{
+//    OutputDebugString(L"" __FUNCTION__);
+
     // only one client may send a message to the device at a time
     auto lock = m_DevicePipeLock.lock();
 
     if (m_MidiBiDiDevice)
     {
-        return m_MidiBiDiDevice->SendMidiMessage(Data, Length, Position);
+        return m_MidiBiDiDevice->SendMidiMessage(Data, Length, Timestamp);
     }
     else if (m_MidiOutDevice)
     {
-        return m_MidiOutDevice->SendMidiMessage(Data, Length, Position);
+        return m_MidiOutDevice->SendMidiMessage(Data, Length, Timestamp);
     }
 
     return E_ABORT;
 }
+
 
 _Use_decl_annotations_
 HRESULT

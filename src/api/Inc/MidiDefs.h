@@ -35,6 +35,17 @@
 
 
 //
+// SendMidiMessage HRESULT codes (these are not exposed through the API, and are just internal)
+//
+
+//#define HR_S_MIDI_SENDMSG_IMMEDIATE     MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_WINDOWS, 0x601)
+//#define HR_S_MIDI_SENDMSG_SCHEDULED     MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_WINDOWS, 0x602)
+//#define HR_S_MIDI_SENDMSG_SYSEX_PARKED  MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_WINDOWS, 0x603)
+//#define HR_E_MIDI_SENDMSG_BUFFER_FULL   MAKE_HRESULT(SEVERITY_ERROR,   FACILITY_WINDOWS, 0x620)
+// the SendMidiMessage function can also return E_FAIL
+
+
+//
 // Defining new interface categories
 //
 #define STRING_DEVINTERFACE_UNIVERSALMIDIPACKET_INPUT L"{AE174174-6396-4DEE-AC9E-1E9C6F403230}"
@@ -196,6 +207,23 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UserSuppliedSmallImagePath, 502);     // DEVPROP
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UserSuppliedDescription, 503);     // DEVPROP_TYPE_STRING
 
 
+
+// Additional metrics ==================================================================
+// Starts at 600
+
+// Calculated latency for sending a message to a device. 
+// We may allow the user to set this value in the settings app. If a standard UMP
+// ping message is available in the future, we may be able to calculate this for
+// MIDI 2.0 devices. We may also be able to calculate this using the jitter-reduction
+// timestamps.
+#define STRING_PKEY_MIDI_MidiOutLatencyTicks MIDI_STRING_PKEY_GUID L",600"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_MidiOutLatencyTicks, 600);     // DEVPROP_TYPE_UINT64
+
+
+
+
+
+
 // TODO: Add in the other properties like
 // - Should receive MIDI clock
 // - Should use MIDI clock start
@@ -204,11 +232,6 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UserSuppliedDescription, 503);     // DEVPROP_TY
 // - Supports MPE
 // - Requires note off translation (Mackie)
 // - 
-
-
-
-
-
 
 
 

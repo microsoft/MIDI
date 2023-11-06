@@ -27,10 +27,10 @@ namespace Windows.Devices.Midi2
         static Double ConvertTimestampToMilliseconds(MIDI_TIMESTAMP timestampValue);
 
         // these can offset to the future or the past, whcih is why the offset is signed
-        static MIDI_TIMESTAMP OffsetTimetampByTicks(MIDI_TIMESTAMP timestampValue, Int64 offsetTicks);
-        static MIDI_TIMESTAMP OffsetTimetampByMicroseconds(MIDI_TIMESTAMP timestampValue, Int64 offsetMicroseconds);
-        static MIDI_TIMESTAMP OffsetTimetampByMilliseconds(MIDI_TIMESTAMP timestampValue, Int64 offsetMilliseconds);
-
+        static MIDI_TIMESTAMP OffsetTimestampByTicks(MIDI_TIMESTAMP timestampValue, Int64 offsetTicks);
+        static MIDI_TIMESTAMP OffsetTimestampByMicroseconds(MIDI_TIMESTAMP timestampValue, Int64 offsetMicroseconds);
+        static MIDI_TIMESTAMP OffsetTimestampByMilliseconds(MIDI_TIMESTAMP timestampValue, Int64 offsetMilliseconds);
+        
 
 
         // TODO: Consider adding a wrapper for GetSystemTimePreciseAsFileTime to enable 

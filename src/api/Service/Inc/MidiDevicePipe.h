@@ -1,4 +1,11 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
 #pragma once
 
 class CMidiDevicePipe :
@@ -36,7 +43,11 @@ public:
         return E_INVALIDARG;
     }
 
+    // called by the client
     HRESULT SendMidiMessage(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
+
+    // called by the scheduler
+    HRESULT SendMidiMessageNow(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
 
     STDMETHOD(Callback)(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
 
@@ -47,6 +58,7 @@ public:
     }
 
 private:
+
     wil::critical_section m_ClientPipeLock;
     std::map<MidiClientHandle, wil::com_ptr_nothrow<CMidiClientPipe>> m_MidiClientPipes;
 
@@ -59,5 +71,11 @@ private:
     wil::com_ptr_nothrow<IMidiBiDi> m_MidiBiDiDevice;
     wil::com_ptr_nothrow<IMidiIn> m_MidiInDevice;
     wil::com_ptr_nothrow<IMidiOut> m_MidiOutDevice;
+
+
+    // TEMP. We'll chain this with plugins when that's in place
+    MidiDevicePipeMessageScheduler m_messageScheduler;
+
+
 };
 

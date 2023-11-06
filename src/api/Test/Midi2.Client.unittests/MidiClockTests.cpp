@@ -22,7 +22,7 @@ void MidiClockTests::TestMidiClockBasics()
         std::cout << "Timestamp: " << i << " : " << MidiClock::Now() << std::endl;
     }
 
-    VERIFY_IS_GREATER_THAN(MidiClock::GetMidiTimestampFrequency(), (uint32_t)0);
+    VERIFY_IS_GREATER_THAN(MidiClock::TimestampFrequency(), (uint32_t)0);
 }
 
 // TODO: Should test the convenience methods as well

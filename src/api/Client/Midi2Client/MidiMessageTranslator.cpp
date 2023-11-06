@@ -12,12 +12,14 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
+    // TODO: Ref the same code being used in the service and usb driver, and just wrap that
+
     _Use_decl_annotations_
     midi2::MidiMessage64 MidiMessageTranslator::UpscaleMidi1ChannelVoiceMessageToMidi2(
         midi2::MidiMessage32 const& /*originalMessage*/
     ) noexcept
     {
-        // TODO
+        // TODO MidiMessageTranslator::UpscaleMidi1ChannelVoiceMessageToMidi2
         return nullptr;
     }
 
@@ -28,7 +30,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint8_t /*statusByte*/
     ) noexcept
     {
-        // TODO
+        // TODO MidiMessageTranslator::UpscaleMidi1ChannelVoiceMessageToMidi2
         return nullptr;
     }
 
@@ -40,7 +42,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint8_t /*dataByte1*/
     ) noexcept
     {
-        // TODO
+        // TODO MidiMessageTranslator::UpscaleMidi1ChannelVoiceMessageToMidi2
         return nullptr;
     }
 
@@ -53,7 +55,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint8_t /*dataByte2*/
     ) noexcept
     {
-        // TODO
+        // TODO MidiMessageTranslator::UpscaleMidi1ChannelVoiceMessageToMidi2
         return nullptr;
     }
 
@@ -62,7 +64,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::MidiMessage64 const& /*originalMessage*/
         ) noexcept
     {
-        // TODO
+        // TODO MidiMessageTranslator::DownscaleMidi2ChannelVoiceMessageToMidi1
         return nullptr;
     }
 }

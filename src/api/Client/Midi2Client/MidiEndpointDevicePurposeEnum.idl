@@ -18,7 +18,7 @@ namespace Windows.Devices.Midi2
 
         VirtualDeviceResponder = 100,
 
-        // TODO: Should we include General MIDI Synth in here?
+        InBoxGeneralMidiSynth = 400,
 
         DiagnosticLoopback = 500,
         DiagnosticPing = 510,

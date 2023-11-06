@@ -27,6 +27,14 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             [DefaultValue(1)]
             public int Count { get; set; }
 
+
+            [LocalizedDescription("ParameterSendMessageTimestampOffsetMicroseconds")]
+            [CommandOption("-o|--offset-microseconds")]
+            [DefaultValue(0)]
+            public long TimestampOffsetMicroseconds { get; set; }
+
+
+
         }
 
         public override Spectre.Console.ValidationResult Validate(CommandContext context, Settings settings)
@@ -117,6 +125,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
             }
 
+
+            UInt64 maxTimestampScheduled = 0;
+
             AnsiConsole.Progress()
                 .Start(ctx =>
                 {
@@ -128,7 +139,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                     while (messagesSent < settings.Count)
                     {
-                        UInt64 timestamp = MidiClock.Now;
+                        UInt64 baseTimestamp = MidiClock.Now;
+                        UInt64 timestamp = MidiClock.OffsetTimestampByMicroseconds(baseTimestamp, settings.TimestampOffsetMicroseconds);
+
+                        Console.WriteLine($"Clock Frequency  : {MidiClock.TimestampFrequency}");
+                        Console.WriteLine($"Current Timestamp: {baseTimestamp}");
+                        Console.WriteLine($"Target Timestamp : {timestamp}");
+
                         connection.SendMessageWordArray(timestamp, settings.Words, 0, (byte)settings.Words.Count());
 
                         messagesSent++;
@@ -136,9 +153,24 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                         ctx.Refresh();
 
+                        if (timestamp > maxTimestampScheduled)
+                        {
+                            maxTimestampScheduled = timestamp;
+                        }
+
                         Thread.Sleep(settings.DelayBetweenMessages);
                     }
                 });
+
+            if (maxTimestampScheduled > MidiClock.Now)
+            {
+                int sleepMs = (int)Math.Round(MidiClock.ConvertTimestampToMilliseconds(maxTimestampScheduled - MidiClock.Now));
+
+                Console.WriteLine($"Keeping connection alive until timestamp  : {maxTimestampScheduled} ({sleepMs/1000} seconds from now)");
+
+                Thread.Sleep(sleepMs + 2000);
+            }
+
 
             session.DisconnectEndpointConnection(connection.ConnectionId);
 

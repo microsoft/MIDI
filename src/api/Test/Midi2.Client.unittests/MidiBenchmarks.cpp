@@ -174,7 +174,7 @@ void MidiBenchmarks::BenchmarkSendReceiveWordArray()
     uint64_t sendReceiveDurationDelta = endingTimestamp - sendingStartTimestamp;
     uint64_t setupDurationDelta = sendingStartTimestamp - setupStartTimestamp;
 
-    uint64_t freq = MidiClock::GetMidiTimestampFrequency();
+    uint64_t freq = MidiClock::TimestampFrequency();
 
     //    std::cout << " - timeoutCounter " << std::dec << timeoutCounter << std::endl;
 
@@ -432,7 +432,7 @@ void MidiBenchmarks::BenchmarkSendReceiveUmpRuntimeClass()
     uint64_t sendReceiveDurationDelta = endingTimestamp - sendingStartTimestamp;
     uint64_t setupDurationDelta = sendingStartTimestamp - setupStartTimestamp;
 
-    uint64_t freq = MidiClock::GetMidiTimestampFrequency();
+    uint64_t freq = MidiClock::TimestampFrequency();
 
     //    std::cout << " - timeoutCounter " << std::dec << timeoutCounter << std::endl;
 

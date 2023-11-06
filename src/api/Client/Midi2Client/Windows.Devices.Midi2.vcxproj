@@ -225,7 +225,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
-    <ClInclude Include="MidiCIMessageUtility.h" />
+      <ClInclude Include="MidiCIMessageUtility.h">
+          <DependentUpon>MidiCIMessageUtility.idl</DependentUpon>
+      </ClInclude>
     <ClInclude Include="MidiEndpointConnection.h">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
     </ClInclude>
@@ -336,7 +338,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
-    <ClCompile Include="MidiCIMessageUtility.cpp" />
+      <ClCompile Include="MidiCIMessageUtility.cpp">
+          <DependentUpon>MidiCIMessageUtility.idl</DependentUpon>
+      </ClCompile>
     <ClCompile Include="MidiEndpointConnection.cpp">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
     </ClCompile>
