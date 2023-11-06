@@ -23,9 +23,21 @@ public:
 
     HRESULT AddClientPipe(wil::com_ptr_nothrow<CMidiClientPipe>& MidiClientPipe)
     {
-        auto lock = m_ClientPipeLock.lock();
-        m_MidiClientPipes[(MidiClientHandle)MidiClientPipe.get()] = MidiClientPipe;
-        return S_OK;
+        // Check the multi-client property of the device. If it's set to
+        // false and we already have a client, do not add the pipe
+        if (m_MidiClientPipes.size() == 0 || m_endpointSupportsMulticlient)
+        {
+            auto lock = m_ClientPipeLock.lock();
+            m_MidiClientPipes[(MidiClientHandle)MidiClientPipe.get()] = MidiClientPipe;
+            return S_OK;
+
+        }
+        else
+        {
+            // TODO: maybe return a custom hresult that the API can evaluate? 
+            // Not sure if that hresult makes it all the way back or not.
+            return E_FAIL;
+        }
     }
 
     HRESULT RemoveClientPipe(wil::com_ptr_nothrow<CMidiClientPipe>& MidiClientPipe)
@@ -76,6 +88,8 @@ private:
     // TEMP. We'll chain this with plugins when that's in place
     MidiDevicePipeMessageScheduler m_messageScheduler;
 
+
+    bool m_endpointSupportsMulticlient{ true };
 
 };
 

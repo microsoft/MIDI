@@ -26,7 +26,7 @@ namespace Windows.Devices.Midi2
         static Double ConvertTimestampToMicroseconds(MIDI_TIMESTAMP timestampValue);
         static Double ConvertTimestampToMilliseconds(MIDI_TIMESTAMP timestampValue);
 
-        // these can offset to the future or the past, whcih is why the offset is signed
+        // these can offset to the future or the past, which is why the offset is signed
         static MIDI_TIMESTAMP OffsetTimestampByTicks(MIDI_TIMESTAMP timestampValue, Int64 offsetTicks);
         static MIDI_TIMESTAMP OffsetTimestampByMicroseconds(MIDI_TIMESTAMP timestampValue, Int64 offsetMicroseconds);
         static MIDI_TIMESTAMP OffsetTimestampByMilliseconds(MIDI_TIMESTAMP timestampValue, Int64 offsetMilliseconds);

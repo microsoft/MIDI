@@ -30,7 +30,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             [LocalizedDescription("ParameterSendMessageTimestampOffsetMicroseconds")]
             [CommandOption("-o|--offset-microseconds")]
-            [DefaultValue(0)]
+            [DefaultValue(0L)]
             public long TimestampOffsetMicroseconds { get; set; }
 
 
@@ -92,89 +92,98 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 endpointId = UmpEndpointPicker.PickEndpoint();
             }
 
-            AnsiConsole.MarkupLine(Strings.SendMessageSendingThroughEndpointLabel + ": " + AnsiMarkupFormatter.FormatDeviceInstanceId(endpointId));
-            AnsiConsole.WriteLine();
-
-            bool openSuccess = false;
-
-            // when this goes out of scope, it will dispose of the session, which closes the connections
-            using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
-
-            var bidiOpenOptions = new MidiEndpointConnectionOptions();
-
-            if (session == null)
+            if (!string.IsNullOrEmpty(endpointId))
             {
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToCreateSession));
-                return (int)MidiConsoleReturnCode.ErrorCreatingSession;
-            }
+                AnsiConsole.MarkupLine(Strings.SendMessageSendingThroughEndpointLabel + ": " + AnsiMarkupFormatter.FormatDeviceInstanceId(endpointId));
+                AnsiConsole.WriteLine();
 
-            using var connection = session.CreateEndpointConnection(endpointId, bidiOpenOptions);
-            if (connection != null)
-            {
-                openSuccess = connection.Open();
+                bool openSuccess = false;
+
+                // when this goes out of scope, it will dispose of the session, which closes the connections
+                using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
+
+                var bidiOpenOptions = new MidiEndpointConnectionOptions();
+
+                if (session == null)
+                {
+                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToCreateSession));
+                    return (int)MidiConsoleReturnCode.ErrorCreatingSession;
+                }
+
+                using var connection = session.CreateEndpointConnection(endpointId, bidiOpenOptions);
+                if (connection != null)
+                {
+                    openSuccess = connection.Open();
+                }
+                else
+                {
+                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToCreateEndpointConnection));
+                    return (int)MidiConsoleReturnCode.ErrorCreatingEndpointConnection;
+                }
+
+                if (!openSuccess)
+                {
+                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToOpenEndpoint));
+                    return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
+                }
+
+
+                UInt64 maxTimestampScheduled = 0;
+
+                AnsiConsole.Progress()
+                    .Start(ctx =>
+                    {
+                        var sendTask = ctx.AddTask("[white]Sending messages[/]");
+                        sendTask.MaxValue = settings.Count;
+                        sendTask.Value = 0;
+
+                        uint messagesSent = 0;
+
+                        while (messagesSent < settings.Count)
+                        {
+                            UInt64 baseTimestamp = MidiClock.Now;
+                            UInt64 timestamp = MidiClock.OffsetTimestampByMicroseconds(baseTimestamp, settings.TimestampOffsetMicroseconds);
+
+                            //Console.WriteLine($"Clock Frequency  : {MidiClock.TimestampFrequency}");
+                            //Console.WriteLine($"Current Timestamp: {baseTimestamp}");
+                            //Console.WriteLine($"Target Timestamp : {timestamp}");
+
+                            connection.SendMessageWordArray(timestamp, settings.Words, 0, (byte)settings.Words.Count());
+
+                            messagesSent++;
+                            sendTask.Value = messagesSent;
+
+                            ctx.Refresh();
+
+                            if (timestamp > maxTimestampScheduled)
+                            {
+                                maxTimestampScheduled = timestamp;
+                            }
+
+                            Thread.Sleep(settings.DelayBetweenMessages);
+                        }
+                    });
+
+                if (maxTimestampScheduled > MidiClock.Now)
+                {
+                    int sleepMs = (int)Math.Ceiling(MidiClock.ConvertTimestampToMilliseconds(maxTimestampScheduled - MidiClock.Now));
+
+                    AnsiConsole.MarkupLine($"Keeping connection alive until timestamp : {AnsiMarkupFormatter.FormatTimestamp(maxTimestampScheduled)} ({sleepMs / 1000} seconds from now)");
+
+                    Thread.Sleep(sleepMs + 500);
+                }
+
+
+                session.DisconnectEndpointConnection(connection.ConnectionId);
+
+                return (int)MidiConsoleReturnCode.Success;
             }
             else
             {
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToCreateEndpointConnection));
-                return (int)MidiConsoleReturnCode.ErrorCreatingEndpointConnection;
+                // no endpoint
+
+                return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
             }
-
-            if (!openSuccess)
-            {
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToOpenEndpoint));
-                return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
-            }
-
-
-            UInt64 maxTimestampScheduled = 0;
-
-            AnsiConsole.Progress()
-                .Start(ctx =>
-                {
-                    var sendTask = ctx.AddTask("[white]Sending messages[/]");
-                    sendTask.MaxValue = settings.Count;
-                    sendTask.Value = 0;
-
-                    uint messagesSent = 0;
-
-                    while (messagesSent < settings.Count)
-                    {
-                        UInt64 baseTimestamp = MidiClock.Now;
-                        UInt64 timestamp = MidiClock.OffsetTimestampByMicroseconds(baseTimestamp, settings.TimestampOffsetMicroseconds);
-
-                        Console.WriteLine($"Clock Frequency  : {MidiClock.TimestampFrequency}");
-                        Console.WriteLine($"Current Timestamp: {baseTimestamp}");
-                        Console.WriteLine($"Target Timestamp : {timestamp}");
-
-                        connection.SendMessageWordArray(timestamp, settings.Words, 0, (byte)settings.Words.Count());
-
-                        messagesSent++;
-                        sendTask.Value = messagesSent;
-
-                        ctx.Refresh();
-
-                        if (timestamp > maxTimestampScheduled)
-                        {
-                            maxTimestampScheduled = timestamp;
-                        }
-
-                        Thread.Sleep(settings.DelayBetweenMessages);
-                    }
-                });
-
-            if (maxTimestampScheduled > MidiClock.Now)
-            {
-                int sleepMs = (int)Math.Round(MidiClock.ConvertTimestampToMilliseconds(maxTimestampScheduled - MidiClock.Now));
-
-                Console.WriteLine($"Keeping connection alive until timestamp  : {maxTimestampScheduled} ({sleepMs/1000} seconds from now)");
-
-                Thread.Sleep(sleepMs + 2000);
-            }
-
-
-            session.DisconnectEndpointConnection(connection.ConnectionId);
-
-            return (int)MidiConsoleReturnCode.Success;
         }
 
     }

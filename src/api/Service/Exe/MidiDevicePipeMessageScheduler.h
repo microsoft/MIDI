@@ -45,7 +45,7 @@ public:
     ~MidiDevicePipeMessageScheduler() { }
 
     HRESULT Initialize(
-        _In_ CMidiDevicePipe* devicePipe, 
+        _In_ wil::com_ptr_nothrow<CMidiDevicePipe>& devicePipe,
         _In_ DWORD* MmcssTaskId);
 
     HRESULT Cleanup();
@@ -93,6 +93,6 @@ private:
 
     std::thread m_queueWorkerThread;
 
-    wil::unique_event_nothrow m_newDataAvailable;
+    wil::unique_event_nothrow m_messageProcessorWakeup;
 
 };

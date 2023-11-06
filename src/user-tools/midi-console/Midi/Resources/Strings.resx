@@ -168,8 +168,11 @@
   <data name="CommonTableHeaderIndex" xml:space="preserve">
     <value>Index</value>
   </data>
+  <data name="EndpointPickerPleaseSelectEndpoint" xml:space="preserve">
+    <value>Please select an endpoint</value>
+  </data>
   <data name="ErrorEnumEndpointsFailed" xml:space="preserve">
-    <value>Enumerating endpoints failed</value>
+    <value>Enumerating endpoints failed. Is the MIDI service running?</value>
   </data>
   <data name="ErrorGeneralFailReasonWinRTActivation" xml:space="preserve">
     <value>The WinRT types could not be activated. Is Windows MIDI Services installed?</value>
@@ -308,6 +311,9 @@
   </data>
   <data name="ParameterSendMessagesFileVerbose" xml:space="preserve">
     <value>Verbose output as the messages are sent</value>
+  </data>
+  <data name="ParameterSendMessageTimestampOffsetMicroseconds" xml:space="preserve">
+    <value>Timestamp offset in microseconds (1/1,000,000 of a second) to use when scheduling this message.</value>
   </data>
   <data name="ParameterSendMessageWordFormat" xml:space="preserve">
     <value>Data format for the individual words. Valid values include:</value>
