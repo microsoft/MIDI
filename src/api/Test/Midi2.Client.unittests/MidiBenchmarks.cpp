@@ -237,21 +237,27 @@ void MidiBenchmarks::BenchmarkSendReceiveScheduledMessages(_In_ uint32_t message
 
 void MidiBenchmarks::BenchmarkSendReceiveScheduledMessagesLowCount()
 {
-    LOG_OUTPUT(L"API Scheduling benchmark low message count ***********************************************************************");
+    LOG_OUTPUT(L"API Scheduling benchmark LOW message count ***********************************************************************");
 
     BenchmarkSendReceiveScheduledMessages(50);
+    BenchmarkSendReceiveScheduledMessages(200);
 }
 
 void MidiBenchmarks::BenchmarkSendReceiveScheduledMessagesMediumCount()
 {
-    LOG_OUTPUT(L"API Scheduling benchmark low message count ***********************************************************************");
+    LOG_OUTPUT(L"API Scheduling benchmark MEDIUM message count ***********************************************************************");
 
     BenchmarkSendReceiveScheduledMessages(1000);
+    BenchmarkSendReceiveScheduledMessages(2000);
+    BenchmarkSendReceiveScheduledMessages(3000);
+    BenchmarkSendReceiveScheduledMessages(5000);
+    BenchmarkSendReceiveScheduledMessages(10000);
 }
+
 
 void MidiBenchmarks::BenchmarkSendReceiveScheduledMessagesHighCount()
 {
-    LOG_OUTPUT(L"API Scheduling benchmark HIGH message count **********************************************************************");
+    LOG_OUTPUT(L"API Scheduling benchmark HIGH (Max) message count **********************************************************************");
 
     BenchmarkSendReceiveScheduledMessages(MIDI_OUTGOING_MESSAGE_QUEUE_MAX_MESSAGE_COUNT);
 }

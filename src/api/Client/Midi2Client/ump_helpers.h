@@ -462,28 +462,43 @@ namespace Windows::Devices::Midi2::Internal
 
     inline bool IsSysEx7StartMessage(_In_ uint32_t const word0) noexcept
     {
+        UNREFERENCED_PARAMETER(word0);
 
+        // TODO
+        return false;
     }
 
     inline bool IsSysEx7ContinueMessage(_In_ uint32_t const word0) noexcept
     {
+        UNREFERENCED_PARAMETER(word0);
 
+        // TODO
+        return false;
     }
 
     inline bool IsSysEx7CompleteMessage(_In_ uint32_t const word0) noexcept
     {
+        UNREFERENCED_PARAMETER(word0);
 
+        // TODO
+        return false;
     }
 
     inline bool IsSysEx7SelfContainedMessage(_In_ uint32_t const word0) noexcept
     {
+        UNREFERENCED_PARAMETER(word0);
 
+        // TODO
+        return false;
     }
 
 
     inline bool IsSysEx8Message(_In_ uint32_t const word0) noexcept
     {
+        UNREFERENCED_PARAMETER(word0);
 
+        // TODO
+        return false;
     }
 
     // To preserve robust connection to all MIDI devices and systems, Senders shall obey the following data rules of the

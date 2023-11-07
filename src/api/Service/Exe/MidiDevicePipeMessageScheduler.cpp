@@ -79,17 +79,15 @@ HRESULT MidiDevicePipeMessageScheduler::ProcessIncomingMidiMessage(
     try
     {
         // Check to see if timestamp is in the past or within our tick window: If so, SendMessageNow
-        if (shared::GetCurrentMidiTimestamp() >= timestamp - m_tickWindow - m_deviceLatencyTicks)
+        if (timestamp == 0 || 
+            shared::GetCurrentMidiTimestamp() >= timestamp - m_tickWindow - m_deviceLatencyTicks)
         {
-            //OutputDebugString(L"" __FUNCTION__ " Send message immediately");
-
             // message is within current tick window, so just send
-
             return SendMidiMessageNow(data, size, timestamp);
         }
         else
         {
-            if (size <= MAXIMUM_UMP_DATASIZE)
+            if (size >= MINIMUM_UMP_DATASIZE && size <= MAXIMUM_UMP_DATASIZE)
             {
                 for (int i = 0; i < MIDI_MESSAGE_SCHEDULE_ENQUEUE_RETRY_COUNT && m_continueProcessing; i++)
                 {
