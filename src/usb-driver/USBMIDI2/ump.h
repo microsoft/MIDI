@@ -338,7 +338,7 @@ typedef struct
 /// MIDI 2 Group Terminal Blocks Descriptor with multiple terminal blocks
 typedef struct {
     midi2_desc_group_terminal_block_header_t header;
-    midi2_desc_group_terminal_block_t aBlock[];
+    midi2_desc_group_terminal_block_t aBlock[1];
 } midi2_cs_interface_desc_group_terminal_blocks;
 
 #pragma pack(pop)
