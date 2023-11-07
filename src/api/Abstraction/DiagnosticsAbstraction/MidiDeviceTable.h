@@ -21,8 +21,6 @@ class MidiDeviceTable
 {
 public:
     MidiLoopbackBidiDevice* GetBidiDevice();
-    MidiLoopbackDevice* GetInOutDevice();
-
     MidiPingBidiDevice* GetPingDevice();
 
     static MidiDeviceTable& Current();
@@ -37,7 +35,6 @@ private:
 
 
     MidiLoopbackBidiDevice m_bidiDevice;
-    MidiLoopbackDevice m_inOutDevice;
 
     MidiPingBidiDevice m_pingDevice;
 };

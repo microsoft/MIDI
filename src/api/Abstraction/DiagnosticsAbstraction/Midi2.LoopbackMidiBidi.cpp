@@ -31,15 +31,20 @@ CMidi2LoopbackMidiBiDi::Initialize(
 
     std::wstring id{ endpointId };
     InPlaceToLower(id);
+    //OutputDebugString(id.c_str());
 
     std::wstring pingBiDiId{ DEFAULT_PING_BIDI_ID };
     InPlaceToLower(pingBiDiId);
+    //OutputDebugString(pingBiDiId.c_str());
 
     std::wstring loopBiDiAId{ DEFAULT_LOOPBACK_BIDI_A_ID };
     InPlaceToLower(loopBiDiAId);
+    //OutputDebugString(loopBiDiAId.c_str());
+
 
     std::wstring loopBiDiBId{ DEFAULT_LOOPBACK_BIDI_B_ID };
     InPlaceToLower(loopBiDiBId);
+    //OutputDebugString(loopBiDiBId.c_str());
 
     
     // Both loopback endpoints share the same internal device as a simple way of routing between the two. 

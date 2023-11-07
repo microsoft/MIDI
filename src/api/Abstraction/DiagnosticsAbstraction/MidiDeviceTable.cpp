@@ -33,8 +33,3 @@ MidiLoopbackBidiDevice* MidiDeviceTable::GetBidiDevice()
     return &m_bidiDevice;
 }
 
-
-MidiLoopbackDevice* MidiDeviceTable::GetInOutDevice()
-{
-    return &m_inOutDevice;
-}

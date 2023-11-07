@@ -66,15 +66,15 @@
 #include "MidiXProc.h"
 
 
-#include "MidiLoopbackDevice.h"
+//#include "MidiLoopbackDevice.h"
 #include "MidiLoopbackBidiDevice.h"
 #include "MidiPingBidiDevice.h"
 
 #include "Midi2.DiagnosticsAbstraction.h"
 #include "Midi2.DiagnosticsEndpointManager.h"
 
-#include "Midi2.LoopbackMidiIn.h"
-#include "Midi2.LoopbackMidiOut.h"
+//#include "Midi2.LoopbackMidiIn.h"
+//#include "Midi2.LoopbackMidiOut.h"
 #include "Midi2.LoopbackMidiBiDi.h"
 
 #include "Midi2.PingMidiBiDi.h"
