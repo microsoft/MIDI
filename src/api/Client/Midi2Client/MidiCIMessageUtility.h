@@ -6,21 +6,21 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#include "midl_defines.h"
-MIDI_IDL_IMPORT
+#pragma once
+#include "MidiCIMessageUtility.g.h"
 
-namespace Windows.Devices.Midi2
+namespace winrt::Windows::Devices::Midi2::implementation
 {
-    [MIDI_API_CONTRACT(1)]
-    enum MidiEndpointDevicePurpose
+    struct MidiCIMessageUtility
     {
-        NormalMessageEndpoint = 0,
+        MidiCIMessageUtility() = default;
 
-        VirtualDeviceResponder = 100,
-
-        InBoxGeneralMidiSynth = 400,
-
-        DiagnosticLoopback = 500,
-        DiagnosticPing = 510,
+        static void Foo();
+    };
+}
+namespace winrt::Windows::Devices::Midi2::factory_implementation
+{
+    struct MidiCIMessageUtility : MidiCIMessageUtilityT<MidiCIMessageUtility, implementation::MidiCIMessageUtility, winrt::static_lifetime>
+    {
     };
 }

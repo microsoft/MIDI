@@ -25,7 +25,7 @@ namespace Windows.Devices.Midi2
 
         Windows.Foundation.Collections.IMap<String, MidiEndpointDeviceInformation> EndpointDevices{ get; };
 
-        // TODO: Need events for data updates. No point in making the map observable because the entities aren't
+        // TODO: Implement MidiEndpointDeviceWatcher. Need events for data updates. No point in making the map observable because the entities aren't
 
     }
 }

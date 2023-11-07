@@ -145,7 +145,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 try
                 {
-                    DWORD mmcssTaskId{};  // TODO: Does this need to be session-wide? Probably, but it can be modified by the endpoint init, so maybe should be endpoint-local
+                    DWORD mmcssTaskId{};  
 
                     winrt::check_hresult(m_endpointAbstraction->Initialize(
                         (LPCWSTR)(EndpointDeviceId().c_str()),

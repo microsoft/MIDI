@@ -40,9 +40,6 @@
     <Filter Include="API\Endpoints\Metadata\Endpoints">
       <UniqueIdentifier>{bce3490a-eb00-4ae7-9e49-6e31e91d70d1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="API\Endpoints\Metadata\MUID">
-      <UniqueIdentifier>{6629b1ee-8608-477e-9537-9a1f55cb770f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="API\Endpoints\Connections\Options">
       <UniqueIdentifier>{3c7e0669-3b44-4eb6-803e-308b307a3474}</UniqueIdentifier>
     </Filter>
@@ -144,9 +141,6 @@
       <Filter>API\Endpoints\Metadata\GroupTerminals</Filter>
     </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
-    <ClCompile Include="MidiVirtualDeviceManager.cpp">
-      <Filter>API\Transports</Filter>
-    </ClCompile>
     <ClCompile Include="MidiService.cpp">
       <Filter>API\Service</Filter>
     </ClCompile>
@@ -158,9 +152,6 @@
     </ClCompile>
     <ClCompile Include="MidiTransportInformation.cpp">
       <Filter>API\Service</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiVirtualDeviceResponder.cpp">
-      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
     </ClCompile>
     <ClCompile Include="MidiStreamMessageBuilder.cpp">
       <Filter>API\Messages\Utility</Filter>
@@ -236,9 +227,6 @@
     <ClInclude Include="MidiGroupTerminalBlock.h">
       <Filter>API\Endpoints\Metadata\GroupTerminals</Filter>
     </ClInclude>
-    <ClInclude Include="MidiVirtualDeviceManager.h">
-      <Filter>API\Transports</Filter>
-    </ClInclude>
     <ClInclude Include="MidiService.h">
       <Filter>API\Service</Filter>
     </ClInclude>
@@ -250,9 +238,6 @@
     </ClInclude>
     <ClInclude Include="MidiTransportInformation.h">
       <Filter>API\Service</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiVirtualDeviceResponder.h">
-      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
     </ClInclude>
     <ClInclude Include="MidiStreamMessageBuilder.h">
       <Filter>API\Messages\Utility</Filter>
@@ -305,9 +290,6 @@
     </Midl>
     <Midl Include="MidiFunctionBlockUIHintEnum.idl">
       <Filter>API\Endpoints\Metadata\Blocks</Filter>
-    </Midl>
-    <Midl Include="MidiUniqueId.idl">
-      <Filter>API\Endpoints\Metadata\MUID</Filter>
     </Midl>
     <Midl Include="MidiEndpointConnectionOptions.idl">
       <Filter>API\Endpoints\Connections\Options</Filter>
@@ -458,6 +440,12 @@
     </Midl>
     <Midl Include="MidiMessageTranslator.idl">
       <Filter>API\Messages\Utility</Filter>
+    </Midl>
+    <Midl Include="MidiCIMessageUtility.idl">
+      <Filter>API\Messages\Utility</Filter>
+    </Midl>
+    <Midl Include="MidiUniqueId.idl">
+      <Filter>API\BasicTypes</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
