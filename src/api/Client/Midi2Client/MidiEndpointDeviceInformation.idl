@@ -13,7 +13,6 @@ import "MidiGroupTerminalBlock.idl";
 import "MidiProtocolEnum.idl";
 import "MidiEndpointNativeDataFormatEnum.idl";
 import "MidiEndpointDevicePurposeEnum.idl";
-//import "MidiEndpointDeviceWatcher.idl";
 import "MidiFunctionBlock.idl";
 
 import "MidiEndpointDeviceInformationSortOrderEnum.idl";
@@ -26,7 +25,6 @@ namespace Windows.Devices.Midi2
     runtimeclass MidiEndpointDeviceInformation
     {
         static MidiEndpointDeviceInformation CreateFromId(String id);
-        //static MidiEndpointDeviceWatcher CreateWatcher();
 
         static IVectorView<MidiEndpointDeviceInformation> FindAll();
         static IVectorView<MidiEndpointDeviceInformation> FindAll(MidiEndpointDeviceInformationSortOrder sortOrder);
@@ -34,7 +32,6 @@ namespace Windows.Devices.Midi2
 
         static String DiagnosticsLoopbackAEndpointId{ get; };
         static String DiagnosticsLoopbackBEndpointId{ get; };
-        //static String DiagnosticsPingEndpointId{ get; };      // don't expose in IDL
 
         static String EndpointInterfaceClass{ get; };
 
@@ -48,11 +45,9 @@ namespace Windows.Devices.Midi2
         Windows.Devices.Enumeration.DeviceInformation GetContainerInformation();
 
 
-        //String ParentDeviceId{ get; };
         Guid ContainerId{ get; };
         String DeviceInstanceId{ get; };
 
-        //String ParentDeviceInstanceId{ get; };
 
         // We surface all the names here, but use a hierarchy to decide which Name we show as the Name property
 

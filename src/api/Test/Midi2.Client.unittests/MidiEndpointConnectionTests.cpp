@@ -30,7 +30,8 @@ void MidiEndpointConnectionTests::TestCreateBiDiLoopbackA()
 
     LOG_OUTPUT(L"Connecting to Bidirectional Loopback Endpoint A");
 
-    auto conn1 = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_A);
+    auto conn1 = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
+
 
     VERIFY_IS_NOT_NULL(conn1);
 
@@ -54,7 +55,7 @@ void MidiEndpointConnectionTests::TestCreateBiDiLoopbackB()
 
     LOG_OUTPUT(L"Connecting to Bidirectional Loopback Endpoint B");
 
-    auto conn1 = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_B);
+    auto conn1 = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId());
 
     VERIFY_IS_NOT_NULL(conn1);
 
@@ -83,8 +84,8 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmpStruct()
 
     MidiEndpointConnectionOptions options;
 
-    auto connSend = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_A, options);
-    auto connReceive = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_B, options);
+    auto connSend = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId(), options);
+    auto connReceive = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId(), options);
 
     VERIFY_IS_NOT_NULL(connSend);
     VERIFY_IS_NOT_NULL(connReceive);
@@ -150,6 +151,8 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmpStruct()
     session.Close();
 }
 
+
+
 void MidiEndpointConnectionTests::TestSendAndReceiveUmp32()
 {
     LOG_OUTPUT(L"TestSendAndReceiveUmp32 **********************************************************************");
@@ -168,8 +171,8 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmp32()
 
     MidiEndpointConnectionOptions options;
 
-    auto connSend = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_A, options);
-    auto connReceive = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_B, options);
+    auto connSend = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId(), options);
+    auto connReceive = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId(), options);
 
     VERIFY_IS_NOT_NULL(connSend);
     VERIFY_IS_NOT_NULL(connReceive);
@@ -270,8 +273,8 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWords()
 
     MidiEndpointConnectionOptions options;
 
-    auto connSend = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_A, options);
-    auto connReceive = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_B, options);
+    auto connSend = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId(), options);
+    auto connReceive = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId(), options);
 
     VERIFY_IS_NOT_NULL(connSend);
     VERIFY_IS_NOT_NULL(connReceive);

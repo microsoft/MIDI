@@ -3,44 +3,61 @@
 #include <map>
 
 
-// todo: need to bring over all the relevant message types and make them work here. Same 
-// with builders for those types. Have a shared def file
-// todo: move this enum out to a shared file
-enum MidiFunctionBlockDiscoveryFilterFlags
-{
-    None = 0x00000000,
-    RequestFunctionBlockInformation = 0x00000001,
-    RequestFunctionBlockName = 0x00000002,
-};
 
 
 
-// intent is to instantiate one of these for each connected unique device endpoint.
-//
 
-class CMidiEndpointInProtocolMetadataManager : public Microsoft::WRL::RuntimeClass<
-    Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-    IMidiCallback>
+// TODO: ParseDeviceIdentityNotificationMessage
+
+// TODO: Parse Endpoint Name Notification
+
+// TODO: Parse Product Instance Id
+
+// TODO: Parse Function Block Info notification
+
+// TODO: Parse Function Block Name Notification
+
+
+
+
+
+
+// Instantiate one of these for each connected unique device endpoint.
+// It manages the data for only one device endpoint
+
+class MidiEndpointInProtocolMetadataManager
 {
 public:
 
-    CMidiEndpointInProtocolMetadataManager() {}
-    ~CMidiEndpointInProtocolMetadataManager() {}
+    MidiEndpointInProtocolMetadataManager() { m_discoveryComplete.create(); }
+    ~MidiEndpointInProtocolMetadataManager() {}
 
+    // TODO: Probably need the handle to the endpoint so we can update metadata
     HRESULT Initialize(
-        _In_ std::shared_ptr<IMidiBiDi>& endpointBiDi, 
-        _In_ PCWSTR endpointDeviceId,
-        _In_ uint8_t preferredMidiProtocolVersion,
-        _In_ bool handleProtocolNegotiation,
-        _In_ bool handleFunctionBlocks);
+        _In_ PCWSTR endpointDeviceId
+    );
 
-    // performs all the protocol negotiation required and then
-    // requests endpoint info and function blocks. Updates the
-    // SWD with the metadata from the discovery. Returns S_OK
-    // when all the initial discovery is complete
-    HRESULT ConfigureMidi2Device(
-        _In_ uint16_t timeoutMsPerAttempt, 
-        _In_ uint8_t retryCount);
+
+
+    // Performs endpoint discovery. Updates the
+    // SWD proeprties with the metadata from the discovery
+    // Returns S_OK when The endpoint info notification and 
+    // Stream configuration notifications have been received, 
+    // or the transaction times out.
+    HRESULT DiscoverMidi2Endpoint(
+        _In_ uint16_t timeoutMsPerAttempt,
+        _In_ uint8_t retryCount
+    );
+
+
+    // Performs protocol negotiation required and then. Returns S_OK
+    // when all the negotiation is complete. Updates the SWD properties
+    // with the protocol information.
+    HRESULT ConfigureMidi2Stream(
+        _In_ uint8_t preferredMidiProtocolVersion,
+        _In_ uint16_t timeoutMsPerAttempt,
+        _In_ uint8_t retryCount
+    );
 
 
     // TODO: need to have something that will listen for additional
@@ -49,17 +66,50 @@ public:
     // long as the endpoint does
 
 
+
+
+    // the device callback calls this when a message arrives from the device
+    HRESULT ProcessMessage(
+        _In_ PVOID data, 
+        _In_ UINT size, 
+        _In_ LONGLONG timestamp
+    );
+
+
+
+
     HRESULT Cleanup();
 
 
-    STDMETHOD(Callback)(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
-
-
 private:
+    wil::com_ptr<IMidiBiDi> m_endpointDeviceBiDi;
+
+    std::wstring m_endpointDeviceId{};
+
+    bool m_functionBlocksAreStatic{ false };
+    uint8_t m_functionBlockCount{ 0 };
+
+
+    wil::unique_event_nothrow m_discoveryComplete;
+    bool m_discoveryEndpointInfoNotificationReceived{ false };
+    bool m_discoveryStreamConfigurationNotificationReceived{ false };
+
+    bool m_discoveryDeviceIdentityNotificationReceived{ false };
+    bool m_discoveryEndpointNameNotificationSetReceived{ false };
+    bool m_discoveryEndpointProductInstanceIdNotificationSetReceived{ false };
+
+
     // All metadata is cached as strings (for names/ids) or JSON (for structures)
 
     // map is property key and then json data
     //std::map<std::string, std::string> m_endpointMetadata;
+
+
+
+
+    internal::PackedUmp128 BuildEndpointDiscoveryMessage();
+    internal::PackedUmp128 BuildFunctionBlockDiscoveryMessage(_In_ uint8_t functionBlockNumber);
+    internal::PackedUmp128 BuildStreamConfigurationRequestMessage(_In_ uint8_t protocol, _In_ bool rxjr, _In_ bool txjr);
 
 
 };

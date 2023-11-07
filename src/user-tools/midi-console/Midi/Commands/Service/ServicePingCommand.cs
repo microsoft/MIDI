@@ -81,7 +81,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     if (pingResult.Success)
                     {
                         // show the summary
-                        var freq = MidiClock.GetMidiTimestampFrequency();
+                        var freq = MidiClock.TimestampFrequency;
 
                         if (settings.Verbose)
                         {

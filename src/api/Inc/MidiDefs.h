@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <Devpropdef.h>
+
 #ifndef PAGE_SIZE
 #define PAGE_SIZE 0x1000
 #endif
@@ -11,6 +13,10 @@
 
 // UMP 128 is 16 bytes
 #define MAXIMUM_UMP_DATASIZE 16
+
+// we can't let the memory usage run away. This many messages is a 
+// lot, and performance will suffer above 5000 or so
+#define MIDI_OUTGOING_MESSAGE_QUEUE_MAX_MESSAGE_COUNT 20000
 
 //
 // Registry keys for global configuration. The settings app can write to some of these, so including in MidiDefs
@@ -32,6 +38,17 @@
 #define MIDI_CONFIG_JSON_HEADER_OBJECT L"header"
 #define MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT L"endpointTransportPluginSettings"
 #define MIDI_CONFIG_JSON_ENDPOINT_PROCESSING_PLUGIN_SETTINGS_OBJECT L"endpointProcessingPluginSettings"
+
+
+//
+// SendMidiMessage HRESULT codes (these are not exposed through the API, and are just internal)
+//
+
+//#define HR_S_MIDI_SENDMSG_IMMEDIATE     MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_WINDOWS, 0x601)
+//#define HR_S_MIDI_SENDMSG_SCHEDULED     MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_WINDOWS, 0x602)
+//#define HR_S_MIDI_SENDMSG_SYSEX_PARKED  MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_WINDOWS, 0x603)
+//#define HR_E_MIDI_SENDMSG_BUFFER_FULL   MAKE_HRESULT(SEVERITY_ERROR,   FACILITY_WINDOWS, 0x620)
+// the SendMidiMessage function can also return E_FAIL
 
 
 //
@@ -196,6 +213,27 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UserSuppliedSmallImagePath, 502);     // DEVPROP
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UserSuppliedDescription, 503);     // DEVPROP_TYPE_STRING
 
 
+
+// Additional metrics ==================================================================
+// Starts at 600
+
+// Calculated latency for sending a message to a device. 
+// We may be able to calculate this using the jitter-reduction timestamps.
+#define STRING_PKEY_MIDI_MidiOutCalculatedLatencyTicks MIDI_STRING_PKEY_GUID L",600"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_MidiOutCalculatedLatencyTicks, 600);     // DEVPROP_TYPE_UINT64
+
+// user-supplied latency ticks for a device
+#define STRING_PKEY_MIDI_MidiOutUserSuppliedLatencyTicks MIDI_STRING_PKEY_GUID L",601"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_MidiOutUserSuppliedLatencyTicks, 601);     // DEVPROP_TYPE_UINT64
+
+// true if we should use the user-supplied latency instead of the calculated latency
+#define STRING_PKEY_MIDI_MidiOutLatencyTicksUserOverride MIDI_STRING_PKEY_GUID L",602"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_MidiOutLatencyTicksUserOverride, 602);     // DEVPROP_TYPE_BOOL
+
+
+
+
+
 // TODO: Add in the other properties like
 // - Should receive MIDI clock
 // - Should use MIDI clock start
@@ -204,11 +242,6 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UserSuppliedDescription, 503);     // DEVPROP_TY
 // - Supports MPE
 // - Requires note off translation (Mackie)
 // - 
-
-
-
-
-
 
 
 

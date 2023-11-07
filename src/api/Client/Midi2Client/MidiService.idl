@@ -28,7 +28,9 @@ namespace Windows.Devices.Midi2
         // for the first release, this will always return false. But developers want to be able
         // to code with this in mind in the future, without changing code/logic
 
-        static Boolean IsMessageSchedulingEnabled{ get; };
+  //      static Boolean IsMessageSchedulingEnabled{ get; };
+
+        static UInt32 GetOutgoingMessageQueueMaxMessageCapacity();
 
 
     }

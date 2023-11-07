@@ -60,22 +60,22 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         if (devices != nullptr && devices.Size() == 1)
         {
-            OutputDebugString(__FUNCTION__ L"Found single possible matching device");
+ //           OutputDebugString(__FUNCTION__ L"Found single possible matching device");
 
             auto myDevice = devices.GetAt(0);
 
             if (devices.GetAt(0).Properties().HasKey(MIDI_DEVICE_PARENT_PROPERTY_KEY))
             {
-                OutputDebugString(__FUNCTION__ L"Found parent id");
+ //               OutputDebugString(__FUNCTION__ L"Found parent id");
 
                 auto parentId = winrt::unbox_value<winrt::hstring>(devices.GetAt(0).Properties().Lookup(MIDI_DEVICE_PARENT_PROPERTY_KEY));
 
                 // if the parent is the system root, don't bother trying to resolve that 
                 if (parentId != rootParent)
                 {
-                    OutputDebugString(parentId.c_str());
+ //                   OutputDebugString(parentId.c_str());
 
-                    OutputDebugString(__FUNCTION__ L"Looking for candidate parents");
+ //                   OutputDebugString(__FUNCTION__ L"Looking for candidate parents");
 
                     auto parents = winrt::Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(
                         L"System.Devices.DeviceInstanceId:=\"" + parentId + L"\"",
@@ -158,7 +158,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     midi2::MidiEndpointDeviceWatcher MidiEndpointDeviceInformation::CreateWatcher(bool /*includeDiagnosticsEndpoints*/)
     {
-        // TODO
+        // TODO: implement CreateWatcher for enumeration
         return nullptr;
     }
 

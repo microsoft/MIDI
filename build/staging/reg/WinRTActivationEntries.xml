@@ -104,6 +104,16 @@
              trustLevel="Base"
              />
           <class
+             activatableClassId="Windows.Devices.Midi2.MidiCIMessageUtility"
+             threading="Both"
+             trustLevel="Base"
+             />
+          <class
+             activatableClassId="Windows.Devices.Midi2.IMidiCIMessageUtilityStatics"
+             threading="Both"
+             trustLevel="Base"
+             />
+          <class
              activatableClassId="Windows.Devices.Midi2.MidiFunctionBlock"
              threading="Both"
              trustLevel="Base"

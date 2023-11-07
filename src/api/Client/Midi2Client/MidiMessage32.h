@@ -21,7 +21,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         MidiMessage32(
             _In_ internal::MidiTimestamp const timestamp, 
             _In_ uint32_t const word0);
-
         // internal
         void InternalInitializeFromPointer(
             _In_ internal::MidiTimestamp const timestamp, 

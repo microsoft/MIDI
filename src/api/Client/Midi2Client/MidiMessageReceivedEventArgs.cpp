@@ -300,12 +300,16 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return messageByteCount;
     }
 
+
+
     _Use_decl_annotations_
     uint8_t MidiMessageReceivedEventArgs::FillBuffer(
         foundation::IMemoryBuffer const& /* buffer */, 
         uint32_t const /* byteOffset*/
         )
     {
+        // TODO: Implement MidiMessageReceivedEventArgs::FillBuffer
+
         throw hresult_not_implemented();
     }
 

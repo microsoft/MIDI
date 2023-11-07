@@ -31,8 +31,11 @@ public:
     TEST_METHOD(BenchmarkSendReceiveWordArray);
     TEST_METHOD(BenchmarkSendReceiveUmpRuntimeClass);
 
+    TEST_METHOD(BenchmarkSendReceiveScheduledMessagesLowCount);
+    TEST_METHOD(BenchmarkSendReceiveScheduledMessagesMediumCount);
+    TEST_METHOD(BenchmarkSendReceiveScheduledMessagesHighCount);
 
-    
+    void BenchmarkSendReceiveScheduledMessages(_In_ uint32_t messageCount);
 
 private:
 

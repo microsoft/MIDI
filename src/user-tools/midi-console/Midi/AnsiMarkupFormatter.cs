@@ -59,7 +59,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public static string FormatTimestamp(UInt64 timestamp)
         {
-            return "[darkseagreen2]" + timestamp.ToString() + "[/]";
+            return "[darkseagreen2]" + timestamp.ToString("N0") + "[/]";
         }
 
         public static string FormatDeviceInstanceId(string id)
