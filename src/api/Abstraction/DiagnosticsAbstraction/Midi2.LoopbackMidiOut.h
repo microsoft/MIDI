@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "MidiLoopbackDevice.h"
+//#include "MidiLoopbackDevice.h"
 
 class CMidi2LoopbackMidiOut : 
     public Microsoft::WRL::RuntimeClass<

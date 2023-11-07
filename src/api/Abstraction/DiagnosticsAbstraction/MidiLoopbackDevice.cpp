@@ -7,8 +7,7 @@
 // ============================================================================
 
 #include "pch.h"
-
-#include "MidiLoopbackDevice.h"
+//#include "MidiLoopbackDevice.h"
 
 HRESULT MidiLoopbackDevice::SendMidiMessage(
     _In_ void* message,

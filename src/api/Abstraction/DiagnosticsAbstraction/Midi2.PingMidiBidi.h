@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "MidiPingBidiDevice.h"
+//#include "MidiPingBidiDevice.h"
 
 class CMidi2PingMidiBiDi :
     public Microsoft::WRL::RuntimeClass<

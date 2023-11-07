@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "MidiLoopbackDevice.h"
+//#include "MidiLoopbackDevice.h"
 
 // thread-safe meyers singleton for storing the devices we'll use
 

@@ -7,8 +7,7 @@
 // ============================================================================
 
 #include "pch.h"
-
-#include "MidiDeviceTable.h"
+//#include "MidiDeviceTable.h"
 
 
 MidiDeviceTable::MidiDeviceTable() = default;

@@ -8,7 +8,7 @@
 
 
 #include "pch.h"
-#include "midi2.DiagnosticsAbstraction.h"
+//#include "midi2.DiagnosticsAbstraction.h"
 
 _Use_decl_annotations_
 HRESULT
@@ -28,9 +28,19 @@ CMidi2LoopbackMidiBiDi::Initialize(
     RETURN_HR_IF_NULL(E_INVALIDARG, callback);
     m_callback = callback;
 
-    // really should uppercase this
 
     std::wstring id{ endpointId };
+    InPlaceToLower(id);
+
+    std::wstring pingBiDiId{ DEFAULT_PING_BIDI_ID };
+    InPlaceToLower(pingBiDiId);
+
+    std::wstring loopBiDiAId{ DEFAULT_LOOPBACK_BIDI_A_ID };
+    InPlaceToLower(loopBiDiAId);
+
+    std::wstring loopBiDiBId{ DEFAULT_LOOPBACK_BIDI_B_ID };
+    InPlaceToLower(loopBiDiBId);
+
     
     // Both loopback endpoints share the same internal device as a simple way of routing between the two. 
     // The Ping device is separate
@@ -39,7 +49,9 @@ CMidi2LoopbackMidiBiDi::Initialize(
     m_loopbackMidiDevice = nullptr;
     m_pingMidiDevice = nullptr;
 
-    if (id.find(DEFAULT_PING_BIDI_ID) != std::wstring::npos)
+
+
+    if (id.find(pingBiDiId) != std::wstring::npos)
     {
         // ping bidi endpoint
 
@@ -48,7 +60,7 @@ CMidi2LoopbackMidiBiDi::Initialize(
         m_pingMidiDevice = (MidiPingBidiDevice*)(MidiDeviceTable::Current().GetPingDevice());
         m_pingMidiDevice->SetCallback(this);
     }
-    else if (id.find(DEFAULT_LOOPBACK_BIDI_A_ID) != std::wstring::npos)
+    else if (id.find(loopBiDiAId) != std::wstring::npos)
     {
         // bidi endpoint A
 
@@ -56,7 +68,7 @@ CMidi2LoopbackMidiBiDi::Initialize(
         m_loopbackMidiDevice = (MidiLoopbackBidiDevice*)(MidiDeviceTable::Current().GetBidiDevice());
         m_loopbackMidiDevice->SetCallbackA(this);
     }
-    else if (id.find(DEFAULT_LOOPBACK_BIDI_B_ID) != std::wstring::npos)
+    else if (id.find(loopBiDiBId) != std::wstring::npos)
     {
         // bidi endpoint B
 
