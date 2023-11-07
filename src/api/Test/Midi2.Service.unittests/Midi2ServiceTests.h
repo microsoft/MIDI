@@ -19,7 +19,9 @@ public:
     BEGIN_TEST_CLASS(Midi2ServiceTests)
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.KSAbstraction.dll")
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.MidiSrvAbstraction.dll")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Minmidi.sys")
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"usbmidi2.sys")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"MidiSrv.exe")
     END_TEST_CLASS()
 

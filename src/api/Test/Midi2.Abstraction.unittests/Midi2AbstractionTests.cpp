@@ -49,7 +49,8 @@ void MidiAbstractionTests::TestMidiAbstraction(REFIID Iid, BOOL IncludeMidiOne)
     {
         if (device->AbstractionLayer == (GUID) __uuidof(Midi2KSAbstraction) &&
             device->Flow == MidiFlowIn &&
-            std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi") &&
+            (std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi") ||
+            std::wstring::npos != device->ParentDeviceInstanceId.find(L"VID_CAFE&PID_4001&MI_02")) &&
             (IncludeMidiOne || !device->MidiOne))
         {
             return true;
@@ -65,7 +66,8 @@ void MidiAbstractionTests::TestMidiAbstraction(REFIID Iid, BOOL IncludeMidiOne)
     {
         if (device->AbstractionLayer == (GUID) __uuidof(Midi2KSAbstraction) &&
             device->Flow == MidiFlowOut &&
-            std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi") &&
+            (std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi") ||
+            std::wstring::npos != device->ParentDeviceInstanceId.find(L"VID_CAFE&PID_4001&MI_02")) &&
             (IncludeMidiOne || !device->MidiOne))
         {
             return true;
@@ -153,7 +155,8 @@ void MidiAbstractionTests::TestMidiAbstractionCreationOrder(REFIID Iid, BOOL Inc
     {
         if (device->AbstractionLayer == (GUID) __uuidof(Midi2KSAbstraction) &&
             device->Flow == MidiFlowIn &&
-            std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi") &&
+            (std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi") ||
+            std::wstring::npos != device->ParentDeviceInstanceId.find(L"VID_CAFE&PID_4001&MI_02")) &&
             (IncludeMidiOne || !device->MidiOne))
         {
             return true;
@@ -169,7 +172,8 @@ void MidiAbstractionTests::TestMidiAbstractionCreationOrder(REFIID Iid, BOOL Inc
     {
         if (device->AbstractionLayer == (GUID) __uuidof(Midi2KSAbstraction) &&
             device->Flow == MidiFlowOut &&
-            std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi") &&
+            (std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi") ||
+            std::wstring::npos != device->ParentDeviceInstanceId.find(L"VID_CAFE&PID_4001&MI_02")) &&
             (IncludeMidiOne || !device->MidiOne))
         {
             return true;
@@ -287,7 +291,8 @@ void MidiAbstractionTests::TestMidiAbstractionBiDi(REFIID Iid)
     {
         if (device->AbstractionLayer == (GUID) __uuidof(Midi2KSAbstraction) &&
             device->Flow == MidiFlowBidirectional &&
-            std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi") &&
+            (std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi") ||
+            std::wstring::npos != device->ParentDeviceInstanceId.find(L"VID_CAFE&PID_4001&MI_02")) &&
             !device->MidiOne)
         {
             return true;
@@ -461,7 +466,8 @@ void MidiAbstractionTests::TestMidiIO_Latency(REFIID Iid, BOOL DelayedMessages)
     {
         if (device->AbstractionLayer == (GUID) __uuidof(Midi2KSAbstraction) &&
             device->Flow == MidiFlowBidirectional &&
-            std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi") &&
+            (std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi") ||
+            std::wstring::npos != device->ParentDeviceInstanceId.find(L"VID_CAFE&PID_4001&MI_02")) &&
             !device->MidiOne)
         {
             return true;
@@ -656,7 +662,8 @@ void MidiAbstractionTests::TestMidiSrv_MultiClient()
     {
         if (device->AbstractionLayer == (GUID) __uuidof(Midi2KSAbstraction) &&
             device->Flow == MidiFlowIn &&
-            std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi"))
+            (std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi") ||
+            std::wstring::npos != device->ParentDeviceInstanceId.find(L"VID_CAFE&PID_4001&MI_02")))
         {
             return true;
         }
@@ -671,7 +678,8 @@ void MidiAbstractionTests::TestMidiSrv_MultiClient()
     {
         if (device->AbstractionLayer == (GUID) __uuidof(Midi2KSAbstraction) &&
             device->Flow == MidiFlowOut &&
-            std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi"))
+            (std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi") ||
+            std::wstring::npos != device->ParentDeviceInstanceId.find(L"VID_CAFE&PID_4001&MI_02")))
         {
             return true;
         }

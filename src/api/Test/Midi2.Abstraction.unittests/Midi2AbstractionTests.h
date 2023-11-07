@@ -21,6 +21,7 @@ public:
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.KSAbstraction.dll")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.MidiSrvAbstraction.dll")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Minmidi.sys")
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"usbmidi2.sys")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"midisrv.exe")
     END_TEST_CLASS()
 
