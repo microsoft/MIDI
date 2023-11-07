@@ -82,7 +82,7 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
 
     // DeviceInterfaces often lack names, so the above device.Name() is likely the name
     // of the machine. Grab the parent device friendly name and use that instead.
-    //
+    // 
     // TODO: use a provided name from a json first, if it is available for this device+filter+pin.
     // second, can we retrieve the localized part name for the interface using KS? That would likely require
     // calling a property to get the name GUID from the filter, and then using that guid to locate the string
@@ -176,6 +176,8 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
     }
 
 #ifdef CREATE_KS_BIDI_SWDS
+    // TODO: This needs to change to allow any number of pins
+    // 
     // there must be exactly two pins on this filter, midi in, and midi out,
     // and they must have the exact same capabilities
     if (newMidiPins.size() == 2 &&

@@ -132,8 +132,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         if (!IsOpen())
         {
             // Activate the endpoint for this device. Will fail if the device is not a BiDi device
-            // we use m_inputAbstraction here and simply provide a copy of it to m_outputAbstraction so that
-            // we don't have to duplicate all that code
             if (!ActivateMidiStream(m_serviceAbstraction, __uuidof(IMidiBiDi), (void**)&m_endpointAbstraction))
             {
                 internal::LogGeneralError(__FUNCTION__, L"Could not activate MIDI Stream");
@@ -145,7 +143,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 try
                 {
-                    DWORD mmcssTaskId{};  // TODO: Does this need to be session-wide? Probably, but it can be modified by the endpoint init, so maybe should be endpoint-local
+                    DWORD mmcssTaskId{};  
 
                     winrt::check_hresult(m_endpointAbstraction->Initialize(
                         (LPCWSTR)(EndpointDeviceId().c_str()),

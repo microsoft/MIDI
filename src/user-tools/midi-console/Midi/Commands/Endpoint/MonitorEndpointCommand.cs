@@ -103,6 +103,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                 connection.MessageReceived += (s, e) =>
                 {
+                //    AnsiConsole.WriteLine("Message received.");
+
                     // helps prevent any race conditions with main loop and its output
                     if (!continueWaiting) return;
 
@@ -116,6 +118,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     {
                         // gets timestamp of first message we receive and uses that so all others are an offset
                         lastTimestamp = e.Timestamp;
+                    }
+
+                    if (index == 0)
+                    {
+                        AnsiConsoleOutput.DisplayMidiMessageTableHeaders();
                     }
 
                     //Console.WriteLine("DEBUG: MessageReceived");
@@ -136,7 +143,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         offsetMicroseconds = MidiClock.ConvertTimestampToMicroseconds(e.Timestamp - lastTimestamp);
                     }
 
-                    AnsiConsoleOutput.DisplayMidiMessage(msg, numWords, offsetMicroseconds, e.Timestamp, index);
+                    AnsiConsoleOutput.DisplayMidiMessageTableRow(msg, numWords, offsetMicroseconds, e.Timestamp, index);
 
                     lastTimestamp = e.Timestamp;
                 };
@@ -235,42 +242,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             return 0;
         }
-
-        //private void DisplayUmp(UInt32 index, MidiMessageStruct ump, byte numWords, MidiMessageType messageType, UInt64 timestamp, Table table) 
-        //{
-        //    string data = string.Empty;
-
-        //    if (numWords == 4)
-        //    {
-        //        data = AnsiMarkupFormatter.FormatMidiWords(ump.Word0, ump.Word1, ump.Word2, ump.Word3);
-        //    }
-        //    else if (numWords == 3)
-        //    {
-        //        data = AnsiMarkupFormatter.FormatMidiWords(ump.Word0, ump.Word1, ump.Word2);
-        //    }
-        //    else if (numWords == 2)
-        //    {
-        //        data = AnsiMarkupFormatter.FormatMidiWords(ump.Word0, ump.Word1);
-        //    }
-        //    else if (numWords == 1)
-        //    {
-        //        data = AnsiMarkupFormatter.FormatMidiWords(ump.Word0);
-        //    }
-
-        //    string detailedMessageType = MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(ump.Word0);
-
-
-
-        //    table.AddRow(
-        //        new Markup(AnsiMarkupFormatter.FormatRowIndex(index)),
-        //        new Markup(AnsiMarkupFormatter.FormatTimestamp(timestamp)), 
-        //        new Markup(data),
-        //        new Markup(AnsiMarkupFormatter.FormatMessageType(messageType)), 
-        //        new Markup(AnsiMarkupFormatter.FormatDetailedMessageType(detailedMessageType))
-        //        );
-
-        //}
-
 
     }
 }

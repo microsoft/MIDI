@@ -8,10 +8,6 @@
 
 #include "pch.h"
 
-#include "MidiPingBidiDevice.h"
-
-
-
 HRESULT MidiPingBidiDevice::SendMidiMessage(
     _In_ void* message,
     _In_ UINT32 size,

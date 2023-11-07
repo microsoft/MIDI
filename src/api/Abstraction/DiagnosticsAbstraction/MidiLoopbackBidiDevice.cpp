@@ -7,8 +7,7 @@
 // ============================================================================
 
 #include "pch.h"
-
-#include "MidiLoopbackBidiDevice.h"
+//#include "MidiLoopbackBidiDevice.h"
 
 HRESULT MidiLoopbackBidiDevice::SendMidiMessageFromAToB(
     _In_ void* message,

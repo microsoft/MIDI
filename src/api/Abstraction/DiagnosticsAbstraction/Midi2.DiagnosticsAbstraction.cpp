@@ -20,39 +20,7 @@ CMidi2DiagnosticsAbstraction::Activate(
 
     RETURN_HR_IF(E_INVALIDARG, nullptr == Interface);
 
-   if (__uuidof(IMidiIn) == Riid)
-    {
-       OutputDebugString(L"" __FUNCTION__ " Activating IMidiIn");
-
-        TraceLoggingWrite(
-            MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- Midi in",
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
-            );
-
-        wil::com_ptr_nothrow<IMidiIn> midiIn;
-        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2LoopbackMidiIn>(&midiIn));
-        *Interface = midiIn.detach();
-    }
-    else if (__uuidof(IMidiOut) == Riid)
-    {
-       OutputDebugString(L"" __FUNCTION__ " Activating IMidiOut");
-       
-       TraceLoggingWrite(
-           MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- Midi Out",
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
-            );
-
-        wil::com_ptr_nothrow<IMidiOut> midiOut;
-        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2LoopbackMidiOut>(&midiOut));
-        *Interface = midiOut.detach();
-    }
-    else if (__uuidof(IMidiBiDi) == Riid)
+    if (__uuidof(IMidiBiDi) == Riid)
     {
        OutputDebugString(L"" __FUNCTION__ " Activating IMidiBiDi");
 

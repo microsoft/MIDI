@@ -67,7 +67,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             {
                 var result = AnsiConsole.Prompt(
                     new SelectionPrompt<UmpEndpointPickerEntry>()
-                        .Title("Please select an endpoint")
+                        .Title(Strings.EndpointPickerPleaseSelectEndpoint)
                         .AddChoices(choices)
                     );
 
@@ -76,6 +76,10 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 {
                     return result.EndpointDeviceId;
                 }
+            }
+            else
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorEnumEndpointsFailed));
             }
 
             return string.Empty;
