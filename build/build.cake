@@ -40,6 +40,7 @@ var apiAndServiceSolutionDir = System.IO.Path.Combine(srcDir, "api");
 var apiAndServiceSolutionFile = System.IO.Path.Combine(apiAndServiceSolutionDir, "Midi2.sln");
 var apiAndServiceStagingDir = System.IO.Path.Combine(stagingRootDir, "api");
 
+
 var sdkSolutionDir = System.IO.Path.Combine(srcDir, "app-dev-sdk");
 var sdkSolutionFile = System.IO.Path.Combine(sdkSolutionDir, "midi-sdk.sln");
 var sdkStagingDir = System.IO.Path.Combine(stagingRootDir, "app-dev-sdk");
@@ -148,6 +149,7 @@ Task("SetupEnvironment")
     // Copy key output files from VSFiles to staging to allow building installer
    
     var outputDir = System.IO.Path.Combine(apiAndServiceSolutionDir, "VSFiles", plat.ToString(), configuration);
+    var apiHeaderDir = System.IO.Path.Combine(apiAndServiceSolutionDir, "VSFiles\\intermediate\\Windows.Devices.Midi2",  plat.ToString(), configuration, "GeneratedFiles\\winrt");
 
     Information("\nCopying service and API for " + plat.ToString());
 
@@ -155,6 +157,7 @@ Task("SetupEnvironment")
     
     if (!DirectoryExists(copyToDir))
         CreateDirectory(copyToDir);
+
 
     // copy all the DLLs
     CopyFiles(System.IO.Path.Combine(outputDir, "*.dll"), copyToDir); 
@@ -167,6 +170,23 @@ Task("SetupEnvironment")
     CopyFiles(System.IO.Path.Combine(outputDir, "Windows.Devices.Midi2.winmd"), copyToDir); 
 
     CopyFiles(System.IO.Path.Combine(outputDir, "WinRTActivationEntries.txt"), copyToDir); 
+
+    // copy the C++ header for the API
+    CopyFiles(System.IO.Path.Combine(apiHeaderDir, "Windows.Devices.Midi2.h"), copyToDir); 
+
+    // copy the API Header and the .winmd to the "API bare" folder
+
+    var apiBareCopyToDir = System.IO.Path.Combine(releaseRootDir, "API");
+    
+    if (!DirectoryExists(apiBareCopyToDir))
+        CreateDirectory(apiBareCopyToDir);
+
+    CopyFiles(System.IO.Path.Combine(copyToDir, "Windows.Devices.Midi2.h"), apiBareCopyToDir); 
+    CopyFiles(System.IO.Path.Combine(copyToDir, "Windows.Devices.Midi2.dll"), apiBareCopyToDir); 
+    CopyFiles(System.IO.Path.Combine(copyToDir, "Windows.Devices.Midi2.winmd"), apiBareCopyToDir); 
+    CopyFiles(System.IO.Path.Combine(copyToDir, "Windows.Devices.Midi2.pri"), apiBareCopyToDir); 
+
+
 });
 
 

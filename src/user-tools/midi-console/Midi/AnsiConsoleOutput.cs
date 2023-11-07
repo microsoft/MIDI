@@ -19,9 +19,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             // can't keep up with rendering for endpoint monitoring.
 
 
-            string leftSideTee = "\u2502";
-            string rightSideTee = "\u2502";
-            string verticalLine = "\u2502";
+          //  string leftSideTee = "\u2502";
+          //  string rightSideTee = "\u2502";
+          //  string verticalLine = "\u2502";
             char horizontalLine = '\u2500';
             string cross = "\u253C";
 

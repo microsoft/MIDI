@@ -36,7 +36,6 @@ HRESULT MidiDevicePipeMessageScheduler::Initialize(
 }
 
 
-_Use_decl_annotations_
 HRESULT MidiDevicePipeMessageScheduler::Cleanup()
 {
     try
@@ -90,7 +89,7 @@ HRESULT MidiDevicePipeMessageScheduler::ProcessIncomingMidiMessage(
         }
         else
         {
-            if (size <= MAX_UMP_BYTES)
+            if (size <= MAXIMUM_UMP_DATASIZE)
             {
                 for (int i = 0; i < MIDI_MESSAGE_SCHEDULE_ENQUEUE_RETRY_COUNT && m_continueProcessing; i++)
                 {
@@ -100,20 +99,33 @@ HRESULT MidiDevicePipeMessageScheduler::ProcessIncomingMidiMessage(
                     {
                         // schedule the message for sending in the future
 
-                        ScheduledMidiMessage msg;
-                        memcpy(msg.Data, data, size);
-                        msg.ByteCount = size;
-                        msg.Timestamp = timestamp;
+                        if (m_messageQueue.size() < MIDI_OUTGOING_MESSAGE_QUEUE_MAX_MESSAGE_COUNT)
+                        {
+                            ScheduledMidiMessage msg;
+                            memcpy(msg.Data, data, size);
+                            msg.ByteCount = size;
+                            msg.Timestamp = timestamp;
 
-                        m_messageQueue.push(msg);
+                            m_messageQueue.push(msg);
 
-                        lock.reset();
+                            lock.reset();
 
-                        // notify the worker thread
-                        m_messageProcessorWakeup.SetEvent();
+                            // notify the worker thread
+                            m_messageProcessorWakeup.SetEvent();
 
-                        // break out of the loop and return
-                        return S_OK;
+                            // break out of the loop and return
+                            return S_OK;
+                        }
+                        else
+                        {
+                            // priority queue doesn't give us any way to pop from the back
+                            // so we just have to fail
+
+                            lock.reset();
+
+                            return E_FAIL;
+                        }
+
                     }
                     else
                     {

@@ -28,6 +28,17 @@
 #define UMP96_WORD_COUNT 3
 #define UMP128_WORD_COUNT 4
 
+
+#define MIDI_MESSAGE_GROUP_WORD_CLEARING_MASK 0xF0FFFFFF
+#define MIDI_MESSAGE_GROUP_WORD_DATA_MASK 0x0F000000
+#define MIDI_MESSAGE_GROUP_BITSHIFT 24
+
+#define MIDI_MESSAGE_CHANNEL_WORD_CLEARING_MASK 0xFFF0FFFF
+#define MIDI_MESSAGE_CHANNEL_WORD_DATA_MASK 0x000F0000
+#define MIDI_MESSAGE_CHANNEL_BITSHIFT 16
+
+
+
 namespace Windows::Devices::Midi2::Internal
 {
     inline std::uint8_t GetUmpLengthInMidiWordsFromMessageType(_In_ const std::uint8_t messageType) noexcept
@@ -90,14 +101,6 @@ namespace Windows::Devices::Midi2::Internal
     {
         return (uint8_t)(GetUmpLengthInMidiWordsFromFirstWord(firstWord) * sizeof(uint32_t));
     }
-
-#define MIDI_MESSAGE_GROUP_WORD_CLEARING_MASK 0xF0FFFFFF
-#define MIDI_MESSAGE_GROUP_WORD_DATA_MASK 0x0F000000
-#define MIDI_MESSAGE_GROUP_BITSHIFT 24
-
-#define MIDI_MESSAGE_CHANNEL_WORD_CLEARING_MASK 0xFFF0FFFF
-#define MIDI_MESSAGE_CHANNEL_WORD_DATA_MASK 0x000F0000
-#define MIDI_MESSAGE_CHANNEL_BITSHIFT 16
 
 
     inline std::uint8_t GetGroupIndexFromFirstWord(_In_ const std::uint32_t firstWord) noexcept
@@ -347,9 +350,6 @@ namespace Windows::Devices::Midi2::Internal
 
 
 
-
-
-
     inline uint8_t GetEndpointInfoNotificationUmpVersionMajorFirstWord(
         _In_ uint32_t const word0
     ) noexcept
@@ -458,5 +458,76 @@ namespace Windows::Devices::Midi2::Internal
     {
         return MIDIWORDNIBBLE4(word0);
     }
+
+
+    inline bool IsSysEx7StartMessage(_In_ uint32_t const word0) noexcept
+    {
+
+    }
+
+    inline bool IsSysEx7ContinueMessage(_In_ uint32_t const word0) noexcept
+    {
+
+    }
+
+    inline bool IsSysEx7CompleteMessage(_In_ uint32_t const word0) noexcept
+    {
+
+    }
+
+    inline bool IsSysEx7SelfContainedMessage(_In_ uint32_t const word0) noexcept
+    {
+
+    }
+
+
+    inline bool IsSysEx8Message(_In_ uint32_t const word0) noexcept
+    {
+
+    }
+
+    // To preserve robust connection to all MIDI devices and systems, Senders shall obey the following data rules of the
+    // MIDI 1.0 Protocol that govern interspersing other messages and termination of System Exclusive within a Group :
+    // • The Sender shall not send any other Message or UMP on the same Group between the Start and End of the
+    //   System Exclusive Message, except for System Exclusive Continue UMPs, and System Real Time Messages.
+    // • System Real Time Messages on the same Group may be inserted between the UMPs of a System Exclusive
+    //   message, in order to maintain timing synchronization.
+    // • If any Message or UMP on the same Group, other than a System Exclusive Continue UMP or a System Real
+    //   Time Message, is sent after a System Exclusive Start UMP and before the associated System Exclusive End
+    //   UMP, then that UMP shall terminate the System Exclusive Message.
+    // Messages which are Groupless(MT = 0x0 and 0xF) and those which are sent to a different Group may be
+    // interspersed with System Exclusive Messages.
+    //
+    // In a multi-client situation, however, we wouldn't want the UMP from Client A to terminate sysex from Client B.
+
+    inline bool IsMessageOkToSendDuringSysEx7(_In_ uint8_t activeSysExGroupIndex, _In_ uint32_t const word0) noexcept
+    {
+        uint8_t mt = GetUmpMessageTypeFromFirstWord(word0);
+
+        if (mt == 0x0 || mt == 0xF)
+        {
+            // stream messages
+            return true;
+        }
+
+        // messages to other groups in same stream are allowed
+        if (GetGroupIndexFromFirstWord(word0) != activeSysExGroupIndex)
+        {
+            return true;
+        }
+
+        // while in sysex7 for this current group, you can end or continue sysex7
+        if (IsSysEx7ContinueMessage(word0) || IsSysEx7CompleteMessage(word0))
+        {
+            return true;
+        }
+
+
+        return false;
+    }
+
+
+
+
 
 }

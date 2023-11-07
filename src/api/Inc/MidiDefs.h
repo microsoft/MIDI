@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <Devpropdef.h>
+
 #ifndef PAGE_SIZE
 #define PAGE_SIZE 0x1000
 #endif
@@ -11,6 +13,10 @@
 
 // UMP 128 is 16 bytes
 #define MAXIMUM_UMP_DATASIZE 16
+
+// we can't let the memory usage run away. This many messages is a 
+// lot, and performance will suffer above 5000 or so
+#define MIDI_OUTGOING_MESSAGE_QUEUE_MAX_MESSAGE_COUNT 20000
 
 //
 // Registry keys for global configuration. The settings app can write to some of these, so including in MidiDefs
@@ -212,13 +218,17 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UserSuppliedDescription, 503);     // DEVPROP_TY
 // Starts at 600
 
 // Calculated latency for sending a message to a device. 
-// We may allow the user to set this value in the settings app. If a standard UMP
-// ping message is available in the future, we may be able to calculate this for
-// MIDI 2.0 devices. We may also be able to calculate this using the jitter-reduction
-// timestamps.
-#define STRING_PKEY_MIDI_MidiOutLatencyTicks MIDI_STRING_PKEY_GUID L",600"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_MidiOutLatencyTicks, 600);     // DEVPROP_TYPE_UINT64
+// We may be able to calculate this using the jitter-reduction timestamps.
+#define STRING_PKEY_MIDI_MidiOutCalculatedLatencyTicks MIDI_STRING_PKEY_GUID L",600"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_MidiOutCalculatedLatencyTicks, 600);     // DEVPROP_TYPE_UINT64
 
+// user-supplied latency ticks for a device
+#define STRING_PKEY_MIDI_MidiOutUserSuppliedLatencyTicks MIDI_STRING_PKEY_GUID L",601"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_MidiOutUserSuppliedLatencyTicks, 601);     // DEVPROP_TYPE_UINT64
+
+// true if we should use the user-supplied latency instead of the calculated latency
+#define STRING_PKEY_MIDI_MidiOutLatencyTicksUserOverride MIDI_STRING_PKEY_GUID L",602"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_MidiOutLatencyTicksUserOverride, 602);     // DEVPROP_TYPE_BOOL
 
 
 

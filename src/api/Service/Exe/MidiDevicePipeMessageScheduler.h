@@ -13,9 +13,6 @@
 #include <thread>
 
 
-// sizeof(uint32_t) * 4
-#define MAX_UMP_BYTES 16
-
 // TODO: This base is arbitrary. We need to calculate this based on testing
 // it's also likely to be different on different PCs, so TBD if we need something
 // more dynamic for this value. Initial value here is 5000, which on my dev PC comes
@@ -31,7 +28,7 @@ struct ScheduledMidiMessage
 {
     internal::MidiTimestamp Timestamp;
     UINT ByteCount;         
-    BYTE Data[MAX_UMP_BYTES];    // pre-define this array to avoid another allocation/indirection
+    BYTE Data[MAXIMUM_UMP_DATASIZE];    // pre-define this array to avoid another allocation/indirection
 };
 
 
@@ -70,6 +67,14 @@ public:
 private:
     // priority queue with comparison set up to compare the timestamps
     // we want the smallest timestamp as front/top of the queue.
+
+    // NOTE: As expected, this works for small-ish numbers of queued 
+    // messages. But when you start getting up into the thousands, the
+    // delay becomes larger. Example: just over 1ms for 10,000 messages.
+    // Not really any other std:: options here, at least for the data
+    // structure we need. It's already using a heap / tree underneath.
+    // 
+    // Consider a separate thread for writing to the queue to make that return quickly.
     std::priority_queue<ScheduledMidiMessage, std::vector<ScheduledMidiMessage>, auto(*)(ScheduledMidiMessage&, ScheduledMidiMessage&)->bool>
         m_messageQueue{ [](_In_ ScheduledMidiMessage& left, _In_ ScheduledMidiMessage& right) -> bool { return left.Timestamp > right.Timestamp; } };
 
