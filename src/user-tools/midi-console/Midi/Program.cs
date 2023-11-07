@@ -77,7 +77,7 @@ app.Configure(config =>
         endpoint.AddCommand<MonitorEndpointCommand>("monitor")
             .WithAlias("monitor")
             .WithAlias("listen")
-            .WithExample("endpoint", "\\\\?\\SWD#MIDISRV#MIDIU_DEFAULT_LOOPBACK_BIDI_A#{e7cce071-3c03-423f-88d3-f1045d02552b}", "monitor")
+            .WithExample("endpoint", "\\\\?\\SWD#MIDISRV#MIDIU_DIAG_LOOPBACK_A#{e7cce071-3c03-423f-88d3-f1045d02552b}", "monitor")
             .WithDescription(Strings.CommandMonitorEndpointDescription)
             ;
 
