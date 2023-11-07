@@ -908,7 +908,7 @@ Return Value:
         &pDeviceContext->DeviceNameMemory);
     if (!NT_SUCCESS(status))
     {
-        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE, "Could not obtain Friendly Name String. Status: 0x%x", status);
+        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE, "Could not obtain Friendly Name String. %!STATUS!", status);
     }
     else
     {
@@ -926,7 +926,6 @@ Return Value:
     // Setup store for setting pairs for use later
     if (numInterfaces)
     {
-        // We only need to hold one interface
         pSettingPairs = (PWDF_USB_INTERFACE_SETTING_PAIR)ExAllocatePool2(
             POOL_FLAG_PAGED,
             sizeof(WDF_USB_INTERFACE_SETTING_PAIR) * numInterfaces,
@@ -938,7 +937,7 @@ Return Value:
     {
         status = STATUS_SEVERITY_ERROR;
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-            "Insufficient Resources\n");
+            "Insufficient Resources %!STATUS!", status);
         return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
@@ -946,7 +945,16 @@ Return Value:
     // an accompany Audio Control interface the Audio Control is not
     // used and many manufacturers do not include it or if combined
     // with audio interface, only have control with audio interface.
+    // Streaming MIDI interface does not use or require control
+    // endpoint except by definition of being an Audio class device
+    // which does by specification require a control interface.
     // Therefore we will skip audio control interface.
+
+    // Temporary variables used to select interface
+    INT midi1Interface = -1;
+    INT midi2Interface = -1;
+    UINT8 midi1InterfaceAlt;
+    UINT8 midi2InterfaceAlt;
 
     // Search for MIDI Interface
     pDeviceContext->UsbMIDIStreamingInterface = NULL;
@@ -957,6 +965,68 @@ Return Value:
             pDeviceContext->UsbDevice,
             interfaceCount
         );
+
+        // Get the Interface Desctiprtor checking if alternate interface
+        bool isAltInterface = true;
+        // See if there is an alternate interface
+        WdfUsbInterfaceGetDescriptor(
+            usbInterface,
+            1,  // alternate interface
+            &interfaceDescriptor
+        );
+        if (!interfaceDescriptor.bLength)
+        {
+            // No alternate interface so fetch original
+            WdfUsbInterfaceGetDescriptor(
+                usbInterface,
+                0,  // MIDI 1.0 Interface?
+                &interfaceDescriptor
+            );
+            if (interfaceDescriptor.bLength)
+            {
+                isAltInterface = false;
+            }
+            else
+            {
+                // Unknown interface so error
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Device detected has an error in interface descriptor.\n");
+                status = STATUS_SEVERITY_ERROR;
+                goto SelectExit;
+            }
+        }
+
+        // Store setting pair
+        pSettingPairs[interfaceCount].UsbInterface = usbInterface;
+        pSettingPairs[interfaceCount].SettingIndex = (isAltInterface) ? 1 : 0;
+        
+        // See if MIDI
+        if (interfaceDescriptor.bInterfaceClass = 1) /*AUDIO*/
+        {
+            if (interfaceDescriptor.bInterfaceSubClass == 3) /*MIDI STREAMING*/
+            {
+                // Look at Class-Specific MS Interface Header Descriptor
+
+                // Determine USB MIDI 1.0 or USB MIDI 2.0
+            }
+            else
+            {
+                if (interfaceDescriptor.bInterfaceSubClass == 1)    /*AUDIO CONTROL*/
+                {
+                    // valid but unused, continue on
+                    continue;
+                }
+                else
+                {
+                    // Unknown interface so error
+                    TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Device detected has an unknown interface.\n");
+                    status = STATUS_SEVERITY_ERROR;
+                    goto SelectExit;
+                }
+            }
+        }
+
+        // Select USB MIDI 2.0 if exists, otherwise USB MIDI 1.0. If neither then error
+        // 
 
         // See if there is an alternate interface
         WdfUsbInterfaceGetDescriptor(
@@ -1185,8 +1255,8 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
-LONGLONG DEFAULT_CONTROL_TRANSFER_TIMEOUT = 5 * -1 * WDF_TIMEOUT_TO_SEC;
 
+LONGLONG DEFAULT_CONTROL_TRANSFER_TIMEOUT = 5 * -1 * WDF_TIMEOUT_TO_SEC;
 _Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
@@ -1196,8 +1266,10 @@ USBMIDI2DriverGetGTB(
 /*++
 Routine Description:
 
-    In this callback to fetch and parse the Group Terminal Block information
+    Function to fetch and parse the Group Terminal Block information
     for the case using a USB MIDI 2.0 device.
+    If a USB MIDI 1.0 device, will call function to create Group
+    Terminal Block from USB MIDI 1.0 data.
 
 Arguments:
 
@@ -1233,7 +1305,12 @@ Return Value:
     // If not USB MIDI 2.0 then error, do not proceed
     if (!devCtx->UsbMIDIStreamingAlt)
     {
-        status = STATUS_INVALID_PARAMETER;
+        status = USBMIDI2DriverCreateGTB(Device);
+        if (!NT_SUCCESS(status))
+        {
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error creating GTB header for USB MIDI 1.0 device. %!STATUS!", status);
+            status = STATUS_SUCCESS;
+        }
         goto exit;
     }
 
@@ -1245,7 +1322,7 @@ Return Value:
     // Set timeout
     WDF_REQUEST_SEND_OPTIONS_SET_TIMEOUT(
         &sendOptions,
-        4*WDF_TIMEOUT_TO_SEC
+        WDF_TIMEOUT_TO_SEC
     );
 
     // Need interface number for setup packet
@@ -1323,7 +1400,7 @@ Return Value:
     // Set timeout
     WDF_REQUEST_SEND_OPTIONS_SET_TIMEOUT(
         &sendOptions,
-        4*WDF_TIMEOUT_TO_SEC
+        WDF_TIMEOUT_TO_SEC
     );
 
     // Get the Group Terminal Block descriptor for this device
@@ -1450,7 +1527,7 @@ Return Value:
 
         if (pUSBGTBs->aBlock[termBlockCount].iBlockItem)
         {
-            USHORT stringSize = grpTermBlockStringSizes[termBlockCount];
+            USHORT stringSize = grpTermBlockStringSizes[termBlockCount] - sizeof(WCHAR); //Always leave NULL
 
             // Fetch String descriptor from device
             status = WdfUsbTargetDeviceQueryString(
@@ -1480,6 +1557,31 @@ exit:
         WdfObjectDelete(gtbMemory);
     }
     return status;
+}
+
+_Use_decl_annotations_
+PAGED_CODE_SEG
+NTSTATUS
+USBMIDI2DriverCreateGTB(
+    _In_ WDFDEVICE    Device
+)
+/*++
+Routine Description:
+
+    Function to create Group Terminal Block information
+    from a USB MIDI 1.0 device.
+
+Arguments:
+
+    Device - the device context from USB Driver
+
+Return Value:
+
+    NONE
+
+--*/
+{
+    return STATUS_SUCCESS;
 }
 
 _Use_decl_annotations_

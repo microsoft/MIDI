@@ -170,7 +170,6 @@ USBMIDI2DriverSelectInterface(
     _In_ WDFDEVICE    Device
 );
 
-// Forward Declartion of helper functions
 //
 // Function to Fetch and parse Group Terminal Block information
 //
@@ -179,6 +178,18 @@ __drv_requiresIRQL(PASSIVE_LEVEL)
 PAGED_CODE_SEG
 NTSTATUS
 USBMIDI2DriverGetGTB(
+    _In_ WDFDEVICE    Device
+);
+
+//
+// Function to Create Group Terminal Block information from
+// USB MIDI 1.0 device confiugation descriptor information.
+//
+_Must_inspect_result_
+__drv_requiresIRQL(PASSIVE_LEVEL)
+PAGED_CODE_SEG
+NTSTATUS
+USBMIDI2DriverCreateGTB(
     _In_ WDFDEVICE    Device
 );
 
