@@ -41,7 +41,7 @@ END
 
 3 TEXTINCLUDE
 BEGIN
-    "1 TYPELIB ""Midi2NetworkMidiAbstraction.tlb""\r\n"
+    "1 TYPELIB ""Midi2JitterReductionAbstraction.tlb""\r\n"
     "\0"
 END
 
@@ -73,8 +73,8 @@ BEGIN
             VALUE "FileDescription", "Windows MIDI Services Plugin"
             VALUE "FileVersion", "1.0.0.1"
             VALUE "LegalCopyright", "Copyright (c) Microsoft Corporation.  All rights reserved."
-            VALUE "InternalName", "Midi2.NetworkMidiAbstraction.dll"
-            VALUE "OriginalFilename", "Midi2.NetworkMidiAbstraction.dll"
+            VALUE "InternalName", "Midi2.JitterReductionAbstraction.dll"
+            VALUE "OriginalFilename", "Midi2.JitterReductionAbstraction.dll"
             VALUE "ProductName", "Windows MIDI Services"
             VALUE "ProductVersion", "1.0.0.1"
             VALUE "OLESelfRegister", ""
@@ -93,10 +93,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROJNAME                    "Midi2.NetworkMidiAbstraction"
+    IDS_PROJNAME                    "Midi2.JitterReductionAbstraction"
 END
 
-IDR_MIDI2NETWORKMIDIABSTRACTION REGISTRY "Midi2.NetworkMidiAbstraction.rgs"
+IDR_MIDI2JITTERREDUCTIONABSTRACTION REGISTRY "Midi2.JitterReductionAbstraction.rgs"
 ////////////////////////////////////////////////////////////////////////////
 
 
@@ -108,7 +108,7 @@ IDR_MIDI2NETWORKMIDIABSTRACTION REGISTRY "Midi2.NetworkMidiAbstraction.rgs"
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-1 TYPELIB "Midi2NetworkMidiAbstraction.tlb"
+1 TYPELIB "Midi2JitterReductionAbstraction.tlb"
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 #endif
