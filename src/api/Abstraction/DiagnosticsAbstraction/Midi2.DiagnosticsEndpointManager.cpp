@@ -8,7 +8,7 @@
 
 
 #include "pch.h"
-#include "midi2.DiagnosticsAbstraction.h"
+//#include "midi2.DiagnosticsAbstraction.h"
 
 using namespace wil;
 using namespace Microsoft::WRL;

@@ -7,8 +7,7 @@
 // ============================================================================
 
 #include "pch.h"
-
-#include "MidiDeviceTable.h"
+//#include "MidiDeviceTable.h"
 
 
 MidiDeviceTable::MidiDeviceTable() = default;
@@ -34,8 +33,3 @@ MidiLoopbackBidiDevice* MidiDeviceTable::GetBidiDevice()
     return &m_bidiDevice;
 }
 
-
-MidiLoopbackDevice* MidiDeviceTable::GetInOutDevice()
-{
-    return &m_inOutDevice;
-}

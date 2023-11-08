@@ -51,6 +51,7 @@
 
 #include "strsafe.h"
 
+#include "string_util.h"
 #include "abstraction_defs.h"
 
 #include "Midi2DiagnosticsAbstraction_i.c"
@@ -65,19 +66,20 @@
 #include "MidiXProc.h"
 
 
+//#include "MidiLoopbackDevice.h"
+#include "MidiLoopbackBidiDevice.h"
+#include "MidiPingBidiDevice.h"
+
 #include "Midi2.DiagnosticsAbstraction.h"
 #include "Midi2.DiagnosticsEndpointManager.h"
 
-#include "Midi2.LoopbackMidiIn.h"
-#include "Midi2.LoopbackMidiOut.h"
+//#include "Midi2.LoopbackMidiIn.h"
+//#include "Midi2.LoopbackMidiOut.h"
 #include "Midi2.LoopbackMidiBiDi.h"
 
 #include "Midi2.PingMidiBiDi.h"
 
 
-#include "MidiLoopbackDevice.h"
-#include "MidiLoopbackBidiDevice.h"
-#include "MidiPingBidiDevice.h"
 #include "MidiDeviceTable.h"
 
 

@@ -8,7 +8,7 @@
 
 
 #include "pch.h"
-#include "midi2.DiagnosticsAbstraction.h"
+//#include "midi2.DiagnosticsAbstraction.h"
 
 
 _Use_decl_annotations_
