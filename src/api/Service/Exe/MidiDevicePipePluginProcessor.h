@@ -18,7 +18,7 @@ class CMidiDevicePipePluginBookend :
 public:
 
 
-    HRESULT SendMidiMessage(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
+    STDMETHOD(SendMidiMessage(_In_ PVOID, _In_ UINT, _In_ LONGLONG));
 
     STDMETHOD(Callback)(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
 
@@ -37,7 +37,7 @@ public:
 
 
 
-    HRESULT SendMidiMessage(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
+    STDMETHOD(SendMidiMessage(_In_ PVOID, _In_ UINT, _In_ LONGLONG));
 
     STDMETHOD(Callback)(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
 
