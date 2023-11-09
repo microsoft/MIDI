@@ -59,7 +59,6 @@ extern "C" {
 #include <usb.h>
 #include <usbdlib.h>
 #include <wdfusb.h>
-#include "Queue.h"
 
 #include <acx.h>
 

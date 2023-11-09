@@ -142,9 +142,8 @@ public:
     NONPAGED_CODE_SEG
     bool
     FillReadStream(
-        _In_reads_(bufferSize)      PUINT32             pBuffer,
-        _In_                        size_t              bufferSize,
-        _In_                        WDFCONTEXT          Context
+        _In_reads_(bufferSize)      PUINT8              pBuffer,
+        _In_                        size_t              bufferSize
     );
 
 private:

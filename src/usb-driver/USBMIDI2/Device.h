@@ -76,21 +76,7 @@ extern "C" {
             UINT32  umpWords[4];
             UINT8   umpBytes[sizeof(UINT32) * 4];
         } umpData;
-    } UMP_PACKET;
-
-    //
-    // Structure to buffer read data between USB continuous reader
-    // and EvtIoRead callback from framework. Implements as a ring
-    // buffer.
-    //
-    typedef struct READ_RING_t
-    {
-        WDFMEMORY   RingBufMemory;
-        size_t      ringBufSize;
-        size_t      ringBufHead;
-        size_t      ringBufTail;
-    } READ_RING_TYPE, * PREAD_RING_TYPE;
-#define USBMIDI2DRIVER_RING_BUF_SIZE 256  // twice size of HS USB buffer
+    } UMP_PACKET, *PUMP_PACKET;
 
 //
 // Define device context.
@@ -117,9 +103,6 @@ typedef struct _DEVICE_CONTEXT {
     WDFUSBPIPE                  MidiOutPipe;        // out to device
     WDF_USB_PIPE_TYPE           MidiOutPipeType;    // Bulk or Interrupt
     ULONG                       MidiOutMaxSize;     // maximum transfer size
-
-    // Read Ring Buffer
-    READ_RING_TYPE              ReadRingBuf;
 
     //
     // The folloiwng fileds are used to store device configuration information
@@ -187,6 +170,18 @@ USBMIDI2DriverSelectInterface(
     _In_ WDFDEVICE    Device
 );
 
+// Forward Declartion of helper functions
+//
+// Function to Fetch and parse Group Terminal Block information
+//
+_Must_inspect_result_
+__drv_requiresIRQL(PASSIVE_LEVEL)
+PAGED_CODE_SEG
+NTSTATUS
+USBMIDI2DriverGetGTB(
+    _In_ WDFDEVICE    Device
+);
+
 //
 // Function to connect and prepare pipes for use
 //
@@ -221,32 +216,6 @@ USBMIDI2DriverEvtReadFailed(
     WDFUSBPIPE      Pipe,
     NTSTATUS        status,
     USBD_STATUS     UsbdStatus
-);
-
-//
-// Helper function to queue read data to be picked up by
-// IoEvtRead routine.
-//
-_Must_inspect_result_
-__drv_maxIRQL(PASSIVE_LEVEL)
-NONPAGED_CODE_SEG
-BOOLEAN 
-USBMIDI2DriverFillReadQueue(
-    _In_reads_(bufferSize)  PUINT32             pBuffer,
-    _In_                    size_t              bufferSize,
-    _In_                    PDEVICE_CONTEXT     pDeviceContext
-);
-
-//
-// Function callback for read request
-//
-__drv_maxIRQL(PASSIVE_LEVEL)
-NONPAGED_CODE_SEG
-VOID
-USBMIDI2DriverEvtIoRead(
-    _In_ WDFQUEUE         Queue,
-    _In_ WDFREQUEST       Request,
-    _In_ size_t           Length
 );
 
 // 
@@ -301,4 +270,14 @@ USBMIDI2DriverEvtRequestWriteCompletionRoutine(
     _In_ WDFIOTARGET                 Target,
     _In_ PWDF_REQUEST_COMPLETION_PARAMS CompletionParams,
     _In_ WDFCONTEXT                  Context
+);
+
+// TODO: Put into dedicated library file
+__drv_maxIRQL(PASSIVE_LEVEL)
+NONPAGED_CODE_SEG
+BOOL
+USBMIDI1ToUMP(
+    _In_    PUINT32        usbMidi1Pkt,
+    _Inout_ bool           *pbIsInSysex,
+    _Out_   PUMP_PACKET    umpPkt
 );
