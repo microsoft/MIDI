@@ -24,6 +24,8 @@ public:
 private:
     IMidiCallback* m_callback;
 
+
+
 };
 
 

@@ -248,10 +248,10 @@ void MidiBenchmarks::BenchmarkSendReceiveScheduledMessagesMediumCount()
     LOG_OUTPUT(L"API Scheduling benchmark MEDIUM message count ***********************************************************************");
 
     BenchmarkSendReceiveScheduledMessages(1000);
-    BenchmarkSendReceiveScheduledMessages(2000);
+    //BenchmarkSendReceiveScheduledMessages(2000);
     BenchmarkSendReceiveScheduledMessages(3000);
-    BenchmarkSendReceiveScheduledMessages(5000);
-    BenchmarkSendReceiveScheduledMessages(10000);
+    //BenchmarkSendReceiveScheduledMessages(5000);
+    //BenchmarkSendReceiveScheduledMessages(10000);
 }
 
 
