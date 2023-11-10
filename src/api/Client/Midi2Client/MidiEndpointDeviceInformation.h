@@ -26,17 +26,22 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static winrt::hstring EndpointInterfaceClass() noexcept { return STRING_DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI; }
 
-        static midi2::MidiEndpointDeviceWatcher CreateWatcher(_In_ bool includeDiagnosticsEndpoints);
-
         static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll(
             _In_ midi2::MidiEndpointDeviceInformationSortOrder const& sortOrder, 
             _In_ midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept;
+
         static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll(
             _In_ midi2::MidiEndpointDeviceInformationSortOrder const& sortOrder) noexcept;
+
         static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll() noexcept;
 
         static collections::IVectorView<winrt::hstring> GetAdditionalPropertiesList() noexcept;
 
+        static winrt::Windows::Devices::Enumeration::DeviceWatcher CreateWatcher(_In_ midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept;
+
+        static bool MidiEndpointDeviceInformation::DeviceMatchesFilter(
+            _In_ midi2::MidiEndpointDeviceInformation const& deviceInformation,
+            _In_ midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept;
 
         winrt::hstring Id() const noexcept;
         winrt::guid ContainerId() const noexcept { return GetGuidProperty(L"System.Devices.ContainerId", winrt::guid{}); }
@@ -85,8 +90,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // TODO: MIDI Device Id (sysex stuff)
 
 
+        bool UpdateFromDeviceInformation(_In_ winrt::Windows::Devices::Enumeration::DeviceInformation const& deviceInformation) noexcept;
+        bool UpdateFromDeviceInformationUpdate(_In_ winrt::Windows::Devices::Enumeration::DeviceInformationUpdate const& deviceInformationUpdate) noexcept;
+
         void InternalUpdateFromDeviceInformation(_In_ winrt::Windows::Devices::Enumeration::DeviceInformation const& info) noexcept;
         
+
+
+
 
     private:
         winrt::hstring GetStringProperty(

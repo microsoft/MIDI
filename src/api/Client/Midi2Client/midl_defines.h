@@ -21,6 +21,7 @@
 import "Windows.Foundation.idl"; \
 import "Windows.Data.Json.idl"; \
 import "Windows.Devices.Midi.idl"; \
+import "Windows.Devices.Enumeration.idl"; \
 
 #define MIDI_INTERFACE_UUID(u,v) uuid(u)
 

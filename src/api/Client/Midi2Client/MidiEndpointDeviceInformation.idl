@@ -37,6 +37,10 @@ namespace Windows.Devices.Midi2
 
         static IVectorView<String> GetAdditionalPropertiesList();
 
+        static Boolean DeviceMatchesFilter(MidiEndpointDeviceInformation deviceInformation, MidiEndpointDeviceInformationFilter endpointFilter);
+
+
+
         String Id { get; };
         
         Windows.Devices.Enumeration.DeviceInformation DeviceInformation{ get; };
@@ -107,6 +111,11 @@ namespace Windows.Devices.Midi2
         // constructor to create from the watcher events
 
         // constructor to create from DeviceInformation
+
+
+        Boolean UpdateFromDeviceInformation(Windows.Devices.Enumeration.DeviceInformation deviceInformation);
+        Boolean UpdateFromDeviceInformationUpdate(Windows.Devices.Enumeration.DeviceInformationUpdate deviceInformationUpdate);
+
 
 
     }

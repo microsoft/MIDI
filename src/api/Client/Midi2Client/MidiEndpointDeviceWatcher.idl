@@ -6,10 +6,10 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
+import "MidiEndpointDeviceInformationFilterEnum.idl";
 import "MidiEndpointDeviceInformation.idl";
 
 namespace Windows.Devices.Midi2
@@ -18,14 +18,19 @@ namespace Windows.Devices.Midi2
     [default_interface]
     runtimeclass MidiEndpointDeviceWatcher
     {
-        MidiEndpointDeviceWatcher();
+        static MidiEndpointDeviceWatcher CreateWatcher(MidiEndpointDeviceInformationFilter endpointFilter);
 
         void Start();
         void Stop();
 
-        Windows.Foundation.Collections.IMap<String, MidiEndpointDeviceInformation> EndpointDevices{ get; };
+        Windows.Devices.Enumeration.DeviceWatcherStatus Status{ get; };
 
-        // TODO: Implement MidiEndpointDeviceWatcher. Need events for data updates. No point in making the map observable because the entities aren't
+        event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, MidiEndpointDeviceInformation> Added;
+        event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, Windows.Devices.Enumeration.DeviceInformationUpdate> Removed;
+        event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, Windows.Devices.Enumeration.DeviceInformationUpdate> Updated;
 
+        event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, IInspectable> EnumerationCompleted;
+        event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, IInspectable> Stopped;
     }
 }
+

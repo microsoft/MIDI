@@ -155,12 +155,84 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
+    //_Use_decl_annotations_
+    //winrt::Windows::Devices::Enumeration::DeviceWatcher MidiEndpointDeviceInformation::CreateWatcher(midi2::MidiEndpointDeviceInformationFilter const& filter) noexcept
+    //{
+    //    winrt::hstring aqsFilter{};
+
+    //    return winrt::Windows::Devices::Enumeration::DeviceInformation::CreateWatcher(
+    //        aqsFilter,
+    //        GetAdditionalPropertiesList()
+    //    );
+    //}
+
+
     _Use_decl_annotations_
-    midi2::MidiEndpointDeviceWatcher MidiEndpointDeviceInformation::CreateWatcher(bool /*includeDiagnosticsEndpoints*/)
+    bool MidiEndpointDeviceInformation::DeviceMatchesFilter(
+        midi2::MidiEndpointDeviceInformation const& deviceInformation,
+        midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept
     {
-        // TODO: implement CreateWatcher for enumeration
-        return nullptr;
+        // check if diagnostic loopback 
+        if (deviceInformation.EndpointPurpose() == MidiEndpointDevicePurpose::DiagnosticLoopback)
+        {
+            if ((endpointFilter & midi2::MidiEndpointDeviceInformationFilter::IncludeDiagnosticLoopback) ==
+                midi2::MidiEndpointDeviceInformationFilter::IncludeDiagnosticLoopback)
+            {
+                return true;
+            }
+        }
+
+        // check if diagnostic ping 
+        else if (deviceInformation.EndpointPurpose() == MidiEndpointDevicePurpose::DiagnosticPing)
+        {
+            if ((endpointFilter & midi2::MidiEndpointDeviceInformationFilter::IncludeDiagnosticPing) ==
+                midi2::MidiEndpointDeviceInformationFilter::IncludeDiagnosticPing)
+            {
+                return true;
+            }
+        }
+
+        // check if virtual device responder
+        else if (deviceInformation.EndpointPurpose() == MidiEndpointDevicePurpose::VirtualDeviceResponder)
+        {
+            if ((endpointFilter & midi2::MidiEndpointDeviceInformationFilter::IncludeVirtualDeviceResponder) ==
+                midi2::MidiEndpointDeviceInformationFilter::IncludeVirtualDeviceResponder)
+            {
+                return true;
+            }
+        }
+
+        // check if normal client MIDI 1.0 / bytestream
+        else if ((deviceInformation.EndpointPurpose() == MidiEndpointDevicePurpose::NormalMessageEndpoint) &&
+            (deviceInformation.NativeDataFormat() == MidiEndpointNativeDataFormat::ByteStream))
+        {
+            if ((endpointFilter & midi2::MidiEndpointDeviceInformationFilter::IncludeClientByteStreamNative) ==
+                midi2::MidiEndpointDeviceInformationFilter::IncludeClientByteStreamNative)
+            {
+                return true;
+            }
+        }
+
+        // check if normal client MIDI 2.0 / UMP 
+        else if ((deviceInformation.EndpointPurpose() == MidiEndpointDevicePurpose::NormalMessageEndpoint) &&
+            (deviceInformation.NativeDataFormat() == MidiEndpointNativeDataFormat::UniversalMidiPacket ||
+                deviceInformation.NativeDataFormat() == MidiEndpointNativeDataFormat::Unknown))
+        {
+            if ((endpointFilter & midi2::MidiEndpointDeviceInformationFilter::IncludeClientUmpNative) == midi2::MidiEndpointDeviceInformationFilter::IncludeClientUmpNative)
+            {
+                return true;
+            }
+        }
+
+        // no idea what kind of endpoint this is, so default to including it
+        else
+        {
+            return true;
+        }
+
+        return false;
     }
+
 
     _Use_decl_annotations_
     collections::IVectorView<midi2::MidiEndpointDeviceInformation> MidiEndpointDeviceInformation::FindAll(
@@ -184,67 +256,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 for (auto const& di : devices)
                 {
-                    auto endpointInfo = winrt::make_self<MidiEndpointDeviceInformation>();
+                    auto midiDevice = winrt::make_self<MidiEndpointDeviceInformation>();
 
-                    endpointInfo->InternalUpdateFromDeviceInformation(di);
+                    midiDevice->UpdateFromDeviceInformation(di);
 
-                    // check if diagnostic loopback 
-                    if (endpointInfo->EndpointPurpose() == MidiEndpointDevicePurpose::DiagnosticLoopback)
+                    if (DeviceMatchesFilter(*midiDevice, endpointFilter))
                     {
-                        if ((endpointFilter & midi2::MidiEndpointDeviceInformationFilter::IncludeDiagnosticLoopback) ==
-                                              midi2::MidiEndpointDeviceInformationFilter::IncludeDiagnosticLoopback)
-                        {
-                            midiDevices.push_back(*endpointInfo);
-                        }
-                    }
-                        
-                    // check if diagnostic ping 
-                    else if (endpointInfo->EndpointPurpose() == MidiEndpointDevicePurpose::DiagnosticPing)
-                    {
-                        if ((endpointFilter & midi2::MidiEndpointDeviceInformationFilter::IncludeDiagnosticPing) == 
-                                              midi2::MidiEndpointDeviceInformationFilter::IncludeDiagnosticPing)
-                        {
-                            midiDevices.push_back(*endpointInfo);
-                        }
+                        midiDevices.push_back(*midiDevice);
                     }
 
-                    // check if virtual device responder
-                    else if (endpointInfo->EndpointPurpose() == MidiEndpointDevicePurpose::VirtualDeviceResponder)
-                    {
-                        if ((endpointFilter & midi2::MidiEndpointDeviceInformationFilter::IncludeVirtualDeviceResponder) == 
-                                              midi2::MidiEndpointDeviceInformationFilter::IncludeVirtualDeviceResponder)
-                        {
-                            midiDevices.push_back(*endpointInfo);
-                        }
-                    }
-
-                    // check if normal client MIDI 1.0 / bytestream
-                    else if ((endpointInfo->EndpointPurpose() == MidiEndpointDevicePurpose::NormalMessageEndpoint) &&
-                        (endpointInfo->NativeDataFormat() == MidiEndpointNativeDataFormat::ByteStream))
-                    {
-                        if ((endpointFilter & midi2::MidiEndpointDeviceInformationFilter::IncludeClientByteStreamNative) ==
-                                              midi2::MidiEndpointDeviceInformationFilter::IncludeClientByteStreamNative)
-                        {
-                            midiDevices.push_back(*endpointInfo);
-                        }
-                    }
-
-                    // check if normal client MIDI 2.0 / UMP 
-                    else if ((endpointInfo->EndpointPurpose() == MidiEndpointDevicePurpose::NormalMessageEndpoint) &&
-                             (endpointInfo->NativeDataFormat() == MidiEndpointNativeDataFormat::UniversalMidiPacket ||
-                              endpointInfo->NativeDataFormat() == MidiEndpointNativeDataFormat::Unknown))
-                    {
-                        if ((endpointFilter & midi2::MidiEndpointDeviceInformationFilter::IncludeClientUmpNative) == midi2::MidiEndpointDeviceInformationFilter::IncludeClientUmpNative)
-                        {
-                            midiDevices.push_back(*endpointInfo);
-                        }
-                    }
-
-                    // no idea what kind of endpoint this is, so default to including it
-                    else
-                    {
-                        midiDevices.push_back(*endpointInfo);
-                    }
                 }
             }
         }
@@ -510,13 +530,39 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     void MidiEndpointDeviceInformation::InternalUpdateFromDeviceInformation(
-        winrt::Windows::Devices::Enumeration::DeviceInformation const& info) noexcept
+        winrt::Windows::Devices::Enumeration::DeviceInformation const& deviceInformation) noexcept
     {
-        if (info != nullptr)
+        if (deviceInformation != nullptr)
         {
-            m_deviceInformation = info;
+            m_deviceInformation = deviceInformation;
         }
     }
+
+    _Use_decl_annotations_
+    bool MidiEndpointDeviceInformation::UpdateFromDeviceInformation(
+        winrt::Windows::Devices::Enumeration::DeviceInformation const& deviceInformation) noexcept
+    {
+        // TODO: Check that the ids (after lowercasing) are the same before allowing this.
+
+        InternalUpdateFromDeviceInformation(deviceInformation);
+
+        return true;
+    }
+
+
+    _Use_decl_annotations_
+    bool MidiEndpointDeviceInformation::UpdateFromDeviceInformationUpdate(
+        winrt::Windows::Devices::Enumeration::DeviceInformationUpdate const& deviceInformationUpdate) noexcept
+    {
+        UNREFERENCED_PARAMETER(deviceInformationUpdate);
+
+        // This needs to update only the changed properties in this deviceinformation object
+        // That means we have to now store the properties separately instead of just using a 
+        // deviceinformation object as our backing store.
+
+        return false;
+    }
+
 
 
 }
