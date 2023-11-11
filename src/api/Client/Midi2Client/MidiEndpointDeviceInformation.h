@@ -47,10 +47,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::guid ContainerId() const noexcept { return GetGuidProperty(L"System.Devices.ContainerId", winrt::guid{}); }
         winrt::hstring DeviceInstanceId() const noexcept { return GetStringProperty(L"System.Devices.DeviceInstanceId", L""); }
 
-        winrt::Windows::Devices::Enumeration::DeviceInformation GetParentDeviceInformation();
-        winrt::Windows::Devices::Enumeration::DeviceInformation GetContainerInformation();
+        winrt::Windows::Devices::Enumeration::DeviceInformation GetParentDeviceInformation() const noexcept;
+        winrt::Windows::Devices::Enumeration::DeviceInformation GetContainerInformation() const noexcept;
 
-        winrt::Windows::Devices::Enumeration::DeviceInformation DeviceInformation() noexcept { return m_deviceInformation; }
+        winrt::Windows::Devices::Enumeration::DeviceInformation DeviceInformation() const noexcept { return m_deviceInformation; }
 
         winrt::hstring Name() const noexcept;
 
@@ -111,6 +111,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint8_t GetByteProperty(
             _In_ winrt::hstring key,
             _In_ uint8_t defaultValue) const noexcept;
+
+        uint32_t GetUInt32Property(
+            _In_ winrt::hstring key,
+            _In_ uint32_t defaultValue) const noexcept;
 
         bool GetBoolProperty(
             _In_ winrt::hstring key,

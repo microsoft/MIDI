@@ -14,13 +14,22 @@ namespace winrt::Windows::Devices::Midi2::implementation
 {
     MidiEndpointDeviceWatcher::~MidiEndpointDeviceWatcher()
     {
-        if (m_watcher)
+        try
         {
-            m_watcher.Added(m_deviceAddedEventRevokeToken);
-            m_watcher.Updated(m_deviceUpdatedEventRevokeToken);
-            m_watcher.Removed(m_deviceRemovedEventRevokeToken);
-            m_watcher.EnumerationCompleted(m_enumerationCompletedEventRevokeToken);
-            m_watcher.Stopped(m_stoppedEventRevokeToken);
+            if (m_watcher)
+            {
+                // unwire events
+
+                m_watcher.Added(m_deviceAddedEventRevokeToken);
+                m_watcher.Updated(m_deviceUpdatedEventRevokeToken);
+                m_watcher.Removed(m_deviceRemovedEventRevokeToken);
+                m_watcher.EnumerationCompleted(m_enumerationCompletedEventRevokeToken);
+                m_watcher.Stopped(m_stoppedEventRevokeToken);
+            }
+        }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"exception unwiring event handlers");
         }
     }
 
@@ -44,7 +53,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
         catch (...)
         {
-            // TODO: Log this
+            internal::LogGeneralError(__FUNCTION__, L"exception in Added event, likely thrown by the application using this API.");
         }
     }
 
@@ -54,7 +63,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         // TODO: check to see if the device matches one in our list
 
-        if (m_deviceUpdatedEvent) m_deviceUpdatedEvent(*this, args);
+        try
+        {
+            if (m_deviceUpdatedEvent) m_deviceUpdatedEvent(*this, args);
+        }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"exception in Updated event, likely thrown by the application using this API.");
+        }
     }
 
     void MidiEndpointDeviceWatcher::OnDeviceRemoved(
@@ -63,21 +79,42 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         // TODO: check to see if the device matches one in our list
 
-        if (m_deviceRemovedEvent) m_deviceRemovedEvent(*this, args);
+        try
+        {
+            if (m_deviceRemovedEvent) m_deviceRemovedEvent(*this, args);
+        }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"exception in Removed event, likely thrown by the application using this API.");
+        }
     }
 
     void MidiEndpointDeviceWatcher::OnEnumerationCompleted(
         _In_ winrt::Windows::Devices::Enumeration::DeviceWatcher source,
         _In_ winrt::Windows::Foundation::IInspectable args)
     {
-        if (m_enumerationCompletedEvent) m_enumerationCompletedEvent(*this, args);
+        try
+        {
+            if (m_enumerationCompletedEvent) m_enumerationCompletedEvent(*this, args);
+        }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"exception in Enumeration Completed event, likely thrown by the application using this API.");
+        }
     }
 
     void MidiEndpointDeviceWatcher::OnStopped(
         _In_ winrt::Windows::Devices::Enumeration::DeviceWatcher source,
         _In_ winrt::Windows::Foundation::IInspectable args)
     {
-        if (m_stoppedEvent) m_stoppedEvent(*this, args);
+        try
+        {
+            if (m_stoppedEvent) m_stoppedEvent(*this, args);
+        }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"exception in Stopped event, likely thrown by the application using this API.");
+        }
     }
 
 
@@ -105,19 +142,28 @@ namespace winrt::Windows::Devices::Midi2::implementation
     midi2::MidiEndpointDeviceWatcher MidiEndpointDeviceWatcher::CreateWatcher(
         midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept
     {
-        // the properties we would filter on are GUID properties, so we can't use
-        // them in the aqs query. Instead, we have to filter when we get the events
-        winrt::hstring aqsFilter = midi2::MidiEndpointConnection::GetDeviceSelector();
+        try
+        {
+            // the properties we would filter on are GUID properties, so we can't use
+            // them in the aqs query. Instead, we have to filter when we get the events
+            winrt::hstring aqsFilter = midi2::MidiEndpointConnection::GetDeviceSelector();
 
-        auto watcher = winrt::make_self<MidiEndpointDeviceWatcher>();
-        auto baseWatcher = winrt::Windows::Devices::Enumeration::DeviceInformation::CreateWatcher(
-            aqsFilter,
-            midi2::MidiEndpointDeviceInformation::GetAdditionalPropertiesList(),
-            winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface);
+            auto watcher = winrt::make_self<MidiEndpointDeviceWatcher>();
+            auto baseWatcher = winrt::Windows::Devices::Enumeration::DeviceInformation::CreateWatcher(
+                aqsFilter,
+                midi2::MidiEndpointDeviceInformation::GetAdditionalPropertiesList(),
+                winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface);
 
-        watcher->InternalInitialize(endpointFilter, baseWatcher);
+            watcher->InternalInitialize(endpointFilter, baseWatcher);
 
-        return *watcher;
+            return *watcher;
+        }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"exception creating MidiEndpointDeviceWatcher.");
+
+            return nullptr;
+        }
     }
 
 

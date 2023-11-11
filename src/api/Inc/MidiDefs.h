@@ -129,17 +129,20 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_AssociatedUMP, 52);     // DEVPROP_TYPE_UINT64
 // Major Known Endpoint Types =====================================================================
 // Starts at 100
 
-// true if this is the device-side of a virtual device. This is not what the client should connect to
-#define STRING_PKEY_MIDI_IsVirtualDeviceResponder MIDI_STRING_PKEY_GUID L",100"
-DEFINE_MIDIDEVPROPKEY(PKEY_PKEY_MIDI_IsVirtualDeviceResponder, 100);     // DEVPROP_TYPE_BOOLEAN
+// If you change these, you should also update
+// the WinRT MidiEndpointDevicePurpose enum, which is projected through the API
+enum MidiEndpointDevicePurposePropertyValue
+{
+    NormalMessageEndpoint = 0,
+    VirtualDeviceResponder = 100,
+    InBoxGeneralMidiSynth = 400,
+    DiagnosticLoopback = 500,
+    DiagnosticPing = 510,
+};
 
-// true if this device is the standard internal ping Bidi device
-#define STRING_PKEY_MIDI_UmpPing MIDI_STRING_PKEY_GUID L",101"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UmpPing, 101);     // DEVPROP_TYPE_BOOLEAN
-
-// true if this device is a standard MIDI 2loopback device or part of a loopback pair of devices
-#define STRING_PKEY_MIDI_UmpLoopback MIDI_STRING_PKEY_GUID L",102"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UmpLoopback, 102);     // DEVPROP_TYPE_BOOLEAN
+// Valid values are in MidiEndpointDevicePurposePropertyValue
+#define STRING_PKEY_MIDI_EndpointDevicePurpose MIDI_STRING_PKEY_GUID L",100"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointDevicePurpose, 100);     // DEVPROP_TYPE_ uint32
 
 
 // In-protocol Endpoint information ================================================================
