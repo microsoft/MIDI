@@ -39,6 +39,9 @@
     <ClCompile Include="MidiStreamMessageBuilderTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceWatcherTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -63,6 +66,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MidiStreamMessageBuilderTests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceWatcherTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
