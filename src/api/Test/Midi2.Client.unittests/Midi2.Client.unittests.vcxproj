@@ -148,7 +148,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="MidiBenchmarks.cpp" />
     <ClCompile Include="MidiClockTests.cpp" />
     <ClCompile Include="MidiEndpointConnectionTests.cpp" />
     <ClCompile Include="MidiFunctionBlockMessageBuilderTests.cpp" />
@@ -159,7 +158,6 @@
     <ClCompile Include="Module.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MidiBenchmarks.h" />
     <ClInclude Include="MidiClockTests.h" />
     <ClInclude Include="MidiEndpointConnectionTests.h" />
     <ClInclude Include="MidiFunctionBlockMessageBuilderTests.h" />

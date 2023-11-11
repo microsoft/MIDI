@@ -18,9 +18,6 @@
     <ClCompile Include="Module.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MidiBenchmarks.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MidiClockTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -45,9 +42,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiBenchmarks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MidiClockTests.h">

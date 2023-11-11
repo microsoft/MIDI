@@ -9,15 +9,13 @@
 
 #pragma once
 
-using namespace winrt::Windows::Devices::Midi2;
 
-
-class MidiBenchmarks
-    : public WEX::TestClass<MidiBenchmarks>
+class MidiSchedulerBenchmarks
+    : public WEX::TestClass<MidiSchedulerBenchmarks>
 {
 public:
 
-    BEGIN_TEST_CLASS(MidiBenchmarks)
+    BEGIN_TEST_CLASS(MidiSchedulerBenchmarks)
         TEST_CLASS_PROPERTY(L"TestClassification", L"Benchmark")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Windows.Devices.Midi2.dll")
     END_TEST_CLASS()
@@ -27,9 +25,6 @@ public:
 
         //TEST_METHOD_SETUP(TestSetup);
         //TEST_METHOD_CLEANUP(TestCleanup);
-
-    TEST_METHOD(BenchmarkSendReceiveWordArray);
-    TEST_METHOD(BenchmarkSendReceiveUmpRuntimeClass);
 
     TEST_METHOD(BenchmarkSendReceiveScheduledMessagesLowCount);
     TEST_METHOD(BenchmarkSendReceiveScheduledMessagesMediumCount);

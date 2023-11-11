@@ -37,7 +37,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static collections::IVectorView<winrt::hstring> GetAdditionalPropertiesList() noexcept;
 
-        static winrt::Windows::Devices::Enumeration::DeviceWatcher CreateWatcher(_In_ midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept;
+        static winrt::Windows::Devices::Enumeration::DeviceWatcher CreateWatcher(
+            _In_ midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept;
 
         static bool MidiEndpointDeviceInformation::DeviceMatchesFilter(
             _In_ midi2::MidiEndpointDeviceInformation const& deviceInformation,
@@ -90,14 +91,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // TODO: MIDI Device Id (sysex stuff)
 
 
-        bool UpdateFromDeviceInformation(_In_ winrt::Windows::Devices::Enumeration::DeviceInformation const& deviceInformation) noexcept;
-        bool UpdateFromDeviceInformationUpdate(_In_ winrt::Windows::Devices::Enumeration::DeviceInformationUpdate const& deviceInformationUpdate) noexcept;
+        bool UpdateFromDeviceInformation(
+            _In_ winrt::Windows::Devices::Enumeration::DeviceInformation const& deviceInformation) noexcept;
 
-        void InternalUpdateFromDeviceInformation(_In_ winrt::Windows::Devices::Enumeration::DeviceInformation const& info) noexcept;
-        
+        bool UpdateFromDeviceInformationUpdate(
+            _In_ winrt::Windows::Devices::Enumeration::DeviceInformationUpdate const& deviceInformationUpdate) noexcept;
 
-
-
+        void InternalUpdateFromDeviceInformation(
+            _In_ winrt::Windows::Devices::Enumeration::DeviceInformation const& info) noexcept;
 
     private:
         winrt::hstring GetStringProperty(
