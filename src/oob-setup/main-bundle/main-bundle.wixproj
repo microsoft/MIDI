@@ -1,15 +1,9 @@
 ﻿<Project Sdk="WixToolset.Sdk/4.0.2">
   <PropertyGroup>
     <OutputType>Bundle</OutputType>
-    <OutputName>WindowsMidiServicesSetup</OutputName>
+    <OutputName>WindowsMidiServicesCompleteSetup</OutputName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <SuppressValidation>true</SuppressValidation>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <SuppressValidation>true</SuppressValidation>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <SuppressValidation>true</SuppressValidation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -25,6 +19,8 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\api-package\api-package.wixproj" />
+    <ProjectReference Include="..\console-package\console-package.wixproj" />
     <ProjectReference Include="..\RegistryCustomActions\RegistryCustomActions.csproj" />
+    <ProjectReference Include="..\settings-package\settings-package.wixproj" />
   </ItemGroup>
 </Project>

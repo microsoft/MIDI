@@ -40,6 +40,7 @@ var apiAndServiceSolutionDir = System.IO.Path.Combine(srcDir, "api");
 var apiAndServiceSolutionFile = System.IO.Path.Combine(apiAndServiceSolutionDir, "Midi2.sln");
 var apiAndServiceStagingDir = System.IO.Path.Combine(stagingRootDir, "api");
 
+
 var sdkSolutionDir = System.IO.Path.Combine(srcDir, "app-dev-sdk");
 var sdkSolutionFile = System.IO.Path.Combine(sdkSolutionDir, "midi-sdk.sln");
 var sdkStagingDir = System.IO.Path.Combine(stagingRootDir, "app-dev-sdk");
@@ -148,6 +149,7 @@ Task("SetupEnvironment")
     // Copy key output files from VSFiles to staging to allow building installer
    
     var outputDir = System.IO.Path.Combine(apiAndServiceSolutionDir, "VSFiles", plat.ToString(), configuration);
+    var apiHeaderDir = System.IO.Path.Combine(apiAndServiceSolutionDir, "VSFiles\\intermediate\\Windows.Devices.Midi2",  plat.ToString(), configuration, "GeneratedFiles\\winrt");
 
     Information("\nCopying service and API for " + plat.ToString());
 
@@ -155,6 +157,7 @@ Task("SetupEnvironment")
     
     if (!DirectoryExists(copyToDir))
         CreateDirectory(copyToDir);
+
 
     // copy all the DLLs
     CopyFiles(System.IO.Path.Combine(outputDir, "*.dll"), copyToDir); 
@@ -167,6 +170,23 @@ Task("SetupEnvironment")
     CopyFiles(System.IO.Path.Combine(outputDir, "Windows.Devices.Midi2.winmd"), copyToDir); 
 
     CopyFiles(System.IO.Path.Combine(outputDir, "WinRTActivationEntries.txt"), copyToDir); 
+
+    // copy the C++ header for the API
+    CopyFiles(System.IO.Path.Combine(apiHeaderDir, "Windows.Devices.Midi2.h"), copyToDir); 
+
+    // copy the API Header and the .winmd to the "API bare" folder
+
+    var apiBareCopyToDir = System.IO.Path.Combine(releaseRootDir, "API");
+    
+    if (!DirectoryExists(apiBareCopyToDir))
+        CreateDirectory(apiBareCopyToDir);
+
+    CopyFiles(System.IO.Path.Combine(copyToDir, "Windows.Devices.Midi2.h"), apiBareCopyToDir); 
+    CopyFiles(System.IO.Path.Combine(copyToDir, "Windows.Devices.Midi2.dll"), apiBareCopyToDir); 
+    CopyFiles(System.IO.Path.Combine(copyToDir, "Windows.Devices.Midi2.winmd"), apiBareCopyToDir); 
+    CopyFiles(System.IO.Path.Combine(copyToDir, "Windows.Devices.Midi2.pri"), apiBareCopyToDir); 
+
+
 });
 
 
@@ -556,57 +576,54 @@ Task("BuildInstaller")
     //var apiProjectFile = System.IO.Path.Combine(apiProjectDir, "api-package.wixproj");
 
     var mainBundleProjectDir = System.IO.Path.Combine(setupSolutionDir, "main-bundle");
+
+    var consoleOnlySetupProjectDir = System.IO.Path.Combine(setupSolutionDir, "console-package");
+    var settingsOnlySetupProjectDir = System.IO.Path.Combine(setupSolutionDir, "settings-package");
+
     //var mainBundleProjectFile = System.IO.Path.Combine(mainBundleProjectDir, "main-bundle.wixproj");
 
     //var regActionsProjectDir = System.IO.Path.Combine(setupSolutionDir, "RegistryCustomActions");
     //var regActionsProjectFile = System.IO.Path.Combine(regActionsProjectDir, "RegistryCustomActions.csproj");
 
-    var buildSettings = new DotNetBuildSettings
-    {
-        WorkingDirectory = mainBundleProjectDir,
-        Configuration = configuration, 
-    };
+
 
             // if we don't set platform here, it always ends up as a 32 bit installer
             // configuration 
    // buildSettings.MSBuildSettings.Properties["Platform"] = plat;
 
+    string rid = "";
+    if (plat == PlatformTarget.x64)
+        rid = ridX64;
+    else if (plat == PlatformTarget.ARM64)
+        rid = ridArm64;
+    else
+        throw new ArgumentException("Invalid platform target " + plat.ToString());
+
+    var buildSettings = new DotNetBuildSettings
+    {
+        WorkingDirectory = mainBundleProjectDir,
+        Configuration = configuration, 
+       // Runtime = rid,               // rid not supported for solution-level builds 
+    };
+
+    DotNetClean(setupSolutionFile);
 
     // build the custom action first
     DotNetBuild(setupSolutionFile, buildSettings);
-    
-    //CopyFiles(System.IO.Path.Combine(mainBundleProjectDir, "bin", "Release", "*.exe"), setupReleaseDir); 
-    
+   
 
-    /*var msbuildSettings = new MSBuildSettings
-    {
-        MaxCpuCount = 0,
-        Configuration = configuration,
-        AllowPreviewVersion = allowPreviewVersionOfBuildTools,
-        PlatformTarget = plat,
-        Verbosity = Verbosity.Minimal,       
-    };
-w
-    MSBuild(regActionsProjectFile, msbuildSettings);
-    MSBuild(apiProjectFile, msbuildSettings);
-    MSBuild(mainBundleProjectFile, msbuildSettings); */
-
-    // built-in WiX support doesn't seem to work with WiX and burn bundles.
-
-    /*var buildSettings = new DotNetBuildSettings
-    {
-        WorkingDirectory = regActionsProjectDir,
-        Configuration = configuration, 
-        Runtime = rid,
-    };
-    
-    DotNetBuild(regActionsProjectFile, buildSettings); */
-
+    string releaseStandAloneInstallerFolder = System.IO.Path.Combine(setupReleaseDir, "Component Installs");
 
     if (!DirectoryExists(setupReleaseDir))
-        CreateDirectory(setupReleaseDir);
+        CreateDirectory(setupReleaseDir);   
+
+    if (!DirectoryExists(releaseStandAloneInstallerFolder))
+        CreateDirectory(releaseStandAloneInstallerFolder);   
 
     CopyFiles(System.IO.Path.Combine(mainBundleProjectDir, "bin", plat.ToString(), "Release", "*.exe"), setupReleaseDir); 
+
+    CopyFiles(System.IO.Path.Combine(consoleOnlySetupProjectDir, "bin", plat.ToString(), "Release", "*.msi"), releaseStandAloneInstallerFolder); 
+    CopyFiles(System.IO.Path.Combine(settingsOnlySetupProjectDir, "bin", plat.ToString(), "Release", "*.msi"), releaseStandAloneInstallerFolder); 
 });
 
 

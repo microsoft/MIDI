@@ -129,7 +129,6 @@ Return Value:
     WDFDEVICE                           device = nullptr;
     PDEVICE_CONTEXT                     devCtx;
     WDF_PNPPOWER_EVENT_CALLBACKS        pnpPowerCallbacks;
-    WDF_OBJECT_ATTRIBUTES               memoryAttributes;
 
     UNREFERENCED_PARAMETER(Driver);
 
@@ -1374,7 +1373,7 @@ Return Value:
     gtbMemorySize = sizeof(midi2_desc_group_terminal_block_header_t) + 10 * sizeof(midi2_desc_group_terminal_block_t);
     status = WdfMemoryCreate(
         &gtbMemoryAttributes,
-        NonPagedPool,
+        NonPagedPoolNx,
         0,
         gtbMemorySize,
         &gtbMemory,
@@ -2204,7 +2203,7 @@ Return Value:Amy
             // Copy necessary data into the buffer performing byte swap
             PUINT32 pWriteMem = (PUINT32)WdfMemoryGetBuffer(writeMemory, NULL);
             PUINT32 pReadMem = (PUINT32)&pBuffer[transferPos];
-            for (int count = 0; count < (thisTransferSize / sizeof(UINT32)); count++)
+            for (size_t count = 0; count < (thisTransferSize / sizeof(UINT32)); count++)
             {
                 pWriteMem[count] = pReadMem[count];     // USB is Little Endian format
             }
@@ -2436,9 +2435,9 @@ _Use_decl_annotations_
 NONPAGED_CODE_SEG
 BOOL
 USBMIDI1ToUMP(
-    _In_    PUINT32         usbMidi1Pkt,
-    _Inout_ bool* pbIsInSysex,
-    _Out_   PUMP_PACKET     umpPkt
+    PUINT32         usbMidi1Pkt,
+    bool* pbIsInSysex,
+    PUMP_PACKET     umpPkt
 )
 /*++
 Routine Description:

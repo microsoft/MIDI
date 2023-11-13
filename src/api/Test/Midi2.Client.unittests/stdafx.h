@@ -18,6 +18,7 @@
 #include <WexTestClass.h>
 
 #include "loopback_ids.h"
+#include "MidiDefs.h"
 
 #ifndef LOG_OUTPUT
 #define LOG_OUTPUT(fmt, ...)  WEX::Logging::Log::Comment(WEX::Common::String().Format(fmt, __VA_ARGS__))

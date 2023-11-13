@@ -601,8 +601,18 @@ EvtMidi2GroupTerminalBlocksCallback(
     ACX_REQUEST_PARAMETERS_INIT(&params);
     AcxRequestGetParameters(Request, &params);
 
+    if (!Object)
+    {
+        status = STATUS_INVALID_PARAMETER;
+        goto exit;
+    }
     ACXSTREAM stream = (ACXSTREAM)Object;
     WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxStreamGetCircuit(stream));
+    if (!devCtx)
+    {
+        status = STATUS_INVALID_PARAMETER;
+        goto exit;
+    }
     PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
 
     // Determine if need to fetch GTB from Device
@@ -622,6 +632,10 @@ EvtMidi2GroupTerminalBlocksCallback(
     {
         pGrpTermBlk = (PUCHAR)WdfMemoryGetBuffer(pDevCtx->DeviceGTBMemory, &grpTermBlkSize);
         minValueSize = (ULONG)grpTermBlkSize;
+    }
+    else
+    {
+        minValueSize = 0;
     }
 
     // The following is required because the buffer size

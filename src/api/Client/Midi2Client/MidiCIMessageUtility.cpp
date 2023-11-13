@@ -6,25 +6,14 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#pragma once
+#include "pch.h"
+#include "MidiCIMessageUtility.h"
+#include "MidiCIMessageUtility.g.cpp"
 
-class MidiLoopbackDevice
+namespace winrt::Windows::Devices::Midi2::implementation
 {
-public:
-    void SetCallback(_In_ IMidiCallback* callback);
-
-    HRESULT SendMidiMessage(
-        _In_ void*,
-        _In_ UINT32,
-        _In_ LONGLONG);
-
-    MidiLoopbackDevice();
-    ~MidiLoopbackDevice();
-
-    void Cleanup();
-
-private:
-    IMidiCallback* m_callback;
-
-
-};
+    void MidiCIMessageUtility::Foo()
+    {
+        throw hresult_not_implemented();
+    }
+}

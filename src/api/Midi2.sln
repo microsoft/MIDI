@@ -153,6 +153,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.VirtualPatchBayAbstra
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.BluetoothMidiAbstraction", "Abstraction\BleMidiAbstraction\Midi2.BluetoothMidiAbstraction.vcxproj", "{8795821B-541D-4B9B-BF7F-50CA976FC54E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Transformation Abstractions", "Transformation Abstractions", "{23C1D0EF-10F0-464B-86C3-1FCD3F6BA20E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
