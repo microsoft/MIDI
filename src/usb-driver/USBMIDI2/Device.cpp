@@ -934,7 +934,7 @@ Return Value:
     // Confirm memory declared properly
     if (!pSettingPairs)
     {
-        status = STATUS_SEVERITY_ERROR;
+        status = STATUS_INSUFFICIENT_RESOURCES;
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
             "Insufficient Resources %!STATUS!", status);
         return(STATUS_INSUFFICIENT_RESOURCES);
@@ -989,7 +989,7 @@ Return Value:
             {
                 // Unknown interface so error
                 TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Device detected has an error in interface descriptor.\n");
-                status = STATUS_SEVERITY_ERROR;
+                status = STATUS_INSUFFICIENT_RESOURCES;
                 goto SelectExit;
             }
         }
@@ -1018,7 +1018,7 @@ Return Value:
                 {
                     // Unknown interface so error
                     TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Device detected has an unknown interface.\n");
-                    status = STATUS_SEVERITY_ERROR;
+                    status = STATUS_INSUFFICIENT_RESOURCES;
                     goto SelectExit;
                 }
             }
@@ -1054,7 +1054,7 @@ Return Value:
                 {
                     // Unknown interface so error
                     TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Device detected has an unknown interface.\n");
-                    status = STATUS_SEVERITY_ERROR;
+                    status = STATUS_INSUFFICIENT_RESOURCES;
                     goto SelectExit;
                 }
                 continue; // Not MIDI so continue to next interface
@@ -1086,7 +1086,7 @@ Return Value:
                 {
                     // Unknown interface so error
                     TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Device detected has an unknown interface.\n");
-                    status = STATUS_SEVERITY_ERROR;
+                    status = STATUS_INSUFFICIENT_RESOURCES;
                     goto SelectExit;
                 }
                 continue;   // Not MIDI so continue to next interface
@@ -1187,7 +1187,7 @@ Return Value:
     {
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
             "No configured endpoints for MIDI streaming discovered.\n");
-        return(STATUS_SEVERITY_ERROR);
+        return(STATUS_INSUFFICIENT_RESOURCES);
     }
     // First make sure past settings for pipes cleared
     pDeviceContext->MidiInPipe = NULL;
@@ -1219,7 +1219,7 @@ Return Value:
     {
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
             "Neither In or Out Endpoint discovered for MIDI Streaming.\n");
-        return(STATUS_SEVERITY_ERROR);
+        return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
     //
