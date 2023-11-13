@@ -144,7 +144,7 @@ typedef struct
 typedef struct
 {
     UMP_GROUP_TERMINAL_BLOCK_HEADER GrpTrmBlock;
-    WCHAR                           Name[];             // NULL Terminated string, blank indicates none available
+    WCHAR                           Name[1];             // NULL Terminated string, blank indicates none available
                                                         // from USB Device
 } UMP_GROUP_TERMINAL_BLOCK_DEFINITION, *PUMP_GROUP_TERMINAL_BLOCK_DEFINITION;
 

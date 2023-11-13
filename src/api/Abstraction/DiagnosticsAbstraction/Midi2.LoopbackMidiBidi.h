@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "MidiLoopbackBidiDevice.h"
-#include "MidiPingBidiDevice.h"
+//#include "MidiLoopbackBidiDevice.h"
+//#include "MidiPingBidiDevice.h"
 
 class CMidi2LoopbackMidiBiDi : 
     public Microsoft::WRL::RuntimeClass<

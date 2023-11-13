@@ -214,7 +214,16 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Enumerating endpoints failed.
+        ///   Looks up a localized string similar to Please select an endpoint.
+        /// </summary>
+        internal static string EndpointPickerPleaseSelectEndpoint {
+            get {
+                return ResourceManager.GetString("EndpointPickerPleaseSelectEndpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enumerating endpoints failed. Is the MIDI service running?.
         /// </summary>
         internal static string ErrorEnumEndpointsFailed {
             get {
@@ -633,6 +642,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         internal static string ParameterSendMessagesFileVerbose {
             get {
                 return ResourceManager.GetString("ParameterSendMessagesFileVerbose", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Timestamp offset in microseconds (1/1,000,000 of a second) to use when scheduling this message..
+        /// </summary>
+        internal static string ParameterSendMessageTimestampOffsetMicroseconds {
+            get {
+                return ResourceManager.GetString("ParameterSendMessageTimestampOffsetMicroseconds", resourceCulture);
             }
         }
         

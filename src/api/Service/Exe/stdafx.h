@@ -13,6 +13,7 @@
 
 namespace json = ::winrt::Windows::Data::Json;
 
+#include <string>
 #include <strsafe.h>
 #include <wrl\module.h>
 #include <wrl\event.h>
@@ -31,6 +32,12 @@ namespace json = ::winrt::Windows::Data::Json;
 #include <atlcoll.h>
 #include <atlsync.h>
 #include <sddl.h>
+
+#include "midi_ump.h"
+#include "midi_timestamp.h"
+
+namespace internal = ::Windows::Devices::Midi2::Internal;
+namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
 
 #include "MidiAbstraction.h"
 
@@ -70,6 +77,9 @@ namespace json = ::winrt::Windows::Data::Json;
 // declare these prior to including the headers.
 class CMidiClientPipe;
 class CMidiDevicePipe;
+
+#include "MidiDevicePipeMessageScheduler.h"
+#include "MidiDevicePipePluginProcessor.h"
 
 #include "MidiDevicePipe.h"
 #include "MidiClientPipe.h"

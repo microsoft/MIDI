@@ -46,7 +46,7 @@ Environment:
 
 extern wil::fast_mutex_with_critical_region *g_MidiInLock;
 
-_Use_decl_annotations_
+//_Use_decl_annotations_
 PAGED_CODE_SEG
 void
 DriverUnload(

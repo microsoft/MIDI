@@ -285,12 +285,9 @@
     <ClCompile Include="MidiDeviceTable.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="MidiLoopbackBidiDevice.cpp" />
-    <ClCompile Include="MidiLoopbackDevice.cpp" />
     <ClCompile Include="Midi2.DiagnosticsAbstraction.cpp" />
     <ClCompile Include="Midi2.DiagnosticsEndpointManager.cpp" />
     <ClCompile Include="Midi2.LoopbackMidiBidi.cpp" />
-    <ClCompile Include="Midi2.LoopbackMidiIn.cpp" />
-    <ClCompile Include="Midi2.LoopbackMidiOut.cpp" />
     <ClCompile Include="MidiPingBidiDevice.cpp" />
     <ClCompile Include="pch.cpp" />
   </ItemGroup>
@@ -307,13 +304,10 @@
     <ClInclude Include="MidiLoopbackBidiDevice.h" />
     <ClInclude Include="MidiDeviceTable.h" />
     <ClInclude Include="dllmain.h" />
-    <ClInclude Include="MidiLoopbackDevice.h" />
     <ClInclude Include="abstraction_defs.h" />
     <ClInclude Include="Midi2.DiagnosticsAbstraction.h" />
     <ClInclude Include="Midi2.DiagnosticsEndpointManager.h" />
     <ClInclude Include="Midi2.LoopbackMidiBidi.h" />
-    <ClInclude Include="Midi2.LoopbackMidiIn.h" />
-    <ClInclude Include="Midi2.LoopbackMidiOut.h" />
     <ClInclude Include="MidiPingBidiDevice.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
