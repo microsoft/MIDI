@@ -110,18 +110,18 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             string groupText = string.Empty;
 
-            var messageType = MidiMessageUtility.GetMessageTypeFromFirstMessageWord(ump.Word0);
+            var messageType = MidiMessageUtility.GetMessageTypeFromMessageFirstWord(ump.Word0);
 
             if (MidiMessageUtility.MessageTypeHasGroupField(messageType))
             {
-                groupText = MidiMessageUtility.GetGroup(ump.Word0).NumberForDisplay.ToString().PadLeft(2);
+                groupText = MidiMessageUtility.GetGroupFromMessageFirstWord(ump.Word0).NumberForDisplay.ToString().PadLeft(2);
             }
 
             string channelText = string.Empty;
 
             if (MidiMessageUtility.MessageTypeHasChannelField(messageType))
             {
-                channelText = MidiMessageUtility.GetChannel(ump.Word0).NumberForDisplay.ToString().PadLeft(2);
+                channelText = MidiMessageUtility.GetChannelFromMessageFirstWord(ump.Word0).NumberForDisplay.ToString().PadLeft(2);
             }
 
 

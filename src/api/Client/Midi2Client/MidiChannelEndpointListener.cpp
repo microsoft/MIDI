@@ -13,9 +13,10 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    void MidiChannelEndpointListener::Initialize()
+    _Use_decl_annotations_
+    void MidiChannelEndpointListener::Initialize(midi2::MidiEndpointConnection const& endpointConnection)
     {
-        // Nothing to do to initialize, so all good
+        m_endpointConnection = endpointConnection;
     }
 
     void MidiChannelEndpointListener::OnEndpointConnectionOpened()
@@ -25,7 +26,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     void MidiChannelEndpointListener::Cleanup()
     {
-        // No cleanup required.
+ //       m_endpointConnection = nullptr;
     }
 
     _Use_decl_annotations_
@@ -57,7 +58,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                         if (m_messageReceivedEvent)
                         {
-                            m_messageReceivedEvent(m_endpointConnection, args);
+                            m_messageReceivedEvent((midi2::IMidiMessageReceivedEventSource)m_endpointConnection, args);
                         }
 
                         break;

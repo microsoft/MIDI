@@ -124,7 +124,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         STDMETHOD(Callback)(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG timestamp) override;
 
-        winrt::event_token MessageReceived(_In_ foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiMessageReceivedEventArgs> const& handler)
+        winrt::event_token MessageReceived(_In_ foundation::TypedEventHandler<midi2::IMidiMessageReceivedEventSource, midi2::MidiMessageReceivedEventArgs> const& handler)
         {
             return m_messageReceivedEvent.add(handler);
         }
@@ -152,7 +152,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::com_ptr<IMidiBiDi> m_endpointAbstraction{ nullptr };
 
 
-        winrt::event<foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;
+        winrt::event<foundation::TypedEventHandler<midi2::IMidiMessageReceivedEventSource, midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;
 
         midi2::MidiEndpointConnectionOptions m_options;
 

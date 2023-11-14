@@ -20,7 +20,6 @@ import "MidiChannel.idl";
 import "IMidiEndpointMessageProcessingPlugin.idl";
 import "IMidiMessageReceivedEventSource.idl";
 
-
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]

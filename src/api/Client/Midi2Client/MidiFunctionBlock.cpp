@@ -30,7 +30,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         for (auto message : messages)
         {
-            if (MidiMessageUtility::GetMessageTypeFromFirstMessageWord(message.Word0()) != MidiMessageType::Stream128)
+            if (MidiMessageUtility::GetMessageTypeFromMessageFirstWord(message.Word0()) != MidiMessageType::Stream128)
             {
                 // list contains non-stream messages. Abort.
                 return false;

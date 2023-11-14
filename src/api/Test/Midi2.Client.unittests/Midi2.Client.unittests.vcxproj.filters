@@ -42,6 +42,9 @@
     <ClCompile Include="MidiEndpointDeviceWatcherTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MidiEndpointListenerTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -69,6 +72,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MidiEndpointDeviceWatcherTests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointListenerTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -96,7 +96,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmpStruct()
  //   auto sentMessageType = MidiMessageType::Midi2ChannelVoice64;
     auto sentTimestamp = MidiClock::Now();
 
-    auto MessageReceivedHandler = [&](winrt::Windows::Foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
+    auto MessageReceivedHandler = [&](IMidiMessageReceivedEventSource const& sender, MidiMessageReceivedEventArgs const& args)
         {
             MidiMessageStruct receivedUmp;
 
@@ -185,7 +185,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmp32()
     auto sentTimestamp = MidiClock::Now();
 
 
-    auto MessageReceivedHandler = [&](winrt::Windows::Foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
+    auto MessageReceivedHandler = [&](IMidiMessageReceivedEventSource const& sender, MidiMessageReceivedEventArgs const& args)
         {
             VERIFY_IS_NOT_NULL(sender);
             VERIFY_IS_NOT_NULL(args);
@@ -284,7 +284,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWords()
 
     uint32_t numMessagesToSend = 10;
 
-    auto MessageReceivedHandler = [&](winrt::Windows::Foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
+    auto MessageReceivedHandler = [&](IMidiMessageReceivedEventSource const& sender, MidiMessageReceivedEventArgs const& args)
         {
             VERIFY_IS_NOT_NULL(sender);
             VERIFY_IS_NOT_NULL(args);

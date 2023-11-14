@@ -43,7 +43,7 @@ void MidiSchedulerBenchmarks::BenchmarkSendReceiveScheduledMessages(_In_ uint32_
     timestampDeltas.reserve(numMessagesToSend);
 
 
-    auto ReceivedHandler = [&allMessagesReceived, &receivedMessageCount, &numMessagesToSend, &timestampDeltas](winrt::Windows::Foundation::IInspectable const& /*sender*/, MidiMessageReceivedEventArgs const& args)
+    auto ReceivedHandler = [&allMessagesReceived, &receivedMessageCount, &numMessagesToSend, &timestampDeltas](IMidiMessageReceivedEventSource const& /*sender*/, MidiMessageReceivedEventArgs const& args)
         {
             receivedMessageCount++;
 

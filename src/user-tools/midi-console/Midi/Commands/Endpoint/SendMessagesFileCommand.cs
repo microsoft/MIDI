@@ -66,7 +66,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             if (words != null && words.Length > 0 && words.Length <= 4)
             {
                 // allowed behavior is to cast the packet type to the word count
-                return (bool)((int)MidiMessageUtility.GetPacketTypeFromFirstMessageWord(words[0]) == words.Length);
+                return (bool)((int)MidiMessageUtility.GetPacketTypeFromMessageFirstWord(words[0]) == words.Length);
             }
             else
             {
@@ -202,9 +202,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                                     if (changeGroup)
                                     {
-                                        if (MidiMessageUtility.MessageTypeHasGroupField(MidiMessageUtility.GetMessageTypeFromFirstMessageWord(words[0])))
+                                        if (MidiMessageUtility.MessageTypeHasGroupField(MidiMessageUtility.GetMessageTypeFromMessageFirstWord(words[0])))
                                         {
-                                            words[0] = MidiMessageUtility.ReplaceGroup(words[0], newGroup);
+                                            words[0] = MidiMessageUtility.ReplaceGroupInMessageFirstWord(words[0], newGroup);
                                         }
                                     }
 
@@ -218,7 +218,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                         AnsiMarkupFormatter.FormatGeneralNumber(lineNumber), 
                                         AnsiMarkupFormatter.FormatTimestamp(timestamp),
                                         AnsiMarkupFormatter.FormatMidiWords(words),
-                                        AnsiMarkupFormatter.FormatMessageType(MidiMessageUtility.GetMessageTypeFromFirstMessageWord(words[0])),
+                                        AnsiMarkupFormatter.FormatMessageType(MidiMessageUtility.GetMessageTypeFromMessageFirstWord(words[0])),
                                         AnsiMarkupFormatter.FormatDetailedMessageType(MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(words[0]))
                                         );
 
