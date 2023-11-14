@@ -89,6 +89,8 @@ typedef struct _DEVICE_CONTEXT {
     WDFUSBINTERFACE             UsbControlInterface;
     WDFUSBINTERFACE             UsbMIDIStreamingInterface;
     UINT8                       UsbMIDIStreamingAlt;
+    UINT16                      UsbMIDIbcdMSC;
+    UINT8                       UsbMIDIInterfaceNumber;
     ULONG                       UsbDeviceTraits;
 
     // Buffers and information for USB MIDI 1.0 and UMP translations
@@ -170,6 +172,7 @@ USBMIDI2DriverSelectInterface(
     _In_ WDFDEVICE    Device
 );
 
+// Forward Declartion of helper functions
 //
 // Function to Fetch and parse Group Terminal Block information
 //
