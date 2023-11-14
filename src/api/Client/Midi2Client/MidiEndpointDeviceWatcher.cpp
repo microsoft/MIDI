@@ -12,10 +12,31 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
+    void MidiEndpointDeviceWatcher::Start()
+    {
+        m_enumeratedEndpointDevices.Clear();
+
+        if (m_watcher)
+        {
+            m_watcher.Start();
+        }
+    }
+
+    void MidiEndpointDeviceWatcher::Stop()
+    { 
+        if (m_watcher)
+        {
+            m_watcher.Stop();
+        }
+    }
+
+
     MidiEndpointDeviceWatcher::~MidiEndpointDeviceWatcher()
     {
         try
         {
+            m_enumeratedEndpointDevices.Clear();
+
             if (m_watcher)
             {
                 // unwire events
@@ -48,7 +69,24 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             if (MidiEndpointDeviceInformation::DeviceMatchesFilter(*midiEndpointDeviceInformation, m_endpointFilter))
             {
-                if (m_deviceAddedEvent) m_deviceAddedEvent(*this, *midiEndpointDeviceInformation);
+                // add to our map
+
+                auto mapKey = internal::ToLowerHStringCopy(midiEndpointDeviceInformation->Id());
+
+                if (!m_enumeratedEndpointDevices.HasKey(mapKey))
+                {
+                    m_enumeratedEndpointDevices.Insert(mapKey, *midiEndpointDeviceInformation);
+
+                    if (m_deviceAddedEvent)
+                    {
+                        m_deviceAddedEvent(*this, *midiEndpointDeviceInformation);
+                    }
+                }
+                else
+                {
+                    // duplicate key. This should never happen, but just in case ...
+                    internal::LogGeneralError(__FUNCTION__, L"Duplicate endpoint device id. This is unexpected.");
+                }
             }
         }
         catch (...)
@@ -65,7 +103,19 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         try
         {
-            if (m_deviceUpdatedEvent) m_deviceUpdatedEvent(*this, args);
+            auto mapKey = internal::ToLowerHStringCopy(args.Id());
+
+            if (m_enumeratedEndpointDevices.HasKey(mapKey))
+            {
+                auto ep = m_enumeratedEndpointDevices.Lookup(mapKey);
+
+                ep.UpdateFromDeviceInformationUpdate(args);
+
+                if (m_deviceUpdatedEvent)
+                {
+                    m_deviceUpdatedEvent(*this, args);
+                }
+            }
         }
         catch (...)
         {
@@ -81,7 +131,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         try
         {
-            if (m_deviceRemovedEvent) m_deviceRemovedEvent(*this, args);
+            auto mapKey = internal::ToLowerHStringCopy(args.Id());
+
+            if (m_enumeratedEndpointDevices.HasKey(mapKey))
+            {
+                m_enumeratedEndpointDevices.Remove(mapKey);
+
+                if (m_deviceRemovedEvent)
+                {
+                    m_deviceRemovedEvent(*this, args);
+                }
+            }
         }
         catch (...)
         {

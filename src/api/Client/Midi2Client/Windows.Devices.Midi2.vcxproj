@@ -237,7 +237,9 @@
     <ClInclude Include="MidiEndpointDeviceInformation.h">
       <DependentUpon>MidiEndpointDeviceInformation.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiEndpointDeviceWatcher.h" />
+    <ClInclude Include="MidiEndpointDeviceWatcher.h">
+      <DependentUpon>MidiEndpointDeviceWatcher.idl</DependentUpon>
+    </ClInclude>	
     <ClInclude Include="MidiGroupTerminalBlock.h">
       <DependentUpon>MidiGroupTerminalBlock.idl</DependentUpon>
     </ClInclude>
@@ -348,7 +350,9 @@
     <ClCompile Include="MidiEndpointDeviceInformation.cpp">
       <DependentUpon>MidiEndpointDeviceInformation.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiEndpointDeviceWatcher.cpp" />
+    <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
+      <DependentUpon>MidiEndpointDeviceWatcher.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiGroupTerminalBlock.cpp">
       <DependentUpon>MidiGroupTerminalBlock.idl</DependentUpon>
     </ClCompile>

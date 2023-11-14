@@ -51,11 +51,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::Windows::Devices::Enumeration::DeviceInformation GetParentDeviceInformation() const noexcept;
         winrt::Windows::Devices::Enumeration::DeviceInformation GetContainerInformation() const noexcept;
 
-        winrt::Windows::Devices::Enumeration::DeviceInformation DeviceInformation() const noexcept { return m_deviceInformation; }
+        //winrt::Windows::Devices::Enumeration::DeviceInformation DeviceInformation() const noexcept { return m_deviceInformation; }
 
         winrt::hstring Name() const noexcept;
 
-        winrt::hstring TransportSuppliedName() const noexcept { return m_deviceInformation.Name(); }  // todo: may need to update this later
+        winrt::hstring TransportSuppliedName() const noexcept { return m_transportSuppliedEndpointName; }  // todo: may need to update this later
         winrt::hstring EndpointSuppliedName() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_EndpointProvidedName, L""); }
         winrt::hstring UserSuppliedName() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UserSuppliedEndpointName, L""); }
 
@@ -88,7 +88,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         midi2::MidiProtocol ConfiguredProtocol() const noexcept;
 
-        // TODO: MIDI Device Id (sysex stuff)
+
+       // TODO: MIDI Device Id (sysex stuff)
+
+
+        collections::IMapView<winrt::hstring, IInspectable> Properties() { return m_properties.GetView(); }
 
 
         bool UpdateFromDeviceInformation(
@@ -121,8 +125,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ winrt::hstring key,
             _In_ bool defaultValue) const noexcept;
 
+        // TODO: This should come from a property in the bag, not something here to get out of sync
+        winrt::hstring m_transportSuppliedEndpointName{};
 
-        winrt::Windows::Devices::Enumeration::DeviceInformation m_deviceInformation{ nullptr };
+        winrt::hstring m_id{};
+
+
+        collections::IMap<winrt::hstring, IInspectable> m_properties =
+            winrt::single_threaded_map< winrt::hstring, IInspectable>();
 
     };
 }

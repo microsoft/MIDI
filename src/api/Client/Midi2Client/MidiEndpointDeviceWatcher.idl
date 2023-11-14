@@ -23,6 +23,8 @@ namespace Windows.Devices.Midi2
         void Start();
         void Stop();
 
+        Windows.Foundation.Collections.IMapView<String, MidiEndpointDeviceInformation> EnumeratedEndpointDevices{ get; };
+
         Windows.Devices.Enumeration.DeviceWatcherStatus Status{ get; };
 
         event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, MidiEndpointDeviceInformation> Added;

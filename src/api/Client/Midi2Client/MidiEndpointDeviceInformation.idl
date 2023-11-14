@@ -43,7 +43,6 @@ namespace Windows.Devices.Midi2
 
         String Id { get; };
         
-        Windows.Devices.Enumeration.DeviceInformation DeviceInformation{ get; };
 
         Windows.Devices.Enumeration.DeviceInformation GetParentDeviceInformation();
         Windows.Devices.Enumeration.DeviceInformation GetContainerInformation();
@@ -59,7 +58,6 @@ namespace Windows.Devices.Midi2
         String TransportSuppliedName{ get; };       // device/transport supplied name, from pnp
         String EndpointSuppliedName{ get; };        // name supplied by the in-protocol endpoint information, if available
         String UserSuppliedName{ get; };            // name supplied by the user, if available
-
 
         String ProductInstanceId{ get; };           // 
 
@@ -106,7 +104,7 @@ namespace Windows.Devices.Midi2
         String LargeImagePath{ get; };
         String SmallImagePath{ get; };
 
-
+        Windows.Foundation.Collections.IMapView<String, IInspectable> Properties{ get; };
         
         // constructor to create from the watcher events
 

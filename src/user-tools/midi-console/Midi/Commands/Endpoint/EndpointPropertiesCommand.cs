@@ -60,7 +60,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             if (settings.Verbose)
             {
-                table.AddRow("Kind", AnsiMarkupFormatter.FormatDeviceKind(di.DeviceInformation.Kind));
+                //table.AddRow("Kind", AnsiMarkupFormatter.FormatDeviceKind(di.DeviceInformation.Kind));
                 table.AddRow("Container Id", AnsiMarkupFormatter.FormatContainerId(di.ContainerId.ToString()));
                 table.AddRow("Device Instance Id", AnsiMarkupFormatter.FormatDeviceInstanceId(di.DeviceInstanceId));
             }
@@ -150,7 +150,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 table.AddEmptyRow();
                 table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("All Properties"), "");
 
-                DisplayProperties(table, di.DeviceInformation.Properties);
+                DisplayProperties(table, di.Properties);
             }
 
             // container

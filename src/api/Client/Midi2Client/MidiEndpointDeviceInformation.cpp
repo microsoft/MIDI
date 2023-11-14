@@ -100,6 +100,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
 
+        additionalProperties.Append(L"System.ItemNameDisplay");
         additionalProperties.Append(L"System.Devices.Parent");
         additionalProperties.Append(L"System.Devices.DeviceManufacturer");
         additionalProperties.Append(L"System.Devices.InterfaceClassGuid");
@@ -335,7 +336,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 endpointInfo->InternalUpdateFromDeviceInformation(di);
 
                 return *endpointInfo;
-
             }
         }
         catch (...)
@@ -352,11 +352,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring key,
         winrt::hstring defaultValue) const noexcept
     {
-        if (m_deviceInformation == nullptr) return defaultValue;
+        if (!m_properties.HasKey(key)) return defaultValue;
 
         try
         {
-            return winrt::unbox_value<winrt::hstring>(m_deviceInformation.Properties().Lookup(key));
+            return winrt::unbox_value<winrt::hstring>(m_properties.Lookup(key));
         }
         catch (...)
         {
@@ -369,11 +369,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring key,
         winrt::guid defaultValue) const noexcept
     {
-        if (m_deviceInformation == nullptr) return defaultValue;
-
+        if (!m_properties.HasKey(key)) return defaultValue;
         try
         {
-            return winrt::unbox_value<winrt::guid>(m_deviceInformation.Properties().Lookup(key));
+            return winrt::unbox_value<winrt::guid>(m_properties.Lookup(key));
         }
         catch (...)
         {
@@ -387,11 +386,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring key,
         uint8_t defaultValue) const noexcept
     {
-        if (m_deviceInformation == nullptr) return defaultValue;
+        if (!m_properties.HasKey(key)) return defaultValue;
 
         try
         {
-            return winrt::unbox_value<uint8_t>(m_deviceInformation.Properties().Lookup(key));
+            return winrt::unbox_value<uint8_t>(m_properties.Lookup(key));
         }
         catch (...)
         {
@@ -404,11 +403,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring key,
         uint32_t defaultValue) const noexcept
     {
-        if (m_deviceInformation == nullptr) return defaultValue;
+        if (!m_properties.HasKey(key)) return defaultValue;
 
         try
         {
-            return winrt::unbox_value<uint32_t>(m_deviceInformation.Properties().Lookup(key));
+            return winrt::unbox_value<uint32_t>(m_properties.Lookup(key));
         }
         catch (...)
         {
@@ -423,11 +422,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring key,
         bool defaultValue) const noexcept
     {
-        if (m_deviceInformation == nullptr) return defaultValue;
+        if (!m_properties.HasKey(key)) return defaultValue;
 
         try
         {
-            return winrt::unbox_value<bool>(m_deviceInformation.Properties().Lookup(key));
+            return winrt::unbox_value<bool>(m_properties.Lookup(key));
         }
         catch (...)
         {
@@ -438,14 +437,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     winrt::hstring MidiEndpointDeviceInformation::Id() const noexcept
     { 
-        if (m_deviceInformation != nullptr)
-        {
-            return m_deviceInformation.Id();
-        }
-        else
-        {
-            return L"";
-        }
+        return m_id;
     }
 
     winrt::hstring MidiEndpointDeviceInformation::Name() const noexcept
@@ -459,10 +451,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // transport-supplied name is last
         if (TransportSuppliedName() != L"") return TransportSuppliedName();
 
-
-        // this is typically the same as the transport-supplied name
-        if (m_deviceInformation != nullptr)
-            return m_deviceInformation.Name();
 
         return L"Unknown";
     }
@@ -528,17 +516,33 @@ namespace winrt::Windows::Devices::Midi2::implementation
     void MidiEndpointDeviceInformation::InternalUpdateFromDeviceInformation(
         winrt::Windows::Devices::Enumeration::DeviceInformation const& deviceInformation) noexcept
     {
-        if (deviceInformation != nullptr)
+    //    OutputDebugString(L"" __FUNCTION__);
+
+        if (deviceInformation == nullptr) return;
+
+        for (auto&& [key, value] : deviceInformation.Properties())
         {
-            m_deviceInformation = deviceInformation;
+            // insert does a replace if the key exists in the map
+
+        //    OutputDebugString(key.c_str());
+
+            m_properties.Insert(key, value);
         }
+
+        m_id = deviceInformation.Id();
+        m_transportSuppliedEndpointName = deviceInformation.Name();
     }
 
     _Use_decl_annotations_
     bool MidiEndpointDeviceInformation::UpdateFromDeviceInformation(
         winrt::Windows::Devices::Enumeration::DeviceInformation const& deviceInformation) noexcept
     {
-        // TODO: Check that the ids (after lowercasing) are the same before allowing this.
+    //    OutputDebugString(L"" __FUNCTION__);
+
+        if (deviceInformation == nullptr) return false;
+
+        // TODO: If an Id is present, check that the ids (after lowercasing) are the same before allowing this.
+        // return false if the ids don't match
 
         InternalUpdateFromDeviceInformation(deviceInformation);
 
@@ -550,11 +554,24 @@ namespace winrt::Windows::Devices::Midi2::implementation
     bool MidiEndpointDeviceInformation::UpdateFromDeviceInformationUpdate(
         winrt::Windows::Devices::Enumeration::DeviceInformationUpdate const& deviceInformationUpdate) noexcept
     {
-        UNREFERENCED_PARAMETER(deviceInformationUpdate);
+     //   OutputDebugString(L"" __FUNCTION__);
 
-        // This needs to update only the changed properties in this deviceinformation object
-        // That means we have to now store the properties separately instead of just using a 
-        // deviceinformation object as our backing store.
+        if (deviceInformationUpdate == nullptr) return false;
+
+        // TODO: Check that the ids (after lowercasing) are the same before allowing this.
+        // return false if the ids don't match
+
+
+        for (auto&& [key, value] : deviceInformationUpdate.Properties())
+        {
+            // insert does a replace if the key exists in the map
+
+            m_properties.Insert(key, value);
+        }
+
+
+        // TODO: need to update the name
+
 
         return false;
     }

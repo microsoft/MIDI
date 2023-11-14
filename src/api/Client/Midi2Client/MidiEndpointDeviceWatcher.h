@@ -19,8 +19,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static midi2::MidiEndpointDeviceWatcher CreateWatcher(_In_ midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept;
 
-        void Start() { if (m_watcher) m_watcher.Start(); }
-        void Stop() { if (m_watcher) m_watcher.Stop(); }
+        void Start();
+        void Stop();
 
         winrt::Windows::Devices::Enumeration::DeviceWatcherStatus Status();
 
@@ -70,6 +70,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
             if (m_stoppedEvent) m_stoppedEvent.remove(token);
         }
 
+
+        collections::IMapView<winrt::hstring, midi2::MidiEndpointDeviceInformation> EnumeratedEndpointDevices() 
+            { return m_enumeratedEndpointDevices.GetView(); }
+
+
     private:
         void InternalInitialize(
             _In_ midi2::MidiEndpointDeviceInformationFilter const& endpointFilter,
@@ -115,6 +120,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::event_token m_enumerationCompletedEventRevokeToken;
         winrt::event_token m_stoppedEventRevokeToken;
 
+        collections::IMap<winrt::hstring, midi2::MidiEndpointDeviceInformation> m_enumeratedEndpointDevices = 
+            winrt::single_threaded_map<winrt::hstring, midi2::MidiEndpointDeviceInformation>();
 
 
         winrt::Windows::Devices::Enumeration::DeviceWatcher m_watcher{ nullptr };
