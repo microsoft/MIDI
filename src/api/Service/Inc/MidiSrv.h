@@ -1,4 +1,11 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
 #pragma once
 
 class CMidiSrv;
@@ -44,6 +51,11 @@ public:
         return S_OK;
     }
 
+    HRESULT GetTransformManager(std::shared_ptr<CMidiTransformManager>& manager)
+    {
+        manager = m_TransformManager;
+        return S_OK;
+    }
 
 
 private:
@@ -52,6 +64,7 @@ private:
     std::shared_ptr<CMidiDeviceManager> m_DeviceManager;
     std::shared_ptr<CMidiClientManager> m_ClientManager;
     std::shared_ptr<CMidiConfigurationManager> m_ConfigurationManager;
+    std::shared_ptr<CMidiTransformManager> m_TransformManager;
 
 
 };

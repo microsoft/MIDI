@@ -18,28 +18,28 @@ class MidiSchedulerAbstractionTelemetryProvider : public wil::TraceLoggingProvid
         (0x9ce181f3,0x0054,0x5b11,0x80,0x1d,0xc4,0xd3,0xa1,0xa8,0x20,0xb0))
 };
 
-using namespace ATL;
-
-class ATL_NO_VTABLE CMidi2SchedulerAbstraction :
-    public CComObjectRootEx<CComMultiThreadModel>,
-    public CComCoClass<CMidi2SchedulerAbstraction, &CLSID_Midi2SchedulerAbstraction>,
-    public IMidiAbstraction
-{
-public:
-    CMidi2SchedulerAbstraction()
-    {
-    }
-
-    DECLARE_REGISTRY_RESOURCEID(IDR_MIDI2SCHEDULERABSTRACTION)
-
-    BEGIN_COM_MAP(CMidi2SchedulerAbstraction)
-        COM_INTERFACE_ENTRY(IMidiAbstraction)
-    END_COM_MAP()
-
-    DECLARE_PROTECT_FINAL_CONSTRUCT()
-
-    STDMETHOD(Activate)(_In_ REFIID, _Out_  void**);
-private:
-};
-
-OBJECT_ENTRY_AUTO(__uuidof(Midi2SchedulerAbstraction), CMidi2SchedulerAbstraction)
+//using namespace ATL;
+//
+//class ATL_NO_VTABLE CMidi2SchedulerAbstraction :
+//    public CComObjectRootEx<CComMultiThreadModel>,
+//    public CComCoClass<CMidi2SchedulerAbstraction, &CLSID_Midi2SchedulerAbstraction>,
+//    public IMidiAbstraction
+//{
+//public:
+//    CMidi2SchedulerAbstraction()
+//    {
+//    }
+//
+//    DECLARE_REGISTRY_RESOURCEID(IDR_MIDI2SCHEDULERABSTRACTION)
+//
+//    BEGIN_COM_MAP(CMidi2SchedulerAbstraction)
+//        COM_INTERFACE_ENTRY(IMidiAbstraction)
+//    END_COM_MAP()
+//
+//    DECLARE_PROTECT_FINAL_CONSTRUCT()
+//
+//    STDMETHOD(Activate)(_In_ REFIID, _Out_  void**);
+//private:
+//};
+//
+//OBJECT_ENTRY_AUTO(__uuidof(Midi2SchedulerAbstraction), CMidi2SchedulerAbstraction)

@@ -1,4 +1,11 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
 #include "stdafx.h"
 #include "midisrvrpc.h"
 
@@ -59,6 +66,9 @@ CMidiSrv::Initialize()
     RETURN_IF_FAILED(m_DeviceManager->Initialize(m_PerformanceManager, m_ConfigurationManager));
     RETURN_IF_FAILED(m_ClientManager->Initialize(m_PerformanceManager, m_ProcessManager, m_DeviceManager));
 
+    RETURN_IF_FAILED(m_TransformManager->Initialize(m_PerformanceManager, m_ClientManager, m_DeviceManager));
+
+
     wil::unique_hlocal rpcSecurityDescriptor;
 
     RETURN_IF_WIN32_BOOL_FALSE(ConvertStringSecurityDescriptorToSecurityDescriptor(
@@ -117,6 +127,13 @@ CMidiSrv::Cleanup()
         RETURN_IF_FAILED(m_ConfigurationManager->Cleanup());
         m_ConfigurationManager.reset();
     }
+
+    if (m_TransformManager)
+    {
+        RETURN_IF_FAILED(m_TransformManager->Cleanup());
+        m_TransformManager.reset();
+    }
+
 
     return S_OK;
 }

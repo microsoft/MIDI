@@ -51,6 +51,11 @@
 
 #include "strsafe.h"
 
+#include <queue>
+#include <thread>
+
+
+
 #include "string_util.h"
 #include "abstraction_defs.h"
 #include "midi_timestamp.h"

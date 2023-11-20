@@ -296,8 +296,8 @@ struct MidiDevicePropertyFunctionBlock
     uint32_t Reserved1{ 0 };        // unused in UMP 1.1
     uint32_t Reserved2{ 0 };        // unused in UMP 1.1
 
-    // +1 because we zero-terminate the name even though it's fixed max length
-    // most function blocks will have much shorter names. Should we instead have
+    // +1 because we zero-terminate the name even though it's fixed max length.
+    // Most function blocks will have much shorter names. Should we instead have
     // a more complicated variable-length scheme here?
     char Name[MIDI_FUNCTION_BLOCK_NAME_MAX_LENGTH+1]{0};
 };
