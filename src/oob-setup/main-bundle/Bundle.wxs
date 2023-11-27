@@ -5,15 +5,20 @@
      >
 
     <?define DependenciesSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\dependencies ?>
+    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
+    <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\BundleInfo.wxi ?>
+
+    <?include $(StagingVersionIncludeFile) ?>
 
     <!-- TODO: Gate on Arm64 or x64. No x86 installation -->
 
     
     <!-- TODO: Gate on Windows 10 22H2 or later -->
 
-    <Bundle Name="Microsoft Windows MIDI Services (Developer Preview 2)" 
+    <!--<Bundle Name="Microsoft Windows MIDI Services (Developer Preview 2)" -->
+    <Bundle Name="Microsoft Windows MIDI Services ($(SetupVersionName) $(SetupVersionNumber))" 
           Manufacturer="Microsoft Corporation" 
-          Version="1.0.0.0" 
+          Version="$(SetupVersionNumber)" 
           UpgradeCode="ecfae6e7-7186-4f41-b9d2-df17ba86c69f">
 
         <WixVariable Id="WixUIDialogBmp" Value="midi_installer_logo.bmp" />

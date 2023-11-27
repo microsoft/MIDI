@@ -78,6 +78,18 @@ public:
 
 private:
 
+    // TODO: ordered list of the transforms for this instance of the pipe. The
+    //       MidiTransformManager is responsible for providing the list to us and for
+    //       managing that list. We're just processing here.
+    // 
+    // TODO: Some mechanism to quickly connect/disconnect the transforms to/from each other
+    //       Don't want to use a map that requires a lookup for each step. They should be just
+    //       a pipe where messages go in one end and may come out the other (messages can be
+    //       eaten, transformed from bytes to UMP, multiplied, etc. No 1:1 between in and out.
+
+
+
+
     //wil::critical_section m_ClientPipeLock;
     //std::map<MidiClientHandle, wil::com_ptr_nothrow<CMidiClientPipe>> m_MidiClientPipes;
 
