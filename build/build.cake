@@ -1,4 +1,5 @@
 #tool nuget:?package=NuGet.CommandLine&version=5.10
+#addin nuget:?package=Cake.Compression&version=0.3.0
 
 var target = Argument("target", "Default");
 
@@ -69,6 +70,7 @@ var setupBundleInfoIncludeFile = System.IO.Path.Combine(stagingRootDir, "version
 
 var setupReleaseDir = releaseRootDir;
 
+var apiReleaseArtifactsFolder = System.IO.Path.Combine(releaseRootDir, "api");
 
 
 // we always want the latest redist. These are permalinks.
@@ -452,10 +454,13 @@ Task("BuildConsoleApp")
     Information("\nBuilding MIDI console app for " + plat.ToString());
 
     // update nuget packages for the entire solution. This is important for API/SDK NuGet in particular
+    // NOTE: This doesn't work on packagereference projects. Need to consider a tool like 
+    // dotnet-outdated https://github.com/dotnet-outdated/dotnet-outdated
 
     NuGetUpdate(consoleAppSolutionFile, new NuGetUpdateSettings
     {
         WorkingDirectory = consoleAppSolutionDir,
+        Prerelease = true,
     });
 
     // we're specifying a rid, so we need to compile the project, not the solution
@@ -664,7 +669,20 @@ Task("BuildInstaller")
 });
 
 
+Task("CopyAPIArtifacts")
+    .IsDependentOn("BuildInstaller")
+    .IsDependentOn("PackAPIProjection")
+    .IsDependentOn("BuildConsoleApp")
+    .DoesForEach(platformTargets, plat => 
+{
+    string apiStagingDir = System.IO.Path.Combine(apiAndServiceStagingDir, "bin", plat.ToString());
 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, "Windows.Devices.Midi2.winmd"), apiReleaseArtifactsFolder); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, "Windows.Devices.Midi2.dll"), apiReleaseArtifactsFolder); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, "Windows.Devices.Midi2.pri"), apiReleaseArtifactsFolder); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, "Windows.Devices.Midi2.h"), apiReleaseArtifactsFolder); 
+
+}
 
 //////////////////////////////////////////////////////////////////////
 // TASK TARGETS
@@ -673,7 +691,9 @@ Task("BuildInstaller")
 Task("Default")
     .IsDependentOn("Clean")
     .IsDependentOn("BuildApiActivationRegEntriesInternal")
-    .IsDependentOn("BuildInstaller");
+    .IsDependentOn("BuildInstaller")
+    .IsDependentOn("CopyAPIArtifacts")
+    ;
 
 
 

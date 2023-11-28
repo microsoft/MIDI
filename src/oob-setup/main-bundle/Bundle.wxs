@@ -86,7 +86,7 @@
 
             <!-- .NET 8, latest preview as used by this installer and the projects -->
             <ExePackage 
-                DisplayName="Microsoft .NET 8 Preview Desktop Runtime"
+                DisplayName="Microsoft .NET 8 Desktop Runtime"
                 SourceFile="$(DependenciesSourceRootFolder)\dotnet8-windowsdesktop-runtime-latest-win-x64.exe"
                 Compressed="yes"
                 DetectCondition="DotNetDesktopRuntimeVersion &gt;= v8.0.0"
@@ -94,15 +94,18 @@
                 UninstallArguments="/uninstall /passive /norestart /quiet"
                 />
 
-            <!-- WinUI / Windows App SDK. This is required, but also has no uninstall option -->
+            <!-- WinUI / Windows App SDK. This is required for the settings app, but also has no uninstall option -->
+            <!-- NOTE: The Instal Argument needs to be dash dash quiet, but that's illegal inside a comment -->
+<!--            
             <ExePackage
                 DisplayName="Microsoft Windows App Runtime"
                 SourceFile="$(DependenciesSourceRootFolder)\winui\WindowsAppRuntimeInstall-x64.exe"
                 Compressed="yes"
-                InstallArguments="--quiet"
+                InstallArguments="-quiet"
                 Permanent="true"
                 >
             </ExePackage>
+-->
 
         </PackageGroup>
         
@@ -123,6 +126,7 @@
                 SourceFile="MidiConsoleAppStandAloneSetup.msi">
             </MsiPackage>
 
+<!--           
             <MsiPackage
                 Id="MidiServicesSettingsAppSetup"
                 Vital="yes"
@@ -130,6 +134,7 @@
                 Compressed="yes"
                 SourceFile="MidiSettingsAppStandAloneSetup.msi">
             </MsiPackage>
+-->
 
         </PackageGroup>
         
