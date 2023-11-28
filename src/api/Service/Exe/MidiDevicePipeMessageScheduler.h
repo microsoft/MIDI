@@ -24,17 +24,15 @@
 // pointer is not guaranteed to be valid by the time we get
 // around to sending the message, especially if it's scheduled
 // far into the future
-struct ScheduledMidiMessage
+struct ScheduledUmpMessage
 {
-    internal::MidiTimestamp Timestamp;
-    UINT ByteCount;         
-    BYTE Data[MAXIMUM_UMP_DATASIZE];    // pre-define this array to avoid another allocation/indirection
+    internal::MidiTimestamp Timestamp{ 0 };
+    uint64_t ReceivedIndex{ 0 };            // this allows us to preserve order for messages with the same timestamp
+    UINT ByteCount{ 0 };
+    BYTE Data[MAXIMUM_UMP_DATASIZE];        // pre-define this array to avoid another allocation/indirection
 };
 
 
-// Messages with the same timestmap have undefined send order. So if 
-// folks are timestamping multi-message streams of data (sysex, or 
-// things like name notifications) they need to have ordered timestamps
 class MidiDevicePipeMessageScheduler
 {
 public:
@@ -56,7 +54,7 @@ public:
     // We could call the device directly, but instead we always call back into the 
     // device pipe so there aren't two different paths for sending messages
     HRESULT SendMidiMessageNow(
-        _In_ ScheduledMidiMessage const message);     // for queued messages
+        _In_ ScheduledUmpMessage const message);     // for queued messages
 
     // for messages that bypass the queue, or have had their time come up
     HRESULT SendMidiMessageNow(
@@ -75,8 +73,20 @@ private:
     // structure we need. It's already using a heap / tree underneath.
     // 
     // Consider a separate thread for writing to the queue to make that return quickly.
-    std::priority_queue<ScheduledMidiMessage, std::vector<ScheduledMidiMessage>, auto(*)(ScheduledMidiMessage&, ScheduledMidiMessage&)->bool>
-        m_messageQueue{ [](_In_ ScheduledMidiMessage& left, _In_ ScheduledMidiMessage& right) -> bool { return left.Timestamp > right.Timestamp; } };
+    std::priority_queue<ScheduledUmpMessage, std::vector<ScheduledUmpMessage>, auto(*)(ScheduledUmpMessage&, ScheduledUmpMessage&)->bool>
+        m_messageQueue{ [](_In_ ScheduledUmpMessage& left, _In_ ScheduledUmpMessage& right) ->
+            bool 
+            { 
+                if (left.Timestamp == right.Timestamp)
+                {
+                    // preserve receive order for messages with the same timestamp
+                    return left.ReceivedIndex > right.ReceivedIndex;
+                }
+                else
+                {
+                    return left.Timestamp > right.Timestamp;
+                }
+            } };
 
     // this is the minimum amount of ticks into the future to send immediately vs scheduling
     // it is essentially our resolution, and will need to be set based on calculating
@@ -94,6 +104,8 @@ private:
 
     
     wil::critical_section m_queueLock;
+    uint64_t m_currentReceivedIndex{ 0 };     // need to use the queueLock before writing to this
+
     bool m_continueProcessing{ true };
 
     std::thread m_queueWorkerThread;

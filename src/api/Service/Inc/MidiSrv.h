@@ -51,20 +51,12 @@ public:
         return S_OK;
     }
 
-    HRESULT GetTransformManager(std::shared_ptr<CMidiTransformManager>& manager)
-    {
-        manager = m_TransformManager;
-        return S_OK;
-    }
-
-
 private:
     std::shared_ptr<CMidiPerformanceManager> m_PerformanceManager;
     std::shared_ptr<CMidiProcessManager> m_ProcessManager;
     std::shared_ptr<CMidiDeviceManager> m_DeviceManager;
     std::shared_ptr<CMidiClientManager> m_ClientManager;
     std::shared_ptr<CMidiConfigurationManager> m_ConfigurationManager;
-    std::shared_ptr<CMidiTransformManager> m_TransformManager;
 
 
 };
