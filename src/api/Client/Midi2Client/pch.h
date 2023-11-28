@@ -32,6 +32,10 @@
 #include <stdint.h>
 #include <sstream>
 #include <iomanip>
+#include <algorithm>
+#include <string>
+#include <cwctype>
+
 
 // internal
 #include "trace_logging.h"
@@ -39,6 +43,7 @@
 #include "midi_service_interface.h"
 #include "ump_helpers.h"
 #include "memory_buffer.h"
+#include "string_util.h"
 
 // shared
 #include "midi_ump.h"   // general shared
@@ -86,3 +91,6 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 #include "MidiServicePingResponseSummary.h"
 #include "MidiTransportInformation.h"
 #include "MidiService.h"
+
+#include "MidiEndpointDeviceInformation.h"
+#include "MidiEndpointDeviceWatcher.h"

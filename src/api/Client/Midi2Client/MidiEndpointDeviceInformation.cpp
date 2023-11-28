@@ -12,7 +12,7 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    winrt::Windows::Devices::Enumeration::DeviceInformation MidiEndpointDeviceInformation::GetContainerInformation()
+    winrt::Windows::Devices::Enumeration::DeviceInformation MidiEndpointDeviceInformation::GetContainerInformation() const noexcept
     {
         // find the container with the same container ID and DeviceInstanceId as us.
 
@@ -37,68 +37,62 @@ namespace winrt::Windows::Devices::Midi2::implementation
     // even when you specify it. So instead, you have to find the container, then find the child of the container 
     // that matches this device, then call the FindAllAsync to get the actual device object. That object then
     // has the parent id, whcih you can use to find the parent.
-    winrt::Windows::Devices::Enumeration::DeviceInformation MidiEndpointDeviceInformation::GetParentDeviceInformation()
+    winrt::Windows::Devices::Enumeration::DeviceInformation MidiEndpointDeviceInformation::GetParentDeviceInformation() const noexcept
     {
-        const winrt::hstring rootParent = L"HTREE\\ROOT\\0";
-
-
-
-        auto container = GetContainerInformation();
-
-        // TODO: This approach needs to be verified with USB.
-
-
-        OutputDebugString(__FUNCTION__ L"Looking for candidate device entries");
-
-        auto devices = winrt::Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(
-            L"System.Devices.ContainerId:=\"" + container.Id() + L"\" AND System.Devices.DeviceInstanceId:=\"" + DeviceInstanceId() + L"\"",
-            {
-                MIDI_DEVICE_PARENT_PROPERTY_KEY
-            },
-            winrt::Windows::Devices::Enumeration::DeviceInformationKind::Device
-        ).get();
-
-        if (devices != nullptr && devices.Size() == 1)
+        try
         {
- //           OutputDebugString(__FUNCTION__ L"Found single possible matching device");
+            const winrt::hstring rootParent = L"HTREE\\ROOT\\0";
 
-            auto myDevice = devices.GetAt(0);
+            auto container = GetContainerInformation();
 
-            if (devices.GetAt(0).Properties().HasKey(MIDI_DEVICE_PARENT_PROPERTY_KEY))
-            {
- //               OutputDebugString(__FUNCTION__ L"Found parent id");
+            // TODO: This approach needs to be verified with USB.
 
-                auto parentId = winrt::unbox_value<winrt::hstring>(devices.GetAt(0).Properties().Lookup(MIDI_DEVICE_PARENT_PROPERTY_KEY));
 
-                // if the parent is the system root, don't bother trying to resolve that 
-                if (parentId != rootParent)
+            auto devices = winrt::Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(
+                L"System.Devices.ContainerId:=\"" + container.Id() + L"\" AND System.Devices.DeviceInstanceId:=\"" + DeviceInstanceId() + L"\"",
                 {
- //                   OutputDebugString(parentId.c_str());
+                    MIDI_DEVICE_PARENT_PROPERTY_KEY
+                },
+                winrt::Windows::Devices::Enumeration::DeviceInformationKind::Device
+            ).get();
 
- //                   OutputDebugString(__FUNCTION__ L"Looking for candidate parents");
+            if (devices != nullptr && devices.Size() == 1)
+            {
+                auto myDevice = devices.GetAt(0);
 
-                    auto parents = winrt::Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(
-                        L"System.Devices.DeviceInstanceId:=\"" + parentId + L"\"",
-                        {
-                            L"System.Devices.Parent",
-                            L"System.Devices.DeviceManufacturer",
-                            L"System.Devices.ModelName",
-                            L"System.Devices.HardwareIds",
-                            L"System.Devices.InterfaceClassGuid"
-                        },
-                        winrt::Windows::Devices::Enumeration::DeviceInformationKind::Device).get();
+                if (devices.GetAt(0).Properties().HasKey(MIDI_DEVICE_PARENT_PROPERTY_KEY))
+                {
+                    auto parentId = winrt::unbox_value<winrt::hstring>(devices.GetAt(0).Properties().Lookup(MIDI_DEVICE_PARENT_PROPERTY_KEY));
 
-                    if (parents != nullptr && parents.Size() == 1)
+                    // if the parent is the system root, don't bother trying to resolve that 
+                    if (parentId != rootParent)
                     {
-                        return parents.GetAt(0);
+                        auto parents = winrt::Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(
+                            L"System.Devices.DeviceInstanceId:=\"" + parentId + L"\"",
+                            {
+                                L"System.Devices.Parent",
+                                L"System.Devices.DeviceManufacturer",
+                                L"System.Devices.ModelName",
+                                L"System.Devices.HardwareIds",
+                                L"System.Devices.InterfaceClassGuid"
+                            },
+                            winrt::Windows::Devices::Enumeration::DeviceInformationKind::Device).get();
+
+                        if (parents != nullptr && parents.Size() == 1)
+                        {
+                            return parents.GetAt(0);
+                        }
                     }
                 }
-            }
 
+            }
+        }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"finding the parent of the MIDI Endpoint device.");
         }
 
         return nullptr;
-
     }
 
 
@@ -106,6 +100,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
 
+        additionalProperties.Append(L"System.ItemNameDisplay");
         additionalProperties.Append(L"System.Devices.Parent");
         additionalProperties.Append(L"System.Devices.DeviceManufacturer");
         additionalProperties.Append(L"System.Devices.InterfaceClassGuid");
@@ -126,9 +121,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         additionalProperties.Append(STRING_PKEY_MIDI_AssociatedUMP);
 
         // Major Known Endpoint Types ========================================================
-        additionalProperties.Append(STRING_PKEY_MIDI_IsVirtualDeviceResponder);
-        additionalProperties.Append(STRING_PKEY_MIDI_UmpPing);
-        additionalProperties.Append(STRING_PKEY_MIDI_UmpLoopback);
+        additionalProperties.Append(STRING_PKEY_MIDI_EndpointDevicePurpose);
 
         // In-protocol Endpoint information ==================================================
         additionalProperties.Append(STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol);
@@ -156,19 +149,77 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     _Use_decl_annotations_
-    midi2::MidiEndpointDeviceWatcher MidiEndpointDeviceInformation::CreateWatcher(bool /*includeDiagnosticsEndpoints*/)
+    bool MidiEndpointDeviceInformation::DeviceMatchesFilter(
+        midi2::MidiEndpointDeviceInformation const& deviceInformation,
+        midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept
     {
-        // TODO: implement CreateWatcher for enumeration
-        return nullptr;
+        // check if diagnostic loopback 
+        if (deviceInformation.EndpointPurpose() == MidiEndpointDevicePurpose::DiagnosticLoopback)
+        {
+            if ((endpointFilter & midi2::MidiEndpointDeviceInformationFilter::IncludeDiagnosticLoopback) ==
+                midi2::MidiEndpointDeviceInformationFilter::IncludeDiagnosticLoopback)
+            {
+                return true;
+            }
+        }
+
+        // check if diagnostic ping 
+        else if (deviceInformation.EndpointPurpose() == MidiEndpointDevicePurpose::DiagnosticPing)
+        {
+            if ((endpointFilter & midi2::MidiEndpointDeviceInformationFilter::IncludeDiagnosticPing) ==
+                midi2::MidiEndpointDeviceInformationFilter::IncludeDiagnosticPing)
+            {
+                return true;
+            }
+        }
+
+        // check if virtual device responder
+        else if (deviceInformation.EndpointPurpose() == MidiEndpointDevicePurpose::VirtualDeviceResponder)
+        {
+            if ((endpointFilter & midi2::MidiEndpointDeviceInformationFilter::IncludeVirtualDeviceResponder) ==
+                midi2::MidiEndpointDeviceInformationFilter::IncludeVirtualDeviceResponder)
+            {
+                return true;
+            }
+        }
+
+        // check if normal client MIDI 1.0 / bytestream
+        else if ((deviceInformation.EndpointPurpose() == MidiEndpointDevicePurpose::NormalMessageEndpoint) &&
+            (deviceInformation.NativeDataFormat() == MidiEndpointNativeDataFormat::ByteStream))
+        {
+            if ((endpointFilter & midi2::MidiEndpointDeviceInformationFilter::IncludeClientByteStreamNative) ==
+                midi2::MidiEndpointDeviceInformationFilter::IncludeClientByteStreamNative)
+            {
+                return true;
+            }
+        }
+
+        // check if normal client MIDI 2.0 / UMP 
+        else if ((deviceInformation.EndpointPurpose() == MidiEndpointDevicePurpose::NormalMessageEndpoint) &&
+            (deviceInformation.NativeDataFormat() == MidiEndpointNativeDataFormat::UniversalMidiPacket ||
+                deviceInformation.NativeDataFormat() == MidiEndpointNativeDataFormat::Unknown))
+        {
+            if ((endpointFilter & midi2::MidiEndpointDeviceInformationFilter::IncludeClientUmpNative) == midi2::MidiEndpointDeviceInformationFilter::IncludeClientUmpNative)
+            {
+                return true;
+            }
+        }
+
+        // no idea what kind of endpoint this is, so default to including it
+        else
+        {
+            return true;
+        }
+
+        return false;
     }
+
 
     _Use_decl_annotations_
     collections::IVectorView<midi2::MidiEndpointDeviceInformation> MidiEndpointDeviceInformation::FindAll(
         midi2::MidiEndpointDeviceInformationSortOrder const& sortOrder, 
         midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept
     {
-        //auto midiDevices = winrt::single_threaded_vector<midi2::MidiEndpointDeviceInformation>();
-
         std::vector<midi2::MidiEndpointDeviceInformation> midiDevices{};
 
         try
@@ -184,73 +235,21 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 for (auto const& di : devices)
                 {
-                    auto endpointInfo = winrt::make_self<MidiEndpointDeviceInformation>();
+                    auto midiDevice = winrt::make_self<MidiEndpointDeviceInformation>();
 
-                    endpointInfo->InternalUpdateFromDeviceInformation(di);
+                    midiDevice->UpdateFromDeviceInformation(di);
 
-                    // check if diagnostic loopback 
-                    if (endpointInfo->EndpointPurpose() == MidiEndpointDevicePurpose::DiagnosticLoopback)
+                    if (DeviceMatchesFilter(*midiDevice, endpointFilter))
                     {
-                        if ((endpointFilter & midi2::MidiEndpointDeviceInformationFilter::IncludeDiagnosticLoopback) ==
-                                              midi2::MidiEndpointDeviceInformationFilter::IncludeDiagnosticLoopback)
-                        {
-                            midiDevices.push_back(*endpointInfo);
-                        }
-                    }
-                        
-                    // check if diagnostic ping 
-                    else if (endpointInfo->EndpointPurpose() == MidiEndpointDevicePurpose::DiagnosticPing)
-                    {
-                        if ((endpointFilter & midi2::MidiEndpointDeviceInformationFilter::IncludeDiagnosticPing) == 
-                                              midi2::MidiEndpointDeviceInformationFilter::IncludeDiagnosticPing)
-                        {
-                            midiDevices.push_back(*endpointInfo);
-                        }
+                        midiDevices.push_back(*midiDevice);
                     }
 
-                    // check if virtual device responder
-                    else if (endpointInfo->EndpointPurpose() == MidiEndpointDevicePurpose::VirtualDeviceResponder)
-                    {
-                        if ((endpointFilter & midi2::MidiEndpointDeviceInformationFilter::IncludeVirtualDeviceResponder) == 
-                                              midi2::MidiEndpointDeviceInformationFilter::IncludeVirtualDeviceResponder)
-                        {
-                            midiDevices.push_back(*endpointInfo);
-                        }
-                    }
-
-                    // check if normal client MIDI 1.0 / bytestream
-                    else if ((endpointInfo->EndpointPurpose() == MidiEndpointDevicePurpose::NormalMessageEndpoint) &&
-                        (endpointInfo->NativeDataFormat() == MidiEndpointNativeDataFormat::ByteStream))
-                    {
-                        if ((endpointFilter & midi2::MidiEndpointDeviceInformationFilter::IncludeClientByteStreamNative) ==
-                                              midi2::MidiEndpointDeviceInformationFilter::IncludeClientByteStreamNative)
-                        {
-                            midiDevices.push_back(*endpointInfo);
-                        }
-                    }
-
-                    // check if normal client MIDI 2.0 / UMP 
-                    else if ((endpointInfo->EndpointPurpose() == MidiEndpointDevicePurpose::NormalMessageEndpoint) &&
-                             (endpointInfo->NativeDataFormat() == MidiEndpointNativeDataFormat::UniversalMidiPacket ||
-                              endpointInfo->NativeDataFormat() == MidiEndpointNativeDataFormat::Unknown))
-                    {
-                        if ((endpointFilter & midi2::MidiEndpointDeviceInformationFilter::IncludeClientUmpNative) == midi2::MidiEndpointDeviceInformationFilter::IncludeClientUmpNative)
-                        {
-                            midiDevices.push_back(*endpointInfo);
-                        }
-                    }
-
-                    // no idea what kind of endpoint this is, so default to including it
-                    else
-                    {
-                        midiDevices.push_back(*endpointInfo);
-                    }
                 }
             }
         }
         catch (...)
         {
-            // TODO: Log this
+            internal::LogGeneralError(__FUNCTION__, L"exception retrieving list of matching MIDI Endpoint devices");
         }
 
 
@@ -325,22 +324,26 @@ namespace winrt::Windows::Devices::Midi2::implementation
     midi2::MidiEndpointDeviceInformation MidiEndpointDeviceInformation::CreateFromId(
         winrt::hstring const& id) noexcept
     {
-        auto di = Windows::Devices::Enumeration::DeviceInformation::CreateFromIdAsync(
-            id, GetAdditionalPropertiesList()).get();
-
-        if (di != nullptr)
+        try
         {
-            auto endpointInfo = winrt::make_self<MidiEndpointDeviceInformation>();
+            auto di = Windows::Devices::Enumeration::DeviceInformation::CreateFromIdAsync(
+                id, GetAdditionalPropertiesList()).get();
 
-            endpointInfo->InternalUpdateFromDeviceInformation(di);
+            if (di != nullptr)
+            {
+                auto endpointInfo = winrt::make_self<MidiEndpointDeviceInformation>();
 
-            return *endpointInfo;
+                endpointInfo->InternalUpdateFromDeviceInformation(di);
 
+                return *endpointInfo;
+            }
         }
-        else
+        catch (...)
         {
-            return nullptr;
+            internal::LogGeneralError(__FUNCTION__, L"exception creating and updating device");
         }
+
+        return nullptr;
     }
 
 
@@ -349,11 +352,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring key,
         winrt::hstring defaultValue) const noexcept
     {
-        if (m_deviceInformation == nullptr) return defaultValue;
+        if (!m_properties.HasKey(key)) return defaultValue;
 
         try
         {
-            return winrt::unbox_value<winrt::hstring>(m_deviceInformation.Properties().Lookup(key));
+            return winrt::unbox_value<winrt::hstring>(m_properties.Lookup(key));
         }
         catch (...)
         {
@@ -366,11 +369,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring key,
         winrt::guid defaultValue) const noexcept
     {
-        if (m_deviceInformation == nullptr) return defaultValue;
-
+        if (!m_properties.HasKey(key)) return defaultValue;
         try
         {
-            return winrt::unbox_value<winrt::guid>(m_deviceInformation.Properties().Lookup(key));
+            return winrt::unbox_value<winrt::guid>(m_properties.Lookup(key));
         }
         catch (...)
         {
@@ -384,11 +386,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring key,
         uint8_t defaultValue) const noexcept
     {
-        if (m_deviceInformation == nullptr) return defaultValue;
+        if (!m_properties.HasKey(key)) return defaultValue;
 
         try
         {
-            return winrt::unbox_value<uint8_t>(m_deviceInformation.Properties().Lookup(key));
+            return winrt::unbox_value<uint8_t>(m_properties.Lookup(key));
         }
         catch (...)
         {
@@ -397,15 +399,34 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
+    uint32_t MidiEndpointDeviceInformation::GetUInt32Property(
+        winrt::hstring key,
+        uint32_t defaultValue) const noexcept
+    {
+        if (!m_properties.HasKey(key)) return defaultValue;
+
+        try
+        {
+            return winrt::unbox_value<uint32_t>(m_properties.Lookup(key));
+        }
+        catch (...)
+        {
+            return defaultValue;
+        }
+    }
+
+
+
+    _Use_decl_annotations_
     bool MidiEndpointDeviceInformation::GetBoolProperty(
         winrt::hstring key,
         bool defaultValue) const noexcept
     {
-        if (m_deviceInformation == nullptr) return defaultValue;
+        if (!m_properties.HasKey(key)) return defaultValue;
 
         try
         {
-            return winrt::unbox_value<bool>(m_deviceInformation.Properties().Lookup(key));
+            return winrt::unbox_value<bool>(m_properties.Lookup(key));
         }
         catch (...)
         {
@@ -416,14 +437,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     winrt::hstring MidiEndpointDeviceInformation::Id() const noexcept
     { 
-        if (m_deviceInformation != nullptr)
-        {
-            return m_deviceInformation.Id();
-        }
-        else
-        {
-            return L"";
-        }
+        return m_id;
     }
 
     winrt::hstring MidiEndpointDeviceInformation::Name() const noexcept
@@ -438,16 +452,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
         if (TransportSuppliedName() != L"") return TransportSuppliedName();
 
 
-        // this is typically the same as the transport-supplied name
-        if (m_deviceInformation != nullptr)
-            return m_deviceInformation.Name();
-
         return L"Unknown";
     }
 
     midi2::MidiEndpointNativeDataFormat MidiEndpointDeviceInformation::NativeDataFormat() const noexcept
     {
-        auto formatProperty = GetByteProperty(STRING_PKEY_MIDI_UmpLoopback, 0);
+        auto formatProperty = GetByteProperty(STRING_PKEY_MIDI_NativeDataFormat, 0);
 
         if (formatProperty == MIDI_PROP_NATIVEDATAFORMAT_BYTESTREAM)
             return MidiEndpointNativeDataFormat::ByteStream;
@@ -459,16 +469,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     midi2::MidiEndpointDevicePurpose MidiEndpointDeviceInformation::EndpointPurpose() const noexcept
     {
-        if (GetBoolProperty(STRING_PKEY_MIDI_UmpLoopback, false) == true)
-            return MidiEndpointDevicePurpose::DiagnosticLoopback;
+        // This assumes we're keeping things in sync with the service
+        // like we should be
 
-        if (GetBoolProperty(STRING_PKEY_MIDI_UmpPing, false) == true)
-            return MidiEndpointDevicePurpose::DiagnosticPing;
-
-        if (GetBoolProperty(STRING_PKEY_MIDI_IsVirtualDeviceResponder, false) == true)
-            return MidiEndpointDevicePurpose::VirtualDeviceResponder;
-
-        return midi2::MidiEndpointDevicePurpose::NormalMessageEndpoint;
+        return (midi2::MidiEndpointDevicePurpose)GetUInt32Property(STRING_PKEY_MIDI_EndpointDevicePurpose, 0);
     }
 
     midi2::MidiProtocol MidiEndpointDeviceInformation::ConfiguredProtocol() const noexcept
@@ -510,13 +514,68 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     void MidiEndpointDeviceInformation::InternalUpdateFromDeviceInformation(
-        winrt::Windows::Devices::Enumeration::DeviceInformation const& info) noexcept
+        winrt::Windows::Devices::Enumeration::DeviceInformation const& deviceInformation) noexcept
     {
-        if (info != nullptr)
+    //    OutputDebugString(L"" __FUNCTION__);
+
+        if (deviceInformation == nullptr) return;
+
+        for (auto&& [key, value] : deviceInformation.Properties())
         {
-            m_deviceInformation = info;
+            // insert does a replace if the key exists in the map
+
+        //    OutputDebugString(key.c_str());
+
+            m_properties.Insert(key, value);
         }
+
+        m_id = deviceInformation.Id();
+        m_transportSuppliedEndpointName = deviceInformation.Name();
     }
+
+    _Use_decl_annotations_
+    bool MidiEndpointDeviceInformation::UpdateFromDeviceInformation(
+        winrt::Windows::Devices::Enumeration::DeviceInformation const& deviceInformation) noexcept
+    {
+    //    OutputDebugString(L"" __FUNCTION__);
+
+        if (deviceInformation == nullptr) return false;
+
+        // TODO: If an Id is present, check that the ids (after lowercasing) are the same before allowing this.
+        // return false if the ids don't match
+
+        InternalUpdateFromDeviceInformation(deviceInformation);
+
+        return true;
+    }
+
+
+    _Use_decl_annotations_
+    bool MidiEndpointDeviceInformation::UpdateFromDeviceInformationUpdate(
+        winrt::Windows::Devices::Enumeration::DeviceInformationUpdate const& deviceInformationUpdate) noexcept
+    {
+     //   OutputDebugString(L"" __FUNCTION__);
+
+        if (deviceInformationUpdate == nullptr) return false;
+
+        // TODO: Check that the ids (after lowercasing) are the same before allowing this.
+        // return false if the ids don't match
+
+
+        for (auto&& [key, value] : deviceInformationUpdate.Properties())
+        {
+            // insert does a replace if the key exists in the map
+
+            m_properties.Insert(key, value);
+        }
+
+
+        // TODO: need to update the name
+
+
+        return false;
+    }
+
 
 
 }

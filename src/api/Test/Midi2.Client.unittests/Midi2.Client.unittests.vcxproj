@@ -148,9 +148,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="MidiBenchmarks.cpp" />
     <ClCompile Include="MidiClockTests.cpp" />
     <ClCompile Include="MidiEndpointConnectionTests.cpp" />
+    <ClCompile Include="MidiEndpointDeviceWatcherTests.cpp" />
+    <ClCompile Include="MidiEndpointListenerTests.cpp" />
     <ClCompile Include="MidiFunctionBlockMessageBuilderTests.cpp" />
     <ClCompile Include="MidiMessageBuilderTests.cpp" />
     <ClCompile Include="MidiMessagePacketTests.cpp" />
@@ -159,9 +160,10 @@
     <ClCompile Include="Module.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MidiBenchmarks.h" />
     <ClInclude Include="MidiClockTests.h" />
     <ClInclude Include="MidiEndpointConnectionTests.h" />
+    <ClInclude Include="MidiEndpointDeviceWatcherTests.h" />
+    <ClInclude Include="MidiEndpointListenerTests.h" />
     <ClInclude Include="MidiFunctionBlockMessageBuilderTests.h" />
     <ClInclude Include="MidiMessageBuilderTests.h" />
     <ClInclude Include="MidiMessagePacketTests.h" />

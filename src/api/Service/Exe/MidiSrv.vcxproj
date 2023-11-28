@@ -264,14 +264,14 @@
     <ClCompile Include="MidiDeviceManager.cpp" />
     <ClCompile Include="MidiDevicePipe.cpp" />
     <ClCompile Include="MidiDevicePipeMessageScheduler.cpp" />
-    <ClCompile Include="MidiDevicePipePluginProcessor.cpp" />
-    <ClCompile Include="MidiEndpointInProtocolMetadataManager.cpp" />
     <ClCompile Include="MidiPerformanceManager.cpp" />
     <ClCompile Include="MidiProcessManager.cpp" />
     <ClCompile Include="MidiService.cpp" />
     <ClCompile Include="MidiSrv.cpp" />
     <ClCompile Include="MidiSrvRpc.cpp" />
     <ClCompile Include="MidiSrvRPC_stub.cpp" />
+    <ClCompile Include="MidiTransformManager.cpp" />
+    <ClCompile Include="MidiTransformPipe.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Inc\MidiClientManager.h" />
@@ -284,8 +284,8 @@
     <ClInclude Include="..\Inc\MidiTelemetry.h" />
     <ClInclude Include="MidiConfigurationManager.h" />
     <ClInclude Include="MidiDevicePipeMessageScheduler.h" />
-    <ClInclude Include="MidiDevicePipePluginProcessor.h" />
-    <ClInclude Include="MidiEndpointInProtocolMetadataManager.h" />
+    <ClInclude Include="MidiTransformManager.h" />
+    <ClInclude Include="MidiTransformPipe.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>

@@ -2,6 +2,10 @@
   <PropertyGroup>
     <OutputType>Bundle</OutputType>
     <OutputName>WindowsMidiServicesCompleteSetup</OutputName>
+
+      <BuildDate>$([System.DateTime]::Now.ToString("yyyyMMddhhmm"))</BuildDate>
+
+      <DefineConstants>BuildDate=$(BuildDate)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <SuppressValidation>true</SuppressValidation>
@@ -9,6 +13,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <SuppressValidation>true</SuppressValidation>
   </PropertyGroup>
+    
+    
   <ItemGroup>
     <Content Include="midi_installer_logo_square.png" />
   </ItemGroup>

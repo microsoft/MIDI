@@ -1,0 +1,29 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+import "MidiAbstraction.idl";
+
+[
+    uuid(77421f51-7cc2-40ff-bb91-ace053179858),
+    version(1.0),
+]
+library Midi2JitterReductionAbstractionLib
+{
+    importlib("stdole2.tlb");
+
+    [uuid(6d261861-4c6c-44f4-a79d-33c60f52ba49), version(1.0)]
+    coclass Midi2JitterReductionAbstraction
+    {
+        [default] interface IMidiAbstraction;
+    }
+};
+

@@ -371,13 +371,23 @@ CMidi2VirtualMidiEndpointManager::CreateEndpoint(
     MidiFlow const flow = MidiFlow::MidiFlowBidirectional;
 
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
-    DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
+    //DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
 
     DEVPROP_BOOLEAN devPropMulticlient = multiclient ? DEVPROP_TRUE : DEVPROP_FALSE;
-    DEVPROP_BOOLEAN devPropVirtualResponder = isVirtualEndpointResponder ? DEVPROP_TRUE : DEVPROP_FALSE;
-
+    //DEVPROP_BOOLEAN devPropVirtualResponder = isVirtualEndpointResponder ? DEVPROP_TRUE : DEVPROP_FALSE;
 
     BYTE nativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
+
+    uint32_t endpointPurpose{};
+
+    if (isVirtualEndpointResponder)
+    {
+        endpointPurpose = (uint32_t)MidiEndpointDevicePurposePropertyValue::VirtualDeviceResponder;
+    }
+    else
+    {
+        endpointPurpose = (uint32_t)MidiEndpointDevicePurposePropertyValue::NormalMessageEndpoint;
+    }
 
     DEVPROPERTY interfaceDevProperties[] = {
         {{DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
@@ -402,15 +412,8 @@ CMidi2VirtualMidiEndpointManager::CreateEndpoint(
         {{PKEY_MIDI_TransportSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_STRING, static_cast<ULONG>((name.length() + 1) * sizeof(WCHAR)), (PVOID)name.c_str()},
 
-        {{PKEY_PKEY_MIDI_IsVirtualDeviceResponder, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropVirtualResponder)), (PVOID)&devPropVirtualResponder},
-
-
-        {{PKEY_MIDI_UmpPing, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), (PVOID)&devPropFalse},
-
-        {{PKEY_MIDI_UmpLoopback, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), (PVOID)&devPropFalse},
+        {{PKEY_MIDI_EndpointDevicePurpose, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(endpointPurpose)),(PVOID)&endpointPurpose},
 
 
         {{PKEY_MIDI_UserSuppliedLargeImagePath, DEVPROP_STORE_SYSTEM, nullptr},

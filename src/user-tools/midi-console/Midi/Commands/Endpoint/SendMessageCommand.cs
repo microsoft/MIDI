@@ -71,7 +71,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             if (words != null && words.Length > 0 && words.Length <= 4)
             {
                 // allowed behavior is to cast the packet type to the word count
-                return (bool)((int)MidiMessageUtility.GetPacketTypeFromFirstMessageWord(words[0]) == words.Length);
+                return (bool)((int)MidiMessageUtility.GetPacketTypeFromMessageFirstWord(words[0]) == words.Length);
             }
             else
             {

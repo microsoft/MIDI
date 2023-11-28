@@ -45,7 +45,7 @@ interface IMidiAbstraction : IUnknown
     uuid(6C4B8BF9-8133-4B41-8303-1FDE78E20ACA),
     pointer_default(unique)
 ]
-interface IMidiIn : IUnknown
+interface IMidiIn : IUnknown        // IMidiMessageSource
 {
     HRESULT Initialize(
         [in] LPCWSTR deviceId,
@@ -62,7 +62,7 @@ interface IMidiIn : IUnknown
     uuid(F328D645-7D6D-4924-A7E3-9DEE245189F9),
     pointer_default(unique)
 ]
-interface IMidiOut : IUnknown
+interface IMidiOut : IUnknown       // IMidiMessageDestination
 {
     HRESULT Initialize(
         [in] LPCWSTR deviceId,
@@ -119,41 +119,56 @@ interface IMidiEndpointManager : IUnknown
 };
 
 
-
 [
     object,
     local,
-    uuid(fa9d8e0c-c432-4fef-9687-46ee2555bc45),
+    uuid(78f73647-2c32-420e-8259-a207c546b2c3),
     pointer_default(unique)
 ]
-interface IMidiServiceMessageProcessingPlugin : IUnknown
+interface IMidiTransform : IUnknown
 {
     HRESULT Initialize(
-        [in] IMidiBiDi* deviceSideConnection,
-        [in] IMidiBiDi* clientSideConnection,
-        [in] LPCWSTR configurationJson
+        [in] IMidiCallback* callback
     );
 
     HRESULT Cleanup();
+
+    HRESULT SendMidiMessage(
+        [in] PVOID message,
+        [in] UINT size,
+        [in] LONGLONG position
+    );
 };
 
 
 
-//// This interface exists so apps can create endpoints through the API
-//// typically the EndpointManager implements this if API-driven device/endpoint
-//// creation is supported. Optional for any transport abstraction. Required for
-//// virtual / app-to-app MIDI
+
 //[
 //    object,
 //    local,
-//    uuid(0b56f71c-75b0-4209-8fdc-5cebe8815726),
+//    uuid(fa9d8e0c-c432-4fef-9687-46ee2555bc45),
 //    pointer_default(unique)
 //]
-//interface IMidiApiEndpointManagerExtension : IUnknown
+//interface IMidiServiceMessageProcessingPlugin : IUnknown
 //{
-//    HRESULT ApplyConfiguration(         // IMidiEndpointManager could also include a function like this for changing device/endpoint names etc. TBD.
-//        [in]LPCWSTR configurationJson,  // typically this contains specs for one or more endpoints and any routing
-//        [out]LPWSTR resultJson         // contains Ids of created endpoints, or other status info.
+//    // TODO: Maybe this should follow the IMidiEndpointManager approach and have a service-side equivalent
+//    // of the device manager, but for plugins. That would simplify this interface and keep the pattern
+//    // consistent with other abstractions. They are not exactly the same, of course, because the
+//    // plugin manager would be requesting plugin instances, not the other way around.
+//    HRESULT Initialize(
+//        [in] GUID pluginInstanceId,
+//        [in] IUnknown* midiDeviceManager,       // needed for any plugins that will update device properties
+//        [in] LPCWSTR deviceId,                  // needed if the plugin has to alter behavior based on device properties
+//        [in] LPCWSTR clientId,                  // If this is a client-side plugin, need some way to get settings, associate abstractions, etc.
+//        [in] BYTE midiInDataFormat,             // bytestream or UMP. Use same MIDI_PROP_NATIVEDATAFORMAT_xxx constants as are stored in PnP properties
+//        [in] BYTE midiOutDataFormat             // bytestream or UMP. Use same MIDI_PROP_NATIVEDATAFORMAT_xxx constants as are stored in PnP properties
+//        );
+//  
+//    HRESULT ApplyConfiguration(                 // used during initial setup, but also whenever any changes are made to config
+//        [in] GUID pluginInstanceId,
+//        [in] LPCWSTR configurationJson
 //    );
 //
+//    HRESULT Cleanup();
 //};
+

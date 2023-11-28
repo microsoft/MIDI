@@ -1,4 +1,5 @@
 #tool nuget:?package=NuGet.CommandLine&version=5.10
+#addin nuget:?package=Cake.Compression&version=0.3.0
 
 var target = Argument("target", "Default");
 
@@ -64,9 +65,12 @@ var settingsAppStagingDir = System.IO.Path.Combine(stagingRootDir, "midi-setting
 
 var setupSolutionDir = System.IO.Path.Combine(srcDir, "oob-setup");
 var setupSolutionFile = System.IO.Path.Combine(setupSolutionDir, "midi-services-setup.sln");
+var setupBundleInfoIncludeFile = System.IO.Path.Combine(stagingRootDir, "version", "BundleInfo.wxi");
+
 
 var setupReleaseDir = releaseRootDir;
 
+var apiReleaseArtifactsFolder = System.IO.Path.Combine(releaseRootDir, "api");
 
 
 // we always want the latest redist. These are permalinks.
@@ -450,10 +454,13 @@ Task("BuildConsoleApp")
     Information("\nBuilding MIDI console app for " + plat.ToString());
 
     // update nuget packages for the entire solution. This is important for API/SDK NuGet in particular
+    // NOTE: This doesn't work on packagereference projects. Need to consider a tool like 
+    // dotnet-outdated https://github.com/dotnet-outdated/dotnet-outdated
 
     NuGetUpdate(consoleAppSolutionFile, new NuGetUpdateSettings
     {
         WorkingDirectory = consoleAppSolutionDir,
+        Prerelease = true,
     });
 
     // we're specifying a rid, so we need to compile the project, not the solution
@@ -599,6 +606,34 @@ Task("BuildInstaller")
     else
         throw new ArgumentException("Invalid platform target " + plat.ToString());
 
+    // create the bundle info include file with the version info in it
+    // this include file is referenced from the WiX Setup project and it
+    // defines compile-time variables used in the project
+    //<Include>
+    //  <?define SetupVersionName="Dev Preview Nightly" ?>
+    //  <?define SetupVersionNumber="1.0.23351.0243" ?>
+    //</Include>
+
+    string setupVersionName = "Developer Preview";
+
+    string setupBuildMajorMinor = "1.0";
+    string setupBuildDateNumber = DateTime.Now.ToString("yy") + DateTime.Now.DayOfYear.ToString("000");       // YYddd where ddd is the day number for the year
+    string setupBuildTimeNumber = DateTime.Now.ToString("HHmm");       // HHmm
+    string setupBuildPlatform = plat.ToString();
+
+    string setupBuildFullVersionString = setupBuildMajorMinor + "." + setupBuildDateNumber + "." + setupBuildTimeNumber;
+    //string setupBuildFullVersionStringFile = setupBuildFullVersionString.Replace('.', '-');
+
+    using (StreamWriter writer = System.IO.File.CreateText(setupBundleInfoIncludeFile))            
+    {
+        writer.WriteLine("<Include>");
+        writer.WriteLine($"  <?define SetupVersionName=\"{setupVersionName}\" ?>");
+        writer.WriteLine($"  <?define SetupVersionNumber=\"{setupBuildFullVersionString}\" ?>");
+        writer.WriteLine("</Include>");
+    }
+
+    string finalSetupName = $"Windows MIDI Services {setupVersionName} {setupBuildPlatform} {setupBuildFullVersionString}.exe";
+
     var buildSettings = new DotNetBuildSettings
     {
         WorkingDirectory = mainBundleProjectDir,
@@ -620,14 +655,34 @@ Task("BuildInstaller")
     if (!DirectoryExists(releaseStandAloneInstallerFolder))
         CreateDirectory(releaseStandAloneInstallerFolder);   
 
-    CopyFiles(System.IO.Path.Combine(mainBundleProjectDir, "bin", plat.ToString(), "Release", "*.exe"), setupReleaseDir); 
+
+    // copy and rename the main bundle installer to include version and platform
+
+    CopyFiles(System.IO.Path.Combine(mainBundleProjectDir, "bin", plat.ToString(), "Release", "WindowsMidiServicesCompleteSetup.exe"), setupReleaseDir); 
+
+    // rename
+    MoveFile(System.IO.Path.Combine(setupReleaseDir, "WindowsMidiServicesCompleteSetup.exe"), 
+            (System.IO.Path.Combine(setupReleaseDir, finalSetupName)));
 
     CopyFiles(System.IO.Path.Combine(consoleOnlySetupProjectDir, "bin", plat.ToString(), "Release", "*.msi"), releaseStandAloneInstallerFolder); 
     CopyFiles(System.IO.Path.Combine(settingsOnlySetupProjectDir, "bin", plat.ToString(), "Release", "*.msi"), releaseStandAloneInstallerFolder); 
 });
 
 
+Task("CopyAPIArtifacts")
+    .IsDependentOn("BuildInstaller")
+    .IsDependentOn("PackAPIProjection")
+    .IsDependentOn("BuildConsoleApp")
+    .DoesForEach(platformTargets, plat => 
+{
+    string apiStagingDir = System.IO.Path.Combine(apiAndServiceStagingDir, "bin", plat.ToString());
 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, "Windows.Devices.Midi2.winmd"), apiReleaseArtifactsFolder); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, "Windows.Devices.Midi2.dll"), apiReleaseArtifactsFolder); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, "Windows.Devices.Midi2.pri"), apiReleaseArtifactsFolder); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, "Windows.Devices.Midi2.h"), apiReleaseArtifactsFolder); 
+
+}
 
 //////////////////////////////////////////////////////////////////////
 // TASK TARGETS
@@ -636,7 +691,9 @@ Task("BuildInstaller")
 Task("Default")
     .IsDependentOn("Clean")
     .IsDependentOn("BuildApiActivationRegEntriesInternal")
-    .IsDependentOn("BuildInstaller");
+    .IsDependentOn("BuildInstaller")
+    .IsDependentOn("CopyAPIArtifacts")
+    ;
 
 
 

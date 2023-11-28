@@ -31,12 +31,12 @@ namespace Windows.Devices.Midi2
         static Boolean ValidateMessage96MessageType(UInt32 word0);
         static Boolean ValidateMessage128MessageType(UInt32 word0);
 
-        static MidiMessageType GetMessageTypeFromFirstMessageWord(UInt32 word0);
-        static MidiPacketType GetPacketTypeFromFirstMessageWord(UInt32 word0);
+        static MidiMessageType GetMessageTypeFromMessageFirstWord(UInt32 word0);
+        static MidiPacketType GetPacketTypeFromMessageFirstWord(UInt32 word0);
 
         static Boolean MessageTypeHasGroupField(MidiMessageType messageType);
-        static UInt32 ReplaceGroup(UInt32 word0, MidiGroup newGroup);
-        static MidiGroup GetGroup(UInt32 word0);
+        static UInt32 ReplaceGroupInMessageFirstWord(UInt32 word0, MidiGroup newGroup);
+        static MidiGroup GetGroupFromMessageFirstWord(UInt32 word0);
 
         static UInt8 GetStatusFromUtilityMessage(UInt32 word0);
         static Midi1ChannelVoiceMessageStatus GetStatusFromMidi1ChannelVoiceMessage(UInt32 word0);
@@ -56,8 +56,8 @@ namespace Windows.Devices.Midi2
 
 
         static Boolean MessageTypeHasChannelField(MidiMessageType messageType);
-        static UInt32 ReplaceChannel(UInt32 word0, MidiChannel newChannel);
-        static MidiChannel GetChannel(UInt32 word0);
+        static UInt32 ReplaceChannelInMessageFirstWord(UInt32 word0, MidiChannel newChannel);
+        static MidiChannel GetChannelFromMessageFirstWord(UInt32 word0);
 
         static UInt8 GetFormFromStreamMessageFirstWord(UInt32 word0);
         static UInt16 GetStatusFromStreamMessageFirstWord(UInt32 word0);

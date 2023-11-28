@@ -1,4 +1,11 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
 #pragma once
 
 #include <windows.h>
@@ -63,6 +70,16 @@ namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
 #include "MidiDefs.h"
 
 
+// MidiDevicePipe holds MidiClientPipe(s) that it is connected to.
+// MidiClientPipe holds a MidiDevicePipe that it is connected to.
+// declare these prior to including the headers.
+class CMidiClientPipe;
+class CMidiDevicePipe;
+class CMidiTransformPipe;
+
+// transform manager takes a ref to client manager and device manager
+class CMidiClientManager;
+
 #include "MidiTelemetry.h"
 #include "MidiPerformanceManager.h"
 #include "MidiProcessManager.h"
@@ -70,21 +87,16 @@ namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
 #include "MidiDeviceManager.h"
 #include "MidiXProc.h"
 
-#include "MidiEndpointInProtocolMetadataManager.h"
 
-// MidiDevicePipe holds MidiClientPipe(s) that it is connected to.
-// MidiClientPipe holds a MidiDevicePipe that it is connected to.
-// declare these prior to including the headers.
-class CMidiClientPipe;
-class CMidiDevicePipe;
+
+#include "MidiTransformPipe.h"
+#include "MidiTransformManager.h"
 
 #include "MidiDevicePipeMessageScheduler.h"
-#include "MidiDevicePipePluginProcessor.h"
 
 #include "MidiDevicePipe.h"
 #include "MidiClientPipe.h"
 #include "MidiClientManager.h"
-
 
 
 #include "MidiSrv.h"

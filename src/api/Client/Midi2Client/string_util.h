@@ -8,12 +8,6 @@
 
 #pragma once
 
-#include <pch.h>
-
-#include <algorithm>
-#include <string>
-#include <cwctype>
-
 
 namespace Windows::Devices::Midi2::Internal
 {
@@ -44,6 +38,14 @@ namespace Windows::Devices::Midi2::Internal
     inline winrt::hstring ToUpperTrimmedHStringCopy(_In_ winrt::hstring s)
     {
         return ToUpperHStringCopy(TrimmedHStringCopy(s));
+    }
+
+    inline winrt::hstring ToLowerHStringCopy(_In_ winrt::hstring s)
+    {
+        std::wstring ws{ s };
+        std::transform(ws.begin(), ws.end(), ws.begin(), std::towlower);
+
+        return winrt::hstring{ ws };
     }
 
 

@@ -5,15 +5,20 @@
      >
 
     <?define DependenciesSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\dependencies ?>
+    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
+    <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\BundleInfo.wxi ?>
+
+    <?include $(StagingVersionIncludeFile) ?>
 
     <!-- TODO: Gate on Arm64 or x64. No x86 installation -->
 
     
     <!-- TODO: Gate on Windows 10 22H2 or later -->
 
-    <Bundle Name="Microsoft Windows MIDI Services (Developer Preview 2)" 
+    <!--<Bundle Name="Microsoft Windows MIDI Services (Developer Preview 2)" -->
+    <Bundle Name="Microsoft Windows MIDI Services ($(SetupVersionName) $(SetupVersionNumber))" 
           Manufacturer="Microsoft Corporation" 
-          Version="1.0.0.0" 
+          Version="$(SetupVersionNumber)" 
           UpgradeCode="ecfae6e7-7186-4f41-b9d2-df17ba86c69f">
 
         <WixVariable Id="WixUIDialogBmp" Value="midi_installer_logo.bmp" />
@@ -81,7 +86,7 @@
 
             <!-- .NET 8, latest preview as used by this installer and the projects -->
             <ExePackage 
-                DisplayName="Microsoft .NET 8 Preview Desktop Runtime"
+                DisplayName="Microsoft .NET 8 Desktop Runtime"
                 SourceFile="$(DependenciesSourceRootFolder)\dotnet8-windowsdesktop-runtime-latest-win-x64.exe"
                 Compressed="yes"
                 DetectCondition="DotNetDesktopRuntimeVersion &gt;= v8.0.0"
@@ -89,15 +94,18 @@
                 UninstallArguments="/uninstall /passive /norestart /quiet"
                 />
 
-            <!-- WinUI / Windows App SDK. This is required, but also has no uninstall option -->
+            <!-- WinUI / Windows App SDK. This is required for the settings app, but also has no uninstall option -->
+            <!-- NOTE: The Instal Argument needs to be dash dash quiet, but that's illegal inside a comment -->
+<!--            
             <ExePackage
                 DisplayName="Microsoft Windows App Runtime"
                 SourceFile="$(DependenciesSourceRootFolder)\winui\WindowsAppRuntimeInstall-x64.exe"
                 Compressed="yes"
-                InstallArguments="--quiet"
+                InstallArguments="-quiet"
                 Permanent="true"
                 >
             </ExePackage>
+-->
 
         </PackageGroup>
         
@@ -118,6 +126,7 @@
                 SourceFile="MidiConsoleAppStandAloneSetup.msi">
             </MsiPackage>
 
+<!--           
             <MsiPackage
                 Id="MidiServicesSettingsAppSetup"
                 Vital="yes"
@@ -125,6 +134,7 @@
                 Compressed="yes"
                 SourceFile="MidiSettingsAppStandAloneSetup.msi">
             </MsiPackage>
+-->
 
         </PackageGroup>
         

@@ -26,30 +26,36 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static winrt::hstring EndpointInterfaceClass() noexcept { return STRING_DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI; }
 
-        static midi2::MidiEndpointDeviceWatcher CreateWatcher(_In_ bool includeDiagnosticsEndpoints);
-
         static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll(
             _In_ midi2::MidiEndpointDeviceInformationSortOrder const& sortOrder, 
             _In_ midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept;
+
         static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll(
             _In_ midi2::MidiEndpointDeviceInformationSortOrder const& sortOrder) noexcept;
+
         static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll() noexcept;
 
         static collections::IVectorView<winrt::hstring> GetAdditionalPropertiesList() noexcept;
 
+        static winrt::Windows::Devices::Enumeration::DeviceWatcher CreateWatcher(
+            _In_ midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept;
+
+        static bool MidiEndpointDeviceInformation::DeviceMatchesFilter(
+            _In_ midi2::MidiEndpointDeviceInformation const& deviceInformation,
+            _In_ midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept;
 
         winrt::hstring Id() const noexcept;
         winrt::guid ContainerId() const noexcept { return GetGuidProperty(L"System.Devices.ContainerId", winrt::guid{}); }
         winrt::hstring DeviceInstanceId() const noexcept { return GetStringProperty(L"System.Devices.DeviceInstanceId", L""); }
 
-        winrt::Windows::Devices::Enumeration::DeviceInformation GetParentDeviceInformation();
-        winrt::Windows::Devices::Enumeration::DeviceInformation GetContainerInformation();
+        winrt::Windows::Devices::Enumeration::DeviceInformation GetParentDeviceInformation() const noexcept;
+        winrt::Windows::Devices::Enumeration::DeviceInformation GetContainerInformation() const noexcept;
 
-        winrt::Windows::Devices::Enumeration::DeviceInformation DeviceInformation() noexcept { return m_deviceInformation; }
+        //winrt::Windows::Devices::Enumeration::DeviceInformation DeviceInformation() const noexcept { return m_deviceInformation; }
 
         winrt::hstring Name() const noexcept;
 
-        winrt::hstring TransportSuppliedName() const noexcept { return m_deviceInformation.Name(); }  // todo: may need to update this later
+        winrt::hstring TransportSuppliedName() const noexcept { return m_transportSuppliedEndpointName; }  // todo: may need to update this later
         winrt::hstring EndpointSuppliedName() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_EndpointProvidedName, L""); }
         winrt::hstring UserSuppliedName() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UserSuppliedEndpointName, L""); }
 
@@ -82,11 +88,21 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         midi2::MidiProtocol ConfiguredProtocol() const noexcept;
 
-        // TODO: MIDI Device Id (sysex stuff)
+
+       // TODO: MIDI Device Id (sysex stuff)
 
 
-        void InternalUpdateFromDeviceInformation(_In_ winrt::Windows::Devices::Enumeration::DeviceInformation const& info) noexcept;
-        
+        collections::IMapView<winrt::hstring, IInspectable> Properties() { return m_properties.GetView(); }
+
+
+        bool UpdateFromDeviceInformation(
+            _In_ winrt::Windows::Devices::Enumeration::DeviceInformation const& deviceInformation) noexcept;
+
+        bool UpdateFromDeviceInformationUpdate(
+            _In_ winrt::Windows::Devices::Enumeration::DeviceInformationUpdate const& deviceInformationUpdate) noexcept;
+
+        void InternalUpdateFromDeviceInformation(
+            _In_ winrt::Windows::Devices::Enumeration::DeviceInformation const& info) noexcept;
 
     private:
         winrt::hstring GetStringProperty(
@@ -101,12 +117,22 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ winrt::hstring key,
             _In_ uint8_t defaultValue) const noexcept;
 
+        uint32_t GetUInt32Property(
+            _In_ winrt::hstring key,
+            _In_ uint32_t defaultValue) const noexcept;
+
         bool GetBoolProperty(
             _In_ winrt::hstring key,
             _In_ bool defaultValue) const noexcept;
 
+        // TODO: This should come from a property in the bag, not something here to get out of sync
+        winrt::hstring m_transportSuppliedEndpointName{};
 
-        winrt::Windows::Devices::Enumeration::DeviceInformation m_deviceInformation{ nullptr };
+        winrt::hstring m_id{};
+
+
+        collections::IMap<winrt::hstring, IInspectable> m_properties =
+            winrt::single_threaded_map< winrt::hstring, IInspectable>();
 
     };
 }
