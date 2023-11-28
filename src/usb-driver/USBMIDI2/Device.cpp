@@ -39,6 +39,9 @@ Environment:
 
 #include "Pch.h"
 #include "ump.h"
+
+#include "usbdlib.h"
+
 //#include "midi_timestamp.h"
 
 #include "Trace.h"
@@ -907,7 +910,7 @@ Return Value:
         &pDeviceContext->DeviceNameMemory);
     if (!NT_SUCCESS(status))
     {
-        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE, "Could not obtain Friendly Name String. Status: 0x%x", status);
+        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE, "Could not obtain Friendly Name String. %!STATUS!", status);
     }
     else
     {
@@ -925,7 +928,6 @@ Return Value:
     // Setup store for setting pairs for use later
     if (numInterfaces)
     {
-        // We only need to hold one interface
         pSettingPairs = (PWDF_USB_INTERFACE_SETTING_PAIR)ExAllocatePool2(
             POOL_FLAG_PAGED,
             sizeof(WDF_USB_INTERFACE_SETTING_PAIR) * numInterfaces,
@@ -935,9 +937,9 @@ Return Value:
     // Confirm memory declared properly
     if (!pSettingPairs)
     {
-        status = STATUS_SEVERITY_ERROR;
+        status = STATUS_INSUFFICIENT_RESOURCES;
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-            "Insufficient Resources\n");
+            "Insufficient Resources %!STATUS!", status);
         return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
@@ -945,6 +947,9 @@ Return Value:
     // an accompany Audio Control interface the Audio Control is not
     // used and many manufacturers do not include it or if combined
     // with audio interface, only have control with audio interface.
+    // Streaming MIDI interface does not use or require control
+    // endpoint except by definition of being an Audio class device
+    // which does by specification require a control interface.
     // Therefore we will skip audio control interface.
 
     // Search for MIDI Interface
@@ -969,7 +974,8 @@ Return Value:
                 && interfaceDescriptor.bInterfaceSubClass == 3 /*MIDI STREAMING*/
                 )
             {
-                pDeviceContext->UsbMIDIStreamingAlt = 1;    // alternate interface
+                pDeviceContext->UsbMIDIStreamingAlt = 1;                    // alternate interface
+                pDeviceContext->UsbMIDIInterfaceNumber = interfaceDescriptor.bInterfaceNumber;
             }
             else
             {
@@ -984,7 +990,7 @@ Return Value:
                 {
                     // Unknown interface so error
                     TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Device detected has an unknown interface.\n");
-                    status = STATUS_SEVERITY_ERROR;
+                    status = STATUS_INSUFFICIENT_RESOURCES;
                     goto SelectExit;
                 }
                 continue; // Not MIDI so continue to next interface
@@ -1002,6 +1008,7 @@ Return Value:
                 )
             {
                 pDeviceContext->UsbMIDIStreamingAlt = 0;    // MIDI 1.0 Interface
+                pDeviceContext->UsbMIDIInterfaceNumber = interfaceDescriptor.bInterfaceNumber;
             }
             else
             {
@@ -1016,7 +1023,7 @@ Return Value:
                 {
                     // Unknown interface so error
                     TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Device detected has an unknown interface.\n");
-                    status = STATUS_SEVERITY_ERROR;
+                    status = STATUS_INSUFFICIENT_RESOURCES;
                     goto SelectExit;
                 }
                 continue;   // Not MIDI so continue to next interface
@@ -1029,6 +1036,36 @@ Return Value:
         // Setup settings pairs for MIDI streaming interface
         pSettingPairs[interfaceCount].UsbInterface = pDeviceContext->UsbMIDIStreamingInterface;
         pSettingPairs[interfaceCount].SettingIndex = pDeviceContext->UsbMIDIStreamingAlt;
+
+        // Determine Version of the selected MIDI Interface
+        PUSB_INTERFACE_DESCRIPTOR pInterfaceDescriptor = USBD_ParseConfigurationDescriptor(
+            pConfigurationDescriptor,               // Descriptor Buffer
+            pDeviceContext->UsbMIDIInterfaceNumber, // Interface Number
+            pDeviceContext->UsbMIDIStreamingAlt     // Alternate Setting
+        );
+        if (!pInterfaceDescriptor)
+        {
+            // Unknown interface so error
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Device unable to parse for MIDI Interface.\n");
+            status = STATUS_INSUFFICIENT_RESOURCES;
+            goto SelectExit;
+        }
+        // From Interface descriptor, look for the Class-Specific MS Interface Header to get bcdMSC
+        PUSB_COMMON_DESCRIPTOR pDescriptorHdr = USBD_ParseDescriptors(
+            pConfigurationDescriptor,       // Descriptor Buffer
+            configurationDescriptorSize,    // Descriptor Total Length
+            (PVOID)pInterfaceDescriptor,    // Start search postion
+            MIDI_CS_INTERFACE               // Descriptor Type
+        );
+        if (!pDescriptorHdr || pDescriptorHdr->bLength != 7)    // Class Specific MS Interface header length fixed
+        {
+            // Unknown interface so error
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Device unable to parse for MIDI MS Interface.\n");
+            status = STATUS_INSUFFICIENT_RESOURCES;
+            goto SelectExit;
+        }
+        midi_desc_header_t* pInterfaceDescHeader = (midi_desc_header_t*)pDescriptorHdr;
+        pDeviceContext->UsbMIDIbcdMSC = pInterfaceDescHeader->bcdMSC;
     }
 
     // Did we find a USB MIDI Interface?
@@ -1117,7 +1154,7 @@ Return Value:
     {
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
             "No configured endpoints for MIDI streaming discovered.\n");
-        return(STATUS_SEVERITY_ERROR);
+        return(STATUS_INSUFFICIENT_RESOURCES);
     }
     // First make sure past settings for pipes cleared
     pDeviceContext->MidiInPipe = NULL;
@@ -1149,7 +1186,7 @@ Return Value:
     {
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
             "Neither In or Out Endpoint discovered for MIDI Streaming.\n");
-        return(STATUS_SEVERITY_ERROR);
+        return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
     //
@@ -1184,8 +1221,8 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
-LONGLONG DEFAULT_CONTROL_TRANSFER_TIMEOUT = 5 * -1 * WDF_TIMEOUT_TO_SEC;
 
+LONGLONG DEFAULT_CONTROL_TRANSFER_TIMEOUT = 5 * -1 * WDF_TIMEOUT_TO_SEC;
 _Use_decl_annotations_
 PAGED_CODE_SEG
 NTSTATUS
@@ -1195,8 +1232,10 @@ USBMIDI2DriverGetGTB(
 /*++
 Routine Description:
 
-    In this callback to fetch and parse the Group Terminal Block information
+    Function to fetch and parse the Group Terminal Block information
     for the case using a USB MIDI 2.0 device.
+    If a USB MIDI 1.0 device, will call function to create Group
+    Terminal Block from USB MIDI 1.0 data.
 
 Arguments:
 
@@ -1230,9 +1269,14 @@ Return Value:
     devCtx = GetDeviceContext(Device);
 
     // If not USB MIDI 2.0 then error, do not proceed
-    if (!devCtx->UsbMIDIStreamingAlt)
+    if (devCtx->UsbMIDIbcdMSC != MIDI_CS_BCD_MIDI2)
     {
-        status = STATUS_INVALID_PARAMETER;
+        status = USBMIDI2DriverCreateGTB(Device);
+        if (!NT_SUCCESS(status))
+        {
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error creating GTB header for USB MIDI 1.0 device. %!STATUS!", status);
+            status = STATUS_SUCCESS;
+        }
         goto exit;
     }
 
@@ -1244,7 +1288,7 @@ Return Value:
     // Set timeout
     WDF_REQUEST_SEND_OPTIONS_SET_TIMEOUT(
         &sendOptions,
-        4*WDF_TIMEOUT_TO_SEC
+        WDF_TIMEOUT_TO_SEC
     );
 
     // Need interface number for setup packet
@@ -1322,7 +1366,7 @@ Return Value:
     // Set timeout
     WDF_REQUEST_SEND_OPTIONS_SET_TIMEOUT(
         &sendOptions,
-        4*WDF_TIMEOUT_TO_SEC
+        WDF_TIMEOUT_TO_SEC
     );
 
     // Get the Group Terminal Block descriptor for this device
@@ -1449,7 +1493,7 @@ Return Value:
 
         if (pUSBGTBs->aBlock[termBlockCount].iBlockItem)
         {
-            USHORT stringSize = grpTermBlockStringSizes[termBlockCount];
+            USHORT stringSize = grpTermBlockStringSizes[termBlockCount] - sizeof(WCHAR); //Always leave NULL
 
             // Fetch String descriptor from device
             status = WdfUsbTargetDeviceQueryString(
@@ -1479,6 +1523,33 @@ exit:
         WdfObjectDelete(gtbMemory);
     }
     return status;
+}
+
+_Use_decl_annotations_
+PAGED_CODE_SEG
+NTSTATUS
+USBMIDI2DriverCreateGTB(
+    WDFDEVICE    Device
+)
+/*++
+Routine Description:
+
+    Function to create Group Terminal Block information
+    from a USB MIDI 1.0 device.
+
+Arguments:
+
+    Device - the device context from USB Driver
+
+Return Value:
+
+    NONE
+
+--*/
+{
+    Device;
+
+    return STATUS_SUCCESS;
 }
 
 _Use_decl_annotations_
@@ -1553,7 +1624,7 @@ Return Value:
             }
 
             // If not alternate indicating USB MIDI 1.0
-            if (!pDeviceContext->UsbMIDIStreamingAlt)
+            if (pDeviceContext->UsbMIDIbcdMSC == MIDI_CS_BCD_MIDI1)
             {
                 // Need Cable Number
                 PUINT8 pBuffer = (PUINT8)&pReceivedWords[receivedIndex];
@@ -1576,7 +1647,7 @@ Return Value:
                     UMP_Packet_Struct.umpData[swapCount] = RtlUlongByteSwap(umpPacket.umpData.umpWords[swapCount]);
                 }
             }
-            else
+            else if (pDeviceContext->UsbMIDIbcdMSC == MIDI_CS_BCD_MIDI2)
             {
                 // Put data into buffer to pass
                 UMP_Packet_Struct.umpHeader.Position = NULL;    // For now allow service to tag time
@@ -1619,6 +1690,12 @@ Return Value:
                     UMP_Packet_Struct.umpHeader.ByteCount
                 );
                 receivedIndex += umpPacket.wordCount;
+            }
+            else
+            {
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                    "Unknown USB MIDI BCD Type.\n");
+                goto ReadCompleteExit;
             }
 
             // Send to circuit
@@ -1740,7 +1817,7 @@ Return Value:Amy
     pBuffer = (PUCHAR)BufferStart;
 
     // Check type of device connected to
-    if (!pDeviceContext->UsbMIDIStreamingAlt)
+    if (pDeviceContext->UsbMIDIbcdMSC == MIDI_CS_BCD_MIDI1)
     {
         //
         // Need to convert from UMP to USB MIDI 1.0 as a USB MIDI 1.0 device connected
@@ -2047,7 +2124,7 @@ Return Value:Amy
             writeBufferIndex = 0;
         }
     }
-    else
+    else if (pDeviceContext->UsbMIDIbcdMSC == MIDI_CS_BCD_MIDI2)
     {
         //
         // UMP device, just pass along
@@ -2122,6 +2199,12 @@ Return Value:Amy
             // Increment position
             transferPos += thisTransferSize;
         }
+    }
+    else
+    {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+            "Unknown MIDI BCD Inteface Type.\n");
+        goto DriverIoWriteExit;
     }
 
 DriverIoWriteExit:
