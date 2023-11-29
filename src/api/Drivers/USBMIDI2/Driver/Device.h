@@ -89,6 +89,8 @@ typedef struct _DEVICE_CONTEXT {
     WDFUSBINTERFACE             UsbControlInterface;
     WDFUSBINTERFACE             UsbMIDIStreamingInterface;
     UINT8                       UsbMIDIStreamingAlt;
+    UINT16                      UsbMIDIbcdMSC;
+    UINT8                       UsbMIDIInterfaceNumber;
     ULONG                       UsbDeviceTraits;
 
     // Buffers and information for USB MIDI 1.0 and UMP translations
@@ -179,6 +181,18 @@ __drv_requiresIRQL(PASSIVE_LEVEL)
 PAGED_CODE_SEG
 NTSTATUS
 USBMIDI2DriverGetGTB(
+    _In_ WDFDEVICE    Device
+);
+
+//
+// Function to Create Group Terminal Block information from
+// USB MIDI 1.0 device confiugation descriptor information.
+//
+_Must_inspect_result_
+__drv_requiresIRQL(PASSIVE_LEVEL)
+PAGED_CODE_SEG
+NTSTATUS
+USBMIDI2DriverCreateGTB(
     _In_ WDFDEVICE    Device
 );
 

@@ -28,15 +28,17 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             string headerLineFormat =
                 "[steelblue1]{0,8}[/] \u2502 " +
                 "[steelblue1]{1,19}[/] \u2502 " +
-                "[steelblue1]{2,10}[/] \u2502 " +
+                "[steelblue1]{2,7}[/] \u2502 " +
                 "[steelblue1]{3,-8}[/] {4,8} {5,8} {6,8} \u2502 " +
-                "[steelblue1]{7,-35}[/]";
+                "[steelblue1]{7,2}[/]|[steelblue1]{8,2}[/] \u2502 " +
+                "[steelblue1]{9,-35}[/]";
 
             string headerSparatorLine =
                 new string(horizontalLine, 8 + 1) + cross + new string(horizontalLine, 1) +
                 new string(horizontalLine, 19 + 1) + cross + new string(horizontalLine, 1) +
-                new string(horizontalLine, 10 + 3 + 1) + cross + new string(horizontalLine, 1) +
+                new string(horizontalLine, 7 + 3 + 1) + cross + new string(horizontalLine, 1) +
                 new string(horizontalLine, 8 * 4 + 4) + cross + new string(horizontalLine, 1) +
+                new string(horizontalLine, 5 + 1) + cross + new string(horizontalLine, 1) +
                 new string(horizontalLine, 35 + 1);
 
             // TODO: Localize
@@ -44,8 +46,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 headerLineFormat,
                 "Index",
                 "Timestamp",
-                "       " + "Offset",
+                "    " + "Offset",
                 "Words", "", "", "",
+                "Gr", "Ch", 
                 "Message Type"
                 );
 
@@ -104,12 +107,31 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 offsetValue = offsetMicroseconds;
             }
 
+
+            string groupText = string.Empty;
+
+            var messageType = MidiMessageUtility.GetMessageTypeFromMessageFirstWord(ump.Word0);
+
+            if (MidiMessageUtility.MessageTypeHasGroupField(messageType))
+            {
+                groupText = MidiMessageUtility.GetGroupFromMessageFirstWord(ump.Word0).NumberForDisplay.ToString().PadLeft(2);
+            }
+
+            string channelText = string.Empty;
+
+            if (MidiMessageUtility.MessageTypeHasChannelField(messageType))
+            {
+                channelText = MidiMessageUtility.GetChannelFromMessageFirstWord(ump.Word0).NumberForDisplay.ToString().PadLeft(2);
+            }
+
+
             string messageLineFormat =
                 "[grey]{0,8}[/] \u2502 " +
                 "[darkseagreen2]{1,19:N0}[/] \u2502 " +
-                "[darkseagreen2]{2,10:F2}[/] " + unitLabel + " \u2502 " +
+                "[darkseagreen2]{2,7:F2}[/] " + unitLabel + " \u2502 " +
                 "[deepskyblue1]{3,8}[/] [deepskyblue2]{4,8}[/] [deepskyblue3]{5,8}[/] [deepskyblue4]{6,8}[/] \u2502 " +
-                "[steelblue1_1]{7,-35}[/]";
+                "[indianred]{7, 2}[/] [mediumorchid3]{8, 2}[/] \u2502 " +
+                "[steelblue1_1]{9,-35}[/]";
 
 
             AnsiConsole.MarkupLine(
@@ -118,6 +140,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 timestamp,
                 offsetValue,
                 word0Text, word1Text, word2Text, word3Text,
+                groupText,
+                channelText,
                 detailedMessageType
                 );
 

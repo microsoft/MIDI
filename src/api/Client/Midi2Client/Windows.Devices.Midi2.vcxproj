@@ -225,9 +225,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
-      <ClInclude Include="MidiCIMessageUtility.h">
-          <DependentUpon>MidiCIMessageUtility.idl</DependentUpon>
-      </ClInclude>
+    <ClInclude Include="MidiCIMessageUtility.h">
+      <DependentUpon>MidiCIMessageUtility.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiEndpointConnection.h">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
     </ClInclude>
@@ -239,7 +239,7 @@
     </ClInclude>
     <ClInclude Include="MidiEndpointDeviceWatcher.h">
       <DependentUpon>MidiEndpointDeviceWatcher.idl</DependentUpon>
-    </ClInclude>
+    </ClInclude>	
     <ClInclude Include="MidiGroupTerminalBlock.h">
       <DependentUpon>MidiGroupTerminalBlock.idl</DependentUpon>
     </ClInclude>
@@ -338,9 +338,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
-      <ClCompile Include="MidiCIMessageUtility.cpp">
-          <DependentUpon>MidiCIMessageUtility.idl</DependentUpon>
-      </ClCompile>
+    <ClCompile Include="MidiCIMessageUtility.cpp">
+      <DependentUpon>MidiCIMessageUtility.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiEndpointConnection.cpp">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
     </ClCompile>
@@ -493,7 +493,6 @@
     <Midl Include="MidiSession.idl" />
     <Midl Include="MidiSessionSettings.idl" />
     <Midl Include="IMidiUniversalPacket.idl" />
-    <Midl Include="MidiStreamConfigurationCompleteEventArgs.idl" />
     <Midl Include="MidiStreamConfigurationRequestedSettings.idl" />
     <Midl Include="MidiStreamMessageBuilder.idl" />
     <Midl Include="MidiSystemExclusive8StatusEnum.idl" />

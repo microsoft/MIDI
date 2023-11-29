@@ -18,6 +18,6 @@ namespace Windows.Devices.Midi2
     interface IMidiMessageReceivedEventSource
     {      
         // callback for when a message comes in
-        event Windows.Foundation.TypedEventHandler<IInspectable, MidiMessageReceivedEventArgs> MessageReceived;
+        event Windows.Foundation.TypedEventHandler<IMidiMessageReceivedEventSource, MidiMessageReceivedEventArgs> MessageReceived;
     }
 }

@@ -71,7 +71,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             // if the main message received event is hooked up, and we're not skipping it, use it
             if (m_messageReceivedEvent && !skipMainMessageReceivedEvent)
             {
-                m_messageReceivedEvent((foundation::IInspectable)*this, *args);
+                m_messageReceivedEvent(*this, *args);
             }
 
             return S_OK;
@@ -110,9 +110,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
             
             m_options = options;
 
-            InitializePlugins();
-
-
             return true;
         }
         catch (winrt::hresult_error const& ex)
@@ -143,6 +140,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 try
                 {
+                    InitializePlugins();
+
+
                     DWORD mmcssTaskId{};  
 
                     winrt::check_hresult(m_endpointAbstraction->Initialize(
@@ -231,7 +231,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
             try
             {
-                plugin.Initialize();
+                plugin.Initialize(*this);
             }
             catch (...)
             {

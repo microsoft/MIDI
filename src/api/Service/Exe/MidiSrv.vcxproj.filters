@@ -45,13 +45,7 @@
     <ClCompile Include="MidiDevicePipe.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MidiEndpointInProtocolMetadataManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MidiConfigurationManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiDevicePipePluginProcessor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MidiDevicePipeMessageScheduler.cpp">
@@ -86,16 +80,10 @@
     <ClInclude Include="..\Inc\MidiDevicePipe.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MidiEndpointInProtocolMetadataManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MidiConfigurationManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiDevicePipePluginProcessor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MidiDevicePipeMessageScheduler.h">

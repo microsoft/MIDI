@@ -32,8 +32,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         foundation::IInspectable Tag() const noexcept { return m_tag; }
         void Tag(_In_ foundation::IInspectable const& value) { m_tag = value; }
 
-        midi2::MidiEndpointConnection Connection() const noexcept { return m_endpointConnection; }
-        void Connection(_In_ midi2::MidiEndpointConnection const& value) noexcept { m_endpointConnection = value; }
+        //midi2::MidiEndpointConnection Connection() const noexcept { return m_endpointConnection; }
+        //void Connection(_In_ midi2::MidiEndpointConnection const& value) noexcept { m_endpointConnection = value; }
 
 
 
@@ -59,7 +59,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool SuppressHandledMessages() { return m_suppressHandledMessages; }
         void SuppressHandledMessages(_In_ bool const value) { m_suppressHandledMessages = value; }
 
-        void Initialize();
+        void Initialize(_In_ midi2::MidiEndpointConnection const& endpointConnection);
         void OnEndpointConnectionOpened();
         void Cleanup();
 

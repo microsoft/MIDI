@@ -74,9 +74,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
     //}
 
 
-    void MidiVirtualDevice::Initialize()
+    _Use_decl_annotations_
+    void MidiVirtualDevice::Initialize(midi2::MidiEndpointConnection const& endpointConnection)
     {
-        throw hresult_not_implemented();
+        m_endpointConnection = endpointConnection;
     }
 
     void MidiVirtualDevice::OnEndpointConnectionOpened()

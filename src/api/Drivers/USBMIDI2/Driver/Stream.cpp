@@ -567,13 +567,18 @@ EvtMidi2NativeDataFormatCallback(
     WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxStreamGetCircuit(stream));
     PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
 
-    if (pDevCtx->UsbMIDIStreamingAlt)
+    if (pDevCtx->UsbMIDIbcdMSC == 0x0200)
     {
         RtlCopyMemory(params.Parameters.Property.Value, &KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET, sizeof(GUID));
     }
-    else
+    else if (pDevCtx->UsbMIDIbcdMSC == 0x0100)
     {
         RtlCopyMemory(params.Parameters.Property.Value, &KSDATAFORMAT_SUBTYPE_MIDI, sizeof(GUID));
+    }
+    else
+    {
+        // Unknown subtype so return NONE
+        RtlCopyMemory(params.Parameters.Property.Value, &KSDATAFORMAT_SUBTYPE_NONE, sizeof(GUID));
     }
 
     // return the amount of buffer actually used.

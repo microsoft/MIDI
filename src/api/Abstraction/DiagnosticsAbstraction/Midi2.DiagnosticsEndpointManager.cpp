@@ -183,10 +183,12 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(std::wstring const inst
     std::wstring mnemonic(TRANSPORT_MNEMONIC);
 
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
-    DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
+    //DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
     BYTE nativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
 
     std::wstring description = L"Diagnostics loopback endpoint. For testing purposes.";
+
+    auto endpointPurpose = (uint32_t)MidiEndpointDevicePurposePropertyValue::DiagnosticLoopback;
 
 
     DEVPROPERTY interfaceDevProperties[] = {
@@ -194,10 +196,8 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(std::wstring const inst
             DEVPROP_TYPE_STRING, static_cast<ULONG>((name.length() + 1) * sizeof(WCHAR)), (PVOID)name.c_str()},
         {{PKEY_MIDI_TransportSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_STRING, static_cast<ULONG>((name.length() + 1) * sizeof(WCHAR)), (PVOID)name.c_str()},
-        {{PKEY_MIDI_UmpLoopback, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),(PVOID)& devPropTrue},
-        {{PKEY_MIDI_UmpPing, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)),(PVOID)&devPropFalse},
+        {{PKEY_MIDI_EndpointDevicePurpose, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(endpointPurpose)),(PVOID)&endpointPurpose},
         {{PKEY_MIDI_UserSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_STRING, static_cast<ULONG>((description.length() + 1) * sizeof(WCHAR)), (PVOID)description.c_str() },
         {{PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},
@@ -253,9 +253,10 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(_In_ std::wstring const ins
     std::wstring mnemonic(TRANSPORT_MNEMONIC);
 
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
-    DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
+    //DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
     BYTE nativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
 
+    auto endpointPurpose = (uint32_t)MidiEndpointDevicePurposePropertyValue::DiagnosticPing;
 
     std::wstring description = L"Internal UMP Ping endpoint. Do not send messages to this endpoint.";
 
@@ -266,10 +267,8 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(_In_ std::wstring const ins
             DEVPROP_TYPE_STRING, static_cast<ULONG>((name.length() + 1) * sizeof(WCHAR)), (PVOID)name.c_str()},
         {{PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_GUID, static_cast<ULONG>(sizeof(GUID)), (PVOID)&AbstractionLayerGUID },        // essential to instantiate the right endpoint types
-        {{PKEY_MIDI_UmpPing, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),(PVOID)& devPropTrue},
-        {{PKEY_MIDI_UmpLoopback, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)),(PVOID)&devPropFalse},
+        {{PKEY_MIDI_EndpointDevicePurpose, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(endpointPurpose)),(PVOID)&endpointPurpose},
         {{PKEY_MIDI_UserSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_STRING, static_cast<ULONG>((description.length() + 1) * sizeof(WCHAR)), (PVOID)description.c_str() },
         {{PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},

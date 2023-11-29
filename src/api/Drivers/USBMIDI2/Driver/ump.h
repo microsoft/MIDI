@@ -126,8 +126,12 @@ typedef enum
   MIDI_CS_INTERFACE_IN_JACK   = 0x02,
   MIDI_CS_INTERFACE_OUT_JACK  = 0x03,
   MIDI_CS_INTERFACE_ELEMENT   = 0x04,
+  MIDI_CS_INTERFACE           = 0x24,
   MIDI_CS_INTERFACE_GR_TRM_BLOCK = 0x26,
 } midi_cs_interface_subtype_t;
+
+#define MIDI_CS_BCD_MIDI1       0x0100
+#define MIDI_CS_BCD_MIDI2       0x0200
 
 typedef enum
 {

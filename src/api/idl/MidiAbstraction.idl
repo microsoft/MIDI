@@ -45,7 +45,7 @@ interface IMidiAbstraction : IUnknown
     uuid(6C4B8BF9-8133-4B41-8303-1FDE78E20ACA),
     pointer_default(unique)
 ]
-interface IMidiIn : IUnknown
+interface IMidiIn : IUnknown        // IMidiMessageSource
 {
     HRESULT Initialize(
         [in] LPCWSTR deviceId,
@@ -62,7 +62,7 @@ interface IMidiIn : IUnknown
     uuid(F328D645-7D6D-4924-A7E3-9DEE245189F9),
     pointer_default(unique)
 ]
-interface IMidiOut : IUnknown
+interface IMidiOut : IUnknown       // IMidiMessageDestination
 {
     HRESULT Initialize(
         [in] LPCWSTR deviceId,
@@ -118,42 +118,3 @@ interface IMidiEndpointManager : IUnknown
     HRESULT Cleanup();
 };
 
-
-
-[
-    object,
-    local,
-    uuid(fa9d8e0c-c432-4fef-9687-46ee2555bc45),
-    pointer_default(unique)
-]
-interface IMidiServiceMessageProcessingPlugin : IUnknown
-{
-    HRESULT Initialize(
-        [in] IMidiBiDi* deviceSideConnection,
-        [in] IMidiBiDi* clientSideConnection,
-        [in] LPCWSTR configurationJson
-    );
-
-    HRESULT Cleanup();
-};
-
-
-
-//// This interface exists so apps can create endpoints through the API
-//// typically the EndpointManager implements this if API-driven device/endpoint
-//// creation is supported. Optional for any transport abstraction. Required for
-//// virtual / app-to-app MIDI
-//[
-//    object,
-//    local,
-//    uuid(0b56f71c-75b0-4209-8fdc-5cebe8815726),
-//    pointer_default(unique)
-//]
-//interface IMidiApiEndpointManagerExtension : IUnknown
-//{
-//    HRESULT ApplyConfiguration(         // IMidiEndpointManager could also include a function like this for changing device/endpoint names etc. TBD.
-//        [in]LPCWSTR configurationJson,  // typically this contains specs for one or more endpoints and any routing
-//        [out]LPWSTR resultJson         // contains Ids of created endpoints, or other status info.
-//    );
-//
-//};

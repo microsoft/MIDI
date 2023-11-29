@@ -37,19 +37,19 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    midi2::MidiMessageType MidiMessageUtility::GetMessageTypeFromFirstMessageWord(uint32_t const word0) noexcept
+    midi2::MidiMessageType MidiMessageUtility::GetMessageTypeFromMessageFirstWord(uint32_t const word0) noexcept
     {
         return (midi2::MidiMessageType)internal::GetUmpMessageTypeFromFirstWord(word0);
     }
 
     _Use_decl_annotations_
-    midi2::MidiPacketType MidiMessageUtility::GetPacketTypeFromFirstMessageWord(uint32_t const word0) noexcept
+    midi2::MidiPacketType MidiMessageUtility::GetPacketTypeFromMessageFirstWord(uint32_t const word0) noexcept
     {
         return (midi2::MidiPacketType)internal::GetUmpLengthInMidiWordsFromFirstWord(word0);
     }
 
     _Use_decl_annotations_
-    midi2::MidiGroup MidiMessageUtility::GetGroup(_In_ uint32_t const word0)
+    midi2::MidiGroup MidiMessageUtility::GetGroupFromMessageFirstWord(_In_ uint32_t const word0)
     {
         auto group = winrt::make<MidiGroup>(internal::GetGroupIndexFromFirstWord(word0));
         return group;
@@ -58,7 +58,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     // It's expected for the user to check to see if the message type has a group field before calling this
     _Use_decl_annotations_
-    uint32_t MidiMessageUtility::ReplaceGroup(uint32_t const word0, midi2::MidiGroup const newGroup) noexcept
+    uint32_t MidiMessageUtility::ReplaceGroupInMessageFirstWord(uint32_t const word0, midi2::MidiGroup const newGroup) noexcept
     {
         return internal::GetFirstWordWithNewGroup(word0, newGroup.Index());
     }
@@ -71,7 +71,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     _Use_decl_annotations_
-    midi2::MidiChannel MidiMessageUtility::GetChannel(_In_ uint32_t const word0)
+    midi2::MidiChannel MidiMessageUtility::GetChannelFromMessageFirstWord(_In_ uint32_t const word0)
     {
         auto channel = winrt::make<MidiChannel>(internal::GetChannelIndexFromFirstWord(word0));
         return channel;
@@ -80,7 +80,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     // It's expected for the user to check to see if the message type has a channel field before calling this
     _Use_decl_annotations_
-    uint32_t MidiMessageUtility::ReplaceChannel(uint32_t const word0, midi2::MidiChannel const newChannel) noexcept
+    uint32_t MidiMessageUtility::ReplaceChannelInMessageFirstWord(uint32_t const word0, midi2::MidiChannel const newChannel) noexcept
     {
         return internal::GetFirstWordWithNewChannel(word0, newChannel.Index());
     }
@@ -176,7 +176,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     winrt::hstring MidiMessageUtility::GetMessageFriendlyNameFromFirstWord(uint32_t const word0) noexcept
     {
-        switch (GetMessageTypeFromFirstMessageWord(word0))
+        switch (GetMessageTypeFromMessageFirstWord(word0))
         {
         case MidiMessageType::UtilityMessage32:
             switch (GetStatusFromUtilityMessage(word0))

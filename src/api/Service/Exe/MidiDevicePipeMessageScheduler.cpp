@@ -95,14 +95,23 @@ HRESULT MidiDevicePipeMessageScheduler::ProcessIncomingMidiMessage(
 
                     if (lock)
                     {
+                        // recycle the current received index whenever the queue is empty. Prevents long-term wrapping
+                        if (m_messageQueue.size() == 0)
+                        {
+                            m_currentReceivedIndex = 0;
+                        }
+
                         // schedule the message for sending in the future
 
                         if (m_messageQueue.size() < MIDI_OUTGOING_MESSAGE_QUEUE_MAX_MESSAGE_COUNT)
                         {
-                            ScheduledMidiMessage msg;
+                            ScheduledUmpMessage msg;
                             memcpy(msg.Data, data, size);
                             msg.ByteCount = size;
                             msg.Timestamp = timestamp;
+
+                            // this helps preserve receive order
+                            msg.ReceivedIndex = ++m_currentReceivedIndex;
 
                             m_messageQueue.push(msg);
 
@@ -151,7 +160,7 @@ HRESULT MidiDevicePipeMessageScheduler::ProcessIncomingMidiMessage(
 
 _Use_decl_annotations_
 HRESULT MidiDevicePipeMessageScheduler::SendMidiMessageNow(
-    ScheduledMidiMessage const message)
+    ScheduledUmpMessage const message)
 {
     if (!m_continueProcessing) return S_OK;
 

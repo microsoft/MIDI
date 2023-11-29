@@ -20,20 +20,20 @@ namespace winrt::Windows::Devices::Midi2::implementation
         static bool ValidateMessage96MessageType(_In_ uint32_t const word0) noexcept;
         static bool ValidateMessage128MessageType(_In_ uint32_t const word0) noexcept;
 
-        static midi2::MidiMessageType GetMessageTypeFromFirstMessageWord(_In_ uint32_t const word0) noexcept;
-        static midi2::MidiPacketType GetPacketTypeFromFirstMessageWord(_In_ uint32_t const word0) noexcept;
+        static midi2::MidiMessageType GetMessageTypeFromMessageFirstWord(_In_ uint32_t const word0) noexcept;
+        static midi2::MidiPacketType GetPacketTypeFromMessageFirstWord(_In_ uint32_t const word0) noexcept;
 
 
 
         // This is likely to need a change in logic as new messages are added
         static bool MessageTypeHasGroupField(_In_ midi2::MidiMessageType const messageType) noexcept;
-        static uint32_t ReplaceGroup(_In_ uint32_t const word0, _In_ midi2::MidiGroup const newGroup) noexcept;
-        static midi2::MidiGroup GetGroup(_In_ uint32_t const word0);
+        static uint32_t ReplaceGroupInMessageFirstWord(_In_ uint32_t const word0, _In_ midi2::MidiGroup const newGroup) noexcept;
+        static midi2::MidiGroup GetGroupFromMessageFirstWord(_In_ uint32_t const word0);
 
         // This is likely to need a change in logic as new messages are added
         static bool MessageTypeHasChannelField(_In_ midi2::MidiMessageType const messageType) noexcept;
-        static uint32_t ReplaceChannel(_In_ uint32_t const word0, _In_ midi2::MidiChannel const newChannel) noexcept;
-        static midi2::MidiChannel GetChannel(_In_ uint32_t const word0);
+        static uint32_t ReplaceChannelInMessageFirstWord(_In_ uint32_t const word0, _In_ midi2::MidiChannel const newChannel) noexcept;
+        static midi2::MidiChannel GetChannelFromMessageFirstWord(_In_ uint32_t const word0);
 
         static uint8_t GetFormFromStreamMessageFirstWord(_In_ uint32_t const word0) noexcept;
         static uint16_t GetStatusFromStreamMessageFirstWord(_In_ uint32_t const word0) noexcept;

@@ -29,14 +29,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
         foundation::IInspectable Tag() const noexcept { return m_tag; }
         void Tag(_In_ foundation::IInspectable const& value) { m_tag = value; }
 
-        midi2::MidiEndpointConnection Connection() const noexcept { return m_endpointConnection; }
-        void Connection(_In_ midi2::MidiEndpointConnection const& value) noexcept { m_endpointConnection = value; }
+        //midi2::MidiEndpointConnection Connection() const noexcept { return m_endpointConnection; }
+        //void Connection(_In_ midi2::MidiEndpointConnection const& value) noexcept { m_endpointConnection = value; }
 
 
         collections::IVector<midi2::MidiMessageType> IncludeMessageTypes() { return m_includedMessageTypes; }
 
         winrt::event_token MessageReceived(
-            _In_ foundation::TypedEventHandler<foundation::IInspectable, 
+            _In_ foundation::TypedEventHandler<midi2::IMidiMessageReceivedEventSource,
             _In_ midi2::MidiMessageReceivedEventArgs> const& handler)
         {
             return m_messageReceivedEvent.add(handler);
@@ -54,7 +54,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool PreventCallingFurtherListeners() noexcept { return m_preventCallingFurtherListeners; }
 
 
-        void Initialize();
+        void Initialize(_In_ midi2::MidiEndpointConnection const& endpointConnection);
         void OnEndpointConnectionOpened();
         void Cleanup();
 
@@ -77,7 +77,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         foundation::Collections::IVector<midi2::MidiMessageType>
             m_includedMessageTypes{ winrt::single_threaded_vector<midi2::MidiMessageType>() };
 
-        winrt::event<foundation::TypedEventHandler<foundation::IInspectable, midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;
+        winrt::event<foundation::TypedEventHandler<midi2::IMidiMessageReceivedEventSource, midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;
 
 
     };
