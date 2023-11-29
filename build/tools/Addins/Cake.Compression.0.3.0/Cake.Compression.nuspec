@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>Cake.Compression</id>
+    <version>0.3.0</version>
+    <authors>Artur Kordowski</authors>
+    <license type="file">LICENSE</license>
+    <licenseUrl>https://aka.ms/deprecateLicenseUrl</licenseUrl>
+    <icon>cake-contrib-medium.png</icon>
+    <projectUrl>https://github.com/akordowski/Cake.Compression</projectUrl>
+    <description>A Cake AddIn which provides compression functionality for BZip2, GZip and Zip.</description>
+    <copyright>Copyright (c) 2022 Artur Kordowski</copyright>
+    <tags>cake-addin cake build compression bzip2 gzip tar zip</tags>
+    <repository url="https://github.com/akordowski/Cake.Compression" />
+    <dependencies>
+      <group targetFramework=".NETCoreApp3.1">
+        <dependency id="SharpZipLib" version="1.3.1" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="net5.0">
+        <dependency id="SharpZipLib" version="1.3.1" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="net6.0">
+        <dependency id="SharpZipLib" version="1.3.1" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+</package>

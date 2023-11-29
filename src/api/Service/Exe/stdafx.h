@@ -89,9 +89,6 @@ class CMidiClientManager;
 
 
 
-#include "MidiTransformPipe.h"
-#include "MidiTransformManager.h"
-
 #include "MidiDevicePipeMessageScheduler.h"
 
 #include "MidiDevicePipe.h"
