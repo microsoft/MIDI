@@ -45,6 +45,9 @@
     <ClCompile Include="MidiEndpointListenerTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MidiMessageSchedulerTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -75,6 +78,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MidiEndpointListenerTests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessageSchedulerTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

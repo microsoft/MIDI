@@ -682,7 +682,7 @@ Task("CopyAPIArtifacts")
     CopyFiles(System.IO.Path.Combine(apiStagingDir, "Windows.Devices.Midi2.pri"), apiReleaseArtifactsFolder); 
     CopyFiles(System.IO.Path.Combine(apiStagingDir, "Windows.Devices.Midi2.h"), apiReleaseArtifactsFolder); 
 
-}
+});
 
 //////////////////////////////////////////////////////////////////////
 // TASK TARGETS
