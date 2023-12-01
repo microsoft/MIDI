@@ -29,7 +29,7 @@ app.Configure(config =>
             .WithAlias("ump")
             .WithAlias("endpoints")
             .WithDescription(Strings.CommandEnumerateEndpointsDescription)
-            .WithExample("enumerate", "ump-endpoints")
+            .WithExample("enumerate", "ump-endpoints", "--include-loopback")
             ;
 
         enumerate.AddCommand<EnumLegacyEndpointsCommand>("bytestream-endpoints")
@@ -52,23 +52,6 @@ app.Configure(config =>
     .WithAlias("enum");
 
 
-    
-    config.AddBranch("service", service =>
-    {
-        service.SetDescription(Strings.CommandServiceDescription);
-
-        service.AddCommand<ServiceStatusCommand>("status")
-            .WithDescription(Strings.CommandServiceStatusDescription)
-            .WithExample("service", "status")
-            ;
-
-        service.AddCommand<ServicePingCommand>("ping")
-            .WithDescription(Strings.CommandServicePingDescription)
-            .WithExample("service", "ping", "--count", "10", "--timeout", "5000", "--verbose")
-            ;
-    }).WithAlias("svc");
-
-
 
     config.AddBranch<EndpointCommandSettings>("endpoint", endpoint =>
     {
@@ -84,6 +67,7 @@ app.Configure(config =>
         endpoint.AddCommand<SendMessageCommand>("send-message")
             .WithAlias("send-ump")
             .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "send-message", "0x405F3AB7", "0x12345789", "--count", "10", "--delay", "20")
+            .WithExample("endpoint", "send-message", "0x21234567", "--count", "10", "--offset-microseconds", "2000000")
             .WithDescription(Strings.CommandSendMessageDescription)
             ;
 
@@ -108,9 +92,36 @@ app.Configure(config =>
             .WithDescription(Strings.CommandEndpointPropertiesDescription)
             ;
 
-
-
     }).WithAlias("ep");
+
+
+    config.AddBranch("service", service =>
+    {
+        service.SetDescription(Strings.CommandServiceDescription);
+
+        service.AddCommand<ServiceStatusCommand>("status")
+            .WithDescription(Strings.CommandServiceStatusDescription)
+            .WithExample("service", "status")
+            ;
+
+        service.AddCommand<ServicePingCommand>("ping")
+            .WithDescription(Strings.CommandServicePingDescription)
+            .WithExample("service", "ping", "--count", "10", "--timeout", "5000", "--verbose")
+            ;
+    }).WithAlias("svc");
+
+
+    config.AddCommand<TimeCommand>("time")
+        .WithDescription(Strings.CommandTimeDescription)
+        .WithExample("time")
+        .WithAlias("clock")
+        ;
+
+    config.AddCommand<WatchEndpointsCommand>("watch-endpoints")
+        .WithDescription(Strings.CommandWatchEndpointsDescription)
+        .WithExample("watch-endpoints")
+        .WithAlias("watch")
+        ;
 
 
     /*

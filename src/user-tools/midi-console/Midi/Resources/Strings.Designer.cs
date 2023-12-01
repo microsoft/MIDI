@@ -205,6 +205,24 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Get the current MIDI clock timestamp value.
+        /// </summary>
+        internal static string CommandTimeDescription {
+            get {
+                return ResourceManager.GetString("CommandTimeDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Watch endpoints for add/remove and PnP property change notifications.
+        /// </summary>
+        internal static string CommandWatchEndpointsDescription {
+            get {
+                return ResourceManager.GetString("CommandWatchEndpointsDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Index.
         /// </summary>
         internal static string CommonTableHeaderIndex {
@@ -396,9 +414,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Escape key pressed. Monitoring terminated..
         /// </summary>
-        internal static string MonitorEscapedPressedMessage {
+        internal static string MonitorEscapePressedMessage {
             get {
-                return ResourceManager.GetString("MonitorEscapedPressedMessage", resourceCulture);
+                return ResourceManager.GetString("MonitorEscapePressedMessage", resourceCulture);
             }
         }
         
@@ -908,6 +926,24 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         internal static string ValidationErrorPingTimeoutTooLow {
             get {
                 return ResourceManager.GetString("ValidationErrorPingTimeoutTooLow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Escape key pressed. Shutting down watcher..
+        /// </summary>
+        internal static string WatcherEscapePressedMessage {
+            get {
+                return ResourceManager.GetString("WatcherEscapePressedMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Press escape to stop monitoring..
+        /// </summary>
+        internal static string WatcherPressEscapeToStopWatchingMessage {
+            get {
+                return ResourceManager.GetString("WatcherPressEscapeToStopWatchingMessage", resourceCulture);
             }
         }
     }
