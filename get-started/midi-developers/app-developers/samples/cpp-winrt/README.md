@@ -14,7 +14,8 @@ For C++, Windows MIDI Services is only being tested with C++/WinRT, not CX or WR
 | Sample | Description |
 | -------| ----------- |
 | [Client API Basics](api-client-basics/) | Shows how to open a MidiSession, and connect to a MidiEndpoint to send and receive messages|
-| [Enumerate Endpoints](api-enum-endpoints/) | Demonstrats enumerating endpoints, getting group terminal and function blocks, and other properties|
+| [Enumerate Endpoints](api-enum-endpoints/) | Demonstrates enumerating endpoints, getting group terminal and function blocks, and other properties|
+| [Watch Endpoints](api-watch-endpoints/) | Demonstrates handling device add/remove notifications, as well as device property changes. Most applications will want to use the watcher so they can properly react to device plug/unplug, as well as things like Function Block updates.|
 
 ## Background information
 

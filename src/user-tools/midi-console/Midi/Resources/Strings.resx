@@ -165,6 +165,12 @@
   <data name="CommandServiceStatusDescription" xml:space="preserve">
     <value>Check to see if the Windows Service is running</value>
   </data>
+  <data name="CommandTimeDescription" xml:space="preserve">
+    <value>Get the current MIDI clock timestamp value</value>
+  </data>
+  <data name="CommandWatchEndpointsDescription" xml:space="preserve">
+    <value>Watch endpoints for add/remove and PnP property change notifications</value>
+  </data>
   <data name="CommonTableHeaderIndex" xml:space="preserve">
     <value>Index</value>
   </data>
@@ -228,7 +234,7 @@
   <data name="MonitorEndpointResultTableColumnHeaderWordsReceived" xml:space="preserve">
     <value>MIDI Words Received</value>
   </data>
-  <data name="MonitorEscapedPressedMessage" xml:space="preserve">
+  <data name="MonitorEscapePressedMessage" xml:space="preserve">
     <value>Escape key pressed. Monitoring terminated.</value>
   </data>
   <data name="MonitorMonitoringOnEndpointLabel" xml:space="preserve">
@@ -409,5 +415,11 @@ Timestamp</value>
   </data>
   <data name="ValidationErrorPingTimeoutTooLow" xml:space="preserve">
     <value>Specified timeout is too low. Please provide a value &gt;= 10ms.</value>
+  </data>
+  <data name="WatcherEscapePressedMessage" xml:space="preserve">
+    <value>Escape key pressed. Shutting down watcher.</value>
+  </data>
+  <data name="WatcherPressEscapeToStopWatchingMessage" xml:space="preserve">
+    <value>Press escape to stop monitoring.</value>
   </data>
 </root>
