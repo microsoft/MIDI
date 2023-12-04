@@ -351,3 +351,4 @@ MigrationBackup/
 build/dependencies/winui/WindowsAppRuntimeInstall-x64.exe
 build/dependencies/winui/WindowsAppRuntimeInstall-arm64.exe
 *.zip
+*.debugtarget
