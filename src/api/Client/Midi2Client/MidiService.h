@@ -24,7 +24,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ uint32_t const timeoutMilliseconds
             ) noexcept;
 
-        static foundation::Collections::IVectorView<midi2::MidiTransportInformation> GetInstalledTransports();
+        static foundation::Collections::IVectorView<midi2::MidiTransportPluginInformation> GetInstalledTransportPlugins();
+        static foundation::Collections::IVectorView<midi2::MidiMessageProcessingPluginInformation> GetInstalledMessageProcessingPlugins();
 
         static uint32_t GetOutgoingMessageQueueMaxMessageCapacity() { return (uint32_t)MIDI_OUTGOING_MESSAGE_QUEUE_MAX_MESSAGE_COUNT; }
 

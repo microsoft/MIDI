@@ -34,7 +34,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             public int Timeout { get; set; }
 
             [LocalizedDescription("ParameterServicePingVerbose")]
-            [CommandOption("-v|--verbose|--details")]
+            [CommandOption("-v|--verbose")]
             [DefaultValue(false)]
             public bool Verbose { get; set; }
 

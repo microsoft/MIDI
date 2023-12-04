@@ -23,12 +23,15 @@ import "MidiSendMessageResultEnum.idl";
 
 import "IMidiEndpointDefinedConnectionSettings.idl";
 
+import "IMidiEndpointConnection.idl";
+
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [default_interface]
     runtimeclass MidiEndpointConnection : Windows.Devices.Midi2.IMidiMessageReceivedEventSource,
-                                          Windows.Foundation.IClosable
+                                          Windows.Foundation.IClosable,
+                                          IMidiEndpointConnection
 
     {
         // Get the enumeration device selector for all compatible devices

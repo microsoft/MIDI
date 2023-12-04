@@ -54,7 +54,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool PreventCallingFurtherListeners() noexcept { return m_preventCallingFurtherListeners; }
 
 
-        void Initialize(_In_ midi2::MidiEndpointConnection const& endpointConnection);
+        void Initialize(_In_ midi2::IMidiEndpointConnection const& endpointConnection);
         void OnEndpointConnectionOpened();
         void Cleanup();
 

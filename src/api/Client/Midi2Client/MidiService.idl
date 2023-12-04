@@ -9,7 +9,8 @@
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-import "MidiTransportInformation.idl";
+import "MidiTransportPluginInformation.idl";
+import "MidiMessageProcessingPluginInformation.idl";
 import "MidiServicePingResponseSummary.idl";
 
 namespace Windows.Devices.Midi2
@@ -22,7 +23,8 @@ namespace Windows.Devices.Midi2
         static MidiServicePingResponseSummary PingService(UInt8 pingCount, UInt32 timeoutMilliseconds);
 
         // list all the installed transports like Virtual, USB, BLE1, etc
-        static IVectorView<MidiTransportInformation> GetInstalledTransports();
+        static IVectorView<MidiTransportPluginInformation> GetInstalledTransportPlugins();
+        static IVectorView<MidiMessageProcessingPluginInformation> GetInstalledMessageProcessingPlugins();
 
 
         // for the first release, this will always return false. But developers want to be able
