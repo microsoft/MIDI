@@ -427,24 +427,25 @@ namespace winrt::Windows::Devices::Midi2::implementation
         case MidiMessageType::Stream128:
             switch (GetStatusFromStreamMessageFirstWord(word0))
             {
-            case MIDI_STREAM_MESSAGE_STATUS_DEVICE_IDENTITY_NOTIFICATION:
-                return L"Device Identity Notification";
             case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_DISCOVERY:
                 return L"Endpoint Discovery";
             case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_INFO_NOTIFICATION:
                 return L"Endpoint Info Notification";
+            case MIDI_STREAM_MESSAGE_STATUS_DEVICE_IDENTITY_NOTIFICATION:
+                return L"Device Identity Notification";
             case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION:
                 return L"Endpoint Name Notification";
             case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID_NOTIFICATION:
                 return L"Product Instance Id Notification";
+            case MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_REQUEST:
+                return L"Stream Configuration Request";
+            case MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_NOTIFICATION:
+                return L"Stream Configuration Notification";
+
             case MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_INFO_NOTIFICATION:
                 return L"Function Block Info Notification";
             case MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION:
                 return L"Function Block Name Notification";
-            case MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_NOTIFICATION:
-                return L"Stream Configuration Notification";
-            case MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_REQUEST:
-                return L"Stream Configuration Request";
             default:
                 return L"Stream Message Unknown";
             }

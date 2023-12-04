@@ -150,9 +150,6 @@
     <ClCompile Include="MidiServicePingResponseSummary.cpp">
       <Filter>API\Service</Filter>
     </ClCompile>
-    <ClCompile Include="MidiTransportInformation.cpp">
-      <Filter>API\Service</Filter>
-    </ClCompile>
     <ClCompile Include="MidiStreamMessageBuilder.cpp">
       <Filter>API\Messages\Utility</Filter>
     </ClCompile>
@@ -176,6 +173,9 @@
     </ClCompile>
     <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
       <Filter>API\Enumeration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessageProcessingPluginInformation.cpp">
+      <Filter>API\Service</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -239,9 +239,6 @@
     <ClInclude Include="MidiServicePingResponseSummary.h">
       <Filter>API\Service</Filter>
     </ClInclude>
-    <ClInclude Include="MidiTransportInformation.h">
-      <Filter>API\Service</Filter>
-    </ClInclude>
     <ClInclude Include="MidiStreamMessageBuilder.h">
       <Filter>API\Messages\Utility</Filter>
     </ClInclude>
@@ -258,7 +255,6 @@
     <ClInclude Include="MidiProperty.h">
       <Filter>API\CI\Property Exchange</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h" />
     <ClInclude Include="MidiMessageConverter.h">
       <Filter>API\Messages\Utility</Filter>
     </ClInclude>
@@ -267,6 +263,15 @@
     </ClInclude>
     <ClInclude Include="MidiEndpointDeviceWatcher.h">
       <Filter>API\Enumeration</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessageProcessingPluginInformation.h">
+      <Filter>API\Service</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="StringResources.h">
+      <Filter>Resources</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -327,7 +332,7 @@
     <Midl Include="MidiServicePingResponseSummary.idl">
       <Filter>API\Service</Filter>
     </Midl>
-    <Midl Include="MidiTransportInformation.idl">
+    <Midl Include="MidiTransportPluginInformation.idl">
       <Filter>API\Service</Filter>
     </Midl>
     <Midl Include="IMidiEndpointMessageProcessingPlugin.idl">
@@ -450,6 +455,12 @@
     <Midl Include="MidiEndpointDeviceWatcher.idl">
       <Filter>API\Enumeration</Filter>
     </Midl>
+    <Midl Include="MidiMessageProcessingPluginInformation.idl">
+      <Filter>API\Service</Filter>
+    </Midl>
+    <Midl Include="IMidiEndpointConnection.idl">
+      <Filter>API\Endpoints\Connections\Interfaces</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />
@@ -478,6 +489,9 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Windows.Devices.Midi2.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="StringResources.rc">
       <Filter>Resources</Filter>
     </ResourceCompile>
   </ItemGroup>

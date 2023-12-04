@@ -6,28 +6,19 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+
+// Marker interface to prevent cyclic references. Not meant to be used directly
+// instead, always cast to MidiEndpointConnection (winrt .as<MidiEndpointConnect>() )
+
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
-
 
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
-    [default_interface]
-    runtimeclass MidiTransportInformation
+    [MIDI_INTERFACE_UUID("44385cdd-b64c-4195-8faa-8a61fc952a23",1.0)]
+    interface IMidiEndpointConnection
     {
-        String Id { get; };
 
-        String Name { get; };
-        String ShortName{ get; };
-
-        // TBD if we change this to an image type or URI instead
-        String IconPath{ get; };
-
-        String Author{ get; };
-        String ServicePluginFileName{ get; };
-
-        // controls whether or not endpoints can be created/deleted at runtime by apps or settings
-        Boolean IsRuntimeCreatable{ get; };
     }
 }

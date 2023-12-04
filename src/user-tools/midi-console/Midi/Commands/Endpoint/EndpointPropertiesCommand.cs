@@ -18,7 +18,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         public sealed class Settings : EndpointCommandSettings
         {
             [LocalizedDescription("ParameterMonitorEndpointVerbose")]
-            [CommandOption("-v|--verbose|--details")]
+            [CommandOption("-v|--verbose")]
             [DefaultValue(false)]
             public bool Verbose { get; set; }
         }
