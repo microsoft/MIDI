@@ -19,6 +19,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint8_t Index() const noexcept { return m_index; }
         void Index(_In_ uint8_t value) noexcept { if (MidiChannel::IsValidChannelIndex(value)) m_index = value; }
         
+        static winrt::hstring LabelShort() { return internal::ResourceManager::GetHString(IDS_MIDI_COMMON_LABEL_CHANNEL_SHORT); }
+        static winrt::hstring LabelFull() { return internal::ResourceManager::GetHString(IDS_MIDI_COMMON_LABEL_CHANNEL_FULL); }
+
         uint8_t NumberForDisplay() const noexcept { return m_index + 1; }
 
         static bool IsValidChannelIndex(_In_ uint8_t const index) noexcept { return index >= 0 && index <= 15; }
