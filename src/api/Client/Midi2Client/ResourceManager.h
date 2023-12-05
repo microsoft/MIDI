@@ -11,8 +11,12 @@
 
 namespace Windows::Devices::Midi2::Internal
 {
+    HMODULE GetCurrentModule();
+
     class ResourceManager
     {
+    private:
+
     public:
         static winrt::hstring GetHString(_In_ UINT resourceId);
     };

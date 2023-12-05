@@ -20,7 +20,11 @@ namespace Windows::Devices::Midi2::Internal
         wchar_t* resourcePointer{ NULL };
         
         // 0 cch to just get a read-only pointer to the string resource
-        int charCount = LoadStringW((HINSTANCE)NULL, resourceId, reinterpret_cast<LPWSTR>(&resourcePointer), 0);
+        int charCount = LoadStringW(
+            GetCurrentModule(),
+            resourceId, 
+            reinterpret_cast<LPWSTR>(&resourcePointer), 
+            0);
 
         if (charCount > 0)
         {
@@ -32,5 +36,20 @@ namespace Windows::Devices::Midi2::Internal
 
             return winrt::hstring{ };
         }
+    }
+
+
+    // let this float outside the class so we can get its address
+
+    HMODULE GetCurrentModule()
+    {
+        HMODULE hModule = NULL;
+
+        GetModuleHandleEx(
+            GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+            (LPCTSTR)GetCurrentModule,
+            &hModule);
+
+        return hModule;
     }
 }
