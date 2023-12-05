@@ -989,9 +989,7 @@ Return Value:
                 else
                 {
                     // Unknown interface so error
-                    TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Device detected has an unknown interface.\n");
-                    status = STATUS_INSUFFICIENT_RESOURCES;
-                    goto SelectExit;
+                    TraceEvents(TRACE_LEVEL_WARNING, TRACE_DEVICE, "Device detected has an unknown interface, ignored.\n");
                 }
                 continue; // Not MIDI so continue to next interface
             }
