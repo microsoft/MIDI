@@ -9,6 +9,8 @@
 
 // Marker interface to prevent cyclic references. Not meant to be used directly
 // instead, always cast to MidiEndpointConnection (winrt .as<MidiEndpointConnect>() )
+// named IMidiEndpointConnectionSource instead of IMidiEndpointConnection because 
+// it conflicts with auto-generated interface names otherwise
 
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
@@ -17,7 +19,7 @@ namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [MIDI_INTERFACE_UUID("44385cdd-b64c-4195-8faa-8a61fc952a23",1.0)]
-    interface IMidiEndpointConnection
+    interface IMidiEndpointConnectionSource
     {
 
     }

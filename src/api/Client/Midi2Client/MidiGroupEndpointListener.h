@@ -34,7 +34,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         collections::IVector<midi2::MidiGroup> IncludeGroups() { return m_includedGroups; }
 
-        void Initialize(_In_ midi2::IMidiEndpointConnection const& endpointConnection);
+        void Initialize(_In_ midi2::IMidiEndpointConnectionSource const& endpointConnection);
         void OnEndpointConnectionOpened();
         void Cleanup();
 

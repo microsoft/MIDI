@@ -94,11 +94,11 @@
     <Filter Include="API\CI\Property Exchange">
       <UniqueIdentifier>{5a082154-f6a6-4d09-be45-cc69e5ecf609}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resources">
-      <UniqueIdentifier>{3360af9e-3363-4faf-861f-7d778c66bf70}</UniqueIdentifier>
-    </Filter>
     <Filter Include="API\Endpoints\Metadata\Blocks">
       <UniqueIdentifier>{277e880f-09e8-43d0-aaa9-926305908cd1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Internal\Resources">
+      <UniqueIdentifier>{3360af9e-3363-4faf-861f-7d778c66bf70}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -176,6 +176,9 @@
     </ClCompile>
     <ClCompile Include="MidiMessageProcessingPluginInformation.cpp">
       <Filter>API\Service</Filter>
+    </ClCompile>
+    <ClCompile Include="ResourceManager.cpp">
+      <Filter>Internal\Resources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -268,10 +271,10 @@
       <Filter>API\Service</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
-      <Filter>Resources</Filter>
+      <Filter>Internal\Resources</Filter>
     </ClInclude>
-    <ClInclude Include="StringResources.h">
-      <Filter>Resources</Filter>
+    <ClInclude Include="ResourceManager.h">
+      <Filter>Internal\Resources</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -458,7 +461,7 @@
     <Midl Include="MidiMessageProcessingPluginInformation.idl">
       <Filter>API\Service</Filter>
     </Midl>
-    <Midl Include="IMidiEndpointConnection.idl">
+    <Midl Include="IMidiEndpointConnectionSource.idl">
       <Filter>API\Endpoints\Connections\Interfaces</Filter>
     </Midl>
   </ItemGroup>
@@ -489,10 +492,7 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Windows.Devices.Midi2.rc">
-      <Filter>Resources</Filter>
-    </ResourceCompile>
-    <ResourceCompile Include="StringResources.rc">
-      <Filter>Resources</Filter>
+      <Filter>Internal\Resources</Filter>
     </ResourceCompile>
   </ItemGroup>
 </Project>
