@@ -48,7 +48,7 @@
     <ClCompile Include="MidiConfigurationManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MidiDevicePipeMessageScheduler.cpp">
+    <ClCompile Include="MidiTransformPipe.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -86,7 +86,10 @@
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MidiDevicePipeMessageScheduler.h">
+    <ClInclude Include="..\Inc\MidiTransformPipe.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Inc\MidiPipe.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

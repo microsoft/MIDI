@@ -20,6 +20,14 @@ typedef enum
     MidiFlowBidirectional
 } MidiFlow;
 
+typedef enum
+{
+	MidiDataFormat_Invalid = 0,
+	MidiDataFormat_ByteStream = 0x1,
+	MidiDataFormat_UMP = 0x2,
+	MidiDataFormat_Any = 0x3
+} MidiDataFormat;
+
 [
     object,
     local,

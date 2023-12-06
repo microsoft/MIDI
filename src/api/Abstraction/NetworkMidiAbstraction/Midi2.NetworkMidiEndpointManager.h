@@ -96,7 +96,7 @@ private:
     // TBD if we need to keep this here as well. The MidiDeviceManager has its own vector of endpoints
     std::vector<std::unique_ptr<MidiUmpEndpointInfo>> m_AvailableMidiUmpEndpoints;
 
-    std::unique_ptr<MidiEndpointParentDeviceInfo> m_parentDevice{ nullptr };
+    std::unique_ptr<MidiEndpointParentDeviceInfo> m_ParentDevice{ nullptr };
 
-    json::JsonObject m_jsonObject{ nullptr };
+    json::JsonObject m_JsonObject{ nullptr };
 };

@@ -8,11 +8,12 @@
 #define PAGE_SIZE 0x1000
 #endif
 
-// UMP 32 is 4 bytes
-#define MINIMUM_UMP_DATASIZE 4
+// smallest UMP is 4 bytes, smallest bytestream is 3 bytes
+#define MINIMUM_LOOPED_DATASIZE 3
 
-// UMP 128 is 16 bytes
-#define MAXIMUM_UMP_DATASIZE 16
+// largest UMP is 16 bytes
+// we'll reuse that for the largest bytestream
+#define MAXIMUM_LOOPED_DATASIZE 16
 
 // we can't let the memory usage run away. This many messages is a 
 // lot, and performance will suffer above 5000 or so
@@ -87,6 +88,8 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_AbstractionLayer, 1); // DEVPROP_TYPE_GUID
 #define STRING_PKEY_MIDI_TransportMnemonic MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"2"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_TransportMnemonic, 2);     // DEVPROP_TYPE_STRING
 
+// Match MidiDataFormat defined in MidiDeviceManagerInterface.idl
+// TODO: Can these be converged to use the same enum?
 #define MIDI_PROP_NATIVEDATAFORMAT_BYTESTREAM (uint8_t)0x01
 #define MIDI_PROP_NATIVEDATAFORMAT_UMP (uint8_t)0x02
 
@@ -106,12 +109,16 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UniqueIdentifier, 4);     // DEVPROP_TYPE_STRING
 #define STRING_PKEY_MIDI_SupportsMulticlient MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"5"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_SupportsMulticlient, 5);     // DEVPROP_TYPE_BOOLEAN
 
+// A bitmask of the data format(s) the abstraction layer can use to talk to the system
+// For a MIDI 1 device, it can support MIDI_NATIVEDATAFORMAT_UMP or MIDI_NATIVEDATAFORMAT_BYTESTREAM
+// For a MIDI 2 device, it will support MIDI_NATIVEDATAFORMAT_UMP
+#define STRING_PKEY_MIDI_SupportedDataFormats MIDI_STRING_PKEY_GUID L",6"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_SupportedDataFormats, 6);     // DEVPROP_TYPE_BYTE uint8_t
 
 // this is the device-supplied name in the case of device-based transports
 // we have a copy here because we may rewrite FriendlyName
 #define STRING_PKEY_MIDI_TransportSuppliedEndpointName MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"14"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_TransportSuppliedEndpointName, 14);     // DEVPROP_TYPE_STRING
-
 
 // USB / KS Properties ============================================================================
 // Starts at 50
@@ -145,7 +152,6 @@ enum MidiEndpointDevicePurposePropertyValue
 // Valid values are in MidiEndpointDevicePurposePropertyValue
 #define STRING_PKEY_MIDI_EndpointDevicePurpose MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"100"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointDevicePurpose, 100);     // DEVPROP_TYPE_ uint32
-
 
 // In-protocol Endpoint information ================================================================
 // Starts at 150
@@ -297,7 +303,7 @@ struct MidiDevicePropertyFunctionBlock
     uint32_t Reserved2{ 0 };        // unused in UMP 1.1
 
     // +1 because we zero-terminate the name even though it's fixed max length.
-    // Most function blocks will have much shorter names. Should we instead have
+    // most function blocks will have much shorter names. Should we instead have
     // a more complicated variable-length scheme here?
     char Name[MIDI_FUNCTION_BLOCK_NAME_MAX_LENGTH+1]{0};
 };

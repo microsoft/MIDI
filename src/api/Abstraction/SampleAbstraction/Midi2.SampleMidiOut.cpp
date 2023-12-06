@@ -7,6 +7,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2SampleMidiOut::Initialize(
     LPCWSTR,
+    PABSTRACTIONCREATIONPARAMS,
     DWORD *
 )
 {

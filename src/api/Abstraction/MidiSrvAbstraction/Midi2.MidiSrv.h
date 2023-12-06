@@ -5,7 +5,7 @@ class CMidi2MidiSrv
 {
 public:
 
-    STDMETHOD(Initialize(_In_ LPCWSTR, _In_ MidiFlow, _In_ DWORD *, _In_opt_ IMidiCallback *));
+    STDMETHOD(Initialize(_In_ LPCWSTR, _In_ MidiFlow, _In_ PABSTRACTIONCREATIONPARAMS, _In_ DWORD *, _In_opt_ IMidiCallback *, _In_ LONGLONG));
     STDMETHOD(SendMidiMessage(_In_ PVOID message, _In_ UINT size, _In_ LONGLONG));
     STDMETHOD(Cleanup)();
 

@@ -19,6 +19,7 @@
 
 #define MIDI_IDL_IMPORT \
 import "Windows.Foundation.idl"; \
+import "Windows.Devices.Enumeration.idl"; \
 import "Windows.Data.Json.idl"; \
 import "Windows.Devices.Midi.idl"; \
 import "Windows.Devices.Enumeration.idl"; \

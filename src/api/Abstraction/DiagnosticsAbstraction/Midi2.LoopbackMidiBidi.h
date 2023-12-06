@@ -19,20 +19,21 @@ class CMidi2LoopbackMidiBiDi :
 {
 public:
 
-    STDMETHOD(Initialize(_In_ LPCWSTR, _In_ DWORD *, _In_opt_ IMidiCallback *));
+    STDMETHOD(Initialize(_In_ LPCWSTR, _In_ PABSTRACTIONCREATIONPARAMS, _In_ DWORD *, _In_opt_ IMidiCallback *, _In_ LONGLONG));
     STDMETHOD(SendMidiMessage(_In_ PVOID message, _In_ UINT size, _In_ LONGLONG));
-    STDMETHOD(Callback)(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
+    STDMETHOD(Callback)(_In_ PVOID, _In_ UINT, _In_ LONGLONG, _In_ LONGLONG);
     STDMETHOD(Cleanup)();
 
 private:
-    IMidiCallback* m_callback;
+    IMidiCallback* m_Callback;
+    LONGLONG m_Context;
 
-    MidiLoopbackBidiDevice* m_loopbackMidiDevice;
-    MidiPingBidiDevice* m_pingMidiDevice;
+    MidiLoopbackBidiDevice* m_LoopbackMidiDevice;
+    MidiPingBidiDevice* m_PingMidiDevice;
 
 
-    bool m_isEndpointA; // true if A, false if B or ping
-    bool m_isPing{ false };
+    bool m_IsEndpointA; // true if A, false if B or ping
+    bool m_IsPing{ false };
 };
 
 

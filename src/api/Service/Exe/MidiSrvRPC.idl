@@ -39,17 +39,11 @@ typedef struct ALLOCATED_SETTINGS
 } ALLOCATED_SETTINGS, *PALLOCATED_SETTINGS;
 // end temporary test RPC data, to be removed
 
-typedef enum
-{
-    LegacyMidi = 0,
-    MidiUMP
-} MidiProtocol;
-
 typedef ULONGLONG MidiClientHandle;
 
 typedef struct MIDISRV_CLIENTCREATION_PARAMS
 {
-    MidiProtocol Protocol;
+    MidiDataFormat DataFormat;
     MidiFlow     Flow;
     ULONG        BufferSize;
 } MIDISRV_CLIENTCREATION_PARAMS, *PMIDISRV_CLIENTCREATION_PARAMS;
@@ -69,6 +63,7 @@ typedef struct MIDISRV_CLIENT
     ULONG MidiOutBufferSize;
 
     MidiClientHandle ClientHandle;
+    MidiDataFormat DataFormat;
 } MIDISRV_CLIENT, *PMIDISRV_CLIENT;
 
 [

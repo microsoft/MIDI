@@ -34,13 +34,11 @@ KSMidiDevice::Initialize(
     LPCWSTR Device,
     HANDLE Filter,
     UINT PinId,
-    BOOL UseCyclic,
-    BOOL UseUMP,
+    MidiTransport Transport,
     ULONG& BufferSize
 )
 {
-    m_IsLooped = UseCyclic;
-    m_IsUMP = UseUMP;
+    m_Transport = Transport;
 
     m_FilterFilename = wil::make_cotaskmem_string_nothrow(Device);
     RETURN_IF_NULL_ALLOC(m_FilterFilename);
@@ -69,9 +67,11 @@ HRESULT
 KSMidiDevice::OpenStream(ULONG& BufferSize
 )
 {
-    RETURN_IF_FAILED(InstantiateMidiPin(m_Filter.get(), m_PinID, m_IsLooped, m_IsUMP, &m_Pin));
+    RETURN_IF_FAILED(InstantiateMidiPin(m_Filter.get(), m_PinID, m_Transport, &m_Pin));
 
-    if (m_IsLooped)
+    BOOL looped = ((m_Transport == MidiTransport_CyclicByteStream) || (m_Transport == MidiTransport_CyclicUMP));
+
+    if (looped)
     {
         m_MidiPipe.reset(new (std::nothrow) MEMORY_MAPPED_PIPE);
         RETURN_IF_NULL_ALLOC(m_MidiPipe);
@@ -244,20 +244,19 @@ KSMidiOutDevice::Initialize(
     LPCWSTR Device,
     HANDLE Filter,
     UINT PinId,
-    BOOL Cyclic,
-    BOOL UseUMP,
+    MidiTransport Transport,
     ULONG BufferSize,
     DWORD* MmcssTaskId
 )
 {
-    RETURN_IF_FAILED(KSMidiDevice::Initialize(Device, Filter, PinId, Cyclic, UseUMP, BufferSize));
+    RETURN_IF_FAILED(KSMidiDevice::Initialize(Device, Filter, PinId, Transport, BufferSize));
 
     m_MmcssTaskId = *MmcssTaskId;
     if (m_CrossProcessMidiPump)
     {
         std::unique_ptr<MEMORY_MAPPED_PIPE> emptyPipe;
         // we're sending midi messages here, so this is a midi out pipe, midi in pipe is unused
-        RETURN_IF_FAILED(m_CrossProcessMidiPump->Initialize(MmcssTaskId, emptyPipe, m_MidiPipe, nullptr));
+        RETURN_IF_FAILED(m_CrossProcessMidiPump->Initialize(MmcssTaskId, emptyPipe, m_MidiPipe, nullptr, 0));
     }
     *MmcssTaskId = m_MmcssTaskId;
 
@@ -414,7 +413,7 @@ KSMidiInDevice::SendRequestToDriver()
             // is closed and the SyncIoctl returns, it may succeed, but have no data.
             if (m_MidiInCallback && payloadSize > 0)
             {
-                m_MidiInCallback->Callback(data, payloadSize, kssh.PresentationTime.Time);
+                m_MidiInCallback->Callback(data, payloadSize, kssh.PresentationTime.Time, m_MidiInCallbackContext);
             }
         }
         else
@@ -457,22 +456,22 @@ KSMidiInDevice::Initialize(
     LPCWSTR Device,
     HANDLE Filter,
     UINT PinId,
-    BOOL Cyclic,
-    BOOL UseUMP,
+    MidiTransport Transport,
     ULONG BufferSize,
     DWORD* MmcssTaskId,
-    IMidiCallback *Callback
+    IMidiCallback *Callback,
+    LONGLONG Context
 )
 {
     RETURN_HR_IF(E_INVALIDARG, nullptr == Callback);
 
-    RETURN_IF_FAILED(KSMidiDevice::Initialize(Device, Filter, PinId, Cyclic, UseUMP, BufferSize));
+    RETURN_IF_FAILED(KSMidiDevice::Initialize(Device, Filter, PinId, Transport, BufferSize));
 
     if (m_CrossProcessMidiPump)
     {
         std::unique_ptr<MEMORY_MAPPED_PIPE> emptyPipe;
         // we're getting midi messages here, so this is a midi in pipe, midi out pipe is unused
-        RETURN_IF_FAILED(m_CrossProcessMidiPump->Initialize(MmcssTaskId, m_MidiPipe, emptyPipe, Callback));
+        RETURN_IF_FAILED(m_CrossProcessMidiPump->Initialize(MmcssTaskId, m_MidiPipe, emptyPipe, Callback, Context));
     }
     else
     {
@@ -483,6 +482,7 @@ KSMidiInDevice::Initialize(
 
         // grab the callback/lambda that was passed in, for use later for message callbacks.
         m_MidiInCallback = Callback;
+        m_MidiInCallbackContext = Context;
 
         m_ThreadHandle.reset(CreateThread(nullptr, 0, MidiInWorker, this, 0, nullptr));
         RETURN_LAST_ERROR_IF_NULL(m_ThreadHandle);

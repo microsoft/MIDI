@@ -24,12 +24,12 @@ MidiDeviceTable& MidiDeviceTable::Current()
 
 MidiPingBidiDevice* MidiDeviceTable::GetPingDevice()
 {
-    return &m_pingDevice;
+    return &m_PingDevice;
 }
 
 
 MidiLoopbackBidiDevice* MidiDeviceTable::GetBidiDevice()
 {
-    return &m_bidiDevice;
+    return &m_BidiDevice;
 }
 

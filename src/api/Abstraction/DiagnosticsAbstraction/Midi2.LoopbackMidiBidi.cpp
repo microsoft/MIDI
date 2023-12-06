@@ -13,9 +13,11 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2LoopbackMidiBiDi::Initialize(
-    LPCWSTR endpointId,
+    LPCWSTR EndpointId,
+    PABSTRACTIONCREATIONPARAMS CreationParams,
     DWORD *,
-    IMidiCallback * callback
+    IMidiCallback * Callback,
+    LONGLONG Context
 )
 {
     TraceLoggingWrite(
@@ -25,11 +27,22 @@ CMidi2LoopbackMidiBiDi::Initialize(
         TraceLoggingPointer(this, "this")
         );
 
-    RETURN_HR_IF_NULL(E_INVALIDARG, callback);
-    m_callback = callback;
+    RETURN_HR_IF_NULL(E_INVALIDARG, Callback);
+    RETURN_HR_IF_NULL(E_INVALIDARG, CreationParams);
 
+    m_Callback = Callback;
+    m_Context = Context;
 
-    std::wstring id{ endpointId };
+    // loopback supports only UMP, reject requests for bytestream
+    if (CreationParams->DataFormat != MidiDataFormat_UMP && 
+        CreationParams->DataFormat != MidiDataFormat_Any)
+    {
+        RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE));
+    }
+
+    CreationParams->DataFormat = MidiDataFormat_UMP;
+
+    std::wstring id{ EndpointId };
     InPlaceToLower(id);
     //OutputDebugString(id.c_str());
 
@@ -50,43 +63,41 @@ CMidi2LoopbackMidiBiDi::Initialize(
     // Both loopback endpoints share the same internal device as a simple way of routing between the two. 
     // The Ping device is separate
 
-    m_isEndpointA = false;
-    m_loopbackMidiDevice = nullptr;
-    m_pingMidiDevice = nullptr;
-
-
+    m_IsEndpointA = false;
+    m_LoopbackMidiDevice = nullptr;
+    m_PingMidiDevice = nullptr;
 
     if (id.find(pingBiDiId) != std::wstring::npos)
     {
         // ping bidi endpoint
 
-        m_isPing = true;
+        m_IsPing = true;
 
-        m_pingMidiDevice = (MidiPingBidiDevice*)(MidiDeviceTable::Current().GetPingDevice());
-        m_pingMidiDevice->SetCallback(this);
+        m_PingMidiDevice = (MidiPingBidiDevice*)(MidiDeviceTable::Current().GetPingDevice());
+        m_PingMidiDevice->SetCallback(this, 0);
     }
     else if (id.find(loopBiDiAId) != std::wstring::npos)
     {
         // bidi endpoint A
 
-        m_isEndpointA = true;
-        m_loopbackMidiDevice = (MidiLoopbackBidiDevice*)(MidiDeviceTable::Current().GetBidiDevice());
-        m_loopbackMidiDevice->SetCallbackA(this);
+        m_IsEndpointA = true;
+        m_LoopbackMidiDevice = (MidiLoopbackBidiDevice*)(MidiDeviceTable::Current().GetBidiDevice());
+        m_LoopbackMidiDevice->SetCallbackA(this, 0);
     }
     else if (id.find(loopBiDiBId) != std::wstring::npos)
     {
         // bidi endpoint B
 
-        m_isEndpointA = false;
-        m_loopbackMidiDevice = (MidiLoopbackBidiDevice*)(MidiDeviceTable::Current().GetBidiDevice());
-        m_loopbackMidiDevice->SetCallbackB(this);
+        m_IsEndpointA = false;
+        m_LoopbackMidiDevice = (MidiLoopbackBidiDevice*)(MidiDeviceTable::Current().GetBidiDevice());
+        m_LoopbackMidiDevice->SetCallbackB(this, 0);
     }
     else
     {
         return E_FAIL;
     }
 
-    //RETURN_HR_IF_NULL(E_POINTER, m_midiDevice);
+    //RETURN_HR_IF_NULL(E_POINTER, m_MidiDevice);
 
     return S_OK;
 }
@@ -101,24 +112,24 @@ CMidi2LoopbackMidiBiDi::Cleanup()
         TraceLoggingPointer(this, "this")
         );
 
+    if (m_LoopbackMidiDevice != nullptr && m_IsEndpointA)
+    {
+        m_LoopbackMidiDevice->CleanupA();
+        m_LoopbackMidiDevice = nullptr;
+    }
+    else if (m_LoopbackMidiDevice != nullptr && !m_IsEndpointA)
+    {
+        m_LoopbackMidiDevice->CleanupB();
+        m_LoopbackMidiDevice = nullptr;
+    }
+    else if (m_PingMidiDevice != nullptr && m_IsPing)
+    {
+        m_PingMidiDevice->Cleanup();
+        m_PingMidiDevice = nullptr;
+    }
 
-    if (m_loopbackMidiDevice != nullptr && m_isEndpointA)
-    {
-        m_loopbackMidiDevice->CleanupA();
-        m_loopbackMidiDevice = nullptr;
-    }
-    else if (m_loopbackMidiDevice != nullptr && !m_isEndpointA)
-    {
-        m_loopbackMidiDevice->CleanupB();
-        m_loopbackMidiDevice = nullptr;
-    }
-    else if (m_pingMidiDevice != nullptr && m_isPing)
-    {
-        m_pingMidiDevice->Cleanup();
-        m_pingMidiDevice = nullptr;
-    }
-
-    m_callback = nullptr;
+    m_Callback = nullptr;
+    m_Context = 0;
 
     return S_OK;
 }
@@ -126,43 +137,44 @@ CMidi2LoopbackMidiBiDi::Cleanup()
 _Use_decl_annotations_
 HRESULT
 CMidi2LoopbackMidiBiDi::SendMidiMessage(
-    PVOID message,
-    UINT size,
-    LONGLONG timestamp
+    PVOID Message,
+    UINT Size,
+    LONGLONG Timestamp
 )
 {
-    RETURN_HR_IF_NULL(E_INVALIDARG, message);
-    RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
+    RETURN_HR_IF_NULL(E_INVALIDARG, Message);
+    RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
     
-    if (m_isPing)
+    if (m_IsPing)
     {
-        RETURN_HR_IF_NULL(E_POINTER, m_pingMidiDevice);
-        return m_pingMidiDevice->SendMidiMessage(message, size, timestamp);
+        RETURN_HR_IF_NULL(E_POINTER, m_PingMidiDevice);
+        return m_PingMidiDevice->SendMidiMessage(Message, Size, Timestamp);
     }
-    else if (m_isEndpointA)
+    else if (m_IsEndpointA)
     {
-        RETURN_HR_IF_NULL(E_POINTER, m_loopbackMidiDevice);
-        return m_loopbackMidiDevice->SendMidiMessageFromAToB(message, size, timestamp);
+        RETURN_HR_IF_NULL(E_POINTER, m_LoopbackMidiDevice);
+        return m_LoopbackMidiDevice->SendMidiMessageFromAToB(Message, Size, Timestamp);
     }
     else
     {
-        RETURN_HR_IF_NULL(E_POINTER, m_loopbackMidiDevice);
-        return m_loopbackMidiDevice->SendMidiMessageFromBToA(message, size, timestamp);
+        RETURN_HR_IF_NULL(E_POINTER, m_LoopbackMidiDevice);
+        return m_LoopbackMidiDevice->SendMidiMessageFromBToA(Message, Size, Timestamp);
     }
 }
 
 _Use_decl_annotations_
 HRESULT
 CMidi2LoopbackMidiBiDi::Callback(
-    PVOID message,
-    UINT size,
-    LONGLONG timestamp
+    PVOID Message,
+    UINT Size,
+    LONGLONG Timestamp,
+    LONGLONG
 )
 {
-    RETURN_HR_IF_NULL(E_INVALIDARG, message);
-    RETURN_HR_IF_NULL(E_POINTER, m_callback);
-    RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
+    RETURN_HR_IF_NULL(E_INVALIDARG, Message);
+    RETURN_HR_IF_NULL(E_POINTER, m_Callback);
+    RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
 
-    return m_callback->Callback(message, size, timestamp);
+    return m_Callback->Callback(Message, Size, Timestamp, m_Context);
 }
 

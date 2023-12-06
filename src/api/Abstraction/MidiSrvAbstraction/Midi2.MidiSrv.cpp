@@ -8,8 +8,10 @@ HRESULT
 CMidi2MidiSrv::Initialize(
     LPCWSTR Device,
     MidiFlow Flow,
+    PABSTRACTIONCREATIONPARAMS CreationParams,
     DWORD * MmcssTaskId,
-    IMidiCallback * Callback
+    IMidiCallback * Callback,
+    LONGLONG Context
 )
 {
     TraceLoggingWrite(
@@ -44,9 +46,8 @@ CMidi2MidiSrv::Initialize(
         }
     });
 
-    creationParams.Protocol = MidiUMP;
     creationParams.Flow = Flow;
-
+    creationParams.DataFormat = CreationParams->DataFormat;
     // Todo: client side buffering requests to come from some service setting?
     creationParams.BufferSize = PAGE_SIZE;
 
@@ -63,6 +64,7 @@ CMidi2MidiSrv::Initialize(
     }());
 
     m_ClientHandle = client->ClientHandle;
+    CreationParams->DataFormat = client->DataFormat;
 
     std::unique_ptr<MEMORY_MAPPED_PIPE> midiInPipe;
     std::unique_ptr<MEMORY_MAPPED_PIPE> midiOutPipe;
@@ -112,7 +114,7 @@ CMidi2MidiSrv::Initialize(
     m_MidiPump.reset(new (std::nothrow) CMidiXProc());
     RETURN_IF_NULL_ALLOC(m_MidiPump);
 
-    RETURN_IF_FAILED(m_MidiPump->Initialize(MmcssTaskId, midiInPipe, midiOutPipe, Callback));
+    RETURN_IF_FAILED(m_MidiPump->Initialize(MmcssTaskId, midiInPipe, midiOutPipe, Callback, Context));
 
     cleanupOnError.release();
 

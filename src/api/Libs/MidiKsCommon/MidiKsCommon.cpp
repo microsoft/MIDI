@@ -13,6 +13,7 @@
 #include <wil\result_macros.h>
 
 #include <Devpkey.h>
+#include "MidiDefs.h"
 #include "MidiKsDef.h"
 #include "MidiKsCommon.h"
 
@@ -35,6 +36,8 @@ SyncIoctl
 
     ZeroMemory(&overlapped, sizeof(overlapped));
 
+    // if a bytes returned pointer was not provided,
+    // supply our own.
     if (!pulBytesReturned)
     {
         pulBytesReturned = &ulBytesReturned;
@@ -47,12 +50,6 @@ SyncIoctl
     overlappedHandle.reset(CreateEvent(NULL,FALSE,FALSE,NULL));
     RETURN_LAST_ERROR_IF(overlappedHandle.get() == nullptr);
     overlapped.hEvent = overlappedHandle.get();
-
-    // Flag the event by setting the low-order bit so we
-    // don't get completion port notifications.
-    // Really! - see the description of the lpOverlapped parameter in
-    // the docs for GetQueuedCompletionStatus
-    overlapped.hEvent = (HANDLE)((DWORD_PTR)overlapped.hEvent | 0x1);
 
     BOOL fRes = DeviceIoControl(
         hHandle, 
@@ -77,7 +74,16 @@ SyncIoctl
             }
         }
 
-        RETURN_IF_FAILED(HRESULT_FROM_WIN32(lastError));
+        // ERROR_MORE_DATA is an expected error code, and the
+        // output buffer size needs to be retained for this error.
+        if (lastError == ERROR_MORE_DATA)
+        {
+            clearOnFailure.release();
+            return HRESULT_FROM_WIN32(ERROR_MORE_DATA);
+        }
+
+        RETURN_IF_FAILED_WITH_EXPECTED(HRESULT_FROM_WIN32(lastError),
+                                        HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
     }
 
     clearOnFailure.release();
@@ -103,16 +109,75 @@ PinPropertySimple(
     ksPProp.PinId = PinId;
     ksPProp.Reserved = 0;
 
-    RETURN_IF_FAILED(SyncIoctl(
+    RETURN_IF_FAILED_WITH_EXPECTED(SyncIoctl(
         Filter,
         IOCTL_KS_PROPERTY,
         &ksPProp,
         sizeof(KSP_PIN),
         Value,
         ValueSize,
-        nullptr));
+        nullptr),
+        HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
     return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+PinPropertyAllocate(
+    HANDLE Filter,
+    ULONG   PinId,
+    REFGUID GuidPropertySet,
+    ULONG   Property,
+    PVOID   *Value,
+    ULONG   *ValueSize)
+{
+    KSP_PIN ksPProp;
+    ULONG bytesRequired {0};
+
+    ksPProp.Property.Set = GuidPropertySet;
+    ksPProp.Property.Id = Property;
+    ksPProp.Property.Flags = KSPROPERTY_TYPE_GET;
+    ksPProp.PinId = PinId;
+    ksPProp.Reserved = 0;
+
+    HRESULT hr = SyncIoctl(
+        Filter,
+        IOCTL_KS_PROPERTY,
+        &ksPProp,
+        sizeof(KSP_PIN),
+        nullptr,
+        0,
+        &bytesRequired);
+
+    if (hr == HRESULT_FROM_WIN32(ERROR_MORE_DATA) && bytesRequired > 0)
+    {
+        std::unique_ptr<BYTE> data;
+
+        data.reset(new (std::nothrow) BYTE[bytesRequired]);
+        RETURN_IF_NULL_ALLOC(data);
+
+        RETURN_IF_FAILED(SyncIoctl(
+            Filter,
+            IOCTL_KS_PROPERTY,
+            &ksPProp,
+            sizeof(KSP_PIN),
+            data.get(),
+            bytesRequired,
+            nullptr));
+
+        *Value = (PVOID) data.release();
+        if (ValueSize)
+        {
+            *ValueSize = bytesRequired;
+        }
+        return S_OK;
+    }
+
+    RETURN_IF_FAILED_WITH_EXPECTED(hr, HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED));
+
+    // The call to retrieve the buffer size returned S_OK, which is unexpected
+    return E_UNEXPECTED;
 }
 
 _Use_decl_annotations_
@@ -148,8 +213,7 @@ HRESULT
 InstantiateMidiPin(
     HANDLE Filter,
     ULONG PinId,
-    BOOL Looped,
-    BOOL UMP,
+    MidiTransport Transport,
     HANDLE* PinHandle
 )
 {
@@ -168,9 +232,12 @@ InstantiateMidiPin(
     connect = &PinConnectBlob.Connect;
     dataFormat = &PinConnectBlob.DataFormat;
 
+    BOOL looped = ((Transport == MidiTransport_CyclicByteStream) || (Transport == MidiTransport_CyclicUMP));
+    BOOL ump = (Transport == MidiTransport_CyclicUMP);
+
     // KSPIN_INTERFACE
     connect->Interface.Set =   KSINTERFACESETID_Standard;
-    connect->Interface.Id  =   Looped? KSINTERFACE_STANDARD_LOOPED_STREAMING : KSINTERFACE_STANDARD_STREAMING;
+    connect->Interface.Id  =   looped ? KSINTERFACE_STANDARD_LOOPED_STREAMING : KSINTERFACE_STANDARD_STREAMING;
     connect->Interface.Flags = 0;
 
     // KSPIN_MEDIUM
@@ -188,7 +255,7 @@ InstantiateMidiPin(
     // Fill data format.
     dataFormat->FormatSize = sizeof(KSDATAFORMAT);
     dataFormat->MajorFormat = KSDATAFORMAT_TYPE_MUSIC;
-    dataFormat->SubFormat = UMP?KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET:KSDATAFORMAT_SUBTYPE_MIDI;
+    dataFormat->SubFormat = ump ? KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET : KSDATAFORMAT_SUBTYPE_MIDI;
     dataFormat->Specifier = KSDATAFORMAT_SPECIFIER_NONE;
    
     // create the MIDI pin

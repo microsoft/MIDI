@@ -7,12 +7,14 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2KSMidiOut::Initialize(
-    LPCWSTR Device,
+    LPCWSTR Device,   
+    PABSTRACTIONCREATIONPARAMS CreationParams,
     DWORD * MmCssTaskId
 )
 {
     RETURN_HR_IF(E_INVALIDARG, nullptr == Device);
     RETURN_HR_IF(E_INVALIDARG, nullptr == MmCssTaskId);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == CreationParams);
 
     TraceLoggingWrite(
         MidiKSAbstractionTelemetryProvider::Provider(),
@@ -26,7 +28,7 @@ CMidi2KSMidiOut::Initialize(
     std::unique_ptr<CMidi2KSMidi> midiDevice(new (std::nothrow) CMidi2KSMidi());
     RETURN_IF_NULL_ALLOC(midiDevice);
 
-    RETURN_IF_FAILED(midiDevice->Initialize(Device, MidiFlowOut, MmCssTaskId, nullptr));
+    RETURN_IF_FAILED(midiDevice->Initialize(Device, MidiFlowOut, CreationParams, MmCssTaskId, nullptr, 0));
     m_MidiDevice = std::move(midiDevice);
 
     return S_OK;

@@ -10,6 +10,8 @@
 #include <wil\resource.h>
 #include <wil\result_macros.h>
 
+#include "MidiDefs.h"
+#include "MidiKsDef.h"
 #include "MidiKsCommon.h"
 #include "MidiKsEnum.h"
 
@@ -46,9 +48,7 @@ KSMidiDeviceEnum::EnumerateFilters()
         {
             wil::unique_handle hPin;
             KSPIN_DATAFLOW dataFlow = (KSPIN_DATAFLOW)0;
-            BOOL cyclic = FALSE;
-            BOOL standard = FALSE;
-            BOOL UMP = TRUE;
+            MidiTransport transportCapability { MidiTransport_Invalid };
             KSPIN_COMMUNICATION communication = (KSPIN_COMMUNICATION)0;
 
             RETURN_IF_FAILED(PinPropertySimple(hFilter.get(), i, KSPROPSETID_Pin, KSPROPERTY_PIN_COMMUNICATION, &communication, sizeof(KSPIN_COMMUNICATION)));
@@ -61,33 +61,32 @@ KSMidiDeviceEnum::EnumerateFilters()
                 continue;
             }
 
-            // attempt to instantiate using standard streaming,
-            // and set that flag if we can.
-            if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, FALSE, TRUE, &hPin)))
+            // Cyclic buffering with UMP messages, MIDI 2 driver and peripheral.
+            if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_CyclicUMP, &hPin)))
             {
-                standard = TRUE;
+                transportCapability = (MidiTransport )((DWORD) transportCapability |  (DWORD) MidiTransport_CyclicUMP);
                 hPin.reset();
             }
 
-            // attempt to instantiate using cyclic streaming,
-            // and set that flag if we can.
-            if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, TRUE, TRUE, &hPin)))
+            // Cyclic buffering, but legacy bytestream, potentially useful for moving
+            // MIDI 1 messages efficiently to and from a new driver communicating with
+            // a legacy peripheral. Only useful for a driver that also supports cyclic
+            // UMP
+            if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_CyclicByteStream, &hPin)))
             {
-                cyclic = TRUE;
+                transportCapability = (MidiTransport )((DWORD) transportCapability |  (DWORD) MidiTransport_CyclicByteStream);
                 hPin.reset();
             }
 
-            // attempt to instantiate using cyclic streaming,
-            // and set that flag if we can.
-            if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, FALSE, FALSE, &hPin)))
+            // Standard buffering with bytesteam, a MIDI 1 KS driver.
+            if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_StandardByteStream, &hPin)))
             {
-                UMP = FALSE;
+                transportCapability = (MidiTransport )((DWORD) transportCapability |  (DWORD) MidiTransport_StandardByteStream);
                 hPin.reset();
             }
 
-            // if this pin supports neither, then it's not a streaming pin,
-            // continue on
-            if (!standard && !cyclic)
+            // if this pin supports nothing, then it's not a streaming pin.
+            if (0 == transportCapability)
             {
                 continue;
             }
@@ -100,9 +99,7 @@ KSMidiDeviceEnum::EnumerateFilters()
                 m_AvailableMidiOutPins[m_AvailableMidiOutPinCount].FilterName =
                     wil::make_cotaskmem_string_nothrow(deviceId);
                 m_AvailableMidiOutPins[m_AvailableMidiOutPinCount].PinId = i;
-                m_AvailableMidiOutPins[m_AvailableMidiOutPinCount].Cyclic = cyclic;
-                m_AvailableMidiOutPins[m_AvailableMidiOutPinCount].Standard = standard;
-                m_AvailableMidiOutPins[m_AvailableMidiOutPinCount].UMP = UMP;
+                m_AvailableMidiOutPins[m_AvailableMidiOutPinCount].TransportCapability = transportCapability;
                 m_AvailableMidiOutPinCount++;
             }
             else if (KSPIN_DATAFLOW_OUT == dataFlow)
@@ -110,9 +107,7 @@ KSMidiDeviceEnum::EnumerateFilters()
                 m_AvailableMidiInPins[m_AvailableMidiInPinCount].FilterName =
                     wil::make_cotaskmem_string_nothrow(deviceId);
                 m_AvailableMidiInPins[m_AvailableMidiInPinCount].PinId = i;
-                m_AvailableMidiInPins[m_AvailableMidiInPinCount].Cyclic = cyclic;
-                m_AvailableMidiInPins[m_AvailableMidiInPinCount].Standard = standard;
-                m_AvailableMidiInPins[m_AvailableMidiInPinCount].UMP = UMP;
+                m_AvailableMidiInPins[m_AvailableMidiInPinCount].TransportCapability = transportCapability;
                 m_AvailableMidiInPinCount++;
             }
             else

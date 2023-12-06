@@ -14,6 +14,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiOut::Initialize(
     LPCWSTR,
+    PABSTRACTIONCREATIONPARAMS,
     DWORD *
 )
 {

@@ -19,7 +19,9 @@ public:
     BEGIN_TEST_CLASS(Midi2ServiceTests)
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.KSAbstraction.dll")
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.MidiSrvAbstraction.dll")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Minmidi.sys")
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"usbmidi2.sys")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"MidiSrv.exe")
     END_TEST_CLASS()
 
@@ -37,11 +39,11 @@ public:
     Midi2ServiceTests()
     {}
 
-    STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position)
+    STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, _In_ LONGLONG Context)
     {
         if (m_MidiInCallback)
         {
-            m_MidiInCallback(Data, Size, Position);
+            m_MidiInCallback(Data, Size, Position, Context);
         }
         return S_OK;
     }
@@ -52,6 +54,6 @@ public:
     STDMETHODIMP_(ULONG) Release() { return 1; }
 
 private:
-    std::function<void(PVOID, UINT32, LONGLONG)> m_MidiInCallback;
+    std::function<void(PVOID, UINT32, LONGLONG, LONGLONG)> m_MidiInCallback;
 };
 

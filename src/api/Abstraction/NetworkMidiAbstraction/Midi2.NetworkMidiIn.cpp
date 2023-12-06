@@ -14,8 +14,10 @@ _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiIn::Initialize(
     LPCWSTR,
+    PABSTRACTIONCREATIONPARAMS,
     DWORD *,
-    IMidiCallback *
+    IMidiCallback *,
+    LONGLONG
 )
 {
     TraceLoggingWrite(
@@ -46,6 +48,7 @@ HRESULT
 CMidi2NetworkMidiIn::Callback(
     PVOID,
     UINT,
+    LONGLONG,
     LONGLONG
 )
 {

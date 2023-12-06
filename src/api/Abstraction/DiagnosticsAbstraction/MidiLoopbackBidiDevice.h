@@ -11,8 +11,8 @@
 class MidiLoopbackBidiDevice
 {
 public:
-    void SetCallbackA(_In_ IMidiCallback* callback);
-    void SetCallbackB(_In_ IMidiCallback* callback);
+    void SetCallbackA(_In_ IMidiCallback*, _In_ LONGLONG);
+    void SetCallbackB(_In_ IMidiCallback*, _In_ LONGLONG);
 
     HRESULT SendMidiMessageFromAToB(
         _In_ void*,
@@ -32,7 +32,10 @@ public:
     ~MidiLoopbackBidiDevice();
 
 private:
-    IMidiCallback* m_callbackA;
-    IMidiCallback* m_callbackB;
+    IMidiCallback* m_CallbackA;
+    LONGLONG m_ContextA;
+
+    IMidiCallback* m_CallbackB;
+    LONGLONG m_ContextB;
 
 };

@@ -6,9 +6,7 @@ typedef class _UMP_PINS
 public:
     wil::unique_cotaskmem_string FilterName;
     INT32 PinId {0};
-    BOOL Standard {FALSE};
-    BOOL Cyclic {FALSE};
-    BOOL UMP {FALSE};
+    MidiTransport TransportCapability {MidiTransport_Invalid};
 } UMP_PINS;
 
 class KSMidiDeviceEnum

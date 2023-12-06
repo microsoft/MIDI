@@ -11,7 +11,9 @@
 class MidiPingBidiDevice
 {
 public:
-    void SetCallback(_In_ IMidiCallback* callback);
+    void SetCallback(
+        _In_ IMidiCallback*,
+        _In_ LONGLONG);
 
     HRESULT SendMidiMessage(
         _In_ void*,
@@ -25,6 +27,6 @@ public:
     ~MidiPingBidiDevice();
 
 private:
-    IMidiCallback* m_callback;
-
+    IMidiCallback* m_Callback;
+    LONGLONG m_Context;
 };

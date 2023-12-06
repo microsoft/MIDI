@@ -3,33 +3,33 @@
 
 typedef struct
 {
-    BYTE mt_group;
     BYTE status;
-    WORD data;
-} UMP32;
+    BYTE data1;
+    BYTE data2;
+} MIDI_MESSAGE;
 
 typedef struct
 {
-    BYTE mt_group;
-    BYTE status;
-    WORD data;
+    DWORD data1;
+} UMP32;
+
+
+typedef struct
+{
+    DWORD data1;
     DWORD data2;
 } UMP64;
 
 typedef struct
 {
-    BYTE mt_group;
-    BYTE status;
-    WORD data;
+    DWORD data1;
     DWORD data2;
     DWORD data3;
 } UMP96;
 
 typedef struct
 {
-    BYTE mt_group;
-    BYTE status;
-    WORD data;
+    DWORD data1;
     DWORD data2;
     DWORD data3;
     DWORD data4;
@@ -39,6 +39,8 @@ extern UMP32 g_MidiTestData_32;
 extern UMP64 g_MidiTestData_64;
 extern UMP96 g_MidiTestData_96;
 extern UMP128 g_MidiTestData_128;
+
+extern MIDI_MESSAGE g_MidiTestMessage;
 
 void PrintMidiMessage(_In_ PVOID, _In_ UINT32, _In_ UINT32, _In_ LONGLONG);
 
