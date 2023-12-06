@@ -163,7 +163,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                 continueWaiting = false;
 
                                 // leading space is because the "E" in "Escape" is often lost in the output for some reason.
-                                AnsiConsole.MarkupLine(" " + Strings.MonitorEscapePressedMessage);
+                                AnsiConsole.MarkupLine("-" + Strings.MonitorEscapePressedMessage);
                                 break;
                             }
                         }

@@ -19,6 +19,9 @@ namespace Windows.Devices.Midi2
         MidiGroup();
         MidiGroup(UInt8 index);
 
+        static String LabelShort{ get; };
+        static String LabelFull{ get; };
+
         UInt8 Index{ get; set; };               // 0-15, the number used in the UMPs
         UInt8 NumberForDisplay{ get; };         // 1-16, the number displayed to users
 

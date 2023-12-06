@@ -182,18 +182,18 @@ namespace winrt::Windows::Devices::Midi2::implementation
             switch (GetStatusFromUtilityMessage(word0))
             {
             case 0x0:
-                return L"NOOP";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT0_NOOP);
             case 0x1:
-                return L"Jitter Reduction Clock Time";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT0_JR_CLOCK);
             case 0x2:
-                return L"Jitter Reduction Timestamp";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT0_JR_TS);
             case 0x3:
-                return L"Delta Ticks Per Quarter Note";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT0_TICKS_PQN);
             case 0x4:
-                return L"Delta Ticks Since Last Event";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT0_DELTA_TICKS);
 
             default:
-                return L"Utility Unknown";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT0_UNKNOWN);
             }
             break;
 
@@ -201,40 +201,40 @@ namespace winrt::Windows::Devices::Midi2::implementation
             switch (GetStatusFromSystemCommonMessage(word0))
             {
             case 0xF0:
-                return L"Reserved 0xF0";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT1_F0_RESERVED); //L"Reserved 0xF0";
             case 0xF1:
-                return L"MIDI Time Code";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT1_F1_TIME_CODE); //L"MIDI Time Code";
             case 0xF2:
-                return L"Song Position Pointer";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT1_F2_SONG_POSITION); //L"Song Position Pointer";
             case 0xF3:
-                return L"Song Select";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT1_F3_SONG_SELECT); //L"Song Select";
             case 0xF4:
-                return L"Reserved 0xF4";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT1_F4_RESERVED); //L"Reserved 0xF4";
             case 0xF5:
-                return L"Reserved 0xF5";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT1_F5_RESERVED); //L"Reserved 0xF5";
             case 0xF6:
-                return L"Tune Request";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT1_F6_TUNE_REQUEST); //L"Tune Request";
             case 0xF7:
-                return L"Reserved 0xF7";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT1_F7_RESERVED); //L"Reserved 0xF7";
             case 0xF8:
-                return L"Timing Clock";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT1_F8_TIMING_CLOCK); //L"Timing Clock";
             case 0xF9:
-                return L"Reserved 0xF9";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT1_F9_RESERVED); //L"Reserved 0xF9";
             case 0xFA:
-                return L"Start";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT1_FA_START); //L"Start";
             case 0xFB:
-                return L"Continue";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT1_FB_CONTINUE); //L"Continue";
             case 0xFC:
-                return L"Stop";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT1_FC_STOP); //L"Stop";
             case 0xFD:
-                return L"Reserved 0xFD";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT1_FD_RESERVED); //L"Reserved 0xFD";
             case 0xFE:
-                return L"Active Sensing";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT1_FE_ACTIVE_SENSE); //L"Active Sensing";
             case 0xFF:
-                return L"Reset";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT1_FF_RESET); //L"Reset";
 
             default:
-                return L"System Common/Realtime Unknown";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT1_UNKNOWN); //L"System Common/Realtime Unknown";
             }
             break;
 
@@ -242,22 +242,22 @@ namespace winrt::Windows::Devices::Midi2::implementation
             switch (GetStatusFromMidi1ChannelVoiceMessage(word0))
             {
             case Midi1ChannelVoiceMessageStatus::NoteOff:
-                return L"MIDI 1.0 Note Off";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT2_8_NOTE_OFF); //L"MIDI 1.0 Note Off";
             case Midi1ChannelVoiceMessageStatus::NoteOn:
-                return L"MIDI 1.0 Note On";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT2_9_NOTE_ON); //L"MIDI 1.0 Note On";
             case Midi1ChannelVoiceMessageStatus::PolyPressure:
-                return L"MIDI 1.0 Poly Pressure";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT2_A_POLY_PRESSURE); //L"MIDI 1.0 Poly Pressure";
             case Midi1ChannelVoiceMessageStatus::ControlChange:
-                return L"MIDI 1.0 Control Change";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT2_B_CONTROL_CHANGE); //L"MIDI 1.0 Control Change";
             case Midi1ChannelVoiceMessageStatus::ProgramChange:
-                return L"MIDI 1.0 Program Change";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT2_C_PROGRAM_CHANGE); //L"MIDI 1.0 Program Change";
             case Midi1ChannelVoiceMessageStatus::ChannelPressure:
-                return L"MIDI 1.0 Channel Pressure";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT2_D_CHANNEL_PRESSURE); //L"MIDI 1.0 Channel Pressure";
             case Midi1ChannelVoiceMessageStatus::PitchBend:
-                return L"MIDI 1.0 Pitch Bend";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT2_E_PITCH_BEND); //L"MIDI 1.0 Pitch Bend";
 
             default:
-                return L"MIDI 1.0 Channel Voice";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT2_UNKNOWN); //L"MIDI 1.0 Channel Voice";
             }
             break;
 
@@ -265,16 +265,16 @@ namespace winrt::Windows::Devices::Midi2::implementation
             switch (GetStatusFromDataMessage64FirstWord(word0))
             {
             case 0x0:
-                return L"SysEx 7-bit Complete";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT3_0_SYSEX7_COMPLETE); //L"SysEx 7-bit Complete";
             case 0x1:
-                return L"SysEx 7-bit Start";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT3_1_SYSEX7_START); //L"SysEx 7-bit Start";
             case 0x2:
-                return L"SysEx 7-bit Continue";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT3_2_SYSEX7_CONTINUE); //L"SysEx 7-bit Continue";
             case 0x3:
-                return L"SysEx 7-bit End";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT3_3_SYSEX7_END); //L"SysEx 7-bit End";
 
             default:
-                return L"Data Message 64";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT3_DATA64_UNKNOWN); //L"Data Message 64";
             }
             break;
 
@@ -282,36 +282,36 @@ namespace winrt::Windows::Devices::Midi2::implementation
             switch (GetStatusFromMidi2ChannelVoiceMessageFirstWord(word0))
             {
             case Midi2ChannelVoiceMessageStatus::RegisteredPerNoteController:
-                return L"MIDI 2.0 Registered Per-Note Controller";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT4_0_RPNC); //L"MIDI 2.0 Registered Per-Note Controller";
             case Midi2ChannelVoiceMessageStatus::AssignablePerNoteController:
-                return L"MIDI 2.0 Assignable Per-Note Controller";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT4_1_APNC); //L"MIDI 2.0 Assignable Per-Note Controller";
             case Midi2ChannelVoiceMessageStatus::RegisteredController:
-                return L"MIDI 2.0 Registered Controller";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT4_2_RC); //L"MIDI 2.0 Registered Controller";
             case Midi2ChannelVoiceMessageStatus::AssignableController:
-                return L"MIDI 2.0 Assignable Controller";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT4_3_AC); //L"MIDI 2.0 Assignable Controller";
             case Midi2ChannelVoiceMessageStatus::RelativeRegisteredController:
-                return L"MIDI 2.0 Relative Registered Controller";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT4_4_REL_RC); //L"MIDI 2.0 Relative Registered Controller";
             case Midi2ChannelVoiceMessageStatus::RelativeAssignableController:
-                return L"MIDI 2.0 Relative Assignable Controller";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT4_5_REL_AC); //L"MIDI 2.0 Relative Assignable Controller";
             case Midi2ChannelVoiceMessageStatus::PerNotePitchBend:
-                return L"MIDI 2.0 Per-Note Pitch Bend";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT4_6_PER_NOTE_BEND); //L"MIDI 2.0 Per-Note Pitch Bend";
             case Midi2ChannelVoiceMessageStatus::NoteOff:
-                return L"MIDI 2.0 Note Off";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT4_8_NOTE_OFF); //L"MIDI 2.0 Note Off";
             case Midi2ChannelVoiceMessageStatus::NoteOn:
-                return L"MIDI 2.0 Note On";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT4_9_NOTE_ON); //L"MIDI 2.0 Note On";
             case Midi2ChannelVoiceMessageStatus::PolyPressure:
-                return L"MIDI 2.0 Poly Pressure";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT4_A_POLY_PRESSURE); //L"MIDI 2.0 Poly Pressure";
             case Midi2ChannelVoiceMessageStatus::ControlChange:
-                return L"MIDI 2.0 Control Change";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT4_B_CONTROL_CHANGE); //L"MIDI 2.0 Control Change";
             case Midi2ChannelVoiceMessageStatus::ProgramChange:
-                return L"MIDI 2.0 Program Change";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT4_C_PROGRAM_CHANGE); //L"MIDI 2.0 Program Change";
             case Midi2ChannelVoiceMessageStatus::ChannelPressure:
-                return L"MIDI 2.0 Channel Pressure";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT4_D_CHANNEL_PRESSURE); //L"MIDI 2.0 Channel Pressure";
             case Midi2ChannelVoiceMessageStatus::PitchBend:
-                return L"MIDI 2.0 Pitch Bend";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT4_E_PITCH_BEND); //L"MIDI 2.0 Pitch Bend";
 
             default:
-                return L"MIDI 2.0 Channel Voice";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT4_MIDI2_CV_UNKNOWN); //L"MIDI 2.0 Channel Voice";
             }
             break;
 
@@ -319,44 +319,44 @@ namespace winrt::Windows::Devices::Midi2::implementation
             switch (GetStatusFromDataMessage128FirstWord(word0))
             {
             case 0x0:
-                return L"SysEx 8-bit Complete";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT5_0_SYSEX8_COMPLETE); //L"SysEx 8-bit Complete";
             case 0x1:
-                return L"SysEx 8-bit Start";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT5_1_SYSEX8_START); //L"SysEx 8-bit Start";
             case 0x2:
-                return L"SysEx 8-bit Continue";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT5_2_SYSEX8_CONTINUE); //L"SysEx 8-bit Continue";
             case 0x3:
-                return L"SysEx 8-bit End";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT5_3_SYSEX8_END); //L"SysEx 8-bit End";
 
             case 0x8:
-                return L"Mixed Data Set Header";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT5_8_MIXED_DATA_HEADER); //L"Mixed Data Set Header";
             case 0x9:
-                return L"Mixed Data Set Payload";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT5_9_MIXED_DATA_PAYLOAD); //L"Mixed Data Set Payload";
 
             default:
-                return L"Data Message Unknown";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT5_UNKNOWN); //L"Data Message Unknown";
             }
             break;
 
         case MidiMessageType::FutureReserved632:
-            return L"Unknown Type 6";
+            return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT6_RESERVED); //L"Unknown Type 6";
 
         case MidiMessageType::FutureReserved732:
-            return L"Unknown Type 7";
+            return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT7_RESERVED); //L"Unknown Type 7";
 
         case MidiMessageType::FutureReserved864:
-            return L"Unknown Type 8";
+            return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT8_RESERVED); //L"Unknown Type 8";
 
         case MidiMessageType::FutureReserved964:
-            return L"Unknown Type 9";
+            return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT9_RESERVED); //L"Unknown Type 9";
 
         case MidiMessageType::FutureReservedA64:
-            return L"Unknown Type A";
+            return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTA_RESERVED); //L"Unknown Type A";
 
         case MidiMessageType::FutureReservedB96:
-            return L"Unknown Type B";
+            return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTB_RESERVED); //L"Unknown Type B";
 
         case MidiMessageType::FutureReservedC96:
-            return L"Unknown Type C";
+            return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTC_RESERVED); //L"Unknown Type C";
 
         case MidiMessageType::FlexData128:
             {
@@ -369,90 +369,90 @@ namespace winrt::Windows::Devices::Midi2::implementation
                     switch (status)
                     {
                     case 0x00:
-                        return L"Metadata Text Event Status 0x00";
+                        return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTD_01_00_METADATA_TEXT); //L"Metadata Text Event Status 0x00";
                     case 0x01:
-                        return L"Project Name";
+                        return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTD_01_01_PROJECT_NAME); //L"Project Name";
                     case 0x02:
-                        return L"Composition (Song) Name";
+                        return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTD_01_02_SONG_NAME); //L"Composition (Song) Name";
                     case 0x03:
-                        return L"MIDI Clip Name";
+                        return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTD_01_03_CLIP_NAME); //L"MIDI Clip Name";
                     case 0x04:
-                        return L"Copyright Notice";
+                        return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTD_01_04_COPYRIGHT); //L"Copyright Notice";
                     case 0x05:
-                        return L"Composer Name";
+                        return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTD_01_05_COMPOSER_NAME); //L"Composer Name";
                     case 0x06:
-                        return L"Lyricist Name";
+                        return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTD_01_06_LYRICIST_NAME); //L"Lyricist Name";
                     case 0x07:
-                        return L"Arranger Name";
+                        return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTD_01_07_ARRANGER_NAME); //L"Arranger Name";
                     case 0x08:
-                        return L"Publisher Name";
+                        return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTD_01_08_PUBLISHER_NAME); //L"Publisher Name";
                     case 0x09:
-                        return L"Primary Performer Name";
+                        return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTD_01_09_PRIMARY_PERFORMER_NAME); //L"Primary Performer Name";
                     case 0x0A:
-                        return L"Accompanying Performer Name";
+                        return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTD_01_0A_ACCOMPANY_PERFORMER_NAME); //L"Accompanying Performer Name";
                     case 0x0B:
-                        return L"Recording / Concert Date";
+                        return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTD_01_0B_RECORDING_DATE); //L"Recording / Concert Date";
                     case 0x0C:
-                        return L"Recording / Concert Location";
+                        return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTD_01_0C_RECORDING_LOCATION); //L"Recording / Concert Location";
                     default:
-                        return L"Flex Data with Bank 0x01";
+                        return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTD_01_UNKNOWN); //L"Flex Data with Bank 0x01";
                     }
                     break;
                 case 0x02:
                     switch (status)
                     {
                     case 0x00:
-                        return L"Performance Text Event Status 0x00";
+                        return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTD_02_00_PERF_TEXT_EVENT); //L"Performance Text Event Status 0x00";
                     case 0x01:
-                        return L"Lyrics";
+                        return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTD_02_01_LYRICS); //L"Lyrics";
                     case 0x02:
-                        return L"Lyrics Language";
+                        return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTD_02_02_LYRICS_LANGUAGE); //L"Lyrics Language";
                     case 0x03:
-                        return L"Ruby";
+                        return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTD_02_03_RUBY); //L"Ruby";
                     case 0x04:
-                        return L"Ruby Language";
+                        return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTD_02_04_RUBY_LANGUAGE); //L"Ruby Language";
                     default:
-                        return L"Flex Data with Bank 0x02";
+                        return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTD_02_UNKNOWN); //L"Flex Data with Bank 0x02";
                     }
                     break;
                 default:
-                    return L"Flex Data Unknown";
+                    return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTD_UNKNOWN); //L"Flex Data Unknown";
 
                 }
             }
 
         case MidiMessageType::FutureReservedE128:
-            return L"Type E Unknown";
+            return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTE_RESERVED); //L"Type E Unknown";
 
         case MidiMessageType::Stream128:
             switch (GetStatusFromStreamMessageFirstWord(word0))
             {
             case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_DISCOVERY:
-                return L"Endpoint Discovery";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTF_00_DISCOVERY); //L"Endpoint Discovery";
             case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_INFO_NOTIFICATION:
-                return L"Endpoint Info Notification";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTF_01_ENDPOINT_INFO); //L"Endpoint Info Notification";
             case MIDI_STREAM_MESSAGE_STATUS_DEVICE_IDENTITY_NOTIFICATION:
-                return L"Device Identity Notification";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTF_02_DEVICE_IDENTITY); //L"Device Identity Notification";
             case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION:
-                return L"Endpoint Name Notification";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTF_03_ENDPOINT_NAME); //L"Endpoint Name Notification";
             case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID_NOTIFICATION:
-                return L"Product Instance Id Notification";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTF_04_PRODUCT_INSTANCE_ID); //L"Product Instance Id Notification";
             case MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_REQUEST:
-                return L"Stream Configuration Request";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTF_05_CONFIG_REQUEST); //L"Stream Configuration Request";
             case MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_NOTIFICATION:
-                return L"Stream Configuration Notification";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTF_06_CONFIG_NOTIFICATION); //L"Stream Configuration Notification";
 
             case MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_INFO_NOTIFICATION:
-                return L"Function Block Info Notification";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTF_11_FUNCTION_BLOCK_INFO); //L"Function Block Info Notification";
             case MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION:
-                return L"Function Block Name Notification";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTF_12_FUNCTION_BLOCK_NAME); //L"Function Block Name Notification";
             default:
-                return L"Stream Message Unknown";
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTF_UNKNOWN); //L"Stream Message Unknown";
             }
             break;
         default:
             // this is here just to satisfy the compiler because it doesn't understand 4-bit values
-            return L"Unknown";
+            return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MT_UNKNOWN); //L"Unknown";
         };
 
 

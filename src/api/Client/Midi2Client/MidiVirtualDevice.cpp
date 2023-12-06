@@ -75,7 +75,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     _Use_decl_annotations_
-    void MidiVirtualDevice::Initialize(midi2::IMidiEndpointConnection const& endpointConnection)
+    void MidiVirtualDevice::Initialize(midi2::IMidiEndpointConnectionSource const& endpointConnection)
     {
         m_endpointConnection = endpointConnection.as<midi2::MidiEndpointConnection>();
     }

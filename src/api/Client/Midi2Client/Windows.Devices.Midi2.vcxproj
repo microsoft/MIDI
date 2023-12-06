@@ -192,6 +192,15 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </Command>
     </PostBuildEvent>
+    <ResourceCompile>
+      <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">Yes</ShowProgress>
+    </ResourceCompile>
+    <ResourceCompile>
+      <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">Yes</ShowProgress>
+    </ResourceCompile>
+    <ResourceCompile>
+      <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Yes</ShowProgress>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
     <ClCompile>
@@ -222,6 +231,15 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Command>
     </PostBuildEvent>
+    <ResourceCompile>
+      <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">Yes</ShowProgress>
+    </ResourceCompile>
+    <ResourceCompile>
+      <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">Yes</ShowProgress>
+    </ResourceCompile>
+    <ResourceCompile>
+      <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Yes</ShowProgress>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
@@ -331,7 +349,7 @@
     <ClInclude Include="midi_stream_message_defs.h" />
     <ClInclude Include="midl_defines.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="StringResources.h" />
+    <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="string_util.h" />
     <ClInclude Include="trace_logging.h" />
     <ClInclude Include="ump_helpers.h" />
@@ -450,10 +468,11 @@
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="trace_logging.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="IMidiEndpointConnection.idl" />
+    <Midl Include="IMidiEndpointConnectionSource.idl" />
     <Midl Include="IMidiEndpointMessageProcessingPlugin.idl" />
     <Midl Include="IMidiMessageReceivedEventSource.idl" />
     <Midl Include="IMidiTransportSettingsData.idl" />
@@ -527,7 +546,6 @@
     <Text Include="WinRTActivationEntries.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="StringResources.rc" />
     <ResourceCompile Include="Windows.Devices.Midi2.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
