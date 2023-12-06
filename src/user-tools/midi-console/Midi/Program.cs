@@ -30,6 +30,7 @@ app.Configure(config =>
             .WithAlias("endpoints")
             .WithDescription(Strings.CommandEnumerateEndpointsDescription)
             .WithExample("enumerate", "ump-endpoints", "--include-loopback")
+            .WithExample("enum", "ump")
             ;
 
         enumerate.AddCommand<EnumLegacyEndpointsCommand>("bytestream-endpoints")

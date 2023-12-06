@@ -11,7 +11,7 @@ MIDI_IDL_IMPORT
 
 import "MidiMessageReceivedEventArgs.idl";
 
-import "MidiEndpointConnection.idl";
+import "IMidiEndpointConnectionSource.idl";
 
 
 namespace Windows.Devices.Midi2
@@ -28,7 +28,7 @@ namespace Windows.Devices.Midi2
 
         // initialize may do things like allocate a shared table which is used to keep metadata
         // that is being listened to. Called when connection is created
-        void Initialize(MidiEndpointConnection endpointConnection);
+        void Initialize(IMidiEndpointConnectionSource endpointConnection);
 
         // called when connection is opened.
         void OnEndpointConnectionOpened();

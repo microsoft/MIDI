@@ -22,8 +22,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         {
             var now = MidiClock.Now;
 
-            AnsiConsole.MarkupLine("Current timestamp:    " + AnsiMarkupFormatter.FormatTimestamp(now));
-            AnsiConsole.MarkupLine("Timestamp resolution: " + AnsiMarkupFormatter.FormatTimestamp(MidiClock.TimestampFrequency) + "hz");
+            AnsiConsole.MarkupLine("Current timestamp:    " + AnsiMarkupFormatter.FormatTimestamp(now) + " ticks");
+            AnsiConsole.MarkupLine("Timestamp resolution: " + AnsiMarkupFormatter.FormatTimestamp(MidiClock.TimestampFrequency) + " ticks per second");
+            AnsiConsole.MarkupLine("Two seconds in ticks: " + AnsiMarkupFormatter.FormatTimestamp(MidiClock.OffsetTimestampByMilliseconds(0, 2000)) + " ticks");
+
+            ;
 
             return (int)MidiConsoleReturnCode.Success;
         }

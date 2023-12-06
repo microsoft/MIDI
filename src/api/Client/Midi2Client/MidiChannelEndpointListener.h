@@ -61,7 +61,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
 
 
-        void Initialize(_In_ midi2::MidiEndpointConnection const& endpointConnection);
+        void Initialize(_In_ midi2::IMidiEndpointConnectionSource const& endpointConnection);
         void OnEndpointConnectionOpened();
         void Cleanup();
 

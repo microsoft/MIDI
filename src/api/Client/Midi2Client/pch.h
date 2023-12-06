@@ -56,9 +56,12 @@ namespace collections = ::winrt::Windows::Foundation::Collections;
 
 namespace internal = ::Windows::Devices::Midi2::Internal;
 
+#include "resource.h"
+#include "ResourceManager.h"
 
 #include "MidiGroup.h"
 #include "MidiChannel.h"
+#include "MidiUniqueId.h"
 
 // TODO: Consider changing these to midi2impl and midi2proj
 namespace implementation = winrt::Windows::Devices::Midi2::implementation;
@@ -77,7 +80,6 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 
 #include "MidiFunctionBlock.h"
 #include "MidiGroupTerminalBlock.h"
-#include "MidiUniqueId.h"
 
 #include "MidiEndpointConnection.h"
 
@@ -89,7 +91,8 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 
 #include "MidiServicePingResponse.h"
 #include "MidiServicePingResponseSummary.h"
-#include "MidiTransportInformation.h"
+#include "MidiTransportPluginInformation.h"
+#include "MidiMessageProcessingPluginInformation.h"
 #include "MidiService.h"
 
 #include "MidiEndpointDeviceInformation.h"
