@@ -12,12 +12,16 @@ public:
     std::wstring Name; // friendly name for this device
     INT32 PinId{ 0 }; // contains the pin id, for bidi it is the MidiflowOut pin id
     INT32 PinIdIn{ 0 }; // only used for bidi, contains the MidiFlowIn pin id
-    BOOL StandardUmp{ FALSE };
-    BOOL CyclicUmp{ FALSE };
-    BOOL MidiOne{ FALSE };
+    MidiTransport TransportCapability {MidiTransport_Invalid};
+    MidiDataFormat DataFormatCapability {MidiDataFormat_Invalid};
     MidiFlow Flow{ MidiFlowOut };
     BOOL CreateUMPOnly{ FALSE };
     HRESULT SwdCreation{ S_OK };
+    std::unique_ptr<BYTE> GroupTerminalBlockDataOut;
+    ULONG GroupTerminalBlockDataSizeOut {0};
+    std::unique_ptr<BYTE> GroupTerminalBlockDataIn;
+    ULONG GroupTerminalBlockDataSizeIn {0};
+    GUID NativeDataFormat{0};
 } MIDI_PIN_INFO, *PMIDI_PIN_INFO;
 
 class CMidi2KSMidiEndpointManager : 

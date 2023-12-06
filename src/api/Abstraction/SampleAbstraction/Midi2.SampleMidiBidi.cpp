@@ -7,8 +7,10 @@ _Use_decl_annotations_
 HRESULT
 CMidi2SampleMidiBiDi::Initialize(
     LPCWSTR,
+    PABSTRACTIONCREATIONPARAMS,
     DWORD *,
-    IMidiCallback *
+    IMidiCallback *,
+    LONGLONG
 )
 {
 
@@ -51,6 +53,7 @@ HRESULT
 CMidi2SampleMidiBiDi::Callback(
     PVOID,
     UINT,
+    LONGLONG,
     LONGLONG
 )
 {

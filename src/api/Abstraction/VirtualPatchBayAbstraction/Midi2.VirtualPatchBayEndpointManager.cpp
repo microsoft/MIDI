@@ -21,8 +21,8 @@ GUID AbstractionLayerGUID = __uuidof(Midi2VirtualPatchBayAbstraction);
 _Use_decl_annotations_
 HRESULT
 CMidi2VirtualPatchBayEndpointManager::Initialize(
-    IUnknown* midiDeviceManager, 
-    LPCWSTR /*configurationJson*/
+    IUnknown* MidiDeviceManager, 
+    LPCWSTR /*ConfigurationJson*/
 )
 {
  //   OutputDebugString(L"" __FUNCTION__ " Enter");
@@ -34,20 +34,20 @@ CMidi2VirtualPatchBayEndpointManager::Initialize(
         TraceLoggingPointer(this, "this")
     );
 
-    RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == MidiDeviceManager);
 
-    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
+    RETURN_IF_FAILED(MidiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
 
-    m_transportAbstractionId = AbstractionLayerGUID;   // this is needed so MidiSrv can instantiate the correct transport
-    m_containerId = m_transportAbstractionId;                           // we use the transport ID as the container ID for convenience
+    m_TransportAbstractionId = AbstractionLayerGUID;   // this is needed so MidiSrv can instantiate the correct transport
+    m_ContainerId = m_TransportAbstractionId;                           // we use the transport ID as the container ID for convenience
 
     RETURN_IF_FAILED(CreateParentDevice());
 
-    //if (configurationJson != nullptr)
+    //if (ConfigurationJson != nullptr)
     //{
     //    try
     //    {
-    //        std::wstring json{ configurationJson };
+    //        std::wstring json{ ConfigurationJson };
 
     //        if (!json.empty())
     //        {
@@ -80,7 +80,11 @@ CMidi2VirtualPatchBayEndpointManager::Initialize(
 
 
 
-void SwMidiParentDeviceCreateCallback(__in HSWDEVICE /*hSwDevice*/, __in HRESULT CreationResult, __in_opt PVOID pContext, __in_opt PCWSTR pszDeviceInstanceId)
+void SwMidiParentDeviceCreateCallback(
+    __in HSWDEVICE /*hSwDevice*/, 
+    __in HRESULT CreationResult, 
+    __in_opt PVOID pContext, 
+    __in_opt PCWSTR pszDeviceInstanceId)
 {
     if (pContext == nullptr)
     {
@@ -111,7 +115,7 @@ void SwMidiParentDeviceCreateCallback(__in HSWDEVICE /*hSwDevice*/, __in HRESULT
     }
 
     // success or failure, signal we have completed.
-    creationContext->creationCompleted.SetEvent();
+    creationContext->CreationCompleted.SetEvent();
 }
 
 
@@ -132,28 +136,28 @@ CMidi2VirtualPatchBayEndpointManager::CreateParentDevice()
 
     SW_DEVICE_CREATE_INFO* createInfo = (SW_DEVICE_CREATE_INFO*)&CreateInfo;
 
-    if (m_parentDevice != nullptr)
+    if (m_ParentDevice != nullptr)
     {
         return S_OK;
     }
 
-    m_parentDevice = std::make_unique<MidiEndpointParentDeviceInfo>();
+    m_ParentDevice = std::make_unique<MidiEndpointParentDeviceInfo>();
 
-    RETURN_IF_NULL_ALLOC(m_parentDevice);
+    RETURN_IF_NULL_ALLOC(m_ParentDevice);
 
     PARENTDEVICECREATECONTEXT creationContext;
 
     // lambdas can only be converted to a function pointer if they
     // don't do capture, so copy everything into the CREATECONTEXT
     // to share with the SwDeviceCreate callback.
-    creationContext.MidiParentDevice = m_parentDevice.get();
+    creationContext.MidiParentDevice = m_ParentDevice.get();
 
     //creationContext.InterfaceDevProperties = (DEVPROPERTY*)InterfaceDevProperties;
     //creationContext.IntPropertyCount = IntPropertyCount;
 
-    m_parentDevice->SwDeviceState = SWDEVICESTATE::CreatePending;
+    m_ParentDevice->SwDeviceState = SWDEVICESTATE::CreatePending;
 
-    //m_parentDevice->InstanceId = createInfo->pszInstanceId;
+    //m_ParentDevice->InstanceId = createInfo->pszInstanceId;
 
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
 
@@ -168,7 +172,7 @@ CMidi2VirtualPatchBayEndpointManager::CreateParentDevice()
     std::wstring rootDeviceId = LOOPBACK_PARENT_ROOT;
     std::wstring enumeratorName = TRANSPORT_ENUMERATOR;
 
-    createInfo->pContainerId = &m_containerId;
+    createInfo->pContainerId = &m_ContainerId;
 
     RETURN_IF_FAILED(SwDeviceCreate(
         enumeratorName.c_str(),             // this really should come from the service
@@ -178,13 +182,13 @@ CMidi2VirtualPatchBayEndpointManager::CreateParentDevice()
         (DEVPROPERTY*)deviceDevProperties,  // pointer to properties
         SwMidiParentDeviceCreateCallback,   // callback
         &creationContext,
-        wil::out_param(m_parentDevice->SwDevice)));
+        wil::out_param(m_ParentDevice->SwDevice)));
 
     // wait for creation to complete
-    creationContext.creationCompleted.wait();
+    creationContext.CreationCompleted.wait();
 
     // confirm we were able to register the interface
-    RETURN_HR_IF(E_FAIL, m_parentDevice->SwDeviceState != SWDEVICESTATE::Created);
+    RETURN_HR_IF(E_FAIL, m_ParentDevice->SwDeviceState != SWDEVICESTATE::Created);
 
     return S_OK;
 }
@@ -208,11 +212,13 @@ CMidi2VirtualPatchBayEndpointManager::CreateParentDevice()
 #define MIDI_JSON_REMOVE_NODE L"remove"
 
 
-json::JsonObject GetAddNode(json::JsonObject parent)
+json::JsonObject GetAddNode(
+    json::JsonObject Parent
+)
 {
-    if (parent.HasKey(MIDI_JSON_ADD_NODE))
+    if (Parent.HasKey(MIDI_JSON_ADD_NODE))
     {
-        return parent.GetNamedObject(MIDI_JSON_ADD_NODE);
+        return Parent.GetNamedObject(MIDI_JSON_ADD_NODE);
     }
     else
     {
@@ -220,28 +226,33 @@ json::JsonObject GetAddNode(json::JsonObject parent)
     }
 }
 
-winrt::hstring GetStringValue(json::JsonObject parent, winrt::hstring key, winrt::hstring default)
+winrt::hstring GetStringValue(
+    json::JsonObject Parent,
+    winrt::hstring Key, 
+    winrt::hstring Default)
 {
-    if (parent.HasKey(key))
+    if (Parent.HasKey(Key))
     {
-        return parent.GetNamedString(key);
+        return Parent.GetNamedString(Key);
     }
     else
     {
-        return default;
+        return Default;
     }
 }
 
 _Use_decl_annotations_
 HRESULT
-CMidi2VirtualPatchBayEndpointManager::CreateConfiguredEndpoints(std::wstring configurationJson)
+CMidi2VirtualPatchBayEndpointManager::CreateConfiguredEndpoints(
+    std::wstring ConfigurationJson
+)
 {
     // if nothing to configure, that's ok
-    if (configurationJson.empty()) return S_OK;
+    if (ConfigurationJson.empty()) return S_OK;
 
     try
     {
-        auto jsonObject = json::JsonObject::Parse(configurationJson);
+        auto jsonObject = json::JsonObject::Parse(ConfigurationJson);
 
 
         // check to see if we have an "add" node. No point in checking for "update" or "remove" for initial configuration
@@ -306,7 +317,7 @@ CMidi2VirtualPatchBayEndpointManager::CreateConfiguredEndpoints(std::wstring con
         // exception parsing the json. It's likely empty or malformed
 
         OutputDebugString(L"" __FUNCTION__ " Exception parsing JSON. Json string follows.");
-        OutputDebugString(configurationJson.c_str());
+        OutputDebugString(ConfigurationJson.c_str());
 
         TraceLoggingWrite(
             MidiVirtualPatchBayAbstractionTelemetryProvider::Provider(),
@@ -326,14 +337,14 @@ CMidi2VirtualPatchBayEndpointManager::CreateConfiguredEndpoints(std::wstring con
 _Use_decl_annotations_
 HRESULT 
 CMidi2VirtualPatchBayEndpointManager::CreateEndpoint(
-    std::wstring const instanceId,
-    std::wstring const uniqueId,
-    bool const multiclient,
-    bool const isVirtualEndpointResponder,
-    std::wstring const name,
-    std::wstring const largeImagePath,
-    std::wstring const smallImagePath,
-    std::wstring const description
+    std::wstring const InstanceId,
+    std::wstring const UniqueId,
+    bool const Multiclient,
+    bool const IsVirtualEndpointResponder,
+    std::wstring const Name,
+    std::wstring const LargeImagePath,
+    std::wstring const SmallImagePath,
+    std::wstring const Description
     )
 {
     //put all of the devproperties we want into arrays and pass into ActivateEndpoint:
@@ -344,12 +355,12 @@ CMidi2VirtualPatchBayEndpointManager::CreateEndpoint(
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
     //DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
 
-    DEVPROP_BOOLEAN devPropMulticlient = multiclient ? DEVPROP_TRUE : DEVPROP_FALSE;
-    //DEVPROP_BOOLEAN devPropVirtualResponder = isVirtualEndpointResponder ? DEVPROP_TRUE : DEVPROP_FALSE;
+    DEVPROP_BOOLEAN devPropMulticlient = Multiclient ? DEVPROP_TRUE : DEVPROP_FALSE;
+    //DEVPROP_BOOLEAN devPropVirtualResponder = IsVirtualEndpointResponder ? DEVPROP_TRUE : DEVPROP_FALSE;
 
     uint32_t endpointPurpose{};
 
-    if (isVirtualEndpointResponder)
+    if (IsVirtualEndpointResponder)
     {
         endpointPurpose = (uint32_t)MidiEndpointDevicePurposePropertyValue::VirtualDeviceResponder;
     }
@@ -362,7 +373,7 @@ CMidi2VirtualPatchBayEndpointManager::CreateEndpoint(
 
     DEVPROPERTY interfaceDevProperties[] = {
         {{DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((name.length() + 1) * sizeof(WCHAR)), (PVOID)name.c_str()},
+            DEVPROP_TYPE_STRING, static_cast<ULONG>((Name.length() + 1) * sizeof(WCHAR)), (PVOID)Name.c_str()},
         
         // essential to instantiate the right endpoint types
         {{PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
@@ -375,29 +386,29 @@ CMidi2VirtualPatchBayEndpointManager::CreateEndpoint(
             DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(BYTE)), (PVOID)&nativeDataFormat},
 
         {{PKEY_MIDI_UniqueIdentifier, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((uniqueId.length() + 1) * sizeof(WCHAR)), (PVOID)uniqueId.c_str()},
+            DEVPROP_TYPE_STRING, static_cast<ULONG>((UniqueId.length() + 1) * sizeof(WCHAR)), (PVOID)UniqueId.c_str()},
 
         {{PKEY_MIDI_SupportsMulticlient, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropMulticlient)), (PVOID)&devPropMulticlient},
 
         {{PKEY_MIDI_TransportSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((name.length() + 1) * sizeof(WCHAR)), (PVOID)name.c_str()},
+            DEVPROP_TYPE_STRING, static_cast<ULONG>((Name.length() + 1) * sizeof(WCHAR)), (PVOID)Name.c_str()},
 
         {{PKEY_MIDI_EndpointDevicePurpose, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(endpointPurpose)),(PVOID)&endpointPurpose},
 
 
         {{PKEY_MIDI_UserSuppliedLargeImagePath, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((largeImagePath.length() + 1) * sizeof(WCHAR)), (PVOID)largeImagePath.c_str() },
+            DEVPROP_TYPE_STRING, static_cast<ULONG>((LargeImagePath.length() + 1) * sizeof(WCHAR)), (PVOID)LargeImagePath.c_str() },
 
         {{PKEY_MIDI_UserSuppliedSmallImagePath, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((smallImagePath.length() + 1) * sizeof(WCHAR)), (PVOID)smallImagePath.c_str() },
+            DEVPROP_TYPE_STRING, static_cast<ULONG>((SmallImagePath.length() + 1) * sizeof(WCHAR)), (PVOID)SmallImagePath.c_str() },
 
         {{PKEY_MIDI_UserSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((description.length() + 1) * sizeof(WCHAR)), (PVOID)description.c_str() },
+            DEVPROP_TYPE_STRING, static_cast<ULONG>((Description.length() + 1) * sizeof(WCHAR)), (PVOID)Description.c_str() },
 
         {{PKEY_MIDI_UserSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((name.length() + 1) * sizeof(WCHAR)), (PVOID)name.c_str() }
+            DEVPROP_TYPE_STRING, static_cast<ULONG>((Name.length() + 1) * sizeof(WCHAR)), (PVOID)Name.c_str() }
     };
 
 
@@ -435,7 +446,7 @@ CMidi2VirtualPatchBayEndpointManager::CreateEndpoint(
     //interfaceProperties.push_back({ {PKEY_MIDI_EndpointProvidedName, DEVPROP_STORE_SYSTEM, nullptr},
     //    DEVPROP_TYPE_STRING, static_cast<ULONG>((emptyString.length() + 1) * sizeof(WCHAR)), (PVOID)emptyString.c_str() });
 
-    //interfaceProperties.push_back({ {PKEY_MIDI_EndpointProvidedProductInstanceId, DEVPROP_STORE_SYSTEM, nullptr},
+    //interfaceProperties.push_back({ {PKEY_MIDI_EndpointProvidedProductinstanceId, DEVPROP_STORE_SYSTEM, nullptr},
     //    DEVPROP_TYPE_STRING, static_cast<ULONG>((emptyString.length() + 1) * sizeof(WCHAR)), (PVOID)emptyString.c_str() });
 
     //interfaceProperties.push_back({ {PKEY_MIDI_FunctionBlocksAreStatic, DEVPROP_STORE_SYSTEM, nullptr},
@@ -463,16 +474,16 @@ CMidi2VirtualPatchBayEndpointManager::CreateEndpoint(
     SW_DEVICE_CREATE_INFO createInfo = {};
     createInfo.cbSize = sizeof(createInfo);
 
-    createInfo.pszInstanceId = instanceId.c_str();
+    createInfo.pszInstanceId = InstanceId.c_str();
     createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
-    createInfo.pszDeviceDescription = name.c_str();
+    createInfo.pszDeviceDescription = Name.c_str();
 
 
     const ULONG deviceInterfaceIdMaxSize = 255;
     wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
 
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
-        std::wstring(m_parentDevice->InstanceId).c_str(),       // parent instance Id
+        std::wstring(m_ParentDevice->InstanceId).c_str(),       // parent instance Id
         true,                                                   // UMP-only
         flow,                                                   // MIDI Flow
         ARRAYSIZE(interfaceDevProperties),

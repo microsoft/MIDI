@@ -31,7 +31,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     _Use_decl_annotations_
-    HRESULT MidiEndpointConnection::Callback(PVOID data, UINT size, LONGLONG timestamp)
+    HRESULT MidiEndpointConnection::Callback(PVOID data, UINT size, LONGLONG timestamp, LONGLONG)
     {
         internal::LogInfo(__FUNCTION__, L"Message Received ");
 
@@ -144,11 +144,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
                     DWORD mmcssTaskId{};  
+                    ABSTRACTIONCREATIONPARAMS abstractionCreationParams{ MidiDataFormat_UMP };
 
                     winrt::check_hresult(m_endpointAbstraction->Initialize(
                         (LPCWSTR)(EndpointDeviceId().c_str()),
+                        &abstractionCreationParams,
                         &mmcssTaskId,
-                        (IMidiCallback*)(this)
+                        (IMidiCallback*)(this),
+                        0
                     ));
 
                     // provide a copy to the output logic

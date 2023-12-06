@@ -8,7 +8,7 @@ class CMidi2KSMidiIn :
 {
 public:
 
-    STDMETHOD(Initialize(_In_ LPCWSTR, _In_ DWORD *, _In_opt_ IMidiCallback *));
+    STDMETHOD(Initialize(_In_ LPCWSTR, _In_ PABSTRACTIONCREATIONPARAMS, _In_ DWORD *, _In_opt_ IMidiCallback *, _In_ LONGLONG));
     STDMETHOD(Cleanup)();
 
 private:

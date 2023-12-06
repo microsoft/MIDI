@@ -1,0 +1,14 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {A8798C54-6066-45F0-9ADB-648BC0641ABF} = s 'Midi2BS2UMPTransform Class'
+		{
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Both'
+			}
+			'Version' = s '1.0'
+		}
+	}
+}

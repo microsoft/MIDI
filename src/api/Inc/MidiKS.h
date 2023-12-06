@@ -22,8 +22,7 @@ protected:
         _In_ LPCWSTR,
         _In_opt_ HANDLE,
         _In_ UINT,
-        _In_ BOOL,
-        _In_ BOOL,
+        _In_ MidiTransport,
         _In_ ULONG&);
 
     HRESULT OpenStream(_In_ ULONG&);
@@ -39,9 +38,7 @@ protected:
     wil::unique_handle m_Pin;
     wil::unique_cotaskmem_string m_FilterFilename;
     UINT m_PinID {0};
-
-    BOOL m_IsLooped{ FALSE };
-    BOOL m_IsUMP{ FALSE };
+    MidiTransport m_Transport {MidiTransport_Invalid};
 
     std::unique_ptr<MEMORY_MAPPED_PIPE> m_MidiPipe;
     std::unique_ptr<CMidiXProc> m_CrossProcessMidiPump;
@@ -58,8 +55,7 @@ public:
         _In_ LPCWSTR,
         _In_opt_ HANDLE,
         _In_ UINT,
-        _In_ BOOL,
-        _In_ BOOL,
+        _In_ MidiTransport,
         _In_ ULONG,
         _In_ DWORD*);
 
@@ -93,17 +89,18 @@ public:
         _In_ LPCWSTR,
         _In_opt_ HANDLE,
         _In_ UINT,
-        _In_ BOOL,
-        _In_ BOOL,
+        _In_ MidiTransport,
         _In_ ULONG,
         _In_ DWORD*,
-        _In_ IMidiCallback *);
+        _In_ IMidiCallback *,
+        _In_ LONGLONG);
 
     virtual
     HRESULT Cleanup();
 
 private:
     wil::com_ptr_nothrow<IMidiCallback> m_MidiInCallback;
+    LONGLONG m_MidiInCallbackContext;
 
     static DWORD WINAPI MidiInWorker(
         _In_ LPVOID);

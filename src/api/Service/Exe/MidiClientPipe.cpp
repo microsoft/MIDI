@@ -25,19 +25,29 @@ CMidiClientPipe::Initialize(
     LPCWSTR Device,
     PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
     PMIDISRV_CLIENT Client,
-    DWORD* MmcssTaskId,
-    wil::com_ptr_nothrow<CMidiDevicePipe>& DevicePipe
+    DWORD* MmcssTaskId
 )
 {
+    auto lock = m_ClientPipeLock.lock();
+
     std::unique_ptr<MEMORY_MAPPED_PIPE> midiInPipe;
     std::unique_ptr<MEMORY_MAPPED_PIPE> midiOutPipe;
     wil::com_ptr_nothrow<IMidiCallback> thisCallback;
 
-    m_ClientPipe.MidiDevice = Device;
-    m_ClientPipe.Flow = CreationParams->Flow;
-    m_ClientPipe.Protocol = CreationParams->Protocol;
+    RETURN_IF_FAILED(CMidiPipe::Initialize(Device, CreationParams->Flow));
 
-    m_MidiDevicePipe = DevicePipe;
+    RETURN_IF_FAILED(AdjustForBufferingRequirements(CreationParams));
+
+    // Save the data format(s) for this client
+    if (IsFlowSupported(MidiFlowIn))
+    {
+        RETURN_IF_FAILED(SetDataFormatIn(CreationParams->DataFormat));
+    }
+
+    if (IsFlowSupported(MidiFlowOut))
+    {
+        RETURN_IF_FAILED(SetDataFormatOut(CreationParams->DataFormat));
+    }
 
     auto cleanupOnFailure = wil::scope_exit([&]()
     {
@@ -49,8 +59,7 @@ CMidiClientPipe::Initialize(
         SAFE_CLOSEHANDLE(Client->MidiOutWriteEvent);
     });
 
-    if (m_ClientPipe.Flow == MidiFlowBidirectional ||
-        m_ClientPipe.Flow == MidiFlowIn)
+    if (IsFlowSupported(MidiFlowIn))
     {
         midiInPipe.reset(new (std::nothrow) MEMORY_MAPPED_PIPE );
         RETURN_IF_NULL_ALLOC(midiInPipe);
@@ -72,8 +81,7 @@ CMidiClientPipe::Initialize(
         Client->MidiInBufferSize = midiInPipe->Data.BufferSize;
     }
 
-    if (m_ClientPipe.Flow == MidiFlowBidirectional ||
-        m_ClientPipe.Flow == MidiFlowOut)
+    if (IsFlowSupported(MidiFlowOut))
     {
         midiOutPipe.reset(new (std::nothrow) MEMORY_MAPPED_PIPE );
         RETURN_IF_NULL_ALLOC(midiOutPipe);
@@ -95,24 +103,17 @@ CMidiClientPipe::Initialize(
         Client->MidiOutBufferSize = midiOutPipe->Data.BufferSize;
     }
 
-    m_ClientPipe.MidiPump.reset(new (std::nothrow) CMidiXProc());
-    RETURN_IF_NULL_ALLOC(m_ClientPipe.MidiPump);
+    m_MidiPump.reset(new (std::nothrow) CMidiXProc());
+    RETURN_IF_NULL_ALLOC(m_MidiPump);
 
     RETURN_IF_FAILED(QueryInterface(__uuidof(IMidiCallback), (void**)&thisCallback));
-
-    // Adding the client pipe to the device pipe creates an intentional circular reference between the client
-    // and device. After this point, a proper cleanup is required, simply releasing the two will, intentionally, not
-    // clean up because there is a cross dependency between the client pipe and device pipe that requires a proper
-    // shutdown.
-    wil::com_ptr_nothrow<CMidiClientPipe> This = this;
-    RETURN_IF_FAILED(m_MidiDevicePipe->AddClientPipe(This));
 
     // The client MidiOut pipe is an input from the client side, sending data to the server,
     // and the client MidiIn pipe is an output from the server, sending data to the client.
     // Thus, the pump is initialized with midiOutPipe for input and midiInPipe for output,
     // which appears backwards if you inspect the function prototype, but is correct for the connection
     // from the client to the server.
-    RETURN_IF_FAILED(m_ClientPipe.MidiPump->Initialize(MmcssTaskId, midiOutPipe, midiInPipe, thisCallback.get()));
+    RETURN_IF_FAILED(m_MidiPump->Initialize(MmcssTaskId, midiOutPipe, midiInPipe, thisCallback.get(), 0));
 
     cleanupOnFailure.release();
 
@@ -122,15 +123,14 @@ CMidiClientPipe::Initialize(
 HRESULT
 CMidiClientPipe::Cleanup()
 {
-    if (m_ClientPipe.MidiPump)
+    auto lock = m_ClientPipeLock.lock();
+    if (m_MidiPump)
     {
-        m_ClientPipe.MidiPump->Cleanup();
-        m_ClientPipe.MidiPump.reset();
+        m_MidiPump->Cleanup();
+        m_MidiPump.reset();
     }
 
-    wil::com_ptr_nothrow<CMidiClientPipe> This = this;
-    m_MidiDevicePipe->RemoveClientPipe(This);
-    m_MidiDevicePipe.reset();
+    RETURN_IF_FAILED(CMidiPipe::Cleanup());
 
     return S_OK;
 }
@@ -143,24 +143,28 @@ CMidiClientPipe::SendMidiMessage(
     LONGLONG Position
 )
 {
-    if (m_ClientPipe.MidiPump)
+    auto lock = m_ClientPipeLock.lock();
+    if (m_MidiPump)
     {
-        return m_ClientPipe.MidiPump->SendMidiMessage(Data, Length, Position);
+        return m_MidiPump->SendMidiMessage(Data, Length, Position);
     }
     return E_ABORT;
 }
 
 _Use_decl_annotations_
 HRESULT
-CMidiClientPipe::Callback(
+CMidiClientPipe::SendMidiMessageNow(
     PVOID Data,
     UINT Length,
     LONGLONG Position
 )
 {
-    if (m_MidiDevicePipe)
+    auto lock = m_ClientPipeLock.lock();
+    if (m_MidiPump)
     {
-        return m_MidiDevicePipe->SendMidiMessage(Data, Length, Position);
+        // TODO: add a SendMidiMessageNow routine to the abstraction layers.
+        return m_MidiPump->SendMidiMessage(Data, Length, Position);
     }
     return E_ABORT;
 }
+

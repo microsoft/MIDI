@@ -60,7 +60,8 @@ public:
     HRESULT Initialize(_In_ DWORD*,
                           _In_ std::unique_ptr<MEMORY_MAPPED_PIPE>&,
                           _In_ std::unique_ptr<MEMORY_MAPPED_PIPE>&,
-                          _In_opt_ IMidiCallback *);
+                          _In_opt_ IMidiCallback *,
+                          _In_ LONGLONG);
 
     HRESULT Cleanup();
 
@@ -72,6 +73,7 @@ public:
 private:
 
     wil::com_ptr_nothrow<IMidiCallback> m_MidiInCallback;
+    LONGLONG m_MidiInCallbackContext;
 
     std::unique_ptr<MEMORY_MAPPED_PIPE> m_MidiIn;
     std::unique_ptr<MEMORY_MAPPED_PIPE> m_MidiOut;

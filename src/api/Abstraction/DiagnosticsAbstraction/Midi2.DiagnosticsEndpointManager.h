@@ -49,7 +49,7 @@ public:
 typedef struct _PARENTDEVICECREATECONTEXT
 {
     MidiEndpointParentDeviceInfo* MidiParentDevice{ nullptr };
-    wil::unique_event creationCompleted{ wil::EventOptions::None };
+    wil::unique_event CreationCompleted{ wil::EventOptions::None };
     DEVPROPERTY* InterfaceDevProperties{ nullptr };
     ULONG IntPropertyCount{};
 } PARENTDEVICECREATECONTEXT, * PPARENTDEVICECREATECONTEXT;
@@ -66,23 +66,26 @@ public:
     STDMETHOD(Cleanup)();
 
 private:
-    GUID m_containerId{};
-    GUID m_transportAbstractionId{};
+    GUID m_ContainerId{};
+    GUID m_TransportAbstractionId{};
 
+    HRESULT CreateLoopbackEndpoint(
+        _In_ std::wstring const InstanceId,
+        _In_ std::wstring const Name,
+        _In_ MidiFlow const Flow);
 
-    HRESULT CreateLoopbackEndpoint(_In_ std::wstring const instanceId, _In_ std::wstring const name, _In_ MidiFlow const flow);
-    HRESULT CreatePingEndpoint(_In_ std::wstring const instanceId, _In_ std::wstring const name, _In_ MidiFlow const flow);
+    HRESULT CreatePingEndpoint(
+        _In_ std::wstring const InstanceId,
+        _In_ std::wstring const Name,
+        _In_ MidiFlow const Flow);
 
     HRESULT CreateParentDevice();
 
     wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
 
-
     // TODO: Is this still needed?
     std::vector<std::unique_ptr<MidiUmpEndpointInfo>> m_AvailableMidiUmpEndpoints;
 
-
-    std::unique_ptr<MidiEndpointParentDeviceInfo> m_parentDevice{ nullptr };
-
+    std::unique_ptr<MidiEndpointParentDeviceInfo> m_ParentDevice{ nullptr };
 
 };

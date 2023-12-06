@@ -11,8 +11,6 @@
 #include "MidiDefs.h"
 #include "MidiXProc.h"
 #include "Midi2ServiceTests.h"
-
-#include "MidiKsCommon.h"
 #include "MidiSwEnum.h"
 
 #include "Midi2MidiSrvAbstraction.h"
@@ -119,7 +117,8 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
     VERIFY_SUCCEEDED(MidiSWDeviceEnum::EnumerateDevices(testDevices, [&](PMIDIU_DEVICE device)
     {
         if (device->Flow == MidiFlowBidirectional &&
-            std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi") &&
+            (std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi") ||
+            std::wstring::npos != device->ParentDeviceInstanceId.find(L"VID_CAFE&PID_4001&MI_02")) &&
             !device->MidiOne)
         {
             return true;
@@ -179,7 +178,7 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
         }
     });
 
-    creationParams.Protocol = MidiUMP;
+    creationParams.DataFormat = MidiDataFormat_UMP;
     creationParams.Flow = MidiFlowBidirectional;
     creationParams.BufferSize = PAGE_SIZE;
 
@@ -248,7 +247,7 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
 
     VERIFY_SUCCEEDED(allMessagesReceived.create());
 
-    m_MidiInCallback = [&](PVOID payload, UINT32 payloadSize, LONGLONG payloadPosition)
+    m_MidiInCallback = [&](PVOID payload, UINT32 payloadSize, LONGLONG payloadPosition, LONGLONG)
     {
         PrintMidiMessage(payload, payloadSize, sizeof(UMP32), payloadPosition);
 
@@ -262,7 +261,7 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
     midiPump.reset(new (std::nothrow) CMidiXProc());
     VERIFY_IS_TRUE(nullptr != midiPump);
 
-    VERIFY_SUCCEEDED(midiPump->Initialize(&MmCssTaskId, midiInPipe, midiOutPipe, this));
+    VERIFY_SUCCEEDED(midiPump->Initialize(&MmCssTaskId, midiInPipe, midiOutPipe, this, 0));
 
     LOG_OUTPUT(L"Writing midi data");
     messagesExpected = 4;

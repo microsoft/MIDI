@@ -10,36 +10,36 @@
 //#include "MidiLoopbackBidiDevice.h"
 
 HRESULT MidiLoopbackBidiDevice::SendMidiMessageFromAToB(
-    _In_ void* message,
-    _In_ UINT32 size,
-    _In_ LONGLONG timestamp)
+    _In_ void* Message,
+    _In_ UINT32 Size,
+    _In_ LONGLONG Timestamp)
 {
     // we don't want a fail hresult here as it just means the callback went away
-    if (m_callbackB == nullptr) return S_OK;
+    if (m_CallbackB == nullptr) return S_OK;
 
-    RETURN_HR_IF_NULL(E_INVALIDARG, message);
-    RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
+    RETURN_HR_IF_NULL(E_INVALIDARG, Message);
+    RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
 
     // Sending message from A output to B input
 
-    return m_callbackB->Callback(message, size, timestamp);
+    return m_CallbackB->Callback(Message, Size, Timestamp, m_ContextB);
 
 }
 
 HRESULT MidiLoopbackBidiDevice::SendMidiMessageFromBToA(
-    _In_ void* message,
-    _In_ UINT32 size,
-    _In_ LONGLONG timestamp)
+    _In_ void* Message,
+    _In_ UINT32 Size,
+    _In_ LONGLONG Timestamp)
 {
     // we don't want a fail hresult here as it just means the callback went away
-    if (m_callbackA == nullptr) return S_OK;
+    if (m_CallbackA == nullptr) return S_OK;
 
-    RETURN_HR_IF_NULL(E_INVALIDARG, message);
-    RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
+    RETURN_HR_IF_NULL(E_INVALIDARG, Message);
+    RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
 
     // Sending message from B output to A input
 
-    return m_callbackA->Callback(message, size, timestamp);
+    return m_CallbackA->Callback(Message, Size, Timestamp, m_ContextB);
 }
 
 
@@ -51,23 +51,38 @@ void MidiLoopbackBidiDevice::Cleanup()
 
 void MidiLoopbackBidiDevice::CleanupA()
 {
-    m_callbackA = nullptr;
+    m_CallbackA = nullptr;
+    m_ContextA = 0;
 }
 
 void MidiLoopbackBidiDevice::CleanupB()
 {
-    m_callbackB = nullptr;
+    m_CallbackB = nullptr;
+    m_ContextB = 0;
 }
 
-
-void MidiLoopbackBidiDevice::SetCallbackA(_In_ IMidiCallback* callback)
+_Use_decl_annotations_
+void
+MidiLoopbackBidiDevice::SetCallbackA
+(
+    IMidiCallback* Callback,
+    LONGLONG Context
+)
 {
-    m_callbackA = callback;
+    m_CallbackA = Callback;
+    m_ContextA = Context;
 }
 
-void MidiLoopbackBidiDevice::SetCallbackB(_In_ IMidiCallback* callback)
+_Use_decl_annotations_
+void
+MidiLoopbackBidiDevice::SetCallbackB
+(
+    IMidiCallback* Callback,
+    LONGLONG Context
+)
 {
-    m_callbackB = callback;
+    m_CallbackB = Callback;
+    m_ContextB = Context;
 }
 
 

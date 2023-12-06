@@ -2,11 +2,11 @@
 #pragma once
 
 #include <windows.h>
-            
+#include <cguid.h>
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
-
+#include <ks.h>
 #include <avrt.h>
 #include <wil\com.h>
 #include <wil\resource.h>

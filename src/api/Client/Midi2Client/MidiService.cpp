@@ -55,7 +55,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             return *responseSummary;
         }
 
-        MidiEndpointConnectionOptions options;
+        auto options = winrt::make<MidiEndpointConnectionOptions>();
         
         // This ID must be consistent with what the service is set up to use.
 

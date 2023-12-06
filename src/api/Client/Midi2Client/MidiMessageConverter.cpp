@@ -35,7 +35,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // set the group
         internal::SetGroupIndexInFirstWord(midiWord, groupIndex);
 
-        MidiMessage32 message;
+        auto message = winrt::make<MidiMessage32>();
         message.Timestamp(timestamp);
         message.Word0(midiWord);
 
@@ -67,7 +67,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // set the group
         internal::SetGroupIndexInFirstWord(midiWord, groupIndex);
 
-        MidiMessage32 message;
+        auto message = winrt::make<MidiMessage32>();
         message.Timestamp(timestamp);
         message.Word0(midiWord);
 
@@ -99,7 +99,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // set the group
         internal::SetGroupIndexInFirstWord(midiWord, groupIndex);
 
-        MidiMessage32 message;
+        auto message = winrt::make<MidiMessage32>();
         message.Timestamp(timestamp);
         message.Word0(midiWord);
 

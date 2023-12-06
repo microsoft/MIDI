@@ -44,7 +44,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ winrt::Windows::Devices::Midi::MidiChannelPressureMessage const& originalMessage
         ) noexcept
         {
-            MidiMessage32 message;
+            auto message = winrt::make<MidiMessage32>();
             message.Timestamp(timestamp);
             message.Word0(InternalConvertBytes(groupIndex, (Windows::Devices::Midi::IMidiMessage)originalMessage));
 

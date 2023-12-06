@@ -14,8 +14,10 @@ _Use_decl_annotations_
 HRESULT
 CMidi2BluetoothMidiBiDi::Initialize(
     LPCWSTR,
+    PABSTRACTIONCREATIONPARAMS,
     DWORD *,
-    IMidiCallback * callback
+    IMidiCallback * Callback,
+    LONGLONG Context
 )
 {
 
@@ -26,7 +28,8 @@ CMidi2BluetoothMidiBiDi::Initialize(
         TraceLoggingPointer(this, "this")
         );
 
-    m_callback = callback;
+    m_Callback = Callback;
+    m_Context = Context;
 
 
     // TODO: Using the device Id parameter, associate with the endpoint in the endpoint device table
@@ -48,7 +51,8 @@ CMidi2BluetoothMidiBiDi::Cleanup()
 
     // TODO: Remove the BiDi pointer from the endpoint device table
 
-    m_callback = nullptr;
+    m_Callback = nullptr;
+    m_Context = 0;
 
     return S_OK;
 }
@@ -56,20 +60,20 @@ CMidi2BluetoothMidiBiDi::Cleanup()
 _Use_decl_annotations_
 HRESULT
 CMidi2BluetoothMidiBiDi::SendMidiMessage(
-    PVOID message,
-    UINT size,
-    LONGLONG /*position*/
+    PVOID Message,
+    UINT Size,
+    LONGLONG /*Position*/
 )
 {
-    RETURN_HR_IF_NULL(E_INVALIDARG, message);
+    RETURN_HR_IF_NULL(E_INVALIDARG, Message);
 
-    if (size < sizeof(uint32_t))
+    if (Size < sizeof(uint32_t))
     {
         // TODO log that data was smaller than minimum UMP size
         return E_FAIL;
     }
 
-    //m_callback->Callback(message, size, position);
+    //m_Callback->Callback(Message, Size, Position, m_Context);
 
     return S_OK;
 
@@ -78,9 +82,10 @@ CMidi2BluetoothMidiBiDi::SendMidiMessage(
 _Use_decl_annotations_
 HRESULT
 CMidi2BluetoothMidiBiDi::Callback(
-    PVOID /*message*/,
-    UINT /*size*/,
-    LONGLONG /*position*/
+    PVOID /*Message*/,
+    UINT /*Size*/,
+    LONGLONG /*Position*/,
+    LONGLONG /*Context*/
 )
 {
     //return E_NOTIMPL;

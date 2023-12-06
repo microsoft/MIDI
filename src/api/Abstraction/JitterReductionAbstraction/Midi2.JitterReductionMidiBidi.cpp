@@ -12,9 +12,11 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2JitterReductionMidiBiDi::Initialize(
-    LPCWSTR endpointId,
+    LPCWSTR EndpointId,
+    PABSTRACTIONCREATIONPARAMS,
     DWORD *,
-    IMidiCallback * callback
+    IMidiCallback * Callback,
+    LONGLONG Context
 )
 {
     TraceLoggingWrite(
@@ -24,14 +26,13 @@ CMidi2JitterReductionMidiBiDi::Initialize(
         TraceLoggingPointer(this, "this")
         );
 
-    RETURN_HR_IF_NULL(E_INVALIDARG, callback);
-    m_callback = callback;
+    RETURN_HR_IF_NULL(E_INVALIDARG, Callback);
+    m_Callback = Callback;
+    m_Context = Context;
 
 
-    std::wstring id{ endpointId };
+    std::wstring id{ EndpointId };
     InPlaceToLower(id);
-
-
 
     return S_OK;
 }
@@ -47,7 +48,8 @@ CMidi2JitterReductionMidiBiDi::Cleanup()
         );
 
 
-    m_callback = nullptr;
+    m_Callback = nullptr;
+    m_Context = 0;
 
     return S_OK;
 }
@@ -55,17 +57,17 @@ CMidi2JitterReductionMidiBiDi::Cleanup()
 _Use_decl_annotations_
 HRESULT
 CMidi2JitterReductionMidiBiDi::SendMidiMessage(
-    PVOID message,
-    UINT size,
-    LONGLONG timestamp
+    PVOID Message,
+    UINT Size,
+    LONGLONG Timestamp
 )
 {
-    RETURN_HR_IF_NULL(E_INVALIDARG, message);
-    RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
+    RETURN_HR_IF_NULL(E_INVALIDARG, Message);
+    RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
     
 
     // TODO
-    UNREFERENCED_PARAMETER(timestamp);
+    UNREFERENCED_PARAMETER(Timestamp);
 
 
     return S_OK;
@@ -74,15 +76,16 @@ CMidi2JitterReductionMidiBiDi::SendMidiMessage(
 _Use_decl_annotations_
 HRESULT
 CMidi2JitterReductionMidiBiDi::Callback(
-    PVOID message,
-    UINT size,
-    LONGLONG timestamp
+    PVOID Message,
+    UINT Size,
+    LONGLONG Timestamp,
+    LONGLONG
 )
 {
-    RETURN_HR_IF_NULL(E_INVALIDARG, message);
-    RETURN_HR_IF_NULL(E_POINTER, m_callback);
-    RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
+    RETURN_HR_IF_NULL(E_INVALIDARG, Message);
+    RETURN_HR_IF_NULL(E_POINTER, m_Callback);
+    RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
 
-    return m_callback->Callback(message, size, timestamp);
+    return m_Callback->Callback(Message, Size, Timestamp, m_Context);
 }
 

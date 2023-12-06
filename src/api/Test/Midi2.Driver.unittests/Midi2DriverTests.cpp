@@ -4,8 +4,6 @@
 #include "MidiAbstraction_i.c"
 #include "MidiAbstraction.h"
 
-#include "Midi2DriverTests.h"
-
 #include <Devpkey.h>
 #include "MidiDefs.h"
 #include "MidiKsDef.h"
@@ -14,13 +12,49 @@
 #include "MidiXProc.h"
 #include "MidiKs.h"
 
+#include "Midi2DriverTests.h"
+
 using namespace WEX::Logging;
 
-void Midi2DriverTests::TestMidiIO(BOOL Cyclic)
+BOOL GetPins(MidiTransport Transport, KSMidiDeviceEnum & MidiDeviceEnum, UINT & OutPinIndex, UINT & InPinIndex)
+{
+    // Transport is required to be one of these three, any other value is invlid.
+    VERIFY_IS_TRUE(Transport == MidiTransport_StandardByteStream || Transport == MidiTransport_CyclicByteStream || Transport == MidiTransport_CyclicUMP);
+
+    // Find a pair of pins which support this transport
+    for (UINT i = 0; i < MidiDeviceEnum.m_AvailableMidiInPinCount; i++)
+    {
+        if (0 != ((DWORD) MidiDeviceEnum.m_AvailableMidiInPins[i].TransportCapability & (DWORD) Transport))
+        {
+            for (UINT j = 0; j < MidiDeviceEnum.m_AvailableMidiOutPinCount; j++)
+            {
+                // pins need to be on the same filter for testing.
+                if (0 == _wcsicmp(MidiDeviceEnum.m_AvailableMidiInPins[i].FilterName.get(), MidiDeviceEnum.m_AvailableMidiOutPins[j].FilterName.get()))
+                {
+                    if (0 != ((DWORD) MidiDeviceEnum.m_AvailableMidiOutPins[j].TransportCapability & (DWORD) Transport))
+                    {
+                        InPinIndex = i;
+                        OutPinIndex = i;
+                        return TRUE;                    
+                    }
+                }
+            }
+        }
+    }
+
+    Log::Result(WEX::Logging::TestResults::Skipped, L"Skipping test: Midi device doesn't support requested transport.");
+
+    return FALSE;
+}
+
+void Midi2DriverTests::TestMidiIO(MidiTransport Transport)
 {
 //    WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
     KSMidiDeviceEnum midiDeviceEnum;
+    UINT inPinIndex {0};
+    UINT outPinIndex{0};
+
     KSMidiOutDevice midiOutDevice;
     KSMidiInDevice midiInDevice;
     DWORD mmcssTaskId {0};
@@ -31,11 +65,11 @@ void Midi2DriverTests::TestMidiIO(BOOL Cyclic)
 
     UINT midiMessagesReceived = 0;
 
-    m_MidiInCallback = [&](PVOID payload, UINT32 payloadSize, LONGLONG payloadPosition)
+    m_MidiInCallback = [&](PVOID payload, UINT32 payloadSize, LONGLONG payloadPosition, LONGLONG)
     {
         midiMessagesReceived++;
 
-        PrintMidiMessage(payload, payloadSize, sizeof(UMP32), payloadPosition);
+        PrintMidiMessage(payload, payloadSize, (Transport == MidiTransport_CyclicUMP)?sizeof(UMP32):sizeof(MIDI_MESSAGE), payloadPosition);
 
         if (midiMessagesReceived == expectedMessageCount)
         {
@@ -47,38 +81,44 @@ void Midi2DriverTests::TestMidiIO(BOOL Cyclic)
 
     VERIFY_SUCCEEDED(midiDeviceEnum.EnumerateFilters());
 
-    VERIFY_IS_TRUE(midiDeviceEnum.m_AvailableMidiInPinCount > 0);
-    VERIFY_IS_TRUE(midiDeviceEnum.m_AvailableMidiOutPinCount > 0);
-
-    if (Cyclic)
+    if (!GetPins(Transport, midiDeviceEnum, outPinIndex, inPinIndex))
     {
-        if (!midiDeviceEnum.m_AvailableMidiOutPins[0].UMP || 
-            !midiDeviceEnum.m_AvailableMidiInPins[0].UMP)
-        {
-            Log::Result(WEX::Logging::TestResults::Skipped, L"Skipping test: Midi 1 device doesn't support cyclic.");
-            return;
-        }
+        return;
     }
 
     ULONG requestedBufferSize = PAGE_SIZE;
     VERIFY_SUCCEEDED(GetRequiredBufferSize(requestedBufferSize));
 
     LOG_OUTPUT(L"Initializing midi in");
-    VERIFY_SUCCEEDED(midiInDevice.Initialize(midiDeviceEnum.m_AvailableMidiInPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiInPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiInPins[0].UMP, requestedBufferSize, &mmcssTaskId, this));
+    VERIFY_SUCCEEDED(midiInDevice.Initialize(midiDeviceEnum.m_AvailableMidiInPins[inPinIndex].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiInPins[inPinIndex].PinId, Transport, requestedBufferSize, &mmcssTaskId, this, 0));
 
     LOG_OUTPUT(L"Initializing midi out");
-    VERIFY_SUCCEEDED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiOutPins[0].UMP, requestedBufferSize, &mmcssTaskId));
+    VERIFY_SUCCEEDED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[outPinIndex].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[outPinIndex].PinId, Transport, requestedBufferSize, &mmcssTaskId));
 
     LOG_OUTPUT(L"Writing midi data");
 
-    QueryPerformanceCounter(&position);
-    VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), position.QuadPart));
-    QueryPerformanceCounter(&position);
-    VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_64, sizeof(UMP64), position.QuadPart));
-    QueryPerformanceCounter(&position);
-    VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_96, sizeof(UMP96), position.QuadPart));
-    QueryPerformanceCounter(&position);
-    VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_128, sizeof(UMP128), position.QuadPart));
+    if (Transport == MidiTransport_CyclicUMP)
+    {
+        QueryPerformanceCounter(&position);
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), position.QuadPart));
+        QueryPerformanceCounter(&position);
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_64, sizeof(UMP64), position.QuadPart));
+        QueryPerformanceCounter(&position);
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_96, sizeof(UMP96), position.QuadPart));
+        QueryPerformanceCounter(&position);
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_128, sizeof(UMP128), position.QuadPart));
+    }
+    else
+    {
+        QueryPerformanceCounter(&position);
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), position.QuadPart));
+        QueryPerformanceCounter(&position);
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), position.QuadPart));
+        QueryPerformanceCounter(&position);
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), position.QuadPart));
+        QueryPerformanceCounter(&position);
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), position.QuadPart));
+    }
 
     // wait for up to 30 seconds for all the messages
     if(!allMessagesReceived.wait(30000))
@@ -98,21 +138,29 @@ void Midi2DriverTests::TestMidiIO(BOOL Cyclic)
     VERIFY_SUCCEEDED(midiInDevice.Cleanup());
 }
 
-void Midi2DriverTests::TestCyclicMidiIO()
+void Midi2DriverTests::TestCyclicUMPMidiIO()
 {
-    TestMidiIO(TRUE);
+    TestMidiIO(MidiTransport_CyclicUMP);
+}
+
+void Midi2DriverTests::TestCyclicByteStreamMidiIO()
+{
+    TestMidiIO(MidiTransport_CyclicByteStream);
 }
 
 void Midi2DriverTests::TestStandardMidiIO()
 {
-    TestMidiIO(FALSE);
+    TestMidiIO(MidiTransport_StandardByteStream);
 }
 
-void Midi2DriverTests::TestMidiIO_ManyMessages(BOOL Cyclic)
+void Midi2DriverTests::TestMidiIO_ManyMessages(MidiTransport Transport)
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
     KSMidiDeviceEnum midiDeviceEnum;
+    UINT inPinIndex {0};
+    UINT outPinIndex{0};
+
     KSMidiOutDevice midiOutDevice;
     KSMidiInDevice midiInDevice;
     DWORD mmcssTaskId {0};
@@ -126,13 +174,23 @@ void Midi2DriverTests::TestMidiIO_ManyMessages(BOOL Cyclic)
     QueryPerformanceCounter(&previousPosition);
 
     UINT midiMessagesReceived = 0;
-    m_MidiInCallback = [&](PVOID payload, UINT32 payloadSize, LONGLONG payloadPosition)
+    m_MidiInCallback = [&](PVOID payload, UINT32 payloadSize, LONGLONG payloadPosition, LONGLONG)
     {
         midiMessagesReceived++;
 
-        if (0 != memcmp(payload, &g_MidiTestData_128, min(payloadSize, sizeof(UMP128))))
+        if (Transport == MidiTransport_CyclicUMP)
         {
-            PrintMidiMessage(payload, payloadSize, sizeof(UMP128), payloadPosition);
+            if (0 != memcmp(payload, &g_MidiTestData_128, min(payloadSize, sizeof(UMP128))))
+            {
+                PrintMidiMessage(payload, payloadSize, sizeof(UMP128), payloadPosition);
+            }
+        }
+        else
+        {
+            if (0 != memcmp(payload, &g_MidiTestMessage, min(payloadSize, sizeof(MIDI_MESSAGE))))
+            {
+                PrintMidiMessage(payload, payloadSize, sizeof(MIDI_MESSAGE), payloadPosition);
+            }
         }
 
         if (midiMessagesReceived == expectedMessageCount)
@@ -145,34 +203,36 @@ void Midi2DriverTests::TestMidiIO_ManyMessages(BOOL Cyclic)
 
     VERIFY_SUCCEEDED(midiDeviceEnum.EnumerateFilters());
 
-    VERIFY_IS_TRUE(midiDeviceEnum.m_AvailableMidiInPinCount > 0);
-    VERIFY_IS_TRUE(midiDeviceEnum.m_AvailableMidiOutPinCount > 0);
-
-    if (Cyclic)
+    if (!GetPins(Transport, midiDeviceEnum, outPinIndex, inPinIndex))
     {
-        if (!midiDeviceEnum.m_AvailableMidiOutPins[0].UMP || 
-            !midiDeviceEnum.m_AvailableMidiInPins[0].UMP)
-        {
-            Log::Result(WEX::Logging::TestResults::Skipped, L"Skipping test: Midi 1 device doesn't support cyclic.");
-            return;
-        }
+        return;
     }
 
     ULONG requestedBufferSize = PAGE_SIZE;
     VERIFY_SUCCEEDED(GetRequiredBufferSize(requestedBufferSize));
 
     LOG_OUTPUT(L"Initializing midi in");
-    VERIFY_SUCCEEDED(midiInDevice.Initialize(midiDeviceEnum.m_AvailableMidiInPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiInPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiInPins[0].UMP, requestedBufferSize, &mmcssTaskId, this));
+    VERIFY_SUCCEEDED(midiInDevice.Initialize(midiDeviceEnum.m_AvailableMidiInPins[inPinIndex].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiInPins[inPinIndex].PinId, Transport, requestedBufferSize, &mmcssTaskId, this, 0));
 
     LOG_OUTPUT(L"Initializing midi out");
-    VERIFY_SUCCEEDED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiOutPins[0].UMP, requestedBufferSize, &mmcssTaskId));
+    VERIFY_SUCCEEDED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[outPinIndex].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[outPinIndex].PinId, Transport, requestedBufferSize, &mmcssTaskId));
 
     LOG_OUTPUT(L"Writing midi data");
 
     for (UINT i = 0; i < expectedMessageCount; i++)
     {
         QueryPerformanceCounter(&position);
-        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_128, sizeof(UMP128), position.QuadPart));
+
+        if (Transport == MidiTransport_CyclicUMP)
+        {
+            QueryPerformanceCounter(&position);
+            VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_128, sizeof(UMP128), position.QuadPart));
+        }
+        else
+        {
+            QueryPerformanceCounter(&position);
+            VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), position.QuadPart));
+        }
     }
 
     // wait for up to 30 seconds for all the messages
@@ -193,23 +253,31 @@ void Midi2DriverTests::TestMidiIO_ManyMessages(BOOL Cyclic)
     VERIFY_SUCCEEDED(midiInDevice.Cleanup());
 }
 
-void Midi2DriverTests::TestCyclicMidiIO_ManyMessages()
+void Midi2DriverTests::TestCyclicUMPMidiIO_ManyMessages()
 {
-    TestMidiIO_ManyMessages(TRUE);
+    TestMidiIO_ManyMessages(MidiTransport_CyclicUMP);
+}
+
+void Midi2DriverTests::TestCyclicByteStreamMidiIO_ManyMessages()
+{
+    TestMidiIO_ManyMessages(MidiTransport_CyclicByteStream);
 }
 
 void Midi2DriverTests::TestStandardMidiIO_ManyMessages()
 {
-    TestMidiIO_ManyMessages(FALSE);
+    TestMidiIO_ManyMessages(MidiTransport_StandardByteStream);
 }
 
-void Midi2DriverTests::TestMidiIO_Latency(BOOL Cyclic, BOOL DelayedMessages)
+void Midi2DriverTests::TestMidiIO_Latency(MidiTransport Transport, BOOL DelayedMessages)
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
     DWORD messageDelay {10};
 
     KSMidiDeviceEnum midiDeviceEnum;
+    UINT inPinIndex {0};
+    UINT outPinIndex{0};
+
     KSMidiOutDevice midiOutDevice;
     KSMidiInDevice midiInDevice;
     DWORD mmcssTaskId {0};
@@ -242,7 +310,7 @@ void Midi2DriverTests::TestMidiIO_Latency(BOOL Cyclic, BOOL DelayedMessages)
     qpcPerMs = (performanceFrequency.QuadPart / 1000.);
 
     UINT midiMessagesReceived = 0;
-    m_MidiInCallback = [&](PVOID, UINT32, LONGLONG payloadPosition)
+    m_MidiInCallback = [&](PVOID, UINT32, LONGLONG payloadPosition, LONGLONG)
     {
         LARGE_INTEGER qpc {0};
         LONGLONG roundTripLatency {0};
@@ -318,27 +386,19 @@ void Midi2DriverTests::TestMidiIO_Latency(BOOL Cyclic, BOOL DelayedMessages)
 
     VERIFY_SUCCEEDED(midiDeviceEnum.EnumerateFilters());
 
-    VERIFY_IS_TRUE(midiDeviceEnum.m_AvailableMidiInPinCount > 0);
-    VERIFY_IS_TRUE(midiDeviceEnum.m_AvailableMidiOutPinCount > 0);
-
-    if (Cyclic)
+    if (!GetPins(Transport, midiDeviceEnum, outPinIndex, inPinIndex))
     {
-        if (!midiDeviceEnum.m_AvailableMidiOutPins[0].UMP || 
-            !midiDeviceEnum.m_AvailableMidiInPins[0].UMP)
-        {
-            Log::Result(WEX::Logging::TestResults::Skipped, L"Skipping test: Midi 1 device doesn't support cyclic.");
-            return;
-        }
+        return;
     }
 
     ULONG requestedBufferSize = PAGE_SIZE;
     VERIFY_SUCCEEDED(GetRequiredBufferSize(requestedBufferSize));
 
     LOG_OUTPUT(L"Initializing midi in");
-    VERIFY_SUCCEEDED(midiInDevice.Initialize(midiDeviceEnum.m_AvailableMidiInPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiInPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiInPins[0].UMP, requestedBufferSize, &mmcssTaskId, this));
+    VERIFY_SUCCEEDED(midiInDevice.Initialize(midiDeviceEnum.m_AvailableMidiInPins[inPinIndex].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiInPins[inPinIndex].PinId, Transport, requestedBufferSize, &mmcssTaskId, this, 0));
 
     LOG_OUTPUT(L"Initializing midi out");
-    VERIFY_SUCCEEDED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[0].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[0].PinId, Cyclic, midiDeviceEnum.m_AvailableMidiOutPins[0].UMP, requestedBufferSize, &mmcssTaskId));
+    VERIFY_SUCCEEDED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[outPinIndex].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[outPinIndex].PinId, Transport, requestedBufferSize, &mmcssTaskId));
 
     LOG_OUTPUT(L"Writing midi data");
 
@@ -361,7 +421,14 @@ void Midi2DriverTests::TestMidiIO_Latency(BOOL Cyclic, BOOL DelayedMessages)
         LONGLONG sendLatency {0};
 
         QueryPerformanceCounter(&qpcBefore);
-        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void*) &g_MidiTestData_32, sizeof(UMP32), qpcBefore.QuadPart));
+        if (Transport == MidiTransport_CyclicUMP)
+        {
+            VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void*) &g_MidiTestData_32, sizeof(UMP32), qpcBefore.QuadPart));
+        }
+        else
+        {
+            VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), qpcBefore.QuadPart));
+        }
         QueryPerformanceCounter(&qpcAfter);
 
         // track the min, max, and average time that the send call took,
@@ -461,24 +528,35 @@ void Midi2DriverTests::TestMidiIO_Latency(BOOL Cyclic, BOOL DelayedMessages)
     VERIFY_SUCCEEDED(midiInDevice.Cleanup());
 }
 
-void Midi2DriverTests::TestCyclicMidiIO_Latency()
+void Midi2DriverTests::TestCyclicUMPMidiIO_Latency()
 {
-    TestMidiIO_Latency(TRUE, FALSE);
+    TestMidiIO_Latency(MidiTransport_CyclicUMP, FALSE);
+}
+
+void Midi2DriverTests::TestCyclicByteStreamMidiIO_Latency()
+{
+    TestMidiIO_Latency(MidiTransport_CyclicByteStream, FALSE);
 }
 
 void Midi2DriverTests::TestStandardMidiIO_Latency()
 {
-    TestMidiIO_Latency(FALSE, FALSE);
+    TestMidiIO_Latency(MidiTransport_StandardByteStream, FALSE);
 }
 
-void Midi2DriverTests::TestCyclicMidiIOSlowMessages_Latency()
+
+void Midi2DriverTests::TestCyclicUMPMidiIOSlowMessages_Latency()
 {
-    TestMidiIO_Latency(TRUE, TRUE);
+    TestMidiIO_Latency(MidiTransport_CyclicUMP, TRUE);
+}
+
+void Midi2DriverTests::TestCyclicByteStreamMidiIOSlowMessages_Latency()
+{
+    TestMidiIO_Latency(MidiTransport_CyclicByteStream, TRUE);
 }
 
 void Midi2DriverTests::TestStandardMidiIOSlowMessages_Latency()
 {
-    TestMidiIO_Latency(FALSE, TRUE);
+    TestMidiIO_Latency(MidiTransport_StandardByteStream, TRUE);
 }
 
 bool Midi2DriverTests::TestSetup()
