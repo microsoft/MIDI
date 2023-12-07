@@ -1486,7 +1486,7 @@ Return Value:
         pThisGrpTrmBlk->GrpTrmBlock.Size =
             (WORD)(sizeof(UMP_GROUP_TERMINAL_BLOCK_HEADER) + grpTermBlockStringSizes[termBlockCount]);
         pThisGrpTrmBlk->GrpTrmBlock.Number = pUSBGTBs->aBlock[termBlockCount].bGrpTrmBlkID;
-        pThisGrpTrmBlk->GrpTrmBlock.Direction = pUSBGTBs->aBlock[termBlockCount].bDescriptorType;
+        pThisGrpTrmBlk->GrpTrmBlock.Direction = pUSBGTBs->aBlock[termBlockCount].bGrpTrmBlkType;
         pThisGrpTrmBlk->GrpTrmBlock.FirstGroupIndex = pUSBGTBs->aBlock[termBlockCount].nGroupTrm;
         pThisGrpTrmBlk->GrpTrmBlock.GroupCount = pUSBGTBs->aBlock[termBlockCount].nNumGroupTrm;
         pThisGrpTrmBlk->GrpTrmBlock.Protocol = pUSBGTBs->aBlock[termBlockCount].bMIDIProtocol;
