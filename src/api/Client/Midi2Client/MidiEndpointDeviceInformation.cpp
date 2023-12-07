@@ -500,11 +500,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     collections::IVectorView<midi2::MidiGroupTerminalBlock> MidiEndpointDeviceInformation::GroupTerminalBlocks() const noexcept
     {
-        collections::IVector<midi2::MidiGroupTerminalBlock> blocks{ winrt::single_threaded_vector<midi2::MidiGroupTerminalBlock>() };
-
-        // TODO: Populate from property
-
-        return blocks.GetView();
+        return m_groupTerminalBlocks.GetView();
     }
 
 
@@ -531,6 +527,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         m_id = deviceInformation.Id();
         m_transportSuppliedEndpointName = deviceInformation.Name();
+
+        ReadGroupTerminalBlocks();
     }
 
     _Use_decl_annotations_
@@ -572,10 +570,114 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         // TODO: need to update the name
 
+        // TODO: Re-read function blocks if the original ones are not static
+        // no need to re-read GTB because those are static
 
         return false;
     }
 
+
+
+    void MidiEndpointDeviceInformation::ReadGroupTerminalBlocks()
+    {
+        try
+        {
+            //OutputDebugString(L"" __FUNCTION__);
+
+            // in groups property
+            // STRING_PKEY_MIDI_IN_GroupTerminalBlocks
+
+            for (auto key : { STRING_PKEY_MIDI_IN_GroupTerminalBlocks /*, STRING_PKEY_MIDI_OUT_GroupTerminalBlocks*/ })
+            {
+                if (m_properties.HasKey(key))
+                {
+                    auto value = m_properties.Lookup(key).as<winrt::Windows::Foundation::IPropertyValue>();
+
+                    if (value != nullptr)
+                    {
+                        auto t = value.Type();
+
+                        //OutputDebugString(std::to_wstring((int)t).c_str());
+
+                        if (t == foundation::PropertyType::UInt8Array)
+                        {
+                            //OutputDebugString(L"Property is PropertyType::UInt8Array");
+
+                            auto refArray = winrt::unbox_value<foundation::IReferenceArray<uint8_t>>(m_properties.Lookup(key));
+                            auto data = refArray.Value();
+                            auto arraySize = data.size();
+
+                            //OutputDebugString(L"Array size is:");
+                            //OutputDebugString(std::to_wstring(data.size()).c_str());
+
+                            uint32_t offset = 0;
+
+                            // get the KS_MULTIPLE_ITEMS info. First is a ULONG of the total size, next is a ULONG of the count of items
+                            // I should use the struct directly, but I don't want to pull in all that KS stuff here.
+                            
+                            //ULONG totalSize = *((ULONG*)(data.data() + offset));
+                            //offset += sizeof(ULONG);
+
+                            //ULONG numberOfItems = *((ULONG*)(data.data() + offset));
+                            //offset += sizeof(ULONG);
+
+                            // we don't actually need anything from the KS_MULTIPLE_ITEMS header
+                            offset += sizeof(ULONG) * 2;
+
+                            // read the structs
+
+                            // read all entries
+                            while (offset < arraySize)
+                            {
+                                auto pheader = (UMP_GROUP_TERMINAL_BLOCK_HEADER*)(data.data() + offset);
+                                auto block = winrt::make_self<MidiGroupTerminalBlock>();
+
+
+                                //OutputDebugString(L"Header reported size is:");
+                                //OutputDebugString(std::to_wstring(pheader->Size).c_str());
+
+                                int charOffset = sizeof(UMP_GROUP_TERMINAL_BLOCK_HEADER);
+
+                                std::wstring name{};
+
+                                // TODO this could be much more efficient just pointing to a string instead of char by char
+                                while (charOffset + 1 < pheader->Size)
+                                {
+                                    wchar_t ch = (wchar_t)(*(data.data() + offset + charOffset));
+
+                                    name += ch;
+
+                                    charOffset += sizeof(wchar_t);
+                                }
+
+                                block->InternalUpdateFromPropertyData(pheader, name);
+
+                                // add to our list
+                                m_groupTerminalBlocks.Append(*block);
+
+                                // move to the next struct, if there is one
+                                offset += pheader->Size;
+                            }
+                        }
+                        else
+                        {
+                            OutputDebugString(L"Unexpected property type");
+                        }
+                    }
+                    else
+                    {
+                        OutputDebugString(L"Property is null or does not implement IPropertyValue");
+                    }
+                }
+            }
+
+        }
+        catch (...)
+        {
+            // can't blow up.
+            OutputDebugString(L"Exception processing endpoint GTB property");
+        }
+    }
 
 
 }

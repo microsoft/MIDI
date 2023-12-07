@@ -11,20 +11,28 @@
 
 namespace Windows::Devices::Midi2::Internal
 {
-    inline winrt::hstring TrimmedHStringCopy(_In_ winrt::hstring s)
+    // TODO: this could use substr and take one op instad of two
+    inline winrt::hstring TrimmedHStringCopy(_In_ std::wstring ws)
     {
-        std::wstring ws{ s };
+        std::wstring whitespace = L" \0\t\n\r";
 
-        size_t index = ws.find_first_not_of(' ');
+        size_t index = ws.find_first_not_of(whitespace);
         if (index != std::wstring::npos)
         {
             ws.erase(0, index);
         }
 
-        index = ws.find_last_not_of(' ');
+        index = ws.find_last_not_of(whitespace);
         ws.resize(index + 1);
 
         return winrt::hstring{ ws };
+    }
+
+    inline winrt::hstring TrimmedHStringCopy(_In_ winrt::hstring s)
+    {
+        std::wstring ws{ s };
+
+        return TrimmedHStringCopy(ws);
     }
 
     inline winrt::hstring ToUpperHStringCopy(_In_ winrt::hstring s)

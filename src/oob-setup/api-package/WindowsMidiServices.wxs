@@ -54,7 +54,14 @@
             <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.NetworkMidiAbstraction.dll"      SelfRegCost="1" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.VirtualMidiAbstraction.dll"      SelfRegCost="1" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.VirtualPatchBayAbstraction.dll"  SelfRegCost="1" Vital="true" />
-        </Component>
+
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.BS2UMPTransform.dll"                      SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.UMP2BSTransform.dll"                      SelfRegCost="1" Vital="true" />
+     <!--       <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.EndpointMetadataListenerAbstraction.dll"  SelfRegCost="1" Vital="true" /> -->
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.JitterReductionAbstraction.dll"           SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.SchedulerAbstraction.dll"                 SelfRegCost="1" Vital="true" />
+
+       </Component>
 
         <Component Id="WindowsService"
                    Bitness="always64"

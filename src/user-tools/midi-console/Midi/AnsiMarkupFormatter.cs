@@ -89,6 +89,16 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         }
 
 
+        public static string FormatBlockNumber(int number)
+        {
+            return "[orange3]" + number + "[/]";
+        }
+
+        public static string FormatBlockName(string name)
+        {
+            return "[steelblue1_1]" + EscapeString(name.Trim()) + "[/]";
+        }
+
         public static string FormatEndpointName(string name)
         {
             return "[steelblue1_1]" + EscapeString(name.Trim()) + "[/]";
