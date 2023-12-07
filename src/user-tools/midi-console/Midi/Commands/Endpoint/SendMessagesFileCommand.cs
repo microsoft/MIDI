@@ -27,7 +27,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             public ParseFieldDelimiter FieldDelimiter { get; set; }
 
             [LocalizedDescription("ParameterSendMessagesFileVerbose")]
-            [CommandOption("-v|--verbose|--details")]
+            [CommandOption("-v|--verbose")]
             [DefaultValue(false)]
             public bool Verbose { get; set; }
 

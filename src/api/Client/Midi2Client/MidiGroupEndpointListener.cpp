@@ -15,9 +15,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
 {
 
     _Use_decl_annotations_
-    void MidiGroupEndpointListener::Initialize(midi2::MidiEndpointConnection const& endpointConnection)
+    void MidiGroupEndpointListener::Initialize(midi2::IMidiEndpointConnectionSource const& endpointConnection)
     {        
-        m_endpointConnection = endpointConnection;
+        m_endpointConnection = endpointConnection.as<midi2::MidiEndpointConnection>();
     }
 
     void MidiGroupEndpointListener::OnEndpointConnectionOpened()

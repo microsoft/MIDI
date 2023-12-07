@@ -94,11 +94,11 @@
     <Filter Include="API\CI\Property Exchange">
       <UniqueIdentifier>{5a082154-f6a6-4d09-be45-cc69e5ecf609}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resources">
-      <UniqueIdentifier>{3360af9e-3363-4faf-861f-7d778c66bf70}</UniqueIdentifier>
-    </Filter>
     <Filter Include="API\Endpoints\Metadata\Blocks">
       <UniqueIdentifier>{277e880f-09e8-43d0-aaa9-926305908cd1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Internal\Resources">
+      <UniqueIdentifier>{3360af9e-3363-4faf-861f-7d778c66bf70}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -150,9 +150,6 @@
     <ClCompile Include="MidiServicePingResponseSummary.cpp">
       <Filter>API\Service</Filter>
     </ClCompile>
-    <ClCompile Include="MidiTransportInformation.cpp">
-      <Filter>API\Service</Filter>
-    </ClCompile>
     <ClCompile Include="MidiStreamMessageBuilder.cpp">
       <Filter>API\Messages\Utility</Filter>
     </ClCompile>
@@ -176,6 +173,12 @@
     </ClCompile>
     <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
       <Filter>API\Enumeration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessageProcessingPluginInformation.cpp">
+      <Filter>API\Service</Filter>
+    </ClCompile>
+    <ClCompile Include="ResourceManager.cpp">
+      <Filter>Internal\Resources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -239,9 +242,6 @@
     <ClInclude Include="MidiServicePingResponseSummary.h">
       <Filter>API\Service</Filter>
     </ClInclude>
-    <ClInclude Include="MidiTransportInformation.h">
-      <Filter>API\Service</Filter>
-    </ClInclude>
     <ClInclude Include="MidiStreamMessageBuilder.h">
       <Filter>API\Messages\Utility</Filter>
     </ClInclude>
@@ -258,7 +258,6 @@
     <ClInclude Include="MidiProperty.h">
       <Filter>API\CI\Property Exchange</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h" />
     <ClInclude Include="MidiMessageConverter.h">
       <Filter>API\Messages\Utility</Filter>
     </ClInclude>
@@ -267,6 +266,15 @@
     </ClInclude>
     <ClInclude Include="MidiEndpointDeviceWatcher.h">
       <Filter>API\Enumeration</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessageProcessingPluginInformation.h">
+      <Filter>API\Service</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Internal\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="ResourceManager.h">
+      <Filter>Internal\Resources</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -327,7 +335,7 @@
     <Midl Include="MidiServicePingResponseSummary.idl">
       <Filter>API\Service</Filter>
     </Midl>
-    <Midl Include="MidiTransportInformation.idl">
+    <Midl Include="MidiTransportPluginInformation.idl">
       <Filter>API\Service</Filter>
     </Midl>
     <Midl Include="IMidiEndpointMessageProcessingPlugin.idl">
@@ -450,6 +458,12 @@
     <Midl Include="MidiEndpointDeviceWatcher.idl">
       <Filter>API\Enumeration</Filter>
     </Midl>
+    <Midl Include="MidiMessageProcessingPluginInformation.idl">
+      <Filter>API\Service</Filter>
+    </Midl>
+    <Midl Include="IMidiEndpointConnectionSource.idl">
+      <Filter>API\Endpoints\Connections\Interfaces</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />
@@ -478,7 +492,7 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Windows.Devices.Midi2.rc">
-      <Filter>Resources</Filter>
+      <Filter>Internal\Resources</Filter>
     </ResourceCompile>
   </ItemGroup>
 </Project>

@@ -192,6 +192,15 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </Command>
     </PostBuildEvent>
+    <ResourceCompile>
+      <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">Yes</ShowProgress>
+    </ResourceCompile>
+    <ResourceCompile>
+      <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">Yes</ShowProgress>
+    </ResourceCompile>
+    <ResourceCompile>
+      <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Yes</ShowProgress>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
     <ClCompile>
@@ -222,6 +231,15 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </Command>
     </PostBuildEvent>
+    <ResourceCompile>
+      <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">Yes</ShowProgress>
+    </ResourceCompile>
+    <ResourceCompile>
+      <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">Yes</ShowProgress>
+    </ResourceCompile>
+    <ResourceCompile>
+      <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Yes</ShowProgress>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
@@ -239,7 +257,7 @@
     </ClInclude>
     <ClInclude Include="MidiEndpointDeviceWatcher.h">
       <DependentUpon>MidiEndpointDeviceWatcher.idl</DependentUpon>
-    </ClInclude>	
+    </ClInclude>
     <ClInclude Include="MidiGroupTerminalBlock.h">
       <DependentUpon>MidiGroupTerminalBlock.idl</DependentUpon>
     </ClInclude>
@@ -248,6 +266,9 @@
     </ClInclude>
     <ClInclude Include="MidiMessageConverter.h">
       <DependentUpon>MidiMessageConverter.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiMessageProcessingPluginInformation.h">
+      <DependentUpon>MidiMessageProcessingPluginInformation.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiMessageTranslator.h">
       <DependentUpon>MidiMessageTranslator.idl</DependentUpon>
@@ -300,8 +321,8 @@
     <ClInclude Include="MidiStreamMessageBuilder.h">
       <DependentUpon>MidiStreamMessageBuilder.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiTransportInformation.h">
-      <DependentUpon>MidiTransportInformation.idl</DependentUpon>
+    <ClInclude Include="MidiTransportPluginInformation.h">
+      <DependentUpon>MidiTransportPluginInformation.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiMessage128.h">
       <DependentUpon>MidiMessage128.idl</DependentUpon>
@@ -328,6 +349,7 @@
     <ClInclude Include="midi_stream_message_defs.h" />
     <ClInclude Include="midl_defines.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="string_util.h" />
     <ClInclude Include="trace_logging.h" />
     <ClInclude Include="ump_helpers.h" />
@@ -361,6 +383,9 @@
     </ClCompile>
     <ClCompile Include="MidiMessageConverter.cpp">
       <DependentUpon>MidiMessageConverter.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiMessageProcessingPluginInformation.cpp">
+      <DependentUpon>MidiMessageProcessingPluginInformation.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiMessageTranslator.cpp">
       <DependentUpon>MidiMessageTranslator.idl</DependentUpon>
@@ -416,8 +441,8 @@
     <ClCompile Include="MidiStreamMessageBuilder.cpp">
       <DependentUpon>MidiStreamMessageBuilder.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiTransportInformation.cpp">
-      <DependentUpon>MidiTransportInformation.idl</DependentUpon>
+    <ClCompile Include="MidiTransportPluginInformation.cpp">
+      <DependentUpon>MidiTransportPluginInformation.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiMessage128.cpp">
       <DependentUpon>MidiMessage128.idl</DependentUpon>
@@ -443,9 +468,11 @@
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="trace_logging.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Midl Include="IMidiEndpointConnectionSource.idl" />
     <Midl Include="IMidiEndpointMessageProcessingPlugin.idl" />
     <Midl Include="IMidiMessageReceivedEventSource.idl" />
     <Midl Include="IMidiTransportSettingsData.idl" />
@@ -477,6 +504,7 @@
     <Midl Include="MidiGroupTerminalBlock.idl" />
     <Midl Include="MidiGroupTerminalBlockProtocolEnum.idl" />
     <Midl Include="MidiMessageConverter.idl" />
+    <Midl Include="MidiMessageProcessingPluginInformation.idl" />
     <Midl Include="MidiMessageStruct.idl" />
     <Midl Include="MidiMessageBuilder.idl" />
     <Midl Include="MidiMessageReceivedEventArgs.idl" />
@@ -496,7 +524,7 @@
     <Midl Include="MidiStreamConfigurationRequestedSettings.idl" />
     <Midl Include="MidiStreamMessageBuilder.idl" />
     <Midl Include="MidiSystemExclusive8StatusEnum.idl" />
-    <Midl Include="MidiTransportInformation.idl" />
+    <Midl Include="MidiTransportPluginInformation.idl" />
     <Midl Include="MidiMessage128.idl" />
     <Midl Include="MidiMessage32.idl" />
     <Midl Include="MidiMessage64.idl" />

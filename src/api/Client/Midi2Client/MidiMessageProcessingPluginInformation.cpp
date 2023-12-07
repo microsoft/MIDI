@@ -6,21 +6,9 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#pragma once
-#include "MidiTransportInformation.g.h"
+#include "pch.h"
+#include "MidiMessageProcessingPluginInformation.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    struct MidiTransportInformation : MidiTransportInformationT<MidiTransportInformation>
-    {
-        MidiTransportInformation() = default;
-
-        hstring Id();
-        hstring Name();
-        hstring ShortName();
-        hstring IconPath();
-        hstring Author();
-        hstring ServicePluginFileName();
-        bool IsRuntimeCreatable();
-    };
 }

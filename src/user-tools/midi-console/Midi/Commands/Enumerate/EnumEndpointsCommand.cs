@@ -31,7 +31,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             public bool IncludeDiagnosticLoopback { get; set; }
 
             [LocalizedDescription("ParameterEnumEndpointsVerboseOutput")]
-            [CommandOption("-v|--verbose|--details")]
+            [CommandOption("-v|--verbose")]
             [DefaultValue(false)]
             public bool Verbose { get; set; }
 

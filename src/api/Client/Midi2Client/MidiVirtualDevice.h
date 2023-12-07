@@ -59,7 +59,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool SuppressHandledMessages() { return m_suppressHandledMessages; }
         void SuppressHandledMessages(_In_ bool const value) { m_suppressHandledMessages = value; }
 
-        void Initialize(_In_ midi2::MidiEndpointConnection const& endpointConnection);
+        void Initialize(_In_ midi2::IMidiEndpointConnectionSource const& endpointConnection);
         void OnEndpointConnectionOpened();
         void Cleanup();
 

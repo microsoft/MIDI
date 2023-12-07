@@ -17,20 +17,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         private MidiEndpointDeviceWatcher _watcher;
         internal class Settings : CommandSettings
         {
-            [LocalizedDescription("ParameterEnumEndpointsIncludeEndpointId")]
-            [CommandOption("-i|--include-endpoint-id")]
-            [DefaultValue(true)]
-            public bool IncludeId { get; set; }
-
             [LocalizedDescription("ParameterEnumEndpointsIncludeLoopbackEndpoints")]
             [CommandOption("-l|--include-loopback")]
             [DefaultValue(false)]
             public bool IncludeDiagnosticLoopback { get; set; }
 
-            [LocalizedDescription("ParameterEnumEndpointsVerboseOutput")]
-            [CommandOption("-v|--verbose|--details")]
-            [DefaultValue(false)]
-            public bool Verbose { get; set; }
         }
 
         public override int Execute(CommandContext context, Settings settings)
@@ -84,6 +75,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             _watcher.Stop();
 
+
+            _watcher.Added -= OnWatcherDeviceAdded;
+            _watcher.Removed -= OnWatcherDeviceRemoved;
+            _watcher.Updated -= OnWatcherDeviceUpdated;
+
+            _watcher.EnumerationCompleted -= OnWatcherEnumerationCompleted;
+            _watcher.Stopped -= OnWatcherStopped;
+
+
             return (int)MidiConsoleReturnCode.Success;
         }
 
@@ -112,6 +112,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         {
             AnsiConsole.MarkupLine("Added:   " + AnsiMarkupFormatter.FormatEndpointName(args.Name));
             AnsiConsole.MarkupLine("         " + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(args.Id));
+            AnsiConsole.MarkupLine("         " + args.EndpointPurpose.ToString());
         }
     }
 }
