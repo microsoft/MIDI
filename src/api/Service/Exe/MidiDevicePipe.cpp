@@ -15,18 +15,19 @@ HRESULT
 CMidiDevicePipe::Initialize(
     handle_t /* BindingHandle */,
     LPCWSTR Device,
-    PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
+    PMIDISRV_DEVICECREATION_PARAMS CreationParams,
     DWORD* MmcssTaskId
 )
 {
-    OutputDebugString(L"" __FUNCTION__ " Initialize.");
-
-    auto clientLock = m_ClientPipeLock.lock();
     auto deviceLock = m_DevicePipeLock.lock();
 
-    m_MidiDevice = wil::make_unique_string<wil::unique_hstring>(Device);
-    m_Flow = CreationParams->Flow;
-    m_Protocol = CreationParams->Protocol;
+    OutputDebugString(L"" __FUNCTION__ " Initialize.");
+
+    ABSTRACTIONCREATIONPARAMS abstractionCreationParams;
+
+    RETURN_IF_FAILED(CMidiPipe::Initialize(Device, CreationParams->Flow));
+
+    abstractionCreationParams.DataFormat = CreationParams->DataFormat;
 
     // retrieve the abstraction layer GUID for this peripheral
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
@@ -39,6 +40,7 @@ CMidiDevicePipe::Initialize(
         winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
 
     auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_AbstractionLayer));
+    RETURN_HR_IF_NULL(E_INVALIDARG, prop);
     m_AbstractionGuid = winrt::unbox_value<winrt::guid>(prop);
 
     if (MidiFlowBidirectional == CreationParams->Flow)
@@ -47,7 +49,7 @@ CMidiDevicePipe::Initialize(
 
         RETURN_IF_FAILED(CoCreateInstance(m_AbstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
         RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&m_MidiBiDiDevice));
-        RETURN_IF_FAILED(m_MidiBiDiDevice->Initialize(Device, MmcssTaskId, this));
+        RETURN_IF_FAILED(m_MidiBiDiDevice->Initialize(Device, &abstractionCreationParams, MmcssTaskId, this, 0));
     }
     else if (MidiFlowIn == CreationParams->Flow)
     {
@@ -55,7 +57,7 @@ CMidiDevicePipe::Initialize(
 
         RETURN_IF_FAILED(CoCreateInstance(m_AbstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
         RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiIn), (void**)&m_MidiInDevice));
-        RETURN_IF_FAILED(m_MidiInDevice->Initialize(Device, MmcssTaskId, this));
+        RETURN_IF_FAILED(m_MidiInDevice->Initialize(Device, &abstractionCreationParams, MmcssTaskId, this, 0));
     }
     else if (MidiFlowOut == CreationParams->Flow)
     {
@@ -63,13 +65,25 @@ CMidiDevicePipe::Initialize(
 
         RETURN_IF_FAILED(CoCreateInstance(m_AbstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
         RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiOut), (void**)&m_MidiOutDevice));
-        RETURN_IF_FAILED(m_MidiOutDevice->Initialize(Device, MmcssTaskId));
+        RETURN_IF_FAILED(m_MidiOutDevice->Initialize(Device, &abstractionCreationParams, MmcssTaskId));
     }
     else
     {
         return E_INVALIDARG;
     }
 
+    // save the format that was actually used for creation.
+    // For the device pipe, the format in and out are always the
+    // same.
+    if (IsFlowSupported(MidiFlowIn))
+    {
+        RETURN_IF_FAILED(SetDataFormatIn(abstractionCreationParams.DataFormat));
+    }
+
+    if (IsFlowSupported(MidiFlowOut))
+    {
+        RETURN_IF_FAILED(SetDataFormatOut(abstractionCreationParams.DataFormat));
+    }
 
     // Check to see if the device supports multi-client. This value is used
     // when trying to add a new client pipe
@@ -99,10 +113,6 @@ CMidiDevicePipe::Initialize(
         m_endpointSupportsMulticlient = true;
     }
 
-    // set up the message scheduler
-    wil::com_ptr_nothrow<CMidiDevicePipe> This = this;
-    RETURN_IF_FAILED(m_messageScheduler.Initialize(This, MmcssTaskId));
-
     OutputDebugString(L"" __FUNCTION__ " Initialize finished.");
 
     return S_OK;
@@ -112,8 +122,6 @@ HRESULT
 CMidiDevicePipe::Cleanup()
 {
     OutputDebugString(L"" __FUNCTION__ " Cleanup started.");
-
-    m_messageScheduler.Cleanup();
 
     {
         auto lock = m_DevicePipeLock.lock();
@@ -136,10 +144,7 @@ CMidiDevicePipe::Cleanup()
         m_MidiOutDevice.reset();
     }
 
-    {
-        auto lock = m_ClientPipeLock.lock();
-        m_MidiClientPipes.clear();
-    }
+    RETURN_IF_FAILED(CMidiPipe::Cleanup());
 
     OutputDebugString(L"" __FUNCTION__ " Cleanup finished.");
 
@@ -177,9 +182,8 @@ CMidiDevicePipe::SendMidiMessage(
     // for jitter calculation. The DevicePipe is the single connection to the device, so
     // we can ensure order there before it goes to the transport.
 
-    return m_messageScheduler.ProcessIncomingMidiMessage(Data, Length, Timestamp);
+    return SendMidiMessageNow(Data, Length, Timestamp);
 }
-
 
 _Use_decl_annotations_
 HRESULT
@@ -210,24 +214,3 @@ CMidiDevicePipe::SendMidiMessageNow(
     return E_ABORT;
 }
 
-
-_Use_decl_annotations_
-HRESULT
-CMidiDevicePipe::Callback(
-    PVOID Data,
-    UINT Length,
-    LONGLONG Position
-)
-{
-    // need to hold the client pipe lock to ensure that
-    // no clients are added or removed while performing the callback
-    // to the client.
-    auto lock = m_ClientPipeLock.lock();
-
-    for (auto const& Client : m_MidiClientPipes)
-    {
-        Client.second->SendMidiMessage(Data, Length, Position);
-    }
-
-    return S_OK;
-}

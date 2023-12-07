@@ -49,7 +49,7 @@ public:
 typedef struct _PARENTDEVICECREATECONTEXT
 {
     MidiEndpointParentDeviceInfo* MidiParentDevice{ nullptr };
-    wil::unique_event creationCompleted{ wil::EventOptions::None };
+    wil::unique_event CreationCompleted{ wil::EventOptions::None };
     DEVPROPERTY* InterfaceDevProperties{ nullptr };
     ULONG IntPropertyCount{};
 } PARENTDEVICECREATECONTEXT, * PPARENTDEVICECREATECONTEXT;
@@ -79,23 +79,24 @@ public:
 
 
 private:
-    GUID m_containerId{};
-    GUID m_transportAbstractionId{};
+    GUID m_ContainerId{};
+    GUID m_TransportAbstractionId{};
 
     HRESULT CreateEndpoint(
-        _In_ std::wstring const instanceId,
-        _In_ std::wstring const uniqueId,
-        _In_ bool const multiclient,
-        _In_ bool const isVirtualEndpointResponder,
-        _In_ std::wstring const name,
-        _In_ std::wstring const largeImagePath,
-        _In_ std::wstring const smallImagePath,
-        _In_ std::wstring const description
-    );
+        _In_ std::wstring const InstanceId,
+        _In_ std::wstring const UniqueId,
+        _In_ bool const Multiclient,
+        _In_ bool const IsVirtualEndpointResponder,
+        _In_ std::wstring const Name,
+        _In_ std::wstring const LargeImagePath,
+        _In_ std::wstring const SmallImagePath,
+        _In_ std::wstring const Description);
 
     HRESULT EnumCompatibleBluetoothDevices();
 
-    HRESULT CreateConfiguredEndpoints(_In_ std::wstring configurationJson);
+    HRESULT CreateConfiguredEndpoints(
+        _In_ std::wstring ConfigurationJson);
+
     HRESULT CreateParentDevice();
 
     wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
@@ -103,7 +104,7 @@ private:
     // TBD if we need to keep this here as well. The MidiDeviceManager has its own vector of endpoints
     std::vector<std::unique_ptr<MidiUmpEndpointInfo>> m_AvailableMidiUmpEndpoints;
 
-    std::unique_ptr<MidiEndpointParentDeviceInfo> m_parentDevice{ nullptr };
+    std::unique_ptr<MidiEndpointParentDeviceInfo> m_ParentDevice{ nullptr };
 
-    json::JsonObject m_jsonObject{ nullptr };
+    json::JsonObject m_JsonObject{ nullptr };
 };

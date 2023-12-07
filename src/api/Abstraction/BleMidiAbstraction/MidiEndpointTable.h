@@ -15,7 +15,7 @@
 
 struct MidiVirtualEndpointEntry
 {
-    GUID jsonKey;                               // this is the key that is used in config before there's any SWD to refer to
+    GUID JsonKey;                               // this is the key that is used in config before there's any SWD to refer to
 
     std::wstring InstanceId;                    // the part of the instance ID we (mostly) control
 
@@ -47,17 +47,17 @@ public:
     MidiEndpointTable& operator=(_In_ const MidiEndpointTable&) = delete;
 
 
-    wil::com_ptr_nothrow<IMidiBiDi> GetEndpointInterfaceForId(_In_ std::wstring endpointDeviceId) const noexcept;
-    void RemoveEndpointEntry(_In_ std::wstring endpointDeviceId) noexcept;
+    wil::com_ptr_nothrow<IMidiBiDi> GetEndpointInterfaceForId(_In_ std::wstring EndpointDeviceId) const noexcept;
+    void RemoveEndpointEntry(_In_ std::wstring EndpointDeviceId) noexcept;
 
 private:
     MidiEndpointTable();
     ~MidiEndpointTable();
 
     // key is EndpointDeviceId (the device interface id)
-    std::map<std::wstring, MidiVirtualEndpointEntry> m_endpoints;
+    std::map<std::wstring, MidiVirtualEndpointEntry> m_Endpoints;
 
 
-    //MidiLoopbackDevice m_bidiDevice;
-    //MidiLoopbackDevice m_inOutDevice;
+    //MidiLoopbackDevice m_BidiDevice;
+    //MidiLoopbackDevice m_InOutDevice;
 };

@@ -23,7 +23,7 @@ using namespace Microsoft::WRL::Wrappers;
 // normal usage because MidiIn and MidiOut use the same pins as 
 // MidiBidi, so only MidiIn and MidiOut or MidiBidi can be used,
 // never all 3 at the same time.
-#define BIDI_REPLACES_INOUT_SWDS
+//#define BIDI_REPLACES_INOUT_SWDS
 
 _Use_decl_annotations_
 HRESULT
@@ -77,12 +77,13 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
 
     // retrieve the device instance id from the DeviceInformation property store
     auto prop = properties.Lookup(winrt::to_hstring(L"System.Devices.DeviceInstanceId"));
+    RETURN_HR_IF_NULL(E_INVALIDARG, prop);
     deviceInstanceId = winrt::unbox_value<winrt::hstring>(prop).c_str();
     deviceId = device.Id().c_str();
 
     // DeviceInterfaces often lack names, so the above device.Name() is likely the name
     // of the machine. Grab the parent device friendly name and use that instead.
-    // 
+    //
     // TODO: use a provided name from a json first, if it is available for this device+filter+pin.
     // second, can we retrieve the localized part name for the interface using KS? That would likely require
     // calling a property to get the name GUID from the filter, and then using that guid to locate the string
@@ -103,10 +104,12 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
     {
         wil::unique_handle hPin;
         KSPIN_DATAFLOW dataFlow = (KSPIN_DATAFLOW)0;
-        BOOL cyclicUmp = FALSE;
-        BOOL standardUmp = FALSE;
-        BOOL midiOne = FALSE;
+        MidiTransport transportCapability { MidiTransport_Invalid };
+        MidiDataFormat dataFormatCapability { MidiDataFormat_Invalid };
         KSPIN_COMMUNICATION communication = (KSPIN_COMMUNICATION)0;
+        GUID nativeDataFormat {0};
+        std::unique_ptr<BYTE> groupTerminalBlockData;
+        ULONG groupTerminalBlockDataSize {0};
 
         RETURN_IF_FAILED(PinPropertySimple(hFilter.get(), i, KSPROPSETID_Pin, KSPROPERTY_PIN_COMMUNICATION, &communication, sizeof(KSPIN_COMMUNICATION)));
 
@@ -120,31 +123,52 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
 
         // attempt to instantiate using standard streaming for UMP buffers
         // and set that flag if we can.
-        if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, FALSE, TRUE, &hPin)))
+        // NOTE: this has been for bring up performance comparison testing only, and will be removed.
+        if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_StandardByteStream, &hPin)))
         {
-            standardUmp = TRUE;
+            transportCapability = ( MidiTransport )((DWORD) transportCapability | (DWORD) MidiTransport_StandardByteStream);
+            dataFormatCapability = ( MidiDataFormat ) ((DWORD) dataFormatCapability | (DWORD) MidiDataFormat_ByteStream);
             hPin.reset();
         }
 
         // attempt to instantiate using cyclic streaming for UMP buffers
         // and set that flag if we can.
-        if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, TRUE, TRUE, &hPin)))
+        if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_CyclicUMP, &hPin)))
         {
-            cyclicUmp = TRUE;
+            transportCapability = (MidiTransport )((DWORD) transportCapability |  (DWORD) MidiTransport_CyclicUMP);
+            dataFormatCapability = ( MidiDataFormat ) ((DWORD) dataFormatCapability | (DWORD) MidiDataFormat_UMP);
+
+            LOG_IF_FAILED_WITH_EXPECTED(PinPropertySimple(hPin.get(), 
+                                            i, 
+                                            KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
+                                            KSPROPERTY_MIDI2_NATIVEDATAFORMAT, 
+                                            &nativeDataFormat, 
+                                            sizeof(nativeDataFormat)),
+                                            HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
+
+            LOG_IF_FAILED_WITH_EXPECTED(PinPropertyAllocate(hPin.get(), 
+                                            i, 
+                                            KSPROPSETID_MIDI2_ENDPOINT_INFORMATION, 
+                                            KSPROPERTY_MIDI2_GROUP_TERMINAL_BLOCKS,
+                                            (PVOID *)&groupTerminalBlockData, 
+                                            &groupTerminalBlockDataSize),
+                                            HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
+
             hPin.reset();
         }
 
         // attempt to instantiate using standard streaming for midiOne buffers
         // and set that flag if we can.
-        if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, FALSE, FALSE, &hPin)))
+        if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_CyclicByteStream, &hPin)))
         {
-            midiOne = TRUE;
+            transportCapability = (MidiTransport )((DWORD) transportCapability |  (DWORD) MidiTransport_CyclicByteStream);
+            dataFormatCapability = ( MidiDataFormat ) ((DWORD) dataFormatCapability | (DWORD) MidiDataFormat_ByteStream);
             hPin.reset();
         }
 
         // if this pin supports nothing, then it's not a streaming pin,
         // continue on
-        if (!standardUmp && !cyclicUmp && !midiOne)
+        if (0 == transportCapability)
         {
             continue;
         }
@@ -158,13 +182,23 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         // for render (MIDIOut) we need KSPIN_DATAFLOW_IN
         midiPin->Flow = (KSPIN_DATAFLOW_IN == dataFlow) ? MidiFlowOut : MidiFlowIn;
         midiPin->PinId = i;
-        midiPin->CyclicUmp = cyclicUmp;
-        midiPin->StandardUmp = standardUmp;
-        midiPin->MidiOne = midiOne;
+        midiPin->TransportCapability = transportCapability;
+        midiPin->DataFormatCapability = dataFormatCapability;
         midiPin->Name = deviceName;
         midiPin->Id = deviceId;
         midiPin->ParentInstanceId = deviceInstanceId;
 
+        if (midiPin->Flow == MidiFlowOut)
+        {
+           midiPin->GroupTerminalBlockDataOut = std::move(groupTerminalBlockData);
+           midiPin->GroupTerminalBlockDataSizeOut = groupTerminalBlockDataSize;
+        }
+        else
+        {
+            midiPin->GroupTerminalBlockDataIn = std::move(groupTerminalBlockData);
+            midiPin->GroupTerminalBlockDataSizeIn = groupTerminalBlockDataSize;
+        }
+        midiPin->NativeDataFormat = nativeDataFormat;
 
         midiPin->InstanceId = L"MIDIU_KS_";
         midiPin->InstanceId += (midiPin->Flow == MidiFlowOut) ? L"OUT_" : L"IN_";
@@ -176,15 +210,11 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
     }
 
 #ifdef CREATE_KS_BIDI_SWDS
-    // TODO: This needs to change to allow any number of pins
-    // 
     // there must be exactly two pins on this filter, midi in, and midi out,
     // and they must have the exact same capabilities
     if (newMidiPins.size() == 2 &&
         newMidiPins[0]->Flow != newMidiPins[1]->Flow &&
-        newMidiPins[0]->CyclicUmp == newMidiPins[1]->CyclicUmp &&
-        newMidiPins[1]->StandardUmp == newMidiPins[1]->StandardUmp &&
-        newMidiPins[1]->MidiOne == newMidiPins[1]->MidiOne)
+        newMidiPins[0]->TransportCapability == newMidiPins[1]->TransportCapability)
     {
         auto midiInPinIndex = newMidiPins[0]->Flow == MidiFlowIn?0:1;
         auto midiOutPinIndex = newMidiPins[0]->Flow == MidiFlowOut?0:1;
@@ -196,12 +226,30 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
 
         midiPin->PinId = newMidiPins[midiOutPinIndex]->PinId;
         midiPin->PinIdIn = newMidiPins[midiInPinIndex]->PinId;
-        midiPin->CyclicUmp = newMidiPins[midiOutPinIndex]->CyclicUmp;
-        midiPin->StandardUmp = newMidiPins[midiOutPinIndex]->StandardUmp;
-        midiPin->MidiOne = newMidiPins[midiOutPinIndex]->MidiOne;
+        midiPin->TransportCapability = newMidiPins[midiInPinIndex]->TransportCapability;
+        midiPin->DataFormatCapability = newMidiPins[midiInPinIndex]->DataFormatCapability;
         midiPin->Name = deviceName;
         midiPin->Id = deviceId;
         midiPin->ParentInstanceId = deviceInstanceId;
+        if (newMidiPins[midiOutPinIndex]->GroupTerminalBlockDataSizeOut > 0)
+        {
+            std::unique_ptr<BYTE> groupTerminalBlockData(new (std::nothrow) BYTE[newMidiPins[midiOutPinIndex]->GroupTerminalBlockDataSizeOut]);
+            RETURN_IF_NULL_ALLOC(groupTerminalBlockData);
+            memcpy(groupTerminalBlockData.get(), newMidiPins[midiOutPinIndex]->GroupTerminalBlockDataOut.get(), newMidiPins[midiOutPinIndex]->GroupTerminalBlockDataSizeOut);
+            midiPin->GroupTerminalBlockDataOut = std::move(groupTerminalBlockData);
+            midiPin->GroupTerminalBlockDataSizeOut = newMidiPins[midiOutPinIndex]->GroupTerminalBlockDataSizeOut;
+        }
+
+        if (newMidiPins[midiInPinIndex]->GroupTerminalBlockDataSizeIn > 0)
+        {
+            std::unique_ptr<BYTE> groupTerminalBlockData(new (std::nothrow) BYTE[newMidiPins[midiInPinIndex]->GroupTerminalBlockDataSizeIn]);
+            RETURN_IF_NULL_ALLOC(groupTerminalBlockData);
+            memcpy(groupTerminalBlockData.get(), newMidiPins[midiInPinIndex]->GroupTerminalBlockDataIn.get(), newMidiPins[midiInPinIndex]->GroupTerminalBlockDataSizeIn);
+            midiPin->GroupTerminalBlockDataIn = std::move(groupTerminalBlockData);
+            midiPin->GroupTerminalBlockDataSizeIn = newMidiPins[midiInPinIndex]->GroupTerminalBlockDataSizeIn;
+        }
+
+        midiPin->NativeDataFormat = newMidiPins[midiOutPinIndex]->NativeDataFormat;
         midiPin->Flow = MidiFlowBidirectional;
 
         midiPin->InstanceId = L"MIDIU_KS_BIDI_";
@@ -228,9 +276,6 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
     for (auto const& MidiPin : newMidiPins)
     {
         GUID KsAbstractionLayerGUID = __uuidof(Midi2KSAbstraction);
-        DEVPROP_BOOLEAN supportsMidiOne = (MidiPin->MidiOne)?DEVPROP_TRUE:DEVPROP_FALSE;
-        DEVPROP_BOOLEAN supportsUmp = (MidiPin->CyclicUmp || MidiPin->StandardUmp)?DEVPROP_TRUE:DEVPROP_FALSE;
-        DEVPROP_BOOLEAN supportsCyclic = (MidiPin->CyclicUmp)?DEVPROP_TRUE:DEVPROP_FALSE;
         DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
 
         std::vector<DEVPROPERTY> interfaceDevProperties;
@@ -242,15 +287,45 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
                 DEVPROP_TYPE_STRING, static_cast<ULONG>((MidiPin->Id.length() + 1) * sizeof(WCHAR)), (PVOID)MidiPin->Id.c_str() });
         interfaceDevProperties.push_back({ {PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_GUID, static_cast<ULONG>(sizeof(GUID)), (PVOID)&KsAbstractionLayerGUID });
-        interfaceDevProperties.push_back({ { DEVPKEY_KsMidiPort_SupportsMidiOneFormat, DEVPROP_STORE_SYSTEM, nullptr },
-                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(supportsMidiOne)), (PVOID)&supportsMidiOne });
-        interfaceDevProperties.push_back({ { DEVPKEY_KsMidiPort_SupportsUMPFormat, DEVPROP_STORE_SYSTEM, nullptr },
-                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(supportsUmp)), (PVOID)&supportsUmp });
-        interfaceDevProperties.push_back({ { DEVPKEY_KsMidiPort_SupportsLooped, DEVPROP_STORE_SYSTEM, nullptr },
-                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(supportsCyclic)), (PVOID)&supportsCyclic }),
+        interfaceDevProperties.push_back({ {DEVPKEY_KsTransport, DEVPROP_STORE_SYSTEM, nullptr },
+                DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), (PVOID)&MidiPin->TransportCapability });
+        interfaceDevProperties.push_back({ {PKEY_MIDI_SupportedDataFormats, DEVPROP_STORE_SYSTEM, nullptr },
+                DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), (PVOID)&MidiPin->DataFormatCapability });
         interfaceDevProperties.push_back({ {PKEY_MIDI_TransportMnemonic, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((mnemonic.length() + 1) * sizeof(WCHAR)), (PVOID)mnemonic.c_str() });
+                DEVPROP_TYPE_STRING, static_cast<ULONG>((mnemonic.length() + 1) * sizeof(WCHAR)), (PVOID)mnemonic.c_str() });
 
+        if (MidiPin->NativeDataFormat != GUID_NULL)
+        {
+            BYTE nativeDataFormat {0};
+
+            if (MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET)
+            {
+                nativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
+            }
+            else if (MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_MIDI)
+            {
+                nativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_BYTESTREAM;
+            }
+            else
+            {
+                RETURN_IF_FAILED(E_UNEXPECTED);
+            }
+
+            interfaceDevProperties.push_back({ { PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr },
+                    DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(BYTE)), (PVOID) &nativeDataFormat });
+        }
+
+        if (MidiPin->GroupTerminalBlockDataSizeOut > 0)
+        {
+            interfaceDevProperties.push_back({ { PKEY_MIDI_OUT_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr },
+                    DEVPROP_TYPE_BINARY, MidiPin->GroupTerminalBlockDataSizeOut, (PVOID)MidiPin->GroupTerminalBlockDataOut.get() });
+        }
+
+        if (MidiPin->GroupTerminalBlockDataSizeIn > 0)
+        {
+            interfaceDevProperties.push_back({ { PKEY_MIDI_IN_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr },
+                    DEVPROP_TYPE_BINARY, MidiPin->GroupTerminalBlockDataSizeIn, (PVOID)MidiPin->GroupTerminalBlockDataIn.get() });
+        }
 
         // Bidirectional uses a different property for the in and out pins, since we currently require two separate ones.
         if (MidiPin->Flow == MidiFlowBidirectional)

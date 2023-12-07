@@ -30,7 +30,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
-
     MidiEndpointDeviceWatcher::~MidiEndpointDeviceWatcher()
     {
         try

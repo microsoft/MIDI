@@ -14,8 +14,10 @@ _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiBiDi::Initialize(
     LPCWSTR,
+    PABSTRACTIONCREATIONPARAMS,
     DWORD *,
-    IMidiCallback * callback
+    IMidiCallback * Callback,
+    LONGLONG Context
 )
 {
 
@@ -26,7 +28,8 @@ CMidi2NetworkMidiBiDi::Initialize(
         TraceLoggingPointer(this, "this")
         );
 
-    m_callback = callback;
+    m_Callback = Callback;
+    m_Context = Context;
 
     return S_OK;
 }
@@ -41,7 +44,8 @@ CMidi2NetworkMidiBiDi::Cleanup()
         TraceLoggingPointer(this, "this")
         );
 
-    m_callback = nullptr;
+    m_Callback = nullptr;
+    m_Context = 0;
 
     return S_OK;
 }
@@ -49,33 +53,30 @@ CMidi2NetworkMidiBiDi::Cleanup()
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiBiDi::SendMidiMessage(
-    PVOID message,
-    UINT size,
-    LONGLONG position
+    PVOID Message,
+    UINT Size,
+    LONGLONG Position
 )
 {
-    if (m_callback == nullptr)
+    if (m_Callback == nullptr)
     {
         // TODO log that callback is null
         return E_FAIL;
     }
 
-    if (message == nullptr)
+    if (Message == nullptr)
     {
         // TODO log that message was null
         return E_FAIL;
     }
 
-    if (size < sizeof(uint32_t))
+    if (Size < sizeof(uint32_t))
     {
         // TODO log that data was smaller than minimum UMP size
         return E_FAIL;
     }
 
-
-
-
-    m_callback->Callback(message, size, position);
+    m_Callback->Callback(Message, Size, Position, m_Context);
 
     return S_OK;
 
@@ -86,6 +87,7 @@ HRESULT
 CMidi2NetworkMidiBiDi::Callback(
     PVOID,
     UINT,
+    LONGLONG,
     LONGLONG
 )
 {

@@ -15,7 +15,7 @@ class CMidi2NetworkMidiOut :
 {
 public:
 
-    STDMETHOD(Initialize(_In_ LPCWSTR, _In_ DWORD *));
+    STDMETHOD(Initialize(_In_ LPCWSTR, _In_ PABSTRACTIONCREATIONPARAMS, _In_ DWORD *));
     STDMETHOD(SendMidiMessage(_In_ PVOID, _In_ UINT, LONGLONG));
     STDMETHOD(Cleanup)();
 

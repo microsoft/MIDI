@@ -51,13 +51,13 @@ CMidi2BluetoothMidiAbstraction::Activate(
         );
 
         // check to see if this is the first time we're creating the endpoint manager. If so, create it.
-        if (m_endpointManager == nullptr)
+        if (m_EndpointManager == nullptr)
         {
-            RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2BluetoothMidiEndpointManager>(&m_endpointManager));
+            RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2BluetoothMidiEndpointManager>(&m_EndpointManager));
         }
 
         // TODO: Not sure if this is the right pattern for this or not. There's no detach call here, so does this leak?
-        RETURN_IF_FAILED(m_endpointManager->QueryInterface(Riid, Interface));
+        RETURN_IF_FAILED(m_EndpointManager->QueryInterface(Riid, Interface));
     }
 
     else

@@ -187,6 +187,9 @@ private:
     // true for cyclic, false for standard
     BOOL m_IsLooped {FALSE};
 
+    // true for bytestream, false for UMP
+    BOOL m_IsByteStream {FALSE};
+
     // The process which acquired the buffer, the user
     // mode buffer is mapped into this processes address space.
     PEPROCESS m_Process {nullptr};

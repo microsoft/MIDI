@@ -6,9 +6,14 @@ _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvOut::Initialize(
     LPCWSTR Device,
+    PABSTRACTIONCREATIONPARAMS CreationParams,
     DWORD * MmcssTaskId
 )
 {
+    RETURN_HR_IF(E_INVALIDARG, nullptr == Device);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == MmcssTaskId);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == CreationParams);
+
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
@@ -19,7 +24,7 @@ CMidi2MidiSrvOut::Initialize(
     std::unique_ptr<CMidi2MidiSrv> midiSrv(new (std::nothrow) CMidi2MidiSrv());
     RETURN_IF_NULL_ALLOC(midiSrv);
 
-    RETURN_IF_FAILED(midiSrv->Initialize(Device, MidiFlowOut, MmcssTaskId, nullptr));
+    RETURN_IF_FAILED(midiSrv->Initialize(Device, MidiFlowOut, CreationParams, MmcssTaskId, nullptr, 0));
     m_MidiSrv = std::move(midiSrv);
 
     return S_OK;

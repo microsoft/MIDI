@@ -16,36 +16,53 @@
 wil::fast_mutex_with_critical_region *g_MidiInLock {nullptr};
 MidiPin* g_MidiInPin {nullptr};
 
-// UMP 32 is 4 bytes
-#define MINIMUM_UMP_DATASIZE 4
+// smallest UMP is 4 bytes, smallest bytestream is 3 bytes
+#define MINIMUM_LOOPED_DATASIZE 3
 
-// UMP 128 is 16 bytes
-#define MAXIMUM_UMP_DATASIZE 16
+// largest UMP is 16 bytes
+// we'll reuse that for the largest bytestream
+#define MAXIMUM_LOOPED_DATASIZE 16
 
 static const
-KSDATARANGE_MUSIC g_MidiStreamDataRange[] =
+KSDATARANGE_MUSIC g_MidiStreamDataRangeUMP =
 {
     {
-        {
-            sizeof(KSDATARANGE_MUSIC),
-            0, // Flags
-            0, // SampleSize
-            0, // Reserved
-            {STATIC_KSDATAFORMAT_TYPE_MUSIC},
-            {STATIC_KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET},
-            {STATIC_KSDATAFORMAT_SPECIFIER_NONE}
-        },
-        {STATIC_KSMUSIC_TECHNOLOGY_PORT},
-        0, // Channels
-        0, // Notes
-        0xFFFF // ChannelMask
-    }
+        sizeof(KSDATARANGE_MUSIC),
+        0, // Flags
+        0, // SampleSize
+        0, // Reserved
+        {STATIC_KSDATAFORMAT_TYPE_MUSIC},
+        {STATIC_KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET},
+        {STATIC_KSDATAFORMAT_SPECIFIER_NONE}
+    },
+    {STATIC_KSMUSIC_TECHNOLOGY_PORT},
+    0, // Channels
+    0, // Notes
+    0xFFFF // ChannelMask
+};
+
+KSDATARANGE_MUSIC g_MidiStreamDataRangeMIDI =
+{
+    {
+        sizeof(KSDATARANGE_MUSIC),
+        0, // Flags
+        0, // SampleSize
+        0, // Reserved
+        {STATIC_KSDATAFORMAT_TYPE_MUSIC},
+        {STATIC_KSDATAFORMAT_SUBTYPE_MIDI},
+        {STATIC_KSDATAFORMAT_SPECIFIER_NONE}
+    },
+    {STATIC_KSMUSIC_TECHNOLOGY_PORT},
+    0, // Channels
+    0, // Notes
+    0xFFFF // ChannelMask
 };
 
 static const
 PKSDATARANGE g_MidiStreamDataRanges[] =
 {
-    PKSDATARANGE(&g_MidiStreamDataRange[0])
+    PKSDATARANGE(&g_MidiStreamDataRangeUMP),
+    PKSDATARANGE(&g_MidiStreamDataRangeMIDI)
 };
 
 static
@@ -257,7 +274,11 @@ MidiPin::MidiPin(
     PKSFILTER filter = KsPinGetParentFilter(Pin);
     m_Filter = (MidiFilter *) filter->Context;
 
+    // Looped or streaming data transfer
     m_IsLooped = (Pin->ConnectionInterface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING);
+
+    // legacy bytestream data, or UMP
+    m_IsByteStream = IsEqualGUID(Pin->ConnectionFormat->SubFormat, KSDATAFORMAT_SUBTYPE_MIDI);
 
     // When used for loopback "standard" streaming,
     // we use a list_entry structure to store the loopback messages
@@ -283,9 +304,13 @@ MidiPin::Create(
     PKSDATAFORMAT format = Pin->ConnectionFormat;
 
     // Confirm the format matches expectations
+    // we only support looped streaming for UMP, but we support both
+    // looped and standard streaming for bytestream.
     BOOL formatMatch = (format->FormatSize >= sizeof(KSDATAFORMAT) &&
                         IsEqualGUID(format->MajorFormat, KSDATAFORMAT_TYPE_MUSIC) && 
-                        IsEqualGUID(format->SubFormat, KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET) &&
+                        (((Pin->ConnectionInterface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING) && 
+                        IsEqualGUID(format->SubFormat, KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET)) ||
+                        IsEqualGUID(format->SubFormat, KSDATAFORMAT_SUBTYPE_MIDI)) &&
                         IsEqualGUID(format->Specifier, KSDATAFORMAT_SPECIFIER_NONE));
     NT_RETURN_NTSTATUS_IF(STATUS_NO_MATCH, !formatMatch);
 
@@ -629,10 +654,10 @@ MidiPin::HandleIo()
                         }
 
                         PVOID startingReadAddress = (PVOID)(((PBYTE)m_KernelBufferMapping.Buffer1.m_BufferClientAddress) + midiOutReadPosition);
-                        PUMPDATAFORMAT header = (PUMPDATAFORMAT)(startingReadAddress);
+                        PLOOPEDDATAFORMAT header = (PLOOPEDDATAFORMAT)(startingReadAddress);
                         UINT32 dataSize = header->ByteCount;
 
-                        if (dataSize < MINIMUM_UMP_DATASIZE || dataSize > MAXIMUM_UMP_DATASIZE)
+                        if (dataSize < MINIMUM_LOOPED_DATASIZE || dataSize > MAXIMUM_LOOPED_DATASIZE)
                         {
                             // TBD: need to log an abort
 
@@ -640,7 +665,7 @@ MidiPin::HandleIo()
                             return;
                         }
 
-                        ULONG bytesToCopy = dataSize + sizeof(UMPDATAFORMAT);
+                        ULONG bytesToCopy = dataSize + sizeof(LOOPEDDATAFORMAT);
                         ULONG finalReadPosition = (midiOutReadPosition + bytesToCopy) % m_BufferSize;
 
                         if (bytesAvailableToRead < bytesToCopy)

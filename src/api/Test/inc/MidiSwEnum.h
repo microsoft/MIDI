@@ -11,6 +11,7 @@ public:
     std::wstring ParentDeviceInstanceId;
     std::wstring Name; // friendly name for this device
     MidiFlow Flow{ MidiFlowOut };
+    MidiDataFormat SupportedDataFormats{ MidiDataFormat_Invalid };
     BOOL MidiOne{ FALSE };
 } MIDIU_DEVICE, *PMIDIU_DEVICE;
 

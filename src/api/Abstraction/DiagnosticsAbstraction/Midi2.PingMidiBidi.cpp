@@ -14,9 +14,11 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2PingMidiBiDi::Initialize(
-    LPCWSTR endpointId,
+    LPCWSTR EndpointId,
+    PABSTRACTIONCREATIONPARAMS CreationParams,
     DWORD*,
-    IMidiCallback* callback
+    IMidiCallback* Callback,
+    LONGLONG Context
 )
 {
     TraceLoggingWrite(
@@ -26,18 +28,29 @@ CMidi2PingMidiBiDi::Initialize(
         TraceLoggingPointer(this, "this")
     );
 
-    RETURN_HR_IF_NULL(E_INVALIDARG, callback);
-    m_callback = callback;
+    RETURN_HR_IF_NULL(E_INVALIDARG, Callback);
+    RETURN_HR_IF_NULL(E_INVALIDARG, CreationParams);
+
+    // ping supports only UMP, reject requests for bytestream
+    if (CreationParams->DataFormat != MidiDataFormat_UMP && 
+        CreationParams->DataFormat != MidiDataFormat_Any)
+    {
+        RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE));
+    }
+
+    CreationParams->DataFormat = MidiDataFormat_UMP;
+    m_Callback = Callback;
+    m_Context = Context;
 
     // really should uppercase this
 
-    std::wstring id{ endpointId };
+    std::wstring id{ EndpointId };
 
-    m_midiDevice = (MidiPingBidiDevice*)(MidiDeviceTable::Current().GetPingDevice());
+    m_MidiDevice = (MidiPingBidiDevice*)(MidiDeviceTable::Current().GetPingDevice());
 
-    RETURN_HR_IF_NULL(E_POINTER, m_midiDevice);
+    RETURN_HR_IF_NULL(E_POINTER, m_MidiDevice);
 
-    m_midiDevice->SetCallback(this);
+    m_MidiDevice->SetCallback(this, 0);
 
 
     return S_OK;
@@ -54,11 +67,12 @@ CMidi2PingMidiBiDi::Cleanup()
     );
 
 
-    if (m_midiDevice != nullptr) m_midiDevice->Cleanup();
+    if (m_MidiDevice != nullptr) m_MidiDevice->Cleanup();
 
-    m_midiDevice = nullptr;
+    m_MidiDevice = nullptr;
 
-    m_callback = nullptr;
+    m_Callback = nullptr;
+    m_Context = 0;
 
     return S_OK;
 }
@@ -66,31 +80,32 @@ CMidi2PingMidiBiDi::Cleanup()
 _Use_decl_annotations_
 HRESULT
 CMidi2PingMidiBiDi::SendMidiMessage(
-    PVOID message,
-    UINT size,
-    LONGLONG timestamp
+    PVOID Message,
+    UINT Size,
+    LONGLONG Timestamp
 )
 {
-    RETURN_HR_IF_NULL(E_INVALIDARG, message);
-    RETURN_HR_IF_NULL(E_POINTER, m_midiDevice);
-    RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
+    RETURN_HR_IF_NULL(E_INVALIDARG, Message);
+    RETURN_HR_IF_NULL(E_POINTER, m_MidiDevice);
+    RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
 
 
-    return m_midiDevice->SendMidiMessage(message, size, timestamp);
+    return m_MidiDevice->SendMidiMessage(Message, Size, Timestamp);
 }
 
 _Use_decl_annotations_
 HRESULT
 CMidi2PingMidiBiDi::Callback(
-    PVOID message,
-    UINT size,
-    LONGLONG timestamp
+    PVOID Message,
+    UINT Size,
+    LONGLONG Timestamp,
+    LONGLONG
 )
 {
-    RETURN_HR_IF_NULL(E_INVALIDARG, message);
-    RETURN_HR_IF_NULL(E_POINTER, m_callback);
-    RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
+    RETURN_HR_IF_NULL(E_INVALIDARG, Message);
+    RETURN_HR_IF_NULL(E_POINTER, m_Callback);
+    RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
 
-    return m_callback->Callback(message, size, timestamp);
+    return m_Callback->Callback(Message, Size, Timestamp, m_Context);
 }
 

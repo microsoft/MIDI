@@ -34,7 +34,7 @@ private:
     ~MidiDeviceTable();
 
 
-    MidiLoopbackBidiDevice m_bidiDevice;
+    MidiLoopbackBidiDevice m_BidiDevice;
 
-    MidiPingBidiDevice m_pingDevice;
+    MidiPingBidiDevice m_PingDevice;
 };

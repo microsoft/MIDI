@@ -107,18 +107,18 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             foreach (var functionBlock in di.FunctionBlocks)
             {
                 table.AddEmptyRow();
-                table.AddRow("Block", functionBlock.Number.ToString());
+                table.AddRow("Function Block", AnsiMarkupFormatter.FormatBlockNumber(functionBlock.Number));
+                table.AddRow("Name", AnsiMarkupFormatter.FormatBlockName(functionBlock.Name));
                 table.AddRow("Active", functionBlock.IsActive.ToString());
-                table.AddRow("Name", AnsiMarkupFormatter.EscapeString(functionBlock.Name));
                 table.AddRow("First Group Index", functionBlock.FirstGroupIndex.ToString());
-                table.AddRow("Group Span", functionBlock.GroupCount.ToString());
+                table.AddRow("Group Count", functionBlock.GroupCount.ToString());
 
                 if (settings.Verbose)
                 {
                     table.AddRow("Direction", functionBlock.Direction.ToString());
                     table.AddRow("UI Hint", functionBlock.UIHint.ToString());
-                    table.AddRow("Max SysEx 8 Streams ", functionBlock.MaxSystemExclusive8Streams.ToString());
-                    table.AddRow("MIDI 1.0 ", functionBlock.Midi10Connection.ToString());
+                    table.AddRow("Max SysEx 8 Streams", functionBlock.MaxSystemExclusive8Streams.ToString());
+                    table.AddRow("MIDI 1.0", functionBlock.Midi10Connection.ToString());
                     table.AddRow("MIDI CI Version Format", functionBlock.MidiCIMessageVersionFormat.ToString());
                 }
             }
@@ -128,17 +128,50 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             foreach (var groupTerminalBlock in di.GroupTerminalBlocks)
             {
                 table.AddEmptyRow();
-                table.AddRow("Block", groupTerminalBlock.Number.ToString());
-                table.AddRow("Name", groupTerminalBlock.Name);
+                table.AddRow("Group Terminal Block", AnsiMarkupFormatter.FormatBlockNumber(groupTerminalBlock.Number));
+                table.AddRow("Name", AnsiMarkupFormatter.FormatBlockName(groupTerminalBlock.Name));
+                table.AddRow("Direction", groupTerminalBlock.Direction.ToString());
+                table.AddRow("Protocol", groupTerminalBlock.Protocol.ToString());
+                table.AddRow("First Group Index", groupTerminalBlock.FirstGroupIndex.ToString());
+                table.AddRow("Group Count", groupTerminalBlock.GroupCount.ToString());
 
-                //if (settings.Verbose)
-                //{
-                //    table.AddRow("Direction", functionBlock.Direction.ToString());
-                //    table.AddRow("UI Hint", functionBlock.UIHint.ToString());
-                //    table.AddRow("Max SysEx 8 Streams ", functionBlock.MaxSystemExclusive8Streams.ToString());
-                //    table.AddRow("MIDI 1.0 ", functionBlock.Midi10Connection.ToString());
-                //    table.AddRow("MIDI CI Version Format", functionBlock.MidiCIMessageVersionFormat.ToString());
-                //}
+                if (settings.Verbose)
+                {
+                    string inputBandwidth = string.Empty;
+                    string outputBandwidth = string.Empty;
+
+                    if (groupTerminalBlock.MaxDeviceInputBandwidthIn4KBSecondUnits == 0)
+                    {
+                        inputBandwidth = "0 (Unknown or Not Fixed)";
+                    }
+                    else if (groupTerminalBlock.MaxDeviceInputBandwidthIn4KBSecondUnits == 1)
+                    {
+                        inputBandwidth = "1 (31.25 kbps)";
+                    }
+                    else
+                    {
+                        inputBandwidth = groupTerminalBlock.MaxDeviceInputBandwidthIn4KBSecondUnits.ToString() + 
+                            $" ({groupTerminalBlock.MaxDeviceInputBandwidthIn4KBSecondUnits * 4096} kbps)";
+                    }
+
+
+                    if (groupTerminalBlock.MaxDeviceOutputBandwidthIn4KBSecondUnits == 0)
+                    {
+                        outputBandwidth = "0 (Unknown or Not Fixed)";
+                    }
+                    else if (groupTerminalBlock.MaxDeviceOutputBandwidthIn4KBSecondUnits == 1)
+                    {
+                        outputBandwidth = "1 (31.25 kbps)";
+                    }
+                    else
+                    {
+                        outputBandwidth = groupTerminalBlock.MaxDeviceOutputBandwidthIn4KBSecondUnits.ToString() +
+                            $" ({groupTerminalBlock.MaxDeviceOutputBandwidthIn4KBSecondUnits * 4096} kbps)";
+                    }
+
+                    table.AddRow("Max Input Bandwidth", inputBandwidth);
+                    table.AddRow("Max Output Bandwidth", outputBandwidth);
+                }
             }
 
 
@@ -255,7 +288,22 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         }
                         else
                         {
-                            table.AddRow(key, AnsiMarkupFormatter.EscapeString(value.ToString()));
+                            if (value is byte[])
+                            {
+                                string s = string.Empty;
+
+                                foreach (byte b in (byte[])value)
+                                {
+                                    s += string.Format("{0:X2} ", b);
+                                }
+
+                                table.AddRow(key, s);
+                            }
+                            else
+                            {
+                                table.AddRow(key, AnsiMarkupFormatter.EscapeString(value.ToString()));
+                            }
+
                         }
 
                     }

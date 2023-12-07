@@ -88,6 +88,6 @@ private:
     ~MidiEndpointTable();
 
     // key is EndpointDeviceId (the device interface id)
-    std::map<std::wstring, MidiVirtualDeviceEndpointEntry> m_endpoints;
+    std::map<std::wstring, MidiVirtualDeviceEndpointEntry> m_Endpoints;
 
 };

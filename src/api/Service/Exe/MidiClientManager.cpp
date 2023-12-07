@@ -36,15 +36,15 @@ CMidiClientManager::Cleanup()
     m_ProcessManager.reset();
     m_DeviceManager.reset();
 
-    for (auto const& Client : m_ClientPipes)
+    for (auto const& client : m_ClientPipes)
     {
-        Client.second->Cleanup();
+        client.second->Cleanup();
     }
     m_ClientPipes.clear();
 
-    for (auto const& Device : m_DevicePipes)
+    for (auto const& device : m_DevicePipes)
     {
-        Device.second->Cleanup();
+        device.second->Cleanup();
     }
     m_DevicePipes.clear();
 
@@ -72,6 +72,7 @@ GetEndpointAlias(_In_ LPCWSTR MidiDevice, _In_ std::wstring& Alias, _In_ MidiFlo
         additionalProperties.Append(winrt::to_hstring(L"System.Devices.InterfaceClassGuid"));
         auto aliasedDeviceInfo = DeviceInformation::CreateFromIdAsync(Alias, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
         prop = aliasedDeviceInfo.Properties().Lookup(winrt::to_hstring(L"System.Devices.InterfaceClassGuid"));
+        RETURN_HR_IF_NULL(E_INVALIDARG, prop);
         auto interfaceClass = winrt::unbox_value<winrt::guid>(prop);
 
         if (winrt::guid(DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI) == interfaceClass)
@@ -82,6 +83,153 @@ GetEndpointAlias(_In_ LPCWSTR MidiDevice, _In_ std::wstring& Alias, _In_ MidiFlo
         // initialize the device pipe for the requested flow.
     }
 
+    std::transform(Alias.begin(), Alias.end(), Alias.begin(), ::towlower);
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT 
+CMidiClientManager::GetMidiClient(
+    handle_t BindingHandle,
+    LPCWSTR MidiDevice,
+    PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
+    PMIDISRV_CLIENT Client,
+    wil::unique_handle& ClientProcessHandle,
+    wil::com_ptr_nothrow<CMidiPipe>&MidiClientPipe
+)
+{
+    wil::com_ptr_nothrow<CMidiClientPipe> clientPipe;
+
+    // we have either a new device or an existing device, create the client pipe and connect to it.
+    RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiClientPipe>(&clientPipe));
+
+    // Initialize our audio client
+    RETURN_IF_FAILED(clientPipe->Initialize(BindingHandle, ClientProcessHandle.get(), MidiDevice, CreationParams, Client, &m_MmcssTaskId));
+
+    // Add this client to the client pipes list and set the output client handle
+    Client->ClientHandle = (MidiClientHandle)clientPipe.get();
+    MidiClientPipe = clientPipe.get();
+    m_ClientPipes.emplace(Client->ClientHandle, std::move(clientPipe));
+
+    return S_OK;
+}
+
+
+_Use_decl_annotations_
+HRESULT 
+CMidiClientManager::GetMidiDevice(
+    handle_t BindingHandle,
+    LPCWSTR MidiDevice,
+    PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
+    wil::com_ptr_nothrow<CMidiPipe>& MidiDevicePipe
+)
+{
+    // Get an existing device pipe if one exists, otherwise create a new pipe
+    auto device = m_DevicePipes.find(MidiDevice);
+    if (device != m_DevicePipes.end())
+    {
+        RETURN_HR_IF(E_UNEXPECTED, device->second->Flow() != CreationParams->Flow);
+        MidiDevicePipe = device->second;
+    }
+    else
+    {
+        wil::com_ptr_nothrow<CMidiDevicePipe> devicePipe;
+
+        // The devicePipe must be initialized with the flow of the aliased device
+        MIDISRV_DEVICECREATION_PARAMS deviceCreationParams{ 0 };
+
+        deviceCreationParams.BufferSize = CreationParams->BufferSize;
+        // create the device using the devices preferred format.
+        // if that mismatches the client capabilities, a transform will be inserted.
+        deviceCreationParams.DataFormat = MidiDataFormat_Any;
+        deviceCreationParams.Flow = CreationParams->Flow;
+
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiDevicePipe>(&devicePipe));
+        RETURN_IF_FAILED(devicePipe->Initialize(BindingHandle, MidiDevice, &deviceCreationParams, &m_MmcssTaskId));
+
+        MidiDevicePipe = devicePipe.get();
+        m_DevicePipes.emplace(MidiDevice, std::move(devicePipe));
+    }
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT 
+CMidiClientManager::GetMidiTransform(
+    handle_t BindingHandle,
+    MidiFlow Flow,
+    MidiDataFormat DataFormatFrom,
+    MidiDataFormat DataFormatTo,
+    wil::com_ptr_nothrow<CMidiPipe>& DevicePipe,
+    wil::com_ptr_nothrow<CMidiPipe>& ClientConnectionPipe
+)
+{
+    wil::com_ptr_nothrow<CMidiPipe> transformPipe;
+
+    // no transform is required, this shouldn't have been called.
+    RETURN_HR_IF(E_UNEXPECTED, DataFormatFrom == DataFormatTo);
+
+    // search existing transforms for this device for an output that supports
+    // the requested flow and data format.
+    auto transforms = m_TransformPipes.equal_range(DevicePipe->MidiDevice());
+    for (auto& transform = transforms.first; transform != transforms.second; ++transform)
+    {
+        if (Flow == transform->second->Flow() &&
+            DataFormatFrom == transform->second->DataFormatIn() &&
+            DataFormatTo == transform->second->DataFormatOut())
+        {
+            RETURN_HR_IF(E_UNEXPECTED, transformPipe);
+            transformPipe = transform->second;
+        }
+    }
+
+    // not found, instantiate the transform that is needed.
+    if (!transformPipe)
+    {
+        MIDISRV_TRANSFORMCREATION_PARAMS creationParams {0};
+
+        creationParams.Flow = Flow;
+        creationParams.DataFormatIn = DataFormatFrom;
+        creationParams.DataFormatOut = DataFormatTo;
+
+        if (MidiDataFormat_UMP == DataFormatFrom &&
+            MidiDataFormat_ByteStream == DataFormatTo)
+        {
+            creationParams.TransformGuid = __uuidof(Midi2UMP2BSTransform);
+        }
+        else if (MidiDataFormat_ByteStream == DataFormatFrom &&
+            MidiDataFormat_UMP == DataFormatTo)
+        {
+            creationParams.TransformGuid = __uuidof(Midi2BS2UMPTransform);
+        }
+        else
+        {
+            // unknown transform
+            RETURN_IF_FAILED(ERROR_UNSUPPORTED_TYPE);
+        }
+
+        // create the transform
+        wil::com_ptr_nothrow<CMidiTransformPipe> transform;
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiTransformPipe>(&transform));
+        RETURN_IF_FAILED(transform->Initialize(BindingHandle, DevicePipe->MidiDevice().c_str(), &creationParams, &m_MmcssTaskId));
+        transformPipe = transform.get();
+
+        // connect the transform to the device
+        if (Flow == MidiFlowIn)
+        {
+            RETURN_IF_FAILED(DevicePipe->AddConnectedPipe(transformPipe));
+        }
+        else
+        {
+            RETURN_IF_FAILED(transformPipe->AddConnectedPipe(DevicePipe));
+        }
+
+        m_TransformPipes.emplace(DevicePipe->MidiDevice(), transformPipe);
+    }
+
+    ClientConnectionPipe = transformPipe;
     return S_OK;
 }
 
@@ -98,11 +246,12 @@ CMidiClientManager::CreateMidiClient(
 
     DWORD clientProcessId{0};
     wil::unique_handle clientProcessHandle;
-    wil::com_ptr_nothrow<CMidiClientPipe> clientPipe;
-    wil::com_ptr_nothrow<CMidiDevicePipe> devicePipe;
+    wil::com_ptr_nothrow<CMidiPipe> clientPipe;
+    wil::com_ptr_nothrow<CMidiPipe> devicePipe;
+    wil::com_ptr_nothrow<CMidiPipe> clientConnectionPipe;
+
     unique_mmcss_handle MmcssHandle;
     std::wstring midiDevice;
-    BOOL newDeviceCreated{ FALSE };
 
     // get the client PID, impersonate the client to get the client process handle, and then
     // revert back to self.
@@ -122,50 +271,73 @@ CMidiClientManager::CreateMidiClient(
     // actively using this task id for the duration of this pipe.
     RETURN_IF_FAILED(EnableMmcss(MmcssHandle, m_MmcssTaskId));
 
-    MidiFlow midiFlow = CreationParams->Flow;
-
     // The provided SWD instance id provided may be an alias of a UMP device, retrieve the
     // PKEY_MIDI_AssociatedUMP property to retrieve the id of the primary device.
     // We only create device pipe entries for the primary devices.
-    RETURN_IF_FAILED(GetEndpointAlias(MidiDevice, midiDevice, midiFlow));
+    RETURN_IF_FAILED(GetEndpointAlias(MidiDevice, midiDevice, CreationParams->Flow));
+    RETURN_IF_FAILED(GetMidiClient(BindingHandle, midiDevice.c_str(), CreationParams, Client, clientProcessHandle, clientPipe));
 
-    // we have either a new device or an existing device, create the client pipe and connect to it.
-    RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiClientPipe>(&clientPipe));
-
-    // Adjust the requested buffer size to align with client requirements.
-    RETURN_IF_FAILED(clientPipe->AdjustForBufferingRequirements(CreationParams));
-
-    // Get an existing device pipe if one exists, otherwise create a new pipe
-    auto device = m_DevicePipes.find(midiDevice.c_str());
-    if (device != m_DevicePipes.end())
+    auto cleanupOnFailure = wil::scope_exit([&]()
     {
-        devicePipe = device->second;
-    }
-    else
+        // If a new device has been created and added to m_DevicePipes,
+        // removing the client will also remove the unused device
+        DestroyMidiClient(BindingHandle, Client->ClientHandle);
+        Client->ClientHandle = NULL;
+        Client->DataFormat = MidiDataFormat_Invalid;
+    });
+
+    RETURN_IF_FAILED(GetMidiDevice(BindingHandle, midiDevice.c_str(), CreationParams, devicePipe));
+    devicePipe->AddClient((MidiClientHandle)clientPipe.get());
+
+    // MidiFlowIn on the client flows data from the midi device to the client,
+    // so we register the clientPipe to receive the callbacks from the clientConnectionPipe.
+    if (clientPipe->IsFlowSupported(MidiFlowIn))
     {
-        // The devicePipe must be initialized with the flow of the aliased device
-        MIDISRV_CLIENTCREATION_PARAMS deviceCreationParams{ *CreationParams };
-        deviceCreationParams.Flow = midiFlow;
-        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiDevicePipe>(&devicePipe));
-        RETURN_IF_FAILED(devicePipe->Initialize(BindingHandle, midiDevice.c_str(), &deviceCreationParams, &m_MmcssTaskId));
-        newDeviceCreated = TRUE;
+        // If the client supports the same format that the device pipe supports,
+        // or if the client supports any format, then connect directly to
+        // the device.
+        if (clientPipe->IsFormatSupportedIn(devicePipe->DataFormatIn()))
+        {
+            clientConnectionPipe = devicePipe;
+        }
+        else
+        {
+            // client requires a specific format, retrieve the transform required for that format.
+            RETURN_IF_FAILED(GetMidiTransform(BindingHandle, MidiFlowIn, devicePipe->DataFormatIn(), clientPipe->DataFormatIn(), devicePipe, clientConnectionPipe));
+            clientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
+        }
+
+        RETURN_IF_FAILED(clientPipe->SetDataFormatIn(clientConnectionPipe->DataFormatIn()));
+        Client->DataFormat = clientPipe->DataFormatIn();
+        RETURN_IF_FAILED(clientConnectionPipe->AddConnectedPipe(clientPipe));
+        clientConnectionPipe.reset();
     }
 
-    // The client pipe will add itself to the device pipe, and hold a reference to the device pipe which
-    // is released when the client pipe is cleaned up.
-    RETURN_IF_FAILED(clientPipe->Initialize(BindingHandle, clientProcessHandle.get(), midiDevice.c_str(), CreationParams, Client, &m_MmcssTaskId, devicePipe));
-
-    // if a new device pipe has been created for this client, we need to transfer
-    // this new reference to the device pipes list.
-    if (newDeviceCreated)
+    // MidiFlowOut on the client flows data from the midi client to the device,
+    // so we register the clientConnectionPipe to receive the callbacks from the clientPipe.
+    if (clientPipe->IsFlowSupported(MidiFlowOut))
     {
-        // transfer this new device pipe to the device list
-        m_DevicePipes.emplace(midiDevice.c_str(), std::move(devicePipe));
+        // If the client supports the same format that the device pipe supports,
+        // or if the client supports any format, then connect directly to
+        // the device.
+        if (clientPipe->IsFormatSupportedOut(devicePipe->DataFormatOut()))
+        {
+            clientConnectionPipe = devicePipe;
+        }
+        else
+        {
+            // client requires a specific format, retrieve the transform required for that format.
+            RETURN_IF_FAILED(GetMidiTransform(BindingHandle, MidiFlowOut, clientPipe->DataFormatOut(), devicePipe->DataFormatOut(), devicePipe, clientConnectionPipe));
+            clientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
+        }
+
+        RETURN_IF_FAILED(clientPipe->SetDataFormatOut(clientConnectionPipe->DataFormatOut()));
+        Client->DataFormat = clientPipe->DataFormatOut();
+        RETURN_IF_FAILED(clientPipe->AddConnectedPipe(clientConnectionPipe));
+        clientConnectionPipe.reset();
     }
 
-    // transfer this new client pipe to internal tracking list
-    Client->ClientHandle = (MidiClientHandle)clientPipe.get();
-    m_ClientPipes.emplace(Client->ClientHandle, std::move(clientPipe));
+    cleanupOnFailure.release();
 
     return S_OK;
 }
@@ -187,23 +359,41 @@ CMidiClientManager::DestroyMidiClient(
     auto client = m_ClientPipes.find(ClientHandle);
     if (client != m_ClientPipes.end())
     {
-        std::wstring deviceInstanceId = client->second->MidiDevice();
+        wil::com_ptr_nothrow<CMidiPipe> midiClientPipe = client->second.get();
 
-        client->second->Cleanup();
-        m_ClientPipes.erase(client);
+        midiClientPipe->Cleanup();
 
-        // if this was the last client using this device pipe, clean
-        // up the device pipe as well.
-        auto device = m_DevicePipes.find(deviceInstanceId);
-
-        if (device != m_DevicePipes.end())
+        for (auto transform = m_TransformPipes.begin(); transform != m_TransformPipes.end();)
         {
-            if (!device->second->InUse())
+            wil::com_ptr_nothrow<CMidiPipe> midiTransformPipe = transform->second.get();
+            midiTransformPipe->RemoveClient(ClientHandle);
+            if (!midiTransformPipe->InUse())
             {
-                device->second->Cleanup();
-                m_DevicePipes.erase(device);
+                midiTransformPipe->Cleanup();
+                transform = m_TransformPipes.erase(transform);
+            }
+            else
+            {
+                transform++;
             }
         }
+
+        for (auto device = m_DevicePipes.begin(); device != m_DevicePipes.end();)
+        {
+            wil::com_ptr_nothrow<CMidiPipe> midiDevicePipe = device->second.get();
+            midiDevicePipe->RemoveClient(ClientHandle);
+            if (!midiDevicePipe->InUse())
+            {
+                midiDevicePipe->Cleanup();
+                device = m_DevicePipes.erase(device);
+            }
+            else
+            {
+                device++;
+            }
+        }
+
+        m_ClientPipes.erase(client);
     }
     else
     {

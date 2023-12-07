@@ -182,7 +182,8 @@ HRESULT
 CMidiXProc::Initialize(DWORD* MmcssTaskId,
                         std::unique_ptr<MEMORY_MAPPED_PIPE>& MidiIn,
                         std::unique_ptr<MEMORY_MAPPED_PIPE>& MidiOut,
-                        IMidiCallback *MidiInCallback
+                        IMidiCallback *MidiInCallback,
+                        LONGLONG Context
 )
 {
     RETURN_HR_IF(E_INVALIDARG, nullptr == MmcssTaskId);
@@ -190,6 +191,7 @@ CMidiXProc::Initialize(DWORD* MmcssTaskId,
     RETURN_HR_IF(E_INVALIDARG, MidiIn && !MidiInCallback);
 
     m_MidiInCallback = MidiInCallback;
+    m_MidiInCallbackContext = Context;
     m_ThreadTerminateEvent.create();
     m_ThreadStartedEvent.create();
     m_MmcssTaskId = *MmcssTaskId;
@@ -249,12 +251,12 @@ CMidiXProc::SendMidiMessage(
 )
 {
     BOOL bufferSent {FALSE};
-    UINT32 requiredBufferSize = sizeof(UMPDATAFORMAT) + Length;
+    UINT32 requiredBufferSize = sizeof(LOOPEDDATAFORMAT) + Length;
     UINT maxRetries{ 10000 };
 
     RETURN_HR_IF(E_UNEXPECTED, !m_MidiOut);
-    RETURN_HR_IF(E_INVALIDARG, Length > MAXIMUM_UMP_DATASIZE);
-    RETURN_HR_IF(E_INVALIDARG, Length < MINIMUM_UMP_DATASIZE);
+    RETURN_HR_IF(E_INVALIDARG, Length > MAXIMUM_LOOPED_DATASIZE);
+    RETURN_HR_IF(E_INVALIDARG, Length < MINIMUM_LOOPED_DATASIZE);
 
     PMEMORY_MAPPED_REGISTERS Registers = &(m_MidiOut->Registers);
     PMEMORY_MAPPED_DATA Data = &(m_MidiOut->Data);
@@ -290,10 +292,10 @@ CMidiXProc::SendMidiMessage(
         // if there is sufficient space to write the buffer, send it
         if (bytesAvailable >= requiredBufferSize)
         {
-            PUMPDATAFORMAT header = (PUMPDATAFORMAT) (((BYTE *) Data->BufferAddress) + writePosition);
+            PLOOPEDDATAFORMAT header = (PLOOPEDDATAFORMAT) (((BYTE *) Data->BufferAddress) + writePosition);
 
             header->ByteCount = Length;
-            CopyMemory((((BYTE *) header) + sizeof(UMPDATAFORMAT)), MidiData, Length);
+            CopyMemory((((BYTE *) header) + sizeof(LOOPEDDATAFORMAT)), MidiData, Length);
 
             // if a position provided is nonzero, use it, otherwise use the current QPC
             if (Position)
@@ -364,17 +366,17 @@ CMidiXProc::ProcessMidiIn()
                 }
 
                 if (0 == bytesAvailable ||
-                    bytesAvailable < sizeof(UMPDATAFORMAT))
+                    bytesAvailable < sizeof(LOOPEDDATAFORMAT))
                 {
-                    // nothing to do, need at least the UMPDATAFORMAT
+                    // nothing to do, need at least the LOOPEDDATAFORMAT
                     // to move forward. Driver will set the event when the
                     // write position advances.
                     break;
                 }
 
-                PUMPDATAFORMAT header = (PUMPDATAFORMAT) (((BYTE *) Data->BufferAddress) + readPosition);
+                PLOOPEDDATAFORMAT header = (PLOOPEDDATAFORMAT) (((BYTE *) Data->BufferAddress) + readPosition);
                 UINT32 dataSize = header->ByteCount;
-                UINT32 totalSize = dataSize + sizeof(UMPDATAFORMAT);
+                UINT32 totalSize = dataSize + sizeof(LOOPEDDATAFORMAT);
                 ULONG newReadPosition = (readPosition + totalSize) % Data->BufferSize;
 
                 if (bytesAvailable < totalSize)
@@ -385,11 +387,11 @@ CMidiXProc::ProcessMidiIn()
                     break;
                 }
 
-                PVOID data = (PVOID) (((BYTE *) header) + sizeof(UMPDATAFORMAT));
+                PVOID data = (PVOID) (((BYTE *) header) + sizeof(LOOPEDDATAFORMAT));
 
                 if (m_MidiInCallback)
                 {
-                    m_MidiInCallback->Callback(data, dataSize, header->Position);
+                    m_MidiInCallback->Callback(data, dataSize, header->Position, m_MidiInCallbackContext);
                 }
 
                 // advance to the next midi packet, we loop processing them one at a time

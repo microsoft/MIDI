@@ -8,44 +8,49 @@
 
 #pragma once
 
-typedef struct MIDI_CLIENT_PIPE
-{
-    std::wstring MidiDevice;
-    MidiClientHandle ClientHandle{ 0 };
+#include "MidiPipe.h"
 
-    MidiProtocol Protocol{ LegacyMidi };
-    MidiFlow Flow{ MidiFlowIn };
-
-    std::unique_ptr<CMidiXProc> MidiPump;
-} MIDI_CLIENT_PIPE, * PMIDI_CLIENT_PIPE;
-
-class CMidiClientPipe :
-    public Microsoft::WRL::RuntimeClass<
-        Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-        IMidiCallback>
+class CMidiClientPipe : public CMidiPipe
 {
 public:
-
-    HRESULT AdjustForBufferingRequirements(_In_ PMIDISRV_CLIENTCREATION_PARAMS CreationParams);
-
     HRESULT Initialize(   _In_ handle_t BindingHandle,
                             _In_ HANDLE,
                             _In_ LPCWSTR,
                             _In_ PMIDISRV_CLIENTCREATION_PARAMS,
                             _In_ PMIDISRV_CLIENT,
-                            _In_ DWORD *,
-                            _In_ wil::com_ptr_nothrow<CMidiDevicePipe>&);
+                            _In_ DWORD *);
     HRESULT Cleanup();
 
     HRESULT SendMidiMessage(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
+    HRESULT SendMidiMessageNow(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
 
-    STDMETHOD(Callback)(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
+    // client pipe must have the same format for both in and out, so
+    // setting the format for one or the other sets for both.
+    virtual HRESULT SetDataFormatIn(MidiDataFormat DataFormat)
+    {
+        RETURN_IF_FAILED(CMidiPipe::SetDataFormatIn(DataFormat));
+        if (CMidiPipe::DataFormatOut() != MidiDataFormat_Invalid)
+        {
+            RETURN_IF_FAILED(CMidiPipe::SetDataFormatOut(DataFormat));
+        }
+        return S_OK;
+    }
 
-    std::wstring MidiDevice() { return m_ClientPipe.MidiDevice; }
+    virtual HRESULT SetDataFormatOut(MidiDataFormat DataFormat)
+    {
+        RETURN_IF_FAILED(CMidiPipe::SetDataFormatOut(DataFormat));
+        if (CMidiPipe::DataFormatIn() != MidiDataFormat_Invalid)
+        {
+            RETURN_IF_FAILED(CMidiPipe::SetDataFormatIn(DataFormat));
+        }
+        return S_OK;
+    }
 
 private:
-    MIDI_CLIENT_PIPE m_ClientPipe;
+    HRESULT AdjustForBufferingRequirements(_In_ PMIDISRV_CLIENTCREATION_PARAMS CreationParams);
 
-    wil::com_ptr_nothrow<CMidiDevicePipe> m_MidiDevicePipe;
+    wil::critical_section m_ClientPipeLock;
+    MidiClientHandle m_ClientHandle{ 0 };
+    std::unique_ptr<CMidiXProc> m_MidiPump;
 };
 

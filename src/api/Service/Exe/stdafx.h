@@ -61,6 +61,9 @@ namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
 #include "mididevicemanagerinterface_i.c"
 #include "mididevicemanagerinterface.h"
 
+#include "Midi2BS2UMPTransform.h"
+#include "Midi2UMP2BSTransform.h"
+
 #include "MidiSrvRpc.h"
 
 #include "SWDevice.h"
@@ -70,16 +73,6 @@ namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
 #include "MidiDefs.h"
 
 
-// MidiDevicePipe holds MidiClientPipe(s) that it is connected to.
-// MidiClientPipe holds a MidiDevicePipe that it is connected to.
-// declare these prior to including the headers.
-class CMidiClientPipe;
-class CMidiDevicePipe;
-class CMidiTransformPipe;
-
-// transform manager takes a ref to client manager and device manager
-class CMidiClientManager;
-
 #include "MidiTelemetry.h"
 #include "MidiPerformanceManager.h"
 #include "MidiProcessManager.h"
@@ -87,14 +80,16 @@ class CMidiClientManager;
 #include "MidiDeviceManager.h"
 #include "MidiXProc.h"
 
-
-
-#include "MidiDevicePipeMessageScheduler.h"
+// MidiDevicePipe holds MidiClientPipe(s) that it is connected to.
+// MidiClientPipe holds a MidiDevicePipe that it is connected to.
+// declare these prior to including the headers.
+class CMidiClientPipe;
+class CMidiDevicePipe;
 
 #include "MidiDevicePipe.h"
 #include "MidiClientPipe.h"
+#include "MidiTransformPipe.h"
 #include "MidiClientManager.h"
-
 
 #include "MidiSrv.h"
 

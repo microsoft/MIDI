@@ -125,12 +125,12 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.BS2UMPTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.UMP2BSTransform\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.BS2UMPTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.UMP2BSTransform\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -169,12 +169,12 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.BS2UMPTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.UMP2BSTransform\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.BS2UMPTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.UMP2BSTransform\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -213,7 +213,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.BS2UMPTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.UMP2BSTransform\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -237,7 +237,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.BS2UMPTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.UMP2BSTransform\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -263,13 +263,13 @@
     <ClCompile Include="MidiConfigurationManager.cpp" />
     <ClCompile Include="MidiDeviceManager.cpp" />
     <ClCompile Include="MidiDevicePipe.cpp" />
-    <ClCompile Include="MidiDevicePipeMessageScheduler.cpp" />
     <ClCompile Include="MidiPerformanceManager.cpp" />
     <ClCompile Include="MidiProcessManager.cpp" />
     <ClCompile Include="MidiService.cpp" />
     <ClCompile Include="MidiSrv.cpp" />
     <ClCompile Include="MidiSrvRpc.cpp" />
     <ClCompile Include="MidiSrvRPC_stub.cpp" />
+    <ClCompile Include="MidiTransformPipe.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Inc\MidiClientManager.h" />
@@ -277,11 +277,12 @@
     <ClInclude Include="..\Inc\MidiDeviceManager.h" />
     <ClInclude Include="..\Inc\MidiDevicePipe.h" />
     <ClInclude Include="..\Inc\MidiPerformanceManager.h" />
+    <ClInclude Include="..\Inc\MidiPipe.h" />
     <ClInclude Include="..\Inc\MidiProcessManager.h" />
     <ClInclude Include="..\Inc\MidiSrv.h" />
     <ClInclude Include="..\Inc\MidiTelemetry.h" />
+    <ClInclude Include="..\Inc\MidiTransformPipe.h" />
     <ClInclude Include="MidiConfigurationManager.h" />
-    <ClInclude Include="MidiDevicePipeMessageScheduler.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>

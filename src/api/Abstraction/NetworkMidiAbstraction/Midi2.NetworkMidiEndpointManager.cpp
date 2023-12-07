@@ -22,8 +22,8 @@ GUID AbstractionLayerGUID = __uuidof(Midi2NetworkMidiAbstraction);
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiEndpointManager::Initialize(
-    IUnknown* midiDeviceManager,
-    LPCWSTR configurationJson
+    IUnknown* MidiDeviceManager,
+    LPCWSTR ConfigurationJson
 
 )
 {
@@ -36,24 +36,24 @@ CMidi2NetworkMidiEndpointManager::Initialize(
         TraceLoggingPointer(this, "this")
     );
 
-    RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == MidiDeviceManager);
 
-    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
+    RETURN_IF_FAILED(MidiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
 
     m_transportAbstractionId = AbstractionLayerGUID;   // this is needed so MidiSrv can instantiate the correct transport
     m_containerId = m_transportAbstractionId;                           // we use the transport ID as the container ID for convenience
 
     RETURN_IF_FAILED(CreateParentDevice());
 
-    if (configurationJson != nullptr)
+    if (ConfigurationJson != nullptr)
     {
         try
         {
-            std::wstring json{ configurationJson };
+            std::wstring json{ ConfigurationJson };
 
             if (!json.empty())
             {
-                m_jsonObject = json::JsonObject::Parse(json);
+                m_JsonObject = json::JsonObject::Parse(json);
 
                 LOG_IF_FAILED(CreateConfiguredEndpoints(json));
             }

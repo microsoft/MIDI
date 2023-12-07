@@ -23,7 +23,7 @@ using namespace winrt::Windows::Devices::Midi2;
 #include <wil\result_macros.h>
 #include <ppltasks.h>
 #include <WexTestClass.h>
-
+#include <Objbase.h>
 #include "loopback_ids.h"
 #include "MidiDefs.h"
 

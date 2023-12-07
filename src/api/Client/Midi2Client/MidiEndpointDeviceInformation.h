@@ -134,6 +134,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
         collections::IMap<winrt::hstring, IInspectable> m_properties =
             winrt::single_threaded_map< winrt::hstring, IInspectable>();
 
+
+        collections::IVector<midi2::MidiGroupTerminalBlock> m_groupTerminalBlocks{ winrt::single_threaded_vector<midi2::MidiGroupTerminalBlock>() };
+
+
+        void ReadGroupTerminalBlocks();
+
     };
 }
 namespace winrt::Windows::Devices::Midi2::factory_implementation

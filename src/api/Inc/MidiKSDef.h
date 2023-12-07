@@ -12,22 +12,27 @@ DEFINE_DEVPROPKEY(DEVPKEY_KsMidiPort_KsFilterInterfaceId, 0x2bf8a79a, 0x79ff, 0x
 #define STRING_DEVPKEY_KsMidiPort_KsPinId L"{2BF8A79A-79FF-49BC-9126-372815B153C8},2"
 DEFINE_DEVPROPKEY(DEVPKEY_KsMidiPort_KsPinId, 0x2bf8a79a, 0x79ff, 0x49bc, 0x91, 0x26, 0x37, 0x28, 0x15, 0xb1, 0x53, 0xc8, 2);     // DEVPROP_TYPE_UINT32
 
-#define STRING_DEVPKEY_KsMidiPort_SupportsUMPFormat L"{05279CB1-002F-4E6B-A3A3-29A87D82B4F7},1"
-DEFINE_DEVPROPKEY(DEVPKEY_KsMidiPort_SupportsUMPFormat, 0x5279cb1, 0x2f, 0x4e6b, 0xa3, 0xa3, 0x29, 0xa8, 0x7d, 0x82, 0xb4, 0xf7, 1);     // DEVPROP_TYPE_BOOL
-
-#define STRING_DEVPKEY_KsMidiPort_SupportsMidiOneFormat L"{05279CB1-002F-4E6B-A3A3-29A87D82B4F7},2"
-DEFINE_DEVPROPKEY(DEVPKEY_KsMidiPort_SupportsMidiOneFormat, 0x5279cb1, 0x2f, 0x4e6b, 0xa3, 0xa3, 0x29, 0xa8, 0x7d, 0x82, 0xb4, 0xf7, 2);     // DEVPROP_TYPE_BOOL
-
-#define STRING_DEVPKEY_KsMidiPort_SupportsLooped L"{05279CB1-002F-4E6B-A3A3-29A87D82B4F7},3"
-DEFINE_DEVPROPKEY(DEVPKEY_KsMidiPort_SupportsLooped, 0x5279cb1, 0x2f, 0x4e6b, 0xa3, 0xa3, 0x29, 0xa8, 0x7d, 0x82, 0xb4, 0xf7, 3);     // DEVPROP_TYPE_BOOL
-
 // used for emulating a bidirectional endpoint when using a KS endpoint with separate in and out pins.
-#define STRING_DEVPKEY_KsMidiPort_InPinId L"{05279CB1-002F-4E6B-A3A3-29A87D82B4F7},4"
-DEFINE_DEVPROPKEY(DEVPKEY_KsMidiPort_InPinId, 0x5279cb1, 0x2f, 0x4e6b, 0xa3, 0xa3, 0x29, 0xa8, 0x7d, 0x82, 0xb4, 0xf7, 4);     // DEVPROP_TYPE_UINT32
+#define STRING_DEVPKEY_KsMidiPort_InPinId L"{05279CB1-002F-4E6B-A3A3-29A87D82B4F7},1"
+DEFINE_DEVPROPKEY(DEVPKEY_KsMidiPort_InPinId, 0x5279cb1, 0x2f, 0x4e6b, 0xa3, 0xa3, 0x29, 0xa8, 0x7d, 0x82, 0xb4, 0xf7, 1);     // DEVPROP_TYPE_UINT32
 
-#define STRING_DEVPKEY_KsMidiPort_OutPinId L"{05279CB1-002F-4E6B-A3A3-29A87D82B4F7},5"
-DEFINE_DEVPROPKEY(DEVPKEY_KsMidiPort_OutPinId, 0x5279cb1, 0x2f, 0x4e6b, 0xa3, 0xa3, 0x29, 0xa8, 0x7d, 0x82, 0xb4, 0xf7, 5);     // DEVPROP_TYPE_UINT32
+#define STRING_DEVPKEY_KsMidiPort_OutPinId L"{05279CB1-002F-4E6B-A3A3-29A87D82B4F7},2"
+DEFINE_DEVPROPKEY(DEVPKEY_KsMidiPort_OutPinId, 0x5279cb1, 0x2f, 0x4e6b, 0xa3, 0xa3, 0x29, 0xa8, 0x7d, 0x82, 0xb4, 0xf7, 2);     // DEVPROP_TYPE_UINT32
 
+#define STRING_DEVPKEY_KsTransport L"{05279CB1-002F-4E6B-A3A3-29A87D82B4F7},3"
+DEFINE_DEVPROPKEY(DEVPKEY_KsTransport, 0x5279cb1, 0x2f, 0x4e6b, 0xa3, 0xa3, 0x29, 0xa8, 0x7d, 0x82, 0xb4, 0xf7, 3);     // DEVPROP_TYPE_BYTE
+
+typedef enum _MidiTransport
+{
+    MidiTransport_Invalid = 0,
+    MidiTransport_StandardByteStream = 1,
+    MidiTransport_CyclicByteStream = 2,
+    MidiTransport_StandardAndCyclicByteStream = 3, // bitmask combination of standard and cyclic bytestream
+    MidiTransport_CyclicUMP = 4,    
+    MidiTransport_StandardByteStreamAndCyclicUMP = 5, // bitmask combination of standard bytestream and cyclic ump
+    MidiTransport_CyclicByteStreamAndCyclicUMP = 6, // bitmask combination of cyclic bytestream and cyclic ump
+    MidiTransport_StandardAndCyclicByteStreamAndCyclicUMP = 7 // bitmask combination of all transports
+} MidiTransport;
 
 #ifndef KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET
 #define STATIC_KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET\
@@ -45,7 +50,7 @@ DEFINE_DEVPROPKEY(DEVPKEY_KsMidiPort_OutPinId, 0x5279cb1, 0x2f, 0x4e6b, 0xa3, 0x
 typedef struct {
     LONGLONG Position;
     ULONG    ByteCount;
-} UMPDATAFORMAT, *PUMPDATAFORMAT;
+} LOOPEDDATAFORMAT, *PLOOPEDDATAFORMAT, UMPDATAFORMAT, *PUMPDATAFORMAT;
 
 typedef enum {
     KSPROPERTY_MIDILOOPEDSTREAMING_BUFFER,
@@ -71,6 +76,17 @@ typedef struct {
     KSPROPERTY  Property;
     ULONG       RequestedBufferSize;
 } KSMIDILOOPED_BUFFER_PROPERTY, *PKSMIDILOOPED_BUFFER_PROPERTY;
+#endif
 
+#ifndef KSPROPSETID_MIDI2_ENDPOINT_INFORMATION
+#define STATIC_KSPROPSETID_MIDI2_ENDPOINT_INFORMATION\
+            0x814552d, 0x2a1e, 0x48fe, 0x9f, 0xbd, 0x70, 0xac, 0x67, 0x91, 0x7, 0x55
+        DEFINE_GUIDSTRUCT("0814552D-2A1E-48FE-9FBD-70AC67910755", KSPROPSETID_MIDI2_ENDPOINT_INFORMATION);
+#define KSPROPSETID_MIDI2_ENDPOINT_INFORMATION DEFINE_GUIDNAMED(KSPROPSETID_MIDI2_ENDPOINT_INFORMATION)
+
+typedef enum {
+    KSPROPERTY_MIDI2_NATIVEDATAFORMAT,
+    KSPROPERTY_MIDI2_GROUP_TERMINAL_BLOCKS
+} KSPROPERTY_MIDI2_ENDPOINT_INFORMATION;
 #endif
 

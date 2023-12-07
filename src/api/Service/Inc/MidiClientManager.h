@@ -30,14 +30,36 @@ public:
     HRESULT Cleanup();
 
 private:
+    HRESULT GetMidiClient(_In_ handle_t,
+                                _In_ LPCWSTR,
+                                _In_ PMIDISRV_CLIENTCREATION_PARAMS,
+                                _In_ PMIDISRV_CLIENT,
+                                _In_ wil::unique_handle&,
+                                _In_ wil::com_ptr_nothrow<CMidiPipe>&);
+
+    HRESULT GetMidiDevice(_In_ handle_t,
+                                _In_ LPCWSTR,
+                                _In_ PMIDISRV_CLIENTCREATION_PARAMS,
+                                _In_ wil::com_ptr_nothrow<CMidiPipe>&);
+
+    HRESULT 
+    CMidiClientManager::GetMidiTransform(
+                                _In_ handle_t,
+                                _In_ MidiFlow,
+                                _In_ MidiDataFormat,
+                                _In_ MidiDataFormat,
+                                _In_ wil::com_ptr_nothrow<CMidiPipe>&,
+                                _In_ wil::com_ptr_nothrow<CMidiPipe>&);
+
     wil::critical_section m_ClientManagerLock;
 
     std::shared_ptr<CMidiPerformanceManager> m_PerformanceManager;
     std::shared_ptr<CMidiProcessManager> m_ProcessManager;
     std::shared_ptr<CMidiDeviceManager> m_DeviceManager;
 
-    std::map<MidiClientHandle, wil::com_ptr_nothrow<CMidiClientPipe>> m_ClientPipes;
-    std::map<std::wstring, wil::com_ptr_nothrow<CMidiDevicePipe>> m_DevicePipes;
+    std::map<MidiClientHandle, wil::com_ptr_nothrow<CMidiPipe>> m_ClientPipes;
+    std::map<std::wstring, wil::com_ptr_nothrow<CMidiPipe>> m_DevicePipes;
+    std::multimap<std::wstring, wil::com_ptr_nothrow<CMidiPipe>> m_TransformPipes;
 
     // mmcss task id that is shared among all midi clients
     DWORD m_MmcssTaskId {0};

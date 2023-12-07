@@ -16,7 +16,8 @@ public:
 
     BEGIN_TEST_CLASS(Midi2DriverTests)
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
-        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Minmidi.sys")
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Minmidi.sys")        
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"usbmidi2.sys")
     END_TEST_CLASS()
 
     TEST_CLASS_SETUP(ClassSetup);
@@ -26,26 +27,30 @@ public:
     TEST_METHOD_CLEANUP(TestCleanup);
 
     //Generic Tests
+    TEST_METHOD(TestCyclicUMPMidiIO);
+    TEST_METHOD(TestCyclicByteStreamMidiIO);
     TEST_METHOD(TestStandardMidiIO);
-    TEST_METHOD(TestCyclicMidiIO);
 
+    TEST_METHOD(TestCyclicUMPMidiIO_ManyMessages);
+    TEST_METHOD(TestCyclicByteStreamMidiIO_ManyMessages);
     TEST_METHOD(TestStandardMidiIO_ManyMessages);
-    TEST_METHOD(TestCyclicMidiIO_ManyMessages);
 
+    TEST_METHOD(TestCyclicUMPMidiIO_Latency);
+    TEST_METHOD(TestCyclicByteStreamMidiIO_Latency);
     TEST_METHOD(TestStandardMidiIO_Latency);
-    TEST_METHOD(TestCyclicMidiIO_Latency);
 
+    TEST_METHOD(TestCyclicUMPMidiIOSlowMessages_Latency);
+    TEST_METHOD(TestCyclicByteStreamMidiIOSlowMessages_Latency);
     TEST_METHOD(TestStandardMidiIOSlowMessages_Latency);
-    TEST_METHOD(TestCyclicMidiIOSlowMessages_Latency);
 
     Midi2DriverTests()
     {}
 
-    STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position)
+    STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, _In_ LONGLONG Context)
     {
         if (m_MidiInCallback)
         {
-            m_MidiInCallback(Data, Size, Position);
+            m_MidiInCallback(Data, Size, Position, Context);
         }
         return S_OK;
     }
@@ -56,10 +61,10 @@ public:
     STDMETHODIMP_(ULONG) Release() { return 1; }
 
 private:
-    void TestMidiIO(BOOL Cyclic);
-    void TestMidiIO_ManyMessages(BOOL Cyclic);
-    void TestMidiIO_Latency(BOOL Cyclic, BOOL DelayedMessages);
+    void TestMidiIO(MidiTransport Transport);
+    void TestMidiIO_ManyMessages(MidiTransport Transport);
+    void TestMidiIO_Latency(MidiTransport Transport, BOOL DelayedMessages);
     
-    std::function<void(PVOID, UINT32, LONGLONG)> m_MidiInCallback;
+    std::function<void(PVOID, UINT32, LONGLONG, LONGLONG)> m_MidiInCallback;
 };
 

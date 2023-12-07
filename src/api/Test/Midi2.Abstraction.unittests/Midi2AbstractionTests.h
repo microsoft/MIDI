@@ -21,6 +21,7 @@ public:
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.KSAbstraction.dll")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.MidiSrvAbstraction.dll")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Minmidi.sys")
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"usbmidi2.sys")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"midisrv.exe")
     END_TEST_CLASS()
 
@@ -31,24 +32,72 @@ public:
     TEST_METHOD_CLEANUP(TestCleanup);
 
     //Generic Tests
-    TEST_METHOD(TestMidiKSAbstraction);
-    TEST_METHOD(TestMidiKSAbstractionCreationOrder);
-    TEST_METHOD(TestMidiKSAbstractionBiDi);
-    TEST_METHOD(TestMidiKSIO_Latency);
-    TEST_METHOD(TestMidiKSIOSlowMessages_Latency);
+    TEST_METHOD(TestMidiKSAbstraction_UMP);
+    TEST_METHOD(TestMidiKSAbstraction_ByteStream);
+    TEST_METHOD(TestMidiKSAbstraction_Any);
+    TEST_METHOD(TestMidiKSAbstractionCreationOrder_UMP);
+    TEST_METHOD(TestMidiKSAbstractionCreationOrder_ByteStream);
+    TEST_METHOD(TestMidiKSAbstractionCreationOrder_Any);
+    TEST_METHOD(TestMidiKSAbstractionBiDi_UMP);
+    TEST_METHOD(TestMidiKSAbstractionBiDi_ByteStream);
+    TEST_METHOD(TestMidiKSAbstractionBiDi_Any);
+    TEST_METHOD(TestMidiKSIO_Latency_UMP);
+    TEST_METHOD(TestMidiKSIO_Latency_ByteStream);
+    TEST_METHOD(TestMidiKSIOSlowMessages_Latency_UMP);
+    TEST_METHOD(TestMidiKSIOSlowMessages_Latency_ByteStream);
 
-    TEST_METHOD(TestMidiSrvAbstraction);
-    TEST_METHOD(TestMidiSrvAbstractionCreationOrder);
-    TEST_METHOD(TestMidiSrvAbstractionBiDi);
-    TEST_METHOD(TestMidiSrvIO_Latency);
-    TEST_METHOD(TestMidiSrvIOSlowMessages_Latency);
-    TEST_METHOD(TestMidiSrv_MultiClient);
+    TEST_METHOD(TestMidiSrvAbstraction_UMP);
+    TEST_METHOD(TestMidiSrvAbstraction_ByteStream);
+    TEST_METHOD(TestMidiSrvAbstraction_Any);
+    TEST_METHOD(TestMidiSrvAbstraction_UMP_MidiOne);
+    TEST_METHOD(TestMidiSrvAbstraction_ByteStream_MidiOne);
+    TEST_METHOD(TestMidiSrvAbstraction_Any_MidiOne);
+    TEST_METHOD(TestMidiSrvAbstractionCreationOrder_UMP);
+    TEST_METHOD(TestMidiSrvAbstractionCreationOrder_ByteStream);
+    TEST_METHOD(TestMidiSrvAbstractionCreationOrder_Any);
+    TEST_METHOD(TestMidiSrvAbstractionCreationOrder_UMP_MidiOne);
+    TEST_METHOD(TestMidiSrvAbstractionCreationOrder_ByteStream_MidiOne);
+    TEST_METHOD(TestMidiSrvAbstractionCreationOrder_Any_MidiOne);
+    TEST_METHOD(TestMidiSrvAbstractionBiDi_UMP);
+    TEST_METHOD(TestMidiSrvAbstractionBiDi_ByteStream);
+    TEST_METHOD(TestMidiSrvAbstractionBiDi_Any);
+    TEST_METHOD(TestMidiSrvIO_Latency_UMP);
+    TEST_METHOD(TestMidiSrvIO_Latency_ByteStream);
+    TEST_METHOD(TestMidiSrvIOSlowMessages_Latency_UMP);
+    TEST_METHOD(TestMidiSrvIOSlowMessages_Latency_ByteStream);
+    TEST_METHOD(TestMidiSrvMultiClient_UMP_UMP);
+    TEST_METHOD(TestMidiSrvMultiClient_ByteStream_ByteStream);
+    TEST_METHOD(TestMidiSrvMultiClient_Any_Any);
+    TEST_METHOD(TestMidiSrvMultiClient_UMP_ByteStream);
+    TEST_METHOD(TestMidiSrvMultiClient_ByteStream_UMP);
+    TEST_METHOD(TestMidiSrvMultiClient_Any_ByteStream);
+    TEST_METHOD(TestMidiSrvMultiClient_ByteStream_Any);
+    TEST_METHOD(TestMidiSrvMultiClient_Any_UMP);
+    TEST_METHOD(TestMidiSrvMultiClient_UMP_Any);
+    TEST_METHOD(TestMidiSrvMultiClient_UMP_UMP_MidiOne);
+    TEST_METHOD(TestMidiSrvMultiClient_ByteStream_ByteStream_MidiOne);
+    TEST_METHOD(TestMidiSrvMultiClient_Any_Any_MidiOne);
+    TEST_METHOD(TestMidiSrvMultiClient_UMP_ByteStream_MidiOne);
+    TEST_METHOD(TestMidiSrvMultiClient_ByteStream_UMP_MidiOne);
+    TEST_METHOD(TestMidiSrvMultiClient_Any_ByteStream_MidiOne);
+    TEST_METHOD(TestMidiSrvMultiClient_ByteStream_Any_MidiOne);
+    TEST_METHOD(TestMidiSrvMultiClient_Any_UMP_MidiOne);
+    TEST_METHOD(TestMidiSrvMultiClient_UMP_Any_MidiOne);
+    TEST_METHOD(TestMidiSrvMultiClientBiDi_UMP_UMP);
+    TEST_METHOD(TestMidiSrvMultiClientBiDi_ByteStream_ByteStream);
+    TEST_METHOD(TestMidiSrvMultiClientBiDi_Any_Any);
+    TEST_METHOD(TestMidiSrvMultiClientBiDi_UMP_ByteStream);
+    TEST_METHOD(TestMidiSrvMultiClientBiDi_ByteStream_UMP);
+    TEST_METHOD(TestMidiSrvMultiClientBiDi_Any_ByteStream);
+    TEST_METHOD(TestMidiSrvMultiClientBiDi_ByteStream_Any);
+    TEST_METHOD(TestMidiSrvMultiClientBiDi_Any_UMP);
+    TEST_METHOD(TestMidiSrvMultiClientBiDi_UMP_Any);
 
-    STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position)
+    STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, LONGLONG Context)
     {
         if (m_MidiInCallback)
         {
-            m_MidiInCallback(Data, Size, Position);
+            m_MidiInCallback(Data, Size, Position, Context);
         }
         return S_OK;
     }
@@ -59,11 +108,13 @@ public:
     STDMETHODIMP_(ULONG) Release() { return 1; }
 
 private:
-    void TestMidiAbstraction(_In_ REFIID, _In_ BOOL);
-    void TestMidiAbstractionCreationOrder(_In_ REFIID, _In_ BOOL);
-    void TestMidiAbstractionBiDi(_In_ REFIID);
-    void TestMidiIO_Latency(_In_ REFIID, _In_ BOOL);
+    void TestMidiAbstraction(_In_ REFIID, _In_ MidiDataFormat, _In_ BOOL);
+    void TestMidiAbstractionCreationOrder(_In_ REFIID, _In_ MidiDataFormat, _In_ BOOL);
+    void TestMidiAbstractionBiDi(_In_ REFIID, _In_ MidiDataFormat);
+    void TestMidiIO_Latency(_In_ REFIID, _In_ MidiDataFormat, _In_ BOOL);
+    void TestMidiSrvMultiClient(_In_ MidiDataFormat, _In_ MidiDataFormat, _In_ BOOL);
+    void TestMidiSrvMultiClientBiDi(_In_ MidiDataFormat, _In_ MidiDataFormat);
 
-    std::function<void(PVOID, UINT32, LONGLONG)> m_MidiInCallback;
+    std::function<void(PVOID, UINT32, LONGLONG, LONGLONG)> m_MidiInCallback;
 };
 

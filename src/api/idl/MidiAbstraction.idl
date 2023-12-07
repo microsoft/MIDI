@@ -6,9 +6,19 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-
-
 import "unknwn.idl";
+import "mididevicemanagerinterface.idl";
+
+typedef struct
+{
+    MidiDataFormat DataFormat;
+} ABSTRACTIONCREATIONPARAMS, *PABSTRACTIONCREATIONPARAMS;
+
+typedef struct
+{
+    MidiDataFormat DataFormatIn;
+    MidiDataFormat DataFormatOut;
+} TRANSFORMCREATIONPARAMS, *PTRANSFORMCREATIONPARAMS;
 
 [
     object,
@@ -21,7 +31,8 @@ interface IMidiCallback : IUnknown
     HRESULT Callback(
         [in] PVOID message,
         [in] UINT size,
-        [in] LONGLONG position
+        [in] LONGLONG position,
+        [in] LONGLONG context
     );
 };
 
@@ -45,12 +56,14 @@ interface IMidiAbstraction : IUnknown
     uuid(6C4B8BF9-8133-4B41-8303-1FDE78E20ACA),
     pointer_default(unique)
 ]
-interface IMidiIn : IUnknown        // IMidiMessageSource
+interface IMidiIn : IUnknown
 {
     HRESULT Initialize(
         [in] LPCWSTR deviceId,
+        [in] PABSTRACTIONCREATIONPARAMS creationParams,
         [in] DWORD * mmcssTaskId,
-        [in] IMidiCallback * callback
+        [in] IMidiCallback * callback,
+        [in] LONGLONG context
     );
 
     HRESULT Cleanup();
@@ -62,10 +75,11 @@ interface IMidiIn : IUnknown        // IMidiMessageSource
     uuid(F328D645-7D6D-4924-A7E3-9DEE245189F9),
     pointer_default(unique)
 ]
-interface IMidiOut : IUnknown       // IMidiMessageDestination
+interface IMidiOut : IUnknown
 {
     HRESULT Initialize(
         [in] LPCWSTR deviceId,
+        [in] PABSTRACTIONCREATIONPARAMS creationParams,
         [in] DWORD * mmcssTaskId
     );
 
@@ -89,8 +103,10 @@ interface IMidiBiDi : IUnknown
 {
     HRESULT Initialize(
         [in] LPCWSTR deviceId,
+        [in] PABSTRACTIONCREATIONPARAMS creationParams,
         [in] DWORD * mmcssTaskId,
-        [in] IMidiCallback * callback
+        [in] IMidiCallback * callback,
+        [in] LONGLONG context
     );
 
     HRESULT Cleanup();
@@ -116,5 +132,44 @@ interface IMidiEndpointManager : IUnknown
     );
 
     HRESULT Cleanup();
+};
+
+[
+    object,
+    local,
+    uuid(65FA86A4-0433-4DCD-88E4-E565051CAB2D),
+    pointer_default(unique)
+]
+interface IMidiTransform : IUnknown
+{
+    HRESULT Activate(
+        [in, annotation("_In_")] REFIID Iid,
+        [out, iid_is(Iid), annotation("_COM_Outptr_")] void** Interface
+    );
+};
+
+[
+    object,
+    local,
+    uuid(5D2400F0-F2EE-4A51-A3BE-0AC9A19C09C4),
+    pointer_default(unique)
+]
+interface IMidiDataTransform : IUnknown
+{
+    HRESULT Initialize(
+        [in] LPCWSTR deviceId,
+        [in] PTRANSFORMCREATIONPARAMS creationParams,
+        [in] DWORD * mmcssTaskId,
+        [in] IMidiCallback * callback,
+        [in] LONGLONG context
+    );
+
+    HRESULT Cleanup();
+
+    HRESULT SendMidiMessage(
+        [in] PVOID message,
+        [in] UINT size,
+        [in] LONGLONG position
+    );
 };
 

@@ -7,8 +7,10 @@ _Use_decl_annotations_
 HRESULT
 CMidi2SampleMidiIn::Initialize(
     LPCWSTR,
+    PABSTRACTIONCREATIONPARAMS,
     DWORD *,
-    IMidiCallback *
+    IMidiCallback *,
+    LONGLONG
 )
 {
     TraceLoggingWrite(
@@ -39,6 +41,7 @@ HRESULT
 CMidi2SampleMidiIn::Callback(
     PVOID,
     UINT,
+    LONGLONG,
     LONGLONG
 )
 {
