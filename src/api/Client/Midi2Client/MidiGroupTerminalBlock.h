@@ -29,7 +29,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint16_t MaxDeviceInputBandwidthIn4KBSecondUnits() { return m_maxDeviceInputBandwidthIn4KBSecondUnits; }
         uint16_t MaxDeviceOutputBandwidthIn4KBSecondUnits() { return m_maxDeviceOutputBandwidthIn4KBSecondUnits; }
 
+        bool InternalUpdateFromPropertyData(_In_ UMP_GROUP_TERMINAL_BLOCK_HEADER* const header, _In_ std::wstring& name);
+
     private:
+
         uint8_t m_number{};
         winrt::hstring m_name{};
         midi2::MidiGroupTerminalBlockDirection m_direction{ MidiGroupTerminalBlockDirection::Bidirectional };
