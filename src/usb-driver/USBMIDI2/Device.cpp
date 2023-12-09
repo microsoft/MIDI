@@ -989,9 +989,7 @@ Return Value:
                 else
                 {
                     // Unknown interface so error
-                    TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Device detected has an unknown interface.\n");
-                    status = STATUS_INSUFFICIENT_RESOURCES;
-                    goto SelectExit;
+                    TraceEvents(TRACE_LEVEL_WARNING, TRACE_DEVICE, "Device detected has an unknown interface, ignored.\n");
                 }
                 continue; // Not MIDI so continue to next interface
             }
@@ -1094,6 +1092,12 @@ Return Value:
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
             "Error selecting USB Interfaces.\n");
         goto SelectExit;
+    }
+
+    // Temporary for testing
+    if (pDeviceContext->UsbMIDIbcdMSC == 0x0100)
+    {
+        USBMIDI2DriverCreateGTB(Device);
     }
 
 SelectExit:
@@ -1258,7 +1262,7 @@ Return Value:
     PDEVICE_CONTEXT                             devCtx = NULL;
     ULONG                                       numBytesTransferred;
     midi2_desc_group_terminal_block_header_t    gtbHeader;
-    USHORT                                      numChars;
+    USHORT                                      numChars = 0;
     WDF_REQUEST_SEND_OPTIONS                    reqOptions;
 
     if (!Device)
@@ -1429,7 +1433,7 @@ Return Value:
             );
             if (!NT_SUCCESS(status) || !numChars)
             {
-                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Product Name string size.%!STATUS!", status);
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting string size.%!STATUS!", status);
                 status = STATUS_SUCCESS;
                 // Make sure we do not try to capture this string in future processing
                 pUSBGTBs->aBlock[termBlockCount].iBlockItem = 0;
@@ -1482,7 +1486,7 @@ Return Value:
         pThisGrpTrmBlk->GrpTrmBlock.Size =
             (WORD)(sizeof(UMP_GROUP_TERMINAL_BLOCK_HEADER) + grpTermBlockStringSizes[termBlockCount]);
         pThisGrpTrmBlk->GrpTrmBlock.Number = pUSBGTBs->aBlock[termBlockCount].bGrpTrmBlkID;
-        pThisGrpTrmBlk->GrpTrmBlock.Direction = pUSBGTBs->aBlock[termBlockCount].bDescriptorType;
+        pThisGrpTrmBlk->GrpTrmBlock.Direction = pUSBGTBs->aBlock[termBlockCount].bGrpTrmBlkType;
         pThisGrpTrmBlk->GrpTrmBlock.FirstGroupIndex = pUSBGTBs->aBlock[termBlockCount].nGroupTrm;
         pThisGrpTrmBlk->GrpTrmBlock.GroupCount = pUSBGTBs->aBlock[termBlockCount].nNumGroupTrm;
         pThisGrpTrmBlk->GrpTrmBlock.Protocol = pUSBGTBs->aBlock[termBlockCount].bMIDIProtocol;
@@ -1507,7 +1511,7 @@ Return Value:
             );
             if (!NT_SUCCESS(status))
             {
-                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Product Name string text.%!STATUS!", status);
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting string text.%!STATUS!", status);
                 status = STATUS_SUCCESS;
                 // Continue processing - string already NULL terminated blank.
             }
@@ -1547,9 +1551,298 @@ Return Value:
 
 --*/
 {
-    Device;
+    PDEVICE_CONTEXT pDevCtx = NULL;
+    PUSB_CONFIGURATION_DESCRIPTOR pConfigurationDescriptor = NULL;
+    PUCHAR pCurrent = NULL;
+    PUCHAR pEnd = NULL;
+    size_t configDescSize;
+    NTSTATUS status = 0;
 
-    return STATUS_SUCCESS;
+    // Temp variables for createing GTB headers
+    WDFMEMORY                       gtbMemory = 0;
+    WDF_OBJECT_ATTRIBUTES           gtbMemoryAttributes;
+    PVOID                           gtbMemoryPtr;
+    size_t                          gtbMemorySize;
+    UINT8                           numMidiIn = 0;
+    UINT8                           numMidiOut = 0;
+    UINT8                           grpTermBlockDirection[32];
+    UINT8                           grpTermBlockStringIndexes[32];
+    USHORT                          grpTermBlockStringSizes[32];
+    UINT8                           grpTermBlockGroupIndex[32];
+    UINT8                           numGrpTermBlocks = 0;
+    USHORT                          numChars;
+    WDF_REQUEST_SEND_OPTIONS        reqOptions;
+
+    ASSERT(Device);
+    pDevCtx = GetDeviceContext(Device);
+    ASSERT(pDevCtx);
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
+
+    if (pDevCtx->DeviceGTBMemory)
+    {
+        TraceEvents(TRACE_LEVEL_WARNING, TRACE_DEVICE, "GTB response memory already created.");
+        goto exit;
+    }
+
+    pConfigurationDescriptor = (PUSB_CONFIGURATION_DESCRIPTOR)WdfMemoryGetBuffer(pDevCtx->DeviceConfigDescriptorMemory, &configDescSize);
+    // Confirm this is a USB MIDI 1.0 interface
+    if (pDevCtx->UsbMIDIbcdMSC != 0x0100)
+    {
+        status = STATUS_INSUFFICIENT_RESOURCES;
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Unexpected bcdMSC version.");
+        goto exit;
+    }
+
+    // Find the relevant interface
+    PUSB_INTERFACE_DESCRIPTOR pInterfaceDescriptor = USBD_ParseConfigurationDescriptor(
+        pConfigurationDescriptor,        // Descriptor Buffer
+        pDevCtx->UsbMIDIInterfaceNumber, // Interface Number
+        pDevCtx->UsbMIDIStreamingAlt     // Alternate Setting
+    );
+    if (!pInterfaceDescriptor)
+    {
+        status = STATUS_INSUFFICIENT_RESOURCES;
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Could not find interface descriptor for selected device.");
+        goto exit;
+    }
+    // Set current search possition
+    pCurrent = (PUCHAR)pInterfaceDescriptor + sizeof(USB_INTERFACE_DESCRIPTOR);
+
+    // Find the end of this interface by looking for end or next interface
+    PUSB_INTERFACE_DESCRIPTOR pInterfaceDescriptorNext = USBD_ParseConfigurationDescriptorEx(
+        pConfigurationDescriptor,
+        (PVOID)pCurrent,
+        -1,         // looking for the next interface whatever it is
+        -1,
+        -1,
+        -1,
+        -1
+    );
+    if (!pInterfaceDescriptorNext)
+    {
+        // means likely last interface descriptor, thus we search to end
+        pEnd = (PUCHAR)pConfigurationDescriptor + configDescSize;
+    }
+    else
+    {
+        // Next interface marks end of interface descriptor of interest
+        pEnd = (PUCHAR)pInterfaceDescriptorNext;
+    }
+
+    // Now we know bounds of the descriptor, look for embedded jacks
+    // NOTE: USB MIDI 1.0 implmentations did not take a consistent (or intended) approach to setting
+    // IDs for Jacks in relation to the virtual cable numbers. It has been generally adopted to just
+    // assume that jacks found of either IN or OUT would be enumerated as virtual cables in order they are
+    // found. Therefore, the first EMBEDDED IN Jack would be assigned virtual cabled 0x00, next 0x01, etc.
+    // The same for found EMBEDDED OUT Jack IDs. We will use this same approach in creating the GTB
+    // representation for this device.
+    
+    // Setup to determine the size of GTB Structure
+    UINT grpTermBlockStructureSize = sizeof(KSMULTIPLE_ITEM);
+
+    // Walk through looking for Jack Descriptors
+    PUSB_COMMON_DESCRIPTOR pNextDescriptor;
+    while (pNextDescriptor = USBD_ParseDescriptors(
+        (PVOID)pConfigurationDescriptor,
+        configDescSize,
+        (PVOID)pCurrent,
+        (LONG)MIDI_CS_INTERFACE)
+        )
+    {
+        // pNextDescriptor is valid, make sure in search area for this interface
+        if ((PVOID)pNextDescriptor >= pEnd)
+        {
+            // Hit end of this interface descriptor
+            break;
+        }
+
+        // Setup to look for next type descriptor
+        pCurrent = (PUCHAR)pNextDescriptor + pNextDescriptor->bLength;
+
+        // Check the subtype and process accordingly
+        midi_desc_header_common_t* pCommonHdr = (midi_desc_header_common_t*)pNextDescriptor;
+        //PUINT8 pThisIndex = NULL;
+        //PUSHORT pThisGTBStringSize = NULL;
+        midi_desc_in_jack_t* pInJack = NULL;
+        midi_desc_out_jack_t* pOutJack = NULL;
+
+        switch (pCommonHdr->bDescriptorSubType)
+        {
+        case MIDI_CS_INTERFACE_IN_JACK :
+            if (pCommonHdr->bLength != 6)
+            {
+                status = STATUS_INSUFFICIENT_RESOURCES;
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "USB MIDI 1.0 In Jack Descriptor invalid format.");
+                goto exit;
+            }
+            pInJack = (midi_desc_in_jack_t*)pNextDescriptor;
+            if (pInJack->bJackType == MIDI_JACK_EMBEDDED)
+            {
+                // Make sure we have space to add more In GTBs
+                if (numGrpTermBlocks >= 32)
+                {
+                    status = STATUS_INSUFFICIENT_RESOURCES;
+                    TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                        "USB MIDI 1.0 number of Embedded jacks exceed 32.");
+                    goto exit;
+                }
+                grpTermBlockDirection[numGrpTermBlocks] = (UINT8)MIDI_CS_INTERFACE_IN_JACK;
+                grpTermBlockStringIndexes[numGrpTermBlocks] = pInJack->iJack;
+                grpTermBlockGroupIndex[numGrpTermBlocks] = numMidiIn++;
+            }
+            else
+            {
+                continue;
+            }
+            break;
+
+        case MIDI_CS_INTERFACE_OUT_JACK :
+            if (pCommonHdr->bLength < 8)
+            {
+                status = STATUS_INSUFFICIENT_RESOURCES;
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "USB MIDI 1.0 Out Jack Descriptor invalid format.");
+                goto exit;
+            }
+            pOutJack = (midi_desc_out_jack_t*)pNextDescriptor;
+            if (pOutJack->bJackType == MIDI_JACK_EMBEDDED)
+            {
+                // Make sure we have space to add more Out GTBs
+                if (numGrpTermBlocks >= 32)
+                {
+                    status = STATUS_INSUFFICIENT_RESOURCES;
+                    TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                        "USB MIDI 1.0 number of Embedded Jacks exceeds 32.");
+                    goto exit;
+                }
+                // Out Embedded Jack descriptor is variable size, but string index is last UINT8
+                grpTermBlockDirection[numGrpTermBlocks] = (UINT8)MIDI_CS_INTERFACE_OUT_JACK;
+                grpTermBlockStringIndexes[numGrpTermBlocks] = *(pCurrent - 1);
+                grpTermBlockGroupIndex[numGrpTermBlocks] = numMidiOut++;
+            }
+            else
+            {
+                continue;
+            }
+            break;
+
+        default :
+            continue;
+        }
+
+        // Account for size if adding a GTB
+        grpTermBlockStructureSize += sizeof(UMP_GROUP_TERMINAL_BLOCK_HEADER);
+
+        if (grpTermBlockStringIndexes[numGrpTermBlocks])
+        {
+            // Find out how large this string is
+            WDF_REQUEST_SEND_OPTIONS_INIT(&reqOptions, WDF_REQUEST_SEND_OPTION_SYNCHRONOUS);
+            WDF_REQUEST_SEND_OPTIONS_SET_TIMEOUT(&reqOptions, WDF_REL_TIMEOUT_IN_SEC(USB_REQ_TIMEOUT_SEC));
+
+            status = WdfUsbTargetDeviceQueryString(
+                pDevCtx->UsbDevice,
+                NULL,
+                &reqOptions,
+                NULL,
+                &numChars,
+                grpTermBlockStringIndexes[numGrpTermBlocks],
+                MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
+            );
+            if (!NT_SUCCESS(status) || !numChars)
+            {
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting string size.%!STATUS!", status);
+                status = STATUS_SUCCESS;
+                // Make sure we do not try to capture this string in future processing
+                grpTermBlockStringIndexes[numGrpTermBlocks] = 0;
+                grpTermBlockStringSizes[numGrpTermBlocks] = sizeof(WCHAR);
+                continue;
+            }
+
+            // Add space for name string including null termination
+            grpTermBlockStringSizes[numGrpTermBlocks] = (numChars + 1) * (USHORT)sizeof(WCHAR);
+        }
+        else
+        {
+            grpTermBlockStringSizes[numGrpTermBlocks] = sizeof(WCHAR);
+        }
+        grpTermBlockStructureSize += grpTermBlockStringSizes[numGrpTermBlocks];
+
+        // successfully defined a group terminal block
+        numGrpTermBlocks++;
+    }
+
+    // Create memory to store GTB Parameters
+    PUCHAR pGTBPropertyBuffer;
+    WDF_OBJECT_ATTRIBUTES_INIT(&gtbMemoryAttributes);
+    gtbMemoryAttributes.ParentObject = pDevCtx->UsbDevice;
+    status = WdfMemoryCreate(
+        &gtbMemoryAttributes,
+        PagedPool,
+        USBMIDI_POOLTAG,
+        (size_t)grpTermBlockStructureSize,
+        &pDevCtx->DeviceGTBMemory,
+        (PVOID*)&pGTBPropertyBuffer
+    );
+    if (!NT_SUCCESS(status))
+    {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error allocating memory for GTB Preoperty. %!STATUS!", status);
+        return(status);
+    }
+
+    // Place KSMULTIPLE_ITEM Strucutre
+    PKSMULTIPLE_ITEM pMultiHeader = (PKSMULTIPLE_ITEM)pGTBPropertyBuffer;
+    pMultiHeader->Size = grpTermBlockStructureSize;
+    pMultiHeader->Count = numGrpTermBlocks;
+    pGTBPropertyBuffer += sizeof(KSMULTIPLE_ITEM);
+
+    for (UINT termBlockCount = 0; termBlockCount < numGrpTermBlocks; termBlockCount++)
+    {
+        PUMP_GROUP_TERMINAL_BLOCK_DEFINITION pThisGrpTrmBlk = (PUMP_GROUP_TERMINAL_BLOCK_DEFINITION)pGTBPropertyBuffer;
+
+        // Populate data from GTB read from USB Device
+        pThisGrpTrmBlk->GrpTrmBlock.Size =
+            (WORD)(sizeof(UMP_GROUP_TERMINAL_BLOCK_HEADER) + grpTermBlockStringSizes[termBlockCount]);
+        pThisGrpTrmBlk->GrpTrmBlock.Number = termBlockCount;
+        pThisGrpTrmBlk->GrpTrmBlock.Direction =
+            (grpTermBlockDirection[termBlockCount] == (UINT8)MIDI_CS_INTERFACE_IN_JACK) ?
+            0x01 /*Input Only*/ : 0x02 /*Output Only*/;
+        pThisGrpTrmBlk->GrpTrmBlock.FirstGroupIndex = grpTermBlockGroupIndex[termBlockCount];
+        pThisGrpTrmBlk->GrpTrmBlock.GroupCount = 1;
+        pThisGrpTrmBlk->GrpTrmBlock.Protocol = 0x01 /*MIDI_1_0_UP_TO_64_BITS*/;
+        pThisGrpTrmBlk->GrpTrmBlock.MaxInputBandwidth = 0x0000; // Unknown or not fixed
+        pThisGrpTrmBlk->GrpTrmBlock.MaxOutputBandwidth = 0x0000; // Unknown or not fixed
+
+        RtlZeroMemory(&pThisGrpTrmBlk->Name, grpTermBlockStringSizes[termBlockCount]);
+
+        if (grpTermBlockStringIndexes[termBlockCount])
+        {
+            USHORT stringSize = grpTermBlockStringSizes[termBlockCount] - sizeof(WCHAR); //Always leave NULL
+
+            // Fetch String descriptor from device
+            status = WdfUsbTargetDeviceQueryString(
+                pDevCtx->UsbDevice,
+                NULL,   // No request needed
+                NULL,   // Parent already established
+                (PUSHORT)&pThisGrpTrmBlk->Name,
+                &stringSize,
+                grpTermBlockStringIndexes[termBlockCount],
+                MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
+            );
+            if (!NT_SUCCESS(status))
+            {
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting string text.%!STATUS!", status);
+                status = STATUS_SUCCESS;
+                // Continue processing - string already NULL terminated blank.
+            }
+        }
+
+        // Move the pointer
+        pGTBPropertyBuffer += pThisGrpTrmBlk->GrpTrmBlock.Size;
+    }
+
+exit:
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
+    return status;
 }
 
 _Use_decl_annotations_
