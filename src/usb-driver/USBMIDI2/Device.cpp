@@ -1490,8 +1490,8 @@ Return Value:
         pThisGrpTrmBlk->GrpTrmBlock.FirstGroupIndex = pUSBGTBs->aBlock[termBlockCount].nGroupTrm;
         pThisGrpTrmBlk->GrpTrmBlock.GroupCount = pUSBGTBs->aBlock[termBlockCount].nNumGroupTrm;
         pThisGrpTrmBlk->GrpTrmBlock.Protocol = pUSBGTBs->aBlock[termBlockCount].bMIDIProtocol;
-        pThisGrpTrmBlk->GrpTrmBlock.MaxInputBandwidth = pUSBGTBs->aBlock[termBlockCount].wMaxInputBandwidth;
-        pThisGrpTrmBlk->GrpTrmBlock.MaxOutputBandwidth = pUSBGTBs->aBlock[termBlockCount].wMaxOutputBandwidth;
+        pThisGrpTrmBlk->GrpTrmBlock.MaxInputBandwidth = RtlUshortByteSwap(pUSBGTBs->aBlock[termBlockCount].wMaxInputBandwidth);
+        pThisGrpTrmBlk->GrpTrmBlock.MaxOutputBandwidth = RtlUshortByteSwap(pUSBGTBs->aBlock[termBlockCount].wMaxOutputBandwidth);
 
         RtlZeroMemory(&pThisGrpTrmBlk->Name, grpTermBlockStringSizes[termBlockCount]);
 
