@@ -187,9 +187,6 @@
     <ClInclude Include="MidiSessionSettings.h">
       <Filter>SDK\Session</Filter>
     </ClInclude>
-    <ClInclude Include="ump_helpers.h">
-      <Filter>Internal</Filter>
-    </ClInclude>
     <ClInclude Include="midi_service_interface.h">
       <Filter>Internal\ServiceAccess</Filter>
     </ClInclude>
@@ -210,9 +207,6 @@
     </ClInclude>
     <ClInclude Include="MidiGroupEndpointListener.h">
       <Filter>API\Endpoints\Listeners</Filter>
-    </ClInclude>
-    <ClInclude Include="string_util.h">
-      <Filter>Internal</Filter>
     </ClInclude>
     <ClInclude Include="memory_buffer.h">
       <Filter>Internal</Filter>

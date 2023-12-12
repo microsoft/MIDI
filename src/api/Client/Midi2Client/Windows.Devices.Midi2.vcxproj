@@ -350,9 +350,7 @@
     <ClInclude Include="midl_defines.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="ResourceManager.h" />
-    <ClInclude Include="string_util.h" />
     <ClInclude Include="trace_logging.h" />
-    <ClInclude Include="ump_helpers.h" />
     <ClInclude Include="MidiSession.h">
       <DependentUpon>MidiSession.idl</DependentUpon>
     </ClInclude>

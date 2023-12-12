@@ -32,7 +32,7 @@ CMidi2EndpointMetadataListenerMidiBiDi::Initialize(
 
 
     std::wstring id{ EndpointId };
-    InPlaceToLower(id);
+    Windows::Devices::Midi2::Internal::InPlaceToLower(id);
 
     return S_OK;
 }
