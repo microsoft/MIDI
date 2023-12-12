@@ -39,9 +39,16 @@ namespace Windows.Devices.Midi2
 
 
         // Note: 0x0000 is unknown or not fixed
-        // 0x0001 is 31.24kb/s
+        // 0x0001 is 31.25kb/s
         // all others are 4kb/second * value
-        UInt16 MaxDeviceInputBandwidthIn4KBSecondUnits{ get; };
-        UInt16 MaxDeviceOutputBandwidthIn4KBSecondUnits{ get; };
+        UInt16 MaxDeviceInputBandwidthIn4KBitsPerSecondUnits{ get; };
+        UInt16 MaxDeviceOutputBandwidthIn4KBitsPerSecondUnits{ get; };
+
+        // TODO: Provide calculated values for above
+
+        UInt32 CalculatedMaxDeviceInputBandwidthBitsPerSecond{ get; };
+        UInt32 CalculatedMaxDeviceOutputBandwidthBitsPerSecond{ get; };
+
+
     }
 }

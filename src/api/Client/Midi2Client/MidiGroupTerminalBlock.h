@@ -26,8 +26,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool IncludesGroup(_In_ midi2::MidiGroup const& group) { return group.Index() >= FirstGroupIndex() && group.Index() < FirstGroupIndex() + GroupCount(); }
 
 
-        uint16_t MaxDeviceInputBandwidthIn4KBSecondUnits() { return m_maxDeviceInputBandwidthIn4KBSecondUnits; }
-        uint16_t MaxDeviceOutputBandwidthIn4KBSecondUnits() { return m_maxDeviceOutputBandwidthIn4KBSecondUnits; }
+        uint16_t MaxDeviceInputBandwidthIn4KBitsPerSecondUnits() { return m_maxDeviceInputBandwidthIn4KBSecondUnits; }
+        uint16_t MaxDeviceOutputBandwidthIn4KBitsPerSecondUnits() { return m_maxDeviceOutputBandwidthIn4KBSecondUnits; }
+
+        uint32_t CalculatedMaxDeviceInputBandwidthBitsPerSecond();
+        uint32_t CalculatedMaxDeviceOutputBandwidthBitsPerSecond();
+
 
         bool InternalUpdateFromPropertyData(_In_ UMP_GROUP_TERMINAL_BLOCK_HEADER* const header, _In_ std::wstring& name);
 
@@ -42,6 +46,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         uint8_t m_firstGroupIndex{ 0 };
         uint8_t m_numberOfGroupsSpanned{ 0 };
+
+        uint32_t MidiGroupTerminalBlock::CalculateBandwidth(_In_ uint16_t gtbBandwidthValue);
 
     };
 }

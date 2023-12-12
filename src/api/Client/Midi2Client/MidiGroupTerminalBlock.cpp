@@ -35,4 +35,39 @@ namespace winrt::Windows::Devices::Midi2::implementation
             return false;
         }
     }
+
+
+    // Note: 0x0000 is unknown or not fixed
+    // 0x0001 is 31.25kb/s
+    // all others are 4kb/second * value
+
+    _Use_decl_annotations_
+    uint32_t MidiGroupTerminalBlock::CalculateBandwidth(uint16_t gtbBandwidthValue)
+    {
+        if (gtbBandwidthValue == 0)
+        {
+            return (uint32_t)0;
+        }
+        else if (gtbBandwidthValue == 0x0001)
+        {
+            return (uint32_t)31250;
+        }
+        else
+        {
+            // 4000, not 4096, for 4k bps
+            return (uint32_t)(gtbBandwidthValue * 4000);
+        }
+    }
+
+    uint32_t MidiGroupTerminalBlock::CalculatedMaxDeviceInputBandwidthBitsPerSecond()
+    {
+        return CalculateBandwidth(m_maxDeviceInputBandwidthIn4KBSecondUnits);
+    }
+
+    uint32_t MidiGroupTerminalBlock::CalculatedMaxDeviceOutputBandwidthBitsPerSecond()
+    {
+        return CalculateBandwidth(m_maxDeviceOutputBandwidthIn4KBSecondUnits);
+    }
+
+
 }

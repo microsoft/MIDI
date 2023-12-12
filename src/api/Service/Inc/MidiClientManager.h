@@ -51,6 +51,16 @@ private:
                                 _In_ wil::com_ptr_nothrow<CMidiPipe>&,
                                 _In_ wil::com_ptr_nothrow<CMidiPipe>&);
 
+    HRESULT
+    CMidiClientManager::GetMidiScheduler(
+                                _In_ handle_t,
+                                _In_ MidiFlow,
+                                _In_ MidiDataFormat,
+                                _In_ MidiDataFormat,
+                                _In_ wil::com_ptr_nothrow<CMidiPipe>&,
+                                _In_ wil::com_ptr_nothrow<CMidiPipe>&);
+
+
     wil::critical_section m_ClientManagerLock;
 
     std::shared_ptr<CMidiPerformanceManager> m_PerformanceManager;
