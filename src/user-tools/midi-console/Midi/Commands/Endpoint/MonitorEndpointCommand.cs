@@ -173,7 +173,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 }
                 else
                 {
-                    AnsiConsole.WriteLine(Strings.ErrorUnableToOpenEndpoint);
+                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToOpenEndpoint));
                     return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
                 }
 
@@ -217,24 +217,30 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         };
 
                         // open the connection
-                        connection.Open();
-
-                        while (continueWaiting)
+                        if (connection.Open())
                         {
-                            if (Console.KeyAvailable)
+
+                            while (continueWaiting)
                             {
-                                var keyInfo = Console.ReadKey(false);
-                                if (keyInfo.Key == ConsoleKey.Escape)
+                                if (Console.KeyAvailable)
                                 {
-                                    AnsiConsole.MarkupLine(Strings.MonitorEscapePressedMessage);
-                                    continueWaiting = false;
-                                    break;
+                                    var keyInfo = Console.ReadKey(false);
+                                    if (keyInfo.Key == ConsoleKey.Escape)
+                                    {
+                                        AnsiConsole.MarkupLine(Strings.MonitorEscapePressedMessage);
+                                        continueWaiting = false;
+                                        break;
+                                    }
                                 }
+
+                                Thread.Sleep(0);
                             }
-
-                            Thread.Sleep(0);
                         }
-
+                        else
+                        {
+                            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToOpenEndpoint));
+                            //return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
+                        }
                     });
 
 

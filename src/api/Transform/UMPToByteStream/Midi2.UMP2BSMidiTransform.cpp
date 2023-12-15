@@ -52,6 +52,8 @@ CMidi2UMP2BSMidiTransform::SendMidiMessage(
     LONGLONG Position
 )
 {
+    OutputDebugString(L"" __FUNCTION__);
+
     // Send the UMP(s) to the parser
     uint32_t *data = (uint32_t *)Data;
     for (UINT i = 0; i < (Length / 4); i++)

@@ -40,9 +40,9 @@ CMidi2SchedulerMidiTransform::Initialize(
     m_context = context;
 
     // need to make sure this is created before starting up the worker thread
-    m_messageProcessorWakeup.create(wil::EventOptions::ManualReset);
+ //   m_messageProcessorWakeup.create(wil::EventOptions::ManualReset);
 
-    // create and start the queue worker thread
+    // create the queue worker thread
     std::thread workerThread(
         &CMidi2SchedulerMidiTransform::QueueWorker,
         this);
@@ -51,6 +51,8 @@ CMidi2SchedulerMidiTransform::Initialize(
     //SetThreadPriority(workerThread.native_handle(), ... );
 
     m_queueWorkerThread = std::move(workerThread);
+
+    // start up the worker thread
     m_queueWorkerThread.detach();
 
 
@@ -69,30 +71,65 @@ CMidi2SchedulerMidiTransform::Cleanup()
 
     try
     {
-        OutputDebugString(L"" __FUNCTION__ " Shut down");
+        OutputDebugString(L"" __FUNCTION__ " Shut down time");
+
 
         // tell the thread to quit. Call SetEvent in case it is in a wait
         m_continueProcessing = false;
-        m_messageProcessorWakeup.SetEvent();
 
-        // release our access to the underlying device pipe
-//        m_devicePipe.reset();
+        // give the thread a change to terminate
+        m_messageProcessorWakeup.SetEvent();
+        Sleep(0);
+
+        //// clear the queue
+        //bool locked = false;
+        //while (!locked)
+        //{
+        //    // clear the queue
+        //    if (m_queueLock.try_lock())
+        //    {
+        //        while (m_messageQueue.size() > 0)
+        //        {
+        //            m_messageQueue.pop();
+        //        }
+
+        //        locked = true;
+        //    }
+
+        //    Sleep(0);
+        //}
+
 
         // join the worker thread and wait for it to end
         if (m_queueWorkerThread.joinable())
             m_queueWorkerThread.join();
 
-        // terminate the event
- //       m_messageProcessorWakeup.reset();
+        // don't let the component shut down until we're sure everything is wrapped up.
+        // this has a bit of a smell to it, but was having problems with the queue
+        // getting torn down before the worker thread was done
+
+        //locked = false;
+
+        //while (!locked)
+        //{
+        //    // clear the queue
+        //    if (m_queueLock.try_lock())
+        //    {
+        //        locked = true;
+        //    }
+
+        //    Sleep(0);
+        //}
 
         return S_OK;
     }
     catch (...)
     {
-    }
+        OutputDebugString(L"" __FUNCTION__ " Exception cleaning up");
 
-    // TODO: Log
-    return E_FAIL;
+        // TODO: Log
+        return S_OK;    // we don't care when cleaning up
+    }
 }
 
 // This is called for messages coming out of the scheduler queue (via
@@ -151,24 +188,33 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
     UINT size,
     LONGLONG timestamp)
 {
+    OutputDebugString(L"" __FUNCTION__);
+
+
     if (!m_continueProcessing) return S_OK;
 
     try
     {
-        // Check to see if timestamp is in the past or within our tick window: If so, SendMessageNow
-        if (timestamp == 0 ||
-            shared::GetCurrentMidiTimestamp() >= timestamp - m_tickWindow - m_deviceLatencyTicks)
+        // check to see if we're bypassing scheduling
+        if (timestamp == 0)
         {
-            // message is within current tick window, so just send
+            // bypass scheduling
+            return SendMidiMessageNow(data, size, timestamp);
+        }
+        else if (shared::GetCurrentMidiTimestamp() >= timestamp - m_tickWindow - m_deviceLatencyTicks)
+        {
+            // timestamp is in the past or within our tick window: so send now
             return SendMidiMessageNow(data, size, timestamp);
         }
         else
         {
+            // otherwise, we schedule the message
+
             if (size >= MINIMUM_UMP_DATASIZE && size <= MAXIMUM_UMP_DATASIZE)
             {
                 for (int i = 0; i < MIDI_MESSAGE_SCHEDULE_ENQUEUE_RETRY_COUNT && m_continueProcessing; i++)
                 {
-                    auto lock = m_queueLock.lock();
+                    auto lock = m_queueLock.try_lock();
 
                     if (lock)
                     {
@@ -182,20 +228,13 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
 
                         if (m_messageQueue.size() < MIDI_OUTGOING_MESSAGE_QUEUE_MAX_MESSAGE_COUNT)
                         {
-                            ScheduledUmpMessage msg;
-                            memcpy(msg.Data, data, size);
-                            msg.ByteCount = size;
-                            msg.Timestamp = timestamp;
+                            m_messageQueue.emplace(timestamp, ++m_currentReceivedIndex, size, (byte*)data);
 
-                            // this helps preserve receive order
-                            msg.ReceivedIndex = ++m_currentReceivedIndex;
-
-                            m_messageQueue.push(msg);
-
+                            // need to reset this before setting the event
                             lock.reset();
 
                             // notify the worker thread
-                            m_messageProcessorWakeup.SetEvent();
+                            if (m_continueProcessing) m_messageProcessorWakeup.SetEvent();
 
                             // break out of the loop and return
                             return S_OK;
@@ -203,7 +242,8 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
                         else
                         {
                             // priority queue doesn't give us any way to pop from the back
-                            // so we just have to fail
+                            // so we just have to fail. 
+                            // TODO: Eventually, we'll want to return a code back to the client API that it can interpret and use as retval
 
                             lock.reset();
 
@@ -217,6 +257,10 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
 
                     }
                 }
+
+                // if we got here, we couldn't lock the queue
+                // should return a better code
+                return E_FAIL;
             }
             else
             {
@@ -235,102 +279,155 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
 
 }
 
+_Use_decl_annotations_
+HRESULT
+CMidi2SchedulerMidiTransform::GetTopMessageTimestamp(internal::MidiTimestamp &timestamp)
+{
+    if (!m_continueProcessing) return E_FAIL;
+
+    HRESULT ret = E_FAIL;
+    timestamp = 0;
+
+    try
+    {
+        // auto resets on exit
+        auto lock = m_queueLock.try_lock();
+
+        if (lock)
+        {
+            if (m_continueProcessing && !m_messageQueue.empty())
+            {
+                timestamp = m_messageQueue.top().Timestamp;
+                ret = S_OK;
+
+            //    OutputDebugString(L"\n--Retrieved current timestamp\n");
+            }
+            else
+            {
+                ret = E_FAIL;
+            }
+        }
+        else
+        {
+            ret = E_FAIL;
+        }
+    }
+    catch (...)
+    {
+        ret = E_FAIL;
+    }
+
+    return ret;
+}
 
 //
 // This code is pretty ugly. Happy to entertain cleanup / optimization suggestions
 //
 void CMidi2SchedulerMidiTransform::QueueWorker()
 {
+    OutputDebugString(L"" __FUNCTION__ " Enter");
+
     try
     {
         const uint64_t totalExpectedLatency = m_deviceLatencyTicks + LOCK_AND_SEND_FUNCTION_LATENCY_TICKS;
 
         while (m_continueProcessing)
         {
-            if (!m_messageQueue.empty())
+            internal::MidiTimestamp topTimestamp = 0;
+
+            if (m_continueProcessing) Sleep(0);
+
+            if (m_continueProcessing && !m_messageQueue.empty())
             {
-                // this block gets us inside the tick window
-                if (shared::GetCurrentMidiTimestamp() >= m_messageQueue.top().Timestamp - m_tickWindow - totalExpectedLatency)
+                if (SUCCEEDED(GetTopMessageTimestamp(topTimestamp)))
                 {
-                    // Busy loop until we're closer to the target timestamp. This wait will typically be a very small 
-                    // amount of time, like under two milliseconds. Really depends on the thread priority and scheduling
-
-                    // this could potentially block other messages. However, the send message function checks to see if
-                    // the message is supposed to go out within the tick window. If so, it just sends it. This can/will
-                    // lead to jitter that is up to the size of the tick window, so worth revisiting this part of the 
-                    // approach.
-
-                    // this loop sneaks up on the actual timestamp from the window start, taking into account the send latency
-                    while (m_continueProcessing && shared::GetCurrentMidiTimestamp() < m_messageQueue.top().Timestamp - totalExpectedLatency)
+                    // this block gets us inside the tick window
+                    if (shared::GetCurrentMidiTimestamp() >= topTimestamp - m_tickWindow - totalExpectedLatency)
                     {
-                        // busy wait. TBD if sleep(0) takes too much time and we need to do something else.
-                        Sleep(0);
+                        // Busy loop until we're closer to the target timestamp. This wait will typically be a very small 
+                        // amount of time, like under two milliseconds. Really depends on the thread priority and scheduling
+
+                        // this could potentially block other messages. However, the send message function checks to see if
+                        // the message is supposed to go out within the tick window. If so, it just sends it. This can/will
+                        // lead to jitter that is up to the size of the tick window, so worth revisiting this part of the 
+                        // approach.
+
+                        // this loop sneaks up on the actual timestamp from the window start, taking into account the send latency
+                        while (m_continueProcessing && shared::GetCurrentMidiTimestamp() < topTimestamp - totalExpectedLatency)
+                        {
+                            // busy wait. TBD if sleep(0) takes too much time and we need to do something else.
+                            Sleep(0);
+                        }
+
+                        if (m_continueProcessing)
+                        {
+                            // if a new message came in and replaced top() while we were looping, it will be within the window
+                            // so it's ok to just send that. We'll catch the next one on the next iteration. We don't really care
+                            // if this is the same message we started with.
+
+                            auto lock = m_queueLock.try_lock();
+
+                            if (lock)
+                            {
+                                if (!m_messageQueue.empty())
+                                {
+                                    // send the message
+                                    LOG_IF_FAILED(SendMidiMessageNow(m_messageQueue.top()));
+
+                                    // pop the top item off the queue
+                                    m_messageQueue.pop();
+                                }
+
+                                //lock.reset();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Queue is not empty, but the next message isn't up to send yet.
+                        // So we sleep for a minimum amount of time rather than a tight loop.
+                        if (m_continueProcessing && !m_messageQueue.empty())
+                        {
+                            uint64_t ts = m_messageQueue.top().Timestamp - totalExpectedLatency;
+
+                            // see if the difference is more than a quarter of a second. If so, sleep for 200ms.
+                            if (ts - shared::GetCurrentMidiTimestamp() > shared::GetMidiTimestampFrequency() / 4)
+                            {
+                                // we're waiting using the event here in case a message comes in while 
+                                // we're sleeping
+
+                                if (m_continueProcessing)
+                                {
+                                    m_messageProcessorWakeup.wait(200);
+                                }
+                            }
+                        }
+                        else if (m_continueProcessing)
+                        {
+                            // Queue is empty, so we just wait. The timeout is to make sure we don't hang on shutdown
+                            // and also helps loosen up the loop so we're not spin waiting and using a full core or something
+                            m_messageProcessorWakeup.wait(1000);
+
+                        }
                     }
 
                     if (m_continueProcessing)
                     {
-                        // if a new message came in and replaced top() while we were looping, it will be within the window
-                        // so it's ok to just send that. We'll catch the next one on the next iteration.
-
-                        // this will unlock when it goes out of scope
-                        auto lock = m_queueLock.lock();
-
-                        if (lock && !m_messageQueue.empty())
+                        // we're looping, not sleeping now, so we can reset this
+                        if (m_messageProcessorWakeup.is_signaled())
                         {
-                            // send the message
-                            LOG_IF_FAILED(SendMidiMessageNow(m_messageQueue.top()));
-
-                            // pop the top item off the queue
-                            m_messageQueue.pop();
-
-                            lock.reset();   // technically not needed
+                            m_messageProcessorWakeup.ResetEvent();
                         }
                     }
                 }
                 else
                 {
-                    // Queue is not empty, but the next message isn't up to send yet.
-                    // So we sleep for a minimum amount of time rather than a tight loop.
-                    if (!m_messageQueue.empty())
-                    {
-                        uint64_t ts = m_messageQueue.top().Timestamp - totalExpectedLatency;
-
-                        // see if the difference is more than a quarter of a second. If so, sleep for 200ms.
-                        if (ts - shared::GetCurrentMidiTimestamp() > shared::GetMidiTimestampFrequency() / 4)
-                        {
-                            // we're waiting using the event here in case a message comes in while 
-                            // we're sleeping
-
-                            if (m_continueProcessing) m_messageProcessorWakeup.wait(200);
-                        }
-                    }
+                    // couldn't get top timestamp for some reason.
                 }
             }
             else
             {
-                // Queue is empty, so we just wait. The timeout is to make sure we don't hang on shutdown
-                // and also helps loosen up the loop so we're not spin waiting and using a full core or something
-                if (m_continueProcessing)
-                {
-                    m_messageProcessorWakeup.wait(1000);
-
-                    if (m_messageProcessorWakeup.is_signaled())
-                    {
-                        m_messageProcessorWakeup.ResetEvent();
-                    }
-                }
-            }
-
-            // we're looping, not sleeping now, so we can reset this
-            if (m_messageProcessorWakeup.is_signaled())
-            {
-                m_messageProcessorWakeup.ResetEvent();
-            }
-
-            if (m_continueProcessing)
-            {
-                // give up the rest of this timeslice
-                Sleep(0);
+                // queue likely empty
             }
         }
     }
@@ -338,6 +435,8 @@ void CMidi2SchedulerMidiTransform::QueueWorker()
     {
         // TODO: Log
     }
+
+    OutputDebugString(L"" __FUNCTION__ " Exit");
 }
 
 

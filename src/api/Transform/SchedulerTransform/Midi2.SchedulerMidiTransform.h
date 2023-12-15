@@ -21,6 +21,8 @@ public:
 
 private:
 
+    HRESULT GetTopMessageTimestamp(_Out_ internal::MidiTimestamp& timestamp);
+
 
     HRESULT SendMidiMessageNow(
         _In_ PVOID Data,
@@ -73,11 +75,13 @@ private:
     wil::critical_section m_queueLock;
     uint64_t m_currentReceivedIndex{ 0 };     // need to use the queueLock before writing to this
 
-    bool m_continueProcessing{ true };
+    //bool m_continueProcessing{ true };
+    std::atomic<bool> m_continueProcessing{ true };
 
     std::thread m_queueWorkerThread;
 
-    wil::unique_event_nothrow m_messageProcessorWakeup;
+    //wil::unique_event_nothrow m_messageProcessorWakeup;
+    wil::slim_event_manual_reset m_messageProcessorWakeup;
 
 
 

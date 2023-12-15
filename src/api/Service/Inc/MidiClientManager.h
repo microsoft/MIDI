@@ -55,8 +55,15 @@ private:
     CMidiClientManager::GetMidiScheduler(
                                 _In_ handle_t,
                                 _In_ MidiFlow,
-                                _In_ MidiDataFormat,
-                                _In_ MidiDataFormat,
+                                _In_ wil::com_ptr_nothrow<CMidiPipe>&,
+                                _In_ wil::com_ptr_nothrow<CMidiPipe>&,
+                                _In_ wil::com_ptr_nothrow<CMidiPipe>&);
+
+    HRESULT
+    CMidiClientManager::GetMidiJRTimestampHandler(
+                                _In_ handle_t,
+                                _In_ MidiFlow,
+                                _In_ wil::com_ptr_nothrow<CMidiPipe>&,
                                 _In_ wil::com_ptr_nothrow<CMidiPipe>&,
                                 _In_ wil::com_ptr_nothrow<CMidiPipe>&);
 
@@ -69,7 +76,7 @@ private:
 
     std::map<MidiClientHandle, wil::com_ptr_nothrow<CMidiPipe>> m_ClientPipes;
     std::map<std::wstring, wil::com_ptr_nothrow<CMidiPipe>> m_DevicePipes;
-    std::multimap<std::wstring, wil::com_ptr_nothrow<CMidiPipe>> m_TransformPipes;
+    std::multimap<std::wstring, wil::com_ptr_nothrow<CMidiTransformPipe>> m_TransformPipes; // need this to be CMidiTransformPipe to make it reasonable to get properties
 
     // mmcss task id that is shared among all midi clients
     DWORD m_MmcssTaskId {0};

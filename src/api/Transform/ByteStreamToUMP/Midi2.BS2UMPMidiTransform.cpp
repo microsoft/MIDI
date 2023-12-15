@@ -55,6 +55,8 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
     LONGLONG Position
 )
 {
+    OutputDebugString(L"" __FUNCTION__);
+
     // Send the bytestream byte(s) to the parser
     BYTE *data = (BYTE *)Data;
     for (UINT i = 0; i < Length; i++)

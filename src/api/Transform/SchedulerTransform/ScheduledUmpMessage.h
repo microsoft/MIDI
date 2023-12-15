@@ -15,5 +15,24 @@ struct ScheduledUmpMessage
     uint64_t ReceivedIndex{ 0 };            // this allows us to preserve order for messages with the same timestamp
     UINT ByteCount{ 0 };
     BYTE Data[MAXIMUM_UMP_DATASIZE];        // pre-define this array to avoid another allocation/indirection
+
+    
+    ScheduledUmpMessage(_In_ internal::MidiTimestamp timestamp, _In_ uint64_t receivedIndex, _In_ UINT byteCount, _In_ BYTE* data)
+    {
+        if (byteCount <= MAXIMUM_UMP_DATASIZE)
+        {
+            memcpy(Data, data, byteCount);
+            ByteCount = byteCount;
+        }
+        else
+        {
+            memcpy(Data, data, MAXIMUM_UMP_DATASIZE);
+            ByteCount = MAXIMUM_UMP_DATASIZE;
+        }
+
+        Timestamp = timestamp;
+        ReceivedIndex = receivedIndex;
+    }
+
 };
 

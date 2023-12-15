@@ -31,6 +31,8 @@ public:
     HRESULT SendMidiMessage(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
     HRESULT SendMidiMessageNow(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
 
+    GUID TransformGuid();
+
 private:
     wil::com_ptr_nothrow<IMidiDataTransform> m_MidiDataTransform;
     winrt::guid m_TransformGuid;
