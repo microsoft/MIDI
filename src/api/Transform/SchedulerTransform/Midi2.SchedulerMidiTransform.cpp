@@ -188,7 +188,7 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
     UINT size,
     LONGLONG timestamp)
 {
-    OutputDebugString(L"" __FUNCTION__);
+//    OutputDebugString(L"" __FUNCTION__);
 
 
     if (!m_continueProcessing) return S_OK;
@@ -325,7 +325,7 @@ CMidi2SchedulerMidiTransform::GetTopMessageTimestamp(internal::MidiTimestamp &ti
 //
 void CMidi2SchedulerMidiTransform::QueueWorker()
 {
-    OutputDebugString(L"" __FUNCTION__ " Enter");
+//    OutputDebugString(L"" __FUNCTION__ " Enter");
 
     try
     {
@@ -436,7 +436,7 @@ void CMidi2SchedulerMidiTransform::QueueWorker()
         // TODO: Log
     }
 
-    OutputDebugString(L"" __FUNCTION__ " Exit");
+//    OutputDebugString(L"" __FUNCTION__ " Exit");
 }
 
 
