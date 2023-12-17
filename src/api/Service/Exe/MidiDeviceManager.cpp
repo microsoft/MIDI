@@ -50,7 +50,7 @@ CMidiDeviceManager::Initialize(
 
                     m_MidiEndpointManagers.emplace(AbstractionLayer, std::move(endpointManager));
 
-                    OutputDebugString(__FUNCTION__ L": Transport Abstraction activated.");
+                //    OutputDebugString(__FUNCTION__ L": Transport Abstraction activated.");
                 }
                 else
                 {

@@ -37,6 +37,11 @@ CMidiTransformPipe::Initialize(
     return S_OK;
 }
 
+GUID CMidiTransformPipe::TransformGuid()
+{
+    return m_TransformGuid;
+}
+
 HRESULT
 CMidiTransformPipe::Cleanup()
 {

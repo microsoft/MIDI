@@ -169,5 +169,6 @@ private:
     wil::critical_section m_Lock;
     std::map<MidiPipeHandle, wil::com_ptr_nothrow<CMidiPipe>> m_ConnectedPipes;
     std::vector<MidiClientHandle> m_Clients;
+
 };
 

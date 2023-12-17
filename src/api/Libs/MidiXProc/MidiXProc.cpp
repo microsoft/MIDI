@@ -302,12 +302,12 @@ CMidiXProc::SendMidiMessage(
             {
                 header->Position = Position;
             }
-            else
-            {
-                LARGE_INTEGER qpc {0};
-                QueryPerformanceCounter(&qpc);
-                header->Position = qpc.QuadPart;
-            }
+            //else
+            //{
+            //    LARGE_INTEGER qpc {0};
+            //    QueryPerformanceCounter(&qpc);
+            //    header->Position = qpc.QuadPart;
+            //}
 
             // update the write position and notify the other side that data is available.
             InterlockedExchange((LONG*) Registers->WritePosition, newWritePosition);
@@ -391,6 +391,14 @@ CMidiXProc::ProcessMidiIn()
 
                 if (m_MidiInCallback)
                 {
+                    // if a position provided is nonzero, use it, otherwise use the current QPC
+                    if (header->Position == 0)
+                    {
+                        LARGE_INTEGER qpc{ 0 };
+                        QueryPerformanceCounter(&qpc);
+                        header->Position = qpc.QuadPart;
+                    }
+
                     m_MidiInCallback->Callback(data, dataSize, header->Position, m_MidiInCallbackContext);
                 }
 

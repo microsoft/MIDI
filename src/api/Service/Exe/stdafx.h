@@ -63,6 +63,8 @@ namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
 
 #include "Midi2BS2UMPTransform.h"
 #include "Midi2UMP2BSTransform.h"
+#include "Midi2SchedulerTransform.h"
+
 
 #include "MidiSrvRpc.h"
 

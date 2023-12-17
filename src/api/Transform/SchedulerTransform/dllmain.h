@@ -6,15 +6,14 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#include "midl_defines.h"
-MIDI_IDL_IMPORT
 
-namespace Windows.Devices.Midi2
+#pragma once
+
+class CMidi2SchedulerTransformModule : public ATL::CAtlDllModuleT< CMidi2SchedulerTransformModule >
 {
-    [MIDI_API_CONTRACT(1)]
-    [default_interface]
-    runtimeclass MidiProperty
-    {
+public :
+    DECLARE_LIBID(LIBID_Midi2SchedulerTransformLib)
+    DECLARE_REGISTRY_APPID_RESOURCEID(IDR_MIDI2SCHEDULERTRANSFORM, "{2ac669ca-18ca-4e7d-951e-b6cc511c96fc}")
+};
 
-    }
-}
+extern class CMidi2SchedulerTransformModule _AtlModule;

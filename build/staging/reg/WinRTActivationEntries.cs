@@ -48,7 +48,5 @@ class RegistryEntries
         new RegEntry{ ClassName="Windows.Devices.Midi2.IMidiChannelStatics", ActivationType=0, Threading=0, TrustLevel=0  },
         new RegEntry{ ClassName="Windows.Devices.Midi2.MidiGroup", ActivationType=0, Threading=0, TrustLevel=0  },
         new RegEntry{ ClassName="Windows.Devices.Midi2.IMidiGroupStatics", ActivationType=0, Threading=0, TrustLevel=0  },
-        new RegEntry{ ClassName="Windows.Devices.Midi2.MidiProfile", ActivationType=0, Threading=0, TrustLevel=0  },
-        new RegEntry{ ClassName="Windows.Devices.Midi2.MidiProperty", ActivationType=0, Threading=0, TrustLevel=0  },
     };
 }

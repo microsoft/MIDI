@@ -8,16 +8,19 @@
 #define PAGE_SIZE 0x1000
 #endif
 
-// smallest UMP is 4 bytes, smallest bytestream is 3 bytes
-#define MINIMUM_LOOPED_DATASIZE 3
+// smallest UMP is 4 bytes, smallest bytestream is 1 byte (clock, etc.)
+#define MINIMUM_LOOPED_DATASIZE 1
 
 // largest UMP is 16 bytes
 // we'll reuse that for the largest bytestream
 #define MAXIMUM_LOOPED_DATASIZE 16
 
+
 // we can't let the memory usage run away. This many messages is a 
-// lot, and performance will suffer above 5000 or so
-#define MIDI_OUTGOING_MESSAGE_QUEUE_MAX_MESSAGE_COUNT 20000
+// lot, and performance will suffer above 5000 or so. This number is
+// used by the scheduler and then also by the client API
+#define MIDI_OUTGOING_MESSAGE_QUEUE_MAX_MESSAGE_COUNT 10000
+
 
 //
 // Registry keys for global configuration. The settings app can write to some of these, so including in MidiDefs

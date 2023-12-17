@@ -13,8 +13,8 @@ MIDI_IDL_IMPORT
 
 import "IMidiEndpointMessageProcessingPlugin.idl";
 import "MidiFunctionBlock.idl";
-import "MidiProperty.idl";
-import "MidiProfile.idl";
+//import "MidiProperty.idl";
+//import "MidiProfile.idl";
 
 //import "MidiEndpointInformation.idl";
 
@@ -26,7 +26,7 @@ namespace Windows.Devices.Midi2
     {
         MidiVirtualDevice();
 
-        Boolean IsMidiCIDevice{ get; set; };
+  //      Boolean IsMidiCIDevice{ get; set; };
 
 
         String EndpointName{ get; set; };
@@ -57,5 +57,9 @@ namespace Windows.Devices.Midi2
 
 
         // TODO: MIDI CI / Profiles etc.
+
+
+
+
     }
 }

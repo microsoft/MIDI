@@ -32,6 +32,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         }
 
 
+        // TODO: Tons of strings in here that need to be localized
+
         public override int Execute(CommandContext context, Settings settings)
         {
             string endpointId = string.Empty;
@@ -123,54 +125,88 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 }
             }
 
-            table.AddRow("Group Terminal Block Count", di.GroupTerminalBlocks.Count.ToString());
+            //table.AddRow("Group Terminal Block Count", di.GroupTerminalBlocks.Count.ToString());
 
-            foreach (var groupTerminalBlock in di.GroupTerminalBlocks)
+            if (di.GroupTerminalBlocks.Count > 0)
             {
                 table.AddEmptyRow();
-                table.AddRow("Group Terminal Block", AnsiMarkupFormatter.FormatBlockNumber(groupTerminalBlock.Number));
-                table.AddRow("Name", AnsiMarkupFormatter.FormatBlockName(groupTerminalBlock.Name));
-                table.AddRow("Direction", groupTerminalBlock.Direction.ToString());
-                table.AddRow("Protocol", groupTerminalBlock.Protocol.ToString());
-                table.AddRow("First Group Index", groupTerminalBlock.FirstGroupIndex.ToString());
-                table.AddRow("Group Count", groupTerminalBlock.GroupCount.ToString());
+                table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("Group terminal Blocks"), "");
 
-                if (settings.Verbose)
+                foreach (var groupTerminalBlock in di.GroupTerminalBlocks)
                 {
-                    string inputBandwidth = string.Empty;
-                    string outputBandwidth = string.Empty;
+                    if (!settings.Verbose)
+                    {
+                        string groupInformation = string.Empty;
+                        ;
 
-                    if (groupTerminalBlock.MaxDeviceInputBandwidthIn4KBSecondUnits == 0)
-                    {
-                        inputBandwidth = "0 (Unknown or Not Fixed)";
-                    }
-                    else if (groupTerminalBlock.MaxDeviceInputBandwidthIn4KBSecondUnits == 1)
-                    {
-                        inputBandwidth = "1 (31.25 kbps)";
+                        if (groupTerminalBlock.GroupCount == 1)
+                        {
+                            groupInformation +=
+                                $"Group {groupTerminalBlock.FirstGroupIndex + 1} (Index {groupTerminalBlock.FirstGroupIndex})";
+                        }
+                        else
+                        {
+                            int stopGroupIndex = groupTerminalBlock.FirstGroupIndex + groupTerminalBlock.GroupCount - 1;
+                            groupInformation +=
+                                $"Groups {groupTerminalBlock.FirstGroupIndex + 1}-{stopGroupIndex + 1} (Indexes {groupTerminalBlock.FirstGroupIndex}-{stopGroupIndex})";
+
+                        }
+
+                        groupInformation += ", Protocol " + groupTerminalBlock.Protocol.ToString();
+                        groupInformation += ", Direction " + groupTerminalBlock.Direction.ToString();
+
+                        table.AddRow(
+                            AnsiMarkupFormatter.FormatBlockNumber(groupTerminalBlock.Number) + " " +
+                            AnsiMarkupFormatter.FormatBlockName(groupTerminalBlock.Name),
+                            groupInformation);
                     }
                     else
                     {
-                        inputBandwidth = groupTerminalBlock.MaxDeviceInputBandwidthIn4KBSecondUnits.ToString() + 
-                            $" ({groupTerminalBlock.MaxDeviceInputBandwidthIn4KBSecondUnits * 4096} kbps)";
-                    }
+                        table.AddEmptyRow();
+
+                        table.AddRow("Group Terminal Block", AnsiMarkupFormatter.FormatBlockNumber(groupTerminalBlock.Number) + " " + AnsiMarkupFormatter.FormatBlockName(groupTerminalBlock.Name));
+
+                        if (groupTerminalBlock.GroupCount == 1)
+                        {
+                            table.AddRow("Group", $"{groupTerminalBlock.FirstGroupIndex + 1} (Index {groupTerminalBlock.FirstGroupIndex})");
+                        }
+                        else
+                        {
+                            int stopGroupIndex = groupTerminalBlock.FirstGroupIndex + groupTerminalBlock.GroupCount - 1;
+                            table.AddRow("Groups", $"{groupTerminalBlock.FirstGroupIndex + 1}-{stopGroupIndex + 1} (Indexes {groupTerminalBlock.FirstGroupIndex}-{stopGroupIndex})");
+                        }
+
+                        table.AddRow("Group Count", groupTerminalBlock.GroupCount.ToString());
+                        table.AddRow("Direction", groupTerminalBlock.Direction.ToString());
+                        table.AddRow("Protocol", groupTerminalBlock.Protocol.ToString());
+
+                        string inputBandwidth = string.Empty;
+                        string outputBandwidth = string.Empty;
+
+                        if (groupTerminalBlock.MaxDeviceInputBandwidthIn4KBitsPerSecondUnits == 0)
+                        {
+                            inputBandwidth = "0 (Unknown or Not Fixed)";
+                        }
+                        else
+                        {
+                            inputBandwidth = groupTerminalBlock.MaxDeviceInputBandwidthIn4KBitsPerSecondUnits.ToString() +
+                                $" ({((double)groupTerminalBlock.CalculatedMaxDeviceInputBandwidthBitsPerSecond/1000.0).ToString("N2")} kbps)";
+                        }
 
 
-                    if (groupTerminalBlock.MaxDeviceOutputBandwidthIn4KBSecondUnits == 0)
-                    {
-                        outputBandwidth = "0 (Unknown or Not Fixed)";
-                    }
-                    else if (groupTerminalBlock.MaxDeviceOutputBandwidthIn4KBSecondUnits == 1)
-                    {
-                        outputBandwidth = "1 (31.25 kbps)";
-                    }
-                    else
-                    {
-                        outputBandwidth = groupTerminalBlock.MaxDeviceOutputBandwidthIn4KBSecondUnits.ToString() +
-                            $" ({groupTerminalBlock.MaxDeviceOutputBandwidthIn4KBSecondUnits * 4096} kbps)";
-                    }
+                        if (groupTerminalBlock.MaxDeviceOutputBandwidthIn4KBitsPerSecondUnits == 0)
+                        {
+                            outputBandwidth = "0 (Unknown or Not Fixed)";
+                        }
+                        else
+                        {
+                            outputBandwidth = groupTerminalBlock.MaxDeviceOutputBandwidthIn4KBitsPerSecondUnits.ToString() +
+                                $" ({((double)groupTerminalBlock.CalculatedMaxDeviceOutputBandwidthBitsPerSecond/1000.0).ToString("N2")} kbps)";
+                        }
 
-                    table.AddRow("Max Input Bandwidth", inputBandwidth);
-                    table.AddRow("Max Output Bandwidth", outputBandwidth);
+                        table.AddRow("Max Input Bandwidth", inputBandwidth);
+                        table.AddRow("Max Output Bandwidth", outputBandwidth);
+                    }
                 }
             }
 

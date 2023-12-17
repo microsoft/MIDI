@@ -85,15 +85,6 @@
     <Filter Include="API\Enumeration">
       <UniqueIdentifier>{0a50ea56-af07-4bca-82f2-0b409820ef1d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="API\CI">
-      <UniqueIdentifier>{f8290fcb-7ad6-44a2-ac8a-e16d0cae7b64}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="API\CI\Profiles">
-      <UniqueIdentifier>{c36a2266-bc88-427c-9c39-0574802a6f10}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="API\CI\Property Exchange">
-      <UniqueIdentifier>{5a082154-f6a6-4d09-be45-cc69e5ecf609}</UniqueIdentifier>
-    </Filter>
     <Filter Include="API\Endpoints\Metadata\Blocks">
       <UniqueIdentifier>{277e880f-09e8-43d0-aaa9-926305908cd1}</UniqueIdentifier>
     </Filter>
@@ -187,9 +178,6 @@
     <ClInclude Include="MidiSessionSettings.h">
       <Filter>SDK\Session</Filter>
     </ClInclude>
-    <ClInclude Include="ump_helpers.h">
-      <Filter>Internal</Filter>
-    </ClInclude>
     <ClInclude Include="midi_service_interface.h">
       <Filter>Internal\ServiceAccess</Filter>
     </ClInclude>
@@ -210,9 +198,6 @@
     </ClInclude>
     <ClInclude Include="MidiGroupEndpointListener.h">
       <Filter>API\Endpoints\Listeners</Filter>
-    </ClInclude>
-    <ClInclude Include="string_util.h">
-      <Filter>Internal</Filter>
     </ClInclude>
     <ClInclude Include="memory_buffer.h">
       <Filter>Internal</Filter>
@@ -418,12 +403,6 @@
     </Midl>
     <Midl Include="MidiEndpointDevicePurposeEnum.idl">
       <Filter>API\Enumeration</Filter>
-    </Midl>
-    <Midl Include="MidiProfile.idl">
-      <Filter>API\CI\Profiles</Filter>
-    </Midl>
-    <Midl Include="MidiProperty.idl">
-      <Filter>API\CI\Property Exchange</Filter>
     </Midl>
     <Midl Include="MidiGroupTerminalBlockDirectionEnum.idl">
       <Filter>API\Endpoints\Metadata\Blocks</Filter>

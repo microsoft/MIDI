@@ -38,8 +38,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
-        bool IsMidiCIDevice() { return m_isMidiCIDevice; }
-        void IsMidiCIDevice(_In_ bool value) { m_isMidiCIDevice = value; }
+//        bool IsMidiCIDevice() { return m_isMidiCIDevice; }
+//        void IsMidiCIDevice(_In_ bool value) { m_isMidiCIDevice = value; }
 
         
         winrt::hstring EndpointName() { return m_endpointName; }

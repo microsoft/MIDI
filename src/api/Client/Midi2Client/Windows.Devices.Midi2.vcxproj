@@ -273,12 +273,6 @@
     <ClInclude Include="MidiMessageTranslator.h">
       <DependentUpon>MidiMessageTranslator.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiProfile.h">
-      <DependentUpon>MidiProfile.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiProperty.h">
-      <DependentUpon>MidiProperty.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiService.h">
       <DependentUpon>MidiService.idl</DependentUpon>
     </ClInclude>
@@ -350,9 +344,7 @@
     <ClInclude Include="midl_defines.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="ResourceManager.h" />
-    <ClInclude Include="string_util.h" />
     <ClInclude Include="trace_logging.h" />
-    <ClInclude Include="ump_helpers.h" />
     <ClInclude Include="MidiSession.h">
       <DependentUpon>MidiSession.idl</DependentUpon>
     </ClInclude>
@@ -389,12 +381,6 @@
     </ClCompile>
     <ClCompile Include="MidiMessageTranslator.cpp">
       <DependentUpon>MidiMessageTranslator.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiProfile.cpp">
-      <DependentUpon>MidiProfile.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiProperty.cpp">
-      <DependentUpon>MidiProperty.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiService.cpp">
       <DependentUpon>MidiService.idl</DependentUpon>
@@ -511,8 +497,6 @@
     <Midl Include="IMidiEndpointDefinedConnectionSettings.idl" />
     <Midl Include="MidiMessageTranslator.idl" />
     <Midl Include="MidiMessageTypeEndpointListener.idl" />
-    <Midl Include="MidiProfile.idl" />
-    <Midl Include="MidiProperty.idl" />
     <Midl Include="MidiProtocolEnum.idl" />
     <Midl Include="MidiSendMessageResultEnum.idl" />
     <Midl Include="MidiService.idl" />

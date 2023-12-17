@@ -1,0 +1,14 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {a42cde44-7fa9-4597-a8ee-b40b96bcddb1} = s 'Midi2SchedulerTransform Class'
+		{
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Both'
+			}
+			'Version' = s '1.0'
+		}
+	}
+}
