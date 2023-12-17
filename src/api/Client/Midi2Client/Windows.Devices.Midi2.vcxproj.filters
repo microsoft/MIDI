@@ -428,9 +428,6 @@
     <Midl Include="MidiMessageTranslator.idl">
       <Filter>API\Messages\Utility</Filter>
     </Midl>
-    <Midl Include="MidiCIMessageUtility.idl">
-      <Filter>API\Messages\Utility</Filter>
-    </Midl>
     <Midl Include="MidiUniqueId.idl">
       <Filter>API\BasicTypes</Filter>
     </Midl>

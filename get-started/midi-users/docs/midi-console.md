@@ -4,13 +4,17 @@ If you have the midi console installed, you can invoke it from any command promp
 
 ## General Information
 
+### Commands vs Options
+
+MIDI Console commands are words with no symbol prefix. For example `endpoint` or `send-message-file`. Options are prefixed with two dashes if you use the full word, or a single dash if you use the single-letter abbreviation. For example `--help` or `-h`. There is no statement completion built in to the console, but there are some supported abbreviations for commands. These are not yet fully documented but are present in the Program.cs in the console source code.
+
 ### "Ports" vs "Streams"
 
 In MIDI 1.0, specifically USB MIDI 1.0, a connected device would have a single input and single output stream. Inside that stream are packets of data with virtual cable numbers. Those numbers (16 total at most) identify the "port" the data is going to. Operating systems would then translate those into input and output ports. Those cable numbers were hidden from users.
 
 MIDI 2.0 does not have a concept of a port. Instead, you always work with the stream itself. The group number, which is in the MIDI message now, is the moral equivalent of that cable number.
 
-So where you may have seen a device with 5 input and 5 output ports in the past, you will now see a single bidirectional UMP Endpoint stream with 5 input groups and 5 output groups. We know this can take some getting used to, but it enables us to use MIDI 1.0 devices as though they are MIDI 2.0 devices, and provide a unified API.
+So where you may have seen a device with 5 input and 5 output ports in the past, you will now see a **single bidirectional UMP Endpoint stream** with 5 input groups and 5 output groups. We know this can take some getting used to, but it enables us to use MIDI 1.0 devices as though they are MIDI 2.0 devices, and provide a unified API.
 
 ### Help
 
@@ -96,7 +100,7 @@ All of the above statements will return a list of all the user-focused UMP endpo
 
 ### Enumerate Classic Byte-stream (MIDI 1.0) Endpoints
 
-This uses the old API. Its primary reason for existance is so you can see what's shown to older APIs vs what is shown for the new Windows MIDI Services API. As with the UMP endpoints, the commands have aliases, so the following are all equivalent
+This uses the old WinRT API. Its primary reason for existance is so you can see what's shown to older APIs vs what is shown for the new Windows MIDI Services API. As with the UMP endpoints, the commands have aliases, so the following are all equivalent
 
 ```
 midi enumerate bytestream-endpoints
@@ -124,7 +128,7 @@ midi watch-endpoints
 midi watch
 ```
 
-Note that only UMP endpoints are watched for changes. The older MIDI API is not used here. When you want to stop watching the endpoints for changes, hit the `escape` key.
+Note that only UMP endpoints (or bytestream endpoints converted to UMP by the new USB driver and service) are watched for changes. The older MIDI API is not used here. When you want to stop watching the endpoints for changes, hit the `escape` key.
 
 ## Single-Endpoint Commands
 
@@ -146,6 +150,8 @@ In the Device Manager in Windows, you can only see a subset of properties for a 
 midi endpoint properties
 ```
 
+
+
 By default, only key properties are displayed. If you want to see the complete list of all properties for the endpoint device, its container, and its parent device, add the `--verbose` parameter.
 
 ```
@@ -158,7 +164,7 @@ As with other endpoint commands, if you provide the endpoint device Id, it will 
 
 By default, every UMP Endpoint in Windows MIDI Services is multi-client. That means that more than one application can open a connection to the endpoint and send and/or receive messages. This also makes it possible to monitor all the incoming messages on an endpoint, even when that endpoint is in use by another application.
 
-When run in verbose mode, the monitor will display each message as it arrives. It also displays helpful information about the type of the message, the group and channel when appropriate, the timestap offset from the previous message, and more.
+When run in `verbose` mode, the monitor will display each message as it arrives. It also displays helpful information about the type of the message, the group and channel when appropriate, the timestap offset (from the previous message if it was received recently), and more. This requires a fairly wide console window to allow formatting each message to take up only a single line. In a narrow window the format will be a bit ugly. We recommend using the [Windows Terminal application](https://apps.microsoft.com/detail/9N0DX20HK701), which has support for zooming in and out using the mouse wheel, different fonts, and more.
 
 When run without the `--verbose` option, the monitor displays a count of the number of messages received.
 
@@ -180,6 +186,8 @@ When you have completed monitoring an endpoint, hit the `escape` key to close th
 
 Sending a message to an endpoint is very helpful for testing, but can also be used in automation to, for example, change the current program, or set a MIDI CC value. It would be very easy for a person to build a batch file or PowerShell script which used midi.exe to synchronize different devices, or reset devices to a known state in preparation for a performance.
 
+The message data beyond the message type (first 4 bits) is not pre-validated, so the data can be anything. However, the number of 32 bit words must match the message type per the MIDI 2.0 specification.
+
 Send a single UMP32 message immediately
 
 ```
@@ -192,23 +200,25 @@ Send a single UMP64 message ten times
 midi endpoint send-message 0x41234567 0xDEADBEEF --count 10
 ```
 
-Send a single UMP64 message 2 seconds from now (2 million microseconds)
+Schedule a single UMP64 message 2 seconds from now (2 million microseconds). Offsets are in microseconds to provide more precise control.
 
 ```
 midi endpoint send-message 0x41234567 0xFEEDF00D --offset-microseconds 2000000
 ```
 
-Send a single UMP64 message fifteen times, but with a delay of two seconds in between each message
+Send a single UMP64 message fifteen times, but with a delay of two seconds (2000 milliseconds) in between each message. Delays are in milliseconds because they are there primarily to prevent flooding with older devices.
 
 ```
 midi endpoint send-message 0x41234567 0xDEADBEEF --count 15 --pause 2000
 ```
 
+In general, we recommend sending messages in hexadecimal format (prefix `0x` followed by 8 hexadecimal digits)as it is easier to visually inspect the information being sent. The 1-4 MIDI words are in order from left to right, from 1 to 4. 
+
 ### Send a File full of Messages
 
 If you want to send a file full of messages, for SysEx or testing, for example, the console has provision for this.
 
-The file needs to have one message per line, with 1-4 32 bit words as appropriate. There are options for delimeter (auto, space, comma, pipe, tab), word format (binary, hex, or decimal) as well as an option to change the group index. The latter is especially important when you have a SysEx file saved from one group and you want to send it on another group.
+The file needs to have one message per line, with 1-4 32 bit words as appropriate. There are options for delimeter (auto, space, comma, pipe, tab), word format (binary, hex, or decimal) as well as an option to change the group index. The latter is especially important when you have a SysEx file saved from one group and you want to send it on another group. The file name can include system variables which require expansion.
 
 ```
 midi endpoint send-message-file %userprofile%\Documents\SysExBank12.txt --new-group-index 5
@@ -269,10 +279,10 @@ F3345678h 12345678h 86754321h 86753099h
 
 ### Receive Message and Save to a File
 
-TODO: This capability is a work-in-progress.
+TODO: This capability is a work-in-progress and is not yet functional.
 
 ## Technical Information
 
-The Windows MIDI Services Console app has been developed using C#, .NET 8, the MIT-licensed open source [Spectre.Console](https://spectreconsole.net/) library, and the Microsoft-developed open source [C#/WinRT](https://learn.microsoft.com/windows/apps/develop/platform/csharp-winrt/) toolkit. 
+The Windows MIDI Services Console app has been developed using C#, .NET 8, the MIT-licensed open source [Spectre.Console](https://spectreconsole.net/) library, and the Microsoft-developed open source [C#/WinRT](https://learn.microsoft.com/windows/apps/develop/platform/csharp-winrt/) toolkit.
 
-It uses the same Windows MIDI Services MIDI API available to other desktop applications. Its full source code is available on our Github repo at https://aka.ms/midirepo . Pull-requests, feature requests, and bug reports welcome.
+The console uses the same Windows MIDI Services WinRT APIs available to other desktop applications. Its full source code is available [on our Github repo](https://aka.ms/midirepo). Pull-requests, feature requests, and bug reports welcome. The project is open source, but we request that instead of forking it to create your own version, you consider contributing to the project.

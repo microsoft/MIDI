@@ -40,9 +40,6 @@ Windows.Devices.Midi2.IMidiMessageTranslatorStatics | 0 | 0 | 0
 Windows.Devices.Midi2.MidiMessageUtility | 0 | 0 | 0
 Windows.Devices.Midi2.IMidiMessageUtilityStatics | 0 | 0 | 0
 
-Windows.Devices.Midi2.MidiCIMessageUtility | 0 | 0 | 0
-Windows.Devices.Midi2.IMidiCIMessageUtilityStatics | 0 | 0 | 0
-
 # Metadata
 
 Windows.Devices.Midi2.MidiFunctionBlock | 0 | 0 | 0
