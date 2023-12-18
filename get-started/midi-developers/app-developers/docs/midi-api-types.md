@@ -93,7 +93,7 @@ MIDI 1.0 had the concept of ports. Each port was just a single cable/jack from a
 
 In MIDI 2.0, what used to be a Port is now a Group address in the message data. Instead of speaking to N different enumerated entities for a device, the application speaks to a single bidirectional UMP endpoint which aggregates all of this information, much like the driver did behind the scenes in MIDI 1.0. We recognize that there are cases when the old model of MIDI Ports is more convenient for passing around in a DAW or similar app, particularly for incoming data. 
 
-To help, there are plugins which implement `IMidiEndpointMessageProcessingPlugin` and optionally one or both of `IMidiEndpointMessageListener` or `IMidiEndpointMessageResponder`. The API includes a few stock plugins, but developers are free to provide their own, or add to the SDK.
+To help, there are plugins which implement `IMidiEndpointMessageProcessingPlugin`. The API includes a few stock plugins, but developers are free to provide their own, or add to the SDK.
 
 | Type | Description |
 | ----- | -- |
@@ -128,6 +128,9 @@ Although we know there are many native libraries which can do message manipulati
 | ----- | -- |
 | MidiMessageUtility | A set of utilities for manipulating UMP data. |
 | MidiMessageBuilder | Builder for the major types of messages. This doesn't include builders for every possible message, as that is evolving. We may add that to the SDK. This builder is typically where you'd want to start when creating new messages. |
+| MidiStreamMessageBuilder | Functions for creating and parsing Stream (type F) messages |
+| MidiMessageConverter | Functions for converting MIDI Messages to/from bytestream messages, and Windows.Devices.Midi WinRT message types |
+| MidiMessageTranslator | Functions for converting between MIDI 1.0 and MIDI 2.0 protocols, all in UMP |
 
 ## Metadata
 

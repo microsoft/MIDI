@@ -243,9 +243,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
-    <ClInclude Include="MidiCIMessageUtility.h">
-      <DependentUpon>MidiCIMessageUtility.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiEndpointConnection.h">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
     </ClInclude>
@@ -352,9 +349,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
-    <ClCompile Include="MidiCIMessageUtility.cpp">
-      <DependentUpon>MidiCIMessageUtility.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiEndpointConnection.cpp">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
     </ClCompile>
@@ -464,7 +458,6 @@
     <Midl Include="IMidiTransportSettingsData.idl" />
     <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl" />
     <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl" />
-    <Midl Include="MidiCIMessageUtility.idl" />
     <Midl Include="MidiEndpointConnection.idl" />
     <Midl Include="MidiEndpointConnectionOptions.idl" />
     <Midl Include="MidiChannel.idl" />
