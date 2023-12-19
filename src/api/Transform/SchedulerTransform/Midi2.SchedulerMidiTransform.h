@@ -23,6 +23,8 @@ private:
 
     HRESULT GetTopMessageTimestamp(_Out_ internal::MidiTimestamp& timestamp);
 
+    HRESULT CalculateSafeSleepTime(_In_ internal::MidiTimestamp nextWakeupWindowTimestamp, _Out_ uint32_t& sleepMS);
+
 
     HRESULT SendMidiMessageNow(
         _In_ PVOID Data,

@@ -30,6 +30,8 @@ CMidiClientManager::Initialize(
 HRESULT
 CMidiClientManager::Cleanup()
 {
+    OutputDebugString(L"" __FUNCTION__ " enter");
+    
     auto lock = m_ClientManagerLock.lock();
 
     m_PerformanceManager.reset();
@@ -433,7 +435,7 @@ CMidiClientManager::CreateMidiClient(
                 devicePipe->DataFormatIn(), 
                 clientPipe->DataFormatIn(), 
                 devicePipe, 
-                clientConnectionPipe));
+                clientConnectionPipe)); // clientConnectionPipe is the plugin
 
             clientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
         }
@@ -512,7 +514,9 @@ CMidiClientManager::CreateMidiClient(
                 clientPipe->DataFormatOut(), 
                 newClientConnectionPipe->DataFormatOut(), 
                 devicePipe, 
-                clientConnectionPipe));
+                clientConnectionPipe)); // clientConnectionPipe is the plugin
+
+            clientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
 
             newClientConnectionPipe = clientConnectionPipe;
         }
@@ -528,7 +532,9 @@ CMidiClientManager::CreateMidiClient(
                 MidiFlowOut, 
                 devicePipe, 
                 newClientConnectionPipe, 
-                clientConnectionPipe));
+                clientConnectionPipe)); // clientConnectionPipe is the plugin
+
+            clientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
 
             newClientConnectionPipe = clientConnectionPipe;
         }
@@ -536,7 +542,7 @@ CMidiClientManager::CreateMidiClient(
         // no more transforms to add
         clientConnectionPipe = newClientConnectionPipe;
 
-        clientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
+        //clientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
 
         RETURN_IF_FAILED(clientPipe->SetDataFormatOut(clientConnectionPipe->DataFormatOut()));
         Client->DataFormat = clientPipe->DataFormatOut();

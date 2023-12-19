@@ -45,6 +45,13 @@ GUID CMidiTransformPipe::TransformGuid()
 HRESULT
 CMidiTransformPipe::Cleanup()
 {
+    OutputDebugString(L"" __FUNCTION__);
+
+    if (m_MidiDataTransform)
+    {
+        RETURN_IF_FAILED(m_MidiDataTransform->Cleanup());
+    }
+
     RETURN_IF_FAILED(CMidiPipe::Cleanup());
     return S_OK;
 }
