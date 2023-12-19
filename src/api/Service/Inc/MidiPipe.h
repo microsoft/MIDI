@@ -42,6 +42,8 @@ public:
 
     virtual HRESULT Cleanup()
     {
+        OutputDebugString(L"" __FUNCTION__);
+
         auto lock = m_Lock.lock();
         m_ConnectedPipes.clear();
         m_Clients.clear();

@@ -320,12 +320,43 @@ CMidi2SchedulerMidiTransform::GetTopMessageTimestamp(internal::MidiTimestamp &ti
     return ret;
 }
 
-//
-// This code is pretty ugly. Happy to entertain cleanup / optimization suggestions
-//
+
+_Use_decl_annotations_
+HRESULT
+CMidi2SchedulerMidiTransform::CalculateSafeSleepTime(internal::MidiTimestamp nextWakeupWindowTimestamp, uint32_t & sleepMS)
+{
+    if (!m_continueProcessing) return E_FAIL;
+
+    HRESULT ret = E_FAIL;
+    sleepMS = 0;
+
+    try
+    {
+        auto now = internal::Shared::GetCurrentMidiTimestamp();
+
+        auto diff = (nextWakeupWindowTimestamp - now) / internal::Shared::GetMidiTimestampFrequency();
+
+        sleepMS = (uint32_t)(diff * 1000);
+
+        return S_OK;
+    }
+    catch (...)
+    {
+        ret = E_FAIL;
+    }
+
+    return ret;
+}
+
+
+
+
+
+#define MIDI_OUTBOUND_EMPTY_QUEUE_SLEEP_DURATION_MS 60000
+
 void CMidi2SchedulerMidiTransform::QueueWorker()
 {
-//    OutputDebugString(L"" __FUNCTION__ " Enter");
+    OutputDebugString(L"" __FUNCTION__ " Enter");
 
     try
     {
@@ -333,90 +364,51 @@ void CMidi2SchedulerMidiTransform::QueueWorker()
 
         while (m_continueProcessing)
         {
-            internal::MidiTimestamp topTimestamp = 0;
-
-            if (m_continueProcessing) Sleep(0);
-
-            if (m_continueProcessing && !m_messageQueue.empty())
+            // check to see if the queue is empty, and if so, go to sleep until we're signaled
+            // to wake up due to a new message arriving or due to shut down.
+            if (m_continueProcessing && m_messageQueue.empty())
             {
+                // queue empty so sleep until we get notified to wake up
+                m_messageProcessorWakeup.wait(MIDI_OUTBOUND_EMPTY_QUEUE_SLEEP_DURATION_MS);
+            }
+            else if (m_continueProcessing && !m_messageQueue.empty())
+            {
+                internal::MidiTimestamp topTimestamp = 0;
+
                 if (SUCCEEDED(GetTopMessageTimestamp(topTimestamp)))
                 {
-                    // this block gets us inside the tick window
-                    if (shared::GetCurrentMidiTimestamp() >= topTimestamp - m_tickWindow - totalExpectedLatency)
+                    uint64_t nextMessageSendTime = topTimestamp - m_tickWindow - totalExpectedLatency;
+
+                    uint32_t sleepTime{ 0 };
+
+                    if (SUCCEEDED(CalculateSafeSleepTime(nextMessageSendTime, sleepTime)))
                     {
-                        // Busy loop until we're closer to the target timestamp. This wait will typically be a very small 
-                        // amount of time, like under two milliseconds. Really depends on the thread priority and scheduling
-
-                        // this could potentially block other messages. However, the send message function checks to see if
-                        // the message is supposed to go out within the tick window. If so, it just sends it. This can/will
-                        // lead to jitter that is up to the size of the tick window, so worth revisiting this part of the 
-                        // approach.
-
-                        // this loop sneaks up on the actual timestamp from the window start, taking into account the send latency
-                        while (m_continueProcessing && shared::GetCurrentMidiTimestamp() < topTimestamp - totalExpectedLatency)
+                        if (sleepTime > 0)
                         {
-                            // busy wait. TBD if sleep(0) takes too much time and we need to do something else.
-                            Sleep(0);
-                        }
-
-                        if (m_continueProcessing)
-                        {
-                            // if a new message came in and replaced top() while we were looping, it will be within the window
-                            // so it's ok to just send that. We'll catch the next one on the next iteration. We don't really care
-                            // if this is the same message we started with.
-
-                            auto lock = m_queueLock.try_lock();
-
-                            if (lock)
-                            {
-                                if (!m_messageQueue.empty())
-                                {
-                                    // send the message
-                                    LOG_IF_FAILED(SendMidiMessageNow(m_messageQueue.top()));
-
-                                    // pop the top item off the queue
-                                    m_messageQueue.pop();
-                                }
-
-                                //lock.reset();
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // Queue is not empty, but the next message isn't up to send yet.
-                        // So we sleep for a minimum amount of time rather than a tight loop.
-                        if (m_continueProcessing && !m_messageQueue.empty())
-                        {
-                            uint64_t ts = m_messageQueue.top().Timestamp - totalExpectedLatency;
-
-                            // see if the difference is more than a quarter of a second. If so, sleep for 200ms.
-                            if (ts - shared::GetCurrentMidiTimestamp() > shared::GetMidiTimestampFrequency() / 4)
-                            {
-                                // we're waiting using the event here in case a message comes in while 
-                                // we're sleeping
-
-                                if (m_continueProcessing)
-                                {
-                                    m_messageProcessorWakeup.wait(200);
-                                }
-                            }
-                        }
-                        else if (m_continueProcessing)
-                        {
-                            // Queue is empty, so we just wait. The timeout is to make sure we don't hang on shutdown
-                            // and also helps loosen up the loop so we're not spin waiting and using a full core or something
-                            m_messageProcessorWakeup.wait(1000);
-
+                            m_messageProcessorWakeup.wait(sleepTime);
                         }
                     }
 
-                    if (m_continueProcessing)
+                    // check to see if it's time to send the message. If not, we'll just
+                    // wrap back around
+                    if (shared::GetCurrentMidiTimestamp() >= nextMessageSendTime)
                     {
-                        // we're looping, not sleeping now, so we can reset this
-                        if (m_messageProcessorWakeup.is_signaled())
+                        // we're inside the tick window + latency, so need to just go ahead and send it
+
+                        auto lock = m_queueLock.try_lock();
+
+                        if (lock)
                         {
-                            m_messageProcessorWakeup.ResetEvent();
+                            if (!m_messageQueue.empty())
+                            {
+                                // send the message
+                                LOG_IF_FAILED(SendMidiMessageNow(m_messageQueue.top()));
+
+                                // pop the top item off the queue
+                                m_messageQueue.pop();
+                            }
+
+                            //lock.reset();
                         }
                     }
                 }
@@ -424,19 +416,26 @@ void CMidi2SchedulerMidiTransform::QueueWorker()
                 {
                     // couldn't get top timestamp for some reason.
                 }
+
             }
-            else
+
+            if (m_continueProcessing)
             {
-                // queue likely empty
+                // we're looping, not sleeping now, so we can reset this
+                if (m_messageProcessorWakeup.is_signaled())
+                {
+                    m_messageProcessorWakeup.ResetEvent();
+                }
             }
-        }
+
+        } // main loop
     }
     catch (...)
     {
         // TODO: Log
     }
 
-//    OutputDebugString(L"" __FUNCTION__ " Exit");
+    OutputDebugString(L"" __FUNCTION__ " Exit");
 }
 
 
