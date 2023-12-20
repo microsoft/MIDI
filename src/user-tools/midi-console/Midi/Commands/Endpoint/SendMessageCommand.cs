@@ -168,9 +168,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 {
                     int sleepMs = (int)Math.Ceiling(MidiClock.ConvertTimestampToMilliseconds(maxTimestampScheduled - MidiClock.Now));
 
-                    AnsiConsole.MarkupLine($"Keeping connection alive until timestamp : {AnsiMarkupFormatter.FormatTimestamp(maxTimestampScheduled)} ({sleepMs / 1000} seconds from now)");
+                    sleepMs += 1000;    // we wait an extra second to avoid any timing issues
 
-                    Thread.Sleep(sleepMs + 500);
+                    AnsiConsole.MarkupLine($"Keeping connection alive until timestamp : {AnsiMarkupFormatter.FormatTimestamp(maxTimestampScheduled)} (apx {Math.Round(sleepMs / 1000.0, 1)} seconds from now)");
+
+                    Thread.Sleep(sleepMs);
                 }
 
 
