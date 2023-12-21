@@ -37,6 +37,11 @@ namespace Windows.Devices.Midi2
         // Get the enumeration device selector for all compatible devices
         static String GetDeviceSelector();
 
+
+        static Boolean SendMessageSucceeded(MidiSendMessageResult sendResult);
+        static Boolean SendMessageFailed(MidiSendMessageResult sendResult);
+
+
         // just a map key for this connection.
         // originally this was a string GUID, but that was easily confused with the Endpoint Device Id
         Guid ConnectionId{ get; };

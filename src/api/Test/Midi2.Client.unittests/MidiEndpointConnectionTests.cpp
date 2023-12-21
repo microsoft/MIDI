@@ -130,7 +130,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmpStruct()
     std::cout << " - Timestamp:   0x" << std::hex << (uint64_t)(sentTimestamp) << std::endl;
     std::cout << " - First Word:  0x" << std::hex << (sentUmp.Word0) << std::endl << std::endl;
 
-    VERIFY_ARE_EQUAL(connSend.SendMessageStruct(sentTimestamp, sentUmp, 2), MidiSendMessageResult::Success);
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageStruct(sentTimestamp, sentUmp, 2)));
 
 
     // Wait for incoming message
@@ -348,7 +348,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWords()
 
         std::cout << "Sending UMP Word Array" << std::endl;
 
-        VERIFY_ARE_EQUAL(connSend.SendMessageWordArray(timestamp, words, 0, wordCount), MidiSendMessageResult::Success);
+        VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageWordArray(timestamp, words, 0, wordCount)));
 
     }
 

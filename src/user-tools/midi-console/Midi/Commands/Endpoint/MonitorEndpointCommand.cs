@@ -13,12 +13,31 @@ using WinRT;
 using Microsoft.Devices.Midi2.ConsoleApp.Resources;
 using Windows.ApplicationModel.UserDataTasks;
 using System.Diagnostics.Eventing.Reader;
+using System.Reflection;
 
 namespace Microsoft.Devices.Midi2.ConsoleApp
 {
+    public struct ReceivedMidiMessage
+    {
+        public UInt32 Index;
+        public UInt64 ReceivedTimestamp;
+        public UInt64 MessageTimestamp;
+        public byte NumWords;
+        public UInt32 Word0;
+        public UInt32 Word1;
+        public UInt32 Word2;
+        public UInt32 Word3;
+    }
+
 
     internal class MonitorEndpointCommand : Command<MonitorEndpointCommand.Settings>
     {
+        // we have this struct so we can separate the relatively fast received processing
+        // and its calculations from the comparatively slow displays processing
+        private Queue<ReceivedMidiMessage> m_receivedMessagesQueue = new Queue<ReceivedMidiMessage>();
+
+
+
         public sealed class Settings : MessageListenerCommandSettings
         {
             [LocalizedDescription("ParameterMonitorEndpointDirectionDescription")]
@@ -93,7 +112,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             if (settings.Verbose)
             {
                 UInt64 startTimestamp = 0;
-                UInt64 lastTimestamp = 0;
+                UInt64 lastReceivedTimestamp = 0;
 
                 MidiMessageStruct msg;
 
@@ -101,52 +120,41 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                 bool continueWaiting = true;
 
-                connection.MessageReceived += (s, e) =>
+
+                var messageListener = new Thread(() => 
                 {
-                //    AnsiConsole.WriteLine("Message received.");
-
-                    // helps prevent any race conditions with main loop and its output
-                    if (!continueWaiting) return;
-
-                    if (startTimestamp == 0)
+                    connection.MessageReceived += (s, e) =>
                     {
-                        // gets timestamp of first message we receive and uses that so all others are an offset
-                        startTimestamp = e.Timestamp;    
+                        // helps prevent any race conditions with main loop and its output
+                        if (!continueWaiting) return;
+
+                        //Console.WriteLine("DEBUG: MessageReceived");
+                        index++;
+
+                        var receivedMessage = new ReceivedMidiMessage()
+                        {
+                            Index = index,
+                            ReceivedTimestamp = MidiClock.Now,
+                            MessageTimestamp = e.Timestamp
+                        };
+
+                        receivedMessage.NumWords = e.FillWords(out receivedMessage.Word0, out receivedMessage.Word1, out receivedMessage.Word2, out receivedMessage.Word3);
+
+                        m_receivedMessagesQueue.Enqueue(receivedMessage);
+
+                        if (settings.SingleMessage)
+                        {
+                            continueWaiting = false;
+                        }
+                    };
+
+                    while (continueWaiting)
+                    {
                     }
 
-                    if (lastTimestamp == 0)
-                    {
-                        // gets timestamp of first message we receive and uses that so all others are an offset
-                        lastTimestamp = e.Timestamp;
-                    }
+                });
 
-                    if (index == 0)
-                    {
-                        AnsiConsoleOutput.DisplayMidiMessageTableHeaders();
-                    }
-
-                    //Console.WriteLine("DEBUG: MessageReceived");
-                    index++;
-
-                    var numWords = e.FillMessageStruct(out msg);
-
-                    double offsetMicroseconds = 0.0;
-
-                    if (settings.SingleMessage)
-                    {
-                        continueWaiting = false;
-                    }
-                    else
-                    {
-                        // calculate offset from the last message received
-                        //offsetMilliseconds = MidiClock.ConvertTimestampToMilliseconds(e.Timestamp - startTimestamp);
-                        offsetMicroseconds = MidiClock.ConvertTimestampToMicroseconds(e.Timestamp - lastTimestamp);
-                    }
-
-                    AnsiConsoleOutput.DisplayMidiMessageTableRow(msg, numWords, offsetMicroseconds, e.Timestamp, index);
-
-                    lastTimestamp = e.Timestamp;
-                };
+                messageListener.Start();
 
 
                 // open the connection
@@ -165,6 +173,41 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                 // leading space is because the "E" in "Escape" is often lost in the output for some reason.
                                 AnsiConsole.MarkupLine(Strings.MonitorEscapePressedMessage);
                                 break;
+                            }
+                        }
+
+                        if (m_receivedMessagesQueue.Count > 0)
+                        {
+                            lock (m_receivedMessagesQueue)
+                            {
+                                var message = m_receivedMessagesQueue.Dequeue();
+
+                                if (startTimestamp == 0)
+                                {
+                                    // gets timestamp of first message we receive and uses that so all others are an offset
+                                    startTimestamp = message.ReceivedTimestamp;
+                                }
+
+                                if (lastReceivedTimestamp == 0)
+                                {
+                                    // gets timestamp of first message we receive and uses that so all others are an offset from previous message
+                                    lastReceivedTimestamp = message.ReceivedTimestamp;
+                                }
+
+                                // TODO: Maybe re-display the header if it's been a while since last header, and it is off-screen (index delta > some number)
+                                if (message.Index == 1)
+                                {
+                                    AnsiConsoleOutput.DisplayMidiMessageTableHeaders();
+                                }
+
+                                // calculate offset from the last message received
+                                //offsetMilliseconds = MidiClock.ConvertTimestampToMilliseconds(e.Timestamp - startTimestamp);
+                                var offsetMicroseconds = MidiClock.ConvertTimestampToMicroseconds(message.ReceivedTimestamp - lastReceivedTimestamp);
+
+                                AnsiConsoleOutput.DisplayMidiMessageTableRow(message, offsetMicroseconds);
+
+                                // set our last received so we can calculate offsets
+                                lastReceivedTimestamp = message.ReceivedTimestamp;
                             }
                         }
 

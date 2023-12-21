@@ -45,7 +45,7 @@ private:
     // 
     // Consider a separate thread for writing to the queue to make that return quickly.
 
-    std::priority_queue<ScheduledUmpMessage, std::vector<ScheduledUmpMessage>, auto(*)(ScheduledUmpMessage&, ScheduledUmpMessage&)->bool>
+    std::priority_queue<ScheduledUmpMessage, std::deque<ScheduledUmpMessage>, auto(*)(ScheduledUmpMessage&, ScheduledUmpMessage&)->bool>
         m_messageQueue{ [](_In_ ScheduledUmpMessage& left, _In_ ScheduledUmpMessage& right) ->
             bool
             {
@@ -63,7 +63,7 @@ private:
     // this is the minimum amount of ticks into the future to send immediately vs scheduling
     // it is essentially our resolution, and will need to be set based on calculating
     // the actual wake-up frequency
-    uint64_t m_tickWindow{ BASE_MESSAGE_SCHEDULER_TICK_WINDOW };
+    uint64_t m_tickWindow{ MIDI_SCHEDULER_LOCK_AND_SEND_FUNCTION_LATENCY_TICKS + MIDI_SCHEDULER_ENQUEUE_OVERHEAD_LATENCY_TICKS };
 
     // TODO: we may allow device latency to be set for the device as a property value with key
     // PKEY_MIDI_MidiOutLatencyTicks. We'd then pre-fetch from the queue by this amount.
@@ -74,7 +74,10 @@ private:
     IMidiCallback* m_callback{ nullptr };
     LONGLONG m_context{ 0 };
 
-    wil::critical_section m_queueLock;
+    //wil::critical_section m_queueLock;
+
+    std::mutex m_queueMutex;
+
     uint64_t m_currentReceivedIndex{ 0 };     // need to use the queueLock before writing to this
 
     //bool m_continueProcessing{ true };
@@ -85,8 +88,7 @@ private:
     //wil::unique_event_nothrow m_messageProcessorWakeup;
     wil::slim_event_manual_reset m_messageProcessorWakeup;
 
-
-
+    uint64_t m_timestampFrequency = internal::Shared::GetMidiTimestampFrequency();
 };
 
 

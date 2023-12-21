@@ -30,6 +30,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         static hstring GetDeviceSelector() noexcept { return MIDI_ENDPOINT_DEVICE_AQS_FILTER; }
 
 
+        static bool SendMessageSucceeded(_In_ midi2::MidiSendMessageResult const sendResult) { return (sendResult & midi2::MidiSendMessageResult::Succeeded) == midi2::MidiSendMessageResult::Succeeded; }
+        static bool SendMessageFailed(_In_ midi2::MidiSendMessageResult const sendResult) { return (sendResult & midi2::MidiSendMessageResult::Failed) == midi2::MidiSendMessageResult::Failed; }
+
+
+
         winrt::guid ConnectionId() const noexcept { return m_connectionId; }
         winrt::hstring EndpointDeviceId() const noexcept { return m_endpointDeviceId; }
 
@@ -192,6 +197,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void InitializePlugins() noexcept;
         void CallOnConnectionOpenedOnPlugins() noexcept;
         void CleanupPlugins() noexcept;
+
+
+        midi2::MidiSendMessageResult SendMessageResultFromHRESULT(_In_ HRESULT hr);
+
 
     };
 }
