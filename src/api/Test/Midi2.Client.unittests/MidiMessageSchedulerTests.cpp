@@ -22,7 +22,7 @@ void MidiMessageSchedulerTests::TestScheduledMessagesTimingLarge()
 {
     LOG_OUTPUT(L"Test timing large **********************************************************************");
 
-    TestScheduledMessagesTiming(400);
+    TestScheduledMessagesTiming(200);
 }
 
 
@@ -48,17 +48,20 @@ void MidiMessageSchedulerTests::TestScheduledMessagesTiming(uint16_t const messa
 
     
     // calculate an acceptable timestamp offset
-    //uint32_t acceptableTimestampDeltaMicroseconds = 100;    // 0.1ms
-    uint32_t acceptableTimestampDeltaMicroseconds = 1000;    // 1.0ms -- this is way too high
-    //uint32_t acceptableTimestampDeltaMicroseconds = 100000;    // 100.0ms -- obviously way too high. For testing purposes.
+    uint32_t acceptableTimestampDeltaMicroseconds = 200;    // 0.2ms
+
     uint64_t acceptableTimestampDeltaTicks = (acceptableTimestampDeltaMicroseconds * MidiClock::TimestampFrequency()) / 1000000;
 
 
     std::cout << "Acceptable timestamp delta is +/- " << std::dec << acceptableTimestampDeltaTicks << " ticks" << std::endl;
-    
+
+    uint32_t scheduledTimeStampOffsetMS = 2000; // time we're scheduling out from send time
+
 
     auto MessageReceivedHandler = [&](IMidiMessageReceivedEventSource const& sender, MidiMessageReceivedEventArgs const& args)
         {
+            // make sure it's one of our messages
+
             try
             {
                 auto receivedTimestamp = MidiClock::Now();
@@ -93,10 +96,6 @@ void MidiMessageSchedulerTests::TestScheduledMessagesTiming(uint16_t const messa
     connReceive.Open();
 
 
-    // schedule all messages to arrive at the same time: 2 seconds into the future
-    // this will also test to ensure they arrive in the order sent
-    auto scheduledTimeStamp = MidiClock::OffsetTimestampByMilliseconds(MidiClock::Now(), 2000);
-
     std::cout << "Sending messages" << std::endl;
 
     // send messages
@@ -107,8 +106,11 @@ void MidiMessageSchedulerTests::TestScheduledMessagesTiming(uint16_t const messa
 
         std::cout << "Sending: 0x" << std::hex << word << std::endl;
 
-        // we increment the message value each time so we can keep track of order
-        VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageWords(scheduledTimeStamp, word)));
+        // we increment the message value each time so we can keep track of order as well
+
+        auto sendResult = connSend.SendMessageWords(MidiClock::OffsetTimestampByMilliseconds(MidiClock::Now(), scheduledTimeStampOffsetMS), word);
+
+        VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(sendResult));
     }
 
     std::cout << "Waiting for response" << std::endl;
