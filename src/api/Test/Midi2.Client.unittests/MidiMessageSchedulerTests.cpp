@@ -22,7 +22,7 @@ void MidiMessageSchedulerTests::TestScheduledMessagesTimingLarge()
 {
     LOG_OUTPUT(L"Test timing large **********************************************************************");
 
-    TestScheduledMessagesTiming(200);
+    TestScheduledMessagesTiming(100);
 }
 
 

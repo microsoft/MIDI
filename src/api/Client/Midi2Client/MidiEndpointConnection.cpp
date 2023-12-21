@@ -553,22 +553,21 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
             }
 
+            // check for out-of-bounds first
+            if (startIndex + wordCount > words.size())
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Array start index + word count is >= array size");
 
-            if (wordCount < 1 || !ValidateUmp(words[0], wordCount))
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange;
+            }
+
+            // check if the message type is correct for the word count
+            if (wordCount < 1 || !ValidateUmp(words[startIndex], wordCount))
             {
                 internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for this UMP", wordCount, timestamp);
 
                 return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::InvalidMessageTypeForWordCount;
             }
-
-
-            if (startIndex + wordCount > words.size())
-            {
-                internal::LogGeneralError(__FUNCTION__, L"Array start index + word count is > array size");
-
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange;
-            }
-
 
             if (m_endpointAbstraction)
             {
@@ -583,7 +582,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
 
                 return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
-
             }
         }
         catch (winrt::hresult_error const& ex)

@@ -43,6 +43,15 @@ public:
     TEST_METHOD(TestSendAndReceiveUmpStruct);
     TEST_METHOD(TestSendAndReceiveUmp32);
     TEST_METHOD(TestSendAndReceiveWords);
+    TEST_METHOD(TestSendAndReceiveWordArray);
+    TEST_METHOD(TestSendWordArrayBoundsError);
+
+
+    //TEST_METHOD(TestSendMessageSuccessImmediateReturnCode);
+    //TEST_METHOD(TestSendMessageSuccessScheduledReturnCode);
+
+    TEST_METHOD(TestSendMessageValidationFailureReturnCode);
+    TEST_METHOD(TestSendMessageInvalidConnectionFailureReturnCode);
 
 
 private:

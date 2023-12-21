@@ -18,6 +18,114 @@
 using namespace winrt::Windows::Devices::Midi2;
 
 
+void MidiEndpointConnectionTests::TestSendMessageInvalidConnectionFailureReturnCode()
+{
+    LOG_OUTPUT(L"TestSendMessageInvalidConnectionFailureReturnCode **********************************************************************");
+
+    auto session = MidiSession::CreateSession(L"Test Session Name");
+
+    VERIFY_IS_TRUE(session.IsOpen());
+
+    auto connSend = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
+
+    VERIFY_IS_NOT_NULL(connSend);
+    //VERIFY_IS_TRUE(connSend.Open());      // we don't open the connection here
+
+
+    // wrong message type for word count
+    auto connectionClosedResult = connSend.SendMessageWords(0, 0x21111111);
+
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageFailed(connectionClosedResult));
+    VERIFY_IS_TRUE((connectionClosedResult & MidiSendMessageResult::EndpointConnectionClosedOrInvalid) == MidiSendMessageResult::EndpointConnectionClosedOrInvalid);
+
+
+    // cleanup endpoint. Technically not required as session will do it
+    session.DisconnectEndpointConnection(connSend.ConnectionId());
+
+    session.Close();
+}
+
+
+void MidiEndpointConnectionTests::TestSendMessageValidationFailureReturnCode()
+{
+    LOG_OUTPUT(L"TestSendMessageValidationFailureReturnCode **********************************************************************");
+
+    auto session = MidiSession::CreateSession(L"Test Session Name");
+
+    VERIFY_IS_TRUE(session.IsOpen());
+
+    auto connSend = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
+
+    VERIFY_IS_NOT_NULL(connSend);
+    VERIFY_IS_TRUE(connSend.Open());
+
+
+    // wrong message type for word count
+    auto badMessageTypeResult = connSend.SendMessageWords(0, 0x41111111);
+
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageFailed(badMessageTypeResult));
+    VERIFY_IS_TRUE((badMessageTypeResult & MidiSendMessageResult::InvalidMessageTypeForWordCount) == MidiSendMessageResult::InvalidMessageTypeForWordCount);
+
+
+    // cleanup endpoint. Technically not required as session will do it
+    session.DisconnectEndpointConnection(connSend.ConnectionId());
+
+    session.Close();
+}
+
+//void MidiEndpointConnectionTests::TestSendMessageSuccessScheduledReturnCode()
+//{
+//    LOG_OUTPUT(L"TestSendMessageSuccessScheduledReturnCode **********************************************************************");
+//
+//    auto session = MidiSession::CreateSession(L"Test Session Name");
+//
+//    VERIFY_IS_TRUE(session.IsOpen());
+//
+//    auto connSend = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
+//
+//    VERIFY_IS_NOT_NULL(connSend);
+//    VERIFY_IS_TRUE(connSend.Open());
+//
+//    // scheduled
+//    auto scheduledResult = connSend.SendMessageWords(MidiClock::OffsetTimestampByMilliseconds(MidiClock::Now(), 2000), 0x27654321);
+//
+//    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(scheduledResult));
+//    VERIFY_IS_TRUE((scheduledResult & MidiSendMessageResult::Scheduled) == MidiSendMessageResult::Scheduled);
+//
+//
+//    // cleanup endpoint. Technically not required as session will do it
+//    session.DisconnectEndpointConnection(connSend.ConnectionId());
+//
+//    session.Close();
+//}
+//
+//void MidiEndpointConnectionTests::TestSendMessageSuccessImmediateReturnCode()
+//{
+//    LOG_OUTPUT(L"TestSendMessageSuccessImmediateReturnCode **********************************************************************");
+//
+//    auto session = MidiSession::CreateSession(L"Test Session Name");
+//
+//    VERIFY_IS_TRUE(session.IsOpen());
+//
+//    auto connSend = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
+//
+//    VERIFY_IS_NOT_NULL(connSend);
+//    VERIFY_IS_TRUE(connSend.Open());
+//
+//
+//    // immediate
+//    auto immediateResult = connSend.SendMessageWords(0, 0x21234567);
+//
+//    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(immediateResult));
+//    VERIFY_IS_TRUE((immediateResult & MidiSendMessageResult::SentImmediately) == MidiSendMessageResult::SentImmediately);
+//
+//    // cleanup endpoint. Technically not required as session will do it
+//    session.DisconnectEndpointConnection(connSend.ConnectionId());
+//
+//    session.Close();
+//}
+
+
 void MidiEndpointConnectionTests::TestCreateBiDiLoopbackA()
 {
     LOG_OUTPUT(L"TestCreateBiDiLoopbackA **********************************************************************");
@@ -150,7 +258,6 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmpStruct()
 
     session.Close();
 }
-
 
 
 void MidiEndpointConnectionTests::TestSendAndReceiveUmp32()
@@ -308,7 +415,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWords()
 
     // send messages
 
-    uint32_t words[]{ 0,0,0,0 };
+    uint32_t words[4]{};
     uint8_t wordCount = 0;
 
     std::cout << "Creating message" << std::endl;
@@ -348,7 +455,10 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWords()
 
         std::cout << "Sending UMP Word Array" << std::endl;
 
-        VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageWordArray(timestamp, words, 0, wordCount)));
+        auto result = connSend.SendMessageWordArray(timestamp, words, 0, wordCount);
+        std::cout << "Send result: 0x" << std::hex << (uint32_t)result << std::endl;
+
+        VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(result));
 
     }
 
@@ -376,3 +486,123 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWords()
 
     session.Close();
 }
+
+
+
+void MidiEndpointConnectionTests::TestSendWordArrayBoundsError()
+{
+    LOG_OUTPUT(L"TestSendWordArrayBoundsError **********************************************************************");
+
+    auto session = MidiSession::CreateSession(L"Test Session Name");
+
+    VERIFY_IS_TRUE(session.IsOpen());
+    VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
+
+    auto connSend = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
+
+    VERIFY_IS_NOT_NULL(connSend);
+
+    uint32_t sendBuffer[4]{};
+
+    sendBuffer[0] = 0x41234567;
+    sendBuffer[1] = 0xDEADBEEF;
+    sendBuffer[2] = 0x41234567;
+    sendBuffer[3] = 0x41234567;
+
+
+    VERIFY_IS_TRUE(connSend.Open());
+
+    // out of bounds
+    auto result = connSend.SendMessageWordArray(0, sendBuffer, 3, 2);
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageFailed(result));
+    VERIFY_IS_TRUE((result & MidiSendMessageResult::DataIndexOutOfRange) == MidiSendMessageResult::DataIndexOutOfRange);
+
+    session.DisconnectEndpointConnection(connSend.ConnectionId());
+
+    session.Close();
+}
+
+
+void MidiEndpointConnectionTests::TestSendAndReceiveWordArray()
+{
+    LOG_OUTPUT(L"TestSendAndReceiveWordArray **********************************************************************");
+
+    wil::unique_event_nothrow allMessagesReceived;
+    allMessagesReceived.create();
+
+    auto session = MidiSession::CreateSession(L"Test Session Name");
+
+    VERIFY_IS_TRUE(session.IsOpen());
+    VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
+
+    auto connSend = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
+    auto connReceive = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId());
+
+    VERIFY_IS_NOT_NULL(connSend);
+    VERIFY_IS_NOT_NULL(connReceive);
+
+    bool messageReceivedFlag = false;
+
+    uint32_t receiveBuffer[50]{};
+    uint8_t sentWordCount = 2;
+    uint32_t sentIndex = 10;
+    uint32_t receiveIndex = 20;
+
+    uint32_t sendBuffer[50]{};
+
+    sendBuffer[sentIndex + 0] = 0x41234567;
+    sendBuffer[sentIndex + 1] = 0xDEADBEEF;
+
+    auto MessageReceivedHandler = [&](IMidiMessageReceivedEventSource const& sender, MidiMessageReceivedEventArgs const& args)
+        {
+            VERIFY_IS_NOT_NULL(sender);
+            VERIFY_IS_NOT_NULL(args);
+
+            // testing that we fill at the correct offset
+            auto wordCount = args.FillWordArray(receiveBuffer, receiveIndex);
+
+            VERIFY_ARE_EQUAL(sentWordCount, wordCount);
+
+            // check to see that we received what we sent
+            for (int i = 0; i < sentWordCount; i++)
+            {
+                VERIFY_ARE_EQUAL(sendBuffer[sentIndex+i], receiveBuffer[receiveIndex+i]);
+            }
+
+
+            messageReceivedFlag = true;
+            allMessagesReceived.SetEvent();
+        };
+
+    auto eventRevokeToken = connReceive.MessageReceived(MessageReceivedHandler);
+
+    VERIFY_IS_TRUE(connSend.Open());
+    VERIFY_IS_TRUE(connReceive.Open());
+
+    auto result = connSend.SendMessageWordArray(0, sendBuffer, sentIndex, sentWordCount);
+
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(result));
+
+
+    // Wait for incoming message
+    if (!allMessagesReceived.wait(3000))
+    {
+        std::cout << "Failure waiting for messages, timed out." << std::endl;
+    }
+
+    VERIFY_IS_TRUE(messageReceivedFlag);
+
+    // unwire event
+    connReceive.MessageReceived(eventRevokeToken);
+
+    // cleanup endpoint. Technically not required as session will do it
+    session.DisconnectEndpointConnection(connSend.ConnectionId());
+    session.DisconnectEndpointConnection(connReceive.ConnectionId());
+
+    session.Close();
+}
+
+
+
+// TODO: Test Buffer
+
