@@ -149,6 +149,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="MidiClockTests.cpp" />
+    <ClCompile Include="MidiEndpointConnectionBufferTests.cpp" />
     <ClCompile Include="MidiEndpointConnectionTests.cpp" />
     <ClCompile Include="MidiEndpointDeviceWatcherTests.cpp" />
     <ClCompile Include="MidiEndpointListenerTests.cpp" />
@@ -162,6 +163,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MidiClockTests.h" />
+    <ClInclude Include="MidiEndpointConnectionBufferTests.h" />
     <ClInclude Include="MidiEndpointConnectionTests.h" />
     <ClInclude Include="MidiEndpointDeviceWatcherTests.h" />
     <ClInclude Include="MidiEndpointListenerTests.h" />

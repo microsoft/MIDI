@@ -304,13 +304,43 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     uint8_t MidiMessageReceivedEventArgs::FillBuffer(
-        foundation::IMemoryBuffer const& /* buffer */, 
-        uint32_t const /* byteOffset*/
+        foundation::IMemoryBuffer const& buffer, 
+        uint32_t const byteOffset
         )
     {
-        // TODO: Implement MidiMessageReceivedEventArgs::FillBuffer
+        try
+        {
+            auto ref = buffer.CreateReference();
+            auto interop = ref.as<IMemoryBufferByteAccess>();
 
-        throw hresult_not_implemented();
+            uint8_t* value{};
+            uint32_t valueSize{};
+
+            // get a pointer to the buffer
+            winrt::check_hresult(interop->GetBuffer(&value, &valueSize));
+
+            uint8_t numWords = GetValidMessageWordCount();
+            uint8_t numBytes = numWords * sizeof(uint32_t);
+
+            if (byteOffset + numBytes > valueSize)
+            {
+                // no room
+                return 0;
+            }
+            else
+            {
+                uint32_t* bufferWordPointer = reinterpret_cast<uint32_t*>(value + byteOffset);
+
+                memcpy(bufferWordPointer, &m_data, numBytes);
+
+                return numBytes;
+            }
+
+        }
+        catch (...)
+        {
+            return 0;
+        }
     }
 
 

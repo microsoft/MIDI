@@ -603,6 +603,3 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWordArray()
 }
 
 
-
-// TODO: Test Buffer
-

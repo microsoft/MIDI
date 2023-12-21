@@ -60,11 +60,12 @@ namespace Windows.Devices.Midi2
         Boolean FillMessage128(MidiMessage128 message);
 
         // Use existing arrays instead of allocating new ones. Array should be at least as large
-        // as the UMP being read. Returns the count of elements written
+        // as the UMP being read. Returns the count of elements written (Words in the case of the
+        // first, and bytes in the case of the second)
         UInt8 FillWordArray(ref UInt32[] words, UInt32 startIndex);
         UInt8 FillByteArray(ref UInt8[] bytes, UInt32 startIndex);
 
-        // Fill a spot in an existing IMemoryBuffer controlled by the caller. Returns the number of bytes written
+        // Fill a spot in an existing IMemoryBuffer controlled by the caller. Returns the number of BYTES written
         UInt8 FillBuffer(Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffset);
 
     }
