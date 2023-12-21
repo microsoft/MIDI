@@ -23,24 +23,23 @@ namespace Windows.Devices.Midi2
         Succeeded =                         0x80000000,
         Failed =                            0x10000000,
 
-        // success details
+        // success details. Unfortunately, we can't get these due to how the x-proc buffer isolates client from service
 
-        SentImmediately =                   0x00000001,
-        Scheduled =                         0x00000002,
-        SystemExclusiveParked =             0x00000004,
+        //SentImmediately =                   0x00000001,
+        //Scheduled =                         0x00000002,
+        //SystemExclusiveParked =             0x00000004,
 
-        // service failure reasons
+        // service failure reasons ----------------------------------------
 
         BufferFull =                        0x00010000,
-        SchedulerQueueFull =                0x00020000,
+        //SchedulerQueueFull =                0x00020000,
         EndpointConnectionClosedOrInvalid = 0x00040000,
 
-        // validation failure reasons
+        // validation failure reasons -------------------------------------
 
         InvalidMessageTypeForWordCount =    0x00100000,
         InvalidMessageOther =               0x00200000,
         DataIndexOutOfRange =               0x00400000,
-
 
         Other =                             0x01000000,
     };

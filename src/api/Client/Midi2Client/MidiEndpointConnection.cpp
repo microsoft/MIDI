@@ -31,28 +31,32 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         switch (hr)
         {
-        case HR_S_MIDI_SENDMSG_IMMEDIATE:
-            result |= midi2::MidiSendMessageResult::SentImmediately;
-            break;
+        //case HR_S_MIDI_SENDMSG_IMMEDIATE:
+        //    result |= midi2::MidiSendMessageResult::SentImmediately;
+        //    break;
 
-        case HR_S_MIDI_SENDMSG_SCHEDULED:
-            result |= midi2::MidiSendMessageResult::Scheduled;
-            break;
+        //case HR_S_MIDI_SENDMSG_SCHEDULED:
+        //    result |= midi2::MidiSendMessageResult::Scheduled;
+        //    break;
 
-        case HR_S_MIDI_SENDMSG_SYSEX_PARKED:
-            result |= midi2::MidiSendMessageResult::SystemExclusiveParked;
-            break;
+        //case HR_S_MIDI_SENDMSG_SYSEX_PARKED:
+        //    result |= midi2::MidiSendMessageResult::SystemExclusiveParked;
+        //    break;
 
-        case HR_E_MIDI_SENDMSG_BUFFER_FULL:
+        //case HR_E_MIDI_SENDMSG_BUFFER_FULL:
+        //    result |= midi2::MidiSendMessageResult::BufferFull;
+        //    break;
+
+        //case HR_E_MIDI_SENDMSG_SCHEDULER_QUEUE_FULL:
+        //    result |= midi2::MidiSendMessageResult::SchedulerQueueFull;
+        //    break;
+
+        //case HR_E_MIDI_SENDMSG_INVALID_MESSAGE:
+        //    result |= midi2::MidiSendMessageResult::InvalidMessageOther;
+        //    break;
+
+        case HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER):
             result |= midi2::MidiSendMessageResult::BufferFull;
-            break;
-
-        case HR_E_MIDI_SENDMSG_SCHEDULER_QUEUE_FULL:
-            result |= midi2::MidiSendMessageResult::SchedulerQueueFull;
-            break;
-
-        case HR_E_MIDI_SENDMSG_INVALID_MESSAGE:
-            result |= midi2::MidiSendMessageResult::InvalidMessageOther;
             break;
 
         default:
