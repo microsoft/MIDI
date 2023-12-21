@@ -27,8 +27,11 @@ public:
         //TEST_METHOD_SETUP(TestSetup);
         //TEST_METHOD_CLEANUP(TestCleanup);
 
-        TEST_METHOD(TestScheduledMessages);
+        TEST_METHOD(TestScheduledMessagesOrder);
+        TEST_METHOD(TestScheduledMessagesTimingSmall);
+        TEST_METHOD(TestScheduledMessagesTimingLarge);
 
+        void TestScheduledMessagesTiming(_In_ uint16_t const messageCount);
 
 private:
 

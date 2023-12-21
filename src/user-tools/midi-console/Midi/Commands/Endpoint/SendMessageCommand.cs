@@ -33,8 +33,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             [DefaultValue(0L)]
             public long TimestampOffsetMicroseconds { get; set; }
 
-
-
         }
 
         public override Spectre.Console.ValidationResult Validate(CommandContext context, Settings settings)
@@ -138,6 +136,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         sendTask.Value = 0;
 
                         uint messagesSent = 0;
+                        uint messageFailures = 0;
 
                         while (messagesSent < settings.Count)
                         {
@@ -148,20 +147,40 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                             //Console.WriteLine($"Current Timestamp: {baseTimestamp}");
                             //Console.WriteLine($"Target Timestamp : {timestamp}");
 
-                            connection.SendMessageWordArray(timestamp, settings.Words, 0, (byte)settings.Words.Count());
+                            var sendResult = connection.SendMessageWordArray(timestamp, settings.Words, 0, (byte)settings.Words.Count());
 
-                            messagesSent++;
-                            sendTask.Value = messagesSent;
-
-                            ctx.Refresh();
-
-                            if (timestamp > maxTimestampScheduled)
+                            if (MidiEndpointConnection.SendMessageSucceeded(sendResult))
                             {
-                                maxTimestampScheduled = timestamp;
-                            }
 
-                            Thread.Sleep(settings.DelayBetweenMessages);
+                                messagesSent++;
+                                sendTask.Value = messagesSent;
+
+                                ctx.Refresh();
+
+                                if (timestamp > maxTimestampScheduled)
+                                {
+                                    maxTimestampScheduled = timestamp;
+                                }
+
+                                Thread.Sleep(settings.DelayBetweenMessages);
+                            }
+                            else
+                            {
+                                messageFailures ++;
+                            }
                         }
+
+                        if (messageFailures > 0)
+                        {
+                            // todo: localize
+                            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Failed to send {messageFailures} of a planned {settings.Count} message(s)."));
+                        }
+                        else
+                        {
+                            // todo: localize
+                            AnsiConsole.MarkupLine($"Sent {messagesSent} message(s).");
+                        }
+
                     });
 
                 if (maxTimestampScheduled > MidiClock.Now)

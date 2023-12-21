@@ -10,6 +10,14 @@
 #include "pch.h"
 #include "midi2.Schedulertransform.h"
 
+
+
+#define MIDI_SCHEDULER_MINIMUM_EVENT_SLEEP_TIME_MS 2000
+#define MIDI_OUTBOUND_EMPTY_QUEUE_SLEEP_DURATION_MS 60000
+
+
+
+
 _Use_decl_annotations_
 HRESULT
 CMidi2SchedulerMidiTransform::Initialize(
@@ -71,7 +79,8 @@ CMidi2SchedulerMidiTransform::Cleanup()
 
     try
     {
-        OutputDebugString(L"" __FUNCTION__ " Shut down time");
+        OutputDebugString(L"" __FUNCTION__ " Scheduler shut down time");
+        OutputDebugString((std::wstring(L"" __FUNCTION__ " Abandoned queue size is: ") + std::to_wstring(m_messageQueue.size())).c_str());
 
 
         // tell the thread to quit. Call SetEvent in case it is in a wait
@@ -151,6 +160,8 @@ CMidi2SchedulerMidiTransform::SendMidiMessageNow(
         }
         else
         {
+            OutputDebugString(L"" __FUNCTION__ " Failure: Callback is nullptr.");
+
             // TODO: Log this
             return E_FAIL;
         }
@@ -170,12 +181,15 @@ HRESULT
 CMidi2SchedulerMidiTransform::SendMidiMessageNow(
     ScheduledUmpMessage const message)
 {
+//    OutputDebugString((std::wstring(L"" __FUNCTION__ " Sending queued message. Queue size is: ") + std::to_wstring(m_messageQueue.size())).c_str());
+
     if (!m_continueProcessing) return S_OK;
 
     return SendMidiMessageNow(
         (PVOID)(message.Data), 
         message.ByteCount, 
         (LONGLONG)(message.Timestamp));
+
 }
 
 
@@ -188,8 +202,6 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
     UINT size,
     LONGLONG timestamp)
 {
-//    OutputDebugString(L"" __FUNCTION__);
-
 
     if (!m_continueProcessing) return S_OK;
 
@@ -198,13 +210,31 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
         // check to see if we're bypassing scheduling
         if (timestamp == 0)
         {
-            // bypass scheduling
-            return SendMidiMessageNow(data, size, timestamp);
+            // bypass scheduling logic completely
+            auto hr = SendMidiMessageNow(data, size, timestamp);
+
+            if (SUCCEEDED(hr))
+            {
+                return HR_S_MIDI_SENDMSG_IMMEDIATE;
+            }
+            else
+            {
+                return hr;
+            }
         }
         else if (shared::GetCurrentMidiTimestamp() >= timestamp - m_tickWindow - m_deviceLatencyTicks)
         {
             // timestamp is in the past or within our tick window: so send now
-            return SendMidiMessageNow(data, size, timestamp);
+            auto hr = SendMidiMessageNow(data, size, timestamp);
+
+            if (SUCCEEDED(hr))
+            {
+                return HR_S_MIDI_SENDMSG_IMMEDIATE;
+            }
+            else
+            {
+                return hr;
+            }
         }
         else
         {
@@ -212,60 +242,38 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
 
             if (size >= MINIMUM_UMP_DATASIZE && size <= MAXIMUM_UMP_DATASIZE)
             {
-                for (int i = 0; i < MIDI_MESSAGE_SCHEDULE_ENQUEUE_RETRY_COUNT && m_continueProcessing; i++)
+                std::lock_guard<std::mutex> lock{ m_queueMutex };
+
+                // recycle the current received index whenever the queue is empty. Prevents long-term wrapping
+                if (m_messageQueue.size() == 0)
                 {
-                    auto lock = m_queueLock.try_lock();
-
-                    if (lock)
-                    {
-                        // recycle the current received index whenever the queue is empty. Prevents long-term wrapping
-                        if (m_messageQueue.size() == 0)
-                        {
-                            m_currentReceivedIndex = 0;
-                        }
-
-                        // schedule the message for sending in the future
-
-                        if (m_messageQueue.size() < MIDI_OUTGOING_MESSAGE_QUEUE_MAX_MESSAGE_COUNT)
-                        {
-                            m_messageQueue.emplace(timestamp, ++m_currentReceivedIndex, size, (byte*)data);
-
-                            // need to reset this before setting the event
-                            lock.reset();
-
-                            // notify the worker thread
-                            if (m_continueProcessing) m_messageProcessorWakeup.SetEvent();
-
-                            // break out of the loop and return
-                            return S_OK;
-                        }
-                        else
-                        {
-                            // priority queue doesn't give us any way to pop from the back
-                            // so we just have to fail. 
-                            // TODO: Eventually, we'll want to return a code back to the client API that it can interpret and use as retval
-
-                            lock.reset();
-
-                            return E_FAIL;
-                        }
-
-                    }
-                    else
-                    {
-                        // TODO: couldn't lock the queue. we should log this 
-
-                    }
+                    m_currentReceivedIndex = 0;
                 }
 
-                // if we got here, we couldn't lock the queue
-                // should return a better code
-                return E_FAIL;
+                // schedule the message for sending in the future
+
+                if (m_messageQueue.size() < MIDI_OUTGOING_MESSAGE_QUEUE_MAX_MESSAGE_COUNT)
+                {
+                    m_messageQueue.emplace(timestamp, ++m_currentReceivedIndex, size, (byte*)data);
+
+                    // notify the worker thread
+                    if (m_continueProcessing) m_messageProcessorWakeup.SetEvent();
+                       
+                    // break out of the loop and return
+                    return HR_S_MIDI_SENDMSG_SCHEDULED;
+                }
+                else
+                {
+                    // priority queue doesn't give us any way to pop from the back
+                    // so we just have to fail. 
+
+                    return HR_E_MIDI_SENDMSG_SCHEDULER_QUEUE_FULL;
+                }
             }
             else
             {
                 // invalid data size
-                return E_FAIL;
+                return HR_E_MIDI_SENDMSG_INVALID_MESSAGE;
             }
         }
 
@@ -291,21 +299,16 @@ CMidi2SchedulerMidiTransform::GetTopMessageTimestamp(internal::MidiTimestamp &ti
     try
     {
         // auto resets on exit
-        auto lock = m_queueLock.try_lock();
+        //auto lock = m_queueLock.try_lock();
 
-        if (lock)
+        std::lock_guard<std::mutex> lock{ m_queueMutex };
+
+        if (m_continueProcessing && !m_messageQueue.empty())
         {
-            if (m_continueProcessing && !m_messageQueue.empty())
-            {
-                timestamp = m_messageQueue.top().Timestamp;
-                ret = S_OK;
+            timestamp = m_messageQueue.top().Timestamp;
+            ret = S_OK;
 
-            //    OutputDebugString(L"\n--Retrieved current timestamp\n");
-            }
-            else
-            {
-                ret = E_FAIL;
-            }
+        //    OutputDebugString(L"\n--Retrieved current timestamp\n");
         }
         else
         {
@@ -334,9 +337,18 @@ CMidi2SchedulerMidiTransform::CalculateSafeSleepTime(internal::MidiTimestamp nex
     {
         auto now = internal::Shared::GetCurrentMidiTimestamp();
 
-        auto diff = (nextWakeupWindowTimestamp - now) / internal::Shared::GetMidiTimestampFrequency();
+        if (nextWakeupWindowTimestamp > now)
+        {
+            auto diff = (nextWakeupWindowTimestamp - now) / m_timestampFrequency;
 
-        sleepMS = (uint32_t)(diff * 1000);
+            sleepMS = (uint32_t)(diff * 1000);
+
+            // if the sleep time is under the limit, we don't sleep at all because the timing is not that accurate
+            if (sleepMS < MIDI_SCHEDULER_MINIMUM_EVENT_SLEEP_TIME_MS)
+            {
+                sleepMS = 0;
+            }
+        }
 
         return S_OK;
     }
@@ -350,17 +362,13 @@ CMidi2SchedulerMidiTransform::CalculateSafeSleepTime(internal::MidiTimestamp nex
 
 
 
-
-
-#define MIDI_OUTBOUND_EMPTY_QUEUE_SLEEP_DURATION_MS 60000
-
 void CMidi2SchedulerMidiTransform::QueueWorker()
 {
     OutputDebugString(L"" __FUNCTION__ " Enter");
 
     try
     {
-        const uint64_t totalExpectedLatency = m_deviceLatencyTicks + LOCK_AND_SEND_FUNCTION_LATENCY_TICKS;
+        const uint64_t totalExpectedLatency = m_deviceLatencyTicks + MIDI_SCHEDULER_LOCK_AND_SEND_FUNCTION_LATENCY_TICKS;
 
         while (m_continueProcessing)
         {
@@ -368,64 +376,93 @@ void CMidi2SchedulerMidiTransform::QueueWorker()
             // to wake up due to a new message arriving or due to shut down.
             if (m_continueProcessing && m_messageQueue.empty())
             {
+                OutputDebugString(L"" __FUNCTION__ " queue is empty. About to sleep");
+
                 // queue empty so sleep until we get notified to wake up
-                m_messageProcessorWakeup.wait(MIDI_OUTBOUND_EMPTY_QUEUE_SLEEP_DURATION_MS);
+                bool triggered = m_messageProcessorWakeup.wait(MIDI_OUTBOUND_EMPTY_QUEUE_SLEEP_DURATION_MS);
+
+                if (triggered) OutputDebugString(L"" __FUNCTION__ " Wake up from sleep");
+
             }
             else if (m_continueProcessing && !m_messageQueue.empty())
             {
                 internal::MidiTimestamp topTimestamp = 0;
 
+                // get the timestamp of the most urgent message. We fetch this
+                // each time in case messages were added since last loop iteration
                 if (SUCCEEDED(GetTopMessageTimestamp(topTimestamp)))
                 {
-                    uint64_t nextMessageSendTime = topTimestamp - m_tickWindow - totalExpectedLatency;
-
-                    uint32_t sleepTime{ 0 };
-
-                    if (SUCCEEDED(CalculateSafeSleepTime(nextMessageSendTime, sleepTime)))
-                    {
-                        if (sleepTime > 0)
-                        {
-                            m_messageProcessorWakeup.wait(sleepTime);
-                        }
-                    }
+                    uint64_t nextMessageSendTime = topTimestamp - totalExpectedLatency;
 
                     // check to see if it's time to send the message. If not, we'll just
                     // wrap back around
                     if (shared::GetCurrentMidiTimestamp() >= nextMessageSendTime)
                     {
-                        // we're inside the tick window + latency, so need to just go ahead and send it
+                        std::lock_guard<std::mutex> lock{ m_queueMutex };
 
-                        auto lock = m_queueLock.try_lock();
+                        // we have the queue locked, so send ALL messages that have the *same* timestamp
+                        // but we need to limit the number to send at once here, so we do.
 
-                        if (lock)
+                        uint32_t processedMessages = 0;
+
+                        while (!m_messageQueue.empty() && 
+                            processedMessages < MIDI_SCHEDULER_MAX_MESSAGES_TO_PROCESS_AT_ONCE &&
+                            m_messageQueue.top().Timestamp <= topTimestamp)
                         {
-                            if (!m_messageQueue.empty())
-                            {
-                                // send the message
-                                LOG_IF_FAILED(SendMidiMessageNow(m_messageQueue.top()));
+                            // send the message
+                            auto hr = SendMidiMessageNow(m_messageQueue.top());
 
+                            if (SUCCEEDED(hr))
+                            {
                                 // pop the top item off the queue
                                 m_messageQueue.pop();
                             }
+                            else
+                            {
+                                LOG_IF_FAILED(hr);
 
-                            //lock.reset();
+                                // we failed to send for some reason, so break out of the loop. We'll catch 
+                                // these messages the next time around.
+                                OutputDebugString(L"" __FUNCTION__ " Failed to send MIDI message");
+                                break;
+                            }
+
+                            processedMessages++;
+                        }
+                    }
+                    else
+                    {
+                        // not yet time to send the top message, so we'll sleep
+                        uint32_t sleepTime{ 0 };
+
+                        if (m_continueProcessing && SUCCEEDED(CalculateSafeSleepTime(nextMessageSendTime, sleepTime)))
+                        {
+                            if (sleepTime > 0)
+                            {
+                                // waiting will get interrupted if a new message comes in. We want that.
+                                m_messageProcessorWakeup.wait(sleepTime);
+                            }
                         }
                     }
                 }
                 else
                 {
                     // couldn't get top timestamp for some reason.
+                    OutputDebugString(L"" __FUNCTION__ " Unable to get top timestamp");
                 }
 
             }
 
             if (m_continueProcessing)
             {
-                // we're looping, not sleeping now, so we can reset this
+                // we're looping, not sleeping now, so we need to reset this to make sure we don't miss new messages
                 if (m_messageProcessorWakeup.is_signaled())
                 {
                     m_messageProcessorWakeup.ResetEvent();
                 }
+
+                // return the rest of the time slice so we're not in a tight loop
+                Sleep(0);
             }
 
         } // main loop
@@ -433,9 +470,12 @@ void CMidi2SchedulerMidiTransform::QueueWorker()
     catch (...)
     {
         // TODO: Log
+        OutputDebugString(L"" __FUNCTION__ " Exception");
     }
 
-    OutputDebugString(L"" __FUNCTION__ " Exit");
+    
+    OutputDebugString((std::wstring(L"" __FUNCTION__ " Exit. Abandoned queue size is: ") + std::to_wstring(m_messageQueue.size())).c_str());
+
 }
 
 

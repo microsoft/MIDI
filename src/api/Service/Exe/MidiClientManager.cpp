@@ -38,6 +38,13 @@ CMidiClientManager::Cleanup()
     m_ProcessManager.reset();
     m_DeviceManager.reset();
 
+    // tear down all transforms before we clean up the client/device
+    for (auto const& transform : m_TransformPipes)
+    {
+        transform.second->Cleanup();
+    }
+    m_TransformPipes.clear();
+
     for (auto const& client : m_ClientPipes)
     {
         client.second->Cleanup();
@@ -50,11 +57,7 @@ CMidiClientManager::Cleanup()
     }
     m_DevicePipes.clear();
 
-    for (auto const& transform : m_TransformPipes)
-    {
-        transform.second->Cleanup();
-    }
-    m_TransformPipes.clear();
+    OutputDebugString(L"" __FUNCTION__ " exit");
 
     return S_OK;
 }

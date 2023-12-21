@@ -15,6 +15,58 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
+    _Use_decl_annotations_
+    midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageResultFromHRESULT(HRESULT hr)
+    {
+        midi2::MidiSendMessageResult result{ 0 };
+
+        if (SUCCEEDED(hr))
+        {
+            result |= midi2::MidiSendMessageResult::Succeeded;
+        }
+        else
+        {
+            result |= midi2::MidiSendMessageResult::Failed;
+        }
+
+        switch (hr)
+        {
+        //case HR_S_MIDI_SENDMSG_IMMEDIATE:
+        //    result |= midi2::MidiSendMessageResult::SentImmediately;
+        //    break;
+
+        //case HR_S_MIDI_SENDMSG_SCHEDULED:
+        //    result |= midi2::MidiSendMessageResult::Scheduled;
+        //    break;
+
+        //case HR_S_MIDI_SENDMSG_SYSEX_PARKED:
+        //    result |= midi2::MidiSendMessageResult::SystemExclusiveParked;
+        //    break;
+
+        //case HR_E_MIDI_SENDMSG_BUFFER_FULL:
+        //    result |= midi2::MidiSendMessageResult::BufferFull;
+        //    break;
+
+        //case HR_E_MIDI_SENDMSG_SCHEDULER_QUEUE_FULL:
+        //    result |= midi2::MidiSendMessageResult::SchedulerQueueFull;
+        //    break;
+
+        //case HR_E_MIDI_SENDMSG_INVALID_MESSAGE:
+        //    result |= midi2::MidiSendMessageResult::InvalidMessageOther;
+        //    break;
+
+        case HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER):
+            result |= midi2::MidiSendMessageResult::BufferFull;
+            break;
+
+        default:
+            result |= midi2::MidiSendMessageResult::Other;
+            break;
+        }
+
+        return result;
+    }
+
 
     _Use_decl_annotations_
     bool MidiEndpointConnection::ValidateUmp(uint32_t word0, uint8_t wordCount) noexcept
@@ -297,20 +349,20 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
 
                 // return failure if we're not open
-                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
             }
 
             if (endpoint != nullptr)
             {
-                winrt::check_hresult(endpoint->SendMidiMessage(data, sizeInBytes, timestamp));
+                auto hr = endpoint->SendMidiMessage(data, sizeInBytes, timestamp);
 
-                return midi2::MidiSendMessageResult::Success;
+                return SendMessageResultFromHRESULT(hr);
             }
             else
             {
                 internal::LogGeneralError(__FUNCTION__, L"endpoint is nullptr");
 
-                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
             }
         }
         catch (winrt::hresult_error const& ex)
@@ -318,7 +370,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             internal::LogHresultError(__FUNCTION__, L"hresult error sending message. Is the service running?", ex);
 
             // TOD: Handle other hresults like buffer full
-            return midi2::MidiSendMessageResult::ErrorUnexpected;
+            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
         }
     }
 
@@ -337,7 +389,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
             internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for this UMP", wordCount, timestamp);
 
-            return midi2::MidiSendMessageResult::ErrorInvalidMessageTypeForWordCount;
+            return midi2::MidiSendMessageResult::InvalidMessageTypeForWordCount;
         }
 
         auto byteLength = (uint8_t)(wordCount * sizeof(uint32_t));
@@ -398,7 +450,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 {
                     internal::LogGeneralError(__FUNCTION__, L"endpoint data pointer is nullptr");
 
-                    return midi2::MidiSendMessageResult::ErrorInvalidMessageOther;
+                    return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::InvalidMessageOther;
                 }
 
                 return SendMessageRaw(endpoint, umpDataPointer, umpDataSize, ump.Timestamp());
@@ -407,7 +459,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 internal::LogGeneralError(__FUNCTION__, L"endpoint is nullptr");
 
-                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
             }
         }
         catch (winrt::hresult_error const& ex)
@@ -415,7 +467,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             internal::LogHresultError(__FUNCTION__, L"hresult error sending message. Is the service running?", ex);
 
             // TODO: handle buffer full and other expected hresults
-            return midi2::MidiSendMessageResult::ErrorUnexpected;
+            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
         }
     }
 
@@ -436,7 +488,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
 
                 // return failure if we're not open
-                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
             }
 
             // make sure we're sending only a single UMP
@@ -448,7 +500,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for a single UMP", sizeInWords, timestamp);
 
                 //throw hresult_invalid_argument();
-                return midi2::MidiSendMessageResult::ErrorInvalidMessageTypeForWordCount;
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::InvalidMessageTypeForWordCount;
             }
 
             winrt::Windows::Foundation::IMemoryBufferReference bufferReference = buffer.CreateReference();
@@ -464,7 +516,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 internal::LogGeneralError(__FUNCTION__, L"Buffer smaller than provided offset + byteLength");
 
-                midi2::MidiSendMessageResult::ErrorSendDataIndexOutOfRange;
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange;
             }
 
 
@@ -477,7 +529,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             internal::LogHresultError(__FUNCTION__, L"hresult exception sending message", ex);
 
             // TODO: handle buffer full and other expected hresults
-            return midi2::MidiSendMessageResult::ErrorUnexpected;
+            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
         }
     }
 
@@ -498,25 +550,24 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
 
                 // return failure if we're not open
-                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
             }
 
+            // check for out-of-bounds first
+            if (startIndex + wordCount > words.size())
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Array start index + word count is >= array size");
 
-            if (wordCount < 1 || !ValidateUmp(words[0], wordCount))
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange;
+            }
+
+            // check if the message type is correct for the word count
+            if (wordCount < 1 || !ValidateUmp(words[startIndex], wordCount))
             {
                 internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for this UMP", wordCount, timestamp);
 
-                return midi2::MidiSendMessageResult::ErrorInvalidMessageTypeForWordCount;
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::InvalidMessageTypeForWordCount;
             }
-
-
-            if (startIndex + wordCount > words.size())
-            {
-                internal::LogGeneralError(__FUNCTION__, L"Array start index + word count is > array size");
-
-                midi2::MidiSendMessageResult::ErrorSendDataIndexOutOfRange;
-            }
-
 
             if (m_endpointAbstraction)
             {
@@ -530,7 +581,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
 
-                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
             }
         }
         catch (winrt::hresult_error const& ex)
@@ -538,7 +589,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex);
 
             // TODO: handle buffer full and other expected hresults
-            return midi2::MidiSendMessageResult::ErrorUnexpected;
+            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
         }
     }
 
@@ -556,7 +607,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
 
                 // return failure if we're not open
-                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
             }
 
 
@@ -564,7 +615,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 // mismatch between the message type and the number of words
                 internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for messageType", UMP32_WORD_COUNT, timestamp);
-                return midi2::MidiSendMessageResult::ErrorInvalidMessageTypeForWordCount;
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::InvalidMessageTypeForWordCount;
             }
 
 
@@ -580,7 +631,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
 
-                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
             }
         }
         catch (winrt::hresult_error const& ex)
@@ -588,7 +639,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex);
 
             // TODO: handle buffer full and other expected hresults
-            return midi2::MidiSendMessageResult::ErrorUnexpected;
+            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
         }
     }
 
@@ -608,7 +659,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
 
                 // return failure if we're not open
-                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
             }
 
 
@@ -616,7 +667,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 // mismatch between the message type and the number of words
                 internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for messageType", UMP64_WORD_COUNT, timestamp);
-                return midi2::MidiSendMessageResult::ErrorInvalidMessageTypeForWordCount;
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::InvalidMessageTypeForWordCount;
             }
 
 
@@ -636,7 +687,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
 
-                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
             }
         }
         catch (winrt::hresult_error const& ex)
@@ -644,7 +695,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex);
 
             // TODO: handle buffer full and other expected hresults
-            return midi2::MidiSendMessageResult::ErrorUnexpected;
+            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
         }
     }
 
@@ -664,7 +715,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
 
                 // return failure if we're not open
-                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
             }
 
 
@@ -672,7 +723,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 // mismatch between the message type and the number of words
                 internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for messageType", UMP96_WORD_COUNT, timestamp);
-                return midi2::MidiSendMessageResult::ErrorInvalidMessageTypeForWordCount;
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::InvalidMessageTypeForWordCount;
             }
 
 
@@ -693,7 +744,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
 
-                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
             }
         }
         catch (winrt::hresult_error const& ex)
@@ -701,7 +752,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex);
 
             // TODO: handle buffer full and other expected hresults
-            return midi2::MidiSendMessageResult::ErrorUnexpected;
+            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
         }
     }
 
@@ -723,14 +774,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
 
                 // return failure if we're not open
-                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
             }
 
 
             if (internal::GetUmpLengthInMidiWordsFromFirstWord(word0) != UMP128_WORD_COUNT)
             {
                 internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for messageType", UMP128_WORD_COUNT, timestamp);
-                return midi2::MidiSendMessageResult::ErrorInvalidMessageTypeForWordCount;
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::InvalidMessageTypeForWordCount;
             }
 
 
@@ -752,7 +803,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
 
-                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
             }
         }
         catch (winrt::hresult_error const& ex)
@@ -760,7 +811,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex);
 
             // TODO: handle buffer full and other expected hresults
-            return midi2::MidiSendMessageResult::ErrorUnexpected;
+            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
         }
     }
 
@@ -778,7 +829,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
 
                 // return failure if we're not open
-                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
             }
 
 
@@ -790,7 +841,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
 
-                return midi2::MidiSendMessageResult::ErrorEndpointConnectionClosedOrInvalid;
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
             }
         }
         catch (winrt::hresult_error const& ex)
@@ -799,7 +850,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
             // todo: handle buffer full and similar messages
-            return midi2::MidiSendMessageResult::ErrorUnexpected;
+            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
         }
     }
 
