@@ -247,7 +247,7 @@
     <value>Monitor</value>
   </data>
   <data name="ParameterCaptureMessagesAnnotate" xml:space="preserve">
-    <value>True to annotate key messages written to the file. Annotations begin with the # sign and are written on the line before the UMP line.</value>
+    <value>True to annotate messages written to the file. Annotations begin with the # sign and are written on the line before the UMP data line.</value>
   </data>
   <data name="ParameterCaptureMessagesFieldDelimiter" xml:space="preserve">
     <value>Delimiter to separate fields. Valid values include:</value>
@@ -284,6 +284,9 @@
   </data>
   <data name="ParameterEnumLegacyEndpointsIncludeEndpointId" xml:space="preserve">
     <value>Include the MIDI 1.0 Endpoint Id (the Port Id) in the output</value>
+  </data>
+  <data name="ParameterListenerMessagesFilter" xml:space="preserve">
+    <value>(not yet implemented)</value>
   </data>
   <data name="ParameterMonitorEndpointDirectionDescription" xml:space="preserve">
     <value>The direction of the endpoint referenced by the Id. If this doesn't match the endpoint type, the connection will fail.</value>

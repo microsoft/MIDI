@@ -448,7 +448,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to True to annotate key messages written to the file. Annotations begin with the # sign and are written on the line before the UMP line..
+        ///   Looks up a localized string similar to True to annotate messages written to the file. Annotations begin with the # sign and are written on the line before the UMP data line..
         /// </summary>
         internal static string ParameterCaptureMessagesAnnotate {
             get {
@@ -561,6 +561,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         internal static string ParameterEnumLegacyEndpointsIncludeEndpointId {
             get {
                 return ResourceManager.GetString("ParameterEnumLegacyEndpointsIncludeEndpointId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (not yet implemented).
+        /// </summary>
+        internal static string ParameterListenerMessagesFilter {
+            get {
+                return ResourceManager.GetString("ParameterListenerMessagesFilter", resourceCulture);
             }
         }
         

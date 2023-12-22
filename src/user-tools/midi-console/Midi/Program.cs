@@ -65,11 +65,14 @@ app.Configure(config =>
             .WithAlias("monitor")
             .WithAlias("listen")
             .WithExample("endpoint", "\\\\?\\SWD#MIDISRV#MIDIU_DIAG_LOOPBACK_A#{e7cce071-3c03-423f-88d3-f1045d02552b}", "monitor")
+            .WithExample("endpoint", "monitor", "--capture-to-file", "%USERPROFILE%\\Documents\\MyMidiCapture.midi2", "--annotate-capture", "--capture-field-delimiter", "Pipe")
+            .WithExample("endpoint", "monitor", "--verbose")
             .WithDescription(Strings.CommandMonitorEndpointDescription)
             ;
 
         endpoint.AddCommand<SendMessageCommand>("send-message")
             .WithAlias("send-ump")
+            .WithAlias("send")
             .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "send-message", "0x405F3AB7", "0x12345789", "--count", "10", "--delay", "20")
             .WithExample("endpoint", "send-message", "0x21234567", "--count", "10", "--offset-microseconds", "2000000")
             .WithDescription(Strings.CommandSendMessageDescription)
@@ -78,7 +81,7 @@ app.Configure(config =>
         endpoint.AddCommand<SendMessagesFileCommand>("send-message-file")
             .WithAlias("send-ump-file")
             .WithAlias("send-file")
-            .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "send-message-file", "%USERPROFILE%\\Documents\\messages.txt")
+            .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "send-message-file", "%USERPROFILE%\\Documents\\messages.midi2")
             .WithDescription(Strings.CommandSendMessagesFileDescription)
             ;
 
