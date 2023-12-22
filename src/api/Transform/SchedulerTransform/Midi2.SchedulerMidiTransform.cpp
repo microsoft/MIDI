@@ -238,6 +238,11 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
         }
         else
         {
+            // bypass scheduling for a stable release
+            auto hr = SendMidiMessageNow(data, size, timestamp);
+            return hr;
+
+#if false
             // otherwise, we schedule the message
 
             if (size >= MINIMUM_UMP_DATASIZE && size <= MAXIMUM_UMP_DATASIZE)
@@ -275,6 +280,8 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
                 // invalid data size
                 return HR_E_MIDI_SENDMSG_INVALID_MESSAGE;
             }
+#endif
+
         }
 
         return S_OK;

@@ -298,10 +298,10 @@ CMidiXProc::SendMidiMessage(
             CopyMemory((((BYTE *) header) + sizeof(LOOPEDDATAFORMAT)), MidiData, Length);
 
             // if a position provided is nonzero, use it, otherwise use the current QPC
-            if (Position)
-            {
+            //if (Position)
+            //{
                 header->Position = Position;
-            }
+            //}
             //else
             //{
             //    LARGE_INTEGER qpc {0};
@@ -392,12 +392,12 @@ CMidiXProc::ProcessMidiIn()
                 if (m_MidiInCallback)
                 {
                     // if a position provided is nonzero, use it, otherwise use the current QPC
-                    if (header->Position == 0)
-                    {
-                        LARGE_INTEGER qpc{ 0 };
-                        QueryPerformanceCounter(&qpc);
-                        header->Position = qpc.QuadPart;
-                    }
+                    //if (header->Position == 0)
+                    //{
+                    //    LARGE_INTEGER qpc{ 0 };
+                    //    QueryPerformanceCounter(&qpc);
+                    //    header->Position = qpc.QuadPart;
+                    //}
 
                     m_MidiInCallback->Callback(data, dataSize, header->Position, m_MidiInCallbackContext);
                 }

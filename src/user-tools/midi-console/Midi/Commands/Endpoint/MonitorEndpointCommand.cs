@@ -70,7 +70,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             [LocalizedDescription("ParameterCaptureMessagesAnnotate")]
             [CommandOption("-a|--annotate-capture")]
-            [DefaultValue(true)]
+            [DefaultValue(false)]
             public bool AnnotateCaptureFile { get; set; }
 
             [EnumLocalizedDescription("ParameterCaptureMessagesFieldDelimiter", typeof(CaptureFieldDelimiter))]
@@ -104,8 +104,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         {
             MidiMessageTable displayTable = new MidiMessageTable(settings.Verbose);
 
-            bool capturingToFile = false;
-
             string endpointId = string.Empty;
 
             if (!string.IsNullOrEmpty(settings.EndpointDeviceId))
@@ -121,7 +119,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             {
                 AnsiConsole.MarkupLine(Strings.MonitorMonitoringOnEndpointLabel + ": " + AnsiMarkupFormatter.FormatDeviceInstanceId(endpointId));
 
-                var table = new Table();
+                //var table = new Table();
 
                 // when this goes out of scope, it will dispose of the session, which closes the connections
                 using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.MonitorSessionNameSuffix}");
@@ -139,7 +137,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 }
 
                 string fileName = string.Empty;
-                StreamWriter captureWriter;
+                StreamWriter captureWriter = null;
 
                 if (settings.OutputFile != null && settings.OutputFile.Trim() != string.Empty)
                 {
@@ -150,14 +148,12 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     // open the file and append to it if it already exists
                     //captureWriter = new StreamWriter(fileName, true);
                     captureWriter = System.IO.File.AppendText(fileName);
-                    capturingToFile = true;
 
                     AnsiConsole.MarkupLine("Capturing to " + AnsiMarkupFormatter.FormatFileName(fileName));
                 }
                 else
                 {
                     captureWriter = null;
-                    capturingToFile = false;
                 }
 
                 AnsiConsole.MarkupLine(Strings.MonitorPressEscapeToStopMonitoringMessage);
@@ -201,7 +197,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                     while (continueWaiting)
                     {
-                        //    Thread.Sleep(0);
+                        Thread.Sleep(0);
                     }
 
                 });
@@ -232,56 +228,61 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         {
                             lock (m_receivedMessagesQueue)
                             {
-                                var message = m_receivedMessagesQueue.Dequeue();
-
-                                if (startTimestamp == 0)
+                                while (m_receivedMessagesQueue.Count > 0)
                                 {
-                                    // gets timestamp of first message we receive and uses that so all others are an offset
-                                    startTimestamp = message.ReceivedTimestamp;
-                                }
+                                    var message = m_receivedMessagesQueue.Dequeue();
 
-                                if (lastReceivedTimestamp == 0)
-                                {
-                                    // gets timestamp of first message we receive and uses that so all others are an offset from previous message
-                                    lastReceivedTimestamp = message.ReceivedTimestamp;
-                                }
-
-                                // TODO: Maybe re-display the header if it's been a while since last header, and it is off-screen (index delta > some number)
-                                if (message.Index == 1)
-                                {
-                                    displayTable.OutputHeader();
-
-
-                                    if (capturingToFile && captureWriter != null)
+                                    if (startTimestamp == 0)
                                     {
-
-                                        captureWriter.WriteLine("#");
-                                        captureWriter.WriteLine($"# Windows MIDI Services Console Capture {DateTime.Now.ToLongDateString()}");
-                                        captureWriter.WriteLine($"# Endpoint:   {endpointId.ToString()}");
-                                        captureWriter.WriteLine($"# Annotation: {settings.AnnotateCaptureFile.ToString()}");
-                                        captureWriter.WriteLine($"# Delimiter:  {settings.FieldDelimiter.ToString()}");
-                                        captureWriter.WriteLine("#");
+                                        // gets timestamp of first message we receive and uses that so all others are an offset
+                                        startTimestamp = message.ReceivedTimestamp;
                                     }
 
+                                    if (lastReceivedTimestamp == 0)
+                                    {
+                                        // gets timestamp of first message we receive and uses that so all others are an offset from previous message
+                                        lastReceivedTimestamp = message.ReceivedTimestamp;
+                                    }
+
+                                    // TODO: Maybe re-display the header if it's been a while since last header, and it is off-screen (index delta > some number)
+                                    if (message.Index == 1)
+                                    {
+                                        displayTable.OutputHeader();
+
+
+                                        if (captureWriter != null)
+                                        {
+                                            captureWriter.WriteLine("#");
+                                            captureWriter.WriteLine($"# Windows MIDI Services Console Capture {DateTime.Now.ToLongDateString()}");
+                                            captureWriter.WriteLine($"# Endpoint:   {endpointId.ToString()}");
+                                            captureWriter.WriteLine($"# Annotation: {settings.AnnotateCaptureFile.ToString()}");
+                                            captureWriter.WriteLine($"# Delimiter:  {settings.FieldDelimiter.ToString()}");
+                                            captureWriter.WriteLine("#");
+                                        }
+
+                                    }
+
+                                    // calculate offset from the last message received
+                                    var offsetMicroseconds = MidiClock.ConvertTimestampToMicroseconds(message.ReceivedTimestamp - lastReceivedTimestamp);
+
+                                    displayTable.OutputRow(message, offsetMicroseconds);
+
+                                    if (captureWriter != null)
+                                    {
+                                        WriteMessageToFile(settings, captureWriter, message);
+                                    }
+
+
+                                    // set our last received so we can calculate offsets
+                                    lastReceivedTimestamp = message.ReceivedTimestamp;
+
                                 }
-
-                                // calculate offset from the last message received
-                                var offsetMicroseconds = MidiClock.ConvertTimestampToMicroseconds(message.ReceivedTimestamp - lastReceivedTimestamp);
-
-                                displayTable.OutputRow(message, offsetMicroseconds);
-
-                                if (capturingToFile)
-                                {
-                                    WriteMessageToFile(settings, captureWriter, message);
-                                }
-
-
-                                // set our last received so we can calculate offsets
-                                lastReceivedTimestamp = message.ReceivedTimestamp;
                             }
                         }
 
-                        Thread.Sleep(0);
+                        // we don't need to update the display more often. A tight loop really ties up the CPU.
+                        // actual message receive timings are based on the worker thread
+                        Thread.Sleep(125); 
                     }
                 }
                 else

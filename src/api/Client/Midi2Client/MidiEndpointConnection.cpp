@@ -352,6 +352,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
             }
 
+            if (timestamp != 0 && timestamp > ::Windows::Devices::Midi2::Internal::Shared::GetCurrentMidiTimestamp() + m_maxAllowedTimestampOffset)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Timestamp exceeds maximum future scheduling offset");
+
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::TimestampOutOfRange;
+            }
+
             if (endpoint != nullptr)
             {
                 auto hr = endpoint->SendMidiMessage(data, sizeInBytes, timestamp);

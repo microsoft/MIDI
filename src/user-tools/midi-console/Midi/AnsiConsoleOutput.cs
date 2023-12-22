@@ -13,29 +13,27 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
     internal class AnsiConsoleOutput
     {
 
-        public static void ConvertToFriendlyTimeUnit(double microsecondsToConvert, out double convertedValue, out string convertedUnitLabel, bool useWarningColors)
+        public static void ConvertToFriendlyTimeUnit(double microsecondsToConvert, out double convertedValue, out string convertedUnitLabel)
         {
             // TODO: These should likely be localized
 
-            string offsetUnitMicroseconds;
-            string offsetUnitMilliseconds;
-            string offsetUnitSeconds;
+            string offsetUnitMicroseconds = "μs";
+            string offsetUnitMilliseconds = "ms";
+            string offsetUnitSeconds = "s";
+            string offsetUnitMinutes = "MN";
+            string offsetUnitHours = "HR";
 
-            if (useWarningColors)
+            if (Math.Abs(microsecondsToConvert) > (double)(60.0 * 60.0 * 1000000))
             {
-                offsetUnitMicroseconds = "[green]μs[/]";
-                offsetUnitMilliseconds = "[red3]ms[/]";
-                offsetUnitSeconds = "[red1]s[/] ";
+                convertedUnitLabel = offsetUnitHours;
+                convertedValue = microsecondsToConvert / (double)(60.0 * 60.0 * 1000000);
             }
-            else
+            else if (Math.Abs(microsecondsToConvert) > (60.0 * 1000000))
             {
-                offsetUnitMicroseconds = "[turquoise2]μs[/]";
-                offsetUnitMilliseconds = "[deepskyblue2]ms[/]";
-                offsetUnitSeconds = "[deepskyblue3]s[/] ";
+                convertedUnitLabel = offsetUnitMinutes;
+                convertedValue = microsecondsToConvert / (60* 1000000);
             }
-
-
-            if (Math.Abs(microsecondsToConvert) > 1000000)
+            else if (Math.Abs(microsecondsToConvert) > 1000000)
             {
                 convertedUnitLabel = offsetUnitSeconds;
                 convertedValue = microsecondsToConvert / 1000000;

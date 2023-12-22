@@ -95,24 +95,27 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             }
 
         }
-       
+
+        const int timestampOffsetValueColumnWidth = 9;
+
         public MidiMessageTable(bool verbose)
         {
             // todo: localize strings
 
             Columns.Add(new MidiMessageTableColumn(0, "Index", 8, true, "grey", ""));
-            Columns.Add(new MidiMessageTableColumn(1, "Message Timestamp", 19, false, "darkseagreen2", "N0"));
-            Columns.Add(new MidiMessageTableColumn(2, "Offset", 7, false, "darkseagreen2", "F2"));
-            Columns.Add(new MidiMessageTableColumn(3, "", 2, true, "darkseagreen2", ""));                // offset label
-            if (verbose) Columns.Add(new MidiMessageTableColumn(4, "Recv \u0394", 7, false, "darkseagreen2", "F2"));
-            if (verbose) Columns.Add(new MidiMessageTableColumn(5, "", 2, true, "darkseagreen2", ""));                // offset label
-            Columns.Add(new MidiMessageTableColumn(6, "Words", 8, false, "deepskyblue1", ""));
-            Columns.Add(new MidiMessageTableColumn(7, "", 8, true, "deepskyblue2", ""));
-            Columns.Add(new MidiMessageTableColumn(8, "", 8, true, "deepskyblue3", ""));
-            Columns.Add(new MidiMessageTableColumn(9, "", 8, true, "deepskyblue4", ""));
-            if (verbose) Columns.Add(new MidiMessageTableColumn(10, "Gr", 2, false, "indianred", ""));
-            if (verbose) Columns.Add(new MidiMessageTableColumn(11, "Ch", 2, true, "mediumorchid3", ""));
-            if (verbose) Columns.Add(new MidiMessageTableColumn(12, "Message Type", -35, false,"steelblue1_1", ""));
+            Columns.Add(new MidiMessageTableColumn(1, "Message Timestamp", 19, false, "darkseagreen2", "N0"));                  // timestamp
+            Columns.Add(new MidiMessageTableColumn(2, "From Last", timestampOffsetValueColumnWidth, false, "darkseagreen", ""));                                  // offset
+            Columns.Add(new MidiMessageTableColumn(3, "", -2, true, "grey", ""));                                               // offset label
+            if (verbose) Columns.Add(new MidiMessageTableColumn(4, "Received Timestamp", 19, false, "skyblue2", "N0"));    // recv timestamp
+            if (verbose) Columns.Add(new MidiMessageTableColumn(5, "Receive \u0394", timestampOffsetValueColumnWidth, false, "lightskyblue3_1", ""));             // delta
+            if (verbose) Columns.Add(new MidiMessageTableColumn(6, "", -2, true, "grey", ""));                                  // delta label
+            Columns.Add(new MidiMessageTableColumn(7, "Words", 8, false, "deepskyblue1", ""));
+            Columns.Add(new MidiMessageTableColumn(8, "", 8, true, "deepskyblue2", ""));
+            Columns.Add(new MidiMessageTableColumn(9, "", 8, true, "deepskyblue3", ""));
+            Columns.Add(new MidiMessageTableColumn(10, "", 8, true, "deepskyblue4", ""));
+            if (verbose) Columns.Add(new MidiMessageTableColumn(11, "Gr", 2, false, "indianred", ""));
+            if (verbose) Columns.Add(new MidiMessageTableColumn(12, "Ch", 2, true, "mediumorchid3", ""));
+            Columns.Add(new MidiMessageTableColumn(13, "Message Type", -35, false,"steelblue1_1", ""));
 
             BuildStringFormats();
         }
@@ -156,7 +159,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             double offsetValue = 0;
             string offsetUnitLabel = string.Empty;
 
-            AnsiConsoleOutput.ConvertToFriendlyTimeUnit(deltaMicrosecondsFromPreviousMessage, out offsetValue, out offsetUnitLabel, false);
+            AnsiConsoleOutput.ConvertToFriendlyTimeUnit(deltaMicrosecondsFromPreviousMessage, out offsetValue, out offsetUnitLabel);
 
 
             double deltaValue = 0;
@@ -175,7 +178,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             }
 
 
-            AnsiConsoleOutput.ConvertToFriendlyTimeUnit(deltaSecheduledTimestampMicroseconds, out deltaValue, out deltaUnitLabel, true);
+            AnsiConsoleOutput.ConvertToFriendlyTimeUnit(deltaSecheduledTimestampMicroseconds, out deltaValue, out deltaUnitLabel);
 
 
             string groupText = string.Empty;
@@ -194,13 +197,43 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 channelText = MidiMessageUtility.GetChannelFromMessageFirstWord(message.Word0).NumberForDisplay.ToString().PadLeft(2);
             }
 
+            // some cleanup
+
+
+            string offsetValueText = offsetValue.ToString("F2");
+            string deltaValueText = "";
+
+            // 0 is the magic "send now" value. You'll only see it
+            // come back this way on a loopback. 
+            if (message.MessageTimestamp == 0)
+            {
+                deltaValueText = "--";
+                deltaUnitLabel = "";
+            }
+            else
+            {
+                deltaValueText = deltaValue.ToString("F2");
+            }
+
+            if (deltaValueText.Length > timestampOffsetValueColumnWidth)
+            {
+                deltaValueText = "######";
+            }
+
+            if (offsetValueText.Length > timestampOffsetValueColumnWidth)
+            {
+                offsetValueText = "######";
+            }
+
+
             AnsiConsole.MarkupLine(
                 _messageFormat,
                 message.Index,
                 message.MessageTimestamp,
-                offsetValue,
+                offsetValueText,
                 offsetUnitLabel,
-                deltaValue,
+                message.ReceivedTimestamp,
+                deltaValueText,
                 deltaUnitLabel,
                 word0, word1, word2, word3,
                 groupText,

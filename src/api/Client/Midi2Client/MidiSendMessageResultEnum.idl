@@ -40,6 +40,7 @@ namespace Windows.Devices.Midi2
         InvalidMessageTypeForWordCount =    0x00100000,
         InvalidMessageOther =               0x00200000,
         DataIndexOutOfRange =               0x00400000,
+        TimestampOutOfRange =               0x00800000,
 
         Other =                             0x01000000,
     };

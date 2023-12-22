@@ -19,12 +19,13 @@
 
 #define MIDI_ENDPOINT_DEVICE_AQS_FILTER L"System.Devices.InterfaceClassGuid:=\"{E7CCE071-3C03-423f-88D3-F1045D02552B}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True"
 
+#define MIDI_MAX_ALLOWED_SCHEDULER_SECONDS_INTO_FUTURE 20
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     struct MidiEndpointConnection : MidiEndpointConnectionT<MidiEndpointConnection, IMidiCallback> 
     {
-        MidiEndpointConnection() = default;
+        MidiEndpointConnection() { m_maxAllowedTimestampOffset = ::Windows::Devices::Midi2::Internal::Shared::GetMidiTimestampFrequency() * MIDI_MAX_ALLOWED_SCHEDULER_SECONDS_INTO_FUTURE; }
         ~MidiEndpointConnection();
 
         static hstring GetDeviceSelector() noexcept { return MIDI_ENDPOINT_DEVICE_AQS_FILTER; }
@@ -146,6 +147,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
 
     private:
+        uint64_t m_maxAllowedTimestampOffset{};
+
+
         winrt::guid m_connectionId{};
         winrt::hstring m_endpointDeviceId{};
         winrt::Windows::Foundation::IInspectable m_tag{ nullptr };
