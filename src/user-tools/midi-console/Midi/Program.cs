@@ -82,14 +82,6 @@ app.Configure(config =>
             .WithDescription(Strings.CommandSendMessagesFileDescription)
             ;
 
-        endpoint.AddCommand<CaptureMessagesCommand>("capture")
-            .WithAlias("record")
-            .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "capture", "%USERPROFILE%\\Documents\\capture.txt", "--echo", "--annotate")
-            .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "capture", "capture.csv", "--delimiter", "Comma")
-            .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "capture", "capture.txt", "--format", "HexWithPrefix", "--filter", "SysEx8")
-            .WithDescription(Strings.CommandMonitorEndpointDescription)
-            ;
-
         endpoint.AddCommand<EndpointPropertiesCommand>("properties")
             .WithAlias("props")
             .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "properties")

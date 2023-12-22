@@ -457,15 +457,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to True to echo the incoming messages to the screen. False to simply show capture progress..
-        /// </summary>
-        internal static string ParameterCaptureMessagesEcho {
-            get {
-                return ResourceManager.GetString("ParameterCaptureMessagesEcho", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Delimiter to separate fields. Valid values include:.
         /// </summary>
         internal static string ParameterCaptureMessagesFieldDelimiter {
@@ -502,7 +493,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Name of the file to write to. The file must not already exist..
+        ///   Looks up a localized string similar to Capture messages to the specified file. If the file exists, it will be appended to..
         /// </summary>
         internal static string ParameterCaptureMessagesOutputFile {
             get {

@@ -249,9 +249,6 @@
   <data name="ParameterCaptureMessagesAnnotate" xml:space="preserve">
     <value>True to annotate key messages written to the file. Annotations begin with the # sign and are written on the line before the UMP line.</value>
   </data>
-  <data name="ParameterCaptureMessagesEcho" xml:space="preserve">
-    <value>True to echo the incoming messages to the screen. False to simply show capture progress.</value>
-  </data>
   <data name="ParameterCaptureMessagesFieldDelimiter" xml:space="preserve">
     <value>Delimiter to separate fields. Valid values include:</value>
   </data>
@@ -265,7 +262,7 @@
     <value>True to include the timestamp as the first field for each message.</value>
   </data>
   <data name="ParameterCaptureMessagesOutputFile" xml:space="preserve">
-    <value>Name of the file to write to. The file must not already exist.</value>
+    <value>Capture messages to the specified file. If the file exists, it will be appended to.</value>
   </data>
   <data name="ParameterCommonEndpointIdDescription" xml:space="preserve">
     <value>Endpoint Id (also called a Device Instance Id) of the endpoint as used in Windows.Devices.Enumeration. This includes the MIDI interface GUID at the end of the string. You can find the Endpoint Ids by enumerating endpoints through this app. If you leave off the Id, we'll re-enumerate them and provide a list for you to pick from.</value>
