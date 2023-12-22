@@ -247,10 +247,7 @@
     <value>Monitor</value>
   </data>
   <data name="ParameterCaptureMessagesAnnotate" xml:space="preserve">
-    <value>True to annotate key messages written to the file. Annotations begin with the # sign and are written on the line before the UMP line.</value>
-  </data>
-  <data name="ParameterCaptureMessagesEcho" xml:space="preserve">
-    <value>True to echo the incoming messages to the screen. False to simply show capture progress.</value>
+    <value>True to annotate messages written to the file. Annotations begin with the # sign and are written on the line before the UMP data line. The annotation includes timestamp information as well as the specific message type.</value>
   </data>
   <data name="ParameterCaptureMessagesFieldDelimiter" xml:space="preserve">
     <value>Delimiter to separate fields. Valid values include:</value>
@@ -265,7 +262,7 @@
     <value>True to include the timestamp as the first field for each message.</value>
   </data>
   <data name="ParameterCaptureMessagesOutputFile" xml:space="preserve">
-    <value>Name of the file to write to. The file must not already exist.</value>
+    <value>Capture messages to the specified file. If the file exists, it will be appended to.</value>
   </data>
   <data name="ParameterCommonEndpointIdDescription" xml:space="preserve">
     <value>Endpoint Id (also called a Device Instance Id) of the endpoint as used in Windows.Devices.Enumeration. This includes the MIDI interface GUID at the end of the string. You can find the Endpoint Ids by enumerating endpoints through this app. If you leave off the Id, we'll re-enumerate them and provide a list for you to pick from.</value>
@@ -288,6 +285,9 @@
   <data name="ParameterEnumLegacyEndpointsIncludeEndpointId" xml:space="preserve">
     <value>Include the MIDI 1.0 Endpoint Id (the Port Id) in the output</value>
   </data>
+  <data name="ParameterListenerMessagesFilter" xml:space="preserve">
+    <value>(not yet implemented)</value>
+  </data>
   <data name="ParameterMonitorEndpointDirectionDescription" xml:space="preserve">
     <value>The direction of the endpoint referenced by the Id. If this doesn't match the endpoint type, the connection will fail.</value>
   </data>
@@ -295,7 +295,7 @@
     <value>Wait for a single incoming message only</value>
   </data>
   <data name="ParameterMonitorEndpointVerbose" xml:space="preserve">
-    <value>List all messages as they come in</value>
+    <value>Provide additional columns of information for each message</value>
   </data>
   <data name="ParameterSendMessageCount" xml:space="preserve">
     <value>Number of times to send this message</value>
@@ -318,8 +318,11 @@
   <data name="ParameterSendMessagesFileVerbose" xml:space="preserve">
     <value>Verbose output as the messages are sent</value>
   </data>
+  <data name="ParameterSendMessageTimestamp" xml:space="preserve">
+    <value>Absolute timestamp value to use for all messages. User 0 to bypass scheduling and send immediately.</value>
+  </data>
   <data name="ParameterSendMessageTimestampOffsetMicroseconds" xml:space="preserve">
-    <value>Timestamp offset in microseconds (1/1,000,000 of a second) to use when scheduling this message.</value>
+    <value>Timestamp offset in microseconds (1/1,000,000 of a second) to use when scheduling this message. A new timestamp with this offset is calculated for each sent message as it is sent.</value>
   </data>
   <data name="ParameterSendMessageWordFormat" xml:space="preserve">
     <value>Data format for the individual words. Valid values include:</value>

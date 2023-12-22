@@ -45,6 +45,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         {
             if (!System.IO.File.Exists(settings.InputFile))
             {
+                // TODO: Localize
                 return ValidationResult.Error($"File not found {settings.InputFile}.");
             }
 
@@ -87,151 +88,167 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 endpointId = UmpEndpointPicker.PickEndpoint();
             }
 
-            // TODO: Update loc strings
-            AnsiConsole.MarkupLine(Strings.SendMessageSendingThroughEndpointLabel + ": " + AnsiMarkupFormatter.FormatDeviceInstanceId(endpointId));
-            AnsiConsole.WriteLine();
-
-            using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
-            if (session == null)
+            if (!string.IsNullOrEmpty(endpointId))
             {
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToCreateSession));
-                return (int)MidiConsoleReturnCode.ErrorCreatingSession;
-            }
+                // TODO: Update loc strings
+                AnsiConsole.MarkupLine(Strings.SendMessageSendingThroughEndpointLabel + ": " + AnsiMarkupFormatter.FormatDeviceInstanceId(endpointId));
+                AnsiConsole.WriteLine();
 
-            using var connection = session.CreateEndpointConnection(endpointId) ;
-            if (connection == null)
-            {
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToCreateEndpointConnection));
-
-                return (int)MidiConsoleReturnCode.ErrorCreatingEndpointConnection;
-            }
-
-            bool openSuccess = openSuccess = connection.Open(); ;
-            if (!openSuccess)
-            {
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToOpenEndpoint));
-
-                return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
-            }
-
-            var table = new Table();
-
-            // if not verbose, just show a status spinner
-
-
-            // if verbose, spin up a live table
-
-            AnsiConsole.Live(table)
-                .Start(ctx =>
+                using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
+                if (session == null)
                 {
-                    // TODO: Localize these
-                    table.AddColumn("Line");               
-                    table.AddColumn("Timestamp");          // a file with a timestamp isn't useful, really. But we could support an offset like +value
-                    table.AddColumn("Sent Data");
-                    table.AddColumn("Message Type");
-                    table.AddColumn("Specific Type");
+                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToCreateSession));
+                    return (int)MidiConsoleReturnCode.ErrorCreatingSession;
+                }
 
-                    ctx.Refresh();
-                    //AnsiConsole.WriteLine("Created table");
+                using var connection = session.CreateEndpointConnection(endpointId);
+                if (connection == null)
+                {
+                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToCreateEndpointConnection));
 
-                    // get starting timestamp for any offset
-                    var startingTimestamp = MidiClock.Now;
+                    return (int)MidiConsoleReturnCode.ErrorCreatingEndpointConnection;
+                }
 
-                    // open our data file
+                bool openSuccess = openSuccess = connection.Open(); ;
+                if (!openSuccess)
+                {
+                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToOpenEndpoint));
 
-                    var fileStream = System.IO.File.OpenText(settings.InputFile);
+                    return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
+                }
 
-                    char delimiter = (char)0;
+                var table = new Table();
 
-                    switch (settings.FieldDelimiter)
+                // if not verbose, just show a status spinner
+
+
+                // if verbose, spin up a live table
+
+                AnsiConsole.Live(table)
+                    .Start(ctx =>
                     {
-                        case ParseFieldDelimiter.Auto:
-                            // we'll evaluate on each line
-                            break;
-                        case ParseFieldDelimiter.Space:
-                            delimiter = ' ';
-                            break;
-                        case ParseFieldDelimiter.Comma:
-                            delimiter = ',';
-                            break;
-                        case ParseFieldDelimiter.Pipe:
-                            delimiter = '|';
-                            break;
-                        case ParseFieldDelimiter.Tab:
-                            delimiter = '\t';
-                            break;
-                    }
+                        // TODO: Localize these
+                        table.AddColumn("Line");
+                        table.AddColumn("Timestamp");          // a file with a timestamp isn't useful, really. But we could support an offset like +value
+                        table.AddColumn("Sent Data");
+                        table.AddColumn("Message Type");
+                        table.AddColumn("Specific Type");
 
-                    bool changeGroup = settings.NewGroupIndex.HasValue;
-                    var newGroup = new MidiGroup((byte)settings.NewGroupIndex.GetValueOrDefault(0));
+                        ctx.Refresh();
+                        //AnsiConsole.WriteLine("Created table");
 
+                        // get starting timestamp for any offset
+                        var startingTimestamp = MidiClock.Now;
 
-                    if (fileStream != null)
-                    {
-                        uint lineNumber = 0;        // if someone has a file with more than uint.MaxValue / 4.3 billion lines, we'll overflow :)
+                        // open our data file
 
-                        string? line = string.Empty;
+                        var fileStream = System.IO.File.OpenText(settings.InputFile);
 
-                        while (!fileStream.EndOfStream && line != null)
+                        char delimiter = (char)0;
+
+                        switch (settings.FieldDelimiter)
                         {
-                            line = fileStream.ReadLine();
+                            case ParseFieldDelimiter.Auto:
+                                // we'll evaluate on each line
+                                break;
+                            case ParseFieldDelimiter.Space:
+                                delimiter = ' ';
+                                break;
+                            case ParseFieldDelimiter.Comma:
+                                delimiter = ',';
+                                break;
+                            case ParseFieldDelimiter.Pipe:
+                                delimiter = '|';
+                                break;
+                            case ParseFieldDelimiter.Tab:
+                                delimiter = '\t';
+                                break;
+                        }
 
-                            if (line == null)
-                                continue;
+                        bool changeGroup = settings.NewGroupIndex.HasValue;
+                        var newGroup = new MidiGroup((byte)settings.NewGroupIndex.GetValueOrDefault(0));
 
-                            lineNumber++;
 
-                            // skip over comments and white space
-                            if (LineIsIgnorable(line))
-                                continue;
+                        if (fileStream != null)
+                        {
+                            uint lineNumber = 0;        // if someone has a file with more than uint.MaxValue / 4.3 billion lines, we'll overflow :)
 
-                            // if we're using Auto for the delimiter, each line is evaluated in case the file is mixed
-                            // if you don't want to take this hit, specify the delimiter on the command line
-                            if (settings.FieldDelimiter == ParseFieldDelimiter.Auto)
-                                delimiter = IdentifyFieldDelimiter(line);
+                            string? line = string.Empty;
 
-                            UInt32[]? words;
-
-                            // ignore files with timestamps for this first version
-
-                            if (ParseNextDataLine(line, delimiter, (int)settings.WordDataFormat, out words))
+                            while (!fileStream.EndOfStream && line != null)
                             {
-                                if (words != null && ValidateMessage(words))
+                                line = fileStream.ReadLine();
+
+                                if (line == null)
+                                    continue;
+
+                                lineNumber++;
+
+                                // skip over comments and white space
+                                if (LineIsIgnorable(line))
+                                    continue;
+
+                                // if we're using Auto for the delimiter, each line is evaluated in case the file is mixed
+                                // if you don't want to take this hit, specify the delimiter on the command line
+                                if (settings.FieldDelimiter == ParseFieldDelimiter.Auto)
+                                    delimiter = IdentifyFieldDelimiter(line);
+
+                                UInt32[]? words;
+
+                                // ignore files with timestamps for this first version
+
+                                if (ParseNextDataLine(line, delimiter, (int)settings.WordDataFormat, out words))
                                 {
-                                    var timestamp = MidiClock.Now;
-
-                                    if (changeGroup)
+                                    if (words != null && ValidateMessage(words))
                                     {
-                                        if (MidiMessageUtility.MessageTypeHasGroupField(MidiMessageUtility.GetMessageTypeFromMessageFirstWord(words[0])))
+                                        var timestamp = MidiClock.Now;
+
+                                        if (changeGroup)
                                         {
-                                            words[0] = MidiMessageUtility.ReplaceGroupInMessageFirstWord(words[0], newGroup);
+                                            if (MidiMessageUtility.MessageTypeHasGroupField(MidiMessageUtility.GetMessageTypeFromMessageFirstWord(words[0])))
+                                            {
+                                                words[0] = MidiMessageUtility.ReplaceGroupInMessageFirstWord(words[0], newGroup);
+                                            }
                                         }
+
+                                        // send the message
+                                        connection.SendMessageWordArray(timestamp, words, 0, (byte)words.Count());
+
+                                        string detailedMessageType = MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(words[0]);
+
+                                        // display the sent data
+                                        table.AddRow(
+                                            AnsiMarkupFormatter.FormatGeneralNumber(lineNumber),
+                                            AnsiMarkupFormatter.FormatTimestamp(timestamp),
+                                            AnsiMarkupFormatter.FormatMidiWords(words),
+                                            AnsiMarkupFormatter.FormatMessageType(MidiMessageUtility.GetMessageTypeFromMessageFirstWord(words[0])),
+                                            AnsiMarkupFormatter.FormatDetailedMessageType(MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(words[0]))
+                                            );
+
+                                        ctx.Refresh();
+                                        Thread.Sleep(settings.DelayBetweenMessages);
                                     }
+                                    else
+                                    {
+                                        // invalid UMP
+                                        table.AddRow(
+                                            AnsiMarkupFormatter.FormatGeneralNumber(lineNumber),
+                                            "",
+                                            AnsiMarkupFormatter.FormatError("Line does not contain a valid UMP") + "\n\"" + line + "\"",
+                                            ""
+                                            );
 
-                                    // send the message
-                                    connection.SendMessageWordArray(timestamp, words, 0, (byte)words.Count());
-
-                                    string detailedMessageType = MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(words[0]);
-
-                                    // display the sent data
-                                    table.AddRow(
-                                        AnsiMarkupFormatter.FormatGeneralNumber(lineNumber), 
-                                        AnsiMarkupFormatter.FormatTimestamp(timestamp),
-                                        AnsiMarkupFormatter.FormatMidiWords(words),
-                                        AnsiMarkupFormatter.FormatMessageType(MidiMessageUtility.GetMessageTypeFromMessageFirstWord(words[0])),
-                                        AnsiMarkupFormatter.FormatDetailedMessageType(MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(words[0]))
-                                        );
-
-                                    ctx.Refresh();
-                                    Thread.Sleep(settings.DelayBetweenMessages);
+                                        ctx.Refresh();
+                                        Thread.Sleep(0);
+                                    }
                                 }
                                 else
                                 {
-                                    // invalid UMP
+                                    // report line number and that it is an error
                                     table.AddRow(
-                                        AnsiMarkupFormatter.FormatGeneralNumber(lineNumber), 
-                                        "", 
-                                        AnsiMarkupFormatter.FormatError("Line does not contain a valid UMP") + "\n\"" + line + "\"",
+                                        AnsiMarkupFormatter.FormatGeneralNumber(lineNumber),
+                                        "",
+                                        AnsiMarkupFormatter.FormatError("Unable to parse MIDI words from line") + "\n\"" + line + "\"",
                                         ""
                                         );
 
@@ -239,31 +256,20 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                     Thread.Sleep(0);
                                 }
                             }
-                            else
-                            {
-                                // report line number and that it is an error
-                                table.AddRow(
-                                    AnsiMarkupFormatter.FormatGeneralNumber(lineNumber), 
-                                    "", 
-                                    AnsiMarkupFormatter.FormatError("Unable to parse MIDI words from line") + "\n\"" + line + "\"",
-                                    ""
-                                    );
-
-                                ctx.Refresh();
-                                Thread.Sleep(0);
-                            }
                         }
-                    }
-                    else
-                    {
-                        // file stream is null
-                        AnsiConsole.WriteLine(AnsiMarkupFormatter.FormatError("Unable to open file. File stream is null"));
-                    }
-                });
+                        else
+                        {
+                            // file stream is null
+                            AnsiConsole.WriteLine(AnsiMarkupFormatter.FormatError("Unable to open file. File stream is null"));
+                        }
+                    });
 
 
-            if (session != null)
-                session.Dispose();
+                if (session != null)
+                    session.Dispose();
+
+            }
+
 
             return (int)MidiConsoleReturnCode.Success;
         }

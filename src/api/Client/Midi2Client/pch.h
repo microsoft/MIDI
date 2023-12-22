@@ -48,6 +48,7 @@
 // shared
 #include "midi_ump.h"   // general shared
 #include "loopback_ids.h"
+#include <midi_timestamp.h>
 
 //#include <wil/resource.h>
 

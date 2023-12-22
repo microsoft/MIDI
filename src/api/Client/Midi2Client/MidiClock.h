@@ -9,7 +9,7 @@
 #pragma once
 #include "MidiClock.g.h"
 
-#include <midi_timestamp.h>
+//#include <midi_timestamp.h>
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {

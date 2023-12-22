@@ -448,20 +448,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to True to annotate key messages written to the file. Annotations begin with the # sign and are written on the line before the UMP line..
+        ///   Looks up a localized string similar to True to annotate messages written to the file. Annotations begin with the # sign and are written on the line before the UMP data line. The annotation includes timestamp information as well as the specific message type..
         /// </summary>
         internal static string ParameterCaptureMessagesAnnotate {
             get {
                 return ResourceManager.GetString("ParameterCaptureMessagesAnnotate", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to True to echo the incoming messages to the screen. False to simply show capture progress..
-        /// </summary>
-        internal static string ParameterCaptureMessagesEcho {
-            get {
-                return ResourceManager.GetString("ParameterCaptureMessagesEcho", resourceCulture);
             }
         }
         
@@ -502,7 +493,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Name of the file to write to. The file must not already exist..
+        ///   Looks up a localized string similar to Capture messages to the specified file. If the file exists, it will be appended to..
         /// </summary>
         internal static string ParameterCaptureMessagesOutputFile {
             get {
@@ -574,6 +565,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to (not yet implemented).
+        /// </summary>
+        internal static string ParameterListenerMessagesFilter {
+            get {
+                return ResourceManager.GetString("ParameterListenerMessagesFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The direction of the endpoint referenced by the Id. If this doesn&apos;t match the endpoint type, the connection will fail..
         /// </summary>
         internal static string ParameterMonitorEndpointDirectionDescription {
@@ -592,7 +592,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to List all messages as they come in.
+        ///   Looks up a localized string similar to Provide additional columns of information for each message.
         /// </summary>
         internal static string ParameterMonitorEndpointVerbose {
             get {
@@ -664,7 +664,16 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Timestamp offset in microseconds (1/1,000,000 of a second) to use when scheduling this message..
+        ///   Looks up a localized string similar to Absolute timestamp value to use for all messages. User 0 to bypass scheduling and send immediately..
+        /// </summary>
+        internal static string ParameterSendMessageTimestamp {
+            get {
+                return ResourceManager.GetString("ParameterSendMessageTimestamp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Timestamp offset in microseconds (1/1,000,000 of a second) to use when scheduling this message. A new timestamp with this offset is calculated for each sent message as it is sent..
         /// </summary>
         internal static string ParameterSendMessageTimestampOffsetMicroseconds {
             get {

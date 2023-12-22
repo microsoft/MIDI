@@ -150,8 +150,6 @@ In the Device Manager in Windows, you can only see a subset of properties for a 
 midi endpoint properties
 ```
 
-
-
 By default, only key properties are displayed. If you want to see the complete list of all properties for the endpoint device, its container, and its parent device, add the `--verbose` parameter.
 
 ```
@@ -166,7 +164,7 @@ By default, every UMP Endpoint in Windows MIDI Services is multi-client. That me
 
 When run in `verbose` mode, the monitor will display each message as it arrives. It also displays helpful information about the type of the message, the group and channel when appropriate, the timestap offset (from the previous message if it was received recently), and more. This requires a fairly wide console window to allow formatting each message to take up only a single line. In a narrow window the format will be a bit ugly. We recommend using the [Windows Terminal application](https://apps.microsoft.com/detail/9N0DX20HK701), which has support for zooming in and out using the mouse wheel, different fonts, and more.
 
-When run without the `--verbose` option, the monitor displays a count of the number of messages received.
+When run without the `--verbose` option, the monitor displays only key data for the incoming messages.
 
 Default mode:
 
@@ -179,6 +177,21 @@ Verbose mode:
 ```
 midi endpoint monitor --verbose
 ```
+
+#### Saving messages to a file
+
+When monitoring, you also have the option to save the messages to a file. This can be used to capture test data which you will send using the `send-message-file` command, or for storing something like a System Exclusive dump.
+
+```
+midi endpoint monitor --capture-to-file %USERPROFILE%\Documents\MyMidiCapture.midi2 --annotate-capture --capture-field-delimiter Pipe
+```
+
+- The annotation option puts a comment before each message line, with additional details, including the timestamp.
+- The delimiter option enables you to specify how to delimit the MIDI words in the file. By default, the words are delimitated with spaces.
+
+> The file you choose to write to will be appended to if it already exists. Use caution when specifying the file name, so that you don't corrupt an unrelated file with this MIDI data.
+
+If no file extension is specified, the extension `.midi2` will be automatically added to the filename.
 
 When you have completed monitoring an endpoint, hit the `escape` key to close the connection and the app.
 
@@ -200,12 +213,6 @@ Send a single UMP64 message ten times
 midi endpoint send-message 0x41234567 0xDEADBEEF --count 10
 ```
 
-Schedule a single UMP64 message 2 seconds from now (2 million microseconds). Offsets are in microseconds to provide more precise control.
-
-```
-midi endpoint send-message 0x41234567 0xFEEDF00D --offset-microseconds 2000000
-```
-
 Send a single UMP64 message fifteen times, but with a delay of two seconds (2000 milliseconds) in between each message. Delays are in milliseconds because they are there primarily to prevent flooding with older devices.
 
 ```
@@ -213,6 +220,28 @@ midi endpoint send-message 0x41234567 0xDEADBEEF --count 15 --pause 2000
 ```
 
 In general, we recommend sending messages in hexadecimal format (prefix `0x` followed by 8 hexadecimal digits)as it is easier to visually inspect the information being sent. The 1-4 MIDI words are in order from left to right, from 1 to 4. 
+
+#### Scheduling messages
+
+When sending messages, you have two options for timestamps:
+
+`--offset-microseconds` is used to add a fixed time to each outgoing message so that it is scheduled that far into the future.  
+
+Schedule a single UMP64 message 2 seconds from now (2 million microseconds). Offsets are in microseconds to provide more precise control compared to milliseconds.
+
+```
+midi endpoint send-message 0x41234567 0xFEEDF00D --offset-microseconds 2000000
+```
+
+You can also specify an absolute timestamp. Typically, this is used to be able to specify a timestamp of 0, which means to bypass any scheduling and send immediately.
+
+```
+midi endpoint send-message 0x41234567 0xFEEDF00D --timestamp 0
+```
+
+Of course, you can also use the `midi time` command to see the current timestamp, and then use that information to pick a future timestamp. 
+
+Finally, if you do not specify a timestamp, the current time is used.
 
 ### Send a File full of Messages
 
@@ -277,9 +306,6 @@ F3345678h 12345678h 86754321h 86753099h
 # bunch of empty lines above. And the file ends with a comment
 ```
 
-### Receive Message and Save to a File
-
-TODO: This capability is a work-in-progress and is not yet functional.
 
 ## Technical Information
 

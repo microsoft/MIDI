@@ -43,16 +43,22 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         {
             var endpoints = MidiEndpointDeviceInformation.FindAll(
                 MidiEndpointDeviceInformationSortOrder.Name, 
-                MidiEndpointDeviceInformationFilter.IncludeClientByteStreamNative | MidiEndpointDeviceInformationFilter.IncludeClientUmpNative | MidiEndpointDeviceInformationFilter.IncludeDiagnosticLoopback);
+                MidiEndpointDeviceInformationFilter.IncludeClientByteStreamNative | 
+                    MidiEndpointDeviceInformationFilter.IncludeClientUmpNative | 
+                    MidiEndpointDeviceInformationFilter.IncludeDiagnosticLoopback);
 
             if (endpoints != null)
             {
                 foreach (var endpoint in endpoints)
                 {
-                    choices.Add(new UmpEndpointPickerEntry(endpoint.Name, endpoint.Id));
+                    choices.Add(new UmpEndpointPickerEntry(AnsiMarkupFormatter.GetEndpointIcon(endpoint.EndpointPurpose) + " " + endpoint.Name.PadRight(50), endpoint.Id));
                 }
 
                 choices.Sort();
+
+                // this feels so dirty               
+                choices.Add(new UmpEndpointPickerEntry("🔙 " + "(Cancel)".PadRight(50), "")); // TODO: Localize
+
             }
         }
 
@@ -65,12 +71,16 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             if (choices.Count > 0)
             {
+                //var selectionStyle = new Style(null, null, Decoration.Invert, null);
+                var selectionStyle = new Style(Color.White, Color.DeepSkyBlue3, null, null);
+
+
                 var result = AnsiConsole.Prompt(
                     new SelectionPrompt<UmpEndpointPickerEntry>()
                         .Title(Strings.EndpointPickerPleaseSelectEndpoint)
+                        .HighlightStyle(selectionStyle)
                         .AddChoices(choices)
-                    );
-
+                    ) ;
 
                 if (result != null)
                 {

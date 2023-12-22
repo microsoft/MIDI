@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Windows.Devices.Midi2;
 
 using Microsoft.Devices.Midi2.ConsoleApp.Resources;
+using System.Diagnostics.Eventing.Reader;
 
 namespace Microsoft.Devices.Midi2.ConsoleApp
 {
@@ -33,10 +34,22 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             [DefaultValue(0L)]
             public long TimestampOffsetMicroseconds { get; set; }
 
+            [LocalizedDescription("ParameterSendMessageTimestamp")]
+            [CommandOption("-t|--timestamp")]
+            /*[DefaultValue(0UL)]*/
+            public ulong? Timestamp { get; set; }
+
+
         }
 
         public override Spectre.Console.ValidationResult Validate(CommandContext context, Settings settings)
         {
+            if (settings.TimestampOffsetMicroseconds > 0 && settings.Timestamp != null)
+            {
+                // TODO: Localize
+                return Spectre.Console.ValidationResult.Error("Please specify a timestamp or an offset, but not both.");
+            }
+
             if (settings.Words == null)
             {
                 return Spectre.Console.ValidationResult.Error(Strings.MessageValidationErrorTooFewWords);
@@ -136,17 +149,33 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         sendTask.Value = 0;
 
                         uint messagesSent = 0;
+                        uint messagesAttempted = 0;
                         uint messageFailures = 0;
 
-                        while (messagesSent < settings.Count)
+                        while (messagesAttempted < settings.Count)
                         {
                             UInt64 baseTimestamp = MidiClock.Now;
-                            UInt64 timestamp = MidiClock.OffsetTimestampByMicroseconds(baseTimestamp, settings.TimestampOffsetMicroseconds);
+                            UInt64 timestamp = 0;
+                            
+                            if (settings.TimestampOffsetMicroseconds > 0)
+                            {
+                                timestamp = MidiClock.OffsetTimestampByMicroseconds(baseTimestamp, settings.TimestampOffsetMicroseconds);
+                            }
+                            else if (settings.Timestamp != null)
+                            {
+                                timestamp = (ulong)(settings.Timestamp);
+                            }
+                            else
+                            {
+                                timestamp = MidiClock.Now;
+                            }
+
 
                             //Console.WriteLine($"Clock Frequency  : {MidiClock.TimestampFrequency}");
                             //Console.WriteLine($"Current Timestamp: {baseTimestamp}");
                             //Console.WriteLine($"Target Timestamp : {timestamp}");
 
+                            messagesAttempted++;
                             var sendResult = connection.SendMessageWordArray(timestamp, settings.Words, 0, (byte)settings.Words.Count());
 
                             if (MidiEndpointConnection.SendMessageSucceeded(sendResult))
@@ -162,12 +191,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                     maxTimestampScheduled = timestamp;
                                 }
 
-                                Thread.Sleep(settings.DelayBetweenMessages);
                             }
                             else
                             {
                                 messageFailures ++;
                             }
+
+                            Thread.Sleep(settings.DelayBetweenMessages);
                         }
 
                         if (messageFailures > 0)

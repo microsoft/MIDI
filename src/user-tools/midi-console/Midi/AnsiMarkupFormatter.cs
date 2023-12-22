@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Devices.Enumeration;
@@ -15,6 +16,20 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
     internal class AnsiMarkupFormatter
     {
+        public static string GetEndpointIcon(MidiEndpointDevicePurpose purpose)
+        {
+            switch (purpose)
+            {
+                case MidiEndpointDevicePurpose.DiagnosticPing:
+                    return "📶";
+                case MidiEndpointDevicePurpose.DiagnosticLoopback:
+                    return "🔁";
+                case MidiEndpointDevicePurpose.NormalMessageEndpoint:
+                    return "🎹";
+                default:
+                    return "🎵";
+            }
+        }
         public static string EscapeString(string s)
         {
             return s.Replace("[", "[[").Replace("]", "]]");
@@ -117,6 +132,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         public static string FormatTableColumnHeading(string heading)
         {
             return "[steelblue1]" + EscapeString(heading) + "[/]";
+        }
+
+        public static string FormatFileName(string fileName)
+        {
+            return "[steelblue1]" + EscapeString(fileName) + "[/]";
         }
 
 
