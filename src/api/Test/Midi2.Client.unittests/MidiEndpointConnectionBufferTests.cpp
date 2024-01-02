@@ -26,7 +26,7 @@ struct __declspec(uuid("5b0d3235-4dba-4d44-865e-8f1d0e4fd04d")) __declspec(novta
 
 void MidiEndpointConnectionBufferTests::TestSendBuffer()
 {
-    LOG_OUTPUT(L"TestSendBufferBoundsError **********************************************************************");
+    LOG_OUTPUT(L"TestSendBuffer **********************************************************************");
 
     auto session = MidiSession::CreateSession(L"Test Session Name");
 
@@ -196,5 +196,57 @@ void MidiEndpointConnectionBufferTests::TestSendAndReceiveBuffer()
 
 void MidiEndpointConnectionBufferTests::TestSendBufferBoundsError()
 {
-    VERIFY_FAIL();
+    LOG_OUTPUT(L"TestSendBufferBoundsError **********************************************************************");
+
+    auto session = MidiSession::CreateSession(L"Test Session Name");
+
+    VERIFY_IS_TRUE(session.IsOpen());
+    VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
+
+    auto connSend = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
+
+    VERIFY_IS_NOT_NULL(connSend);
+
+
+    VERIFY_IS_TRUE(connSend.Open());
+
+    const size_t bufferSizeInBytes = sizeof(uint32_t) * 100;
+
+    winrt::Windows::Foundation::MemoryBuffer sendBuffer(bufferSizeInBytes);
+    auto ref = sendBuffer.CreateReference();
+
+    auto interop = ref.as<IMemoryBufferByteAccess>();
+
+    uint8_t* value{};
+    uint32_t valueSize{};
+
+    // get a pointer to the buffer
+    winrt::check_hresult(interop->GetBuffer(&value, &valueSize));
+
+
+    // In this case, we're putting a type 4 UMP (just the first word of it) in the last word of the buffer
+    // This should fail a bounds check because a type 4 is two words long
+    uint32_t byteOffset = bufferSizeInBytes - sizeof(uint32_t);
+    uint32_t* sendBufferWordPointer = reinterpret_cast<uint32_t*>(value + byteOffset);
+
+    // you can also memcpy or whatever you need to do to get the data in here.
+    uint8_t numWords = 2;
+    uint8_t numBytes = numWords * sizeof(uint32_t);
+
+    *sendBufferWordPointer = 0x41234567;
+    //*(sendBufferWordPointer + 1) = 0xDEADBEEF;
+
+    auto result = connSend.SendMessageBuffer(0, sendBuffer, byteOffset, numBytes);
+
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageFailed(result));
+    VERIFY_IS_TRUE((result & MidiSendMessageResult::DataIndexOutOfRange) == MidiSendMessageResult::DataIndexOutOfRange);
+
+    session.DisconnectEndpointConnection(connSend.ConnectionId());
+
+    session.Close();
+
+
+
+
+
 }
