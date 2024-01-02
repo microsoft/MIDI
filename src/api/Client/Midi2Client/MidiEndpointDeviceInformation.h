@@ -65,7 +65,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring LargeImagePath() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UserSuppliedLargeImagePath, L""); }
         winrt::hstring SmallImagePath() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UserSuppliedSmallImagePath, L""); }
 
-        winrt::hstring UniqueIdentifier() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UniqueIdentifier, L"");}
+        winrt::hstring TransportSuppliedSerialNumber() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_SerialNumber, L"");}
+        winrt::hstring ManufacturerName() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_ManufacturerName, L""); }
 
         bool SupportsMultiClient() const noexcept { return GetBoolProperty(STRING_PKEY_MIDI_SupportsMulticlient, true); }
 

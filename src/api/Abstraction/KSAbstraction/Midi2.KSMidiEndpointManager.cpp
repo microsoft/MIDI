@@ -210,6 +210,11 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
     }
 
 #ifdef CREATE_KS_BIDI_SWDS
+    // TODO: This logic needs to change because we want ALL KS devices to show up
+    // as bidi, even if they have only a single pin
+    // https://github.com/microsoft/MIDI/issues/184
+     
+     
     // there must be exactly two pins on this filter, midi in, and midi out,
     // and they must have the exact same capabilities
     if (newMidiPins.size() == 2 &&

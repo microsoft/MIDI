@@ -110,7 +110,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         additionalProperties.Append(STRING_PKEY_MIDI_AbstractionLayer);
         additionalProperties.Append(STRING_PKEY_MIDI_TransportMnemonic);
         additionalProperties.Append(STRING_PKEY_MIDI_NativeDataFormat);
-        additionalProperties.Append(STRING_PKEY_MIDI_UniqueIdentifier);
+        additionalProperties.Append(STRING_PKEY_MIDI_SerialNumber);
         additionalProperties.Append(STRING_PKEY_MIDI_SupportsMulticlient);
         additionalProperties.Append(STRING_PKEY_MIDI_TransportSuppliedEndpointName);
 

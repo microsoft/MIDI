@@ -385,8 +385,8 @@ CMidi2VirtualPatchBayEndpointManager::CreateEndpoint(
         {{PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(BYTE)), (PVOID)&nativeDataFormat},
 
-        {{PKEY_MIDI_UniqueIdentifier, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((UniqueId.length() + 1) * sizeof(WCHAR)), (PVOID)UniqueId.c_str()},
+        //{{PKEY_MIDI_UniqueIdentifier, DEVPROP_STORE_SYSTEM, nullptr},
+        //    DEVPROP_TYPE_STRING, static_cast<ULONG>((UniqueId.length() + 1) * sizeof(WCHAR)), (PVOID)UniqueId.c_str()},
 
         {{PKEY_MIDI_SupportsMulticlient, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropMulticlient)), (PVOID)&devPropMulticlient},

@@ -61,6 +61,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 table.AddRow("Name", AnsiMarkupFormatter.FormatEndpointName(di.Name));
                 table.AddRow("Id", AnsiMarkupFormatter.FormatFullEndpointInterfaceId(di.Id));
                 table.AddRow("Purpose", di.EndpointPurpose.ToString());
+                table.AddRow("Serial Number", AnsiMarkupFormatter.EscapeString(di.TransportSuppliedSerialNumber));
+                table.AddRow("Manufacturer", AnsiMarkupFormatter.EscapeString(di.ManufacturerName));
 
                 if (settings.Verbose)
                 {

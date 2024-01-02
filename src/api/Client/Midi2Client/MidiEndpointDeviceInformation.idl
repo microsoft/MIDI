@@ -80,8 +80,11 @@ namespace Windows.Devices.Midi2
         String TransportId{ get; };
         String TransportMnemonic{ get; };
 
-        // unique Id like iSerialNumber
-        String UniqueIdentifier{ get; };
+        // iSerialNumber from USB. This is transport-specific, but super important
+        String TransportSuppliedSerialNumber{ get; };
+
+        // manufacturer when we can get that. Typically from USB
+        String ManufacturerName{ get; };
 
         // whether or not this supports multi-client use
         Boolean SupportsMultiClient{ get; };
