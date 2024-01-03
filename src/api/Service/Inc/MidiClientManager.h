@@ -35,7 +35,8 @@ private:
                                 _In_ PMIDISRV_CLIENTCREATION_PARAMS,
                                 _In_ PMIDISRV_CLIENT,
                                 _In_ wil::unique_handle&,
-                                _In_ wil::com_ptr_nothrow<CMidiPipe>&);
+                                _In_ wil::com_ptr_nothrow<CMidiPipe>&,
+                                _In_ BOOL);
 
     HRESULT GetMidiDevice(_In_ handle_t,
                                 _In_ LPCWSTR,

@@ -114,7 +114,8 @@ CMidi2MidiSrv::Initialize(
     m_MidiPump.reset(new (std::nothrow) CMidiXProc());
     RETURN_IF_NULL_ALLOC(m_MidiPump);
 
-    RETURN_IF_FAILED(m_MidiPump->Initialize(MmcssTaskId, midiInPipe, midiOutPipe, Callback, Context));
+    // TODO: Need to double-check if the "false" for auto-generating the timestamp is appropriate here.
+    RETURN_IF_FAILED(m_MidiPump->Initialize(MmcssTaskId, midiInPipe, midiOutPipe, Callback, Context, false));
 
     cleanupOnError.release();
 

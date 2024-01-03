@@ -299,6 +299,9 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         interfaceDevProperties.push_back({ {PKEY_MIDI_TransportMnemonic, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_STRING, static_cast<ULONG>((mnemonic.length() + 1) * sizeof(WCHAR)), (PVOID)mnemonic.c_str() });
 
+        interfaceDevProperties.push_back({ {PKEY_MIDI_GenerateIncomingTimestamp, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
+
         if (MidiPin->NativeDataFormat != GUID_NULL)
         {
             BYTE nativeDataFormat {0};

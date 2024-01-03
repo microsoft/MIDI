@@ -63,6 +63,37 @@ CMidiClientManager::Cleanup()
 }
 
 HRESULT
+GetEndpointGenerateIncomingTimestamp(_In_ LPCWSTR MidiDevice, _Inout_ bool& GenerateIncomingTimestamp, _In_ MidiFlow& Flow)
+{
+    // we only generate timestamps for incoming messages FROM the device
+    if (Flow == MidiFlow::MidiFlowBidirectional || Flow == MidiFlow::MidiFlowIn)
+    {
+        auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
+        additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_GenerateIncomingTimestamp));
+        auto deviceInfo = DeviceInformation::CreateFromIdAsync(MidiDevice, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
+
+        auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_GenerateIncomingTimestamp));
+        if (prop)
+        {
+            // this interface is pointing to a UMP interface, so use that instance id.
+            GenerateIncomingTimestamp = winrt::unbox_value<bool>(prop);
+        }
+        else
+        {
+            // default to true
+            GenerateIncomingTimestamp = true;
+        }
+    }
+    else
+    {
+        // output-only flow
+        GenerateIncomingTimestamp = false;
+    }
+
+    return S_OK;
+}
+
+HRESULT
 GetEndpointAlias(_In_ LPCWSTR MidiDevice, _In_ std::wstring& Alias, _In_ MidiFlow& AliasFlow)
 {
     Alias = MidiDevice;
@@ -107,7 +138,8 @@ CMidiClientManager::GetMidiClient(
     PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
     PMIDISRV_CLIENT Client,
     wil::unique_handle& ClientProcessHandle,
-    wil::com_ptr_nothrow<CMidiPipe>&MidiClientPipe
+    wil::com_ptr_nothrow<CMidiPipe>&MidiClientPipe,
+    BOOL OverwriteIncomingZeroTimestamps
 )
 {
     OutputDebugString(L"" __FUNCTION__ " enter");
@@ -117,8 +149,8 @@ CMidiClientManager::GetMidiClient(
     // we have either a new device or an existing device, create the client pipe and connect to it.
     RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiClientPipe>(&clientPipe));
 
-    // Initialize our audio client
-    RETURN_IF_FAILED(clientPipe->Initialize(BindingHandle, ClientProcessHandle.get(), MidiDevice, CreationParams, Client, &m_MmcssTaskId));
+    // Initialize our client
+    RETURN_IF_FAILED(clientPipe->Initialize(BindingHandle, ClientProcessHandle.get(), MidiDevice, CreationParams, Client, &m_MmcssTaskId, OverwriteIncomingZeroTimestamps));
 
     // Add this client to the client pipes list and set the output client handle
     Client->ClientHandle = (MidiClientHandle)clientPipe.get();
@@ -400,11 +432,21 @@ CMidiClientManager::CreateMidiClient(
     // actively using this task id for the duration of this pipe.
     RETURN_IF_FAILED(EnableMmcss(MmcssHandle, m_MmcssTaskId));
 
+    // see if we should create timestamps or not. This option is set
+    // by the transport at endpoint enumeration time. For most endpoint
+    // types, this will be true, but for diagnostics loopback endpoints, 
+    // it is false. So, we store the value in the property store to make
+    // it more flexible
+    bool generateIncomingMessageTimestamps{ true };
+    RETURN_IF_FAILED(GetEndpointGenerateIncomingTimestamp(MidiDevice, generateIncomingMessageTimestamps, CreationParams->Flow));
+
     // The provided SWD instance id provided may be an alias of a UMP device, retrieve the
     // PKEY_MIDI_AssociatedUMP property to retrieve the id of the primary device.
     // We only create device pipe entries for the primary devices.
     RETURN_IF_FAILED(GetEndpointAlias(MidiDevice, midiDevice, CreationParams->Flow));
-    RETURN_IF_FAILED(GetMidiClient(BindingHandle, midiDevice.c_str(), CreationParams, Client, clientProcessHandle, clientPipe));
+    RETURN_IF_FAILED(GetMidiClient(BindingHandle, midiDevice.c_str(), CreationParams, Client, clientProcessHandle, clientPipe, generateIncomingMessageTimestamps));
+
+
 
     auto cleanupOnFailure = wil::scope_exit([&]()
     {

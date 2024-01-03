@@ -110,15 +110,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
         additionalProperties.Append(STRING_PKEY_MIDI_AbstractionLayer);
         additionalProperties.Append(STRING_PKEY_MIDI_TransportMnemonic);
         additionalProperties.Append(STRING_PKEY_MIDI_NativeDataFormat);
-        additionalProperties.Append(STRING_PKEY_MIDI_SerialNumber);
         additionalProperties.Append(STRING_PKEY_MIDI_SupportsMulticlient);
         additionalProperties.Append(STRING_PKEY_MIDI_TransportSuppliedEndpointName);
+        additionalProperties.Append(STRING_PKEY_MIDI_GenerateIncomingTimestamp);
 
         // USB / KS Properties ===============================================================
         // TODO: Group Terminal Blocks will likely be a single property
         additionalProperties.Append(STRING_PKEY_MIDI_IN_GroupTerminalBlocks);
         additionalProperties.Append(STRING_PKEY_MIDI_OUT_GroupTerminalBlocks);
         additionalProperties.Append(STRING_PKEY_MIDI_AssociatedUMP);
+        additionalProperties.Append(STRING_PKEY_MIDI_ManufacturerName);
+        additionalProperties.Append(STRING_PKEY_MIDI_SerialNumber);
 
         // Major Known Endpoint Types ========================================================
         additionalProperties.Append(STRING_PKEY_MIDI_EndpointDevicePurpose);

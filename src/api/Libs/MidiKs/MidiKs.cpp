@@ -256,7 +256,7 @@ KSMidiOutDevice::Initialize(
     {
         std::unique_ptr<MEMORY_MAPPED_PIPE> emptyPipe;
         // we're sending midi messages here, so this is a midi out pipe, midi in pipe is unused
-        RETURN_IF_FAILED(m_CrossProcessMidiPump->Initialize(MmcssTaskId, emptyPipe, m_MidiPipe, nullptr, 0));
+        RETURN_IF_FAILED(m_CrossProcessMidiPump->Initialize(MmcssTaskId, emptyPipe, m_MidiPipe, nullptr, 0, true));
     }
     *MmcssTaskId = m_MmcssTaskId;
 
@@ -471,7 +471,7 @@ KSMidiInDevice::Initialize(
     {
         std::unique_ptr<MEMORY_MAPPED_PIPE> emptyPipe;
         // we're getting midi messages here, so this is a midi in pipe, midi out pipe is unused
-        RETURN_IF_FAILED(m_CrossProcessMidiPump->Initialize(MmcssTaskId, m_MidiPipe, emptyPipe, Callback, Context));
+        RETURN_IF_FAILED(m_CrossProcessMidiPump->Initialize(MmcssTaskId, m_MidiPipe, emptyPipe, Callback, Context, true));
     }
     else
     {

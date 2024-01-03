@@ -18,7 +18,8 @@ public:
                             _In_ LPCWSTR,
                             _In_ PMIDISRV_CLIENTCREATION_PARAMS,
                             _In_ PMIDISRV_CLIENT,
-                            _In_ DWORD *);
+                            _In_ DWORD *,
+                            _In_ BOOL);
     HRESULT Cleanup();
 
     HRESULT SendMidiMessage(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
