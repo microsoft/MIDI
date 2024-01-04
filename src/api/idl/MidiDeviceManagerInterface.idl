@@ -49,6 +49,12 @@ interface IMidiDeviceManagerInterface : IUnknown
         [in] ULONG CreatedInterfaceIdCharCount
     );
 
+    HRESULT UpdateEndpointProperties(
+        [in] LPCWSTR DeviceInterfaceId,
+        [in] ULONG IntPropertyCount,
+        [in, annotation("_In_")] PVOID InterfaceDevProperties
+    );
+
     HRESULT DeactivateEndpoint(
         [in] LPCWSTR InstanceId
     );

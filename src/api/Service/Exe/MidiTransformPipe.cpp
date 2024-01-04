@@ -14,7 +14,8 @@ CMidiTransformPipe::Initialize(
     handle_t /* BindingHandle */,
     LPCWSTR Device,
     PMIDISRV_TRANSFORMCREATION_PARAMS CreationParams,
-    DWORD* MmcssTaskId
+    DWORD* MmcssTaskId,
+    IUnknown* MidiDeviceManager
 )
 {
     wil::com_ptr_nothrow<IMidiTransform> midiTransform;
@@ -32,7 +33,7 @@ CMidiTransformPipe::Initialize(
 
     creationParams.DataFormatIn = m_DataFormatIn;
     creationParams.DataFormatOut = m_DataFormatOut;
-    RETURN_IF_FAILED(m_MidiDataTransform->Initialize(Device, &creationParams, MmcssTaskId, this, 0));
+    RETURN_IF_FAILED(m_MidiDataTransform->Initialize(Device, &creationParams, MmcssTaskId, this, 0, MidiDeviceManager));
 
     return S_OK;
 }

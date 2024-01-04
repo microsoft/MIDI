@@ -263,7 +263,7 @@ CMidiClientManager::GetMidiTransform(
         // create the transform
         wil::com_ptr_nothrow<CMidiTransformPipe> transform;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiTransformPipe>(&transform));
-        RETURN_IF_FAILED(transform->Initialize(BindingHandle, DevicePipe->MidiDevice().c_str(), &creationParams, &m_MmcssTaskId));
+        RETURN_IF_FAILED(transform->Initialize(BindingHandle, DevicePipe->MidiDevice().c_str(), &creationParams, &m_MmcssTaskId, (IUnknown*)&m_DeviceManager));
         transformPipe = transform.get();
 
         // connect the transform to the device
@@ -342,7 +342,7 @@ CMidiClientManager::GetMidiScheduler(
         wil::com_ptr_nothrow<CMidiTransformPipe> transform;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiTransformPipe>(&transform));
 
-        RETURN_IF_FAILED(transform->Initialize(BindingHandle, DevicePipe->MidiDevice().c_str(), &creationParams, &m_MmcssTaskId));
+        RETURN_IF_FAILED(transform->Initialize(BindingHandle, DevicePipe->MidiDevice().c_str(), &creationParams, &m_MmcssTaskId, (IUnknown*) & m_DeviceManager));
 
         transformPipe = transform.get();
 
@@ -354,6 +354,74 @@ CMidiClientManager::GetMidiScheduler(
         //else
         //{
             RETURN_IF_FAILED(transformPipe->AddConnectedPipe(NextDeviceSidePipe));
+        //}
+
+        //m_TransformPipes.emplace(DevicePipe->MidiDevice(), transformPipe);
+        m_TransformPipes.emplace(DevicePipe->MidiDevice(), transform);
+    }
+
+    ClientConnectionPipe = transformPipe;
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidiClientManager::GetMidiEndpointMetadataHandler(
+    handle_t BindingHandle,
+    MidiFlow Flow,
+    wil::com_ptr_nothrow<CMidiPipe>& DevicePipe,
+    wil::com_ptr_nothrow<CMidiPipe>& NextDeviceSidePipe,
+    wil::com_ptr_nothrow<CMidiPipe>& ClientConnectionPipe
+)
+{
+    wil::com_ptr_nothrow<CMidiPipe> transformPipe{ nullptr };
+
+    // we only handle metadata on incoming messages
+    RETURN_HR_IF(E_UNEXPECTED, Flow != MidiFlow::MidiFlowIn);
+
+
+    auto transforms = m_TransformPipes.equal_range(DevicePipe->MidiDevice());
+    for (auto& transform = transforms.first; transform != transforms.second; ++transform)
+    {
+        //wil::com_ptr_nothrow<CMidiTransformPipe> pipe = transform->second.get();
+
+        if (transform->second->TransformGuid() == __uuidof(Midi2SchedulerTransform))
+        {
+            transformPipe = transform->second;
+            break;
+        }
+    }
+
+    // not found, instantiate the transform that is needed.
+    if (!transformPipe)
+    {
+        //        OutputDebugString(L"" __FUNCTION__ " scheduler transform pipe not found. Creating one.");
+
+        MIDISRV_TRANSFORMCREATION_PARAMS creationParams{ 0 };
+
+        creationParams.Flow = Flow;
+        creationParams.DataFormatIn = MidiDataFormat::MidiDataFormat_UMP;
+        creationParams.DataFormatOut = MidiDataFormat::MidiDataFormat_UMP;
+
+        creationParams.TransformGuid = __uuidof(Midi2SchedulerTransform);
+
+        // create the transform
+        wil::com_ptr_nothrow<CMidiTransformPipe> transform;
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiTransformPipe>(&transform));
+
+        RETURN_IF_FAILED(transform->Initialize(BindingHandle, DevicePipe->MidiDevice().c_str(), &creationParams, &m_MmcssTaskId, (IUnknown*)&m_DeviceManager));
+
+        transformPipe = transform.get();
+
+        //// connect the transform to the device
+        //if (Flow == MidiFlowIn)
+        //{
+        //    RETURN_IF_FAILED(NextDeviceSidePipe->AddConnectedPipe(transformPipe));
+        //}
+        //else
+        //{
+        RETURN_IF_FAILED(transformPipe->AddConnectedPipe(NextDeviceSidePipe));
         //}
 
         //m_TransformPipes.emplace(DevicePipe->MidiDevice(), transformPipe);

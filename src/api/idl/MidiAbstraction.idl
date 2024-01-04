@@ -161,7 +161,8 @@ interface IMidiDataTransform : IUnknown
         [in] PTRANSFORMCREATIONPARAMS creationParams,
         [in] DWORD * mmcssTaskId,
         [in] IMidiCallback * callback,
-        [in] LONGLONG context
+        [in] LONGLONG context,
+        [in] IUnknown* midiDeviceManager
     );
 
     HRESULT Cleanup();

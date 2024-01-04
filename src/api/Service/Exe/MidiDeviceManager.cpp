@@ -350,6 +350,54 @@ CMidiDeviceManager::ActivateEndpointInternal
     return S_OK;
 }
 
+
+_Use_decl_annotations_
+HRESULT
+CMidiDeviceManager::UpdateEndpointProperties
+(
+    PCWSTR DeviceInterfaceId,
+    ULONG IntPropertyCount,
+    PVOID InterfaceDevProperties
+)
+{
+    std::wstring requestedInterfaceId(DeviceInterfaceId);
+    ::Windows::Devices::Midi2::Internal::InPlaceToLower(requestedInterfaceId);
+
+    // following the pattern from other functions here
+    // there may be more than one SWD associated with this instance id, as we reuse
+    // the instance id for the legacy SWD, it just has a different activator and InterfaceClass.
+    do
+    {
+        // locate the MIDIPORT 
+        auto item = std::find_if(m_MidiPorts.begin(), m_MidiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
+            {
+                std::wstring portInterfaceId(Port->DeviceInterfaceId.get());
+                ::Windows::Devices::Midi2::Internal::InPlaceToLower(portInterfaceId);
+
+                return (portInterfaceId == requestedInterfaceId);
+            });
+
+        if (item == m_MidiPorts.end())
+        {
+            // not found
+            break;
+        }
+        else
+        {
+            // Using the found handle, add/update properties
+
+            RETURN_IF_FAILED(SwDevicePropertySet(
+                item->get()->SwDevice.get(),
+                IntPropertyCount,
+                (const DEVPROPERTY*)InterfaceDevProperties
+            ));
+        }
+    } while (TRUE);
+
+    return S_OK;
+}
+
+
 _Use_decl_annotations_
 HRESULT
 CMidiDeviceManager::DeactivateEndpoint

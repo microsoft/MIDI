@@ -76,6 +76,13 @@ public:
     );
     STDMETHOD(DeactivateEndpoint)(_In_ PCWSTR);
     STDMETHOD(RemoveEndpoint)(_In_ PCWSTR);
+
+    STDMETHOD(UpdateEndpointProperties)(
+        _In_ PCWSTR,
+        _In_ ULONG,
+        _In_ PVOID
+        );
+
     STDMETHOD(Cleanup)();
 
     //TODO: Method to update the properties (using SwDevicePropertySet and an array of props) for a device by its Id

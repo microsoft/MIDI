@@ -11,7 +11,8 @@ CMidi2BS2UMPMidiTransform::Initialize(
     PTRANSFORMCREATIONPARAMS CreationParams,
     DWORD *,
     IMidiCallback * Callback,
-    LONGLONG Context
+    LONGLONG Context,
+    IUnknown* /*MidiDeviceManager*/
 )
 {
     TraceLoggingWrite(

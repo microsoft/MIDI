@@ -42,6 +42,7 @@ namespace json = ::winrt::Windows::Data::Json;
 
 #include "midi_ump.h"
 #include "midi_timestamp.h"
+#include "string_util.h"
 
 namespace internal = ::Windows::Devices::Midi2::Internal;
 namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
@@ -64,6 +65,7 @@ namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
 #include "Midi2BS2UMPTransform.h"
 #include "Midi2UMP2BSTransform.h"
 #include "Midi2SchedulerTransform.h"
+#include "Midi2EndpointMetadataListenerTransform.h"
 
 
 #include "MidiSrvRpc.h"
