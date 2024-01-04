@@ -217,6 +217,9 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_DeviceIdentification, 160);     // DEVPROP_TYPE_
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointConfiguredProtocol, 161);     // DEVPROP_TYPE_BYTE
 
 
+#define STRING_PKEY_MIDI_EndpointConfiguredExpectsJRTimestamps MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"162"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointConfiguredExpectsJRTimestamps, 162);     // DEVPROP_TYPE_BOOLEAN
+
 
 
 // User-supplied metadata ==================================================================

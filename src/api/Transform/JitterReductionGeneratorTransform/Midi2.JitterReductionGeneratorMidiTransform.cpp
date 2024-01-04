@@ -38,6 +38,14 @@ CMidi2JitterReductionGeneratorMidiTransform::Initialize(
     );
 
 
+
+    // TODO: 
+    // Set up a device watcher for this device. When the JR Timestamp property changes,
+    // then start or stop timestamp generation as appropriate
+    // Prop key is STRING_PKEY_MIDI_EndpointConfiguredExpectsJRTimestamps
+
+
+
     m_callback = callback;
 
     m_context = context;
