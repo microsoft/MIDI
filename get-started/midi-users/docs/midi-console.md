@@ -314,9 +314,11 @@ Before sending the request, you may want to open another console window or tab w
 
 These are primarily a convenience for developers.
 
+Note that in all the request commands, you may abbreviate `request` as `req`
+
 #### Send a Function Block Request Message
 
-In the command, you may abbreviate `function-blocks` as `fb` or `functions`.
+In the command, you may abbreviate `function-blocks` as `fb`, `functions`, `function` or `function-block`. The singular versions are available to make the command make more sense when requesting a single block's data.
 
 Request all function blocks from an endpoint
 

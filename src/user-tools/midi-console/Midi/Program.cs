@@ -97,7 +97,9 @@ app.Configure(config =>
             request.SetDescription(Strings.CommandEndpointRequestDescription);
 
             request.AddCommand<EndpointRequestFunctionBlocksCommand>("function-blocks")
+                .WithAlias("function-block")
                 .WithAlias("fb")
+                .WithAlias("function")
                 .WithAlias("functions")
                 .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "request", "function-blocks", "--all")
                 .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "request", "function-blocks", "--number", "2")
