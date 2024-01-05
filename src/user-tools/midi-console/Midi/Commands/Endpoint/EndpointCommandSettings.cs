@@ -49,5 +49,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         //public ListenerMessageTypeFilter Filter { get; set; }
     }
 
-
+    internal class EndpointRequestCommandSettings : EndpointCommandSettings
+    {
+    }
 }

@@ -13,7 +13,7 @@ using Microsoft.Devices.Midi2.ConsoleApp.Resources;
 
 namespace Microsoft.Devices.Midi2.ConsoleApp
 {
-    internal class SendMessagesFileCommand : Command<SendMessagesFileCommand.Settings>
+    internal class EndpointSendMessagesFileCommand : Command<EndpointSendMessagesFileCommand.Settings>
     {
         public sealed class Settings : SendMessageCommandSettings
         {

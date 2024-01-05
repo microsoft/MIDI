@@ -61,7 +61,7 @@ app.Configure(config =>
 
         endpoint.SetDescription(Strings.CommandEndpointDescription);
 
-        endpoint.AddCommand<MonitorEndpointCommand>("monitor")
+        endpoint.AddCommand<EndpointMonitorCommand>("monitor")
             .WithAlias("monitor")
             .WithAlias("listen")
             .WithExample("endpoint", "\\\\?\\SWD#MIDISRV#MIDIU_DIAG_LOOPBACK_A#{e7cce071-3c03-423f-88d3-f1045d02552b}", "monitor")
@@ -70,7 +70,7 @@ app.Configure(config =>
             .WithDescription(Strings.CommandMonitorEndpointDescription)
             ;
 
-        endpoint.AddCommand<SendMessageCommand>("send-message")
+        endpoint.AddCommand<EndpointSendMessageCommand>("send-message")
             .WithAlias("send-ump")
             .WithAlias("send")
             .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "send-message", "0x405F3AB7", "0x12345789", "--count", "10", "--delay", "20")
@@ -78,7 +78,7 @@ app.Configure(config =>
             .WithDescription(Strings.CommandSendMessageDescription)
             ;
 
-        endpoint.AddCommand<SendMessagesFileCommand>("send-message-file")
+        endpoint.AddCommand<EndpointSendMessagesFileCommand>("send-message-file")
             .WithAlias("send-ump-file")
             .WithAlias("send-file")
             .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "send-message-file", "%USERPROFILE%\\Documents\\messages.midi2")
@@ -90,6 +90,28 @@ app.Configure(config =>
             .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "properties")
             .WithDescription(Strings.CommandEndpointPropertiesDescription)
             ;
+
+
+        endpoint.AddBranch<EndpointRequestCommandSettings>("request", request =>
+        {
+            request.SetDescription(Strings.CommandEndpointRequestDescription);
+
+            request.AddCommand<EndpointRequestFunctionBlocksCommand>("function-blocks")
+                .WithAlias("fb")
+                .WithAlias("functions")
+                .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "request", "function-blocks", "--all")
+                .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "request", "function-blocks", "--number", "2")
+                .WithDescription(Strings.CommandEndpointRequestFunctionBlocksDescription)
+                ;
+
+            request.AddCommand<EndpointRequestEndpointMetadataCommand>("endpoint-metadata")
+                .WithAlias("em")
+                .WithAlias("metadata")
+                .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "request", "endpoint-metadata", "--all")
+                .WithDescription(Strings.CommandEndpointRequestEndpointMetadataDescription)
+                ;
+        }).WithAlias("req");
+
 
     }).WithAlias("ep");
      

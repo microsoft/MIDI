@@ -35,7 +35,8 @@ private:
 
     // this is responsible for adding to or updating the function block list, or to the 
     // function block name list. For the name list, it handles restarting etc.
-    HRESULT AddOrUpdateInternalFunctionBlockList(_In_ internal::PackedUmp128& relatedMessage);
+    HRESULT AddOrUpdateInternalFunctionBlockList(_In_ internal::PackedUmp128& functionBlockInfoMessage);
+    HRESULT AddInternalFunctionBlockNameMessage(_In_ internal::PackedUmp128& functionBlockNameMessage);
 
 
     IMidiCallback* m_callback{ nullptr };
@@ -43,6 +44,7 @@ private:
 
     std::wstring m_deviceInstanceId;
 
+    // these should likely be priority queues sorted by timestamp, but that's not priority atm
     std::vector<internal::PackedUmp128> m_queuedEndpointNameMessages;
     std::vector<internal::PackedUmp128> m_queuedEndpointProductInstanceIdMessages;
 

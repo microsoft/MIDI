@@ -374,7 +374,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return MidiMessageBuilder::BuildStreamMessage(
             timestamp,
             MIDI_STREAM_MESSAGE_STANDARD_FORM0,
-            MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_NOTIFICATION,
+            MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_DISCOVERY,
             word0Remaining,
             MIDI_RESERVED_WORD,
             MIDI_RESERVED_WORD,

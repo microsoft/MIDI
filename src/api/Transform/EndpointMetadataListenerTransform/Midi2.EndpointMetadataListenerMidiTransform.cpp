@@ -193,9 +193,22 @@ CMidi2EndpointMetadataListenerMidiTransform::ProcessStreamMessage(PVOID message,
 
 _Use_decl_annotations_
 HRESULT
-CMidi2EndpointMetadataListenerMidiTransform::AddOrUpdateInternalFunctionBlockList(internal::PackedUmp128& relatedMessage)
+CMidi2EndpointMetadataListenerMidiTransform::AddInternalFunctionBlockNameMessage(internal::PackedUmp128& functionBlockNameMessage)
 {
-    UNREFERENCED_PARAMETER(relatedMessage);
+    UNREFERENCED_PARAMETER(functionBlockNameMessage);
+
+
+
+
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2EndpointMetadataListenerMidiTransform::AddOrUpdateInternalFunctionBlockList(internal::PackedUmp128& functionBlockInfoMessage)
+{
+    UNREFERENCED_PARAMETER(functionBlockInfoMessage);
 
 
 

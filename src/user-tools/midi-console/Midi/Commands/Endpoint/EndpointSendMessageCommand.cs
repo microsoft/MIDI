@@ -13,7 +13,7 @@ using System.Diagnostics.Eventing.Reader;
 
 namespace Microsoft.Devices.Midi2.ConsoleApp
 {
-    internal class SendMessageCommand : Command<SendMessageCommand.Settings>
+    internal class EndpointSendMessageCommand : Command<EndpointSendMessageCommand.Settings>
     {
         public sealed class Settings : SendMessageCommandSettings
         {
@@ -180,7 +180,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                             if (MidiEndpointConnection.SendMessageSucceeded(sendResult))
                             {
-
                                 messagesSent++;
                                 sendTask.Value = messagesSent;
 

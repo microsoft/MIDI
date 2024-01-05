@@ -135,6 +135,15 @@
   <data name="CommandEndpointPropertiesDescription" xml:space="preserve">
     <value>List out all properties for a given endpoint</value>
   </data>
+  <data name="CommandEndpointRequestDescription" xml:space="preserve">
+    <value>Request certain MIDI 2.0 in-protocol data from an endpoint. Use a separate console or application to view the responses.</value>
+  </data>
+  <data name="CommandEndpointRequestEndpointMetadataDescription" xml:space="preserve">
+    <value>Send an endpoint discovery message to the endpoint. You can monitor incoming messages in another window, or watch property changes</value>
+  </data>
+  <data name="CommandEndpointRequestFunctionBlocksDescription" xml:space="preserve">
+    <value>Send a function block request message to the endpoint. You can monitor incoming messages or the device properties in another window</value>
+  </data>
   <data name="CommandEnumerateDescription" xml:space="preserve">
     <value>Enumerate (list) endpoints and transports</value>
   </data>
@@ -198,6 +207,15 @@
   <data name="ErrorUnableToOpenEndpoint" xml:space="preserve">
     <value>Unable to open specified endpoint.</value>
   </data>
+  <data name="ErrorUnableToSendMessage" xml:space="preserve">
+    <value>Unable to send message to endpoint</value>
+  </data>
+  <data name="FunctionBlockNumberInvalid" xml:space="preserve">
+    <value>The function block number is invalid. Please request a number between 0 and 31, inclusive.</value>
+  </data>
+  <data name="FunctionBlockRequestInvalid" xml:space="preserve">
+    <value>The function block request is invalid. Please request at last one data item.</value>
+  </data>
   <data name="GenericAverage" xml:space="preserve">
     <value>Average</value>
   </data>
@@ -218,6 +236,9 @@
   </data>
   <data name="GenericTotal" xml:space="preserve">
     <value>Total</value>
+  </data>
+  <data name="InteractiveEndpointMenuPleaseSelectOption" xml:space="preserve">
+    <value>Please select one of the following</value>
   </data>
   <data name="MessageValidationErrorInvalidUmp" xml:space="preserve">
     <value>The data does not result in a valid UMP</value>
@@ -296,6 +317,42 @@
   </data>
   <data name="ParameterMonitorEndpointVerbose" xml:space="preserve">
     <value>Provide additional columns of information for each message</value>
+  </data>
+  <data name="ParameterRequestEndpointMetadataAll" xml:space="preserve">
+    <value>Request all endpoint information</value>
+  </data>
+  <data name="ParameterRequestEndpointMetadataDeviceIdentityNotification" xml:space="preserve">
+    <value>Request a device identity notification</value>
+  </data>
+  <data name="ParameterRequestEndpointMetadataEndpointInfoNotification" xml:space="preserve">
+    <value>Request the endpoint information notification</value>
+  </data>
+  <data name="ParameterRequestEndpointMetadataEndpointNameNotification" xml:space="preserve">
+    <value>Request an endpoint name notification. May result in multiple response messages.</value>
+  </data>
+  <data name="ParameterRequestEndpointMetadataEndpointProductInstanceIdNotification" xml:space="preserve">
+    <value>Request a product instance id notification. May result in multiple response messages.</value>
+  </data>
+  <data name="ParameterRequestEndpointMetadataEndpointStreamConfigurationNotification" xml:space="preserve">
+    <value>Request a stream configuration notification</value>
+  </data>
+  <data name="ParameterRequestEndpointMetadataEndpointUmpVersionMajor" xml:space="preserve">
+    <value>The UMP specification major version. The default is usually sufficient.</value>
+  </data>
+  <data name="ParameterRequestEndpointMetadataEndpointUmpVersionMinor" xml:space="preserve">
+    <value>The UMP specification minor version. The default is usually sufficient.</value>
+  </data>
+  <data name="ParameterRequestFunctionBlockInfoNotification" xml:space="preserve">
+    <value>Request the general information for a function block</value>
+  </data>
+  <data name="ParameterRequestFunctionBlockNameNotification" xml:space="preserve">
+    <value>Request the name for a function block</value>
+  </data>
+  <data name="ParameterRequestFunctionBlockNumber" xml:space="preserve">
+    <value>Request just the specified function block number</value>
+  </data>
+  <data name="ParameterRequestFunctionBlocksAll" xml:space="preserve">
+    <value>Request all function blocks for this endpoint</value>
   </data>
   <data name="ParameterSendMessageCount" xml:space="preserve">
     <value>Number of times to send this message</value>

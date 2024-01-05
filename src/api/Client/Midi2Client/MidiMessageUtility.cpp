@@ -442,6 +442,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
             case MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_NOTIFICATION:
                 return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTF_06_CONFIG_NOTIFICATION); //L"Stream Configuration Notification";
 
+            case MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_DISCOVERY:
+                return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTF_10_FUNCTION_BLOCK_DISCOVERY); //L"Function Block Info Notification";
             case MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_INFO_NOTIFICATION:
                 return internal::ResourceManager::GetHString(IDS_MESSAGE_DESC_MTF_11_FUNCTION_BLOCK_INFO); //L"Function Block Info Notification";
             case MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION:

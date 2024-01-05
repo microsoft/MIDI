@@ -30,7 +30,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
     }
 
 
-    internal class MonitorEndpointCommand : Command<MonitorEndpointCommand.Settings>
+    internal class EndpointMonitorCommand : Command<EndpointMonitorCommand.Settings>
     {
         // we have this struct so we can separate the relatively fast received processing
         // and its calculations from the comparatively slow displays processing
