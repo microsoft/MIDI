@@ -614,7 +614,7 @@ Task("BuildInstaller")
     //  <?define SetupVersionNumber="1.0.23351.0243" ?>
     //</Include>
 
-    string setupVersionName = "Developer Preview";
+    string setupVersionName = "Developer Preview 3";
 
     string setupBuildMajorMinor = "1.0";
     string setupBuildDateNumber = DateTime.Now.ToString("yy") + DateTime.Now.DayOfYear.ToString("000");       // YYddd where ddd is the day number for the year
