@@ -362,8 +362,9 @@ struct MidiDeviceIdentityProperty
 // for PKEY_MIDI_FunctionBlocks
 // these properties are raw from the messages, with the exception of the name
 // which is assembled from multiple in-protocol messages. Name is utf8 encoded.
-struct MidiDevicePropertyFunctionBlock
+struct MidiFunctionBlockHeader
 {
+    uint16_t Size;                  // total size for this function block, including name
     bool IsActive{ false };
     uint8_t BlockNumber{ 0 };
     uint8_t Reserved0{ 0 };         // unused in UMP 1.1
@@ -377,14 +378,13 @@ struct MidiDevicePropertyFunctionBlock
 
     uint32_t Reserved1{ 0 };        // unused in UMP 1.1
     uint32_t Reserved2{ 0 };        // unused in UMP 1.1
-
-    // +1 because we zero-terminate the name even though it's fixed max length.
-    // most function blocks will have much shorter names. Should we instead have
-    // a more complicated variable-length scheme here?
-    char Name[MIDI_FUNCTION_BLOCK_NAME_MAX_LENGTH+1]{0};
 };
 
-
+struct MidiFunctionBlockDefinition
+{
+    MidiFunctionBlockHeader FunctionBlock;
+    char                    Name[1];             // NULL Terminated string, blank indicates none available. Not a WCHAR per spec
+};
 
 
 #define HRESULT_FROM_RPCSTATUS(status) status == RPC_S_OK ? S_OK : MAKE_HRESULT(SEVERITY_ERROR, FACILITY_RPC, status)

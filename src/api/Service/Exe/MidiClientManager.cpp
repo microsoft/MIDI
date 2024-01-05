@@ -386,7 +386,7 @@ CMidiClientManager::GetMidiEndpointMetadataHandler(
     {
         //wil::com_ptr_nothrow<CMidiTransformPipe> pipe = transform->second.get();
 
-        if (transform->second->TransformGuid() == __uuidof(Midi2SchedulerTransform))
+        if (transform->second->TransformGuid() == __uuidof(Midi2EndpointMetadataListenerTransform))
         {
             transformPipe = transform->second;
             break;
@@ -396,7 +396,7 @@ CMidiClientManager::GetMidiEndpointMetadataHandler(
     // not found, instantiate the transform that is needed.
     if (!transformPipe)
     {
-        //        OutputDebugString(L"" __FUNCTION__ " scheduler transform pipe not found. Creating one.");
+        OutputDebugString(L"" __FUNCTION__ " transform pipe not found. Creating one.");
 
         MIDISRV_TRANSFORMCREATION_PARAMS creationParams{ 0 };
 
@@ -404,7 +404,7 @@ CMidiClientManager::GetMidiEndpointMetadataHandler(
         creationParams.DataFormatIn = MidiDataFormat::MidiDataFormat_UMP;
         creationParams.DataFormatOut = MidiDataFormat::MidiDataFormat_UMP;
 
-        creationParams.TransformGuid = __uuidof(Midi2SchedulerTransform);
+        creationParams.TransformGuid = __uuidof(Midi2EndpointMetadataListenerTransform);
 
         // create the transform
         wil::com_ptr_nothrow<CMidiTransformPipe> transform;
@@ -414,17 +414,17 @@ CMidiClientManager::GetMidiEndpointMetadataHandler(
 
         transformPipe = transform.get();
 
-        //// connect the transform to the device
-        //if (Flow == MidiFlowIn)
-        //{
-        //    RETURN_IF_FAILED(NextDeviceSidePipe->AddConnectedPipe(transformPipe));
-        //}
-        //else
-        //{
-        RETURN_IF_FAILED(transformPipe->AddConnectedPipe(NextDeviceSidePipe));
-        //}
+        // connect the transform to the device
 
-        //m_TransformPipes.emplace(DevicePipe->MidiDevice(), transformPipe);
+        if (Flow == MidiFlowIn)
+        {
+            RETURN_IF_FAILED(NextDeviceSidePipe->AddConnectedPipe(transformPipe));
+        }
+        else
+        {
+            RETURN_IF_FAILED(transformPipe->AddConnectedPipe(NextDeviceSidePipe));
+        }
+
         m_TransformPipes.emplace(DevicePipe->MidiDevice(), transform);
     }
 
@@ -550,6 +550,13 @@ CMidiClientManager::CreateMidiClient(
                 devicePipe, 
                 clientConnectionPipe)); // clientConnectionPipe is the plugin
 
+
+            // TODO: 
+            // If a Native Format UMP device, Add metadata listener
+            // If a Native Format UMP device, add JR timestamp listener
+
+
+
             clientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
         }
 
@@ -602,6 +609,7 @@ CMidiClientManager::CreateMidiClient(
         // JR Timestamps ---------------------------------------------------
         // TODO: these are only for MIDI 2.0 clients, so need to do additional property checking here
         // TODO: There should be only one JR Timestamp handler in each direction connected to the device
+        // TODO: The data format is not sufficient to know if it is UMP. We need to check the native format
         //if (devicePipe->DataFormatOut() == MidiDataFormat_UMP)
         //{
         //    // Add JR timestamp 

@@ -12,7 +12,7 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2EndpointMetadataListenerTransform::Activate(
-    REFIID Riid,
+    REFIID Iid,
     void **Interface
 )
 {
@@ -20,21 +20,21 @@ CMidi2EndpointMetadataListenerTransform::Activate(
 
     RETURN_HR_IF(E_INVALIDARG, nullptr == Interface);
 
-    if (__uuidof(IMidiBiDi) == Riid)
+    if (__uuidof(IMidiDataTransform) == Iid)
     {
-       //OutputDebugString(L"" __FUNCTION__ " Activating IMidiBiDi");
+       OutputDebugString(L"" __FUNCTION__ " Activating IMidiDataTransform");
 
-       // TraceLoggingWrite(
-       //     MidiEndpointMetadataListenerAbstractionTelemetryProvider::Provider(),
-       //     __FUNCTION__ "- Midi BiDi",
-       //     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-       //     TraceLoggingValue(__FUNCTION__),
-       //     TraceLoggingPointer(this, "this")
-       //     );
+        TraceLoggingWrite(
+            MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
+            __FUNCTION__ "- IMidiDataTransform",
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingValue(__FUNCTION__),
+            TraceLoggingPointer(this, "this")
+            );
 
-       // wil::com_ptr_nothrow<IMidiBiDi> midiBiDi;
-       // RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2EndpointMetadataListenerMidiBiDi>(&midiBiDi));
-       // *Interface = midiBiDi.detach();
+        wil::com_ptr_nothrow<IMidiDataTransform> transform;
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2EndpointMetadataListenerMidiTransform>(&transform));
+        *Interface = transform.detach();
     }
     else
     {

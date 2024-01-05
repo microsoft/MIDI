@@ -138,6 +138,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         additionalProperties.Append(STRING_PKEY_MIDI_FunctionBlocksAreStatic);
         additionalProperties.Append(STRING_PKEY_MIDI_DeviceIdentification);
         additionalProperties.Append(STRING_PKEY_MIDI_EndpointConfiguredProtocol);
+        additionalProperties.Append(STRING_PKEY_MIDI_EndpointConfiguredExpectsJRTimestamps);
 
         // User-supplied metadata ============================================================
         additionalProperties.Append(STRING_PKEY_MIDI_UserSuppliedEndpointName);

@@ -86,6 +86,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool SupportsMidi20Protocol() const noexcept { return GetBoolProperty(STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol, false); }
         bool SupportsReceivingJRTimestamps() const noexcept { return GetBoolProperty(STRING_PKEY_MIDI_EndpointSupportsReceivingJRTimestamps, false); }
         bool SupportsSendingJRTimestamps() const noexcept { return GetBoolProperty(STRING_PKEY_MIDI_EndpointSupportsSendingJRTimestamps, false); }
+        bool ExpectsJRTimestamps() const noexcept { return GetBoolProperty(STRING_PKEY_MIDI_EndpointConfiguredExpectsJRTimestamps, false); }
 
         midi2::MidiProtocol ConfiguredProtocol() const noexcept;
 

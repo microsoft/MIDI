@@ -204,6 +204,12 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.SchedulerTransform", "Transform\SchedulerTransform\Midi2.SchedulerTransform.vcxproj", "{366FA284-D8C0-4CC5-B9A3-917EAB967173}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.Transform.unittests", "Test\Midi2.Transform.unittests\Midi2.Transform.unittests.vcxproj", "{1425218C-E6E6-40BB-B99B-052156749E2C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0DDD9961-7959-46B1-A11D-05BA8AF65297} = {0DDD9961-7959-46B1-A11D-05BA8AF65297}
+		{366FA284-D8C0-4CC5-B9A3-917EAB967173} = {366FA284-D8C0-4CC5-B9A3-917EAB967173}
+		{36E99993-ABE3-44CC-A776-B4E835B5EEC6} = {36E99993-ABE3-44CC-A776-B4E835B5EEC6}
+		{6D151BF5-40A2-4BD7-BB67-07D2741DA01E} = {6D151BF5-40A2-4BD7-BB67-07D2741DA01E}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.JitterReductionGeneratorTransform", "Transform\JitterReductionGeneratorTransform\Midi2.JitterReductionGeneratorTransform.vcxproj", "{6D151BF5-40A2-4BD7-BB67-07D2741DA01E}"
 EndProject

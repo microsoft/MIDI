@@ -73,6 +73,7 @@ namespace Windows.Devices.Midi2
 
         Boolean SupportsReceivingJRTimestamps{ get; };
         Boolean SupportsSendingJRTimestamps{ get; };
+        Boolean ExpectsJRTimestamps{ get; };
 
         // TODO: MIDI Device Id (sysex stuff)
 
