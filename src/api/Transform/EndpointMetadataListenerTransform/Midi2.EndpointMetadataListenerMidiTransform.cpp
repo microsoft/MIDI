@@ -22,13 +22,12 @@ CMidi2EndpointMetadataListenerMidiTransform::Initialize(
     IUnknown* MidiDeviceManager
 )
 {
-    UNREFERENCED_PARAMETER(deviceId);
     UNREFERENCED_PARAMETER(creationParams);
     UNREFERENCED_PARAMETER(mmcssTaskId);
-    UNREFERENCED_PARAMETER(MidiDeviceManager);
 
 
-    OutputDebugString(L"" __FUNCTION__ " Start up");
+    OutputDebugString(L"" __FUNCTION__ " Start up, Provided device id:");
+    OutputDebugString(deviceId);
 
     TraceLoggingWrite(
         MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
@@ -37,9 +36,14 @@ CMidi2EndpointMetadataListenerMidiTransform::Initialize(
         TraceLoggingPointer(this, "this")
     );
 
+    RETURN_HR_IF_NULL(E_INVALIDARG, MidiDeviceManager);
+    RETURN_HR_IF_NULL(E_INVALIDARG, callback);
+
+    RETURN_IF_FAILED(MidiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
 
     m_callback = callback;
 
+    m_deviceInstanceId = deviceId;
     m_context = context;
 
     return S_OK;
@@ -81,6 +85,8 @@ CMidi2EndpointMetadataListenerMidiTransform::SendMidiMessage(
     UINT size,
     LONGLONG timestamp)
 {
+ //   OutputDebugString(L"" __FUNCTION__);
+
     // TODO: This really should have a worker thread doing the message processing
     // because we don't want to add any latency or jitter here. Prototype will
     // be all in-line, however.
@@ -93,8 +99,6 @@ CMidi2EndpointMetadataListenerMidiTransform::SendMidiMessage(
         m_callback->Callback(data, size, timestamp, m_context);
     }
 
-    // Check to see if type F and if so, send it to be processed
-
     if (data != nullptr && size == UMP128_BYTE_COUNT)
     {
         internal::PackedUmp128 ump;
@@ -105,7 +109,7 @@ CMidi2EndpointMetadataListenerMidiTransform::SendMidiMessage(
 
             if (internal::GetUmpMessageTypeFromFirstWord(ump.word0) == 0xF)
             {
-                ProcessStreamMessage(data, size, timestamp);
+                ProcessStreamMessage(ump, timestamp);
             }
             else
             {
@@ -134,6 +138,7 @@ CMidi2EndpointMetadataListenerMidiTransform::SendMidiMessage(
 HRESULT
 CMidi2EndpointMetadataListenerMidiTransform::UpdateEndpointNameProperty()
 {
+    OutputDebugString(L"" __FUNCTION__);
 
     return S_OK;
 }
@@ -144,17 +149,50 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateEndpointNameProperty()
 HRESULT
 CMidi2EndpointMetadataListenerMidiTransform::UpdateEndpointProductInstanceIdProperty()
 {
+    OutputDebugString(L"" __FUNCTION__);
 
     return S_OK;
 }
 
 // The device identity is a single message, so we don't keep a copy. Instead, we just do
-// the parsing here and then update the property
+// the parsing here and then update the property. We assume this has already been identified
+// as a type=F, form=0, status=0x02 stream message
 _Use_decl_annotations_
 HRESULT
 CMidi2EndpointMetadataListenerMidiTransform::UpdateDeviceIdentityProperty(internal::PackedUmp128& identityMessage)
 {
-    UNREFERENCED_PARAMETER(identityMessage);
+    OutputDebugString(L"" __FUNCTION__);
+
+    MidiDeviceIdentityProperty prop;
+
+    prop.Reserved0 = MIDIWORDSHORT2(identityMessage.word0);
+
+    prop.Reserved1 = internal::CleanupByte7(MIDIWORDBYTE1(identityMessage.word1));
+    prop.ManufacturerSysExIdByte1 = internal::CleanupByte7(MIDIWORDBYTE2(identityMessage.word1));
+    prop.ManufacturerSysExIdByte2 = internal::CleanupByte7(MIDIWORDBYTE3(identityMessage.word1));
+    prop.ManufacturerSysExIdByte3 = internal::CleanupByte7(MIDIWORDBYTE4(identityMessage.word1));
+
+    prop.DeviceFamilyLsb = internal::CleanupByte7(MIDIWORDBYTE1(identityMessage.word2));
+    prop.DeviceFamilyMsb = internal::CleanupByte7(MIDIWORDBYTE2(identityMessage.word2));
+    prop.DeviceFamilyModelNumberLsb = internal::CleanupByte7(MIDIWORDBYTE3(identityMessage.word2));
+    prop.DeviceFamilyModelNumberMsb = internal::CleanupByte7(MIDIWORDBYTE4(identityMessage.word2));
+
+    prop.SoftwareRevisionLevelByte1 = internal::CleanupByte7(MIDIWORDBYTE1(identityMessage.word3));
+    prop.SoftwareRevisionLevelByte2 = internal::CleanupByte7(MIDIWORDBYTE2(identityMessage.word3));
+    prop.SoftwareRevisionLevelByte3 = internal::CleanupByte7(MIDIWORDBYTE3(identityMessage.word3));
+    prop.SoftwareRevisionLevelByte4 = internal::CleanupByte7(MIDIWORDBYTE4(identityMessage.word3));
+
+
+    DEVPROPERTY props[] = {
+    {
+        {PKEY_MIDI_DeviceIdentity, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BINARY, static_cast<ULONG>(sizeof(prop)), &prop},
+    };
+
+    RETURN_IF_FAILED(m_MidiDeviceManager->UpdateEndpointProperties(m_deviceInstanceId.c_str(), ARRAYSIZE(props), (PVOID)props));
+
+    OutputDebugString(L"" __FUNCTION__ " Property Updated");
+
 
     return S_OK;
 }
@@ -164,6 +202,8 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateDeviceIdentityProperty(intern
 HRESULT
 CMidi2EndpointMetadataListenerMidiTransform::UpdateFunctionBlocksProperty()
 {
+    OutputDebugString(L"" __FUNCTION__);
+
     // lock the function blocks
      
     // pull existing property
@@ -176,15 +216,31 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateFunctionBlocksProperty()
     return S_OK;
 }
 
+#define MIDI_DEVICE_IDENTITY_STREAM_MESSAGE_FORM 0
+#define MIDI_DEVICE_IDENTITY_STREAM_MESSAGE_STATUS 0x02
+
 
 // this function assumes we've already done bounds checking
 _Use_decl_annotations_
 HRESULT 
-CMidi2EndpointMetadataListenerMidiTransform::ProcessStreamMessage(PVOID message, UINT size, LONGLONG timestamp)
+CMidi2EndpointMetadataListenerMidiTransform::ProcessStreamMessage(internal::PackedUmp128 ump, LONGLONG timestamp)
 {
-    UNREFERENCED_PARAMETER(message);
-    UNREFERENCED_PARAMETER(size);
+    OutputDebugString(L"" __FUNCTION__);
+
     UNREFERENCED_PARAMETER(timestamp);
+    
+    if (internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_DEVICE_IDENTITY_STREAM_MESSAGE_FORM &&
+        internal::GetStatusFromStreamMessageFirstWord(ump.word0) == MIDI_DEVICE_IDENTITY_STREAM_MESSAGE_STATUS)
+    {
+        // single message contains all we need, so super simple. Just update
+        UpdateDeviceIdentityProperty(ump);
+    }
+    else
+    {
+        // TODO other message types
+    }
+
+
 
 
     return S_OK;

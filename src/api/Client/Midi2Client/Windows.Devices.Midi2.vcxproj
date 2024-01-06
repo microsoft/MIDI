@@ -252,6 +252,10 @@
     <ClInclude Include="MidiEndpointDeviceInformation.h">
       <DependentUpon>MidiEndpointDeviceInformation.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceInformationUpdateEventArgs.h">
+      <DependentUpon>MidiEndpointDeviceInformationUpdateEventArgs.idl</DependentUpon>
+    </ClInclude>
+
     <ClInclude Include="MidiEndpointDeviceWatcher.h">
       <DependentUpon>MidiEndpointDeviceWatcher.idl</DependentUpon>
     </ClInclude>
@@ -358,6 +362,10 @@
     <ClCompile Include="MidiEndpointDeviceInformation.cpp">
       <DependentUpon>MidiEndpointDeviceInformation.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceInformationUpdateEventArgs.cpp">
+      <DependentUpon>MidiEndpointDeviceInformationUpdateEventArgs.idl</DependentUpon>
+    </ClCompile>
+
     <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
       <DependentUpon>MidiEndpointDeviceWatcher.idl</DependentUpon>
     </ClCompile>
@@ -458,6 +466,7 @@
     <Midl Include="IMidiTransportSettingsData.idl" />
     <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl" />
     <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl" />
+    <Midl Include="MidiEndpointDeviceInformationUpdateEventArgs.idl" />
     <Midl Include="MidiEndpointConnection.idl" />
     <Midl Include="MidiEndpointConnectionOptions.idl" />
     <Midl Include="MidiChannel.idl" />

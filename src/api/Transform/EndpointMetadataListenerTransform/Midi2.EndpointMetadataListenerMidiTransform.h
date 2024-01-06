@@ -30,7 +30,7 @@ private:
     // updates.
     HRESULT UpdateFunctionBlocksProperty();
 
-    HRESULT ProcessStreamMessage(_In_ PVOID message, _In_ UINT size, _In_ LONGLONG timestamp);
+    HRESULT ProcessStreamMessage(_In_ internal::PackedUmp128 ump, _In_ LONGLONG timestamp);
 
 
     // this is responsible for adding to or updating the function block list, or to the 
@@ -43,6 +43,8 @@ private:
     LONGLONG m_context{ 0 };
 
     std::wstring m_deviceInstanceId;
+
+    wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
 
     // these should likely be priority queues sorted by timestamp, but that's not priority atm
     std::vector<internal::PackedUmp128> m_queuedEndpointNameMessages;

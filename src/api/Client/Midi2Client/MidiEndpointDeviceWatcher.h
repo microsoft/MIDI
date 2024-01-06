@@ -43,7 +43,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             if (m_deviceRemovedEvent) m_deviceRemovedEvent.remove(token);
         }
 
-        winrt::event_token Updated(_In_ winrt::Windows::Foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, winrt::Windows::Devices::Enumeration::DeviceInformationUpdate> const& handler)
+        winrt::event_token Updated(_In_ winrt::Windows::Foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, midi2::MidiEndpointDeviceInformationUpdateEventArgs> const& handler)
         {
             return m_deviceUpdatedEvent.add(handler);
         }
@@ -107,7 +107,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
         winrt::event<foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, midi2::MidiEndpointDeviceInformation>> m_deviceAddedEvent;
-        winrt::event<foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, winrt::Windows::Devices::Enumeration::DeviceInformationUpdate>> m_deviceUpdatedEvent;
+        winrt::event<foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, midi2::MidiEndpointDeviceInformationUpdateEventArgs>> m_deviceUpdatedEvent;
         winrt::event<foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, winrt::Windows::Devices::Enumeration::DeviceInformationUpdate>> m_deviceRemovedEvent;
 
         winrt::event<foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, winrt::Windows::Foundation::IInspectable>> m_enumerationCompletedEvent;

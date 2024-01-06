@@ -144,7 +144,7 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_OUT_GroupTerminalBlocks, 51);     // DEVPROP_TYP
 #define STRING_PKEY_MIDI_AssociatedUMP MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"52"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_AssociatedUMP, 52);     // DEVPROP_TYPE_UINT64
 
-// iSerialNumber Some as iSerialNumber
+// iSerialNumber for USB
 #define STRING_PKEY_MIDI_SerialNumber MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"53"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_SerialNumber, 53);     // DEVPROP_TYPE_STRING
 
@@ -188,37 +188,53 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointUmpVersionMajor, 154);     // DEVPROP_TY
 #define STRING_PKEY_MIDI_EndpointUmpVersionMinor MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"155"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointUmpVersionMinor, 155);     // DEVPROP_TYPE_BYTE
 
+
+// binary device information structure holding sysex id, device family id, sw revision, etc.
+#define STRING_PKEY_MIDI_DeviceIdentity MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"160"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_DeviceIdentity, 160);     // DEVPROP_TYPE_BINARY
+
+// In-protocol endpoint strings ================================================================
+// Starts at 170
+
 // name provided by the endpoint through endpoint discovery
 // Note that it is supplied by protocol as utf8, and we need to convert to unicode
-#define STRING_PKEY_MIDI_EndpointProvidedName MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"156"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointProvidedName, 156);     // DEVPROP_TYPE_STRING
+#define STRING_PKEY_MIDI_EndpointProvidedName MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"170"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointProvidedName, 170);     // DEVPROP_TYPE_STRING
 
 // Product instance Id provided by the endpoint through endpoint discovery
 // Note that it is supplied by protocol as utf8, and we need to convert to unicode
-#define STRING_PKEY_MIDI_EndpointProvidedProductInstanceId MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"157"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointProvidedProductInstanceId, 157);     // DEVPROP_TYPE_STRING
+#define STRING_PKEY_MIDI_EndpointProvidedProductInstanceId MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"171"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointProvidedProductInstanceId, 171);     // DEVPROP_TYPE_STRING
 
-// full list of function blocks for this ump endpoint
-#define STRING_PKEY_MIDI_FunctionBlocks MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"158"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_FunctionBlocks, 158);     // DEVPROP_TYPE_BINARY
+// In-protocol Function Block information ================================================================
+// starts at 180
+
+// value provided during endpoint discovery. Need this to know when we receive all function block data
+#define STRING_PKEY_MIDI_FunctionBlockCount MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"180"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_FunctionBlockCount, 180);     // DEVPROP_TYPE_BYTE
 
 // true if function blocks are static
-#define STRING_PKEY_MIDI_FunctionBlocksAreStatic MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"159"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_FunctionBlocksAreStatic, 159);     // DEVPROP_TYPE_BOOLEAN
+#define STRING_PKEY_MIDI_FunctionBlocksAreStatic MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"182"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_FunctionBlocksAreStatic, 182);     // DEVPROP_TYPE_BOOLEAN
 
-// binary device information structure holding sysex id etc.
-#define STRING_PKEY_MIDI_DeviceIdentification MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"160"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_DeviceIdentification, 160);     // DEVPROP_TYPE_BINARY
+// full list of function blocks for this ump endpoint
+#define STRING_PKEY_MIDI_FunctionBlocks MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"185"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_FunctionBlocks, 185);     // DEVPROP_TYPE_BINARY
+
+
+
+// In-protocol Negotiated information ================================================================
+// starts at 300
 
 #define MIDI_PROP_CONFIGURED_PROTOCOL_MIDI1 (uint8_t)0x01
 #define MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2 (uint8_t)0x02
 
-#define STRING_PKEY_MIDI_EndpointConfiguredProtocol MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"161"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointConfiguredProtocol, 161);     // DEVPROP_TYPE_BYTE
+#define STRING_PKEY_MIDI_EndpointConfiguredProtocol MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"300"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointConfiguredProtocol, 300);     // DEVPROP_TYPE_BYTE
 
 
-#define STRING_PKEY_MIDI_EndpointConfiguredExpectsJRTimestamps MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"162"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointConfiguredExpectsJRTimestamps, 162);     // DEVPROP_TYPE_BOOLEAN
+#define STRING_PKEY_MIDI_EndpointConfiguredExpectsJRTimestamps MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"305"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointConfiguredExpectsJRTimestamps, 305);     // DEVPROP_TYPE_BOOLEAN
 
 
 
@@ -236,46 +252,53 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UserSuppliedLargeImagePath, 501);     // DEVPROP
 #define STRING_PKEY_MIDI_UserSuppliedSmallImagePath MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"502"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UserSuppliedSmallImagePath, 502);     // DEVPROP_TYPE_STRING
 
-
 #define STRING_PKEY_MIDI_UserSuppliedDescription MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"503"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UserSuppliedDescription, 503);     // DEVPROP_TYPE_STRING
 
 
 
-// Additional metrics ==================================================================
+// Capability properties which can impact which plugins we instantiate =======================
+// This is only for things that endpoints or user may supply, not something with in-protocol discovery
 // Starts at 600
+
+// Requires note off translation (Mackie). Translate Note On with zero velocity (MIDI 1.0) to note off
+#define STRING_PKEY_MIDI_RequiresNoteOffTranslation MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"610"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_RequiresNoteOffTranslation, 610);     // DEVPROP_TYPE_BOOLEAN
+
+#define STRING_PKEY_MIDI_RecommendedCCAutomationIntervalMS MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"611"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_RecommendedCCAutomationIntervalMS, 611);     // DEVPROP_TYPE_INT
+
+#define STRING_PKEY_MIDI_SupportsMidiPolyphonicExpression MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"612"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_SupportsMidiPolyphonicExpression, 612);     // DEVPROP_TYPE_BOOLEAN
+
+// TODO: Add in the other properties like
+// - Can receive MIDI clock
+// - Can use MIDI clock start
+// - Can use MIDI timecode
+// - Default SysEx delay between messages
+// These values would be set by the user in the settings app, and then used by DAWs instead of keeping their own metadata
+
+
+
+// Additional metrics ========================================================================
+// Starts at 800
 
 // Calculated latency for sending a message to a device. 
 // We may be able to calculate this using the jitter-reduction timestamps.
-#define STRING_PKEY_MIDI_MidiOutCalculatedLatencyTicks MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"600"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_MidiOutCalculatedLatencyTicks, 600);     // DEVPROP_TYPE_UINT64
+#define STRING_PKEY_MIDI_MidiOutCalculatedLatencyTicks MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"800"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_MidiOutCalculatedLatencyTicks, 800);     // DEVPROP_TYPE_UINT64
 
 // user-supplied latency ticks for a device
-#define STRING_PKEY_MIDI_MidiOutUserSuppliedLatencyTicks MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"601"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_MidiOutUserSuppliedLatencyTicks, 601);     // DEVPROP_TYPE_UINT64
+#define STRING_PKEY_MIDI_MidiOutUserSuppliedLatencyTicks MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"801"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_MidiOutUserSuppliedLatencyTicks, 801);     // DEVPROP_TYPE_UINT64
 
 // true if we should use the user-supplied latency instead of the calculated latency
-#define STRING_PKEY_MIDI_MidiOutLatencyTicksUserOverride MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"602"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_MidiOutLatencyTicksUserOverride, 602);     // DEVPROP_TYPE_BOOL
-
-
-// TODO: Add in the other properties like
-// - Should receive MIDI clock
-// - Should use MIDI clock start
-// - Should use MIDI timecode
-// - Recommended CC Automation Interval (ms)
-// - Supports MPE
-// - Requires note off translation (Mackie)
-// - 
-
-
+#define STRING_PKEY_MIDI_MidiOutLatencyTicksUserOverride MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"802"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_MidiOutLatencyTicksUserOverride, 802);     // DEVPROP_TYPE_BOOL
 
 
 
 // Structures for properties ================================================================
-
-
-
 
 
 // GTB structures Copied from driver code. This should be a shared file instead.
@@ -383,7 +406,7 @@ struct MidiFunctionBlockHeader
 struct MidiFunctionBlockDefinition
 {
     MidiFunctionBlockHeader FunctionBlock;
-    char                    Name[1];             // NULL Terminated string, blank indicates none available. Not a WCHAR per spec
+    wchar_t                 Name[1];             // NULL Terminated string, blank indicates none available. Not a WCHAR per spec, but storing that way anyway
 };
 
 

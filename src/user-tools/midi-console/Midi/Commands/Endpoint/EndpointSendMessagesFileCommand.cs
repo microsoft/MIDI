@@ -19,7 +19,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         {
             [LocalizedDescription("ParameterSendMessagesFileCommandFile")]
             [CommandArgument(1, "<Input File>")]
-            public string InputFile { get; set; }
+            public string? InputFile { get; set; }
 
             [EnumLocalizedDescription("ParameterSendMessagesFileFieldDelimiter", typeof(ParseFieldDelimiter))]
             [CommandOption("-d|--delimiter")]
@@ -43,7 +43,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public override ValidationResult Validate(CommandContext context, Settings settings)
         {
-            if (!System.IO.File.Exists(settings.InputFile))
+            if (settings.InputFile == null)
+            {
+                // TODO: Localize
+                return ValidationResult.Error($"File not specified.");
+            }
+
+            if (settings.InputFile != null && !System.IO.File.Exists(settings.InputFile))
             {
                 // TODO: Localize
                 return ValidationResult.Error($"File not found {settings.InputFile}.");
@@ -142,7 +148,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                         // open our data file
 
-                        var fileStream = System.IO.File.OpenText(settings.InputFile);
+                        var fileStream = System.IO.File.OpenText(settings.InputFile!);
 
                         char delimiter = (char)0;
 

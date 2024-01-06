@@ -14,6 +14,10 @@
 #define MIDIWORDNIBBLE2(x) ((uint8_t)((x & 0x0F000000) >> 24))
 #define MIDIWORDNIBBLE3(x) ((uint8_t)((x & 0x00F00000) >> 20))
 #define MIDIWORDNIBBLE4(x) ((uint8_t)((x & 0x000F0000) >> 16))
+#define MIDIWORDNIBBLE5(x) ((uint8_t)((x & 0x0000F000) >> 12))
+#define MIDIWORDNIBBLE6(x) ((uint8_t)((x & 0x00000F00) >> 8))
+#define MIDIWORDNIBBLE7(x) ((uint8_t)((x & 0x000000F0) >> 4))
+#define MIDIWORDNIBBLE8(x) ((uint8_t)((x & 0x0000000F)))
 
 
 #define MIDIWORDBYTE1(x) ((uint8_t)((x & 0xFF000000) >> 24))
@@ -21,6 +25,8 @@
 #define MIDIWORDBYTE3(x) ((uint8_t)((x & 0x0000FF00) >> 8))
 #define MIDIWORDBYTE4(x) ((uint8_t)((x & 0x000000FF)))
 
+#define MIDIWORDSHORT1(x) ((uint8_t)((x & 0xFFFF0000) >> 16))
+#define MIDIWORDSHORT2(x) ((uint8_t)((x & 0x0000FFFF)))
 
 
 #define UMP32_WORD_COUNT 1

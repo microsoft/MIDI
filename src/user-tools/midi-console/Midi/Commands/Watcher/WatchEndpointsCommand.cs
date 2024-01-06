@@ -9,12 +9,13 @@ using System.ComponentModel;
 
 using Microsoft.Devices.Midi2.ConsoleApp.Resources;
 using Windows.Devices.Midi2;
+using Windows.UI.Input.Inking.Analysis;
 
 namespace Microsoft.Devices.Midi2.ConsoleApp
 {
     internal class WatchEndpointsCommand : Command<WatchEndpointsCommand.Settings>
     {
-        private MidiEndpointDeviceWatcher _watcher;
+        private MidiEndpointDeviceWatcher? _watcher = null;
         internal class Settings : CommandSettings
         {
             [LocalizedDescription("ParameterEnumEndpointsIncludeLoopbackEndpoints")]
@@ -88,30 +89,83 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         private void OnWatcherStopped(MidiEndpointDeviceWatcher sender, object args)
         {
-            AnsiConsole.MarkupLine("Watcher Stopped");
+            AnsiConsole.MarkupLine("[darkorange]Watcher Stopped[/]");
+            AnsiConsole.MarkupLine("");
+
         }
 
         private void OnWatcherEnumerationCompleted(MidiEndpointDeviceWatcher sender, object args)
         {
-            AnsiConsole.MarkupLine("Enumeration Completed");
+            AnsiConsole.MarkupLine("[green]Enumeration Completed[/]");
+            AnsiConsole.MarkupLine("");
+
         }
 
 
         private void OnWatcherDeviceRemoved(MidiEndpointDeviceWatcher sender, Windows.Devices.Enumeration.DeviceInformationUpdate args)
         {
-            AnsiConsole.MarkupLine("Removed: " + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(args.Id));
+            AnsiConsole.MarkupLine("[indianred1]Endpoint Removed:[/]");
+            AnsiConsole.MarkupLine(" - " + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(args.Id));
+            AnsiConsole.MarkupLine("");
+
         }
 
-        private void OnWatcherDeviceUpdated(MidiEndpointDeviceWatcher sender, Windows.Devices.Enumeration.DeviceInformationUpdate args)
+        private const string _bullet = "[green] ✔️ [/]";
+        private const string _deviceBullet = " 🎹 ";
+
+        private void OnWatcherDeviceUpdated(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationUpdateEventArgs args)
         {
-            AnsiConsole.MarkupLine("Updated: " + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(args.Id));
+            AnsiConsole.MarkupLine("[steelblue1]Endpoint Updated:[/]");
+            AnsiConsole.MarkupLine(_deviceBullet + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(args.Id));
+
+            
+
+            if (args.UpdatedName)
+            {
+                AnsiConsole.MarkupLine(_bullet + "[gold3_1]Name Updated[/]");
+            }
+
+            if (args.UpdatedProtocol)
+            {
+                AnsiConsole.MarkupLine(_bullet + "[gold3_1]Protocol Updated[/]");
+            }
+
+            if (args.UpdatedJRTimestampHandling)
+            {
+                AnsiConsole.MarkupLine(_bullet + "[gold3_1]JR Timestamp Handling Updated[/]");
+            }
+
+            if (args.UpdatedFunctionBlocks)
+            {
+                AnsiConsole.MarkupLine(_bullet + "[gold3_1]Function Blocks Updated[/]");
+            }
+
+            if (args.UpdatedInProtocolEndpointInformation)
+            {
+                AnsiConsole.MarkupLine(_bullet + "[gold3_1]In-Protocol Endpoint Information Updated[/]");
+            }
+
+            if (args.UpdatedUserMetadata)
+            {
+                AnsiConsole.MarkupLine(_bullet + "[gold3_1]User Metadata Updated[/]");
+            }
+
+            if (args.UpdatedAdditionalCapabilities)
+            {
+                AnsiConsole.MarkupLine(_bullet + "[gold3_1]Additional Capabilities Updated[/]");
+            }
+
+            AnsiConsole.MarkupLine("");
         }
 
         private void OnWatcherDeviceAdded(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformation args)
         {
-            AnsiConsole.MarkupLine("Added:   " + AnsiMarkupFormatter.FormatEndpointName(args.Name));
-            AnsiConsole.MarkupLine("         " + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(args.Id));
-            AnsiConsole.MarkupLine("         " + args.EndpointPurpose.ToString());
+            AnsiConsole.MarkupLine("Endpoint Added: ");
+            AnsiConsole.MarkupLine(_deviceBullet + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(args.Id));
+            AnsiConsole.MarkupLine(_bullet + AnsiMarkupFormatter.FormatEndpointName(args.Name));
+            AnsiConsole.MarkupLine(_bullet + args.EndpointPurpose.ToString());
+            AnsiConsole.MarkupLine("");
+
         }
     }
 }

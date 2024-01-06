@@ -1,0 +1,45 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+namespace Windows.Devices.Midi2
+{
+    [MIDI_API_CONTRACT(1)]
+    [default_interface]
+    runtimeclass MidiEndpointDeviceInformationUpdateEventArgs
+    {
+        String Id {get; };
+
+        // any name changes
+        Boolean UpdatedName{ get; };
+
+        // Endpoint identity, endpoint info, Endpoint Name, device instance id, etc.
+        Boolean UpdatedInProtocolEndpointInformation{ get; };
+
+        // Function blocks or function block names
+        Boolean UpdatedFunctionBlocks{ get; };
+
+        // change from midi 1.0 <-> midi 2.0
+        Boolean UpdatedProtocol{ get; };
+        
+        // Description, icon etc. Not the name
+        Boolean UpdatedUserMetadata{ get; };                
+
+        // Negotiated JR timestamp handling. Not really needed in client code, but good to know.
+        Boolean UpdatedJRTimestampHandling{ get; };
+
+        // User or endpoint-supplied capabilities like MPE, cc automation interval, etc.
+        Boolean UpdatedAdditionalCapabilities{ get; };
+
+
+        Windows.Devices.Enumeration.DeviceInformationUpdate DeviceInformationUpdate{ get; };
+    }
+}
+

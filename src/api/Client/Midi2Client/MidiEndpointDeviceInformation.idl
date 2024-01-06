@@ -75,7 +75,14 @@ namespace Windows.Devices.Midi2
         Boolean SupportsSendingJRTimestamps{ get; };
         Boolean ExpectsJRTimestamps{ get; };
 
-        // TODO: MIDI Device Id (sysex stuff)
+        // MIDI Device Identity (sysex stuff)
+        UInt8[] DeviceIdentitySystemExclusiveId{ get; };
+        UInt8 DeviceIdentityDeviceFamilyLsb{ get; };
+        UInt8 DeviceIdentityDeviceFamilyMsb{ get; };
+        UInt8 DeviceIdentityDeviceFamilyModelNumberLsb{ get; };
+        UInt8 DeviceIdentityDeviceFamilyModelNumberMsb{ get; };
+        UInt8[] DeviceIdentitySoftwareRevisionLevel{ get; };
+
 
         // transport type
         String TransportId{ get; };
@@ -108,12 +115,15 @@ namespace Windows.Devices.Midi2
         String LargeImagePath{ get; };
         String SmallImagePath{ get; };
 
+
+
+        Boolean RequiresNoteOffTranslation{ get; };
+        UInt16 RecommendedCCAutomationIntervalMS{ get; };
+        Boolean SupportsMidiPolyphonicExpression{ get; };
+
+
         Windows.Foundation.Collections.IMapView<String, IInspectable> Properties{ get; };
         
-        // constructor to create from the watcher events
-
-        // constructor to create from DeviceInformation
-
 
         Boolean UpdateFromDeviceInformation(Windows.Devices.Enumeration.DeviceInformation deviceInformation);
         Boolean UpdateFromDeviceInformationUpdate(Windows.Devices.Enumeration.DeviceInformationUpdate deviceInformationUpdate);

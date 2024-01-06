@@ -282,6 +282,7 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
     {
         GUID KsAbstractionLayerGUID = __uuidof(Midi2KSAbstraction);
         DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
+        DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
 
         std::vector<DEVPROPERTY> interfaceDevProperties;
         std::vector<DEVPROPERTY> deviceDevProperties;
@@ -299,8 +300,28 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         interfaceDevProperties.push_back({ {PKEY_MIDI_TransportMnemonic, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_STRING, static_cast<ULONG>((mnemonic.length() + 1) * sizeof(WCHAR)), (PVOID)mnemonic.c_str() });
 
+        interfaceDevProperties.push_back({ {PKEY_MIDI_SupportsMulticlient, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
+
         interfaceDevProperties.push_back({ {PKEY_MIDI_GenerateIncomingTimestamp, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
+
+        // Adding this here so it can later be updated in-protocol.
+        MidiDeviceIdentityProperty dummyDeviceIdentity;
+        interfaceDevProperties.push_back({ {PKEY_MIDI_DeviceIdentity, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_BINARY, static_cast<ULONG>(sizeof(dummyDeviceIdentity)), &dummyDeviceIdentity });
+
+        // default to keep us from spamming JR timestamps until they are configured
+        interfaceDevProperties.push_back({ {PKEY_MIDI_EndpointConfiguredExpectsJRTimestamps, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse });
+
+
+
+        // TODO: iSerialNumber from driver KS property PKEY_MIDI_SerialNumber
+
+        // TODO: Manufacturer name from driver KS property PKEY_MIDI_ManufacturerName
+
+
 
         if (MidiPin->NativeDataFormat != GUID_NULL)
         {

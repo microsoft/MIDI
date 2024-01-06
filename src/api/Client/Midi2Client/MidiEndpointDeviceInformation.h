@@ -91,7 +91,19 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::MidiProtocol ConfiguredProtocol() const noexcept;
 
 
-       // TODO: MIDI Device Id (sysex stuff)
+       // MIDI Device Id (sysex stuff)
+        com_array<uint8_t> DeviceIdentitySystemExclusiveId() const noexcept;
+        uint8_t DeviceIdentityDeviceFamilyLsb() const noexcept { return m_deviceIdentity.DeviceFamilyLsb; }
+        uint8_t DeviceIdentityDeviceFamilyMsb() const noexcept { return m_deviceIdentity.DeviceFamilyMsb; }
+        uint8_t DeviceIdentityDeviceFamilyModelNumberLsb() const noexcept { return m_deviceIdentity.DeviceFamilyModelNumberLsb; }
+        uint8_t DeviceIdentityDeviceFamilyModelNumberMsb() const noexcept { return m_deviceIdentity.DeviceFamilyModelNumberMsb; }
+        com_array<uint8_t> DeviceIdentitySoftwareRevisionLevel() const noexcept;
+
+
+        bool RequiresNoteOffTranslation() { return GetBoolProperty(STRING_PKEY_MIDI_RequiresNoteOffTranslation, false); }
+        bool SupportsMidiPolyphonicExpression() { return GetBoolProperty(STRING_PKEY_MIDI_SupportsMidiPolyphonicExpression, false); }
+        uint16_t RecommendedCCAutomationIntervalMS() { return GetUInt16Property(STRING_PKEY_MIDI_RecommendedCCAutomationIntervalMS, 0); }
+
 
 
         collections::IMapView<winrt::hstring, IInspectable> Properties() { return m_properties.GetView(); }
@@ -123,9 +135,18 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ winrt::hstring key,
             _In_ uint32_t defaultValue) const noexcept;
 
+        uint16_t GetUInt16Property(
+            _In_ winrt::hstring key,
+            _In_ uint16_t defaultValue) const noexcept;
+
         bool GetBoolProperty(
             _In_ winrt::hstring key,
             _In_ bool defaultValue) const noexcept;
+
+        foundation::IReferenceArray<uint8_t> GetBinaryProperty(
+            _In_ winrt::hstring key) const noexcept;
+
+
 
         // TODO: This should come from a property in the bag, not something here to get out of sync
         winrt::hstring m_transportSuppliedEndpointName{};
@@ -140,6 +161,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         collections::IVector<midi2::MidiGroupTerminalBlock> m_groupTerminalBlocks{ winrt::single_threaded_vector<midi2::MidiGroupTerminalBlock>() };
 
 
+        MidiDeviceIdentityProperty m_deviceIdentity;
+
+        void ReadDeviceIdentity();
+        void ReadFunctionBlocks();
         void ReadGroupTerminalBlocks();
 
     };

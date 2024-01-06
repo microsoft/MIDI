@@ -104,6 +104,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         {
             MidiMessageTable displayTable = new MidiMessageTable(settings.Verbose);
 
+            bool capturingToFile = false;
+
             string endpointId = string.Empty;
 
             if (!string.IsNullOrEmpty(settings.EndpointDeviceId))
@@ -137,7 +139,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 }
 
                 string fileName = string.Empty;
-                StreamWriter captureWriter = null;
+                StreamWriter? captureWriter = null;
 
                 if (settings.OutputFile != null && settings.OutputFile.Trim() != string.Empty)
                 {
@@ -150,10 +152,12 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     captureWriter = System.IO.File.AppendText(fileName);
 
                     AnsiConsole.MarkupLine("Capturing to " + AnsiMarkupFormatter.FormatFileName(fileName));
+
+                    capturingToFile = true;
                 }
                 else
                 {
-                    captureWriter = null;
+                    //captureWriter = null;
                 }
 
                 AnsiConsole.MarkupLine(Strings.MonitorPressEscapeToStopMonitoringMessage);
@@ -162,7 +166,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 UInt64 startTimestamp = 0;
                 UInt64 lastReceivedTimestamp = 0;
 
-                MidiMessageStruct msg;
+                //MidiMessageStruct msg;
 
                 UInt32 index = 0;
 
@@ -250,7 +254,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                         displayTable.OutputHeader();
 
 
-                                        if (captureWriter != null)
+                                        if (captureWriter != null && capturingToFile)
                                         {
                                             captureWriter.WriteLine("#");
                                             captureWriter.WriteLine($"# Windows MIDI Services Console Capture {DateTime.Now.ToLongDateString()}");

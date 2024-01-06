@@ -55,11 +55,12 @@
             <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.VirtualMidiAbstraction.dll"      SelfRegCost="1" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.VirtualPatchBayAbstraction.dll"  SelfRegCost="1" Vital="true" />
 
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.BS2UMPTransform.dll"                      SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.UMP2BSTransform.dll"                      SelfRegCost="1" Vital="true" />
-     <!--       <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.EndpointMetadataListenerAbstraction.dll"  SelfRegCost="1" Vital="true" /> -->
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.JitterReductionAbstraction.dll"           SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.SchedulerTransform.dll"                 SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.BS2UMPTransform.dll"                     SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.UMP2BSTransform.dll"                     SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.EndpointMetadataListenerTransform.dll"   SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.JitterReductionGeneratorTransform.dll"   SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.JitterReductionListenerTransform.dll"    SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.SchedulerTransform.dll"                  SelfRegCost="1" Vital="true" />
 
        </Component>
 

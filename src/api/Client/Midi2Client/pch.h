@@ -87,6 +87,7 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 #include "MidiEndpointConnectionOptions.h"
 
 #include "MidiMessageReceivedEventArgs.h"
+#include "MidiEndpointDeviceInformationUpdateEventArgs.h"
 
 #include "MidiSession.h"
 

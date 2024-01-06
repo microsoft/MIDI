@@ -77,6 +77,24 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("Endpoint Metadata"), "");
                     table.AddRow("Product Instance Id", AnsiMarkupFormatter.EscapeString(di.ProductInstanceId));
                     table.AddRow("Endpoint-Supplied Name", AnsiMarkupFormatter.FormatEndpointName(di.EndpointSuppliedName));
+                    table.AddRow("System Exclusive Id", 
+                        di.DeviceIdentitySystemExclusiveId[0].ToString("X2") + " " +
+                        di.DeviceIdentitySystemExclusiveId[1].ToString("X2") + " " +
+                        di.DeviceIdentitySystemExclusiveId[2].ToString("X2"));
+
+                    table.AddRow("Device Family",
+                        di.DeviceIdentityDeviceFamilyMsb.ToString("X2") + " " +
+                        di.DeviceIdentityDeviceFamilyLsb.ToString("X2"));
+
+                    table.AddRow("Device Family Model #",
+                        di.DeviceIdentityDeviceFamilyModelNumberMsb.ToString("X2") + " " +
+                        di.DeviceIdentityDeviceFamilyModelNumberLsb.ToString("X2"));
+
+                    table.AddRow("Software Revision Level",
+                        di.DeviceIdentitySoftwareRevisionLevel[0].ToString("X2") + " " +
+                        di.DeviceIdentitySoftwareRevisionLevel[1].ToString("X2") + " " +
+                        di.DeviceIdentitySoftwareRevisionLevel[2].ToString("X2") + " " +
+                        di.DeviceIdentitySoftwareRevisionLevel[3].ToString("X2"));
                 }
 
                 table.AddEmptyRow();
@@ -215,6 +233,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 }
 
 
+                if (settings.Verbose)
+                {
+                    table.AddEmptyRow();
+                    table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("Additional Capabilities/Properties"), "");
+                    //table.AddRow("Requires Note Off Translation", di.NativeDataFormat.ToString());
+                }
+
 
                 if (settings.Verbose)
                 {
@@ -306,7 +331,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         {
             foreach (string key in properties.Keys)
             {
-                object value;
+                object? value;
                 bool found = properties.TryGetValue(key, out value);
 
                 if (found)
@@ -315,19 +340,19 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     {
                         if (key == "System.ItemNameDisplay")
                         {
-                            table.AddRow(key, AnsiMarkupFormatter.FormatEndpointName(value.ToString()));
+                            table.AddRow(key, AnsiMarkupFormatter.FormatEndpointName(value.ToString()!));
                         }
                         else if (key == "System.Devices.DeviceInstanceId")
                         {
-                            table.AddRow(key, AnsiMarkupFormatter.FormatDeviceInstanceId(value.ToString()));
+                            table.AddRow(key, AnsiMarkupFormatter.FormatDeviceInstanceId(value.ToString()!));
                         }
                         else if (key == "System.Devices.Parent")
                         {
-                            table.AddRow(key, AnsiMarkupFormatter.FormatDeviceParentId(value.ToString()));
+                            table.AddRow(key, AnsiMarkupFormatter.FormatDeviceParentId(value.ToString()!));
                         }
                         else if (key == "System.Devices.ContainerId")
                         {
-                            table.AddRow(key, AnsiMarkupFormatter.FormatContainerId(value.ToString()));
+                            table.AddRow(key, AnsiMarkupFormatter.FormatContainerId(value.ToString()!));
                         }
                         else
                         {
@@ -344,7 +369,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                             }
                             else
                             {
-                                table.AddRow(key, AnsiMarkupFormatter.EscapeString(value.ToString()));
+                                table.AddRow(key, AnsiMarkupFormatter.EscapeString(value.ToString()!));
                             }
 
                         }

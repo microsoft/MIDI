@@ -21,13 +21,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         private class MenuItem
         {
-            public string Text { get; set; }
-            public MenuActionCallback Action { get; set; }
+            public string Text { get; set; } = string.Empty;
+            public MenuActionCallback? Action { get; set; }
         }
 
 
         //MidiVirtualDeviceResponder _responder;
-        MidiEndpointConnection _endpoint;
+//        MidiEndpointConnection? _endpoint = null;
 
 
         internal class Settings : CommandSettings
@@ -132,7 +132,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         .AddChoices(choices)
                     );
 
-                if (result != null)
+                if (result != null && result.Action != null)
                 {
                     result.Action();
                 }

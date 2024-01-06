@@ -150,12 +150,6 @@
     <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
       <Filter>API\Enumeration</Filter>
     </ClCompile>
-    <ClCompile Include="MidiProfile.cpp">
-      <Filter>API\CI\Profiles</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiProperty.cpp">
-      <Filter>API\CI\Property Exchange</Filter>
-    </ClCompile>
     <ClCompile Include="MidiMessageConverter.cpp">
       <Filter>API\Messages\Utility</Filter>
     </ClCompile>
@@ -170,6 +164,9 @@
     </ClCompile>
     <ClCompile Include="ResourceManager.cpp">
       <Filter>Internal\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceInformationUpdateEventArgs.cpp">
+      <Filter>API\Enumeration</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -237,12 +234,6 @@
     <ClInclude Include="MidiEndpointDeviceWatcher.h">
       <Filter>API\Enumeration</Filter>
     </ClInclude>
-    <ClInclude Include="MidiProfile.h">
-      <Filter>API\CI\Profiles</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiProperty.h">
-      <Filter>API\CI\Property Exchange</Filter>
-    </ClInclude>
     <ClInclude Include="MidiMessageConverter.h">
       <Filter>API\Messages\Utility</Filter>
     </ClInclude>
@@ -260,6 +251,9 @@
     </ClInclude>
     <ClInclude Include="ResourceManager.h">
       <Filter>Internal\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceInformationUpdateEventArgs.h">
+      <Filter>API\Enumeration</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -439,6 +433,9 @@
     </Midl>
     <Midl Include="IMidiEndpointConnectionSource.idl">
       <Filter>API\Endpoints\Connections\Interfaces</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationUpdateEventArgs.idl">
+      <Filter>API\Enumeration</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

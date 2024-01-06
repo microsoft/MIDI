@@ -11,6 +11,7 @@ MIDI_IDL_IMPORT
 
 import "MidiEndpointDeviceInformationFilterEnum.idl";
 import "MidiEndpointDeviceInformation.idl";
+import "MidiEndpointDeviceInformationUpdateEventArgs.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -29,7 +30,7 @@ namespace Windows.Devices.Midi2
 
         event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, MidiEndpointDeviceInformation> Added;
         event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, Windows.Devices.Enumeration.DeviceInformationUpdate> Removed;
-        event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, Windows.Devices.Enumeration.DeviceInformationUpdate> Updated;
+        event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, MidiEndpointDeviceInformationUpdateEventArgs> Updated;
 
         event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, IInspectable> EnumerationCompleted;
         event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, IInspectable> Stopped;
