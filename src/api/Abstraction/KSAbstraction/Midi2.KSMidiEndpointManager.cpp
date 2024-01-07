@@ -312,7 +312,9 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
                 DEVPROP_TYPE_BINARY, static_cast<ULONG>(sizeof(dummyDeviceIdentity)), &dummyDeviceIdentity });
 
         // default to keep us from spamming JR timestamps until they are configured
-        interfaceDevProperties.push_back({ {PKEY_MIDI_EndpointConfiguredExpectsJRTimestamps, DEVPROP_STORE_SYSTEM, nullptr},
+        interfaceDevProperties.push_back({ {PKEY_MIDI_EndpointConfiguredToSendJRTimestamps, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse });
+        interfaceDevProperties.push_back({ {PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse });
 
 

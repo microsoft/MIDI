@@ -61,9 +61,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         winrt::hstring TransportId() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_AbstractionLayer, L""); }
         winrt::hstring TransportMnemonic() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_TransportMnemonic, L""); }
-        winrt::hstring Description() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UserSuppliedDescription, L""); }
-        winrt::hstring LargeImagePath() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UserSuppliedLargeImagePath, L""); }
-        winrt::hstring SmallImagePath() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UserSuppliedSmallImagePath, L""); }
 
         winrt::hstring TransportSuppliedSerialNumber() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_SerialNumber, L"");}
         winrt::hstring ManufacturerName() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_ManufacturerName, L""); }
@@ -74,35 +71,44 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::MidiEndpointDevicePurpose EndpointPurpose() const noexcept;
 
 
-        collections::IVectorView<midi2::MidiFunctionBlock> FunctionBlocks() const noexcept;
+        bool HasStaticFunctionBlocks() const noexcept { return GetBoolProperty(STRING_PKEY_MIDI_FunctionBlocksAreStatic, false); }
+        uint8_t FunctionBlockCount() const noexcept { return GetByteProperty(STRING_PKEY_MIDI_FunctionBlockCount, (uint8_t)0); }
+        collections::IMapView<uint8_t, midi2::MidiFunctionBlock> FunctionBlocks() const noexcept;
+
         collections::IVectorView<midi2::MidiGroupTerminalBlock> GroupTerminalBlocks() const noexcept;
 
 
         winrt::hstring ProductInstanceId() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_EndpointProvidedProductInstanceId, L""); }
         uint8_t SpecificationVersionMajor() const noexcept { return GetByteProperty(STRING_PKEY_MIDI_EndpointUmpVersionMajor, (uint8_t)0); }
         uint8_t SpecificationVersionMinor() const noexcept { return GetByteProperty(STRING_PKEY_MIDI_EndpointUmpVersionMinor, (uint8_t)0); }
-        bool HasStaticFunctionBlocks() const noexcept { return GetBoolProperty(STRING_PKEY_MIDI_EndpointUmpVersionMinor, false); }
+
         bool SupportsMidi10Protocol() const noexcept { return GetBoolProperty(STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol, false); }
         bool SupportsMidi20Protocol() const noexcept { return GetBoolProperty(STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol, false); }
-        bool SupportsReceivingJRTimestamps() const noexcept { return GetBoolProperty(STRING_PKEY_MIDI_EndpointSupportsReceivingJRTimestamps, false); }
-        bool SupportsSendingJRTimestamps() const noexcept { return GetBoolProperty(STRING_PKEY_MIDI_EndpointSupportsSendingJRTimestamps, false); }
-        bool ExpectsJRTimestamps() const noexcept { return GetBoolProperty(STRING_PKEY_MIDI_EndpointConfiguredExpectsJRTimestamps, false); }
-
         midi2::MidiProtocol ConfiguredProtocol() const noexcept;
 
+        bool SupportsReceivingJRTimestamps() const noexcept { return GetBoolProperty(STRING_PKEY_MIDI_EndpointSupportsReceivingJRTimestamps, false); }
+        bool SupportsSendingJRTimestamps() const noexcept { return GetBoolProperty(STRING_PKEY_MIDI_EndpointSupportsSendingJRTimestamps, false); }
+        bool ConfiguredToReceiveJRTimestamps() const noexcept { return GetBoolProperty(STRING_PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps, false); }
+        bool ConfiguredToSendJRTimestamps() const noexcept { return GetBoolProperty(STRING_PKEY_MIDI_EndpointConfiguredToSendJRTimestamps, false); }
 
-       // MIDI Device Id (sysex stuff)
-        com_array<uint8_t> DeviceIdentitySystemExclusiveId() const noexcept;
+
+
+        // MIDI Device Identity (sysex stuff)
+        winrt::com_array<uint8_t> DeviceIdentitySystemExclusiveId() const noexcept;
         uint8_t DeviceIdentityDeviceFamilyLsb() const noexcept { return m_deviceIdentity.DeviceFamilyLsb; }
         uint8_t DeviceIdentityDeviceFamilyMsb() const noexcept { return m_deviceIdentity.DeviceFamilyMsb; }
         uint8_t DeviceIdentityDeviceFamilyModelNumberLsb() const noexcept { return m_deviceIdentity.DeviceFamilyModelNumberLsb; }
         uint8_t DeviceIdentityDeviceFamilyModelNumberMsb() const noexcept { return m_deviceIdentity.DeviceFamilyModelNumberMsb; }
-        com_array<uint8_t> DeviceIdentitySoftwareRevisionLevel() const noexcept;
+        winrt::com_array<uint8_t> DeviceIdentitySoftwareRevisionLevel() const noexcept;
 
 
         bool RequiresNoteOffTranslation() { return GetBoolProperty(STRING_PKEY_MIDI_RequiresNoteOffTranslation, false); }
         bool SupportsMidiPolyphonicExpression() { return GetBoolProperty(STRING_PKEY_MIDI_SupportsMidiPolyphonicExpression, false); }
         uint16_t RecommendedCCAutomationIntervalMS() { return GetUInt16Property(STRING_PKEY_MIDI_RecommendedCCAutomationIntervalMS, 0); }
+
+        winrt::hstring Description() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UserSuppliedDescription, L""); }
+        winrt::hstring LargeImagePath() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UserSuppliedLargeImagePath, L""); }
+        winrt::hstring SmallImagePath() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UserSuppliedSmallImagePath, L""); }
 
 
 
@@ -127,9 +133,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ winrt::hstring key,
             _In_ winrt::guid defaultValue) const noexcept;
 
+
         uint8_t GetByteProperty(
             _In_ winrt::hstring key,
             _In_ uint8_t defaultValue) const noexcept;
+
+        uint64_t GetUInt64Property(
+            _In_ winrt::hstring key,
+            _In_ uint64_t defaultValue) const noexcept;
 
         uint32_t GetUInt32Property(
             _In_ winrt::hstring key,
@@ -138,6 +149,20 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint16_t GetUInt16Property(
             _In_ winrt::hstring key,
             _In_ uint16_t defaultValue) const noexcept;
+
+
+        int64_t GetInt64Property(
+            _In_ winrt::hstring key,
+            _In_ int64_t defaultValue) const noexcept;
+
+        int32_t GetInt32Property(
+            _In_ winrt::hstring key,
+            _In_ int32_t defaultValue) const noexcept;
+
+        int16_t GetInt16Property(
+            _In_ winrt::hstring key,
+            _In_ int16_t defaultValue) const noexcept;
+
 
         bool GetBoolProperty(
             _In_ winrt::hstring key,
@@ -158,6 +183,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
             winrt::single_threaded_map< winrt::hstring, IInspectable>();
 
 
+        collections::IMap<uint8_t, midi2::MidiFunctionBlock> m_functionBlocks =
+            winrt::single_threaded_map<uint8_t, midi2::MidiFunctionBlock>();
+
         collections::IVector<midi2::MidiGroupTerminalBlock> m_groupTerminalBlocks{ winrt::single_threaded_vector<midi2::MidiGroupTerminalBlock>() };
 
 
@@ -166,6 +194,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void ReadDeviceIdentity();
         void ReadFunctionBlocks();
         void ReadGroupTerminalBlocks();
+
+
+        void AddOrUpdateFunctionBlock(_In_ foundation::IReferenceArray<uint8_t> refArray);
+
 
     };
 }

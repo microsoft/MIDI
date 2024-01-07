@@ -20,20 +20,20 @@ namespace Windows.Devices.Midi2
         // any name changes
         Boolean UpdatedName{ get; };
 
-        // Endpoint identity, endpoint info, Endpoint Name, device instance id, etc.
-        Boolean UpdatedInProtocolEndpointInformation{ get; };
+        // Endpoint identity, endpoint info
+        Boolean UpdatedEndpointInformation{ get; };
+
+        // Endpoint identity, endpoint info
+        Boolean UpdatedDeviceIdentity{ get; };
+
+        // Endpoint identity, endpoint info
+        Boolean UpdatedStreamConfiguration{ get; };
 
         // Function blocks or function block names
         Boolean UpdatedFunctionBlocks{ get; };
-
-        // change from midi 1.0 <-> midi 2.0
-        Boolean UpdatedProtocol{ get; };
-        
+       
         // Description, icon etc. Not the name
         Boolean UpdatedUserMetadata{ get; };                
-
-        // Negotiated JR timestamp handling. Not really needed in client code, but good to know.
-        Boolean UpdatedJRTimestampHandling{ get; };
 
         // User or endpoint-supplied capabilities like MPE, cc automation interval, etc.
         Boolean UpdatedAdditionalCapabilities{ get; };

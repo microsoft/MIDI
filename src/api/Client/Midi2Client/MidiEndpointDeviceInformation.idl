@@ -65,15 +65,15 @@ namespace Windows.Devices.Midi2
         UInt8 SpecificationVersionMajor{ get; };
         UInt8 SpecificationVersionMinor{ get; };
 
-        Boolean HasStaticFunctionBlocks{ get; };
-
         Boolean SupportsMidi10Protocol{ get; };
         Boolean SupportsMidi20Protocol{ get; };
         MidiProtocol ConfiguredProtocol{ get; };    // MIDI 1.0 or MIDI 2.0 for this endpoint
 
         Boolean SupportsReceivingJRTimestamps{ get; };
         Boolean SupportsSendingJRTimestamps{ get; };
-        Boolean ExpectsJRTimestamps{ get; };
+
+        Boolean ConfiguredToReceiveJRTimestamps{ get; };
+        Boolean ConfiguredToSendJRTimestamps{ get; };
 
         // MIDI Device Identity (sysex stuff)
         UInt8[] DeviceIdentitySystemExclusiveId{ get; };
@@ -101,9 +101,14 @@ namespace Windows.Devices.Midi2
         // whether or not this is an upgrade MIDI 1.0 device
         MidiEndpointNativeDataFormat NativeDataFormat{ get; };
 
-        // group terminal blocks and function blocks
+        // group terminal blocks
         IVectorView<MidiGroupTerminalBlock> GroupTerminalBlocks{ get; };
-        IVectorView<MidiFunctionBlock> FunctionBlocks{ get; };
+
+        // function blocks
+        Boolean HasStaticFunctionBlocks{ get; };
+        UInt8 FunctionBlockCount{ get; };           // this number is provided by a separate message, but should match the vector item count
+
+        IMapView<UInt8, MidiFunctionBlock> FunctionBlocks{ get; };
 
         // If this is a diagnostic endpoint
         MidiEndpointDevicePurpose EndpointPurpose{ get; };

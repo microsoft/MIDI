@@ -18,12 +18,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring Id() { return m_endpointDeviceId; }
 
         bool UpdatedName() { return m_updatedName; }
-        bool UpdatedInProtocolEndpointInformation() { return m_updatedInProtocolEndpointInformation; }
+        bool UpdatedEndpointInformation() { return m_updatedInProtocolEndpointInformation; }
+        bool UpdatedDeviceIdentity() { return m_updatedDeviceIdentity; }
+        bool UpdatedStreamConfiguration() { return m_updatedStreamConfiguration; }
         bool UpdatedFunctionBlocks() { return m_updatedFunctionBlocks; }
-        bool UpdatedProtocol() { return m_updatedProtocol; }
         bool UpdatedUserMetadata() { return m_updatedUserMetadata; }
         bool UpdatedAdditionalCapabilities() { return m_updatedAdditionalCapabilities; }
-        bool UpdatedJRTimestampHandling() { return m_updatedJRTimestampHandling; }
 
         winrt::Windows::Devices::Enumeration::DeviceInformationUpdate DeviceInformationUpdate() { return m_deviceInformationUpdate; }
 
@@ -32,9 +32,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ winrt::Windows::Devices::Enumeration::DeviceInformationUpdate deviceInformationUpdate,
             _In_ bool updatedName,
             _In_ bool updatedInProtocolEndpointInformation,
+            _In_ bool updatedDeviceIdentity,
+            _In_ bool updatedStreamConfiguration,
             _In_ bool updatedFunctionBlocks,
-            _In_ bool updatedProtocol,
-            _In_ bool updatedJRTimestampHandling,
             _In_ bool updatedUserMetadata,
             _In_ bool updatedAdditionalCapabilities
         );
@@ -42,11 +42,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
     private:
         bool m_updatedName{ false };
         bool m_updatedInProtocolEndpointInformation{ false };
+        bool m_updatedDeviceIdentity{ false };
+        bool m_updatedStreamConfiguration{ false };
         bool m_updatedFunctionBlocks{ false };
-        bool m_updatedProtocol{ false };
         bool m_updatedUserMetadata{ false };
         bool m_updatedAdditionalCapabilities{ false };
-        bool m_updatedJRTimestampHandling{ false };
 
         winrt::hstring m_endpointDeviceId{};
         winrt::Windows::Devices::Enumeration::DeviceInformationUpdate m_deviceInformationUpdate{ nullptr };

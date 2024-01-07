@@ -28,6 +28,26 @@
 #define MIDIWORDSHORT1(x) ((uint8_t)((x & 0xFFFF0000) >> 16))
 #define MIDIWORDSHORT2(x) ((uint8_t)((x & 0x0000FFFF)))
 
+#define MIDIWORDHIGHBIT(x) (bool)((x & 0x80000000) != 0)
+
+#define MIDIWORDBYTE1HIGHBIT(x) (bool)((x & 0x80000000) != 0)
+#define MIDIWORDBYTE2HIGHBIT(x) (bool)((x & 0x00800000) != 0)
+#define MIDIWORDBYTE3HIGHBIT(x) (bool)((x & 0x00008000) != 0)
+#define MIDIWORDBYTE4HIGHBIT(x) (bool)((x & 0x00000080) != 0)
+
+#define MIDIWORDBYTE3LOWBIT1(x) (bool)((x & 0x00000100) != 0)
+#define MIDIWORDBYTE3LOWBIT2(x) (bool)((x & 0x00000200) != 0)
+#define MIDIWORDBYTE3LOWBIT3(x) (bool)((x & 0x00000400) != 0)
+
+#define MIDIWORDBYTE4LOWBIT1(x) (bool)((x & 0x00000001) != 0)
+#define MIDIWORDBYTE4LOWBIT2(x) (bool)((x & 0x00000002) != 0)
+#define MIDIWORDBYTE4LOWBIT3(x) (bool)((x & 0x00000004) != 0)
+
+#define MIDIWORDBYTE4LOWCRUMB1(x) (uint8_t)((x & 0x00000003))
+#define MIDIWORDBYTE4LOWCRUMB2(x) (uint8_t)((x & 0x0000000C) >> 2)
+#define MIDIWORDBYTE4LOWCRUMB3(x) (uint8_t)((x & 0x00000030) >> 4)
+#define MIDIWORDBYTE4LOWCRUMB4(x) (uint8_t)((x & 0x000000C0) >> 6)
+
 
 #define UMP32_WORD_COUNT 1
 #define UMP64_WORD_COUNT 2

@@ -110,7 +110,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         }
 
-        private const string _bullet = "[green] ✔️ [/]";
+        private const string _bullet = "[grey] ☑️ [/]";
         private const string _deviceBullet = " 🎹 ";
 
         private void OnWatcherDeviceUpdated(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationUpdateEventArgs args)
@@ -125,14 +125,14 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 AnsiConsole.MarkupLine(_bullet + "[gold3_1]Name Updated[/]");
             }
 
-            if (args.UpdatedProtocol)
+            if (args.UpdatedEndpointInformation)
             {
-                AnsiConsole.MarkupLine(_bullet + "[gold3_1]Protocol Updated[/]");
+                AnsiConsole.MarkupLine(_bullet + "[gold3_1]Endpoint Information Updated[/]");
             }
 
-            if (args.UpdatedJRTimestampHandling)
+            if (args.UpdatedStreamConfiguration)
             {
-                AnsiConsole.MarkupLine(_bullet + "[gold3_1]JR Timestamp Handling Updated[/]");
+                AnsiConsole.MarkupLine(_bullet + "[gold3_1]Stream Configuration Updated[/]");
             }
 
             if (args.UpdatedFunctionBlocks)
@@ -140,9 +140,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 AnsiConsole.MarkupLine(_bullet + "[gold3_1]Function Blocks Updated[/]");
             }
 
-            if (args.UpdatedInProtocolEndpointInformation)
+            if (args.UpdatedDeviceIdentity)
             {
-                AnsiConsole.MarkupLine(_bullet + "[gold3_1]In-Protocol Endpoint Information Updated[/]");
+                AnsiConsole.MarkupLine(_bullet + "[gold3_1]Device Identity Updated[/]");
             }
 
             if (args.UpdatedUserMetadata)

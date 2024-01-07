@@ -19,20 +19,20 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::Windows::Devices::Enumeration::DeviceInformationUpdate deviceInformationUpdate,
         bool updatedName,
         bool updatedInProtocolEndpointInformation,
+        bool updatedDeviceIdentity,
+        bool updatedStreamConfiguration,
         bool updatedFunctionBlocks,
-        bool updatedProtocol,
-        bool updatedJRTimestampHandling,
         bool updatedUserMetadata,
         bool updatedAdditionalCapabilities
     )
     {
+
         m_updatedName = updatedName;
         m_updatedInProtocolEndpointInformation = updatedInProtocolEndpointInformation;
+        m_updatedDeviceIdentity = updatedDeviceIdentity;
+        m_updatedStreamConfiguration = updatedStreamConfiguration;
         m_updatedFunctionBlocks = updatedFunctionBlocks;
-        m_updatedProtocol = updatedProtocol;
         m_updatedUserMetadata = updatedUserMetadata;
-
-        m_updatedJRTimestampHandling = updatedJRTimestampHandling;
         m_updatedAdditionalCapabilities = updatedAdditionalCapabilities;
 
         m_endpointDeviceId = endpointDeviceId;

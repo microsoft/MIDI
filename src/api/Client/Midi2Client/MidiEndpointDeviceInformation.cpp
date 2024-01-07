@@ -101,6 +101,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
 
         additionalProperties.Append(L"System.ItemNameDisplay");
+        additionalProperties.Append(L"System.Devices.FriendlyName");
         additionalProperties.Append(L"System.Devices.Parent");
         additionalProperties.Append(L"System.Devices.DeviceManufacturer");
         additionalProperties.Append(L"System.Devices.InterfaceClassGuid");
@@ -139,11 +140,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         // In-protocol Endpoint configuration ================================================
         additionalProperties.Append(STRING_PKEY_MIDI_EndpointConfiguredProtocol);
-        additionalProperties.Append(STRING_PKEY_MIDI_EndpointConfiguredExpectsJRTimestamps);
+        additionalProperties.Append(STRING_PKEY_MIDI_EndpointConfiguredToSendJRTimestamps);
+        additionalProperties.Append(STRING_PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps);
 
         // Function Blocks ===================================================================
         additionalProperties.Append(STRING_PKEY_MIDI_FunctionBlockCount);
-        additionalProperties.Append(STRING_PKEY_MIDI_FunctionBlocks);
         additionalProperties.Append(STRING_PKEY_MIDI_FunctionBlocksAreStatic);
 
         // User-supplied metadata ============================================================
@@ -160,6 +161,19 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // Calculated metrics =================================================================
         // we don't load them here because they would spam device information update events
         // and they are (potentially) used only in the service
+
+
+        // Function Blocks =================================================================
+
+
+        for (uint8_t fb = 0; fb < MIDI_MAX_FUNCTION_BLOCKS; fb++)
+        {
+            winrt::hstring functionBlockProperty = winrt::hstring(MIDI_STRING_PKEY_GUID) + winrt::hstring(MIDI_STRING_PKEY_PID_SEPARATOR) + winrt::to_hstring(fb + MIDI_FUNCTION_BLOCK_PROPERTY_INDEX_START);
+            winrt::hstring functionBlockNameProperty = winrt::hstring(MIDI_STRING_PKEY_GUID) + winrt::hstring(MIDI_STRING_PKEY_PID_SEPARATOR) + winrt::to_hstring(fb + MIDI_FUNCTION_BLOCK_NAME_PROPERTY_INDEX_START);
+
+            additionalProperties.Append(functionBlockProperty);
+            additionalProperties.Append(functionBlockNameProperty);
+        }
 
         return additionalProperties.GetView();
     }
@@ -416,6 +430,23 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
+    uint64_t MidiEndpointDeviceInformation::GetUInt64Property(
+        winrt::hstring key,
+        uint64_t defaultValue) const noexcept
+    {
+        if (!m_properties.HasKey(key)) return defaultValue;
+
+        try
+        {
+            return winrt::unbox_value<uint64_t>(m_properties.Lookup(key));
+        }
+        catch (...)
+        {
+            return defaultValue;
+        }
+    }
+
+    _Use_decl_annotations_
     uint32_t MidiEndpointDeviceInformation::GetUInt32Property(
         winrt::hstring key,
         uint32_t defaultValue) const noexcept
@@ -448,6 +479,62 @@ namespace winrt::Windows::Devices::Midi2::implementation
             return defaultValue;
         }
     }
+
+
+
+    _Use_decl_annotations_
+    int64_t MidiEndpointDeviceInformation::GetInt64Property(
+        winrt::hstring key,
+        int64_t defaultValue) const noexcept
+    {
+        if (!m_properties.HasKey(key)) return defaultValue;
+
+        try
+        {
+            return winrt::unbox_value<int64_t>(m_properties.Lookup(key));
+        }
+        catch (...)
+        {
+            return defaultValue;
+        }
+    }
+
+    _Use_decl_annotations_
+    int32_t MidiEndpointDeviceInformation::GetInt32Property(
+        winrt::hstring key,
+        int32_t defaultValue) const noexcept
+    {
+        if (!m_properties.HasKey(key)) return defaultValue;
+
+        try
+        {
+            return winrt::unbox_value<int32_t>(m_properties.Lookup(key));
+        }
+        catch (...)
+        {
+            return defaultValue;
+        }
+    }
+
+    _Use_decl_annotations_
+    int16_t MidiEndpointDeviceInformation::GetInt16Property(
+        winrt::hstring key,
+        int16_t defaultValue) const noexcept
+    {
+        if (!m_properties.HasKey(key)) return defaultValue;
+
+        try
+        {
+            return winrt::unbox_value<int16_t>(m_properties.Lookup(key));
+        }
+        catch (...)
+        {
+            return defaultValue;
+        }
+    }
+
+
+
 
 
     _Use_decl_annotations_
@@ -521,13 +608,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
-    collections::IVectorView<midi2::MidiFunctionBlock> MidiEndpointDeviceInformation::FunctionBlocks() const noexcept
+    collections::IMapView<uint8_t, midi2::MidiFunctionBlock> MidiEndpointDeviceInformation::FunctionBlocks() const noexcept
     {
-        collections::IVector<midi2::MidiFunctionBlock> blocks{ winrt::single_threaded_vector<midi2::MidiFunctionBlock>() };
-
-        // TODO: Populate from property
-
-        return blocks.GetView();
+        return m_functionBlocks.GetView();
     }
 
 
@@ -565,14 +648,41 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 ReadDeviceIdentity();
             }
-            else if (key == STRING_PKEY_MIDI_FunctionBlocks)
-            {
-                ReadFunctionBlocks();
-            }
+            //else if (key == STRING_PKEY_MIDI_FunctionBlocks)
+            //{
+            //    ReadFunctionBlocks();
+            //}
         }
 
         m_id = deviceInformation.Id();
         m_transportSuppliedEndpointName = deviceInformation.Name();
+
+
+        // this is not efficient, but it works. Optimize later.
+        for (uint8_t fb = 0; fb < MIDI_MAX_FUNCTION_BLOCKS; fb++)
+        {
+            winrt::hstring functionBlockProperty = winrt::hstring(MIDI_STRING_PKEY_GUID) + winrt::hstring(MIDI_STRING_PKEY_PID_SEPARATOR) + winrt::to_hstring(fb + MIDI_FUNCTION_BLOCK_PROPERTY_INDEX_START);
+            winrt::hstring functionBlockNameProperty = winrt::hstring(MIDI_STRING_PKEY_GUID) + winrt::hstring(MIDI_STRING_PKEY_PID_SEPARATOR) + winrt::to_hstring(fb + MIDI_FUNCTION_BLOCK_NAME_PROPERTY_INDEX_START);
+
+            if (deviceInformation.Properties().HasKey(functionBlockProperty))
+            {
+                OutputDebugString(__FUNCTION__ L" Update includes a function block property\n");
+
+                // update the function block
+                auto refArray = GetBinaryProperty(functionBlockProperty);
+
+                if (refArray != nullptr)
+                {
+                    AddOrUpdateFunctionBlock(refArray);
+                }
+            }
+
+            if (deviceInformation.Properties().HasKey(functionBlockNameProperty))
+            {
+                // update the function block property name
+            }
+
+        }
 
     }
 
@@ -597,7 +707,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     bool MidiEndpointDeviceInformation::UpdateFromDeviceInformationUpdate(
         winrt::Windows::Devices::Enumeration::DeviceInformationUpdate const& deviceInformationUpdate) noexcept
     {
-        OutputDebugString(L"" __FUNCTION__);
+        OutputDebugString(__FUNCTION__ L"\n");
 
         if (deviceInformationUpdate == nullptr) return false;
 
@@ -620,9 +730,30 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 ReadDeviceIdentity();
             }
-            else if (key == STRING_PKEY_MIDI_FunctionBlocks)
+        }
+
+        // this is not efficient, but it works. Optimize later.
+        for (uint8_t fb = 0; fb < MIDI_MAX_FUNCTION_BLOCKS; fb++)
+        {
+            winrt::hstring functionBlockProperty = winrt::hstring(MIDI_STRING_PKEY_GUID) + winrt::hstring(MIDI_STRING_PKEY_PID_SEPARATOR) + winrt::to_hstring(fb + MIDI_FUNCTION_BLOCK_PROPERTY_INDEX_START);
+            winrt::hstring functionBlockNameProperty = winrt::hstring(MIDI_STRING_PKEY_GUID) + winrt::hstring(MIDI_STRING_PKEY_PID_SEPARATOR) + winrt::to_hstring(fb + MIDI_FUNCTION_BLOCK_NAME_PROPERTY_INDEX_START);
+
+            if (deviceInformationUpdate.Properties().HasKey(functionBlockProperty))
             {
-                ReadFunctionBlocks();
+                OutputDebugString(__FUNCTION__ L" Update includes a function block property\n");
+
+                // update the function block
+                auto refArray = GetBinaryProperty(functionBlockProperty);
+                
+                if (refArray != nullptr)
+                {
+                    AddOrUpdateFunctionBlock(refArray);
+                }
+            }
+
+            if (deviceInformationUpdate.Properties().HasKey(functionBlockNameProperty))
+            {
+                // update the function block property name
             }
 
         }
@@ -631,6 +762,38 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         return false;
     }
+
+    _Use_decl_annotations_
+    void MidiEndpointDeviceInformation::AddOrUpdateFunctionBlock(foundation::IReferenceArray<uint8_t> refArray)
+    {
+        OutputDebugString(__FUNCTION__ L"\n");
+
+        if (refArray != nullptr)
+        {
+            auto data = refArray.Value();
+            auto arraySize = data.size();
+
+            if (arraySize == sizeof(MidiFunctionBlockProperty))
+            {
+                MidiFunctionBlockProperty prop;
+
+                memcpy(&prop, data.data(), arraySize);
+
+                auto block = winrt::make_self<midi2::implementation::MidiFunctionBlock>();
+
+                block->UpdateFromDevPropertyStruct(prop);
+
+                // adds or replaces
+                m_functionBlocks.Insert(block->Number(), *block);
+
+            }
+        }
+    }
+
+
+
+
+
 
     com_array<uint8_t> MidiEndpointDeviceInformation::DeviceIdentitySystemExclusiveId() const noexcept
     {

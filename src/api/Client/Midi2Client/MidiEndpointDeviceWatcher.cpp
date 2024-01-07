@@ -114,13 +114,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 {
                     auto newArgs = winrt::make_self<midi2::implementation::MidiEndpointDeviceInformationUpdateEventArgs>();
 
-                    bool updatedName;
-                    bool updatedInProtocolEndpointInformation;
-                    bool updatedFunctionBlocks;
-                    bool updatedProtocol;
-                    bool updatedUserMetadata;
-                    bool updatedJRTimestampHandling;
-                    bool updatedAdditionalCapabilities;
+                    bool updatedName{ false };
+                    bool updatedInProtocolEndpointInformation{ false };
+                    bool updatedDeviceIdentity{ false };
+                    bool updatedStreamConfiguration{ false };
+                    bool updatedFunctionBlocks{ false };
+                    bool updatedUserMetadata{ false };
+                    bool updatedAdditionalCapabilities{ false };
 
                     // TODO: check changed properties and set the flags here
 
@@ -133,41 +133,44 @@ namespace winrt::Windows::Devices::Midi2::implementation
                         updatedName = true;
                     }
 
-                    if (args.Properties().HasKey(STRING_PKEY_MIDI_EndpointConfiguredProtocol))
-                    {
-                        updatedProtocol = true;
-                    }
-
-                    if (args.Properties().HasKey(STRING_PKEY_MIDI_EndpointConfiguredExpectsJRTimestamps))
-                    {
-                        updatedJRTimestampHandling = true;
-                    }
 
 
                     if (args.Properties().HasKey(STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol) ||
                         args.Properties().HasKey(STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol) ||
                         args.Properties().HasKey(STRING_PKEY_MIDI_EndpointUmpVersionMajor) ||
                         args.Properties().HasKey(STRING_PKEY_MIDI_EndpointUmpVersionMinor) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointConfiguredProtocol) ||
                         args.Properties().HasKey(STRING_PKEY_MIDI_EndpointSupportsReceivingJRTimestamps) ||
                         args.Properties().HasKey(STRING_PKEY_MIDI_EndpointSupportsSendingJRTimestamps) ||
                         args.Properties().HasKey(STRING_PKEY_MIDI_EndpointProvidedName) ||
                         args.Properties().HasKey(STRING_PKEY_MIDI_EndpointProvidedProductInstanceId) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_DeviceIdentity)
+                        args.Properties().HasKey(STRING_PKEY_MIDI_FunctionBlocksAreStatic) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_FunctionBlockCount)
                         )
                     {
                         updatedInProtocolEndpointInformation = true;
                     }
 
-                    if (args.Properties().HasKey(STRING_PKEY_MIDI_FunctionBlocks) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_FunctionBlocksAreStatic) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointUmpVersionMajor) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointUmpVersionMinor) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointConfiguredProtocol)
+                    if (args.Properties().HasKey(STRING_PKEY_MIDI_DeviceIdentity)
                         )
                     {
-                        updatedFunctionBlocks = true;
+                        updatedDeviceIdentity = true;
                     }
+
+
+                    if (args.Properties().HasKey(STRING_PKEY_MIDI_EndpointConfiguredProtocol) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointConfiguredToSendJRTimestamps) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps))
+                    {
+                        updatedStreamConfiguration = true;
+                    }
+
+
+                    // TODO: Need to loop through FB properties and see if any are in the bag
+                    //if (args.Properties().HasKey(STRING_PKEY_MIDI_FunctionBlocks)
+                    //    )
+                    //{
+                    //    updatedFunctionBlocks = true;
+                    //}
 
                     if (args.Properties().HasKey(STRING_PKEY_MIDI_UserSuppliedEndpointName) ||
                         args.Properties().HasKey(STRING_PKEY_MIDI_UserSuppliedLargeImagePath) ||
@@ -191,9 +194,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
                         args,
                         updatedName,
                         updatedInProtocolEndpointInformation,
+                        updatedDeviceIdentity,
+                        updatedStreamConfiguration,
                         updatedFunctionBlocks,
-                        updatedProtocol,
-                        updatedJRTimestampHandling,
                         updatedUserMetadata,
                         updatedAdditionalCapabilities
                         );
