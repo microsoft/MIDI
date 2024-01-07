@@ -23,19 +23,18 @@ public:
 private:
     HRESULT UpdateEndpointNameProperty();
     HRESULT UpdateEndpointProductInstanceIdProperty();
+    HRESULT UpdateFunctionBlockNameProperty(_In_ uint8_t functionBlockNumber, _In_ std::wstring value);
 
     HRESULT UpdateDeviceIdentityProperty(_In_ internal::PackedUmp128& identityMessage);
     HRESULT UpdateEndpointInfoProperties(_In_ internal::PackedUmp128& endpointInfoNotificationMessage);
     HRESULT UpdateStreamConfigurationProperties(_In_ internal::PackedUmp128& endpointStreamConfigurationNotificationMessage);
     HRESULT UpdateFunctionBlockProperty(_In_ internal::PackedUmp128& functionBlockInfoNotificationMessage);
 
+    HRESULT HandleFunctionBlockNameMessage(_In_ internal::PackedUmp128& functionBlockNameMessage);
+    HRESULT HandleEndpointNameMessage(_In_ internal::PackedUmp128& endpointNameMessage);
+    HRESULT HandleProductInstanceIdMessage(_In_ internal::PackedUmp128& productInstanceIdMessage);
+
     HRESULT ProcessStreamMessage(_In_ internal::PackedUmp128 ump, _In_ LONGLONG timestamp);
-
-
-    // this is responsible for adding to or updating the function block list, or to the 
-    // function block name list. For the name list, it handles restarting etc.
-    HRESULT AddOrUpdateInternalFunctionBlockList(_In_ internal::PackedUmp128& functionBlockInfoMessage);
-    HRESULT AddInternalFunctionBlockNameMessage(_In_ internal::PackedUmp128& functionBlockNameMessage);
 
 
     IMidiCallback* m_callback{ nullptr };
@@ -45,15 +44,9 @@ private:
 
     wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
 
-    // these should likely be priority queues sorted by timestamp, but that's not priority atm
-    std::vector<internal::PackedUmp128> m_queuedEndpointNameMessages;
-    std::vector<internal::PackedUmp128> m_queuedEndpointProductInstanceIdMessages;
-
-    // list of function blocks ready to be written to the properties.
-    // The Size property in these won't be valid until we get the name for any given block
-//    std::vector<MidiFunctionBlockHeader> m_functionBlocks;
-
-    // list of messages for the function block names. The uint8_t is the function block number
-    std::map<uint8_t, std::vector<internal::PackedUmp128>> m_functionBlockNameMessages;
+    // these are holding locations while names are built
+    std::wstring m_endpointName{};
+    std::wstring m_productInstanceId{};
+    std::map<uint8_t /* function block number */, std::wstring> m_functionBlockNames;
 };
 

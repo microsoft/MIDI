@@ -15,8 +15,8 @@ DEVPROPKEY FunctionBlockPropertyKeyFromNumber(_In_ uint8_t functionBlockNumber)
 {
     OutputDebugString(L"" __FUNCTION__);
 
-    DEVPROPKEY key;
-    GUID propertyId;
+    DEVPROPKEY key{};
+    GUID propertyId{};
 
     if (functionBlockNumber < MIDI_MAX_FUNCTION_BLOCKS)
     {
@@ -38,8 +38,8 @@ DEVPROPKEY FunctionBlockNamePropertyKeyFromNumber(_In_ uint8_t functionBlockNumb
 {
     OutputDebugString(L"" __FUNCTION__);
 
-    DEVPROPKEY key;
-    GUID propertyId;
+    DEVPROPKEY key{};
+    GUID propertyId{};
 
     if (functionBlockNumber < MIDI_MAX_FUNCTION_BLOCKS)
     {
@@ -136,7 +136,7 @@ CMidi2EndpointMetadataListenerMidiTransform::SendMidiMessage(
  //   OutputDebugString(L"" __FUNCTION__);
 
     // TODO: This really should have a worker thread doing the message processing
-    // because we don't want to add any latency or jitter here. Prototype will
+    // because we don't want to add any latency or jitter here. This prototype will
     // be all in-line, however.
 
     RETURN_HR_IF_NULL(E_INVALIDARG, data);
@@ -180,24 +180,72 @@ CMidi2EndpointMetadataListenerMidiTransform::SendMidiMessage(
 
 
 
-// takes the list of messages making up the name, builds a name string, and then updates
-// the device property in the property store. If we end up multi-threading this, it will
-// need to lock the list while working on it.
 HRESULT
 CMidi2EndpointMetadataListenerMidiTransform::UpdateEndpointNameProperty()
 {
-    OutputDebugString(L"" __FUNCTION__);
+    OutputDebugString(L"\n" __FUNCTION__ " endpoint name is: ");
+    OutputDebugString(m_endpointName.c_str());
+    OutputDebugString(L"\n");
+
+    auto cleanedValue{ internal::TrimmedWStringCopy(m_endpointName) + L"\0" };
+
+    DEVPROPERTY props[] =
+    {
+        {{ PKEY_MIDI_EndpointProvidedName, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_STRING, static_cast<ULONG>((cleanedValue.length() + 1) * sizeof(WCHAR)), (PVOID)(cleanedValue.c_str()) },
+    };
+
+    RETURN_IF_FAILED(m_MidiDeviceManager->UpdateEndpointProperties(m_deviceInstanceId.c_str(), ARRAYSIZE(props), (PVOID)props));
+
+    // clear out any old value that's in there
+    //m_endpointName.clear();
 
     return S_OK;
 }
 
-// takes the list of messages making up the name, builds a name string, and then updates
-// the device property in the property store. If we end up multi-threading this, it will
-// need to lock the list while working on it.
 HRESULT
 CMidi2EndpointMetadataListenerMidiTransform::UpdateEndpointProductInstanceIdProperty()
 {
-    OutputDebugString(L"" __FUNCTION__);
+    OutputDebugString(L"\n" __FUNCTION__ " product instance id is: '");
+    OutputDebugString(m_productInstanceId.c_str());
+    OutputDebugString(L"'\n");
+
+    std::wstring cleanedValue{ internal::TrimmedWStringCopy(m_productInstanceId) + L"\0" };
+
+    DEVPROPERTY props[] =
+    {
+        {{ PKEY_MIDI_EndpointProvidedProductInstanceId, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_STRING, static_cast<ULONG>((cleanedValue.length() + 1) * sizeof(WCHAR)), (PVOID)(cleanedValue.c_str()) },
+    };
+
+    RETURN_IF_FAILED(m_MidiDeviceManager->UpdateEndpointProperties(m_deviceInstanceId.c_str(), ARRAYSIZE(props), (PVOID)props));
+
+    // clear out any old value that's in there
+    //m_productInstanceId.clear();
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2EndpointMetadataListenerMidiTransform::UpdateFunctionBlockNameProperty(uint8_t functionBlockNumber, std::wstring name)
+{
+    OutputDebugString(L"\n" __FUNCTION__ " function block name is: ");
+    OutputDebugString(name.c_str());
+    OutputDebugString(L"\n");
+
+    std::wstring cleanedValue{ internal::TrimmedWStringCopy(name) + L"\0" };
+
+    DEVPROPERTY props[] =
+    {
+        {{ FunctionBlockNamePropertyKeyFromNumber(functionBlockNumber), DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_STRING, static_cast<ULONG>((cleanedValue.length() + 1) * sizeof(WCHAR)), (PVOID)(cleanedValue.c_str()) },
+    };
+
+    RETURN_IF_FAILED(m_MidiDeviceManager->UpdateEndpointProperties(m_deviceInstanceId.c_str(), ARRAYSIZE(props), (PVOID)props));
+
+    // clear out any old name that's in there
+  //  m_functionBlockNames.erase(functionBlockNumber);
 
     return S_OK;
 }
@@ -206,7 +254,7 @@ _Use_decl_annotations_
 HRESULT 
 CMidi2EndpointMetadataListenerMidiTransform::UpdateStreamConfigurationProperties(internal::PackedUmp128& endpointStreamConfigurationNotificationMessage)
 {
-    //OutputDebugString(L"" __FUNCTION__);
+    OutputDebugString(L"\n" __FUNCTION__);
 
     BYTE configuredProtocol = MIDIWORDBYTE3(endpointStreamConfigurationNotificationMessage.word0);
 
@@ -241,7 +289,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2EndpointMetadataListenerMidiTransform::UpdateDeviceIdentityProperty(internal::PackedUmp128& identityMessage)
 {
-    //OutputDebugString(L"" __FUNCTION__);
+    OutputDebugString(L"\n" __FUNCTION__);
 
     MidiDeviceIdentityProperty prop;
 
@@ -282,7 +330,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2EndpointMetadataListenerMidiTransform::UpdateEndpointInfoProperties(internal::PackedUmp128& endpointInfoNotificationMessage)
 {
-    //OutputDebugString(L"" __FUNCTION__);
+    OutputDebugString(L"\n" __FUNCTION__);
 
     BYTE umpVersionMajor = MIDIWORDBYTE3(endpointInfoNotificationMessage.word0);
     BYTE umpVersionMinor = MIDIWORDBYTE4(endpointInfoNotificationMessage.word0);
@@ -333,6 +381,7 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateEndpointInfoProperties(intern
 }
 
 
+_Use_decl_annotations_
 HRESULT
 CMidi2EndpointMetadataListenerMidiTransform::UpdateFunctionBlockProperty(internal::PackedUmp128& functionBlockInfoNotificationMessage)
 {
@@ -370,62 +419,165 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateFunctionBlockProperty(interna
     return S_OK;
 }
 
-// these should be stored in a common file. Maybe the ump*.h ones
-
-#define MIDI_ENDPOINT_INFO_NOTIFICATION_STREAM_MESSAGE_FORM 0
-#define MIDI_ENDPOINT_INFO_NOTIFICATION_STREAM_MESSAGE_STATUS 0x01
-
-#define MIDI_DEVICE_IDENTITY_STREAM_MESSAGE_FORM 0
-#define MIDI_DEVICE_IDENTITY_STREAM_MESSAGE_STATUS 0x02
-
-#define MIDI_STREAM_CONFIGURATION_STREAM_MESSAGE_FORM 0
-#define MIDI_STREAM_CONFIGURATION_STREAM_MESSAGE_STATUS 0x06
-
-#define MIDI_FUNCTION_BLOCK_INFO_NOTIFICATION_STREAM_MESSAGE_FORM 0
-#define MIDI_FUNCTION_BLOCK_INFO_NOTIFICATION_STREAM_MESSAGE_STATUS 0x11
-
-// this function assumes we've already done bounds checking
 _Use_decl_annotations_
 HRESULT 
 CMidi2EndpointMetadataListenerMidiTransform::ProcessStreamMessage(internal::PackedUmp128 ump, LONGLONG timestamp)
 {
-    OutputDebugString(L"" __FUNCTION__);
+    OutputDebugString(L"\n" __FUNCTION__);
 
     UNREFERENCED_PARAMETER(timestamp);
-    
-    if (internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_DEVICE_IDENTITY_STREAM_MESSAGE_FORM &&
-        internal::GetStatusFromStreamMessageFirstWord(ump.word0) == MIDI_DEVICE_IDENTITY_STREAM_MESSAGE_STATUS)
-    {
-        OutputDebugString(__FUNCTION__ L" Message is Device Identity\n");
-        // single message contains all we need, so super simple. Just update
-        UpdateDeviceIdentityProperty(ump);
-    }
-    else if (internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_ENDPOINT_INFO_NOTIFICATION_STREAM_MESSAGE_FORM &&
-        internal::GetStatusFromStreamMessageFirstWord(ump.word0) == MIDI_ENDPOINT_INFO_NOTIFICATION_STREAM_MESSAGE_STATUS)
-    {
-        OutputDebugString(__FUNCTION__ L" Message is Endpoint Info\n");
-        UpdateEndpointInfoProperties(ump);
-    }
-    else if (internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_CONFIGURATION_STREAM_MESSAGE_FORM &&
-        internal::GetStatusFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_CONFIGURATION_STREAM_MESSAGE_STATUS)
-    {
-        OutputDebugString(__FUNCTION__ L" Message is Stream Configuration\n");
-        UpdateStreamConfigurationProperties(ump);
-    }
-    else if (internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_FUNCTION_BLOCK_INFO_NOTIFICATION_STREAM_MESSAGE_FORM &&
-        internal::GetStatusFromStreamMessageFirstWord(ump.word0) == MIDI_FUNCTION_BLOCK_INFO_NOTIFICATION_STREAM_MESSAGE_STATUS)
-    {
-        OutputDebugString(__FUNCTION__ L" Message is Function Block Info\n");
 
+    auto messageStatus = internal::GetStatusFromStreamMessageFirstWord(ump.word0);
+    
+    switch (messageStatus)
+    {
+    case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_INFO_NOTIFICATION:
+        OutputDebugString(L" MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_INFO_NOTIFICATION\n");
+        UpdateEndpointInfoProperties(ump);
+        break;
+    case MIDI_STREAM_MESSAGE_STATUS_DEVICE_IDENTITY_NOTIFICATION:
+        OutputDebugString(L" MIDI_STREAM_MESSAGE_STATUS_DEVICE_IDENTITY_NOTIFICATION\n");
+        UpdateDeviceIdentityProperty(ump);
+        break;
+    case MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_NOTIFICATION:
+        OutputDebugString(L" MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_NOTIFICATION\n");
+        UpdateStreamConfigurationProperties(ump);
+        break;
+    case MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_INFO_NOTIFICATION:
+        OutputDebugString(L" MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_INFO_NOTIFICATION\n");
         UpdateFunctionBlockProperty(ump);
+        break;
+    case MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION:
+        OutputDebugString(L" MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION\n");
+        HandleFunctionBlockNameMessage(ump);
+        break;
+    case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID_NOTIFICATION:
+        OutputDebugString(L" MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID_NOTIFICATION\n");
+        HandleProductInstanceIdMessage(ump);
+        break;
+    case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION:
+        OutputDebugString(L" MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION\n");
+        HandleEndpointNameMessage(ump);
+        break;
+    default:
+        OutputDebugString(L" Message is unidentified stream message\n");
+        break;
+    }
+
+    return S_OK;
+}
+
+std::wstring ParseStreamTextMessage(_In_ internal::PackedUmp128& message)
+{
+    OutputDebugString(L"\n" __FUNCTION__);
+
+    // check the status to know which byte is first to be grabbed
+
+    // preallocate a wstring to the maximum length for a single message to avoid reallocation. Fill with zero
+
+    uint8_t maxCharsThisMessage{ 14 };     // TODO
+
+    uint16_t messageStatus = internal::GetStatusFromStreamMessageFirstWord(message.word0);
+
+    if (messageStatus == MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION)
+    {
+        // function block name messages have 13 character bytes instead of 14 due to having the FB number in the message
+        maxCharsThisMessage = 13;
     }
     else
     {
-        OutputDebugString(__FUNCTION__ L" Message is unidentified stream message\n");
+        maxCharsThisMessage = 14;
     }
 
-    // TODO: Other message types
+    std::wstring text;
+    text.reserve(maxCharsThisMessage+1);  // try to avoid reallocations
 
+
+    if (maxCharsThisMessage == 14)
+    {
+        if (MIDIWORDBYTE3(message.word0) != 0) text.push_back((wchar_t)MIDIWORDBYTE3(message.word0));
+    }
+
+    // this unroll is easier than looping, honestly.
+    // Also, the property set completely fails if there are any embedded nuls, so need to
+    // ignore any in the source data
+    if (MIDIWORDBYTE4(message.word0) != 0) text.push_back((wchar_t)MIDIWORDBYTE4(message.word0));
+
+    if (MIDIWORDBYTE1(message.word1) != 0) text.push_back((wchar_t)MIDIWORDBYTE1(message.word1));
+    if (MIDIWORDBYTE2(message.word1) != 0) text.push_back((wchar_t)MIDIWORDBYTE2(message.word1));
+    if (MIDIWORDBYTE3(message.word1) != 0) text.push_back((wchar_t)MIDIWORDBYTE3(message.word1));
+    if (MIDIWORDBYTE4(message.word1) != 0) text.push_back((wchar_t)MIDIWORDBYTE4(message.word1));
+
+    if (MIDIWORDBYTE1(message.word2) != 0) text.push_back((wchar_t)MIDIWORDBYTE1(message.word2));
+    if (MIDIWORDBYTE2(message.word2) != 0) text.push_back((wchar_t)MIDIWORDBYTE2(message.word2));
+    if (MIDIWORDBYTE3(message.word2) != 0) text.push_back((wchar_t)MIDIWORDBYTE3(message.word2));
+    if (MIDIWORDBYTE4(message.word2) != 0) text.push_back((wchar_t)MIDIWORDBYTE4(message.word2));
+
+    if (MIDIWORDBYTE1(message.word3) != 0) text.push_back((wchar_t)MIDIWORDBYTE1(message.word3));
+    if (MIDIWORDBYTE2(message.word3) != 0) text.push_back((wchar_t)MIDIWORDBYTE2(message.word3));
+    if (MIDIWORDBYTE3(message.word3) != 0) text.push_back((wchar_t)MIDIWORDBYTE3(message.word3));
+    if (MIDIWORDBYTE4(message.word3) != 0) text.push_back((wchar_t)MIDIWORDBYTE4(message.word3));
+
+    text.shrink_to_fit();
+
+    return text;
+}
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2EndpointMetadataListenerMidiTransform::HandleFunctionBlockNameMessage(internal::PackedUmp128& functionBlockNameMessage)
+{
+    OutputDebugString(L"\n" __FUNCTION__);
+
+    uint8_t functionBlockNumber = MIDIWORDBYTE3(functionBlockNameMessage.word0);
+
+    switch (internal::GetFormFromStreamMessageFirstWord(functionBlockNameMessage.word0))
+    {
+    case MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE: // complete name in single message. Just update property
+        RETURN_IF_FAILED(UpdateFunctionBlockNameProperty(functionBlockNumber, ParseStreamTextMessage(functionBlockNameMessage)));
+        break;
+
+    case MIDI_STREAM_MESSAGE_MULTI_FORM_START: // start of multi-part name message. Overwrite any other name in the map
+        {
+            std::wstring name = ParseStreamTextMessage(functionBlockNameMessage);
+
+            m_functionBlockNames.insert_or_assign(functionBlockNumber, name);
+        }
+        break;
+
+    case MIDI_STREAM_MESSAGE_MULTI_FORM_CONTINUE: //continuation of multi-part name message. Append to name in map
+        if (m_functionBlockNames.find(functionBlockNumber) != m_functionBlockNames.end())
+        {
+            std::wstring name = m_functionBlockNames.find(functionBlockNumber)->second;
+            name += ParseStreamTextMessage(functionBlockNameMessage);
+
+            m_functionBlockNames.insert_or_assign(functionBlockNumber, name);
+        }
+        else
+        {
+            // name isn't already in the map, so a start message was skipped. Don't append anything at all.
+        }
+        break;
+
+    case MIDI_STREAM_MESSAGE_MULTI_FORM_END: // end of multi-part name message. Finish name and update property
+        if (m_functionBlockNames.find(functionBlockNumber) != m_functionBlockNames.end())
+        {
+            std::wstring name = m_functionBlockNames.find(functionBlockNumber)->second;
+            name += ParseStreamTextMessage(functionBlockNameMessage);
+
+            RETURN_IF_FAILED(UpdateFunctionBlockNameProperty(functionBlockNumber, name));
+        }
+        else
+        {
+            // name isn't already in the map, so at least start message was skipped. Don't append anything at all.
+        }
+        break;
+
+    default:
+        // won't actually happen because the Form field is only 2 bits
+        break;
+    }
 
     return S_OK;
 }
@@ -433,15 +585,107 @@ CMidi2EndpointMetadataListenerMidiTransform::ProcessStreamMessage(internal::Pack
 
 _Use_decl_annotations_
 HRESULT
-CMidi2EndpointMetadataListenerMidiTransform::AddInternalFunctionBlockNameMessage(internal::PackedUmp128& functionBlockNameMessage)
+CMidi2EndpointMetadataListenerMidiTransform::HandleEndpointNameMessage(internal::PackedUmp128& endpointNameMessage)
 {
-    UNREFERENCED_PARAMETER(functionBlockNameMessage);
+    OutputDebugString(L"\n" __FUNCTION__);
 
+    switch (internal::GetFormFromStreamMessageFirstWord(endpointNameMessage.word0))
+    {
+    case MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE: // complete name in single message. Just update property
+        m_endpointName = ParseStreamTextMessage(endpointNameMessage);
+        RETURN_IF_FAILED(UpdateEndpointNameProperty());
+        break;
 
+    case MIDI_STREAM_MESSAGE_MULTI_FORM_START: // start of multi-part name message. Overwrite any other name in the map
+    {
+        m_endpointName = ParseStreamTextMessage(endpointNameMessage);
+    }
+    break;
 
+    case MIDI_STREAM_MESSAGE_MULTI_FORM_CONTINUE: //continuation of multi-part name message. Append to name in map
+        if (!m_endpointName.empty())
+        {
+            m_endpointName += ParseStreamTextMessage(endpointNameMessage);
+        }
+        else
+        {
+            // name isn't already started, so a start message was skipped. Don't append anything at all.
+        }
+        break;
 
+    case MIDI_STREAM_MESSAGE_MULTI_FORM_END: // end of multi-part name message. Finish name and update property
+        if (!m_endpointName.empty())
+        {
+            m_endpointName += ParseStreamTextMessage(endpointNameMessage);
+            RETURN_IF_FAILED(UpdateEndpointNameProperty());
+        }
+        else
+        {
+            // name isn't already started, so a start message was skipped. Don't append anything at all.
+        }
+
+        break;
+
+    default:
+        // won't actually happen because the Form field is only 2 bits
+        break;
+    }
 
     return S_OK;
 }
 
+_Use_decl_annotations_
+HRESULT
+CMidi2EndpointMetadataListenerMidiTransform::HandleProductInstanceIdMessage(internal::PackedUmp128& productInstanceIdMessage)
+{
+    OutputDebugString(L"\n" __FUNCTION__);
 
+    switch (internal::GetFormFromStreamMessageFirstWord(productInstanceIdMessage.word0))
+    {
+    case MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE: // complete name in single message. Just update property
+        OutputDebugString(L" MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE\n" );
+        m_productInstanceId = ParseStreamTextMessage(productInstanceIdMessage);
+        RETURN_IF_FAILED(UpdateEndpointProductInstanceIdProperty());
+        break;
+
+    case MIDI_STREAM_MESSAGE_MULTI_FORM_START: // start of multi-part name message. Overwrite any other name in the map
+    {
+        OutputDebugString(L" MIDI_STREAM_MESSAGE_MULTI_FORM_START\n");
+        m_productInstanceId = ParseStreamTextMessage(productInstanceIdMessage);
+    }
+    break;
+
+    case MIDI_STREAM_MESSAGE_MULTI_FORM_CONTINUE: //continuation of multi-part name message. Append to name in map
+        OutputDebugString(L" MIDI_STREAM_MESSAGE_MULTI_FORM_CONTINUE\n");
+        if (!m_productInstanceId.empty())
+        {
+            m_productInstanceId += ParseStreamTextMessage(productInstanceIdMessage);
+        }
+        else
+        {
+            // name isn't already started, so a start message was skipped. Don't append anything at all.
+        }
+        break;
+
+    case MIDI_STREAM_MESSAGE_MULTI_FORM_END: // end of multi-part name message. Finish name and update property
+        OutputDebugString(L" MIDI_STREAM_MESSAGE_MULTI_FORM_END\n");
+        if (!m_productInstanceId.empty())
+        {
+            m_productInstanceId += ParseStreamTextMessage(productInstanceIdMessage);
+            RETURN_IF_FAILED(UpdateEndpointProductInstanceIdProperty());
+        }
+        else
+        {
+            // name isn't already started, so a start message was skipped. Don't append anything at all.
+        }
+
+        break;
+
+    default:
+        // won't actually happen because the Form field is only 2 bits
+        break;
+    }
+
+    return S_OK;
+
+}

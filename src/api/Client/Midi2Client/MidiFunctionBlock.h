@@ -39,6 +39,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         bool UpdateFromDevPropertyStruct(_In_ MidiFunctionBlockProperty prop);
 
+        void InternalSetName(_In_ winrt::hstring name) { m_name = name; }
+
     private:
         uint8_t m_number{ 0 };
         winrt::hstring m_name{};

@@ -164,13 +164,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
                         updatedStreamConfiguration = true;
                     }
 
-
-                    // TODO: Need to loop through FB properties and see if any are in the bag
-                    //if (args.Properties().HasKey(STRING_PKEY_MIDI_FunctionBlocks)
-                    //    )
-                    //{
-                    //    updatedFunctionBlocks = true;
-                    //}
+                    if (internal::PropertyMapContainsAnyFunctionBlockProperty(args.Properties()))
+                    {
+                        updatedFunctionBlocks = true;
+                    }
 
                     if (args.Properties().HasKey(STRING_PKEY_MIDI_UserSuppliedEndpointName) ||
                         args.Properties().HasKey(STRING_PKEY_MIDI_UserSuppliedLargeImagePath) ||

@@ -168,6 +168,9 @@
     <ClCompile Include="MidiEndpointDeviceInformationUpdateEventArgs.cpp">
       <Filter>API\Enumeration</Filter>
     </ClCompile>
+    <ClCompile Include="midi_function_block_prop_util.cpp">
+      <Filter>API\Enumeration</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -253,6 +256,9 @@
       <Filter>Internal\Resources</Filter>
     </ClInclude>
     <ClInclude Include="MidiEndpointDeviceInformationUpdateEventArgs.h">
+      <Filter>API\Enumeration</Filter>
+    </ClInclude>
+    <ClInclude Include="midi_function_block_prop_util.h">
       <Filter>API\Enumeration</Filter>
     </ClInclude>
   </ItemGroup>

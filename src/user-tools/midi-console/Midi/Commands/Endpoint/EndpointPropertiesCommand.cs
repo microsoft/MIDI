@@ -136,12 +136,12 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 table.AddEmptyRow();
                 table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("Function Blocks"), "");
                 table.AddRow("Static Function Blocks?", di.HasStaticFunctionBlocks.ToString());
-                table.AddRow("Function Block Count", di.FunctionBlockCount.ToString());
+                table.AddRow("Declared Function Block Count", di.FunctionBlockCount.ToString());
 
                 if (di.FunctionBlocks.Count > 0)
                 {
                     table.AddEmptyRow();
-                    table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("Function Blocks"), "");
+                    //table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("Function Blocks"), "");
 
                     foreach (var functionBlock in di.FunctionBlocks.Values)
                     {
@@ -153,24 +153,36 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                             if (functionBlock.GroupCount == 1)
                             {
                                 functionInformation +=
-                                    $"Group {functionBlock.FirstGroupIndex + 1} (Index {functionBlock.FirstGroupIndex})";
+                                    $"[grey]Group[/] {functionBlock.FirstGroupIndex + 1} (Index {functionBlock.FirstGroupIndex})";
                             }
                             else
                             {
                                 int stopGroupIndex = functionBlock.FirstGroupIndex + functionBlock.GroupCount - 1;
                                 functionInformation +=
-                                    $"Groups {functionBlock.FirstGroupIndex + 1}-{stopGroupIndex + 1} (Indexes {functionBlock.FirstGroupIndex}-{stopGroupIndex})";
+                                    $"[grey]Groups[/] {functionBlock.FirstGroupIndex + 1}-{stopGroupIndex + 1} (Indexes {functionBlock.FirstGroupIndex}-{stopGroupIndex})";
 
                             }
 
-                            functionInformation += ", Active " + functionBlock.IsActive.ToString();
-                            functionInformation += ", MIDI " + functionBlock.Midi10Connection.ToString();
-                            functionInformation += ", Direction " + functionBlock.Direction.ToString();
-                            functionInformation += ", UI Hint " + functionBlock.UIHint.ToString();
+                            functionInformation += ", [grey]MIDI[/] " + functionBlock.Midi10Connection.ToString();
+                            functionInformation += ", [grey]Direction[/] " + functionBlock.Direction.ToString();
+                            functionInformation += ", [grey]UI Hint[/] " + functionBlock.UIHint.ToString();
+
+                            string active = string.Empty;
+
+                            if (!functionBlock.IsActive)
+                            {
+                                active = " [grey](inactive)[/] ";
+                            }
+                            else
+                            {
+                                // if it's active, we don't show anything special
+                                active = string.Empty;
+                            }
 
                             table.AddRow(
                                 AnsiMarkupFormatter.FormatBlockNumber(functionBlock.Number) + " " +
-                                AnsiMarkupFormatter.FormatBlockName(functionBlock.Name),
+                                AnsiMarkupFormatter.FormatBlockName(functionBlock.Name) +
+                                active, 
                                 functionInformation);
                         }
                         else
@@ -185,7 +197,22 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                             {
                                 table.AddRow("Direction", functionBlock.Direction.ToString());
                                 table.AddRow("UI Hint", functionBlock.UIHint.ToString());
-                                table.AddRow("Max SysEx 8 Streams", functionBlock.MaxSystemExclusive8Streams.ToString());
+
+                                string sysexStreams = string.Empty;
+                                if (functionBlock.MaxSystemExclusive8Streams == 0)
+                                {
+                                    sysexStreams = "SysEx 8 Not Supported";
+                                }
+                                else if (functionBlock.MaxSystemExclusive8Streams == 1)
+                                {
+                                    sysexStreams = "Single SysEx Stream";
+                                }
+                                else
+                                {
+                                    sysexStreams = functionBlock.MaxSystemExclusive8Streams + " SysEx Streams";
+                                }
+
+                                table.AddRow("Max SysEx 8 Streams", sysexStreams);
                                 table.AddRow("MIDI 1.0", functionBlock.Midi10Connection.ToString());
                                 table.AddRow("MIDI CI Version Format", functionBlock.MidiCIMessageVersionFormat.ToString());
                             }
@@ -209,7 +236,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 if (di.GroupTerminalBlocks.Count > 0)
                 {
                     table.AddEmptyRow();
-                    table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("Group terminal Blocks"), "");
+                    table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("Group Terminal Blocks"), "");
 
                     foreach (var groupTerminalBlock in di.GroupTerminalBlocks)
                     {
@@ -221,18 +248,18 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                             if (groupTerminalBlock.GroupCount == 1)
                             {
                                 groupInformation +=
-                                    $"Group {groupTerminalBlock.FirstGroupIndex + 1} (Index {groupTerminalBlock.FirstGroupIndex})";
+                                    $"[grey]Group[/] {groupTerminalBlock.FirstGroupIndex + 1} (Index {groupTerminalBlock.FirstGroupIndex})";
                             }
                             else
                             {
                                 int stopGroupIndex = groupTerminalBlock.FirstGroupIndex + groupTerminalBlock.GroupCount - 1;
                                 groupInformation +=
-                                    $"Groups {groupTerminalBlock.FirstGroupIndex + 1}-{stopGroupIndex + 1} (Indexes {groupTerminalBlock.FirstGroupIndex}-{stopGroupIndex})";
+                                    $"[grey]Groups[/] {groupTerminalBlock.FirstGroupIndex + 1}-{stopGroupIndex + 1} (Indexes {groupTerminalBlock.FirstGroupIndex}-{stopGroupIndex})";
 
                             }
 
-                            groupInformation += ", Protocol " + groupTerminalBlock.Protocol.ToString();
-                            groupInformation += ", Direction " + groupTerminalBlock.Direction.ToString();
+                            groupInformation += ", [grey]Protocol[/] " + groupTerminalBlock.Protocol.ToString();
+                            groupInformation += ", [grey]Direction[/] " + groupTerminalBlock.Direction.ToString();
 
                             table.AddRow(
                                 AnsiMarkupFormatter.FormatBlockNumber(groupTerminalBlock.Number) + " " +

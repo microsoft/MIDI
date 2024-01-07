@@ -110,8 +110,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         }
 
-        private const string _bullet = "[grey] ☑️ [/]";
         private const string _deviceBullet = " 🎹 ";
+        private const string _bullet = "[grey] ➡️ [/]";
+        private const string _emptyBullet = "   ";
 
         private void OnWatcherDeviceUpdated(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationUpdateEventArgs args)
         {
@@ -162,8 +163,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         {
             AnsiConsole.MarkupLine("Endpoint Added: ");
             AnsiConsole.MarkupLine(_deviceBullet + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(args.Id));
-            AnsiConsole.MarkupLine(_bullet + AnsiMarkupFormatter.FormatEndpointName(args.Name));
-            AnsiConsole.MarkupLine(_bullet + args.EndpointPurpose.ToString());
+            AnsiConsole.MarkupLine(_emptyBullet + AnsiMarkupFormatter.FormatEndpointName(args.Name));
+            AnsiConsole.MarkupLine(_emptyBullet + args.EndpointPurpose.ToString());
             AnsiConsole.MarkupLine("");
 
         }

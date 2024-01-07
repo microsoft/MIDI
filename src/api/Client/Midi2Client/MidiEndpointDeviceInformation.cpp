@@ -12,6 +12,7 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
+
     winrt::Windows::Devices::Enumeration::DeviceInformation MidiEndpointDeviceInformation::GetContainerInformation() const noexcept
     {
         // find the container with the same container ID and DeviceInstanceId as us.
@@ -168,8 +169,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         for (uint8_t fb = 0; fb < MIDI_MAX_FUNCTION_BLOCKS; fb++)
         {
-            winrt::hstring functionBlockProperty = winrt::hstring(MIDI_STRING_PKEY_GUID) + winrt::hstring(MIDI_STRING_PKEY_PID_SEPARATOR) + winrt::to_hstring(fb + MIDI_FUNCTION_BLOCK_PROPERTY_INDEX_START);
-            winrt::hstring functionBlockNameProperty = winrt::hstring(MIDI_STRING_PKEY_GUID) + winrt::hstring(MIDI_STRING_PKEY_PID_SEPARATOR) + winrt::to_hstring(fb + MIDI_FUNCTION_BLOCK_NAME_PROPERTY_INDEX_START);
+            winrt::hstring functionBlockProperty = internal::BuildFunctionBlockPropertyKey(fb);
+            winrt::hstring functionBlockNameProperty = internal::BuildFunctionBlockNamePropertyKey(fb);
 
             additionalProperties.Append(functionBlockProperty);
             additionalProperties.Append(functionBlockNameProperty);
@@ -677,11 +678,27 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 }
             }
 
+
             if (deviceInformation.Properties().HasKey(functionBlockNameProperty))
             {
-                // update the function block property name
-            }
+                OutputDebugString(__FUNCTION__ L" Update includes a function block Name property\n");
 
+                // update the function block property name
+
+                if (m_functionBlocks.HasKey(fb))
+                {
+                    auto blockProjection = m_functionBlocks.Lookup(fb);
+
+                    // convert to internal and then set the name
+                    auto impl = winrt::get_self<implementation::MidiFunctionBlock>(blockProjection);
+
+                    // we can do this because the properties have already been added/updated to bag
+                    impl->InternalSetName(GetStringProperty(functionBlockNameProperty, L""));
+
+                    // TODO: revisit if this is necessary
+                    m_functionBlocks.Insert(fb, *impl);
+                }
+            }
         }
 
     }
@@ -735,8 +752,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // this is not efficient, but it works. Optimize later.
         for (uint8_t fb = 0; fb < MIDI_MAX_FUNCTION_BLOCKS; fb++)
         {
-            winrt::hstring functionBlockProperty = winrt::hstring(MIDI_STRING_PKEY_GUID) + winrt::hstring(MIDI_STRING_PKEY_PID_SEPARATOR) + winrt::to_hstring(fb + MIDI_FUNCTION_BLOCK_PROPERTY_INDEX_START);
-            winrt::hstring functionBlockNameProperty = winrt::hstring(MIDI_STRING_PKEY_GUID) + winrt::hstring(MIDI_STRING_PKEY_PID_SEPARATOR) + winrt::to_hstring(fb + MIDI_FUNCTION_BLOCK_NAME_PROPERTY_INDEX_START);
+            winrt::hstring functionBlockProperty = internal::BuildFunctionBlockPropertyKey(fb);
+            winrt::hstring functionBlockNameProperty = internal::BuildFunctionBlockNamePropertyKey(fb);
 
             if (deviceInformationUpdate.Properties().HasKey(functionBlockProperty))
             {
@@ -753,7 +770,24 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             if (deviceInformationUpdate.Properties().HasKey(functionBlockNameProperty))
             {
+                OutputDebugString(__FUNCTION__ L" Update includes a function block Name property\n");
+
                 // update the function block property name
+
+                if (m_functionBlocks.HasKey(fb))
+                {
+                    auto blockProjection = m_functionBlocks.Lookup(fb);
+
+                    // convert to internal and then set the name
+                    auto impl = winrt::get_self<implementation::MidiFunctionBlock>(blockProjection);
+
+                    // we can do this because the properties have already been added/updated to bag
+                    impl->InternalSetName(GetStringProperty(functionBlockNameProperty, L""));
+
+                    // revisit if this is necessary
+                    m_functionBlocks.Insert(fb, *impl);
+                }
+
             }
 
         }
@@ -835,11 +869,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
-    void MidiEndpointDeviceInformation::ReadFunctionBlocks()
-    {
-
-
-    }
 
     _Use_decl_annotations_
     foundation::IReferenceArray<uint8_t> MidiEndpointDeviceInformation::GetBinaryProperty(winrt::hstring key) const noexcept

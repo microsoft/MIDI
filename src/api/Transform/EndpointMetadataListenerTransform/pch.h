@@ -56,6 +56,7 @@
 #include "midi_timestamp.h"
 #include "midi_ump.h"
 #include "ump_helpers.h"
+#include "midi_ump_message_defs.h"
 
 namespace internal = ::Windows::Devices::Midi2::Internal;
 namespace shared = ::Windows::Devices::Midi2::Internal::Shared;

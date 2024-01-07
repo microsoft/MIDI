@@ -350,12 +350,13 @@ CMidiDeviceManager::UpdateEndpointProperties
     PVOID InterfaceDevProperties
 )
 {
-//    OutputDebugString(__FUNCTION__ L"");
+    OutputDebugString(L"\n" __FUNCTION__ " ");
 
     std::wstring requestedInterfaceId(DeviceInterfaceId);
     ::Windows::Devices::Midi2::Internal::InPlaceToLower(requestedInterfaceId);
 
     OutputDebugString(requestedInterfaceId.c_str());
+    OutputDebugString(L"\n");
 
     // locate the MIDIPORT 
     auto item = std::find_if(m_MidiPorts.begin(), m_MidiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
@@ -372,14 +373,14 @@ CMidiDeviceManager::UpdateEndpointProperties
 
     if (item == m_MidiPorts.end())
     {
-//        OutputDebugString(__FUNCTION__ L" No matching device found");
+        OutputDebugString(__FUNCTION__ L" No matching device found\n");
 
         // device not found
         return E_FAIL;
     }
     else
     {
-        OutputDebugString(__FUNCTION__ L" Found matching device in endpoint list");
+        OutputDebugString(__FUNCTION__ L" Found matching device in endpoint list\n");
         OutputDebugString(item->get()->DeviceInterfaceId.get());
 
         // Using the found handle, add/update properties
@@ -392,7 +393,7 @@ CMidiDeviceManager::UpdateEndpointProperties
             (const DEVPROPERTY*)InterfaceDevProperties
         ));
 
-        OutputDebugString(__FUNCTION__ L" Property updated successfully");
+        OutputDebugString(__FUNCTION__ L" Property updated successfully\n");
     }
 
     return S_OK;
