@@ -15,8 +15,19 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
     internal class InteractiveEndpointCommand : Command<InteractiveEndpointCommand.Settings>
     {
+        private bool _continue = true;
+
+        private delegate void MenuActionCallback();
+
+        private class MenuItem
+        {
+            public string Text { get; set; } = string.Empty;
+            public MenuActionCallback? Action { get; set; }
+        }
+
+
         //MidiVirtualDeviceResponder _responder;
-        MidiEndpointConnection _endpoint;
+//        MidiEndpointConnection? _endpoint = null;
 
 
         internal class Settings : CommandSettings
@@ -42,6 +53,23 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             return (int)MidiConsoleReturnCode.ErrorNotImplemented;
         }
+
+
+        private void ActionRequestFunctionBlocks()
+        {
+            // TODO: Prompt for single or all
+        }
+        private void ActionRequestEndpointMetadata()
+        {
+            // TODO: Prompt for single or all
+        }
+
+        private void ActionQuit()
+        {
+            _continue = false;
+        }
+
+
 
         // will also want ways to send arbitrary messages, so that code may need to be refactored so it can
         // be used here (send individual words, or maybe send more)
@@ -82,24 +110,38 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         }
 
 
-        // TODO: Need to localize these strings
-        private void ShowMainMenu()
+        public void ShowMainMenu()
         {
-            var result = AnsiConsole.Prompt(
-                new SelectionPrompt<string>()
-                    .Title("Please select an option")
-                    .AddChoices(new[]
-                    {
-                        "View Configuration",
-                        "Update Endpoint Info",
-                        "Update Endpoint Product Instance Id",
-                        "Function Block Sub-menu",
-                        "Shut down Device and Exit"
-                    }
-                    ));
+            while (_continue)
+            {
+                var choices = new List<MenuItem>();
 
-            
+                choices.Add(new MenuItem() { Text = "Request Function Blocks from Endpoint", Action = ActionRequestFunctionBlocks });
+                choices.Add(new MenuItem() { Text = "Request Endpoint Metadata from Endpoint", Action = ActionRequestEndpointMetadata });
+
+                // TODO: Virtual device sub-menu
+
+
+
+                var selectionStyle = new Style(Color.White, Color.DeepSkyBlue3, null, null);
+
+                var result = AnsiConsole.Prompt(
+                    new SelectionPrompt<MenuItem>()
+                        .Title(Strings.InteractiveEndpointMenuPleaseSelectOption)
+                        .HighlightStyle(selectionStyle)
+                        .AddChoices(choices)
+                    );
+
+                if (result != null && result.Action != null)
+                {
+                    result.Action();
+                }
+            }
+
+            return;
         }
+
+
 
         // TODO: Need to localize these strings
         private void ShowFunctionBlockMenu(MidiFunctionBlock block)

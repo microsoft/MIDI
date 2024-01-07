@@ -65,8 +65,6 @@ namespace Windows.Devices.Midi2
         UInt8 SpecificationVersionMajor{ get; };
         UInt8 SpecificationVersionMinor{ get; };
 
-        Boolean HasStaticFunctionBlocks{ get; };
-
         Boolean SupportsMidi10Protocol{ get; };
         Boolean SupportsMidi20Protocol{ get; };
         MidiProtocol ConfiguredProtocol{ get; };    // MIDI 1.0 or MIDI 2.0 for this endpoint
@@ -74,14 +72,27 @@ namespace Windows.Devices.Midi2
         Boolean SupportsReceivingJRTimestamps{ get; };
         Boolean SupportsSendingJRTimestamps{ get; };
 
-        // TODO: MIDI Device Id (sysex stuff)
+        Boolean ConfiguredToReceiveJRTimestamps{ get; };
+        Boolean ConfiguredToSendJRTimestamps{ get; };
+
+        // MIDI Device Identity (sysex stuff)
+        UInt8[] DeviceIdentitySystemExclusiveId{ get; };
+        UInt8 DeviceIdentityDeviceFamilyLsb{ get; };
+        UInt8 DeviceIdentityDeviceFamilyMsb{ get; };
+        UInt8 DeviceIdentityDeviceFamilyModelNumberLsb{ get; };
+        UInt8 DeviceIdentityDeviceFamilyModelNumberMsb{ get; };
+        UInt8[] DeviceIdentitySoftwareRevisionLevel{ get; };
+
 
         // transport type
         String TransportId{ get; };
         String TransportMnemonic{ get; };
 
-        // unique Id like iSerialNumber
-        String UniqueIdentifier{ get; };
+        // iSerialNumber from USB. This is transport-specific, but super important
+        String TransportSuppliedSerialNumber{ get; };
+
+        // manufacturer when we can get that. Typically from USB
+        String ManufacturerName{ get; };
 
         // whether or not this supports multi-client use
         Boolean SupportsMultiClient{ get; };
@@ -90,9 +101,14 @@ namespace Windows.Devices.Midi2
         // whether or not this is an upgrade MIDI 1.0 device
         MidiEndpointNativeDataFormat NativeDataFormat{ get; };
 
-        // group terminal blocks and function blocks
+        // group terminal blocks
         IVectorView<MidiGroupTerminalBlock> GroupTerminalBlocks{ get; };
-        IVectorView<MidiFunctionBlock> FunctionBlocks{ get; };
+
+        // function blocks
+        Boolean HasStaticFunctionBlocks{ get; };
+        UInt8 FunctionBlockCount{ get; };           // this number is provided by a separate message, but should match the vector item count
+
+        IMapView<UInt8, MidiFunctionBlock> FunctionBlocks{ get; };
 
         // If this is a diagnostic endpoint
         MidiEndpointDevicePurpose EndpointPurpose{ get; };
@@ -104,12 +120,15 @@ namespace Windows.Devices.Midi2
         String LargeImagePath{ get; };
         String SmallImagePath{ get; };
 
+
+
+        Boolean RequiresNoteOffTranslation{ get; };
+        UInt16 RecommendedCCAutomationIntervalMS{ get; };
+        Boolean SupportsMidiPolyphonicExpression{ get; };
+
+
         Windows.Foundation.Collections.IMapView<String, IInspectable> Properties{ get; };
         
-        // constructor to create from the watcher events
-
-        // constructor to create from DeviceInformation
-
 
         Boolean UpdateFromDeviceInformation(Windows.Devices.Enumeration.DeviceInformation deviceInformation);
         Boolean UpdateFromDeviceInformationUpdate(Windows.Devices.Enumeration.DeviceInformationUpdate deviceInformationUpdate);

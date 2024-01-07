@@ -183,7 +183,8 @@ CMidiXProc::Initialize(DWORD* MmcssTaskId,
                         std::unique_ptr<MEMORY_MAPPED_PIPE>& MidiIn,
                         std::unique_ptr<MEMORY_MAPPED_PIPE>& MidiOut,
                         IMidiCallback *MidiInCallback,
-                        LONGLONG Context
+                        LONGLONG Context,
+                        BOOL OverwriteZeroTimestamp
 )
 {
     RETURN_HR_IF(E_INVALIDARG, nullptr == MmcssTaskId);
@@ -200,6 +201,14 @@ CMidiXProc::Initialize(DWORD* MmcssTaskId,
     // mapped pipes.
     m_MidiIn = std::move(MidiIn);
     m_MidiOut = std::move(MidiOut);
+
+    // true if incoming messages from the device should get a timestamp
+    // we never timestamp outgoing messages TO the device, because 0 has
+    // "send immediately" semantics, similar to other operating systems.
+    // This is ultimately set by the client manager using a value from
+    // the property store, which was written by the abstraction at
+    // enumeration time
+    m_OverwriteZeroTimestamp = OverwriteZeroTimestamp;
 
     // if we have midi in, create our worker.
     if (m_MidiIn)
@@ -298,16 +307,16 @@ CMidiXProc::SendMidiMessage(
             CopyMemory((((BYTE *) header) + sizeof(LOOPEDDATAFORMAT)), MidiData, Length);
 
             // if a position provided is nonzero, use it, otherwise use the current QPC
-            //if (Position)
-            //{
+            if (Position)
+            {
                 header->Position = Position;
-            //}
-            //else
-            //{
-            //    LARGE_INTEGER qpc {0};
-            //    QueryPerformanceCounter(&qpc);
-            //    header->Position = qpc.QuadPart;
-            //}
+            }
+            else if (m_OverwriteZeroTimestamp)
+            {
+                LARGE_INTEGER qpc {0};
+                QueryPerformanceCounter(&qpc);
+                header->Position = qpc.QuadPart;
+            }
 
             // update the write position and notify the other side that data is available.
             InterlockedExchange((LONG*) Registers->WritePosition, newWritePosition);
@@ -316,7 +325,7 @@ CMidiXProc::SendMidiMessage(
         }
         else
         {
-            // relenquish the remainder of this processing slice and try again on the next
+            // relinquish the remainder of this processing slice and try again on the next
             Sleep(0);
         }
     }while (!bufferSent && --maxRetries > 0);
@@ -392,12 +401,12 @@ CMidiXProc::ProcessMidiIn()
                 if (m_MidiInCallback)
                 {
                     // if a position provided is nonzero, use it, otherwise use the current QPC
-                    //if (header->Position == 0)
-                    //{
-                    //    LARGE_INTEGER qpc{ 0 };
-                    //    QueryPerformanceCounter(&qpc);
-                    //    header->Position = qpc.QuadPart;
-                    //}
+                    if (header->Position == 0 && m_OverwriteZeroTimestamp)
+                    {
+                        LARGE_INTEGER qpc{ 0 };
+                        QueryPerformanceCounter(&qpc);
+                        header->Position = qpc.QuadPart;
+                    }
 
                     m_MidiInCallback->Callback(data, dataSize, header->Position, m_MidiInCallbackContext);
                 }

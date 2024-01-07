@@ -210,6 +210,11 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
     }
 
 #ifdef CREATE_KS_BIDI_SWDS
+    // TODO: This logic needs to change because we want ALL KS devices to show up
+    // as bidi, even if they have only a single pin
+    // https://github.com/microsoft/MIDI/issues/184
+     
+     
     // there must be exactly two pins on this filter, midi in, and midi out,
     // and they must have the exact same capabilities
     if (newMidiPins.size() == 2 &&
@@ -277,6 +282,7 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
     {
         GUID KsAbstractionLayerGUID = __uuidof(Midi2KSAbstraction);
         DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
+        DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
 
         std::vector<DEVPROPERTY> interfaceDevProperties;
         std::vector<DEVPROPERTY> deviceDevProperties;
@@ -293,6 +299,31 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
                 DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), (PVOID)&MidiPin->DataFormatCapability });
         interfaceDevProperties.push_back({ {PKEY_MIDI_TransportMnemonic, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_STRING, static_cast<ULONG>((mnemonic.length() + 1) * sizeof(WCHAR)), (PVOID)mnemonic.c_str() });
+
+        interfaceDevProperties.push_back({ {PKEY_MIDI_SupportsMulticlient, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
+
+        interfaceDevProperties.push_back({ {PKEY_MIDI_GenerateIncomingTimestamp, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
+
+        // Adding this here so it can later be updated in-protocol.
+        MidiDeviceIdentityProperty dummyDeviceIdentity;
+        interfaceDevProperties.push_back({ {PKEY_MIDI_DeviceIdentity, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_BINARY, static_cast<ULONG>(sizeof(dummyDeviceIdentity)), &dummyDeviceIdentity });
+
+        // default to keep us from spamming JR timestamps until they are configured
+        interfaceDevProperties.push_back({ {PKEY_MIDI_EndpointConfiguredToSendJRTimestamps, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse });
+        interfaceDevProperties.push_back({ {PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse });
+
+
+
+        // TODO: iSerialNumber from driver KS property PKEY_MIDI_SerialNumber
+
+        // TODO: Manufacturer name from driver KS property PKEY_MIDI_ManufacturerName
+
+
 
         if (MidiPin->NativeDataFormat != GUID_NULL)
         {

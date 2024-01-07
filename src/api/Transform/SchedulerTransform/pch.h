@@ -55,7 +55,7 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
 
 #include "MidiDefs.h"
-#include "transform_defs.h"
+#include "plugin_defs.h"
 #include "ScheduledUmpMessage.h"
 
 #include "Midi2SchedulerTransform_i.c"

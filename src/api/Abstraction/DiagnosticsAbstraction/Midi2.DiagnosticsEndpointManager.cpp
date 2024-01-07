@@ -188,7 +188,7 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(
     std::wstring mnemonic(TRANSPORT_MNEMONIC);
 
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
-    //DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
+    DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
     BYTE nativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
 
     std::wstring description = L"Diagnostics loopback endpoint. For testing purposes.";
@@ -207,6 +207,12 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(
             DEVPROP_TYPE_STRING, static_cast<ULONG>((description.length() + 1) * sizeof(WCHAR)), (PVOID)description.c_str() },
         {{PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(BYTE)), (PVOID)&nativeDataFormat},
+
+        // do not generate incoming (from device) timestamps automatically.
+        // for the loopback endpoints, we expect a zero timestamp to come back through as zero
+        {{PKEY_MIDI_GenerateIncomingTimestamp, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), (PVOID)&devPropFalse},
+
 
         {{PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_GUID, static_cast<ULONG>(sizeof(GUID)), (PVOID)&AbstractionLayerGUID },        // essential to instantiate the right endpoint types

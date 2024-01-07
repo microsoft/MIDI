@@ -115,6 +115,33 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Request certain MIDI 2.0 in-protocol data from an endpoint. Use a separate console or application to view the responses..
+        /// </summary>
+        internal static string CommandEndpointRequestDescription {
+            get {
+                return ResourceManager.GetString("CommandEndpointRequestDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Send an endpoint discovery message to the endpoint. You can monitor incoming messages in another window, or watch property changes.
+        /// </summary>
+        internal static string CommandEndpointRequestEndpointMetadataDescription {
+            get {
+                return ResourceManager.GetString("CommandEndpointRequestEndpointMetadataDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Send a function block request message to the endpoint. You can monitor incoming messages or the device properties in another window.
+        /// </summary>
+        internal static string CommandEndpointRequestFunctionBlocksDescription {
+            get {
+                return ResourceManager.GetString("CommandEndpointRequestFunctionBlocksDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Enumerate (list) endpoints and transports.
         /// </summary>
         internal static string CommandEnumerateDescription {
@@ -304,6 +331,33 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to send message to endpoint.
+        /// </summary>
+        internal static string ErrorUnableToSendMessage {
+            get {
+                return ResourceManager.GetString("ErrorUnableToSendMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The function block number is invalid. Please request a number between 0 and 31, inclusive..
+        /// </summary>
+        internal static string FunctionBlockNumberInvalid {
+            get {
+                return ResourceManager.GetString("FunctionBlockNumberInvalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The function block request is invalid. Please request at last one data item..
+        /// </summary>
+        internal static string FunctionBlockRequestInvalid {
+            get {
+                return ResourceManager.GetString("FunctionBlockRequestInvalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Average.
         /// </summary>
         internal static string GenericAverage {
@@ -363,6 +417,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         internal static string GenericTotal {
             get {
                 return ResourceManager.GetString("GenericTotal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please select one of the following.
+        /// </summary>
+        internal static string InteractiveEndpointMenuPleaseSelectOption {
+            get {
+                return ResourceManager.GetString("InteractiveEndpointMenuPleaseSelectOption", resourceCulture);
             }
         }
         
@@ -597,6 +660,114 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         internal static string ParameterMonitorEndpointVerbose {
             get {
                 return ResourceManager.GetString("ParameterMonitorEndpointVerbose", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Request all endpoint information.
+        /// </summary>
+        internal static string ParameterRequestEndpointMetadataAll {
+            get {
+                return ResourceManager.GetString("ParameterRequestEndpointMetadataAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Request a device identity notification.
+        /// </summary>
+        internal static string ParameterRequestEndpointMetadataDeviceIdentityNotification {
+            get {
+                return ResourceManager.GetString("ParameterRequestEndpointMetadataDeviceIdentityNotification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Request the endpoint information notification.
+        /// </summary>
+        internal static string ParameterRequestEndpointMetadataEndpointInfoNotification {
+            get {
+                return ResourceManager.GetString("ParameterRequestEndpointMetadataEndpointInfoNotification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Request an endpoint name notification. May result in multiple response messages..
+        /// </summary>
+        internal static string ParameterRequestEndpointMetadataEndpointNameNotification {
+            get {
+                return ResourceManager.GetString("ParameterRequestEndpointMetadataEndpointNameNotification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Request a product instance id notification. May result in multiple response messages..
+        /// </summary>
+        internal static string ParameterRequestEndpointMetadataEndpointProductInstanceIdNotification {
+            get {
+                return ResourceManager.GetString("ParameterRequestEndpointMetadataEndpointProductInstanceIdNotification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Request a stream configuration notification.
+        /// </summary>
+        internal static string ParameterRequestEndpointMetadataEndpointStreamConfigurationNotification {
+            get {
+                return ResourceManager.GetString("ParameterRequestEndpointMetadataEndpointStreamConfigurationNotification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The UMP specification major version. The default is usually sufficient..
+        /// </summary>
+        internal static string ParameterRequestEndpointMetadataEndpointUmpVersionMajor {
+            get {
+                return ResourceManager.GetString("ParameterRequestEndpointMetadataEndpointUmpVersionMajor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The UMP specification minor version. The default is usually sufficient..
+        /// </summary>
+        internal static string ParameterRequestEndpointMetadataEndpointUmpVersionMinor {
+            get {
+                return ResourceManager.GetString("ParameterRequestEndpointMetadataEndpointUmpVersionMinor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Request the general information for a function block.
+        /// </summary>
+        internal static string ParameterRequestFunctionBlockInfoNotification {
+            get {
+                return ResourceManager.GetString("ParameterRequestFunctionBlockInfoNotification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Request the name for a function block.
+        /// </summary>
+        internal static string ParameterRequestFunctionBlockNameNotification {
+            get {
+                return ResourceManager.GetString("ParameterRequestFunctionBlockNameNotification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Request just the specified function block number.
+        /// </summary>
+        internal static string ParameterRequestFunctionBlockNumber {
+            get {
+                return ResourceManager.GetString("ParameterRequestFunctionBlockNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Request all function blocks for this endpoint.
+        /// </summary>
+        internal static string ParameterRequestFunctionBlocksAll {
+            get {
+                return ResourceManager.GetString("ParameterRequestFunctionBlocksAll", resourceCulture);
             }
         }
         

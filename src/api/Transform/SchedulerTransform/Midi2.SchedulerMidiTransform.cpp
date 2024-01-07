@@ -25,7 +25,8 @@ CMidi2SchedulerMidiTransform::Initialize(
     PTRANSFORMCREATIONPARAMS creationParams,
     DWORD * mmcssTaskId,
     IMidiCallback * callback,
-    LONGLONG context
+    LONGLONG context,
+    IUnknown* /*MidiDeviceManager*/
 )
 {
     UNREFERENCED_PARAMETER(deviceId);

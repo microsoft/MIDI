@@ -10,7 +10,8 @@ CMidi2SampleMidiTransform::Initialize(
     PTRANSFORMCREATIONPARAMS,
     DWORD *,
     IMidiCallback *,
-    LONGLONG
+    LONGLONG,
+    IUnknown* /*MidiDeviceManager*/
 )
 {
 

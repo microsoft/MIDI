@@ -12,6 +12,7 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
+
     winrt::Windows::Devices::Enumeration::DeviceInformation MidiEndpointDeviceInformation::GetContainerInformation() const noexcept
     {
         // find the container with the same container ID and DeviceInstanceId as us.
@@ -101,6 +102,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
 
         additionalProperties.Append(L"System.ItemNameDisplay");
+        additionalProperties.Append(L"System.Devices.FriendlyName");
         additionalProperties.Append(L"System.Devices.Parent");
         additionalProperties.Append(L"System.Devices.DeviceManufacturer");
         additionalProperties.Append(L"System.Devices.InterfaceClassGuid");
@@ -110,15 +112,18 @@ namespace winrt::Windows::Devices::Midi2::implementation
         additionalProperties.Append(STRING_PKEY_MIDI_AbstractionLayer);
         additionalProperties.Append(STRING_PKEY_MIDI_TransportMnemonic);
         additionalProperties.Append(STRING_PKEY_MIDI_NativeDataFormat);
-        additionalProperties.Append(STRING_PKEY_MIDI_UniqueIdentifier);
+        additionalProperties.Append(STRING_PKEY_MIDI_SupportedDataFormats);
         additionalProperties.Append(STRING_PKEY_MIDI_SupportsMulticlient);
         additionalProperties.Append(STRING_PKEY_MIDI_TransportSuppliedEndpointName);
+        additionalProperties.Append(STRING_PKEY_MIDI_GenerateIncomingTimestamp);
 
         // USB / KS Properties ===============================================================
         // TODO: Group Terminal Blocks will likely be a single property
         additionalProperties.Append(STRING_PKEY_MIDI_IN_GroupTerminalBlocks);
         additionalProperties.Append(STRING_PKEY_MIDI_OUT_GroupTerminalBlocks);
         additionalProperties.Append(STRING_PKEY_MIDI_AssociatedUMP);
+        additionalProperties.Append(STRING_PKEY_MIDI_ManufacturerName);
+        additionalProperties.Append(STRING_PKEY_MIDI_SerialNumber);
 
         // Major Known Endpoint Types ========================================================
         additionalProperties.Append(STRING_PKEY_MIDI_EndpointDevicePurpose);
@@ -132,10 +137,16 @@ namespace winrt::Windows::Devices::Midi2::implementation
         additionalProperties.Append(STRING_PKEY_MIDI_EndpointUmpVersionMinor);
         additionalProperties.Append(STRING_PKEY_MIDI_EndpointProvidedName);
         additionalProperties.Append(STRING_PKEY_MIDI_EndpointProvidedProductInstanceId);
-        additionalProperties.Append(STRING_PKEY_MIDI_FunctionBlocks);
-        additionalProperties.Append(STRING_PKEY_MIDI_FunctionBlocksAreStatic);
-        additionalProperties.Append(STRING_PKEY_MIDI_DeviceIdentification);
+        additionalProperties.Append(STRING_PKEY_MIDI_DeviceIdentity);
+
+        // In-protocol Endpoint configuration ================================================
         additionalProperties.Append(STRING_PKEY_MIDI_EndpointConfiguredProtocol);
+        additionalProperties.Append(STRING_PKEY_MIDI_EndpointConfiguredToSendJRTimestamps);
+        additionalProperties.Append(STRING_PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps);
+
+        // Function Blocks ===================================================================
+        additionalProperties.Append(STRING_PKEY_MIDI_FunctionBlockCount);
+        additionalProperties.Append(STRING_PKEY_MIDI_FunctionBlocksAreStatic);
 
         // User-supplied metadata ============================================================
         additionalProperties.Append(STRING_PKEY_MIDI_UserSuppliedEndpointName);
@@ -143,6 +154,27 @@ namespace winrt::Windows::Devices::Midi2::implementation
         additionalProperties.Append(STRING_PKEY_MIDI_UserSuppliedSmallImagePath);
         additionalProperties.Append(STRING_PKEY_MIDI_UserSuppliedDescription);
        
+        // Additional Capabiltiies ============================================================
+        additionalProperties.Append(STRING_PKEY_MIDI_RequiresNoteOffTranslation);
+        additionalProperties.Append(STRING_PKEY_MIDI_RecommendedCCAutomationIntervalMS);
+        additionalProperties.Append(STRING_PKEY_MIDI_SupportsMidiPolyphonicExpression);
+
+        // Calculated metrics =================================================================
+        // we don't load them here because they would spam device information update events
+        // and they are (potentially) used only in the service
+
+
+        // Function Blocks =================================================================
+
+
+        for (uint8_t fb = 0; fb < MIDI_MAX_FUNCTION_BLOCKS; fb++)
+        {
+            winrt::hstring functionBlockProperty = internal::BuildFunctionBlockPropertyKey(fb);
+            winrt::hstring functionBlockNameProperty = internal::BuildFunctionBlockNamePropertyKey(fb);
+
+            additionalProperties.Append(functionBlockProperty);
+            additionalProperties.Append(functionBlockNameProperty);
+        }
 
         return additionalProperties.GetView();
     }
@@ -399,6 +431,23 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
+    uint64_t MidiEndpointDeviceInformation::GetUInt64Property(
+        winrt::hstring key,
+        uint64_t defaultValue) const noexcept
+    {
+        if (!m_properties.HasKey(key)) return defaultValue;
+
+        try
+        {
+            return winrt::unbox_value<uint64_t>(m_properties.Lookup(key));
+        }
+        catch (...)
+        {
+            return defaultValue;
+        }
+    }
+
+    _Use_decl_annotations_
     uint32_t MidiEndpointDeviceInformation::GetUInt32Property(
         winrt::hstring key,
         uint32_t defaultValue) const noexcept
@@ -414,6 +463,78 @@ namespace winrt::Windows::Devices::Midi2::implementation
             return defaultValue;
         }
     }
+
+    _Use_decl_annotations_
+    uint16_t MidiEndpointDeviceInformation::GetUInt16Property(
+        winrt::hstring key,
+        uint16_t defaultValue) const noexcept
+    {
+        if (!m_properties.HasKey(key)) return defaultValue;
+
+        try
+        {
+            return winrt::unbox_value<uint16_t>(m_properties.Lookup(key));
+        }
+        catch (...)
+        {
+            return defaultValue;
+        }
+    }
+
+
+
+    _Use_decl_annotations_
+    int64_t MidiEndpointDeviceInformation::GetInt64Property(
+        winrt::hstring key,
+        int64_t defaultValue) const noexcept
+    {
+        if (!m_properties.HasKey(key)) return defaultValue;
+
+        try
+        {
+            return winrt::unbox_value<int64_t>(m_properties.Lookup(key));
+        }
+        catch (...)
+        {
+            return defaultValue;
+        }
+    }
+
+    _Use_decl_annotations_
+    int32_t MidiEndpointDeviceInformation::GetInt32Property(
+        winrt::hstring key,
+        int32_t defaultValue) const noexcept
+    {
+        if (!m_properties.HasKey(key)) return defaultValue;
+
+        try
+        {
+            return winrt::unbox_value<int32_t>(m_properties.Lookup(key));
+        }
+        catch (...)
+        {
+            return defaultValue;
+        }
+    }
+
+    _Use_decl_annotations_
+    int16_t MidiEndpointDeviceInformation::GetInt16Property(
+        winrt::hstring key,
+        int16_t defaultValue) const noexcept
+    {
+        if (!m_properties.HasKey(key)) return defaultValue;
+
+        try
+        {
+            return winrt::unbox_value<int16_t>(m_properties.Lookup(key));
+        }
+        catch (...)
+        {
+            return defaultValue;
+        }
+    }
+
+
 
 
 
@@ -488,13 +609,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
-    collections::IVectorView<midi2::MidiFunctionBlock> MidiEndpointDeviceInformation::FunctionBlocks() const noexcept
+    collections::IMapView<uint8_t, midi2::MidiFunctionBlock> MidiEndpointDeviceInformation::FunctionBlocks() const noexcept
     {
-        collections::IVector<midi2::MidiFunctionBlock> blocks{ winrt::single_threaded_vector<midi2::MidiFunctionBlock>() };
-
-        // TODO: Populate from property
-
-        return blocks.GetView();
+        return m_functionBlocks.GetView();
     }
 
 
@@ -512,7 +629,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     void MidiEndpointDeviceInformation::InternalUpdateFromDeviceInformation(
         winrt::Windows::Devices::Enumeration::DeviceInformation const& deviceInformation) noexcept
     {
-    //    OutputDebugString(L"" __FUNCTION__);
+        OutputDebugString(L"" __FUNCTION__);
 
         if (deviceInformation == nullptr) return;
 
@@ -523,12 +640,67 @@ namespace winrt::Windows::Devices::Midi2::implementation
         //    OutputDebugString(key.c_str());
 
             m_properties.Insert(key, value);
+
+            if (key == STRING_PKEY_MIDI_IN_GroupTerminalBlocks)
+            {
+                ReadGroupTerminalBlocks();
+            }
+            else if (key == STRING_PKEY_MIDI_DeviceIdentity)
+            {
+                ReadDeviceIdentity();
+            }
+            //else if (key == STRING_PKEY_MIDI_FunctionBlocks)
+            //{
+            //    ReadFunctionBlocks();
+            //}
         }
 
         m_id = deviceInformation.Id();
         m_transportSuppliedEndpointName = deviceInformation.Name();
 
-        ReadGroupTerminalBlocks();
+
+        // this is not efficient, but it works. Optimize later.
+        for (uint8_t fb = 0; fb < MIDI_MAX_FUNCTION_BLOCKS; fb++)
+        {
+            winrt::hstring functionBlockProperty = winrt::hstring(MIDI_STRING_PKEY_GUID) + winrt::hstring(MIDI_STRING_PKEY_PID_SEPARATOR) + winrt::to_hstring(fb + MIDI_FUNCTION_BLOCK_PROPERTY_INDEX_START);
+            winrt::hstring functionBlockNameProperty = winrt::hstring(MIDI_STRING_PKEY_GUID) + winrt::hstring(MIDI_STRING_PKEY_PID_SEPARATOR) + winrt::to_hstring(fb + MIDI_FUNCTION_BLOCK_NAME_PROPERTY_INDEX_START);
+
+            if (deviceInformation.Properties().HasKey(functionBlockProperty))
+            {
+                OutputDebugString(__FUNCTION__ L" Update includes a function block property\n");
+
+                // update the function block
+                auto refArray = GetBinaryProperty(functionBlockProperty);
+
+                if (refArray != nullptr)
+                {
+                    AddOrUpdateFunctionBlock(refArray);
+                }
+            }
+
+
+            if (deviceInformation.Properties().HasKey(functionBlockNameProperty))
+            {
+                OutputDebugString(__FUNCTION__ L" Update includes a function block Name property\n");
+
+                // update the function block property name
+
+                if (m_functionBlocks.HasKey(fb))
+                {
+                    auto blockProjection = m_functionBlocks.Lookup(fb);
+
+                    // convert to internal and then set the name
+                    auto impl = winrt::get_self<implementation::MidiFunctionBlock>(blockProjection);
+
+                    // we can do this because the properties have already been added/updated to bag
+                    impl->InternalSetName(GetStringProperty(functionBlockNameProperty, L""));
+
+                    // TODO: revisit if this is necessary
+                    m_functionBlocks.Insert(fb, *impl);
+                }
+            }
+        }
+
     }
 
     _Use_decl_annotations_
@@ -552,7 +724,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     bool MidiEndpointDeviceInformation::UpdateFromDeviceInformationUpdate(
         winrt::Windows::Devices::Enumeration::DeviceInformationUpdate const& deviceInformationUpdate) noexcept
     {
-     //   OutputDebugString(L"" __FUNCTION__);
+        OutputDebugString(__FUNCTION__ L"\n");
 
         if (deviceInformationUpdate == nullptr) return false;
 
@@ -565,15 +737,174 @@ namespace winrt::Windows::Devices::Midi2::implementation
             // insert does a replace if the key exists in the map
 
             m_properties.Insert(key, value);
+
+            if (key == STRING_PKEY_MIDI_IN_GroupTerminalBlocks)
+            {
+                // this shouldn't happen because these should be static
+                ReadGroupTerminalBlocks();
+            }
+            else if (key == STRING_PKEY_MIDI_DeviceIdentity)
+            {
+                ReadDeviceIdentity();
+            }
         }
 
+        // this is not efficient, but it works. Optimize later.
+        for (uint8_t fb = 0; fb < MIDI_MAX_FUNCTION_BLOCKS; fb++)
+        {
+            winrt::hstring functionBlockProperty = internal::BuildFunctionBlockPropertyKey(fb);
+            winrt::hstring functionBlockNameProperty = internal::BuildFunctionBlockNamePropertyKey(fb);
+
+            if (deviceInformationUpdate.Properties().HasKey(functionBlockProperty))
+            {
+                OutputDebugString(__FUNCTION__ L" Update includes a function block property\n");
+
+                // update the function block
+                auto refArray = GetBinaryProperty(functionBlockProperty);
+                
+                if (refArray != nullptr)
+                {
+                    AddOrUpdateFunctionBlock(refArray);
+                }
+            }
+
+            if (deviceInformationUpdate.Properties().HasKey(functionBlockNameProperty))
+            {
+                OutputDebugString(__FUNCTION__ L" Update includes a function block Name property\n");
+
+                // update the function block property name
+
+                if (m_functionBlocks.HasKey(fb))
+                {
+                    auto blockProjection = m_functionBlocks.Lookup(fb);
+
+                    // convert to internal and then set the name
+                    auto impl = winrt::get_self<implementation::MidiFunctionBlock>(blockProjection);
+
+                    // we can do this because the properties have already been added/updated to bag
+                    impl->InternalSetName(GetStringProperty(functionBlockNameProperty, L""));
+
+                    // revisit if this is necessary
+                    m_functionBlocks.Insert(fb, *impl);
+                }
+
+            }
+
+        }
 
         // TODO: need to update the name
 
-        // TODO: Re-read function blocks if the original ones are not static
-        // no need to re-read GTB because those are static
-
         return false;
+    }
+
+    _Use_decl_annotations_
+    void MidiEndpointDeviceInformation::AddOrUpdateFunctionBlock(foundation::IReferenceArray<uint8_t> refArray)
+    {
+        OutputDebugString(__FUNCTION__ L"\n");
+
+        if (refArray != nullptr)
+        {
+            auto data = refArray.Value();
+            auto arraySize = data.size();
+
+            if (arraySize == sizeof(MidiFunctionBlockProperty))
+            {
+                MidiFunctionBlockProperty prop;
+
+                memcpy(&prop, data.data(), arraySize);
+
+                auto block = winrt::make_self<midi2::implementation::MidiFunctionBlock>();
+
+                block->UpdateFromDevPropertyStruct(prop);
+
+                // adds or replaces
+                m_functionBlocks.Insert(block->Number(), *block);
+
+            }
+        }
+    }
+
+
+
+
+
+
+    com_array<uint8_t> MidiEndpointDeviceInformation::DeviceIdentitySystemExclusiveId() const noexcept
+    {
+        return { m_deviceIdentity.ManufacturerSysExIdByte1, m_deviceIdentity.ManufacturerSysExIdByte2, m_deviceIdentity.ManufacturerSysExIdByte3 };
+    }
+
+    com_array<uint8_t> MidiEndpointDeviceInformation::DeviceIdentitySoftwareRevisionLevel() const noexcept
+    {
+        return { m_deviceIdentity.SoftwareRevisionLevelByte1, m_deviceIdentity.SoftwareRevisionLevelByte2, m_deviceIdentity.SoftwareRevisionLevelByte3, m_deviceIdentity.SoftwareRevisionLevelByte4 };
+    }
+
+    void MidiEndpointDeviceInformation::ReadDeviceIdentity()
+    {
+        OutputDebugString(__FUNCTION__ L"");
+
+        auto key = STRING_PKEY_MIDI_DeviceIdentity;
+
+        auto refArray = GetBinaryProperty(key);
+
+        if (refArray != nullptr)
+        {
+            auto data = refArray.Value();
+            auto arraySize = data.size();
+
+            if (arraySize == sizeof(m_deviceIdentity))
+            {
+                memcpy(&m_deviceIdentity, data.data(), arraySize);
+
+                OutputDebugString(__FUNCTION__ L" Device identity values read");
+            }
+            else
+            {
+                OutputDebugString(__FUNCTION__ L" Unable to read device identity. Size of array is incorrect.");
+            }
+        }
+        else
+        {
+            OutputDebugString(__FUNCTION__ L" Unable to read device identity. Value is null.");
+        }
+    }
+
+
+    _Use_decl_annotations_
+    foundation::IReferenceArray<uint8_t> MidiEndpointDeviceInformation::GetBinaryProperty(winrt::hstring key) const noexcept
+    {
+        if (m_properties.HasKey(key))
+        {
+            OutputDebugString(__FUNCTION__ L" Key present.");
+
+            auto value = m_properties.Lookup(key).as<winrt::Windows::Foundation::IPropertyValue>();
+
+            if (value != nullptr)
+            {
+                OutputDebugString(__FUNCTION__ L" Value != null.");
+
+                auto t = value.Type();
+
+                if (t == foundation::PropertyType::UInt8Array)
+                {
+                    OutputDebugString(__FUNCTION__ L" Value type is UInt8Array.");
+
+                    auto refArray = winrt::unbox_value<foundation::IReferenceArray<uint8_t>>(m_properties.Lookup(key));
+
+                    return refArray;
+                }
+                else
+                {
+                    OutputDebugString(__FUNCTION__ L" Value type is something unexpected.");
+                }
+            }
+        }
+        else
+        {
+            OutputDebugString(__FUNCTION__ L" Key not present.");
+        }
+
+        return nullptr;
     }
 
 
@@ -589,88 +920,59 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             for (auto key : { STRING_PKEY_MIDI_IN_GroupTerminalBlocks /*, STRING_PKEY_MIDI_OUT_GroupTerminalBlocks*/ })
             {
-                if (m_properties.HasKey(key))
+                auto refArray = GetBinaryProperty(key);
+
+                if (refArray != nullptr)
                 {
-                    auto value = m_properties.Lookup(key).as<winrt::Windows::Foundation::IPropertyValue>();
+                    auto data = refArray.Value();
+                    auto arraySize = data.size();
 
-                    if (value != nullptr)
-                    {
-                        auto t = value.Type();
+                    //OutputDebugString(L"Array size is:");
+                    //OutputDebugString(std::to_wstring(data.size()).c_str());
 
-                        //OutputDebugString(std::to_wstring((int)t).c_str());
+                    uint32_t offset = 0;
 
-                        if (t == foundation::PropertyType::UInt8Array)
-                        {
-                            //OutputDebugString(L"Property is PropertyType::UInt8Array");
-
-                            auto refArray = winrt::unbox_value<foundation::IReferenceArray<uint8_t>>(m_properties.Lookup(key));
-                            auto data = refArray.Value();
-                            auto arraySize = data.size();
-
-                            //OutputDebugString(L"Array size is:");
-                            //OutputDebugString(std::to_wstring(data.size()).c_str());
-
-                            uint32_t offset = 0;
-
-                            // get the KS_MULTIPLE_ITEMS info. First is a ULONG of the total size, next is a ULONG of the count of items
-                            // I should use the struct directly, but I don't want to pull in all that KS stuff here.
+                    // get the KS_MULTIPLE_ITEMS info. First is a ULONG of the total size, next is a ULONG of the count of items
+                    // I should use the struct directly, but I don't want to pull in all that KS stuff here.
                             
-                            //ULONG totalSize = *((ULONG*)(data.data() + offset));
-                            //offset += sizeof(ULONG);
-
-                            //ULONG numberOfItems = *((ULONG*)(data.data() + offset));
-                            //offset += sizeof(ULONG);
-
-                            // we don't actually need anything from the KS_MULTIPLE_ITEMS header
-                            offset += sizeof(ULONG) * 2;
-
-                            // read the structs
-
-                            // read all entries
-                            while (offset < arraySize)
-                            {
-                                auto pheader = (UMP_GROUP_TERMINAL_BLOCK_HEADER*)(data.data() + offset);
-                                auto block = winrt::make_self<MidiGroupTerminalBlock>();
+                    // we don't actually need anything from the KS_MULTIPLE_ITEMS header
+                    offset += sizeof(ULONG) * 2;
 
 
-                                //OutputDebugString(L"Header reported size is:");
-                                //OutputDebugString(std::to_wstring(pheader->Size).c_str());
-
-                                int charOffset = sizeof(UMP_GROUP_TERMINAL_BLOCK_HEADER);
-
-                                std::wstring name{};
-
-                                // TODO this could be much more efficient just pointing to a string instead of char by char
-                                while (charOffset + 1 < pheader->Size)
-                                {
-                                    wchar_t ch = (wchar_t)(*(data.data() + offset + charOffset));
-
-                                    name += ch;
-
-                                    charOffset += sizeof(wchar_t);
-                                }
-
-                                block->InternalUpdateFromPropertyData(pheader, name);
-
-                                // add to our list
-                                m_groupTerminalBlocks.Append(*block);
-
-                                // move to the next struct, if there is one
-                                offset += pheader->Size;
-                            }
-                        }
-                        else
-                        {
-                            OutputDebugString(L"Unexpected property type");
-                        }
-                    }
-                    else
+                    // read all entries
+                    while (offset < arraySize)
                     {
-                        OutputDebugString(L"Property is null or does not implement IPropertyValue");
+                        auto pheader = (UMP_GROUP_TERMINAL_BLOCK_HEADER*)(data.data() + offset);
+                        auto block = winrt::make_self<MidiGroupTerminalBlock>();
+
+
+                        //OutputDebugString(L"Header reported size is:");
+                        //OutputDebugString(std::to_wstring(pheader->Size).c_str());
+
+                        int charOffset = sizeof(UMP_GROUP_TERMINAL_BLOCK_HEADER);
+
+                        std::wstring name{};
+
+                        // TODO this could be much more efficient just pointing to a string instead of char by char
+                        while (charOffset + 1 < pheader->Size)
+                        {
+                            wchar_t ch = (wchar_t)(*(data.data() + offset + charOffset));
+
+                            name += ch;
+
+                            charOffset += sizeof(wchar_t);
+                        }
+
+                        block->InternalUpdateFromPropertyData(pheader, name);
+
+                        // add to our list
+                        m_groupTerminalBlocks.Append(*block);
+
+                        // move to the next struct, if there is one
+                        offset += pheader->Size;
                     }
                 }
             }
-
         }
         catch (...)
         {

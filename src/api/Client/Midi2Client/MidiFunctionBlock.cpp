@@ -156,4 +156,22 @@ namespace winrt::Windows::Devices::Midi2::implementation
         
         return jsonObject.Stringify();
     }
+
+
+    _Use_decl_annotations_
+    bool MidiFunctionBlock::UpdateFromDevPropertyStruct(MidiFunctionBlockProperty prop)
+    {
+        m_number = prop.BlockNumber;
+        m_isActive = prop.IsActive;
+        m_direction = (midi2::MidiFunctionBlockDirection)prop.Direction;
+        m_firstGroupIndex = prop.FirstGroup;
+        m_numberOfGroupsSpanned = prop.NumberOfGroupsSpanned;
+        m_maxSysEx8Streams = prop.MaxSysEx8Streams;
+        m_uiHint = (midi2::MidiFunctionBlockUIHint)prop.UIHint;
+        m_midi10Connection = (midi2::MidiFunctionBlockMidi10)prop.Midi1;
+        m_midiCIMessageVersionFormat = prop.MidiCIMessageVersionFormat;
+
+        return true;
+    }
+
 }

@@ -252,6 +252,9 @@
     <ClInclude Include="MidiEndpointDeviceInformation.h">
       <DependentUpon>MidiEndpointDeviceInformation.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceInformationUpdateEventArgs.h">
+      <DependentUpon>MidiEndpointDeviceInformationUpdateEventArgs.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiEndpointDeviceWatcher.h">
       <DependentUpon>MidiEndpointDeviceWatcher.idl</DependentUpon>
     </ClInclude>
@@ -336,6 +339,7 @@
     <ClInclude Include="MidiVirtualDevice.h">
       <DependentUpon>MidiVirtualDevice.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="midi_function_block_prop_util.h" />
     <ClInclude Include="midi_service_interface.h" />
     <ClInclude Include="midi_stream_message_defs.h" />
     <ClInclude Include="midl_defines.h" />
@@ -357,6 +361,9 @@
     </ClCompile>
     <ClCompile Include="MidiEndpointDeviceInformation.cpp">
       <DependentUpon>MidiEndpointDeviceInformation.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceInformationUpdateEventArgs.cpp">
+      <DependentUpon>MidiEndpointDeviceInformationUpdateEventArgs.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
       <DependentUpon>MidiEndpointDeviceWatcher.idl</DependentUpon>
@@ -445,6 +452,7 @@
     <ClCompile Include="MidiVirtualDevice.cpp">
       <DependentUpon>MidiVirtualDevice.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="midi_function_block_prop_util.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -458,6 +466,7 @@
     <Midl Include="IMidiTransportSettingsData.idl" />
     <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl" />
     <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl" />
+    <Midl Include="MidiEndpointDeviceInformationUpdateEventArgs.idl" />
     <Midl Include="MidiEndpointConnection.idl" />
     <Midl Include="MidiEndpointConnectionOptions.idl" />
     <Midl Include="MidiChannel.idl" />

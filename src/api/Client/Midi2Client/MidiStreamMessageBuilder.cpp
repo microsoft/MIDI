@@ -374,7 +374,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return MidiMessageBuilder::BuildStreamMessage(
             timestamp,
             MIDI_STREAM_MESSAGE_STANDARD_FORM0,
-            MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_NOTIFICATION,
+            MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_DISCOVERY,
             word0Remaining,
             MIDI_RESERVED_WORD,
             MIDI_RESERVED_WORD,
@@ -452,20 +452,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
-
-
-#define MIDI_WORD_CHAR0(w) (uint8_t)((w & 0xFF000000) >> 24)
-#define MIDI_WORD_CHAR1(w) (uint8_t)((w & 0x00FF0000) >> 16)
-#define MIDI_WORD_CHAR2(w) (uint8_t)((w & 0x0000FF00) >> 8)
-#define MIDI_WORD_CHAR3(w) (uint8_t)(w & 0x000000FF)
-
-
     _Use_decl_annotations_
     winrt::hstring MidiStreamMessageBuilder::ParseFunctionBlockNameNotificationMessages(
         collections::IVector<midi2::MidiMessage128> messages
         )
     {
         std::string s{};
+        s.reserve(13);
 
         for (auto message : messages)
         {
@@ -473,22 +466,22 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             // verify the status is correct
 
-            AppendCharToString(s, MIDI_WORD_CHAR3(message.Word0()));
+            AppendCharToString(s, MIDIWORDBYTE4(message.Word0()));
 
-            AppendCharToString(s, MIDI_WORD_CHAR0(message.Word1()));
-            AppendCharToString(s, MIDI_WORD_CHAR1(message.Word1()));
-            AppendCharToString(s, MIDI_WORD_CHAR2(message.Word1()));
-            AppendCharToString(s, MIDI_WORD_CHAR3(message.Word1()));
+            AppendCharToString(s, MIDIWORDBYTE1(message.Word1()));
+            AppendCharToString(s, MIDIWORDBYTE2(message.Word1()));
+            AppendCharToString(s, MIDIWORDBYTE3(message.Word1()));
+            AppendCharToString(s, MIDIWORDBYTE4(message.Word1()));
 
-            AppendCharToString(s, MIDI_WORD_CHAR0(message.Word2()));
-            AppendCharToString(s, MIDI_WORD_CHAR1(message.Word2()));
-            AppendCharToString(s, MIDI_WORD_CHAR2(message.Word2()));
-            AppendCharToString(s, MIDI_WORD_CHAR3(message.Word2()));
+            AppendCharToString(s, MIDIWORDBYTE1(message.Word2()));
+            AppendCharToString(s, MIDIWORDBYTE2(message.Word2()));
+            AppendCharToString(s, MIDIWORDBYTE3(message.Word2()));
+            AppendCharToString(s, MIDIWORDBYTE4(message.Word2()));
 
-            AppendCharToString(s, MIDI_WORD_CHAR0(message.Word3()));
-            AppendCharToString(s, MIDI_WORD_CHAR1(message.Word3()));
-            AppendCharToString(s, MIDI_WORD_CHAR2(message.Word3()));
-            AppendCharToString(s, MIDI_WORD_CHAR3(message.Word3()));
+            AppendCharToString(s, MIDIWORDBYTE1(message.Word3()));
+            AppendCharToString(s, MIDIWORDBYTE2(message.Word3()));
+            AppendCharToString(s, MIDIWORDBYTE3(message.Word3()));
+            AppendCharToString(s, MIDIWORDBYTE4(message.Word3()));
         }
 
         return winrt::to_hstring(s);
@@ -501,6 +494,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         )
     {
         std::string s{};
+        s.reserve(14);
 
         for (auto message : messages)
         {
@@ -508,23 +502,23 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             // verify the status is correct
 
-            AppendCharToString(s, MIDI_WORD_CHAR2(message.Word0()));
-            AppendCharToString(s, MIDI_WORD_CHAR3(message.Word0()));
+            AppendCharToString(s, MIDIWORDBYTE3(message.Word0()));
+            AppendCharToString(s, MIDIWORDBYTE4(message.Word0()));
 
-            AppendCharToString(s, MIDI_WORD_CHAR0(message.Word1()));
-            AppendCharToString(s, MIDI_WORD_CHAR1(message.Word1()));
-            AppendCharToString(s, MIDI_WORD_CHAR2(message.Word1()));
-            AppendCharToString(s, MIDI_WORD_CHAR3(message.Word1()));
+            AppendCharToString(s, MIDIWORDBYTE1(message.Word1()));
+            AppendCharToString(s, MIDIWORDBYTE2(message.Word1()));
+            AppendCharToString(s, MIDIWORDBYTE3(message.Word1()));
+            AppendCharToString(s, MIDIWORDBYTE4(message.Word1()));
 
-            AppendCharToString(s, MIDI_WORD_CHAR0(message.Word2()));
-            AppendCharToString(s, MIDI_WORD_CHAR1(message.Word2()));
-            AppendCharToString(s, MIDI_WORD_CHAR2(message.Word2()));
-            AppendCharToString(s, MIDI_WORD_CHAR3(message.Word2()));
+            AppendCharToString(s, MIDIWORDBYTE1(message.Word2()));
+            AppendCharToString(s, MIDIWORDBYTE2(message.Word2()));
+            AppendCharToString(s, MIDIWORDBYTE3(message.Word2()));
+            AppendCharToString(s, MIDIWORDBYTE4(message.Word2()));
 
-            AppendCharToString(s, MIDI_WORD_CHAR0(message.Word3()));
-            AppendCharToString(s, MIDI_WORD_CHAR1(message.Word3()));
-            AppendCharToString(s, MIDI_WORD_CHAR2(message.Word3()));
-            AppendCharToString(s, MIDI_WORD_CHAR3(message.Word3()));
+            AppendCharToString(s, MIDIWORDBYTE1(message.Word3()));
+            AppendCharToString(s, MIDIWORDBYTE2(message.Word3()));
+            AppendCharToString(s, MIDIWORDBYTE3(message.Word3()));
+            AppendCharToString(s, MIDIWORDBYTE4(message.Word3()));
         }
 
         return winrt::to_hstring(s);
@@ -536,6 +530,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         )
     {
         std::string s{};
+        s.reserve(14);
 
         for (auto message : messages)
         {
@@ -543,23 +538,23 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             // verify the status is correct
 
-            AppendCharToString(s, MIDI_WORD_CHAR2(message.Word0()));
-            AppendCharToString(s, MIDI_WORD_CHAR3(message.Word0()));
+            AppendCharToString(s, MIDIWORDBYTE3(message.Word0()));
+            AppendCharToString(s, MIDIWORDBYTE4(message.Word0()));
 
-            AppendCharToString(s, MIDI_WORD_CHAR0(message.Word1()));
-            AppendCharToString(s, MIDI_WORD_CHAR1(message.Word1()));
-            AppendCharToString(s, MIDI_WORD_CHAR2(message.Word1()));
-            AppendCharToString(s, MIDI_WORD_CHAR3(message.Word1()));
+            AppendCharToString(s, MIDIWORDBYTE1(message.Word1()));
+            AppendCharToString(s, MIDIWORDBYTE2(message.Word1()));
+            AppendCharToString(s, MIDIWORDBYTE3(message.Word1()));
+            AppendCharToString(s, MIDIWORDBYTE4(message.Word1()));
 
-            AppendCharToString(s, MIDI_WORD_CHAR0(message.Word2()));
-            AppendCharToString(s, MIDI_WORD_CHAR1(message.Word2()));
-            AppendCharToString(s, MIDI_WORD_CHAR2(message.Word2()));
-            AppendCharToString(s, MIDI_WORD_CHAR3(message.Word2()));
+            AppendCharToString(s, MIDIWORDBYTE1(message.Word2()));
+            AppendCharToString(s, MIDIWORDBYTE2(message.Word2()));
+            AppendCharToString(s, MIDIWORDBYTE3(message.Word2()));
+            AppendCharToString(s, MIDIWORDBYTE4(message.Word2()));
 
-            AppendCharToString(s, MIDI_WORD_CHAR0(message.Word3()));
-            AppendCharToString(s, MIDI_WORD_CHAR1(message.Word3()));
-            AppendCharToString(s, MIDI_WORD_CHAR2(message.Word3()));
-            AppendCharToString(s, MIDI_WORD_CHAR3(message.Word3()));
+            AppendCharToString(s, MIDIWORDBYTE1(message.Word3()));
+            AppendCharToString(s, MIDIWORDBYTE2(message.Word3()));
+            AppendCharToString(s, MIDIWORDBYTE3(message.Word3()));
+            AppendCharToString(s, MIDIWORDBYTE4(message.Word3()));
         }
 
         return winrt::to_hstring(s);

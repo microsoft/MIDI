@@ -20,10 +20,7 @@ namespace Windows::Devices::Midi2::Internal
         std::transform(s.begin(), s.end(), s.begin(), towlower);
     }
 
-
-
-    // TODO: this could use substr and take one op instad of two
-    inline winrt::hstring TrimmedHStringCopy(_In_ std::wstring ws)
+    inline void InPlaceTrim(_Inout_ std::wstring& ws)
     {
         std::wstring whitespace = L" \0\t\n\r";
 
@@ -35,8 +32,22 @@ namespace Windows::Devices::Midi2::Internal
 
         index = ws.find_last_not_of(whitespace);
         ws.resize(index + 1);
+    }
 
-        return winrt::hstring{ ws };
+    inline std::wstring TrimmedWStringCopy(_In_ std::wstring ws)
+    {
+        std::wstring newString{ ws };
+
+        InPlaceTrim(newString);
+
+        return newString;
+    }
+
+
+    // TODO: this could use substr and take one op instad of two
+    inline winrt::hstring TrimmedHStringCopy(_In_ std::wstring ws)
+    {
+        return winrt::hstring{ TrimmedWStringCopy(ws) };
     }
 
     inline winrt::hstring TrimmedHStringCopy(_In_ winrt::hstring s)

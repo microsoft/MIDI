@@ -63,6 +63,37 @@ CMidiClientManager::Cleanup()
 }
 
 HRESULT
+GetEndpointGenerateIncomingTimestamp(_In_ LPCWSTR MidiDevice, _Inout_ bool& GenerateIncomingTimestamp, _In_ MidiFlow& Flow)
+{
+    // we only generate timestamps for incoming messages FROM the device
+    if (Flow == MidiFlow::MidiFlowBidirectional || Flow == MidiFlow::MidiFlowIn)
+    {
+        auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
+        additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_GenerateIncomingTimestamp));
+        auto deviceInfo = DeviceInformation::CreateFromIdAsync(MidiDevice, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
+
+        auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_GenerateIncomingTimestamp));
+        if (prop)
+        {
+            // this interface is pointing to a UMP interface, so use that instance id.
+            GenerateIncomingTimestamp = winrt::unbox_value<bool>(prop);
+        }
+        else
+        {
+            // default to true
+            GenerateIncomingTimestamp = true;
+        }
+    }
+    else
+    {
+        // output-only flow
+        GenerateIncomingTimestamp = false;
+    }
+
+    return S_OK;
+}
+
+HRESULT
 GetEndpointAlias(_In_ LPCWSTR MidiDevice, _In_ std::wstring& Alias, _In_ MidiFlow& AliasFlow)
 {
     Alias = MidiDevice;
@@ -107,7 +138,8 @@ CMidiClientManager::GetMidiClient(
     PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
     PMIDISRV_CLIENT Client,
     wil::unique_handle& ClientProcessHandle,
-    wil::com_ptr_nothrow<CMidiPipe>&MidiClientPipe
+    wil::com_ptr_nothrow<CMidiPipe>&MidiClientPipe,
+    BOOL OverwriteIncomingZeroTimestamps
 )
 {
     OutputDebugString(L"" __FUNCTION__ " enter");
@@ -117,8 +149,8 @@ CMidiClientManager::GetMidiClient(
     // we have either a new device or an existing device, create the client pipe and connect to it.
     RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiClientPipe>(&clientPipe));
 
-    // Initialize our audio client
-    RETURN_IF_FAILED(clientPipe->Initialize(BindingHandle, ClientProcessHandle.get(), MidiDevice, CreationParams, Client, &m_MmcssTaskId));
+    // Initialize our client
+    RETURN_IF_FAILED(clientPipe->Initialize(BindingHandle, ClientProcessHandle.get(), MidiDevice, CreationParams, Client, &m_MmcssTaskId, OverwriteIncomingZeroTimestamps));
 
     // Add this client to the client pipes list and set the output client handle
     Client->ClientHandle = (MidiClientHandle)clientPipe.get();
@@ -231,7 +263,7 @@ CMidiClientManager::GetMidiTransform(
         // create the transform
         wil::com_ptr_nothrow<CMidiTransformPipe> transform;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiTransformPipe>(&transform));
-        RETURN_IF_FAILED(transform->Initialize(BindingHandle, DevicePipe->MidiDevice().c_str(), &creationParams, &m_MmcssTaskId));
+        RETURN_IF_FAILED(transform->Initialize(BindingHandle, DevicePipe->MidiDevice().c_str(), &creationParams, &m_MmcssTaskId, (IUnknown*)&m_DeviceManager));
         transformPipe = transform.get();
 
         // connect the transform to the device
@@ -266,6 +298,8 @@ CMidiClientManager::GetMidiScheduler(
     wil::com_ptr_nothrow<CMidiPipe>& ClientConnectionPipe
 )
 {
+    OutputDebugString(L"" __FUNCTION__);
+
     wil::com_ptr_nothrow<CMidiPipe> transformPipe{ nullptr };
 
     // we only schedule outgoing messages
@@ -310,7 +344,7 @@ CMidiClientManager::GetMidiScheduler(
         wil::com_ptr_nothrow<CMidiTransformPipe> transform;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiTransformPipe>(&transform));
 
-        RETURN_IF_FAILED(transform->Initialize(BindingHandle, DevicePipe->MidiDevice().c_str(), &creationParams, &m_MmcssTaskId));
+        RETURN_IF_FAILED(transform->Initialize(BindingHandle, DevicePipe->MidiDevice().c_str(), &creationParams, &m_MmcssTaskId, (IUnknown*) & m_DeviceManager));
 
         transformPipe = transform.get();
 
@@ -325,6 +359,76 @@ CMidiClientManager::GetMidiScheduler(
         //}
 
         //m_TransformPipes.emplace(DevicePipe->MidiDevice(), transformPipe);
+        m_TransformPipes.emplace(DevicePipe->MidiDevice(), transform);
+    }
+
+    ClientConnectionPipe = transformPipe;
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidiClientManager::GetMidiEndpointMetadataHandler(
+    handle_t BindingHandle,
+    MidiFlow Flow,
+    wil::com_ptr_nothrow<CMidiPipe>& DevicePipe,
+    wil::com_ptr_nothrow<CMidiPipe>& NextDeviceSidePipe,
+    wil::com_ptr_nothrow<CMidiPipe>& ClientConnectionPipe
+)
+{
+    OutputDebugString(L"" __FUNCTION__);
+
+    wil::com_ptr_nothrow<CMidiPipe> transformPipe{ nullptr };
+
+    // we only handle metadata on incoming messages
+    RETURN_HR_IF(E_UNEXPECTED, Flow != MidiFlow::MidiFlowIn);
+
+
+    auto transforms = m_TransformPipes.equal_range(DevicePipe->MidiDevice());
+    for (auto& transform = transforms.first; transform != transforms.second; ++transform)
+    {
+        //wil::com_ptr_nothrow<CMidiTransformPipe> pipe = transform->second.get();
+
+        if (transform->second->TransformGuid() == __uuidof(Midi2EndpointMetadataListenerTransform))
+        {
+            transformPipe = transform->second;
+            break;
+        }
+    }
+
+    // not found, instantiate the transform that is needed.
+    if (!transformPipe)
+    {
+        OutputDebugString(L"" __FUNCTION__ " transform pipe not found. Creating one.");
+
+        MIDISRV_TRANSFORMCREATION_PARAMS creationParams{ 0 };
+
+        creationParams.Flow = Flow;
+        creationParams.DataFormatIn = MidiDataFormat::MidiDataFormat_UMP;
+        creationParams.DataFormatOut = MidiDataFormat::MidiDataFormat_UMP;
+
+        creationParams.TransformGuid = __uuidof(Midi2EndpointMetadataListenerTransform);
+
+        // create the transform
+        wil::com_ptr_nothrow<CMidiTransformPipe> transform;
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiTransformPipe>(&transform));
+
+        RETURN_IF_FAILED(transform->Initialize(BindingHandle, DevicePipe->MidiDevice().c_str(), &creationParams, &m_MmcssTaskId, (IUnknown*)m_DeviceManager.get()));
+
+        transformPipe = transform.get();
+
+        // connect the transform to the device
+
+        if (Flow == MidiFlowIn)
+        {
+            RETURN_IF_FAILED(NextDeviceSidePipe->AddConnectedPipe(transformPipe));
+        }
+        else
+        {
+            RETURN_IF_FAILED(transformPipe->AddConnectedPipe(NextDeviceSidePipe));
+        }
+
         m_TransformPipes.emplace(DevicePipe->MidiDevice(), transform);
     }
 
@@ -400,11 +504,21 @@ CMidiClientManager::CreateMidiClient(
     // actively using this task id for the duration of this pipe.
     RETURN_IF_FAILED(EnableMmcss(MmcssHandle, m_MmcssTaskId));
 
+    // see if we should create timestamps or not. This option is set
+    // by the transport at endpoint enumeration time. For most endpoint
+    // types, this will be true, but for diagnostics loopback endpoints, 
+    // it is false. So, we store the value in the property store to make
+    // it more flexible
+    bool generateIncomingMessageTimestamps{ true };
+    RETURN_IF_FAILED(GetEndpointGenerateIncomingTimestamp(MidiDevice, generateIncomingMessageTimestamps, CreationParams->Flow));
+
     // The provided SWD instance id provided may be an alias of a UMP device, retrieve the
     // PKEY_MIDI_AssociatedUMP property to retrieve the id of the primary device.
     // We only create device pipe entries for the primary devices.
     RETURN_IF_FAILED(GetEndpointAlias(MidiDevice, midiDevice, CreationParams->Flow));
-    RETURN_IF_FAILED(GetMidiClient(BindingHandle, midiDevice.c_str(), CreationParams, Client, clientProcessHandle, clientPipe));
+    RETURN_IF_FAILED(GetMidiClient(BindingHandle, midiDevice.c_str(), CreationParams, Client, clientProcessHandle, clientPipe, generateIncomingMessageTimestamps));
+
+
 
     auto cleanupOnFailure = wil::scope_exit([&]()
     {
@@ -422,15 +536,21 @@ CMidiClientManager::CreateMidiClient(
     // so we register the clientPipe to receive the callbacks from the clientConnectionPipe.
     if (clientPipe->IsFlowSupported(MidiFlowIn))
     {
+        OutputDebugString(L"" __FUNCTION__ " Creating MidiFlowIn transforms");
+
         // If the client supports the same format that the device pipe supports,
         // or if the client supports any format, then connect directly to
         // the device.
         if (clientPipe->IsFormatSupportedIn(devicePipe->DataFormatIn()))
         {
+            OutputDebugString(L"" __FUNCTION__ " No MidiFlowIn format translation required");
+
             clientConnectionPipe = devicePipe;
         }
         else
         {
+            OutputDebugString(L"" __FUNCTION__ " Adding MidiFlowIn format translator");
+
             // client requires a specific format, retrieve the transform required for that format.
             RETURN_IF_FAILED(GetMidiTransform(
                 BindingHandle, 
@@ -442,6 +562,38 @@ CMidiClientManager::CreateMidiClient(
 
             clientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
         }
+        newClientConnectionPipe = clientConnectionPipe;
+
+
+        // TODO: 
+        // If a Native Format UMP device, add JR timestamp listener
+
+
+        // Metadata Listener ----------------------------------------------------------------
+        // We should check protocol, not just data format here because we're putting this on
+        // MIDI 1.0 devices that use the new driver, and there's no reason to do that.
+        if (devicePipe->IsFormatSupportedIn(MidiDataFormat::MidiDataFormat_UMP))
+        {
+            OutputDebugString(L"" __FUNCTION__ " Adding MidiFlowIn metadata handler");
+
+            // Our clientConnectionPipe is now the Scheduler
+            RETURN_IF_FAILED(GetMidiEndpointMetadataHandler(
+                BindingHandle,
+                MidiFlowIn,
+                devicePipe,
+                newClientConnectionPipe,
+                clientConnectionPipe)); // clientConnectionPipe is the plugin
+
+            clientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
+        }
+        newClientConnectionPipe = clientConnectionPipe;
+
+
+
+
+        // no more transforms to add
+        clientConnectionPipe = newClientConnectionPipe;
+
 
         RETURN_IF_FAILED(clientPipe->SetDataFormatIn(clientConnectionPipe->DataFormatIn()));
         Client->DataFormat = clientPipe->DataFormatIn();
@@ -453,6 +605,8 @@ CMidiClientManager::CreateMidiClient(
     // so we register the clientConnectionPipe to receive the callbacks from the clientPipe.
     if (clientPipe->IsFlowSupported(MidiFlowOut))
     {
+        OutputDebugString(L"" __FUNCTION__ " Creating MidiFlowOut transforms");
+
         // TODO: Need to see if there's a translator or JR Timestamp provider at the end of this
         // and if so, connect to that, not to the device pipe itself.
         //
@@ -492,6 +646,7 @@ CMidiClientManager::CreateMidiClient(
         // JR Timestamps ---------------------------------------------------
         // TODO: these are only for MIDI 2.0 clients, so need to do additional property checking here
         // TODO: There should be only one JR Timestamp handler in each direction connected to the device
+        // TODO: The data format is not sufficient to know if it is UMP. We need to check the native format
         //if (devicePipe->DataFormatOut() == MidiDataFormat_UMP)
         //{
         //    // Add JR timestamp 
@@ -507,6 +662,8 @@ CMidiClientManager::CreateMidiClient(
         // Data Format Translator ---------------------------------------------------
         if (!clientPipe->IsFormatSupportedOut(newClientConnectionPipe->DataFormatOut()))
         {
+            OutputDebugString(L"" __FUNCTION__ " Adding MidiFlowOut format translator");
+
             // Format is not supported, so we need to transform
             // client requires a specific format, retrieve the transform required for that format.
             // Our clientConnectionPipe is now the format translator
@@ -529,6 +686,8 @@ CMidiClientManager::CreateMidiClient(
         // any required translation is done BEFORE we add this.
         if (clientConnectionPipe->IsFormatSupportedOut(MidiDataFormat::MidiDataFormat_UMP))
         {
+            OutputDebugString(L"" __FUNCTION__ " Adding MidiFlowOut scheduler");
+
             // Our clientConnectionPipe is now the Scheduler
             RETURN_IF_FAILED(GetMidiScheduler(
                 BindingHandle, 

@@ -261,7 +261,7 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
     midiPump.reset(new (std::nothrow) CMidiXProc());
     VERIFY_IS_TRUE(nullptr != midiPump);
 
-    VERIFY_SUCCEEDED(midiPump->Initialize(&MmCssTaskId, midiInPipe, midiOutPipe, this, 0));
+    VERIFY_SUCCEEDED(midiPump->Initialize(&MmCssTaskId, midiInPipe, midiOutPipe, this, 0, true));
 
     LOG_OUTPUT(L"Writing midi data");
     messagesExpected = 4;

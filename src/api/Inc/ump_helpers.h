@@ -8,10 +8,16 @@
 
 #pragma once
 
+#include <stdint.h>
+
 #define MIDIWORDNIBBLE1(x) ((uint8_t)((x & 0xF0000000) >> 28))
 #define MIDIWORDNIBBLE2(x) ((uint8_t)((x & 0x0F000000) >> 24))
 #define MIDIWORDNIBBLE3(x) ((uint8_t)((x & 0x00F00000) >> 20))
 #define MIDIWORDNIBBLE4(x) ((uint8_t)((x & 0x000F0000) >> 16))
+#define MIDIWORDNIBBLE5(x) ((uint8_t)((x & 0x0000F000) >> 12))
+#define MIDIWORDNIBBLE6(x) ((uint8_t)((x & 0x00000F00) >> 8))
+#define MIDIWORDNIBBLE7(x) ((uint8_t)((x & 0x000000F0) >> 4))
+#define MIDIWORDNIBBLE8(x) ((uint8_t)((x & 0x0000000F)))
 
 
 #define MIDIWORDBYTE1(x) ((uint8_t)((x & 0xFF000000) >> 24))
@@ -19,12 +25,40 @@
 #define MIDIWORDBYTE3(x) ((uint8_t)((x & 0x0000FF00) >> 8))
 #define MIDIWORDBYTE4(x) ((uint8_t)((x & 0x000000FF)))
 
+#define MIDIWORDSHORT1(x) ((uint8_t)((x & 0xFFFF0000) >> 16))
+#define MIDIWORDSHORT2(x) ((uint8_t)((x & 0x0000FFFF)))
+
+#define MIDIWORDHIGHBIT(x) (bool)((x & 0x80000000) != 0)
+
+#define MIDIWORDBYTE1HIGHBIT(x) (bool)((x & 0x80000000) != 0)
+#define MIDIWORDBYTE2HIGHBIT(x) (bool)((x & 0x00800000) != 0)
+#define MIDIWORDBYTE3HIGHBIT(x) (bool)((x & 0x00008000) != 0)
+#define MIDIWORDBYTE4HIGHBIT(x) (bool)((x & 0x00000080) != 0)
+
+#define MIDIWORDBYTE3LOWBIT1(x) (bool)((x & 0x00000100) != 0)
+#define MIDIWORDBYTE3LOWBIT2(x) (bool)((x & 0x00000200) != 0)
+#define MIDIWORDBYTE3LOWBIT3(x) (bool)((x & 0x00000400) != 0)
+
+#define MIDIWORDBYTE4LOWBIT1(x) (bool)((x & 0x00000001) != 0)
+#define MIDIWORDBYTE4LOWBIT2(x) (bool)((x & 0x00000002) != 0)
+#define MIDIWORDBYTE4LOWBIT3(x) (bool)((x & 0x00000004) != 0)
+
+#define MIDIWORDBYTE4LOWCRUMB1(x) (uint8_t)((x & 0x00000003))
+#define MIDIWORDBYTE4LOWCRUMB2(x) (uint8_t)((x & 0x0000000C) >> 2)
+#define MIDIWORDBYTE4LOWCRUMB3(x) (uint8_t)((x & 0x00000030) >> 4)
+#define MIDIWORDBYTE4LOWCRUMB4(x) (uint8_t)((x & 0x000000C0) >> 6)
 
 
 #define UMP32_WORD_COUNT 1
 #define UMP64_WORD_COUNT 2
 #define UMP96_WORD_COUNT 3
 #define UMP128_WORD_COUNT 4
+
+#define UMP32_BYTE_COUNT (UMP32_WORD_COUNT * sizeof(uint32_t))
+#define UMP64_BYTE_COUNT (UMP64_WORD_COUNT * sizeof(uint32_t))
+#define UMP96_BYTE_COUNT (UMP96_WORD_COUNT * sizeof(uint32_t))
+#define UMP128_BYTE_COUNT (UMP128_WORD_COUNT * sizeof(uint32_t))
+
 
 
 #define MIDI_MESSAGE_GROUP_WORD_CLEARING_MASK 0xF0FFFFFF
@@ -73,7 +107,11 @@ namespace Windows::Devices::Midi2::Internal
 
     }
     
-
+    inline std::uint8_t GetUmpLengthInBytesFromMessageType(_In_ const std::uint8_t messageType) noexcept
+    {
+        return GetUmpLengthInMidiWordsFromMessageType(messageType) * sizeof(uint32_t);
+    }
+    
 
     inline void SetUmpMessageType(_In_ std::uint32_t& firstWord, _In_ const uint8_t messageType) noexcept
     {
@@ -99,7 +137,6 @@ namespace Windows::Devices::Midi2::Internal
     {
         return (uint8_t)(GetUmpLengthInMidiWordsFromFirstWord(firstWord) * sizeof(uint32_t));
     }
-
 
     inline std::uint8_t GetGroupIndexFromFirstWord(_In_ const std::uint32_t firstWord) noexcept
     {
@@ -501,11 +538,11 @@ namespace Windows::Devices::Midi2::Internal
 
     // To preserve robust connection to all MIDI devices and systems, Senders shall obey the following data rules of the
     // MIDI 1.0 Protocol that govern interspersing other messages and termination of System Exclusive within a Group :
-    // • The Sender shall not send any other Message or UMP on the same Group between the Start and End of the
+    // ï¿½ The Sender shall not send any other Message or UMP on the same Group between the Start and End of the
     //   System Exclusive Message, except for System Exclusive Continue UMPs, and System Real Time Messages.
-    // • System Real Time Messages on the same Group may be inserted between the UMPs of a System Exclusive
+    // ï¿½ System Real Time Messages on the same Group may be inserted between the UMPs of a System Exclusive
     //   message, in order to maintain timing synchronization.
-    // • If any Message or UMP on the same Group, other than a System Exclusive Continue UMP or a System Real
+    // ï¿½ If any Message or UMP on the same Group, other than a System Exclusive Continue UMP or a System Real
     //   Time Message, is sent after a System Exclusive Start UMP and before the associated System Exclusive End
     //   UMP, then that UMP shall terminate the System Exclusive Message.
     // Messages which are Groupless(MT = 0x0 and 0xF) and those which are sent to a different Group may be

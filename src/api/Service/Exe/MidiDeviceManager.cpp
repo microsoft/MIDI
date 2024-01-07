@@ -239,16 +239,6 @@ CMidiDeviceManager::ActivateEndpointInternal
     interfaceProperties.push_back({ {DEVPKEY_Device_NoConnectSound, DEVPROP_STORE_SYSTEM, nullptr},
         DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
 
-    //// get the MidiSrv filename so we can specify the icons
-    //TCHAR szFileName[MAX_PATH];
-    //GetModuleFileName(NULL, szFileName, MAX_PATH);
-
-    //std::wstring interfaceIconPath(szFileName);
-    //interfaceIconPath += L", " + std::to_wstring(IDI_ENDPOINT_DEVICE_ICON);
-
-    //interfaceProperties.push_back({{PKEY_Devices_GlyphIcon, DEVPROP_STORE_SYSTEM, nullptr},
-    //    DEVPROP_TYPE_STRING, static_cast<ULONG>(interfaceIconPath.length() + 1) * sizeof(WCHAR), (PVOID)interfaceIconPath.c_str()});
-
 
     midiPort->InstanceId = CreateInfo->pszInstanceId;
     midiPort->MidiFlow = MidiFlow;
@@ -349,6 +339,66 @@ CMidiDeviceManager::ActivateEndpointInternal
 
     return S_OK;
 }
+
+
+_Use_decl_annotations_
+HRESULT
+CMidiDeviceManager::UpdateEndpointProperties
+(
+    PCWSTR DeviceInterfaceId,
+    ULONG IntPropertyCount,
+    PVOID InterfaceDevProperties
+)
+{
+    OutputDebugString(L"\n" __FUNCTION__ " ");
+
+    std::wstring requestedInterfaceId(DeviceInterfaceId);
+    ::Windows::Devices::Midi2::Internal::InPlaceToLower(requestedInterfaceId);
+
+    OutputDebugString(requestedInterfaceId.c_str());
+    OutputDebugString(L"\n");
+
+    // locate the MIDIPORT 
+    auto item = std::find_if(m_MidiPorts.begin(), m_MidiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
+        {
+            std::wstring portInterfaceId(Port->DeviceInterfaceId.get());
+
+            ::Windows::Devices::Midi2::Internal::InPlaceToLower(portInterfaceId);
+
+//            OutputDebugString((L" -- Checking " + portInterfaceId).c_str());
+
+
+            return (portInterfaceId == requestedInterfaceId);
+        });
+
+    if (item == m_MidiPorts.end())
+    {
+        OutputDebugString(__FUNCTION__ L" No matching device found\n");
+
+        // device not found
+        return E_FAIL;
+    }
+    else
+    {
+        OutputDebugString(__FUNCTION__ L" Found matching device in endpoint list\n");
+        OutputDebugString(item->get()->DeviceInterfaceId.get());
+
+        // Using the found handle, add/update properties
+        auto deviceHandle = item->get()->SwDevice.get();
+
+        RETURN_IF_FAILED(SwDeviceInterfacePropertySet(
+            deviceHandle,
+            item->get()->DeviceInterfaceId.get(),
+            IntPropertyCount,
+            (const DEVPROPERTY*)InterfaceDevProperties
+        ));
+
+        OutputDebugString(__FUNCTION__ L" Property updated successfully\n");
+    }
+
+    return S_OK;
+}
+
 
 _Use_decl_annotations_
 HRESULT

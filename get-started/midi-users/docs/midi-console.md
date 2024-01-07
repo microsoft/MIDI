@@ -306,6 +306,74 @@ F3345678h 12345678h 86754321h 86753099h
 # bunch of empty lines above. And the file ends with a comment
 ```
 
+### Sending Endpoint Metadata Requests
+
+The MIDI Services Console also makes it possible to send some common stream request messages without having to remember their exact format.
+
+Before sending the request, you may want to open another console window or tab with a device watcher active on the connected endpoint. This will tell you when the stored properties are changed. In addition, you may want to have a verbose monitoring tab/window open so you can see the response messages come back.
+
+These are primarily a convenience for developers.
+
+Note that in all the request commands, you may abbreviate `request` as `req`
+
+#### Send a Function Block Request Message
+
+In the command, you may abbreviate `function-blocks` as `fb`, `functions`, `function` or `function-block`. The singular versions are available to make the command make more sense when requesting a single block's data.
+
+Request all function blocks from an endpoint
+
+```
+midi endpoint request function-blocks --all
+```
+
+Request a single function block
+
+```
+midi endpoint request function-blocks --function-block-number 3
+```
+
+Note that you may abbreviate `--function-block-number` as `-n` or as `--number`
+
+By default, you will request both the info notification and name notification messages. If you want to request only one of them, simply turn the other off. You must request at least one of the two types of messages.
+
+```
+midi endpoint request function-blocks --all --request-name false
+midi endpoint request function-blocks --all --request-info false
+```
+
+#### Send an Endpoint Information Request Message
+
+In the command, you may abbreviate `endpoint-metadata` as `em` or `metadata`.
+
+By default, you will request only the endpoint information notification. To request other types of information, specify the flag for that type, or simply use `--all`
+
+Request all metadata notification messages
+
+```
+midi endpoint request endpoint-metadata --all
+```
+
+Request endpoint info (on by default) and name
+
+```
+midi endpoint request endpoint-metadata --name
+```
+
+Request only the name
+
+```
+midi endpoint request endpoint-metadata --name --endpoint-info false
+```
+
+Other request types
+
+```
+midi endpoint request endpoint-metadata --device-identity
+midi endpoint request endpoint-metadata --product-instance-id
+midi endpoint request endpoint-metadata --stream-configuration
+```
+
+Finally, note that you can provide a UMP version to send with the request. By default, the version is Major 1, Minor 1. The `--ump-version-major` and `--ump-version-minor` options are what you want to use here.
 
 ## Technical Information
 

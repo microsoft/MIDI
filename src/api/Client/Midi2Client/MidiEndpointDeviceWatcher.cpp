@@ -112,7 +112,93 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                 if (m_deviceUpdatedEvent)
                 {
-                    m_deviceUpdatedEvent(*this, args);
+                    auto newArgs = winrt::make_self<midi2::implementation::MidiEndpointDeviceInformationUpdateEventArgs>();
+
+                    bool updatedName{ false };
+                    bool updatedInProtocolEndpointInformation{ false };
+                    bool updatedDeviceIdentity{ false };
+                    bool updatedStreamConfiguration{ false };
+                    bool updatedFunctionBlocks{ false };
+                    bool updatedUserMetadata{ false };
+                    bool updatedAdditionalCapabilities{ false };
+
+                    // TODO: check changed properties and set the flags here
+
+                    if (args.Properties().HasKey(STRING_PKEY_MIDI_TransportSuppliedEndpointName) ||
+                        args.Properties().HasKey(L"System.ItemNameDisplay") ||
+                        args.Properties().HasKey(L"System.Devices.FriendlyName") ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointProvidedName) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_UserSuppliedEndpointName))
+                    {
+                        updatedName = true;
+                    }
+
+
+
+                    if (args.Properties().HasKey(STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointUmpVersionMajor) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointUmpVersionMinor) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointSupportsReceivingJRTimestamps) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointSupportsSendingJRTimestamps) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointProvidedName) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointProvidedProductInstanceId) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_FunctionBlocksAreStatic) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_FunctionBlockCount)
+                        )
+                    {
+                        updatedInProtocolEndpointInformation = true;
+                    }
+
+                    if (args.Properties().HasKey(STRING_PKEY_MIDI_DeviceIdentity)
+                        )
+                    {
+                        updatedDeviceIdentity = true;
+                    }
+
+
+                    if (args.Properties().HasKey(STRING_PKEY_MIDI_EndpointConfiguredProtocol) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointConfiguredToSendJRTimestamps) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps))
+                    {
+                        updatedStreamConfiguration = true;
+                    }
+
+                    if (internal::PropertyMapContainsAnyFunctionBlockProperty(args.Properties()))
+                    {
+                        updatedFunctionBlocks = true;
+                    }
+
+                    if (args.Properties().HasKey(STRING_PKEY_MIDI_UserSuppliedEndpointName) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_UserSuppliedLargeImagePath) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_UserSuppliedSmallImagePath) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_UserSuppliedDescription)
+                        )
+                    {
+                        updatedUserMetadata = true;
+                    }
+
+                    if (args.Properties().HasKey(STRING_PKEY_MIDI_RequiresNoteOffTranslation) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_SupportsMidiPolyphonicExpression)
+                        )
+                    {
+                        updatedAdditionalCapabilities = true;
+                    }
+
+
+                    newArgs->InternalInitialize(
+                        args.Id(),
+                        args,
+                        updatedName,
+                        updatedInProtocolEndpointInformation,
+                        updatedDeviceIdentity,
+                        updatedStreamConfiguration,
+                        updatedFunctionBlocks,
+                        updatedUserMetadata,
+                        updatedAdditionalCapabilities
+                        );
+
+                    m_deviceUpdatedEvent(*this, *newArgs);
                 }
             }
         }

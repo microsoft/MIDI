@@ -25,7 +25,8 @@ CMidiClientPipe::Initialize(
     LPCWSTR Device,
     PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
     PMIDISRV_CLIENT Client,
-    DWORD* MmcssTaskId
+    DWORD* MmcssTaskId,
+    BOOL OverwriteZeroTimestamps
 )
 {
     auto lock = m_ClientPipeLock.lock();
@@ -113,7 +114,7 @@ CMidiClientPipe::Initialize(
     // Thus, the pump is initialized with midiOutPipe for input and midiInPipe for output,
     // which appears backwards if you inspect the function prototype, but is correct for the connection
     // from the client to the server.
-    RETURN_IF_FAILED(m_MidiPump->Initialize(MmcssTaskId, midiOutPipe, midiInPipe, thisCallback.get(), 0));
+    RETURN_IF_FAILED(m_MidiPump->Initialize(MmcssTaskId, midiOutPipe, midiInPipe, thisCallback.get(), 0, OverwriteZeroTimestamps));
 
     cleanupOnFailure.release();
 

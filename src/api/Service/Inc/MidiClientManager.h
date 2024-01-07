@@ -35,14 +35,18 @@ private:
                                 _In_ PMIDISRV_CLIENTCREATION_PARAMS,
                                 _In_ PMIDISRV_CLIENT,
                                 _In_ wil::unique_handle&,
-                                _In_ wil::com_ptr_nothrow<CMidiPipe>&);
+                                _In_ wil::com_ptr_nothrow<CMidiPipe>&,
+                                _In_ BOOL);
 
     HRESULT GetMidiDevice(_In_ handle_t,
                                 _In_ LPCWSTR,
                                 _In_ PMIDISRV_CLIENTCREATION_PARAMS,
                                 _In_ wil::com_ptr_nothrow<CMidiPipe>&);
 
-    HRESULT 
+    // TODO: These should be made more generic and go by a configuration, rather than have
+    // discrete methods for each type of transform. But right now, it's about making the
+    // transform process work properly
+    HRESULT
     CMidiClientManager::GetMidiTransform(
                                 _In_ handle_t,
                                 _In_ MidiFlow,
@@ -61,6 +65,14 @@ private:
 
     HRESULT
     CMidiClientManager::GetMidiJRTimestampHandler(
+                                _In_ handle_t,
+                                _In_ MidiFlow,
+                                _In_ wil::com_ptr_nothrow<CMidiPipe>&,
+                                _In_ wil::com_ptr_nothrow<CMidiPipe>&,
+                                _In_ wil::com_ptr_nothrow<CMidiPipe>&);
+
+    HRESULT
+    CMidiClientManager::GetMidiEndpointMetadataHandler(
                                 _In_ handle_t,
                                 _In_ MidiFlow,
                                 _In_ wil::com_ptr_nothrow<CMidiPipe>&,

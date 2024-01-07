@@ -68,10 +68,14 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 namespace implementation = winrt::Windows::Devices::Midi2::implementation;
 namespace midi2 = ::winrt::Windows::Devices::Midi2;
 
+
+
 #include "midi_stream_message_defs.h"
+#include "midi_ump_message_defs.h"
 
 #include <Devpropdef.h>
 #include "MidiDefs.h"
+#include "midi_function_block_prop_util.h"
 
 
 #include "MidiMessage32.h"
@@ -87,6 +91,7 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 #include "MidiEndpointConnectionOptions.h"
 
 #include "MidiMessageReceivedEventArgs.h"
+#include "MidiEndpointDeviceInformationUpdateEventArgs.h"
 
 #include "MidiSession.h"
 

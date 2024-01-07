@@ -25,7 +25,9 @@ public:
     HRESULT Initialize(_In_ handle_t,
                             _In_ LPCWSTR, // device it's associated to
                             _In_ PMIDISRV_TRANSFORMCREATION_PARAMS, // what transform to create
-                            _In_ DWORD *); // mmcss
+                            _In_ DWORD *, // mmcss
+                            _In_ IUnknown* // MidiDeviceManager to provide to transforms that need to update device properties
+    ); 
     HRESULT Cleanup();
 
     HRESULT SendMidiMessage(_In_ PVOID, _In_ UINT, _In_ LONGLONG);

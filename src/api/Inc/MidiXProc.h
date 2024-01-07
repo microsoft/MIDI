@@ -61,7 +61,8 @@ public:
                           _In_ std::unique_ptr<MEMORY_MAPPED_PIPE>&,
                           _In_ std::unique_ptr<MEMORY_MAPPED_PIPE>&,
                           _In_opt_ IMidiCallback *,
-                          _In_ LONGLONG);
+                          _In_ LONGLONG,
+                          _In_ BOOL);
 
     HRESULT Cleanup();
 
@@ -71,6 +72,8 @@ public:
         _In_ LONGLONG);
 
 private:
+
+    BOOL m_OverwriteZeroTimestamp{ true };
 
     wil::com_ptr_nothrow<IMidiCallback> m_MidiInCallback;
     LONGLONG m_MidiInCallbackContext;
