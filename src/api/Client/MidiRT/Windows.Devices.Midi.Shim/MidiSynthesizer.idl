@@ -1,0 +1,25 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+// This file needs to be 100% compatible with the C++/CX definitions for 
+// WinRT MIDI 1.0. This is here for repointing the older classes to the
+// new service and Windows MIDI Services in general. 
+
+#include "winrt_midi1_midl_defines.h"
+MIDI_IDL_IMPORT
+
+namespace Windows.Devices.Midi
+{
+    [MIDI1_SHIM_API_CONTRACT(1)]
+    [marshaling_behavior(agile)]
+    [interface_name("Windows.Devices.Midi.IMidiSynthesizer", F0DA155E-DB90-405F-B8AE-21D2E17F2E45)]
+    [static_name("Windows.Devices.Midi.IMidiSynthesizerStatics", 4224EAA8-6629-4D6B-AA8F-D4521A5A31CE)]
+    runtimeclass MidiSynthesizer : IMidiOutPort
+    {
+    }
+}
