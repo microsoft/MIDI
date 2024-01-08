@@ -43,7 +43,7 @@ using (var session = MidiSession.CreateSession("Sample Session"))
 
         receiveEndpoint.MessageReceived += MessageReceivedHandler;
 
-        Console.WriteLine("Opening endpoint connection (this sends out the required discovery messages which will loop back)..");
+        Console.WriteLine("Opening endpoint connection");
 
         // once you have wired up all your event handlers, added any filters/listeners, etc.
         // You can open the connection. Doing this will query the cache for the in-protocol 
