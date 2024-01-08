@@ -61,10 +61,12 @@ int main()
             std::cout << "Removed: " << winrt::to_string(args.Id()) << std::endl;
         };
 
-    auto OnWatcherDeviceUpdated = [&](MidiEndpointDeviceWatcher const& sender, winrt::Windows::Devices::Enumeration::DeviceInformationUpdate const& args)
+    auto OnWatcherDeviceUpdated = [&](MidiEndpointDeviceWatcher const& sender, MidiEndpointDeviceInformationUpdateEventArgs const& args)
         {
             std::cout << std::endl;
             std::cout << "Updated: " << winrt::to_string(args.Id()) << std::endl;
+
+            // TODO: Show how to use the various data update flags here
         };
 
     auto OnWatcherDeviceAdded = [&](MidiEndpointDeviceWatcher const& sender, MidiEndpointDeviceInformation const& args)

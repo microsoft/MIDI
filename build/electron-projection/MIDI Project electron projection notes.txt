@@ -1,0 +1,93 @@
+NOTE: I know very little about electron development. These are raw notes. --Pete
+
+
+Modified from this project
+https://github.com/MaySoMusician/NodeRT/tree/feature/136-vs2019
+
+Assuming you have winget installed
+
+winget install nodejs
+or download from https://nodejs.org/en
+
+npm install npm@latest -g
+
+npm install node-gyp -g
+
+in windows environment variables (so they are global)
+LIBPATH = C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.20348.0
+
+npm config edit
+	add a line which says:
+	msvs_version=2022
+
+
+nodert\src\NodeRTCmd\bin\Debug\NodeRTCmd.exe --winmd ..\Windows.Devices.Midi2.winmd --outdir .\projection
+
+In VS C++ project, for all configurations, update the AdditionalUsingDirectories property to include
+%Program Files (x86)%\Windows Kits\10\UnionMetadata\10.0.20348.0
+
+copy Windows.Devices.Midi2.winmd to projection\windows.devices.midi2\build
+copy Windows.winmd from the unionmetadata to same folder
+
+copy C:\Program Files\Microsoft Visual Studio\2022\Preview\Common7\IDE\VC\vcpackages platform.winmd to same folder
+
+
+Comment out SendMessageStruct body and reference
+
+Open binding.sln in VS and recompile in BOTH debug and release
+
+
+binding.gyp
+
+      ["WIN_VER==\"v10\"", {
+        "msvs_settings": {
+          "VCCLCompilerTool": {
+            "AdditionalUsingDirectories": [
+              "%ProgramFiles(x86)%/Microsoft Visual Studio 14.0/VC/lib/store/references",
+              "%ProgramFiles%/Microsoft Visual Studio 14.0/VC/lib/store/references",
+              "%ProgramFiles(x86)%/Windows Kits/10/UnionMetadata/10.0.20348.0",
+              "$(VCToolsInstallDir)/lib/x86/store/references",
+              "%MIDI_REPO_ROOT%/build/release/api/"
+            ]
+          }
+        }
+      }],
+
+
+download 
+npm pack @nodert-win11/windows.data.json
+npm pack @nodert-win11/windows.devices.midi
+npm pack @nodert-win11/windows.devices.enumeration
+
+unzip them, copy to appropriate folders under node_modules, and then make these changes:
+
+ (this change needs to be made in binding.gyp in ALL downloaded packages as well or you need to download and install 10.0.22000 sdk, or whatever version the binding.gyp specifies)
+
+      ["USE_ADDITIONAL_WINMD==\"true\"", {
+        "msvs_settings": {
+          "VCCLCompilerTool": {
+            "AdditionalUsingDirectories": [
+              "%ProgramFiles%/Windows Kits/10/UnionMetadata/10.0.20348.0",
+              "%ProgramFiles%/Windows Kits/10/Include/10.0.20348.0/um",
+              "%ProgramFiles(x86)%/Windows Kits/10/UnionMetadata/10.0.20348.0",
+              "%ProgramFiles(x86)%/Windows Kits/10/Include/10.0.20348.0/um"
+            ]
+          }
+        }
+      }]
+
+
+
+copy windows.devices.midi2 folder from projection to node_modules in sample
+
+To deal with mismatch node_module versions:
+
+in projection windows.devices.midi2 folder:
+npm install --save-dev electron
+npm install --save-dev @electron/rebuild
+node_modules\.bin\electron-rebuild
+
+Then do the same for each app. After the npm install commands, you'll need to re-copy the windows.devices.midi2 folder into node_modules
+
+from electron-midi-sample folder
+npm start to run

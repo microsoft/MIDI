@@ -1,0 +1,1 @@
+﻿cls.@(TX.Uncap(Model.Name)) = new @(Converter.ToJsDefinitonType(Model.PropertyType, TX.MainModel.Types.ContainsKey(Model.PropertyType)))();

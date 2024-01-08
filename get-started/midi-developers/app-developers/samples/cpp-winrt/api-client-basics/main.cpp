@@ -79,7 +79,7 @@ int main()
     auto eventRevokeToken = receiveEndpoint.MessageReceived(MessageReceivedHandler);
 
 
-    std::cout << std::endl << "Opening endpoint connection (this sends out the required discovery messages which will loop back)..." << std::endl;
+    std::cout << std::endl << "Opening endpoint connection" << std::endl;
 
     // once you have wired up all your event handlers, added any filters/listeners, etc.
     // You can open the connection. Doing this will query the cache for the in-protocol 

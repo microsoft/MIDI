@@ -9,7 +9,8 @@
   "author": "Microsoft",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^27.1.2",
+    "@electron/rebuild": "^3.4.1",
+    "electron": "^27.2.1",
     "electron-rebuild": "^3.2.9"
   }
 }

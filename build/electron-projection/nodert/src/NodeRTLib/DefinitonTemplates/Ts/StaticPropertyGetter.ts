@@ -1,0 +1,1 @@
+﻿    static @(TX.Uncap(Model.Name)): @(Converter.ToJsDefinitonType(Model.PropertyType, TX.MainModel.Types.ContainsKey(Model.PropertyType)));
