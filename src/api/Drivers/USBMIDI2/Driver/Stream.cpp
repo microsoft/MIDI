@@ -40,8 +40,6 @@ Environment:
 
 #include "Pch.h"
 
-extern wil::fast_mutex_with_critical_region *g_MidiInLock;
-
 static ACX_PROPERTY_ITEM MidiStreamProperties[] =
 {
     {

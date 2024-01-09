@@ -53,7 +53,6 @@ Environment:
 // Because we are using a global pin instance,
 // InstancesPossible on the in/out pins must not exceed 1 when
 // doing loopback.
-wil::fast_mutex_with_critical_region *g_MidiInLock {nullptr};
 StreamEngine* g_MidiInStreamEngine {nullptr};
 
 // UMP 32 is 4 bytes
@@ -184,7 +183,6 @@ StreamEngine::HandleIo()
                     // use of pMidiStreamEngine in Device Context (g_MidiInStreamEngine). There should be very little contention,
                     // as the only other time this is used is when midi in
                     // transitions between run and paused.
-                    auto lock = g_MidiInLock->acquire();
 
                     // we have a write event, there should be data available to move.
 //                    if (nullptr != pDevCtx->pMidiStreamEngine)
@@ -514,7 +512,6 @@ StreamEngine::Pause()
         // protects g_MidiInStreamEngine and clear g_MidiInStreamEngine to stop the loopback data
         // flowing.
         // TBD - this mechanism needs to change in case where device can be destroyed
-        auto lock = g_MidiInLock->acquire();
 //        pDevCtx->pMidiStreamEngine = nullptr;
         g_MidiInStreamEngine = nullptr;
     }
@@ -584,7 +581,6 @@ StreamEngine::Run()
         // protects g_MidiInStreamEngine and set g_MidiInStreamEngine to start the loopback data
         // flowing.
         // TBD this mechanism must be changed in case where multiple instances
-        auto lock = g_MidiInLock->acquire();
 //        pDevCtx->pMidiStreamEngine = this;
         g_MidiInStreamEngine = this;
     }

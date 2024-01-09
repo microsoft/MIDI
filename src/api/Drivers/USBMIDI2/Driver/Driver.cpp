@@ -44,7 +44,6 @@ Environment:
 #include "Trace.h"
 #include "Driver.tmh"
 
-extern wil::fast_mutex_with_critical_region *g_MidiInLock;
 
 //_Use_decl_annotations_
 PAGED_CODE_SEG
@@ -86,12 +85,6 @@ NOTE: Consider putting globals into context and using context cleanup
     {
         ExFreePool(g_RegistryPath.Buffer);
         RtlZeroMemory(&g_RegistryPath, sizeof(g_RegistryPath));
-    }
-
-    if (g_MidiInLock)
-    {
-        delete g_MidiInLock;
-        g_MidiInLock = nullptr;
     }
 
 exit:
@@ -198,10 +191,6 @@ DriverEntry(
         goto exit;
     }
 
-    if (!g_MidiInLock)
-    {
-        g_MidiInLock = new (POOL_FLAG_NON_PAGED) wil::fast_mutex_with_critical_region();
-    }
 
 exit:
     if (!NT_SUCCESS(status))
