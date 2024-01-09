@@ -13,7 +13,8 @@
 
 namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
 {
-    MidiSystemExclusiveMessage::MidiSystemExclusiveMessage(winrt::Windows::Storage::Streams::IBuffer const& rawData)
+    _Use_decl_annotations_
+    MidiSystemExclusiveMessage::MidiSystemExclusiveMessage(winrt::Windows::Storage::Streams::IBuffer const& /*rawData*/)
     {
         throw hresult_not_implemented();
     }

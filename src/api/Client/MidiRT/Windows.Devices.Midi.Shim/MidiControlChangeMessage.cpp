@@ -13,10 +13,12 @@
 
 namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
 {
-    MidiControlChangeMessage::MidiControlChangeMessage(uint8_t channel, uint8_t controller, uint8_t controlValue)
+    _Use_decl_annotations_
+    MidiControlChangeMessage::MidiControlChangeMessage(uint8_t /*channel*/, uint8_t /*controller*/, uint8_t /*controlValue*/)
     {
         throw hresult_not_implemented();
     }
+
     uint8_t MidiControlChangeMessage::Channel()
     {
         throw hresult_not_implemented();

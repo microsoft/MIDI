@@ -13,7 +13,8 @@
 
 namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
 {
-    MidiProgramChangeMessage::MidiProgramChangeMessage(uint8_t channel, uint8_t program)
+    _Use_decl_annotations_
+    MidiProgramChangeMessage::MidiProgramChangeMessage(uint8_t /*channel*/, uint8_t /*program*/)
     {
         throw hresult_not_implemented();
     }

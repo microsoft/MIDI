@@ -16,7 +16,8 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
     {
         MidiTimeCodeMessage() = default;
 
-        MidiTimeCodeMessage(uint8_t frameType, uint8_t values);
+        MidiTimeCodeMessage(_In_ uint8_t frameType, _In_ uint8_t values);
+
         uint8_t FrameType();
         uint8_t Values();
         winrt::Windows::Foundation::TimeSpan Timestamp();

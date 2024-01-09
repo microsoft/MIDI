@@ -16,7 +16,7 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
     {
         MidiProgramChangeMessage() = default;
 
-        MidiProgramChangeMessage(uint8_t channel, uint8_t program);
+        MidiProgramChangeMessage(_In_ uint8_t channel, _In_ uint8_t program);
         uint8_t Channel();
         uint8_t Program();
         winrt::Windows::Foundation::TimeSpan Timestamp();

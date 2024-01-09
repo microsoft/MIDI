@@ -13,7 +13,8 @@
 
 namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
 {
-    MidiNoteOnMessage::MidiNoteOnMessage(uint8_t channel, uint8_t note, uint8_t velocity)
+    _Use_decl_annotations_
+    MidiNoteOnMessage::MidiNoteOnMessage(uint8_t /*channel*/, uint8_t /*note*/, uint8_t /*velocity*/)
     {
         throw hresult_not_implemented();
     }

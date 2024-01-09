@@ -16,7 +16,7 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
     {
         MidiPitchBendChangeMessage() = default;
 
-        MidiPitchBendChangeMessage(uint8_t channel, uint16_t bend);
+        MidiPitchBendChangeMessage(_In_ uint8_t channel, _In_ uint16_t bend);
         uint8_t Channel();
         uint16_t Bend();
         winrt::Windows::Foundation::TimeSpan Timestamp();

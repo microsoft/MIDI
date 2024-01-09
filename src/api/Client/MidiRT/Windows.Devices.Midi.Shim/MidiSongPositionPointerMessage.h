@@ -16,7 +16,8 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
     {
         MidiSongPositionPointerMessage() = default;
 
-        MidiSongPositionPointerMessage(uint16_t beats);
+        MidiSongPositionPointerMessage(_In_ uint16_t beats);
+
         uint16_t Beats();
         winrt::Windows::Foundation::TimeSpan Timestamp();
         winrt::MIDI_ROOT_NAMESPACE_CPP::MidiMessageType Type();

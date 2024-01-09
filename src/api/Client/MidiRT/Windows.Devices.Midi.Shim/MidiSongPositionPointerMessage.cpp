@@ -13,7 +13,8 @@
 
 namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
 {
-    MidiSongPositionPointerMessage::MidiSongPositionPointerMessage(uint16_t beats)
+    _Use_decl_annotations_
+    MidiSongPositionPointerMessage::MidiSongPositionPointerMessage(uint16_t /*beats*/)
     {
         throw hresult_not_implemented();
     }

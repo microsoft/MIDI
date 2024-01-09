@@ -97,6 +97,8 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">Level4</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Level4</WarningLevel>
     </ClCompile>
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</Profile>
@@ -141,6 +143,8 @@
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</TreatWarningAsError>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">Level4</WarningLevel>
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Level4</WarningLevel>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -172,142 +176,142 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-      <ClInclude Include="MidiActiveSensingMessage.h">
-          <DependentUpon>MidiActiveSensingMessage.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiChannelPressureMessage.h">
-          <DependentUpon>MidiChannelPressureMessage.idl</DependentUpon>
-      </ClInclude>
-    <ClInclude Include="MidiContinueMessage.h">
-        <DependentUpon>MidiContinueMessage.idl</DependentUpon>
+    <ClInclude Include="MidiActiveSensingMessage.h">
+      <DependentUpon>MidiActiveSensingMessage.idl</DependentUpon>
     </ClInclude>
-      <ClInclude Include="MidiControlChangeMessage.h">
-          <DependentUpon>MidiControlChangeMessage.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiInPort.h">
-          <DependentUpon>MidiInPort.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiMessageReceivedEventArgs.h">
-          <DependentUpon>MidiMessageReceivedEventArgs.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiNoteOffMessage.h">
-          <DependentUpon>MidiNoteOffMessage.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiNoteOnMessage.h">
-          <DependentUpon>MidiNoteOnMessage.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiOutPort.h">
-          <DependentUpon>MidiOutPort.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiPitchBendChangeMessage.h">
-          <DependentUpon>MidiPitchBendChangeMessage.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiPolyphonicKeyPressureMessage.h">
-          <DependentUpon>MidiPolyphonicKeyPressureMessage.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiProgramChangeMessage.h">
-          <DependentUpon>MidiProgramChangeMessage.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiSongPositionPointerMessage.h">
-          <DependentUpon>MidiSongPositionPointerMessage.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiSongSelectMessage.h">
-          <DependentUpon>MidiSongSelectMessage.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiStartMessage.h">
-          <DependentUpon>MidiStartMessage.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiStopMessage.h">
-          <DependentUpon>MidiStopMessage.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiSynthesizer.h">
-          <DependentUpon>MidiSynthesizer.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiSystemExclusiveMessage.h">
-          <DependentUpon>MidiSystemExclusiveMessage.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiSystemResetMessage.h">
-          <DependentUpon>MidiSystemResetMessage.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiTimeCodeMessage.h">
-          <DependentUpon>MidiTimeCodeMessage.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiTimingClockMessage.h">
-          <DependentUpon>MidiTimingClockMessage.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiTuneRequestMessage.h">
-          <DependentUpon>MidiTuneRequestMessage.idl</DependentUpon>
-      </ClInclude>
+    <ClInclude Include="MidiChannelPressureMessage.h">
+      <DependentUpon>MidiChannelPressureMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiContinueMessage.h">
+      <DependentUpon>MidiContinueMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiControlChangeMessage.h">
+      <DependentUpon>MidiControlChangeMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiInPort.h">
+      <DependentUpon>MidiInPort.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiMessageReceivedEventArgs.h">
+      <DependentUpon>MidiMessageReceivedEventArgs.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiNoteOffMessage.h">
+      <DependentUpon>MidiNoteOffMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiNoteOnMessage.h">
+      <DependentUpon>MidiNoteOnMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiOutPort.h">
+      <DependentUpon>MidiOutPort.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiPitchBendChangeMessage.h">
+      <DependentUpon>MidiPitchBendChangeMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiPolyphonicKeyPressureMessage.h">
+      <DependentUpon>MidiPolyphonicKeyPressureMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiProgramChangeMessage.h">
+      <DependentUpon>MidiProgramChangeMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiSongPositionPointerMessage.h">
+      <DependentUpon>MidiSongPositionPointerMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiSongSelectMessage.h">
+      <DependentUpon>MidiSongSelectMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiStartMessage.h">
+      <DependentUpon>MidiStartMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiStopMessage.h">
+      <DependentUpon>MidiStopMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiSynthesizer.h">
+      <DependentUpon>MidiSynthesizer.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiSystemExclusiveMessage.h">
+      <DependentUpon>MidiSystemExclusiveMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiSystemResetMessage.h">
+      <DependentUpon>MidiSystemResetMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiTimeCodeMessage.h">
+      <DependentUpon>MidiTimeCodeMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiTimingClockMessage.h">
+      <DependentUpon>MidiTimingClockMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiTuneRequestMessage.h">
+      <DependentUpon>MidiTuneRequestMessage.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="pch.h" />
     <ClInclude Include="winrt_midi1_midl_defines.h" />
   </ItemGroup>
   <ItemGroup>
-      <ClCompile Include="MidiActiveSensingMessage.cpp">
-          <DependentUpon>MidiActiveSensingMessage.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiChannelPressureMessage.cpp">
-          <DependentUpon>MidiChannelPressureMessage.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiContinueMessage.cpp">
-          <DependentUpon>MidiContinueMessage.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiControlChangeMessage.cpp">
-          <DependentUpon>MidiControlChangeMessage.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiInPort.cpp">
-          <DependentUpon>MidiInPort.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiMessageReceivedEventArgs.cpp">
-          <DependentUpon>MidiMessageReceivedEventArgs.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiNoteOffMessage.cpp">
-          <DependentUpon>MidiNoteOffMessage.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiNoteOnMessage.cpp">
-          <DependentUpon>MidiNoteOnMessage.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiOutPort.cpp">
-          <DependentUpon>MidiOutPort.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiPitchBendChangeMessage.cpp">
-          <DependentUpon>MidiPitchBendChangeMessage.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiPolyphonicKeyPressureMessage.cpp">
-          <DependentUpon>MidiPolyphonicKeyPressureMessage.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiProgramChangeMessage.cpp">
-          <DependentUpon>MidiProgramChangeMessage.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiSongPositionPointerMessage.cpp">
-          <DependentUpon>MidiSongPositionPointerMessage.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiSongSelectMessage.cpp">
-          <DependentUpon>MidiSongSelectMessage.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiStartMessage.cpp">
-          <DependentUpon>MidiStartMessage.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiStopMessage.cpp">
-          <DependentUpon>MidiStopMessage.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiSynthesizer.cpp">
-          <DependentUpon>MidiSynthesizer.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiSystemExclusiveMessage.cpp">
-          <DependentUpon>MidiSystemExclusiveMessage.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiSystemResetMessage.cpp">
-          <DependentUpon>MidiSystemResetMessage.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiTimeCodeMessage.cpp">
-          <DependentUpon>MidiTimeCodeMessage.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiTimingClockMessage.cpp">
-          <DependentUpon>MidiTimingClockMessage.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiTuneRequestMessage.cpp">
-          <DependentUpon>MidiTuneRequestMessage.idl</DependentUpon>
-      </ClCompile>
+    <ClCompile Include="MidiActiveSensingMessage.cpp">
+      <DependentUpon>MidiActiveSensingMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiChannelPressureMessage.cpp">
+      <DependentUpon>MidiChannelPressureMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiContinueMessage.cpp">
+      <DependentUpon>MidiContinueMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiControlChangeMessage.cpp">
+      <DependentUpon>MidiControlChangeMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiInPort.cpp">
+      <DependentUpon>MidiInPort.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiMessageReceivedEventArgs.cpp">
+      <DependentUpon>MidiMessageReceivedEventArgs.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiNoteOffMessage.cpp">
+      <DependentUpon>MidiNoteOffMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiNoteOnMessage.cpp">
+      <DependentUpon>MidiNoteOnMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiOutPort.cpp">
+      <DependentUpon>MidiOutPort.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiPitchBendChangeMessage.cpp">
+      <DependentUpon>MidiPitchBendChangeMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiPolyphonicKeyPressureMessage.cpp">
+      <DependentUpon>MidiPolyphonicKeyPressureMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiProgramChangeMessage.cpp">
+      <DependentUpon>MidiProgramChangeMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiSongPositionPointerMessage.cpp">
+      <DependentUpon>MidiSongPositionPointerMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiSongSelectMessage.cpp">
+      <DependentUpon>MidiSongSelectMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiStartMessage.cpp">
+      <DependentUpon>MidiStartMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiStopMessage.cpp">
+      <DependentUpon>MidiStopMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiSynthesizer.cpp">
+      <DependentUpon>MidiSynthesizer.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiSystemExclusiveMessage.cpp">
+      <DependentUpon>MidiSystemExclusiveMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiSystemResetMessage.cpp">
+      <DependentUpon>MidiSystemResetMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiTimeCodeMessage.cpp">
+      <DependentUpon>MidiTimeCodeMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiTimingClockMessage.cpp">
+      <DependentUpon>MidiTimingClockMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiTuneRequestMessage.cpp">
+      <DependentUpon>MidiTuneRequestMessage.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>

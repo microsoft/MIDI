@@ -16,7 +16,8 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
     {
         MidiSongSelectMessage() = default;
 
-        MidiSongSelectMessage(uint8_t song);
+        MidiSongSelectMessage(_In_ uint8_t song);
+
         uint8_t Song();
         winrt::Windows::Foundation::TimeSpan Timestamp();
         winrt::MIDI_ROOT_NAMESPACE_CPP::MidiMessageType Type();

@@ -16,7 +16,7 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
     {
         MidiControlChangeMessage() = default;
 
-        MidiControlChangeMessage(uint8_t channel, uint8_t controller, uint8_t controlValue);
+        MidiControlChangeMessage(_In_ uint8_t channel, _In_ uint8_t controller, _In_ uint8_t controlValue);
         uint8_t Channel();
         uint8_t Controller();
         uint8_t ControlValue();

@@ -16,7 +16,7 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
     {
         MidiChannelPressureMessage() = default;
 
-        MidiChannelPressureMessage(uint8_t channel, uint8_t pressure);
+        MidiChannelPressureMessage(_In_ uint8_t channel, _In_ uint8_t pressure);
         uint8_t Channel();
         uint8_t Pressure();
         winrt::Windows::Foundation::TimeSpan Timestamp();

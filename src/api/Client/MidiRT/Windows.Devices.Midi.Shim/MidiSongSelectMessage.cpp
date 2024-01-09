@@ -13,7 +13,8 @@
 
 namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
 {
-    MidiSongSelectMessage::MidiSongSelectMessage(uint8_t song)
+    _Use_decl_annotations_
+    MidiSongSelectMessage::MidiSongSelectMessage(uint8_t /*song*/)
     {
         throw hresult_not_implemented();
     }

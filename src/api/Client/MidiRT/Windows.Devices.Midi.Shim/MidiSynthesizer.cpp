@@ -17,11 +17,15 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
     {
         throw hresult_not_implemented();
     }
-    void MidiSynthesizer::SendMessage(winrt::MIDI_ROOT_NAMESPACE_CPP::IMidiMessage const& midiMessage)
+
+    _Use_decl_annotations_
+    void MidiSynthesizer::SendMessage(winrt::MIDI_ROOT_NAMESPACE_CPP::IMidiMessage const& /*midiMessage*/)
     {
         throw hresult_not_implemented();
     }
-    void MidiSynthesizer::SendBuffer(winrt::Windows::Storage::Streams::IBuffer const& midiData)
+
+    _Use_decl_annotations_
+    void MidiSynthesizer::SendBuffer(winrt::Windows::Storage::Streams::IBuffer const& /*midiData*/)
     {
         throw hresult_not_implemented();
     }

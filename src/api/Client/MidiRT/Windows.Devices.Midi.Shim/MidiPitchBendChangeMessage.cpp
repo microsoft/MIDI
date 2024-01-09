@@ -13,7 +13,8 @@
 
 namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
 {
-    MidiPitchBendChangeMessage::MidiPitchBendChangeMessage(uint8_t channel, uint16_t bend)
+    _Use_decl_annotations_
+    MidiPitchBendChangeMessage::MidiPitchBendChangeMessage(uint8_t /*channel*/, uint16_t /*bend*/)
     {
         throw hresult_not_implemented();
     }

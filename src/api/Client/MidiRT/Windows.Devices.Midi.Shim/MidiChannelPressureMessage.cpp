@@ -13,10 +13,12 @@
 
 namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
 {
-    MidiChannelPressureMessage::MidiChannelPressureMessage(uint8_t channel, uint8_t pressure)
+    _Use_decl_annotations_
+    MidiChannelPressureMessage::MidiChannelPressureMessage(uint8_t /*channel*/, uint8_t /*pressure*/)
     {
         throw hresult_not_implemented();
     }
+
     uint8_t MidiChannelPressureMessage::Channel()
     {
         throw hresult_not_implemented();

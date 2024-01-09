@@ -13,7 +13,8 @@
 
 namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
 {
-    MidiTimeCodeMessage::MidiTimeCodeMessage(uint8_t frameType, uint8_t values)
+    _Use_decl_annotations_
+    MidiTimeCodeMessage::MidiTimeCodeMessage(uint8_t /*frameType*/, uint8_t /*values*/)
     {
         throw hresult_not_implemented();
     }

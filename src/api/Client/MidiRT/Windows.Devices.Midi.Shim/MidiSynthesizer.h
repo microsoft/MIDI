@@ -17,7 +17,7 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
         MidiSynthesizer() = default;
 
         hstring DeviceId();
-        void SendMessage(winrt::MIDI_ROOT_NAMESPACE_CPP::IMidiMessage const& midiMessage);
-        void SendBuffer(winrt::Windows::Storage::Streams::IBuffer const& midiData);
+        void SendMessage(_In_ winrt::MIDI_ROOT_NAMESPACE_CPP::IMidiMessage const& midiMessage);
+        void SendBuffer(_In_ winrt::Windows::Storage::Streams::IBuffer const& midiData);
     };
 }

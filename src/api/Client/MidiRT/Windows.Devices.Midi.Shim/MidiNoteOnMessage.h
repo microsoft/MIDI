@@ -16,7 +16,7 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
     {
         MidiNoteOnMessage() = default;
 
-        MidiNoteOnMessage(uint8_t channel, uint8_t note, uint8_t velocity);
+        MidiNoteOnMessage(_In_ uint8_t channel, _In_ uint8_t note, _In_ uint8_t velocity);
         uint8_t Channel();
         uint8_t Note();
         uint8_t Velocity();

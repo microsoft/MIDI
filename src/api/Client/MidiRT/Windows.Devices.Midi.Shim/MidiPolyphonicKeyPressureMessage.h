@@ -16,7 +16,7 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
     {
         MidiPolyphonicKeyPressureMessage() = default;
 
-        MidiPolyphonicKeyPressureMessage(uint8_t channel, uint8_t note, uint8_t pressure);
+        MidiPolyphonicKeyPressureMessage(_In_ uint8_t channel, _In_ uint8_t note, _In_ uint8_t pressure);
         uint8_t Channel();
         uint8_t Note();
         uint8_t Pressure();
