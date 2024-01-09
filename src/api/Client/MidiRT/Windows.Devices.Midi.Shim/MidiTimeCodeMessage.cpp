@@ -26,16 +26,17 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Foundation::TimeSpan MidiTimeCodeMessage::Timestamp()
+    foundation::TimeSpan MidiTimeCodeMessage::Timestamp()
     {
         throw hresult_not_implemented();
     }
-    winrt::MIDI_ROOT_NAMESPACE_CPP::MidiMessageType MidiTimeCodeMessage::Type()
+    midi1::MidiMessageType MidiTimeCodeMessage::Type()
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Storage::Streams::IBuffer MidiTimeCodeMessage::RawData()
+    streams::IBuffer MidiTimeCodeMessage::RawData()
     {
         throw hresult_not_implemented();
     }
+
 }

@@ -13,7 +13,7 @@
 
 namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
 {
-    winrt::MIDI_ROOT_NAMESPACE_CPP::IMidiMessage MidiMessageReceivedEventArgs::Message()
+    midi1::IMidiMessage MidiMessageReceivedEventArgs::Message()
     {
         throw hresult_not_implemented();
     }

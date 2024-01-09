@@ -22,16 +22,17 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Foundation::TimeSpan MidiSongPositionPointerMessage::Timestamp()
+    foundation::TimeSpan MidiSongPositionPointerMessage::Timestamp()
     {
         throw hresult_not_implemented();
     }
-    winrt::MIDI_ROOT_NAMESPACE_CPP::MidiMessageType MidiSongPositionPointerMessage::Type()
+    midi1::MidiMessageType MidiSongPositionPointerMessage::Type()
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Storage::Streams::IBuffer MidiSongPositionPointerMessage::RawData()
+    streams::IBuffer MidiSongPositionPointerMessage::RawData()
     {
         throw hresult_not_implemented();
     }
+
 }

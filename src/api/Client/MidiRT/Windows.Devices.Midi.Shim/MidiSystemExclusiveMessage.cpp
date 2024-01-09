@@ -14,20 +14,21 @@
 namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
 {
     _Use_decl_annotations_
-    MidiSystemExclusiveMessage::MidiSystemExclusiveMessage(winrt::Windows::Storage::Streams::IBuffer const& /*rawData*/)
+    MidiSystemExclusiveMessage::MidiSystemExclusiveMessage(streams::IBuffer const& /*rawData*/)
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Foundation::TimeSpan MidiSystemExclusiveMessage::Timestamp()
+    foundation::TimeSpan MidiSystemExclusiveMessage::Timestamp()
     {
         throw hresult_not_implemented();
     }
-    winrt::MIDI_ROOT_NAMESPACE_CPP::MidiMessageType MidiSystemExclusiveMessage::Type()
+    midi1::MidiMessageType MidiSystemExclusiveMessage::Type()
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Storage::Streams::IBuffer MidiSystemExclusiveMessage::RawData()
+    streams::IBuffer MidiSystemExclusiveMessage::RawData()
     {
         throw hresult_not_implemented();
     }
+
 }

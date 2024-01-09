@@ -16,11 +16,12 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
     {
         MidiSystemExclusiveMessage() = default;
 
-        MidiSystemExclusiveMessage(_In_ winrt::Windows::Storage::Streams::IBuffer const& rawData);
+        MidiSystemExclusiveMessage(_In_ streams::IBuffer const& rawData);
 
-        winrt::Windows::Foundation::TimeSpan Timestamp();
-        winrt::MIDI_ROOT_NAMESPACE_CPP::MidiMessageType Type();
-        winrt::Windows::Storage::Streams::IBuffer RawData();
+        foundation::TimeSpan Timestamp();
+        midi1::MidiMessageType Type();
+        streams::IBuffer RawData();
+
     };
 }
 namespace winrt::MIDI_ROOT_NAMESPACE_CPP::factory_implementation

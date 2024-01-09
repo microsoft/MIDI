@@ -30,16 +30,17 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Foundation::TimeSpan MidiPolyphonicKeyPressureMessage::Timestamp()
+    foundation::TimeSpan MidiPolyphonicKeyPressureMessage::Timestamp()
     {
         throw hresult_not_implemented();
     }
-    winrt::MIDI_ROOT_NAMESPACE_CPP::MidiMessageType MidiPolyphonicKeyPressureMessage::Type()
+    midi1::MidiMessageType MidiPolyphonicKeyPressureMessage::Type()
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Storage::Streams::IBuffer MidiPolyphonicKeyPressureMessage::RawData()
+    streams::IBuffer MidiPolyphonicKeyPressureMessage::RawData()
     {
         throw hresult_not_implemented();
     }
+
 }

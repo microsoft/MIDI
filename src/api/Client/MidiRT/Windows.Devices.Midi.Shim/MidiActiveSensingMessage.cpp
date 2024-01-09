@@ -17,11 +17,11 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
     {
         throw hresult_not_implemented();
     }
-    winrt::MIDI_ROOT_NAMESPACE_CPP::MidiMessageType MidiActiveSensingMessage::Type()
+    midi1::MidiMessageType MidiActiveSensingMessage::Type()
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Storage::Streams::IBuffer MidiActiveSensingMessage::RawData()
+    streams::IBuffer MidiActiveSensingMessage::RawData()
     {
         throw hresult_not_implemented();
     }

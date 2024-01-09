@@ -22,16 +22,17 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Foundation::TimeSpan MidiSongSelectMessage::Timestamp()
+    foundation::TimeSpan MidiSongSelectMessage::Timestamp()
     {
         throw hresult_not_implemented();
     }
-    winrt::MIDI_ROOT_NAMESPACE_CPP::MidiMessageType MidiSongSelectMessage::Type()
+    midi1::MidiMessageType MidiSongSelectMessage::Type()
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Storage::Streams::IBuffer MidiSongSelectMessage::RawData()
+    streams::IBuffer MidiSongSelectMessage::RawData()
     {
         throw hresult_not_implemented();
     }
+
 }

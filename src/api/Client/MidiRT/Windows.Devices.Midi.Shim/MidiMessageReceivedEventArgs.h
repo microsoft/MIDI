@@ -16,6 +16,6 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
     {
         MidiMessageReceivedEventArgs() = default;
 
-        winrt::MIDI_ROOT_NAMESPACE_CPP::IMidiMessage Message();
+        midi1::IMidiMessage Message();
     };
 }

@@ -20,7 +20,7 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
 
     _Use_decl_annotations_
     winrt::event_token MidiInPort::MessageReceived(
-        winrt::Windows::Foundation::TypedEventHandler<winrt::MIDI_ROOT_NAMESPACE_CPP::MidiInPort, winrt::MIDI_ROOT_NAMESPACE_CPP::MidiMessageReceivedEventArgs> const& /*handler*/)
+        foundation::TypedEventHandler<midi1::MidiInPort, midi1::MidiMessageReceivedEventArgs> const& /*handler*/)
     {
         throw hresult_not_implemented();
     }

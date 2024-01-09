@@ -13,16 +13,17 @@
 
 namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
 {
-    winrt::Windows::Foundation::TimeSpan MidiTimingClockMessage::Timestamp()
+    foundation::TimeSpan MidiTimingClockMessage::Timestamp()
     {
         throw hresult_not_implemented();
     }
-    winrt::MIDI_ROOT_NAMESPACE_CPP::MidiMessageType MidiTimingClockMessage::Type()
+    midi1::MidiMessageType MidiTimingClockMessage::Type()
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Storage::Streams::IBuffer MidiTimingClockMessage::RawData()
+    streams::IBuffer MidiTimingClockMessage::RawData()
     {
         throw hresult_not_implemented();
     }
+
 }

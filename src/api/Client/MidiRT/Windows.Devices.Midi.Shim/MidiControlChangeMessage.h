@@ -20,9 +20,10 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
         uint8_t Channel();
         uint8_t Controller();
         uint8_t ControlValue();
-        winrt::Windows::Foundation::TimeSpan Timestamp();
-        winrt::MIDI_ROOT_NAMESPACE_CPP::MidiMessageType Type();
-        winrt::Windows::Storage::Streams::IBuffer RawData();
+
+        foundation::TimeSpan Timestamp();
+        midi1::MidiMessageType Type();
+        streams::IBuffer RawData();
     };
 }
 namespace winrt::MIDI_ROOT_NAMESPACE_CPP::factory_implementation

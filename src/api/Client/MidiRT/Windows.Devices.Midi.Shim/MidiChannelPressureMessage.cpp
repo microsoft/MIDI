@@ -27,15 +27,15 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Foundation::TimeSpan MidiChannelPressureMessage::Timestamp()
+    foundation::TimeSpan MidiChannelPressureMessage::Timestamp()
     {
         throw hresult_not_implemented();
     }
-    winrt::MIDI_ROOT_NAMESPACE_CPP::MidiMessageType MidiChannelPressureMessage::Type()
+    midi1::MidiMessageType MidiChannelPressureMessage::Type()
     {
         throw hresult_not_implemented();
     }
-    winrt::Windows::Storage::Streams::IBuffer MidiChannelPressureMessage::RawData()
+    streams::IBuffer MidiChannelPressureMessage::RawData()
     {
         throw hresult_not_implemented();
     }

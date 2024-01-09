@@ -17,7 +17,7 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
         MidiInPort() = default;
 
         hstring DeviceId();
-        winrt::event_token MessageReceived(_In_ winrt::Windows::Foundation::TypedEventHandler<winrt::MIDI_ROOT_NAMESPACE_CPP::MidiInPort, winrt::MIDI_ROOT_NAMESPACE_CPP::MidiMessageReceivedEventArgs> const& handler);
+        winrt::event_token MessageReceived(_In_ foundation::TypedEventHandler<midi1::MidiInPort, midi1::MidiMessageReceivedEventArgs> const& handler);
         void MessageReceived(_In_ winrt::event_token const& token) noexcept;
         void Close();
     };

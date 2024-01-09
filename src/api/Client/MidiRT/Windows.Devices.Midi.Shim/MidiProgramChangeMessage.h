@@ -19,9 +19,11 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
         MidiProgramChangeMessage(_In_ uint8_t channel, _In_ uint8_t program);
         uint8_t Channel();
         uint8_t Program();
-        winrt::Windows::Foundation::TimeSpan Timestamp();
-        winrt::MIDI_ROOT_NAMESPACE_CPP::MidiMessageType Type();
-        winrt::Windows::Storage::Streams::IBuffer RawData();
+
+        foundation::TimeSpan Timestamp();
+        midi1::MidiMessageType Type();
+        streams::IBuffer RawData();
+
     };
 }
 namespace winrt::MIDI_ROOT_NAMESPACE_CPP::factory_implementation

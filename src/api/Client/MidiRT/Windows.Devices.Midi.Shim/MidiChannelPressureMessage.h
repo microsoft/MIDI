@@ -19,9 +19,10 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
         MidiChannelPressureMessage(_In_ uint8_t channel, _In_ uint8_t pressure);
         uint8_t Channel();
         uint8_t Pressure();
-        winrt::Windows::Foundation::TimeSpan Timestamp();
-        winrt::MIDI_ROOT_NAMESPACE_CPP::MidiMessageType Type();
-        winrt::Windows::Storage::Streams::IBuffer RawData();
+
+        foundation::TimeSpan Timestamp();
+        midi1::MidiMessageType Type();
+        streams::IBuffer RawData();
     };
 }
 namespace winrt::MIDI_ROOT_NAMESPACE_CPP::factory_implementation
