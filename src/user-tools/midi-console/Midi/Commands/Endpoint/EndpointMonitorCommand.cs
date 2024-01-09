@@ -232,8 +232,12 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         {
                             lock (m_receivedMessagesQueue)
                             {
-                                while (m_receivedMessagesQueue.Count > 0)
+                                int iter = 0;
+
+                                while (m_receivedMessagesQueue.Count > 0 && iter < 50)
                                 {
+                                    iter++; // we need to take a break if we're being spammed, so this tracks iterations
+
                                     var message = m_receivedMessagesQueue.Dequeue();
 
                                     if (startTimestamp == 0)
