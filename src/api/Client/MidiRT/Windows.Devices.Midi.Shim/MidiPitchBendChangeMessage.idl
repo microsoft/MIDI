@@ -15,11 +15,11 @@ MIDI_IDL_IMPORT
 
 import "IMidiMessage.idl";
 
-namespace Windows.Devices.Midi
+namespace MIDI_ROOT_NAMESPACE_IDL
 {
     [MIDI1_SHIM_API_CONTRACT(1)]
     [marshaling_behavior(agile)]
-    [interface_name("Windows.Devices.Midi.IMidiPitchBendChangeMessage", 29DF4CB1 - 2E9F - 4FAF - 8C2B - 9CB82A9079CA)]
+    [interface_name(MIDI_MIDL_INTERFACE_NAME(IMidiPitchBendChangeMessage), 29DF4CB1-2E9F-4FAF-8C2B-9CB82A9079CA)]
     runtimeclass MidiPitchBendChangeMessage : IMidiMessage
     {
         MidiPitchBendChangeMessage(UInt8 channel, UInt16 bend);

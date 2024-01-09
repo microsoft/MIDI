@@ -11,10 +11,10 @@ MIDI_IDL_IMPORT
 
 import "IMidiMessage.idl";
 
-namespace Windows.Devices.Midi
+namespace MIDI_ROOT_NAMESPACE_IDL
 {
     [MIDI1_SHIM_API_CONTRACT(1)]
-    [interface_name("Windows.Devices.Midi.IMidiMessageReceivedEventArgs", 76566E56-F328-4B51-907D-B3A8CE96BF80)]
+    [interface_name(MIDI_MIDL_INTERFACE_NAME(IMidiMessageReceivedEventArgs), 76566E56-F328-4B51-907D-B3A8CE96BF80)]
     runtimeclass MidiMessageReceivedEventArgs
     {
         IMidiMessage Message{ get; };

@@ -15,11 +15,11 @@ MIDI_IDL_IMPORT
 
 import "IMidiMessage.idl";
 
-namespace Windows.Devices.Midi
+namespace MIDI_ROOT_NAMESPACE_IDL
 {
     [MIDI1_SHIM_API_CONTRACT(1)]
     [marshaling_behavior(agile)]
-    [interface_name("Windows.Devices.Midi.IMidiSongPositionPointerMessage", 4CA50C56-EC5E-4AE4-A115-88DC57CC2B79)]
+    [interface_name(MIDI_MIDL_INTERFACE_NAME(IMidiSongPositionPointerMessage), 4CA50C56-EC5E-4AE4-A115-88DC57CC2B79)]
     runtimeclass MidiSongPositionPointerMessage : IMidiMessage
     {
         MidiSongPositionPointerMessage(UInt16 beats);

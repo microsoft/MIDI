@@ -16,12 +16,12 @@ MIDI_IDL_IMPORT
 import "IMidiMessage.idl";
 import "IMidiOutPort.idl";
 
-namespace Windows.Devices.Midi
+namespace MIDI_ROOT_NAMESPACE_IDL
 {
     [MIDI1_SHIM_API_CONTRACT(1)]
     [marshaling_behavior(agile)]
-    [static_name("Windows.Devices.Midi.IMidiOutPortStatics", 065CC3E9-0F88-448B-9B64-A95826C65B8F)]
-    runtimeclass MidiOutPort : [default] IMidiOutPort, Windows.Foundation.IClosable,
+    [static_name(MIDI_MIDL_INTERFACE_NAME(IMidiOutPortStatics), 065CC3E9-0F88-448B-9B64-A95826C65B8F)]
+    runtimeclass MidiOutPort : [default] IMidiOutPort, Windows.Foundation.IClosable
     {
 
     }

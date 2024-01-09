@@ -13,7 +13,9 @@
 #include "winrt_midi1_midl_defines.h"
 MIDI_IDL_IMPORT
 
-namespace Windows.Devices.Midi
+import "MidiMessageTypeEnum.idl";
+
+namespace MIDI_ROOT_NAMESPACE_IDL
 {
     [MIDI1_SHIM_API_CONTRACT(1)]
     [MIDI_INTERFACE_UUID("79767945-1094-4283-9BE0-289FC0EE8334",1.0)]

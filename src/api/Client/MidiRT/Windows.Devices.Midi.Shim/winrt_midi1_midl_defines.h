@@ -11,9 +11,17 @@
 // These are required for internal Microsoft build support and if set incorrectly
 // will break any public compilation.
 
+#define QUOTE(s) #s
+
+
 #ifdef RAZZLE
 
 // internal build (using Razzle)
+
+#define MIDI_ROOT_NAMESPACE_IDL Windows.Devices.Midi
+#define MIDI_ROOT_NAMESPACE_CPP Windows::Devices::Midi
+#define MIDI_CONCAT_NAMESPACE(r,n) QUOTE(r.n)
+#define MIDI_MIDL_INTERFACE_NAME(n) MIDI_CONCAT_NAMESPACE(MIDI_ROOT_NAMESPACE_IDL, n)
 
 #define MIDI1_SHIM_API_CONTRACT(n) contract(Windows.Foundation.UniversalApiContract, n) 
 
@@ -21,9 +29,8 @@
 import "Windows.Foundation.idl"; \
 import "Windows.Devices.Enumeration.idl"; \
 import "Windows.Data.Json.idl"; \
-import "Windows.Devices.Midi.idl"; \
 import "Windows.Devices.Enumeration.idl"; \
-import "Windows.Storage.Streams.idl"; \
+import "Windows.Storage.Streams.idl"; 
 
 #define MIDI_INTERFACE_UUID(u,v) uuid(u)
 
@@ -31,7 +38,13 @@ import "Windows.Storage.Streams.idl"; \
 
 // public build (using Visual Studio, msbuild, etc.)
 
-#define MIDI1_SHIM_API_CONTRACT(n)
+#define MIDI_ROOT_NAMESPACE_IDL Microsoft.Windows.Devices.Midi
+#define MIDI_ROOT_NAMESPACE_CPP Microsoft::Windows::Devices::Midi
+#define MIDI_CONCAT_NAMESPACE(r,n) QUOTE(r.n)
+#define MIDI_MIDL_INTERFACE_NAME(n) MIDI_CONCAT_NAMESPACE(MIDI_ROOT_NAMESPACE_IDL, n)
+
+
+#define MIDI1_SHIM_API_CONTRACT(n) 
 #define MIDI_IDL_IMPORT
 #define MIDI_INTERFACE_UUID(u,v) uuid(u), version(v)
 

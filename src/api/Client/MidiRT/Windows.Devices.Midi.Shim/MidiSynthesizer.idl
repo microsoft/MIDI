@@ -13,12 +13,14 @@
 #include "winrt_midi1_midl_defines.h"
 MIDI_IDL_IMPORT
 
-namespace Windows.Devices.Midi
+import "IMidiOutPort.idl";
+
+namespace MIDI_ROOT_NAMESPACE_IDL
 {
     [MIDI1_SHIM_API_CONTRACT(1)]
     [marshaling_behavior(agile)]
-    [interface_name("Windows.Devices.Midi.IMidiSynthesizer", F0DA155E-DB90-405F-B8AE-21D2E17F2E45)]
-    [static_name("Windows.Devices.Midi.IMidiSynthesizerStatics", 4224EAA8-6629-4D6B-AA8F-D4521A5A31CE)]
+    [interface_name(MIDI_MIDL_INTERFACE_NAME(IMidiSynthesizer), F0DA155E-DB90-405F-B8AE-21D2E17F2E45)]
+    [static_name(MIDI_MIDL_INTERFACE_NAME(IMidiSynthesizerStatics), 4224EAA8-6629-4D6B-AA8F-D4521A5A31CE)]
     runtimeclass MidiSynthesizer : IMidiOutPort
     {
     }

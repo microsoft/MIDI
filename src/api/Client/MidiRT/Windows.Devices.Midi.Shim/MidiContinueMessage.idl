@@ -15,11 +15,12 @@ MIDI_IDL_IMPORT
 
 import "IMidiMessage.idl";
 
-namespace Windows.Devices.Midi
+namespace MIDI_ROOT_NAMESPACE_IDL
 {
     [MIDI1_SHIM_API_CONTRACT(1)]
     [marshaling_behavior(agile)]
     runtimeclass MidiContinueMessage : [default] IMidiMessage
     {
+        MidiContinueMessage();
     }
 }

@@ -9,7 +9,7 @@
 #include "winrt_midi1_midl_defines.h"
 MIDI_IDL_IMPORT
 
-namespace Windows.Devices.Midi
+namespace MIDI_ROOT_NAMESPACE_IDL
 {
     [MIDI1_SHIM_API_CONTRACT(1)]
     enum MidiMessageType
@@ -38,5 +38,5 @@ namespace Windows.Devices.Midi
         Stop = 252,
         ActiveSensing = 254,
         SystemReset = 255
-    }
+    };
 }

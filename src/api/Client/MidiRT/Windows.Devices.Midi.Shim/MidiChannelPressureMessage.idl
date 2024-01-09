@@ -15,11 +15,11 @@ MIDI_IDL_IMPORT
 
 import "IMidiMessage.idl";
 
-namespace Windows.Devices.Midi
+namespace MIDI_ROOT_NAMESPACE_IDL
 {
     [MIDI1_SHIM_API_CONTRACT(1)]
     [marshaling_behavior(agile)]
-    [interface_name("Windows.Devices.Midi.IMidiChannelPressureMessage", BE1FA860-62B4-4D52-A37E-92E54D35B909)]
+    [interface_name(MIDI_MIDL_INTERFACE_NAME(IMidiChannelPressureMessage), BE1FA860-62B4-4D52-A37E-92E54D35B909)]
     runtimeclass MidiChannelPressureMessage : IMidiMessage
     {
         MidiChannelPressureMessage(UInt8 channel, UInt8 pressure);

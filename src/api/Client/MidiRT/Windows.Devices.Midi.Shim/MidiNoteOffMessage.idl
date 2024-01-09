@@ -15,11 +15,11 @@ MIDI_IDL_IMPORT
 
 import "IMidiMessage.idl";
 
-namespace Windows.Devices.Midi
+namespace MIDI_ROOT_NAMESPACE_IDL
 {
     [MIDI1_SHIM_API_CONTRACT(1)]
     [marshaling_behavior(agile)]
-    [interface_name("Windows.Devices.Midi.IMidiNoteOffMessage", 16FD8AF4 - 198E-4D8F - A654 - D305A293548F)]
+    [interface_name(MIDI_MIDL_INTERFACE_NAME(IMidiNoteOffMessage), 16FD8AF4-198E-4D8F-A654-D305A293548F)]
     runtimeclass MidiNoteOffMessage : IMidiMessage
     {
         MidiNoteOffMessage(UInt8 channel, UInt8 note, UInt8 velocity);

@@ -15,11 +15,11 @@ MIDI_IDL_IMPORT
 
 import "IMidiMessage.idl";
 
-namespace Windows.Devices.Midi
+namespace MIDI_ROOT_NAMESPACE_IDL
 {
     [MIDI1_SHIM_API_CONTRACT(1)]
     [marshaling_behavior(agile)]
-    [interface_name("Windows.Devices.Midi.IMidiProgramChangeMessage", 9CBB3C78-7A3E-4327-AA98-20B8E4485AF8)]
+    [interface_name(MIDI_MIDL_INTERFACE_NAME(IMidiProgramChangeMessage), 9CBB3C78-7A3E-4327-AA98-20B8E4485AF8)]
     runtimeclass MidiProgramChangeMessage : IMidiMessage
     {
         MidiProgramChangeMessage(UInt8 channel, UInt8 program);
