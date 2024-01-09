@@ -1253,7 +1253,6 @@ Return Value:
 {
     NTSTATUS                                    status;
     WDF_USB_CONTROL_SETUP_PACKET                controlSetupPacket;
-    WDF_REQUEST_SEND_OPTIONS                    sendOptions;
     WDFMEMORY                                   gtbMemory = 0;
     WDF_OBJECT_ATTRIBUTES                       gtbMemoryAttributes;
     PVOID                                       gtbMemoryPtr;
@@ -1288,12 +1287,6 @@ Return Value:
     // 
     // Set memory descriptor
     WDF_MEMORY_DESCRIPTOR_INIT_BUFFER(&memoryDescriptor, (PVOID)&gtbHeader, sizeof(gtbHeader));
-
-    // Set timeout
-    WDF_REQUEST_SEND_OPTIONS_SET_TIMEOUT(
-        &sendOptions,
-        WDF_TIMEOUT_TO_SEC
-    );
 
     // Need interface number for setup packet
     USHORT interfaceNumber = (USHORT)WdfUsbInterfaceGetInterfaceNumber(devCtx->UsbMIDIStreamingInterface);
@@ -1365,12 +1358,6 @@ Return Value:
         USB_REQUEST_GET_DESCRIPTOR,  // bRequest
         (USHORT)0x2601,              // Value
         interfaceNumber              // Index 
-    );
-
-    // Set timeout
-    WDF_REQUEST_SEND_OPTIONS_SET_TIMEOUT(
-        &sendOptions,
-        WDF_TIMEOUT_TO_SEC
     );
 
     // Get the Group Terminal Block descriptor for this device
@@ -1988,15 +1975,22 @@ Return Value:
             }
 
             // Send to circuit
-            if (!g_MidiInStreamEngine
-                || !g_MidiInStreamEngine->FillReadStream(
+            if (g_MidiInStreamEngine != 0)
+            {
+                if (!g_MidiInStreamEngine->FillReadStream(
                     (PUINT8)&UMP_Packet_Struct,
                     (size_t)(UMP_Packet_Struct.umpHeader.ByteCount) + sizeof(UMPDATAFORMAT)
                 ))
+                {
+                    TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                        "Error submitting to read queue prep buffer.\n");
+                    goto ReadCompleteExit;
+                }
+            }
+            else
             {
-                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                    "Error submitting to read queue prep buffer.\n");
-                goto ReadCompleteExit;
+                TraceEvents(TRACE_LEVEL_WARNING, TRACE_DEVICE,
+                   "MIDI Stream Engine not valid.\n");
             }
         }
     }
