@@ -1,0 +1,30 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+// This file needs to be 100% compatible with the C++/CX definitions for 
+// WinRT MIDI 1.0. This is here for repointing the older classes to the
+// new service and Windows MIDI Services in general. 
+
+#include "winrt_midi1_midl_defines.h"
+MIDI_IDL_IMPORT
+
+import "MidiMessageReceivedEventArgs.idl";
+
+namespace MIDI_ROOT_NAMESPACE_IDL
+{
+    [MIDI1_SHIM_API_CONTRACT(1)]
+    [marshaling_behavior(agile)]   
+    [interface_name(MIDI_MIDL_INTERFACE_NAME(IMidiInPort), D5C1D9DB-971A-4EAF-A23D-EA19FE607FF9)]
+    [static_name(MIDI_MIDL_INTERFACE_NAME(IMidiInPortStatics), 44C439DC-67FF-4A6E-8BAC-FDB6610CF296)]
+    runtimeclass MidiInPort : Windows.Foundation.IClosable
+    {
+        String DeviceId{ get; };
+
+        event Windows.Foundation.TypedEventHandler<MidiInPort, MidiMessageReceivedEventArgs> MessageReceived;
+    }
+}

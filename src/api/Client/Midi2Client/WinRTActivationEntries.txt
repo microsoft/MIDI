@@ -1,5 +1,6 @@
 # This is read by the cake build process and transformed into
-# registry creation statements for the WiX installer
+# registry creation statements for the WiX installer and also
+# the XML used for the internal manifest
 #
 # Format:
 # ClassName | ActivationType | Threading | TrustLevel
