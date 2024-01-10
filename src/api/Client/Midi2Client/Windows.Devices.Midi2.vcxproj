@@ -336,8 +336,8 @@
     <ClInclude Include="MidiUniqueId.h">
       <DependentUpon>MidiUniqueId.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiVirtualDevice.h">
-      <DependentUpon>MidiVirtualDevice.idl</DependentUpon>
+    <ClInclude Include="MidiVirtualEndpointDevice.h">
+      <DependentUpon>MidiVirtualEndpointDevice.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="midi_function_block_prop_util.h" />
     <ClInclude Include="midi_service_interface.h" />
@@ -449,8 +449,8 @@
     <ClCompile Include="MidiUniqueId.cpp">
       <DependentUpon>MidiUniqueId.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiVirtualDevice.cpp">
-      <DependentUpon>MidiVirtualDevice.idl</DependentUpon>
+    <ClCompile Include="MidiVirtualEndpointDevice.cpp">
+      <DependentUpon>MidiVirtualEndpointDevice.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="midi_function_block_prop_util.cpp" />
     <ClCompile Include="pch.cpp">
@@ -463,6 +463,8 @@
     <Midl Include="IMidiEndpointConnectionSource.idl" />
     <Midl Include="IMidiEndpointMessageProcessingPlugin.idl" />
     <Midl Include="IMidiMessageReceivedEventSource.idl" />
+    <Midl Include="IMidiReadOnlyFunctionBlock.idl" />
+    <Midl Include="IMidiReadWriteFunctionBlock.idl" />
     <Midl Include="IMidiTransportSettingsData.idl" />
     <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl" />
     <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl" />
@@ -508,6 +510,7 @@
     <Midl Include="MidiSessionSettings.idl" />
     <Midl Include="IMidiUniversalPacket.idl" />
     <Midl Include="MidiStreamConfigurationRequestedSettings.idl" />
+    <Midl Include="MidiStreamConfigurationRequestReceivedEventArgs.idl" />
     <Midl Include="MidiStreamMessageBuilder.idl" />
     <Midl Include="MidiSystemExclusive8StatusEnum.idl" />
     <Midl Include="MidiTransportPluginInformation.idl" />
@@ -519,7 +522,8 @@
     <Midl Include="MidiPacketTypeEnum.idl" />
     <Midl Include="MidiMessageUtility.idl" />
     <Midl Include="MidiUniqueId.idl" />
-    <Midl Include="MidiVirtualDevice.idl" />
+    <Midl Include="MidiVirtualEndpointDevice.idl" />
+    <Midl Include="MidiVirtualDeviceDefinition.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />

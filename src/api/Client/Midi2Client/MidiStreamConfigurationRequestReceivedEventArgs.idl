@@ -9,14 +9,19 @@
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-
-import "IMidiReadOnlyFunctionBlock.idl";
-import "IMidiReadWriteFunctionBlock.idl";
+import "MidiProtocol.idl";
 
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
-    runtimeclass MidiFunctionBlock : IMidiReadWriteFunctionBlock, IMidiReadOnlyFunctionBlock
+    [default_interface]
+    runtimeclass MidiStreamConfigurationRequestReceivedEventArgs
     {
+        MIDI_TIMESTAMP Timestamp{ get; };
+
+        MidiProtocol PreferredMidiProtocol{ get; };
+
+        Boolean RequestEndpointTransmitJitterReductionTimestamps{ get; };
+        Boolean RequestEndpointReceiveJitterReductionTimestamps{ get; };
     }
 }

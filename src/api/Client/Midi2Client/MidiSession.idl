@@ -61,7 +61,7 @@ namespace Windows.Devices.Midi2
         MidiEndpointConnection CreateVirtualDeviceAndConnection(
             String endpointName,
             String endpointDeviceInstanceId
-            // TODO: Other pptions for creating the device. Maybe wrap this all up in an object.
+            // TODO: Other options for creating the device. Maybe wrap this all up in an object.
         );
 
         // This will close and remove a single endpoint connection instance.

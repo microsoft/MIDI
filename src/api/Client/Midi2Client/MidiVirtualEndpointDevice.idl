@@ -16,50 +16,37 @@ import "MidiFunctionBlock.idl";
 //import "MidiProperty.idl";
 //import "MidiProfile.idl";
 
-//import "MidiEndpointInformation.idl";
+import "MidiStreamConfigurationRequestReceivedEventArgs.idl";
 
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [default_interface]
-    runtimeclass MidiVirtualDevice : IMidiEndpointMessageProcessingPlugin
+    runtimeclass MidiVirtualEndpointDevice : IMidiEndpointMessageProcessingPlugin
     {
-        MidiVirtualDevice();
+        MidiVirtualEndpointDevice();
 
-  //      Boolean IsMidiCIDevice{ get; set; };
-
-
-        String EndpointName{ get; set; };
-        String EndpointProductInstanceId{ get; set; };
-
-        // TODO: Other endpoint properties, including the MIDI SysEx stuff, protocol, UMP version, etc.
-
-        // TODO: MUID table?
-
-
-        // this can only be set before the connection is opened
-        Boolean AreFunctionBlocksStatic{ get; set; };
 
         // This is a view because all modifications require sending notifications
         // out on the endpoint. So the functions do that.
         IMapView<UInt8, MidiFunctionBlock> FunctionBlocks{ get; };
         
-        Boolean AddFunctionBlock(MidiFunctionBlock block);
+        // only available if blocks are not static
         void UpdateFunctionBlock(MidiFunctionBlock block);
-        void RemoveFunctionBlock(UInt8 functionBlockNumber);
 
- //       MidiEndpointInformation EndpointInformation{ get; set; };
+        void UpdateEndpointName(String name);
 
         // true if you want the stream / function block etc. messages automatically handled
         // and then removed from the stream. False if the endpoint should still raise
         // MessageReceived events for those messages
         Boolean SuppressHandledMessages{ get; set; };
 
-
         // TODO: MIDI CI / Profiles etc.
+        // Add/Update/Remove CI Profiles
+        // Add/Update/Remove CI Properties
 
 
-
+        event Windows.Foundation.TypedEventHandler<MidiVirtualEndpointDevice, MidiStreamConfigurationRequestReceivedEventArgs> StreamConfigurationRequestReceived;
 
     }
 }

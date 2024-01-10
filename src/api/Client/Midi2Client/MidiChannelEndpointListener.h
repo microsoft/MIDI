@@ -85,7 +85,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::Windows::Devices::Midi2::MidiGroup m_includedGroup{ nullptr };
 
         foundation::Collections::IVector<midi2::MidiChannel>
-            m_includedChannels{ winrt::single_threaded_vector<midi2::MidiChannel>() };
+            m_includedChannels{ winrt::multi_threaded_vector<midi2::MidiChannel>() };
 
         winrt::event<foundation::TypedEventHandler<midi2::IMidiMessageReceivedEventSource, midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;
     };

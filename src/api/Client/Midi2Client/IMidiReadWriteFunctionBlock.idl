@@ -1,0 +1,52 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+
+import "MidiFunctionBlockDirectionEnum.idl";
+import "MidiFunctionBlockUIHintEnum.idl";
+import "MidiGroup.idl";
+
+import "MidiMessage128.idl";
+
+// TODO: Verify this has everything in the spec
+
+import "MidiFunctionBlockMidi10Enum.idl";
+import "IMidiReadOnlyFunctionBlock.idl";
+import "IMidiReadWriteFunctionBlock.idl";
+
+namespace Windows.Devices.Midi2
+{
+    [MIDI_API_CONTRACT(1)]
+    [MIDI_INTERFACE_UUID("1e5835f3-c07f-4bfb-8443-034b3c5de400",1.0)]
+    interface IMidiReadWriteFunctionBlock requires IMidiReadOnlyFunctionBlock
+    {
+        UInt8 Number{ set; };               // function block number: 0-31
+        String Name{ set; };
+
+        Boolean IsActive{ set; };
+
+        MidiFunctionBlockDirection Direction{ set; };
+        MidiFunctionBlockUIHint UIHint{ set; };
+
+        MidiFunctionBlockMidi10 Midi10Connection{ set; };
+
+        UInt8 FirstGroupIndex{ set; };
+        UInt8 GroupCount{ set; };
+
+
+        UInt8 MidiCIMessageVersionFormat{ set; };
+
+        UInt8 MaxSystemExclusive8Streams{ set; };
+
+        Boolean UpdateFromJson(Windows.Data.Json.JsonObject json);
+
+    }
+}

@@ -108,7 +108,7 @@ namespace Windows.Devices.Midi2
         Boolean HasStaticFunctionBlocks{ get; };
         UInt8 FunctionBlockCount{ get; };           // this number is provided by a separate message, but should match the vector item count
 
-        IMapView<UInt8, MidiFunctionBlock> FunctionBlocks{ get; };
+        IMapView<UInt8, IMidiReadOnlyFunctionBlock> FunctionBlocks{ get; };
 
         // If this is a diagnostic endpoint
         MidiEndpointDevicePurpose EndpointPurpose{ get; };

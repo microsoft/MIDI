@@ -75,7 +75,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool m_preventFiringMainMessageReceivedEvent{ false };
 
         foundation::Collections::IVector<midi2::MidiMessageType>
-            m_includedMessageTypes{ winrt::single_threaded_vector<midi2::MidiMessageType>() };
+            m_includedMessageTypes{ winrt::multi_threaded_vector<midi2::MidiMessageType>() };
 
         winrt::event<foundation::TypedEventHandler<midi2::IMidiMessageReceivedEventSource, midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;
 
