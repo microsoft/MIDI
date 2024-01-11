@@ -339,6 +339,7 @@
     <ClInclude Include="MidiVirtualEndpointDevice.h">
       <DependentUpon>MidiVirtualEndpointDevice.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiVirtualEndpointDeviceDefinition.h" />
     <ClInclude Include="midi_function_block_prop_util.h" />
     <ClInclude Include="midi_service_interface.h" />
     <ClInclude Include="midi_stream_message_defs.h" />
@@ -452,6 +453,7 @@
     <ClCompile Include="MidiVirtualEndpointDevice.cpp">
       <DependentUpon>MidiVirtualEndpointDevice.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiVirtualEndpointDeviceDefinition.cpp" />
     <ClCompile Include="midi_function_block_prop_util.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -463,8 +465,6 @@
     <Midl Include="IMidiEndpointConnectionSource.idl" />
     <Midl Include="IMidiEndpointMessageProcessingPlugin.idl" />
     <Midl Include="IMidiMessageReceivedEventSource.idl" />
-    <Midl Include="IMidiReadOnlyFunctionBlock.idl" />
-    <Midl Include="IMidiReadWriteFunctionBlock.idl" />
     <Midl Include="IMidiTransportSettingsData.idl" />
     <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl" />
     <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl" />
@@ -523,7 +523,7 @@
     <Midl Include="MidiMessageUtility.idl" />
     <Midl Include="MidiUniqueId.idl" />
     <Midl Include="MidiVirtualEndpointDevice.idl" />
-    <Midl Include="MidiVirtualDeviceDefinition.idl" />
+    <Midl Include="MidiVirtualEndpointDeviceDefinition.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />

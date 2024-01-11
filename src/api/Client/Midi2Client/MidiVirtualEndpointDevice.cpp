@@ -8,94 +8,53 @@
 
 
 #include "pch.h"
-#include "MidiVirtualDevice.h"
-#include "MidiVirtualDevice.g.cpp"
+#include "MidiVirtualEndpointDevice.h"
+#include "MidiVirtualEndpointDevice.g.cpp"
 
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
 
+
     _Use_decl_annotations_
-    bool MidiVirtualDevice::AddFunctionBlock(midi2::MidiFunctionBlock const& block)
+    void MidiVirtualEndpointDevice::UpdateFunctionBlock(midi2::MidiFunctionBlock const& block) noexcept
     {
-        // add to list if there isn't already a one in that spot
+        UNREFERENCED_PARAMETER(block);
 
-        if (m_functionBlocks.HasKey(block.Number()))
-        {
-            // we already have a function block with this number
-            return false;
-        }
-        else
-        {
-            // add to the list
-
-            m_functionBlocks.Insert(block.Number(), block);
-        }
-
-
-        if (m_enabled)
-        {
-
-            // send out function block info messages
-
-            // send out function block name messages
-
-            // TODO: Set up a builder for these types of messages. The multi-part ones will create an array of UMPs given the string
-            // and the common parameters
-
-
-        }
-
-
-        throw hresult_not_implemented();
+        //throw hresult_not_implemented();
     }
 
     _Use_decl_annotations_
-    void MidiVirtualDevice::UpdateFunctionBlock(midi2::MidiFunctionBlock const& /*block*/)
+    void MidiVirtualEndpointDevice::UpdateEndpointName(winrt::hstring const& name) noexcept
     {
-        throw hresult_not_implemented();
+        UNREFERENCED_PARAMETER(name);
+
+        //throw hresult_not_implemented();
     }
-
-    _Use_decl_annotations_
-    void MidiVirtualDevice::RemoveFunctionBlock(uint8_t /*functionBlockNumber*/)
-    {
-        throw hresult_not_implemented();
-    }
-
-    //midi2::MidiEndpointInformation MidiVirtualDeviceResponder::EndpointInformation()
-    //{
-    //    throw hresult_not_implemented();
-    //}
-
-    //_Use_decl_annotations_
-    //void MidiVirtualDeviceResponder::EndpointInformation(midi2::MidiEndpointInformation const& /*value*/)
-    //{
-    //    throw hresult_not_implemented();
-    //}
 
 
     _Use_decl_annotations_
-    void MidiVirtualDevice::Initialize(midi2::IMidiEndpointConnectionSource const& endpointConnection)
+    void MidiVirtualEndpointDevice::Initialize(midi2::IMidiEndpointConnectionSource const& endpointConnection) noexcept
     {
         m_endpointConnection = endpointConnection.as<midi2::MidiEndpointConnection>();
     }
 
-    void MidiVirtualDevice::OnEndpointConnectionOpened()
+    void MidiVirtualEndpointDevice::OnEndpointConnectionOpened() noexcept
     {
-        throw hresult_not_implemented();
+        //throw hresult_not_implemented();
     }
 
-    void MidiVirtualDevice::Cleanup()
+    void MidiVirtualEndpointDevice::Cleanup() noexcept
     {
-        throw hresult_not_implemented();
+        //throw hresult_not_implemented();
     }
 
     _Use_decl_annotations_
-    void MidiVirtualDevice::ProcessIncomingMessage(
+    void MidiVirtualEndpointDevice::ProcessIncomingMessage(
         midi2::MidiMessageReceivedEventArgs const& /*args*/,
         bool& /*skipFurtherListeners*/,
-        bool& /*skipMainMessageReceivedEvent*/)
+        bool& /*skipMainMessageReceivedEvent*/)  noexcept
     {
-        throw hresult_not_implemented();
+        //throw hresult_not_implemented();
     }
 }

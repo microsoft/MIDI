@@ -9,7 +9,7 @@
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-import "MidiProtocol.idl";
+import "MidiProtocolEnum.idl";
 
 namespace Windows.Devices.Midi2
 {

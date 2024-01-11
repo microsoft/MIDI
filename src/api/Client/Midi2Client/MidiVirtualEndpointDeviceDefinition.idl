@@ -17,9 +17,9 @@ namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [default_interface]
-    runtimeclass MidiVirtualDeviceDefinition
+    runtimeclass MidiVirtualEndpointDeviceDefinition
     {
-        MidiVirtualDeviceDefinition();
+        MidiVirtualEndpointDeviceDefinition();
 
         // endpoint info and name
         String EndpointName{ get; set; };
@@ -32,16 +32,16 @@ namespace Windows.Devices.Midi2
 
 
         // Device identity
-        UInt8[] DeviceManufacturerSystemExclusiveId{ get; set; };
+        IVector<UInt8> DeviceManufacturerSystemExclusiveId{ get; };
         UInt8 DeviceFamilyLsb{ get; set; };
         UInt8 DeviceFamilyMsb{ get; set; };
         UInt8 DeviceFamilyModelLsb{ get; set; };
         UInt8 DeviceFamilyModelMsb{ get; set; };
-        UInt8[] SoftwareRevisionLevel{ get; set; };
+        IVector<UInt8> SoftwareRevisionLevel{ get; };
 
         Boolean AreFunctionBlocksStatic{ get; set; };
 
-        IMap<UInt8, MidiFunctionBlock> FunctionBlocks{ get; };
+        IVector<MidiFunctionBlock> FunctionBlocks{ get; };
 
 
 

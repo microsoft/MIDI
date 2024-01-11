@@ -12,11 +12,12 @@ MIDI_IDL_IMPORT
 
 
 import "IMidiEndpointMessageProcessingPlugin.idl";
-import "MidiFunctionBlock.idl";
 //import "MidiProperty.idl";
 //import "MidiProfile.idl";
 
 import "MidiStreamConfigurationRequestReceivedEventArgs.idl";
+import "MidiFunctionBlock.idl";
+import "MidiVirtualEndpointDeviceDefinition.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -25,7 +26,6 @@ namespace Windows.Devices.Midi2
     runtimeclass MidiVirtualEndpointDevice : IMidiEndpointMessageProcessingPlugin
     {
         MidiVirtualEndpointDevice();
-
 
         // This is a view because all modifications require sending notifications
         // out on the endpoint. So the functions do that.

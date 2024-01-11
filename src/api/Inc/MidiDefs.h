@@ -601,7 +601,7 @@ struct MidiDeviceIdentityProperty
 // these properties are raw from the messages
 struct MidiFunctionBlockProperty
 {
-    uint16_t Size;                  // total size for this function block, including name
+    uint16_t Size{ 0 };             // total size for this function block
     bool IsActive{ false };
     uint8_t BlockNumber{ 0 };
     uint8_t Reserved0{ 0 };         // unused in UMP 1.1
@@ -628,8 +628,6 @@ inline std::wstring GuidToString(_In_ GUID guid)
     LPOLESTR str;
     if (SUCCEEDED(StringFromCLSID(guid, &str)))
     {
-
-        // TODO: Is this copying or acquiring?
         std::wstring guidString{ str };
 
         ::CoTaskMemFree(str);
