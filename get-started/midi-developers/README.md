@@ -23,3 +23,8 @@ We want to encourage experimentation. By adopting a pluggable transport model fo
 Developer FAQs:
 
 * [Programming Languages, WinRT, and Projections](FAQ-Programming-Languages.md)
+
+Documentation:
+
+* [App Developer Documentation](/app-developers/docs/README.md)
+

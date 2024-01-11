@@ -42,7 +42,7 @@ For the typical send/receive use-case, this is the flow:
 
 1. Create a New Session
 2. Enumerate UMP Endpoints and find one you are looking for
-3. Create an Endpoint Connection (typically a Bidirectional one)
+3. Create an Endpoint Connection
 4. Add any endpoint listeners you may want to add
 5. Wire up your message received handling
 6. Open the connection
@@ -75,18 +75,6 @@ For details, see the samples under \get-started\midi-developers\app-developers\s
 | ----- | -- |
 | MidiMessageReceivedEventArgs | For any class which provides messages (MidiInputEndpointConnection, for example) this is the mechanism through which the message data is provided. The events which provide this are synchronous/blocking and fired on the same thread, so you'll want to grab the message data as quick as possible (and put it into your own processing queue) and move on.  |
 
-### Built-in Endpoint types
-
-There are five build-in UMP Endpoints available on every system with Windows MIDI Services installed. These are all used for testing and development. They are always available, so that a support person can ask a customer to run a MIDI Console command, or an in-app feature, to test that the system is healthy. They are also useful, especially in the early days of MIDI 2.0, for developers to use in their own testing and app development. We use them in our own unit and integration tests, for example.
-
-You could use these as simple app-to-app MIDI, but given that these are multi-client and static (you cannot create additional instances) this is not a supported scenario. We will provide proper virtual and app-to-app MIDI support in Windows MIDI Services.
-
-| Type | Description |
-| ----- | -- |
-| Loopback UMP Endpoint A (MIDI 2.0) | Messages sent out on this arrive on Endpoint B's input  |
-| Loopback UMP Endpoint B (MIDI 2.0) | Messages sent out on this arrive on Endpoint A's input|
-| Ping UMP Endpoint (Internal) | This is for internal use. The MidiService::PingService method uses this to test the connection to the Windows Service. You can see this in action in the MIDI Console app |
-
 ### Endpoint Message Plugins
 
 MIDI 1.0 had the concept of ports. Each port was just a single cable/jack from a MIDI stream exposed by the device. The API and driver were responsible for merging all of the different cables into the single stream for outgoing data, or pulling them apart for incoming data.
@@ -118,11 +106,11 @@ Sending and receiving functions in the API include multiple ways of sending and 
 | MidiMessage128 | 128 bit (four 32-bit words) UMP |
 | MidiMessageStruct | 128 bit UMP simple structure. Use this when you don't need any of the other conveniences of UMP manipulation. Functions which fill this return the number of valid words written to it. The state of all other words are undefined. |
 
-For the most part, we do not provide strongly-typed message types in the API as that is a moving target, and many applications also include their own message creation and processing functions. If there's demand for strongly-typed messages, we may provide them in the SDK.
+For the most part, we do not provide strongly-typed message types in the API as that is a moving target, and many applications also include their own message creation and processing functions using their own libraries or any of the libraries included on [https://midi2.dev](https://midi2.dev). If there's demand for strongly-typed messages, we may provide them in the SDK.
 
 ## Message Utilities
 
-Although we know there are many native libraries which can do message manipulation, we've exposed some of the basics here. In general, if we found it useful and generally non-volatile, and had to have an internal version for our own processing anyway, we exposed it here to help other developers.
+Although we know there are many native libraries which can do message manipulation, we've exposed some of the basics here. In general, if we found it useful and generally non-volatile, and had to have an internal version for our own processing or for you to make use of another type we provide, we exposed it here.
 
 | Type | Description |
 | ----- | -- |
@@ -134,19 +122,28 @@ Although we know there are many native libraries which can do message manipulati
 
 ## Metadata
 
-The in-protocol metadata is a bit odd compared to how we normally set up devices outside of MIDI. This information can't be reasonably gathered by the operating system upon device connection, and can also change at any time. For those reasons, at least in version 1.0 of Windows MIDI Services, we are using the message listener infrastructure to update the runtime metadata cache. We may consider moving this to the service in the future, but we generally prefer to have the service do as little message inspection as possible.
+The Windows Service intercepts (but does not remove from the stream) Endpoint metadata notifications. For example, we'll intercept Endpoint Name notifications and use those to provide a new endpoint-supplied name for the device. These are cached in the SWD properties for the Endpoint Device.
+
+In addition to the endpoint data, we also capture and store block data. The block data should be used by applications to identify which groups are active and how to display them to the user. For example, you may want to display a function block name including group numbers like "Sequencer (Groups 1, 2, 3)" in a way similar to how you treated ports in the past.
 
 | Type | Description |
 | ----- | -- |
 | MidiFunctionBlock | A single function block for the UMP Endpoint |
-| MidiGroupTerminalBlock | Unlike the other metadata, this is provided at device enumeration time, and is specific to USB. |
+| MidiGroupTerminalBlock | Similar to function blocks, but is specific to USB. When both these and function blocks are available, you should prefer the function blocks.|
 
+The MIDI 2.0 UMP specification goes into more detail on the different properties of the function blocks. The USB MIDI 2.0 specification describes the earlier (and now deprecated) Group Terminal Blocks.
 
 ## Enumeration
 
-Finally, we have enumeration. Of course, enumeration will work through standard Windows::Devices::Enumeration. However, for ease of accessing all of the custom properties, which must be requested at enumeration time, and for parsing the Function Block, Group Terminal Block, and other binary data, we've created specialized versions of the enumeration classes.
+Finally, we have enumeration. Of course, enumeration will work through standard Windows::Devices::Enumeration. However, for ease of accessing all of the custom properties, which must be requested at enumeration time, and for parsing the Function Block, Group Terminal Block, and other binary data, and for presenting the correct endpoint name in your application, we've created specialized versions of the enumeration classes.
 
 | Type | Description |
 | ----- | -- |
 | MidiEndpointDeviceInformation | Replacement for DeviceInformation. No async calls required. Includes the superset of known custom properties for MIDI devices. |
 | MidiEndpointDeviceWatcher | Replacement for the DeviceWatcher. No async calls required. |
+
+Whenever reasonable, prefer the EndpointDeviceWatcher on a background thread vs taking a static snapshot of the connected devices. The watcher will notify you when devices are added or removed, and also when key properties (like name and function blocks) are updated.
+
+> TIP Use the `MidiEndpointDeviceWatcher` to gracefully handle device connects/disconnections, function block and name updates, new network devices coming online, and more.
+
+The samples area includes enumeration examples including how to use the watcher.
