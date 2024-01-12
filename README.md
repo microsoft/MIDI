@@ -10,6 +10,18 @@ Here's a high-level view of the end goal of this project. Details subject to cha
 
 ![High-level view of the MIDI stack](img/high-level-view.png)
 
+## Key Features
+
+* **Multi-client by default**. Unless an endpoint is configured to not allow shared connections, any endpoint (including MIDI 1.0 devices) can be used by multiple applications at the same time.
+* **Faster**. In our testing, we've found that the new infrastructure is much faster at sending and receiving messages compared to the older API, even with plugins configured in the service. There are no built-in speed caps or throttling in Windows MIDI Services, even for older USB MIDI 1.0 devices.
+* **Lower Jitter**. Along with speed comes lower jitter. This will vary by transport type (USB vs Network vs Virtual), but the jitter is in the low microsecond range.
+* **Extensible**. The service has been designed to be extensible by Microsoft and third-parties. New types of transports can be added at any time, including during prototyping of a new transport specification. Similarly, message processing plugins can also be developed by Microsoft or third-parties and used for production and/or prototyping. No driver experience required in most cases.
+* **UMP-Centric**. The new API fully embraces MIDI 2.0 and the Universal MIDI Packet format.
+* **Better tools**. We supply the `midi.exe` Windows MIDI Services Console for developers and power users, or anyone comfortable with the command line. You can use it to monitor endpoints, send and receive messages, send/capture SysEx data and much more. We'll deliver the MIDI Settings GUI app after our initial release.
+* **Open Source**. The source code is open and available to everyone under a permissive license. Not sure how something works? Want to create a transport but aren't sure how we did it? Want to investigate a bug or contribute a feature? The code is there for you to explore.
+
+Note: MIDI CI functionality, which does not technically require OS support, will be coming after version 1.0. We intend to add helpers for profiles, property exchange, MUID tracking, and more. In the meantime, applications can send and receive MIDI CI messages without anything in their way.
+
 ## Key documentation
 
 Currently, the documentation is focused on developers. Although Windows MIDI Services supports the latest version of Windows 10, developers need to run a Windows Insider Canary version of Windows 11 to be able to use the USB Driver.
@@ -132,18 +144,9 @@ This project may contain trademarks or logos for projects, products, or services
 
 ## Relevant specifications
 
-These are the updated MIDI 2.0 (June 2023) specifications which apply to this project today.
+These are the updated MIDI 2.0 specifications which apply to this project today.
 
-* [MIDI 2.0](https://midi.org/specifications)
-
-Note that this project does not support the deprecated MIDI CI protocol negotiation and related mechanisms.
-
-Older specifications
-
-* [MIDI 2.0](https://www.midi.org/specifications/midi-2-0-specifications)
-* [USB MIDI 2.0](https://www.midi.org/specifications/midi-transports-specifications/usb/usb-midi-2-0-2)
-* [MIDI 1.0](https://www.midi.org/specifications/midi1-specifications)
-* [USB MIDI 1.0](https://www.midi.org/specifications/midi-transports-specifications/usb/usb-midi-1-0-2)
+* [MIDI 2.0 UMP Specifications](https://midi.org/specifications)
 
 ## Learn more about MIDI 2.0
 
