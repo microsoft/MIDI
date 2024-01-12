@@ -1,3 +1,4 @@
 # MIDI User Information
 
-See [MIDI Console user information](docs\midi-console.md) for information on how to use the console.
+* [MIDI Console user information](docs/midi-console.md)
+* [Configuration File information](docs/config-json.md)
