@@ -20,7 +20,7 @@ public:
 //    HRESULT LoadCurrentConfiguration();
 
     std::vector<GUID> GetEnabledTransportAbstractionLayers() const noexcept;
-    std::vector<GUID> GetEnabledEndpointProcessingAbstractionLayers() const noexcept;
+    std::vector<GUID> GetEnabledEndpointProcessingTransforms() const noexcept;
 
     // takes a string because that's what we convert to anyway 
     // expects the guid in the form with braces
@@ -29,7 +29,7 @@ public:
 
     // takes a string because that's what we convert to anyway 
     // expects the guid in the form with braces
-    std::wstring GetConfigurationForEndpointProcessingAbstraction(
+    std::wstring GetConfigurationForEndpointProcessingTransform(
         _In_ GUID abstractionGuid) const noexcept;
 
     HRESULT Cleanup() noexcept;
