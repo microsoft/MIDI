@@ -83,6 +83,15 @@ public:
         _In_ PVOID
         );
 
+    STDMETHOD(NegotiateAndRequestMetadata)(
+        _In_ PCWSTR,
+        _In_ BOOL,
+        _In_ BOOL,
+        _In_ BYTE,
+        _In_ WORD
+    );
+
+
     STDMETHOD(Cleanup)();
 
     //TODO: Method to update the properties (using SwDevicePropertySet and an array of props) for a device by its Id

@@ -59,7 +59,6 @@ CMidiSrv::Initialize()
     RETURN_IF_NULL_ALLOC(m_ConfigurationManager);
 
 
-
     RETURN_IF_FAILED(m_PerformanceManager->Initialize());
     RETURN_IF_FAILED(m_ProcessManager->Initialize());
     RETURN_IF_FAILED(m_ConfigurationManager->Initialize());

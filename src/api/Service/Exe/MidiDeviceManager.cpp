@@ -455,6 +455,51 @@ CMidiDeviceManager::RemoveEndpoint
     return S_OK;
 }
 
+
+
+
+
+_Use_decl_annotations_
+HRESULT
+CMidiDeviceManager::NegotiateAndRequestMetadata(
+    LPCWSTR deviceInterfaceId,
+    BOOL preferToSendJRTimestampsToEndpoint,
+    BOOL preferToReceiveJRTimestampsFromEndpoint,
+    BYTE preferredMidiProtocol,
+    WORD timeoutMS
+) noexcept
+{
+    UNREFERENCED_PARAMETER(deviceInterfaceId);
+    UNREFERENCED_PARAMETER(preferToSendJRTimestampsToEndpoint);
+    UNREFERENCED_PARAMETER(preferToReceiveJRTimestampsFromEndpoint);
+    UNREFERENCED_PARAMETER(preferredMidiProtocol);
+    UNREFERENCED_PARAMETER(timeoutMS);
+
+    // We assume the endpoint manager which calls this function knows whether or not protocol
+    // negotiation etc. should happen. So we leave it up to the transport to correctly call
+    // this or not, and we just assume it made the correct choice.
+    // 
+    // For now, we'll do this synchronously, but it should be in a separate thread in the future
+
+
+    // Create and open a connection to the endpoint, complete with metadata listeners
+
+
+
+
+    // Send discovery request
+
+    // Wait until all metadata arrives or we timeout
+
+
+
+    return S_OK;
+
+}
+
+
+
+
 HRESULT
 CMidiDeviceManager::Cleanup()
 {
@@ -463,4 +508,9 @@ CMidiDeviceManager::Cleanup()
 
     return S_OK;
 }
+
+
+
+
+
 

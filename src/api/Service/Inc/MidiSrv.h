@@ -51,6 +51,7 @@ public:
         return S_OK;
     }
 
+
 private:
     std::shared_ptr<CMidiPerformanceManager> m_PerformanceManager;
     std::shared_ptr<CMidiProcessManager> m_ProcessManager;
