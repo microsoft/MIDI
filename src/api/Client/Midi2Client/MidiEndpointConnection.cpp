@@ -194,7 +194,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 {
                     InitializePlugins();
 
-
                     DWORD mmcssTaskId{};  
                     ABSTRACTIONCREATIONPARAMS abstractionCreationParams{ MidiDataFormat_UMP };
 

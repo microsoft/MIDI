@@ -41,7 +41,9 @@ private:
     HRESULT OnDeviceUpdated(_In_ DeviceWatcher, _In_ DeviceInformationUpdate);
     HRESULT OnDeviceStopped(_In_ DeviceWatcher, _In_ winrt::Windows::Foundation::IInspectable);
     HRESULT OnEnumerationCompleted(_In_ DeviceWatcher, _In_ winrt::Windows::Foundation::IInspectable);
+
     wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
+    wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> m_MidiProtocolManager;
 
     std::vector<std::unique_ptr<MIDI_PIN_INFO>> m_AvailableMidiPins;
     

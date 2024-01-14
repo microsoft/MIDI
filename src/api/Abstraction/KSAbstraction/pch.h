@@ -53,6 +53,9 @@
 #include "mididevicemanagerinterface_i.c"
 #include "mididevicemanagerinterface.h"
 
+#include "midiendpointprotocolmanagerinterface_i.c"
+#include "midiendpointprotocolmanagerinterface.h"
+
 #include "dllmain.h"
 
 #include "MidiDefs.h"
