@@ -265,9 +265,9 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(
     // TODO: Invoke the protocol negotiator to now capture updated endpoint info.
     
 
-     
-     
-     
+    
+    
+    
     // todo: store the interface id and use it for matches later instead of the current partial string match
 
     return S_OK;
