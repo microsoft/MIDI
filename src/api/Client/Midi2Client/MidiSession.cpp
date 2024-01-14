@@ -209,7 +209,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
             if (m_connections.HasKey(endpointConnectionId))
             {
-                // todo: disconnect the endpoint from the service, call Close() etc.
+                // disconnect the endpoint from the service, call Close() etc.
 
                 m_connections.Lookup(endpointConnectionId).as<foundation::IClosable>().Close();
 
@@ -217,7 +217,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             }
             else
             {
-                // endpoint already disconnected. No need to except or anything, just exit.
+                // endpoint already disconnected. No need to throw an exception or anything, just exit.
             }
         }
         catch (winrt::hresult_error const& ex)

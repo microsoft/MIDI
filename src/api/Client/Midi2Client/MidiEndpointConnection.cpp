@@ -272,7 +272,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
     MidiEndpointConnection::~MidiEndpointConnection()
     {
         if (!m_closeHasBeenCalled)
+        {
             Close();
+        }
     }
 
 
