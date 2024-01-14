@@ -259,6 +259,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Endpoint has been disconnected.
+        /// </summary>
+        internal static string EndpointDisconnected {
+            get {
+                return ResourceManager.GetString("EndpointDisconnected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please select an endpoint.
         /// </summary>
         internal static string EndpointPickerPleaseSelectEndpoint {
