@@ -1,6 +1,16 @@
 #tool nuget:?package=NuGet.CommandLine&version=5.10
 #addin nuget:?package=Cake.Compression&version=0.3.0
 
+
+
+string setupVersionName = "Developer Preview 4";
+
+
+
+
+
+
+
 var target = Argument("target", "Default");
 
 
@@ -613,8 +623,6 @@ Task("BuildInstaller")
     //  <?define SetupVersionName="Dev Preview Nightly" ?>
     //  <?define SetupVersionNumber="1.0.23351.0243" ?>
     //</Include>
-
-    string setupVersionName = "Developer Preview 3";
 
     string setupBuildMajorMinor = "1.0";
     string setupBuildDateNumber = DateTime.Now.ToString("yy") + DateTime.Now.DayOfYear.ToString("000");       // YYddd where ddd is the day number for the year

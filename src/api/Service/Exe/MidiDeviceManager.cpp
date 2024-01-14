@@ -461,7 +461,6 @@ CMidiDeviceManager::DeleteAllEndpointInProtocolDiscoveredProperties
 
     keys.push_back(PKEY_MIDI_DeviceIdentity);
 
-
     keys.push_back(PKEY_MIDI_FunctionBlocksAreStatic);
     keys.push_back(PKEY_MIDI_FunctionBlockCount);
 

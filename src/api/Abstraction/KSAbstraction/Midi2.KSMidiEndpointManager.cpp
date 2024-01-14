@@ -29,13 +29,15 @@ _Use_decl_annotations_
 HRESULT
 CMidi2KSMidiEndpointManager::Initialize(
     IUnknown* midiDeviceManager,
-    IUnknown* /*midiEndpointProtocolManager*/,
+    IUnknown* midiEndpointProtocolManager,
     LPCWSTR /*configurationJson*/
 )
 {
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == midiEndpointProtocolManager);
 
     RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
+    RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManagerInterface), (void**)&m_MidiProtocolManager));
 
     winrt::hstring deviceSelector(
         L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
@@ -406,10 +408,27 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         // we saw this device, if we've ever seen it.
         m_MidiDeviceManager->DeleteAllEndpointInProtocolDiscoveredProperties(newDeviceInterfaceId);
 
-        // TODO: Invoke the protocol negotiator to now capture updated endpoint info.
 
+        // we only perform protocol negotiation if it's a bidirectional UMP (native) endpoint. We
+        // don't want to perform this on translated byte stream endpoints
+        if (MidiPin->Flow == MidiFlowBidirectional && MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET)
+        {
+            // Required MIDI 2.0 Protocol step
+            // Invoke the protocol negotiator to now capture updated endpoint info.
 
+            bool preferToSendJRToEndpoint{ false };
+            bool preferToReceiveJRFromEndpoint{ false };
+            BYTE preferredProtocol{ MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2 };
+            WORD negotiationTimeoutMS{ 5000 };  // this should be much shorter
 
+            LOG_IF_FAILED(m_MidiProtocolManager->NegotiateAndRequestMetadata(
+                newDeviceInterfaceId,
+                preferToSendJRToEndpoint,
+                preferToReceiveJRFromEndpoint,
+                preferredProtocol,
+                negotiationTimeoutMS
+            ));
+        }
 
     }
 

@@ -122,6 +122,21 @@ namespace Windows::Devices::Midi2::Internal
         firstWord = (firstWord & 0x0FFFFFFF) | t;
     }
 
+    inline void SetUmpStreamMessageForm(_In_ std::uint32_t& firstWord, _In_ const uint8_t form) noexcept
+    {
+        uint32_t f = ((uint32_t)(form & 0x03) << 26);
+
+        firstWord = (firstWord & 0xFFFFFFFF) | f;
+    }
+
+    inline void SetUmpStreamMessageStatus(_In_ std::uint32_t& firstWord, _In_ const uint16_t status) noexcept
+    {
+        uint32_t f = ((uint32_t)(status & 0x03FF) << 16);
+
+        firstWord = (firstWord & 0xFFFFFFFF) | f;
+    }
+
+
     inline std::uint8_t GetUmpMessageTypeFromFirstWord(_In_ const std::uint32_t firstWord) noexcept
     {
         return (uint8_t)(MIDIWORDNIBBLE1(firstWord));
@@ -298,6 +313,28 @@ namespace Windows::Devices::Midi2::Internal
     }
 
 
+
+    inline void SetMidiWordMostSignificantByte1(_Inout_ uint32_t& word, _In_ uint8_t value)
+    {
+        word = (word & 0x00FFFFFF) | (value << 24);
+    }
+
+    inline void SetMidiWordMostSignificantByte2(_Inout_ uint32_t& word, _In_ uint8_t value)
+    {
+        word = (word & 0xFF00FFFF) | (value << 16);
+    }
+
+    inline void SetMidiWordMostSignificantByte3(_Inout_ uint32_t& word, _In_ uint8_t value)
+    {
+        word = (word & 0xFFFF00FF) | (value << 8);
+    }
+
+    inline void SetMidiWordMostSignificantByte4(_Inout_ uint32_t& word, _In_ uint8_t value)
+    {
+        word = (word & 0xFFFFFF00) | (value);
+    }
+
+
     inline uint8_t GetFormFromStreamMessageFirstWord(
         _In_ uint32_t const word0
         ) noexcept
@@ -353,7 +390,24 @@ namespace Windows::Devices::Midi2::Internal
 
 
 
-  
+    // Function Block Info Notification
+
+    inline uint32_t BuildFunctionBlockDiscoveryRequestFirstWord(
+        _In_ uint8_t functionBlockNumber,
+        _In_ uint8_t filter)
+    {
+        uint32_t word{ 0 };
+
+        SetUmpMessageType(word, 0xF);
+        SetUmpStreamMessageForm(word, 0);
+        SetUmpStreamMessageStatus(word, 0x10);
+
+        SetMidiWordMostSignificantByte3(word, functionBlockNumber);
+        SetMidiWordMostSignificantByte4(word, filter);
+
+        return word;
+    }
+
 
     inline uint8_t GetFunctionBlockFirstGroupFromInfoNotificationSecondWord(
         _In_ uint32_t const word1
@@ -381,6 +435,25 @@ namespace Windows::Devices::Midi2::Internal
     ) noexcept
     {
         return (uint8_t)(word1 & 0x000000FF);
+    }
+
+
+    // Endpoint Info Notification
+
+    inline uint32_t BuildEndpointDiscoveryRequestFirstWord(
+        _In_ uint8_t umpVersionMajor,
+        _In_ uint8_t umpVersionMinor)
+    {
+        uint32_t word{ 0 };
+
+        SetUmpMessageType(word, 0xF);
+        SetUmpStreamMessageForm(word, 0);
+        SetUmpStreamMessageStatus(word, 0); 
+
+        SetMidiWordMostSignificantByte3(word, umpVersionMajor);
+        SetMidiWordMostSignificantByte4(word, umpVersionMinor);
+
+        return word;
     }
 
 
@@ -442,6 +515,62 @@ namespace Windows::Devices::Midi2::Internal
         return (bool)((word1 & 0x00000001) > 0);
     }
 
+    // Stream Configuration Request and Notification Messages
+
+    inline uint32_t BuildStreamConfigurationRequestFirstWord(
+        _In_ uint8_t protocol,
+        _In_ bool endpointShouldExpectToReceiveJR,
+        _In_ bool endpointShouldSendJR
+    )
+    {
+        uint32_t word{ 0 };
+
+        SetUmpMessageType(word, 0xF);
+        SetUmpStreamMessageForm(word, 0);
+        SetUmpStreamMessageStatus(word, 5);
+
+        SetMidiWordMostSignificantByte3(word, protocol);
+
+        uint8_t flags{ 0 };
+
+        if (endpointShouldExpectToReceiveJR)
+        {
+            flags |= 0x2;
+        }
+
+        if (endpointShouldSendJR)
+        {
+            flags |= 0x1;
+        }
+
+        SetMidiWordMostSignificantByte4(word, flags);
+
+        return word;
+    }
+
+    inline uint8_t GetStreamConfigurationNotificationProtocolFromFirstWord(
+        _In_ uint32_t const word0
+    ) noexcept
+    {
+        return (uint8_t)((word0 & 0x0000FF00) >> 8);
+    }
+
+    inline bool GetStreamConfigurationNotificationReceiveJRFromFirstWord(
+        _In_ uint32_t const word0
+    ) noexcept
+    {
+        return (bool)(((word0 & 0x00000003) >> 1) != 0);
+    }
+
+    inline bool GetStreamConfigurationNotificationTransmitJRFromFirstWord(
+        _In_ uint32_t const word0
+    ) noexcept
+    {
+        return (bool)((word0 & 0x00000001) != 0);
+    }
+
+
+    // Others
 
 
     inline uint8_t GetStatusFromUmp32FirstWord(_In_ uint32_t const word0) noexcept
