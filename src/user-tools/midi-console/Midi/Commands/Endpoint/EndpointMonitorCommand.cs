@@ -99,6 +99,43 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             return ValidationResult.Success();
         }
 
+        bool _hasEndpointDisconnected = false;
+        bool _continueWatchingDevice = true;
+
+        private void MonitorEndpointConnectionStatusInTheBackground(string endpointId)
+        {
+            var deviceWatcherThread = new Thread(() =>
+            {
+                var watcher = MidiEndpointDeviceWatcher.CreateWatcher(
+                    MidiEndpointDeviceInformationFilter.IncludeDiagnosticLoopback |
+                    MidiEndpointDeviceInformationFilter.IncludeClientUmpNative |
+                    MidiEndpointDeviceInformationFilter.IncludeVirtualDeviceResponder |
+                    MidiEndpointDeviceInformationFilter.IncludeClientByteStreamNative
+                    );
+
+
+                watcher.Removed += (s, e) =>
+                {
+                    if (e.Id.ToLower() == endpointId.ToLower())
+                    {
+                        _hasEndpointDisconnected = true;
+                        _continueWatchingDevice = false;
+
+                        watcher.Stop();
+                    }
+                };
+
+                watcher.Start();
+
+                while (_continueWatchingDevice)
+                {
+                    Thread.Sleep(125);
+                }
+
+            });
+
+            deviceWatcherThread.Start();
+        }
 
         public override int Execute(CommandContext context, Settings settings)
         {
@@ -119,6 +156,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             if (!string.IsNullOrEmpty(endpointId))
             {
+
                 AnsiConsole.MarkupLine(Strings.MonitorMonitoringOnEndpointLabel + ": " + AnsiMarkupFormatter.FormatDeviceInstanceId(endpointId));
 
                 //var table = new Table();
@@ -170,6 +208,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                 UInt32 index = 0;
 
+                MonitorEndpointConnectionStatusInTheBackground(endpointId);
+
                 bool continueWaiting = true;
 
                 var messageListener = new Thread(() =>
@@ -199,7 +239,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         }
                     };
 
-                    while (continueWaiting)
+                    while (continueWaiting && !_hasEndpointDisconnected)
                     {
                         Thread.Sleep(0);
                     }
@@ -226,9 +266,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                 AnsiConsole.MarkupLine(Strings.MonitorEscapePressedMessage);
                                 break;
                             }
+                            
                         }
 
-                        if (m_receivedMessagesQueue.Count > 0)
+                        if (_hasEndpointDisconnected)
+                        {
+                            continueWaiting = false;
+                            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.EndpointDisconnected));
+                        }
+                        else if (continueWaiting && m_receivedMessagesQueue.Count > 0)
                         {
                             lock (m_receivedMessagesQueue)
                             {
@@ -299,7 +345,10 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
                 }
 
-                session.DisconnectEndpointConnection(connection.ConnectionId);
+                if (!_hasEndpointDisconnected)
+                {
+                    session.DisconnectEndpointConnection(connection.ConnectionId);
+                }
 
                 if (captureWriter != null)
                 {

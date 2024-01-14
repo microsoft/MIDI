@@ -183,6 +183,9 @@
   <data name="CommonTableHeaderIndex" xml:space="preserve">
     <value>Index</value>
   </data>
+  <data name="EndpointDisconnected" xml:space="preserve">
+    <value>Endpoint has been disconnected</value>
+  </data>
   <data name="EndpointPickerPleaseSelectEndpoint" xml:space="preserve">
     <value>Please select an endpoint</value>
   </data>
