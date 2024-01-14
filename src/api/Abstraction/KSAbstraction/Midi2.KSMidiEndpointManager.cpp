@@ -409,22 +409,26 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         m_MidiDeviceManager->DeleteAllEndpointInProtocolDiscoveredProperties(newDeviceInterfaceId);
 
 
+        // we only perform protocol negotiation if it's a bidirectional UMP (native) endpoint. We
+        // don't want to perform this on translated byte stream endpoints
+        if (MidiPin->Flow == MidiFlowBidirectional && MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET)
+        {
+            // Required MIDI 2.0 Protocol step
+            // Invoke the protocol negotiator to now capture updated endpoint info.
 
-        // Required MIDI 2.0 Protocol step
-        // Invoke the protocol negotiator to now capture updated endpoint info.
+            bool preferToSendJRToEndpoint{ false };
+            bool preferToReceiveJRFromEndpoint{ false };
+            BYTE preferredProtocol{ MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2 };
+            WORD negotiationTimeoutMS{ 5000 };  // this should be much shorter
 
-        bool preferToSendJRToEndpoint{ false };
-        bool preferToReceiveJRFromEndpoint{ false };
-        BYTE preferredProtocol{ MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2 };
-        WORD negotiationTimeoutMS{ 5000 };  // this should be much shorter
-
-        LOG_IF_FAILED(m_MidiProtocolManager->NegotiateAndRequestMetadata(
-            newDeviceInterfaceId,
-            preferToSendJRToEndpoint,
-            preferToReceiveJRFromEndpoint,
-            preferredProtocol,
-            negotiationTimeoutMS
+            LOG_IF_FAILED(m_MidiProtocolManager->NegotiateAndRequestMetadata(
+                newDeviceInterfaceId,
+                preferToSendJRToEndpoint,
+                preferToReceiveJRFromEndpoint,
+                preferredProtocol,
+                negotiationTimeoutMS
             ));
+        }
 
     }
 
