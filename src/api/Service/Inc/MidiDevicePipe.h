@@ -22,9 +22,9 @@ class CMidiDevicePipe : public CMidiPipe
 public:
     
     HRESULT Initialize(_In_ handle_t BindingHandle,
-                            _In_ LPCWSTR,
-                            _In_ PMIDISRV_DEVICECREATION_PARAMS,
-                            _In_ DWORD *);
+                       _In_ LPCWSTR,
+                       _In_ PMIDISRV_DEVICECREATION_PARAMS,
+                       _In_ DWORD *);
     HRESULT Cleanup();
 
     // called by the client
@@ -40,6 +40,7 @@ private:
     wil::com_ptr_nothrow<IMidiIn> m_MidiInDevice;
     wil::com_ptr_nothrow<IMidiOut> m_MidiOutDevice;
 
+    // TODO: This needs to be read from the device properties
     bool m_endpointSupportsMulticlient{ true };
 
 };

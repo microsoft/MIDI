@@ -51,12 +51,14 @@ interface IMidiDeviceManagerInterface : IUnknown
         [in, annotation("_In_")] PVOID InterfaceDevProperties
     );
 
-    HRESULT NegotiateAndRequestMetadata(
-        [in] LPCWSTR deviceInterfaceId,
-        [in] BOOL preferToSendJRTimestampsToEndpoint,
-        [in] BOOL preferToReceiveJRTimestampsFromEndpoint,
-        [in] BYTE preferredMidiProtocol,
-        [in] WORD timeoutMS
+    HRESULT DeleteEndpointProperties(
+        [in] LPCWSTR DeviceInterfaceId,
+        [in] ULONG IntPropertyCount,
+        [in, annotation("_In_")] PVOID DevPropKeys
+    );
+
+    HRESULT DeleteAllEndpointInProtocolDiscoveredProperties(
+        [in] LPCWSTR DeviceInterfaceId
     );
 
     HRESULT DeactivateEndpoint(

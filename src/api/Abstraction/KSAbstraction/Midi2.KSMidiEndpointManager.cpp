@@ -29,6 +29,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2KSMidiEndpointManager::Initialize(
     IUnknown* midiDeviceManager,
+    IUnknown* /*midiEndpointProtocolManager*/,
     LPCWSTR /*configurationJson*/
 )
 {
@@ -399,6 +400,16 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
                                                             (PVOID)&createInfo,
                                                             (LPWSTR)&newDeviceInterfaceId,
                                                             deviceInterfaceIdMaxSize));
+
+
+        // clear any of the endpoint-discovered properties that hung around from the last time
+        // we saw this device, if we've ever seen it.
+        m_MidiDeviceManager->DeleteAllEndpointInProtocolDiscoveredProperties(newDeviceInterfaceId);
+
+        // TODO: Invoke the protocol negotiator to now capture updated endpoint info.
+
+
+
 
     }
 

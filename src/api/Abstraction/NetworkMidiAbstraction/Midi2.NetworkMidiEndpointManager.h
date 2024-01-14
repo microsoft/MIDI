@@ -76,7 +76,7 @@ class CMidi2NetworkMidiEndpointManager :
 
 {
 public:
-    STDMETHOD(Initialize(_In_ IUnknown*, _In_ LPCWSTR));
+    STDMETHOD(Initialize(_In_ IUnknown*, _In_ IUnknown*, _In_ LPCWSTR));
     STDMETHOD(Cleanup)();
 
 private:

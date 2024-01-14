@@ -23,6 +23,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2DiagnosticsEndpointManager::Initialize(
     IUnknown* MidiDeviceManager,
+    IUnknown* /*midiEndpointProtocolManager*/,
     LPCWSTR /*ConfigurationJson*/
 
 )
@@ -201,6 +202,9 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(
             DEVPROP_TYPE_STRING, static_cast<ULONG>((Name.length() + 1) * sizeof(WCHAR)), (PVOID)Name.c_str()},
         {{PKEY_MIDI_TransportSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_STRING, static_cast<ULONG>((Name.length() + 1) * sizeof(WCHAR)), (PVOID)Name.c_str()},
+
+        // TODO: We should reset function blocks and other endpoint properties here as well.
+
         {{PKEY_MIDI_EndpointDevicePurpose, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(endpointPurpose)),(PVOID)&endpointPurpose},
         {{PKEY_MIDI_UserSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
@@ -250,6 +254,20 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(
         (LPWSTR)&newDeviceInterfaceId,
         deviceInterfaceIdMaxSize));
 
+
+    // now delete all the properties that have been discovered in-protocol
+    // we have to do this because they end up cached by PNP and come back
+    // when you recreate a device with the same Id. This is a real problem 
+    // if you are testing function blocks or endpoint properties with this
+    // loopback transport.
+    m_MidiDeviceManager->DeleteAllEndpointInProtocolDiscoveredProperties(newDeviceInterfaceId);
+
+    // TODO: Invoke the protocol negotiator to now capture updated endpoint info.
+    
+
+     
+     
+     
     // todo: store the interface id and use it for matches later instead of the current partial string match
 
     return S_OK;

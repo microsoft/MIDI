@@ -62,7 +62,7 @@ class CMidi2DiagnosticsEndpointManager :
 
 {
 public:
-    STDMETHOD(Initialize(_In_ IUnknown*, _In_ LPCWSTR));
+    STDMETHOD(Initialize(_In_ IUnknown*, _In_ IUnknown*, _In_ LPCWSTR));
     STDMETHOD(Cleanup)();
 
 private:
