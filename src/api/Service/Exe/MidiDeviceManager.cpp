@@ -15,10 +15,10 @@ _Use_decl_annotations_
 HRESULT
 CMidiDeviceManager::Initialize(
     std::shared_ptr<CMidiPerformanceManager>& PerformanceManager, 
+    std::shared_ptr<CMidiEndpointProtocolManager>& EndpointProtocolManager,
     std::shared_ptr<CMidiConfigurationManager>& configurationManager)
 {
     m_ConfigurationManager = configurationManager;
-
 
     // Get the enabled abstraction layers from the registry
     std::vector<GUID> availableAbstractionLayers = m_ConfigurationManager->GetEnabledTransportAbstractionLayers();
@@ -46,7 +46,7 @@ CMidiDeviceManager::Initialize(
 
                 if (endpointManager != nullptr)
                 {
-                    LOG_IF_FAILED(endpointManager->Initialize((IUnknown*)this, transportSettingsJson.c_str()));
+                    LOG_IF_FAILED(endpointManager->Initialize((IUnknown*)this, (IUnknown*)EndpointProtocolManager.get(), transportSettingsJson.c_str()));
 
                     m_MidiEndpointManagers.emplace(AbstractionLayer, std::move(endpointManager));
 
@@ -54,18 +54,18 @@ CMidiDeviceManager::Initialize(
                 }
                 else
                 {
-                    OutputDebugString(__FUNCTION__ L": Transport Abstraction Endpoint Manager activation failed (nullptr return).");
+                    OutputDebugString(__FUNCTION__ L": Transport Abstraction Endpoint Manager activation failed (nullptr return).\n");
                 }
             }
             else
             {
-                OutputDebugString(__FUNCTION__ L": Transport Abstraction activation failed (nullptr return).");
+                OutputDebugString(__FUNCTION__ L": Transport Abstraction activation failed (nullptr return).\n");
             }
         }
         catch (...)
         {
             // TODO: Log
-            OutputDebugString(__FUNCTION__ L": Exception loading transport abstraction.");
+            OutputDebugString(__FUNCTION__ L": Exception loading transport abstraction.\n");
         }
     }
 
@@ -104,6 +104,11 @@ void SwMidiPortCreateCallback(__in HSWDEVICE hSwDevice, __in HRESULT CreationRes
             creationContext->InterfaceDevProperties,
             TRUE,
             wil::out_param(creationContext->MidiPort->DeviceInterfaceId));
+
+        // TODO: Is the string output parameter here leaking? Docs say you need
+        // to free it using SwMemFree. Makes me thing we should copy it and then
+        // free it up.
+
     }
 
     if (SUCCEEDED(creationContext->MidiPort->hr))
@@ -355,8 +360,8 @@ CMidiDeviceManager::UpdateEndpointProperties
     std::wstring requestedInterfaceId(DeviceInterfaceId);
     ::Windows::Devices::Midi2::Internal::InPlaceToLower(requestedInterfaceId);
 
-    OutputDebugString(requestedInterfaceId.c_str());
-    OutputDebugString(L"\n");
+    //OutputDebugString(requestedInterfaceId.c_str());
+    //OutputDebugString(L"\n");
 
     // locate the MIDIPORT 
     auto item = std::find_if(m_MidiPorts.begin(), m_MidiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
@@ -398,6 +403,89 @@ CMidiDeviceManager::UpdateEndpointProperties
 
     return S_OK;
 }
+
+_Use_decl_annotations_
+HRESULT
+CMidiDeviceManager::DeleteEndpointProperties
+(
+    PCWSTR DeviceInterfaceId,
+    ULONG IntPropertyCount,
+    PVOID InterfaceDevPropKeys
+)
+{
+    OutputDebugString(L"\n" __FUNCTION__ " ");
+
+
+    // create list of dev properties from the keys
+
+    // Call UpdateEndpointProperties
+
+    auto keys = (const DEVPROPKEY*)InterfaceDevPropKeys;
+
+    std::vector<DEVPROPERTY> properties;
+
+    for (ULONG i = 0; i < IntPropertyCount; i++)
+    {
+        properties.push_back({{ keys[i], DEVPROP_STORE_SYSTEM, nullptr },
+            DEVPROP_TYPE_EMPTY, 0, NULL });
+    }
+
+    return UpdateEndpointProperties(DeviceInterfaceId, (ULONG)properties.size(), (PVOID)properties.data());
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidiDeviceManager::DeleteAllEndpointInProtocolDiscoveredProperties
+(
+    PCWSTR DeviceInterfaceId
+)
+{
+    // don't delete any keys that are specified by the user, or 
+    // by the driver or transport. We're only deleting things that
+    // are discovered in-protocol.
+
+    std::vector<DEVPROPKEY> keys;
+
+    keys.push_back(PKEY_MIDI_EndpointProvidedName);
+    keys.push_back(PKEY_MIDI_EndpointProvidedProductInstanceId);
+
+    keys.push_back(PKEY_MIDI_EndpointConfiguredProtocol);
+    keys.push_back(PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps);
+    keys.push_back(PKEY_MIDI_EndpointConfiguredToSendJRTimestamps);
+    keys.push_back(PKEY_MIDI_EndpointSupportsMidi1Protocol);
+    keys.push_back(PKEY_MIDI_EndpointSupportsMidi2Protocol);
+    keys.push_back(PKEY_MIDI_EndpointSupportsReceivingJRTimestamps);
+    keys.push_back(PKEY_MIDI_EndpointSupportsSendingJRTimestamps);
+    keys.push_back(PKEY_MIDI_EndpointUmpVersionMajor);
+    keys.push_back(PKEY_MIDI_EndpointUmpVersionMinor);
+
+    keys.push_back(PKEY_MIDI_DeviceIdentity);
+
+
+    keys.push_back(PKEY_MIDI_FunctionBlocksAreStatic);
+    keys.push_back(PKEY_MIDI_FunctionBlockCount);
+
+    // remove actual function blocks and their names
+
+    for (int i = 0; i < MIDI_MAX_FUNCTION_BLOCKS; i++)
+    {
+        DEVPROPKEY fbkey;
+        fbkey.fmtid = PKEY_MIDI_FunctionBlock00.fmtid;    // hack
+        fbkey.pid = MIDI_FUNCTION_BLOCK_PROPERTY_INDEX_START + i;
+
+        keys.push_back(fbkey);
+
+        DEVPROPKEY namekey;
+        namekey.fmtid = PKEY_MIDI_FunctionBlock00.fmtid;    // hack
+        namekey.pid = MIDI_FUNCTION_BLOCK_NAME_PROPERTY_INDEX_START + i;
+
+        keys.push_back(namekey);
+    }
+
+    return DeleteEndpointProperties(DeviceInterfaceId, (ULONG)keys.size(), (PVOID)keys.data());
+}
+
+
 
 
 _Use_decl_annotations_
@@ -455,6 +543,8 @@ CMidiDeviceManager::RemoveEndpoint
     return S_OK;
 }
 
+
+
 HRESULT
 CMidiDeviceManager::Cleanup()
 {
@@ -463,4 +553,9 @@ CMidiDeviceManager::Cleanup()
 
     return S_OK;
 }
+
+
+
+
+
 

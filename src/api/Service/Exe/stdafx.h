@@ -62,6 +62,10 @@ namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
 #include "mididevicemanagerinterface_i.c"
 #include "mididevicemanagerinterface.h"
 
+#include "MidiEndpointProtocolManagerInterface_i.c"
+#include "MidiEndpointProtocolManagerInterface.h"
+
+
 #include "Midi2BS2UMPTransform.h"
 #include "Midi2UMP2BSTransform.h"
 #include "Midi2SchedulerTransform.h"
@@ -76,6 +80,8 @@ namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
 #include <Devpkey.h>
 #include "MidiDefs.h"
 
+// need to declare this before the device manager
+class CMidiEndpointProtocolManager;
 
 #include "MidiTelemetry.h"
 #include "MidiPerformanceManager.h"
@@ -94,6 +100,8 @@ class CMidiDevicePipe;
 #include "MidiClientPipe.h"
 #include "MidiTransformPipe.h"
 #include "MidiClientManager.h"
+
+#include "MidiEndpointProtocolManager.h"
 
 #include "MidiSrv.h"
 

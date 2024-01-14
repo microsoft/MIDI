@@ -112,16 +112,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
-
-
-
-
-
-
-
-
-
-
         _Success_(return == true)
         bool Open();
 
@@ -166,8 +156,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::MidiEndpointConnectionOptions m_options;
 
         foundation::Collections::IVector<midi2::IMidiEndpointMessageProcessingPlugin>
-            m_messageProcessingPlugins{ winrt::single_threaded_vector<midi2::IMidiEndpointMessageProcessingPlugin>() };
-
+            m_messageProcessingPlugins{ winrt::multi_threaded_vector<midi2::IMidiEndpointMessageProcessingPlugin>() };
 
         midi2::IMidiEndpointDefinedConnectionSettings m_settings{ nullptr };
 

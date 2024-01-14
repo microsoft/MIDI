@@ -660,7 +660,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
         // this is not efficient, but it works. Optimize later.
-        for (uint8_t fb = 0; fb < MIDI_MAX_FUNCTION_BLOCKS; fb++)
+        for (uint8_t fb = 0; fb < MIDI_MAX_FUNCTION_BLOCKS && fb < FunctionBlockCount(); fb++)
         {
             winrt::hstring functionBlockProperty = winrt::hstring(MIDI_STRING_PKEY_GUID) + winrt::hstring(MIDI_STRING_PKEY_PID_SEPARATOR) + winrt::to_hstring(fb + MIDI_FUNCTION_BLOCK_PROPERTY_INDEX_START);
             winrt::hstring functionBlockNameProperty = winrt::hstring(MIDI_STRING_PKEY_GUID) + winrt::hstring(MIDI_STRING_PKEY_PID_SEPARATOR) + winrt::to_hstring(fb + MIDI_FUNCTION_BLOCK_NAME_PROPERTY_INDEX_START);
@@ -750,7 +750,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
 
         // this is not efficient, but it works. Optimize later.
-        for (uint8_t fb = 0; fb < MIDI_MAX_FUNCTION_BLOCKS; fb++)
+        for (uint8_t fb = 0; fb < MIDI_MAX_FUNCTION_BLOCKS && fb < FunctionBlockCount(); fb++)
         {
             winrt::hstring functionBlockProperty = internal::BuildFunctionBlockPropertyKey(fb);
             winrt::hstring functionBlockNameProperty = internal::BuildFunctionBlockNamePropertyKey(fb);

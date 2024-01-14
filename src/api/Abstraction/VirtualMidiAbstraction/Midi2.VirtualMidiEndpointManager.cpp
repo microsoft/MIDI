@@ -22,6 +22,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiEndpointManager::Initialize(
     IUnknown* MidiDeviceManager, 
+    IUnknown* /*midiEndpointProtocolManager*/,
     LPCWSTR /*ConfigurationJson*/
 )
 {

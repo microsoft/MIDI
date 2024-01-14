@@ -1,14 +1,34 @@
 # Windows MIDI Services
 
-This project is the next-generation MIDI API for Windows, including MIDI 1.0, MIDI CI, and MIDI 2.0. It includes enhancements, a new USB class driver, new transports, and a suite of essential tools. The project adds many enhancements and bug fixes to our MIDI 1.0 support, and importantly adds support for the latest revisions to MIDI CI and MIDI 2.0 as approved by The MIDI Association.
+This project is the next-generation MIDI API for Windows, including MIDI 1.0, MIDI CI, and MIDI 2.0. It includes enhancements, a new USB class driver, new transports, and a suite of essential tools. The project adds many enhancements and bug fixes to our MIDI 1.0 support, and importantly adds support for the latest revisions to MIDI 2.0 as approved by The MIDI Association.
 
 > The open source USB MIDI 2.0 driver has been generously donated by [AMEI](https://www.amei.or.jp/), the **Association of Musical Electronics Industry**, and developed by [AmeNote :tm:](https://www.AmeNote.com/) in partnership with Microsoft. Please see the file headers for any additional copyright notices. A huge thank you to AMEI and its member companies for making this happen!
 
 **This is an official Microsoft project**. Although Microsoft is an active member of the MIDI Association, and Pete is the chair of the MIDI Association Executive Board, and other contributors are on standards boards, this project is not affiliated with the MIDI Association other than as a consumer of and contributor to the standards. Affiliation with AMEI is disclosed above.
 
-Here's a high-level view of the end goal. Details subject to change.
+Here's a high-level view of the end goal of this project. Details subject to change.
 
 ![High-level view of the MIDI stack](img/high-level-view.png)
+
+## Key Features
+
+* **Multi-client by default**. Unless an endpoint is configured to not allow shared connections, any endpoint (including MIDI 1.0 devices) can be used by multiple applications at the same time.
+* **Faster**. In our testing, we've found that the new infrastructure is much faster at sending and receiving messages compared to the older API, even with plugins configured in the service. There are no built-in speed caps or throttling in Windows MIDI Services, even for older USB MIDI 1.0 devices.
+* **Lower Jitter**. Along with speed comes lower jitter. This will vary by transport type (USB vs Network vs Virtual), but the jitter is in the low microsecond range.
+* **Extensible**. The service has been designed to be extensible by Microsoft and third-parties. New types of transports can be added at any time, including during prototyping of a new transport specification. Similarly, message processing plugins can also be developed by Microsoft or third-parties and used for production and/or prototyping. No driver experience required in most cases.
+* **UMP-Centric**. The new API fully embraces MIDI 2.0 and the Universal MIDI Packet format.
+* **Better tools**. We supply the `midi.exe` Windows MIDI Services Console for developers and power users, or anyone comfortable with the command line. You can use it to monitor endpoints, send and receive messages, send/capture SysEx data and much more. We'll deliver the MIDI Settings GUI app after our initial release.
+* **Open Source**. The source code is open and available to everyone under a permissive license. Not sure how something works? Want to create a transport but aren't sure how we did it? Want to investigate a bug or contribute a feature? The code is there for you to explore.
+
+Note: MIDI CI functionality, which does not technically require OS support, will be coming after version 1.0. We intend to add helpers for profiles, property exchange, MUID tracking, and more. In the meantime, applications can send and receive MIDI CI messages without anything in their way.
+
+## Key documentation
+
+Currently, the documentation is focused on developers. Although Windows MIDI Services supports the latest version of Windows 10, developers need to run a Windows Insider Canary version of Windows 11 to be able to use the USB Driver.
+
+* [Application Developer Documentation](get-started/midi-developers/app-developers/docs/README.md). This also includes API overviews, best practices, implementation notes, and more
+* [Application Developer Samples](get-started/midi-developers/app-developers/samples/README.md). Samples for multiple languages including C#, C++, and Electron/NodeJS
+* [Windows MIDI Services Console documentation](get-started/midi-users/README.md). This is an essential tool for developers and power users.
 
 > **Join the Discussion!**
 >
@@ -33,36 +53,54 @@ Here is where we currently stand with planned backwards compatibility. Backwards
 
 Note that we are also investigating and experimenting with how to best incorporate the existing in-box Roland GS / General MIDI Synth into this architecture. It's likely we will handle it as an additional transport, but we need to test some of the MIDI file players today as many of them make assumptions about which synth index is the GS synth, so this compatibility may come after the initial release.
 
-> MIDI is used for many things from musical performances to [Black MIDI](https://en.wikipedia.org/wiki/Black_MIDI) to controlling lights and even quadcopters (something I did on stage once, even). For the initial releases, our primary user audience for Windows MIDI Services, and therefore our priority when deciding on features, is **musicians using typical musician workflows** to make music and perform, manage their devices, etc. Use cases outside of this are not necessarily in-scope for the first release, but may be certainly considered for subsequent releases. This is especially important as the MIDI community works to arrive at best practices around things like jitter reduction timestamps, which can generate a significant amount of traffic. We're not going to do anything specifically to prevent any other use of MIDI, but we ask folks interested in those other uses to both provide feedback to us through issues here or Discord so we know what you are looking for and we can keep it in mind, and to be patient while we work through the priorities.
-
 ## Component parts
 
-You'll notice that this repo contains a number of related projects all grouped together as "Windows MIDI Services"
+You'll notice that this repo contains a number of related components all grouped together as "Windows MIDI Services"
 
-| Project | Description |
-| --------------- | ----------------------------------- |
-| USB MIDI 2.0 Driver | The new MIDI 1.0 and MIDI 2.0 class driver for Windows |
-| MIDI Service | MIDI in Windows now uses a Windows Service, like audio does today. This enables us to do a lot more on behalf of the user. The MIDI service is what talks to the various transports and drivers directly. |
-| MIDI Abstraction Layer | This is mostly part of the service. This provides the abstractions we need to be able to enable different types of transports, and also enable compatibility with the current MIDI 1.0 APIs |
-| New MIDI API | The API is the interface into the service. To ensure that we can ship the API with Windows and still keep up with evolving MIDI standards, much of the API uses JSON payloads for parameters and configuration and is largely just a direct pipe to the service. Our intent is for application developers to avoid using the API directly in most cases, but to instead use the SDK. |
-| MIDI App SDK | The SDK is shipped with individual applications. It provides strongly-typed entry points into and interpretations of API information. It also helps ensure applications name and treat MIDI entities in similar or identical ways. Additionally, the SDK can rev at the speed needed to keep up with updates to the MIDI specifications, without breaking compatibility with the operating system API. **We encourage all application developers to use the SDK rather than the API directly.** |
-| MIDI Settings Tool | This is the first of the end-user-focused tools we are delivering with Windows MIDI Services. It is a GUI tool which helps the user manage the MIDI system, and also perform tests, provide information to product support teams, perform common tasks such as sending/receiving SysEx, and much more. |
+| Location | Component | Description |
+|--------| --------------- | ----------------------------------- |
+| src\api\Drivers\USBMIDI2\ | USB MIDI 2.0 Driver | The new MIDI 1.0 and MIDI 2.0 class driver for Windows |
+| src\api\Service\ | MIDI Service | MIDI in Windows now uses a Windows Service, like audio does today. This enables us to do a lot more on behalf of the user. The MIDI service is what talks to the various transports and drivers directly. |
+| src\api\Abstraction\ | Transport Plugins | These are plugins referred to as "Abstractions". These are COM components that run in the service and talk to the different devices (USB, network, more). |
+| src\api\Transform\ | Message Processing Plugins | These are plugins referred to as "Transforms". Like transports, these are COM components which run in the service. They provide features such as outbound message scheduling, translating between MIDI 1.0 byte stream and MIDI UMP, Jitter Reduction Timestamp handling, and more. |
+| src\api\Client\Midi2Client\ | WinRT MIDI API | The WinRT MIDI API `Windows.Devices.Midi2` is the interface into the service and provides the mechanism by which applications use MIDI on Windows. |
+| src\user-tools\midi-console\ | MIDI MIDI Services Console | This is a richly featured console application for monitoring endpoints, sending messages, automating tasks, testing, and much more. Written in C# using .NET 8 |
+| src\user-tools\midi-settings\ | MIDI Settings Tool | This is a GUI tool which helps the user manage the MIDI system, rename endpoints, and also perform tests, provide information to product support teams, perform common tasks such as sending/receiving SysEx, and much more. We will deliver this after the initial release of Windows MIDI Services |
+| src\oob-setup\ | Out of Band Delivery Setup Package | A WiX MSI installer for github-delivered releases of Windows MIDI Services. Our internal build and delivery process has no dependency on this. |
 
 ### Transports
 
-Here are the current plans for transports. In general, transports are implemented as plugins into the Windows Service. Some, like USB, require related drivers, but the majority are user-mode code.
+In general, transports are implemented as plugins into the Windows Service. Some, like USB, require related drivers, but the majority are user-mode code.
 
-| Transport | Description |
-| --------------- | ----------------------------------- |
-| USB | The USB transport code and driver. This will be delivered with the initial release |
-| Virtual and Loopback | These will be early transport plugins |
-| Network MIDI 2.0 | The in-progress UDP-based Network specification for UWP. We have this prototyped, and will deliver shortly after the specification is finalized. UWP Endpoints from Network will show up just like any other transport in the API/SDK. This transport will not require any other third-party products. We are also using the Network protocol, alongside the USB protocol, to validate our abstraction layers and plugin approach.|
-| BLE | BLE MIDI 1.0 is currently planned to be implemented clean-room to include in this repo as full open source, and also address bugs brought up from the broader developer and musician communities. This work has not yet started. |
-| RTP | No current plans for implementing RTP MIDI 1.0. That may change in the future if the need is there. We would, of course, accept contributions here if someone wishes to make an RTP network plugin. In the meantime, the existing RTP solutions should continue to work as they do today. |
+| Location | Transport | Description |
+| -------- | --------------- | ----------------------------------- |
+| src\api\Abstraction\KSAbstraction\ | USB (Kernel Streaming) | The USB transport code and driver. This will be delivered with the initial release |
+| src\api\Abstraction\VirtualMidiAbstraction\ | Virtual / App-to-App MIDI | This is what applications can use to create their own virtual MIDI Endpoints and be treated as though they are an external device. |
+| src\api\Abstraction\DiagnosticsAbstraction\ | Diagnostics Loopback | These two endpoints are for testing and debugging purposes. [Learn more.](get-started/midi-developers/app-developers/docs/README.md)   |
+| src\api\Abstraction\NetworkMidiAbstraction\ | Network MIDI 2.0 | The in-progress UDP-based Network specification for UWP. We have this prototyped and will deliver our implementation after we ship v 1.0 of Windows MIDI Services. UWP Endpoints from Network will show up just like any other transport in the API/SDK. This transport will not require any other third-party products. |
+| src\api\Abstraction\BleMidiAbstraction\ | BLE | BLE MIDI 1.0 is currently planned to be implemented clean-room to include in this repo as full open source, and also address bugs brought up from the broader developer and musician communities. TBD on when this will ship |
+| na | RTP | No current plans for implementing RTP MIDI 1.0. That may change in the future if the need is there. We would, of course, accept contributions here if someone wishes to make an RTP network plugin. In the meantime, the existing RTP solutions should continue to work as they do today. |
+
+Third-parties may also create transports for prototyping new MIDI standards, or for otherwise adding new connectivity options. Transports are COM objects which implement a specific set of interfaces, and are loaded based on values stored in the Windows MIDI Services section of the registry. No driver or kernel programming knowledge is required.
+
+### Transforms
+
+Here are the in development and/or planned message transforms
+
+| Location | Purpose | Description |
+| -------- | --------------- | ----------------------------------- |
+| src\api\Transform\ByteStreamToUMP\ | Translation | Translates MIDI 1.0 byte stream messages to UMP for legacy APIs and drivers |
+| src\api\Transform\UMPToByteStream\ | Translation | Translates message formats from UMP to Byte Stream |
+| src\api\Transform\EndpointMetadataListenerTransform\ | Metadata Capture | Monitors in-coming stream messages and stores Endpoint and Function Block info into the device properties |
+| src\api\Transform\JitterReductionGeneratorTransform\ | JR Timestamps | Generates outgoing JR Timestamps when the stream is configured to do so. |
+| src\api\Transform\JitterReductionListenerTransform\ | JR Timestamps | Listens for incoming JR Timestamps when the stream is configured to do so.  Removes them from the stream. |
+| src\api\Transform\SchedulerTransform\ | Outbound Scheduling | Schedules outgoing messages based on timestamp. |
+
+We will develop additional transforms in the future for things like optionally translating Note On velocity 0 to a Note Off message (required for some Mackie devices, for example), remapping groups/channels, remapping notes, etc. Those will be available after the MIDI Settings app is available.
 
 ## Releases
 
-We are in the process of setting up automated pipelines for building (and eventually signing) the component pieces of this project. This readme will be updated with build status information one that is in place. **There are no usable builds, currently.**
+We are currently releasing only for developers. The end-user releases will be in publicly available Windows builds or servicing updates when ready.
 
 ### Developer Releases
 
@@ -71,19 +109,6 @@ Please see the [releases section of this repo](https://github.com/microsoft/MIDI
 ### End-user Releases
 
 **There are no end-user preview releases yet.**
-
-For maximum flexibility and compatibility, there are several release mechanisms for Windows MIDI Services components.
-
-| Component | Preview Release Mechanism | Production Release Mechanism |
-| --------------- | ------------------------------ | ------------------------------ |
-| USB MIDI 2 Driver | (Unsigned) Driver install from Github | (Signed) In-box Windows with Windows Update updates |
-| Windows Service | Github Install | In-box Windows with Windows Update updates |
-| Initial Transports | With Windows Service | With Windows Service |
-| New Transports | Github Install | TBD (Possibly through Store with link from Settings App) |
-| API | Github Install | In-box Windows with Windows Update updates |
-| SDK | Github Install | NuGet, Github Install, others TBD |
-| Settings and Related Tools | Github Install | Microsoft Store on Windows, WinGet |
-| Documentation and Samples | Github | Microsoft Learn / Docs |
 
 **When will components be considered "production"?** The bar in Windows is very high for any big changes (especially anything which may break compatibility) to an API that has shipped in-box, so we want to ensure the API and service are truly production-ready before including them in-box. This will be based on stability/readiness/performance, with input from stakeholders including AMEI, and not necessarily a specific timeline (although we do need to support partner product launches, and we do have broad milestone dates).
 
@@ -119,18 +144,9 @@ This project may contain trademarks or logos for projects, products, or services
 
 ## Relevant specifications
 
-These are the updated MIDI 2.0 (June 2023) specifications which apply to this project today.
+These are the updated MIDI 2.0 specifications which apply to this project today.
 
-* [MIDI 2.0](https://midi.org/specifications)
-
-Note that this project does not support the deprecated MIDI CI protocol negotiation and related mechanisms.
-
-Older specifications
-
-* [MIDI 2.0](https://www.midi.org/specifications/midi-2-0-specifications)
-* [USB MIDI 2.0](https://www.midi.org/specifications/midi-transports-specifications/usb/usb-midi-2-0-2)
-* [MIDI 1.0](https://www.midi.org/specifications/midi1-specifications)
-* [USB MIDI 1.0](https://www.midi.org/specifications/midi-transports-specifications/usb/usb-midi-1-0-2)
+* [MIDI 2.0 UMP Specifications](https://midi.org/specifications)
 
 ## Learn more about MIDI 2.0
 

@@ -35,6 +35,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         bool InternalUpdateFromPropertyData(_In_ UMP_GROUP_TERMINAL_BLOCK_HEADER* const header, _In_ std::wstring& name);
 
+
+        midi2::MidiFunctionBlock AsEquivalentFunctionBlock();
+
+
     private:
 
         uint8_t m_number{};

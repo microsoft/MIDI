@@ -184,7 +184,7 @@ CMidiClientManager::GetMidiDevice(
         wil::com_ptr_nothrow<CMidiDevicePipe> devicePipe;
 
         // The devicePipe must be initialized with the flow of the aliased device
-        MIDISRV_DEVICECREATION_PARAMS deviceCreationParams{ 0 };
+        MIDISRV_DEVICECREATION_PARAMS deviceCreationParams{ };
 
         deviceCreationParams.BufferSize = CreationParams->BufferSize;
         // create the device using the devices preferred format.

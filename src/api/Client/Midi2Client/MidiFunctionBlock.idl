@@ -9,16 +9,11 @@
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-
 import "MidiFunctionBlockDirectionEnum.idl";
 import "MidiFunctionBlockUIHintEnum.idl";
-import "MidiGroup.idl";
-
-import "MidiMessage128.idl";
-
-// TODO: Verify this has everything in the spec
-
 import "MidiFunctionBlockMidi10Enum.idl";
+
+import "MidiGroup.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -28,27 +23,25 @@ namespace Windows.Devices.Midi2
     {
         MidiFunctionBlock();
 
-        UInt8 Number{ get; };               // function block number: 0-31
-        String Name{ get; };
+        Boolean IsReadOnly { get; };
 
-        Boolean IsActive{ get; };
+        UInt8 Number{ get; set; };               // function block number: 0-31
+        String Name{ get; set; };
 
-        MidiFunctionBlockDirection Direction{ get; };
-        MidiFunctionBlockUIHint UIHint{ get; };
+        Boolean IsActive{ get; set; };
 
-        MidiFunctionBlockMidi10 Midi10Connection{ get; };
+        MidiFunctionBlockDirection Direction{ get; set; };
+        MidiFunctionBlockUIHint UIHint{ get; set; };
 
-        UInt8 FirstGroupIndex{ get; };
-        UInt8 GroupCount{ get; };
+        MidiFunctionBlockMidi10 Midi10Connection{ get; set; };
+
+        UInt8 FirstGroupIndex{ get; set; };
+        UInt8 GroupCount{ get; set; };
 
         Boolean IncludesGroup(MidiGroup group);
 
+        UInt8 MidiCIMessageVersionFormat{ get; set; };
 
-        UInt8 MidiCIMessageVersionFormat{ get; };
-
-        UInt8 MaxSystemExclusive8Streams{ get; };
-
-        Boolean UpdateFromJson(Windows.Data.Json.JsonObject json);
-
+        UInt8 MaxSystemExclusive8Streams{ get; set; };
     }
 }

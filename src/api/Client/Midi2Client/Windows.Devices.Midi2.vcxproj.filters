@@ -171,6 +171,9 @@
     <ClCompile Include="midi_function_block_prop_util.cpp">
       <Filter>API\Enumeration</Filter>
     </ClCompile>
+    <ClCompile Include="MidiVirtualEndpointDeviceDefinition.cpp">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -260,6 +263,9 @@
     </ClInclude>
     <ClInclude Include="midi_function_block_prop_util.h">
       <Filter>API\Enumeration</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualEndpointDeviceDefinition.h">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -356,9 +362,6 @@
     <Midl Include="MidiMessageBuilder.idl">
       <Filter>API\Messages\Utility</Filter>
     </Midl>
-    <Midl Include="MidiVirtualDevice.idl">
-      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
-    </Midl>
     <Midl Include="MidiFunctionBlockMidi10Enum.idl">
       <Filter>API\Endpoints\Metadata\Blocks</Filter>
     </Midl>
@@ -442,6 +445,15 @@
     </Midl>
     <Midl Include="MidiEndpointDeviceInformationUpdateEventArgs.idl">
       <Filter>API\Enumeration</Filter>
+    </Midl>
+    <Midl Include="MidiStreamConfigurationRequestReceivedEventArgs.idl">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualEndpointDeviceDefinition.idl">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualEndpointDevice.idl">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

@@ -69,7 +69,7 @@ class CMidi2BluetoothMidiEndpointManager :
 
 {
 public:
-    STDMETHOD(Initialize(_In_ IUnknown*, _In_ LPCWSTR));
+    STDMETHOD(Initialize(_In_ IUnknown*, _In_ IUnknown*, _In_ LPCWSTR));
     STDMETHOD(Cleanup)();
 
     //STDMETHOD(ApplyConfiguration(

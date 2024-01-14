@@ -157,7 +157,7 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledTransportAbstractionLayer
 }
 
 // TODO: Refactor these two methods and abstract out the registry code. Do this once wil adds the enumeration helpers to the NuGet
-std::vector<GUID> CMidiConfigurationManager::GetEnabledEndpointProcessingAbstractionLayers() const noexcept
+std::vector<GUID> CMidiConfigurationManager::GetEnabledEndpointProcessingTransforms() const noexcept
 {
     //OutputDebugString(L"GetEnabledAbstractionLayers");
 
@@ -454,7 +454,7 @@ std::wstring CMidiConfigurationManager::GetConfigurationForTransportAbstraction(
 
 
 _Use_decl_annotations_
-std::wstring CMidiConfigurationManager::GetConfigurationForEndpointProcessingAbstraction(GUID abstractionGuid) const noexcept
+std::wstring CMidiConfigurationManager::GetConfigurationForEndpointProcessingTransform(GUID abstractionGuid) const noexcept
 {
  //   OutputDebugString(L"" __FUNCTION__);
 

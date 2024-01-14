@@ -51,6 +51,13 @@ public:
         return S_OK;
     }
 
+    HRESULT GetEndpointProtocolManager(std::shared_ptr<CMidiEndpointProtocolManager>& manager)
+    {
+        manager = m_EndpointProtocolManager;
+        return S_OK;
+    }
+
+
 private:
     std::shared_ptr<CMidiPerformanceManager> m_PerformanceManager;
     std::shared_ptr<CMidiProcessManager> m_ProcessManager;
@@ -58,6 +65,7 @@ private:
     std::shared_ptr<CMidiClientManager> m_ClientManager;
     std::shared_ptr<CMidiConfigurationManager> m_ConfigurationManager;
 
+    std::shared_ptr<CMidiEndpointProtocolManager> m_EndpointProtocolManager;
 
 };
 

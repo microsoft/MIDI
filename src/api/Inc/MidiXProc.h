@@ -76,7 +76,7 @@ private:
     BOOL m_OverwriteZeroTimestamp{ true };
 
     wil::com_ptr_nothrow<IMidiCallback> m_MidiInCallback;
-    LONGLONG m_MidiInCallbackContext;
+    LONGLONG m_MidiInCallbackContext{};
 
     std::unique_ptr<MEMORY_MAPPED_PIPE> m_MidiIn;
     std::unique_ptr<MEMORY_MAPPED_PIPE> m_MidiOut;

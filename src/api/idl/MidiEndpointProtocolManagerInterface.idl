@@ -1,0 +1,28 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+
+import "unknwn.idl";
+
+[
+    object,
+        local,
+        uuid(7a3def20-fb76-49b6-a3a0-3dcbcda8f482),
+        pointer_default(unique)
+]
+interface IMidiEndpointProtocolManagerInterface : IUnknown
+{
+    HRESULT NegotiateAndRequestMetadata(
+        [in] LPCWSTR DeviceInterfaceId,
+        [in] BOOL PreferToSendJRTimestampsToEndpoint,
+        [in] BOOL PreferToReceiveJRTimestampsFromEndpoint,
+        [in] BYTE PreferredMidiProtocol,
+        [in] WORD TimeoutMS
+    );
+
+};

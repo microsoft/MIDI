@@ -58,8 +58,10 @@ public:
 
     CMidiDeviceManager() {}
     ~CMidiDeviceManager() {}
+
     STDMETHOD(Initialize)(
         _In_ std::shared_ptr<CMidiPerformanceManager>& performanceManager,
+        _In_ std::shared_ptr<CMidiEndpointProtocolManager>& EndpointProtocolManager,
         _In_ std::shared_ptr<CMidiConfigurationManager>& configurationManager);
 
     STDMETHOD(ActivateEndpoint)(
@@ -81,6 +83,16 @@ public:
         _In_ PCWSTR,
         _In_ ULONG,
         _In_ PVOID
+        );
+
+    STDMETHOD(DeleteEndpointProperties)(
+        _In_ PCWSTR,
+        _In_ ULONG,
+        _In_ PVOID
+        );
+
+    STDMETHOD(DeleteAllEndpointInProtocolDiscoveredProperties)(
+        _In_ PCWSTR
         );
 
     STDMETHOD(Cleanup)();
