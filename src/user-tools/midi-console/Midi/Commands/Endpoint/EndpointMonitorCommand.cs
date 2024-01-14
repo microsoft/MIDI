@@ -264,10 +264,10 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                                 AnsiConsole.WriteLine();
                                 AnsiConsole.MarkupLine(Strings.MonitorEscapePressedMessage);
-                                break;
                             }
                             
                         }
+
 
                         if (_hasEndpointDisconnected)
                         {
@@ -336,7 +336,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                         // we don't need to update the display more often. A tight loop really ties up the CPU.
                         // actual message receive timings are based on the worker thread
-                        Thread.Sleep(125); 
+                        if (continueWaiting) Thread.Sleep(125); 
                     }
                 }
                 else
@@ -344,6 +344,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToOpenEndpoint));
                     return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
                 }
+
+                _continueWatchingDevice = false;
 
                 if (!_hasEndpointDisconnected)
                 {
