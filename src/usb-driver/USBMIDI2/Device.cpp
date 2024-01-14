@@ -1559,7 +1559,10 @@ Return Value:
     NTSTATUS status = 0;
 
     // Temp variables for createing GTB headers
+    WDFMEMORY                       gtbMemory = 0;
     WDF_OBJECT_ATTRIBUTES           gtbMemoryAttributes;
+    PVOID                           gtbMemoryPtr;
+    size_t                          gtbMemorySize;
     UINT8                           numMidiIn = 0;
     UINT8                           numMidiOut = 0;
     UINT8                           grpTermBlockDirection[32];
@@ -1640,11 +1643,12 @@ Return Value:
 
     // Walk through looking for Jack Descriptors
     PUSB_COMMON_DESCRIPTOR pNextDescriptor;
-    while (nullptr != (pNextDescriptor = USBD_ParseDescriptors(
+    while (pNextDescriptor = USBD_ParseDescriptors(
         (PVOID)pConfigurationDescriptor,
-        (ULONG) configDescSize,
+        configDescSize,
         (PVOID)pCurrent,
-        (LONG)MIDI_CS_INTERFACE)))
+        (LONG)MIDI_CS_INTERFACE)
+        )
     {
         // pNextDescriptor is valid, make sure in search area for this interface
         if ((PVOID)pNextDescriptor >= pEnd)
@@ -1798,7 +1802,7 @@ Return Value:
         // Populate data from GTB read from USB Device
         pThisGrpTrmBlk->GrpTrmBlock.Size =
             (WORD)(sizeof(UMP_GROUP_TERMINAL_BLOCK_HEADER) + grpTermBlockStringSizes[termBlockCount]);
-        pThisGrpTrmBlk->GrpTrmBlock.Number = (BYTE) termBlockCount;
+        pThisGrpTrmBlk->GrpTrmBlock.Number = termBlockCount;
         pThisGrpTrmBlk->GrpTrmBlock.Direction =
             (grpTermBlockDirection[termBlockCount] == (UINT8)MIDI_CS_INTERFACE_IN_JACK) ?
             0x01 /*Input Only*/ : 0x02 /*Output Only*/;
