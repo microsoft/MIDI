@@ -56,46 +56,46 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             {
                 var table = new Table();
                 table.Border(TableBorder.Rounded);
-                table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Property"));
-                table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Value"));
+                table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading(Resources.Strings.PropertiesTableColumnHeaderProperty));
+                table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading(Resources.Strings.PropertiesTableColumnHeaderValue));
 
 
                 MidiEndpointDeviceInformation di = MidiEndpointDeviceInformation.CreateFromId(endpointId);
 
-                table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("Identification"), "");
-                table.AddRow("Name", AnsiMarkupFormatter.FormatEndpointName(di.Name));
-                table.AddRow("Id", AnsiMarkupFormatter.FormatFullEndpointInterfaceId(di.Id));
-                table.AddRow("Purpose", di.EndpointPurpose.ToString());
-                table.AddRow("Serial Number", AnsiMarkupFormatter.EscapeString(di.TransportSuppliedSerialNumber));
-                table.AddRow("Manufacturer", AnsiMarkupFormatter.EscapeString(di.ManufacturerName));
+                table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Resources.Strings.PropertiesTableSectionHeaderIdentification), "");
+                table.AddRow(Resources.Strings.PropertiesTablePropertyLabelName, AnsiMarkupFormatter.FormatEndpointName(di.Name));
+                table.AddRow(Resources.Strings.PropertiesTablePropertyLabelId, AnsiMarkupFormatter.FormatFullEndpointInterfaceId(di.Id));
+                table.AddRow(Resources.Strings.PropertiesTablePropertyLabelPurpose, di.EndpointPurpose.ToString());
+                table.AddRow(Resources.Strings.PropertiesTablePropertyLabelSerialNumber, AnsiMarkupFormatter.EscapeString(di.TransportSuppliedSerialNumber));
+                table.AddRow(Resources.Strings.PropertiesTablePropertyLabelManufacturer, AnsiMarkupFormatter.EscapeString(di.ManufacturerName));
 
                 if (settings.Verbose)
                 {
                     //table.AddRow("Kind", AnsiMarkupFormatter.FormatDeviceKind(di.DeviceInformation.Kind));
-                    table.AddRow("Container Id", AnsiMarkupFormatter.FormatContainerId(di.ContainerId.ToString()));
-                    table.AddRow("Device Instance Id", AnsiMarkupFormatter.FormatDeviceInstanceId(di.DeviceInstanceId));
+                    table.AddRow(Resources.Strings.PropertiesTablePropertyLabelContainerId, AnsiMarkupFormatter.FormatContainerId(di.ContainerId.ToString()));
+                    table.AddRow(Resources.Strings.PropertiesTablePropertyLabelDeviceInstanceId, AnsiMarkupFormatter.FormatDeviceInstanceId(di.DeviceInstanceId));
                 }
 
                 if (settings.Verbose)
                 {
                     table.AddEmptyRow();
-                    table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("Endpoint Metadata"), "");
-                    table.AddRow("Product Instance Id", AnsiMarkupFormatter.EscapeString(di.ProductInstanceId));
-                    table.AddRow("Endpoint-Supplied Name", AnsiMarkupFormatter.FormatEndpointName(di.EndpointSuppliedName));
-                    table.AddRow("System Exclusive Id", 
+                    table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Resources.Strings.PropertiesTableSectionHeaderEndpointMetadata), "");
+                    table.AddRow(Resources.Strings.PropertiesTablePropertyLabelProductInstanceId, AnsiMarkupFormatter.EscapeString(di.ProductInstanceId));
+                    table.AddRow(Resources.Strings.PropertiesTablePropertyLabelEndpointSuppliedName, AnsiMarkupFormatter.FormatEndpointName(di.EndpointSuppliedName));
+                    table.AddRow(Resources.Strings.PropertiesTablePropertyLabelSystemExclusiveId, 
                         di.DeviceIdentitySystemExclusiveId[0].ToString("X2") + " " +
                         di.DeviceIdentitySystemExclusiveId[1].ToString("X2") + " " +
                         di.DeviceIdentitySystemExclusiveId[2].ToString("X2"));
 
-                    table.AddRow("Device Family",
+                    table.AddRow(Resources.Strings.PropertiesTablePropertyLabelDeviceFamily,
                         di.DeviceIdentityDeviceFamilyMsb.ToString("X2") + " " +
                         di.DeviceIdentityDeviceFamilyLsb.ToString("X2"));
 
-                    table.AddRow("Device Family Model #",
+                    table.AddRow(Resources.Strings.PropertiesTablePropertyLabelDeviceFamilyModelNumber,
                         di.DeviceIdentityDeviceFamilyModelNumberMsb.ToString("X2") + " " +
                         di.DeviceIdentityDeviceFamilyModelNumberLsb.ToString("X2"));
 
-                    table.AddRow("Software Revision Level",
+                    table.AddRow(Resources.Strings.PropertiesTablePropertyLabelSoftwareRevisionLevel,
                         di.DeviceIdentitySoftwareRevisionLevel[0].ToString("X2") + " " +
                         di.DeviceIdentitySoftwareRevisionLevel[1].ToString("X2") + " " +
                         di.DeviceIdentitySoftwareRevisionLevel[2].ToString("X2") + " " +
@@ -103,11 +103,16 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 }
 
                 table.AddEmptyRow();
-                table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("User Data"), "");
-                table.AddRow("User-Supplied Name", AnsiMarkupFormatter.FormatEndpointName(di.UserSuppliedName));
-                table.AddRow("Description", AnsiMarkupFormatter.EscapeString(di.Description));
-                table.AddRow("Small Image Path", AnsiMarkupFormatter.EscapeString(di.SmallImagePath));
-                table.AddRow("Large Image Path", AnsiMarkupFormatter.EscapeString(di.LargeImagePath));
+                table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Resources.Strings.PropertiesTableSectionHeaderUserData), "");
+                table.AddRow(Resources.Strings.PropertiesTablePropertyLabelUserSuppliedName, AnsiMarkupFormatter.FormatEndpointName(di.UserSuppliedName));
+                table.AddRow(Resources.Strings.PropertiesTablePropertyLabelDescription, AnsiMarkupFormatter.EscapeString(di.Description));
+                table.AddRow(Resources.Strings.PropertiesTablePropertyLabelSmallImagePath, AnsiMarkupFormatter.EscapeString(di.SmallImagePath));
+                table.AddRow(Resources.Strings.PropertiesTablePropertyLabelLargeImagePath, AnsiMarkupFormatter.EscapeString(di.LargeImagePath));
+
+
+
+                // TODO: Continue with localization
+
 
                 table.AddEmptyRow();
                 table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("Active Configuration"), "");
@@ -398,7 +403,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     // spit out all properties by key / value in a new table
 
                     table.AddEmptyRow();
-                    table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("All Properties"), "");
+                    table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("All Raw Properties"), "");
 
                     DisplayProperties(table, di.Properties);
                 }

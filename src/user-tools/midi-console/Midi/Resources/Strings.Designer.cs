@@ -1020,6 +1020,204 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Property.
+        /// </summary>
+        internal static string PropertiesTableColumnHeaderProperty {
+            get {
+                return ResourceManager.GetString("PropertiesTableColumnHeaderProperty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Value.
+        /// </summary>
+        internal static string PropertiesTableColumnHeaderValue {
+            get {
+                return ResourceManager.GetString("PropertiesTableColumnHeaderValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Container Id.
+        /// </summary>
+        internal static string PropertiesTablePropertyLabelContainerId {
+            get {
+                return ResourceManager.GetString("PropertiesTablePropertyLabelContainerId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Description.
+        /// </summary>
+        internal static string PropertiesTablePropertyLabelDescription {
+            get {
+                return ResourceManager.GetString("PropertiesTablePropertyLabelDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Device Family.
+        /// </summary>
+        internal static string PropertiesTablePropertyLabelDeviceFamily {
+            get {
+                return ResourceManager.GetString("PropertiesTablePropertyLabelDeviceFamily", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Device Family Model #.
+        /// </summary>
+        internal static string PropertiesTablePropertyLabelDeviceFamilyModelNumber {
+            get {
+                return ResourceManager.GetString("PropertiesTablePropertyLabelDeviceFamilyModelNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Device Instance Id.
+        /// </summary>
+        internal static string PropertiesTablePropertyLabelDeviceInstanceId {
+            get {
+                return ResourceManager.GetString("PropertiesTablePropertyLabelDeviceInstanceId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Endpoint-Supplied Name.
+        /// </summary>
+        internal static string PropertiesTablePropertyLabelEndpointSuppliedName {
+            get {
+                return ResourceManager.GetString("PropertiesTablePropertyLabelEndpointSuppliedName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Id.
+        /// </summary>
+        internal static string PropertiesTablePropertyLabelId {
+            get {
+                return ResourceManager.GetString("PropertiesTablePropertyLabelId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Large Image Path.
+        /// </summary>
+        internal static string PropertiesTablePropertyLabelLargeImagePath {
+            get {
+                return ResourceManager.GetString("PropertiesTablePropertyLabelLargeImagePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Manufacturer.
+        /// </summary>
+        internal static string PropertiesTablePropertyLabelManufacturer {
+            get {
+                return ResourceManager.GetString("PropertiesTablePropertyLabelManufacturer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name.
+        /// </summary>
+        internal static string PropertiesTablePropertyLabelName {
+            get {
+                return ResourceManager.GetString("PropertiesTablePropertyLabelName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Product Instance Id.
+        /// </summary>
+        internal static string PropertiesTablePropertyLabelProductInstanceId {
+            get {
+                return ResourceManager.GetString("PropertiesTablePropertyLabelProductInstanceId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Purpose.
+        /// </summary>
+        internal static string PropertiesTablePropertyLabelPurpose {
+            get {
+                return ResourceManager.GetString("PropertiesTablePropertyLabelPurpose", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Serial Number.
+        /// </summary>
+        internal static string PropertiesTablePropertyLabelSerialNumber {
+            get {
+                return ResourceManager.GetString("PropertiesTablePropertyLabelSerialNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Small Image Path.
+        /// </summary>
+        internal static string PropertiesTablePropertyLabelSmallImagePath {
+            get {
+                return ResourceManager.GetString("PropertiesTablePropertyLabelSmallImagePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Software RevisionLevel.
+        /// </summary>
+        internal static string PropertiesTablePropertyLabelSoftwareRevisionLevel {
+            get {
+                return ResourceManager.GetString("PropertiesTablePropertyLabelSoftwareRevisionLevel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to System Exclusive Id.
+        /// </summary>
+        internal static string PropertiesTablePropertyLabelSystemExclusiveId {
+            get {
+                return ResourceManager.GetString("PropertiesTablePropertyLabelSystemExclusiveId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to User-Supplied Name.
+        /// </summary>
+        internal static string PropertiesTablePropertyLabelUserSuppliedName {
+            get {
+                return ResourceManager.GetString("PropertiesTablePropertyLabelUserSuppliedName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Endpoint Metadata.
+        /// </summary>
+        internal static string PropertiesTableSectionHeaderEndpointMetadata {
+            get {
+                return ResourceManager.GetString("PropertiesTableSectionHeaderEndpointMetadata", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Identification.
+        /// </summary>
+        internal static string PropertiesTableSectionHeaderIdentification {
+            get {
+                return ResourceManager.GetString("PropertiesTableSectionHeaderIdentification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to User Data.
+        /// </summary>
+        internal static string PropertiesTableSectionHeaderUserData {
+            get {
+                return ResourceManager.GetString("PropertiesTableSectionHeaderUserData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Timestamp.
         /// </summary>
         internal static string SendMessageResultTableColumnHeaderTimestamp {
