@@ -318,7 +318,6 @@ CMidiEndpointProtocolManager::NegotiateAndRequestMetadata(
     // 
     // For now, we'll do this synchronously, but it should be in a separate thread in the future
 
-    // create the queue worker thread
 
     CMidiEndpointProtocolNegotiationWorker worker;
 
@@ -333,7 +332,9 @@ CMidiEndpointProtocolManager::NegotiateAndRequestMetadata(
     //m_queueWorkerThread.detach();
 
 
-    // Synchronous for testing
+    // TODO: create and spin off a worker thread for this.
+
+    // Synchronous for first implementation
     return worker.Start(
         DeviceInterfaceId, 
         PreferToSendJRTimestampsToEndpoint, 
