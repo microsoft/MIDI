@@ -129,7 +129,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                 while (_continueWatchingDevice)
                 {
-                    Thread.Sleep(125);
+                    Thread.Sleep(100);
                 }
 
             });
@@ -208,12 +208,16 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                 UInt32 index = 0;
 
+
                 MonitorEndpointConnectionStatusInTheBackground(endpointId);
 
                 bool continueWaiting = true;
+                UInt64 outOfOrderMessageCount = 0;
 
                 var messageListener = new Thread(() =>
                 {
+                    UInt64 lastMessageTimestamp = 0;
+
                     connection.MessageReceived += (s, e) =>
                     {
                         // helps prevent any race conditions with main loop and its output
@@ -228,6 +232,14 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                             ReceivedTimestamp = MidiClock.Now,
                             MessageTimestamp = e.Timestamp
                         };
+
+                        if (e.Timestamp <  lastMessageTimestamp)
+                        {
+                            outOfOrderMessageCount++;
+                        }
+
+                        lastMessageTimestamp = e.Timestamp;
+
 
                         receivedMessage.NumWords = e.FillWords(out receivedMessage.Word0, out receivedMessage.Word1, out receivedMessage.Word2, out receivedMessage.Word3);
 
@@ -247,6 +259,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 });
 
                 messageListener.Start();
+
+
 
 
                 // open the connection
@@ -280,7 +294,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                             {
                                 int iter = 0;
 
-                                while (m_receivedMessagesQueue.Count > 0 && iter < 50)
+                                while (m_receivedMessagesQueue.Count > 0 && iter < 10)
                                 {
                                     iter++; // we need to take a break if we're being spammed, so this tracks iterations
 
@@ -350,6 +364,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 if (!_hasEndpointDisconnected)
                 {
                     session.DisconnectEndpointConnection(connection.ConnectionId);
+                }
+
+                if (outOfOrderMessageCount > 0)
+                {
+                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(outOfOrderMessageCount.ToString() + " messages received out of sent timestamp order."));
+                }
+                else
+                {
+                    AnsiConsole.MarkupLine("No messages received out of expected timestamp order.");
                 }
 
                 if (captureWriter != null)
