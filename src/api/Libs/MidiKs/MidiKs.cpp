@@ -156,6 +156,7 @@ KSMidiDevice::PinSetState(
     return S_OK;
 }
 
+_Use_decl_annotations_
 HRESULT
 KSMidiDevice::ConfigureLoopedBuffer(ULONG& BufferSize
 )
