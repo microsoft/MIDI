@@ -583,6 +583,24 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Include the full list of raw property keys and values for the endpoint. Typically useful only for debugging purposes..
+        /// </summary>
+        internal static string ParameterEndpointPropertiesIncludeRaw {
+            get {
+                return ResourceManager.GetString("ParameterEndpointPropertiesIncludeRaw", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Include additional detailed information about the endpoint..
+        /// </summary>
+        internal static string ParameterEndpointPropertiesVerbose {
+            get {
+                return ResourceManager.GetString("ParameterEndpointPropertiesVerbose", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The direction of data flow for the endpoints to list.
         /// </summary>
         internal static string ParameterEnumEndpointsDirection {

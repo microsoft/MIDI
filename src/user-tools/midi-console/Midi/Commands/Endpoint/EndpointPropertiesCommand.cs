@@ -17,10 +17,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
     {
         public sealed class Settings : EndpointCommandSettings
         {
-            [LocalizedDescription("ParameterMonitorEndpointVerbose")]
+            [LocalizedDescription("ParameterEndpointPropertiesVerbose")]
             [CommandOption("-v|--verbose")]
             [DefaultValue(false)]
             public bool Verbose { get; set; }
+
+            [LocalizedDescription("ParameterEndpointPropertiesIncludeRaw")]
+            [CommandOption("-r|--include-raw-properties|--include-raw")]
+            [DefaultValue(false)]
+            public bool IncludeRaw { get; set; }
         }
 
 
@@ -134,15 +139,14 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 }
 
                 table.AddEmptyRow();
+                table.AddEmptyRow();
                 table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("Function Blocks"), "");
+                table.AddEmptyRow();
                 table.AddRow("Static Function Blocks?", di.HasStaticFunctionBlocks.ToString());
                 table.AddRow("Declared Function Block Count", di.FunctionBlockCount.ToString());
 
                 if (di.FunctionBlocks.Count > 0)
                 {
-                    table.AddEmptyRow();
-                    //table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("Function Blocks"), "");
-
                     foreach (var functionBlock in di.FunctionBlocks.Values)
                     {
                         if (!settings.Verbose)
@@ -325,16 +329,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 }
 
 
-                if (settings.Verbose)
-                {
-                    // spit out all properties by key / value in a new table
-
-                    table.AddEmptyRow();
-                    table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("All Properties"), "");
-
-                    DisplayProperties(table, di.Properties);
-                }
-
                 // container
 
                 var containerInfo = di.GetContainerInformation();
@@ -397,6 +391,16 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 else
                 {
                     table.AddRow(AnsiMarkupFormatter.FormatError("No matching container found"), "");
+                }
+
+                if (settings.IncludeRaw)
+                {
+                    // spit out all properties by key / value in a new table
+
+                    table.AddEmptyRow();
+                    table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("All Properties"), "");
+
+                    DisplayProperties(table, di.Properties);
                 }
 
                 AnsiConsole.Write(table);
