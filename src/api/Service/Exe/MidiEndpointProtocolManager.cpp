@@ -272,6 +272,10 @@ CMidiEndpointProtocolNegotiationWorker::Start(
         // we didn't receive everything, but that's not a failure condition for this.
     }
 
+    m_endpoint->Cleanup();
+
+    m_endpoint.reset();
+
     return S_OK;
 }
 
@@ -351,6 +355,8 @@ CMidiEndpointProtocolManager::NegotiateAndRequestMetadata(
 HRESULT 
 CMidiEndpointProtocolManager::Cleanup()
 {
+    // TODO terminate any open threads and ensure they close up
+
     m_clientManager.reset();
     m_deviceManager.reset();
 

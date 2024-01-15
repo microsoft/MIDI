@@ -23,6 +23,7 @@ namespace MIDI_ROOT_NAMESPACE_IDL
     [static_name(MIDI_MIDL_INTERFACE_NAME(IMidiOutPortStatics), 065CC3E9-0F88-448B-9B64-A95826C65B8F)]
     runtimeclass MidiOutPort : [default] IMidiOutPort, Windows.Foundation.IClosable
     {
-
+        static Windows.Foundation.IAsyncOperation<IMidiOutPort> FromIdAsync(String deviceId);
+        static String GetDeviceSelector();
     }
 }

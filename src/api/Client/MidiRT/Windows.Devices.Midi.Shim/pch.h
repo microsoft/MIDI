@@ -14,6 +14,10 @@
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Storage.Streams.h>
 
+// work around the define in base windows
+#undef SendMessage
+
+
 namespace foundation = ::winrt::Windows::Foundation;
 namespace collections = ::winrt::Windows::Foundation::Collections;
 namespace streams = ::winrt::Windows::Storage::Streams;
@@ -29,3 +33,5 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP {}
 namespace implementation = ::winrt::MIDI_ROOT_NAMESPACE_CPP::implementation;
 namespace midi1 = ::winrt::MIDI_ROOT_NAMESPACE_CPP;
 
+#include "MidiAbstraction.h"
+#include "Midi2MidiSrvAbstraction.h"
