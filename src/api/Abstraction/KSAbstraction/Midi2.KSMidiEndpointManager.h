@@ -1,4 +1,11 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
 #pragma once
 
 using namespace winrt::Windows::Devices::Enumeration;
@@ -54,5 +61,9 @@ private:
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::Stopped_revoker m_DeviceStopped;
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::EnumerationCompleted_revoker m_DeviceEnumerationCompleted;
     wil::unique_event m_EnumerationCompleted{wil::EventOptions::None};
+
+    // may want to change this to the actual json object.
+    winrt::Windows::Data::Json::JsonObject m_jsonObject{};
+    HRESULT ApplyUserConfiguration(_In_ std::wstring deviceInterfaceId);
 
 };

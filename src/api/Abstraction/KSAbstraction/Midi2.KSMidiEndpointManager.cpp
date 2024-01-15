@@ -30,7 +30,7 @@ HRESULT
 CMidi2KSMidiEndpointManager::Initialize(
     IUnknown* midiDeviceManager,
     IUnknown* midiEndpointProtocolManager,
-    LPCWSTR /*configurationJson*/
+    LPCWSTR configurationJson
 )
 {
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);
@@ -38,6 +38,24 @@ CMidi2KSMidiEndpointManager::Initialize(
 
     RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
     RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManagerInterface), (void**)&m_MidiProtocolManager));
+
+    try
+    {
+        if (configurationJson != nullptr)
+        {
+            winrt::hstring jsonString{ configurationJson };
+
+            if (jsonString != L"")
+            {
+                m_jsonObject = json::JsonObject::Parse(configurationJson);
+            }
+        }
+    }
+    catch (...)
+    {
+        m_jsonObject = nullptr;
+    }
+
 
     winrt::hstring deviceSelector(
         L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
@@ -403,31 +421,40 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
                                                             (LPWSTR)&newDeviceInterfaceId,
                                                             deviceInterfaceIdMaxSize));
 
+        
+        // Now we deal with metadata provided in-protocol and also by the user
 
-        // clear any of the endpoint-discovered properties that hung around from the last time
-        // we saw this device, if we've ever seen it.
-        m_MidiDeviceManager->DeleteAllEndpointInProtocolDiscoveredProperties(newDeviceInterfaceId);
-
-
-        // we only perform protocol negotiation if it's a bidirectional UMP (native) endpoint. We
-        // don't want to perform this on translated byte stream endpoints
-        if (MidiPin->Flow == MidiFlowBidirectional && MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET)
+        if (SUCCEEDED(MidiPin->SwdCreation))
         {
-            // Required MIDI 2.0 Protocol step
-            // Invoke the protocol negotiator to now capture updated endpoint info.
+            // clear any of the endpoint-discovered properties that hung around from the last time
+            // we saw this device, if we've ever seen it.
+            m_MidiDeviceManager->DeleteAllEndpointInProtocolDiscoveredProperties(newDeviceInterfaceId);
 
-            bool preferToSendJRToEndpoint{ false };
-            bool preferToReceiveJRFromEndpoint{ false };
-            BYTE preferredProtocol{ MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2 };
-            WORD negotiationTimeoutMS{ 5000 };  // this should be much shorter
+            // load settings from the configuration JSON and update properties
+            LOG_IF_FAILED(ApplyUserConfiguration(std::wstring(newDeviceInterfaceId)));
 
-            LOG_IF_FAILED(m_MidiProtocolManager->NegotiateAndRequestMetadata(
-                newDeviceInterfaceId,
-                preferToSendJRToEndpoint,
-                preferToReceiveJRFromEndpoint,
-                preferredProtocol,
-                negotiationTimeoutMS
-            ));
+
+            // we only perform protocol negotiation if it's a bidirectional UMP (native) endpoint. We
+            // don't want to perform this on translated byte stream endpoints
+            if (MidiPin->Flow == MidiFlowBidirectional && MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET)
+            {
+                // Required MIDI 2.0 Protocol step
+                // Invoke the protocol negotiator to now capture updated endpoint info.
+
+                bool preferToSendJRToEndpoint{ false };
+                bool preferToReceiveJRFromEndpoint{ false };
+                BYTE preferredProtocol{ MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2 };
+                WORD negotiationTimeoutMS{ 5000 };  // this should be much shorter
+
+                LOG_IF_FAILED(m_MidiProtocolManager->NegotiateAndRequestMetadata(
+                    newDeviceInterfaceId,
+                    preferToSendJRToEndpoint,
+                    preferToReceiveJRFromEndpoint,
+                    preferredProtocol,
+                    negotiationTimeoutMS
+                ));
+            }
+
         }
 
     }
@@ -442,6 +469,76 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
 
     return S_OK;
 }
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2KSMidiEndpointManager::ApplyUserConfiguration(std::wstring deviceInterfaceId)
+{
+    // if we have no configuration, that's ok
+    if (m_jsonObject == nullptr) return S_OK;
+
+
+    std::vector<DEVPROPERTY> endpointProperties;
+
+    // for now, we only support lookup by the deviceInterfaceId, so this code is easier
+
+    winrt::hstring endpointSettingsKey = winrt::to_hstring(MIDI_CONFIG_JSON_ENDPOINT_IDENTIFIER_SWD) + deviceInterfaceId;
+
+    OutputDebugString(L"\n" __FUNCTION__ L" Key: ");
+    OutputDebugString(endpointSettingsKey.c_str());
+    OutputDebugString(L"\n");
+
+
+    if (m_jsonObject.HasKey(endpointSettingsKey))
+    {
+        json::JsonObject endpointSettings = m_jsonObject.GetNamedObject(endpointSettingsKey);
+
+        // Get the user-specified endpoint name
+        if (endpointSettings != nullptr && endpointSettings.HasKey(MIDI_CONFIG_JSON_ENDPOINT_USER_SUPPLIED_NAME_PROPERTY_KEY))
+        {
+            auto name = endpointSettings.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_USER_SUPPLIED_NAME_PROPERTY_KEY);
+
+            endpointProperties.push_back({ {PKEY_MIDI_UserSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_STRING, static_cast<ULONG>((name.size() + 1) * sizeof(WCHAR)), (PVOID)name.c_str() });
+        }
+
+        // Get the user-specified endpoint description
+        if (endpointSettings != nullptr && endpointSettings.HasKey(MIDI_CONFIG_JSON_ENDPOINT_USER_SUPPLIED_DESCRIPTION_PROPERTY_KEY))
+        {
+            auto description = endpointSettings.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_USER_SUPPLIED_DESCRIPTION_PROPERTY_KEY);
+
+            endpointProperties.push_back({ {PKEY_MIDI_UserSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_STRING, static_cast<ULONG>((description.size() + 1) * sizeof(WCHAR)), (PVOID)description.c_str() });
+        }
+
+        // Get the user-specified multiclient override
+        if (endpointSettings != nullptr && endpointSettings.HasKey(MIDI_CONFIG_JSON_ENDPOINT_FORCE_SINGLE_CLIENT_PROPERTY_KEY))
+        {
+            auto forceSingleClient = endpointSettings.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_FORCE_SINGLE_CLIENT_PROPERTY_KEY);
+
+            if (forceSingleClient)
+            {
+                DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
+
+                endpointProperties.push_back({ {PKEY_MIDI_SupportsMulticlient, DEVPROP_STORE_SYSTEM, nullptr},
+                        DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), (PVOID)&devPropFalse });
+            }
+        }
+
+        // apply supported property changes.
+        if (endpointProperties.size() > 0)
+        {
+            return m_MidiDeviceManager->UpdateEndpointProperties(
+                (LPCWSTR)deviceInterfaceId.c_str(),
+                (ULONG)endpointProperties.size(),
+                (PVOID)endpointProperties.data());
+        }
+    }
+
+    return S_OK;
+}
+
 
 _Use_decl_annotations_
 HRESULT CMidi2KSMidiEndpointManager::OnDeviceRemoved(DeviceWatcher, DeviceInformationUpdate device)
