@@ -28,3 +28,4 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP {}
 
 namespace implementation = ::winrt::MIDI_ROOT_NAMESPACE_CPP::implementation;
 namespace midi1 = ::winrt::MIDI_ROOT_NAMESPACE_CPP;
+

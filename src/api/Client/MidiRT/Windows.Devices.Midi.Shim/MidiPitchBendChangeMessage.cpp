@@ -18,25 +18,11 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
     {
         throw hresult_not_implemented();
     }
-    uint8_t MidiPitchBendChangeMessage::Channel()
-    {
-        throw hresult_not_implemented();
-    }
-    uint16_t MidiPitchBendChangeMessage::Bend()
-    {
-        throw hresult_not_implemented();
-    }
-    foundation::TimeSpan MidiPitchBendChangeMessage::Timestamp()
-    {
-        throw hresult_not_implemented();
-    }
-    midi1::MidiMessageType MidiPitchBendChangeMessage::Type()
-    {
-        throw hresult_not_implemented();
-    }
+
+
+    // TODO: Need to implement this and any methods required to populate it
     streams::IBuffer MidiPitchBendChangeMessage::RawData()
     {
-        throw hresult_not_implemented();
+        return nullptr;
     }
-
 }

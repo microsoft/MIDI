@@ -18,21 +18,11 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
     {
         throw hresult_not_implemented();
     }
-    uint8_t MidiSongSelectMessage::Song()
-    {
-        throw hresult_not_implemented();
-    }
-    foundation::TimeSpan MidiSongSelectMessage::Timestamp()
-    {
-        throw hresult_not_implemented();
-    }
-    midi1::MidiMessageType MidiSongSelectMessage::Type()
-    {
-        throw hresult_not_implemented();
-    }
+
+
+    // TODO: Need to implement this and any methods required to populate it
     streams::IBuffer MidiSongSelectMessage::RawData()
     {
-        throw hresult_not_implemented();
+        return nullptr;
     }
-
 }

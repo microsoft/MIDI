@@ -19,29 +19,9 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
         throw hresult_not_implemented();
     }
 
-    uint8_t MidiControlChangeMessage::Channel()
-    {
-        throw hresult_not_implemented();
-    }
-    uint8_t MidiControlChangeMessage::Controller()
-    {
-        throw hresult_not_implemented();
-    }
-    uint8_t MidiControlChangeMessage::ControlValue()
-    {
-        throw hresult_not_implemented();
-    }
-    foundation::TimeSpan MidiControlChangeMessage::Timestamp()
-    {
-        throw hresult_not_implemented();
-    }
-    midi1::MidiMessageType MidiControlChangeMessage::Type()
-    {
-        throw hresult_not_implemented();
-    }
+    // TODO: Need to implement this and any methods required to populate it
     streams::IBuffer MidiControlChangeMessage::RawData()
     {
-        throw hresult_not_implemented();
+        return nullptr;
     }
-
 }

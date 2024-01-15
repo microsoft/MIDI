@@ -18,29 +18,11 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
     {
         throw hresult_not_implemented();
     }
-    uint8_t MidiNoteOnMessage::Channel()
-    {
-        throw hresult_not_implemented();
-    }
-    uint8_t MidiNoteOnMessage::Note()
-    {
-        throw hresult_not_implemented();
-    }
-    uint8_t MidiNoteOnMessage::Velocity()
-    {
-        throw hresult_not_implemented();
-    }
-    foundation::TimeSpan MidiNoteOnMessage::Timestamp()
-    {
-        throw hresult_not_implemented();
-    }
-    midi1::MidiMessageType MidiNoteOnMessage::Type()
-    {
-        throw hresult_not_implemented();
-    }
+
+
+    // TODO: Need to implement this and any methods required to populate it
     streams::IBuffer MidiNoteOnMessage::RawData()
     {
-        throw hresult_not_implemented();
+        return nullptr;
     }
-
 }

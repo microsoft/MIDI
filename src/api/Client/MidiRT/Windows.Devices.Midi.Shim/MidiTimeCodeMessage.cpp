@@ -18,25 +18,11 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
     {
         throw hresult_not_implemented();
     }
-    uint8_t MidiTimeCodeMessage::FrameType()
-    {
-        throw hresult_not_implemented();
-    }
-    uint8_t MidiTimeCodeMessage::Values()
-    {
-        throw hresult_not_implemented();
-    }
-    foundation::TimeSpan MidiTimeCodeMessage::Timestamp()
-    {
-        throw hresult_not_implemented();
-    }
-    midi1::MidiMessageType MidiTimeCodeMessage::Type()
-    {
-        throw hresult_not_implemented();
-    }
+
+
+    // TODO: Need to implement this and any methods required to populate it
     streams::IBuffer MidiTimeCodeMessage::RawData()
     {
-        throw hresult_not_implemented();
+        return nullptr;
     }
-
 }

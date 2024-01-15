@@ -17,13 +17,21 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
         MidiProgramChangeMessage() = default;
 
         MidiProgramChangeMessage(_In_ uint8_t channel, _In_ uint8_t program);
-        uint8_t Channel();
-        uint8_t Program();
 
-        foundation::TimeSpan Timestamp();
-        midi1::MidiMessageType Type();
+        uint8_t Channel() { return m_channel; }
+        uint8_t Program() { return m_program; }
+
+
+        foundation::TimeSpan Timestamp() { return m_timestamp; }
+        midi1::MidiMessageType Type() { return m_type; }
         streams::IBuffer RawData();
 
+    private:
+        foundation::TimeSpan m_timestamp{};
+        midi1::MidiMessageType m_type{ midi1::MidiMessageType::None };
+
+        uint8_t m_channel{};
+        uint8_t m_program{};
     };
 }
 namespace winrt::MIDI_ROOT_NAMESPACE_CPP::factory_implementation

@@ -18,29 +18,11 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
     {
         throw hresult_not_implemented();
     }
-    uint8_t MidiPolyphonicKeyPressureMessage::Channel()
-    {
-        throw hresult_not_implemented();
-    }
-    uint8_t MidiPolyphonicKeyPressureMessage::Note()
-    {
-        throw hresult_not_implemented();
-    }
-    uint8_t MidiPolyphonicKeyPressureMessage::Pressure()
-    {
-        throw hresult_not_implemented();
-    }
-    foundation::TimeSpan MidiPolyphonicKeyPressureMessage::Timestamp()
-    {
-        throw hresult_not_implemented();
-    }
-    midi1::MidiMessageType MidiPolyphonicKeyPressureMessage::Type()
-    {
-        throw hresult_not_implemented();
-    }
+
+
+    // TODO: Need to implement this and any methods required to populate it
     streams::IBuffer MidiPolyphonicKeyPressureMessage::RawData()
     {
-        throw hresult_not_implemented();
+        return nullptr;
     }
-
 }

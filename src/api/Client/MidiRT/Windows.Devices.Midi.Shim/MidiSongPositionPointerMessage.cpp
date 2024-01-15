@@ -18,21 +18,11 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
     {
         throw hresult_not_implemented();
     }
-    uint16_t MidiSongPositionPointerMessage::Beats()
-    {
-        throw hresult_not_implemented();
-    }
-    foundation::TimeSpan MidiSongPositionPointerMessage::Timestamp()
-    {
-        throw hresult_not_implemented();
-    }
-    midi1::MidiMessageType MidiSongPositionPointerMessage::Type()
-    {
-        throw hresult_not_implemented();
-    }
+
+
+    // TODO: Need to implement this and any methods required to populate it
     streams::IBuffer MidiSongPositionPointerMessage::RawData()
     {
-        throw hresult_not_implemented();
+        return nullptr;
     }
-
 }
