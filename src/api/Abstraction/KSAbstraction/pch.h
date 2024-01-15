@@ -1,4 +1,11 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
 
 #pragma once
 
@@ -11,6 +18,7 @@
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
+#include <winrt/Windows.Data.Json.h>
 #include <wrl\module.h>
 #include <wrl\event.h>
 #include <ks.h>
@@ -22,6 +30,9 @@
 #include <wil\tracelogging.h>
 
 #include <SDKDDKVer.h>
+
+namespace json = winrt::Windows::Data::Json;
+
 
 #define _ATL_APARTMENT_THREADED
 #define _ATL_NO_AUTOMATIC_NAMESPACE
@@ -46,6 +57,7 @@
 #include "strsafe.h"
 
 #include "abstraction_defs.h"
+#include "midi_config_json.h"
 
 #include "Midi2KSAbstraction_i.c"
 #include "Midi2KSAbstraction.h"
