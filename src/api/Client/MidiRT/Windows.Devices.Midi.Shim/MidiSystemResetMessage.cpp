@@ -13,17 +13,11 @@
 
 namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
 {
-    foundation::TimeSpan MidiSystemResetMessage::Timestamp()
-    {
-        throw hresult_not_implemented();
-    }
-    midi1::MidiMessageType MidiSystemResetMessage::Type()
-    {
-        throw hresult_not_implemented();
-    }
+
+
+    // TODO: Need to implement this and any methods required to populate it
     streams::IBuffer MidiSystemResetMessage::RawData()
     {
-        throw hresult_not_implemented();
+        return nullptr;
     }
-
 }

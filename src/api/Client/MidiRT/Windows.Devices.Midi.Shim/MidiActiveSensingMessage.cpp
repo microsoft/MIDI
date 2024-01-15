@@ -13,16 +13,10 @@
 
 namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
 {
-    winrt::Windows::Foundation::TimeSpan MidiActiveSensingMessage::Timestamp()
-    {
-        throw hresult_not_implemented();
-    }
-    midi1::MidiMessageType MidiActiveSensingMessage::Type()
-    {
-        throw hresult_not_implemented();
-    }
+
+    // TODO: Need to implement this and any methods required to populate it
     streams::IBuffer MidiActiveSensingMessage::RawData()
     {
-        throw hresult_not_implemented();
+        return nullptr;
     }
 }

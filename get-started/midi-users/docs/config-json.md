@@ -94,7 +94,7 @@ Valid properties you can set across all supported endpoints
 | -------- | ---- | ----------- |
 | `userSuppliedName` | Quoted Text | The name you want to use for the endpoint. This will override the name displayed in correctly-coded applications, but won't necessarily change what you see in Device Manager. These names should be relatively short so they display fully in all/most applications, but meaningful to you. |
 | `userSuppliedDescription` | Quoted Text | A text description and/or notes about the endpoint. Applications may or may not use this data |
-| `forceSingleClientOnly` | Boolean true/false (no quotes) | Most endpoints are multi-client (more than one applicatation can use them simultaneously) by default. This is for forcing an endpoint to be single-client only (true). It's unusual to need this, but a typical use may be to disable multi-client for a device which has a custom driver which doesn't gracefully handle multiple client applications at the same time. |
+| `forceSingleClientOnly` | Boolean true/false (no quotes) | Most endpoints are multi-client (more than one application can use them simultaneously) by default. This setting is for forcing an endpoint to be single-client only (a value of true). It's unusual to need this, but a typical use may be to disable multi-client for a device which has a custom driver which doesn't gracefully handle multiple client applications at the same time. |
 
 ## Plugin-specific settings
 

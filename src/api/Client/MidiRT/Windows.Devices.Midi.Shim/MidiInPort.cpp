@@ -13,6 +13,28 @@
 
 namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
 {
+    _Use_decl_annotations_
+    foundation::IAsyncOperation<midi1::MidiInPort> MidiInPort::FromIdAsync(winrt::hstring deviceId)
+    {
+
+    }
+
+    winrt::hstring MidiInPort::GetDeviceSelector()
+    {
+        // TODO
+        return winrt::hstring{};
+    }
+
+    _Use_decl_annotations_
+    HRESULT MidiInPort::Callback(PVOID data, UINT size, LONGLONG timestamp, LONGLONG context)
+    {
+        UNREFERENCED_PARAMETER(data);
+        UNREFERENCED_PARAMETER(size);
+        UNREFERENCED_PARAMETER(timestamp);
+        UNREFERENCED_PARAMETER(context);
+    }
+
+
     hstring MidiInPort::DeviceId()
     {
         throw hresult_not_implemented();

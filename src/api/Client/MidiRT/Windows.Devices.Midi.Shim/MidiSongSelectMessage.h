@@ -18,12 +18,18 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
 
         MidiSongSelectMessage(_In_ uint8_t song);
 
-        uint8_t Song();
+        uint8_t Song() { return m_song; }
 
-        foundation::TimeSpan Timestamp();
-        midi1::MidiMessageType Type();
+
+        foundation::TimeSpan Timestamp() { return m_timestamp; }
+        midi1::MidiMessageType Type() { return m_type; }
         streams::IBuffer RawData();
 
+    private:
+        foundation::TimeSpan m_timestamp{};
+        midi1::MidiMessageType m_type{ midi1::MidiMessageType::None };
+
+        uint8_t m_song{};
     };
 }
 namespace winrt::MIDI_ROOT_NAMESPACE_CPP::factory_implementation

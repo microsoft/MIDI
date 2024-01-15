@@ -23,6 +23,10 @@ namespace MIDI_ROOT_NAMESPACE_IDL
     [static_name(MIDI_MIDL_INTERFACE_NAME(IMidiInPortStatics), 44C439DC-67FF-4A6E-8BAC-FDB6610CF296)]
     runtimeclass MidiInPort : Windows.Foundation.IClosable
     {
+        static Windows.Foundation.IAsyncOperation<MidiInPort> FromIdAsync(String deviceId);
+        static String GetDeviceSelector();
+
+
         String DeviceId{ get; };
 
         event Windows.Foundation.TypedEventHandler<MidiInPort, MidiMessageReceivedEventArgs> MessageReceived;

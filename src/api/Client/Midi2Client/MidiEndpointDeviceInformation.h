@@ -59,7 +59,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring EndpointSuppliedName() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_EndpointProvidedName, L""); }
         winrt::hstring UserSuppliedName() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UserSuppliedEndpointName, L""); }
 
-        winrt::hstring TransportId() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_AbstractionLayer, L""); }
+        winrt::hstring TransportId() const noexcept { return GetGuidPropertyAsString(STRING_PKEY_MIDI_AbstractionLayer, L""); }
         winrt::hstring TransportMnemonic() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_TransportMnemonic, L""); }
 
         winrt::hstring TransportSuppliedSerialNumber() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_SerialNumber, L"");}
@@ -132,6 +132,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::guid GetGuidProperty(
             _In_ winrt::hstring key,
             _In_ winrt::guid defaultValue) const noexcept;
+
+        winrt::hstring GetGuidPropertyAsString(
+            _In_ winrt::hstring key,
+            _In_ winrt::hstring defaultValue) const noexcept;
 
 
         uint8_t GetByteProperty(

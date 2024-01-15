@@ -485,9 +485,9 @@ CMidi2KSMidiEndpointManager::ApplyUserConfiguration(std::wstring deviceInterface
 
     winrt::hstring endpointSettingsKey = winrt::to_hstring(MIDI_CONFIG_JSON_ENDPOINT_IDENTIFIER_SWD) + deviceInterfaceId;
 
-    OutputDebugString(L"\n" __FUNCTION__ L" Key: ");
-    OutputDebugString(endpointSettingsKey.c_str());
-    OutputDebugString(L"\n");
+    //OutputDebugString(L"\n" __FUNCTION__ L" Key: ");
+    //OutputDebugString(endpointSettingsKey.c_str());
+    //OutputDebugString(L"\n");
 
 
     if (m_jsonObject.HasKey(endpointSettingsKey))

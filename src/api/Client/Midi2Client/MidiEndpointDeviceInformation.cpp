@@ -412,6 +412,28 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
     }
 
+    _Use_decl_annotations_
+    winrt::hstring MidiEndpointDeviceInformation::GetGuidPropertyAsString(
+        winrt::hstring key,
+        winrt::hstring defaultValue) const noexcept
+    {
+        if (!m_properties.HasKey(key)) return defaultValue;
+
+        try
+        {
+            auto guid = winrt::unbox_value<winrt::guid>(m_properties.Lookup(key));
+
+            auto s = GuidToString(guid);
+
+            return winrt::hstring(s);
+
+        }
+        catch (...)
+        {
+            return defaultValue;
+        }
+    }
+
 
     _Use_decl_annotations_
     uint8_t MidiEndpointDeviceInformation::GetByteProperty(

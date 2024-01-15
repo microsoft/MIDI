@@ -19,24 +19,10 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
         throw hresult_not_implemented();
     }
 
-    uint8_t MidiChannelPressureMessage::Channel()
-    {
-        throw hresult_not_implemented();
-    }
-    uint8_t MidiChannelPressureMessage::Pressure()
-    {
-        throw hresult_not_implemented();
-    }
-    foundation::TimeSpan MidiChannelPressureMessage::Timestamp()
-    {
-        throw hresult_not_implemented();
-    }
-    midi1::MidiMessageType MidiChannelPressureMessage::Type()
-    {
-        throw hresult_not_implemented();
-    }
+
+    // TODO: Need to implement this and any methods required to populate it
     streams::IBuffer MidiChannelPressureMessage::RawData()
     {
-        throw hresult_not_implemented();
+        return nullptr;
     }
 }

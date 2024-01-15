@@ -16,9 +16,13 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
     {
         MidiContinueMessage() = default;
 
-        foundation::TimeSpan Timestamp();
-        midi1::MidiMessageType Type();
+        foundation::TimeSpan Timestamp() { return m_timestamp; }
+        midi1::MidiMessageType Type() { return m_type; }
         streams::IBuffer RawData();
+
+    private:
+        foundation::TimeSpan m_timestamp{};
+        midi1::MidiMessageType m_type{};
     };
 }
 namespace winrt::MIDI_ROOT_NAMESPACE_CPP::factory_implementation
