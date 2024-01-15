@@ -21,7 +21,7 @@ CMidi2MidiSrv::Initialize(
         TraceLoggingPointer(this, "this")
         );
 
-    MIDISRV_CLIENTCREATION_PARAMS creationParams{ 0 };
+    MIDISRV_CLIENTCREATION_PARAMS creationParams{ };
     PMIDISRV_CLIENT client{ nullptr };
     wil::unique_rpc_binding bindingHandle;
 
@@ -48,8 +48,13 @@ CMidi2MidiSrv::Initialize(
 
     creationParams.Flow = Flow;
     creationParams.DataFormat = CreationParams->DataFormat;
+
     // Todo: client side buffering requests to come from some service setting?
-    creationParams.BufferSize = PAGE_SIZE;
+    // - See https://github.com/microsoft/MIDI/issues/219 for details
+    
+    //creationParams.BufferSize = PAGE_SIZE;
+    creationParams.BufferSize = 512;    // for debugging DON'T LEAVE THIS IN
+
 
     RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
 
