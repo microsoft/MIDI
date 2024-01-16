@@ -341,7 +341,7 @@ std::wstring CMidiConfigurationManager::GetCurrentConfigurationFileName() noexce
 
 HRESULT CMidiConfigurationManager::Initialize()
 {
-    //OutputDebugString(L"" __FUNCTION__);
+    OutputDebugString(L"\n" __FUNCTION__);
 
     // load the current configuration
 
@@ -371,13 +371,10 @@ HRESULT CMidiConfigurationManager::Initialize()
             // try to read the text from the file
             fileContents = winrt::Windows::Storage::FileIO::ReadTextAsync(file).get();
 
-
-            //OutputDebugString(L"" __FUNCTION__);
-            //OutputDebugString(fileContents.c_str());
         }
         catch (...)
         {
-            OutputDebugString(L"Exception opening json config file");
+            OutputDebugString(L"Exception opening json config file\n");
 
             // file does not exist or we can't open it
             // we don't fail if no configuration file, we just don't config anything
@@ -397,20 +394,28 @@ HRESULT CMidiConfigurationManager::Initialize()
 
             try
             {
-                m_jsonObject = json::JsonObject::Parse(fileContents);
+                if (json::JsonObject::TryParse(fileContents, m_jsonObject))
+                {
+                    // worked
+                    OutputDebugString(L"Parsing json worked\n");
+                }
+                else
+                {
+                    OutputDebugString(L"Parsing json failed\n");
+                }
             }
             CATCH_LOG()
         }
         else
         {
-            OutputDebugString(L"Config file contents are empty");
+            OutputDebugString(L"Config file contents are empty\n");
         }
 
     }
     else
     {
         // config file is missing
-        OutputDebugString(L"Config file is missing");
+        OutputDebugString(L"Config file is missing, but that's ok.\n");
 
         return S_OK;
     }
@@ -422,31 +427,37 @@ HRESULT CMidiConfigurationManager::Initialize()
 _Use_decl_annotations_
 std::wstring CMidiConfigurationManager::GetConfigurationForTransportAbstraction(GUID abstractionGuid) const noexcept
 {
-    OutputDebugString(L"" __FUNCTION__);
+    OutputDebugString(L"\n" __FUNCTION__);
 
-    auto key = GuidToString(abstractionGuid);
-
-//    OutputDebugString(key.c_str());
-
-    if (m_jsonObject != nullptr)
+    try
     {
-        // probably need to normalize these to ignore case. Not sure if WinRT Json dictionary is case-sensitive
-        if (m_jsonObject.HasKey(winrt::to_hstring(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT)))
+        OutputDebugString(L"" __FUNCTION__);
+
+        auto key = GuidToString(abstractionGuid);
+
+        //    OutputDebugString(key.c_str());
+
+        if (m_jsonObject != nullptr)
         {
-            auto plugins = m_jsonObject.GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT);
-
-            if (plugins.HasKey(key))
+            // probably need to normalize these to ignore case. Not sure if WinRT Json dictionary is case-sensitive
+            if (m_jsonObject.HasKey(winrt::to_hstring(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT)))
             {
-                auto thisPlugin = plugins.GetNamedObject(key);
+                auto plugins = m_jsonObject.GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT);
 
-                std::wstring jsonString = (std::wstring)thisPlugin.Stringify();
+                if (plugins.HasKey(key))
+                {
+                    auto thisPlugin = plugins.GetNamedObject(key);
 
-                //OutputDebugString(jsonString.c_str());
+                    std::wstring jsonString = (std::wstring)thisPlugin.Stringify();
 
-                return jsonString;
+                    //OutputDebugString(jsonString.c_str());
+
+                    return jsonString;
+                }
             }
         }
     }
+    CATCH_LOG();
 
     return L"";
 }
@@ -456,31 +467,37 @@ std::wstring CMidiConfigurationManager::GetConfigurationForTransportAbstraction(
 _Use_decl_annotations_
 std::wstring CMidiConfigurationManager::GetConfigurationForEndpointProcessingTransform(GUID abstractionGuid) const noexcept
 {
- //   OutputDebugString(L"" __FUNCTION__);
-
-    auto key = GuidToString(abstractionGuid);
-
-//    OutputDebugString(key.c_str());
-
-    if (m_jsonObject != nullptr)
+    OutputDebugString(L"\n" __FUNCTION__);
+    
+    try
     {
-        // probably need to normalize these to ignore case. Not sure if WinRT Json dictionary is case-sensitive
-        if (m_jsonObject.HasKey(winrt::to_hstring(MIDI_CONFIG_JSON_ENDPOINT_PROCESSING_PLUGIN_SETTINGS_OBJECT)))
+        //   OutputDebugString(L"" __FUNCTION__);
+
+        auto key = GuidToString(abstractionGuid);
+
+        //    OutputDebugString(key.c_str());
+
+        if (m_jsonObject != nullptr)
         {
-            auto plugins = m_jsonObject.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_PROCESSING_PLUGIN_SETTINGS_OBJECT);
-
-            if (plugins.HasKey(key))
+            // probably need to normalize these to ignore case. Not sure if WinRT Json dictionary is case-sensitive
+            if (m_jsonObject.HasKey(winrt::to_hstring(MIDI_CONFIG_JSON_ENDPOINT_PROCESSING_PLUGIN_SETTINGS_OBJECT)))
             {
-                auto thisPlugin = plugins.GetNamedObject(key);
+                auto plugins = m_jsonObject.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_PROCESSING_PLUGIN_SETTINGS_OBJECT);
 
-                std::wstring jsonString = (std::wstring)thisPlugin.Stringify();
+                if (plugins.HasKey(key))
+                {
+                    auto thisPlugin = plugins.GetNamedObject(key);
 
-                OutputDebugString(jsonString.c_str());
+                    std::wstring jsonString = (std::wstring)thisPlugin.Stringify();
 
-                return jsonString;
+                    OutputDebugString(jsonString.c_str());
+
+                    return jsonString;
+                }
             }
         }
     }
+    CATCH_LOG();
 
     return L"";
 }
@@ -489,6 +506,7 @@ std::wstring CMidiConfigurationManager::GetConfigurationForEndpointProcessingTra
 
 HRESULT CMidiConfigurationManager::Cleanup() noexcept
 {
+    OutputDebugString(L"\n" __FUNCTION__);
 
 
     return S_OK;

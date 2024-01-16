@@ -139,6 +139,17 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 }
 
 
+
+
+                // todo: we need to break messaging sending out to a bg thread so
+                // we can make it as fast as possible
+                var messageSenderThread = new Thread(() =>
+                { 
+                });
+                
+
+
+
                 UInt64 maxTimestampScheduled = 0;
 
                 AnsiConsole.Progress()
@@ -196,7 +207,14 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                 messageFailures ++;
                             }
 
-                            Thread.Sleep(settings.DelayBetweenMessages);
+                            if (settings.DelayBetweenMessages > 0)
+                            {
+                                Thread.Sleep(settings.DelayBetweenMessages);
+                            }
+                            else
+                            {
+                                // we just tight loop
+                            }
                         }
 
                         if (messageFailures > 0)

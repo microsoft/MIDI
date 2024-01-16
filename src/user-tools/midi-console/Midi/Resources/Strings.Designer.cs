@@ -682,6 +682,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to If you are monitoring very fast input from a device, the display can start to lag behind considerably. In that case, set this to true and messages will be skipped (only on the display output) to try to keep the display output roughly in time with the messages received..
+        /// </summary>
+        internal static string ParameterMonitorEndpointSkipToKeepUp {
+            get {
+                return ResourceManager.GetString("ParameterMonitorEndpointSkipToKeepUp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Provide additional columns of information for each message.
         /// </summary>
         internal static string ParameterMonitorEndpointVerbose {

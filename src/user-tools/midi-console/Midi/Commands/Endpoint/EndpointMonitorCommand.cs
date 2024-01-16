@@ -34,14 +34,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
     {
         // we have this struct so we can separate the relatively fast received processing
         // and its calculations from the comparatively slow displays processing
-        private Queue<ReceivedMidiMessage> m_receivedMessagesQueue = new Queue<ReceivedMidiMessage>();
-        private Queue<ReceivedMidiMessage> m_displayMessageQueue = new Queue<ReceivedMidiMessage>();
-        private Queue<ReceivedMidiMessage> m_fileWriterMessagesQueue = new Queue<ReceivedMidiMessage>();
-
-
-        private static AutoResetEvent m_displayMessageThreadWakeup = new AutoResetEvent(false);
-        private static AutoResetEvent m_fileMessageThreadWakeup = new AutoResetEvent(false);
-        private static AutoResetEvent m_terminateMessageListenerThread = new AutoResetEvent(false);
+        private Queue<ReceivedMidiMessage> m_receivedMessagesQueue = new Queue<ReceivedMidiMessage>(1000);
+        private Queue<ReceivedMidiMessage> m_displayMessageQueue = new Queue<ReceivedMidiMessage>(1000);
+        private Queue<ReceivedMidiMessage> m_fileWriterMessagesQueue = new Queue<ReceivedMidiMessage>(1000);
 
 
 
@@ -84,6 +79,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             [CommandOption("-l|--capture-field-delimiter")]
             [DefaultValue(CaptureFieldDelimiter.Space)]
             public CaptureFieldDelimiter FieldDelimiter { get; set; }
+
+            //[EnumLocalizedDescription("ParameterMonitorEndpointSkipToKeepUp", typeof(CaptureFieldDelimiter))]
+            //[CommandOption("-k|--keep-up-display")]
+            //[DefaultValue(false)]
+            //public bool SkipToKeepUp { get; set; }
 
 
         }
@@ -151,6 +151,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
+            using AutoResetEvent m_displayMessageThreadWakeup = new AutoResetEvent(false);
+            using AutoResetEvent m_fileMessageThreadWakeup = new AutoResetEvent(false);
+            using AutoResetEvent m_messageDispatcherThreadWakeup = new AutoResetEvent(false);
+
+            using AutoResetEvent m_terminateMessageListenerThread = new AutoResetEvent(false);
+
+
             MidiMessageTable displayTable = new MidiMessageTable(settings.Verbose);
 
             bool capturingToFile = false;
@@ -217,6 +224,10 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 UInt64 lastReceivedTimestamp = 0;
                 UInt32 index = 0;
 
+                UInt64 firstMessageReceivedEventTimestamp = 0;
+                UInt64 lastMessageReceivedEventTimestamp = 0;
+                UInt32 countMessagesReceived = 0;
+
 
                 MonitorEndpointConnectionStatusInTheBackground(endpointId);
 
@@ -235,6 +246,14 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                         connection.MessageReceived += (s, e) =>
                         {
+                            // this captures stats to tell us how long it takes to receive and queue messages
+                            lastMessageReceivedEventTimestamp = MidiClock.Now;
+                            if (firstMessageReceivedEventTimestamp == 0) firstMessageReceivedEventTimestamp = lastMessageReceivedEventTimestamp;
+                            countMessagesReceived++;
+
+                            // this captures intended timestamps, not actual
+                            if (startTimestamp == 0) startTimestamp = e.Timestamp;
+
                             // helps prevent any race conditions with main loop and its output
                             if (!continueWaiting) return;
 
@@ -263,6 +282,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                 m_receivedMessagesQueue.Enqueue(receivedMessage);
                             }
 
+                            m_messageDispatcherThreadWakeup.Set();
+
                             if (settings.SingleMessage)
                             {
                                 continueWaiting = false;
@@ -274,12 +295,14 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     messageListener.Start();
 
 
+                    const UInt32 minMessagesToLagBeforeSkip = 10;
+
                     // Console display background thread -----------------------------------------------------
                     var messageConsoleDisplay = new Thread(() =>
                     {
                         while (continueWaiting)
                         {
-                            m_displayMessageThreadWakeup.WaitOne(5000);
+                            if (m_displayMessageQueue.Count == 0) m_displayMessageThreadWakeup.WaitOne(5000);
 
                             if (m_displayMessageQueue.Count > 0)
                             {
@@ -289,6 +312,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                 {
                                     message = m_displayMessageQueue.Dequeue();
                                 }
+
 
                                 if (startTimestamp == 0)
                                 {
@@ -314,7 +338,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                 // set our last received so we can calculate offsets
                                 lastReceivedTimestamp = message.ReceivedTimestamp;
 
-
                                 displayTable.OutputRow(message, offsetMicroseconds);
                             }
 
@@ -324,6 +347,59 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     messageConsoleDisplay.Start();
 
 
+                    var messageDispatcherThread = new Thread(() =>
+                    {
+                        while (continueWaiting)
+                        {
+                            if (m_receivedMessagesQueue.Count == 0) m_messageDispatcherThreadWakeup.WaitOne(5000);
+
+                            if (continueWaiting && m_receivedMessagesQueue.Count > 0)
+                            {
+                                // we load up the various queues here
+
+                                ReceivedMidiMessage message;
+
+                                // pull from the incoming messages queue
+                                lock (m_receivedMessagesQueue)
+                                {
+                                    message = m_receivedMessagesQueue.Dequeue();
+                                }
+
+
+                                //if (settings.SkipToKeepUp && m_displayMessageQueue.Count >= minMessagesToLagBeforeSkip)
+                                //{
+                                //    // display queue is backed up. Skip displaying if user has specified that.
+
+                                //    lock (m_displayMessageQueue)
+                                //    {
+                                //        m_displayMessageQueue.Clear();
+                                //    }
+                                //}
+
+                                // add to the display queue
+                                lock (m_displayMessageQueue)
+                                {
+                                    m_displayMessageQueue.Enqueue(message);
+                                }
+                                m_displayMessageThreadWakeup.Set();
+
+
+                                // add to the file writer queue if we're capturing to file
+                                if (captureWriter != null)
+                                {
+                                    lock (m_fileWriterMessagesQueue)
+                                    {
+                                        m_fileWriterMessagesQueue.Enqueue(message);
+                                    }
+                                    m_fileMessageThreadWakeup.Set();
+                                }
+                            }
+                        }
+
+                    });
+                    messageDispatcherThread.Start();
+
+
                     // File writing background thread -----------------------------------------------------
                     if (captureWriter != null)
                     {
@@ -331,7 +407,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         {
                             while (continueWaiting)
                             {
-                                m_fileMessageThreadWakeup.WaitOne(5000);
+                                if (m_fileWriterMessagesQueue.Count == 0) m_fileMessageThreadWakeup.WaitOne(5000);
 
                                 if (m_fileWriterMessagesQueue.Count > 0)
                                 {
@@ -355,7 +431,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                     }
 
                                     WriteMessageToFile(settings, captureWriter, message);
-
                                 }
 
                                 //Thread.Sleep(0);
@@ -365,7 +440,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     }
 
 
-                    // Main UI loop -----------------------------------------------------
+                    // Main UI loop and moving messages to output queues -----------------------------------------
                     while (continueWaiting)
                     {
                         if (Console.KeyAvailable)
@@ -380,6 +455,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                 m_terminateMessageListenerThread.Set();
                                 m_fileMessageThreadWakeup.Set();
                                 m_displayMessageThreadWakeup.Set();
+                                m_messageDispatcherThreadWakeup.Set();
 
                                 AnsiConsole.WriteLine();
                                 AnsiConsole.MarkupLine("🛑 " + Strings.MonitorEscapePressedMessage);
@@ -393,41 +469,12 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                             m_terminateMessageListenerThread.Set();
                             m_displayMessageThreadWakeup.Set();
                             m_fileMessageThreadWakeup.Set();
+                            m_messageDispatcherThreadWakeup.Set();
 
                             AnsiConsole.MarkupLine("❎ " + AnsiMarkupFormatter.FormatError(Strings.EndpointDisconnected));
                         }
-                        else if (continueWaiting && m_receivedMessagesQueue.Count > 0) 
-                        {
-                            // we load up the various queues here
-
-                            ReceivedMidiMessage message;
-
-                            // pull from the incoming messages queue
-                            lock (m_receivedMessagesQueue)
-                            {
-                                message = m_receivedMessagesQueue.Dequeue();
-                            }
-
-
-                            // add to the display queue
-                            lock (m_displayMessageQueue)
-                            {
-                                m_displayMessageQueue.Enqueue(message);
-                            }
-                            m_displayMessageThreadWakeup.Set();
-
-                            // add to the file writer queue if we're capturing to file
-                            if (captureWriter != null)
-                            {
-                                lock (m_fileWriterMessagesQueue)
-                                {
-                                    m_fileWriterMessagesQueue.Enqueue(message);
-                                }
-                                m_fileMessageThreadWakeup.Set();
-                            }
-                        }
                        
-                        if (continueWaiting) Thread.Sleep(10); 
+                        if (continueWaiting) Thread.Sleep(100); 
                     }
                 }
                 else
@@ -444,7 +491,55 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     session.DisconnectEndpointConnection(connection.ConnectionId);
                 }
 
-                // Summary information
+                // Summary information ---------------------------------------------------------------------------------
+
+                if (lastMessageReceivedEventTimestamp >= firstMessageReceivedEventTimestamp)
+                {
+                    string message = "➡️ ";
+
+                    if (countMessagesReceived == 0)
+                    {
+                        message += "[red]No[/] messages received";
+                    }
+                    else if (countMessagesReceived == 1)
+                    {
+                        message += "[green]One[/] message received";
+                    }
+                    else
+                    {
+                        message += $"[steelblue1]{countMessagesReceived.ToString("N0")}[/] messages received";
+                    }
+
+                    // calculate total receive time, not total display time
+
+                    UInt64 totalTicks = lastMessageReceivedEventTimestamp - firstMessageReceivedEventTimestamp;
+                    double totalSeconds = MidiClock.ConvertTimestampToMilliseconds(totalTicks) / 1000;
+
+                    message += $" and processed over [steelblue1]{totalSeconds.ToString("N2")}[/] seconds, ";
+
+                    UInt64 averageTicksPerMessage = totalTicks / countMessagesReceived;
+                    double averageMicroseconds = MidiClock.ConvertTimestampToMicroseconds(averageTicksPerMessage);
+                    double averageMilliseconds = MidiClock.ConvertTimestampToMilliseconds(averageTicksPerMessage);
+
+                    if (averageMicroseconds > 1000000)
+                    {
+                        // display in seconds
+                        double averageSeconds = averageMicroseconds / 1000000;
+                        message += $"[steelblue1]{averageSeconds.ToString("N4")} s[/] per message.";
+                    }
+                    else if (averageMilliseconds > 1)
+                    {
+                        // display in milliseconds
+                        message += $"[steelblue1]{averageMilliseconds.ToString("N2")} ms[/] per message.";
+                    }
+                    else 
+                    {
+                        // display in microseconds
+                        message += $"[steelblue1]{averageMilliseconds.ToString("N2")} μs[/] per message.";
+                    }
+
+                    AnsiConsole.MarkupLine(message);
+                }
 
                 if (outOfOrderMessageCount > 0)
                 {
@@ -468,6 +563,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     AnsiConsole.MarkupLine("✅ No messages received out of expected timestamp order.");
                 }
 
+          //      AnsiConsole.MarkupLine($"{MidiClock.ConvertTimestampToMilliseconds(displayTable.TotalRenderingTicks).ToString("N4")} milliseconds spent just on output rendering.");
+
                 if (captureWriter != null)
                 {
                     AnsiConsole.MarkupLine("✅ Messages written to " + AnsiMarkupFormatter.FormatFileName(fileName));
@@ -476,7 +573,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             }
 
-            return 0;
+            return (int)MidiConsoleReturnCode.Success;
         }
 
 

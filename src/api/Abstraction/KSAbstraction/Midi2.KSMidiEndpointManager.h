@@ -63,7 +63,7 @@ private:
     wil::unique_event m_EnumerationCompleted{wil::EventOptions::None};
 
     // may want to change this to the actual json object.
-    winrt::Windows::Data::Json::JsonObject m_jsonObject{};
+    winrt::Windows::Data::Json::JsonObject m_jsonObject{ nullptr };
     HRESULT ApplyUserConfiguration(_In_ std::wstring deviceInterfaceId);
 
 };

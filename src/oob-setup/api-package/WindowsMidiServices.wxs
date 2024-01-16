@@ -44,7 +44,6 @@
         <!-- Setting the SelfRegCost attribute to any positive number causes DLL Self Registration -->
     
        <Component Id="WindowsServiceAbstractions"
-                   SharedDllRefCount="no"
                    Bitness="always64"
                    Directory="SERVICE_INSTALLFOLDER"
                    Guid="{6a2300f5-ccae-4f61-b849-d41aefb8a999}"  >
@@ -66,7 +65,6 @@
        </Component>
 
         <Component Id="WindowsService"
-                   SharedDllRefCount="no"
                    Bitness="always64"
                    Directory="SERVICE_INSTALLFOLDER"
                    Guid="6a2300f5-ccae-4f61-b849-d41aefb8a2f7" >

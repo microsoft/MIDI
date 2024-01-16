@@ -47,7 +47,10 @@ CMidi2KSMidiEndpointManager::Initialize(
 
             if (jsonString != L"")
             {
-                m_jsonObject = json::JsonObject::Parse(configurationJson);
+                if (json::JsonObject::TryParse(configurationJson, m_jsonObject))
+                {
+                    // worked
+                }
             }
         }
     }
@@ -475,68 +478,77 @@ _Use_decl_annotations_
 HRESULT
 CMidi2KSMidiEndpointManager::ApplyUserConfiguration(std::wstring deviceInterfaceId)
 {
-    // if we have no configuration, that's ok
-    if (m_jsonObject == nullptr) return S_OK;
+    OutputDebugString(L"\n" __FUNCTION__);
 
-
-    std::vector<DEVPROPERTY> endpointProperties;
-
-    // for now, we only support lookup by the deviceInterfaceId, so this code is easier
-
-    winrt::hstring endpointSettingsKey = winrt::to_hstring(MIDI_CONFIG_JSON_ENDPOINT_IDENTIFIER_SWD) + deviceInterfaceId;
-
-    //OutputDebugString(L"\n" __FUNCTION__ L" Key: ");
-    //OutputDebugString(endpointSettingsKey.c_str());
-    //OutputDebugString(L"\n");
-
-
-    if (m_jsonObject.HasKey(endpointSettingsKey))
+    try
     {
-        json::JsonObject endpointSettings = m_jsonObject.GetNamedObject(endpointSettingsKey);
+        // if we have no configuration, that's ok
+        if (m_jsonObject == nullptr) return S_OK;
 
-        // Get the user-specified endpoint name
-        if (endpointSettings != nullptr && endpointSettings.HasKey(MIDI_CONFIG_JSON_ENDPOINT_USER_SUPPLIED_NAME_PROPERTY_KEY))
+
+        std::vector<DEVPROPERTY> endpointProperties;
+
+        // for now, we only support lookup by the deviceInterfaceId, so this code is easier
+
+        winrt::hstring endpointSettingsKey = winrt::to_hstring(MIDI_CONFIG_JSON_ENDPOINT_IDENTIFIER_SWD) + deviceInterfaceId;
+
+        //OutputDebugString(L" Key: ");
+        //OutputDebugString(endpointSettingsKey.c_str());
+        //OutputDebugString(L"\n");
+
+
+        if (m_jsonObject.HasKey(endpointSettingsKey))
         {
-            auto name = endpointSettings.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_USER_SUPPLIED_NAME_PROPERTY_KEY);
+            json::JsonObject endpointSettings = m_jsonObject.GetNamedObject(endpointSettingsKey);
 
-            endpointProperties.push_back({ {PKEY_MIDI_UserSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_STRING, static_cast<ULONG>((name.size() + 1) * sizeof(WCHAR)), (PVOID)name.c_str() });
-        }
-
-        // Get the user-specified endpoint description
-        if (endpointSettings != nullptr && endpointSettings.HasKey(MIDI_CONFIG_JSON_ENDPOINT_USER_SUPPLIED_DESCRIPTION_PROPERTY_KEY))
-        {
-            auto description = endpointSettings.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_USER_SUPPLIED_DESCRIPTION_PROPERTY_KEY);
-
-            endpointProperties.push_back({ {PKEY_MIDI_UserSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_STRING, static_cast<ULONG>((description.size() + 1) * sizeof(WCHAR)), (PVOID)description.c_str() });
-        }
-
-        // Get the user-specified multiclient override
-        if (endpointSettings != nullptr && endpointSettings.HasKey(MIDI_CONFIG_JSON_ENDPOINT_FORCE_SINGLE_CLIENT_PROPERTY_KEY))
-        {
-            auto forceSingleClient = endpointSettings.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_FORCE_SINGLE_CLIENT_PROPERTY_KEY);
-
-            if (forceSingleClient)
+            // Get the user-specified endpoint name
+            if (endpointSettings != nullptr && endpointSettings.HasKey(MIDI_CONFIG_JSON_ENDPOINT_USER_SUPPLIED_NAME_PROPERTY_KEY))
             {
-                DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
+                auto name = endpointSettings.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_USER_SUPPLIED_NAME_PROPERTY_KEY);
 
-                endpointProperties.push_back({ {PKEY_MIDI_SupportsMulticlient, DEVPROP_STORE_SYSTEM, nullptr},
-                        DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), (PVOID)&devPropFalse });
+                endpointProperties.push_back({ {PKEY_MIDI_UserSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
+                        DEVPROP_TYPE_STRING, static_cast<ULONG>((name.size() + 1) * sizeof(WCHAR)), (PVOID)name.c_str() });
+            }
+
+            // Get the user-specified endpoint description
+            if (endpointSettings != nullptr && endpointSettings.HasKey(MIDI_CONFIG_JSON_ENDPOINT_USER_SUPPLIED_DESCRIPTION_PROPERTY_KEY))
+            {
+                auto description = endpointSettings.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_USER_SUPPLIED_DESCRIPTION_PROPERTY_KEY);
+
+                endpointProperties.push_back({ {PKEY_MIDI_UserSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
+                        DEVPROP_TYPE_STRING, static_cast<ULONG>((description.size() + 1) * sizeof(WCHAR)), (PVOID)description.c_str() });
+            }
+
+            // Get the user-specified multiclient override
+            if (endpointSettings != nullptr && endpointSettings.HasKey(MIDI_CONFIG_JSON_ENDPOINT_FORCE_SINGLE_CLIENT_PROPERTY_KEY))
+            {
+                auto forceSingleClient = endpointSettings.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_FORCE_SINGLE_CLIENT_PROPERTY_KEY);
+
+                if (forceSingleClient)
+                {
+                    DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
+
+                    endpointProperties.push_back({ {PKEY_MIDI_SupportsMulticlient, DEVPROP_STORE_SYSTEM, nullptr},
+                            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), (PVOID)&devPropFalse });
+                }
+            }
+
+            // apply supported property changes.
+            if (endpointProperties.size() > 0)
+            {
+                return m_MidiDeviceManager->UpdateEndpointProperties(
+                    (LPCWSTR)deviceInterfaceId.c_str(),
+                    (ULONG)endpointProperties.size(),
+                    (PVOID)endpointProperties.data());
             }
         }
 
-        // apply supported property changes.
-        if (endpointProperties.size() > 0)
-        {
-            return m_MidiDeviceManager->UpdateEndpointProperties(
-                (LPCWSTR)deviceInterfaceId.c_str(),
-                (ULONG)endpointProperties.size(),
-                (PVOID)endpointProperties.data());
-        }
+        return S_OK;
     }
-
-    return S_OK;
+    catch (...)
+    {
+        return E_FAIL;
+    }
 }
 
 
