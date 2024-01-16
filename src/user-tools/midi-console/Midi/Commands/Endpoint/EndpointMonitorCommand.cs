@@ -39,8 +39,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         private Queue<ReceivedMidiMessage> m_fileWriterMessagesQueue = new Queue<ReceivedMidiMessage>();
 
 
-  //      private static AutoResetEvent m_displayMessageQueueNewMessage = new AutoResetEvent(true);
-  //      private static AutoResetEvent m_fileMessageQueueNewMessage = new AutoResetEvent(false);
+        private static AutoResetEvent m_displayMessageThreadWakeup = new AutoResetEvent(false);
+        private static AutoResetEvent m_fileMessageThreadWakeup = new AutoResetEvent(false);
+        private static AutoResetEvent m_terminateMessageListenerThread = new AutoResetEvent(false);
 
 
 
@@ -268,12 +269,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                             }
                         };
 
-                        // spin wait. We can change this to an event.
-                        while (continueWaiting && !_hasEndpointDisconnected)
-                        {
-                            Thread.Sleep(0);
-                        }
-
+                        m_terminateMessageListenerThread.WaitOne();
                     });
                     messageListener.Start();
 
@@ -283,6 +279,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     {
                         while (continueWaiting)
                         {
+                            m_displayMessageThreadWakeup.WaitOne(5000);
+
                             if (m_displayMessageQueue.Count > 0)
                             {
                                 ReceivedMidiMessage message;
@@ -320,7 +318,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                 displayTable.OutputRow(message, offsetMicroseconds);
                             }
 
-                            Thread.Sleep(0);
+                            //Thread.Sleep(0);
                         }
                     });
                     messageConsoleDisplay.Start();
@@ -333,6 +331,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         {
                             while (continueWaiting)
                             {
+                                m_fileMessageThreadWakeup.WaitOne(5000);
+
                                 if (m_fileWriterMessagesQueue.Count > 0)
                                 {
                                     ReceivedMidiMessage message;
@@ -358,7 +358,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                                 }
 
-                                Thread.Sleep(0);
+                                //Thread.Sleep(0);
                             }
                         });
                         messageFileWriter.Start();
@@ -376,6 +376,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                             {
                                 continueWaiting = false;
 
+                                // wake up the threads so they terminate
+                                m_terminateMessageListenerThread.Set();
+                                m_fileMessageThreadWakeup.Set();
+                                m_displayMessageThreadWakeup.Set();
+
                                 AnsiConsole.WriteLine();
                                 AnsiConsole.MarkupLine("🛑 " + Strings.MonitorEscapePressedMessage);
                             }
@@ -385,7 +390,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         if (_hasEndpointDisconnected)
                         {
                             continueWaiting = false;
-                            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.EndpointDisconnected));
+                            m_terminateMessageListenerThread.Set();
+                            m_displayMessageThreadWakeup.Set();
+                            m_fileMessageThreadWakeup.Set();
+
+                            AnsiConsole.MarkupLine("❎ " + AnsiMarkupFormatter.FormatError(Strings.EndpointDisconnected));
                         }
                         else if (continueWaiting && m_receivedMessagesQueue.Count > 0) 
                         {
@@ -405,6 +414,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                             {
                                 m_displayMessageQueue.Enqueue(message);
                             }
+                            m_displayMessageThreadWakeup.Set();
 
                             // add to the file writer queue if we're capturing to file
                             if (captureWriter != null)
@@ -413,6 +423,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                 {
                                     m_fileWriterMessagesQueue.Enqueue(message);
                                 }
+                                m_fileMessageThreadWakeup.Set();
                             }
                         }
                        
@@ -432,8 +443,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 {
                     session.DisconnectEndpointConnection(connection.ConnectionId);
                 }
-
-
 
                 // Summary information
 
