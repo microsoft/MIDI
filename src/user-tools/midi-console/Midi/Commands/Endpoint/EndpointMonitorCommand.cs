@@ -217,8 +217,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     //captureWriter = null;
                 }
 
-                AnsiConsole.MarkupLine(Strings.MonitorPressEscapeToStopMonitoringMessage);
-                AnsiConsole.WriteLine();
 
                 UInt64 startTimestamp = 0;
                 UInt64 lastReceivedTimestamp = 0;
@@ -295,7 +293,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     messageListener.Start();
 
 
-                    const UInt32 minMessagesToLagBeforeSkip = 10;
+                    //const UInt32 minMessagesToLagBeforeSkip = 10;
 
                     // Console display background thread -----------------------------------------------------
                     var messageConsoleDisplay = new Thread(() =>
@@ -441,6 +439,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
 
                     // Main UI loop and moving messages to output queues -----------------------------------------
+                    AnsiConsole.MarkupLine(Strings.MonitorPressEscapeToStopMonitoringMessage);
+                    AnsiConsole.WriteLine();
                     while (continueWaiting)
                     {
                         if (Console.KeyAvailable)

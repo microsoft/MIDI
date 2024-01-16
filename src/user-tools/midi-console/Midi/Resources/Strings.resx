@@ -515,6 +515,15 @@ Timestamp</value>
   <data name="PropertiesTableSectionHeaderUserData" xml:space="preserve">
     <value>User Data</value>
   </data>
+  <data name="SendMessageEscapePressedMessage" xml:space="preserve">
+    <value>Escape key pressed. Message sending terminated.</value>
+  </data>
+  <data name="SendMessageFloodWarning" xml:space="preserve">
+    <value>Warning: sending a large number of messages with no delay can result in flooding the buffers. This is especially true of software endpoints like the loopback, or slow external hardware. Message loss may result.</value>
+  </data>
+  <data name="SendMessagePressEscapeToStopSendingMessage" xml:space="preserve">
+    <value>Press escape to stop sending messages.</value>
+  </data>
   <data name="SendMessageResultTableColumnHeaderTimestamp" xml:space="preserve">
     <value>Timestamp</value>
   </data>
@@ -558,6 +567,6 @@ Timestamp</value>
     <value>Escape key pressed. Shutting down watcher.</value>
   </data>
   <data name="WatcherPressEscapeToStopWatchingMessage" xml:space="preserve">
-    <value>Press escape to stop monitoring.</value>
+    <value>Press escape to stop watching for endpoint changes.</value>
   </data>
 </root>

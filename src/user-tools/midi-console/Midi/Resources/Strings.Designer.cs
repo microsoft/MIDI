@@ -1227,6 +1227,33 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Escape key pressed. Message sending terminated..
+        /// </summary>
+        internal static string SendMessageEscapePressedMessage {
+            get {
+                return ResourceManager.GetString("SendMessageEscapePressedMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: sending a large number of messages with no delay can result in flooding the buffers. This is especially true of software endpoints like the loopback, or slow external hardware. Message loss may result..
+        /// </summary>
+        internal static string SendMessageFloodWarning {
+            get {
+                return ResourceManager.GetString("SendMessageFloodWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Press escape to stop sending messages..
+        /// </summary>
+        internal static string SendMessagePressEscapeToStopSendingMessage {
+            get {
+                return ResourceManager.GetString("SendMessagePressEscapeToStopSendingMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Timestamp.
         /// </summary>
         internal static string SendMessageResultTableColumnHeaderTimestamp {
@@ -1353,7 +1380,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Press escape to stop monitoring..
+        ///   Looks up a localized string similar to Press escape to stop watching for endpoint changes..
         /// </summary>
         internal static string WatcherPressEscapeToStopWatchingMessage {
             get {
