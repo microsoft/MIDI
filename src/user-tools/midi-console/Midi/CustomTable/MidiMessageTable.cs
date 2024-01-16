@@ -37,6 +37,10 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         private string _separatorLine = string.Empty;
         private string _messageFormat = string.Empty;
 
+        private UInt64 _totalRenderingTicks = 0;
+
+        public UInt64 TotalRenderingTicks { get { return _totalRenderingTicks; } }
+
         public List<MidiMessageTableColumn> Columns { get; private set; } = new List<MidiMessageTableColumn>();
 
         private void BuildStringFormats()
@@ -141,6 +145,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public void OutputRow(ReceivedMidiMessage message, double deltaMicrosecondsFromPreviousMessage)
         {
+            //Console.WriteLine(message.Index);
+            //return;
+
             string data = string.Empty;
 
             string detailedMessageType = string.Empty;
@@ -262,6 +269,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 Columns[m_offsetColumnNumber].DataColor = m_offsetValueDefaultColor;
             }
 
+            UInt64 outputStart = MidiClock.Now;
 
             AnsiConsole.MarkupLine(
                 _messageFormat,
@@ -277,6 +285,10 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 channelText,
                 detailedMessageType
                 );
+
+            UInt64 outputEnd = MidiClock.Now;
+
+            _totalRenderingTicks += outputEnd - outputStart;
 
         }
     }
