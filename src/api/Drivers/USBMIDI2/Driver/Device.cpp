@@ -47,8 +47,6 @@ Environment:
 #include "Trace.h"
 #include "Device.tmh"
 
-extern StreamEngine* g_MidiInStreamEngine;
-
 UNICODE_STRING g_RegistryPath = {0};      // This is used to store the registry settings path for the driver
 
 _Use_decl_annotations_
@@ -1975,6 +1973,7 @@ Return Value:
             }
 
             // Send to circuit
+#if 0 // need to figure out how to get stream engine to here
             if (g_MidiInStreamEngine != 0)
             {
                 if (!g_MidiInStreamEngine->FillReadStream(
@@ -1992,6 +1991,7 @@ Return Value:
                 TraceEvents(TRACE_LEVEL_WARNING, TRACE_DEVICE,
                    "MIDI Stream Engine not valid.\n");
             }
+#endif
         }
     }
 

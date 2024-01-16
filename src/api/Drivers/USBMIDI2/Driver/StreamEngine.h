@@ -200,6 +200,7 @@ private:
 
 private:
     // Data memebers
+    StreamEngine* pMidiStreamEngine = nullptr;
 
     ACXPIN      m_Pin {nullptr};
     ACX_STREAM_STATE m_StreamState {AcxStreamStateStop};

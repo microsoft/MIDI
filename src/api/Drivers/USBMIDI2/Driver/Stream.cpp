@@ -43,8 +43,8 @@ Environment:
 static ACX_PROPERTY_ITEM MidiStreamProperties[] =
 {
     {
-        &KSPROPSETID_MidiLoopedStreaming,
-        KSPROPERTY_MIDILOOPEDSTREAMING_BUFFER,
+        &KSPROPSETID_USBMIDI2Driver,
+        KSPROPERTY_USBMIDI2DRIVER_BUFFER,
         ACX_PROPERTY_ITEM_FLAG_GET,
         EvtMidiGetLoopedStreamingBufferCallback,
         0,
@@ -52,8 +52,8 @@ static ACX_PROPERTY_ITEM MidiStreamProperties[] =
         sizeof(KSMIDILOOPED_BUFFER),
     },
     {
-        &KSPROPSETID_MidiLoopedStreaming,
-        KSPROPERTY_MIDILOOPEDSTREAMING_REGISTERS,
+        &KSPROPSETID_USBMIDI2Driver,
+        KSPROPERTY_USBMIDI2DRIVER_REGISTERS,
         ACX_PROPERTY_ITEM_FLAG_GET,
         EvtMidiGetLoopedStreamingRegistersCallback,
         0,
@@ -61,8 +61,8 @@ static ACX_PROPERTY_ITEM MidiStreamProperties[] =
         sizeof(KSMIDILOOPED_REGISTERS)
     },
     {
-        &KSPROPSETID_MidiLoopedStreaming,
-        KSPROPERTY_MIDILOOPEDSTREAMING_NOTIFICATION_EVENT,
+        &KSPROPSETID_USBMIDI2Driver,
+        KSPROPERTY_USBMIDI2DRIVER_NOTIFICATION_EVENT,
         ACX_PROPERTY_ITEM_FLAG_SET,
         EvtMidiSetLoopedStreamingNotificationEventCallback,
         0,
