@@ -35,6 +35,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         // we have this struct so we can separate the relatively fast received processing
         // and its calculations from the comparatively slow displays processing
         private Queue<ReceivedMidiMessage> m_receivedMessagesQueue = new Queue<ReceivedMidiMessage>();
+        private Queue<ReceivedMidiMessage> m_displayMessageQueue = new Queue<ReceivedMidiMessage>();
+        private Queue<ReceivedMidiMessage> m_fileWriterMessagesQueue = new Queue<ReceivedMidiMessage>();
+
+
+        private static AutoResetEvent m_displayMessageThreadWakeup = new AutoResetEvent(false);
+        private static AutoResetEvent m_fileMessageThreadWakeup = new AutoResetEvent(false);
+        private static AutoResetEvent m_terminateMessageListenerThread = new AutoResetEvent(false);
 
 
 
@@ -129,13 +136,18 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                 while (_continueWatchingDevice)
                 {
-                    Thread.Sleep(125);
+                    Thread.Sleep(100);
                 }
 
             });
 
             deviceWatcherThread.Start();
         }
+
+
+
+
+
 
         public override int Execute(CommandContext context, Settings settings)
         {
@@ -203,55 +215,157 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                 UInt64 startTimestamp = 0;
                 UInt64 lastReceivedTimestamp = 0;
-
-                //MidiMessageStruct msg;
-
                 UInt32 index = 0;
+
 
                 MonitorEndpointConnectionStatusInTheBackground(endpointId);
 
                 bool continueWaiting = true;
-
-                var messageListener = new Thread(() =>
-                {
-                    connection.MessageReceived += (s, e) =>
-                    {
-                        // helps prevent any race conditions with main loop and its output
-                        if (!continueWaiting) return;
-
-                        //Console.WriteLine("DEBUG: MessageReceived");
-                        index++;
-
-                        var receivedMessage = new ReceivedMidiMessage()
-                        {
-                            Index = index,
-                            ReceivedTimestamp = MidiClock.Now,
-                            MessageTimestamp = e.Timestamp
-                        };
-
-                        receivedMessage.NumWords = e.FillWords(out receivedMessage.Word0, out receivedMessage.Word1, out receivedMessage.Word2, out receivedMessage.Word3);
-
-                        m_receivedMessagesQueue.Enqueue(receivedMessage);
-
-                        if (settings.SingleMessage)
-                        {
-                            continueWaiting = false;
-                        }
-                    };
-
-                    while (continueWaiting && !_hasEndpointDisconnected)
-                    {
-                        Thread.Sleep(0);
-                    }
-
-                });
-
-                messageListener.Start();
+                UInt64 outOfOrderMessageCount = 0;
 
 
                 // open the connection
                 if (connection.Open())
                 {
+                    // Main message listener background thread -----------------------------------------------------
+
+                    var messageListener = new Thread(() =>
+                    {
+                        UInt64 lastMessageTimestamp = 0;
+
+                        connection.MessageReceived += (s, e) =>
+                        {
+                            // helps prevent any race conditions with main loop and its output
+                            if (!continueWaiting) return;
+
+                            //Console.WriteLine("DEBUG: MessageReceived");
+                            index++;
+
+                            var receivedMessage = new ReceivedMidiMessage()
+                            {
+                                Index = index,
+                                ReceivedTimestamp = MidiClock.Now,
+                                MessageTimestamp = e.Timestamp
+                            };
+
+                            if (e.Timestamp < lastMessageTimestamp)
+                            {
+                                outOfOrderMessageCount++;
+                            }
+
+                            lastMessageTimestamp = e.Timestamp;
+
+
+                            receivedMessage.NumWords = e.FillWords(out receivedMessage.Word0, out receivedMessage.Word1, out receivedMessage.Word2, out receivedMessage.Word3);
+
+                            lock (m_receivedMessagesQueue)
+                            {
+                                m_receivedMessagesQueue.Enqueue(receivedMessage);
+                            }
+
+                            if (settings.SingleMessage)
+                            {
+                                continueWaiting = false;
+                            }
+                        };
+
+                        m_terminateMessageListenerThread.WaitOne();
+                    });
+                    messageListener.Start();
+
+
+                    // Console display background thread -----------------------------------------------------
+                    var messageConsoleDisplay = new Thread(() =>
+                    {
+                        while (continueWaiting)
+                        {
+                            m_displayMessageThreadWakeup.WaitOne(5000);
+
+                            if (m_displayMessageQueue.Count > 0)
+                            {
+                                ReceivedMidiMessage message;
+
+                                lock (m_displayMessageQueue)
+                                {
+                                    message = m_displayMessageQueue.Dequeue();
+                                }
+
+                                if (startTimestamp == 0)
+                                {
+                                    // gets timestamp of first message we receive and uses that so all others are an offset
+                                    startTimestamp = message.ReceivedTimestamp;
+                                }
+
+                                if (lastReceivedTimestamp == 0)
+                                {
+                                    // gets timestamp of first message we receive and uses that so all others are an offset from previous message
+                                    lastReceivedTimestamp = message.ReceivedTimestamp;
+                                }
+
+                                if (message.Index == 1)
+                                {
+                                    displayTable.OutputHeader();
+                                }
+
+                                // calculate offset from the last message received
+                                var offsetMicroseconds = MidiClock.ConvertTimestampToMicroseconds(
+                                message.ReceivedTimestamp - lastReceivedTimestamp);
+
+                                // set our last received so we can calculate offsets
+                                lastReceivedTimestamp = message.ReceivedTimestamp;
+
+
+                                displayTable.OutputRow(message, offsetMicroseconds);
+                            }
+
+                            //Thread.Sleep(0);
+                        }
+                    });
+                    messageConsoleDisplay.Start();
+
+
+                    // File writing background thread -----------------------------------------------------
+                    if (captureWriter != null)
+                    {
+                        var messageFileWriter = new Thread(() =>
+                        {
+                            while (continueWaiting)
+                            {
+                                m_fileMessageThreadWakeup.WaitOne(5000);
+
+                                if (m_fileWriterMessagesQueue.Count > 0)
+                                {
+                                    ReceivedMidiMessage message;
+
+                                    lock (m_fileWriterMessagesQueue)
+                                    {
+                                        message = m_fileWriterMessagesQueue.Dequeue();
+                                    }
+
+
+                                    // write header if first message
+                                    if (message.Index == 1)
+                                    {
+                                        captureWriter.WriteLine("#");
+                                        captureWriter.WriteLine($"# Windows MIDI Services Console Capture {DateTime.Now.ToLongDateString()}");
+                                        captureWriter.WriteLine($"# Endpoint:   {endpointId.ToString()}");
+                                        captureWriter.WriteLine($"# Annotation: {settings.AnnotateCaptureFile.ToString()}");
+                                        captureWriter.WriteLine($"# Delimiter:  {settings.FieldDelimiter.ToString()}");
+                                        captureWriter.WriteLine("#");
+                                    }
+
+                                    WriteMessageToFile(settings, captureWriter, message);
+
+                                }
+
+                                //Thread.Sleep(0);
+                            }
+                        });
+                        messageFileWriter.Start();
+                    }
+
+
+                    // Main UI loop -----------------------------------------------------
                     while (continueWaiting)
                     {
                         if (Console.KeyAvailable)
@@ -262,87 +376,65 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                             {
                                 continueWaiting = false;
 
+                                // wake up the threads so they terminate
+                                m_terminateMessageListenerThread.Set();
+                                m_fileMessageThreadWakeup.Set();
+                                m_displayMessageThreadWakeup.Set();
+
                                 AnsiConsole.WriteLine();
-                                AnsiConsole.MarkupLine(Strings.MonitorEscapePressedMessage);
+                                AnsiConsole.MarkupLine("🛑 " + Strings.MonitorEscapePressedMessage);
                             }
                             
                         }
 
-
                         if (_hasEndpointDisconnected)
                         {
                             continueWaiting = false;
-                            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.EndpointDisconnected));
+                            m_terminateMessageListenerThread.Set();
+                            m_displayMessageThreadWakeup.Set();
+                            m_fileMessageThreadWakeup.Set();
+
+                            AnsiConsole.MarkupLine("❎ " + AnsiMarkupFormatter.FormatError(Strings.EndpointDisconnected));
                         }
-                        else if (continueWaiting && m_receivedMessagesQueue.Count > 0)
+                        else if (continueWaiting && m_receivedMessagesQueue.Count > 0) 
                         {
+                            // we load up the various queues here
+
+                            ReceivedMidiMessage message;
+
+                            // pull from the incoming messages queue
                             lock (m_receivedMessagesQueue)
                             {
-                                int iter = 0;
+                                message = m_receivedMessagesQueue.Dequeue();
+                            }
 
-                                while (m_receivedMessagesQueue.Count > 0 && iter < 50)
+
+                            // add to the display queue
+                            lock (m_displayMessageQueue)
+                            {
+                                m_displayMessageQueue.Enqueue(message);
+                            }
+                            m_displayMessageThreadWakeup.Set();
+
+                            // add to the file writer queue if we're capturing to file
+                            if (captureWriter != null)
+                            {
+                                lock (m_fileWriterMessagesQueue)
                                 {
-                                    iter++; // we need to take a break if we're being spammed, so this tracks iterations
-
-                                    var message = m_receivedMessagesQueue.Dequeue();
-
-                                    if (startTimestamp == 0)
-                                    {
-                                        // gets timestamp of first message we receive and uses that so all others are an offset
-                                        startTimestamp = message.ReceivedTimestamp;
-                                    }
-
-                                    if (lastReceivedTimestamp == 0)
-                                    {
-                                        // gets timestamp of first message we receive and uses that so all others are an offset from previous message
-                                        lastReceivedTimestamp = message.ReceivedTimestamp;
-                                    }
-
-                                    // TODO: Maybe re-display the header if it's been a while since last header, and it is off-screen (index delta > some number)
-                                    if (message.Index == 1)
-                                    {
-                                        displayTable.OutputHeader();
-
-
-                                        if (captureWriter != null && capturingToFile)
-                                        {
-                                            captureWriter.WriteLine("#");
-                                            captureWriter.WriteLine($"# Windows MIDI Services Console Capture {DateTime.Now.ToLongDateString()}");
-                                            captureWriter.WriteLine($"# Endpoint:   {endpointId.ToString()}");
-                                            captureWriter.WriteLine($"# Annotation: {settings.AnnotateCaptureFile.ToString()}");
-                                            captureWriter.WriteLine($"# Delimiter:  {settings.FieldDelimiter.ToString()}");
-                                            captureWriter.WriteLine("#");
-                                        }
-
-                                    }
-
-                                    // calculate offset from the last message received
-                                    var offsetMicroseconds = MidiClock.ConvertTimestampToMicroseconds(message.ReceivedTimestamp - lastReceivedTimestamp);
-
-                                    displayTable.OutputRow(message, offsetMicroseconds);
-
-                                    if (captureWriter != null)
-                                    {
-                                        WriteMessageToFile(settings, captureWriter, message);
-                                    }
-
-
-                                    // set our last received so we can calculate offsets
-                                    lastReceivedTimestamp = message.ReceivedTimestamp;
-
+                                    m_fileWriterMessagesQueue.Enqueue(message);
                                 }
+                                m_fileMessageThreadWakeup.Set();
                             }
                         }
-
-                        // we don't need to update the display more often. A tight loop really ties up the CPU.
-                        // actual message receive timings are based on the worker thread
-                        if (continueWaiting) Thread.Sleep(125); 
+                       
+                        if (continueWaiting) Thread.Sleep(10); 
                     }
                 }
                 else
                 {
                     AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToOpenEndpoint));
                     return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
+
                 }
 
                 _continueWatchingDevice = false;
@@ -352,9 +444,33 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     session.DisconnectEndpointConnection(connection.ConnectionId);
                 }
 
+                // Summary information
+
+                if (outOfOrderMessageCount > 0)
+                {
+                    string message = "❎ " + outOfOrderMessageCount.ToString();
+
+                    if (outOfOrderMessageCount > 1)
+                    {
+                        // multiple messages out of order
+                        message += " messages received out of sent timestamp order.";
+                    }
+                    else
+                    {
+                        // single message out of order
+                        message += " message received out of sent timestamp order.";
+                    }
+
+                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(message));
+                }
+                else
+                {
+                    AnsiConsole.MarkupLine("✅ No messages received out of expected timestamp order.");
+                }
+
                 if (captureWriter != null)
                 {
-                    AnsiConsole.MarkupLine("Messages written to " + AnsiMarkupFormatter.FormatFileName(fileName));
+                    AnsiConsole.MarkupLine("✅ Messages written to " + AnsiMarkupFormatter.FormatFileName(fileName));
                     captureWriter.Close();
                 }
 

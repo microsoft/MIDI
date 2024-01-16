@@ -2,13 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Devices.Midi2;
 
 namespace Microsoft.Devices.Midi2.ConsoleApp
 {
-    internal struct MidiMessageTableColumn
+    internal class MidiMessageTableColumn
     {
         public int ParameterIndex { get; set; }
         public string HeaderText { get; set; }
@@ -98,16 +99,28 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         const int timestampOffsetValueColumnWidth = 9;
 
+        private bool m_verbose = false;
+        private int m_offsetColumnNumber = 2;
+        private int m_deltaColumnNumber = 5;
+
+        private string m_offsetValueDefaultColor = "darkseagreen";
+        private string m_offsetValueErrorColor = "red";
+
+        private string m_deltaValueDefaultColor = "lightskyblue3_1";
+        private string m_deltaValueErrorColor = "red";
+
         public MidiMessageTable(bool verbose)
         {
+            m_verbose = verbose;
+
             // todo: localize strings
 
             Columns.Add(new MidiMessageTableColumn(0, "Index", 8, true, "grey", ""));
             Columns.Add(new MidiMessageTableColumn(1, "Message Timestamp", 19, false, "darkseagreen2", "N0"));                  // timestamp
-            Columns.Add(new MidiMessageTableColumn(2, "From Last", timestampOffsetValueColumnWidth, false, "darkseagreen", ""));                                  // offset
+            Columns.Add(new MidiMessageTableColumn(m_offsetColumnNumber, "From Last", timestampOffsetValueColumnWidth, false, m_offsetValueDefaultColor, ""));                                  // offset
             Columns.Add(new MidiMessageTableColumn(3, "", -2, true, "grey", ""));                                               // offset label
             if (verbose) Columns.Add(new MidiMessageTableColumn(4, "Received Timestamp", 19, false, "skyblue2", "N0"));    // recv timestamp
-            if (verbose) Columns.Add(new MidiMessageTableColumn(5, "Receive \u0394", timestampOffsetValueColumnWidth, false, "lightskyblue3_1", ""));             // delta
+            if (verbose) Columns.Add(new MidiMessageTableColumn(m_deltaColumnNumber, "Receive \u0394", timestampOffsetValueColumnWidth, false, "lightskyblue3_1", ""));             // delta
             if (verbose) Columns.Add(new MidiMessageTableColumn(6, "", -2, true, "grey", ""));                                  // delta label
             Columns.Add(new MidiMessageTableColumn(7, "Words", 8, false, "deepskyblue1", ""));
             Columns.Add(new MidiMessageTableColumn(8, "", 8, true, "deepskyblue2", ""));
@@ -115,7 +128,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             Columns.Add(new MidiMessageTableColumn(10, "", 8, true, "deepskyblue4", ""));
             if (verbose) Columns.Add(new MidiMessageTableColumn(11, "Gr", 2, false, "indianred", ""));
             if (verbose) Columns.Add(new MidiMessageTableColumn(12, "Ch", 2, true, "mediumorchid3", ""));
-            Columns.Add(new MidiMessageTableColumn(13, "Message Type", -35, false,"steelblue1_1", ""));
+            if (verbose) Columns.Add(new MidiMessageTableColumn(13, "Message Type", -35, false,"steelblue1_1", ""));
 
             BuildStringFormats();
         }
@@ -130,7 +143,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         {
             string data = string.Empty;
 
-            string detailedMessageType = MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(message.Word0);
+            string detailedMessageType = string.Empty;
+            
+            if (m_verbose) detailedMessageType = MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(message.Word0);
 
             string word0 = string.Empty;
             string word1 = string.Empty;
@@ -165,36 +180,46 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             double deltaValue = 0;
             string deltaUnitLabel = string.Empty;
 
-            double deltaSecheduledTimestampMicroseconds = 0.0;
-
-            if (message.ReceivedTimestamp >= message.MessageTimestamp)
+            if (m_verbose)
             {
-                deltaSecheduledTimestampMicroseconds = MidiClock.ConvertTimestampToMicroseconds(message.ReceivedTimestamp - message.MessageTimestamp);
-            }
-            else
-            {
-                // we received the message early, so the offset is negative
-                deltaSecheduledTimestampMicroseconds = -1 * MidiClock.ConvertTimestampToMicroseconds(message.MessageTimestamp - message.ReceivedTimestamp);
-            }
+                double deltaSecheduledTimestampMicroseconds = 0.0;
 
+                if (message.ReceivedTimestamp >= message.MessageTimestamp)
+                {
+                    deltaSecheduledTimestampMicroseconds = MidiClock.ConvertTimestampToMicroseconds(message.ReceivedTimestamp - message.MessageTimestamp);
+                }
+                else
+                {
+                    // we received the message early, so the offset is negative
+                    deltaSecheduledTimestampMicroseconds = -1 * MidiClock.ConvertTimestampToMicroseconds(message.MessageTimestamp - message.ReceivedTimestamp);
+                }
 
-            AnsiConsoleOutput.ConvertToFriendlyTimeUnit(deltaSecheduledTimestampMicroseconds, out deltaValue, out deltaUnitLabel);
+                AnsiConsoleOutput.ConvertToFriendlyTimeUnit(deltaSecheduledTimestampMicroseconds, out deltaValue, out deltaUnitLabel);
+            }
 
 
             string groupText = string.Empty;
 
-            var messageType = MidiMessageUtility.GetMessageTypeFromMessageFirstWord(message.Word0);
-
-            if (MidiMessageUtility.MessageTypeHasGroupField(messageType))
+            if (m_verbose) 
             {
-                groupText = MidiMessageUtility.GetGroupFromMessageFirstWord(message.Word0).NumberForDisplay.ToString().PadLeft(2);
+                var messageType = MidiMessageUtility.GetMessageTypeFromMessageFirstWord(message.Word0);
+
+                if (MidiMessageUtility.MessageTypeHasGroupField(messageType))
+                {
+                    groupText = MidiMessageUtility.GetGroupFromMessageFirstWord(message.Word0).NumberForDisplay.ToString().PadLeft(2);
+                }
             }
 
             string channelText = string.Empty;
 
-            if (MidiMessageUtility.MessageTypeHasChannelField(messageType))
+            if (m_verbose)
             {
-                channelText = MidiMessageUtility.GetChannelFromMessageFirstWord(message.Word0).NumberForDisplay.ToString().PadLeft(2);
+                var messageType = MidiMessageUtility.GetMessageTypeFromMessageFirstWord(message.Word0);
+
+                if (MidiMessageUtility.MessageTypeHasChannelField(messageType))
+                {
+                    channelText = MidiMessageUtility.GetChannelFromMessageFirstWord(message.Word0).NumberForDisplay.ToString().PadLeft(2);
+                }
             }
 
             // some cleanup
@@ -218,11 +243,23 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             if (deltaValueText.Length > timestampOffsetValueColumnWidth)
             {
                 deltaValueText = "######";
+                deltaUnitLabel = "";
+                Columns[m_deltaColumnNumber].DataColor = m_deltaValueErrorColor;
+            }
+            else
+            {
+                Columns[m_deltaColumnNumber].DataColor = m_deltaValueDefaultColor;
             }
 
             if (offsetValueText.Length > timestampOffsetValueColumnWidth)
             {
                 offsetValueText = "######";
+                offsetUnitLabel = "";
+                Columns[m_offsetColumnNumber].DataColor = m_offsetValueErrorColor;
+            }
+            else
+            {
+                Columns[m_offsetColumnNumber].DataColor = m_offsetValueDefaultColor;
             }
 
 
