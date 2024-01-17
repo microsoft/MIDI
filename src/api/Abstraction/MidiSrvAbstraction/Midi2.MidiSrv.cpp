@@ -52,8 +52,9 @@ CMidi2MidiSrv::Initialize(
     // Todo: client side buffering requests to come from some service setting?
     // - See https://github.com/microsoft/MIDI/issues/219 for details
     
-    creationParams.BufferSize = PAGE_SIZE;
+    //creationParams.BufferSize = PAGE_SIZE;  // original
     //creationParams.BufferSize = 512;    // Set this for debugging see https://github.com/microsoft/MIDI/issues/182 for all the drama :)
+    creationParams.BufferSize = PAGE_SIZE * 4;
 
 
     RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
