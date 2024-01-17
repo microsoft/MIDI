@@ -2,8 +2,9 @@
 name: Feature request
 about: Suggest an idea for this project
 title: "[Feature]"
-labels: feature proposal
 assignees: Psychlist1972
+project: "microsoft/339"
+labels: "feature request :bulb:"
 
 ---
 
@@ -17,6 +18,7 @@ A clear and concise description of what you want to happen.
 A clear and concise description of any alternative solutions or features you've considered.
 
 **Do you wish to contribute a solution?**
+Yes or no
 
 **Additional context**
 Add any other context or screenshots about the feature request here.
