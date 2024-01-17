@@ -808,6 +808,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to This is for developers and those who want to check that all messages are being sent/received in the correct order. When set, it will auto-increment the last word you have specified by 1 for each message sent. Requires that a message of two or more words be used so that the message type nibble isn&apos;t impacted..
+        /// </summary>
+        internal static string ParameterSendMessageAutoIncrementLastWord {
+            get {
+                return ResourceManager.GetString("ParameterSendMessageAutoIncrementLastWord", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Number of times to send this message.
         /// </summary>
         internal static string ParameterSendMessageCount {

@@ -366,6 +366,9 @@
   <data name="ParameterRequestFunctionBlocksAll" xml:space="preserve">
     <value>Request all function blocks for this endpoint</value>
   </data>
+  <data name="ParameterSendMessageAutoIncrementLastWord" xml:space="preserve">
+    <value>This is for developers and those who want to check that all messages are being sent/received in the correct order. When set, it will auto-increment the last word you have specified by 1 for each message sent. Requires that a message of two or more words be used so that the message type nibble isn't impacted.</value>
+  </data>
   <data name="ParameterSendMessageCount" xml:space="preserve">
     <value>Number of times to send this message</value>
   </data>

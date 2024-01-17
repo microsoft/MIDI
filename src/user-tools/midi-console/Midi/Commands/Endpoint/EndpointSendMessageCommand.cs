@@ -39,6 +39,10 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             /*[DefaultValue(0UL)]*/
             public ulong? Timestamp { get; set; }
 
+            [LocalizedDescription("ParameterSendMessageAutoIncrementLastWord")]
+            [CommandOption("-i|--debug-auto-increment|--increment")]
+            [DefaultValue(false)]
+            public bool DebugAutoIncrementLastWord { get; set; }
 
         }
 
@@ -176,6 +180,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         }
 
 
+                        // the debug auto increment
+                        if (settings.Words!.Count() > 1 && settings.DebugAutoIncrementLastWord)
+                        {
+                            settings.Words![settings.Words!.Count() - 1] = (settings.Words![settings.Words!.Count() - 1] + 1) % UInt32.MaxValue;
+                        }
+
+
                         messagesAttempted++;
                         var sendResult = connection.SendMessageWordArray(timestamp, settings.Words, 0, (byte)settings.Words!.Count());
 
@@ -272,11 +283,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     // todo: localize
                     if (settings.DelayBetweenMessages > 0)
                     {
-                        AnsiConsole.MarkupLine($"Sent {messagesSent} message(s) with a delay of approximately {settings.DelayBetweenMessages} ms between each.");
+                        AnsiConsole.MarkupLine($"Sent [steelblue1]{messagesSent.ToString("N0")}[/] message(s) with a delay of approximately [steelblue1]{settings.DelayBetweenMessages.ToString("N0")} ms[/] between each.");
                     }
                     else
                     {
-                        AnsiConsole.MarkupLine($"Sent {messagesSent} message(s).");
+                        AnsiConsole.MarkupLine($"Sent [steelblue1]{messagesSent.ToString("N0")}[/] message(s).");
                     }
                 }
 
