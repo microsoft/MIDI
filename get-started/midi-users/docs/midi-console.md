@@ -221,7 +221,19 @@ midi endpoint send-message 0x41234567 0xDEADBEEF --count 15 --pause 2000
 
 In general, we recommend sending messages in hexadecimal format (prefix `0x` followed by 8 hexadecimal digits)as it is easier to visually inspect the information being sent. The 1-4 MIDI words are in order from left to right, from 1 to 4. 
 
+#### Special debug messages
+
+One thing that can be useful is to send otherwise valid UMP messages where the last word is incremented by 1 for each sent message. This helps to validate that all messages were received by your application, and in the correct order. Note that this requires a message type of at least two words. We don't recommend sending Type F stream messages as those have the potential to corrupt data. Instead, a Type 4 MIDI 2.0 channel voice message is usually safer.
+
+```
+midi endpoint send-message 0x41234567 0x00000000 --count 10000 --pause 2 --debug-auto-increment
+```
+
+When sent, you should see messages where the second word is updated from `0x00000000` through `0x00002710` (decimal 10000). We recommend the pause when sending large numbers of messages because a pause of 0 ("send as fast as possible") can flood the buffers with more data than the client may be able to retrieve in time and may result in dropped messages. A warning is displayed when that possibility seems likely.
+
 #### Scheduling messages
+
+> NOTE: In current Developer Preview builds, message scheduling is turned off so the timestamp is ignored. Refer to the release notes.
 
 When sending messages, you have two options for timestamps:
 
