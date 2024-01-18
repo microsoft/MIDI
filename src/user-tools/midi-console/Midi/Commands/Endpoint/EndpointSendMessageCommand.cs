@@ -39,6 +39,10 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             /*[DefaultValue(0UL)]*/
             public ulong? Timestamp { get; set; }
 
+            [LocalizedDescription("ParameterSendMessageAutoIncrementLastWord")]
+            [CommandOption("-i|--debug-auto-increment|--increment")]
+            [DefaultValue(false)]
+            public bool DebugAutoIncrementLastWord { get; set; }
 
         }
 
@@ -141,94 +145,151 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
 
 
+                uint messagesSent = 0;
+                uint messagesAttempted = 0;
+                uint messageFailures = 0;
+
+                UInt64 maxTimestampScheduled = 0;
+
+
+                using AutoResetEvent m_messageDispatcherThreadWakeup = new AutoResetEvent(false);
+
+                bool stillSending = true;
+
+
                 // todo: we need to break messaging sending out to a bg thread so
                 // we can make it as fast as possible
                 var messageSenderThread = new Thread(() =>
-                { 
+                {
+                    while (stillSending && messagesAttempted < settings.Count)
+                    {
+                        UInt64 baseTimestamp = MidiClock.Now;
+                        UInt64 timestamp = 0;
+
+                        if (settings.TimestampOffsetMicroseconds > 0)
+                        {
+                            timestamp = MidiClock.OffsetTimestampByMicroseconds(baseTimestamp, settings.TimestampOffsetMicroseconds);
+                        }
+                        else if (settings.Timestamp != null)
+                        {
+                            timestamp = (ulong)(settings.Timestamp);
+                        }
+                        else
+                        {
+                            timestamp = MidiClock.Now;
+                        }
+
+
+                        // the debug auto increment
+                        if (settings.Words!.Count() > 1 && settings.DebugAutoIncrementLastWord)
+                        {
+                            settings.Words![settings.Words!.Count() - 1] = (settings.Words![settings.Words!.Count() - 1] + 1) % UInt32.MaxValue;
+                        }
+
+
+                        messagesAttempted++;
+                        var sendResult = connection.SendMessageWordArray(timestamp, settings.Words, 0, (byte)settings.Words!.Count());
+
+                        if (MidiEndpointConnection.SendMessageSucceeded(sendResult))
+                        {
+                            messagesSent++;
+
+                            if (timestamp > maxTimestampScheduled)
+                            {
+                                maxTimestampScheduled = timestamp;
+                            }
+
+                        }
+                        else
+                        {
+                            messageFailures++;
+                        }
+
+
+
+                        if (settings.DelayBetweenMessages > 0)
+                        {
+                            m_messageDispatcherThreadWakeup.WaitOne(settings.DelayBetweenMessages);
+                        }
+                        else
+                        {
+                            // we just tight loop
+                        }
+                    }
+
+                    stillSending = false;
                 });
-                
 
 
+                const uint bufferWarningThreshold = 10000;
 
-                UInt64 maxTimestampScheduled = 0;
 
                 AnsiConsole.Progress()
                     .Start(ctx =>
                     {
+                        if ((settings.Count * (settings.Words!.Length + 2)) > bufferWarningThreshold && settings.DelayBetweenMessages == 0)
+                        {
+                            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning(Strings.SendMessageFloodWarning));
+                            AnsiConsole.WriteLine();
+                        }
+
                         var sendTask = ctx.AddTask("[white]Sending messages[/]");
                         sendTask.MaxValue = settings.Count;
                         sendTask.Value = 0;
 
-                        uint messagesSent = 0;
-                        uint messagesAttempted = 0;
-                        uint messageFailures = 0;
+                        messageSenderThread.Start();
 
-                        while (messagesAttempted < settings.Count)
+
+                        AnsiConsole.MarkupLine(Strings.SendMessagePressEscapeToStopSendingMessage);
+                        AnsiConsole.WriteLine();
+                        while (stillSending)
                         {
-                            UInt64 baseTimestamp = MidiClock.Now;
-                            UInt64 timestamp = 0;
-                            
-                            if (settings.TimestampOffsetMicroseconds > 0)
+                            // check for input
+
+                            if (Console.KeyAvailable)
                             {
-                                timestamp = MidiClock.OffsetTimestampByMicroseconds(baseTimestamp, settings.TimestampOffsetMicroseconds);
-                            }
-                            else if (settings.Timestamp != null)
-                            {
-                                timestamp = (ulong)(settings.Timestamp);
-                            }
-                            else
-                            {
-                                timestamp = MidiClock.Now;
-                            }
+                                var keyInfo = Console.ReadKey(true);
 
-
-                            //Console.WriteLine($"Clock Frequency  : {MidiClock.TimestampFrequency}");
-                            //Console.WriteLine($"Current Timestamp: {baseTimestamp}");
-                            //Console.WriteLine($"Target Timestamp : {timestamp}");
-
-                            messagesAttempted++;
-                            var sendResult = connection.SendMessageWordArray(timestamp, settings.Words, 0, (byte)settings.Words!.Count());
-
-                            if (MidiEndpointConnection.SendMessageSucceeded(sendResult))
-                            {
-                                messagesSent++;
-                                sendTask.Value = messagesSent;
-
-                                ctx.Refresh();
-
-                                if (timestamp > maxTimestampScheduled)
+                                if (keyInfo.Key == ConsoleKey.Escape)
                                 {
-                                    maxTimestampScheduled = timestamp;
+                                    stillSending = false;
+
+                                    // wake up the threads so they terminate
+                                    m_messageDispatcherThreadWakeup.Set();
+
+                                    AnsiConsole.WriteLine();
+                                    AnsiConsole.MarkupLine("🛑 " + Strings.SendMessageEscapePressedMessage);
                                 }
 
                             }
-                            else
-                            {
-                                messageFailures ++;
-                            }
 
-                            if (settings.DelayBetweenMessages > 0)
-                            {
-                                Thread.Sleep(settings.DelayBetweenMessages);
-                            }
-                            else
-                            {
-                                // we just tight loop
-                            }
+                            sendTask.Value = messagesSent;
+                            ctx.Refresh();
+
+                            if (stillSending) Thread.Sleep(100);
                         }
 
-                        if (messageFailures > 0)
-                        {
-                            // todo: localize
-                            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Failed to send {messageFailures} of a planned {settings.Count} message(s)."));
-                        }
-                        else
-                        {
-                            // todo: localize
-                            AnsiConsole.MarkupLine($"Sent {messagesSent} message(s).");
-                        }
+                        sendTask.Value = messagesSent;
 
                     });
+
+                if (messageFailures > 0)
+                {
+                    // todo: localize
+                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Failed to send {messageFailures} of a planned {settings.Count} message(s)."));
+                }
+                else
+                {
+                    // todo: localize
+                    if (settings.DelayBetweenMessages > 0)
+                    {
+                        AnsiConsole.MarkupLine($"Sent [steelblue1]{messagesSent.ToString("N0")}[/] message(s) with a delay of approximately [steelblue1]{settings.DelayBetweenMessages.ToString("N0")} ms[/] between each.");
+                    }
+                    else
+                    {
+                        AnsiConsole.MarkupLine($"Sent [steelblue1]{messagesSent.ToString("N0")}[/] message(s).");
+                    }
+                }
 
                 if (maxTimestampScheduled > MidiClock.Now)
                 {

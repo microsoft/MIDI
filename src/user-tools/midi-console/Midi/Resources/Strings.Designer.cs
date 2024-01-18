@@ -529,6 +529,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to For incoming streams where the last word is incremented by one each time (a developer debugging approach) warn when there are gaps..
+        /// </summary>
+        internal static string ParameterCaptureMessagesFieldDebugWarnSkippedIncrement {
+            get {
+                return ResourceManager.GetString("ParameterCaptureMessagesFieldDebugWarnSkippedIncrement", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Delimiter to separate fields. Valid values include:.
         /// </summary>
         internal static string ParameterCaptureMessagesFieldDelimiter {
@@ -804,6 +813,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         internal static string ParameterRequestFunctionBlocksAll {
             get {
                 return ResourceManager.GetString("ParameterRequestFunctionBlocksAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This is for developers and those who want to check that all messages are being sent/received in the correct order. When set, it will auto-increment the last word you have specified by 1 for each message sent. Requires that a message of two or more words be used so that the message type nibble isn&apos;t impacted..
+        /// </summary>
+        internal static string ParameterSendMessageAutoIncrementLastWord {
+            get {
+                return ResourceManager.GetString("ParameterSendMessageAutoIncrementLastWord", resourceCulture);
             }
         }
         
@@ -1227,6 +1245,33 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Escape key pressed. Message sending terminated..
+        /// </summary>
+        internal static string SendMessageEscapePressedMessage {
+            get {
+                return ResourceManager.GetString("SendMessageEscapePressedMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: sending a large number of messages with no delay can result in flooding the buffers. This is especially true of software endpoints like the loopback, or slow external hardware. Message loss may result..
+        /// </summary>
+        internal static string SendMessageFloodWarning {
+            get {
+                return ResourceManager.GetString("SendMessageFloodWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Press escape to stop sending messages..
+        /// </summary>
+        internal static string SendMessagePressEscapeToStopSendingMessage {
+            get {
+                return ResourceManager.GetString("SendMessagePressEscapeToStopSendingMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Timestamp.
         /// </summary>
         internal static string SendMessageResultTableColumnHeaderTimestamp {
@@ -1353,7 +1398,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Press escape to stop monitoring..
+        ///   Looks up a localized string similar to Press escape to stop watching for endpoint changes..
         /// </summary>
         internal static string WatcherPressEscapeToStopWatchingMessage {
             get {

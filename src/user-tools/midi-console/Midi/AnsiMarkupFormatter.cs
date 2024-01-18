@@ -67,6 +67,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             return "[red]" + EscapeString(error) + "[/]";
         }
 
+        public static string FormatWarning(string warning)
+        {
+            return "[yellow]" + EscapeString(warning) + "[/]";
+        }
+
         public static string FormatSuccess(string message)
         {
             return "[green]" + EscapeString(message) + "[/]";

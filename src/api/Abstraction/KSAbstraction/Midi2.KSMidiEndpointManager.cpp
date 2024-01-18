@@ -509,6 +509,13 @@ CMidi2KSMidiEndpointManager::ApplyUserConfiguration(std::wstring deviceInterface
                 endpointProperties.push_back({ {PKEY_MIDI_UserSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
                         DEVPROP_TYPE_STRING, static_cast<ULONG>((name.size() + 1) * sizeof(WCHAR)), (PVOID)name.c_str() });
             }
+            else
+            {
+                // delete any existing property value, because it is no longer in the config
+                endpointProperties.push_back({ {PKEY_MIDI_UserSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
+                        DEVPROP_TYPE_EMPTY, 0, nullptr });
+            }
+
 
             // Get the user-specified endpoint description
             if (endpointSettings != nullptr && endpointSettings.HasKey(MIDI_CONFIG_JSON_ENDPOINT_USER_SUPPLIED_DESCRIPTION_PROPERTY_KEY))
@@ -517,6 +524,12 @@ CMidi2KSMidiEndpointManager::ApplyUserConfiguration(std::wstring deviceInterface
 
                 endpointProperties.push_back({ {PKEY_MIDI_UserSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
                         DEVPROP_TYPE_STRING, static_cast<ULONG>((description.size() + 1) * sizeof(WCHAR)), (PVOID)description.c_str() });
+            }
+            else
+            {
+                // delete any existing property value, because it is no longer in the config
+                endpointProperties.push_back({ {PKEY_MIDI_UserSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
+                        DEVPROP_TYPE_EMPTY, 0, nullptr });
             }
 
             // Get the user-specified multiclient override
@@ -531,6 +544,10 @@ CMidi2KSMidiEndpointManager::ApplyUserConfiguration(std::wstring deviceInterface
                     endpointProperties.push_back({ {PKEY_MIDI_SupportsMulticlient, DEVPROP_STORE_SYSTEM, nullptr},
                             DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), (PVOID)&devPropFalse });
                 }
+            }
+            else
+            {
+                // this property was an override, so it should have been set elsewhere earlier
             }
 
             // apply supported property changes.

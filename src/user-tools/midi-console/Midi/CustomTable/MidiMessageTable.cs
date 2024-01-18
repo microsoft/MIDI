@@ -36,10 +36,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         private string _headerFormat = string.Empty;
         private string _separatorLine = string.Empty;
         private string _messageFormat = string.Empty;
-
-        private UInt64 _totalRenderingTicks = 0;
-
-        public UInt64 TotalRenderingTicks { get { return _totalRenderingTicks; } }
+        private string _errorMessageFormat = string.Empty;
 
         public List<MidiMessageTableColumn> Columns { get; private set; } = new List<MidiMessageTableColumn>();
 
@@ -48,11 +45,14 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             char horizontalLine = '\u2500';
             string cross = "\u253C";
 
+            string errorVerticalLine = "[red]\u2573[/]";
+            string verticalLine = "\u2502";
+
             foreach (var col in Columns)
             {
                 if (_headerFormat != string.Empty && !col.NoLeftSeparator)
                 {
-                    _headerFormat += " \u2502 ";
+                    _headerFormat += $" {verticalLine} ";
                 }
                 else if (col.NoLeftSeparator)
                 {
@@ -80,24 +80,30 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                 if (_messageFormat != string.Empty && !col.NoLeftSeparator)
                 {
-                    _messageFormat += " \u2502 ";
+                    _messageFormat += $" {verticalLine} ";
+                    _errorMessageFormat += $" {errorVerticalLine} ";
                 }
                 else if (col.NoLeftSeparator)
                 {
                     _messageFormat += " ";
+                    _errorMessageFormat += " ";
                 }
 
                 if (col.DataFormat == string.Empty)
                 {
                     _messageFormat += $"[{col.DataColor}]{{{col.ParameterIndex},{col.Width}}}[/]";
+                    _errorMessageFormat += $"[{col.DataColor}]{{{col.ParameterIndex},{col.Width}}}[/]";
                 }
                 else
                 {
                     _messageFormat += $"[{col.DataColor}]{{{col.ParameterIndex},{col.Width}:{col.DataFormat}}}[/]";
+                    _errorMessageFormat += $"[{col.DataColor}]{{{col.ParameterIndex},{col.Width}:{col.DataFormat}}}[/]";
 
                 }
 
             }
+
+            _errorMessageFormat += "[red] ** possible error **[/]";
 
         }
 
@@ -151,7 +157,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             string data = string.Empty;
 
             string detailedMessageType = string.Empty;
-            
+
             if (m_verbose) detailedMessageType = MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(message.Word0);
 
             string word0 = string.Empty;
@@ -189,25 +195,25 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             if (m_verbose)
             {
-                double deltaSecheduledTimestampMicroseconds = 0.0;
+                double deltaScheduledTimestampMicroseconds = 0.0;
 
                 if (message.ReceivedTimestamp >= message.MessageTimestamp)
                 {
-                    deltaSecheduledTimestampMicroseconds = MidiClock.ConvertTimestampToMicroseconds(message.ReceivedTimestamp - message.MessageTimestamp);
+                    deltaScheduledTimestampMicroseconds = MidiClock.ConvertTimestampToMicroseconds(message.ReceivedTimestamp - message.MessageTimestamp);
                 }
                 else
                 {
                     // we received the message early, so the offset is negative
-                    deltaSecheduledTimestampMicroseconds = -1 * MidiClock.ConvertTimestampToMicroseconds(message.MessageTimestamp - message.ReceivedTimestamp);
+                    deltaScheduledTimestampMicroseconds = -1 * MidiClock.ConvertTimestampToMicroseconds(message.MessageTimestamp - message.ReceivedTimestamp);
                 }
 
-                AnsiConsoleOutput.ConvertToFriendlyTimeUnit(deltaSecheduledTimestampMicroseconds, out deltaValue, out deltaUnitLabel);
+                AnsiConsoleOutput.ConvertToFriendlyTimeUnit(deltaScheduledTimestampMicroseconds, out deltaValue, out deltaUnitLabel);
             }
 
 
             string groupText = string.Empty;
 
-            if (m_verbose) 
+            if (m_verbose)
             {
                 var messageType = MidiMessageUtility.GetMessageTypeFromMessageFirstWord(message.Word0);
 
@@ -269,27 +275,42 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 Columns[m_offsetColumnNumber].DataColor = m_offsetValueDefaultColor;
             }
 
-            UInt64 outputStart = MidiClock.Now;
+            if (message.HasError)
+            {
+                AnsiConsole.MarkupLine(
+                    _errorMessageFormat,
+                    message.Index,
+                    message.MessageTimestamp,
+                    offsetValueText,
+                    offsetUnitLabel,
+                    message.ReceivedTimestamp,
+                    deltaValueText,
+                    deltaUnitLabel,
+                    word0, word1, word2, word3,
+                    groupText,
+                    channelText,
+                    detailedMessageType
+                    );
+            }
+            else
+            {
+                AnsiConsole.MarkupLine(
+                    _messageFormat,
+                    message.Index,
+                    message.MessageTimestamp,
+                    offsetValueText,
+                    offsetUnitLabel,
+                    message.ReceivedTimestamp,
+                    deltaValueText,
+                    deltaUnitLabel,
+                    word0, word1, word2, word3,
+                    groupText,
+                    channelText,
+                    detailedMessageType
+                    );
 
-            AnsiConsole.MarkupLine(
-                _messageFormat,
-                message.Index,
-                message.MessageTimestamp,
-                offsetValueText,
-                offsetUnitLabel,
-                message.ReceivedTimestamp,
-                deltaValueText,
-                deltaUnitLabel,
-                word0, word1, word2, word3,
-                groupText,
-                channelText,
-                detailedMessageType
-                );
-
-            UInt64 outputEnd = MidiClock.Now;
-
-            _totalRenderingTicks += outputEnd - outputStart;
-
+                UInt64 outputEnd = MidiClock.Now;
+            }
         }
     }
 
