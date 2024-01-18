@@ -142,21 +142,53 @@ CMidi2LoopbackMidiBiDi::SendMidiMessage(
     LONGLONG Timestamp
 )
 {
+    TraceLoggingWrite(
+        MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     RETURN_HR_IF_NULL(E_INVALIDARG, Message);
     RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
     
     if (m_IsPing)
     {
+        TraceLoggingWrite(
+            MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"), 
+            TraceLoggingWideString(L"Sending Ping")
+        );
+
         RETURN_HR_IF_NULL(E_POINTER, m_PingMidiDevice);
         return m_PingMidiDevice->SendMidiMessage(Message, Size, Timestamp);
     }
     else if (m_IsEndpointA)
     {
+        TraceLoggingWrite(
+            MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Sending From Loopback A to B")
+        );
+
         RETURN_HR_IF_NULL(E_POINTER, m_LoopbackMidiDevice);
         return m_LoopbackMidiDevice->SendMidiMessageFromAToB(Message, Size, Timestamp);
     }
     else
     {
+        TraceLoggingWrite(
+            MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Sending From Loopback B to A")
+        );
+
         RETURN_HR_IF_NULL(E_POINTER, m_LoopbackMidiDevice);
         return m_LoopbackMidiDevice->SendMidiMessageFromBToA(Message, Size, Timestamp);
     }
@@ -171,6 +203,13 @@ CMidi2LoopbackMidiBiDi::Callback(
     LONGLONG
 )
 {
+    TraceLoggingWrite(
+        MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     RETURN_HR_IF_NULL(E_INVALIDARG, Message);
     RETURN_HR_IF_NULL(E_POINTER, m_Callback);
     RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Intrinsics.X86;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Devices.Midi2;
@@ -13,40 +14,103 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
     internal class AnsiConsoleOutput
     {
 
-        public static void ConvertToFriendlyTimeUnit(double microsecondsToConvert, out double convertedValue, out string convertedUnitLabel)
+        public static void ConvertTicksToFriendlyTimeUnit(UInt64 ticksToConvert, out double convertedValue, out string convertedUnitLabel, bool longLabel = false)
         {
             // TODO: These should likely be localized
 
+            string offsetUnitNanoseconds = "ns";
             string offsetUnitMicroseconds = "μs";
             string offsetUnitMilliseconds = "ms";
             string offsetUnitSeconds = "s";
-            string offsetUnitMinutes = "MN";
-            string offsetUnitHours = "HR";
+            string offsetUnitMinutes = "mn";
+            string offsetUnitHours = "hr";
+            string offsetUnitDays = "dd";
+            string offsetUnitYears = "yy";
 
-            if (Math.Abs(microsecondsToConvert) > (double)(60.0 * 60.0 * 1000000))
+            string offsetUnitNanosecondsLong = "nanoseconds";
+            string offsetUnitMicrosecondsLong = "microseconds";
+            string offsetUnitMillisecondsLong = "milliseconds";
+            string offsetUnitSecondsLong = "seconds";
+            string offsetUnitMinutesLong = "minutes";
+            string offsetUnitHoursLong = "hours";
+            string offsetUnitDaysLong = "days";
+            string offsetUnitYearsLong = "years";
+
+
+            const double secondsPerMinute = 60;
+            const double secondsPerHour = secondsPerMinute * 60;
+            const double secondsPerDay = secondsPerHour * 24;
+            const double secondsPerYear = secondsPerDay * 365;  // yes, this is approximate, but good enough for where it is used
+
+            // these just make the code much more readible
+            double ticksPerSecond = MidiClock.TimestampFrequency;
+            double ticksPerMinute = MidiClock.TimestampFrequency * secondsPerMinute;
+            double ticksPerHour = MidiClock.TimestampFrequency * secondsPerHour;
+            double ticksPerDay = MidiClock.TimestampFrequency * secondsPerDay;
+            double ticksPerYear = MidiClock.TimestampFrequency * secondsPerYear;
+
+            double ticksPerMillisecond = MidiClock.TimestampFrequency / 1000;
+            double ticksPerMicrosecond = MidiClock.TimestampFrequency / 1000000;
+            double ticksPerNanosecond = MidiClock.TimestampFrequency / 1000000000;
+
+
+            if (ticksToConvert == 0)
             {
-                convertedUnitLabel = offsetUnitHours;
-                convertedValue = microsecondsToConvert / (double)(60.0 * 60.0 * 1000000);
+                convertedValue = 0;
+                convertedUnitLabel = "--";
             }
-            else if (Math.Abs(microsecondsToConvert) > (60.0 * 1000000))
+            else if (ticksToConvert > ticksPerYear)
             {
-                convertedUnitLabel = offsetUnitMinutes;
-                convertedValue = microsecondsToConvert / (60* 1000000);
+                // convert to days
+                convertedUnitLabel = longLabel ? offsetUnitYearsLong : offsetUnitYears;
+                convertedValue = (double)ticksToConvert / ticksPerYear;
+
             }
-            else if (Math.Abs(microsecondsToConvert) > 1000000)
+            else if (ticksToConvert > ticksPerDay)
             {
-                convertedUnitLabel = offsetUnitSeconds;
-                convertedValue = microsecondsToConvert / 1000000;
+                // convert to days
+                convertedUnitLabel = longLabel ? offsetUnitDaysLong : offsetUnitDays;
+                convertedValue = (double)ticksToConvert / ticksPerDay;
+
             }
-            else if (Math.Abs(microsecondsToConvert) > 1000)
+            else if (ticksToConvert > ticksPerHour)
             {
-                convertedUnitLabel = offsetUnitMilliseconds;
-                convertedValue = microsecondsToConvert / 1000;
+                // convert to hours
+
+                convertedUnitLabel = longLabel ? offsetUnitHoursLong : offsetUnitHours;
+                convertedValue = (double)ticksToConvert / ticksPerHour;
+            }
+            else if (ticksToConvert > ticksPerMinute)
+            {
+                // convert to minutes
+
+                convertedUnitLabel = longLabel ? offsetUnitMinutesLong : offsetUnitMinutes;
+                convertedValue = (double)ticksToConvert / ticksPerMinute;
+            }
+            else if (ticksToConvert > ticksPerSecond)
+            {
+                // convert to seconds
+
+                convertedUnitLabel = longLabel ? offsetUnitMinutesLong : offsetUnitSeconds;
+                convertedValue = (double)ticksToConvert / ticksPerSecond;
+            }
+            else if (ticksToConvert > ticksPerMillisecond)
+            {
+                // convert to milliseconds
+                convertedUnitLabel = longLabel ? offsetUnitMillisecondsLong : offsetUnitMilliseconds;
+                convertedValue = (double)ticksToConvert / ticksPerMillisecond;
+            }
+            else if (ticksToConvert > ticksPerMicrosecond)
+            {
+                // convert to microseconds
+                convertedUnitLabel = longLabel ? offsetUnitMicrosecondsLong : offsetUnitMicroseconds;
+                convertedValue = (double)ticksToConvert / ticksPerMicrosecond;
             }
             else
             {
-                convertedUnitLabel = offsetUnitMicroseconds;
-                convertedValue = microsecondsToConvert;
+                // convert to nanoseconds
+                convertedUnitLabel = longLabel ? offsetUnitNanosecondsLong : offsetUnitNanoseconds;
+                convertedValue = (double)ticksToConvert / ticksPerNanosecond;
             }
 
         }

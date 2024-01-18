@@ -273,10 +273,10 @@ CMidiXProc::SendMidiMessage(
     do{
         // the write position is the last position we have written,
         // the read position is the last position the driver has read from
-        ULONG writePosition = InterlockedCompareExchange((LONG*) Registers->WritePosition, 0, 0);
-        ULONG readPosition = InterlockedCompareExchange((LONG*) Registers->ReadPosition, 0, 0);
+        ULONG writePosition = InterlockedCompareExchange((LONG*)Registers->WritePosition, 0, 0);
+        ULONG readPosition = InterlockedCompareExchange((LONG*)Registers->ReadPosition, 0, 0);
         ULONG newWritePosition = (writePosition + requiredBufferSize) % Data->BufferSize;
-        ULONG bytesAvailable {0};
+        ULONG bytesAvailable{ 0 };
 
         // Calculate the available space in the buffer.
         if (readPosition <= writePosition)
@@ -301,10 +301,10 @@ CMidiXProc::SendMidiMessage(
         // if there is sufficient space to write the buffer, send it
         if (bytesAvailable >= requiredBufferSize)
         {
-            PLOOPEDDATAFORMAT header = (PLOOPEDDATAFORMAT) (((BYTE *) Data->BufferAddress) + writePosition);
+            PLOOPEDDATAFORMAT header = (PLOOPEDDATAFORMAT)(((BYTE*)Data->BufferAddress) + writePosition);
 
             header->ByteCount = Length;
-            CopyMemory((((BYTE *) header) + sizeof(LOOPEDDATAFORMAT)), MidiData, Length);
+            CopyMemory((((BYTE*)header) + sizeof(LOOPEDDATAFORMAT)), MidiData, Length);
 
             // if a position provided is nonzero, use it, otherwise use the current QPC
             if (Position)
@@ -313,27 +313,42 @@ CMidiXProc::SendMidiMessage(
             }
             else if (m_OverwriteZeroTimestamp)
             {
-                LARGE_INTEGER qpc {0};
+                LARGE_INTEGER qpc{ 0 };
                 QueryPerformanceCounter(&qpc);
                 header->Position = qpc.QuadPart;
             }
 
             // update the write position and notify the other side that data is available.
-            InterlockedExchange((LONG*) Registers->WritePosition, newWritePosition);
+            InterlockedExchange((LONG*)Registers->WritePosition, newWritePosition);
             RETURN_LAST_ERROR_IF(FALSE == SetEvent(m_MidiOut->WriteEvent.get()));
+
+            //if (!SetEvent(m_MidiOut->WriteEvent.get()))
+            //{
+            //    LOG_LAST_ERROR();
+            //    RETURN_LAST_ERROR_IF(true);
+            //}
+
             bufferSent = TRUE;
         }
         else
         {
             // relinquish the remainder of this processing slice and try again on the next
-            Sleep(0);
+            //Sleep(0);
+            
+            // if you remove this line, you will get additional send *and* receive failures
+            // if you set it to Sleep(0), you will end up with missing messages if we're 
+            // spammed heavily
+            // If you set it to Sleep(1), there's more jitter, but all messages arrive.
+            Sleep(1);
         }
+
     }while (!bufferSent && --maxRetries > 0);
 
     // Failed to send the buffer due to insufficient space,
     // fail.
     if (!bufferSent)
     {
+        LOG_IF_FAILED(HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER));
         return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
     }
 

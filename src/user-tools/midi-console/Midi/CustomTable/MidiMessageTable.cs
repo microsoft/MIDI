@@ -45,8 +45,12 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             char horizontalLine = '\u2500';
             string cross = "\u253C";
 
-            string errorVerticalLine = "[red]\u2573[/]";
+            //string errorVerticalLine = "[black]\u2573[/]";
+            string errorVerticalLine = "\u2502";
             string verticalLine = "\u2502";
+
+
+
 
             foreach (var col in Columns)
             {
@@ -103,7 +107,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             }
 
-            _errorMessageFormat += "[red] ** possible error **[/]";
+            _errorMessageFormat += "[white] ** possible error **[/] ";
+
+            _errorMessageFormat = $"[default on darkred]{_errorMessageFormat}[/]";
 
         }
 
@@ -149,7 +155,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             AnsiConsole.MarkupLine(_separatorLine);
         }
 
-        public void OutputRow(ReceivedMidiMessage message, double deltaMicrosecondsFromPreviousMessage)
+        public void OutputRow(ReceivedMidiMessage message)
         {
             //Console.WriteLine(message.Index);
             //return;
@@ -187,7 +193,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             double offsetValue = 0;
             string offsetUnitLabel = string.Empty;
 
-            AnsiConsoleOutput.ConvertToFriendlyTimeUnit(deltaMicrosecondsFromPreviousMessage, out offsetValue, out offsetUnitLabel);
+            AnsiConsoleOutput.ConvertTicksToFriendlyTimeUnit(message.ReceivedOffsetFromLastMessage, out offsetValue, out offsetUnitLabel);
 
 
             double deltaValue = 0;
@@ -195,19 +201,17 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             if (m_verbose)
             {
-                double deltaScheduledTimestampMicroseconds = 0.0;
-
                 if (message.ReceivedTimestamp >= message.MessageTimestamp)
                 {
-                    deltaScheduledTimestampMicroseconds = MidiClock.ConvertTimestampToMicroseconds(message.ReceivedTimestamp - message.MessageTimestamp);
+                    AnsiConsoleOutput.ConvertTicksToFriendlyTimeUnit((UInt64)(message.ReceivedTimestamp - message.MessageTimestamp), out deltaValue, out deltaUnitLabel);
                 }
                 else
                 {
                     // we received the message early, so the offset is negative
-                    deltaScheduledTimestampMicroseconds = -1 * MidiClock.ConvertTimestampToMicroseconds(message.MessageTimestamp - message.ReceivedTimestamp);
+                    AnsiConsoleOutput.ConvertTicksToFriendlyTimeUnit((UInt64)(message.ReceivedTimestamp - message.MessageTimestamp), out deltaValue, out deltaUnitLabel);
+                    deltaValue = deltaValue * -1;
                 }
 
-                AnsiConsoleOutput.ConvertToFriendlyTimeUnit(deltaScheduledTimestampMicroseconds, out deltaValue, out deltaUnitLabel);
             }
 
 

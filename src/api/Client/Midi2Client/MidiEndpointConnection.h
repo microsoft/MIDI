@@ -56,59 +56,56 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
         _Success_(return == true)
-            midi2::MidiSendMessageResult SendMessagePacket(
-                _In_ midi2::IMidiUniversalPacket const& ump);
+        midi2::MidiSendMessageResult SendMessagePacket(
+            _In_ midi2::IMidiUniversalPacket const& ump) noexcept;
 
 
         _Success_(return == true)
-            midi2::MidiSendMessageResult SendMessageStruct(
-                _In_ internal::MidiTimestamp timestamp,
-                _In_ midi2::MidiMessageStruct const& message,
-                _In_ uint8_t wordCount);
+        midi2::MidiSendMessageResult SendMessageStruct(
+            _In_ internal::MidiTimestamp timestamp,
+            _In_ midi2::MidiMessageStruct const& message,
+            _In_ uint8_t wordCount) noexcept;
 
 
         _Success_(return == true)
-            midi2::MidiSendMessageResult SendMessageWords(
-                _In_ internal::MidiTimestamp const timestamp,
-                _In_ uint32_t const word0);
+        midi2::MidiSendMessageResult SendMessageWords(
+            _In_ internal::MidiTimestamp const timestamp,
+            _In_ uint32_t const word0) noexcept;
 
         _Success_(return == true)
-            midi2::MidiSendMessageResult SendMessageWords(
-                _In_ internal::MidiTimestamp const timestamp,
-                _In_ uint32_t const word0,
-                _In_ uint32_t const word1);
+        midi2::MidiSendMessageResult SendMessageWords(
+            _In_ internal::MidiTimestamp const timestamp,
+            _In_ uint32_t const word0,
+            _In_ uint32_t const word1) noexcept;
 
         _Success_(return == true)
-            midi2::MidiSendMessageResult SendMessageWords(
-                _In_ internal::MidiTimestamp const timestamp,
-                _In_ uint32_t const word0,
-                _In_ uint32_t const word1,
-                _In_ uint32_t const word2);
+        midi2::MidiSendMessageResult SendMessageWords(
+            _In_ internal::MidiTimestamp const timestamp,
+            _In_ uint32_t const word0,
+            _In_ uint32_t const word1,
+            _In_ uint32_t const word2) noexcept;
 
         _Success_(return == true)
-            midi2::MidiSendMessageResult SendMessageWords(
-                _In_ internal::MidiTimestamp const timestamp,
-                _In_ uint32_t const word0,
-                _In_ uint32_t const word1,
-                _In_ uint32_t const word2,
-                _In_ uint32_t const word3);
-
-
-        _Success_(return == true)
-            midi2::MidiSendMessageResult SendMessageWordArray(
-                _In_ internal::MidiTimestamp const timestamp,
-                _In_ winrt::array_view<uint32_t const> words,
-                _In_ uint32_t const startIndex,
-                _In_ uint8_t const wordCount);
-
-
+        midi2::MidiSendMessageResult SendMessageWords(
+            _In_ internal::MidiTimestamp const timestamp,
+            _In_ uint32_t const word0,
+            _In_ uint32_t const word1,
+            _In_ uint32_t const word2,
+            _In_ uint32_t const word3) noexcept;
 
         _Success_(return == true)
-            midi2::MidiSendMessageResult SendMessageBuffer(
-                _In_ internal::MidiTimestamp timestamp,
-                _In_ foundation::IMemoryBuffer const& buffer,
-                _In_ uint32_t byteOffset,
-                _In_ uint8_t byteLength);
+        midi2::MidiSendMessageResult SendMessageWordArray(
+            _In_ internal::MidiTimestamp const timestamp,
+            _In_ winrt::array_view<uint32_t const> words,
+            _In_ uint32_t const startIndex,
+            _In_ uint8_t const wordCount) noexcept;
+
+        _Success_(return == true)
+        midi2::MidiSendMessageResult SendMessageBuffer(
+            _In_ internal::MidiTimestamp timestamp,
+            _In_ foundation::IMemoryBuffer const& buffer,
+            _In_ uint32_t byteOffset,
+            _In_ uint8_t byteLength) noexcept;
 
 
 
