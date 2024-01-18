@@ -54,7 +54,7 @@ CMidi2MidiSrv::Initialize(
     
     //creationParams.BufferSize = PAGE_SIZE;  // original
     //creationParams.BufferSize = 512;    // Set this for debugging see https://github.com/microsoft/MIDI/issues/182 for all the drama :)
-    creationParams.BufferSize = PAGE_SIZE * 4;
+    creationParams.BufferSize = PAGE_SIZE * 2;
 
 
     RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));

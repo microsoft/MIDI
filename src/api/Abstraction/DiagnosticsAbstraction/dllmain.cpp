@@ -13,6 +13,7 @@ DllMain(
 {
     if (Reason == DLL_PROCESS_ATTACH)
     {
+        OutputDebugString(__FUNCTION__ L" Setting Diagnostics Abstraction error logging.\n");
         wil::SetResultTelemetryFallback(MidiDiagnosticsAbstractionTelemetryProvider::FallbackTelemetryCallback);
     }
 

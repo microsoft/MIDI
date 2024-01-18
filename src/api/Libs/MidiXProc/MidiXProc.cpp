@@ -271,69 +271,82 @@ CMidiXProc::SendMidiMessage(
     PMEMORY_MAPPED_DATA Data = &(m_MidiOut->Data);
 
     do{
-        // the write position is the last position we have written,
-        // the read position is the last position the driver has read from
-        ULONG writePosition = InterlockedCompareExchange((LONG*) Registers->WritePosition, 0, 0);
-        ULONG readPosition = InterlockedCompareExchange((LONG*) Registers->ReadPosition, 0, 0);
-        ULONG newWritePosition = (writePosition + requiredBufferSize) % Data->BufferSize;
-        ULONG bytesAvailable {0};
-
-        // Calculate the available space in the buffer.
-        if (readPosition <= writePosition)
+        try
         {
-            bytesAvailable = Data->BufferSize - (writePosition - readPosition);
-        }
-        else
-        {
-            bytesAvailable = (readPosition - writePosition);
-        }
+            // the write position is the last position we have written,
+            // the read position is the last position the driver has read from
+            ULONG writePosition = InterlockedCompareExchange((LONG*)Registers->WritePosition, 0, 0);
+            ULONG readPosition = InterlockedCompareExchange((LONG*)Registers->ReadPosition, 0, 0);
+            ULONG newWritePosition = (writePosition + requiredBufferSize) % Data->BufferSize;
+            ULONG bytesAvailable{ 0 };
 
-        // Note, if we fill the buffer up 100%, then write position == read position,
-        // which is the same as when the buffer is empty and everything in the buffer
-        // would be lost.
-        // Reserve 1 byte so that when the buffer is full the write position will trail
-        // the read position.
-        // Because of this reserve, and the above calculation, the true bytesAvailable 
-        // count can never be 0.
-        assert(bytesAvailable != 0);
-        bytesAvailable--;
-
-        // if there is sufficient space to write the buffer, send it
-        if (bytesAvailable >= requiredBufferSize)
-        {
-            PLOOPEDDATAFORMAT header = (PLOOPEDDATAFORMAT) (((BYTE *) Data->BufferAddress) + writePosition);
-
-            header->ByteCount = Length;
-            CopyMemory((((BYTE *) header) + sizeof(LOOPEDDATAFORMAT)), MidiData, Length);
-
-            // if a position provided is nonzero, use it, otherwise use the current QPC
-            if (Position)
+            // Calculate the available space in the buffer.
+            if (readPosition <= writePosition)
             {
-                header->Position = Position;
+                bytesAvailable = Data->BufferSize - (writePosition - readPosition);
             }
-            else if (m_OverwriteZeroTimestamp)
+            else
             {
-                LARGE_INTEGER qpc {0};
-                QueryPerformanceCounter(&qpc);
-                header->Position = qpc.QuadPart;
+                bytesAvailable = (readPosition - writePosition);
             }
 
-            // update the write position and notify the other side that data is available.
-            InterlockedExchange((LONG*) Registers->WritePosition, newWritePosition);
-            RETURN_LAST_ERROR_IF(FALSE == SetEvent(m_MidiOut->WriteEvent.get()));
-            bufferSent = TRUE;
+            // Note, if we fill the buffer up 100%, then write position == read position,
+            // which is the same as when the buffer is empty and everything in the buffer
+            // would be lost.
+            // Reserve 1 byte so that when the buffer is full the write position will trail
+            // the read position.
+            // Because of this reserve, and the above calculation, the true bytesAvailable 
+            // count can never be 0.
+            assert(bytesAvailable != 0);
+            bytesAvailable--;
+
+            // if there is sufficient space to write the buffer, send it
+            if (bytesAvailable >= requiredBufferSize)
+            {
+                PLOOPEDDATAFORMAT header = (PLOOPEDDATAFORMAT)(((BYTE*)Data->BufferAddress) + writePosition);
+
+                header->ByteCount = Length;
+                CopyMemory((((BYTE*)header) + sizeof(LOOPEDDATAFORMAT)), MidiData, Length);
+
+                // if a position provided is nonzero, use it, otherwise use the current QPC
+                if (Position)
+                {
+                    header->Position = Position;
+                }
+                else if (m_OverwriteZeroTimestamp)
+                {
+                    LARGE_INTEGER qpc{ 0 };
+                    QueryPerformanceCounter(&qpc);
+                    header->Position = qpc.QuadPart;
+                }
+
+                // update the write position and notify the other side that data is available.
+                InterlockedExchange((LONG*)Registers->WritePosition, newWritePosition);
+                RETURN_LAST_ERROR_IF(FALSE == SetEvent(m_MidiOut->WriteEvent.get()));
+
+                //if (!SetEvent(m_MidiOut->WriteEvent.get()))
+                //{
+                //    LOG_LAST_ERROR();
+                //    RETURN_LAST_ERROR_IF(true);
+                //}
+
+                bufferSent = TRUE;
+            }
+            else
+            {
+                // relinquish the remainder of this processing slice and try again on the next
+                Sleep(0);
+            }
         }
-        else
-        {
-            // relinquish the remainder of this processing slice and try again on the next
-            Sleep(0);
-        }
+        CATCH_LOG();
+
     }while (!bufferSent && --maxRetries > 0);
 
     // Failed to send the buffer due to insufficient space,
     // fail.
     if (!bufferSent)
     {
+        LOG_IF_FAILED(HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER));
         return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
     }
 

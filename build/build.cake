@@ -1,10 +1,9 @@
 #tool nuget:?package=NuGet.CommandLine&version=5.10
-#addin nuget:?package=Cake.Compression&version=0.3.0
+//#addin nuget:?package=Cake.Compression&version=0.3.0
 
-
-
+// ===========================================================================================
 string setupVersionName = "Developer Preview 4";
-
+// ===========================================================================================
 
 
 
@@ -163,7 +162,8 @@ Task("SetupEnvironment")
     // Copy key output files from VSFiles to staging to allow building installer
    
     var outputDir = System.IO.Path.Combine(apiAndServiceSolutionDir, "VSFiles", plat.ToString(), configuration);
-    var apiHeaderDir = System.IO.Path.Combine(apiAndServiceSolutionDir, "VSFiles\\intermediate\\Windows.Devices.Midi2",  plat.ToString(), configuration, "GeneratedFiles\\winrt");
+    var generatedFilesDir = System.IO.Path.Combine(apiAndServiceSolutionDir, "VSFiles", "intermediate", "Windows.Devices.Midi2", plat.ToString(), configuration, "GeneratedFiles", "winrt");
+    //var apiHeaderDir = System.IO.Path.Combine(apiAndServiceSolutionDir, "VSFiles\\intermediate\\Windows.Devices.Midi2",  plat.ToString(), configuration, "GeneratedFiles\\winrt");
 
     Information("\nCopying service and API for " + plat.ToString());
 
@@ -186,16 +186,36 @@ Task("SetupEnvironment")
     CopyFiles(System.IO.Path.Combine(outputDir, "WinRTActivationEntries.txt"), copyToDir); 
 
     // copy the C++ header for the API
-    CopyFiles(System.IO.Path.Combine(apiHeaderDir, "Windows.Devices.Midi2.h"), copyToDir); 
+    CopyFiles(System.IO.Path.Combine(generatedFilesDir, "Windows.Devices.Midi2.h"), copyToDir); 
 
     // copy the API Header and the .winmd to the "API bare" folder
 
-    var apiBareCopyToDir = System.IO.Path.Combine(releaseRootDir, "API");
+    var apiBareCopyToDir = System.IO.Path.Combine(releaseRootDir, "api");
     
     if (!DirectoryExists(apiBareCopyToDir))
         CreateDirectory(apiBareCopyToDir);
 
+    if (!DirectoryExists(System.IO.Path.Combine(apiBareCopyToDir, "winrt")))
+        CreateDirectory(System.IO.Path.Combine(apiBareCopyToDir, "winrt"));
+
+    if (!DirectoryExists(System.IO.Path.Combine(apiBareCopyToDir, "winrt", "impl")))
+        CreateDirectory(System.IO.Path.Combine(apiBareCopyToDir, "winrt", "impl"));
+
+
     CopyFiles(System.IO.Path.Combine(copyToDir, "Windows.Devices.Midi2.h"), apiBareCopyToDir); 
+
+    CopyFiles(System.IO.Path.Combine(generatedFilesDir, "base.h"), System.IO.Path.Combine(apiBareCopyToDir, "winrt/")); 
+    CopyFiles(System.IO.Path.Combine(generatedFilesDir, "Windows.Devices.h"), System.IO.Path.Combine(apiBareCopyToDir, "winrt/")); 
+    CopyFiles(System.IO.Path.Combine(generatedFilesDir, "impl/Windows.Devices.Enumeration.2.h"), System.IO.Path.Combine(apiBareCopyToDir, "winrt/impl/")); 
+    CopyFiles(System.IO.Path.Combine(generatedFilesDir, "impl/Windows.Devices.Midi.2.h"), System.IO.Path.Combine(apiBareCopyToDir, "winrt/impl/")); 
+    CopyFiles(System.IO.Path.Combine(generatedFilesDir, "impl/Windows.Foundation.2.h"), System.IO.Path.Combine(apiBareCopyToDir, "winrt/impl/")); 
+    CopyFiles(System.IO.Path.Combine(generatedFilesDir, "impl/Windows.Foundation.Collections.2.h"), System.IO.Path.Combine(apiBareCopyToDir, "winrt/impl/")); 
+    CopyFiles(System.IO.Path.Combine(generatedFilesDir, "impl/Windows.Devices.Midi2.2.h"), System.IO.Path.Combine(apiBareCopyToDir, "winrt/impl/")); 
+
+
+
+
+
     CopyFiles(System.IO.Path.Combine(copyToDir, "Windows.Devices.Midi2.dll"), apiBareCopyToDir); 
     CopyFiles(System.IO.Path.Combine(copyToDir, "Windows.Devices.Midi2.winmd"), apiBareCopyToDir); 
     CopyFiles(System.IO.Path.Combine(copyToDir, "Windows.Devices.Midi2.pri"), apiBareCopyToDir); 
@@ -455,7 +475,7 @@ Task("PackSDKProjection")
 
 Task("BuildConsoleApp")
     .IsDependentOn("PackAPIProjection")
-    .IsDependentOn("PackSDKProjection")
+/*    .IsDependentOn("PackSDKProjection") */
     .DoesForEach(platformTargets, plat =>
 {
     // TODO: Update nuget ref in console app to the new version
@@ -565,14 +585,14 @@ Task("BuildSettingsApp")
 
 });
 
-
+ string finalSetupName = string.Empty;
 
 Task("BuildInstaller")
     .IsDependentOn("SetupEnvironment")
     .IsDependentOn("BuildServiceAndAPI")
     .IsDependentOn("BuildApiActivationRegEntriesCSharp")
-    .IsDependentOn("BuildSDK")
-    .IsDependentOn("BuildSettingsApp")
+/*    .IsDependentOn("BuildSDK") */
+/*    .IsDependentOn("BuildSettingsApp") */
     .IsDependentOn("BuildConsoleApp")
     .DoesForEach(platformTargets, plat => 
 {
@@ -640,7 +660,7 @@ Task("BuildInstaller")
         writer.WriteLine("</Include>");
     }
 
-    string finalSetupName = $"Windows MIDI Services {setupVersionName} {setupBuildPlatform} {setupBuildFullVersionString}.exe";
+    finalSetupName = $"Windows MIDI Services {setupVersionName} {setupBuildPlatform} {setupBuildFullVersionString}.exe";
 
     var buildSettings = new DotNetBuildSettings
     {
@@ -674,6 +694,9 @@ Task("BuildInstaller")
 
     CopyFiles(System.IO.Path.Combine(consoleOnlySetupProjectDir, "bin", plat.ToString(), "Release", "*.msi"), releaseStandAloneInstallerFolder); 
     CopyFiles(System.IO.Path.Combine(settingsOnlySetupProjectDir, "bin", plat.ToString(), "Release", "*.msi"), releaseStandAloneInstallerFolder); 
+
+
+
 });
 
 
@@ -689,6 +712,14 @@ Task("CopyAPIArtifacts")
     CopyFiles(System.IO.Path.Combine(apiStagingDir, "Windows.Devices.Midi2.dll"), apiReleaseArtifactsFolder); 
     CopyFiles(System.IO.Path.Combine(apiStagingDir, "Windows.Devices.Midi2.pri"), apiReleaseArtifactsFolder); 
     CopyFiles(System.IO.Path.Combine(apiStagingDir, "Windows.Devices.Midi2.h"), apiReleaseArtifactsFolder); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/base.h"), System.IO.Path.Combine(apiReleaseArtifactsFolder, "winrt/")); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/Windows.Devices.h"), System.IO.Path.Combine(apiReleaseArtifactsFolder, "winrt/")); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/impl/Windows.Devices.Enumeration.2.h"), System.IO.Path.Combine(apiReleaseArtifactsFolder, "winrt/impl/")); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/impl/Windows.Devices.Midi.2.h"), System.IO.Path.Combine(apiReleaseArtifactsFolder, "winrt/impl/")); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/impl/Windows.Foundation.2.h"), System.IO.Path.Combine(apiReleaseArtifactsFolder, "winrt/impl/")); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/impl/Windows.Foundation.Collections.2.h"), System.IO.Path.Combine(apiReleaseArtifactsFolder, "winrt/impl/")); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/impl/Windows.Devices.Midi2.2.h"), System.IO.Path.Combine(apiReleaseArtifactsFolder, "winrt/impl/")); 
+
 
 });
 
@@ -701,7 +732,12 @@ Task("Default")
     .IsDependentOn("BuildApiActivationRegEntriesInternal")
     .IsDependentOn("BuildInstaller")
     .IsDependentOn("CopyAPIArtifacts")
-    ;
+    .Does(() =>
+{
+
+    Information("\n\nInstaller >> \"" + finalSetupName + "\"\n\n");
+
+});
 
 
 
