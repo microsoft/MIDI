@@ -273,6 +273,9 @@
   <data name="ParameterCaptureMessagesAnnotate" xml:space="preserve">
     <value>True to annotate messages written to the file. Annotations begin with the # sign and are written on the line before the UMP data line. The annotation includes timestamp information as well as the specific message type.</value>
   </data>
+  <data name="ParameterCaptureMessagesFieldDebugWarnSkippedIncrement" xml:space="preserve">
+    <value>For incoming streams where the last word is incremented by one each time (a developer debugging approach) warn when there are gaps.</value>
+  </data>
   <data name="ParameterCaptureMessagesFieldDelimiter" xml:space="preserve">
     <value>Delimiter to separate fields. Valid values include:</value>
   </data>

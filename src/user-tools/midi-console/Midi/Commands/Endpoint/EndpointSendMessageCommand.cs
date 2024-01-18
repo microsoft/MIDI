@@ -227,7 +227,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 AnsiConsole.Progress()
                     .Start(ctx =>
                     {
-                        if ((settings.Count * (settings.Words.Length + 2)) > bufferWarningThreshold && settings.DelayBetweenMessages == 0)
+                        if ((settings.Count * (settings.Words!.Length + 2)) > bufferWarningThreshold && settings.DelayBetweenMessages == 0)
                         {
                             AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning(Strings.SendMessageFloodWarning));
                             AnsiConsole.WriteLine();

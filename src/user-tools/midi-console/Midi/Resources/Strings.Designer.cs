@@ -529,6 +529,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to For incoming streams where the last word is incremented by one each time (a developer debugging approach) warn when there are gaps..
+        /// </summary>
+        internal static string ParameterCaptureMessagesFieldDebugWarnSkippedIncrement {
+            get {
+                return ResourceManager.GetString("ParameterCaptureMessagesFieldDebugWarnSkippedIncrement", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Delimiter to separate fields. Valid values include:.
         /// </summary>
         internal static string ParameterCaptureMessagesFieldDelimiter {

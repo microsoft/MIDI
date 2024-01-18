@@ -27,6 +27,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         public UInt32 Word1;
         public UInt32 Word2;
         public UInt32 Word3;
+
+        public bool HasError;
     }
 
 
@@ -79,6 +81,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             [CommandOption("-l|--capture-field-delimiter")]
             [DefaultValue(CaptureFieldDelimiter.Space)]
             public CaptureFieldDelimiter FieldDelimiter { get; set; }
+
+            [EnumLocalizedDescription("ParameterCaptureMessagesFieldDebugWarnSkippedIncrement", typeof(CaptureFieldDelimiter))]
+            [CommandOption("-w|--debug-warn-skipped-increment")]
+            [DefaultValue(false)]
+            public bool WarnIfSkippedIncrementMessage { get; set; }
 
             //[EnumLocalizedDescription("ParameterMonitorEndpointSkipToKeepUp", typeof(CaptureFieldDelimiter))]
             //[CommandOption("-k|--keep-up-display")]
@@ -160,7 +167,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             MidiMessageTable displayTable = new MidiMessageTable(settings.Verbose);
 
-            bool capturingToFile = false;
+        //    bool capturingToFile = false;
 
             string endpointId = string.Empty;
 
@@ -210,7 +217,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                     AnsiConsole.MarkupLine("Capturing to " + AnsiMarkupFormatter.FormatFileName(fileName));
 
-                    capturingToFile = true;
+                    //capturingToFile = true;
                 }
                 else
                 {
@@ -230,8 +237,10 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 MonitorEndpointConnectionStatusInTheBackground(endpointId);
 
                 bool continueWaiting = true;
-                UInt64 outOfOrderMessageCount = 0;
+                
+                UInt64 outOfTimestampOrderMessageCount = 0;
 
+                uint numberOfSkippedDebugMessages = 0;
 
                 // open the connection
                 if (connection.Open())
@@ -241,6 +250,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     var messageListener = new Thread(() =>
                     {
                         UInt64 lastMessageTimestamp = 0;
+
+                        UInt32 lastReceivedDebugWord = 0;
+                        UInt32 currentDebugWord = 0;
 
                         connection.MessageReceived += (s, e) =>
                         {
@@ -255,7 +267,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                             // helps prevent any race conditions with main loop and its output
                             if (!continueWaiting) return;
 
-                            //Console.WriteLine("DEBUG: MessageReceived");
                             index++;
 
                             var receivedMessage = new ReceivedMidiMessage()
@@ -267,13 +278,45 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                             if (e.Timestamp < lastMessageTimestamp)
                             {
-                                outOfOrderMessageCount++;
+                                outOfTimestampOrderMessageCount++;
+                                receivedMessage.HasError = true;
                             }
 
                             lastMessageTimestamp = e.Timestamp;
 
 
-                            receivedMessage.NumWords = e.FillWords(out receivedMessage.Word0, out receivedMessage.Word1, out receivedMessage.Word2, out receivedMessage.Word3);
+                            receivedMessage.NumWords = e.FillWords(
+                                out receivedMessage.Word0, 
+                                out receivedMessage.Word1, 
+                                out receivedMessage.Word2, 
+                                out receivedMessage.Word3);
+
+
+                            switch (receivedMessage.NumWords)
+                            {
+                                case 1: break; // 1 word messages don't auto-increment
+                                case 2:
+                                    currentDebugWord = receivedMessage.Word1;
+                                    break;
+                                case 3:
+                                    currentDebugWord = receivedMessage.Word2;
+                                    break;
+                                case 4:
+                                    currentDebugWord = receivedMessage.Word3;
+                                    break;
+                            }
+
+                            if (settings.WarnIfSkippedIncrementMessage && index > 1)
+                            {
+                                if (currentDebugWord != lastReceivedDebugWord + 1)
+                                {
+                                    numberOfSkippedDebugMessages += (currentDebugWord - lastReceivedDebugWord - 1);
+                                    receivedMessage.HasError = true;
+                                }
+
+                                lastReceivedDebugWord = currentDebugWord;
+                            }
+
 
                             lock (m_receivedMessagesQueue)
                             {
@@ -319,8 +362,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                 }
 
                                 if (lastReceivedTimestamp == 0)
-                                {
-                                    // gets timestamp of first message we receive and uses that so all others are an offset from previous message
+                                {                                   
                                     lastReceivedTimestamp = message.ReceivedTimestamp;
                                 }
 
@@ -331,7 +373,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                                 // calculate offset from the last message received
                                 var offsetMicroseconds = MidiClock.ConvertTimestampToMicroseconds(
-                                message.ReceivedTimestamp - lastReceivedTimestamp);
+                                    message.ReceivedTimestamp - lastReceivedTimestamp);
 
                                 // set our last received so we can calculate offsets
                                 lastReceivedTimestamp = message.ReceivedTimestamp;
@@ -513,7 +555,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     // calculate total receive time, not total display time
 
                     UInt64 totalTicks = lastMessageReceivedEventTimestamp - firstMessageReceivedEventTimestamp;
-                    double totalSeconds = MidiClock.ConvertTimestampToMilliseconds(totalTicks) / 1000;
+                    double totalSeconds = MidiClock.ConvertTimestampToMilliseconds(totalTicks) / 1000.0;
 
                     message += $" and processed over [steelblue1]{totalSeconds.ToString("N2")}[/] seconds, ";
 
@@ -524,7 +566,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     if (averageMicroseconds > 1000000)
                     {
                         // display in seconds
-                        double averageSeconds = averageMicroseconds / 1000000;
+                        double averageSeconds = averageMicroseconds / 1000000.0;
                         message += $"[steelblue1]{averageSeconds.ToString("N4")} s[/] per message.";
                     }
                     else if (averageMilliseconds > 1)
@@ -541,11 +583,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     AnsiConsole.MarkupLine(message);
                 }
 
-                if (outOfOrderMessageCount > 0)
+                if (outOfTimestampOrderMessageCount > 0)
                 {
-                    string message = "❎ " + outOfOrderMessageCount.ToString();
+                    string message = "❎ " + outOfTimestampOrderMessageCount.ToString();
 
-                    if (outOfOrderMessageCount > 1)
+                    if (outOfTimestampOrderMessageCount > 1)
                     {
                         // multiple messages out of order
                         message += " messages received out of sent timestamp order.";
@@ -563,7 +605,34 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     AnsiConsole.MarkupLine("✅ No messages received out of expected timestamp order.");
                 }
 
-          //      AnsiConsole.MarkupLine($"{MidiClock.ConvertTimestampToMilliseconds(displayTable.TotalRenderingTicks).ToString("N4")} milliseconds spent just on output rendering.");
+                if (settings.WarnIfSkippedIncrementMessage)
+                {
+                    if (numberOfSkippedDebugMessages > 0)
+                    {
+                        string message = "❎ " + numberOfSkippedDebugMessages.ToString();
+
+                        if (numberOfSkippedDebugMessages > 1)
+                        {
+                            // multiple messages out of order
+                            message += " in-line messages skipped (assuming they were sent with debug words).";
+                        }
+                        else
+                        {
+                            // single message out of order
+                            message += " in-line message skipped (assuming it was sent with debug words).";
+                        }
+
+                        AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(message));
+                    }
+                    else
+                    {
+                        AnsiConsole.MarkupLine("✅ No messages skipped.");
+                    }
+                }
+
+
+
+                //      AnsiConsole.MarkupLine($"{MidiClock.ConvertTimestampToMilliseconds(displayTable.TotalRenderingTicks).ToString("N4")} milliseconds spent just on output rendering.");
 
                 if (captureWriter != null)
                 {
