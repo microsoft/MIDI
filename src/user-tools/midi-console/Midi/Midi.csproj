@@ -27,11 +27,11 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.4" />
-    <PackageReference Include="Spectre.Console" Version="0.48.1-preview.0.12" />
-    <PackageReference Include="Spectre.Console.Cli" Version="0.48.1-preview.0.12" />
+    <PackageReference Include="Spectre.Console" Version="0.48.1-preview.0.17" />
+    <PackageReference Include="Spectre.Console.Cli" Version="0.48.1-preview.0.17" />
     <PackageReference Include="System.Management" Version="8.0.0" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.0" />
-    <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.3-0133" />
+    <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.3-0134" />
   </ItemGroup>
 
   <ItemGroup>
