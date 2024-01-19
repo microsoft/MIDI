@@ -481,6 +481,20 @@ StreamEngine::Pause()
     }
     else
     {
+        // Stop Continuous reader
+        WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin));
+        PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
+
+        if (pDevCtx)
+        {
+            WdfIoTargetStop(WdfUsbTargetPipeGetIoTarget(pDevCtx->MidiInPipe), WdfIoTargetCancelSentIo);
+        }
+        else
+        {
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
+                "%!FUNC! Could not start interrupt pipe as no MidiInPipe");
+        }
+
         // If pMidiStreamEngine is available, the midi out worker thread will loopback.
         // If it isn't available, the midi out worker will throw the data away.
         // So when we transition midi in from run to paused, acquire the lock that
@@ -549,13 +563,30 @@ StreamEngine::Run()
     }
     else
     {
-        // If g_MidiInStreamEngine is available, the midi out worker thread will loopback.
-        // If it isn't available, the midi out worker will throw the data away.
-        // So when we transition midi in from paused to run, acquire the lock that
-        // protects g_MidiInStreamEngine and set g_MidiInStreamEngine to start the loopback data
-        // flowing.
-        // TBD this mechanism must be changed in case where multiple instances
+        // pMidiStreamEngine is used to indicate running state. If pMidiStreamEngine is available, the out worker
+        // thread will output data to the connected device, otherwise data will be thrown away.
         pMidiStreamEngine = this;
+
+        // Start the continuous reader
+        WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin));
+        PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
+
+        pDevCtx->pStreamEngine = this;
+
+        if (pDevCtx)
+        {
+            status = WdfIoTargetStart(WdfUsbTargetPipeGetIoTarget(pDevCtx->MidiInPipe));
+            if (!NT_SUCCESS(status))
+            {
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                    "%!FUNC! Could not start interrupt pipe failed %!STATUS!", status);
+            }
+        }
+        else
+        {
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
+                "%!FUNC! Could not start interrupt pipe as no MidiInPipe");
+        }
     }
 
     //

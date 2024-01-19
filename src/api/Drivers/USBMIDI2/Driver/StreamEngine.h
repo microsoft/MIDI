@@ -198,7 +198,7 @@ private:
         _Inout_ PDOUBLE_BUFFER_MAPPING mapping
         );
 
-private:
+private:  
     // Data memebers
     StreamEngine* pMidiStreamEngine = nullptr;
 

@@ -411,24 +411,6 @@ EvtDeviceD0Entry(
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
-    devCtx = GetDeviceContext(Device);
-    ASSERT(devCtx != nullptr);
-
-    if (devCtx->MidiInPipe)
-    {
-        status = WdfIoTargetStart(WdfUsbTargetPipeGetIoTarget(devCtx->MidiInPipe));
-        if (!NT_SUCCESS(status))
-        {
-            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                "%!FUNC! Could not start interrupt pipe failed %!STATUS!", status);
-        }
-    }
-    else
-    {
-        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
-            "%!FUNC! Could not start interrupt pipe as no MidiInPipe");
-    }
-
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
     return status;
@@ -1973,10 +1955,9 @@ Return Value:
             }
 
             // Send to circuit
-#if 0 // need to figure out how to get stream engine to here
-            if (g_MidiInStreamEngine != 0)
+            if (pDeviceContext->pStreamEngine)
             {
-                if (!g_MidiInStreamEngine->FillReadStream(
+                if (!pDeviceContext->pStreamEngine->FillReadStream(
                     (PUINT8)&UMP_Packet_Struct,
                     (size_t)(UMP_Packet_Struct.umpHeader.ByteCount) + sizeof(UMPDATAFORMAT)
                 ))
@@ -1989,9 +1970,9 @@ Return Value:
             else
             {
                 TraceEvents(TRACE_LEVEL_WARNING, TRACE_DEVICE,
-                   "MIDI Stream Engine not valid.\n");
+                    "No StreamEngine found in Device Context for filling read stream.\n");
+                goto ReadCompleteExit;
             }
-#endif
         }
     }
 

@@ -84,6 +84,7 @@ extern "C" {
 typedef struct _DEVICE_CONTEXT {
     WDFUSBDEVICE    UsbDevice;
     ACXCIRCUIT      Midi;
+    StreamEngine* pStreamEngine;
     WDF_TRI_STATE   ExcludeD3Cold;
 
     WDFUSBINTERFACE             UsbControlInterface;
