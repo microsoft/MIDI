@@ -238,5 +238,6 @@ private:
     // m_StandardStreamingLock m_LoopbackMessageQueue are only used
     // for standard streaming of loopback messages
     wil::fast_mutex_with_critical_region m_StandardStreamingLock;
+    wil::fast_mutex_with_critical_region m_MidiInLock;
     LIST_ENTRY  m_LoopbackMessageQueue {nullptr};
 };

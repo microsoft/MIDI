@@ -168,6 +168,8 @@ StreamEngine::HandleIo()
                     // process data in the cyclic buffer until either the read buffer is empty
                     // or the write buffer is full.
 
+                    auto lock = m_MidiInLock.acquire();
+
                     // we have a write event, there should be data available to move.
                     if (pMidiStreamEngine != nullptr)
                     {
@@ -501,6 +503,8 @@ StreamEngine::Pause()
         // protects pMidiStreamEngine and clear pMidiStreamEngine to stop the loopback data
         // flowing.
         // TBD - this mechanism needs to change in case where device can be destroyed
+        auto lock = m_MidiInLock.acquire();
+
         pMidiStreamEngine = nullptr;
     }
     else
@@ -571,6 +575,7 @@ StreamEngine::Run()
     {
         // pMidiStreamEngine is used to indicate running state. If pMidiStreamEngine is available, the out worker
         // thread will output data to the connected device, otherwise data will be thrown away.
+        auto lock = m_MidiInLock.acquire();
         pMidiStreamEngine = this;
 
         // Start the continuous reader
