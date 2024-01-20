@@ -479,7 +479,7 @@ StreamEngine::Pause()
             m_WorkerThread = nullptr;
         }
     }
-    else
+    else if (AcxPinGetId(m_Pin) == MidiPinTypeMidiIn)
     {
         // Stop Continuous reader
         WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin));
@@ -502,6 +502,12 @@ StreamEngine::Pause()
         // flowing.
         // TBD - this mechanism needs to change in case where device can be destroyed
         pMidiStreamEngine = nullptr;
+    }
+    else
+    {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+            "%!FUNC! Invalid device request, Pin type not valid.");
+        status = STATUS_INVALID_DEVICE_REQUEST;
     }
 
     //
@@ -561,7 +567,7 @@ StreamEngine::Run()
             KeSetPriorityThread(m_WorkerThread, HIGH_PRIORITY);
         }
     }
-    else
+    else if (AcxPinGetId(m_Pin) == MidiPinTypeMidiIn)
     {
         // pMidiStreamEngine is used to indicate running state. If pMidiStreamEngine is available, the out worker
         // thread will output data to the connected device, otherwise data will be thrown away.
@@ -587,6 +593,12 @@ StreamEngine::Run()
             TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
                 "%!FUNC! Could not start interrupt pipe as no MidiInPipe");
         }
+    }
+    else
+    {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+            "%!FUNC! Invalid device request, Pin type not valid.");
+        status = STATUS_INVALID_DEVICE_REQUEST;
     }
 
     //
