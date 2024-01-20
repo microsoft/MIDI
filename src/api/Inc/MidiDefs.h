@@ -513,6 +513,17 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_MidiOutLatencyTicksUserOverride, 802);     // DE
 
 
 
+
+// Additional Transport-specific properties ==================================================
+// Starts at 900
+
+#define STRING_PKEY_MIDI_VirtualMidiEndpointAssociator MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"900"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_VirtualMidiEndpointAssociator, 900);     // DEVPROP_TYPE_GUID
+
+
+
+
+
 // Structures for properties ================================================================
 
 
