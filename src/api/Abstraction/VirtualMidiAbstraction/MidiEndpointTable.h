@@ -52,11 +52,10 @@
 
 struct MidiVirtualDeviceEndpointEntry
 {
+    GUID VirtualEndpointAssociationId;             // how the config entries associate endpoints
     std::wstring DeviceEndpointDeviceId;              // the device interface id
 
     wil::com_ptr_nothrow<IMidiBiDi> MidiDeviceBiDi;
-
-    // don't need to keep the client bidi here, because we only use this table when creating the client
 
     ~MidiVirtualDeviceEndpointEntry()
     {
@@ -79,9 +78,13 @@ public:
     MidiEndpointTable& operator=(_In_ const MidiEndpointTable&) = delete;
 
 
-    wil::com_ptr_nothrow<IMidiBiDi> GetDeviceEndpointInterfaceForDeviceEndpointId(_In_ std::wstring deviceEndpointId) const noexcept;
+    // TODO: the two bidi endpoints should just be hard-wired together when both endpoints come online. 
+    // No lookup at runtime. Just assignment.
 
-    void RemoveEndpointEntry(_In_ std::wstring deviceEndpointId) noexcept;
+
+ //   wil::com_ptr_nothrow<IMidiBiDi> GetDeviceEndpointInterfaceForClientEndpointId(_In_ std::wstring clientEndpointId) const noexcept;
+
+    void RemoveEndpointPair(_In_ GUID VirtualEndpointAssociationId) noexcept;
 
 private:
     MidiEndpointTable();

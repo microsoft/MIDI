@@ -33,6 +33,8 @@ CMidi2KSMidiEndpointManager::Initialize(
     LPCWSTR configurationJson
 )
 {
+    OutputDebugString(L"\n" __FUNCTION__);
+
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiEndpointProtocolManager);
 

@@ -22,39 +22,39 @@ MidiEndpointTable& MidiEndpointTable::Current()
 }
 
 
-_Use_decl_annotations_
-wil::com_ptr_nothrow<IMidiBiDi> MidiEndpointTable::GetDeviceEndpointInterfaceForDeviceEndpointId(std::wstring const EndpointDeviceId) const noexcept
-{
-    try
-    {
-        auto result = m_Endpoints.find(EndpointDeviceId);
+//_Use_decl_annotations_
+//wil::com_ptr_nothrow<IMidiBiDi> MidiEndpointTable::GetDeviceEndpointInterfaceForDeviceEndpointId(std::wstring const EndpointDeviceId) const noexcept
+//{
+//    try
+//    {
+//        auto result = m_Endpoints.find(EndpointDeviceId);
+//
+//        if (result != m_Endpoints.end())
+//            return result->second.MidiDeviceBiDi;
+//        else
+//            return nullptr;
+//    }
+//    catch (...)
+//    {
+//        return nullptr;
+//    }
+//}
 
-        if (result != m_Endpoints.end())
-            return result->second.MidiDeviceBiDi;
-        else
-            return nullptr;
-    }
-    catch (...)
-    {
-        return nullptr;
-    }
-}
 
-
-_Use_decl_annotations_
-void MidiEndpointTable::RemoveEndpointEntry(std::wstring EndpointDeviceId) noexcept
-{
-    try
-    {
-        auto result = m_Endpoints.find(EndpointDeviceId);
-
-        if (result != m_Endpoints.end())
-        {
-            m_Endpoints.erase(result);
-        }
-    }
-    catch (...)
-    {
-
-    }
-}
+//_Use_decl_annotations_
+//void MidiEndpointTable::RemoveEndpointEntry(std::wstring EndpointDeviceId) noexcept
+//{
+//    try
+//    {
+//        auto result = m_Endpoints.find(EndpointDeviceId);
+//
+//        if (result != m_Endpoints.end())
+//        {
+//            m_Endpoints.erase(result);
+//        }
+//    }
+//    catch (...)
+//    {
+//
+//    }
+//}

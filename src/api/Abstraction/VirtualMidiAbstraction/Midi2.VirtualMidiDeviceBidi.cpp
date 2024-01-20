@@ -28,8 +28,8 @@ CMidi2VirtualMidiDeviceBiDi::Initialize(
         TraceLoggingPointer(this, "this")
         );
 
-    m_ClientCallback = Callback;
-    m_ClientCallbackContext = Context;
+    m_deviceCallback = Callback;
+    m_deviceCallbackContext = Context;
 
 
     // TODO: Spin up the client endpoint
@@ -51,9 +51,11 @@ CMidi2VirtualMidiDeviceBiDi::Cleanup()
         TraceLoggingPointer(this, "this")
         );
 
-    m_ClientCallback = nullptr;
-    m_ClientCallbackContext = 0;
-    m_DeviceBiDi = nullptr;
+    m_deviceCallback = nullptr;
+    m_deviceCallbackContext = 0;
+    
+    //m_LinkedClientBiDi->Release();
+    m_linkedClientBiDi = nullptr;
 
     return S_OK;
 }
@@ -61,25 +63,22 @@ CMidi2VirtualMidiDeviceBiDi::Cleanup()
 _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiDeviceBiDi::SendMidiMessage(
-    PVOID /*Message*/,
-    UINT /*Size*/,
-    LONGLONG /*Position*/
+    PVOID Message,
+    UINT Size,
+    LONGLONG Position
 )
 {
-    //// message received from the client
+    // message received from the device
 
-    //RETURN_HR_IF_NULL(E_INVALIDARG, Message);
+    RETURN_HR_IF_NULL(E_INVALIDARG, Message);
+    RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
 
-    //if (Size < sizeof(uint32_t))
-    //{
-    //    // TODO log that data was smaller than minimum UMP size
-    //    return E_FAIL;
-    //}
-
-    //if (m_ClientCallback != nullptr)
-    //{
-    //    return m_ClientCallback(Message, Size, Position, m_ClientCallbackContext);
-    //}
+    // if there's no linked bidi, it's not a failure. We just lose the message
+    if (m_linkedClientBiDi != nullptr)
+    {
+        // is this right, or should it be the callback?
+        return m_linkedClientBiDi->SendMidiMessage(Message, Size, Position);
+    }
 
     return S_OK;
 
@@ -88,16 +87,18 @@ CMidi2VirtualMidiDeviceBiDi::SendMidiMessage(
 _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiDeviceBiDi::Callback(
-    PVOID /*Message*/,
-    UINT /*Size*/,
-    LONGLONG /*Position*/,
-    LONGLONG /*Context*/
+    PVOID Message,
+    UINT Size,
+    LONGLONG Position,
+    LONGLONG Context
 )
 {
-    //if (m_ClientCallback != nullptr)
-    //{
-    //    return m_ClientCallback->Callback(Message, Size, Position, m_ClientCallbackContext);
-    //}
+    // message received from the client
+
+    if (m_deviceCallback != nullptr)
+    {
+        return m_deviceCallback->Callback(Message, Size, Position, Context);
+    }
 
     return S_OK;
 }

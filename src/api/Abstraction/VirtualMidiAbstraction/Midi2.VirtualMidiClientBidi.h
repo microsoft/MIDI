@@ -21,11 +21,16 @@ public:
     STDMETHOD(Callback)(_In_ PVOID, _In_ UINT, _In_ LONGLONG, _In_ LONGLONG);
     STDMETHOD(Cleanup)();
 
-private:
-    IMidiCallback* m_ClientCallback;
-    LONGLONG m_ClientCallbackContext;
+    HRESULT LinkAssociatedDeviceBiDi(_In_ wil::com_ptr_nothrow<IMidiBiDi> deviceBiDi)
+    {
+        m_linkedDeviceBiDi = deviceBiDi;
+    }
 
-    IMidiBiDi* m_EndpointBiDi;
+private:
+    IMidiCallback* m_clientCallback;
+    LONGLONG m_clientCallbackContext;
+
+    wil::com_ptr_nothrow<IMidiBiDi> m_linkedDeviceBiDi;
 };
 
 

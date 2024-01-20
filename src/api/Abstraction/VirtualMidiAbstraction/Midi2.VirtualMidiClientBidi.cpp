@@ -28,8 +28,8 @@ CMidi2VirtualMidiClientBiDi::Initialize(
         TraceLoggingPointer(this, "this")
     );
 
-    m_ClientCallback = Callback;
-    m_ClientCallbackContext = Context;
+    m_clientCallback = Callback;
+    m_clientCallbackContext = Context;
 
     // TODO: Using the device Id parameter, associate with the endpoint in the endpoint device table
 
@@ -46,9 +46,11 @@ CMidi2VirtualMidiClientBiDi::Cleanup()
         TraceLoggingPointer(this, "this")
     );
 
-    m_ClientCallback = nullptr;
-    m_ClientCallbackContext = 0;
-    m_EndpointBiDi = nullptr;
+    m_clientCallback = nullptr;
+    m_clientCallbackContext = 0;
+
+    m_linkedDeviceBiDi->Release();
+    m_linkedDeviceBiDi = nullptr;
 
     return S_OK;
 }
@@ -64,17 +66,13 @@ CMidi2VirtualMidiClientBiDi::SendMidiMessage(
     // message received from the client
 
     RETURN_HR_IF_NULL(E_INVALIDARG, Message);
+    RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
 
-    if (Size < sizeof(uint32_t))
-    {
-        // TODO log that data was smaller than minimum UMP size
-        return E_FAIL;
-    }
-
-    if (m_EndpointBiDi != nullptr)
+    // if there's no linked bidi, it's not a failure. We just lose the message
+    if (m_linkedDeviceBiDi != nullptr)
     {
         // is this right, or should it be the callback?
-        return m_EndpointBiDi->SendMidiMessage(Message, Size, Position);
+        return m_linkedDeviceBiDi->SendMidiMessage(Message, Size, Position);
     }
 
     return S_OK;
@@ -87,14 +85,14 @@ CMidi2VirtualMidiClientBiDi::Callback(
     PVOID Message,
     UINT Size,
     LONGLONG Position,
-    LONGLONG
+    LONGLONG Context
 )
 {
     // message received from the device
 
-    if (m_ClientCallback != nullptr)
+    if (m_clientCallback != nullptr)
     {
-        return m_ClientCallback->Callback(Message, Size, Position, m_ClientCallbackContext);
+        return m_clientCallback->Callback(Message, Size, Position, Context);
     }
 
     return S_OK;
