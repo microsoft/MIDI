@@ -403,8 +403,8 @@ EvtDeviceD0Entry(
     )
 {
     NTSTATUS status = STATUS_SUCCESS;
-    PDEVICE_CONTEXT devCtx;
 
+    UNREFERENCED_PARAMETER(Device);
     UNREFERENCED_PARAMETER(PreviousState);
 
     PAGED_CODE();

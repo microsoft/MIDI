@@ -142,6 +142,8 @@ _Use_decl_annotations_
 void
 StreamEngine::HandleIo()
 {
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
+
     // This function handles both sending and receiving midi messages
     // when cyclic buffering is being used.
     // This implememtation loops the midi out data back to midi in.
@@ -257,17 +259,16 @@ StreamEngine::HandleIo()
                         InterlockedExchange((LONG *)(m_ReadRegister), *((ULONG*)(m_WriteRegister)));
                         break;
                     }
-
-                    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
-                        "%!FUNC! thread event end with status: %!STATUS!", status);
-
                 }while(true);
             }
             else
             {
                 // exit event or failure, exit the loop to terminate the thread.
+                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! thread terminated with status: %!STATUS!", status);
                 break;
             }
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
+                "%!FUNC! thread event end with status: %!STATUS!", status);
         }while(true);
     }
     // else, this is a midi in pin, nothing to do for this worker thread that is just
@@ -275,6 +276,8 @@ StreamEngine::HandleIo()
 
     m_ThreadExitedEvent.set();
     PsTerminateSystemThread(status);
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 }
 
 _Use_decl_annotations_
@@ -377,6 +380,7 @@ Return Value:
     }
     else
     {
+        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit with data dropped.");
         return true;    // just drop the data
     }
 
@@ -460,6 +464,8 @@ StreamEngine::Pause()
 
     PAGED_CODE();
 
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
+
     if (m_StreamState == AcxStreamStatePause)
     {
         // Nothing to do.
@@ -497,6 +503,9 @@ StreamEngine::Pause()
         WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin));
         PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
 
+        // Make sure we are not trying to change state while processing
+        auto lock = m_MidiInLock.acquire();
+
         if (pDevCtx)
         {
             WdfIoTargetStop(WdfUsbTargetPipeGetIoTarget(pDevCtx->MidiInPipe), WdfIoTargetCancelSentIo);
@@ -513,7 +522,6 @@ StreamEngine::Pause()
         // protects pMidiStreamEngine and clear pMidiStreamEngine to stop the loopback data
         // flowing.
         // TBD - this mechanism needs to change in case where device can be destroyed
-        auto lock = m_MidiInLock.acquire();
 
         pMidiStreamEngine = nullptr;
     }
@@ -532,6 +540,7 @@ StreamEngine::Pause()
     status = STATUS_SUCCESS;
 
 exit:
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
     return status;
 }
 
@@ -542,6 +551,8 @@ StreamEngine::Run()
     NTSTATUS status = STATUS_UNSUCCESSFUL;
 
     PAGED_CODE();
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
     if (m_StreamState == AcxStreamStateRun)
     {
@@ -588,12 +599,13 @@ StreamEngine::Run()
         auto lock = m_MidiInLock.acquire();
         pMidiStreamEngine = this;
 
-        // Start the continuous reader
         WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin));
         PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
-
         pDevCtx->pStreamEngine = this;
 
+        // NOTE: Must not start continuous reader until after setting pMidiStreamEngine as ISR can be called before
+        // the acquired lock is cleared.
+        // Start the continuous reader
         if (pDevCtx)
         {
             status = WdfIoTargetStart(WdfUsbTargetPipeGetIoTarget(pDevCtx->MidiInPipe));
@@ -608,6 +620,7 @@ StreamEngine::Run()
             TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
                 "%!FUNC! Could not start interrupt pipe as no MidiInPipe");
         }
+
     }
     else
     {
@@ -620,6 +633,9 @@ StreamEngine::Run()
     // Pause to Run.
     //
     m_StreamState = AcxStreamStateRun;
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
+
     status = STATUS_SUCCESS;
 
 exit:
