@@ -161,6 +161,10 @@ StreamEngine::HandleIo()
             // run until we get a thread exit event.
             // wait for either a write event indicating data is ready to move, or thread exit.
             status = KeWaitForMultipleObjects(2, waitObjects, WaitAny, Executive, KernelMode, FALSE, nullptr, nullptr);
+
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
+                "%!FUNC! thread event with status: %!STATUS!", status);
+
             if (STATUS_WAIT_1 == status)
             {
                 do
@@ -253,6 +257,10 @@ StreamEngine::HandleIo()
                         InterlockedExchange((LONG *)(m_ReadRegister), *((ULONG*)(m_WriteRegister)));
                         break;
                     }
+
+                    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
+                        "%!FUNC! thread event end with status: %!STATUS!", status);
+
                 }while(true);
             }
             else
@@ -300,6 +308,8 @@ Return Value:
 
     // Current mechanism to determine if currently processing data is that
     // the StreamEngine is not null. TBD this mechanism needs to be fixed.
+    auto lock = m_MidiInLock.acquire();
+
     if (pMidiStreamEngine)
     {
         // Retrieve the midi in position for the buffer that we are writing to. The data between the write position
