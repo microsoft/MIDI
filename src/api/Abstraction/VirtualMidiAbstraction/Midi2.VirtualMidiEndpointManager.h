@@ -25,37 +25,32 @@ public:
     //));
 
 
-private:
-    GUID m_ContainerId{};
-    GUID m_TransportAbstractionId{};
-
     HRESULT CreateDeviceSideEndpoint(
-        _In_ GUID const VirtualEndpointAssociationGuid,
-        _Out_ std::wstring InstanceId
+        _Inout_ MidiVirtualDeviceEndpointEntry& entry
     );
 
     HRESULT CreateClientVisibleEndpoint(
-        _In_ GUID const VirtualEndpointAssociationGuid,
-        _In_ std::wstring DeviceSideInstanceId,
-        _In_ std::wstring const Name,
-        _In_ std::wstring const LargeImagePath,
-        _In_ std::wstring const SmallImagePath,
-        _In_ std::wstring const Description,
-        _Out_ std::wstring InstanceId
+        _Inout_ MidiVirtualDeviceEndpointEntry& entry
     );
 
     HRESULT ApplyJson(_In_ json::JsonObject jsonObject);
 
-    HRESULT DeleteEndpointPair(
-        _In_ GUID const VirtualEndpointAssociationGuid
-    );
+    //HRESULT DeleteEndpointPair(
+    //    _In_ GUID const VirtualEndpointAssociationGuid
+    //);
 
-    HRESULT CreateConfiguredDeviceEndpoints(_In_ std::wstring ConfigurationJson);
+private:
+    GUID m_ContainerId{};
+    GUID m_TransportAbstractionId{};
+
+    std::wstring m_parentDeviceId{};
+
+
+//    HRESULT CreateConfiguredDeviceEndpoints(_In_ std::wstring ConfigurationJson);
     
     HRESULT CreateParentDevice();
 
     wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
-
 
     //json::JsonObject m_JsonObject{ nullptr };
 };

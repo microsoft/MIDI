@@ -118,6 +118,7 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
     DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
     BYTE nativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
+    uint32_t supportedDataFormat = (BYTE)MidiDataFormat::MidiDataFormat_UMP;
 
     std::wstring description = L"Diagnostics loopback endpoint. For testing purposes.";
 
@@ -126,12 +127,22 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(
     OutputDebugString(__FUNCTION__ L": Building DEVPROPERTY interfaceDevProperties[]\n");
 
     DEVPROPERTY interfaceDevProperties[] = {
+        {{PKEY_MIDI_AssociatedUMP, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_EMPTY, 0, nullptr},
+
+        {{PKEY_MIDI_SupportedDataFormats, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(BYTE)), &supportedDataFormat},
+
+
         {{DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_STRING, static_cast<ULONG>((Name.length() + 1) * sizeof(WCHAR)), (PVOID)Name.c_str()},
         {{PKEY_MIDI_TransportSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_STRING, static_cast<ULONG>((Name.length() + 1) * sizeof(WCHAR)), (PVOID)Name.c_str()},
 
-        // TODO: We should reset function blocks and other endpoint properties here as well.
+
+        {{PKEY_MIDI_EndpointRequiresMetadataHandler, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue},           
+
 
         {{PKEY_MIDI_EndpointDevicePurpose, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(endpointPurpose)),(PVOID)&endpointPurpose},
@@ -223,8 +234,9 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(
     std::wstring mnemonic(TRANSPORT_MNEMONIC);
 
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
-    //DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
+    DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
     BYTE nativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
+    BYTE supportedDataFormat = (BYTE)MidiDataFormat::MidiDataFormat_UMP;
 
     auto endpointPurpose = (uint32_t)MidiEndpointDevicePurposePropertyValue::DiagnosticPing;
 
@@ -235,6 +247,15 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(
             DEVPROP_TYPE_STRING, static_cast<ULONG>((Name.length() + 1) * sizeof(WCHAR)), (PVOID)Name.c_str()},
         {{PKEY_MIDI_TransportSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_STRING, static_cast<ULONG>((Name.length() + 1) * sizeof(WCHAR)), (PVOID)Name.c_str()},
+
+        {{PKEY_MIDI_EndpointRequiresMetadataHandler, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse},
+
+        {{PKEY_MIDI_SupportedDataFormats, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(BYTE)), &supportedDataFormat},
+
+
+
         {{PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_GUID, static_cast<ULONG>(sizeof(GUID)), (PVOID)&AbstractionLayerGUID },        // essential to instantiate the right endpoint types
         {{PKEY_MIDI_EndpointDevicePurpose, DEVPROP_STORE_SYSTEM, nullptr},
@@ -245,6 +266,8 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(
             DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(BYTE)), (PVOID)&nativeDataFormat},
         {{PKEY_MIDI_TransportMnemonic, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_STRING, static_cast<ULONG>((mnemonic.length() + 1) * sizeof(WCHAR)), (PVOID)mnemonic.c_str()}
+
+
     };
 
 

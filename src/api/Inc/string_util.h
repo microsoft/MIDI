@@ -15,6 +15,11 @@
 namespace Windows::Devices::Midi2::Internal
 {
     
+    inline void InPlaceToUpper(_Inout_ std::wstring &s)
+    {
+        std::transform(s.begin(), s.end(), s.begin(), towupper);
+    }
+
     inline void InPlaceToLower(_Inout_ std::wstring &s)
     {
         std::transform(s.begin(), s.end(), s.begin(), towlower);
@@ -41,6 +46,20 @@ namespace Windows::Devices::Midi2::Internal
         InPlaceTrim(newString);
 
         return newString;
+    }
+
+    inline std::wstring ToUpperWStringCopy(_In_ std::wstring s)
+    {
+        std::wstring ws{ s };
+        InPlaceToUpper(ws);
+
+        return ws;
+    }
+
+
+    inline std::wstring ToUpperTrimmedWStringCopy(_In_ std::wstring s)
+    {
+        return ToUpperWStringCopy(TrimmedWStringCopy(s));
     }
 
 

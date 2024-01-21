@@ -28,9 +28,7 @@ namespace MidiSample.AppToAppMidi
     public sealed partial class MainWindow : Window
     {
         private midi2.MidiSession _session;
-
         private midi2.MidiEndpointConnection _connection;
-
 
         public MainWindow()
         {
@@ -52,30 +50,21 @@ namespace MidiSample.AppToAppMidi
         private void OpenConnection()
         {
             _session = midi2.MidiSession.CreateSession("App to app MIDI sample");
-
             _connection = _session.CreateEndpointConnection(midi2.MidiEndpointDeviceInformation.DiagnosticsLoopbackAEndpointId);
-
             _connection.Open();
         }
 
-
-
         private byte GetMidiNoteNumberFromPad(Rectangle pad)
         {
-            // you could do anything here. We're just going to use the number that's in the tag
-
             return byte.Parse(pad.Tag!.ToString());
         }
 
         private void OnPadPointerPressed(object sender, PointerRoutedEventArgs e)
         {
             byte note = GetMidiNoteNumberFromPad((Rectangle)sender);
-
             var message = midi2.MidiMessageBuilder.BuildMidi2ChannelVoiceMessage(0, 0, midi2.Midi2ChannelVoiceMessageStatus.NoteOn, 0, note, 1000);
 
             _connection.SendMessagePacket(message);
-
-            //System.Diagnostics.Debug.WriteLine($"Note on {note}");
         }
 
         private void OnPadPointerReleased(object sender, PointerRoutedEventArgs e)
@@ -85,8 +74,6 @@ namespace MidiSample.AppToAppMidi
             var message = midi2.MidiMessageBuilder.BuildMidi2ChannelVoiceMessage(0, 0, midi2.Midi2ChannelVoiceMessageStatus.NoteOff, 0, note, 1000);
 
             _connection.SendMessagePacket(message);
-
-            //System.Diagnostics.Debug.WriteLine($"Note off {note}");
         }
     }
 }

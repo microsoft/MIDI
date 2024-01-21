@@ -65,6 +65,9 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "Devpkey.h"
 
 #include "strsafe.h"
+#include "string_util.h"
+
+namespace internal = ::Windows::Devices::Midi2::Internal;
 
 #include "abstraction_defs.h"
 
@@ -79,12 +82,12 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "MidiDefs.h"
 #include "MidiXProc.h"
 
+class CMidi2VirtualMidiEndpointManager;
+class CMidi2VirtualMidiBiDi;
 
-#include "MidiRoute.h"
 #include "MidiEndpointTable.h"
 
 #include "Midi2.VirtualMidiAbstraction.h"
-#include "Midi2.VirtualMidiDeviceBiDi.h"
-#include "Midi2.VirtualMidiClientBiDi.h"
+#include "Midi2.VirtualMidiBiDi.h"
 #include "Midi2.VirtualMidiEndpointManager.h"
 

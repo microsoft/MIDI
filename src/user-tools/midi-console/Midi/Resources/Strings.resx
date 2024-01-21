@@ -303,6 +303,9 @@
   <data name="ParameterEnumEndpointsDirection" xml:space="preserve">
     <value>The direction of data flow for the endpoints to list</value>
   </data>
+  <data name="ParameterEnumEndpointsIncludeAll" xml:space="preserve">
+    <value>List all recognized endpoints, including internal ones and ones an application may be unable to connect to directly.</value>
+  </data>
   <data name="ParameterEnumEndpointsIncludeEndpointId" xml:space="preserve">
     <value>Include the UMP Endpoint Id in the output</value>
   </data>

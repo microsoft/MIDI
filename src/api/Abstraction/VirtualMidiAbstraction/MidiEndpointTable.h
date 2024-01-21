@@ -52,10 +52,16 @@
 
 struct MidiVirtualDeviceEndpointEntry
 {
-    GUID VirtualEndpointAssociationId;             // how the config entries associate endpoints
-    std::wstring DeviceEndpointDeviceId;              // the device interface id
+    std::wstring VirtualEndpointAssociationId;             // how the config entries associate endpoints. Typically a GUID
+    std::wstring BaseEndpointName;
+    std::wstring Description;
+    std::wstring ShortUniqueId;
 
-    wil::com_ptr_nothrow<IMidiBiDi> MidiDeviceBiDi;
+    std::wstring CreatedDeviceEndpointId;              // the device interface id
+    std::wstring CreatedClientEndpointId;
+
+    wil::com_ptr_nothrow<CMidi2VirtualMidiBiDi> MidiDeviceBiDi;
+    wil::com_ptr_nothrow<CMidi2VirtualMidiBiDi> MidiClientBiDi;
 
     ~MidiVirtualDeviceEndpointEntry()
     {
@@ -77,20 +83,30 @@ public:
     MidiEndpointTable(_In_ const MidiEndpointTable&) = delete;
     MidiEndpointTable& operator=(_In_ const MidiEndpointTable&) = delete;
 
+    void Initialize(_In_ CMidi2VirtualMidiEndpointManager *endpointManager)
+    {
+        m_endpointManager = endpointManager;
+    }
 
-    // TODO: the two bidi endpoints should just be hard-wired together when both endpoints come online. 
-    // No lookup at runtime. Just assignment.
 
+    HRESULT AddCreatedEndpointDevice(_In_ MidiVirtualDeviceEndpointEntry& entry) noexcept;
+ 
+    HRESULT OnDeviceConnected(_In_ std::wstring deviceInstanceId, _In_ CMidi2VirtualMidiBiDi* deviceBiDi);
+    HRESULT OnClientConnected(_In_ std::wstring clientInstanceId, _In_ CMidi2VirtualMidiBiDi* clientBiDi);
+    HRESULT OnDeviceDisconnected(_In_ std::wstring deviceInstanceId);
 
- //   wil::com_ptr_nothrow<IMidiBiDi> GetDeviceEndpointInterfaceForClientEndpointId(_In_ std::wstring clientEndpointId) const noexcept;
-
-    void RemoveEndpointPair(_In_ GUID VirtualEndpointAssociationId) noexcept;
+    HRESULT Cleanup();
 
 private:
     MidiEndpointTable();
     ~MidiEndpointTable();
 
+    void RemoveEndpointPair(_In_ GUID VirtualEndpointAssociationId) noexcept;
+
     // key is EndpointDeviceId (the device interface id)
-    std::map<std::wstring, MidiVirtualDeviceEndpointEntry> m_Endpoints;
+    std::map<std::wstring, MidiVirtualDeviceEndpointEntry> m_endpoints;
+
+    // maybe this should be a weak_ptr, but those are a pain to work with
+    wil::com_ptr_nothrow<CMidi2VirtualMidiEndpointManager> m_endpointManager;
 
 };

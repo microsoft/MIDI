@@ -30,6 +30,12 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             [DefaultValue(false)]
             public bool IncludeDiagnosticLoopback { get; set; }
 
+            [LocalizedDescription("ParameterEnumEndpointsIncludeAll")]
+            [CommandOption("-a|--all")]
+            [DefaultValue(false)]
+            public bool IncludeAll{ get; set; }
+
+
             [LocalizedDescription("ParameterEnumEndpointsVerboseOutput")]
             [CommandOption("-v|--verbose")]
             [DefaultValue(false)]
@@ -71,10 +77,22 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         MidiEndpointDeviceInformationFilter.IncludeClientByteStreamNative | 
                         MidiEndpointDeviceInformationFilter.IncludeClientUmpNative;
 
-                    if (settings.IncludeDiagnosticLoopback)
+                    if (settings.IncludeAll)
+                    {
+                        filter =
+                            MidiEndpointDeviceInformationFilter.IncludeClientByteStreamNative |
+                            MidiEndpointDeviceInformationFilter.IncludeClientUmpNative |
+                            MidiEndpointDeviceInformationFilter.IncludeDiagnosticLoopback |
+                            MidiEndpointDeviceInformationFilter.IncludeDiagnosticPing |
+                            MidiEndpointDeviceInformationFilter.IncludeVirtualDeviceResponder;
+                    }
+                    else if (settings.IncludeDiagnosticLoopback)
                     {
                         filter |= MidiEndpointDeviceInformationFilter.IncludeDiagnosticLoopback;
                     }
+
+
+
 
                     var endpoints = MidiEndpointDeviceInformation.FindAll(
                         MidiEndpointDeviceInformationSortOrder.Name,

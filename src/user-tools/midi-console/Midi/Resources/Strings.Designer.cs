@@ -619,6 +619,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to List all recognized endpoints, including internal ones and ones an application may be unable to connect to directly..
+        /// </summary>
+        internal static string ParameterEnumEndpointsIncludeAll {
+            get {
+                return ResourceManager.GetString("ParameterEnumEndpointsIncludeAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Include the UMP Endpoint Id in the output.
         /// </summary>
         internal static string ParameterEnumEndpointsIncludeEndpointId {

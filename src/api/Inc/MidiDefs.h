@@ -115,6 +115,7 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_SupportsMulticlient, 5);     // DEVPROP_TYPE_BOO
 // A bitmask of the data format(s) the abstraction layer can use to talk to the system
 // For a MIDI 1 device, it can support MIDI_NATIVEDATAFORMAT_UMP or MIDI_NATIVEDATAFORMAT_BYTESTREAM
 // For a MIDI 2 device, it will support MIDI_NATIVEDATAFORMAT_UMP
+// NOTE: These are actually in the MidiDataFormat enum, slightly different than the defines mentioned above.
 #define STRING_PKEY_MIDI_SupportedDataFormats MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"6"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_SupportedDataFormats, 6);     // DEVPROP_TYPE_BYTE uint8_t
 
@@ -166,6 +167,14 @@ enum MidiEndpointDevicePurposePropertyValue
 // Valid values are in MidiEndpointDevicePurposePropertyValue
 #define STRING_PKEY_MIDI_EndpointDevicePurpose MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"100"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointDevicePurpose, 100);     // DEVPROP_TYPE_ uint32
+
+
+
+// if this is true or missing, we add an endpoint metadata listener
+#define STRING_PKEY_MIDI_EndpointRequiresMetadataHandler MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"120"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointRequiresMetadataHandler, 120);     // DEVPROP_TYPE_BOOLEAN
+
+
 
 // In-protocol Endpoint information ================================================================
 // Starts at 150
