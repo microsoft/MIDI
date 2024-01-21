@@ -8,7 +8,7 @@
 
 #pragma once
 
-class CMidi2VirtualMidiClientBiDi :
+class CMidi2VirtualMidiBiDi :
     public Microsoft::WRL::RuntimeClass<
     Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
     IMidiBiDi,
@@ -21,11 +21,28 @@ public:
     STDMETHOD(Callback)(_In_ PVOID, _In_ UINT, _In_ LONGLONG, _In_ LONGLONG);
     STDMETHOD(Cleanup)();
 
-private:
-    IMidiCallback* m_ClientCallback;
-    LONGLONG m_ClientCallbackContext;
+    HRESULT LinkAssociatedBiDi(_In_ wil::com_ptr_nothrow<CMidi2VirtualMidiBiDi> biDi)
+    {
+        m_linkedBiDi = biDi;
 
-    IMidiBiDi* m_EndpointBiDi;
+        RETURN_IF_FAILED(biDi->QueryInterface(__uuidof(IMidiCallback), (void**)&m_linkedBiDiCallback));
+
+        return S_OK;
+    }
+
+private:
+    wil::com_ptr_nothrow<IMidiBiDi> m_linkedBiDi;
+
+    IMidiCallback* m_linkedBiDiCallback;
+    IMidiCallback* m_callback;
+
+    LONGLONG m_callbackContext;
+
+    std::wstring m_endpointId{};
+
+
+    bool m_isDeviceSide{ false };
+
 };
 
 

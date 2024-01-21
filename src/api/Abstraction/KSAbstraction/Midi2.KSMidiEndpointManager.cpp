@@ -33,6 +33,8 @@ CMidi2KSMidiEndpointManager::Initialize(
     LPCWSTR configurationJson
 )
 {
+    OutputDebugString(L"\n" __FUNCTION__);
+
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiEndpointProtocolManager);
 
@@ -317,6 +319,7 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
                 DEVPROP_TYPE_STRING, static_cast<ULONG>((MidiPin->Id.length() + 1) * sizeof(WCHAR)), (PVOID)MidiPin->Id.c_str() });
         interfaceDevProperties.push_back({ {PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_GUID, static_cast<ULONG>(sizeof(GUID)), (PVOID)&KsAbstractionLayerGUID });
+
         interfaceDevProperties.push_back({ {DEVPKEY_KsTransport, DEVPROP_STORE_SYSTEM, nullptr },
                 DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), (PVOID)&MidiPin->TransportCapability });
         interfaceDevProperties.push_back({ {PKEY_MIDI_SupportedDataFormats, DEVPROP_STORE_SYSTEM, nullptr },

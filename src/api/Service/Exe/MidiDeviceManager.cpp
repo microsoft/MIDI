@@ -46,11 +46,20 @@ CMidiDeviceManager::Initialize(
 
                 if (endpointManager != nullptr)
                 {
-                    LOG_IF_FAILED(endpointManager->Initialize((IUnknown*)this, (IUnknown*)EndpointProtocolManager.get(), transportSettingsJson.c_str()));
+                    auto initializeResult = endpointManager->Initialize((IUnknown*)this, (IUnknown*)EndpointProtocolManager.get(), transportSettingsJson.c_str());
 
-                    m_MidiEndpointManagers.emplace(AbstractionLayer, std::move(endpointManager));
+                    LOG_IF_FAILED(initializeResult);
 
-                //    OutputDebugString(__FUNCTION__ L": Transport Abstraction activated.");
+                    if (SUCCEEDED(initializeResult))
+                    {
+                        OutputDebugString(__FUNCTION__ L": Transport Abstraction initialized.\n");
+                        m_MidiEndpointManagers.emplace(AbstractionLayer, std::move(endpointManager));
+                    }
+                    else
+                    {
+                        OutputDebugString(__FUNCTION__ L": Transport Abstraction initialization FAILED.\n");
+                    }
+
                 }
                 else
                 {
@@ -81,6 +90,14 @@ typedef struct _CREATECONTEXT
     DEVPROPERTY* InterfaceDevProperties{ nullptr };
     ULONG IntPropertyCount{ 0 };
 } CREATECONTEXT, * PCREATECONTEXT;
+
+typedef struct _PARENTDEVICECREATECONTEXT
+{
+    PMIDIPARENTDEVICE MidiParentDevice{ nullptr };
+    wil::unique_event CreationCompleted{ wil::EventOptions::None };
+} PARENTDEVICECREATECONTEXT, * PPARENTDEVICECREATECONTEXT;
+
+
 
 void SwMidiPortCreateCallback(__in HSWDEVICE hSwDevice, __in HRESULT CreationResult, __in PVOID pContext, __in_opt PCWSTR /* pszDeviceInstanceId */)
 {
@@ -121,6 +138,163 @@ void SwMidiPortCreateCallback(__in HSWDEVICE hSwDevice, __in HRESULT CreationRes
     creationContext->creationCompleted.SetEvent();
 }
 
+
+void
+SwMidiParentDeviceCreateCallback(
+    __in HSWDEVICE /*hSwDevice*/,
+    __in HRESULT CreationResult,
+    __in_opt PVOID pContext,
+    __in_opt PCWSTR pszDeviceInstanceId
+)
+{
+    OutputDebugString(L"" __FUNCTION__);
+
+    if (pContext == nullptr)
+    {
+        // TODO: Should log this.
+
+        return;
+    }
+
+    PPARENTDEVICECREATECONTEXT creationContext = (PPARENTDEVICECREATECONTEXT)pContext;
+
+    // interface registration has started, assume failure
+    creationContext->MidiParentDevice->SwDeviceState = SWDEVICESTATE::Failed;
+    creationContext->MidiParentDevice->hr = CreationResult;
+
+    LOG_IF_FAILED(CreationResult);
+
+    if (SUCCEEDED(CreationResult))
+    {
+        OutputDebugString(__FUNCTION__ L" - CreationResult Success\n");
+
+        // success, mark the port as created
+        creationContext->MidiParentDevice->SwDeviceState = SWDEVICESTATE::Created;
+
+        // get the new device instance ID. This is usually modified from what we started with
+        creationContext->MidiParentDevice->InstanceId = std::wstring(pszDeviceInstanceId);
+    }
+    else
+    {
+        OutputDebugString(__FUNCTION__ L" - CreationResult FAILURE\n");
+    }
+
+    // success or failure, signal we have completed.
+    creationContext->CreationCompleted.SetEvent();
+
+    OutputDebugString(__FUNCTION__ L" - Complete\n");
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidiDeviceManager::ActivateVirtualParentDevice
+(
+    ULONG DevPropertyCount,
+    PVOID DevProperties,
+    PVOID CreateInfo,
+    PWSTR CreatedSwDeviceId,
+    ULONG CreatedSwDeviceIdCharCount
+)
+{
+    OutputDebugString(L"" __FUNCTION__);
+
+    RETURN_HR_IF_NULL(E_INVALIDARG, CreateInfo);
+    RETURN_HR_IF_NULL(E_INVALIDARG, CreatedSwDeviceId);
+    RETURN_HR_IF(E_INVALIDARG, CreatedSwDeviceIdCharCount == 0);
+
+    if (CreatedSwDeviceId != nullptr && CreatedSwDeviceIdCharCount > 0)
+    {
+        CreatedSwDeviceId[CreatedSwDeviceIdCharCount - 1] = (wchar_t)0;
+    }
+
+    auto pcreateinfo = (SW_DEVICE_CREATE_INFO *)CreateInfo;
+
+    std::unique_ptr<MIDIPARENTDEVICE> midiParent = std::make_unique<MIDIPARENTDEVICE>();
+    RETURN_IF_NULL_ALLOC(midiParent);
+
+    midiParent->SwDeviceState = SWDEVICESTATE::CreatePending;
+
+    PARENTDEVICECREATECONTEXT creationContext;
+    creationContext.MidiParentDevice = midiParent.get();
+
+    std::vector<DEVPROPERTY> devProperties{};
+
+
+
+    OutputDebugString(__FUNCTION__ L": Setting dev properties\n");
+
+    DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
+
+    if (DevPropertyCount > 0 && DevProperties != nullptr)
+    {
+        for (ULONG i = 0; i < DevPropertyCount; i++)
+        {
+            devProperties.push_back(((DEVPROPERTY*)DevProperties)[i]);
+        }
+    }
+
+    devProperties.push_back({ {DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
+
+    devProperties.push_back({ {DEVPKEY_Device_NoConnectSound, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue });
+
+
+
+    OutputDebugString(__FUNCTION__ L": About to SwDeviceCreate\n");
+
+    RETURN_IF_FAILED(SwDeviceCreate(
+        MIDI_DEVICE_ENUMERATOR,                 
+        MIDI_SWD_VIRTUAL_PARENT_ROOT,           // root device
+        pcreateinfo,
+        (ULONG)devProperties.size(),            // count of properties
+        (DEVPROPERTY*)devProperties.data(),     // pointer to properties
+        SwMidiParentDeviceCreateCallback,       // callback
+        &creationContext,
+        wil::out_param(creationContext.MidiParentDevice->SwDevice)));
+
+
+    OutputDebugString(__FUNCTION__ L": About to wait for completion\n");
+
+    // wait 5 seconds for creation to complete
+    creationContext.CreationCompleted.wait(5000);
+
+
+    OutputDebugString(__FUNCTION__ L": Done waiting. Checking for success or failure\n");
+
+    // confirm we were able to register the interface
+    RETURN_IF_FAILED(creationContext.MidiParentDevice->hr);
+    RETURN_HR_IF(E_FAIL, creationContext.MidiParentDevice->SwDeviceState != SWDEVICESTATE::Created);
+
+
+    OutputDebugString(__FUNCTION__ L": Getting the new CreatedSwDeviceId\n");
+
+    // return the created device interface Id. This is needed for anything that will 
+    // do a match in the Ids from Windows.Devices.Enumeration
+    if (CreatedSwDeviceId != nullptr && CreatedSwDeviceIdCharCount > 0)
+    {
+        creationContext.MidiParentDevice->InstanceId.copy(CreatedSwDeviceId, CreatedSwDeviceIdCharCount - 1);
+
+        CreatedSwDeviceId[CreatedSwDeviceIdCharCount - 1] = (wchar_t)0;
+
+        OutputDebugString(CreatedSwDeviceId);
+    }
+
+    if (SUCCEEDED(creationContext.MidiParentDevice->hr))
+    {
+        OutputDebugString(__FUNCTION__ L": Success\n");
+
+        m_MidiParents.push_back(std::move(midiParent));
+    }
+
+    OutputDebugString(__FUNCTION__ L": Complete\n");
+
+    return S_OK;
+}
+
+
+
+
 _Use_decl_annotations_
 HRESULT
 CMidiDeviceManager::ActivateEndpoint
@@ -137,7 +311,11 @@ CMidiDeviceManager::ActivateEndpoint
     ULONG CreatedDeviceInterfaceIdCharCount
 )
 {
+    OutputDebugString(__FUNCTION__ L": Enter\n");
+
     auto lock = m_MidiPortsLock.lock();
+
+    OutputDebugString(__FUNCTION__ L": Checking for an existing port\n");
 
     const bool alreadyActivated = std::find_if(m_MidiPorts.begin(), m_MidiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
     {
@@ -150,6 +328,7 @@ CMidiDeviceManager::ActivateEndpoint
         return false;
     }) != m_MidiPorts.end();
 
+    OutputDebugString(__FUNCTION__ L": About to Null terminate CreatedDeviceInterfaceId\n");
 
     if (CreatedDeviceInterfaceId != nullptr && CreatedDeviceInterfaceIdCharCount > 0)
     {
@@ -171,6 +350,8 @@ CMidiDeviceManager::ActivateEndpoint
             DeactivateEndpoint(((SW_DEVICE_CREATE_INFO*)CreateInfo)->pszInstanceId);
         });
 
+        OutputDebugString(__FUNCTION__ L": About to ActivateEndpointInternal\n");
+
         // Activate the UMP version of this endpoint.
         RETURN_IF_FAILED(ActivateEndpointInternal(ParentInstanceId, nullptr, FALSE, MidiFlow, IntPropertyCount, DevPropertyCount, (DEVPROPERTY*)InterfaceDevProperties, (DEVPROPERTY*)DeviceDevProperties, (SW_DEVICE_CREATE_INFO*)CreateInfo, &deviceInterfaceId));
 
@@ -189,6 +370,8 @@ CMidiDeviceManager::ActivateEndpoint
             }
         }
 
+        OutputDebugString(__FUNCTION__ L": About to get CreatedDeviceInterfaceId\n");
+
         // return the created device interface Id. This is needed for anything that will 
         // do a match in the Ids from Windows.Devices.Enumeration
         if (CreatedDeviceInterfaceId != nullptr && CreatedDeviceInterfaceIdCharCount > 0)
@@ -201,6 +384,9 @@ CMidiDeviceManager::ActivateEndpoint
 
         cleanupOnFailure.release();
     }
+
+
+    OutputDebugString(__FUNCTION__ L": Complete\n");
 
     return S_OK;
 }
@@ -221,6 +407,10 @@ CMidiDeviceManager::ActivateEndpointInternal
     std::wstring *DeviceInterfaceId
 )
 {
+    OutputDebugString(__FUNCTION__ L": Enter\nParentInstanceId: ");
+    OutputDebugString(ParentInstanceId);
+
+
     std::unique_ptr<MIDIPORT> midiPort = std::make_unique<MIDIPORT>();
 
     RETURN_IF_NULL_ALLOC(midiPort);
@@ -292,6 +482,9 @@ CMidiDeviceManager::ActivateEndpointInternal
     creationContext.InterfaceDevProperties = interfaceProperties.data();
     creationContext.IntPropertyCount = (ULONG)interfaceProperties.size();
 
+    OutputDebugString(__FUNCTION__ L": About to SwDeviceCreate\n");
+
+
     // create the devnode for the device
     midiPort->hr = SwDeviceCreate(
         midiPort->Enumerator.c_str(),
@@ -305,11 +498,15 @@ CMidiDeviceManager::ActivateEndpointInternal
 
     if (SUCCEEDED(midiPort->hr))
     {
-        // wait for creation to complete
-        creationContext.creationCompleted.wait();
+        OutputDebugString(__FUNCTION__ L": SwDeviceCreate succeeded\n");
+
+        // wait 10 seconds for creation to complete
+        creationContext.creationCompleted.wait(10000);
     }
     else if (HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS) == midiPort->hr)
     {
+        OutputDebugString(__FUNCTION__ L": SwDeviceCreate returned that the endpoint device already exists\n");
+
         // if the devnode already exists, then we likely only need to create/activate the interface, a previous
         // call created the devnode. First, locate the matching SwDevice handle for the existing devnode.
         auto item = std::find_if(m_MidiPorts.begin(), m_MidiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
@@ -332,7 +529,12 @@ CMidiDeviceManager::ActivateEndpointInternal
 
     // confirm we were able to register the interface
     RETURN_IF_FAILED(midiPort->hr);
+
+    OutputDebugString(__FUNCTION__ L": Checking midiPort->SwDeviceState\n");
+
     RETURN_HR_IF(E_FAIL, midiPort->SwDeviceState != SWDEVICESTATE::Created);
+
+    OutputDebugString(__FUNCTION__ L": Copying new DeviceInterfaceId\n");
 
     if (DeviceInterfaceId)
     {
@@ -341,6 +543,8 @@ CMidiDeviceManager::ActivateEndpointInternal
 
     // success, transfer the midiPort to the list
     m_MidiPorts.push_back(std::move(midiPort));
+
+    OutputDebugString(__FUNCTION__ L": Complete\n");
 
     return S_OK;
 }
@@ -549,6 +753,8 @@ CMidiDeviceManager::Cleanup()
 {
     m_MidiEndpointManagers.clear();
     m_MidiPorts.clear();
+
+    m_MidiParents.clear();
 
     return S_OK;
 }

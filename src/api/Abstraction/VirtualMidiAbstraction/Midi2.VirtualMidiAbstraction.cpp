@@ -33,12 +33,11 @@ CMidi2VirtualMidiAbstraction::Activate(
             );
 
 
-        // TODO
         wil::com_ptr_nothrow<IMidiBiDi> midiBiDi;
-        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2VirtualMidiDeviceBiDi>(&midiBiDi));
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2VirtualMidiBiDi>(&midiBiDi));
         *Interface = midiBiDi.detach();
-
     }
+
 
 
     // IMidiEndpointManager and IMidiApiEndpointManagerExtension are interfaces implemented by the same class

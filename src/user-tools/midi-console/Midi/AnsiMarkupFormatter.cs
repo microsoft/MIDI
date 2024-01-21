@@ -26,6 +26,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     return "🔁";
                 case MidiEndpointDevicePurpose.NormalMessageEndpoint:
                     return "🎹";
+                case MidiEndpointDevicePurpose.VirtualDeviceResponder:
+                    return "💻";
                 default:
                     return "🎵";
             }

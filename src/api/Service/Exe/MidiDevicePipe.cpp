@@ -22,6 +22,7 @@ CMidiDevicePipe::Initialize(
     auto deviceLock = m_DevicePipeLock.lock();
 
     OutputDebugString(L"" __FUNCTION__ " Initialize.");
+    OutputDebugString(Device);
 
     ABSTRACTIONCREATIONPARAMS abstractionCreationParams;
 
@@ -93,15 +94,24 @@ CMidiDevicePipe::Initialize(
         // we don't watch this property for updates. It's reasonable for a change to this
         // property to require disconnecting any clients and reconnecting to pick them up. 
         // It's necessary, even
-        auto propMultiClient = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_SupportsMulticlient));
 
-        if (propMultiClient != nullptr)
+        if (deviceInfo.Properties().HasKey(winrt::to_hstring(STRING_PKEY_MIDI_SupportsMulticlient)))
         {
-            m_endpointSupportsMulticlient = winrt::unbox_value<bool>(propMultiClient);
+            auto propMultiClient = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_SupportsMulticlient));
+
+            if (propMultiClient != nullptr)
+            {
+                m_endpointSupportsMulticlient = winrt::unbox_value<bool>(propMultiClient);
+            }
+            else
+            {
+                // default to true for multiclient support
+                m_endpointSupportsMulticlient = true;
+            }
         }
         else
         {
-            // default to true for multiclient support
+            // no key. we're multi-client by default
             m_endpointSupportsMulticlient = true;
         }
     }

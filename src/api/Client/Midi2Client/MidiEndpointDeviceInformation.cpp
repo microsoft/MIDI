@@ -878,7 +878,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 memcpy(&m_deviceIdentity, data.data(), arraySize);
 
-                OutputDebugString(__FUNCTION__ L" Device identity values read");
+            //    OutputDebugString(__FUNCTION__ L" Device identity values read");
             }
             else
             {
@@ -887,7 +887,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
         else
         {
-            OutputDebugString(__FUNCTION__ L" Unable to read device identity. Value is null.");
+        //    OutputDebugString(__FUNCTION__ L" Unable to read device identity. Value is null.");
         }
     }
 
@@ -897,19 +897,19 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         if (m_properties.HasKey(key))
         {
-            OutputDebugString(__FUNCTION__ L" Key present.");
+         //   OutputDebugString(__FUNCTION__ L" Key present.");
 
             auto value = m_properties.Lookup(key).as<winrt::Windows::Foundation::IPropertyValue>();
 
             if (value != nullptr)
             {
-                OutputDebugString(__FUNCTION__ L" Value != null.");
+           //     OutputDebugString(__FUNCTION__ L" Value != null.");
 
                 auto t = value.Type();
 
                 if (t == foundation::PropertyType::UInt8Array)
                 {
-                    OutputDebugString(__FUNCTION__ L" Value type is UInt8Array.");
+                 //   OutputDebugString(__FUNCTION__ L" Value type is UInt8Array.");
 
                     auto refArray = winrt::unbox_value<foundation::IReferenceArray<uint8_t>>(m_properties.Lookup(key));
 
@@ -923,7 +923,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
         else
         {
-            OutputDebugString(__FUNCTION__ L" Key not present.");
+        //    OutputDebugString(__FUNCTION__ L" Key not present.");
         }
 
         return nullptr;

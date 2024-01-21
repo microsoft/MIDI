@@ -85,7 +85,7 @@
                             Stop="both" 
                             Remove="uninstall" 
                             Name="MidiSrv" 
-                            Wait="yes" />
+                            Wait="no" />
         </Component>     
         
 

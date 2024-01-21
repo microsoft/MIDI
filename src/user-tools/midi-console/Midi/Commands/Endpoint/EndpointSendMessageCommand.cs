@@ -10,6 +10,7 @@ using Windows.Devices.Midi2;
 
 using Microsoft.Devices.Midi2.ConsoleApp.Resources;
 using System.Diagnostics.Eventing.Reader;
+using Windows.ApplicationModel.Preview.Notes;
 
 namespace Microsoft.Devices.Midi2.ConsoleApp
 {
@@ -156,11 +157,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                 bool stillSending = true;
 
+                UInt64 messageSendingStartTimestamp = 0;
+                UInt64 messageSendingFinishTimestamp = 0;
 
                 // todo: we need to break messaging sending out to a bg thread so
                 // we can make it as fast as possible
                 var messageSenderThread = new Thread(() =>
                 {
+                    messageSendingStartTimestamp = MidiClock.Now;
+
                     while (stillSending && messagesAttempted < settings.Count)
                     {
                         UInt64 baseTimestamp = MidiClock.Now;
@@ -205,8 +210,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                             messageFailures++;
                         }
 
-
-
                         if (settings.DelayBetweenMessages > 0)
                         {
                             m_messageDispatcherThreadWakeup.WaitOne(settings.DelayBetweenMessages);
@@ -218,6 +221,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     }
 
                     stillSending = false;
+
+                    messageSendingFinishTimestamp = MidiClock.Now;
                 });
 
 
@@ -227,11 +232,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 AnsiConsole.Progress()
                     .Start(ctx =>
                     {
-                        if (settings.DelayBetweenMessages == 0 && (settings.Count * (settings.Words!.Length + 2)) > bufferWarningThreshold)
-                        {
-                            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning(Strings.SendMessageFloodWarning));
-                            AnsiConsole.WriteLine();
-                        }
+                        //if (settings.DelayBetweenMessages == 0 && (settings.Count * (settings.Words!.Length + 2)) > bufferWarningThreshold)
+                        //{
+                        //    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning(Strings.SendMessageFloodWarning));
+                        //    AnsiConsole.WriteLine();
+                        //}
 
                         var sendTask = ctx.AddTask("[white]Sending messages[/]");
                         sendTask.MaxValue = settings.Count;
@@ -289,6 +294,26 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     {
                         AnsiConsole.MarkupLine($"Sent [steelblue1]{messagesSent.ToString("N0")}[/] message(s).");
                     }
+                }
+
+                if (messagesSent > 0 && messageSendingFinishTimestamp >= messageSendingStartTimestamp)
+                {
+                    // calculate total send time, not total display time
+
+                    UInt64 totalTicks = messageSendingFinishTimestamp - messageSendingStartTimestamp;
+                    double totalTime = 0.0;
+                    string totalTimeLabel = string.Empty;
+
+                    AnsiConsoleOutput.ConvertTicksToFriendlyTimeUnit(totalTicks, out totalTime, out totalTimeLabel);
+
+                    UInt64 averageTicks = totalTicks / messagesSent;   // yes, this will truncate. That's ok
+                    double averageTime = 0.0;
+                    string averageTimeLabel = string.Empty;
+
+                    AnsiConsoleOutput.ConvertTicksToFriendlyTimeUnit(averageTicks, out averageTime, out averageTimeLabel);
+
+                    AnsiConsole.MarkupLine($"Total send time [steelblue1]{totalTime.ToString("N2")} {totalTimeLabel}[/], averaging [steelblue1]{averageTime.ToString("N2")} {averageTimeLabel}[/] per message.");
+
                 }
 
                 if (maxTimestampScheduled > MidiClock.Now)

@@ -32,6 +32,16 @@ typedef enum
 ]
 interface IMidiDeviceManagerInterface : IUnknown
 {
+
+    HRESULT ActivateVirtualParentDevice(
+        [in] ULONG DevPropertyCount,
+        [in, annotation("_In_opt_")] PVOID DevProperties,
+        [in, annotation("_In_")] PVOID CreateInfo,
+        [out, annotation("_Out_writes_opt_z_(CreatedSwDeviceIdCharCount)")] LPWSTR CreatedSwDeviceId,
+        [in] ULONG CreatedSwDeviceIdCharCount
+    );
+
+
     HRESULT ActivateEndpoint(
         [in] LPCWSTR ParentInstanceId,
         [in] BOOL UMPOnly,
@@ -41,8 +51,8 @@ interface IMidiDeviceManagerInterface : IUnknown
         [in, annotation("_In_opt_")] PVOID InterfaceDevProperties,
         [in, annotation("_In_opt_")] PVOID DeviceDevProperties,
         [in, annotation("_In_opt_")] PVOID CreateInfo,
-        [out, annotation("_Out_writes_opt_z_(CreatedInterfaceIdCharCount)")] LPWSTR CreatedDeviceInterfaceId,
-        [in] ULONG CreatedInterfaceIdCharCount
+        [out, annotation("_Out_writes_opt_z_(CreatedSwDeviceInterfaceIdCharCount)")] LPWSTR CreatedSwDeviceInterfaceId,
+        [in] ULONG CreatedSwDeviceInterfaceIdCharCount
     );
 
     HRESULT UpdateEndpointProperties(
