@@ -62,9 +62,6 @@ StreamEngine::StreamEngine(
     // When used for loopback "standard" streaming,
     // we use a list_entry structure to store the loopback messages
     InitializeListHead(&m_LoopbackMessageQueue);
-
-    // Initial testing for local copy of stream engine
-    pMidiStreamEngine = this;
 }
 
 _Use_decl_annotations_
@@ -174,10 +171,8 @@ StreamEngine::HandleIo()
                     // process data in the cyclic buffer until either the read buffer is empty
                     // or the write buffer is full.
 
-                    auto lock = m_MidiInLock.acquire();
-
                     // we have a write event, there should be data available to move.
-                    if (pMidiStreamEngine != nullptr)
+                    if (m_IsRunning)
                     {
                         ULONG bytesAvailableToRead = 0;
 
@@ -281,6 +276,7 @@ StreamEngine::HandleIo()
 }
 
 _Use_decl_annotations_
+NONPAGED_CODE_SEG
 bool
 StreamEngine::FillReadStream(
     PUINT8  pBuffer,
@@ -303,7 +299,7 @@ Return Value:
 
 --*/
 {
-    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry with m_IsRunning set to %d", (int)m_IsRunning);
 
     // Check parameters passed
     if (!pBuffer)
@@ -311,17 +307,16 @@ Return Value:
 
     // Current mechanism to determine if currently processing data is that
     // the StreamEngine is not null. TBD this mechanism needs to be fixed.
-    auto lock = m_MidiInLock.acquire();
+    //auto lock = m_MidiInLock.acquire();
 
-    if (pMidiStreamEngine)
+    if (m_IsRunning)
     {
         // Retrieve the midi in position for the buffer that we are writing to. The data between the write position
         // and read position is empty. (read position is their last read position, write position is our last written).
         // retrieve our write position first since we know it won't be changing, and their read position second,
         // so we can have as much free space as possible.
-        ULONG midiInWritePosition = (ULONG)InterlockedCompareExchange((LONG*)pMidiStreamEngine->m_WriteRegister, 0, 0);
-        ULONG midiInReadPosition = (ULONG)InterlockedCompareExchange((LONG*)pMidiStreamEngine->m_ReadRegister, 0, 0);
-
+        ULONG midiInWritePosition = (ULONG)InterlockedCompareExchange((LONG*)m_WriteRegister, 0, 0);
+        ULONG midiInReadPosition = (ULONG)InterlockedCompareExchange((LONG*)m_ReadRegister, 0, 0);
 
         // Check enough space to write into
         ULONG bytesAvailable = 0;
@@ -333,7 +328,7 @@ Return Value:
             // if the read position is less than the write position, then the difference between
             // the read and write position is the buffer in use, same as above. So, the total
             // buffer size minus the used buffer gives us the available space.
-            bytesAvailable = pMidiStreamEngine->m_BufferSize - (midiInWritePosition - midiInReadPosition);
+            bytesAvailable = m_BufferSize - (midiInWritePosition - midiInReadPosition);
         }
         else
         {
@@ -358,7 +353,7 @@ Return Value:
         }
 
         // There's enough space available, calculate our write position
-        PVOID startingWriteAddress = (PVOID)(((PBYTE)pMidiStreamEngine->m_KernelBufferMapping.Buffer1.m_BufferClientAddress) + midiInWritePosition);
+        PVOID startingWriteAddress = (PVOID)(((PBYTE)m_KernelBufferMapping.Buffer1.m_BufferClientAddress) + midiInWritePosition);
 
         // Copy the data
         RtlCopyMemory(
@@ -370,13 +365,13 @@ Return Value:
         // now calculate the new position that the buffer has been written up to.
         // this will be the original write position, plus the bytes copied, again modululs
         // the buffer size to take into account the loop.
-        ULONG finalWritePosition = (midiInWritePosition + bufferSize) % pMidiStreamEngine->m_BufferSize;
+        ULONG finalWritePosition = (midiInWritePosition + bufferSize) % m_BufferSize;
 
         // finalize by advancing the registers and setting the write event
 
         // advance the write position for the loopback and signal that there's data available
-        InterlockedExchange((LONG*)pMidiStreamEngine->m_WriteRegister, finalWritePosition);
-        KeSetEvent(pMidiStreamEngine->m_WriteEvent, 0, 0);
+        InterlockedExchange((LONG*)m_WriteRegister, finalWritePosition);
+        KeSetEvent(m_WriteEvent, 0, 0);
     }
     else
     {
@@ -516,14 +511,9 @@ StreamEngine::Pause()
                 "%!FUNC! Could not start interrupt pipe as no MidiInPipe");
         }
 
-        // If pMidiStreamEngine is available, the midi out worker thread will loopback.
-        // If it isn't available, the midi out worker will throw the data away.
-        // So when we transition midi in from run to paused, acquire the lock that
-        // protects pMidiStreamEngine and clear pMidiStreamEngine to stop the loopback data
-        // flowing.
-        // TBD - this mechanism needs to change in case where device can be destroyed
-
-        pMidiStreamEngine = nullptr;
+        // If m_IsRunning true, the midi out worker thread will loopback.
+        // If it is false, the midi out worker will throw the data away.
+        m_IsRunning = false;
     }
     else
     {
@@ -594,10 +584,10 @@ StreamEngine::Run()
     }
     else if (AcxPinGetId(m_Pin) == MidiPinTypeMidiIn)
     {
-        // pMidiStreamEngine is used to indicate running state. If pMidiStreamEngine is available, the out worker
+        // m_IsRunning is used to indicate running state. If m_IsRunning true, the out worker
         // thread will output data to the connected device, otherwise data will be thrown away.
         auto lock = m_MidiInLock.acquire();
-        pMidiStreamEngine = this;
+        m_IsRunning = true;
 
         WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin));
         PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
