@@ -1957,6 +1957,9 @@ Return Value:
             // Send to circuit
             if (pDeviceContext->pStreamEngine)
             {
+                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Calling FillReadStream with Position %d and ByteCount %d",
+                    UMP_Packet_Struct.umpHeader.Position, UMP_Packet_Struct.umpHeader.ByteCount);
+
                 if (!pDeviceContext->pStreamEngine->FillReadStream(
                     (PUINT8)&UMP_Packet_Struct,
                     (size_t)(UMP_Packet_Struct.umpHeader.ByteCount) + sizeof(UMPDATAFORMAT)

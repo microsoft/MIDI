@@ -355,6 +355,8 @@ Return Value:
         // There's enough space available, calculate our write position
         PVOID startingWriteAddress = (PVOID)(((PBYTE)m_KernelBufferMapping.Buffer1.m_BufferClientAddress) + midiInWritePosition);
 
+        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Filling buffer with bytecount %d", bufferSize);
+
         // Copy the data
         RtlCopyMemory(
             (PVOID)startingWriteAddress,
@@ -503,6 +505,8 @@ StreamEngine::Pause()
 
         if (pDevCtx)
         {
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
+                "%!FUNC! STOPPING Continuous Reader.");
             WdfIoTargetStop(WdfUsbTargetPipeGetIoTarget(pDevCtx->MidiInPipe), WdfIoTargetCancelSentIo);
         }
         else
@@ -598,6 +602,8 @@ StreamEngine::Run()
         // Start the continuous reader
         if (pDevCtx)
         {
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
+                "%!FUNC! STARTING Continuous Reader.");
             status = WdfIoTargetStart(WdfUsbTargetPipeGetIoTarget(pDevCtx->MidiInPipe));
             if (!NT_SUCCESS(status))
             {
