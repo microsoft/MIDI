@@ -10,14 +10,11 @@
 MIDI_IDL_IMPORT
 
 import "MidiEndpointConnection.idl";
-
 import "IMidiEndpointDefinedConnectionSettings.idl";
-
 import "MidiSessionSettings.idl";
-
 import "MidiEndpointConnectionOptions.idl";
+import "MidiVirtualEndpointDeviceDefinition.idl";
 
-//import "MidiVirtualDeviceManager.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -59,9 +56,7 @@ namespace Windows.Devices.Midi2
         // This creates the virtual device, and also adds the appropriate listener
         // to the returned endpoint connection
         MidiEndpointConnection CreateVirtualDeviceAndConnection(
-            String endpointName,
-            String endpointDeviceInstanceId
-            // TODO: Other options for creating the device. Maybe wrap this all up in an object.
+            MidiVirtualEndpointDeviceDefinition deviceDefinition
         );
 
         // This will close and remove a single endpoint connection instance.

@@ -150,7 +150,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             }
             else
             {
-                internal::LogGeneralError(__FUNCTION__, L" WinRT Endpoint connection wouldn't start");
+                internal::LogGeneralError(__FUNCTION__, L"WinRT Endpoint connection wouldn't start");
 
                 // TODO: Cleanup
 
@@ -159,7 +159,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
-            internal::LogHresultError(__FUNCTION__, L" hresult exception connecting to endpoint. Service or endpoint may be unavailable, or endpoint may not be the correct type.", ex);
+            internal::LogHresultError(__FUNCTION__, L"hresult exception connecting to endpoint. Service or endpoint may be unavailable, or endpoint may not be the correct type.", ex);
 
             return nullptr;
         }
@@ -185,13 +185,44 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     midi2::MidiEndpointConnection MidiSession::CreateVirtualDeviceAndConnection(
-        winrt::hstring /*endpointName*/,
-        winrt::hstring /*endpointDeviceInstanceId*/
+        midi2::MidiVirtualEndpointDeviceDefinition const& deviceDefinition
     ) noexcept
     {
-        // TODO
+        OutputDebugString(__FUNCTION__ L"");
 
-        return nullptr;
+        // TEMP ============================================================================================
+        // Until we can spin up a new virtual device from the API, we have to use a pre-configured 
+        // endpoint.
+
+        winrt::hstring endpointDeviceId = 
+            L"\\\\?\\SWD#MIDISRV#MIDIU_VIRTDEV_" + 
+            deviceDefinition.EndpointProductInstanceId() +
+            L"#" + midi2::MidiEndpointDeviceInformation::EndpointInterfaceClass();
+
+        OutputDebugString(endpointDeviceId.c_str());
+
+        // End TEMP ========================================================================================
+
+
+        // create the connection
+        auto connection = CreateEndpointConnection(endpointDeviceId, nullptr, nullptr);
+
+        if (connection)
+        {
+            auto virtualDevice = winrt::make_self<implementation::MidiVirtualEndpointDevice>();
+
+            virtualDevice->InternalSetDeviceDefinition(deviceDefinition);
+            virtualDevice->IsEnabled(true);
+
+            // add the listener
+            connection.MessageProcessingPlugins().Append(*virtualDevice);
+        }
+        else
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Could not create connection");
+        }
+
+        return connection;
     }
 
 

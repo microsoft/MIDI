@@ -46,7 +46,10 @@ CMidiDeviceManager::Initialize(
 
                 if (endpointManager != nullptr)
                 {
-                    auto initializeResult = endpointManager->Initialize((IUnknown*)this, (IUnknown*)EndpointProtocolManager.get(), transportSettingsJson.c_str());
+                    // need to do this to avoid an ambiguous IUnknown cast error
+                    wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> protocolManager = EndpointProtocolManager.get();
+
+                    auto initializeResult = endpointManager->Initialize((IUnknown*)this, (IUnknown*)protocolManager.get(), transportSettingsJson.c_str());
 
                     LOG_IF_FAILED(initializeResult);
 

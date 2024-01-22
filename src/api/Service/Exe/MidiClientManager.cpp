@@ -110,10 +110,16 @@ GetDeviceSupportedDataFormat(_In_ std::wstring MidiDevice, _Inout_ MidiDataForma
     auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_SupportedDataFormats));
     if (prop)
     {
+
         OutputDebugString(__FUNCTION__ L" found property");
 
-        // this interface is pointing to a UMP interface, so use that instance id.
-        DataFormat = (MidiDataFormat)winrt::unbox_value<uint8_t>(prop);
+        DataFormat = MidiDataFormat::MidiDataFormat_Any;
+        try
+        {
+            // this interface is pointing to a UMP interface, so use that instance id.
+            DataFormat = (MidiDataFormat)winrt::unbox_value<UINT32>(prop);
+        }
+        CATCH_LOG();
     }
     else
     {
@@ -170,7 +176,11 @@ GetEndpointAlias(_In_ LPCWSTR MidiDevice, _In_ std::wstring& Alias, _In_ MidiFlo
     additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_AssociatedUMP));
     auto deviceInfo = DeviceInformation::CreateFromIdAsync(MidiDevice, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
 
+    OutputDebugString(__FUNCTION__ L" looking up prop");
     auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_AssociatedUMP));
+
+    OutputDebugString(__FUNCTION__ L" got prop. About to check for null");
+
     if (prop)
     {
         OutputDebugString(L"" __FUNCTION__ " STRING_PKEY_MIDI_AssociatedUMP property present");

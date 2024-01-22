@@ -22,50 +22,59 @@ CMidi2VirtualMidiBiDi::Initialize(
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        __FUNCTION__, 
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(endpointId, "endpoint id")
         );
 
     m_callback = Callback;
     m_callbackContext = Context;
-
-    m_endpointId  = internal::ToUpperTrimmedWStringCopy(endpointId);
+    m_endpointId = internal::ToUpperTrimmedWStringCopy(endpointId);
   
-    OutputDebugString(__FUNCTION__ L" Looking up Endpoint:");
-    OutputDebugString(m_endpointId.c_str());
-
-    // This should use SWD properties and not a string search
-
-    if (m_endpointId.find(MIDI_VIRT_INSTANCE_ID_DEVICE_PREFIX) != std::wstring::npos)
+    //if (Context != MIDI_PROTOCOL_MANAGER_ENDPOINT_CREATION_CONTEXT)
     {
-        OutputDebugString(__FUNCTION__ L" - endpoint id is a virtual device\n");
-
-        m_isDeviceSide = true;
-
-        RETURN_IF_FAILED(MidiEndpointTable::Current().OnDeviceConnected(m_endpointId, this));
-    }
-    else if (m_endpointId.find(MIDI_VIRT_INSTANCE_ID_CLIENT_PREFIX) != std::wstring::npos)
-    {
-        OutputDebugString(__FUNCTION__ L" - endpoint id is a virtual client\n");
-
-        m_isDeviceSide = false;
-
-        RETURN_IF_FAILED(MidiEndpointTable::Current().OnClientConnected(m_endpointId, this));
-
-    }
-    else
-    {
-        OutputDebugString(__FUNCTION__ L" - endpoint id is unknown type\n");
+        OutputDebugString(__FUNCTION__ L" Looking up Endpoint:");
         OutputDebugString(m_endpointId.c_str());
 
-        // we don't understand this endpoint id
+        HRESULT hr = S_OK;
 
-        return E_FAIL;
+        // This should use SWD properties and not a string search
+
+        if (m_endpointId.find(MIDI_VIRT_INSTANCE_ID_DEVICE_PREFIX) != std::wstring::npos)
+        {
+            OutputDebugString(__FUNCTION__ L" - endpoint id is a virtual device\n");
+
+            m_isDeviceSide = true;
+
+            LOG_IF_FAILED(hr = MidiEndpointTable::Current().OnDeviceConnected(m_endpointId, this));
+        }
+        else if (m_endpointId.find(MIDI_VIRT_INSTANCE_ID_CLIENT_PREFIX) != std::wstring::npos)
+        {
+            OutputDebugString(__FUNCTION__ L" - endpoint id is a virtual client\n");
+
+            m_isDeviceSide = false;
+
+            LOG_IF_FAILED(hr = MidiEndpointTable::Current().OnClientConnected(m_endpointId, this));
+        }
+        else
+        {
+            OutputDebugString(__FUNCTION__ L" - endpoint id is unknown type\n");
+            OutputDebugString(m_endpointId.c_str());
+
+            // we don't understand this endpoint id
+
+            hr = E_FAIL;
+        }
+
+        return hr;
     }
-
-    return S_OK;
-
+    //else
+    //{
+    //    // we're in protocol negotiation
+    //    m_isDeviceSide = false;
+    //    return S_OK;
+    //}
 }
 
 HRESULT
@@ -78,7 +87,9 @@ CMidi2VirtualMidiBiDi::Cleanup()
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
+        TraceLoggingBool(m_isDeviceSide, "is device side")
         );
 
     m_callback = nullptr;
@@ -104,6 +115,15 @@ CMidi2VirtualMidiBiDi::SendMidiMessage(
     LONGLONG Position
 )
 {
+    TraceLoggingWrite(
+        MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
+        TraceLoggingBool(m_isDeviceSide, "is device side")
+    );
+
     // message received from the device
 
     RETURN_HR_IF_NULL(E_INVALIDARG, Message);
@@ -129,6 +149,15 @@ CMidi2VirtualMidiBiDi::Callback(
     LONGLONG Context
 )
 {
+    TraceLoggingWrite(
+        MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
+        TraceLoggingBool(m_isDeviceSide, "is device side")
+    );
+
     // message received from the client
 
     if (m_callback != nullptr)

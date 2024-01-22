@@ -65,7 +65,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiEndpointManager::Initialize(
     IUnknown* MidiDeviceManager, 
-    IUnknown* /*midiEndpointProtocolManager*/,
+    IUnknown* MidiEndpointProtocolManager,
     LPCWSTR ConfigurationJson
 )
 {
@@ -79,8 +79,12 @@ CMidi2VirtualMidiEndpointManager::Initialize(
     );
 
     RETURN_HR_IF(E_INVALIDARG, nullptr == MidiDeviceManager);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == MidiEndpointProtocolManager);
 
     RETURN_IF_FAILED(MidiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
+    RETURN_IF_FAILED(MidiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManagerInterface), (void**)&m_MidiProtocolManager));
+
+
 
     m_TransportAbstractionId = AbstractionLayerGUID;    // this is needed so MidiSrv can instantiate the correct transport
     m_ContainerId = m_TransportAbstractionId;           // we use the transport ID as the container ID for convenience
@@ -212,10 +216,29 @@ CMidi2VirtualMidiEndpointManager::CreateParentDevice()
 
 
 
+_Use_decl_annotations_
+HRESULT
+CMidi2VirtualMidiEndpointManager::NegotiateAndRequestMetadata(std::wstring endpointId)
+{
+    bool preferToSendJRToEndpoint{ false };
+    bool preferToReceiveJRFromEndpoint{ false };
+    BYTE preferredProtocol{ MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2 };
+    WORD negotiationTimeoutMS{ 2000 };
 
+    RETURN_IF_FAILED(m_MidiProtocolManager->NegotiateAndRequestMetadata(
+        endpointId.c_str(),
+        preferToSendJRToEndpoint,
+        preferToReceiveJRFromEndpoint,
+        preferredProtocol,
+        negotiationTimeoutMS
+    ));
+
+    return S_OK;
+}
 
 _Use_decl_annotations_
-HRESULT CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
+HRESULT 
+CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
     MidiVirtualDeviceEndpointEntry& entry
 )
 {
@@ -228,7 +251,7 @@ HRESULT CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
     //   DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
     BYTE nativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
-    BYTE supportedDataFormat = (BYTE)MidiDataFormat::MidiDataFormat_UMP;
+    UINT32 supportedDataFormat = (UINT32)MidiDataFormat::MidiDataFormat_UMP;
 
     // this purpose is important because it controls how this shows up to clients
     auto endpointPurpose = (uint32_t)MidiEndpointDevicePurposePropertyValue::NormalMessageEndpoint;
@@ -244,7 +267,7 @@ HRESULT CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
             DEVPROP_TYPE_EMPTY, 0, nullptr},
 
         {{PKEY_MIDI_SupportedDataFormats, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(BYTE)), &supportedDataFormat},
+            DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), &supportedDataFormat},
 
         {{PKEY_MIDI_SupportsMulticlient, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),& devPropTrue},
@@ -325,14 +348,10 @@ HRESULT CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
     // loopback transport.
     m_MidiDeviceManager->DeleteAllEndpointInProtocolDiscoveredProperties(newDeviceInterfaceId);
 
-    // TODO: Invoke the protocol negotiator to now capture updated endpoint info.
-
     entry.CreatedClientEndpointId = newDeviceInterfaceId;
 
     //MidiEndpointTable::Current().AddCreatedEndpointDevice(entry);
     //MidiEndpointTable::Current().AddCreatedClient(entry.VirtualEndpointAssociationId, entry.CreatedClientEndpointId);
-
-
 
     OutputDebugString(__FUNCTION__ L": Complete\n");
 
@@ -354,7 +373,7 @@ HRESULT CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
     DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
     BYTE nativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
-    BYTE supportedDataFormat = (BYTE)MidiDataFormat::MidiDataFormat_UMP;
+    UINT32 supportedDataFormat = (UINT32)MidiDataFormat::MidiDataFormat_UMP;
 
 
     // this purpose is important because it controls how this shows up to clients
@@ -363,14 +382,14 @@ HRESULT CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
     OutputDebugString(__FUNCTION__ L": Building DEVPROPERTY interfaceDevProperties[]\n");
 
     std::wstring endpointName = entry.BaseEndpointName + L" (Virtual MIDI Device)";
-    std::wstring endpointDescription = entry.Description + L" (for use only by the device host application)";
+    std::wstring endpointDescription = entry.Description + L" (This endpoint for use only by the device host application.)";
 
     DEVPROPERTY interfaceDevProperties[] = {
         {{PKEY_MIDI_AssociatedUMP, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_EMPTY, 0, nullptr},
 
         {{PKEY_MIDI_SupportedDataFormats, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(BYTE)), &supportedDataFormat},
+            DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), &supportedDataFormat},
             
             // the device side connection is NOT multi-client. Keep it just to the device app
         {{PKEY_MIDI_SupportsMulticlient, DEVPROP_STORE_SYSTEM, nullptr},

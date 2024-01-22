@@ -121,10 +121,10 @@ std::wstring GetStringSWDProperty(_In_ std::wstring instanceId, _In_ std::wstrin
 }
 
 _Use_decl_annotations_
-HRESULT MidiEndpointTable::OnClientConnected(std::wstring clientInstanceId, CMidi2VirtualMidiBiDi* clientBiDi)
+HRESULT 
+MidiEndpointTable::OnClientConnected(std::wstring clientInstanceId, CMidi2VirtualMidiBiDi* clientBiDi)
 {
     // get the device BiDi, and then wire them together
-
 
     try
     {
@@ -141,13 +141,16 @@ HRESULT MidiEndpointTable::OnClientConnected(std::wstring clientInstanceId, CMid
             // find this id in the table
             auto entry = m_endpoints[associationId];
 
-            entry.MidiClientBiDi = clientBiDi;
-            entry.CreatedClientEndpointId = cleanId;
+            if (entry.MidiClientBiDi == nullptr)
+            {
+                entry.MidiClientBiDi = clientBiDi;
+                entry.CreatedClientEndpointId = cleanId;
 
-            entry.MidiDeviceBiDi->LinkAssociatedBiDi(clientBiDi);
-            clientBiDi->LinkAssociatedBiDi(entry.MidiDeviceBiDi);
+                entry.MidiDeviceBiDi->LinkAssociatedBiDi(clientBiDi);
+                clientBiDi->LinkAssociatedBiDi(entry.MidiDeviceBiDi);
 
-            m_endpoints[associationId] = entry;
+                m_endpoints[associationId] = entry;
+            }
         }
     }
     CATCH_RETURN();
@@ -159,17 +162,12 @@ HRESULT MidiEndpointTable::OnClientConnected(std::wstring clientInstanceId, CMid
 _Use_decl_annotations_
 HRESULT MidiEndpointTable::OnDeviceConnected(std::wstring deviceInstanceId, CMidi2VirtualMidiBiDi* deviceBiDi)
 {
-    // get the device BiDi, and then wire them together
-
-
     try
     {
         OutputDebugString(__FUNCTION__ L"");
 
-        std::wstring cleanId = internal::ToUpperTrimmedWStringCopy(deviceInstanceId);
-
         // look up the association ID in SWD properties
-
+        std::wstring cleanId = internal::ToUpperTrimmedWStringCopy(deviceInstanceId);
         auto associationId = internal::ToUpperTrimmedWStringCopy(GetStringSWDProperty(cleanId, STRING_PKEY_MIDI_VirtualMidiEndpointAssociator, L""));
 
         if (associationId != L"")
@@ -177,25 +175,44 @@ HRESULT MidiEndpointTable::OnDeviceConnected(std::wstring deviceInstanceId, CMid
             // find this id in the table
             auto entry = m_endpoints[associationId];
 
-            entry.MidiDeviceBiDi = deviceBiDi;
-
-            m_endpoints[associationId] = entry;
-
-            // if we have an endpoint manager, go ahead and create the client endpoint
-            if (m_endpointManager)
+            if (entry.MidiDeviceBiDi == nullptr)
             {
-                OutputDebugString(__FUNCTION__ L" - Creating client endpoint");
+                OutputDebugString(__FUNCTION__ L" - no registered device bidi yet\n");
 
-                // create the client endpoint
-                RETURN_IF_FAILED(m_endpointManager->CreateClientVisibleEndpoint(entry));
-
+                entry.MidiDeviceBiDi = deviceBiDi;
                 m_endpoints[associationId] = entry;
+
+                // if we have an endpoint manager, go ahead and create the client endpoint
+                if (m_endpointManager)
+                {
+                    OutputDebugString(__FUNCTION__ L" - Creating client endpoint");
+
+                    // create the client endpoint
+                    RETURN_IF_FAILED(m_endpointManager->CreateClientVisibleEndpoint(entry));
+
+                    OutputDebugString(__FUNCTION__ L" - Client endpoint created");
+
+                    m_endpoints[associationId] = entry;
+
+
+
+
+//                    LOG_IF_FAILED(m_endpointManager->NegotiateAndRequestMetadata(entry.CreatedClientEndpointId));
+
+
+
+
+                }
+                else
+                {
+                    OutputDebugString(__FUNCTION__ L" - Endpoint Manager is null");
+
+                    return E_FAIL;
+                }
             }
             else
             {
-                OutputDebugString(__FUNCTION__ L" - Endpoint Manager is null");
-
-                return E_FAIL;
+                // already created. Exit. This happens during protocol negotiation.
             }
         }
     }

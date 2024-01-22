@@ -147,6 +147,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::MidiEndpointConnectionOptions options
     )
     {
+        OutputDebugString(__FUNCTION__ L"");
+
         internal::LogInfo(__FUNCTION__, L"Internal Initialize ");
 
         try
@@ -176,6 +178,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     bool MidiEndpointConnection::Open()
     {
+        OutputDebugString(__FUNCTION__ L"");
+
         internal::LogInfo(__FUNCTION__, L"Connection Open ");
 
         if (!IsOpen())
@@ -183,6 +187,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
             // Activate the endpoint for this device. Will fail if the device is not a BiDi device
             if (!ActivateMidiStream(m_serviceAbstraction, __uuidof(IMidiBiDi), (void**)&m_endpointAbstraction))
             {
+                OutputDebugString(__FUNCTION__ L" coult not activate MIDI stream");
+
                 internal::LogGeneralError(__FUNCTION__, L"Could not activate MIDI Stream");
 
                 return false;
@@ -239,6 +245,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     void MidiEndpointConnection::Close()
     {
+        OutputDebugString(__FUNCTION__ L"");
+
         internal::LogInfo(__FUNCTION__, L"Connection Close");
 
         if (m_closeHasBeenCalled) return;
@@ -270,6 +278,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     MidiEndpointConnection::~MidiEndpointConnection()
     {
+        OutputDebugString(__FUNCTION__ L"");
+
         if (!m_closeHasBeenCalled)
         {
             Close();
@@ -281,6 +291,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     void MidiEndpointConnection::InitializePlugins() noexcept
     {
+        OutputDebugString(__FUNCTION__ L"");
+
         internal::LogInfo(__FUNCTION__, L"Initializing message processing plugins");
 
         for (const auto& plugin : m_messageProcessingPlugins)
@@ -300,6 +312,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     void MidiEndpointConnection::CallOnConnectionOpenedOnPlugins() noexcept
     {
+        OutputDebugString(__FUNCTION__ L"");
+
         internal::LogInfo(__FUNCTION__, L"Notifying message processing plugins that the connection is opened");
 
         for (const auto& plugin : m_messageProcessingPlugins)

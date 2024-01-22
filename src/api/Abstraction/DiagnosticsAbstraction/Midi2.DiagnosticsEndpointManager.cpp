@@ -118,7 +118,7 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
     DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
     BYTE nativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
-    uint32_t supportedDataFormat = (BYTE)MidiDataFormat::MidiDataFormat_UMP;
+    UINT32 supportedDataFormat = (UINT32)MidiDataFormat::MidiDataFormat_UMP;
 
     std::wstring description = L"Diagnostics loopback endpoint. For testing purposes.";
 
@@ -131,7 +131,7 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(
             DEVPROP_TYPE_EMPTY, 0, nullptr},
 
         {{PKEY_MIDI_SupportedDataFormats, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(BYTE)), &supportedDataFormat},
+            DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), &supportedDataFormat},
 
 
         {{DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
@@ -236,7 +236,7 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
     DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
     BYTE nativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
-    BYTE supportedDataFormat = (BYTE)MidiDataFormat::MidiDataFormat_UMP;
+    UINT32 supportedDataFormat = (UINT32)MidiDataFormat::MidiDataFormat_UMP;
 
     auto endpointPurpose = (uint32_t)MidiEndpointDevicePurposePropertyValue::DiagnosticPing;
 
@@ -252,7 +252,7 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(
             DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse},
 
         {{PKEY_MIDI_SupportedDataFormats, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(BYTE)), &supportedDataFormat},
+            DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), &supportedDataFormat},
 
 
 
