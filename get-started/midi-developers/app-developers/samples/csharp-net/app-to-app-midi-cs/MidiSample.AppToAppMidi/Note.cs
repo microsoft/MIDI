@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using Windows.Devices.Midi2;
 using midi2 = Windows.Devices.Midi2;
 
 namespace MidiSample.AppToAppMidi
@@ -18,22 +18,48 @@ namespace MidiSample.AppToAppMidi
 
         public byte ChannelIndex { get; set; }
 
-        public void NoteOn() => Connection.SendMessagePacket(
-            midi2.MidiMessageBuilder.BuildMidi2ChannelVoiceMessage(
-                0, 
-                GroupIndex, 
-                midi2.Midi2ChannelVoiceMessageStatus.NoteOn, 
-                ChannelIndex, 
-                (ushort)((ushort)NoteNumber << 8), 
-                1000));
-        public void NoteOff() => Connection.SendMessagePacket(
-            midi2.MidiMessageBuilder.BuildMidi2ChannelVoiceMessage(
-                0, 
-                GroupIndex, 
-                midi2.Midi2ChannelVoiceMessageStatus.NoteOff, 
-                ChannelIndex,
-                (ushort)((ushort)NoteNumber << 8), 
-                0));
+        public void NoteOn()
+        {
+            System.Diagnostics.Debug.Write("Note On");
+
+            UInt16 index = NoteNumber;
+            index <<= 8;
+
+            UInt16 velocity = 0xFFFF;
+
+            UInt32 word1 = (UInt32)velocity << 16;
+
+            if (MidiEndpointConnection.SendMessageSucceeded(Connection.SendMessagePacket(
+                midi2.MidiMessageBuilder.BuildMidi2ChannelVoiceMessage(
+                    0,
+                    GroupIndex,
+                    midi2.Midi2ChannelVoiceMessageStatus.NoteOn,
+                    ChannelIndex,
+                    index,
+                    word1))))
+            {
+                System.Diagnostics.Debug.WriteLine(" - sent");
+            }
+        }
+        public void NoteOff()
+        {
+            System.Diagnostics.Debug.Write("Note Off");
+
+            UInt16 index = NoteNumber;
+            index <<= 8;
+
+            if (MidiEndpointConnection.SendMessageSucceeded(Connection.SendMessagePacket(
+                midi2.MidiMessageBuilder.BuildMidi2ChannelVoiceMessage(
+                    0,
+                    GroupIndex,
+                    midi2.Midi2ChannelVoiceMessageStatus.NoteOff,
+                    ChannelIndex,
+                    index,
+                    0))))
+            {
+                System.Diagnostics.Debug.WriteLine(" - sent");
+            }
+        }
     }
 
 
