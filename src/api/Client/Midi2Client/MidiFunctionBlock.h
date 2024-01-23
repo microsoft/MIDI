@@ -62,7 +62,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void InternalSetisReadOnly(_In_ bool isReadOnly) { m_isReadOnly = isReadOnly; }
 
     private:
-        bool m_isReadOnly{ true };
+        bool m_isReadOnly{ false };
         uint8_t m_number{ 0 };
         winrt::hstring m_name{};
         bool m_isActive{ false };

@@ -64,6 +64,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void OnEndpointConnectionOpened()  noexcept;
         void Cleanup()  noexcept;
 
+        void InternalSetDeviceDefinition(_In_ midi2::MidiVirtualEndpointDeviceDefinition definition);
+
         void ProcessIncomingMessage(
             _In_ midi2::MidiMessageReceivedEventArgs const& args,
             _Out_ bool& skipFurtherListeners,
@@ -71,6 +73,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     private:
+        void SendFunctionBlockInfoNotificationMessage(_In_ midi2::MidiFunctionBlock const& fb) noexcept;
+        void SendFunctionBlockNameNotificationMessages(_In_ midi2::MidiFunctionBlock const& fb) noexcept;
+        
+
         //midi2::MidiVirtualEndpointDeviceDefinition m_virtualEndpointDeviceDefinition
 
         winrt::hstring m_id{};                      // plugin id

@@ -22,49 +22,6 @@ MidiEndpointTable& MidiEndpointTable::Current()
 }
 
 
-//HRESULT
-//GetDeviceVirtualEndpointAssociationId(_In_ std::wstring deviceId, _Inout_ std::wstring& associationId)
-//{
-//    OutputDebugString(__FUNCTION__ L" enter");
-//
-//    auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-//    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_SupportedDataFormats));
-//    auto deviceInfo = DeviceInformation::CreateFromIdAsync(MidiDevice, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
-//
-//    auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_SupportedDataFormats));
-//    if (prop)
-//    {
-//        OutputDebugString(__FUNCTION__ L" found property");
-//
-//        // this interface is pointing to a UMP interface, so use that instance id.
-//        DataFormat = (MidiDataFormat)winrt::unbox_value<uint8_t>(prop);
-//    }
-//    else
-//    {
-//        OutputDebugString(__FUNCTION__ L" didn't find property");
-//        // default to any
-//        DataFormat = MidiDataFormat::MidiDataFormat_Any;
-//    }
-//
-//    OutputDebugString(__FUNCTION__ L" exiting OK");
-//
-//    return S_OK;
-//}
-//
-//
-//
-//
-//
-//
-//
-//
-//
-
-
-
-
-
-
 
 HRESULT MidiEndpointTable::Cleanup()
 {
@@ -89,113 +46,114 @@ HRESULT MidiEndpointTable::AddCreatedEndpointDevice(MidiVirtualDeviceEndpointEnt
     return S_OK;
 }
 
-std::wstring GetStringSWDProperty(_In_ std::wstring instanceId, _In_ std::wstring propertyName, _In_ std::wstring defaultValue)
-{
-    auto propertyKey = winrt::to_hstring(propertyName.c_str());
-
-    auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-    additionalProperties.Append(propertyKey);
-
-
-    auto deviceInfo = winrt::Windows::Devices::Enumeration::DeviceInformation::CreateFromIdAsync(
-        winrt::to_hstring(instanceId.c_str()), 
-        additionalProperties, 
-        winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
-
-    auto prop = deviceInfo.Properties().Lookup(propertyKey);
-
-    if (prop)
-    {
-        OutputDebugString(__FUNCTION__ L" found property");
-
-        // this interface is pointing to a UMP interface, so use that instance id.
-        return (winrt::unbox_value<winrt::hstring>(prop)).c_str();
-    }
-    else
-    {
-        OutputDebugString(__FUNCTION__ L" didn't find property");
-        // default to any
-        return defaultValue;
-    }
-
-}
 
 _Use_decl_annotations_
-HRESULT MidiEndpointTable::OnClientConnected(std::wstring clientInstanceId, CMidi2VirtualMidiBiDi* clientBiDi)
+HRESULT 
+MidiEndpointTable::OnClientConnected(std::wstring clientEndpointInterfaceId, CMidi2VirtualMidiBiDi* clientBiDi)
 {
     // get the device BiDi, and then wire them together
-
 
     try
     {
         OutputDebugString(__FUNCTION__ L"");
 
-        std::wstring cleanId = internal::ToUpperTrimmedWStringCopy(clientInstanceId);
+        std::wstring cleanId = internal::NormalizeEndpointInterfaceIdCopy(clientEndpointInterfaceId);
 
         // look up the association ID in SWD properties
 
-        auto associationId = internal::ToUpperTrimmedWStringCopy(GetStringSWDProperty(cleanId, STRING_PKEY_MIDI_VirtualMidiEndpointAssociator, L""));
+        auto associationId = GetSwdPropertyVirtualEndpointAssociationId(clientEndpointInterfaceId);
 
         if (associationId != L"")
         {
-            // find this id in the table
-            auto entry = m_endpoints[associationId];
-
-            entry.MidiClientBiDi = clientBiDi;
-            entry.CreatedClientEndpointId = cleanId;
-
-            entry.MidiDeviceBiDi->LinkAssociatedBiDi(clientBiDi);
-            clientBiDi->LinkAssociatedBiDi(entry.MidiDeviceBiDi);
-
-            m_endpoints[associationId] = entry;
-        }
-    }
-    CATCH_RETURN();
-
-    return S_OK;
-}
-
-
-_Use_decl_annotations_
-HRESULT MidiEndpointTable::OnDeviceConnected(std::wstring deviceInstanceId, CMidi2VirtualMidiBiDi* deviceBiDi)
-{
-    // get the device BiDi, and then wire them together
-
-
-    try
-    {
-        OutputDebugString(__FUNCTION__ L"");
-
-        std::wstring cleanId = internal::ToUpperTrimmedWStringCopy(deviceInstanceId);
-
-        // look up the association ID in SWD properties
-
-        auto associationId = internal::ToUpperTrimmedWStringCopy(GetStringSWDProperty(cleanId, STRING_PKEY_MIDI_VirtualMidiEndpointAssociator, L""));
-
-        if (associationId != L"")
-        {
-            // find this id in the table
-            auto entry = m_endpoints[associationId];
-
-            entry.MidiDeviceBiDi = deviceBiDi;
-
-            m_endpoints[associationId] = entry;
-
-            // if we have an endpoint manager, go ahead and create the client endpoint
-            if (m_endpointManager)
+            if (m_endpoints.find(associationId) != m_endpoints.end())
             {
-                OutputDebugString(__FUNCTION__ L" - Creating client endpoint");
+                // find this id in the table
+                auto entry = m_endpoints[associationId];
 
-                // create the client endpoint
-                RETURN_IF_FAILED(m_endpointManager->CreateClientVisibleEndpoint(entry));
+                if (entry.MidiClientBiDi == nullptr)
+                {
+                    entry.MidiClientBiDi = clientBiDi;
+                    entry.CreatedClientEndpointId = cleanId;
 
-                m_endpoints[associationId] = entry;
+                    entry.MidiDeviceBiDi->LinkAssociatedBiDi(clientBiDi);
+                    clientBiDi->LinkAssociatedBiDi(entry.MidiDeviceBiDi);
+
+                    m_endpoints[associationId] = entry;
+                }
             }
             else
             {
-                OutputDebugString(__FUNCTION__ L" - Endpoint Manager is null");
+                // couldn't find the entry
+                OutputDebugString(__FUNCTION__ L" - unable to find device table entry");
+            }
+        }
+    }
+    CATCH_RETURN();
 
-                return E_FAIL;
+    return S_OK;
+}
+
+
+
+_Use_decl_annotations_
+HRESULT MidiEndpointTable::OnDeviceConnected(std::wstring deviceEndpointInterfaceId, CMidi2VirtualMidiBiDi* deviceBiDi)
+{
+    try
+    {
+        OutputDebugString(__FUNCTION__ L"");
+
+        // look up the association ID in SWD properties
+        auto associationId = GetSwdPropertyVirtualEndpointAssociationId(deviceEndpointInterfaceId);
+
+        if (associationId != L"")
+        {
+            if (m_endpoints.find(associationId) != m_endpoints.end())
+            {
+                // find this id in the table
+                auto entry = m_endpoints[associationId];
+
+                if (entry.MidiDeviceBiDi == nullptr)
+                {
+                    OutputDebugString(__FUNCTION__ L" - no registered device bidi yet\n");
+
+                    entry.MidiDeviceBiDi = deviceBiDi;
+                    m_endpoints[associationId] = entry;
+
+                }
+                else
+                {
+                    // already created. Exit. This happens during protocol negotiation.
+                }
+
+
+                // if we have an endpoint manager, go ahead and create the client endpoint
+                if (m_endpointManager && entry.CreatedClientEndpointId == L"")
+                {
+                    entry.MidiClientBiDi = nullptr;
+                    entry.CreatedClientEndpointId = L"";
+
+                    OutputDebugString(__FUNCTION__ L" - Creating client endpoint");
+
+                    // create the client endpoint
+                    RETURN_IF_FAILED(m_endpointManager->CreateClientVisibleEndpoint(entry));
+
+                    OutputDebugString(__FUNCTION__ L" - Client endpoint created");
+
+                    m_endpoints[associationId] = entry;
+
+
+                    // LOG_IF_FAILED(m_endpointManager->NegotiateAndRequestMetadata(entry.CreatedClientEndpointId));
+
+
+                }
+                else
+                {
+                    OutputDebugString(__FUNCTION__ L" - Endpoint Manager is null or created client endpoint ID is not empty");
+
+                    return E_FAIL;
+                }
+
+
             }
         }
     }
@@ -205,15 +163,66 @@ HRESULT MidiEndpointTable::OnDeviceConnected(std::wstring deviceInstanceId, CMid
 }
 
 _Use_decl_annotations_
-HRESULT MidiEndpointTable::OnDeviceDisconnected(std::wstring /*deviceInstanceId*/)
+HRESULT MidiEndpointTable::OnDeviceDisconnected(std::wstring deviceEndpointInterfaceId)
 {
-    OutputDebugString(__FUNCTION__ L"");
+    try
+    {
+        OutputDebugString(__FUNCTION__ L" - enter\n");
 
-    //std::wstring deviceEndpointId{ deviceInstanceId };
-    //internal::InPlaceToUpper(deviceEndpointId);
+        if (m_endpointManager != nullptr)
+        {
+            std::wstring associationId = GetSwdPropertyVirtualEndpointAssociationId(deviceEndpointInterfaceId);
 
+            if (associationId != L"")
+            {
+                OutputDebugString(__FUNCTION__ L" - Getting virtual endpoints table entry\n");
 
-    // tear down the client device and BiDi as well
+                if (m_endpoints.find(associationId) != m_endpoints.end())
+                {
+                    auto entry = m_endpoints[associationId];
+
+                    if (entry.MidiClientBiDi != nullptr)
+                    {
+                        // unlink the bidi devices
+                        entry.MidiClientBiDi->UnlinkAssociatedBiDi();
+                        entry.MidiClientBiDi = nullptr;
+                    }
+
+                    if (entry.MidiDeviceBiDi != nullptr)
+                    {
+                        // unlink the bidi devices
+                        entry.MidiDeviceBiDi->UnlinkAssociatedBiDi();
+                        entry.MidiDeviceBiDi = nullptr;
+
+                        // deactivate the client
+                        m_endpointManager->DeleteClientEndpoint(entry.CreatedShortClientInstanceId);
+
+                        entry.CreatedShortClientInstanceId = L"";
+                        entry.CreatedClientEndpointId = L"";
+                    }
+
+                    // update with changes
+                    m_endpoints[associationId] = entry;
+
+                }
+                else
+                {
+                    OutputDebugString(__FUNCTION__ L" - no entry for associationId\n");
+                }
+            }
+            else
+            {
+                OutputDebugString(__FUNCTION__ L" - unable to get association Id\n");
+            }
+        }
+        else
+        {
+            OutputDebugString(__FUNCTION__ L" - endpoint manager is null\n");
+        }
+
+        OutputDebugString(__FUNCTION__ L" - exit\n");
+    }
+    CATCH_LOG();
 
     return S_OK;
 }

@@ -63,8 +63,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
         midi2::MidiEndpointConnection CreateVirtualDeviceAndConnection(
-            _In_ winrt::hstring endpointName,
-            _In_ winrt::hstring endpointDeviceInstanceId
+            _In_ midi2::MidiVirtualEndpointDeviceDefinition const& deviceDefinition
         ) noexcept;
 
 

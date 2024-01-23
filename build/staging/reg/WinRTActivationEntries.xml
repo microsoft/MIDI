@@ -134,7 +134,12 @@
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiVirtualDevice"
+             activatableClassId="Windows.Devices.Midi2.MidiVirtualEndpointDevice"
+             threading="Both"
+             trustLevel="Base"
+             />
+          <class
+             activatableClassId="Windows.Devices.Midi2.MidiVirtualEndpointDeviceDefinition"
              threading="Both"
              trustLevel="Base"
              />

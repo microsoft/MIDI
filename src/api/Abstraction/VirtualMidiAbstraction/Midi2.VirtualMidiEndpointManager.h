@@ -35,6 +35,10 @@ public:
 
     HRESULT ApplyJson(_In_ json::JsonObject jsonObject);
 
+    HRESULT NegotiateAndRequestMetadata(_In_ std::wstring endpointInterfaceId);
+
+    HRESULT DeleteClientEndpoint(_In_ std::wstring clientShortInstanceId);
+
     //HRESULT DeleteEndpointPair(
     //    _In_ GUID const VirtualEndpointAssociationGuid
     //);
@@ -51,6 +55,7 @@ private:
     HRESULT CreateParentDevice();
 
     wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
+    wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> m_MidiProtocolManager;
 
     //json::JsonObject m_JsonObject{ nullptr };
 };

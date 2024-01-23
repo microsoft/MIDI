@@ -16,9 +16,6 @@ using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
-
 namespace MidiSample.AppToAppMidi
 {
     /// <summary>
@@ -45,6 +42,6 @@ namespace MidiSample.AppToAppMidi
             m_window.Activate();
         }
 
-        private Window m_window;
+        private Microsoft.UI.Xaml.Window m_window;
     }
 }

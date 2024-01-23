@@ -8,54 +8,30 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-
-    <Grid Background="Black">
-        <Grid.Resources>
-            <ResourceDictionary>
-                <Style TargetType="Rectangle">
-                    <Setter Property="Fill" Value="Orange" />
-                    <Setter Property="Margin" Value="5" />
-                </Style>
-            </ResourceDictionary>
-        </Grid.Resources>
-
-        
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
+    <!-- Thanks to Morten (twitter @dotMorten) for the code and markup refactor here! -->
+    
+    <Grid Background="#252525">
         <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="*" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
+        <Grid x:Name="PadContainer" Grid.Row="0" Margin="5,25,5,5">
+            <GridView ItemsSource="{x:Bind Notes}" HorizontalAlignment="Center" VerticalAlignment="Center" >
+                <ItemsPanelTemplate>
+                    <UniformGridLayout x:Name="PadLayout" MaximumRowsOrColumns="4" />
+                    <!--<ItemsWrapGrid x:Name="MaxItemsWrapGrid" MaximumRowsOrColumns="4"  Orientation="Horizontal" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" /> -->
+                </ItemsPanelTemplate>
+
+                <GridView.ItemTemplate>
+                    <DataTemplate x:DataType="local:Note">
+                        <Rectangle Fill="Orange" Margin="5" Width="95" Height="95"
+                                   PointerPressed="{x:Bind NoteOn}" 
+                                   PointerReleased="{x:Bind NoteOff}" />
+                    </DataTemplate>
+                </GridView.ItemTemplate>
+            </GridView>
+        </Grid>
         
-        <!-- D Minor: D, E, F, G, A, Bb, C -->
-        <!-- Tags are MIDI note numbers -->
-
-        <Rectangle x:Name="Pad00" Grid.Row="0" Grid.Column="0" Tag="50" PointerPressed="OnPadPointerPressed" PointerReleased="OnPadPointerReleased"/>
-        <Rectangle x:Name="Pad01" Grid.Row="0" Grid.Column="1" Tag="52" PointerPressed="OnPadPointerPressed" PointerReleased="OnPadPointerReleased"/>
-        <Rectangle x:Name="Pad02" Grid.Row="0" Grid.Column="2" Tag="53" PointerPressed="OnPadPointerPressed" PointerReleased="OnPadPointerReleased"/>
-        <Rectangle x:Name="Pad03" Grid.Row="0" Grid.Column="3" Tag="55" PointerPressed="OnPadPointerPressed" PointerReleased="OnPadPointerReleased"/>
-
-        <Rectangle x:Name="Pad10" Grid.Row="1" Grid.Column="0" Tag="57" PointerPressed="OnPadPointerPressed" PointerReleased="OnPadPointerReleased"/>
-        <Rectangle x:Name="Pad11" Grid.Row="1" Grid.Column="1" Tag="58" PointerPressed="OnPadPointerPressed" PointerReleased="OnPadPointerReleased"/>
-        <Rectangle x:Name="Pad12" Grid.Row="1" Grid.Column="2" Tag="60" PointerPressed="OnPadPointerPressed" PointerReleased="OnPadPointerReleased"/>
-        <Rectangle x:Name="Pad13" Grid.Row="1" Grid.Column="3" Tag="62" PointerPressed="OnPadPointerPressed" PointerReleased="OnPadPointerReleased"/>
-
-        <Rectangle x:Name="Pad20" Grid.Row="2" Grid.Column="0" Tag="64" PointerPressed="OnPadPointerPressed" PointerReleased="OnPadPointerReleased"/>
-        <Rectangle x:Name="Pad21" Grid.Row="2" Grid.Column="1" Tag="65" PointerPressed="OnPadPointerPressed" PointerReleased="OnPadPointerReleased"/>
-        <Rectangle x:Name="Pad22" Grid.Row="2" Grid.Column="2" Tag="67" PointerPressed="OnPadPointerPressed" PointerReleased="OnPadPointerReleased"/>
-        <Rectangle x:Name="Pad23" Grid.Row="2" Grid.Column="3" Tag="69" PointerPressed="OnPadPointerPressed" PointerReleased="OnPadPointerReleased"/>
-
-        <Rectangle x:Name="Pad30" Grid.Row="3" Grid.Column="0" Tag="70" PointerPressed="OnPadPointerPressed" PointerReleased="OnPadPointerReleased"/>
-        <Rectangle x:Name="Pad31" Grid.Row="3" Grid.Column="1" Tag="72" PointerPressed="OnPadPointerPressed" PointerReleased="OnPadPointerReleased"/>
-        <Rectangle x:Name="Pad32" Grid.Row="3" Grid.Column="2" Tag="74" PointerPressed="OnPadPointerPressed" PointerReleased="OnPadPointerReleased"/>
-        <Rectangle x:Name="Pad33" Grid.Row="3" Grid.Column="3" Tag="76" PointerPressed="OnPadPointerPressed" PointerReleased="OnPadPointerReleased"/>
         
     </Grid>
         

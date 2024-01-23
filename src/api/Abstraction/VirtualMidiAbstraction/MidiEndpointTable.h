@@ -52,16 +52,18 @@
 
 struct MidiVirtualDeviceEndpointEntry
 {
-    std::wstring VirtualEndpointAssociationId;             // how the config entries associate endpoints. Typically a GUID
-    std::wstring BaseEndpointName;
-    std::wstring Description;
-    std::wstring ShortUniqueId;
+    std::wstring VirtualEndpointAssociationId{ L"" };             // how the config entries associate endpoints. Typically a GUID
+    std::wstring BaseEndpointName{ L"" };
+    std::wstring Description{ L"" };
+    std::wstring ShortUniqueId{ L"" };
 
-    std::wstring CreatedDeviceEndpointId;              // the device interface id
-    std::wstring CreatedClientEndpointId;
+    std::wstring CreatedDeviceEndpointId{ L"" };              // the device interface id
+    std::wstring CreatedClientEndpointId{ L"" };
+    std::wstring CreatedShortClientInstanceId{ L"" };
 
-    wil::com_ptr_nothrow<CMidi2VirtualMidiBiDi> MidiDeviceBiDi;
-    wil::com_ptr_nothrow<CMidi2VirtualMidiBiDi> MidiClientBiDi;
+
+    wil::com_ptr_nothrow<CMidi2VirtualMidiBiDi> MidiDeviceBiDi{ nullptr };
+    wil::com_ptr_nothrow<CMidi2VirtualMidiBiDi> MidiClientBiDi{ nullptr };
 
     ~MidiVirtualDeviceEndpointEntry()
     {
@@ -91,9 +93,9 @@ public:
 
     HRESULT AddCreatedEndpointDevice(_In_ MidiVirtualDeviceEndpointEntry& entry) noexcept;
  
-    HRESULT OnDeviceConnected(_In_ std::wstring deviceInstanceId, _In_ CMidi2VirtualMidiBiDi* deviceBiDi);
-    HRESULT OnClientConnected(_In_ std::wstring clientInstanceId, _In_ CMidi2VirtualMidiBiDi* clientBiDi);
-    HRESULT OnDeviceDisconnected(_In_ std::wstring deviceInstanceId);
+    HRESULT OnDeviceConnected(_In_ std::wstring deviceEndpointInterfaceId, _In_ CMidi2VirtualMidiBiDi* deviceBiDi);
+    HRESULT OnClientConnected(_In_ std::wstring clientEndpointInterfaceId, _In_ CMidi2VirtualMidiBiDi* clientBiDi);
+    HRESULT OnDeviceDisconnected(_In_ std::wstring deviceEndpointInterfaceId);
 
     HRESULT Cleanup();
 

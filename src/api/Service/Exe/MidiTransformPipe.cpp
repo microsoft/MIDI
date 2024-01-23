@@ -19,7 +19,7 @@ CMidiTransformPipe::Initialize(
 )
 {
     wil::com_ptr_nothrow<IMidiTransform> midiTransform;
-    TRANSFORMCREATIONPARAMS creationParams {0};
+    TRANSFORMCREATIONPARAMS creationParams {};
 
     m_TransformGuid = CreationParams->TransformGuid;
     m_DataFormatIn = CreationParams->DataFormatIn;

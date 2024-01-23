@@ -157,6 +157,10 @@ CMidi2EndpointMetadataListenerMidiTransform::SendMidiMessage(
 
             if (internal::GetUmpMessageTypeFromFirstWord(ump.word0) == 0xF)
             {
+                OutputDebugString(__FUNCTION__ L" - Type F message. About to process.");
+
+                // TODO: this should get thrown into a work queue and processed out of band
+
                 ProcessStreamMessage(ump, timestamp);
             }
             else

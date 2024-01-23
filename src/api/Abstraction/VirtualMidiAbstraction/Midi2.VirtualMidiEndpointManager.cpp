@@ -65,7 +65,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiEndpointManager::Initialize(
     IUnknown* MidiDeviceManager, 
-    IUnknown* /*midiEndpointProtocolManager*/,
+    IUnknown* MidiEndpointProtocolManager,
     LPCWSTR ConfigurationJson
 )
 {
@@ -79,8 +79,12 @@ CMidi2VirtualMidiEndpointManager::Initialize(
     );
 
     RETURN_HR_IF(E_INVALIDARG, nullptr == MidiDeviceManager);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == MidiEndpointProtocolManager);
 
     RETURN_IF_FAILED(MidiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
+    RETURN_IF_FAILED(MidiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManagerInterface), (void**)&m_MidiProtocolManager));
+
+
 
     m_TransportAbstractionId = AbstractionLayerGUID;    // this is needed so MidiSrv can instantiate the correct transport
     m_ContainerId = m_TransportAbstractionId;           // we use the transport ID as the container ID for convenience
@@ -153,6 +157,7 @@ CMidi2VirtualMidiEndpointManager::ApplyJson(json::JsonObject jsonObject)
                     deviceEntry.BaseEndpointName = GetJsonStringValue(jsonEntry, MIDI_VIRT_JSON_DEVICE_PROPERTY_NAME, L"");
                     deviceEntry.Description = GetJsonStringValue(jsonEntry, MIDI_VIRT_JSON_DEVICE_PROPERTY_DESCRIPTION, L"");
 
+
                     // if no association id, or it already exists in the table, bail
 
                     // if no unique Id, bail or maybe generate one
@@ -173,6 +178,37 @@ CMidi2VirtualMidiEndpointManager::ApplyJson(json::JsonObject jsonObject)
 
 
 
+_Use_decl_annotations_
+HRESULT
+CMidi2VirtualMidiEndpointManager::DeleteClientEndpoint(std::wstring clientShortInstanceId)
+{
+    OutputDebugString(__FUNCTION__ L" - enter\n");
+
+    // get the instance id for the device
+
+    if (m_MidiDeviceManager != nullptr)
+    {
+        //auto instanceId = GetSwdPropertyInstanceId(clientEndpointInterfaceId);
+        auto instanceId = internal::NormalizeDeviceInstanceIdCopy(clientShortInstanceId);
+
+        if (instanceId != L"")
+        {
+            return m_MidiDeviceManager->RemoveEndpoint(instanceId.c_str());
+        }
+        else
+        {
+            OutputDebugString(__FUNCTION__ L" - could not find instanceId property for client\n");
+
+            return E_FAIL;
+        }
+    }
+    else
+    {
+        // null device manager
+        return E_FAIL;
+    }
+}
+
 
 HRESULT
 CMidi2VirtualMidiEndpointManager::CreateParentDevice()
@@ -181,7 +217,7 @@ CMidi2VirtualMidiEndpointManager::CreateParentDevice()
 
     // the parent device parameters are set by the transport (this)
     std::wstring parentDeviceName{ TRANSPORT_PARENT_DEVICE_NAME };
-    std::wstring parentDeviceId{ TRANSPORT_PARENT_ID };
+    std::wstring parentDeviceId{ internal::NormalizeDeviceInstanceIdCopy(TRANSPORT_PARENT_ID) };
 
     SW_DEVICE_CREATE_INFO createInfo = {};
     createInfo.cbSize = sizeof(createInfo);
@@ -201,9 +237,9 @@ CMidi2VirtualMidiEndpointManager::CreateParentDevice()
         deviceIdMaxSize
     ));
 
-    m_parentDeviceId = std::wstring(newDeviceId);
+    m_parentDeviceId = internal::NormalizeDeviceInstanceIdCopy(newDeviceId);
 
-    OutputDebugString(__FUNCTION__ L" New parent device id: ");
+    OutputDebugString(__FUNCTION__ L" New parent device instance id: ");
     OutputDebugString(newDeviceId);
     OutputDebugString(L"\n");
 
@@ -212,10 +248,29 @@ CMidi2VirtualMidiEndpointManager::CreateParentDevice()
 
 
 
+_Use_decl_annotations_
+HRESULT
+CMidi2VirtualMidiEndpointManager::NegotiateAndRequestMetadata(std::wstring endpointId)
+{
+    bool preferToSendJRToEndpoint{ false };
+    bool preferToReceiveJRFromEndpoint{ false };
+    BYTE preferredProtocol{ MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2 };
+    WORD negotiationTimeoutMS{ 2000 };
 
+    RETURN_IF_FAILED(m_MidiProtocolManager->NegotiateAndRequestMetadata(
+        endpointId.c_str(),
+        preferToSendJRToEndpoint,
+        preferToReceiveJRFromEndpoint,
+        preferredProtocol,
+        negotiationTimeoutMS
+    ));
+
+    return S_OK;
+}
 
 _Use_decl_annotations_
-HRESULT CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
+HRESULT 
+CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
     MidiVirtualDeviceEndpointEntry& entry
 )
 {
@@ -228,7 +283,7 @@ HRESULT CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
     //   DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
     BYTE nativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
-    BYTE supportedDataFormat = (BYTE)MidiDataFormat::MidiDataFormat_UMP;
+    UINT32 supportedDataFormat = (UINT32)MidiDataFormat::MidiDataFormat_UMP;
 
     // this purpose is important because it controls how this shows up to clients
     auto endpointPurpose = (uint32_t)MidiEndpointDevicePurposePropertyValue::NormalMessageEndpoint;
@@ -244,7 +299,7 @@ HRESULT CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
             DEVPROP_TYPE_EMPTY, 0, nullptr},
 
         {{PKEY_MIDI_SupportedDataFormats, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(BYTE)), &supportedDataFormat},
+            DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), &supportedDataFormat},
 
         {{PKEY_MIDI_SupportsMulticlient, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),& devPropTrue},
@@ -291,7 +346,8 @@ HRESULT CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
     createInfo.cbSize = sizeof(createInfo);
 
 
-    std::wstring instanceId = MIDI_VIRT_INSTANCE_ID_CLIENT_PREFIX + entry.ShortUniqueId;
+    std::wstring instanceId = internal::NormalizeDeviceInstanceIdCopy(MIDI_VIRT_INSTANCE_ID_CLIENT_PREFIX + entry.ShortUniqueId);
+
 
 
     createInfo.pszInstanceId = instanceId.c_str();
@@ -325,14 +381,13 @@ HRESULT CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
     // loopback transport.
     m_MidiDeviceManager->DeleteAllEndpointInProtocolDiscoveredProperties(newDeviceInterfaceId);
 
-    // TODO: Invoke the protocol negotiator to now capture updated endpoint info.
+    // we need this for removal later
+    entry.CreatedShortClientInstanceId = instanceId;
 
-    entry.CreatedClientEndpointId = newDeviceInterfaceId;
+    entry.CreatedClientEndpointId = internal::NormalizeEndpointInterfaceIdCopy(newDeviceInterfaceId);
 
     //MidiEndpointTable::Current().AddCreatedEndpointDevice(entry);
     //MidiEndpointTable::Current().AddCreatedClient(entry.VirtualEndpointAssociationId, entry.CreatedClientEndpointId);
-
-
 
     OutputDebugString(__FUNCTION__ L": Complete\n");
 
@@ -354,7 +409,7 @@ HRESULT CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
     DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
     BYTE nativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
-    BYTE supportedDataFormat = (BYTE)MidiDataFormat::MidiDataFormat_UMP;
+    UINT32 supportedDataFormat = (UINT32)MidiDataFormat::MidiDataFormat_UMP;
 
 
     // this purpose is important because it controls how this shows up to clients
@@ -363,14 +418,14 @@ HRESULT CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
     OutputDebugString(__FUNCTION__ L": Building DEVPROPERTY interfaceDevProperties[]\n");
 
     std::wstring endpointName = entry.BaseEndpointName + L" (Virtual MIDI Device)";
-    std::wstring endpointDescription = entry.Description + L" (for use only by the device host application)";
+    std::wstring endpointDescription = entry.Description + L" (This endpoint for use only by the device host application.)";
 
     DEVPROPERTY interfaceDevProperties[] = {
         {{PKEY_MIDI_AssociatedUMP, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_EMPTY, 0, nullptr},
 
         {{PKEY_MIDI_SupportedDataFormats, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(BYTE)), &supportedDataFormat},
+            DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), &supportedDataFormat},
             
             // the device side connection is NOT multi-client. Keep it just to the device app
         {{PKEY_MIDI_SupportsMulticlient, DEVPROP_STORE_SYSTEM, nullptr},
@@ -421,7 +476,7 @@ HRESULT CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
     createInfo.cbSize = sizeof(createInfo);
 
 
-    std::wstring instanceId = MIDI_VIRT_INSTANCE_ID_DEVICE_PREFIX + entry.ShortUniqueId;
+    std::wstring instanceId = internal::NormalizeDeviceInstanceIdCopy(MIDI_VIRT_INSTANCE_ID_DEVICE_PREFIX + entry.ShortUniqueId);
 
 
     createInfo.pszInstanceId = instanceId.c_str();
@@ -455,7 +510,7 @@ HRESULT CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
     // loopback transport.
     m_MidiDeviceManager->DeleteAllEndpointInProtocolDiscoveredProperties(newDeviceInterfaceId);
 
-    entry.CreatedDeviceEndpointId = newDeviceInterfaceId;
+    entry.CreatedDeviceEndpointId = internal::NormalizeEndpointInterfaceIdCopy(newDeviceInterfaceId);
 
     MidiEndpointTable::Current().AddCreatedEndpointDevice(entry);
 
