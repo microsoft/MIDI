@@ -100,6 +100,10 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 AnsiConsole.MarkupLine(Strings.SendMessageSendingThroughEndpointLabel + ": " + AnsiMarkupFormatter.FormatDeviceInstanceId(endpointId));
                 AnsiConsole.WriteLine();
 
+                AnsiConsole.MarkupLine("Temporary UI change: Only error lines will be displayed when sending messages.");
+
+
+
                 using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
                 if (session == null)
                 {
@@ -123,12 +127,66 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
                 }
 
-                var table = new Table();
+                // TODO: Consider creating a message sender thread worker object that is shared
+                // between this and the send-message command
 
                 // if not verbose, just show a status spinner
+                //AnsiConsole.Progress()
+                //    .Start(ctx =>
+                //    {
+                //        //if (settings.DelayBetweenMessages == 0 && (settings.Count * (settings.Words!.Length + 2)) > bufferWarningThreshold)
+                //        //{
+                //        //    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning(Strings.SendMessageFloodWarning));
+                //        //    AnsiConsole.WriteLine();
+                //        //}
+
+                //        var sendTask = ctx.AddTask("[white]Sending messages[/]");
+                //        sendTask.MaxValue = settings.Count;
+                //        sendTask.Value = 0;
+
+                //        messageSenderThread.Start();
+
+
+                //        AnsiConsole.MarkupLine(Strings.SendMessagePressEscapeToStopSendingMessage);
+                //        AnsiConsole.WriteLine();
+                //        while (stillSending)
+                //        {
+                //            // check for input
+
+                //            if (Console.KeyAvailable)
+                //            {
+                //                var keyInfo = Console.ReadKey(true);
+
+                //                if (keyInfo.Key == ConsoleKey.Escape)
+                //                {
+                //                    stillSending = false;
+
+                //                    // wake up the threads so they terminate
+                //                    m_messageDispatcherThreadWakeup.Set();
+
+                //                    AnsiConsole.WriteLine();
+                //                    AnsiConsole.MarkupLine("🛑 " + Strings.SendMessageEscapePressedMessage);
+                //                }
+
+                //            }
+
+                //            sendTask.Value = messagesSent;
+                //            ctx.Refresh();
+
+                //            if (stillSending) Thread.Sleep(100);
+                //        }
+
+                //        sendTask.Value = messagesSent;
+
+                //    });
 
 
                 // if verbose, spin up a live table
+                var table = new Table();
+
+                UInt32 countSkippedLines = 0;
+                UInt32 countFailedLines = 0;
+                UInt32 countMessagesSent = 0;
 
                 AnsiConsole.Live(table)
                     .Start(ctx =>
@@ -186,13 +244,19 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                 line = fileStream.ReadLine();
 
                                 if (line == null)
+                                {
+                                    countSkippedLines++;
                                     continue;
+                                }
 
                                 lineNumber++;
 
                                 // skip over comments and white space
                                 if (LineIsIgnorable(line))
+                                {
+                                    countSkippedLines++;
                                     continue;
+                                }
 
                                 // if we're using Auto for the delimiter, each line is evaluated in case the file is mixed
                                 // if you don't want to take this hit, specify the delimiter on the command line
@@ -218,10 +282,19 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                         }
 
                                         // send the message
-                                        connection.SendMessageWordArray(timestamp, words, 0, (byte)words.Count());
+                                        if (MidiEndpointConnection.SendMessageSucceeded(connection.SendMessageWordArray(timestamp, words, 0, (byte)words.Count())))
+                                        {
+                                            countMessagesSent++;
+                                        }
+                                        else
+                                        {
+                                            countFailedLines++;
+                                        }
 
+                                        
                                         string detailedMessageType = MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(words[0]);
 
+#if false
                                         // display the sent data
                                         table.AddRow(
                                             AnsiMarkupFormatter.FormatGeneralNumber(lineNumber),
@@ -232,10 +305,14 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                             );
 
                                         ctx.Refresh();
-                                        Thread.Sleep(settings.DelayBetweenMessages);
+#endif
+
+
                                     }
                                     else
                                     {
+                                        countFailedLines++;
+
                                         // invalid UMP
                                         table.AddRow(
                                             AnsiMarkupFormatter.FormatGeneralNumber(lineNumber),
@@ -245,7 +322,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                             );
 
                                         ctx.Refresh();
-                                        Thread.Sleep(0);
+                                    }
+
+                                    if (settings.DelayBetweenMessages > 0)
+                                    {
+                                        Thread.Sleep(settings.DelayBetweenMessages);
                                     }
                                 }
                                 else
@@ -269,6 +350,22 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                             AnsiConsole.WriteLine(AnsiMarkupFormatter.FormatError("Unable to open file. File stream is null"));
                         }
                     });
+
+
+                if (countMessagesSent > 0) 
+                {
+                    AnsiConsole.WriteLine($"{countMessagesSent.ToString("N0")} message(s) sent.");
+                }
+
+                if (countSkippedLines > 0)
+                {
+                    AnsiConsole.WriteLine($"{countSkippedLines.ToString("N0")} lines skipped (empty or comments).");
+                }
+
+                if (countFailedLines > 0)
+                {
+                    AnsiConsole.WriteLine(AnsiMarkupFormatter.FormatError($"{countFailedLines.ToString("N0")} lines with errors."));
+                }
 
 
                 if (session != null)

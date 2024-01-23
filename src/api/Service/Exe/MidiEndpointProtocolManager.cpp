@@ -83,6 +83,11 @@ CMidiEndpointProtocolManager::NegotiateAndRequestMetadata(
 
     ProtocolManagerWork work;
 
+    // DEBUG
+    //TimeoutMS = 25000;
+
+
+
     work.EndpointInstanceId = DeviceInterfaceId;
     work.PreferToSendJRTimestampsToEndpoint = PreferToSendJRTimestampsToEndpoint;
     work.PreferToReceiveJRTimestampsFromEndpoint = PreferToReceiveJRTimestampsFromEndpoint;
@@ -131,7 +136,7 @@ _Use_decl_annotations_
 HRESULT
 CMidiEndpointProtocolManager::Callback(PVOID Data, UINT Size, LONGLONG Position, LONGLONG Context)
 {
-    OutputDebugString(L"\n" __FUNCTION__);
+    OutputDebugString(L"\n" __FUNCTION__ L" - enter");
 
     UNREFERENCED_PARAMETER(Position);
     UNREFERENCED_PARAMETER(Context);
@@ -399,7 +404,14 @@ CMidiEndpointProtocolManager::ProcessCurrentWorkEntry()
     // the rest happens in response to messages in the callback
     LOG_IF_FAILED(hr = RequestAllEndpointDiscoveryInformation());
 
-    OutputDebugString(__FUNCTION__ L" - Requested discovery information");
+    if (SUCCEEDED(hr))
+    {
+        OutputDebugString(__FUNCTION__ L" - Requested discovery information");
+    }
+    else
+    {
+        OutputDebugString(__FUNCTION__ L" - FAILED to request discovery information");
+    }
 
     if (SUCCEEDED(hr))
     {

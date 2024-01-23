@@ -157,6 +157,7 @@ CMidi2VirtualMidiEndpointManager::ApplyJson(json::JsonObject jsonObject)
                     deviceEntry.BaseEndpointName = GetJsonStringValue(jsonEntry, MIDI_VIRT_JSON_DEVICE_PROPERTY_NAME, L"");
                     deviceEntry.Description = GetJsonStringValue(jsonEntry, MIDI_VIRT_JSON_DEVICE_PROPERTY_DESCRIPTION, L"");
 
+
                     // if no association id, or it already exists in the table, bail
 
                     // if no unique Id, bail or maybe generate one
@@ -177,6 +178,37 @@ CMidi2VirtualMidiEndpointManager::ApplyJson(json::JsonObject jsonObject)
 
 
 
+_Use_decl_annotations_
+HRESULT
+CMidi2VirtualMidiEndpointManager::DeleteClientEndpoint(std::wstring clientShortInstanceId)
+{
+    OutputDebugString(__FUNCTION__ L" - enter\n");
+
+    // get the instance id for the device
+
+    if (m_MidiDeviceManager != nullptr)
+    {
+        //auto instanceId = GetSwdPropertyInstanceId(clientEndpointInterfaceId);
+        auto instanceId = internal::NormalizeDeviceInstanceIdCopy(clientShortInstanceId);
+
+        if (instanceId != L"")
+        {
+            return m_MidiDeviceManager->RemoveEndpoint(instanceId.c_str());
+        }
+        else
+        {
+            OutputDebugString(__FUNCTION__ L" - could not find instanceId property for client\n");
+
+            return E_FAIL;
+        }
+    }
+    else
+    {
+        // null device manager
+        return E_FAIL;
+    }
+}
+
 
 HRESULT
 CMidi2VirtualMidiEndpointManager::CreateParentDevice()
@@ -185,7 +217,7 @@ CMidi2VirtualMidiEndpointManager::CreateParentDevice()
 
     // the parent device parameters are set by the transport (this)
     std::wstring parentDeviceName{ TRANSPORT_PARENT_DEVICE_NAME };
-    std::wstring parentDeviceId{ TRANSPORT_PARENT_ID };
+    std::wstring parentDeviceId{ internal::NormalizeDeviceInstanceIdCopy(TRANSPORT_PARENT_ID) };
 
     SW_DEVICE_CREATE_INFO createInfo = {};
     createInfo.cbSize = sizeof(createInfo);
@@ -205,9 +237,9 @@ CMidi2VirtualMidiEndpointManager::CreateParentDevice()
         deviceIdMaxSize
     ));
 
-    m_parentDeviceId = std::wstring(newDeviceId);
+    m_parentDeviceId = internal::NormalizeDeviceInstanceIdCopy(newDeviceId);
 
-    OutputDebugString(__FUNCTION__ L" New parent device id: ");
+    OutputDebugString(__FUNCTION__ L" New parent device instance id: ");
     OutputDebugString(newDeviceId);
     OutputDebugString(L"\n");
 
@@ -314,7 +346,8 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
     createInfo.cbSize = sizeof(createInfo);
 
 
-    std::wstring instanceId = MIDI_VIRT_INSTANCE_ID_CLIENT_PREFIX + entry.ShortUniqueId;
+    std::wstring instanceId = internal::NormalizeDeviceInstanceIdCopy(MIDI_VIRT_INSTANCE_ID_CLIENT_PREFIX + entry.ShortUniqueId);
+
 
 
     createInfo.pszInstanceId = instanceId.c_str();
@@ -348,7 +381,10 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
     // loopback transport.
     m_MidiDeviceManager->DeleteAllEndpointInProtocolDiscoveredProperties(newDeviceInterfaceId);
 
-    entry.CreatedClientEndpointId = newDeviceInterfaceId;
+    // we need this for removal later
+    entry.CreatedShortClientInstanceId = instanceId;
+
+    entry.CreatedClientEndpointId = internal::NormalizeEndpointInterfaceIdCopy(newDeviceInterfaceId);
 
     //MidiEndpointTable::Current().AddCreatedEndpointDevice(entry);
     //MidiEndpointTable::Current().AddCreatedClient(entry.VirtualEndpointAssociationId, entry.CreatedClientEndpointId);
@@ -440,7 +476,7 @@ HRESULT CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
     createInfo.cbSize = sizeof(createInfo);
 
 
-    std::wstring instanceId = MIDI_VIRT_INSTANCE_ID_DEVICE_PREFIX + entry.ShortUniqueId;
+    std::wstring instanceId = internal::NormalizeDeviceInstanceIdCopy(MIDI_VIRT_INSTANCE_ID_DEVICE_PREFIX + entry.ShortUniqueId);
 
 
     createInfo.pszInstanceId = instanceId.c_str();
@@ -474,7 +510,7 @@ HRESULT CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
     // loopback transport.
     m_MidiDeviceManager->DeleteAllEndpointInProtocolDiscoveredProperties(newDeviceInterfaceId);
 
-    entry.CreatedDeviceEndpointId = newDeviceInterfaceId;
+    entry.CreatedDeviceEndpointId = internal::NormalizeEndpointInterfaceIdCopy(newDeviceInterfaceId);
 
     MidiEndpointTable::Current().AddCreatedEndpointDevice(entry);
 

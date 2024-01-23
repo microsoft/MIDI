@@ -121,7 +121,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 table.AddRow("Receives JR Timestamps", di.ConfiguredToReceiveJRTimestamps.ToString());
 
                 table.AddEmptyRow();
-                table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("Capabilities"), "");
+                table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("Declared Capabilities"), "");
                 table.AddRow("Multi-client", di.SupportsMultiClient.ToString());
                 table.AddRow("MIDI 1.0 Protocol", di.SupportsMidi10Protocol.ToString());
                 table.AddRow("MIDI 2.0 Protocol", di.SupportsMidi20Protocol.ToString());
@@ -146,9 +146,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 table.AddEmptyRow();
                 table.AddEmptyRow();
                 table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("Function Blocks"), "");
-                table.AddEmptyRow();
                 table.AddRow("Static Function Blocks?", di.HasStaticFunctionBlocks.ToString());
                 table.AddRow("Declared Function Block Count", di.FunctionBlockCount.ToString());
+                table.AddEmptyRow();
 
                 if (di.FunctionBlocks.Count > 0)
                 {
@@ -246,6 +246,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 {
                     table.AddEmptyRow();
                     table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("Group Terminal Blocks"), "");
+                    
+                    if (di.FunctionBlocks.Count > 0)
+                    {
+                        table.AddRow("Function blocks are present. Applications should use the Function Blocks and their group declarations instead of the Group Terminal Blocks.", "");
+                    }
 
                     foreach (var groupTerminalBlock in di.GroupTerminalBlocks)
                     {

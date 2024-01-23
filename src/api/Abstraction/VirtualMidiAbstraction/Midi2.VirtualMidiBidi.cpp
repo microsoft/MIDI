@@ -20,6 +20,8 @@ CMidi2VirtualMidiBiDi::Initialize(
     LONGLONG Context
 )
 {
+    OutputDebugString(__FUNCTION__ L" - enter\n");
+
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
         __FUNCTION__, 
@@ -30,7 +32,7 @@ CMidi2VirtualMidiBiDi::Initialize(
 
     m_callback = Callback;
     m_callbackContext = Context;
-    m_endpointId = internal::ToUpperTrimmedWStringCopy(endpointId);
+    m_endpointId = internal::NormalizeEndpointInterfaceIdCopy(endpointId);
   
     //if (Context != MIDI_PROTOCOL_MANAGER_ENDPOINT_CREATION_CONTEXT)
     {
@@ -41,7 +43,7 @@ CMidi2VirtualMidiBiDi::Initialize(
 
         // This should use SWD properties and not a string search
 
-        if (m_endpointId.find(MIDI_VIRT_INSTANCE_ID_DEVICE_PREFIX) != std::wstring::npos)
+        if (internal::EndpointInterfaceIdContainsString(m_endpointId, MIDI_VIRT_INSTANCE_ID_DEVICE_PREFIX))
         {
             OutputDebugString(__FUNCTION__ L" - endpoint id is a virtual device\n");
 
@@ -49,7 +51,7 @@ CMidi2VirtualMidiBiDi::Initialize(
 
             LOG_IF_FAILED(hr = MidiEndpointTable::Current().OnDeviceConnected(m_endpointId, this));
         }
-        else if (m_endpointId.find(MIDI_VIRT_INSTANCE_ID_CLIENT_PREFIX) != std::wstring::npos)
+        else if (internal::EndpointInterfaceIdContainsString(m_endpointId, MIDI_VIRT_INSTANCE_ID_CLIENT_PREFIX))
         {
             OutputDebugString(__FUNCTION__ L" - endpoint id is a virtual client\n");
 
@@ -80,8 +82,7 @@ CMidi2VirtualMidiBiDi::Initialize(
 HRESULT
 CMidi2VirtualMidiBiDi::Cleanup()
 {
-    // TODO: Cleanup here needs additional logic to tear down the client endpoint
-    // when this endpoint goes away
+    OutputDebugString(__FUNCTION__ L" - enter\n");
 
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
@@ -97,12 +98,18 @@ CMidi2VirtualMidiBiDi::Cleanup()
 
     if (m_isDeviceSide)
     {
+        OutputDebugString(__FUNCTION__ L" - this is the device BiDi, so calling OnDeviceDisconnected\n");
+
         MidiEndpointTable::Current().OnDeviceDisconnected(m_endpointId);
     }
+    else
+    {
+        OutputDebugString(__FUNCTION__ L" - this is the client BiDi. Nothing needed here.\n");
+    }
 
-    //m_LinkedClientBiDi->Release();
-    m_linkedBiDiCallback = nullptr;
-    m_linkedBiDi = nullptr;
+    UnlinkAssociatedBiDi();
+
+    OutputDebugString(__FUNCTION__ L" - exit\n");
 
     return S_OK;
 }

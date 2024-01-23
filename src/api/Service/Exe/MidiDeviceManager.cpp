@@ -318,7 +318,7 @@ CMidiDeviceManager::ActivateEndpoint
 
     auto lock = m_MidiPortsLock.lock();
 
-    OutputDebugString(__FUNCTION__ L": Checking for an existing port\n");
+    OutputDebugString(__FUNCTION__ L": Checking for an existing port. \n");
 
     const bool alreadyActivated = std::find_if(m_MidiPorts.begin(), m_MidiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
     {
@@ -438,7 +438,7 @@ CMidiDeviceManager::ActivateEndpointInternal
         DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
 
 
-    midiPort->InstanceId = CreateInfo->pszInstanceId;
+    midiPort->InstanceId = internal::NormalizeDeviceInstanceIdCopy(CreateInfo->pszInstanceId);
     midiPort->MidiFlow = MidiFlow;
     midiPort->Enumerator = MidiOne?AUDIO_DEVICE_ENUMERATOR : MIDI_DEVICE_ENUMERATOR;
 
@@ -541,7 +541,7 @@ CMidiDeviceManager::ActivateEndpointInternal
 
     if (DeviceInterfaceId)
     {
-        *DeviceInterfaceId = midiPort->DeviceInterfaceId.get();
+        *DeviceInterfaceId = internal::NormalizeEndpointInterfaceIdCopy(midiPort->DeviceInterfaceId.get()).c_str();
     }
 
     // success, transfer the midiPort to the list
@@ -564,8 +564,7 @@ CMidiDeviceManager::UpdateEndpointProperties
 {
     OutputDebugString(L"\n" __FUNCTION__ " ");
 
-    std::wstring requestedInterfaceId(DeviceInterfaceId);
-    ::Windows::Devices::Midi2::Internal::InPlaceToLower(requestedInterfaceId);
+    auto requestedInterfaceId = internal::NormalizeEndpointInterfaceIdCopy(DeviceInterfaceId);
 
     //OutputDebugString(requestedInterfaceId.c_str());
     //OutputDebugString(L"\n");
@@ -573,12 +572,9 @@ CMidiDeviceManager::UpdateEndpointProperties
     // locate the MIDIPORT 
     auto item = std::find_if(m_MidiPorts.begin(), m_MidiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
         {
-            std::wstring portInterfaceId(Port->DeviceInterfaceId.get());
-
-            ::Windows::Devices::Midi2::Internal::InPlaceToLower(portInterfaceId);
+            auto portInterfaceId = internal::NormalizeEndpointInterfaceIdCopy(Port->DeviceInterfaceId.get());
 
 //            OutputDebugString((L" -- Checking " + portInterfaceId).c_str());
-
 
             return (portInterfaceId == requestedInterfaceId);
         });
@@ -701,15 +697,24 @@ CMidiDeviceManager::DeactivateEndpoint
         PCWSTR InstanceId
 )
 {
+    OutputDebugString(__FUNCTION__ L" - enter. Cleaned instance id is: ");
+
+    auto cleanId = internal::NormalizeDeviceInstanceIdCopy(InstanceId);
+
+    OutputDebugString(cleanId.c_str());
+
     // there may be more than one SWD associated with this instance id, as we reuse
     // the instance id for the legacy SWD, it just has a different activator and InterfaceClass.
     do
     {
         // locate the MIDIPORT that identifies the swd
+        // NOTE: This uses InstanceId, not the Device Interface Id
         auto item = std::find_if(m_MidiPorts.begin(), m_MidiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
         {
-            // if this instance id already activated, then we cannot activate/create a second time,
-            if (InstanceId == Port->InstanceId)
+           // OutputDebugString(__FUNCTION__ L" Checking against stored instance id: ");
+           // OutputDebugString(Port->InstanceId.c_str());
+                
+            if (cleanId == Port->InstanceId)
             {
                 return true;
             }
@@ -717,18 +722,22 @@ CMidiDeviceManager::DeactivateEndpoint
             return false;
         });
 
-        // if the item was found
+        // exit if the item was not found. We're done.
         if (item == m_MidiPorts.end())
         {
             break;
         }
         else
         {
+            OutputDebugString(__FUNCTION__ L" - Id found. Removing SWD\n");
+
             // Erasing this item from the list will free the unique_ptr and also trigger a SwDeviceClose on the item->SwDevice,
             // which will deactivate the device, done.
             m_MidiPorts.erase(item);
         }
     } while (TRUE);
+
+    OutputDebugString(__FUNCTION__ L" - exit\n");
 
     return S_OK;
 }
@@ -754,6 +763,8 @@ CMidiDeviceManager::RemoveEndpoint
 HRESULT
 CMidiDeviceManager::Cleanup()
 {
+    OutputDebugString(__FUNCTION__ L"\n");
+
     m_MidiEndpointManagers.clear();
     m_MidiPorts.clear();
 

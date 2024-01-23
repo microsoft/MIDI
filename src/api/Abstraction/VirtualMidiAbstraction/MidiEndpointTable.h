@@ -59,6 +59,8 @@ struct MidiVirtualDeviceEndpointEntry
 
     std::wstring CreatedDeviceEndpointId{ L"" };              // the device interface id
     std::wstring CreatedClientEndpointId{ L"" };
+    std::wstring CreatedShortClientInstanceId{ L"" };
+
 
     wil::com_ptr_nothrow<CMidi2VirtualMidiBiDi> MidiDeviceBiDi{ nullptr };
     wil::com_ptr_nothrow<CMidi2VirtualMidiBiDi> MidiClientBiDi{ nullptr };
@@ -91,9 +93,9 @@ public:
 
     HRESULT AddCreatedEndpointDevice(_In_ MidiVirtualDeviceEndpointEntry& entry) noexcept;
  
-    HRESULT OnDeviceConnected(_In_ std::wstring deviceInstanceId, _In_ CMidi2VirtualMidiBiDi* deviceBiDi);
-    HRESULT OnClientConnected(_In_ std::wstring clientInstanceId, _In_ CMidi2VirtualMidiBiDi* clientBiDi);
-    HRESULT OnDeviceDisconnected(_In_ std::wstring deviceInstanceId);
+    HRESULT OnDeviceConnected(_In_ std::wstring deviceEndpointInterfaceId, _In_ CMidi2VirtualMidiBiDi* deviceBiDi);
+    HRESULT OnClientConnected(_In_ std::wstring clientEndpointInterfaceId, _In_ CMidi2VirtualMidiBiDi* clientBiDi);
+    HRESULT OnDeviceDisconnected(_In_ std::wstring deviceEndpointInterfaceId);
 
     HRESULT Cleanup();
 

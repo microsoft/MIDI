@@ -15,6 +15,7 @@
 namespace Windows::Devices::Midi2::Internal
 {
     
+
     inline void InPlaceToUpper(_Inout_ std::wstring &s)
     {
         std::transform(s.begin(), s.end(), s.begin(), towupper);
@@ -56,12 +57,24 @@ namespace Windows::Devices::Midi2::Internal
         return ws;
     }
 
+    inline std::wstring ToLowerWStringCopy(_In_ std::wstring s)
+    {
+        std::wstring ws{ s };
+        InPlaceToLower(ws);
+
+        return ws;
+    }
+
 
     inline std::wstring ToUpperTrimmedWStringCopy(_In_ std::wstring s)
     {
         return ToUpperWStringCopy(TrimmedWStringCopy(s));
     }
 
+    inline std::wstring ToLowerTrimmedWStringCopy(_In_ std::wstring s)
+    {
+        return ToLowerWStringCopy(TrimmedWStringCopy(s));
+    }
 
     // TODO: this could use substr and take one op instad of two
     inline winrt::hstring TrimmedHStringCopy(_In_ std::wstring ws)
@@ -97,5 +110,41 @@ namespace Windows::Devices::Midi2::Internal
         return winrt::hstring{ ws };
     }
 
+
+
+
+    // This is just to convert all GUIDs to the same case. It does
+    // not add or remove opening / closing brackets
+    inline std::wstring NormalizeGuidStringCopy(_In_ std::wstring guidString)
+    {
+        return ToUpperTrimmedWStringCopy(guidString);
+    }
+
+    // This is for the device instance id. Not to be confused with the interface id
+    inline std::wstring NormalizeDeviceInstanceIdCopy(_In_ std::wstring deviceInstanceId)
+    {
+        return ToUpperTrimmedWStringCopy(deviceInstanceId);
+    }
+
+    // This is for the endpoint device interface id (the long SWD id with the GUID)
+    inline std::wstring NormalizeEndpointInterfaceIdCopy(_In_ std::wstring endpointInterfaceId)
+    {
+        return ToLowerTrimmedWStringCopy(endpointInterfaceId);
+    }
+
+    // used for searching for a substring in an endpoint interface id. Matches case with
+    // what NormalizeEndpointInterfaceIdCopy produces
+    inline bool EndpointInterfaceIdContainsString(_In_ std::wstring endpointInterfaceId, _In_ std::wstring searchFor)
+    {
+        auto id = NormalizeEndpointInterfaceIdCopy(endpointInterfaceId);
+        auto sub = ToLowerWStringCopy(searchFor);             // match case with NormalizeEndpointInterfaceIdCopy
+
+        if (id == L"" || sub == L"")
+        {
+            return false;
+        }
+
+        return id.find(sub) != std::wstring::npos;
+    }
 
 }

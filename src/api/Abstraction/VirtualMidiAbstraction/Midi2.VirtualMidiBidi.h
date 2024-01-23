@@ -30,11 +30,19 @@ public:
         return S_OK;
     }
 
+    HRESULT UnlinkAssociatedBiDi()
+    {
+        m_linkedBiDi = nullptr;
+        m_linkedBiDiCallback = nullptr;
+
+        return S_OK;
+    }
+
 private:
     wil::com_ptr_nothrow<IMidiBiDi> m_linkedBiDi;
 
-    IMidiCallback* m_linkedBiDiCallback;
-    IMidiCallback* m_callback;
+    wil::com_ptr_nothrow<IMidiCallback> m_linkedBiDiCallback;
+    wil::com_ptr_nothrow <IMidiCallback> m_callback;
 
     LONGLONG m_callbackContext;
 

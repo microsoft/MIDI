@@ -45,6 +45,14 @@ namespace MidiSample.AppToAppMidi
             this.SetWindowSize(500, 550);
             this.SetIsAlwaysOnTop(true);
 
+            this.Closed += MainWindow_Closed;
+
+        }
+
+        private void MainWindow_Closed(object sender, WindowEventArgs args)
+        {
+            _session.DisconnectEndpointConnection(_connection.ConnectionId);
+            _session.Dispose();
         }
 
         // in MIDI Services config file in Virtual Device MIDI section

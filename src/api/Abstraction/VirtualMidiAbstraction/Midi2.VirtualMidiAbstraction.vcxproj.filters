@@ -33,6 +33,9 @@
     <ClCompile Include="MidiEndpointTable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="swd_shared.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Midi2VirtualMidiAbstraction.idl">
@@ -71,6 +74,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Midi2.VirtualMidiBidi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="swd_shared.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -85,6 +85,7 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 
 #include "MidiDefs.h"
 #include "MidiXProc.h"
+#include "swd_shared.h"
 
 class CMidi2VirtualMidiEndpointManager;
 class CMidi2VirtualMidiBiDi;
