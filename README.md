@@ -120,7 +120,7 @@ First, if you are building a commercial MIDI 2.0 product, we strongly encourage 
 
 We encourage you to begin building your products using the information in this repo. If you run into any problems with your products integrating with the implementation here, please be sure to open an issue if you believe it is a bug or omission, or have a discussion about it on Discord. 
 
-For planning purposes, we expect to have a first version of the full MIDI 2.0 stack out near the end of this year. We'll update everyone as that gets more solid.
+For planning purposes, we expect to have a first version of the full Windows MIDI Services stack out later this year (2024). We're likely to release for Windows 11 first, and then as we get the required USB stack changes into the latest support Windows 10, we'll provide it for Windows 10. 
 
 [MIDI Association article on building MIDI 2.0 USB devices](https://midi.org/midi-articles/building-a-usb-midi-2-0-device-part-1)
 
@@ -151,6 +151,10 @@ These are the updated MIDI 2.0 specifications which apply to this project today.
 ## Learn more about MIDI 2.0
 
 This project supports both MIDI 1.0 and MIDI 2.0 through an updated modern API. MIDI 1.0 has been around since 1983, but MIDI 2.0 is new. You can learn more about it through the links below.
+
+[![MIDI 2.0 at the NAMM Show 2024](https://img.youtube.com/vi/1AZmAvaeBjM/mqdefault.jpg)](https://www.youtube.com/watch?v=1AZmAvaeBjM)
+
+Older videos:
 
 [![ADC 2022 Apple, Google, and Microsoft Implementations of MIDI 2.0](https://img.youtube.com/vi/AVQeHsBZjxc/mqdefault.jpg)](https://www.youtube.com/watch?v=AVQeHsBZjxc)
 [![NAMM 2022 MIDI 2.0 Update](https://img.youtube.com/vi/69hzeBFOPfo/mqdefault.jpg)](https://www.youtube.com/watch?v=69hzeBFOPfo) 
