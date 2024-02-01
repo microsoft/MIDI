@@ -337,6 +337,50 @@ std::wstring CMidiConfigurationManager::GetCurrentConfigurationFileName() noexce
 }
 
 
+std::map<GUID, std::wstring> CMidiConfigurationManager::GetTransportAbstractionSettingsFromJsonString(
+    _In_ std::wstring json) const noexcept
+{
+    OutputDebugString(L"\n" __FUNCTION__);
+
+    std::map<GUID, std::wstring> abstractionSettings{};
+
+    try
+    {       
+        winrt::Windows::Data::Json::JsonObject jsonObject{ nullptr };
+
+
+        if (json::JsonObject::TryParse(json, jsonObject))
+        {
+            // worked
+            OutputDebugString(L"Parsing json worked\n");
+        }
+        else
+        {
+            OutputDebugString(L"Parsing json failed\n");
+        }
+
+        if (jsonObject != nullptr)
+        {
+            // probably need to normalize these to ignore case.
+            if (m_jsonObject.HasKey(winrt::to_hstring(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT)))
+            {
+                auto plugins = m_jsonObject.GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT);
+
+
+                // TODO: Iterate through nodes and find each transport abstraction entry. Parse the GUID. Add to results.
+
+
+
+
+                std::wstring jsonString = (std::wstring)thisPlugin.Stringify();
+
+            }
+        }
+    }
+    CATCH_LOG();
+
+    return abstractionSettings;
+}
 
 
 HRESULT CMidiConfigurationManager::Initialize()
@@ -425,13 +469,12 @@ HRESULT CMidiConfigurationManager::Initialize()
 
 
 _Use_decl_annotations_
-std::wstring CMidiConfigurationManager::GetConfigurationForTransportAbstraction(GUID abstractionGuid) const noexcept
+std::wstring CMidiConfigurationManager::GetSavedConfigurationForTransportAbstraction(GUID abstractionGuid) const noexcept
 {
     OutputDebugString(L"\n" __FUNCTION__);
 
     try
     {
-        OutputDebugString(L"" __FUNCTION__);
 
         auto key = GuidToString(abstractionGuid);
 
@@ -439,7 +482,7 @@ std::wstring CMidiConfigurationManager::GetConfigurationForTransportAbstraction(
 
         if (m_jsonObject != nullptr)
         {
-            // probably need to normalize these to ignore case. Not sure if WinRT Json dictionary is case-sensitive
+            // probably need to normalize these to ignore case.
             if (m_jsonObject.HasKey(winrt::to_hstring(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT)))
             {
                 auto plugins = m_jsonObject.GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT);
@@ -465,7 +508,7 @@ std::wstring CMidiConfigurationManager::GetConfigurationForTransportAbstraction(
 
 
 _Use_decl_annotations_
-std::wstring CMidiConfigurationManager::GetConfigurationForEndpointProcessingTransform(GUID abstractionGuid) const noexcept
+std::wstring CMidiConfigurationManager::GetSavedConfigurationForEndpointProcessingTransform(GUID abstractionGuid) const noexcept
 {
     OutputDebugString(L"\n" __FUNCTION__);
     

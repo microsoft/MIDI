@@ -112,6 +112,15 @@ CMidi2NetworkMidiEndpointManager::CreateEndpoint()
 }
 
 
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiEndpointManager::UpdateConfiguration(LPCWSTR configurationJson)
+{
+    UNREFERENCED_PARAMETER(configurationJson);
+
+    return S_OK;
+}
+
 
 HRESULT
 CMidi2NetworkMidiEndpointManager::Cleanup()

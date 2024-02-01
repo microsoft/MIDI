@@ -506,6 +506,14 @@ CMidi2BluetoothMidiEndpointManager::EnumCompatibleBluetoothDevices()
     return S_OK;
 }
 
+_Use_decl_annotations_
+HRESULT
+CMidi2BluetoothMidiEndpointManager::UpdateConfiguration(LPCWSTR configurationJson)
+{
+    UNREFERENCED_PARAMETER(configurationJson);
+
+    return S_OK;
+}
 
 
 HRESULT

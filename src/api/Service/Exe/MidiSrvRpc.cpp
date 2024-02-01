@@ -113,3 +113,25 @@ HRESULT MidiSrvDestroyClient(
 
     return S_OK;
 }
+
+
+HRESULT MidiSrvUpdateConfiguration(
+    /* [in] */ handle_t BindingHandle,
+    /*[in, string]*/ __RPC__in_string LPCWSTR ConfigurationJson)
+{
+    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(ConfigurationJson);
+
+
+    // Send it to the configuration manager and get it broken apart and sent to
+    // all the destinations it needs to get to (transports, transforms, etc.)
+
+
+
+
+
+
+    return S_OK;
+}
+
+

@@ -629,6 +629,17 @@ HRESULT CMidi2KSMidiEndpointManager::OnEnumerationCompleted(DeviceWatcher, winrt
     return S_OK;
 }
 
+
+_Use_decl_annotations_
+HRESULT
+CMidi2KSMidiEndpointManager::UpdateConfiguration(LPCWSTR configurationJson)
+{
+    UNREFERENCED_PARAMETER(configurationJson);
+
+    return S_OK;
+}
+
+
 HRESULT
 CMidi2KSMidiEndpointManager::Cleanup()
 {

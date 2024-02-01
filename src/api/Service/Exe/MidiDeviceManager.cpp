@@ -31,9 +31,7 @@ CMidiDeviceManager::Initialize(
         try
         {
             // provide the initial settings for these transports
-            // TODO: Still need a way to send updates to them without restarting the service or the abstraction
-            // but that requires a pipe all the way down to the client to send up that configuration block
-            auto transportSettingsJson = m_ConfigurationManager->GetConfigurationForTransportAbstraction(AbstractionLayer);
+            auto transportSettingsJson = m_ConfigurationManager->GetSavedConfigurationForTransportAbstraction(AbstractionLayer);
 
             // changed these from a return-on-fail to just log, so we don't prevent service startup
             // due to one bad abstraction
@@ -688,8 +686,6 @@ CMidiDeviceManager::DeleteAllEndpointInProtocolDiscoveredProperties
 }
 
 
-
-
 _Use_decl_annotations_
 HRESULT
 CMidiDeviceManager::DeactivateEndpoint
@@ -758,6 +754,31 @@ CMidiDeviceManager::RemoveEndpoint
     return S_OK;
 }
 
+
+_Use_decl_annotations_
+HRESULT
+CMidiDeviceManager::UpdateAbstractionConfiguration
+(
+    GUID AbstractionId,
+    LPCWSTR ConfigurationJson
+)
+{
+    if (ConfigurationJson != nullptr && ConfigurationJson != L"")
+    {
+        if (auto search = m_MidiEndpointManagers.find(AbstractionId); search != m_MidiEndpointManagers.end())
+        {
+            auto endpointManager = search->second;
+
+            if (endpointManager)
+            {
+                return endpointManager->UpdateConfiguration(ConfigurationJson);
+            }
+        }
+    }
+
+    // failed to find the abstraction or its related endpoint manager
+    return E_FAIL;
+}
 
 
 HRESULT

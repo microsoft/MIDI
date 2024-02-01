@@ -18,6 +18,7 @@ class CMidi2DiagnosticsEndpointManager :
 {
 public:
     STDMETHOD(Initialize(_In_ IUnknown*, _In_ IUnknown*, _In_ LPCWSTR));
+    STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJson));
     STDMETHOD(Cleanup)();
 
 private:

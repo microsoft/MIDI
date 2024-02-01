@@ -525,6 +525,14 @@ HRESULT CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
 // this will be called from the runtime endpoint creation interface
 
 
+_Use_decl_annotations_
+HRESULT
+CMidi2VirtualMidiEndpointManager::UpdateConfiguration(LPCWSTR configurationJson)
+{
+    UNREFERENCED_PARAMETER(configurationJson);
+
+    return S_OK;
+}
 
 
 HRESULT

@@ -127,6 +127,13 @@ public:
         _In_ PCWSTR
         );
 
+
+    STDMETHOD(UpdateAbstractionConfiguration)(
+        _In_ GUID AbstractionId,
+        _In_ LPCWSTR ConfigurationJson
+        );
+
+
     STDMETHOD(Cleanup)();
 
     //TODO: Method to update the properties (using SwDevicePropertySet and an array of props) for a device by its Id

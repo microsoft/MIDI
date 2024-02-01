@@ -78,4 +78,7 @@ interface MidiSrvRPC
 
     HRESULT MidiSrvCreateClient([in] handle_t BindingHandle, [ in, string ] LPCWSTR MidiDevice, [in] PMIDISRV_CLIENTCREATION_PARAMS CreationParams, [out] PMIDISRV_CLIENT *Client);
     HRESULT MidiSrvDestroyClient([in] handle_t BindingHandle, [in] MidiClientHandle ClientHandle);
+
+    // TODO: Is BindingHandle needed here?
+    HRESULT MidiSrvUpdateConfiguration([in] handle_t BindingHandle, [in, string] LPCWSTR ConfigurationJson);
 }

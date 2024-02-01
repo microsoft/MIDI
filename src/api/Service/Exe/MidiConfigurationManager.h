@@ -22,15 +22,15 @@ public:
     std::vector<GUID> GetEnabledTransportAbstractionLayers() const noexcept;
     std::vector<GUID> GetEnabledEndpointProcessingTransforms() const noexcept;
 
-    // takes a string because that's what we convert to anyway 
-    // expects the guid in the form with braces
-    std::wstring GetConfigurationForTransportAbstraction(
+    std::wstring GetSavedConfigurationForTransportAbstraction(
         _In_ GUID abstractionGuid) const noexcept;
 
-    // takes a string because that's what we convert to anyway 
-    // expects the guid in the form with braces
-    std::wstring GetConfigurationForEndpointProcessingTransform(
+    std::wstring GetSavedConfigurationForEndpointProcessingTransform(
         _In_ GUID abstractionGuid) const noexcept;
+
+
+    std::map<GUID, std::wstring> GetTransportAbstractionSettingsFromJsonString(
+        _In_ std::wstring json) const noexcept;
 
     HRESULT Cleanup() noexcept;
 

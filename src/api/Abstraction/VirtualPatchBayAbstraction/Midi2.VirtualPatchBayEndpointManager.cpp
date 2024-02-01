@@ -507,6 +507,15 @@ CMidi2VirtualPatchBayEndpointManager::CreateEndpoint(
 
 
 
+_Use_decl_annotations_
+HRESULT
+CMidi2VirtualPatchBayEndpointManager::UpdateConfiguration(LPCWSTR configurationJson)
+{
+    UNREFERENCED_PARAMETER(configurationJson);
+
+    return S_OK;
+}
+
 HRESULT
 CMidi2VirtualPatchBayEndpointManager::Cleanup()
 {

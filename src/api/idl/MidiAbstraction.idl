@@ -132,6 +132,11 @@ interface IMidiEndpointManager : IUnknown
         [in] LPCWSTR configurationJson
     );
 
+    HRESULT UpdateConfiguration(
+        [in] LPCWSTR configurationJson
+    );
+
+
     HRESULT Cleanup();
 };
 
