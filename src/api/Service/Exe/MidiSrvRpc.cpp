@@ -120,13 +120,27 @@ HRESULT MidiSrvUpdateConfiguration(
     /*[in, string]*/ __RPC__in_string LPCWSTR ConfigurationJson)
 {
     UNREFERENCED_PARAMETER(BindingHandle);
-    UNREFERENCED_PARAMETER(ConfigurationJson);
-
 
     // Send it to the configuration manager and get it broken apart and sent to
     // all the destinations it needs to get to (transports, transforms, etc.)
 
 
+    std::shared_ptr<CMidiConfigurationManager> configurationManager;
+    std::shared_ptr<CMidiDeviceManager> deviceManager;
+
+    auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
+
+    RETURN_IF_FAILED(g_MidiService->GetConfigurationManager(configurationManager));
+    
+    auto configEntries = configurationManager->GetTransportAbstractionSettingsFromJsonString(ConfigurationJson);
+
+    for (auto i = configEntries.begin(); i != configEntries.end(); i++)
+    {
+        deviceManager->UpdateAbstractionConfiguration(i->first, i->second.c_str());
+    }
+
+
+    // TODO: Now check to see if it has settings for anything else, and send those along to be processed
 
 
 
