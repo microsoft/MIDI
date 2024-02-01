@@ -29,7 +29,7 @@ public:
         _In_ GUID abstractionGuid) const noexcept;
 
 
-    std::map<GUID, std::wstring> GetTransportAbstractionSettingsFromJsonString(
+    std::map<GUID, std::wstring, GUIDCompare> GetTransportAbstractionSettingsFromJsonString(
         _In_ std::wstring json) const noexcept;
 
     HRESULT Cleanup() noexcept;

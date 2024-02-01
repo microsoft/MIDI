@@ -14,7 +14,12 @@
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 
+// this def messages with json
+#pragma push_macro("GetObject")
+#undef GetObject
 #include <winrt/Windows.Data.Json.h>
+#pragma pop_macro("GetObject")
+
 #include <winrt/Windows.Storage.h>
 #include <winrt/Windows.Storage.Streams.h>
 
@@ -82,6 +87,7 @@ namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
 
 // need to declare this before the device manager
 class CMidiEndpointProtocolManager;
+struct GUIDCompare;
 
 #include "MidiTelemetry.h"
 #include "MidiPerformanceManager.h"

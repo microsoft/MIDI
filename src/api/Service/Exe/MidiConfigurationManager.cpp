@@ -13,6 +13,7 @@
 #define MAX_KEY_LENGTH 255
 #define MAX_VALUE_NAME 16383
 
+
 // TODO: Refactor these two methods and abstract out the registry code. Do this once wil adds the enumeration helpers to the NuGet
 std::vector<GUID> CMidiConfigurationManager::GetEnabledTransportAbstractionLayers() const noexcept
 {
@@ -337,16 +338,21 @@ std::wstring CMidiConfigurationManager::GetCurrentConfigurationFileName() noexce
 }
 
 
-std::map<GUID, std::wstring> CMidiConfigurationManager::GetTransportAbstractionSettingsFromJsonString(
+
+#pragma push_macro("GetObject")
+#undef GetObject
+
+std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTransportAbstractionSettingsFromJsonString(
     _In_ std::wstring json) const noexcept
 {
     OutputDebugString(L"\n" __FUNCTION__);
 
-    std::map<GUID, std::wstring> abstractionSettings{};
+    //std::map<winrt::guid, std::wstring> abstractionSettings{};
+    std::map<GUID, std::wstring, GUIDCompare> abstractionSettings{};
 
     try
     {       
-        winrt::Windows::Data::Json::JsonObject jsonObject{ nullptr };
+        json::JsonObject jsonObject{ nullptr };
 
 
         if (json::JsonObject::TryParse(json, jsonObject))
@@ -359,21 +365,28 @@ std::map<GUID, std::wstring> CMidiConfigurationManager::GetTransportAbstractionS
             OutputDebugString(L"Parsing json failed\n");
         }
 
+
         if (jsonObject != nullptr)
         {
             // probably need to normalize these to ignore case.
-            if (m_jsonObject.HasKey(winrt::to_hstring(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT)))
+            if (jsonObject.HasKey(winrt::to_hstring(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT)))
             {
-                auto plugins = m_jsonObject.GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT);
+                auto plugins = jsonObject.GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT);
 
+                // Iterate through nodes and find each transport abstraction entry. Parse the GUID. Add to results.
 
-                // TODO: Iterate through nodes and find each transport abstraction entry. Parse the GUID. Add to results.
+                for (auto i = plugins.begin(); i != plugins.end(); i++)
+                {
+                    std::wstring key = i.Current().Key().c_str();
+                    std::wstring transportJson = i.Current().Value().GetObject().Stringify().c_str();
 
+                    GUID abstractionId = StringToGuid(key);
+                     
+                    // TODO: Should verify the abstractionId is for an enabled abstraction
+                    // before adding it to the returned map
 
-
-
-                std::wstring jsonString = (std::wstring)thisPlugin.Stringify();
-
+                    abstractionSettings.insert_or_assign(abstractionId, transportJson);
+                }
             }
         }
     }
@@ -381,6 +394,8 @@ std::map<GUID, std::wstring> CMidiConfigurationManager::GetTransportAbstractionS
 
     return abstractionSettings;
 }
+#pragma pop_macro("GetObject")
+
 
 
 HRESULT CMidiConfigurationManager::Initialize()

@@ -663,3 +663,9 @@ inline std::wstring GuidToString(_In_ GUID guid)
     }
 }
 
+inline GUID StringToGuid(_In_ std::wstring value)
+{
+    winrt::guid resultingGuid(value);
+
+    return resultingGuid;
+}

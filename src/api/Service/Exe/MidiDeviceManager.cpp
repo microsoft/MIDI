@@ -763,7 +763,7 @@ CMidiDeviceManager::UpdateAbstractionConfiguration
     LPCWSTR ConfigurationJson
 )
 {
-    if (ConfigurationJson != nullptr && ConfigurationJson != L"")
+    if (ConfigurationJson != nullptr)
     {
         if (auto search = m_MidiEndpointManagers.find(AbstractionId); search != m_MidiEndpointManagers.end())
         {
