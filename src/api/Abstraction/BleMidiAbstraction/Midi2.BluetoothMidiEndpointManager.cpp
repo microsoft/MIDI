@@ -22,8 +22,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2BluetoothMidiEndpointManager::Initialize(
     IUnknown* MidiDeviceManager, 
-    IUnknown* /*midiEndpointProtocolManager*/,
-    LPCWSTR /*ConfigurationJson*/
+    IUnknown* /*midiEndpointProtocolManager*/
 )
 {
     //OutputDebugString(L"" __FUNCTION__ " Enter");
@@ -502,15 +501,6 @@ CMidi2BluetoothMidiEndpointManager::EnumCompatibleBluetoothDevices()
 
 //    bt::BluetoothLEDevice::GetGattServicesForUuidAsync(midiServiceGuid);
 
-
-    return S_OK;
-}
-
-_Use_decl_annotations_
-HRESULT
-CMidi2BluetoothMidiEndpointManager::UpdateConfiguration(LPCWSTR configurationJson)
-{
-    UNREFERENCED_PARAMETER(configurationJson);
 
     return S_OK;
 }

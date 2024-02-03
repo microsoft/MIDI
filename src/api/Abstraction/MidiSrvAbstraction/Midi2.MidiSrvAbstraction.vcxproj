@@ -266,6 +266,7 @@
     <ClCompile Include="Midi2.MidiSrv.cpp" />
     <ClCompile Include="Midi2.MidiSrvAbstraction.cpp" />
     <ClCompile Include="Midi2.MidiSrvBidi.cpp" />
+    <ClCompile Include="Midi2.MidiSrvConfigurationManager.cpp" />
     <ClCompile Include="Midi2.MidiSrvIn.cpp" />
     <ClCompile Include="Midi2.MidiSrvOut.cpp" />
     <ClCompile Include="MidiSrv_Rpc.cpp" />
@@ -284,6 +285,7 @@
     <ClInclude Include="Midi2.MidiSrv.h" />
     <ClInclude Include="Midi2.MidiSrvAbstraction.h" />
     <ClInclude Include="Midi2.MidiSrvBidi.h" />
+    <ClInclude Include="Midi2.MidiSrvConfigurationManager.h" />
     <ClInclude Include="Midi2.MidiSrvIn.h" />
     <ClInclude Include="Midi2.MidiSrvOut.h" />
     <ClInclude Include="pch.h" />

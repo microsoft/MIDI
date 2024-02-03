@@ -69,8 +69,7 @@ class CMidi2VirtualPatchBayEndpointManager :
 
 {
 public:
-    STDMETHOD(Initialize(_In_ IUnknown*, _In_ IUnknown*, _In_ LPCWSTR));
-    STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJson));
+    STDMETHOD(Initialize(_In_ IUnknown*, _In_ IUnknown*));
     STDMETHOD(Cleanup)();
 
     //STDMETHOD(ApplyConfiguration(

@@ -27,6 +27,7 @@ CMidiDeviceManager::Initialize(
     {
         wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
         wil::com_ptr_nothrow<IMidiEndpointManager> endpointManager;
+        wil::com_ptr_nothrow<IMidiAbstractionConfigurationManager> abstractionConfigurationManager;
 
         try
         {
@@ -47,7 +48,7 @@ CMidiDeviceManager::Initialize(
                     // need to do this to avoid an ambiguous IUnknown cast error
                     wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> protocolManager = EndpointProtocolManager.get();
 
-                    auto initializeResult = endpointManager->Initialize((IUnknown*)this, (IUnknown*)protocolManager.get(), transportSettingsJson.c_str());
+                    auto initializeResult = endpointManager->Initialize((IUnknown*)this, (IUnknown*)protocolManager.get());
 
                     LOG_IF_FAILED(initializeResult);
 
@@ -66,11 +67,35 @@ CMidiDeviceManager::Initialize(
                 {
                     OutputDebugString(__FUNCTION__ L": Transport Abstraction Endpoint Manager activation failed (nullptr return).\n");
                 }
+
+                // we only log. This interface is optional
+                LOG_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiAbstractionConfigurationManager), (void**)&abstractionConfigurationManager));
+
+                if (abstractionConfigurationManager != nullptr)
+                {
+                    if (transportSettingsJson != L"")
+                    {
+                        CComBSTR response;
+                        response.Empty();
+
+                        LOG_IF_FAILED(abstractionConfigurationManager->UpdateConfiguration(transportSettingsJson.c_str(), &response));
+
+                        // we don't use the response info here.
+                        ::SysFreeString(response);
+                    }
+
+                    m_MidiAbstractionConfigurationManagers.emplace(AbstractionLayer, std::move(abstractionConfigurationManager));
+                }
             }
             else
             {
                 OutputDebugString(__FUNCTION__ L": Transport Abstraction activation failed (nullptr return).\n");
             }
+
+
+
+
+
         }
         catch (...)
         {
@@ -760,18 +785,19 @@ HRESULT
 CMidiDeviceManager::UpdateAbstractionConfiguration
 (
     GUID AbstractionId,
-    LPCWSTR ConfigurationJson
+    LPCWSTR ConfigurationJson,
+    BSTR* Response
 )
 {
     if (ConfigurationJson != nullptr)
     {
-        if (auto search = m_MidiEndpointManagers.find(AbstractionId); search != m_MidiEndpointManagers.end())
+        if (auto search = m_MidiAbstractionConfigurationManagers.find(AbstractionId); search != m_MidiAbstractionConfigurationManagers.end())
         {
-            auto endpointManager = search->second;
+            auto configManager = search->second;
 
-            if (endpointManager)
+            if (configManager)
             {
-                return endpointManager->UpdateConfiguration(ConfigurationJson);
+                return configManager->UpdateConfiguration(ConfigurationJson, Response);
             }
         }
     }
@@ -787,6 +813,8 @@ CMidiDeviceManager::Cleanup()
     OutputDebugString(__FUNCTION__ L"\n");
 
     m_MidiEndpointManagers.clear();
+    m_MidiAbstractionConfigurationManagers.clear();
+
     m_MidiPorts.clear();
 
     m_MidiParents.clear();

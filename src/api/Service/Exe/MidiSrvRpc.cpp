@@ -136,7 +136,12 @@ HRESULT MidiSrvUpdateConfiguration(
 
     for (auto i = configEntries.begin(); i != configEntries.end(); i++)
     {
-        deviceManager->UpdateAbstractionConfiguration(i->first, i->second.c_str());
+        CComBSTR response;
+        response.Empty();
+
+        deviceManager->UpdateAbstractionConfiguration(i->first, i->second.c_str(), &response);
+
+        ::SysFreeString(response);
     }
 
 

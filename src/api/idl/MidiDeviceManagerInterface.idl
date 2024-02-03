@@ -83,7 +83,8 @@ interface IMidiDeviceManagerInterface : IUnknown
     // Update the running configuration for an abstraction or endpoints managed by that abstraction
     HRESULT UpdateAbstractionConfiguration(
         [in] GUID AbstractionId,
-        [in] LPCWSTR ConfigurationJson
+        [in] LPCWSTR ConfigurationJson,
+        [out] BSTR* Response
     );
 
 

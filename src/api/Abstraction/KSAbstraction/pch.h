@@ -59,6 +59,9 @@ namespace json = winrt::Windows::Data::Json;
 #include "abstraction_defs.h"
 #include "midi_config_json.h"
 
+#include "midiabstraction_i.c"
+#include "midiabstraction.h"
+
 #include "Midi2KSAbstraction_i.c"
 #include "Midi2KSAbstraction.h"
 
@@ -82,3 +85,4 @@ namespace json = winrt::Windows::Data::Json;
 #include "Midi2.KSMidiOut.h"
 #include "Midi2.KSMidiBiDi.h"
 #include "Midi2.KSMidiEndpointManager.h"
+#include "Midi2.KSMidiConfigurationManager.h"

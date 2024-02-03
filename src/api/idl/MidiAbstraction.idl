@@ -128,14 +128,9 @@ interface IMidiEndpointManager : IUnknown
 {
     HRESULT Initialize(
         [in] IUnknown* midiDeviceManager,
-        [in] IUnknown* midiEndpointProtocolManager,
-        [in] LPCWSTR configurationJson
+        [in] IUnknown* midiEndpointProtocolManager //,
+        /*[in] LPCWSTR configurationJson */
     );
-
-    HRESULT UpdateConfiguration(
-        [in] LPCWSTR configurationJson
-    );
-
 
     HRESULT Cleanup();
 };
@@ -180,3 +175,32 @@ interface IMidiDataTransform : IUnknown
     );
 };
 
+
+
+// IMidiConfigurationManager for sending config json to 
+// an endpoint, transform, or the service at runtime
+// The json section sent contains only changes, not the 
+// entire configuration for the entity
+
+[
+    object,
+    local,
+    uuid(f19dd642-1809-4497-9eee-f230b11bd6fb),
+    pointer_default(unique)
+]
+interface IMidiAbstractionConfigurationManager : IUnknown
+{
+    HRESULT Initialize(
+        [in] GUID abstractionId,
+        [in] IUnknown* midiDeviceManager
+    );
+
+    HRESULT UpdateConfiguration(
+        [in] LPCWSTR configurationJsonSection,
+        [out] BSTR* response
+    );
+
+    HRESULT Cleanup();
+
+
+};
