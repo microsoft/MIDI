@@ -152,13 +152,9 @@ HRESULT MidiSrvUpdateConfiguration(
         ::SysFreeString(response);
     }
 
-
     RETURN_IF_FAILED(combinedResponse.CopyTo(Response));
 
     // TODO: Now check to see if it has settings for anything else, and send those along to be processed
-
-
-
 
     return S_OK;
 }

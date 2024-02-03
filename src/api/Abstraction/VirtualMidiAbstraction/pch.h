@@ -20,9 +20,9 @@
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
-#include <winrt/Windows.Data.Json.h>
+//#include <winrt/Windows.Data.Json.h>
 
-namespace json = ::winrt::Windows::Data::Json;
+//namespace json = ::winrt::Windows::Data::Json;
 
 
 #include <assert.h>
@@ -66,6 +66,7 @@ namespace json = ::winrt::Windows::Data::Json;
 
 #include "strsafe.h"
 #include "string_util.h"
+#include "json_helpers.h"
 
 namespace internal = ::Windows::Devices::Midi2::Internal;
 
@@ -89,10 +90,12 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 
 class CMidi2VirtualMidiEndpointManager;
 class CMidi2VirtualMidiBiDi;
+class AbstractionState;
 
 #include "MidiEndpointTable.h"
 
 #include "Midi2.VirtualMidiAbstraction.h"
 #include "Midi2.VirtualMidiBiDi.h"
 #include "Midi2.VirtualMidiEndpointManager.h"
-
+#include "Midi2.VirtualMidiConfigurationManager.h"
+#include "AbstractionState.h"

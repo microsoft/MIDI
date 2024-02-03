@@ -20,7 +20,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         if (ContainerId() == winrt::guid{}) return nullptr;
 
         auto container = winrt::Windows::Devices::Enumeration::DeviceInformation::CreateFromIdAsync(
-            GuidToString(ContainerId()),
+            internal::GuidToString(ContainerId()),
             {
                 L"System.Devices.DeviceInstanceId",
                 L"System.Devices.Parent",
@@ -423,7 +423,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
             auto guid = winrt::unbox_value<winrt::guid>(m_properties.Lookup(key));
 
-            auto s = GuidToString(guid);
+            auto s = internal::GuidToString(guid);
 
             return winrt::hstring(s);
 

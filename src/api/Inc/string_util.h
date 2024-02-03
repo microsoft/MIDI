@@ -147,4 +147,34 @@ namespace Windows::Devices::Midi2::Internal
         return id.find(sub) != std::wstring::npos;
     }
 
+
+
+
+
+    // note that this produces a GUID with uppercase letters and enclosing braces
+    inline std::wstring GuidToString(_In_ GUID guid)
+    {
+        LPOLESTR str;
+        if (SUCCEEDED(StringFromCLSID(guid, &str)))
+        {
+            std::wstring guidString{ str };
+
+            ::CoTaskMemFree(str);
+
+            return guidString;
+        }
+        else
+        {
+            return L"";
+        }
+    }
+
+    inline GUID StringToGuid(_In_ std::wstring value)
+    {
+        winrt::guid resultingGuid(value);
+
+        return resultingGuid;
+    }
+
+
 }

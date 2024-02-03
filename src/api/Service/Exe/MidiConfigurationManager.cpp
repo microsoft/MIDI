@@ -6,6 +6,12 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+
+//
+// TODO: Refactor this code to use the json_helpers.h functions and defines
+//
+
+
 #include "stdafx.h"
 
 #include "MidiConfigurationManager.h"
@@ -380,7 +386,7 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
                     std::wstring key = i.Current().Key().c_str();
                     std::wstring transportJson = i.Current().Value().GetObject().Stringify().c_str();
 
-                    GUID abstractionId = StringToGuid(key);
+                    GUID abstractionId = internal::StringToGuid(key);
                      
                     // TODO: Should verify the abstractionId is for an enabled abstraction
                     // before adding it to the returned map
@@ -491,7 +497,7 @@ std::wstring CMidiConfigurationManager::GetSavedConfigurationForTransportAbstrac
     try
     {
 
-        auto key = GuidToString(abstractionGuid);
+        auto key = internal::GuidToString(abstractionGuid);
 
         //    OutputDebugString(key.c_str());
 
@@ -531,7 +537,7 @@ std::wstring CMidiConfigurationManager::GetSavedConfigurationForEndpointProcessi
     {
         //   OutputDebugString(L"" __FUNCTION__);
 
-        auto key = GuidToString(abstractionGuid);
+        auto key = internal::GuidToString(abstractionGuid);
 
         //    OutputDebugString(key.c_str());
 

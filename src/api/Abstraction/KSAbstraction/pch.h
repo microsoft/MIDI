@@ -79,6 +79,7 @@ namespace json = winrt::Windows::Data::Json;
 #include "MidiXProc.h"
 #include "MidiKs.h"
 
+
 #include "Midi2.KSAbstraction.h"
 #include "Midi2.KSMidi.h"
 #include "Midi2.KSMidiIn.h"
@@ -86,3 +87,5 @@ namespace json = winrt::Windows::Data::Json;
 #include "Midi2.KSMidiBiDi.h"
 #include "Midi2.KSMidiEndpointManager.h"
 #include "Midi2.KSMidiConfigurationManager.h"
+
+

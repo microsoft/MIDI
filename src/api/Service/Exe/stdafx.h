@@ -14,16 +14,9 @@
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 
-// this def messages with json
-#pragma push_macro("GetObject")
-#undef GetObject
-#include <winrt/Windows.Data.Json.h>
-#pragma pop_macro("GetObject")
 
 #include <winrt/Windows.Storage.h>
 #include <winrt/Windows.Storage.Streams.h>
-
-namespace json = ::winrt::Windows::Data::Json;
 
 #include <string>
 #include <strsafe.h>
@@ -48,6 +41,7 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "midi_ump.h"
 #include "midi_timestamp.h"
 #include "string_util.h"
+#include "json_helpers.h"
 
 namespace internal = ::Windows::Devices::Midi2::Internal;
 namespace shared = ::Windows::Devices::Midi2::Internal::Shared;

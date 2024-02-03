@@ -13,6 +13,7 @@
 #include "MidiEndpointConnection.h"
 
 #include "string_util.h"
+#include <atlcomcli.h>
 
 
 namespace winrt::Windows::Devices::Midi2::implementation
@@ -190,21 +191,138 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         OutputDebugString(__FUNCTION__ L"");
 
-        // TEMP ============================================================================================
-        // Until we can spin up a new virtual device from the API, we have to use a pre-configured 
-        // endpoint.
+        //winrt::hstring endpointDeviceId = 
+        //    L"\\\\?\\SWD#MIDISRV#MIDIU_VIRTDEV_" + 
+        //    deviceDefinition.EndpointProductInstanceId() +
+        //    L"#" + midi2::MidiEndpointDeviceInformation::EndpointInterfaceClass();
 
-        winrt::hstring endpointDeviceId = 
-            L"\\\\?\\SWD#MIDISRV#MIDIU_VIRTDEV_" + 
-            deviceDefinition.EndpointProductInstanceId() +
-            L"#" + midi2::MidiEndpointDeviceInformation::EndpointInterfaceClass();
-
-        OutputDebugString(endpointDeviceId.c_str());
-
-        // End TEMP ========================================================================================
+        winrt::hstring endpointDeviceId{};
 
 
-        // create the connection
+        // TODO: Replace all these strings with consts/defines from the service src ========================================================
+
+        // create the json for creating the endpoint
+
+
+        // todo: grab this from a constant
+        winrt::hstring virtualDeviceAbstractionId = L"{8FEAAD91 -70E1-4A19-997A-377720A719C1}";
+
+        json::JsonObject endpointCreationObject;
+        json::JsonArray createVirtualDevicesArray;
+        json::JsonObject endpointDefinitionObject;
+
+        // Create association guid
+        auto associationGuid = foundation::GuidHelper::CreateNewGuid();
+
+        // set all of our properties.
+        endpointDefinitionObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_ASSOCIATION_ID_PROPERTY_KEY, json::JsonValue::CreateStringValue(winrt::to_hstring(associationGuid)));
+        endpointDefinitionObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_UNIQUE_ID_PROPERTY_KEY, json::JsonValue::CreateStringValue(deviceDefinition.EndpointProductInstanceId()));
+        endpointDefinitionObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, json::JsonValue::CreateStringValue(deviceDefinition.EndpointName()));
+//        endpointDefinitionObject.SetNamedValue(L"description", json::JsonValue::CreateStringValue(deviceDefinition.EndpointDescription()));
+
+        // TODO: Other props that have to be set at the service level and not in-protocol
+
+
+
+
+        createVirtualDevicesArray.Append(endpointDefinitionObject);
+
+        json::JsonObject abstractionObject;
+        abstractionObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICES_CREATE_ARRAY_KEY, createVirtualDevicesArray);
+
+        endpointCreationObject.SetNamedValue(virtualDeviceAbstractionId, abstractionObject);
+
+
+        // send it up
+
+        auto iid = __uuidof(IMidiAbstractionConfigurationManager);
+
+        winrt::com_ptr<IMidiAbstractionConfigurationManager> configManager;
+
+        winrt::check_hresult(m_serviceAbstraction->Activate(iid, (void**)&configManager));
+
+
+        if (configManager != nullptr)
+        {
+            winrt::check_hresult(configManager->Initialize(internal::StringToGuid(virtualDeviceAbstractionId.c_str()), nullptr));
+
+            CComBSTR response;
+            response.Empty();
+
+            configManager->UpdateConfiguration(abstractionObject.Stringify().c_str(), &response);
+
+            // TODO: check the response. If success, get the SWD id so we can create the connection
+
+            json::JsonObject responseObject;
+
+            if (internal::JsonObjectFromBSTR(&response, responseObject))
+            {
+                // check for success
+
+                auto success = internal::JsonGetBoolProperty(responseObject, MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_SUCCESS_PROPERTY_KEY, false);
+
+                if (success)
+                {
+                    auto responseArray = internal::JsonGetArrayProperty(responseObject, MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_CREATED_DEVICES_ARRAY_KEY);
+
+                    if (responseArray.Size() > 0)
+                    {
+                        // get the id. We should have only one item in the response array here so we'll just grab the first
+
+                        auto firstObject = responseArray.GetObjectAt(0);
+
+                        endpointDeviceId = internal::JsonGetWStringProperty(
+                            firstObject, 
+                            MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_CREATED_ID_PROPERTY_KEY, 
+                            L"");
+
+                        if (endpointDeviceId == L"")
+                        {
+                            // failed in another unexpected way
+                            OutputDebugString(__FUNCTION__ L" Virtual device creation failed. Created Id was empty");
+
+                            return nullptr;
+                        }
+                    }
+                    else
+                    {
+                        // creation failed in an unexpected way
+                        OutputDebugString(__FUNCTION__ L" Virtual device creation failed. Empty response array");
+
+                        return nullptr;
+                    }
+
+                    //endpointDeviceId
+                }
+                else
+                {
+                    // creation failed
+                    OutputDebugString(__FUNCTION__ L" Virtual device creation failed");
+
+                    return nullptr;
+                }
+            }
+            else
+            {
+                // failed in some way
+                OutputDebugString(__FUNCTION__ L" Failed to read json response object from virtual device creation");
+
+                return nullptr;
+            }
+
+
+
+        }
+        else
+        {
+            // failed. Log
+
+            return nullptr;
+        }
+
+
+
+        // Creating the device succeeded, so create the connection
         auto connection = CreateEndpointConnection(endpointDeviceId, nullptr, nullptr);
 
         if (connection)

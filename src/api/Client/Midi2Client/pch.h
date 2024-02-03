@@ -27,7 +27,7 @@
 #include <winrt/Windows.Storage.h>
 
 #include <winrt/Windows.Data.Json.h>
-
+namespace json = ::winrt::Windows::Data::Json;
 
 #include <stdint.h>
 #include <sstream>
@@ -44,6 +44,7 @@
 #include "ump_helpers.h"
 #include "memory_buffer.h"
 #include "string_util.h"
+#include "json_helpers.h"
 
 // shared
 #include "midi_ump.h"   // general shared

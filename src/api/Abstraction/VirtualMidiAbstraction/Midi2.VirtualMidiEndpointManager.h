@@ -33,8 +33,6 @@ public:
         _Inout_ MidiVirtualDeviceEndpointEntry& entry
     );
 
-    HRESULT ApplyJson(_In_ json::JsonObject jsonObject);
-
     HRESULT NegotiateAndRequestMetadata(_In_ std::wstring endpointInterfaceId);
 
     HRESULT DeleteClientEndpoint(_In_ std::wstring clientShortInstanceId);

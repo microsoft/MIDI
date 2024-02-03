@@ -274,8 +274,10 @@
     </Midl>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AbstractionState.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Midi2.VirtualMidiAbstraction.cpp" />
+    <ClCompile Include="Midi2.VirtualMidiConfigurationManager.cpp" />
     <ClCompile Include="Midi2.VirtualMidiEndpointManager.cpp" />
     <ClCompile Include="Midi2.VirtualMidiBidi.cpp" />
     <ClCompile Include="MidiEndpointTable.cpp" />
@@ -291,10 +293,12 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AbstractionState.h" />
     <ClInclude Include="abstraction_defs.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="Midi2.VirtualMidiAbstraction.h" />
     <ClInclude Include="Midi2.VirtualMidiBidi.h" />
+    <ClInclude Include="Midi2.VirtualMidiConfigurationManager.h" />
     <ClInclude Include="Midi2.VirtualMidiEndpointManager.h" />
     <ClInclude Include="MidiEndpointTable.h" />
     <ClInclude Include="pch.h" />

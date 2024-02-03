@@ -23,32 +23,32 @@ GUID AbstractionLayerGUID = __uuidof(Midi2VirtualMidiAbstraction);
 
 
 
-json::JsonObject GetJsonCreateNode(json::JsonObject Parent)
-{
-    if (Parent.HasKey(MIDI_VIRT_JSON_INSTRUCTION_CREATE_KEY))
-    {
-        return Parent.GetNamedObject(MIDI_VIRT_JSON_INSTRUCTION_CREATE_KEY);
-    }
-    else
-    {
-        return nullptr;
-    }
-}
-
-winrt::hstring GetJsonStringValue(
-    json::JsonObject Parent,
-    winrt::hstring Key,
-    winrt::hstring Default)
-{
-    if (Parent.HasKey(Key))
-    {
-        return Parent.GetNamedString(Key);
-    }
-    else
-    {
-        return Default;
-    }
-}
+//json::JsonObject GetJsonCreateNode(json::JsonObject Parent)
+//{
+//    if (Parent.HasKey(MIDI_VIRT_JSON_INSTRUCTION_CREATE_KEY))
+//    {
+//        return Parent.GetNamedObject(MIDI_VIRT_JSON_INSTRUCTION_CREATE_KEY);
+//    }
+//    else
+//    {
+//        return nullptr;
+//    }
+//}
+//
+//winrt::hstring GetJsonStringValue(
+//    json::JsonObject Parent,
+//    winrt::hstring Key,
+//    winrt::hstring Default)
+//{
+//    if (Parent.HasKey(Key))
+//    {
+//        return Parent.GetNamedString(Key);
+//    }
+//    else
+//    {
+//        return Default;
+//    }
+//}
 
 
 
@@ -89,58 +89,6 @@ CMidi2VirtualMidiEndpointManager::Initialize(
     m_ContainerId = m_TransportAbstractionId;           // we use the transport ID as the container ID for convenience
 
     RETURN_IF_FAILED(CreateParentDevice());
-
-    // TODO: This has a bit of a smell. Revisit.
-    MidiEndpointTable::Current().Initialize(this);
-
-
-    return S_OK;
-}
-
-_Use_decl_annotations_
-HRESULT
-CMidi2VirtualMidiEndpointManager::ApplyJson(json::JsonObject jsonObject)
-{
-    // we're expecting a chunk of json here with children for creating, updating, and removing virtual devices
-
-    if (jsonObject.HasKey(MIDI_VIRT_JSON_INSTRUCTION_CREATE_KEY))
-    {
-        auto array = jsonObject.GetNamedArray(MIDI_VIRT_JSON_INSTRUCTION_CREATE_KEY);
-
-        // under this should be a set of objects, each representing a single device to modify
-
-        if (array)
-        {
-
-            for (uint32_t i = 0; i < array.Size(); i++)
-            {
-                auto jsonEntry = (array.GetObjectAt(i));
-
-                if (jsonEntry)
-                {
-                    // add to our endpoint table
-                    MidiVirtualDeviceEndpointEntry deviceEntry;
-
-                    deviceEntry.VirtualEndpointAssociationId = GetJsonStringValue(jsonEntry, MIDI_VIRT_JSON_DEVICE_PROPERTY_ASSOCIATION_IDENTIFIER, L"");
-                    deviceEntry.ShortUniqueId = GetJsonStringValue(jsonEntry, MIDI_VIRT_JSON_DEVICE_PROPERTY_SHORT_UNIQUE_ID, L"");
-                    deviceEntry.BaseEndpointName = GetJsonStringValue(jsonEntry, MIDI_VIRT_JSON_DEVICE_PROPERTY_NAME, L"");
-                    deviceEntry.Description = GetJsonStringValue(jsonEntry, MIDI_VIRT_JSON_DEVICE_PROPERTY_DESCRIPTION, L"");
-
-
-                    // if no association id, or it already exists in the table, bail
-
-                    // if no unique Id, bail or maybe generate one
-
-                    // if a unique id and it's larger than the max length, truncate it
-
-                    // create the device-side endpoint
-                    LOG_IF_FAILED(CreateDeviceSideEndpoint(deviceEntry));
-                }
-
-            }
-        }
-    }
-
 
     return S_OK;
 }
@@ -365,7 +313,8 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
 
 
 _Use_decl_annotations_
-HRESULT CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
+HRESULT
+CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
     MidiVirtualDeviceEndpointEntry &entry
 )
 {
@@ -481,9 +430,7 @@ HRESULT CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
 
     entry.CreatedDeviceEndpointId = internal::NormalizeEndpointInterfaceIdCopy(newDeviceInterfaceId);
 
-    MidiEndpointTable::Current().AddCreatedEndpointDevice(entry);
-
-    // todo: store the interface id and use it for matches later instead of the current partial string match
+    AbstractionState::Current().GetEndpointTable()->AddCreatedEndpointDevice(entry);
 
     OutputDebugString(__FUNCTION__ L": Complete\n");
 
@@ -551,9 +498,7 @@ CMidi2VirtualMidiEndpointManager::Cleanup()
 
     // destroy and release all the devices we have created
 
-
-    MidiEndpointTable::Current().Cleanup();
-
+    LOG_IF_FAILED(AbstractionState::Current().GetEndpointTable()->Cleanup());
 
     return S_OK;
 }
