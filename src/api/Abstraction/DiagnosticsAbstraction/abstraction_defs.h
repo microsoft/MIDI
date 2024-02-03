@@ -16,7 +16,7 @@
 // TODO: Names should be moved to .rc for localization
 
 #define TRANSPORT_PARENT_ID L"MIDIU_DIAG_TRANSPORT"
-#define TRANSPORT_PARENT_DEVICE_NAME L"MIDI 2.0 Diagnostics Enumerator"
+#define TRANSPORT_PARENT_DEVICE_NAME L"MIDI 2.0 Diagnostics Devices"
 
 #define DEFAULT_LOOPBACK_BIDI_A_ID L"MIDIU_DIAG_LOOPBACK_A"
 #define DEFAULT_LOOPBACK_BIDI_A_NAME L"Diagnostics Loopback A"
