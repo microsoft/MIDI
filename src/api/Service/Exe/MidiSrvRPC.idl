@@ -80,5 +80,5 @@ interface MidiSrvRPC
     HRESULT MidiSrvDestroyClient([in] handle_t BindingHandle, [in] MidiClientHandle ClientHandle);
 
     // TODO: Is BindingHandle needed here?
-    HRESULT MidiSrvUpdateConfiguration([in] handle_t BindingHandle, [in, string] LPCWSTR ConfigurationJson);
+    HRESULT MidiSrvUpdateConfiguration([in] handle_t BindingHandle, [in, string] LPCWSTR ConfigurationJson, [out] BSTR* Response);
 }

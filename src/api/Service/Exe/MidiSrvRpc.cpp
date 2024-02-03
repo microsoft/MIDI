@@ -117,7 +117,8 @@ HRESULT MidiSrvDestroyClient(
 
 HRESULT MidiSrvUpdateConfiguration(
     /* [in] */ handle_t BindingHandle,
-    /*[in, string]*/ __RPC__in_string LPCWSTR ConfigurationJson)
+    /*[in, string]*/ __RPC__in_string LPCWSTR ConfigurationJson, 
+    __RPC__out BSTR* Response)
 {
     UNREFERENCED_PARAMETER(BindingHandle);
 
@@ -131,8 +132,12 @@ HRESULT MidiSrvUpdateConfiguration(
     auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
 
     RETURN_IF_FAILED(g_MidiService->GetConfigurationManager(configurationManager));
-    
+    RETURN_IF_FAILED(g_MidiService->GetDeviceManager(deviceManager));
+
     auto configEntries = configurationManager->GetTransportAbstractionSettingsFromJsonString(ConfigurationJson);
+
+    CComBSTR combinedResponse;
+    combinedResponse.Empty();
 
     for (auto i = configEntries.begin(); i != configEntries.end(); i++)
     {
@@ -141,9 +146,14 @@ HRESULT MidiSrvUpdateConfiguration(
 
         deviceManager->UpdateAbstractionConfiguration(i->first, i->second.c_str(), &response);
 
+        // Probably need to do more formatting of this.
+        combinedResponse += response;
+
         ::SysFreeString(response);
     }
 
+
+    RETURN_IF_FAILED(combinedResponse.CopyTo(Response));
 
     // TODO: Now check to see if it has settings for anything else, and send those along to be processed
 
