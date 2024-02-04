@@ -141,6 +141,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     
     _Use_decl_annotations_
     bool MidiEndpointConnection::InternalInitialize(
+        winrt::guid sessionId,
         winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
         winrt::guid const connectionId,
         winrt::hstring const endpointDeviceId, 
@@ -153,12 +154,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         try
         {
+            m_sessionId = sessionId;
             m_connectionId = connectionId;
 
             m_endpointDeviceId = endpointDeviceId;
 
-            WINRT_ASSERT(!m_endpointDeviceId.empty());
-            WINRT_ASSERT(serviceAbstraction != nullptr);
+            //WINRT_ASSERT(!m_endpointDeviceId.empty());
+            //WINRT_ASSERT(serviceAbstraction != nullptr);
 
             m_serviceAbstraction = serviceAbstraction;
             
@@ -208,7 +210,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
                         &abstractionCreationParams,
                         &mmcssTaskId,
                         (IMidiCallback*)(this),
-                        0
+                        0,
+                        m_sessionId
                     ));
 
                     // provide a copy to the output logic

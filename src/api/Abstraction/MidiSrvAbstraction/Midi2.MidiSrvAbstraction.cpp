@@ -64,7 +64,7 @@ CMidi2MidiSrvAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiSrvAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- Midi BiDi",
+            __FUNCTION__ "- IMidiAbstractionConfigurationManager",
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingValue(__FUNCTION__),
             TraceLoggingPointer(this, "this")
@@ -72,6 +72,20 @@ CMidi2MidiSrvAbstraction::Activate(
 
         wil::com_ptr_nothrow<IMidiAbstractionConfigurationManager> config;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2MidiSrvConfigurationManager>(&config));
+        *Interface = config.detach();
+    }
+    else if (__uuidof(IMidiSessionTracker) == Iid)
+    {
+        TraceLoggingWrite(
+            MidiSrvAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__ "- IMidiSessionTracker",
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingValue(__FUNCTION__),
+            TraceLoggingPointer(this, "this")
+        );
+
+        wil::com_ptr_nothrow<IMidiSessionTracker> config;
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2MidiSrvSessionTracker>(&config));
         *Interface = config.detach();
     }
     else

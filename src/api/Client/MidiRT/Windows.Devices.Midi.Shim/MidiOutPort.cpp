@@ -34,10 +34,14 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
                 DWORD mmcssTaskId{};
                 ABSTRACTIONCREATIONPARAMS abstractionCreationParams{ MidiDataFormat_ByteStream };
 
+                // this should be set some way to a meaningful per-process value
+                GUID dummySessionId{};
+
                 if (SUCCEEDED(endpoint->Initialize(
                     deviceId.c_str(),
                     &abstractionCreationParams,
-                    &mmcssTaskId
+                    &mmcssTaskId,
+                    dummySessionId
                 )))
                 {
                     auto port = winrt::make_self<winrt::MIDI_ROOT_NAMESPACE_CPP::implementation::MidiOutPort>();

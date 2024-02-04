@@ -49,6 +49,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         _Success_(return == true)
         bool InternalInitialize(
+            _In_ winrt::guid sessionId,
             _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
             _In_ winrt::guid const connectionId,
             _In_ winrt::hstring const endpointDeviceId,
@@ -137,6 +138,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint64_t m_maxAllowedTimestampOffset{};
 
 
+        winrt::guid m_sessionId{};
         winrt::guid m_connectionId{};
         winrt::hstring m_endpointDeviceId{};
         winrt::Windows::Foundation::IInspectable m_tag{ nullptr };

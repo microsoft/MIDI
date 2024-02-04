@@ -610,6 +610,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to New endpoint name.
+        /// </summary>
+        internal static string ParameterEndpointUpdateName {
+            get {
+                return ResourceManager.GetString("ParameterEndpointUpdateName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The direction of data flow for the endpoints to list.
         /// </summary>
         internal static string ParameterEnumEndpointsDirection {

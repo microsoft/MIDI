@@ -23,9 +23,9 @@ public:
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Minmidi.sys")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"usbmidi2.sys")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"midisrv.exe")
-    END_TEST_CLASS()
+        END_TEST_CLASS()
 
-    TEST_CLASS_SETUP(ClassSetup);
+        TEST_CLASS_SETUP(ClassSetup);
     TEST_CLASS_CLEANUP(ClassCleanup);
 
     TEST_METHOD_SETUP(TestSetup);
@@ -116,5 +116,7 @@ private:
     void TestMidiSrvMultiClientBiDi(_In_ MidiDataFormat, _In_ MidiDataFormat);
 
     std::function<void(PVOID, UINT32, LONGLONG, LONGLONG)> m_MidiInCallback;
+
+    GUID m_SessionId{};
 };
 

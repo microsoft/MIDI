@@ -17,7 +17,8 @@ CMidi2VirtualMidiBiDi::Initialize(
     PABSTRACTIONCREATIONPARAMS,
     DWORD *,
     IMidiCallback * Callback,
-    LONGLONG Context
+    LONGLONG Context,
+    GUID /* SessionId */
 )
 {
     OutputDebugString(__FUNCTION__ L" - enter\n");

@@ -15,6 +15,7 @@
 #include "string_util.h"
 #include <atlcomcli.h>
 
+#include <filesystem>
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
@@ -73,21 +74,35 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             if (m_serviceAbstraction != nullptr)
             {
-                // TODO: Not sure if service will need to provide the Id, or we can simply gen a GUID and send it up
-                // that's why the assignment is in this function and not in CreateSession()
+                // the session id is created on the client and provided in calls to the endpoints
                 m_id = foundation::GuidHelper::CreateNewGuid();
 
                 m_isOpen = true;
 
-                // create the virtual device manager
 
-//                auto virtualDeviceManager = winrt::make_self<implementation::MidiVirtualDeviceManager>();
-//                if (virtualDeviceManager != nullptr)
-//                {
-//                    virtualDeviceManager->Initialize(m_serviceAbstraction);
-//
-//                    m_virtualDeviceManager = *virtualDeviceManager;
-//                }
+                // register the session
+
+                if (SUCCEEDED(m_serviceAbstraction->Activate(__uuidof(IMidiSessionTracker), (void**)&m_sessionTracker)))
+                {
+                    m_sessionTracker->Initialize();
+
+                    DWORD clientProcessId = GetCurrentProcessId();
+
+                    std::wstring modulePath;
+                    modulePath.reserve(2048);   // MAX_PATH is almost never big enough. This is a wild shot. Not going to allocate 32k chars for this but I know this will bite me some day
+
+                    /*auto numPathCharacters =*/ GetModuleFileName(NULL, modulePath.data(), (DWORD)modulePath.capacity());
+
+                    auto processName = std::filesystem::path(modulePath).filename().c_str();
+
+
+                    m_sessionTracker->AddClientSession(m_id, clientProcessId, processName, m_name.c_str());
+                }
+                else
+                {
+                    internal::LogGeneralError(__FUNCTION__, L"Error activating IMidiSessionTracker.");
+                }
+
             }
             else
             {
@@ -143,7 +158,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             // generate internal endpoint Id
             auto connectionInstanceId = foundation::GuidHelper::CreateNewGuid();
 
-            if (endpointConnection->InternalInitialize(m_serviceAbstraction, connectionInstanceId, normalizedDeviceId, fixedOptions))
+            if (endpointConnection->InternalInitialize(m_id, m_serviceAbstraction, connectionInstanceId, normalizedDeviceId, fixedOptions))
             {
                 m_connections.Insert(connectionInstanceId, *endpointConnection);
 

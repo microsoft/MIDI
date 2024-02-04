@@ -68,15 +68,15 @@ HRESULT MidiSrvCreateClient(
     /* [in] */ handle_t BindingHandle,
     /* [string][in] */ __RPC__in_string LPCWSTR MidiDevice,
     /* [in] */ __RPC__in PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
-    /* [out] */ __RPC__deref_out_opt PMIDISRV_CLIENT *Client)
+    /* [in] */ __RPC__in GUID SessionId,
+    /* [out] */ __RPC__deref_out_opt PMIDISRV_CLIENT *Client
+    )
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO)
     );
-
-
 
     std::shared_ptr<CMidiClientManager> clientManager;
     PMIDISRV_CLIENT createdClient {nullptr};
@@ -100,6 +100,13 @@ HRESULT MidiSrvCreateClient(
     RETURN_IF_FAILED(g_MidiService->GetClientManager(clientManager));
     RETURN_IF_FAILED(clientManager->CreateMidiClient(BindingHandle, MidiDevice, CreationParams, createdClient));
 
+    // Register this client
+    
+    std::shared_ptr<CMidiSessionTracker> sessionTracker;
+    RETURN_IF_FAILED(g_MidiService->GetSessionTracker(sessionTracker));
+    RETURN_IF_FAILED(sessionTracker->AddClientEndpointConnection(SessionId, MidiDevice));
+
+
     // Success, transfer the MIDISRV_CLIENT data to the caller.
     *Client = createdClient;
     createdClient = nullptr;
@@ -117,7 +124,6 @@ HRESULT MidiSrvDestroyClient(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO)
     );
 
-
     std::shared_ptr<CMidiClientManager> clientManager;
 
     auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
@@ -130,11 +136,14 @@ HRESULT MidiSrvDestroyClient(
 }
 
 
-HRESULT MidiSrvUpdateConfiguration(
+HRESULT 
+MidiSrvUpdateConfiguration(
     /* [in] */ handle_t BindingHandle,
-    /*[in, string]*/ __RPC__in_string LPCWSTR ConfigurationJson, 
+    /*[in, string]*/ __RPC__in_string LPCWSTR ConfigurationJson,
     __RPC__out BSTR* Response)
 {
+    UNREFERENCED_PARAMETER(BindingHandle);
+
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
         __FUNCTION__,
@@ -151,8 +160,6 @@ HRESULT MidiSrvUpdateConfiguration(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingWideString(ConfigurationJson, "JSON")
     );
-
-    UNREFERENCED_PARAMETER(BindingHandle);
 
     // Send it to the configuration manager and get it broken apart
 
@@ -210,3 +217,110 @@ HRESULT MidiSrvUpdateConfiguration(
 }
 
 
+HRESULT
+MidiSrvRegisterSession(
+    /* [in] */ handle_t BindingHandle,
+    __RPC__in GUID SessionId,
+    __RPC__in DWORD ProcessId,
+    __RPC__in_string LPCWSTR ProcessName,
+    __RPC__in_string LPCWSTR SessionName
+)
+{
+    UNREFERENCED_PARAMETER(BindingHandle);
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingWideString(L"Enter")
+    );
+
+    std::shared_ptr<CMidiSessionTracker> sessionTracker;
+
+    auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
+
+    RETURN_IF_FAILED(g_MidiService->GetSessionTracker(sessionTracker));
+
+    RETURN_IF_FAILED(sessionTracker->AddClientSession(SessionId, ProcessId, ProcessName, SessionName));
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingWideString(L"Exit success")
+    );
+
+    return S_OK;
+}
+
+HRESULT
+MidiSrvDeregisterSession(
+    /* [in] */ handle_t BindingHandle,
+    __RPC__in GUID SessionId
+)
+{
+    UNREFERENCED_PARAMETER(BindingHandle);
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingWideString(L"Enter")
+    );
+
+    std::shared_ptr<CMidiSessionTracker> sessionTracker;
+
+    auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
+
+    RETURN_IF_FAILED(g_MidiService->GetSessionTracker(sessionTracker));
+
+    RETURN_IF_FAILED(sessionTracker->RemoveClientSession(SessionId));
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingWideString(L"Exit success")
+    );
+
+    return S_OK;
+}
+
+HRESULT
+MidiSrvGetSessionList(
+    /* [in] */ handle_t BindingHandle,
+    __RPC__out BSTR* SessionListJson
+)
+{
+    UNREFERENCED_PARAMETER(BindingHandle);
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingWideString(L"Enter")
+    );
+
+    std::shared_ptr<CMidiSessionTracker> sessionTracker;
+
+    auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
+
+    RETURN_IF_FAILED(g_MidiService->GetSessionTracker(sessionTracker));
+
+    CComBSTR sessionList;
+    sessionList.Empty();
+
+    RETURN_IF_FAILED(sessionTracker->GetSessionListJson(&sessionList));
+
+    RETURN_IF_FAILED(sessionList.CopyTo(SessionListJson));
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingWideString(L"Exit success")
+    );
+
+    return S_OK;
+
+}

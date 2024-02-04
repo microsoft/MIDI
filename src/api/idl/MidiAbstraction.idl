@@ -63,7 +63,9 @@ interface IMidiIn : IUnknown
         [in] PABSTRACTIONCREATIONPARAMS creationParams,
         [in] DWORD * mmcssTaskId,
         [in] IMidiCallback * callback,
-        [in] LONGLONG context
+        [in] LONGLONG context,
+        [in] GUID SessionId
+
     );
 
     HRESULT Cleanup();
@@ -80,7 +82,8 @@ interface IMidiOut : IUnknown
     HRESULT Initialize(
         [in] LPCWSTR deviceId,
         [in] PABSTRACTIONCREATIONPARAMS creationParams,
-        [in] DWORD * mmcssTaskId
+        [in] DWORD * mmcssTaskId,
+        [in] GUID SessionId
     );
 
     HRESULT Cleanup();
@@ -106,7 +109,8 @@ interface IMidiBiDi : IUnknown
         [in] PABSTRACTIONCREATIONPARAMS creationParams,
         [in] DWORD * mmcssTaskId,
         [in] IMidiCallback * callback,
-        [in] LONGLONG context
+        [in] LONGLONG context,
+        [in] GUID SessionId
     );
 
     HRESULT Cleanup();
@@ -202,5 +206,47 @@ interface IMidiAbstractionConfigurationManager : IUnknown
 
     HRESULT Cleanup();
 
+
+};
+
+
+// this is a bookkeeping class. It tracks only. It does
+// not own the lifetime of any of the items it tracks.
+[
+    object,
+    local,
+    uuid(194c2746-3ae5-419a-94d9-20416c7dbefe),
+    pointer_default(unique)
+]
+interface IMidiSessionTracker : IUnknown
+{
+    HRESULT Initialize();
+
+    HRESULT AddClientSession(
+        [in] GUID SessionId,
+        [in] DWORD ClientProcessId,
+        [in] LPCWSTR ProcessName, 
+        [in] LPCWSTR SessionName
+    );
+
+    HRESULT RemoveClientSession(
+        [in] GUID SessionId
+    );
+
+    //HRESULT AddClientEndpointConnection(
+    //    [in] GUID SessionId, 
+    //    [in] LPCWSTR ConnectionEndpointInterfaceId
+    //);
+
+    //HRESULT RemoveClientEndpointConnection(
+    //    [in] GUID SessionId, 
+    //    [in] LPCWSTR ConnectionEndpointInterfaceId
+    //);
+
+    HRESULT GetSessionListJson(
+        [out] BSTR* SessionList
+    );
+
+    HRESULT Cleanup();
 
 };

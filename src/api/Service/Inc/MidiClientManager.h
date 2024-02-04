@@ -17,7 +17,8 @@ public:
     
     HRESULT Initialize(_In_ std::shared_ptr<CMidiPerformanceManager>& performanceManager,
                             _In_ std::shared_ptr<CMidiProcessManager>& processManager,
-                            _In_ std::shared_ptr<CMidiDeviceManager>& deviceManager);
+                            _In_ std::shared_ptr<CMidiDeviceManager>& deviceManager,
+                            _In_ std::shared_ptr<CMidiSessionTracker>& sessionTracker);
 
     HRESULT CreateMidiClient(_In_ handle_t,
                                 _In_ LPCWSTR,
@@ -85,6 +86,7 @@ private:
     std::shared_ptr<CMidiPerformanceManager> m_PerformanceManager;
     std::shared_ptr<CMidiProcessManager> m_ProcessManager;
     std::shared_ptr<CMidiDeviceManager> m_DeviceManager;
+    std::shared_ptr<CMidiSessionTracker> m_SessionTracker;
 
     std::map<MidiClientHandle, wil::com_ptr_nothrow<CMidiPipe>> m_ClientPipes;
     std::map<std::wstring, wil::com_ptr_nothrow<CMidiPipe>> m_DevicePipes;

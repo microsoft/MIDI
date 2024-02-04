@@ -17,7 +17,8 @@ HRESULT
 CMidi2KSMidiOut::Initialize(
     LPCWSTR Device,   
     PABSTRACTIONCREATIONPARAMS CreationParams,
-    DWORD * MmCssTaskId
+    DWORD * MmCssTaskId,
+    GUID /* SessionId */
 )
 {
     RETURN_HR_IF(E_INVALIDARG, nullptr == Device);

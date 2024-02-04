@@ -189,4 +189,39 @@ namespace Windows::Devices::Midi2::Internal
     }
 
 
+
+    inline std::wstring SystemTimeToDateTimeString(SYSTEMTIME const& time)
+    {
+        std::wstring dateBuffer;
+        dateBuffer.reserve(50);
+
+        std::wstring timeBuffer;
+        timeBuffer.reserve(50);
+
+        GetDateFormatEx(
+            LOCALE_NAME_SYSTEM_DEFAULT,
+            DATE_LONGDATE,
+            &time,
+            NULL,
+            dateBuffer.data(),
+            (int)dateBuffer.capacity(),
+            NULL
+        );
+
+        GetTimeFormatEx(
+            LOCALE_NAME_SYSTEM_DEFAULT,
+            0,
+            &time,
+            NULL,
+            timeBuffer.data(),
+            (int)timeBuffer.capacity()
+        );
+
+        std::wstring dateTime = dateBuffer + L" " + timeBuffer;
+
+        return dateTime;
+    }
+
+
+
 }

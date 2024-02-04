@@ -15,7 +15,8 @@ HRESULT
 CMidiClientManager::Initialize(
     std::shared_ptr<CMidiPerformanceManager>& PerformanceManager,
     std::shared_ptr<CMidiProcessManager>& ProcessManager,
-    std::shared_ptr<CMidiDeviceManager>& DeviceManager
+    std::shared_ptr<CMidiDeviceManager>& DeviceManager,
+    std::shared_ptr<CMidiSessionTracker>& SessionTracker
 )
 {
     TraceLoggingWrite(
@@ -31,6 +32,7 @@ CMidiClientManager::Initialize(
     m_PerformanceManager = PerformanceManager;
     m_ProcessManager = ProcessManager;
     m_DeviceManager = DeviceManager;
+    m_SessionTracker = SessionTracker;
 
     return S_OK;
 }
@@ -53,6 +55,7 @@ CMidiClientManager::Cleanup()
     m_PerformanceManager.reset();
     m_ProcessManager.reset();
     m_DeviceManager.reset();
+    m_SessionTracker.reset();
 
     // tear down all transforms before we clean up the client/device
     for (auto const& transform : m_TransformPipes)

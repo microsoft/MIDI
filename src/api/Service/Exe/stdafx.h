@@ -82,6 +82,8 @@ namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
 // need to declare this before the device manager
 class CMidiEndpointProtocolManager;
 struct GUIDCompare;
+class CMidiSessionTracker;
+
 
 #include "MidiTelemetry.h"
 #include "MidiPerformanceManager.h"
@@ -102,6 +104,7 @@ class CMidiDevicePipe;
 #include "MidiClientManager.h"
 
 #include "MidiEndpointProtocolManager.h"
+#include "MidiSessionTracker.h"
 
 #include "MidiSrv.h"
 

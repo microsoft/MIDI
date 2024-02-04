@@ -13,6 +13,8 @@ import "MidiTransportPluginInformation.idl";
 import "MidiMessageProcessingPluginInformation.idl";
 import "MidiServicePingResponseSummary.idl";
 
+import "MidiSessionInformation.idl";
+
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
@@ -33,6 +35,10 @@ namespace Windows.Devices.Midi2
   //      static Boolean IsMessageSchedulingEnabled{ get; };
 
         static UInt32 GetOutgoingMessageQueueMaxMessageCapacity();
+
+
+        static IVectorView<MidiSessionInformation> GetActiveSessions();
+
 
 
     }

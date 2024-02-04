@@ -207,25 +207,39 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return PingService(pingCount, pingCount * 20 + 1000);
     }
 
+
+
     foundation::Collections::IVectorView<midi2::MidiTransportPluginInformation> MidiService::GetInstalledTransportPlugins()
     {
         // TODO: Need to implement GetInstalledTransportPlugins. For now, return an empty collection instead of throwing
 
+        // This can be read from the registry, but the additional metadata requires calling into the objects themselves
 
 
         return winrt::single_threaded_vector<midi2::MidiTransportPluginInformation>().GetView();
     }
 
-    // TODO: Same type of method for returning all the message processing plugins
+
     foundation::Collections::IVectorView<midi2::MidiMessageProcessingPluginInformation> MidiService::GetInstalledMessageProcessingPlugins()
     {
         // TODO: Need to implement GetInstalledMessageProcessingPlugins. For now, return an empty collection instead of throwing
 
-
+        // This can be read from the registry, but the additional metadata requires calling into the objects themselves
 
         return winrt::single_threaded_vector<midi2::MidiMessageProcessingPluginInformation>().GetView();
     }
 
 
+    foundation::Collections::IVectorView<midi2::MidiSessionInformation> MidiService::GetActiveSessions()
+    {
+        // TODO: Call the service to get this info
+
+
+        // Parse the json, create the objects, throw them into the vector and return
+
+
+        return winrt::single_threaded_vector<midi2::MidiSessionInformation>().GetView();
+
+    }
 
 }

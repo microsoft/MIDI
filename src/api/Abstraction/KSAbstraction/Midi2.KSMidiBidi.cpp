@@ -17,7 +17,8 @@ CMidi2KSMidiBiDi::Initialize(
     PABSTRACTIONCREATIONPARAMS CreationParams,
     DWORD * MmCssTaskId,
     IMidiCallback * Callback,
-    LONGLONG Context
+    LONGLONG Context,
+    GUID /* SessionId */
 )
 {
     RETURN_HR_IF(E_INVALIDARG, nullptr == Callback);

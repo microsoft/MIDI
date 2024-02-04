@@ -57,6 +57,12 @@ public:
         return S_OK;
     }
 
+    HRESULT GetSessionTracker(std::shared_ptr<CMidiSessionTracker>& tracker)
+    {
+        tracker = m_SessionTracker;
+        return S_OK;
+    }
+
 
 private:
     std::shared_ptr<CMidiPerformanceManager> m_PerformanceManager;
@@ -67,5 +73,6 @@ private:
 
     std::shared_ptr<CMidiEndpointProtocolManager> m_EndpointProtocolManager;
 
+    std::shared_ptr<CMidiSessionTracker> m_SessionTracker;
 };
 

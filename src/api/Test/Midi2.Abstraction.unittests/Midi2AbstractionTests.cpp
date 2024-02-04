@@ -146,10 +146,10 @@ void MidiAbstractionTests::TestMidiAbstraction(REFIID Iid, MidiDataFormat DataFo
     }
 
     LOG_OUTPUT(L"Initializing midi in");
-    VERIFY_SUCCEEDED(midiInDevice->Initialize(midiInInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskId, this, 0));
+    VERIFY_SUCCEEDED(midiInDevice->Initialize(midiInInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskId, this, 0, m_SessionId));
 
     LOG_OUTPUT(L"Initializing midi out");
-    VERIFY_SUCCEEDED(midiOutDevice->Initialize(midiOutInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskId));
+    VERIFY_SUCCEEDED(midiOutDevice->Initialize(midiOutInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskId, m_SessionId));
 
     VERIFY_IS_TRUE(abstractionCreationParams.DataFormat == MidiDataFormat_UMP || abstractionCreationParams.DataFormat == MidiDataFormat_ByteStream);
 
@@ -279,11 +279,11 @@ void MidiAbstractionTests::TestMidiAbstractionCreationOrder(REFIID Iid, _In_ Mid
     LOG_OUTPUT(L"Initializing midi out");
     mmcssTaskIdOut = mmcssTaskId;
     abstractionCreationParams.DataFormat = DataFormat;
-    VERIFY_SUCCEEDED(midiOutDevice->Initialize(midiOutInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskIdOut));
+    VERIFY_SUCCEEDED(midiOutDevice->Initialize(midiOutInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskIdOut, m_SessionId));
     mmcssTaskIdIn = mmcssTaskIdOut;
     abstractionCreationParams.DataFormat = DataFormat;
     LOG_OUTPUT(L"Initializing midi in");
-    VERIFY_SUCCEEDED(midiInDevice->Initialize(midiInInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskIdIn, this, 0));
+    VERIFY_SUCCEEDED(midiInDevice->Initialize(midiInInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskIdIn, this, 0, m_SessionId));
     VERIFY_IS_TRUE(mmcssTaskId == mmcssTaskIdOut);
     VERIFY_IS_TRUE(mmcssTaskIdIn == mmcssTaskIdOut);
     VERIFY_SUCCEEDED(midiOutDevice->Cleanup());
@@ -294,11 +294,11 @@ void MidiAbstractionTests::TestMidiAbstractionCreationOrder(REFIID Iid, _In_ Mid
     LOG_OUTPUT(L"Initializing midi in");
     mmcssTaskIdIn = mmcssTaskId;
     abstractionCreationParams.DataFormat = DataFormat;
-    VERIFY_SUCCEEDED(midiInDevice->Initialize(midiInInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskIdIn, this, 0));
+    VERIFY_SUCCEEDED(midiInDevice->Initialize(midiInInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskIdIn, this, 0, m_SessionId));
     mmcssTaskIdOut = mmcssTaskIdIn;
     abstractionCreationParams.DataFormat = DataFormat;
     LOG_OUTPUT(L"Initializing midi out");
-    VERIFY_SUCCEEDED(midiOutDevice->Initialize(midiOutInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskIdOut));
+    VERIFY_SUCCEEDED(midiOutDevice->Initialize(midiOutInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskIdOut, m_SessionId));
     VERIFY_IS_TRUE(mmcssTaskId == mmcssTaskIdOut);
     VERIFY_IS_TRUE(mmcssTaskIdIn == mmcssTaskIdOut);
     VERIFY_SUCCEEDED(midiOutDevice->Cleanup());
@@ -313,11 +313,11 @@ void MidiAbstractionTests::TestMidiAbstractionCreationOrder(REFIID Iid, _In_ Mid
     LOG_OUTPUT(L"Initializing midi out");
     mmcssTaskIdOut = mmcssTaskId;
     abstractionCreationParams.DataFormat = DataFormat;
-    VERIFY_SUCCEEDED(midiOutDevice->Initialize(midiOutInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskIdOut));
+    VERIFY_SUCCEEDED(midiOutDevice->Initialize(midiOutInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskIdOut, m_SessionId));
     mmcssTaskIdIn = mmcssTaskIdOut;
     abstractionCreationParams.DataFormat = DataFormat;
     LOG_OUTPUT(L"Initializing midi in");
-    VERIFY_SUCCEEDED(midiInDevice->Initialize(midiInInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskIdIn, this, 0));
+    VERIFY_SUCCEEDED(midiInDevice->Initialize(midiInInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskIdIn, this, 0, m_SessionId));
     VERIFY_IS_TRUE(mmcssTaskId == mmcssTaskIdOut);
     VERIFY_IS_TRUE(mmcssTaskIdIn == mmcssTaskIdOut);
     VERIFY_SUCCEEDED(midiInDevice->Cleanup());
@@ -325,11 +325,11 @@ void MidiAbstractionTests::TestMidiAbstractionCreationOrder(REFIID Iid, _In_ Mid
     LOG_OUTPUT(L"Initializing midi in");
     mmcssTaskIdIn = mmcssTaskId;
     abstractionCreationParams.DataFormat = DataFormat;
-    VERIFY_SUCCEEDED(midiInDevice->Initialize(midiInInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskIdIn, this, 0));
+    VERIFY_SUCCEEDED(midiInDevice->Initialize(midiInInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskIdIn, this, 0, m_SessionId));
     mmcssTaskIdOut = mmcssTaskIdIn;
     abstractionCreationParams.DataFormat = DataFormat;
     LOG_OUTPUT(L"Initializing midi out");
-    VERIFY_SUCCEEDED(midiOutDevice->Initialize(midiOutInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskIdOut));
+    VERIFY_SUCCEEDED(midiOutDevice->Initialize(midiOutInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskIdOut, m_SessionId));
     VERIFY_IS_TRUE(mmcssTaskId == mmcssTaskIdOut);
     VERIFY_IS_TRUE(mmcssTaskIdIn == mmcssTaskIdOut);
 
@@ -421,7 +421,7 @@ void MidiAbstractionTests::TestMidiAbstractionBiDi(REFIID Iid, MidiDataFormat Da
     }
     
     LOG_OUTPUT(L"Initializing midi BiDi");
-    VERIFY_SUCCEEDED(midiBiDiDevice->Initialize(midiBiDirectionalInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskId, this, 0));
+    VERIFY_SUCCEEDED(midiBiDiDevice->Initialize(midiBiDirectionalInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskId, this, 0, m_SessionId));
 
     VERIFY_IS_TRUE(abstractionCreationParams.DataFormat == MidiDataFormat_UMP || abstractionCreationParams.DataFormat == MidiDataFormat_ByteStream);
 
@@ -615,7 +615,7 @@ void MidiAbstractionTests::TestMidiIO_Latency(REFIID Iid, MidiDataFormat DataFor
     }
 
     LOG_OUTPUT(L"Initializing midi BiDi");
-    VERIFY_SUCCEEDED(midiBiDiDevice->Initialize(midiBiDirectionalInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskId, this, 0));
+    VERIFY_SUCCEEDED(midiBiDiDevice->Initialize(midiBiDirectionalInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskId, this, 0, m_SessionId));
 
     VERIFY_IS_TRUE(abstractionCreationParams.DataFormat == MidiDataFormat_UMP || abstractionCreationParams.DataFormat == MidiDataFormat_ByteStream);
 
@@ -884,16 +884,16 @@ void MidiAbstractionTests::TestMidiSrvMultiClient(MidiDataFormat DataFormat1, Mi
     VERIFY_SUCCEEDED(allMessagesReceived.create());
 
     LOG_OUTPUT(L"Initializing midi in 1");
-    VERIFY_SUCCEEDED(midiInDevice1->Initialize(midiInInstanceId.c_str(), &abstractionCreationParams1, &mmcssTaskId, this, context1));
+    VERIFY_SUCCEEDED(midiInDevice1->Initialize(midiInInstanceId.c_str(), &abstractionCreationParams1, &mmcssTaskId, this, context1, m_SessionId));
 
     LOG_OUTPUT(L"Initializing midi in 2");
-    VERIFY_SUCCEEDED(midiInDevice2->Initialize(midiInInstanceId.c_str(), &abstractionCreationParams2, &mmcssTaskId, this, context2));
+    VERIFY_SUCCEEDED(midiInDevice2->Initialize(midiInInstanceId.c_str(), &abstractionCreationParams2, &mmcssTaskId, this, context2, m_SessionId));
 
     LOG_OUTPUT(L"Initializing midi out 1");
-    VERIFY_SUCCEEDED(midiOutDevice1->Initialize(midiOutInstanceId.c_str(), &abstractionCreationParams1, &mmcssTaskId));
+    VERIFY_SUCCEEDED(midiOutDevice1->Initialize(midiOutInstanceId.c_str(), &abstractionCreationParams1, &mmcssTaskId, m_SessionId));
 
     LOG_OUTPUT(L"Initializing midi out 2");
-    VERIFY_SUCCEEDED(midiOutDevice2->Initialize(midiOutInstanceId.c_str(), &abstractionCreationParams2, &mmcssTaskId));
+    VERIFY_SUCCEEDED(midiOutDevice2->Initialize(midiOutInstanceId.c_str(), &abstractionCreationParams2, &mmcssTaskId, m_SessionId));
 
     VERIFY_IS_TRUE(abstractionCreationParams1.DataFormat == MidiDataFormat_UMP || abstractionCreationParams1.DataFormat == MidiDataFormat_ByteStream);
     VERIFY_IS_TRUE(abstractionCreationParams2.DataFormat == MidiDataFormat_UMP || abstractionCreationParams2.DataFormat == MidiDataFormat_ByteStream);
@@ -1122,10 +1122,10 @@ void MidiAbstractionTests::TestMidiSrvMultiClientBiDi(MidiDataFormat DataFormat1
     VERIFY_SUCCEEDED(allMessagesReceived.create());
 
     LOG_OUTPUT(L"Initializing midi in 1");
-    VERIFY_SUCCEEDED(midiDevice1->Initialize(midiInstanceId.c_str(), &abstractionCreationParams1, &mmcssTaskId, this, context1));
+    VERIFY_SUCCEEDED(midiDevice1->Initialize(midiInstanceId.c_str(), &abstractionCreationParams1, &mmcssTaskId, this, context1, m_SessionId));
 
     LOG_OUTPUT(L"Initializing midi in 2");
-    VERIFY_SUCCEEDED(midiDevice2->Initialize(midiInstanceId.c_str(), &abstractionCreationParams2, &mmcssTaskId, this, context2));
+    VERIFY_SUCCEEDED(midiDevice2->Initialize(midiInstanceId.c_str(), &abstractionCreationParams2, &mmcssTaskId, this, context2, m_SessionId));
 
     VERIFY_IS_TRUE(abstractionCreationParams1.DataFormat == MidiDataFormat_UMP || abstractionCreationParams1.DataFormat == MidiDataFormat_ByteStream);
     VERIFY_IS_TRUE(abstractionCreationParams2.DataFormat == MidiDataFormat_UMP || abstractionCreationParams2.DataFormat == MidiDataFormat_ByteStream);

@@ -54,6 +54,9 @@
     <ClCompile Include="MidiEndpointProtocolManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MidiSessionTracker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -96,6 +99,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MidiEndpointProtocolManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiSessionTracker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

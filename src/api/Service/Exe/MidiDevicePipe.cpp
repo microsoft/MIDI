@@ -52,13 +52,15 @@ CMidiDevicePipe::Initialize(
     RETURN_HR_IF_NULL(E_INVALIDARG, prop);
     m_AbstractionGuid = winrt::unbox_value<winrt::guid>(prop);
 
+    GUID dummySessionId{};
+
     if (MidiFlowBidirectional == CreationParams->Flow)
     {
         wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
 
         RETURN_IF_FAILED(CoCreateInstance(m_AbstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
         RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&m_MidiBiDiDevice));
-        RETURN_IF_FAILED(m_MidiBiDiDevice->Initialize(Device, &abstractionCreationParams, MmcssTaskId, this, 0));
+        RETURN_IF_FAILED(m_MidiBiDiDevice->Initialize(Device, &abstractionCreationParams, MmcssTaskId, this, 0, dummySessionId));
     }
     else if (MidiFlowIn == CreationParams->Flow)
     {
@@ -66,7 +68,7 @@ CMidiDevicePipe::Initialize(
 
         RETURN_IF_FAILED(CoCreateInstance(m_AbstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
         RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiIn), (void**)&m_MidiInDevice));
-        RETURN_IF_FAILED(m_MidiInDevice->Initialize(Device, &abstractionCreationParams, MmcssTaskId, this, 0));
+        RETURN_IF_FAILED(m_MidiInDevice->Initialize(Device, &abstractionCreationParams, MmcssTaskId, this, 0, dummySessionId));
     }
     else if (MidiFlowOut == CreationParams->Flow)
     {
@@ -74,7 +76,7 @@ CMidiDevicePipe::Initialize(
 
         RETURN_IF_FAILED(CoCreateInstance(m_AbstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
         RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiOut), (void**)&m_MidiOutDevice));
-        RETURN_IF_FAILED(m_MidiOutDevice->Initialize(Device, &abstractionCreationParams, MmcssTaskId));
+        RETURN_IF_FAILED(m_MidiOutDevice->Initialize(Device, &abstractionCreationParams, MmcssTaskId, dummySessionId));
     }
     else
     {

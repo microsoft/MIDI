@@ -84,6 +84,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         DWORD m_mmcssTaskId{ 0 };
 
         winrt::com_ptr<IMidiAbstraction> m_serviceAbstraction;
+        winrt::com_ptr<IMidiSessionTracker> m_sessionTracker;
 
         collections::IMap<winrt::guid, midi2::MidiEndpointConnection>
             m_connections{ winrt::single_threaded_map<winrt::guid, midi2::MidiEndpointConnection>() };

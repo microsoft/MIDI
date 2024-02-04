@@ -185,10 +185,12 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
     LOG_OUTPUT(L"Retrieving binding handle");
     VERIFY_SUCCEEDED(GetMidiSrvBindingHandle(&bindingHandle));
 
+    GUID DummySessionId{};
+
     VERIFY_SUCCEEDED([&]() {
         // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
         // with structured exception handling.
-        RpcTryExcept RETURN_IF_FAILED(MidiSrvCreateClient(bindingHandle.get(), midiDevice.c_str(), &creationParams, &client));
+        RpcTryExcept RETURN_IF_FAILED(MidiSrvCreateClient(bindingHandle.get(), midiDevice.c_str(), &creationParams, DummySessionId, &client));
         RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
         RpcEndExcept
         return S_OK;

@@ -300,6 +300,9 @@
   <data name="ParameterEndpointPropertiesVerbose" xml:space="preserve">
     <value>Include additional detailed information about the endpoint.</value>
   </data>
+  <data name="ParameterEndpointUpdateName" xml:space="preserve">
+    <value>New endpoint name</value>
+  </data>
   <data name="ParameterEnumEndpointsDirection" xml:space="preserve">
     <value>The direction of data flow for the endpoints to list</value>
   </data>
