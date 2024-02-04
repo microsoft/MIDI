@@ -171,9 +171,21 @@ namespace Windows::Devices::Midi2::Internal
 
     inline GUID StringToGuid(_In_ std::wstring value)
     {
-        winrt::guid resultingGuid(value);
+        // this fails when {} are included
+//        winrt::guid resultingGuid = winrt::guid{ value };
 
-        return resultingGuid;
+        GUID g;
+
+        if (SUCCEEDED(CLSIDFromString(value.c_str(), &g)))
+        {
+            return g;
+        }
+        else
+        {
+            // return the empty GUID. This is a bit dumb, honestly
+            return g;
+        }
+        
     }
 
 

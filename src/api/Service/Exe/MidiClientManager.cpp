@@ -18,6 +18,14 @@ CMidiClientManager::Initialize(
     std::shared_ptr<CMidiDeviceManager>& DeviceManager
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     auto lock = m_ClientManagerLock.lock();
 
     m_PerformanceManager = PerformanceManager;
@@ -30,6 +38,14 @@ CMidiClientManager::Initialize(
 HRESULT
 CMidiClientManager::Cleanup()
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     OutputDebugString(L"" __FUNCTION__ " enter");
     
     auto lock = m_ClientManagerLock.lock();
@@ -225,6 +241,14 @@ CMidiClientManager::GetMidiClient(
     BOOL OverwriteIncomingZeroTimestamps
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     OutputDebugString(__FUNCTION__ L" enter");
 
     wil::com_ptr_nothrow<CMidiClientPipe> clientPipe;
@@ -255,6 +279,14 @@ CMidiClientManager::GetMidiDevice(
     wil::com_ptr_nothrow<CMidiPipe>& MidiDevicePipe
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     OutputDebugString(__FUNCTION__ L" enter. Device:");
     OutputDebugString(MidiDevice);
 
@@ -315,6 +347,14 @@ CMidiClientManager::GetMidiTransform(
     wil::com_ptr_nothrow<CMidiPipe>& ClientConnectionPipe
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     OutputDebugString(__FUNCTION__ L" enter");
 
     wil::com_ptr_nothrow<CMidiPipe> transformPipe{ nullptr };
@@ -410,6 +450,14 @@ CMidiClientManager::GetMidiScheduler(
     wil::com_ptr_nothrow<CMidiPipe>& ClientConnectionPipe
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     OutputDebugString(L"" __FUNCTION__);
 
     wil::com_ptr_nothrow<CMidiPipe> transformPipe{ nullptr };
@@ -489,6 +537,14 @@ CMidiClientManager::GetMidiEndpointMetadataHandler(
     wil::com_ptr_nothrow<CMidiPipe>& ClientConnectionPipe
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     OutputDebugString(L"" __FUNCTION__);
 
     wil::com_ptr_nothrow<CMidiPipe> transformPipe{ nullptr };
@@ -560,6 +616,14 @@ CMidiClientManager::GetMidiJRTimestampHandler(
     wil::com_ptr_nothrow<CMidiPipe>& ClientConnectionPipe
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     OutputDebugString(L"" __FUNCTION__);
 
     UNREFERENCED_PARAMETER(BindingHandle);
@@ -583,6 +647,14 @@ CMidiClientManager::CreateMidiClient(
     PMIDISRV_CLIENT Client
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     OutputDebugString(__FUNCTION__ L" enter. Device:");
     OutputDebugString(MidiDevice);
 
@@ -860,6 +932,14 @@ CMidiClientManager::DestroyMidiClient(
     MidiClientHandle ClientHandle
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     OutputDebugString(L"" __FUNCTION__ " enter");
 
     auto lock = m_ClientManagerLock.lock();

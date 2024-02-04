@@ -14,12 +14,18 @@ _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvConfigurationManager::UpdateConfiguration(LPCWSTR configurationJson, BSTR* response)
 {
-    UNREFERENCED_PARAMETER(configurationJson);
-    UNREFERENCED_PARAMETER(response);
+    TraceLoggingWrite(
+        MidiSrvAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
 
     wil::unique_rpc_binding bindingHandle;
 
     RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
+    RETURN_HR_IF_NULL(E_INVALIDARG, response);
+    RETURN_HR_IF_NULL(E_INVALIDARG, configurationJson);
 
     RETURN_IF_FAILED([&]()
     {
@@ -31,7 +37,6 @@ CMidi2MidiSrvConfigurationManager::UpdateConfiguration(LPCWSTR configurationJson
         return S_OK;
     }());
 
-
     return S_OK;
 }
 
@@ -42,8 +47,17 @@ _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvConfigurationManager::Initialize(GUID abstractionGuid, IUnknown* deviceManagerInterface)
 {
-    UNREFERENCED_PARAMETER(abstractionGuid);
+    TraceLoggingWrite(
+        MidiSrvAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     UNREFERENCED_PARAMETER(deviceManagerInterface);
+
+
+    m_abstractionGuid = abstractionGuid;
 
     return S_OK;
 
@@ -53,6 +67,13 @@ _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvConfigurationManager::Cleanup()
 {
+    TraceLoggingWrite(
+        MidiSrvAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     return S_OK;
 }
 

@@ -18,6 +18,13 @@ CMidiDeviceManager::Initialize(
     std::shared_ptr<CMidiEndpointProtocolManager>& EndpointProtocolManager,
     std::shared_ptr<CMidiConfigurationManager>& configurationManager)
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     m_ConfigurationManager = configurationManager;
 
     // Get the enabled abstraction layers from the registry
@@ -222,6 +229,14 @@ CMidiDeviceManager::ActivateVirtualParentDevice
     ULONG CreatedSwDeviceIdCharCount
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     OutputDebugString(L"" __FUNCTION__);
 
     RETURN_HR_IF_NULL(E_INVALIDARG, CreateInfo);
@@ -337,6 +352,13 @@ CMidiDeviceManager::ActivateEndpoint
     ULONG CreatedDeviceInterfaceIdCharCount
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     OutputDebugString(__FUNCTION__ L": Enter\n");
 
     auto lock = m_MidiPortsLock.lock();
@@ -585,6 +607,13 @@ CMidiDeviceManager::UpdateEndpointProperties
     PVOID InterfaceDevProperties
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     OutputDebugString(L"\n" __FUNCTION__ " ");
 
     auto requestedInterfaceId = internal::NormalizeEndpointInterfaceIdCopy(DeviceInterfaceId);
@@ -639,6 +668,13 @@ CMidiDeviceManager::DeleteEndpointProperties
     PVOID InterfaceDevPropKeys
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     OutputDebugString(L"\n" __FUNCTION__ " ");
 
 
@@ -666,6 +702,13 @@ CMidiDeviceManager::DeleteAllEndpointInProtocolDiscoveredProperties
     PCWSTR DeviceInterfaceId
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     // don't delete any keys that are specified by the user, or 
     // by the driver or transport. We're only deleting things that
     // are discovered in-protocol.
@@ -718,6 +761,13 @@ CMidiDeviceManager::DeactivateEndpoint
         PCWSTR InstanceId
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     OutputDebugString(__FUNCTION__ L" - enter. Cleaned instance id is: ");
 
     auto cleanId = internal::NormalizeDeviceInstanceIdCopy(InstanceId);
@@ -770,6 +820,13 @@ CMidiDeviceManager::RemoveEndpoint
     PCWSTR InstanceId 
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     // first deactivate, to ensure it's removed from the tracking list
     LOG_IF_FAILED(DeactivateEndpoint(InstanceId));
 
@@ -789,6 +846,13 @@ CMidiDeviceManager::UpdateAbstractionConfiguration
     BSTR* Response
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     if (ConfigurationJson != nullptr)
     {
         if (auto search = m_MidiAbstractionConfigurationManagers.find(AbstractionId); search != m_MidiAbstractionConfigurationManagers.end())
@@ -800,7 +864,29 @@ CMidiDeviceManager::UpdateAbstractionConfiguration
                 return configManager->UpdateConfiguration(ConfigurationJson, Response);
             }
         }
+        else
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Failed to find the referenced abstraction by its GUID")
+            );
+
+        }
     }
+    else
+    {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Json is null")
+        );
+    }
+
 
     // failed to find the abstraction or its related endpoint manager
     return E_FAIL;
@@ -810,6 +896,13 @@ CMidiDeviceManager::UpdateAbstractionConfiguration
 HRESULT
 CMidiDeviceManager::Cleanup()
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     OutputDebugString(__FUNCTION__ L"\n");
 
     m_MidiEndpointManagers.clear();

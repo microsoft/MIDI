@@ -29,6 +29,14 @@ CMidiClientPipe::Initialize(
     BOOL OverwriteZeroTimestamps
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     auto lock = m_ClientPipeLock.lock();
 
     std::unique_ptr<MEMORY_MAPPED_PIPE> midiInPipe;
@@ -124,6 +132,14 @@ CMidiClientPipe::Initialize(
 HRESULT
 CMidiClientPipe::Cleanup()
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     auto lock = m_ClientPipeLock.lock();
     if (m_MidiPump)
     {

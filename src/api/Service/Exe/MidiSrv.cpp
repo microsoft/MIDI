@@ -30,6 +30,13 @@ RPC_STATUS MidiSrvRpcIfCallback(
 HRESULT
 CMidiSrv::Initialize()
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     auto cleanupOnError = wil::scope_exit([&]()
     {
         Cleanup();
@@ -100,6 +107,13 @@ CMidiSrv::Initialize()
 HRESULT
 CMidiSrv::Cleanup()
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     if (m_ClientManager)
     {
         RETURN_IF_FAILED(m_ClientManager->Cleanup());

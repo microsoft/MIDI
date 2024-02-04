@@ -70,6 +70,14 @@ HRESULT MidiSrvCreateClient(
     /* [in] */ __RPC__in PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
     /* [out] */ __RPC__deref_out_opt PMIDISRV_CLIENT *Client)
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO)
+    );
+
+
+
     std::shared_ptr<CMidiClientManager> clientManager;
     PMIDISRV_CLIENT createdClient {nullptr};
 
@@ -103,6 +111,13 @@ HRESULT MidiSrvDestroyClient(
     /* [in] */ handle_t BindingHandle,
     /* [in] */ __RPC__in MidiClientHandle ClientHandle)
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO)
+    );
+
+
     std::shared_ptr<CMidiClientManager> clientManager;
 
     auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
@@ -120,11 +135,26 @@ HRESULT MidiSrvUpdateConfiguration(
     /*[in, string]*/ __RPC__in_string LPCWSTR ConfigurationJson, 
     __RPC__out BSTR* Response)
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingWideString(L"Enter")
+    );
+
+    RETURN_HR_IF_NULL(E_INVALIDARG, ConfigurationJson);
+    RETURN_HR_IF_NULL(E_INVALIDARG, Response);
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingWideString(ConfigurationJson, "JSON")
+    );
+
     UNREFERENCED_PARAMETER(BindingHandle);
 
-    // Send it to the configuration manager and get it broken apart and sent to
-    // all the destinations it needs to get to (transports, transforms, etc.)
-
+    // Send it to the configuration manager and get it broken apart
 
     std::shared_ptr<CMidiConfigurationManager> configurationManager;
     std::shared_ptr<CMidiDeviceManager> deviceManager;
@@ -136,6 +166,18 @@ HRESULT MidiSrvUpdateConfiguration(
 
     auto configEntries = configurationManager->GetTransportAbstractionSettingsFromJsonString(ConfigurationJson);
 
+    if (configEntries.size() == 0)
+    {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingWideString(L"No config entries in JSON string")
+        );
+
+        return E_FAIL;
+    }
+
     CComBSTR combinedResponse;
     combinedResponse.Empty();
 
@@ -146,7 +188,8 @@ HRESULT MidiSrvUpdateConfiguration(
 
         deviceManager->UpdateAbstractionConfiguration(i->first, i->second.c_str(), &response);
 
-        // Probably need to do more formatting of this.
+        // Probably need to do more formatting of this. Should use the json objects instead
+
         combinedResponse += response;
 
         ::SysFreeString(response);
@@ -155,6 +198,13 @@ HRESULT MidiSrvUpdateConfiguration(
     RETURN_IF_FAILED(combinedResponse.CopyTo(Response));
 
     // TODO: Now check to see if it has settings for anything else, and send those along to be processed
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingWideString(L"Exit success")
+    );
 
     return S_OK;
 }

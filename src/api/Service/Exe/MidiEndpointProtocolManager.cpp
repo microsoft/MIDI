@@ -31,6 +31,14 @@ CMidiEndpointProtocolManager::Initialize(
     std::shared_ptr<CMidiDeviceManager>& DeviceManager
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     OutputDebugString(__FUNCTION__ L"");
 
     m_clientManager = ClientManager;
@@ -79,6 +87,14 @@ CMidiEndpointProtocolManager::NegotiateAndRequestMetadata(
     WORD TimeoutMS
 ) noexcept
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     OutputDebugString(__FUNCTION__ L"");
 
     ProtocolManagerWork work;
@@ -108,6 +124,14 @@ CMidiEndpointProtocolManager::NegotiateAndRequestMetadata(
 HRESULT
 CMidiEndpointProtocolManager::Cleanup()
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     OutputDebugString(__FUNCTION__ L"");
 
     // TODO terminate any open threads and ensure they close up

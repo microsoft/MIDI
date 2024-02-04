@@ -349,51 +349,133 @@ std::wstring CMidiConfigurationManager::GetCurrentConfigurationFileName() noexce
 #undef GetObject
 
 std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTransportAbstractionSettingsFromJsonString(
-    _In_ std::wstring json) const noexcept
+    _In_ std::wstring jsonStringSource) const noexcept
 {
-    OutputDebugString(L"\n" __FUNCTION__);
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"), 
+        TraceLoggingWideString(L"Enter")
+    );
+
 
     //std::map<winrt::guid, std::wstring> abstractionSettings{};
     std::map<GUID, std::wstring, GUIDCompare> abstractionSettings{};
 
     try
     {       
-        json::JsonObject jsonObject{ nullptr };
+        json::JsonObject jsonObject{ };
 
-
-        if (json::JsonObject::TryParse(json, jsonObject))
+        try
         {
-            // worked
-            OutputDebugString(L"Parsing json worked\n");
-        }
-        else
-        {
-            OutputDebugString(L"Parsing json failed\n");
-        }
-
-
-        if (jsonObject != nullptr)
-        {
-            // probably need to normalize these to ignore case.
-            if (jsonObject.HasKey(winrt::to_hstring(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT)))
+            if (!json::JsonObject::TryParse(jsonStringSource, jsonObject))
             {
-                auto plugins = jsonObject.GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT);
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    __FUNCTION__,
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"JSON Object parsing failed"),
+                    TraceLoggingWideString(jsonStringSource.c_str(), "Source JSON String")
+                );
 
-                // Iterate through nodes and find each transport abstraction entry. Parse the GUID. Add to results.
-
-                for (auto i = plugins.begin(); i != plugins.end(); i++)
-                {
-                    std::wstring key = i.Current().Key().c_str();
-                    std::wstring transportJson = i.Current().Value().GetObject().Stringify().c_str();
-
-                    GUID abstractionId = internal::StringToGuid(key);
-                     
-                    // TODO: Should verify the abstractionId is for an enabled abstraction
-                    // before adding it to the returned map
-
-                    abstractionSettings.insert_or_assign(abstractionId, transportJson);
-                }
+                // return the empty map
+                return abstractionSettings;
             }
+        }
+        catch (...)
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"JSON Object parsing failed. Exception.")
+            );
+
+            return abstractionSettings;
+        }
+
+
+        if (jsonObject == nullptr)
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"JSON Object null after parsing")
+            );
+
+            // return the empty map
+            return abstractionSettings;
+        }
+
+
+
+        auto plugins = internal::JsonGetObjectProperty(jsonObject, MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT, nullptr);
+
+        if (plugins == nullptr)
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"No transport plugins node in JSON")
+            );
+
+            // return the empty map
+            return abstractionSettings;
+        }
+
+        // Iterate through nodes and find each transport abstraction entry. Parse the GUID. Add to results.
+
+        for (auto i = plugins.begin(); i != plugins.end(); i++)
+        {
+            std::wstring key = i.Current().Key().c_str();
+
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(key.c_str(), "AbstractionIdGuidString")
+            );
+
+            std::wstring transportJson = i.Current().Value().GetObject().Stringify().c_str();
+
+            GUID abstractionId;
+
+            try
+            {
+                abstractionId = internal::StringToGuid(key);
+            }
+            catch (...)
+            {
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    __FUNCTION__,
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(key.c_str(), "Invalid GUID Property")
+                );
+            }
+                     
+            // TODO: Should verify the abstractionId is for an enabled abstraction
+            // before adding it to the returned map
+
+            abstractionSettings.insert_or_assign(abstractionId, transportJson);
+
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(transportJson.c_str()),
+                TraceLoggingGuid(abstractionId)
+                );
         }
     }
     CATCH_LOG();
@@ -406,7 +488,14 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
 
 HRESULT CMidiConfigurationManager::Initialize()
 {
-    OutputDebugString(L"\n" __FUNCTION__);
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter")
+    );
+
 
     // load the current configuration
 
@@ -492,7 +581,16 @@ HRESULT CMidiConfigurationManager::Initialize()
 _Use_decl_annotations_
 std::wstring CMidiConfigurationManager::GetSavedConfigurationForTransportAbstraction(GUID abstractionGuid) const noexcept
 {
-    OutputDebugString(L"\n" __FUNCTION__);
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter")
+    );
+
+
+
 
     try
     {
@@ -531,7 +629,16 @@ std::wstring CMidiConfigurationManager::GetSavedConfigurationForTransportAbstrac
 _Use_decl_annotations_
 std::wstring CMidiConfigurationManager::GetSavedConfigurationForEndpointProcessingTransform(GUID abstractionGuid) const noexcept
 {
-    OutputDebugString(L"\n" __FUNCTION__);
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter")
+    );
+
+
+
     
     try
     {
@@ -570,7 +677,16 @@ std::wstring CMidiConfigurationManager::GetSavedConfigurationForEndpointProcessi
 
 HRESULT CMidiConfigurationManager::Cleanup() noexcept
 {
-    OutputDebugString(L"\n" __FUNCTION__);
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter")
+    );
+
+
+
 
 
     return S_OK;

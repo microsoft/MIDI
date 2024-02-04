@@ -61,13 +61,16 @@ namespace json = ::winrt::Windows::Data::Json;
 
 namespace Windows::Devices::Midi2::Internal
 {
-    inline bool JsonObjectFromBSTR(_In_ BSTR* str, _Out_ json::JsonObject &obj)
+    inline bool JsonObjectFromBSTR(_In_ BSTR* bstr, _Out_ json::JsonObject &obj)
     {
+        if (bstr == nullptr) return false;
+
         try
         {
-            ATL::CComBSTR bstr(*str);
+            ATL::CComBSTR ccbstr(*bstr);
+            if (ccbstr.Length() == 0) return false;
 
-            winrt::hstring hstr(bstr);
+            winrt::hstring hstr(ccbstr);
 
             if (json::JsonObject::TryParse(hstr, obj))
             {

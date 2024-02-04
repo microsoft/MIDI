@@ -19,6 +19,14 @@ CMidiDevicePipe::Initialize(
     DWORD* MmcssTaskId
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     auto deviceLock = m_DevicePipeLock.lock();
 
     OutputDebugString(L"" __FUNCTION__ " Initialize.");
@@ -131,6 +139,14 @@ CMidiDevicePipe::Initialize(
 HRESULT
 CMidiDevicePipe::Cleanup()
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     OutputDebugString(L"" __FUNCTION__ " Cleanup started.");
 
     {
