@@ -103,7 +103,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ winrt::Windows::Foundation::IInspectable args);
 
 
-        midi2::MidiEndpointDeviceInformationFilter m_endpointFilter;
+        midi2::MidiEndpointDeviceInformationFilter m_endpointFilter{ 
+            MidiEndpointDeviceInformationFilter::IncludeClientByteStreamNative | MidiEndpointDeviceInformationFilter::IncludeClientUmpNative };
 
 
         winrt::event<foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, midi2::MidiEndpointDeviceInformation>> m_deviceAddedEvent;

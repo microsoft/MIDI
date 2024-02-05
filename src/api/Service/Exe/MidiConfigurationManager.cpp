@@ -6,12 +6,19 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+
+//
+// TODO: Refactor this code to use the json_helpers.h functions and defines
+//
+
+
 #include "stdafx.h"
 
 #include "MidiConfigurationManager.h"
 
 #define MAX_KEY_LENGTH 255
 #define MAX_VALUE_NAME 16383
+
 
 // TODO: Refactor these two methods and abstract out the registry code. Do this once wil adds the enumeration helpers to the NuGet
 std::vector<GUID> CMidiConfigurationManager::GetEnabledTransportAbstractionLayers() const noexcept
@@ -338,10 +345,157 @@ std::wstring CMidiConfigurationManager::GetCurrentConfigurationFileName() noexce
 
 
 
+#pragma push_macro("GetObject")
+#undef GetObject
+
+std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTransportAbstractionSettingsFromJsonString(
+    _In_ std::wstring jsonStringSource) const noexcept
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"), 
+        TraceLoggingWideString(L"Enter")
+    );
+
+
+    //std::map<winrt::guid, std::wstring> abstractionSettings{};
+    std::map<GUID, std::wstring, GUIDCompare> abstractionSettings{};
+
+    try
+    {       
+        json::JsonObject jsonObject{ };
+
+        try
+        {
+            if (!json::JsonObject::TryParse(jsonStringSource, jsonObject))
+            {
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    __FUNCTION__,
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"JSON Object parsing failed"),
+                    TraceLoggingWideString(jsonStringSource.c_str(), "Source JSON String")
+                );
+
+                // return the empty map
+                return abstractionSettings;
+            }
+        }
+        catch (...)
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"JSON Object parsing failed. Exception.")
+            );
+
+            return abstractionSettings;
+        }
+
+
+        if (jsonObject == nullptr)
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"JSON Object null after parsing")
+            );
+
+            // return the empty map
+            return abstractionSettings;
+        }
+
+
+
+        auto plugins = internal::JsonGetObjectProperty(jsonObject, MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT, nullptr);
+
+        if (plugins == nullptr)
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"No transport plugins node in JSON")
+            );
+
+            // return the empty map
+            return abstractionSettings;
+        }
+
+        // Iterate through nodes and find each transport abstraction entry. Parse the GUID. Add to results.
+
+        for (auto i = plugins.begin(); i != plugins.end(); i++)
+        {
+            std::wstring key = i.Current().Key().c_str();
+
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(key.c_str(), "AbstractionIdGuidString")
+            );
+
+            std::wstring transportJson = i.Current().Value().GetObject().Stringify().c_str();
+
+            GUID abstractionId;
+
+            try
+            {
+                abstractionId = internal::StringToGuid(key);
+            }
+            catch (...)
+            {
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    __FUNCTION__,
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(key.c_str(), "Invalid GUID Property")
+                );
+            }
+                     
+            // TODO: Should verify the abstractionId is for an enabled abstraction
+            // before adding it to the returned map
+
+            abstractionSettings.insert_or_assign(abstractionId, transportJson);
+
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(transportJson.c_str()),
+                TraceLoggingGuid(abstractionId)
+                );
+        }
+    }
+    CATCH_LOG();
+
+    return abstractionSettings;
+}
+#pragma pop_macro("GetObject")
+
+
 
 HRESULT CMidiConfigurationManager::Initialize()
 {
-    OutputDebugString(L"\n" __FUNCTION__);
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter")
+    );
+
 
     // load the current configuration
 
@@ -425,21 +579,29 @@ HRESULT CMidiConfigurationManager::Initialize()
 
 
 _Use_decl_annotations_
-std::wstring CMidiConfigurationManager::GetConfigurationForTransportAbstraction(GUID abstractionGuid) const noexcept
+std::wstring CMidiConfigurationManager::GetSavedConfigurationForTransportAbstraction(GUID abstractionGuid) const noexcept
 {
-    OutputDebugString(L"\n" __FUNCTION__);
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter")
+    );
+
+
+
 
     try
     {
-        OutputDebugString(L"" __FUNCTION__);
 
-        auto key = GuidToString(abstractionGuid);
+        auto key = internal::GuidToString(abstractionGuid);
 
         //    OutputDebugString(key.c_str());
 
         if (m_jsonObject != nullptr)
         {
-            // probably need to normalize these to ignore case. Not sure if WinRT Json dictionary is case-sensitive
+            // probably need to normalize these to ignore case.
             if (m_jsonObject.HasKey(winrt::to_hstring(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT)))
             {
                 auto plugins = m_jsonObject.GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT);
@@ -465,15 +627,24 @@ std::wstring CMidiConfigurationManager::GetConfigurationForTransportAbstraction(
 
 
 _Use_decl_annotations_
-std::wstring CMidiConfigurationManager::GetConfigurationForEndpointProcessingTransform(GUID abstractionGuid) const noexcept
+std::wstring CMidiConfigurationManager::GetSavedConfigurationForEndpointProcessingTransform(GUID abstractionGuid) const noexcept
 {
-    OutputDebugString(L"\n" __FUNCTION__);
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter")
+    );
+
+
+
     
     try
     {
         //   OutputDebugString(L"" __FUNCTION__);
 
-        auto key = GuidToString(abstractionGuid);
+        auto key = internal::GuidToString(abstractionGuid);
 
         //    OutputDebugString(key.c_str());
 
@@ -506,7 +677,16 @@ std::wstring CMidiConfigurationManager::GetConfigurationForEndpointProcessingTra
 
 HRESULT CMidiConfigurationManager::Cleanup() noexcept
 {
-    OutputDebugString(L"\n" __FUNCTION__);
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter")
+    );
+
+
+
 
 
     return S_OK;

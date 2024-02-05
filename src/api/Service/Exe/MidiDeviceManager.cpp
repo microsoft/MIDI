@@ -18,6 +18,13 @@ CMidiDeviceManager::Initialize(
     std::shared_ptr<CMidiEndpointProtocolManager>& EndpointProtocolManager,
     std::shared_ptr<CMidiConfigurationManager>& configurationManager)
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     m_ConfigurationManager = configurationManager;
 
     // Get the enabled abstraction layers from the registry
@@ -27,13 +34,12 @@ CMidiDeviceManager::Initialize(
     {
         wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
         wil::com_ptr_nothrow<IMidiEndpointManager> endpointManager;
+        wil::com_ptr_nothrow<IMidiAbstractionConfigurationManager> abstractionConfigurationManager;
 
         try
         {
             // provide the initial settings for these transports
-            // TODO: Still need a way to send updates to them without restarting the service or the abstraction
-            // but that requires a pipe all the way down to the client to send up that configuration block
-            auto transportSettingsJson = m_ConfigurationManager->GetConfigurationForTransportAbstraction(AbstractionLayer);
+            auto transportSettingsJson = m_ConfigurationManager->GetSavedConfigurationForTransportAbstraction(AbstractionLayer);
 
             // changed these from a return-on-fail to just log, so we don't prevent service startup
             // due to one bad abstraction
@@ -49,7 +55,7 @@ CMidiDeviceManager::Initialize(
                     // need to do this to avoid an ambiguous IUnknown cast error
                     wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> protocolManager = EndpointProtocolManager.get();
 
-                    auto initializeResult = endpointManager->Initialize((IUnknown*)this, (IUnknown*)protocolManager.get(), transportSettingsJson.c_str());
+                    auto initializeResult = endpointManager->Initialize((IUnknown*)this, (IUnknown*)protocolManager.get());
 
                     LOG_IF_FAILED(initializeResult);
 
@@ -68,11 +74,35 @@ CMidiDeviceManager::Initialize(
                 {
                     OutputDebugString(__FUNCTION__ L": Transport Abstraction Endpoint Manager activation failed (nullptr return).\n");
                 }
+
+                // we only log. This interface is optional
+                LOG_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiAbstractionConfigurationManager), (void**)&abstractionConfigurationManager));
+
+                if (abstractionConfigurationManager != nullptr)
+                {
+                    if (transportSettingsJson != L"")
+                    {
+                        CComBSTR response;
+                        response.Empty();
+
+                        LOG_IF_FAILED(abstractionConfigurationManager->UpdateConfiguration(transportSettingsJson.c_str(), &response));
+
+                        // we don't use the response info here.
+                        ::SysFreeString(response);
+                    }
+
+                    m_MidiAbstractionConfigurationManagers.emplace(AbstractionLayer, std::move(abstractionConfigurationManager));
+                }
             }
             else
             {
                 OutputDebugString(__FUNCTION__ L": Transport Abstraction activation failed (nullptr return).\n");
             }
+
+
+
+
+
         }
         catch (...)
         {
@@ -199,6 +229,14 @@ CMidiDeviceManager::ActivateVirtualParentDevice
     ULONG CreatedSwDeviceIdCharCount
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     OutputDebugString(L"" __FUNCTION__);
 
     RETURN_HR_IF_NULL(E_INVALIDARG, CreateInfo);
@@ -314,6 +352,13 @@ CMidiDeviceManager::ActivateEndpoint
     ULONG CreatedDeviceInterfaceIdCharCount
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     OutputDebugString(__FUNCTION__ L": Enter\n");
 
     auto lock = m_MidiPortsLock.lock();
@@ -562,6 +607,13 @@ CMidiDeviceManager::UpdateEndpointProperties
     PVOID InterfaceDevProperties
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     OutputDebugString(L"\n" __FUNCTION__ " ");
 
     auto requestedInterfaceId = internal::NormalizeEndpointInterfaceIdCopy(DeviceInterfaceId);
@@ -616,6 +668,13 @@ CMidiDeviceManager::DeleteEndpointProperties
     PVOID InterfaceDevPropKeys
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     OutputDebugString(L"\n" __FUNCTION__ " ");
 
 
@@ -643,6 +702,13 @@ CMidiDeviceManager::DeleteAllEndpointInProtocolDiscoveredProperties
     PCWSTR DeviceInterfaceId
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     // don't delete any keys that are specified by the user, or 
     // by the driver or transport. We're only deleting things that
     // are discovered in-protocol.
@@ -688,8 +754,6 @@ CMidiDeviceManager::DeleteAllEndpointInProtocolDiscoveredProperties
 }
 
 
-
-
 _Use_decl_annotations_
 HRESULT
 CMidiDeviceManager::DeactivateEndpoint
@@ -697,6 +761,13 @@ CMidiDeviceManager::DeactivateEndpoint
         PCWSTR InstanceId
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     OutputDebugString(__FUNCTION__ L" - enter. Cleaned instance id is: ");
 
     auto cleanId = internal::NormalizeDeviceInstanceIdCopy(InstanceId);
@@ -749,6 +820,13 @@ CMidiDeviceManager::RemoveEndpoint
     PCWSTR InstanceId 
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     // first deactivate, to ensure it's removed from the tracking list
     LOG_IF_FAILED(DeactivateEndpoint(InstanceId));
 
@@ -759,13 +837,77 @@ CMidiDeviceManager::RemoveEndpoint
 }
 
 
+_Use_decl_annotations_
+HRESULT
+CMidiDeviceManager::UpdateAbstractionConfiguration
+(
+    GUID AbstractionId,
+    LPCWSTR ConfigurationJson,
+    BSTR* Response
+)
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+    if (ConfigurationJson != nullptr)
+    {
+        if (auto search = m_MidiAbstractionConfigurationManagers.find(AbstractionId); search != m_MidiAbstractionConfigurationManagers.end())
+        {
+            auto configManager = search->second;
+
+            if (configManager)
+            {
+                return configManager->UpdateConfiguration(ConfigurationJson, Response);
+            }
+        }
+        else
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Failed to find the referenced abstraction by its GUID")
+            );
+
+        }
+    }
+    else
+    {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Json is null")
+        );
+    }
+
+
+    // failed to find the abstraction or its related endpoint manager
+    return E_FAIL;
+}
+
 
 HRESULT
 CMidiDeviceManager::Cleanup()
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     OutputDebugString(__FUNCTION__ L"\n");
 
     m_MidiEndpointManagers.clear();
+    m_MidiAbstractionConfigurationManagers.clear();
+
     m_MidiPorts.clear();
 
     m_MidiParents.clear();

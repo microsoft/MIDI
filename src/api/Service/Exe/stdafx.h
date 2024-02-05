@@ -14,11 +14,9 @@
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 
-#include <winrt/Windows.Data.Json.h>
+
 #include <winrt/Windows.Storage.h>
 #include <winrt/Windows.Storage.Streams.h>
-
-namespace json = ::winrt::Windows::Data::Json;
 
 #include <string>
 #include <strsafe.h>
@@ -43,6 +41,7 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "midi_ump.h"
 #include "midi_timestamp.h"
 #include "string_util.h"
+#include "json_helpers.h"
 
 namespace internal = ::Windows::Devices::Midi2::Internal;
 namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
@@ -82,6 +81,9 @@ namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
 
 // need to declare this before the device manager
 class CMidiEndpointProtocolManager;
+struct GUIDCompare;
+class CMidiSessionTracker;
+
 
 #include "MidiTelemetry.h"
 #include "MidiPerformanceManager.h"
@@ -102,6 +104,7 @@ class CMidiDevicePipe;
 #include "MidiClientManager.h"
 
 #include "MidiEndpointProtocolManager.h"
+#include "MidiSessionTracker.h"
 
 #include "MidiSrv.h"
 

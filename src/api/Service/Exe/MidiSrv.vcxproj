@@ -267,6 +267,7 @@
     <ClCompile Include="MidiPerformanceManager.cpp" />
     <ClCompile Include="MidiProcessManager.cpp" />
     <ClCompile Include="MidiService.cpp" />
+    <ClCompile Include="MidiSessionTracker.cpp" />
     <ClCompile Include="MidiSrv.cpp" />
     <ClCompile Include="MidiSrvRpc.cpp" />
     <ClCompile Include="MidiSrvRPC_stub.cpp" />
@@ -285,6 +286,7 @@
     <ClInclude Include="..\Inc\MidiTransformPipe.h" />
     <ClInclude Include="MidiConfigurationManager.h" />
     <ClInclude Include="MidiEndpointProtocolManager.h" />
+    <ClInclude Include="MidiSessionTracker.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>

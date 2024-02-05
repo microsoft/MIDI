@@ -28,14 +28,25 @@ _Use_decl_annotations_
 HRESULT
 CMidiEndpointProtocolManager::Initialize(
     std::shared_ptr<CMidiClientManager>& ClientManager,
-    std::shared_ptr<CMidiDeviceManager>& DeviceManager
+    std::shared_ptr<CMidiDeviceManager>& DeviceManager,
+    std::shared_ptr<CMidiSessionTracker>& SessionTracker
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+    // use our clsid as the session id. 
+    m_sessionId = __uuidof(IMidiEndpointProtocolManagerInterface);
+
     OutputDebugString(__FUNCTION__ L"");
 
     m_clientManager = ClientManager;
     m_deviceManager = DeviceManager;
-
+    m_sessionTracker = SessionTracker;
 
     m_allMessagesReceived.create();
     m_queueWorkerThreadWakeup.create();
@@ -45,6 +56,9 @@ CMidiEndpointProtocolManager::Initialize(
     // a good way around that other than fixing up the ClientManager to make
     // local connections with local handles reasonable.
     RETURN_IF_FAILED(CoCreateInstance(__uuidof(Midi2MidiSrvAbstraction), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&m_serviceAbstraction)));
+
+    auto pid = GetCurrentProcessId();
+    m_sessionTracker->AddClientSession(m_sessionId, L"Protocol Manager", pid, L"midisrv.exe");
 
     try
     {
@@ -79,6 +93,14 @@ CMidiEndpointProtocolManager::NegotiateAndRequestMetadata(
     WORD TimeoutMS
 ) noexcept
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     OutputDebugString(__FUNCTION__ L"");
 
     ProtocolManagerWork work;
@@ -108,12 +130,23 @@ CMidiEndpointProtocolManager::NegotiateAndRequestMetadata(
 HRESULT
 CMidiEndpointProtocolManager::Cleanup()
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
+    m_sessionTracker->RemoveClientSession(m_sessionId);
+
     OutputDebugString(__FUNCTION__ L"");
 
     // TODO terminate any open threads and ensure they close up
 
     m_clientManager.reset();
     m_deviceManager.reset();
+    m_sessionTracker.reset();
 
     // clear the queue
     while (m_workQueue.size() > 0) m_workQueue.pop();
@@ -391,7 +424,8 @@ CMidiEndpointProtocolManager::ProcessCurrentWorkEntry()
         &abstractionCreationParams,
         &mmcssTaskId,
         (IMidiCallback*)this,
-        MIDI_PROTOCOL_MANAGER_ENDPOINT_CREATION_CONTEXT
+        MIDI_PROTOCOL_MANAGER_ENDPOINT_CREATION_CONTEXT,
+        m_sessionId
     ));
 
 //    OutputDebugString(__FUNCTION__ L" - Resetting messages received event");

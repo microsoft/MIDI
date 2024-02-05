@@ -79,36 +79,27 @@ class MidiEndpointTable
 {
 public:
 
-    static MidiEndpointTable& Current();
-
-    // no copying
-    MidiEndpointTable(_In_ const MidiEndpointTable&) = delete;
-    MidiEndpointTable& operator=(_In_ const MidiEndpointTable&) = delete;
-
-    void Initialize(_In_ CMidi2VirtualMidiEndpointManager *endpointManager)
-    {
-        m_endpointManager = endpointManager;
-    }
+    //void Initialize(_In_ CMidi2VirtualMidiEndpointManager *endpointManager)
+    //{
+    //    m_endpointManager = endpointManager;
+    //}
 
 
     HRESULT AddCreatedEndpointDevice(_In_ MidiVirtualDeviceEndpointEntry& entry) noexcept;
  
-    HRESULT OnDeviceConnected(_In_ std::wstring deviceEndpointInterfaceId, _In_ CMidi2VirtualMidiBiDi* deviceBiDi);
-    HRESULT OnClientConnected(_In_ std::wstring clientEndpointInterfaceId, _In_ CMidi2VirtualMidiBiDi* clientBiDi);
-    HRESULT OnDeviceDisconnected(_In_ std::wstring deviceEndpointInterfaceId);
+    HRESULT OnDeviceConnected(_In_ std::wstring deviceEndpointInterfaceId, _In_ CMidi2VirtualMidiBiDi* deviceBiDi) noexcept;
+    HRESULT OnClientConnected(_In_ std::wstring clientEndpointInterfaceId, _In_ CMidi2VirtualMidiBiDi* clientBiDi) noexcept;
+    HRESULT OnDeviceDisconnected(_In_ std::wstring deviceEndpointInterfaceId) noexcept;
 
     HRESULT Cleanup();
 
 private:
-    MidiEndpointTable();
-    ~MidiEndpointTable();
-
     void RemoveEndpointPair(_In_ GUID VirtualEndpointAssociationId) noexcept;
 
     // key is EndpointDeviceId (the device interface id)
     std::map<std::wstring, MidiVirtualDeviceEndpointEntry> m_endpoints;
 
     // maybe this should be a weak_ptr, but those are a pain to work with
-    wil::com_ptr_nothrow<CMidi2VirtualMidiEndpointManager> m_endpointManager;
+//    wil::com_ptr_nothrow<CMidi2VirtualMidiEndpointManager> m_endpointManager;
 
 };

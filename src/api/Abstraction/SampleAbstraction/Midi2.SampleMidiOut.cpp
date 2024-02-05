@@ -8,7 +8,9 @@ HRESULT
 CMidi2SampleMidiOut::Initialize(
     LPCWSTR,
     PABSTRACTIONCREATIONPARAMS,
-    DWORD *
+    DWORD *,
+    GUID /* SessionId */
+
 )
 {
     TraceLoggingWrite(

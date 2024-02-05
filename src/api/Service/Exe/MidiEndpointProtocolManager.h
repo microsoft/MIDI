@@ -48,7 +48,8 @@ public:
 
     HRESULT Initialize(
         _In_ std::shared_ptr<CMidiClientManager>& ClientManager,
-        _In_ std::shared_ptr<CMidiDeviceManager>& DeviceManager
+        _In_ std::shared_ptr<CMidiDeviceManager>& DeviceManager,
+        _In_ std::shared_ptr<CMidiSessionTracker>& SessionTracker
     );
 
     STDMETHOD(NegotiateAndRequestMetadata)(
@@ -67,6 +68,8 @@ public:
 private:
     void ThreadWorker();
 
+    GUID m_sessionId;
+
     HRESULT ProcessCurrentWorkEntry();
 
 
@@ -76,6 +79,7 @@ private:
 
     std::shared_ptr<CMidiClientManager> m_clientManager;
     std::shared_ptr<CMidiDeviceManager> m_deviceManager;
+    std::shared_ptr<CMidiSessionTracker> m_sessionTracker;
 
 
     wil::com_ptr_nothrow<IMidiAbstraction> m_serviceAbstraction;

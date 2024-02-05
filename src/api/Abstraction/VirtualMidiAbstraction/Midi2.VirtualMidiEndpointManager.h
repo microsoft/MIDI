@@ -16,7 +16,7 @@ class CMidi2VirtualMidiEndpointManager :
 
 {
 public:
-    STDMETHOD(Initialize(_In_ IUnknown*, _In_ IUnknown*, _In_ LPCWSTR));
+    STDMETHOD(Initialize(_In_ IUnknown*, _In_ IUnknown*));
     STDMETHOD(Cleanup)();
 
     //STDMETHOD(ApplyConfiguration(
@@ -32,8 +32,6 @@ public:
     HRESULT CreateClientVisibleEndpoint(
         _Inout_ MidiVirtualDeviceEndpointEntry& entry
     );
-
-    HRESULT ApplyJson(_In_ json::JsonObject jsonObject);
 
     HRESULT NegotiateAndRequestMetadata(_In_ std::wstring endpointInterfaceId);
 

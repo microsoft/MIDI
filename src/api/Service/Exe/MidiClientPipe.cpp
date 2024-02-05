@@ -23,12 +23,25 @@ CMidiClientPipe::Initialize(
     handle_t /* BindingHandle */,
     HANDLE /* clientProcess */,
     LPCWSTR Device,
+    GUID SessionId,
     PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
     PMIDISRV_CLIENT Client,
     DWORD* MmcssTaskId,
     BOOL OverwriteZeroTimestamps
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+    // for tracking the client connection
+    m_sessionId = SessionId;
+    //m_device = internal::NormalizeEndpointInterfaceIdCopy(Device);
+
+
     auto lock = m_ClientPipeLock.lock();
 
     std::unique_ptr<MEMORY_MAPPED_PIPE> midiInPipe;
@@ -124,6 +137,14 @@ CMidiClientPipe::Initialize(
 HRESULT
 CMidiClientPipe::Cleanup()
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     auto lock = m_ClientPipeLock.lock();
     if (m_MidiPump)
     {

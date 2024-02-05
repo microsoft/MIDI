@@ -78,4 +78,14 @@ interface IMidiDeviceManagerInterface : IUnknown
     HRESULT RemoveEndpoint(
         [in] LPCWSTR InstanceId
     );
+
+
+    // Update the running configuration for an abstraction or endpoints managed by that abstraction
+    HRESULT UpdateAbstractionConfiguration(
+        [in] GUID AbstractionId,
+        [in] LPCWSTR ConfigurationJson,
+        [out] BSTR* Response
+    );
+
+
 };

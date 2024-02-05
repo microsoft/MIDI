@@ -40,6 +40,11 @@ app.Configure(config =>
             .WithExample("enumerate", "bytestream-endpoints", "--direction", "all")
             ;
 
+        enumerate.AddCommand<EnumActiveSessionsCommand>("active-sessions")
+            .WithAlias("sessions")
+            .WithDescription(Strings.CommandEnumerateActiveSessionsDescription)
+            .WithExample("enumerate", "active-sessions")
+            ;
 
         // TODO: may want to change this to just "plugins" and offer a switch
         // for the type of plugins to show

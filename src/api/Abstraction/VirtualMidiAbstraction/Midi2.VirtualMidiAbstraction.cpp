@@ -40,9 +40,7 @@ CMidi2VirtualMidiAbstraction::Activate(
 
 
 
-    // IMidiEndpointManager and IMidiApiEndpointManagerExtension are interfaces implemented by the same class
-    // We want to make sure we're always returning the same instance for these calls
-    else if (__uuidof(IMidiEndpointManager) == Riid/* || __uuidof(IMidiApiEndpointManagerExtension) == Riid*/)
+    else if (__uuidof(IMidiEndpointManager) == Riid)
     {
         TraceLoggingWrite(
             MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
@@ -53,13 +51,30 @@ CMidi2VirtualMidiAbstraction::Activate(
         );
 
         // check to see if this is the first time we're creating the endpoint manager. If so, create it.
-        if (m_EndpointManager == nullptr)
+        if (AbstractionState::Current().GetEndpointManager() == nullptr)
         {
-            RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2VirtualMidiEndpointManager>(&m_EndpointManager));
+            AbstractionState::Current().ConstructEndpointManager();
         }
 
-        // TODO: Not sure if this is the right pattern for this or not. There's no detach call here, so does this leak?
-        RETURN_IF_FAILED(m_EndpointManager->QueryInterface(Riid, Interface));
+        RETURN_IF_FAILED(AbstractionState::Current().GetEndpointManager()->QueryInterface(Riid, Interface));
+    }
+    else if (__uuidof(IMidiAbstractionConfigurationManager) == Riid)
+    {
+        TraceLoggingWrite(
+            MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__ "- IMidiAbstractionConfigurationManager",
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingValue(__FUNCTION__),
+            TraceLoggingPointer(this, "this")
+        );
+
+        // check to see if this is the first time we're creating the endpoint manager. If so, create it.
+        if (AbstractionState::Current().GetConfigurationManager() == nullptr)
+        {
+            AbstractionState::Current().ConstructConfigurationManager();
+        }
+
+        RETURN_IF_FAILED(AbstractionState::Current().GetConfigurationManager()->QueryInterface(Riid, Interface));
     }
 
     else

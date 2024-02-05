@@ -17,7 +17,8 @@ CMidi2VirtualPatchBayBiDi::Initialize(
     PABSTRACTIONCREATIONPARAMS,
     DWORD *,
     IMidiCallback * Callback,
-    LONGLONG Context
+    LONGLONG Context,
+    GUID /* SessionId */
 )
 {
 

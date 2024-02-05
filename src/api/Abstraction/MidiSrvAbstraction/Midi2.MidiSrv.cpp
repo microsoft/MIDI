@@ -1,4 +1,10 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
 
 #include "pch.h"
 #include "Midi2.MidiSrv.h"
@@ -11,7 +17,8 @@ CMidi2MidiSrv::Initialize(
     PABSTRACTIONCREATIONPARAMS CreationParams,
     DWORD * MmcssTaskId,
     IMidiCallback * Callback,
-    LONGLONG Context
+    LONGLONG Context,
+    GUID SessionId
 )
 {
     TraceLoggingWrite(
@@ -63,10 +70,10 @@ CMidi2MidiSrv::Initialize(
     {
         // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
         // with structured exception handling.
-        RpcTryExcept RETURN_IF_FAILED(MidiSrvCreateClient(bindingHandle.get(), Device, &creationParams, &client));
+        RpcTryExcept RETURN_IF_FAILED(MidiSrvCreateClient(bindingHandle.get(), Device, &creationParams, SessionId, &client));
         RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
         RpcEndExcept
-            return S_OK;
+        return S_OK;
     }());
 
     m_ClientHandle = client->ClientHandle;

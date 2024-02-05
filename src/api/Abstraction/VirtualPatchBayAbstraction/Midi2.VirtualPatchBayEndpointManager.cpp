@@ -22,8 +22,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2VirtualPatchBayEndpointManager::Initialize(
     IUnknown* MidiDeviceManager, 
-    IUnknown* /*midiEndpointProtocolManager*/,
-    LPCWSTR /*ConfigurationJson*/
+    IUnknown* /*midiEndpointProtocolManager*/
 )
 {
  //   OutputDebugString(L"" __FUNCTION__ " Enter");
@@ -44,36 +43,7 @@ CMidi2VirtualPatchBayEndpointManager::Initialize(
 
     RETURN_IF_FAILED(CreateParentDevice());
 
-    //if (ConfigurationJson != nullptr)
-    //{
-    //    try
-    //    {
-    //        std::wstring json{ ConfigurationJson };
 
-    //        if (!json.empty())
-    //        {
-    //            m_jsonObject = json::JsonObject::Parse(json);
-
-    //            LOG_IF_FAILED(CreateConfiguredEndpoints(json));
-    //        }
-    //    }
-    //    catch (...)
-    //    {
-    //        OutputDebugString(L"Exception processing json for virtual MIDI abstraction");
-
-    //        // we return S_OK here because otherwise this prevents the service from starting up.
-    //        return S_OK;
-    //    }
-
-    //}
-    //else
-    //{
-    //    // empty / null is fine. We just continue on.
-
-    //    OutputDebugString(L"Configuration json is null for virtual MIDI abstraction");
-
-    //    return S_OK;
-    //}
 
     return S_OK;
 }
@@ -506,6 +476,47 @@ CMidi2VirtualPatchBayEndpointManager::CreateEndpoint(
 }
 
 
+
+//_Use_decl_annotations_
+//HRESULT
+//CMidi2VirtualPatchBayEndpointManager::UpdateConfiguration(LPCWSTR configurationJson)
+//{
+//    UNREFERENCED_PARAMETER(configurationJson);
+//
+//
+//    //if (ConfigurationJson != nullptr)
+//    //{
+//    //    try
+//    //    {
+//    //        std::wstring json{ ConfigurationJson };
+//
+//    //        if (!json.empty())
+//    //        {
+//    //            m_jsonObject = json::JsonObject::Parse(json);
+//
+//    //            LOG_IF_FAILED(CreateConfiguredEndpoints(json));
+//    //        }
+//    //    }
+//    //    catch (...)
+//    //    {
+//    //        OutputDebugString(L"Exception processing json for virtual MIDI abstraction");
+//
+//    //        // we return S_OK here because otherwise this prevents the service from starting up.
+//    //        return S_OK;
+//    //    }
+//
+//    //}
+//    //else
+//    //{
+//    //    // empty / null is fine. We just continue on.
+//
+//    //    OutputDebugString(L"Configuration json is null for virtual MIDI abstraction");
+//
+//    //    return S_OK;
+//    //}
+//
+//    return S_OK;
+//}
 
 HRESULT
 CMidi2VirtualPatchBayEndpointManager::Cleanup()

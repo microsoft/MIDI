@@ -127,6 +127,14 @@ public:
         _In_ PCWSTR
         );
 
+
+    STDMETHOD(UpdateAbstractionConfiguration)(
+        _In_ GUID AbstractionId,
+        _In_ LPCWSTR ConfigurationJson,
+        _Out_ BSTR* Response
+        );
+
+
     STDMETHOD(Cleanup)();
 
     //TODO: Method to update the properties (using SwDevicePropertySet and an array of props) for a device by its Id
@@ -148,8 +156,10 @@ private:
 
     std::shared_ptr<CMidiPerformanceManager> m_PerformanceManager;
     std::shared_ptr<CMidiConfigurationManager> m_ConfigurationManager;
+
     std::map<GUID, wil::com_ptr_nothrow<IMidiEndpointManager>, GUIDCompare> m_MidiEndpointManagers;
- 
+    std::map<GUID, wil::com_ptr_nothrow<IMidiAbstractionConfigurationManager>, GUIDCompare> m_MidiAbstractionConfigurationManagers;
+
     wil::critical_section m_MidiPortsLock;
     std::vector<std::unique_ptr<MIDIPORT>> m_MidiPorts;
 

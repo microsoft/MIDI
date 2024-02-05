@@ -76,6 +76,16 @@ interface MidiSrvRPC
     // Temporary test RPC, to be removed
     HRESULT MidiSrvTestRpc([in] handle_t BindingHandle, [ in, string ] LPCWSTR Identifier, [in] PREQUESTED_SETTINGS RequestedSettings, [out] PALLOCATED_SETTINGS *AllocatedSettings);
 
-    HRESULT MidiSrvCreateClient([in] handle_t BindingHandle, [ in, string ] LPCWSTR MidiDevice, [in] PMIDISRV_CLIENTCREATION_PARAMS CreationParams, [out] PMIDISRV_CLIENT *Client);
+
+    HRESULT MidiSrvCreateClient([in] handle_t BindingHandle, [ in, string ] LPCWSTR MidiDevice, [in] PMIDISRV_CLIENTCREATION_PARAMS CreationParams, [in] GUID SessionId, [out] PMIDISRV_CLIENT *Client);
     HRESULT MidiSrvDestroyClient([in] handle_t BindingHandle, [in] MidiClientHandle ClientHandle);
+
+    HRESULT MidiSrvUpdateConfiguration([in] handle_t BindingHandle, [in, string] LPCWSTR ConfigurationJson, [out] BSTR* Response);
+
+
+    HRESULT MidiSrvRegisterSession([in] handle_t BindingHandle, [in] GUID SessionId, [in, string] LPCWSTR SessionName, [in] DWORD ProcessId, [in, string] LPCWSTR ProcessName);
+    HRESULT MidiSrvDeregisterSession([in] handle_t BindingHandle, [in] GUID SessionId);
+
+    HRESULT MidiSrvGetSessionList([in] handle_t BindingHandle, [out] BSTR* SessionListJson);
+
 }

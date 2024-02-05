@@ -42,11 +42,6 @@
 // read/write there.
 #define MIDI_CONFIG_FILE_FOLDER L"%ALLUSERSPROFILE%\\Microsoft\\MIDI\\"
 
-#define MIDI_CONFIG_JSON_HEADER_OBJECT L"header"
-#define MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT L"endpointTransportPluginSettings"
-#define MIDI_CONFIG_JSON_ENDPOINT_PROCESSING_PLUGIN_SETTINGS_OBJECT L"endpointProcessingPluginSettings"
-
-
 //
 // SendMidiMessage HRESULT codes (these are not exposed through the API, and are just internal)
 //
@@ -644,22 +639,4 @@ struct MidiFunctionBlockProperty
 
 #define SAFE_CLOSEHANDLE(h) if (h) { CloseHandle(h); h = NULL; }
 
-
-// note that this produces a GUID with uppercase letters and enclosing braces
-inline std::wstring GuidToString(_In_ GUID guid)
-{
-    LPOLESTR str;
-    if (SUCCEEDED(StringFromCLSID(guid, &str)))
-    {
-        std::wstring guidString{ str };
-
-        ::CoTaskMemFree(str);
-
-        return guidString;
-    }
-    else
-    {
-        return L"";
-    }
-}
 

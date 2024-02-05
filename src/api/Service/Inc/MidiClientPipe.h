@@ -16,6 +16,7 @@ public:
     HRESULT Initialize(   _In_ handle_t BindingHandle,
                             _In_ HANDLE,
                             _In_ LPCWSTR,
+                            _In_ GUID,
                             _In_ PMIDISRV_CLIENTCREATION_PARAMS,
                             _In_ PMIDISRV_CLIENT,
                             _In_ DWORD *,
@@ -47,11 +48,17 @@ public:
         return S_OK;
     }
 
+    GUID SessionId() { return m_sessionId; }
+    //LPCWSTR Device() { return m_device.c_str(); }
+
 private:
     HRESULT AdjustForBufferingRequirements(_In_ PMIDISRV_CLIENTCREATION_PARAMS CreationParams);
 
     wil::critical_section m_ClientPipeLock;
     MidiClientHandle m_ClientHandle{ 0 };
     std::unique_ptr<CMidiXProc> m_MidiPump;
+
+    GUID m_sessionId{};         // client session id for tracking
+    //std::wstring m_device{};    // device id this connects to
 };
 

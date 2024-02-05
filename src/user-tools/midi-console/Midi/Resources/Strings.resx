@@ -144,6 +144,9 @@
   <data name="CommandEndpointRequestFunctionBlocksDescription" xml:space="preserve">
     <value>Send a function block request message to the endpoint. You can monitor incoming messages or the device properties in another window</value>
   </data>
+  <data name="CommandEnumerateActiveSessionsDescription" xml:space="preserve">
+    <value>List all currently active Windows MIDI Services sessions on this PC.</value>
+  </data>
   <data name="CommandEnumerateDescription" xml:space="preserve">
     <value>Enumerate (list) endpoints and transports</value>
   </data>
@@ -299,6 +302,9 @@
   </data>
   <data name="ParameterEndpointPropertiesVerbose" xml:space="preserve">
     <value>Include additional detailed information about the endpoint.</value>
+  </data>
+  <data name="ParameterEndpointUpdateName" xml:space="preserve">
+    <value>New endpoint name</value>
   </data>
   <data name="ParameterEnumEndpointsDirection" xml:space="preserve">
     <value>The direction of data flow for the endpoints to list</value>

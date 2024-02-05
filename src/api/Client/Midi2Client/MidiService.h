@@ -29,6 +29,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static uint32_t GetOutgoingMessageQueueMaxMessageCapacity() { return (uint32_t)MIDI_OUTGOING_MESSAGE_QUEUE_MAX_MESSAGE_COUNT; }
 
+
+        static foundation::Collections::IVectorView<midi2::MidiSessionInformation> GetActiveSessions();
+
     private:
 
 

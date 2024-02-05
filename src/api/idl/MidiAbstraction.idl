@@ -63,7 +63,9 @@ interface IMidiIn : IUnknown
         [in] PABSTRACTIONCREATIONPARAMS creationParams,
         [in] DWORD * mmcssTaskId,
         [in] IMidiCallback * callback,
-        [in] LONGLONG context
+        [in] LONGLONG context,
+        [in] GUID SessionId
+
     );
 
     HRESULT Cleanup();
@@ -80,7 +82,8 @@ interface IMidiOut : IUnknown
     HRESULT Initialize(
         [in] LPCWSTR deviceId,
         [in] PABSTRACTIONCREATIONPARAMS creationParams,
-        [in] DWORD * mmcssTaskId
+        [in] DWORD * mmcssTaskId,
+        [in] GUID SessionId
     );
 
     HRESULT Cleanup();
@@ -106,7 +109,8 @@ interface IMidiBiDi : IUnknown
         [in] PABSTRACTIONCREATIONPARAMS creationParams,
         [in] DWORD * mmcssTaskId,
         [in] IMidiCallback * callback,
-        [in] LONGLONG context
+        [in] LONGLONG context,
+        [in] GUID SessionId
     );
 
     HRESULT Cleanup();
@@ -128,8 +132,8 @@ interface IMidiEndpointManager : IUnknown
 {
     HRESULT Initialize(
         [in] IUnknown* midiDeviceManager,
-        [in] IUnknown* midiEndpointProtocolManager,
-        [in] LPCWSTR configurationJson
+        [in] IUnknown* midiEndpointProtocolManager //,
+        /*[in] LPCWSTR configurationJson */
     );
 
     HRESULT Cleanup();
@@ -175,3 +179,74 @@ interface IMidiDataTransform : IUnknown
     );
 };
 
+
+
+// IMidiConfigurationManager for sending config json to 
+// an endpoint, transform, or the service at runtime
+// The json section sent contains only changes, not the 
+// entire configuration for the entity
+
+[
+    object,
+    local,
+    uuid(f19dd642-1809-4497-9eee-f230b11bd6fb),
+    pointer_default(unique)
+]
+interface IMidiAbstractionConfigurationManager : IUnknown
+{
+    HRESULT Initialize(
+        [in] GUID abstractionId,
+        [in] IUnknown* midiDeviceManager
+    );
+
+    HRESULT UpdateConfiguration(
+        [in] LPCWSTR configurationJsonSection,
+        [out] BSTR* response
+    );
+
+    HRESULT Cleanup();
+
+
+};
+
+
+// this is a bookkeeping class. It tracks only. It does
+// not own the lifetime of any of the items it tracks.
+[
+    object,
+    local,
+    uuid(194c2746-3ae5-419a-94d9-20416c7dbefe),
+    pointer_default(unique)
+]
+interface IMidiSessionTracker : IUnknown
+{
+    HRESULT Initialize();
+
+    HRESULT AddClientSession(
+        [in] GUID SessionId,
+        [in] LPCWSTR SessionName,
+        [in] DWORD ClientProcessId,
+        [in] LPCWSTR ClientProcessName 
+    );
+
+    HRESULT RemoveClientSession(
+        [in] GUID SessionId
+    );
+
+    //HRESULT AddClientEndpointConnection(
+    //    [in] GUID SessionId, 
+    //    [in] LPCWSTR ConnectionEndpointInterfaceId
+    //);
+
+    //HRESULT RemoveClientEndpointConnection(
+    //    [in] GUID SessionId, 
+    //    [in] LPCWSTR ConnectionEndpointInterfaceId
+    //);
+
+    HRESULT GetSessionListJson(
+        [out] BSTR* SessionList
+    );
+
+    HRESULT Cleanup();
+
+};

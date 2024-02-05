@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Spectre.Console;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -16,6 +17,12 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
     internal class AnsiMarkupFormatter
     {
+        public static void SetTableBorderStyle(Table table)
+        {
+            table.Border(TableBorder.Rounded);
+            table.BorderColor(Color.Grey35);
+        }
+
         public static string GetEndpointIcon(MidiEndpointDevicePurpose purpose)
         {
             switch (purpose)
@@ -126,6 +133,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             return "[steelblue1_1]" + EscapeString(name.Trim()) + "[/]";
         }
 
+
         public static string FormatGeneralNumber(UInt64 i)
         {
             return "[olive]" + i.ToString() + "[/]";
@@ -144,6 +152,28 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         public static string FormatFileName(string fileName)
         {
             return "[steelblue1]" + EscapeString(fileName) + "[/]";
+        }
+
+
+
+        public static string FormatProcessName(string processName)
+        {
+            return "[steelblue1_1]" + EscapeString(processName) + "[/]";
+        }
+
+        public static string FormatProcessId(UInt64 pid)
+        {
+            return "[steelblue]" + pid.ToString() + "[/]";
+        }
+
+        public static string FormatSessionName(string sessionName)
+        {
+            return "[deepskyblue1]" + EscapeString(sessionName) + "[/]";
+        }
+
+        public static string FormatLongDateTime(DateTimeOffset time)
+        {
+            return "[cadetblue]" + time.DateTime.ToLongDateString() + "[/] [cadetblue]" + time.DateTime.ToLongTimeString() + "[/]";
         }
 
 

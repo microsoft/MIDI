@@ -17,7 +17,9 @@ CMidi2LoopbackMidiBiDi::Initialize(
     PABSTRACTIONCREATIONPARAMS CreationParams,
     DWORD *,
     IMidiCallback * Callback,
-    LONGLONG Context
+    LONGLONG Context,
+    GUID /* SessionId */
+
 )
 {
     TraceLoggingWrite(

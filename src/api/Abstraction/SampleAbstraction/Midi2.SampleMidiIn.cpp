@@ -10,7 +10,9 @@ CMidi2SampleMidiIn::Initialize(
     PABSTRACTIONCREATIONPARAMS,
     DWORD *,
     IMidiCallback *,
-    LONGLONG
+    LONGLONG,
+    GUID /* SessionId */
+
 )
 {
     TraceLoggingWrite(

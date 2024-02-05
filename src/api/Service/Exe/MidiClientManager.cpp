@@ -15,14 +15,24 @@ HRESULT
 CMidiClientManager::Initialize(
     std::shared_ptr<CMidiPerformanceManager>& PerformanceManager,
     std::shared_ptr<CMidiProcessManager>& ProcessManager,
-    std::shared_ptr<CMidiDeviceManager>& DeviceManager
+    std::shared_ptr<CMidiDeviceManager>& DeviceManager,
+    std::shared_ptr<CMidiSessionTracker>& SessionTracker
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     auto lock = m_ClientManagerLock.lock();
 
     m_PerformanceManager = PerformanceManager;
     m_ProcessManager = ProcessManager;
     m_DeviceManager = DeviceManager;
+    m_SessionTracker = SessionTracker;
 
     return S_OK;
 }
@@ -30,6 +40,14 @@ CMidiClientManager::Initialize(
 HRESULT
 CMidiClientManager::Cleanup()
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     OutputDebugString(L"" __FUNCTION__ " enter");
     
     auto lock = m_ClientManagerLock.lock();
@@ -37,6 +55,7 @@ CMidiClientManager::Cleanup()
     m_PerformanceManager.reset();
     m_ProcessManager.reset();
     m_DeviceManager.reset();
+    m_SessionTracker.reset();
 
     // tear down all transforms before we clean up the client/device
     for (auto const& transform : m_TransformPipes)
@@ -218,6 +237,7 @@ HRESULT
 CMidiClientManager::GetMidiClient(
     handle_t BindingHandle,
     LPCWSTR MidiDevice,
+    GUID SessionId,
     PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
     PMIDISRV_CLIENT Client,
     wil::unique_handle& ClientProcessHandle,
@@ -225,6 +245,14 @@ CMidiClientManager::GetMidiClient(
     BOOL OverwriteIncomingZeroTimestamps
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     OutputDebugString(__FUNCTION__ L" enter");
 
     wil::com_ptr_nothrow<CMidiClientPipe> clientPipe;
@@ -233,7 +261,7 @@ CMidiClientManager::GetMidiClient(
     RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiClientPipe>(&clientPipe));
 
     // Initialize our client
-    RETURN_IF_FAILED(clientPipe->Initialize(BindingHandle, ClientProcessHandle.get(), MidiDevice, CreationParams, Client, &m_MmcssTaskId, OverwriteIncomingZeroTimestamps));
+    RETURN_IF_FAILED(clientPipe->Initialize(BindingHandle, ClientProcessHandle.get(), MidiDevice, SessionId, CreationParams, Client, &m_MmcssTaskId, OverwriteIncomingZeroTimestamps));
 
     // Add this client to the client pipes list and set the output client handle
     Client->ClientHandle = (MidiClientHandle)clientPipe.get();
@@ -255,6 +283,14 @@ CMidiClientManager::GetMidiDevice(
     wil::com_ptr_nothrow<CMidiPipe>& MidiDevicePipe
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     OutputDebugString(__FUNCTION__ L" enter. Device:");
     OutputDebugString(MidiDevice);
 
@@ -315,6 +351,14 @@ CMidiClientManager::GetMidiTransform(
     wil::com_ptr_nothrow<CMidiPipe>& ClientConnectionPipe
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     OutputDebugString(__FUNCTION__ L" enter");
 
     wil::com_ptr_nothrow<CMidiPipe> transformPipe{ nullptr };
@@ -410,6 +454,14 @@ CMidiClientManager::GetMidiScheduler(
     wil::com_ptr_nothrow<CMidiPipe>& ClientConnectionPipe
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     OutputDebugString(L"" __FUNCTION__);
 
     wil::com_ptr_nothrow<CMidiPipe> transformPipe{ nullptr };
@@ -489,6 +541,14 @@ CMidiClientManager::GetMidiEndpointMetadataHandler(
     wil::com_ptr_nothrow<CMidiPipe>& ClientConnectionPipe
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     OutputDebugString(L"" __FUNCTION__);
 
     wil::com_ptr_nothrow<CMidiPipe> transformPipe{ nullptr };
@@ -560,6 +620,14 @@ CMidiClientManager::GetMidiJRTimestampHandler(
     wil::com_ptr_nothrow<CMidiPipe>& ClientConnectionPipe
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     OutputDebugString(L"" __FUNCTION__);
 
     UNREFERENCED_PARAMETER(BindingHandle);
@@ -579,10 +647,19 @@ HRESULT
 CMidiClientManager::CreateMidiClient(
     handle_t BindingHandle,
     LPCWSTR MidiDevice,
+    GUID SessionId,
     PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
     PMIDISRV_CLIENT Client
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     OutputDebugString(__FUNCTION__ L" enter. Device:");
     OutputDebugString(MidiDevice);
 
@@ -656,7 +733,7 @@ CMidiClientManager::CreateMidiClient(
     RETURN_IF_FAILED(GetEndpointShouldHaveMetadataHandler(midiDevice, addMetadataListenerToIncomingStream, CreationParams->Flow));
     
 
-    RETURN_IF_FAILED(GetMidiClient(BindingHandle, midiDevice.c_str(), CreationParams, Client, clientProcessHandle, clientPipe, generateIncomingMessageTimestamps));
+    RETURN_IF_FAILED(GetMidiClient(BindingHandle, midiDevice.c_str(), SessionId, CreationParams, Client, clientProcessHandle, clientPipe, generateIncomingMessageTimestamps));
 
     auto cleanupOnFailure = wil::scope_exit([&]()
     {
@@ -848,6 +925,8 @@ CMidiClientManager::CreateMidiClient(
         newClientConnectionPipe.reset();
     }
 
+    m_SessionTracker->AddClientEndpointConnection(SessionId, MidiDevice);
+
     cleanupOnFailure.release();
 
     return S_OK;
@@ -860,6 +939,14 @@ CMidiClientManager::DestroyMidiClient(
     MidiClientHandle ClientHandle
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     OutputDebugString(L"" __FUNCTION__ " enter");
 
     auto lock = m_ClientManagerLock.lock();
@@ -872,9 +959,11 @@ CMidiClientManager::DestroyMidiClient(
     auto client = m_ClientPipes.find(ClientHandle);
     if (client != m_ClientPipes.end())
     {
-        wil::com_ptr_nothrow<CMidiPipe> midiClientPipe = client->second.get();
+        wil::com_ptr_nothrow<CMidiClientPipe> midiClientPipe = (CMidiClientPipe*)(client->second.get());
 
         midiClientPipe->Cleanup();
+
+        m_SessionTracker->RemoveClientEndpointConnection(midiClientPipe->SessionId(), client->second->MidiDevice().c_str());
 
         for (auto transform = m_TransformPipes.begin(); transform != m_TransformPipes.end();)
         {

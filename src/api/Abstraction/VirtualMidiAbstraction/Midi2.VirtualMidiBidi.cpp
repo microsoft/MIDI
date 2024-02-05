@@ -17,7 +17,8 @@ CMidi2VirtualMidiBiDi::Initialize(
     PABSTRACTIONCREATIONPARAMS,
     DWORD *,
     IMidiCallback * Callback,
-    LONGLONG Context
+    LONGLONG Context,
+    GUID /* SessionId */
 )
 {
     OutputDebugString(__FUNCTION__ L" - enter\n");
@@ -49,7 +50,7 @@ CMidi2VirtualMidiBiDi::Initialize(
 
             m_isDeviceSide = true;
 
-            LOG_IF_FAILED(hr = MidiEndpointTable::Current().OnDeviceConnected(m_endpointId, this));
+            LOG_IF_FAILED(hr = AbstractionState::Current().GetEndpointTable()->OnDeviceConnected(m_endpointId, this));
         }
         else if (internal::EndpointInterfaceIdContainsString(m_endpointId, MIDI_VIRT_INSTANCE_ID_CLIENT_PREFIX))
         {
@@ -57,7 +58,7 @@ CMidi2VirtualMidiBiDi::Initialize(
 
             m_isDeviceSide = false;
 
-            LOG_IF_FAILED(hr = MidiEndpointTable::Current().OnClientConnected(m_endpointId, this));
+            LOG_IF_FAILED(hr = AbstractionState::Current().GetEndpointTable()->OnClientConnected(m_endpointId, this));
         }
         else
         {
@@ -100,7 +101,7 @@ CMidi2VirtualMidiBiDi::Cleanup()
     {
         OutputDebugString(__FUNCTION__ L" - this is the device BiDi, so calling OnDeviceDisconnected\n");
 
-        MidiEndpointTable::Current().OnDeviceDisconnected(m_endpointId);
+        LOG_IF_FAILED(AbstractionState::Current().GetEndpointTable()->OnDeviceDisconnected(m_endpointId));
     }
     else
     {

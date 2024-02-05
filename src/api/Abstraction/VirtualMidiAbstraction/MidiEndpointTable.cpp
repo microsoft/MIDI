@@ -8,26 +8,11 @@
 
 #include "pch.h"
 
-
-MidiEndpointTable::MidiEndpointTable() = default;
-MidiEndpointTable::~MidiEndpointTable() = default;
-
-MidiEndpointTable& MidiEndpointTable::Current()
-{
-    // explanation: http://www.modernescpp.com/index.php/thread-safe-initialization-of-data/
-
-    static MidiEndpointTable current;
-
-    return current;
-}
-
-
-
 HRESULT MidiEndpointTable::Cleanup()
 {
     OutputDebugString(__FUNCTION__ L"");
 
-    m_endpointManager = nullptr;
+    //m_endpointManager = nullptr;
     m_endpoints.clear();
 
     return S_OK;
@@ -49,7 +34,7 @@ HRESULT MidiEndpointTable::AddCreatedEndpointDevice(MidiVirtualDeviceEndpointEnt
 
 _Use_decl_annotations_
 HRESULT 
-MidiEndpointTable::OnClientConnected(std::wstring clientEndpointInterfaceId, CMidi2VirtualMidiBiDi* clientBiDi)
+MidiEndpointTable::OnClientConnected(std::wstring clientEndpointInterfaceId, CMidi2VirtualMidiBiDi* clientBiDi) noexcept
 {
     // get the device BiDi, and then wire them together
 
@@ -96,7 +81,7 @@ MidiEndpointTable::OnClientConnected(std::wstring clientEndpointInterfaceId, CMi
 
 
 _Use_decl_annotations_
-HRESULT MidiEndpointTable::OnDeviceConnected(std::wstring deviceEndpointInterfaceId, CMidi2VirtualMidiBiDi* deviceBiDi)
+HRESULT MidiEndpointTable::OnDeviceConnected(std::wstring deviceEndpointInterfaceId, CMidi2VirtualMidiBiDi* deviceBiDi) noexcept
 {
     try
     {
@@ -127,15 +112,15 @@ HRESULT MidiEndpointTable::OnDeviceConnected(std::wstring deviceEndpointInterfac
 
 
                 // if we have an endpoint manager, go ahead and create the client endpoint
-                if (m_endpointManager && entry.CreatedClientEndpointId == L"")
+                if (AbstractionState::Current().GetEndpointManager() && entry.CreatedClientEndpointId == L"")
                 {
                     entry.MidiClientBiDi = nullptr;
                     entry.CreatedClientEndpointId = L"";
 
                     OutputDebugString(__FUNCTION__ L" - Creating client endpoint");
 
-                    // create the client endpoint
-                    RETURN_IF_FAILED(m_endpointManager->CreateClientVisibleEndpoint(entry));
+
+                    RETURN_IF_FAILED(AbstractionState::Current().GetEndpointManager()->CreateClientVisibleEndpoint(entry));
 
                     OutputDebugString(__FUNCTION__ L" - Client endpoint created");
 
@@ -163,13 +148,13 @@ HRESULT MidiEndpointTable::OnDeviceConnected(std::wstring deviceEndpointInterfac
 }
 
 _Use_decl_annotations_
-HRESULT MidiEndpointTable::OnDeviceDisconnected(std::wstring deviceEndpointInterfaceId)
+HRESULT MidiEndpointTable::OnDeviceDisconnected(std::wstring deviceEndpointInterfaceId) noexcept
 {
     try
     {
         OutputDebugString(__FUNCTION__ L" - enter\n");
 
-        if (m_endpointManager != nullptr)
+        if (AbstractionState::Current().GetEndpointManager() != nullptr)
         {
             std::wstring associationId = GetSwdPropertyVirtualEndpointAssociationId(deviceEndpointInterfaceId);
 
@@ -195,7 +180,7 @@ HRESULT MidiEndpointTable::OnDeviceDisconnected(std::wstring deviceEndpointInter
                         entry.MidiDeviceBiDi = nullptr;
 
                         // deactivate the client
-                        m_endpointManager->DeleteClientEndpoint(entry.CreatedShortClientInstanceId);
+                        LOG_IF_FAILED(AbstractionState::Current().GetEndpointManager()->DeleteClientEndpoint(entry.CreatedShortClientInstanceId));
 
                         entry.CreatedShortClientInstanceId = L"";
                         entry.CreatedClientEndpointId = L"";

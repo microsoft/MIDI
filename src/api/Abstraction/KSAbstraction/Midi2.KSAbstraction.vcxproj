@@ -251,6 +251,7 @@
     <ClCompile Include="Midi2.KSAbstraction.cpp" />
     <ClCompile Include="Midi2.KSMidi.cpp" />
     <ClCompile Include="Midi2.KSMidiBidi.cpp" />
+    <ClCompile Include="Midi2.KSMidiConfigurationManager.cpp" />
     <ClCompile Include="Midi2.KSMidiIn.cpp" />
     <ClCompile Include="Midi2.KSMidiOut.cpp" />
     <ClCompile Include="pch.cpp" />
@@ -270,6 +271,7 @@
     <ClInclude Include="Midi2.KSAbstraction.h" />
     <ClInclude Include="Midi2.KSMidi.h" />
     <ClInclude Include="Midi2.KSMidiBidi.h" />
+    <ClInclude Include="Midi2.KSMidiConfigurationManager.h" />
     <ClInclude Include="Midi2.KSMidiIn.h" />
     <ClInclude Include="Midi2.KSMidiOut.h" />
     <ClInclude Include="pch.h" />

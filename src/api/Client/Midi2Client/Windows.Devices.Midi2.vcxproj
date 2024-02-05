@@ -306,6 +306,12 @@
     <ClInclude Include="MidiMessageTypeEndpointListener.h">
       <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
     </ClInclude>
+      <ClInclude Include="MidiSessionConnectionInformation.h">
+          <DependentUpon>MidiSessionConnectionInformation.idl</DependentUpon>
+      </ClInclude>
+      <ClInclude Include="MidiSessionInformation.h">
+          <DependentUpon>MidiSessionInformation.idl</DependentUpon>
+      </ClInclude>
     <ClInclude Include="MidiSessionSettings.h">
       <DependentUpon>MidiSessionSettings.idl</DependentUpon>
     </ClInclude>
@@ -339,7 +345,9 @@
     <ClInclude Include="MidiVirtualEndpointDevice.h">
       <DependentUpon>MidiVirtualEndpointDevice.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiVirtualEndpointDeviceDefinition.h" />
+      <ClInclude Include="MidiVirtualEndpointDeviceDefinition.h">
+          <DependentUpon>MidiVirtualEndpointDeviceDefinition.idl</DependentUpon>
+      </ClInclude>
     <ClInclude Include="midi_function_block_prop_util.h" />
     <ClInclude Include="midi_service_interface.h" />
     <ClInclude Include="midi_stream_message_defs.h" />
@@ -417,6 +425,12 @@
     <ClCompile Include="MidiMessageTypeEndpointListener.cpp">
       <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
     </ClCompile>
+      <ClCompile Include="MidiSessionConnectionInformation.cpp">
+          <DependentUpon>MidiSessionConnectionInformation.idl</DependentUpon>
+      </ClCompile>
+      <ClCompile Include="MidiSessionInformation.cpp">
+          <DependentUpon>MidiSessionInformation.idl</DependentUpon>
+      </ClCompile>
     <ClCompile Include="MidiSessionSettings.cpp">
       <DependentUpon>MidiSessionSettings.idl</DependentUpon>
     </ClCompile>
@@ -453,7 +467,9 @@
     <ClCompile Include="MidiVirtualEndpointDevice.cpp">
       <DependentUpon>MidiVirtualEndpointDevice.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiVirtualEndpointDeviceDefinition.cpp" />
+      <ClCompile Include="MidiVirtualEndpointDeviceDefinition.cpp">
+          <DependentUpon>MidiVirtualEndpointDeviceDefinition.idl</DependentUpon>
+      </ClCompile>
     <ClCompile Include="midi_function_block_prop_util.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -507,6 +523,8 @@
     <Midl Include="MidiServicePingResponse.idl" />
     <Midl Include="MidiServicePingResponseSummary.idl" />
     <Midl Include="MidiSession.idl" />
+    <Midl Include="MidiSessionConnectionInformation.idl" />
+    <Midl Include="MidiSessionInformation.idl" />
     <Midl Include="MidiSessionSettings.idl" />
     <Midl Include="IMidiUniversalPacket.idl" />
     <Midl Include="MidiStreamConfigurationRequestedSettings.idl" />

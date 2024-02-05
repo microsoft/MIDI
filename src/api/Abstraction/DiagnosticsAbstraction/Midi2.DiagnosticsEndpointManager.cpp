@@ -23,8 +23,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2DiagnosticsEndpointManager::Initialize(
     IUnknown* MidiDeviceManager,
-    IUnknown* /*midiEndpointProtocolManager*/,
-    LPCWSTR /*ConfigurationJson*/
+    IUnknown* /*midiEndpointProtocolManager*/
 
 )
 {
@@ -307,6 +306,7 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(
 
     return S_OK;
 }
+
 
 HRESULT
 CMidi2DiagnosticsEndpointManager::Cleanup()

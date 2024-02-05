@@ -24,7 +24,7 @@ public:
     virtual HRESULT Initialize(_In_ LPCWSTR Device,
         _In_ MidiFlow Flow)
     {
-        m_Device = Device;
+        m_Device = internal::NormalizeEndpointInterfaceIdCopy(Device);
         m_Flow = Flow;
 
         if (IsFlowSupported(MidiFlowIn))
@@ -42,8 +42,6 @@ public:
 
     virtual HRESULT Cleanup()
     {
-        OutputDebugString(L"" __FUNCTION__);
-
         auto lock = m_Lock.lock();
         m_ConnectedPipes.clear();
         m_Clients.clear();

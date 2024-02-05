@@ -30,6 +30,13 @@ RPC_STATUS MidiSrvRpcIfCallback(
 HRESULT
 CMidiSrv::Initialize()
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     auto cleanupOnError = wil::scope_exit([&]()
     {
         Cleanup();
@@ -61,14 +68,19 @@ CMidiSrv::Initialize()
     m_EndpointProtocolManager = std::make_shared<CMidiEndpointProtocolManager>();
     RETURN_IF_NULL_ALLOC(m_EndpointProtocolManager);
 
+    m_SessionTracker = std::make_shared<CMidiSessionTracker>();
+    RETURN_IF_NULL_ALLOC(m_SessionTracker);
+
+
+    RETURN_IF_FAILED(m_SessionTracker->Initialize());
 
     RETURN_IF_FAILED(m_PerformanceManager->Initialize());
     RETURN_IF_FAILED(m_ProcessManager->Initialize());
     RETURN_IF_FAILED(m_ConfigurationManager->Initialize());
     RETURN_IF_FAILED(m_DeviceManager->Initialize(m_PerformanceManager, m_EndpointProtocolManager, m_ConfigurationManager));
-    RETURN_IF_FAILED(m_ClientManager->Initialize(m_PerformanceManager, m_ProcessManager, m_DeviceManager));
+    RETURN_IF_FAILED(m_ClientManager->Initialize(m_PerformanceManager, m_ProcessManager, m_DeviceManager, m_SessionTracker));
 
-    RETURN_IF_FAILED(m_EndpointProtocolManager->Initialize(m_ClientManager, m_DeviceManager));
+    RETURN_IF_FAILED(m_EndpointProtocolManager->Initialize(m_ClientManager, m_DeviceManager, m_SessionTracker));
 
 
     wil::unique_hlocal rpcSecurityDescriptor;
@@ -100,6 +112,13 @@ CMidiSrv::Initialize()
 HRESULT
 CMidiSrv::Cleanup()
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     if (m_ClientManager)
     {
         RETURN_IF_FAILED(m_ClientManager->Cleanup());
@@ -132,4 +151,5 @@ CMidiSrv::Cleanup()
 
     return S_OK;
 }
+
 
