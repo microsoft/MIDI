@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -26,7 +27,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                 var table = new Table();
 
-                table.Border(TableBorder.Rounded);
+                AnsiMarkupFormatter.SetTableBorderStyle(table);
+
 
                 table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Processes"));
                 table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Sessions"));
@@ -46,6 +48,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                         if (session.Connections.Count > 0)
                         {
+                            //table.AddEmptyRow();
+
                             string connectionCountMessage = string.Empty;
 
                             if (session.Connections.Count == 1)
@@ -57,12 +61,14 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                 connectionCountMessage = $"Connected to {session.Connections.Count} endpoints";
                             }
 
+                            //table.AddEmptyRow();
                             table.AddRow("", $"{connectionCountMessage}:");
+                            table.AddEmptyRow();
 
                             foreach (var connection in session.Connections)
                             {
                                 // TODO: Display the endpoint name, type, etc. here as well and use the standard emoji icon for the type
-                                string connectionInfoString = "🔗";
+                                string connectionInfoString = string.Empty; // = "🔗";
 
                                 if (connection.InstanceCount > 1)
                                 {
@@ -70,7 +76,31 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                     connectionInfoString += $" [paleturquoise1]x{connection.InstanceCount}[/] ";
                                 }
 
+                                var di = MidiEndpointDeviceInformation.CreateFromId(connection.EndpointDeviceId);
+
+                                string epName;
+                                string icon;
+
+                                if (di != null)
+                                {
+                                    epName = di.Name;
+                                    icon = AnsiMarkupFormatter.GetEndpointIcon(di.EndpointPurpose);
+                                }
+                                else
+                                {
+                                    epName = "Unknown";
+                                    icon = AnsiMarkupFormatter.GetEndpointIcon(MidiEndpointDevicePurpose.NormalMessageEndpoint);
+                                }
+
+                                if (epName != string.Empty)
+                                {
+                                    table.AddRow("", $"{icon} {AnsiMarkupFormatter.FormatEndpointName(epName)}");
+
+                                }
+
                                 table.AddRow("", $"{connectionInfoString} {AnsiMarkupFormatter.FormatFullEndpointInterfaceId(connection.EndpointDeviceId)}");
+                                table.AddEmptyRow();
+
                             }
                         }
                         else 

@@ -167,6 +167,8 @@ CMidiSessionTracker::GetSessionListJson(
     json::JsonObject rootObject;
     json::JsonArray sessionsArray{};
 
+
+
     for (auto sessionIter = m_sessions.begin(); sessionIter != m_sessions.end(); sessionIter++)
     {
         json::JsonObject sessionObject;
@@ -175,7 +177,7 @@ CMidiSessionTracker::GetSessionListJson(
         internal::JsonSetWStringProperty(sessionObject, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_NAME_PROPERTY_KEY, sessionIter->second.SessionName);
         internal::JsonSetWStringProperty(sessionObject, MIDI_SESSION_TRACKER_JSON_RESULT_PROCESS_NAME_PROPERTY_KEY, sessionIter->second.ProcessName);
         internal::JsonSetWStringProperty(sessionObject, MIDI_SESSION_TRACKER_JSON_RESULT_PROCESS_ID_PROPERTY_KEY, std::to_wstring(sessionIter->second.ClientProcessId));
-    //    internal::JsonSetWStringProperty(sessionObject, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_TIME_PROPERTY_KEY, std::to_wstring(sessionIter->second.StartTime.time_since_epoch()));
+        internal::JsonSetDateTimeProperty(sessionObject, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_TIME_PROPERTY_KEY, sessionIter->second.StartTime);
 
         // now add all the client connections
 
@@ -185,7 +187,7 @@ CMidiSessionTracker::GetSessionListJson(
         {
             json::JsonObject connectionObject;
 
-           // internal::JsonSetWStringProperty(sessionObject, MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_TIME_PROPERTY_KEY, std::to_wstring(connectionIter->second.EarliestStartTime.time_since_epoch()));
+            internal::JsonSetDateTimeProperty(sessionObject, MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_TIME_PROPERTY_KEY, connectionIter->second.EarliestStartTime);
             internal::JsonSetDoubleProperty(connectionObject, MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_COUNT_PROPERTY_KEY, connectionIter->second.InstanceCount);
             internal::JsonSetWStringProperty(connectionObject, MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ENDPOINT_ID_PROPERTY_KEY, connectionIter->second.ConnectedEndpointInterfaceId);
             

@@ -35,7 +35,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             var table = new Table();
 
-            table.Border(TableBorder.HeavyHead);
+            AnsiMarkupFormatter.SetTableBorderStyle(table);
 
             table.AddColumn("MIDI 1.0 Byte Stream Endpoints for older MIDI APIs");
 

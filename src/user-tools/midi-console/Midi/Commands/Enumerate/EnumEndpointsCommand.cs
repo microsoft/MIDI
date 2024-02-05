@@ -55,7 +55,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                     var table = new Table();
 
-                    table.Border(TableBorder.Rounded);
+                    AnsiMarkupFormatter.SetTableBorderStyle(table);
 
                     table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("UMP Endpoints for Windows MIDI Services"));
 

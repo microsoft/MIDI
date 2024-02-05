@@ -211,6 +211,55 @@ namespace Windows::Devices::Midi2::Internal
         return false;
     }
 
+    // this handles accuracy of seconds and no finer
+    inline std::chrono::time_point<std::chrono::system_clock> JsonGetDateTimeProperty(_In_ json::JsonObject parent, _In_ std::wstring key, _In_ std::chrono::time_point<std::chrono::system_clock> defaultValue) noexcept
+    {
+        if (parent != nullptr)
+        {
+            if (parent.HasKey(key))
+            {
+                try
+                {
+                    auto result = parent.GetNamedNumber(key);
+                    auto seconds = std::chrono::seconds((long)result);
+
+                    std::chrono::time_point<std::chrono::system_clock> tp;
+                    tp += seconds;
+
+                    return tp;
+                }
+                catch (...)
+                {
+                    // we'll fall through and return the default
+                }
+            }
+        }
+
+        // return default in case of error
+        return defaultValue;
+    }
+
+    // this handles accuracy of seconds and no finer
+    inline bool JsonSetDateTimeProperty(_In_ json::JsonObject parent, _In_ std::wstring key, _In_ std::chrono::time_point<std::chrono::system_clock> value) noexcept
+    {
+        try
+        {
+            if (parent != nullptr)
+            {
+                auto number = std::chrono::duration_cast<std::chrono::seconds>(value.time_since_epoch()).count();
+
+                parent.SetNamedValue(key, json::JsonValue::CreateNumberValue((double)number));
+
+                return true;
+            }
+        }
+        catch (...)
+        {
+
+        }
+
+        return false;
+    }
 
 
     inline GUID JsonGetGuidProperty(_In_ json::JsonObject parent, _In_ std::wstring key, _In_ GUID defaultValue) noexcept
@@ -302,7 +351,6 @@ namespace Windows::Devices::Midi2::Internal
     }
 
 
-
     inline double JsonGetDoubleProperty(_In_ json::JsonObject parent, _In_ std::wstring key, double defaultValue) noexcept
     {
         if (parent != nullptr)
@@ -345,6 +393,51 @@ namespace Windows::Devices::Midi2::Internal
 
         return false;
     }
+
+
+    inline long JsonGetLongProperty(_In_ json::JsonObject parent, _In_ std::wstring key, long defaultValue) noexcept
+    {
+        if (parent != nullptr)
+        {
+            if (parent.HasKey(key))
+            {
+                try
+                {
+                    auto result = (long)parent.GetNamedNumber(key);
+
+                    return result;
+                }
+                catch (...)
+                {
+                    // we'll fall through and return the default
+                }
+
+            }
+        }
+
+        // return default in case of error
+        return defaultValue;
+    }
+
+    inline bool JsonSetLongProperty(_In_ json::JsonObject parent, _In_ std::wstring key, _In_ long value) noexcept
+    {
+        try
+        {
+            if (parent != nullptr)
+            {
+                parent.SetNamedValue(key, json::JsonValue::CreateNumberValue((double)value));
+
+                return true;
+            }
+        }
+        catch (...)
+        {
+
+        }
+
+        return false;
+    }
+
 
 
 

@@ -279,6 +279,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                             auto sessionJsonArray = internal::JsonGetArrayProperty(jsonObject, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_ARRAY_PROPERTY_KEY);
 
                             GUID defaultGuid{};
+                            std::chrono::time_point<std::chrono::system_clock> noTime;
 
                             for (uint32_t i = 0; i < sessionJsonArray.Size(); i++)
                             {
@@ -287,14 +288,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                             //    auto startTimeString = internal::JsonGetWStringProperty(sessionJson, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_TIME_PROPERTY_KEY, L"").c_str();
                                 
-                                foundation::DateTime startTime = winrt::clock::now();   // TEMP!!
+                                auto startTime = internal::JsonGetDateTimeProperty(sessionJson, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_TIME_PROPERTY_KEY, noTime);
 
                                 sessionObject->InternalInitialize(
                                     internal::JsonGetGuidProperty(sessionJson, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_ID_PROPERTY_KEY, defaultGuid),
                                     internal::JsonGetWStringProperty(sessionJson, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_NAME_PROPERTY_KEY, L"").c_str(),
                                     std::stol(internal::JsonGetWStringProperty(sessionJson, MIDI_SESSION_TRACKER_JSON_RESULT_PROCESS_ID_PROPERTY_KEY, L"0")),
                                     internal::JsonGetWStringProperty(sessionJson, MIDI_SESSION_TRACKER_JSON_RESULT_PROCESS_NAME_PROPERTY_KEY, L"").c_str(),
-                                    startTime);
+                                    winrt::clock::from_sys(startTime)
+                                );
 
 
                                 // Add connections
@@ -308,12 +310,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
                                         auto connectionJson = connectionsJsonArray.GetObjectAt(j);
                                         auto connectionObject = winrt::make_self<implementation::MidiSessionConnectionInformation>();
 
-                                        foundation::DateTime earliestConnectionTime = winrt::clock::now();   // TEMP!!
+                                        auto earliestConnectionTime = internal::JsonGetDateTimeProperty(connectionJson, MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_TIME_PROPERTY_KEY, noTime);
 
                                         connectionObject->InternalInitialize(
                                             internal::JsonGetWStringProperty(connectionJson, MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ENDPOINT_ID_PROPERTY_KEY, L"").c_str(),
                                             (uint16_t)(internal::JsonGetDoubleProperty(connectionJson, MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_COUNT_PROPERTY_KEY, 0)),
-                                            earliestConnectionTime
+                                            winrt::clock::from_sys(earliestConnectionTime)
                                         );
 
                                         sessionObject->InternalAddConnection(*connectionObject);
