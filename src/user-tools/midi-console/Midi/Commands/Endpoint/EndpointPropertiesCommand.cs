@@ -55,7 +55,10 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             if (!string.IsNullOrEmpty(endpointId))
             {
                 var table = new Table();
-                table.Border(TableBorder.Rounded);
+
+                AnsiMarkupFormatter.SetTableBorderStyle(table);
+
+
                 table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading(Resources.Strings.PropertiesTableColumnHeaderProperty));
                 table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading(Resources.Strings.PropertiesTableColumnHeaderValue));
 
