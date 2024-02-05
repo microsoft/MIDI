@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="{{ site.lang | default: "en" }}">
+  <head>
+    {% include head.html %}
+  </head>
+  <body>
+    {% include header.html %}
+
+    <a id="top"></a>
+    <div class="page-body">
+      <div class="wrapper">
+          <div class="main-container">
+              {% include toc.html html=content %}
+              {% include main.html %}
+          </div>
+        </div>
+    </div>
+
+    {% include footer.html %}
+
+  </body>
+</html>

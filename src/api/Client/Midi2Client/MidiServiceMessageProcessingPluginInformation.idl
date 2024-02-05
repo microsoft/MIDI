@@ -14,7 +14,7 @@ namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [default_interface]
-    runtimeclass MidiMessageProcessingPluginInformation
+    runtimeclass MidiServiceMessageProcessingPluginInformation
     {
         Guid ClassId{ get; };           // from registry
         String RegistryKey{ get; };     // from registry

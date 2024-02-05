@@ -7,7 +7,7 @@
 // ============================================================================
 
 #include "pch.h"
-#include "MidiMessageProcessingPluginInformation.g.cpp"
+#include "MidiServiceMessageProcessingPluginInformation.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {

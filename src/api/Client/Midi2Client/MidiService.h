@@ -24,13 +24,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ uint32_t const timeoutMilliseconds
             ) noexcept;
 
-        static foundation::Collections::IVectorView<midi2::MidiTransportPluginInformation> GetInstalledTransportPlugins();
-        static foundation::Collections::IVectorView<midi2::MidiMessageProcessingPluginInformation> GetInstalledMessageProcessingPlugins();
+        static foundation::Collections::IVectorView<midi2::MidiServiceTransportPluginInformation> GetInstalledTransportPlugins();
+        static foundation::Collections::IVectorView<midi2::MidiServiceMessageProcessingPluginInformation> GetInstalledMessageProcessingPlugins();
 
-        static uint32_t GetOutgoingMessageQueueMaxMessageCapacity() { return (uint32_t)MIDI_OUTGOING_MESSAGE_QUEUE_MAX_MESSAGE_COUNT; }
+//        static uint32_t GetOutgoingMessageQueueMaxMessageCapacity() noexcept { return (uint32_t)MIDI_OUTGOING_MESSAGE_QUEUE_MAX_MESSAGE_COUNT; }
 
+        static foundation::Collections::IVectorView<midi2::MidiSessionInformation> GetActiveSessions() noexcept;
 
-        static foundation::Collections::IVectorView<midi2::MidiSessionInformation> GetActiveSessions();
+        static json::JsonObject UpdateRuntimeConfiguration(_In_ json::JsonObject configurationUpdate) noexcept;
 
     private:
 

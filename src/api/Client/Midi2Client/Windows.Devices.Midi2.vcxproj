@@ -267,8 +267,8 @@
     <ClInclude Include="MidiMessageConverter.h">
       <DependentUpon>MidiMessageConverter.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiMessageProcessingPluginInformation.h">
-      <DependentUpon>MidiMessageProcessingPluginInformation.idl</DependentUpon>
+    <ClInclude Include="MidiServiceMessageProcessingPluginInformation.h">
+      <DependentUpon>MidiServiceMessageProcessingPluginInformation.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiMessageTranslator.h">
       <DependentUpon>MidiMessageTranslator.idl</DependentUpon>
@@ -306,12 +306,12 @@
     <ClInclude Include="MidiMessageTypeEndpointListener.h">
       <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
     </ClInclude>
-      <ClInclude Include="MidiSessionConnectionInformation.h">
-          <DependentUpon>MidiSessionConnectionInformation.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiSessionInformation.h">
-          <DependentUpon>MidiSessionInformation.idl</DependentUpon>
-      </ClInclude>
+    <ClInclude Include="MidiSessionConnectionInformation.h">
+      <DependentUpon>MidiSessionConnectionInformation.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiSessionInformation.h">
+      <DependentUpon>MidiSessionInformation.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiSessionSettings.h">
       <DependentUpon>MidiSessionSettings.idl</DependentUpon>
     </ClInclude>
@@ -321,8 +321,8 @@
     <ClInclude Include="MidiStreamMessageBuilder.h">
       <DependentUpon>MidiStreamMessageBuilder.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiTransportPluginInformation.h">
-      <DependentUpon>MidiTransportPluginInformation.idl</DependentUpon>
+    <ClInclude Include="MidiServiceTransportPluginInformation.h">
+      <DependentUpon>MidiServiceTransportPluginInformation.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiMessage128.h">
       <DependentUpon>MidiMessage128.idl</DependentUpon>
@@ -345,9 +345,9 @@
     <ClInclude Include="MidiVirtualEndpointDevice.h">
       <DependentUpon>MidiVirtualEndpointDevice.idl</DependentUpon>
     </ClInclude>
-      <ClInclude Include="MidiVirtualEndpointDeviceDefinition.h">
-          <DependentUpon>MidiVirtualEndpointDeviceDefinition.idl</DependentUpon>
-      </ClInclude>
+    <ClInclude Include="MidiVirtualEndpointDeviceDefinition.h">
+      <DependentUpon>MidiVirtualEndpointDeviceDefinition.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="midi_function_block_prop_util.h" />
     <ClInclude Include="midi_service_interface.h" />
     <ClInclude Include="midi_stream_message_defs.h" />
@@ -386,8 +386,8 @@
     <ClCompile Include="MidiMessageConverter.cpp">
       <DependentUpon>MidiMessageConverter.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiMessageProcessingPluginInformation.cpp">
-      <DependentUpon>MidiMessageProcessingPluginInformation.idl</DependentUpon>
+    <ClCompile Include="MidiServiceMessageProcessingPluginInformation.cpp">
+      <DependentUpon>MidiServiceMessageProcessingPluginInformation.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiMessageTranslator.cpp">
       <DependentUpon>MidiMessageTranslator.idl</DependentUpon>
@@ -425,12 +425,12 @@
     <ClCompile Include="MidiMessageTypeEndpointListener.cpp">
       <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
     </ClCompile>
-      <ClCompile Include="MidiSessionConnectionInformation.cpp">
-          <DependentUpon>MidiSessionConnectionInformation.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiSessionInformation.cpp">
-          <DependentUpon>MidiSessionInformation.idl</DependentUpon>
-      </ClCompile>
+    <ClCompile Include="MidiSessionConnectionInformation.cpp">
+      <DependentUpon>MidiSessionConnectionInformation.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiSessionInformation.cpp">
+      <DependentUpon>MidiSessionInformation.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiSessionSettings.cpp">
       <DependentUpon>MidiSessionSettings.idl</DependentUpon>
     </ClCompile>
@@ -443,8 +443,8 @@
     <ClCompile Include="MidiStreamMessageBuilder.cpp">
       <DependentUpon>MidiStreamMessageBuilder.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiTransportPluginInformation.cpp">
-      <DependentUpon>MidiTransportPluginInformation.idl</DependentUpon>
+    <ClCompile Include="MidiServiceTransportPluginInformation.cpp">
+      <DependentUpon>MidiServiceTransportPluginInformation.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiMessage128.cpp">
       <DependentUpon>MidiMessage128.idl</DependentUpon>
@@ -467,9 +467,9 @@
     <ClCompile Include="MidiVirtualEndpointDevice.cpp">
       <DependentUpon>MidiVirtualEndpointDevice.idl</DependentUpon>
     </ClCompile>
-      <ClCompile Include="MidiVirtualEndpointDeviceDefinition.cpp">
-          <DependentUpon>MidiVirtualEndpointDeviceDefinition.idl</DependentUpon>
-      </ClCompile>
+    <ClCompile Include="MidiVirtualEndpointDeviceDefinition.cpp">
+      <DependentUpon>MidiVirtualEndpointDeviceDefinition.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="midi_function_block_prop_util.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -510,7 +510,7 @@
     <Midl Include="MidiGroupTerminalBlock.idl" />
     <Midl Include="MidiGroupTerminalBlockProtocolEnum.idl" />
     <Midl Include="MidiMessageConverter.idl" />
-    <Midl Include="MidiMessageProcessingPluginInformation.idl" />
+    <Midl Include="MidiServiceMessageProcessingPluginInformation.idl" />
     <Midl Include="MidiMessageStruct.idl" />
     <Midl Include="MidiMessageBuilder.idl" />
     <Midl Include="MidiMessageReceivedEventArgs.idl" />
@@ -531,7 +531,7 @@
     <Midl Include="MidiStreamConfigurationRequestReceivedEventArgs.idl" />
     <Midl Include="MidiStreamMessageBuilder.idl" />
     <Midl Include="MidiSystemExclusive8StatusEnum.idl" />
-    <Midl Include="MidiTransportPluginInformation.idl" />
+    <Midl Include="MidiServiceTransportPluginInformation.idl" />
     <Midl Include="MidiMessage128.idl" />
     <Midl Include="MidiMessage32.idl" />
     <Midl Include="MidiMessage64.idl" />

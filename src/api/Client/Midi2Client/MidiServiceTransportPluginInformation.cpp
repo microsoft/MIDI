@@ -7,7 +7,7 @@
 // ============================================================================
 
 #include "pch.h"
-#include "MidiTransportPluginInformation.g.cpp"
+#include "MidiServiceTransportPluginInformation.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {

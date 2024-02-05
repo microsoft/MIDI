@@ -209,42 +209,27 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
-    foundation::Collections::IVectorView<midi2::MidiTransportPluginInformation> MidiService::GetInstalledTransportPlugins()
+    foundation::Collections::IVectorView<midi2::MidiServiceTransportPluginInformation> MidiService::GetInstalledTransportPlugins()
     {
         // TODO: Need to implement GetInstalledTransportPlugins. For now, return an empty collection instead of throwing
 
         // This can be read from the registry, but the additional metadata requires calling into the objects themselves
 
 
-        return winrt::single_threaded_vector<midi2::MidiTransportPluginInformation>().GetView();
+        return winrt::single_threaded_vector<midi2::MidiServiceTransportPluginInformation>().GetView();
     }
 
 
-    foundation::Collections::IVectorView<midi2::MidiMessageProcessingPluginInformation> MidiService::GetInstalledMessageProcessingPlugins()
+    foundation::Collections::IVectorView<midi2::MidiServiceMessageProcessingPluginInformation> MidiService::GetInstalledMessageProcessingPlugins()
     {
         // TODO: Need to implement GetInstalledMessageProcessingPlugins. For now, return an empty collection instead of throwing
 
         // This can be read from the registry, but the additional metadata requires calling into the objects themselves
 
-        return winrt::single_threaded_vector<midi2::MidiMessageProcessingPluginInformation>().GetView();
+        return winrt::single_threaded_vector<midi2::MidiServiceMessageProcessingPluginInformation>().GetView();
     }
 
-//#define MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_ARRAY_PROPERTY_KEY             L"sessions"
-//
-//#define MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_ID_PROPERTY_KEY                L"id"
-//#define MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_NAME_PROPERTY_KEY              L"name"
-//#define MIDI_SESSION_TRACKER_JSON_RESULT_PROCESS_ID_PROPERTY_KEY                L"clientProcessId"
-//#define MIDI_SESSION_TRACKER_JSON_RESULT_PROCESS_NAME_PROPERTY_KEY              L"processName"
-//#define MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_TIME_PROPERTY_KEY              L"startTime"
-//
-//
-//#define MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ARRAY_PROPERTY_KEY          L"connections"
-//
-//#define MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_TIME_PROPERTY_KEY           L"earliestStartTime"
-//#define MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_COUNT_PROPERTY_KEY          L"instanceCount"
-//#define MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ENDPOINT_ID_PROPERTY_KEY    L"endpointId"
-
-    foundation::Collections::IVectorView<midi2::MidiSessionInformation> MidiService::GetActiveSessions()
+    foundation::Collections::IVectorView<midi2::MidiSessionInformation> MidiService::GetActiveSessions() noexcept
     {
         auto sessionList = winrt::single_threaded_vector<midi2::MidiSessionInformation>();
 
@@ -337,5 +322,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return sessionList.GetView();
 
     }
+
+    _Use_decl_annotations_
+    json::JsonObject MidiService::UpdateRuntimeConfiguration(json::JsonObject configurationUpdate) noexcept
+    {
+        // TEMP!
+
+        return json::JsonObject{};
+
+    }
+
 
 }

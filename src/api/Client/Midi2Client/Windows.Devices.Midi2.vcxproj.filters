@@ -338,7 +338,7 @@
     <Midl Include="MidiServicePingResponseSummary.idl">
       <Filter>API\Service</Filter>
     </Midl>
-    <Midl Include="MidiTransportPluginInformation.idl">
+    <Midl Include="MidiServiceTransportPluginInformation.idl">
       <Filter>API\Service</Filter>
     </Midl>
     <Midl Include="IMidiEndpointMessageProcessingPlugin.idl">
@@ -449,7 +449,7 @@
     <Midl Include="MidiEndpointDeviceWatcher.idl">
       <Filter>API\Enumeration</Filter>
     </Midl>
-    <Midl Include="MidiMessageProcessingPluginInformation.idl">
+    <Midl Include="MidiServiceMessageProcessingPluginInformation.idl">
       <Filter>API\Service</Filter>
     </Midl>
     <Midl Include="IMidiEndpointConnectionSource.idl">
