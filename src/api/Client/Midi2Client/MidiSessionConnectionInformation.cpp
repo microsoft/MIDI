@@ -6,4 +6,18 @@
 namespace winrt::Windows::Devices::Midi2::implementation
 {
 
+    _Use_decl_annotations_
+    void MidiSessionConnectionInformation::InternalInitialize(
+        winrt::hstring const endpointDeviceId,
+        uint16_t const instanceCount,
+        foundation::DateTime const earliestConnectionTime
+        )
+    {
+        m_endpointDeviceId = endpointDeviceId;
+        m_instanceCount = instanceCount;
+        m_earliestConnectionTime = earliestConnectionTime;
+    }
+
+
+
 }

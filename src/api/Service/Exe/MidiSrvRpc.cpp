@@ -98,13 +98,12 @@ HRESULT MidiSrvCreateClient(
 
     // Client manager creates the client, fills in the MIDISRV_CLIENT information
     RETURN_IF_FAILED(g_MidiService->GetClientManager(clientManager));
-    RETURN_IF_FAILED(clientManager->CreateMidiClient(BindingHandle, MidiDevice, CreationParams, createdClient));
+    RETURN_IF_FAILED(clientManager->CreateMidiClient(BindingHandle, MidiDevice, SessionId, CreationParams, createdClient));
 
-    // Register this client
-    
-    std::shared_ptr<CMidiSessionTracker> sessionTracker;
-    RETURN_IF_FAILED(g_MidiService->GetSessionTracker(sessionTracker));
-    RETURN_IF_FAILED(sessionTracker->AddClientEndpointConnection(SessionId, MidiDevice));
+    // Register this client (this code moved to the client manager)
+   // std::shared_ptr<CMidiSessionTracker> sessionTracker;
+   // RETURN_IF_FAILED(g_MidiService->GetSessionTracker(sessionTracker));
+  //  RETURN_IF_FAILED(sessionTracker->AddClientEndpointConnection(SessionId, MidiDevice));
 
 
     // Success, transfer the MIDISRV_CLIENT data to the caller.
@@ -131,6 +130,11 @@ HRESULT MidiSrvDestroyClient(
     // Client manager creates the client, fills in the MIDISRV_CLIENT information
     RETURN_IF_FAILED(g_MidiService->GetClientManager(clientManager));
     RETURN_IF_FAILED(clientManager->DestroyMidiClient(BindingHandle, ClientHandle));
+
+
+
+
+
 
     return S_OK;
 }
@@ -221,9 +225,9 @@ HRESULT
 MidiSrvRegisterSession(
     /* [in] */ handle_t BindingHandle,
     __RPC__in GUID SessionId,
+    __RPC__in_string LPCWSTR SessionName,
     __RPC__in DWORD ProcessId,
-    __RPC__in_string LPCWSTR ProcessName,
-    __RPC__in_string LPCWSTR SessionName
+    __RPC__in_string LPCWSTR ProcessName
 )
 {
     UNREFERENCED_PARAMETER(BindingHandle);
@@ -241,7 +245,7 @@ MidiSrvRegisterSession(
 
     RETURN_IF_FAILED(g_MidiService->GetSessionTracker(sessionTracker));
 
-    RETURN_IF_FAILED(sessionTracker->AddClientSession(SessionId, ProcessId, ProcessName, SessionName));
+    RETURN_IF_FAILED(sessionTracker->AddClientSession(SessionId, SessionName, ProcessId, ProcessName));
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),

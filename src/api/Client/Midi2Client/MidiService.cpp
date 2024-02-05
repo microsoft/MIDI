@@ -229,16 +229,110 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return winrt::single_threaded_vector<midi2::MidiMessageProcessingPluginInformation>().GetView();
     }
 
+//#define MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_ARRAY_PROPERTY_KEY             L"sessions"
+//
+//#define MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_ID_PROPERTY_KEY                L"id"
+//#define MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_NAME_PROPERTY_KEY              L"name"
+//#define MIDI_SESSION_TRACKER_JSON_RESULT_PROCESS_ID_PROPERTY_KEY                L"clientProcessId"
+//#define MIDI_SESSION_TRACKER_JSON_RESULT_PROCESS_NAME_PROPERTY_KEY              L"processName"
+//#define MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_TIME_PROPERTY_KEY              L"startTime"
+//
+//
+//#define MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ARRAY_PROPERTY_KEY          L"connections"
+//
+//#define MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_TIME_PROPERTY_KEY           L"earliestStartTime"
+//#define MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_COUNT_PROPERTY_KEY          L"instanceCount"
+//#define MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ENDPOINT_ID_PROPERTY_KEY    L"endpointId"
 
     foundation::Collections::IVectorView<midi2::MidiSessionInformation> MidiService::GetActiveSessions()
     {
-        // TODO: Call the service to get this info
+        auto sessionList = winrt::single_threaded_vector<midi2::MidiSessionInformation>();
+
+        try
+        {
+            winrt::com_ptr<IMidiAbstraction> serviceAbstraction;
+            winrt::com_ptr<IMidiSessionTracker> sessionTracker;
+
+            serviceAbstraction = winrt::create_instance<IMidiAbstraction>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
+
+            if (serviceAbstraction != nullptr)
+            {
+                if (SUCCEEDED(serviceAbstraction->Activate(__uuidof(IMidiSessionTracker), (void**)&sessionTracker)))
+                {
+                    CComBSTR sessionListJson;
+                    sessionListJson.Empty();
+
+                    sessionTracker->GetSessionListJson(&sessionListJson);
+
+                    // parse it into json objects
+
+                    if (sessionListJson != nullptr && sessionListJson.Length() > 0)
+                    {
+                        winrt::hstring hstr = sessionListJson;
+
+                        // Parse the json, create the objects, throw them into the vector and return
+
+                        json::JsonObject jsonObject = json::JsonObject::Parse(hstr);
+
+                        if (jsonObject != nullptr)
+                        {
+                            auto sessionJsonArray = internal::JsonGetArrayProperty(jsonObject, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_ARRAY_PROPERTY_KEY);
+
+                            GUID defaultGuid{};
+
+                            for (uint32_t i = 0; i < sessionJsonArray.Size(); i++)
+                            {
+                                auto sessionJson = sessionJsonArray.GetObjectAt(i);
+                                auto sessionObject = winrt::make_self<implementation::MidiSessionInformation>();
+
+                            //    auto startTimeString = internal::JsonGetWStringProperty(sessionJson, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_TIME_PROPERTY_KEY, L"").c_str();
+                                
+                                foundation::DateTime startTime = winrt::clock::now();   // TEMP!!
+
+                                sessionObject->InternalInitialize(
+                                    internal::JsonGetGuidProperty(sessionJson, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_ID_PROPERTY_KEY, defaultGuid),
+                                    internal::JsonGetWStringProperty(sessionJson, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_NAME_PROPERTY_KEY, L"").c_str(),
+                                    std::stol(internal::JsonGetWStringProperty(sessionJson, MIDI_SESSION_TRACKER_JSON_RESULT_PROCESS_ID_PROPERTY_KEY, L"0")),
+                                    internal::JsonGetWStringProperty(sessionJson, MIDI_SESSION_TRACKER_JSON_RESULT_PROCESS_NAME_PROPERTY_KEY, L"").c_str(),
+                                    startTime);
 
 
-        // Parse the json, create the objects, throw them into the vector and return
+                                // Add connections
 
+                                auto connectionsJsonArray = internal::JsonGetArrayProperty(sessionJson, MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ARRAY_PROPERTY_KEY);
 
-        return winrt::single_threaded_vector<midi2::MidiSessionInformation>().GetView();
+                                if (connectionsJsonArray.Size() > 0)
+                                {
+                                    for (uint32_t j = 0; j < connectionsJsonArray.Size(); j++)
+                                    {
+                                        auto connectionJson = connectionsJsonArray.GetObjectAt(j);
+                                        auto connectionObject = winrt::make_self<implementation::MidiSessionConnectionInformation>();
+
+                                        foundation::DateTime earliestConnectionTime = winrt::clock::now();   // TEMP!!
+
+                                        connectionObject->InternalInitialize(
+                                            internal::JsonGetWStringProperty(connectionJson, MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ENDPOINT_ID_PROPERTY_KEY, L"").c_str(),
+                                            (uint16_t)(internal::JsonGetDoubleProperty(connectionJson, MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_COUNT_PROPERTY_KEY, 0)),
+                                            earliestConnectionTime
+                                        );
+
+                                        sessionObject->InternalAddConnection(*connectionObject);
+                                    }
+                                }
+
+                                sessionList.Append(*sessionObject);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Exception processing session tracker result json");
+        }
+
+        return sessionList.GetView();
 
     }
 

@@ -8,11 +8,13 @@
 
 #pragma once
 
+#include <chrono>
+
 struct MidiSessionConnectionEntry
 {
     std::wstring ConnectedEndpointInterfaceId;
 
-    SYSTEMTIME EarliestStartTime;
+    std::chrono::time_point<std::chrono::system_clock> EarliestStartTime;
 
     uint16_t InstanceCount{ 1 };
 
@@ -24,7 +26,8 @@ struct MidiSessionEntry
 {
     GUID SessionId;
     DWORD ClientProcessId;
-    SYSTEMTIME StartTime;   // use GetSystemTime to generate
+    //SYSTEMTIME StartTime;   // use GetSystemTime to generate
+    std::chrono::time_point<std::chrono::system_clock> StartTime;
 
     std::wstring ProcessName;
     std::wstring SessionName;
@@ -45,7 +48,7 @@ public:
     HRESULT Initialize();
 
     // These are called from the API
-    HRESULT AddClientSession(_In_ GUID SessionId, _In_ DWORD ClientProcessId, _In_ LPCWSTR ProcessName, _In_ LPCWSTR SessionName);
+    HRESULT AddClientSession(_In_ GUID SessionId, _In_ LPCWSTR SessionName, _In_ DWORD ClientProcessId, _In_ LPCWSTR ClientProcessName);
     HRESULT RemoveClientSession(_In_ GUID SessionId);
 
     // These are called from within the service

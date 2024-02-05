@@ -17,7 +17,7 @@ public:
     STDMETHOD(Initialize());
 
     // These are called from the client API
-    STDMETHOD(AddClientSession(_In_ GUID SessionId, _In_ DWORD ClientProcessId, _In_ LPCWSTR ProcessName, _In_ LPCWSTR SessionName));
+    STDMETHOD(AddClientSession(_In_ GUID SessionId, _In_ LPCWSTR SessionName, _In_ DWORD ClientProcessId, _In_ LPCWSTR ClientProcessName));
     STDMETHOD(RemoveClientSession(_In_ GUID SessionId));
 
     // These are called from within the service

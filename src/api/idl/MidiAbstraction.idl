@@ -224,9 +224,9 @@ interface IMidiSessionTracker : IUnknown
 
     HRESULT AddClientSession(
         [in] GUID SessionId,
+        [in] LPCWSTR SessionName,
         [in] DWORD ClientProcessId,
-        [in] LPCWSTR ProcessName, 
-        [in] LPCWSTR SessionName
+        [in] LPCWSTR ClientProcessName 
     );
 
     HRESULT RemoveClientSession(

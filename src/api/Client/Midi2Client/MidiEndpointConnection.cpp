@@ -85,7 +85,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     HRESULT MidiEndpointConnection::Callback(PVOID data, UINT size, LONGLONG timestamp, LONGLONG)
     {
-        internal::LogInfo(__FUNCTION__, L"Message Received ");
+        internal::LogInfo(__FUNCTION__, L"Message Received");
 
         try
         {
@@ -148,8 +148,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::MidiEndpointConnectionOptions options
     )
     {
-        OutputDebugString(__FUNCTION__ L"");
-
         internal::LogInfo(__FUNCTION__, L"Internal Initialize ");
 
         try
@@ -180,8 +178,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     bool MidiEndpointConnection::Open()
     {
-        OutputDebugString(__FUNCTION__ L"");
-
         internal::LogInfo(__FUNCTION__, L"Connection Open ");
 
         if (!IsOpen())
@@ -248,8 +244,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     void MidiEndpointConnection::Close()
     {
-        OutputDebugString(__FUNCTION__ L"");
-
         internal::LogInfo(__FUNCTION__, L"Connection Close");
 
         if (m_closeHasBeenCalled) return;

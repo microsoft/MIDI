@@ -142,6 +142,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to List all currently active Windows MIDI Services sessions on this PC..
+        /// </summary>
+        internal static string CommandEnumerateActiveSessionsDescription {
+            get {
+                return ResourceManager.GetString("CommandEnumerateActiveSessionsDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Enumerate (list) endpoints and transports.
         /// </summary>
         internal static string CommandEnumerateDescription {

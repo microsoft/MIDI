@@ -147,6 +147,28 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         }
 
 
+
+        public static string FormatProcessName(string processName)
+        {
+            return "[darkslategray3]" + EscapeString(processName) + "[/]";
+        }
+
+        public static string FormatProcessId(UInt64 pid)
+        {
+            return "[darkseagreen3]" + pid.ToString() + "[/]";
+        }
+
+        public static string FormatSessionName(string sessionName)
+        {
+            return "[chartreuse2_1]" + EscapeString(sessionName) + "[/]";
+        }
+
+        public static string FormatLongDateTime(DateTimeOffset time)
+        {
+            return "[lightskyblue3_1]" + time.DateTime.ToLongDateString() + "[/] [lightskyblue3_1]" + time.DateTime.ToLongTimeString() + "[/]";
+        }
+
+
         public static string FormatMidiWords(params UInt32[] words)
         {
             string output = string.Empty;

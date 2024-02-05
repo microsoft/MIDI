@@ -19,9 +19,9 @@ _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvSessionTracker::AddClientSession(
     GUID SessionId,
+    LPCWSTR SessionName,
     DWORD ClientProcessId,
-    LPCWSTR ProcessName,
-    LPCWSTR SessionName
+    LPCWSTR ClientProcessName
 )
 {
     TraceLoggingWrite(
@@ -34,14 +34,14 @@ CMidi2MidiSrvSessionTracker::AddClientSession(
     wil::unique_rpc_binding bindingHandle;
 
     RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
-    RETURN_HR_IF_NULL(E_INVALIDARG, ProcessName);
+    RETURN_HR_IF_NULL(E_INVALIDARG, ClientProcessName);
     RETURN_HR_IF_NULL(E_INVALIDARG, SessionName);
 
     RETURN_IF_FAILED([&]()
         {
             // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
             // with structured exception handling.
-            RpcTryExcept RETURN_IF_FAILED(MidiSrvRegisterSession(bindingHandle.get(), SessionId, ClientProcessId, ProcessName, SessionName));
+            RpcTryExcept RETURN_IF_FAILED(MidiSrvRegisterSession(bindingHandle.get(), SessionId, SessionName, ClientProcessId, ClientProcessName));
             RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
             RpcEndExcept
             

@@ -90,7 +90,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             m_connections{ winrt::single_threaded_map<winrt::guid, midi2::MidiEndpointConnection>() };
 
 
-        winrt::hstring NormalizeDeviceId(_In_ const winrt::hstring& endpointDeviceId);
+        //winrt::hstring NormalizeDeviceId(_In_ const winrt::hstring& endpointDeviceId);
 
     };
 }

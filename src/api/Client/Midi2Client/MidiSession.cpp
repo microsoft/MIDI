@@ -26,7 +26,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::MidiSessionSettings const& settings
         ) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L" Session create ");
+        internal::LogInfo(__FUNCTION__, L"Session create ");
 
         try
         {
@@ -46,7 +46,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
-            internal::LogHresultError(__FUNCTION__, L" hresult exception initializing creating session. Service may be unavailable.", ex);
+            internal::LogHresultError(__FUNCTION__, L"hresult exception initializing creating session. Service may be unavailable.", ex);
 
             return nullptr;
         }
@@ -65,7 +65,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     // the session instance
     bool MidiSession::InternalStart()
     {
-        internal::LogInfo(__FUNCTION__, L" Start Session ");
+        internal::LogInfo(__FUNCTION__, L"Start Session ");
 
         try
         {
@@ -88,15 +88,27 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                     DWORD clientProcessId = GetCurrentProcessId();
 
-                    std::wstring modulePath;
-                    modulePath.reserve(2048);   // MAX_PATH is almost never big enough. This is a wild shot. Not going to allocate 32k chars for this but I know this will bite me some day
+                    //std::wstring modulePath{ _wpgmptr };
 
-                    /*auto numPathCharacters =*/ GetModuleFileName(NULL, modulePath.data(), (DWORD)modulePath.capacity());
+                    std::wstring modulePath{ 0 };
+                    modulePath.resize(2048);   // MAX_PATH is almost never big enough. This is a wild shot. Not going to allocate 32k chars for this but I know this will bite me some day
 
-                    auto processName = std::filesystem::path(modulePath).filename().c_str();
+                    auto numPathCharacters = GetModuleFileName(NULL, modulePath.data(), (DWORD)modulePath.capacity());
+                    
+                    if (numPathCharacters > 0)
+                    {
+                        internal::LogInfo(__FUNCTION__, (std::wstring(L"Module Path: ") + modulePath).c_str());
 
+                        std::wstring processName = (std::filesystem::path(modulePath).filename()).c_str();
+                        internal::LogInfo(__FUNCTION__, (std::wstring(L"Process Name: ") + processName).c_str());
 
-                    m_sessionTracker->AddClientSession(m_id, clientProcessId, processName, m_name.c_str());
+                        m_sessionTracker->AddClientSession(m_id, m_name.c_str(), clientProcessId, processName.c_str());
+                    }
+                    else
+                    {
+                        // couldn't get the process name
+                        internal::LogGeneralError(__FUNCTION__, L"Unable to get current process name.");
+                    }
                 }
                 else
                 {
@@ -114,7 +126,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
-            internal::LogHresultError(__FUNCTION__, L" hresult exception starting session. Service may be unavailable.", ex);
+            internal::LogHresultError(__FUNCTION__, L"hresult exception starting session. Service may be unavailable.", ex);
 
             return false;
         }
@@ -122,13 +134,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return true;
     }
 
-    _Use_decl_annotations_
-    winrt::hstring MidiSession::NormalizeDeviceId(const winrt::hstring& endpointDeviceId)
-    {
-        if (endpointDeviceId.empty()) return endpointDeviceId;
+    //_Use_decl_annotations_
+    //winrt::hstring MidiSession::NormalizeDeviceId(const winrt::hstring& endpointDeviceId)
+    //{
+    //    if (endpointDeviceId.empty()) return endpointDeviceId;
 
-        return internal::ToUpperTrimmedHStringCopy(endpointDeviceId);
-    }
+    //    return internal::ToUpperTrimmedHStringCopy(endpointDeviceId);
+    //}
 
 
 
@@ -140,11 +152,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::IMidiEndpointDefinedConnectionSettings const& /*settings*/
         ) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L" Creating Endpoint Connection");
+        internal::LogInfo(__FUNCTION__, L"Creating Endpoint Connection");
 
         try
         {
-            auto normalizedDeviceId = NormalizeDeviceId(endpointDeviceId);
+            auto normalizedDeviceId = winrt::to_hstring(internal::NormalizeEndpointInterfaceIdCopy(endpointDeviceId.c_str()).c_str());
             auto endpointConnection = winrt::make_self<implementation::MidiEndpointConnection>();
 
             // default options
@@ -206,7 +218,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::MidiVirtualEndpointDeviceDefinition const& deviceDefinition
     ) noexcept
     {
-        OutputDebugString(__FUNCTION__ L"");
         internal::LogInfo(__FUNCTION__, L"");
 
 
@@ -434,7 +445,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::guid const& endpointConnectionId
         ) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L" Disconnect endpoint connection ");
+        internal::LogInfo(__FUNCTION__, L"Disconnect endpoint connection");
 
         try
         {
@@ -467,7 +478,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     void MidiSession::Close() noexcept
     {
-        internal::LogInfo(__FUNCTION__, L" Closing session");
+        internal::LogInfo(__FUNCTION__, L"Closing session");
 
         if (!m_isOpen) return;
 
@@ -483,6 +494,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 }
 
                 m_serviceAbstraction = nullptr;
+            }
+
+            if (m_sessionTracker != nullptr)
+            {
+                m_sessionTracker->RemoveClientSession(m_id);
+
+                m_sessionTracker = nullptr;
             }
 
             m_connections.Clear();

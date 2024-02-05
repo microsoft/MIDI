@@ -83,7 +83,7 @@ interface MidiSrvRPC
     HRESULT MidiSrvUpdateConfiguration([in] handle_t BindingHandle, [in, string] LPCWSTR ConfigurationJson, [out] BSTR* Response);
 
 
-    HRESULT MidiSrvRegisterSession([in] handle_t BindingHandle, [in] GUID SessionId, [in] DWORD ProcessId, [in, string] LPCWSTR ProcessName, [in, string] LPCWSTR SessionName);
+    HRESULT MidiSrvRegisterSession([in] handle_t BindingHandle, [in] GUID SessionId, [in, string] LPCWSTR SessionName, [in] DWORD ProcessId, [in, string] LPCWSTR ProcessName);
     HRESULT MidiSrvDeregisterSession([in] handle_t BindingHandle, [in] GUID SessionId);
 
     HRESULT MidiSrvGetSessionList([in] handle_t BindingHandle, [out] BSTR* SessionListJson);

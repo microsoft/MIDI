@@ -16,6 +16,18 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         collections::IVectorView<midi2::MidiSessionConnectionInformation> Connections() { return m_connections.GetView(); }
 
+        void InternalInitialize(
+            _In_ winrt::guid sessionId,
+            _In_ winrt::hstring sessionName,
+            _In_ uint64_t processId,
+            _In_ winrt::hstring processName,
+            _In_ foundation::DateTime startTime
+        );
+
+        void InternalAddConnection(
+            _In_ midi2::MidiSessionConnectionInformation const& info
+        );
+
     private:
         winrt::guid m_sessionId{};
         uint64_t m_processId{};

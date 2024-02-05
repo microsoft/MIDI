@@ -237,6 +237,7 @@ HRESULT
 CMidiClientManager::GetMidiClient(
     handle_t BindingHandle,
     LPCWSTR MidiDevice,
+    GUID SessionId,
     PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
     PMIDISRV_CLIENT Client,
     wil::unique_handle& ClientProcessHandle,
@@ -260,7 +261,7 @@ CMidiClientManager::GetMidiClient(
     RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiClientPipe>(&clientPipe));
 
     // Initialize our client
-    RETURN_IF_FAILED(clientPipe->Initialize(BindingHandle, ClientProcessHandle.get(), MidiDevice, CreationParams, Client, &m_MmcssTaskId, OverwriteIncomingZeroTimestamps));
+    RETURN_IF_FAILED(clientPipe->Initialize(BindingHandle, ClientProcessHandle.get(), MidiDevice, SessionId, CreationParams, Client, &m_MmcssTaskId, OverwriteIncomingZeroTimestamps));
 
     // Add this client to the client pipes list and set the output client handle
     Client->ClientHandle = (MidiClientHandle)clientPipe.get();
@@ -646,6 +647,7 @@ HRESULT
 CMidiClientManager::CreateMidiClient(
     handle_t BindingHandle,
     LPCWSTR MidiDevice,
+    GUID SessionId,
     PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
     PMIDISRV_CLIENT Client
 )
@@ -731,7 +733,7 @@ CMidiClientManager::CreateMidiClient(
     RETURN_IF_FAILED(GetEndpointShouldHaveMetadataHandler(midiDevice, addMetadataListenerToIncomingStream, CreationParams->Flow));
     
 
-    RETURN_IF_FAILED(GetMidiClient(BindingHandle, midiDevice.c_str(), CreationParams, Client, clientProcessHandle, clientPipe, generateIncomingMessageTimestamps));
+    RETURN_IF_FAILED(GetMidiClient(BindingHandle, midiDevice.c_str(), SessionId, CreationParams, Client, clientProcessHandle, clientPipe, generateIncomingMessageTimestamps));
 
     auto cleanupOnFailure = wil::scope_exit([&]()
     {
@@ -923,6 +925,8 @@ CMidiClientManager::CreateMidiClient(
         newClientConnectionPipe.reset();
     }
 
+    m_SessionTracker->AddClientEndpointConnection(SessionId, MidiDevice);
+
     cleanupOnFailure.release();
 
     return S_OK;
@@ -955,9 +959,11 @@ CMidiClientManager::DestroyMidiClient(
     auto client = m_ClientPipes.find(ClientHandle);
     if (client != m_ClientPipes.end())
     {
-        wil::com_ptr_nothrow<CMidiPipe> midiClientPipe = client->second.get();
+        wil::com_ptr_nothrow<CMidiClientPipe> midiClientPipe = (CMidiClientPipe*)(client->second.get());
 
         midiClientPipe->Cleanup();
+
+        m_SessionTracker->RemoveClientEndpointConnection(midiClientPipe->SessionId(), client->second->MidiDevice().c_str());
 
         for (auto transform = m_TransformPipes.begin(); transform != m_TransformPipes.end();)
         {

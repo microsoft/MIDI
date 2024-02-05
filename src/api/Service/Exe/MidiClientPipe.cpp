@@ -23,6 +23,7 @@ CMidiClientPipe::Initialize(
     handle_t /* BindingHandle */,
     HANDLE /* clientProcess */,
     LPCWSTR Device,
+    GUID SessionId,
     PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
     PMIDISRV_CLIENT Client,
     DWORD* MmcssTaskId,
@@ -35,6 +36,10 @@ CMidiClientPipe::Initialize(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
+
+    // for tracking the client connection
+    m_sessionId = SessionId;
+    //m_device = internal::NormalizeEndpointInterfaceIdCopy(Device);
 
 
     auto lock = m_ClientPipeLock.lock();
