@@ -59,7 +59,6 @@ namespace MidiSample.AppToAppMidi
             _session.Dispose();
         }
 
-        //const string _appDeviceConnectionId = "\\\\?\\SWD#MIDISRV#MIDIU_VIRTDEV_PMB_APP2_8675309#{e7cce071-3c03-423f-88d3-f1045d02552b}";
         private void OpenConnection()
         {
             try
@@ -85,16 +84,31 @@ namespace MidiSample.AppToAppMidi
                     MidiCIMessageVersionFormat = 0
                 });
 
+                deviceDefinition.FunctionBlocks.Add(new midi2.MidiFunctionBlock()
+                {
+                    Number = 1,
+                    IsActive = true,
+                    Name = "A Function Block",
+                    UIHint = midi2.MidiFunctionBlockUIHint.Sender,
+                    FirstGroupIndex = 1,
+                    GroupCount = 1,
+                    Direction = midi2.MidiFunctionBlockDirection.Bidirectional,
+                    Midi10Connection = midi2.MidiFunctionBlockMidi10.Not10,
+                    MaxSystemExclusive8Streams = 0,
+                    MidiCIMessageVersionFormat = 0
+                });
+
                 deviceDefinition.AreFunctionBlocksStatic = true;
                 deviceDefinition.EndpointName = "Pad Controller App";
-                deviceDefinition.EndpointProductInstanceId = "PMB_APP2_8675309";    // this needs to match pre-configuration for now
+                deviceDefinition.EndpointProductInstanceId = "PMB_APP2_3263827";
                 deviceDefinition.SupportsMidi2ProtocolMessages = true;
                 deviceDefinition.SupportsMidi1ProtocolMessages = true;
                 deviceDefinition.SupportsReceivingJRTimestamps = false;
                 deviceDefinition.SupportsSendingJRTimestamps = false;
 
+
                 System.Diagnostics.Debug.WriteLine("Creating session");
-                _session = midi2.MidiSession.CreateSession("App to app MIDI sample");
+                _session = midi2.MidiSession.CreateSession(deviceDefinition.EndpointName);
 
                 if (_session != null)
                 {
@@ -107,18 +121,21 @@ namespace MidiSample.AppToAppMidi
 
                         _connection.MessageReceived += _connection_MessageReceived;
 
+                        // do anything else needed here. The public endpoint is not available to other
+                        // applications until you open the device endpoint
+
                         System.Diagnostics.Debug.WriteLine("Connection created. About to open it.");
 
                         if (_connection.Open())
                         {
                             System.Diagnostics.Debug.WriteLine("Connection Opened");
 
-                            this.AppWindow.Title = "App-to-app MIDI Pad Controller: Connected";
+                            this.AppWindow.Title = deviceDefinition.EndpointName + ": Connected";
                         }
                         else
                         {
                             System.Diagnostics.Debug.WriteLine("Connection Open Failed");
-                            this.AppWindow.Title = "App-to-app MIDI Pad Controller: (no connection)";
+                            this.AppWindow.Title = deviceDefinition.EndpointName + ": (no connection)";
                         }
                     }
                     else
@@ -129,13 +146,11 @@ namespace MidiSample.AppToAppMidi
                 else
                 {
                     System.Diagnostics.Debug.WriteLine("Session Open Failed");
-                    // unable to open session
                 }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine("Exception: " + ex.ToString());
-
             }
         }
 

@@ -1,6 +1,5 @@
 # Documentation
 
-API and other documentation which will eventually be used in the Microsoft Learn docs portal. 
 
 | Page | Description |
 | ------------- | --------------------- |
