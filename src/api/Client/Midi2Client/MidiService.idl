@@ -9,8 +9,8 @@
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-import "MidiTransportPluginInformation.idl";
-import "MidiMessageProcessingPluginInformation.idl";
+import "MidiServiceTransportPluginInformation.idl";
+import "MidiServiceMessageProcessingPluginInformation.idl";
 import "MidiServicePingResponseSummary.idl";
 
 import "MidiSessionInformation.idl";
@@ -25,8 +25,8 @@ namespace Windows.Devices.Midi2
         static MidiServicePingResponseSummary PingService(UInt8 pingCount, UInt32 timeoutMilliseconds);
 
         // list all the installed transports like Virtual, USB, BLE1, etc
-        static IVectorView<MidiTransportPluginInformation> GetInstalledTransportPlugins();
-        static IVectorView<MidiMessageProcessingPluginInformation> GetInstalledMessageProcessingPlugins();
+        static IVectorView<MidiServiceTransportPluginInformation> GetInstalledTransportPlugins();
+        static IVectorView<MidiServiceMessageProcessingPluginInformation> GetInstalledMessageProcessingPlugins();
 
 
         // for the first release, this will always return false. But developers want to be able
@@ -34,12 +34,13 @@ namespace Windows.Devices.Midi2
 
   //      static Boolean IsMessageSchedulingEnabled{ get; };
 
-        static UInt32 GetOutgoingMessageQueueMaxMessageCapacity();
+//        static UInt32 GetOutgoingMessageQueueMaxMessageCapacity();
 
 
         static IVectorView<MidiSessionInformation> GetActiveSessions();
 
 
+        static Windows.Data.Json.JsonObject UpdateRuntimeConfiguration(Windows.Data.Json.JsonObject configurationUpdate);
 
     }
 }
