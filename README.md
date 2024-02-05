@@ -10,37 +10,15 @@ Here's a high-level view of the end goal of this project. Details subject to cha
 
 ![High-level view of the MIDI stack](img/high-level-view.png)
 
-
 ## Key documentation
 
-Currently, the documentation is focused on developers. Although Windows MIDI Services supports the latest version of Windows 10, developers need to run a Windows Insider Canary version of Windows 11 to be able to use the USB Driver.
-
-* [Application Developer Documentation](get-started/midi-developers/app-developers/docs/README.md). This also includes API overviews, best practices, implementation notes, and more
-* [Application Developer Samples](get-started/midi-developers/app-developers/samples/README.md). Samples for multiple languages including C#, C++, and Electron/NodeJS
-* [Windows MIDI Services Console documentation](get-started/midi-users/README.md). This is an essential tool for developers and power users.
+All documentation has been moved to our site [https://aka.ms/midi](https://aka.ms/midi)
 
 > **Join the Discussion!**
 >
 > Our official community server for this project is on Discord here: https://aka.ms/MidiDiscord
 >
 > Please keep bug and feature requests in the issues here, but other discussion, live streams, Q&A, and more can happen on Discord. Additionally, we know that not everyone who uses MIDI has access to GitHub, so we welcome additional suggestions, reports, etc. there for those members of the community.
-
-## API Backwards Compatibility
-
-**Our intention is for developers to begin adopting Windows MIDI Services in place of the older WinMM, WinRT, and (deprecated) DirectMusic APIs in their applications.** All new MIDI features, transports, and more will be implemented in Windows MIDI Services and the new API. A select number of features, slightly more than their current baseline, will be available to WinMM and WinRT APIs through our backwards-compatibility shims and abstractions, but this is simply to ensure existing applications continue to function on systems using Windows MIDI Services. **Please note that we are not providing backwards compatibility to support DirectMusic MIDI APIs.**
-
-The existing MIDI APIs on Windows talk (almost) directly to MIDI 1.0 drivers through kernel calls. In Windows MIDI Services, the architecture is built around a central Windows Service, much like our audio system today. It also uses a much faster IO mechanism for communication with the USB driver vs what our MIDI 1.0 API uses today. This provides much more flexibility, including the potential for multi-client use, and good baseline speed with our new class driver. We are working on shims and abstractions which will allow some of the existing MIDI 1.0 APIs to talk to the service rather than directly to the driver.
-
-Here is where we currently stand with planned backwards compatibility. Backwards compatibility for WinMM and WinRT APIs will be a post-1.0 feature, but shortly after that first release.
-
-| API | What you should expect |
-| --------------- | ----------------------------------- |
-| Windows MIDI Services | This project. 100% of all supported features for MIDI 1.0 and MIDI 2.0, including multi-client. API/SDK uses UMP as its internal data format even for MIDI 1.0 devices. Transports and the service handle translation. |
-| WinMM (Win32 API most apps use today) | Access to MIDI 1.0 and most MIDI 2.0 devices, at a MIDI 1.0 compatibility level only. It is possible we will add multi-client support here after our initial release. |
-| WinRT (MIDI API Introduced with Windows 10) | Access to MIDI 1.0 and most MIDI 2.0 devices, at a MIDI 1.0 compatibility level only. It is possible we will add multi-client support here after our initial release. |
-| DirectMusic | No compatibility planned. Not part of our testing. |
-
-Note that we are also investigating and experimenting with how to best incorporate the existing in-box Roland GS / General MIDI Synth into this architecture. It's likely we will handle it as an additional transport, but we need to test some of the MIDI file players today as many of them make assumptions about which synth index is the GS synth, so this compatibility may come after the initial release.
 
 ## Component parts
 
@@ -130,12 +108,6 @@ See [SECURITY.md](SECURITY.md)
 
 This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft trademarks or logos is subject to and must follow
 [Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general). Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship. Any use of third-party trademarks or logos (AMEI, The MIDI Association, AmeNote, etc.) are subject to those third-party's policies.
-
-## Relevant specifications
-
-These are the updated MIDI 2.0 specifications which apply to this project today.
-
-* [MIDI 2.0 UMP Specifications](https://midi.org/specifications)
 
 ## Learn more about MIDI 2.0
 
