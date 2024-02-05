@@ -1,6 +1,7 @@
 # Microsoft Windows MIDI Services
 
 > [Source repo and developer releases on GitHub](https://aka.ms/midirepo)
+
 > [Discord Server for discussion about this project](https://aka.ms/mididiscord)
 
 ## Key Features
