@@ -91,7 +91,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             {
                 // convert to seconds
 
-                convertedUnitLabel = longLabel ? offsetUnitMinutesLong : offsetUnitSeconds;
+                convertedUnitLabel = longLabel ? offsetUnitSecondsLong : offsetUnitSeconds;
                 convertedValue = (double)ticksToConvert / ticksPerSecond;
             }
             else if (ticksToConvert > ticksPerMillisecond)

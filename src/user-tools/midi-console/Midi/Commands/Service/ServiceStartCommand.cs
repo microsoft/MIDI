@@ -27,8 +27,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            string serviceName = "MidiSrv";
-
             // this command requires admin
 
             if (!UserHelper.CurrentUserHasAdminRights())
@@ -89,10 +87,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Unable to start service."));
                 return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
             }
-
-
-
-            return (int)MidiConsoleReturnCode.Success;
         }
     }
 }
