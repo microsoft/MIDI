@@ -41,7 +41,7 @@ Note that we are also investigating and experimenting with how to best incorpora
 ### Developer Materials
 
 * [Get started examples](https://github.com/microsoft/MIDI/blob/main/get-started/README.md)
-* [API Documentation](developer-docs/client-api/)
+* [API Documentation](developer-docs/)
 * [Samples](../samples/)
 * [Programming Languages FAQ](developer-docs/faq-programming-languages.md)
 

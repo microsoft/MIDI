@@ -12,7 +12,7 @@ Here's a high-level view of the end goal of this project. Details subject to cha
 
 ## Key documentation
 
-All documentation has been moved to our site [https://aka.ms/midi](https://aka.ms/midi)
+All documentation has been moved to our documentation pages [https://aka.ms/midi](https://aka.ms/midi)
 
 > **Join the Discussion!**
 >
