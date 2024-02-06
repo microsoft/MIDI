@@ -66,5 +66,9 @@ namespace Windows.Devices.Midi2
         // lifetime / info as well as provide the session-level service interface
 //        MidiVirtualDeviceManager VirtualDeviceManager{ get; };
 
+        // changes the session name in the service. Needed
+        // for cases where the session name is a project name
+        // or similar
+        Boolean UpdateSessionName(String newName);
     }
 }
