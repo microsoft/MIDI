@@ -96,9 +96,9 @@ namespace Windows::Devices::Midi2::Internal
         }
         catch (...)
         {
-
         }
 
+        obj = nullptr;
         return false;
     }
 

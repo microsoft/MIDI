@@ -20,8 +20,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         MidiVirtualEndpointDevice() = default;
 
         // plugin Id
-        winrt::hstring Id() const noexcept { return m_id; }
-        void Id(_In_ hstring const& value) noexcept { m_id = internal::ToUpperTrimmedHStringCopy(value); }
+        winrt::guid Id() const noexcept { return m_id; }
+
         // plugin name
         winrt::hstring Name() const noexcept { return m_name; }
         void Name(_In_ winrt::hstring const& value) noexcept { m_name = internal::TrimmedHStringCopy(value); }
@@ -79,7 +79,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         //midi2::MidiVirtualEndpointDeviceDefinition m_virtualEndpointDeviceDefinition
 
-        winrt::hstring m_id{};                      // plugin id
+        winrt::guid m_id{ foundation::GuidHelper::CreateNewGuid() };                         // plugin id
         winrt::hstring m_name{};                    // plugin name, not the endpointdevice name
         bool m_enabled{ true };                     // plugin enabled, not the endpointdevice enabled
         foundation::IInspectable m_tag{ nullptr };  // plugin tag, not the endpointdevice tag
