@@ -31,7 +31,7 @@
     <PackageReference Include="Spectre.Console.Cli" Version="0.48.1-preview.0.20" />
     <PackageReference Include="System.Management" Version="8.0.0" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.0" />
-    <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.3-0139" />
+    <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.3-0140" />
   </ItemGroup>
 
   <ItemGroup>

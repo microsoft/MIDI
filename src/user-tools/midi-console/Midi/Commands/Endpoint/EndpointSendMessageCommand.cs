@@ -226,7 +226,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 });
 
 
-                const uint bufferWarningThreshold = 10000;
+            //    const uint bufferWarningThreshold = 10000;
 
 
                 AnsiConsole.Progress()

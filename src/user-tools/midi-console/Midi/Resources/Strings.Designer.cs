@@ -232,11 +232,38 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Restart the MIDI service. This will close all open connections, remove any non-persistent configuration, and otherwise reset the MIDI system. Must be run as Administrator..
+        /// </summary>
+        internal static string CommandServiceRestartDescription {
+            get {
+                return ResourceManager.GetString("CommandServiceRestartDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Start the MIDI Service if it is currently stopped. Must be run as Administrator..
+        /// </summary>
+        internal static string CommandServiceStartDescription {
+            get {
+                return ResourceManager.GetString("CommandServiceStartDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Check to see if the Windows Service is running.
         /// </summary>
         internal static string CommandServiceStatusDescription {
             get {
                 return ResourceManager.GetString("CommandServiceStatusDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stops the MIDI Service, freeing up all resources in use, closing all devices, and clearing any runtime configuration. Must be run as Administrator..
+        /// </summary>
+        internal static string CommandServiceStopDescription {
+            get {
+                return ResourceManager.GetString("CommandServiceStopDescription", resourceCulture);
             }
         }
         
