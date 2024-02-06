@@ -83,7 +83,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public static string FormatSuccess(string message)
         {
-            return "[green]" + EscapeString(message) + "[/]";
+            return "[greenyellow]" + EscapeString(message) + "[/]";
         }
 
         public static string FormatTimestamp(UInt64 timestamp)

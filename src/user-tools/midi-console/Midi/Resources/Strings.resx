@@ -174,8 +174,17 @@
   <data name="CommandServicePingDescription" xml:space="preserve">
     <value>Ping the MIDI Windows Service</value>
   </data>
+  <data name="CommandServiceRestartDescription" xml:space="preserve">
+    <value>Restart the MIDI service. This will close all open connections, remove any non-persistent configuration, and otherwise reset the MIDI system. Must be run as Administrator.</value>
+  </data>
+  <data name="CommandServiceStartDescription" xml:space="preserve">
+    <value>Start the MIDI Service if it is currently stopped. Must be run as Administrator.</value>
+  </data>
   <data name="CommandServiceStatusDescription" xml:space="preserve">
     <value>Check to see if the Windows Service is running</value>
+  </data>
+  <data name="CommandServiceStopDescription" xml:space="preserve">
+    <value>Stops the MIDI Service, freeing up all resources in use, closing all devices, and clearing any runtime configuration. Must be run as Administrator.</value>
   </data>
   <data name="CommandTimeDescription" xml:space="preserve">
     <value>Get the current MIDI clock timestamp value</value>

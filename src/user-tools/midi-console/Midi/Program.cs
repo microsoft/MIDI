@@ -138,6 +138,22 @@ app.Configure(config =>
             .WithDescription(Strings.CommandServicePingDescription)
             .WithExample("service", "ping", "--count", "10", "--timeout", "5000", "--verbose")
             ;
+
+        service.AddCommand<ServiceRestartCommand>("restart")
+            .WithDescription(Strings.CommandServiceRestartDescription)
+            .WithExample("service", "restart")
+            ;
+
+        service.AddCommand<ServiceStartCommand>("start")
+            .WithDescription(Strings.CommandServiceStartDescription)
+            .WithExample("service", "start")
+            ;
+
+        service.AddCommand<ServiceStopCommand>("stop")
+            .WithDescription(Strings.CommandServiceStopDescription)
+            .WithExample("service", "stop")
+            ;
+
     }).WithAlias("svc");
 
 
