@@ -36,4 +36,6 @@ The two static functions are factory-pattern methods for creating a new session.
 
 > Note: If you manually close a MidiEndpointConnection using `IClosable` (or `IDisposable`), it will not be removed from the MidiSession's collection of endpoints. Instead, use the `DisconnectEndpointConnection` method of the session to keep both in sync. For that reason, we do not recommend that you wrap the `CreateEndpointConnection` calls in a using statement.
 
-[IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiSession.idl)
+## IDL
+
+[MidiSession IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiSession.idl)

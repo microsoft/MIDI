@@ -28,4 +28,6 @@ This is the main class to use when receving MIDI data from a message source such
 | FillByteArray(bytes, startIndex)| Writes the data starting at the zero-based `startIndex`. Some projections pass a copy of all the data, so this may not always be an efficient approach. Returns the number of bytes written. |
 | FillBuffer(buffer, byteOffset)| Writes the data to the buffer starting at byteOffset. Returns the number of bytes written. |
 
-[IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiMessageReceivedEventArgs.idl)
+## IDL
+
+[MidiMessageReceivedEventArgs IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiMessageReceivedEventArgs.idl)
