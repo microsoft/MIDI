@@ -242,7 +242,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
-    void MidiEndpointConnection::Close()
+    void MidiEndpointConnection::InternalClose()
     {
         internal::LogInfo(__FUNCTION__, L"Connection Close");
 
@@ -279,7 +279,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         if (!m_closeHasBeenCalled)
         {
-            Close();
+            InternalClose();
         }
     }
 
@@ -898,5 +898,40 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
+    _Use_decl_annotations_
+    void MidiEndpointConnection::AddMessageProcessingPlugin(midi2::IMidiEndpointMessageProcessingPlugin const& plugin)
+    {
+        m_messageProcessingPlugins.Append(plugin);
 
+        try
+        {
+            plugin.Initialize(*this);
+
+            // if this is added after we've already been opened, call the
+            // handler anyway to get it ready.
+
+            if (m_isOpen)
+            {
+                plugin.OnEndpointConnectionOpened();
+            }
+        }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Exception initializing or calling OnEndpointConnectionOpened on newly-added plugin");
+        }
+    }
+
+    _Use_decl_annotations_
+    void MidiEndpointConnection::RemoveMessageProcessingPlugin(winrt::guid id)
+    {
+        for (uint32_t i = 0; i < m_messageProcessingPlugins.Size(); i++)
+        {
+            if (m_messageProcessingPlugins.GetAt(i).Id() == id)
+            {
+                m_messageProcessingPlugins.RemoveAt(i);
+                break;
+            }
+        }
+
+    }
 }

@@ -1,2 +1,4 @@
-# Section in development
+# MidiEndpointDeviceInformationUpdateEventArgs
+
+(In progress)
 

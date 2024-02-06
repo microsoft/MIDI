@@ -1,2 +1,5 @@
-# Section in development
+# MidiGroupTerminalBlock
 
+(In progress)
+
+[IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiGroupTerminalBlock.idl)

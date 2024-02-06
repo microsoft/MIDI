@@ -426,7 +426,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             virtualDevice->IsEnabled(true);
 
             // add the listener
-            connection.MessageProcessingPlugins().Append(*virtualDevice);
+            connection.AddMessageProcessingPlugin(*virtualDevice);
         }
         else
         {
@@ -437,6 +437,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
+    _Use_decl_annotations_
+    bool MidiSession::UpdateName(winrt::hstring const& newName) noexcept
+    {
+        UNREFERENCED_PARAMETER(newName);
+
+        // TODO:
+
+
+        return false;
+
+    }
 
 
 
@@ -453,7 +464,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 // disconnect the endpoint from the service, call Close() etc.
 
-                m_connections.Lookup(endpointConnectionId).as<foundation::IClosable>().Close();
+                auto conn = m_connections.Lookup(endpointConnectionId);
+                auto connSelf = winrt::get_self<implementation::MidiEndpointConnection>(conn);
+                connSelf->InternalClose();
 
                 m_connections.Remove(endpointConnectionId);
             }

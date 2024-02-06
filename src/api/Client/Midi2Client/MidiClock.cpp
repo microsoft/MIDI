@@ -67,6 +67,20 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return OffsetTimestampByTicks(timestampValue, offsetTicks);
     }
 
+    _Use_decl_annotations_
+    internal::MidiTimestamp MidiClock::OffsetTimestampBySeconds(
+        internal::MidiTimestamp timestampValue,
+        int64_t offsetSeconds)
+    {
+        uint64_t offsetTicks;
+
+        offsetTicks = (uint64_t)(offsetSeconds * TimestampFrequency());
+
+        return OffsetTimestampByTicks(timestampValue, offsetTicks);
+    }
+
+
+
 
     _Use_decl_annotations_
     double MidiClock::ConvertTimestampToMicroseconds(
@@ -82,4 +96,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         return (double)((timestampValue * (double)MILLISECONDS_PER_SECOND) / TimestampFrequency());
     }
+
+    _Use_decl_annotations_
+    double MidiClock::ConvertTimestampToSeconds(
+        internal::MidiTimestamp const timestampValue)
+    {
+        return (double)((timestampValue) / TimestampFrequency());
+    }
+
 }

@@ -20,7 +20,8 @@ namespace Windows.Devices.Midi2
     [MIDI_INTERFACE_UUID("198d5ef2-313f-41af-9259-a42997e060f0",1.0)]
     interface IMidiEndpointMessageProcessingPlugin
     {
-        String Id { get; set; };            // Id supplied by the consuming application
+        Guid Id { get; };            
+
         String Name{ get; set; };           // Optional Name supplied by the consuming application
         IInspectable Tag{ get; set; };      // Optional Arbitrary data attached by the consuming application
 

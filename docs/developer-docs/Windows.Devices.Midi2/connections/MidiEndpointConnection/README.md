@@ -13,7 +13,7 @@ Connections allocate resources including send/receive buffers, and processing th
 | Tag | You may use this `Tag` property to hold any additional information you wish to have associated with the connection. |
 | IsOpen | True if this connection is currently open. When first created, the connection is not open until the consuming code calls the `Open` method |
 | Settings | Settings used to create this connection. |
-| MessageProcessingPlugins | Collection of all message processing plugins which will optionally handle incoming messages. Fill this collection before opening the connection. Once the connection has been opened, plugins added to this collection are not initialized properly and have undefined behavior. |
+| MessageProcessingPlugins | Collection of all message processing plugins which will optionally handle incoming messages. |
 
 ## Static Member Functions
 
@@ -36,7 +36,10 @@ Connections allocate resources including send/receive buffers, and processing th
 | SendMessageWords(timestamp, word0, word1, word2) | Send a single 96-bit Universal MIDI Packet as 32-bit words. This is often the most efficient way to send this type of message |
 | SendMessageWords(timestamp, word0, word1, word2, word3) | Send a single 128-bit Universal MIDI Packet as 32-bit words. This is often the most efficient way to send this type of message |
 | SendMessageBuffer(timestamp, buffer, byteOffset, byteLength) | Send a single Universal MIDI Packet as bytes from a buffer. The number of bytes sent must match the size read from the first 4 bits of the data starting at the specified offset, and must be laid out correctly with the first byte corresponding to the MSB of the first word of the UMP (the word which contains hte message type). If you want to manage a chunk of buffer memory, the `IMemoryBuffer` type is the acceptable WinRT approach, and is as close as you get to sending a pointer into a buffer. |
-| Close() | Please see note below about calling `Close` or the projected `Dispose` function |
+| AddEndpointProcessingPlugin(plugin) | Add an endpoint processing plugin to this connection |
+| RemoveEndpointProcessingPlugin(id) | Remove an endpoint processing plugin |
+
+> Tip: In all the functions which accept a timestamp to schedule the message, **you can send a timestamp of 0 (zero) to bypass the scheduler and send the message immediately**. Otherwise, the provided timestamp is treated as an absolute time for when the message should be sent from the service. Note that the service-based scheduler (currently based on a `std::priority_queue`) gets less efficient when there are thousands of messages in it, so it's recommended that you not schedule too many messages at a time or too far out into the future. 
 
 ## Events
 
@@ -46,8 +49,6 @@ Connections allocate resources including send/receive buffers, and processing th
 
 When processing the `MessageReceived` event, do so quickly. This event is synchronous. If you need to do long-running processing of incoming messages, add them to your own incoming queue structure and have them processed by another application thread.
 
-> Note: If you manually close a `MidiEndpointConnection` using `IClosable` (or `IDisposable`), it will not be removed from the `MidiSession`'s collection of endpoints. Instead, use the `DisconnectEndpointConnection` method of the `MidiSession` to keep both in sync. For that reason, we do not recommend that you wrap the `CreateEndpointConnection` calls in a using statement.
-
-> Note: Wire up event handlers and add all message processing plugins prior to calling `Open()`. 
+> Note: Wire up event handlers and add message processing plugins prior to calling `Open()`. 
 
 [IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiEndpointConnection.idl)

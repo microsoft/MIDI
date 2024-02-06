@@ -45,7 +45,6 @@ namespace Windows.Devices.Midi2
         // Add/Update/Remove CI Profiles
         // Add/Update/Remove CI Properties
 
-
         event Windows.Foundation.TypedEventHandler<MidiVirtualEndpointDevice, MidiStreamConfigurationRequestReceivedEventArgs> StreamConfigurationRequestReceived;
 
     }

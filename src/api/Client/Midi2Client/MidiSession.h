@@ -34,6 +34,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         midi2::MidiSessionSettings Settings() const noexcept { return m_settings; }
 
+        bool UpdateName(_In_ winrt::hstring const& newName) noexcept;
 
         foundation::Collections::IMapView<winrt::guid, midi2::MidiEndpointConnection> Connections() { return m_connections.GetView(); }
 
@@ -65,6 +66,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::MidiEndpointConnection CreateVirtualDeviceAndConnection(
             _In_ midi2::MidiVirtualEndpointDeviceDefinition const& deviceDefinition
         ) noexcept;
+
+
+
 
 
         // internal to the API

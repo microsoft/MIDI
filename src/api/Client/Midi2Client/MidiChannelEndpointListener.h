@@ -17,8 +17,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiChannelEndpointListener() = default;
 
-        hstring Id() const noexcept { return m_id; }
-        void Id(_In_ hstring const& value) noexcept { m_id = internal::ToUpperTrimmedHStringCopy(value); }
+        winrt::guid Id() const noexcept { return m_id; }
 
         hstring Name() const noexcept { return m_name; }
         void Name(_In_ hstring const& value) noexcept { m_name = internal::TrimmedHStringCopy(value); }
@@ -72,7 +71,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     private:
-        winrt::hstring m_id{};
+        winrt::guid m_id{ foundation::GuidHelper::CreateNewGuid() };                         // plugin id
         winrt::hstring m_name{};
         bool m_enabled{ true };
         foundation::IInspectable m_tag{ nullptr };

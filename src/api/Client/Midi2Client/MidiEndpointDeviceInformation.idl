@@ -124,7 +124,7 @@ namespace Windows.Devices.Midi2
 
         Boolean RequiresNoteOffTranslation{ get; };
         UInt16 RecommendedCCAutomationIntervalMS{ get; };
-        Boolean SupportsMidiPolyphonicExpression{ get; };
+        //Boolean SupportsMidiPolyphonicExpression{ get; }; // removed because the MPE profile is a better way to do this
 
 
         Windows.Foundation.Collections.IMapView<String, IInspectable> Properties{ get; };

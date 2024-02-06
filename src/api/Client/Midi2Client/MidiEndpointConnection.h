@@ -113,8 +113,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         _Success_(return == true)
         bool Open();
 
-        // IClosable
-        void Close();
+        void InternalClose();
 
         STDMETHOD(Callback)(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG timestamp, _In_ LONGLONG) override;
 
@@ -129,10 +128,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
 
 
-        winrt::Windows::Foundation::Collections::IVector<midi2::IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins() const noexcept
+        winrt::Windows::Foundation::Collections::IVectorView<midi2::IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins() const noexcept
         {
-            return m_messageProcessingPlugins;
+            return m_messageProcessingPlugins.GetView();
         }
+
+        void AddMessageProcessingPlugin(_In_ midi2::IMidiEndpointMessageProcessingPlugin const& plugin);
+
+        void RemoveMessageProcessingPlugin(_In_ winrt::guid id);
 
     private:
         uint64_t m_maxAllowedTimestampOffset{};

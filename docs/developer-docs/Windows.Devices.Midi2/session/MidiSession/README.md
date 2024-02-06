@@ -32,7 +32,7 @@ The two static functions are factory-pattern methods for creating a new session.
 | CreateEndpointConnection(endpointDeviceId, options, settings) | Create a new connection to the specified endpoint device Id, using the provided connection options and the endpoint-specific settings |
 | CreateVirtualDeviceAndConnection(deviceDefinition) | Create the device-side of an app-to-app virtual endpoint. The calling application will perform as a MIDI device, responding to discovery and other MIDI 2.0 protocol messages. |
 | DisconnectEndpointConnection(endpointConnectionId) | Cleanly disconnect an endpoint connection and remove it from the connection map |
-| UpdateSessionName(newName) | Update the name of this session locally and in the MIDI Service |
+| UpdateName(newName) | Update the name of this session locally and in the MIDI Service |
 
 > Note: If you manually close a MidiEndpointConnection using `IClosable` (or `IDisposable`), it will not be removed from the MidiSession's collection of endpoints. Instead, use the `DisconnectEndpointConnection` method of the session to keep both in sync. For that reason, we do not recommend that you wrap the `CreateEndpointConnection` calls in a using statement.
 
