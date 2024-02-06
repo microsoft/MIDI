@@ -34,6 +34,7 @@ The `MidiUniqueId` class is used to provide formatting and data validation for M
 | Function | Description |
 | --------------- | ----------- |
 | CreateBroadcast() | Constructs a broadcast `MidiUniqueId` |
+| CreateRandom() | Constructs a random `MidiUniqueId` |
 
 
 [IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiUniqueId.idl)
