@@ -81,4 +81,6 @@ When a device is first enumerated by the MIDI Service, if it is a UMP-native dev
 | DeviceMatchesFilter(deviceInformation, endpointFilter) | A helper function to compare a device against the filter. |
 | GetAdditionalPropertiesList() | This returns the list of properties which must be requested during enumeration. Typically not needed for applications, as the watcher calls this function |
 
-[IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiEndpointDeviceInformation.idl)
+## IDL
+
+[MidiEndpointDeviceInformation IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiEndpointDeviceInformation.idl)

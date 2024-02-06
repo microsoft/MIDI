@@ -46,8 +46,6 @@ namespace Windows.Devices.Midi2
         UInt16 MaxDeviceInputBandwidthIn4KBitsPerSecondUnits{ get; };
         UInt16 MaxDeviceOutputBandwidthIn4KBitsPerSecondUnits{ get; };
 
-        // TODO: Provide calculated values for above
-
         UInt32 CalculatedMaxDeviceInputBandwidthBitsPerSecond{ get; };
         UInt32 CalculatedMaxDeviceOutputBandwidthBitsPerSecond{ get; };
 

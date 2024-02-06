@@ -27,4 +27,6 @@ The static functions are for convenience in calculating offsets to a timestamp, 
 | OffsetTimestampByMilliseconds(timestampValue, offsetMilliseconds) | Offsets a given timestamp by the provided (signed) number of milliseconds |
 | OffsetTimestampBySeconds(timestampValue, offsetSeconds) | Offsets a given timestamp by the provided (signed) number of seconds |
 
-[IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiClock.idl)
+## IDL
+
+[MidiClock IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiClock.idl)

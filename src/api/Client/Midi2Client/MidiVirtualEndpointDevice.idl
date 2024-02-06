@@ -25,7 +25,7 @@ namespace Windows.Devices.Midi2
     [default_interface]
     runtimeclass MidiVirtualEndpointDevice : IMidiEndpointMessageProcessingPlugin
     {
-        MidiVirtualEndpointDevice();
+        //MidiVirtualEndpointDevice();
 
         // This is a view because all modifications require sending notifications
         // out on the endpoint. So the functions do that.

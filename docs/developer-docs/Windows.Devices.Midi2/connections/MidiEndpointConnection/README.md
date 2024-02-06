@@ -51,4 +51,6 @@ When processing the `MessageReceived` event, do so quickly. This event is synchr
 
 > Note: Wire up event handlers and add message processing plugins prior to calling `Open()`. 
 
-[IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiEndpointConnection.idl)
+## IDL
+
+[MidiEndpointConnection IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiEndpointConnection.idl)
