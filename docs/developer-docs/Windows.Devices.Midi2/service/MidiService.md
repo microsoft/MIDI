@@ -31,8 +31,7 @@ The ping does not tell you if a specific transport or device is in a bad state. 
 
 Here's an example of ping responses through the MIDI console app
 
-```
-```
+![MIDI Console Ping](./console-ping.png)
 
 ## A note on updating runtime configuration
 

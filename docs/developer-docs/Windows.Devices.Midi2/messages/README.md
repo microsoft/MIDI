@@ -7,7 +7,7 @@ has_children: true
 
 # Messages
 
-Windows MIDI Services messages are all sent and received in Universal MIDI Packet (UMP) format. a UMP is made up of 1-4 32 bit MIDI words, sized in 32 bit, 64 bit, 96 bit, and 128 bit packets. The first four bits of the packet are the message type, and from that, you can identify the type and size of message which follows.
+Windows MIDI Services messages are all sent and received in Universal MIDI Packet (UMP) format, even if the device is a bytestream MIDI 1.0 device (we do the translation for you). a UMP is made up of 1-4 32 bit MIDI words, sized in 32 bit, 64 bit, 96 bit, and 128 bit packets. The first four bits of the packet are the message type, and from that, you can identify the type and size of message which follows.
 
 ## Words
 

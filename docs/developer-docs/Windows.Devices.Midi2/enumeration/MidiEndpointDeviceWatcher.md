@@ -12,7 +12,7 @@ WinRT provides a `Windows.Devices.Enumeration` namespace with a `DeviceWatcher` 
 
 This is the class applications should use when they want to find devices, and also be notified when devices are added or removed, or when properties like function blocks or device names change.
 
-Create a MidiEndpointDeviceWatcher on a background thread, and use the internal list of Endpoints as your source of record for device properties.
+Create a `MidiEndpointDeviceWatcher` on a background thread, and use the internal list of Endpoints as your source of record for device properties.
 
 ## Properties
 

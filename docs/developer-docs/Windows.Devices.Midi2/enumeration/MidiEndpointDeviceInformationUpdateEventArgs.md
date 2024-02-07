@@ -14,7 +14,7 @@ Represents a notification that endpoint properties have been updated
 
 | Property | Description |
 | --------------- | ----------- |
-| `Id | Id of the endpoint which has been updated  |
+| `Id` | Id of the endpoint which has been updated  |
 | `UpdatedName` | True if the name properties have been updated  |
 | `UpdatedEndpointInformation` | True if the in-protocol endpoint information has been updated |
 | `UpdatedDeviceIdentity` | True if the in-protocol device identity information has been updated |

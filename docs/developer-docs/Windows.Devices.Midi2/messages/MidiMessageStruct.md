@@ -17,4 +17,6 @@ has_children: false
 | `Word2` | Third 32-bit MIDI word |
 | `Word3` | Fourth 32-bit MIDI word |
 
+## IDL
+
 [MidiMessageStruct IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiMessageStruct.idl)

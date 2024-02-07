@@ -23,5 +23,7 @@ Includes all functions and properties in `IMidiUniversalPacket`, as well as:
 | `MidiMessage96()` | Default constructor |
 | `MidiMessage96(timestamp, word0, word1, word2)` | Construct a new message with a timestamp and all 32 bit MIDI words |
 
+## IDL
+
 [MidiMessage96 IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiMessage96.idl)
 

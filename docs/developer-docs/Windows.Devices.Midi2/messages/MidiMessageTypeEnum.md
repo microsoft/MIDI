@@ -29,4 +29,6 @@ The values correspond directly to the "mt" field in the MIDI UMP packet and may 
 | `FutureReservedE128` | `0xE` | Reserved for future use by the MIDI standards bodies |
 | `Stream128` | `0xF` | 128-bit stream message, including endpoint discovery and function block messages |
 
+## IDL
+
 [MidiMessageType IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiMessageTypeEnum.idl)
