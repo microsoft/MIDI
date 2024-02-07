@@ -25,7 +25,7 @@ Note: Additionally MIDI CI functionality, which does not technically require OS 
 
 ## Developer Samples
 
-* [Developer Samples in the repo](../samples/)
+* [Developer Samples in the repo](https://github.com/microsoft/MIDI/samples/)
 
 ## Additional Resources
 
