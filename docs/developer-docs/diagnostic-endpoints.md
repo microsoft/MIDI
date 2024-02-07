@@ -1,3 +1,10 @@
+---
+layout: page
+title: Diagnostics Endpoints
+parent: Windows Midi Services
+has_children: false
+---
+
 # MIDI Diagnostic Endpoints
 
 Windows MIDI Services comes with three diagnostic endpoints, two of which are there for application development, testing, and debugging.

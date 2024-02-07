@@ -196,7 +196,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     return (int)MidiConsoleReturnCode.ErrorCreatingSession;
                 }
 
-                using var connection = session.CreateEndpointConnection(endpointId);
+                var connection = session.CreateEndpointConnection(endpointId);
                 if (connection == null)
                 {
                     AnsiConsole.WriteLine(Strings.ErrorUnableToCreateEndpointConnection);

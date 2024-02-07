@@ -1,3 +1,10 @@
+---
+layout: page
+title: Programming Languages FAQ
+parent: Windows Midi Services
+has_children: false
+---
+
 # Programming Languages and App Models FAQ
 
 This is a developer-focused FAQ.

@@ -88,16 +88,16 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                             // show table of the ping results
 
                             var table = new Table();
-                            table.Border(TableBorder.Rounded);
+                            AnsiMarkupFormatter.SetTableBorderStyle(table);
 
-                            table.AddColumn(Strings.PingResultTableColumnHeaderPing);
-                            table.AddColumn(Strings.PingResultTableColumnHeaderSendTimestamp);
-                            table.AddColumn(Strings.PingResultTableColumnHeaderServiceTimestamp);
-                            table.AddColumn(Strings.PingResultTableColumnHeaderReceiveTimestamp);
-                            table.AddColumn(Strings.PingResultTableColumnHeaderServiceBreakdown);
-                            table.AddColumn(Strings.PingResultTableColumnHeaderRoundTripTicks);
-                            table.AddColumn(Strings.PingResultTableColumnHeaderRoundTripMicroseconds);
-                            table.AddColumn(Strings.PingResultTableColumnHeaderRoundTripMilliseconds);
+                            table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PingResultTableColumnHeaderPing));
+                            table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PingResultTableColumnHeaderSendTimestamp));
+                            table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PingResultTableColumnHeaderServiceTimestamp));
+                            table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PingResultTableColumnHeaderReceiveTimestamp));
+                            table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PingResultTableColumnHeaderServiceBreakdown));
+                            table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PingResultTableColumnHeaderRoundTripTicks));
+                            table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PingResultTableColumnHeaderRoundTripMicroseconds));
+                            table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PingResultTableColumnHeaderRoundTripMilliseconds));
 
 
                             foreach (var response in pingResult.Responses)

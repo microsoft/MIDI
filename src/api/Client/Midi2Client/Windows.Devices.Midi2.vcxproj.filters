@@ -159,9 +159,6 @@
     <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
       <Filter>API\Enumeration</Filter>
     </ClCompile>
-    <ClCompile Include="MidiMessageProcessingPluginInformation.cpp">
-      <Filter>API\Service</Filter>
-    </ClCompile>
     <ClCompile Include="ResourceManager.cpp">
       <Filter>Internal\Resources</Filter>
     </ClCompile>
@@ -254,9 +251,6 @@
     </ClInclude>
     <ClInclude Include="MidiEndpointDeviceWatcher.h">
       <Filter>API\Enumeration</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiMessageProcessingPluginInformation.h">
-      <Filter>API\Service</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Internal\Resources</Filter>
