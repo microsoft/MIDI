@@ -18,4 +18,6 @@ The values correspond to the number of 32-bit MIDI words in the packet.
 | `UniversalMidiPacket96` | `3` | 96-bit (3 words) Universal MIDI Packet |
 | `UniversalMidiPacket128` | `4` | 128-bit (4 words) Universal MIDI Packet |
 
+## IDL
+
 [MidiPacketType IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiPacketTypeEnum.idl)

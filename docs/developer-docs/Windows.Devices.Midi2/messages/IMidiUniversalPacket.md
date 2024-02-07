@@ -20,5 +20,7 @@ This interface is implemented by the rich MidiMessageXX runtime class types. It 
 | -------- | ----------- |
 | `PeekFirstWord()` | Provides access to the first word of data, even if the message type and size is not yet known by the API user |
 
+## IDL
+
 [IMidiUniversalPacket IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/IMidiUniversalPacket.idl)
 

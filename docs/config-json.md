@@ -22,14 +22,14 @@ JSON is typically case-sensitive for all keys. The Windows.Data.Json parser used
 "{26FA740D-469C-4D33-BEB1-3885DE7D6DF1}":
         {
             "_comment": "KS MIDI (USB etc.)"
-        },
+        }
 ```
 and
 ```json
 "{26fa740d-469c-4d33-beb1-3885de7d6df1}":
         {
             "_comment": "KS MIDI (USB etc.)"
-        },
+        }
 ```
 
 ## Schema
@@ -61,7 +61,6 @@ Here's an example of a bare-bones file, with sections for three different transp
         {
             "_comment": "Virtual MIDI"
         }
-
     },
     "endpointProcessingPluginSettings":
     {
@@ -83,7 +82,7 @@ The basics of this are identical for each transport. We'll use KS (USB) as an ex
         "userSuppliedName" : "Pete's Kontrol S61",
         "userSuppliedDescription" : "This is my most favorite MIDI 2.0 controller in the whole world!"
     }
-    ...
+    
 },
 ```
 
@@ -108,25 +107,7 @@ This is not an exhaustive list, because the transport and processing plugins may
 
 ### Virtual MIDI 
 
-Virtual MIDI includes three different sections inside its transport bucket.
-
-```json
-"{8FEAAD91-70E1-4A19-997A-377720A719C1}":
-{
-    "_comment": "Virtual MIDI",
-    "add":
-    {
-    },
-    "update":
-    {
-    },
-    "remove":
-    {
-       
-    }
-
-}
-```
+TODO: Provide examples for this
 
 For the persistent configuration file, typically "add" is all that is specified, as it doesn't make sense to update or remove endpoints or routing on service start.
 
