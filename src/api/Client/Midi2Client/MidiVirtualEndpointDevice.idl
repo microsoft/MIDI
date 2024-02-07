@@ -27,6 +27,10 @@ namespace Windows.Devices.Midi2
     {
         //MidiVirtualEndpointDevice();
 
+        //String EndpointDeviceId{ get; };
+
+        MidiVirtualEndpointDeviceDefinition DeviceDefinition{ get; };
+
         // This is a view because all modifications require sending notifications
         // out on the endpoint. So the functions do that.
         IMapView<UInt8, MidiFunctionBlock> FunctionBlocks{ get; };

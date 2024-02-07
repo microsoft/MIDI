@@ -1,3 +1,9 @@
+---
+layout: page
+title: Config JSON
+parent: Windows Midi Services
+---
+
 # JSON Config File
 
 It's best to use the Settings application and the transport / processing plugins for Settings to manipulate the file. However, if you edit it by hand, here are some notes.

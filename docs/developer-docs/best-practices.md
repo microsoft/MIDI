@@ -1,3 +1,10 @@
+---
+layout: page
+title: Best Practices
+parent: Windows Midi Services
+has_children: false
+---
+
 # Best Practices and Performance Optimizations
 
 Here's a list of best practices and performance optimizations for MIDI API-consuming applications.

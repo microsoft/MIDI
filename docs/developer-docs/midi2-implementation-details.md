@@ -1,3 +1,10 @@
+---
+layout: page
+title: MIDI 2.0 Implementation Details
+parent: Windows MIDI Services
+has_children: false
+---
+
 # Implementation Details
 
 Specifications can be funny. As much as the MIDI Association, and all of us in it, try to be very specific and crisp on wording, there's often room for interpretation. Most of these we work out among the various OS companies under the umbrella of the MIDI Association. But there are others were an approach may just not make sense on one OS or the other. Here are the ones that are Windows-specific, that you should be aware of as a developer.

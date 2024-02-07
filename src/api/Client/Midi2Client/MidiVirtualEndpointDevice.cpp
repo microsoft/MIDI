@@ -272,6 +272,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
+            m_virtualEndpointDeviceDefinition = definition;
 
         }
         catch (...)

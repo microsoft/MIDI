@@ -7,7 +7,8 @@ using System;
 
 Console.WriteLine("Creating session");
 
-using (var session = MidiSession.CreateSession("Sample Session"))
+// session implements IDisposable
+using (var session = MidiSession.CreateSession("API Sample Session"))
 {
     var endpointAId = MidiEndpointDeviceInformation.DiagnosticsLoopbackAEndpointId;
     var endpointBId = MidiEndpointDeviceInformation.DiagnosticsLoopbackBEndpointId;
@@ -16,65 +17,64 @@ using (var session = MidiSession.CreateSession("Sample Session"))
     Console.WriteLine("Connecting to Receiver UMP Endpoint: " + endpointBId);
 
 
-    using (var sendEndpoint = session.CreateEndpointConnection(endpointAId))
-    using (var receiveEndpoint = session.CreateEndpointConnection(endpointBId))
+    var sendEndpoint = session.CreateEndpointConnection(endpointAId);
+    var receiveEndpoint = session.CreateEndpointConnection(endpointBId);
+
+
+    // c# allows local functions. This is nicer than anonymous because we can unregister it by name
+    void MessageReceivedHandler(object sender, MidiMessageReceivedEventArgs args)
     {
-        // c# allows local functions. This is nicer than anonymous because we can unregister it by name
-        void MessageReceivedHandler(object sender, MidiMessageReceivedEventArgs args)
+        var ump = args.GetMessagePacket();
+
+        Console.WriteLine();
+        Console.WriteLine("Received UMP");
+        Console.WriteLine("- Current Timestamp: " + MidiClock.Now);
+        Console.WriteLine("- UMP Timestamp:     " + ump.Timestamp);
+        Console.WriteLine("- UMP Msg Type:      " + ump.MessageType);
+        Console.WriteLine("- UMP Packet Type:   " + ump.PacketType);
+        Console.WriteLine("- Message:           " + MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(args.PeekFirstWord()));
+
+        if (ump is MidiMessage32)
         {
-            var ump = args.GetMessagePacket();
+            var ump32 = ump as MidiMessage32;
 
-            Console.WriteLine();
-            Console.WriteLine("Received UMP");
-            Console.WriteLine("- Current Timestamp: " + MidiClock.Now);
-            Console.WriteLine("- UMP Timestamp:     " + ump.Timestamp);
-            Console.WriteLine("- UMP Msg Type:      " + ump.MessageType);
-            Console.WriteLine("- UMP Packet Type:   " + ump.PacketType);
-            Console.WriteLine("- Message:           " + MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(args.PeekFirstWord()));
+            if (ump32 != null)
+                Console.WriteLine("- Word 0:            0x{0:X}", ump32.Word0);
+        }
+    };
 
-            if (ump is MidiMessage32)
-            {
-                var ump32 = ump as MidiMessage32;
+    receiveEndpoint.MessageReceived += MessageReceivedHandler;
 
-                if (ump32 != null)
-                    Console.WriteLine("- Word 0:            0x{0:X}", ump32.Word0);
-            }
-        };
+    Console.WriteLine("Opening endpoint connection");
 
-        receiveEndpoint.MessageReceived += MessageReceivedHandler;
-
-        Console.WriteLine("Opening endpoint connection");
-
-        // once you have wired up all your event handlers, added any filters/listeners, etc.
-        // You can open the connection. Doing this will query the cache for the in-protocol 
-        // endpoint information and function blocks. If not there, it will send out the requests
-        // which will come back asynchronously with responses.
-        receiveEndpoint.Open();
-        sendEndpoint.Open();
+    // once you have wired up all your event handlers, added any filters/listeners, etc.
+    // You can open the connection. Doing this will query the cache for the in-protocol 
+    // endpoint information and function blocks. If not there, it will send out the requests
+    // which will come back asynchronously with responses.
+    receiveEndpoint.Open();
+    sendEndpoint.Open();
 
 
-        Console.WriteLine("Creating MIDI 1.0 Channel Voice 32-bit UMP...");
+    Console.WriteLine("Creating MIDI 1.0 Channel Voice 32-bit UMP...");
 
-        var ump32 = MidiMessageBuilder.BuildMidi1ChannelVoiceMessage(
-            MidiClock.Now, // use current timestamp
-            5,      // group 5
-            Midi1ChannelVoiceMessageStatus.NoteOn,  // 9
-            3,      // channel 3
-            120,    // note 120 - hex 0x78
-            100);   // velocity 100 hex 0x64
+    var ump32 = MidiMessageBuilder.BuildMidi1ChannelVoiceMessage(
+        MidiClock.Now, // use current timestamp
+        5,      // group 5
+        Midi1ChannelVoiceMessageStatus.NoteOn,  // 9
+        3,      // channel 3
+        120,    // note 120 - hex 0x78
+        100);   // velocity 100 hex 0x64
 
-        sendEndpoint.SendMessagePacket((IMidiUniversalPacket)ump32);  // could also use the SendWords methods, etc.
+    sendEndpoint.SendMessagePacket((IMidiUniversalPacket)ump32);  // could also use the SendWords methods, etc.
 
-        Console.WriteLine(" ** Wait for the message to arrive, and then press enter to cleanup. ** ");
-        Console.ReadLine();
+    Console.WriteLine(" ** Wait for the message to arrive, and then press enter to cleanup. ** ");
+    Console.ReadLine();
 
-        // you should unregister the event handler as well
-        receiveEndpoint.MessageReceived -= MessageReceivedHandler;
+    // you should unregister the event handler as well
+    receiveEndpoint.MessageReceived -= MessageReceivedHandler;
 
-        // not strictly necessary
-        session.DisconnectEndpointConnection(sendEndpoint.ConnectionId);
-        session.DisconnectEndpointConnection(receiveEndpoint.ConnectionId);
-    }
-
+    // not strictly necessary if the session is going out of scope or is in a using block
+    session.DisconnectEndpointConnection(sendEndpoint.ConnectionId);
+    session.DisconnectEndpointConnection(receiveEndpoint.ConnectionId);
 }
 

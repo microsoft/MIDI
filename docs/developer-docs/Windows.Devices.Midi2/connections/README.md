@@ -1,7 +1,8 @@
-# Connections
+---
+layout: api_page
+title: Connections
+parent: Windows.Devices.Midi2 API
+has_children: true
+---
 
-Once you have a session, you will create one or more connections to send and receive messages.
-
-* [Overview](./)
-* [MidiEndpointConnection](./MidiEndpointConnection/)
-* [MidiMessageReceivedEventArgs](./MidiMessageReceivedEventArgs/)
+# Connection APIs

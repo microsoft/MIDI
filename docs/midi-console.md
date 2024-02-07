@@ -1,3 +1,9 @@
+---
+layout: page
+title: MIDI Console
+parent: Windows Midi Services
+---
+
 # Windows MIDI Services Console
 
 If you have the midi console installed, you can invoke it from any command prompt using `midi`. We recommend using [Windows Terminal](https://aka.ms/terminal) for the best experience.
@@ -65,6 +71,16 @@ Here are examples of the command with various parameters.
 ```
 midi service ping --verbose
 midi service ping --verbose --count 20 --timeout 20000
+```
+
+### Stop / Start / Restart the Service
+
+The MIDI console has three commands for managing the Windows service. These can be useful when developing or debugging service-side plugins. Note that these must be run from an Administrator console session.
+
+```
+midi service stop
+midi service start
+midi service restart
 ```
 
 ## See the Current Timestamp and Frequency

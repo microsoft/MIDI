@@ -1,3 +1,10 @@
+---
+layout: page
+title: Endpoint Device Ids
+parent: Windows Midi Services
+has_children: false
+---
+
 # Endpoint Device Ids
 
 The Endpoint Device Id (also referred to as a Device Id) is the way we identify individual devices and interfaces in Windows. 

@@ -1,3 +1,10 @@
+---
+layout: api_group_page
+title: Client Plugins
+parent: Windows.Devices.Midi2 API
+has_children: true
+---
+
 # Client-side Processing Plugins
 
 Connections allocate service resources (time and memory), so we recommend applications maintain only a single connection to an endpoint within any session. But because the new endpoint stream-focused approach aggregates what used to be considered ports, we provide processing plugins to parcel out the incoming messages based on criteria set by the application. In this way, an application can have the logical equivalent of several input ports, without the associated resource usage.
@@ -10,6 +17,3 @@ To help, there are plugins which implement `IMidiEndpointMessageProcessingPlugin
 
 Listener instances are 1:1 with endpoint connections. We don't support using the same listener on multiple endpoints.
 
-* [MidiChannelEndpointListener](./MidiChannelEndpointListener/)
-* [MidiGroupEndpointListener](./MidiGroupEndpointListener/)
-* [MidiMessageTypeEndpointListener](./MidiMessageTypeEndpointListener/)

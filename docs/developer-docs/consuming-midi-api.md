@@ -1,3 +1,10 @@
+---
+layout: page
+title: Consuming the MIDI API
+parent: Windows Midi Services
+has_children: false
+---
+
 # Consuming the Windows MIDI Services API
 
 The Windows MIDI Services API is built using C++/WinRT. WinRT, a requirement for modern APIs on Windows, enables desktop applications, regardless of language, to be able to use APIs, SDKs, etc. that we create. The older tools, C++/CX, are arguably simpler to implement in, but because they include proprietary extensions to C++, we decided to go with standards-based C++/WinRT instead.

@@ -159,7 +159,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             // send the ping
             endpoint.SendMessageWords(timestamp, request.Word0, pingSourceId, pingIndex, request.Padding);
 
-            Sleep(0);
+            //Sleep(0);
         }
 
         // Wait for all responses to come in (receivedCount == pingCount). If not all responses come back, report the failure.
@@ -193,9 +193,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // unwire the event and close the session.
         endpoint.MessageReceived(eventRevokeToken);
 
-        // not strictly necessary
         session.DisconnectEndpointConnection(endpoint.ConnectionId());
-
         session.Close();
 
         return *responseSummary;

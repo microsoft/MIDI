@@ -126,7 +126,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     return (int)MidiConsoleReturnCode.ErrorCreatingSession;
                 }
 
-                using var connection = session.CreateEndpointConnection(endpointId, bidiOpenOptions);
+                var connection = session.CreateEndpointConnection(endpointId, bidiOpenOptions);
                 if (connection != null)
                 {
                     openSuccess = connection.Open();

@@ -58,6 +58,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void UpdateEndpointName(_In_ winrt::hstring const& name) noexcept;
 
 
+        midi2::MidiVirtualEndpointDeviceDefinition DeviceDefinition() { return m_virtualEndpointDeviceDefinition; }
+
 
 
         void Initialize(_In_ midi2::IMidiEndpointConnectionSource const& endpointConnection) noexcept;
@@ -77,7 +79,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void SendFunctionBlockNameNotificationMessages(_In_ midi2::MidiFunctionBlock const& fb) noexcept;
         
 
-        //midi2::MidiVirtualEndpointDeviceDefinition m_virtualEndpointDeviceDefinition
+        midi2::MidiVirtualEndpointDeviceDefinition m_virtualEndpointDeviceDefinition{ nullptr };
 
         winrt::guid m_id{ foundation::GuidHelper::CreateNewGuid() };                         // plugin id
         winrt::hstring m_name{};                    // plugin name, not the endpointdevice name
@@ -99,9 +101,4 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::event<foundation::TypedEventHandler<midi2::MidiVirtualEndpointDevice, midi2::MidiStreamConfigurationRequestReceivedEventArgs>> m_streamConfigurationRequestReceivedEvent;
     };
 }
-namespace winrt::Windows::Devices::Midi2::factory_implementation
-{
-    struct MidiVirtualEndpointDevice : MidiVirtualEndpointDeviceT<MidiVirtualEndpointDevice, implementation::MidiVirtualEndpointDevice>
-    {
-    };
-}
+
