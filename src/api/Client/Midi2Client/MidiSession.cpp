@@ -148,29 +148,20 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     midi2::MidiEndpointConnection MidiSession::CreateEndpointConnection(
         winrt::hstring const& endpointDeviceId,
-        midi2::MidiEndpointConnectionOptions const& options,
-        midi2::IMidiEndpointDefinedConnectionSettings const& /*settings*/
+        midi2::IMidiEndpointConnectionSettings const& /*settings*/
         ) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Creating Endpoint Connection");
 
         try
         {
-            auto normalizedDeviceId = winrt::to_hstring(internal::NormalizeEndpointInterfaceIdCopy(endpointDeviceId.c_str()).c_str());
+            auto normalizedDeviceId = winrt::to_hstring(internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId.c_str()).c_str());
             auto endpointConnection = winrt::make_self<implementation::MidiEndpointConnection>();
-
-            // default options
-            midi2::MidiEndpointConnectionOptions fixedOptions{ nullptr };
-
-            if (options != nullptr)
-            {
-                fixedOptions = options;
-            }
 
             // generate internal endpoint Id
             auto connectionInstanceId = foundation::GuidHelper::CreateNewGuid();
 
-            if (endpointConnection->InternalInitialize(m_id, m_serviceAbstraction, connectionInstanceId, normalizedDeviceId, fixedOptions))
+            if (endpointConnection->InternalInitialize(m_id, m_serviceAbstraction, connectionInstanceId, normalizedDeviceId))
             {
                 m_connections.Insert(connectionInstanceId, *endpointConnection);
 
@@ -195,19 +186,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     midi2::MidiEndpointConnection MidiSession::CreateEndpointConnection(
-        winrt::hstring const& endpointDeviceId,
-        midi2::MidiEndpointConnectionOptions const& options
-        ) noexcept
-    {
-        return CreateEndpointConnection(endpointDeviceId, options, nullptr);
-    }
-
-    _Use_decl_annotations_
-    midi2::MidiEndpointConnection MidiSession::CreateEndpointConnection(
         winrt::hstring const& endpointDeviceId
         ) noexcept
     {
-        return CreateEndpointConnection(endpointDeviceId, nullptr, nullptr);
+        return CreateEndpointConnection(endpointDeviceId, nullptr);
     }
 
 
@@ -414,7 +396,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         internal::LogInfo(__FUNCTION__, L"Virtual device creation worked.");
 
         // Creating the device succeeded, so create the connection
-        auto connection = CreateEndpointConnection(endpointDeviceId, nullptr, nullptr);
+        auto connection = CreateEndpointConnection(endpointDeviceId, nullptr);
 
         internal::LogInfo(__FUNCTION__, L"Created endpoint connection");
 

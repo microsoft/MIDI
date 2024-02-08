@@ -144,8 +144,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::guid sessionId,
         winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
         winrt::guid const connectionId,
-        winrt::hstring const endpointDeviceId, 
-        midi2::MidiEndpointConnectionOptions options
+        winrt::hstring const endpointDeviceId
     )
     {
         internal::LogInfo(__FUNCTION__, L"Internal Initialize ");
@@ -162,8 +161,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             m_serviceAbstraction = serviceAbstraction;
             
-            m_options = options;
-
             return true;
         }
         catch (winrt::hresult_error const& ex)
@@ -185,8 +182,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
             // Activate the endpoint for this device. Will fail if the device is not a BiDi device
             if (!ActivateMidiStream(m_serviceAbstraction, __uuidof(IMidiBiDi), (void**)&m_endpointAbstraction))
             {
-                OutputDebugString(__FUNCTION__ L" coult not activate MIDI stream");
-
                 internal::LogGeneralError(__FUNCTION__, L"Could not activate MIDI Stream");
 
                 return false;
@@ -275,8 +270,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     MidiEndpointConnection::~MidiEndpointConnection()
     {
-        OutputDebugString(__FUNCTION__ L"");
-
         if (!m_closeHasBeenCalled)
         {
             InternalClose();
@@ -288,8 +281,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     void MidiEndpointConnection::InitializePlugins() noexcept
     {
-        OutputDebugString(__FUNCTION__ L"");
-
         internal::LogInfo(__FUNCTION__, L"Initializing message processing plugins");
 
         for (const auto& plugin : m_messageProcessingPlugins)
@@ -309,8 +300,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     void MidiEndpointConnection::CallOnConnectionOpenedOnPlugins() noexcept
     {
-        OutputDebugString(__FUNCTION__ L"");
-
         internal::LogInfo(__FUNCTION__, L"Notifying message processing plugins that the connection is opened");
 
         for (const auto& plugin : m_messageProcessingPlugins)
@@ -872,6 +861,46 @@ namespace winrt::Windows::Devices::Midi2::implementation
             return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
         }
     }
+
+
+
+
+
+    _Use_decl_annotations_
+    midi2::MidiSendMessageResult MidiEndpointConnection::SendMessagesWordList(
+        internal::MidiTimestamp timestamp,
+        collections::IVectorView<uint32_t> const& words) noexcept
+    {
+        UNREFERENCED_PARAMETER(timestamp);
+        UNREFERENCED_PARAMETER(words);
+
+        // TODO: Implement SendMessagesWordList
+
+        return midi2::MidiSendMessageResult::Succeeded;
+    }
+
+
+
+
+    _Use_decl_annotations_
+    midi2::MidiSendMessageResult MidiEndpointConnection::SendMessagesWordArray(
+        internal::MidiTimestamp timestamp,
+        winrt::array_view<uint32_t const> words) noexcept
+    {
+        UNREFERENCED_PARAMETER(timestamp);
+        UNREFERENCED_PARAMETER(words);
+
+        // TODO: Implement SendMessagesWordArray
+
+        return midi2::MidiSendMessageResult::Succeeded;
+    }
+
+
+
+
+
+
+
 
 
     _Use_decl_annotations_

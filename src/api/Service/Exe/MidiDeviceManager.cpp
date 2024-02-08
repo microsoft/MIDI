@@ -483,7 +483,7 @@ CMidiDeviceManager::ActivateEndpointInternal
         DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
 
 
-    midiPort->InstanceId = internal::NormalizeDeviceInstanceIdCopy(CreateInfo->pszInstanceId);
+    midiPort->InstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(CreateInfo->pszInstanceId);
     midiPort->MidiFlow = MidiFlow;
     midiPort->Enumerator = MidiOne?AUDIO_DEVICE_ENUMERATOR : MIDI_DEVICE_ENUMERATOR;
 
@@ -586,7 +586,7 @@ CMidiDeviceManager::ActivateEndpointInternal
 
     if (DeviceInterfaceId)
     {
-        *DeviceInterfaceId = internal::NormalizeEndpointInterfaceIdCopy(midiPort->DeviceInterfaceId.get()).c_str();
+        *DeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(midiPort->DeviceInterfaceId.get()).c_str();
     }
 
     // success, transfer the midiPort to the list
@@ -616,7 +616,7 @@ CMidiDeviceManager::UpdateEndpointProperties
 
     OutputDebugString(L"\n" __FUNCTION__ " ");
 
-    auto requestedInterfaceId = internal::NormalizeEndpointInterfaceIdCopy(DeviceInterfaceId);
+    auto requestedInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(DeviceInterfaceId);
 
     //OutputDebugString(requestedInterfaceId.c_str());
     //OutputDebugString(L"\n");
@@ -624,7 +624,7 @@ CMidiDeviceManager::UpdateEndpointProperties
     // locate the MIDIPORT 
     auto item = std::find_if(m_MidiPorts.begin(), m_MidiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
         {
-            auto portInterfaceId = internal::NormalizeEndpointInterfaceIdCopy(Port->DeviceInterfaceId.get());
+            auto portInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(Port->DeviceInterfaceId.get());
 
 //            OutputDebugString((L" -- Checking " + portInterfaceId).c_str());
 
@@ -770,7 +770,7 @@ CMidiDeviceManager::DeactivateEndpoint
 
     OutputDebugString(__FUNCTION__ L" - enter. Cleaned instance id is: ");
 
-    auto cleanId = internal::NormalizeDeviceInstanceIdCopy(InstanceId);
+    auto cleanId = internal::NormalizeDeviceInstanceIdWStringCopy(InstanceId);
 
     OutputDebugString(cleanId.c_str());
 

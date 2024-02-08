@@ -20,9 +20,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         //static winrt::hstring UniversalMidiPacketBidirectionalInterfaceClassId() noexcept { return L"" /* STRING_DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI */; }
 
         // these would be more robust if they did an enumeration lookup on the loopback/ping properties
-        static winrt::hstring DiagnosticsLoopbackAEndpointId() noexcept { return MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_A; }
-        static winrt::hstring DiagnosticsLoopbackBEndpointId() noexcept { return MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_B; }
-        static winrt::hstring DiagnosticsInternalPingEndpointId() noexcept { return MIDI_DIAGNOSTICS_PING_BIDI_ID; }
+        static winrt::hstring DiagnosticsLoopbackAEndpointId() noexcept { return internal::NormalizeEndpointInterfaceIdHStringCopy(MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_A).c_str(); }
+        static winrt::hstring DiagnosticsLoopbackBEndpointId() noexcept { return internal::NormalizeEndpointInterfaceIdHStringCopy(MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_B).c_str(); }
+        static winrt::hstring DiagnosticsInternalPingEndpointId() noexcept { return internal::NormalizeEndpointInterfaceIdHStringCopy(MIDI_DIAGNOSTICS_PING_BIDI_ID).c_str(); }
 
         static winrt::hstring EndpointInterfaceClass() noexcept { return STRING_DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI; }
 
@@ -40,7 +40,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         static winrt::Windows::Devices::Enumeration::DeviceWatcher CreateWatcher(
             _In_ midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept;
 
-        static bool MidiEndpointDeviceInformation::DeviceMatchesFilter(
+        static bool DeviceMatchesFilter(
             _In_ midi2::MidiEndpointDeviceInformation const& deviceInformation,
             _In_ midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept;
 

@@ -33,38 +33,28 @@ CMidi2VirtualMidiBiDi::Initialize(
 
     m_callback = Callback;
     m_callbackContext = Context;
-    m_endpointId = internal::NormalizeEndpointInterfaceIdCopy(endpointId);
+    m_endpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointId);
   
     //if (Context != MIDI_PROTOCOL_MANAGER_ENDPOINT_CREATION_CONTEXT)
     {
-        OutputDebugString(__FUNCTION__ L" Looking up Endpoint:");
-        OutputDebugString(m_endpointId.c_str());
-
         HRESULT hr = S_OK;
 
         // This should use SWD properties and not a string search
 
         if (internal::EndpointInterfaceIdContainsString(m_endpointId, MIDI_VIRT_INSTANCE_ID_DEVICE_PREFIX))
         {
-            OutputDebugString(__FUNCTION__ L" - endpoint id is a virtual device\n");
-
             m_isDeviceSide = true;
 
             LOG_IF_FAILED(hr = AbstractionState::Current().GetEndpointTable()->OnDeviceConnected(m_endpointId, this));
         }
         else if (internal::EndpointInterfaceIdContainsString(m_endpointId, MIDI_VIRT_INSTANCE_ID_CLIENT_PREFIX))
         {
-            OutputDebugString(__FUNCTION__ L" - endpoint id is a virtual client\n");
-
             m_isDeviceSide = false;
 
             LOG_IF_FAILED(hr = AbstractionState::Current().GetEndpointTable()->OnClientConnected(m_endpointId, this));
         }
         else
         {
-            OutputDebugString(__FUNCTION__ L" - endpoint id is unknown type\n");
-            OutputDebugString(m_endpointId.c_str());
-
             // we don't understand this endpoint id
 
             hr = E_FAIL;
@@ -83,8 +73,6 @@ CMidi2VirtualMidiBiDi::Initialize(
 HRESULT
 CMidi2VirtualMidiBiDi::Cleanup()
 {
-    OutputDebugString(__FUNCTION__ L" - enter\n");
-
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
@@ -99,18 +87,10 @@ CMidi2VirtualMidiBiDi::Cleanup()
 
     if (m_isDeviceSide)
     {
-        OutputDebugString(__FUNCTION__ L" - this is the device BiDi, so calling OnDeviceDisconnected\n");
-
         LOG_IF_FAILED(AbstractionState::Current().GetEndpointTable()->OnDeviceDisconnected(m_endpointId));
-    }
-    else
-    {
-        OutputDebugString(__FUNCTION__ L" - this is the client BiDi. Nothing needed here.\n");
     }
 
     UnlinkAssociatedBiDi();
-
-    OutputDebugString(__FUNCTION__ L" - exit\n");
 
     return S_OK;
 }

@@ -44,13 +44,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         winrt::Windows::Devices::Midi2::MidiEndpointConnection CreateEndpointConnection(
             _In_ winrt::hstring const& endpointDeviceId,
-            _In_ midi2::MidiEndpointConnectionOptions const& options
-        ) noexcept;
-
-        winrt::Windows::Devices::Midi2::MidiEndpointConnection CreateEndpointConnection(
-            _In_ winrt::hstring const& endpointDeviceId,
-            _In_ midi2::MidiEndpointConnectionOptions const& options,
-            _In_ midi2::IMidiEndpointDefinedConnectionSettings const& settings
+            _In_ midi2::IMidiEndpointConnectionSettings const& settings
         ) noexcept;
 
 

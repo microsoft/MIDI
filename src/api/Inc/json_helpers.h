@@ -104,10 +104,18 @@ namespace Windows::Devices::Midi2::Internal
 
 
 
-    inline void JsonStringifyObjectToOutParam(_In_ json::JsonObject obj, _Out_ BSTR** outParam)
+    inline bool JsonStringifyObjectToOutParam(_In_ json::JsonObject obj, _Out_ BSTR** outParam)
     {
         ATL::CComBSTR responseString = obj.Stringify().c_str();
-        responseString.CopyTo(*outParam);
+        
+        auto hr = responseString.CopyTo(*outParam);
+
+        if (SUCCEEDED(hr))
+        {
+            return true;
+        }
+
+        return false;
     }
 
 

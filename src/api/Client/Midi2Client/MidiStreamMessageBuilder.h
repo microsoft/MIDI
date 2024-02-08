@@ -121,7 +121,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     private:
 
-        static collections::IVector<midi2::MidiMessage128> MidiStreamMessageBuilder::BuildSplitTextMessages(
+        static collections::IVector<midi2::MidiMessage128> BuildSplitTextMessages(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const status,
             _In_ uint16_t const word0Remainder,

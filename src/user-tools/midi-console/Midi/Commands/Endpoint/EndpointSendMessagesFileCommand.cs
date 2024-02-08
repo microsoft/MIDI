@@ -97,7 +97,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             if (!string.IsNullOrEmpty(endpointId))
             {
                 // TODO: Update loc strings
-                AnsiConsole.MarkupLine(Strings.SendMessageSendingThroughEndpointLabel + ": " + AnsiMarkupFormatter.FormatDeviceInstanceId(endpointId));
+                AnsiConsole.MarkupLine(Strings.SendMessageSendingThroughEndpointLabel + ": " + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointId));
                 AnsiConsole.WriteLine();
 
                 AnsiConsole.MarkupLine("Temporary UI change: Only error lines will be displayed when sending messages.");

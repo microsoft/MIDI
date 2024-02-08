@@ -97,11 +97,6 @@ namespace Windows::Devices::Midi2::Internal
         return winrt::hstring{ ws };
     }
 
-    inline winrt::hstring ToUpperTrimmedHStringCopy(_In_ winrt::hstring s)
-    {
-        return ToUpperHStringCopy(TrimmedHStringCopy(s));
-    }
-
     inline winrt::hstring ToLowerHStringCopy(_In_ winrt::hstring s)
     {
         std::wstring ws{ s };
@@ -109,6 +104,17 @@ namespace Windows::Devices::Midi2::Internal
 
         return winrt::hstring{ ws };
     }
+
+    inline winrt::hstring ToUpperTrimmedHStringCopy(_In_ winrt::hstring s)
+    {
+        return ToUpperHStringCopy(TrimmedHStringCopy(s));
+    }
+
+    inline winrt::hstring ToLowerTrimmedHStringCopy(_In_ winrt::hstring s)
+    {
+        return ToLowerHStringCopy(TrimmedHStringCopy(s));
+    }
+
 
 
 
@@ -121,13 +127,31 @@ namespace Windows::Devices::Midi2::Internal
     }
 
     // This is for the device instance id. Not to be confused with the interface id
-    inline std::wstring NormalizeDeviceInstanceIdCopy(_In_ std::wstring deviceInstanceId)
+    inline std::wstring NormalizeDeviceInstanceIdWStringCopy(_In_ std::wstring deviceInstanceId)
     {
         return ToUpperTrimmedWStringCopy(deviceInstanceId);
     }
+    // This is for the device instance id. Not to be confused with the interface id
+    inline winrt::hstring NormalizeDeviceInstanceIdHStringCopy(_In_ winrt::hstring deviceInstanceId)
+    {
+        return ToUpperTrimmedHStringCopy(deviceInstanceId);
+    }
+
+    //// This is for the endpoint device interface id (the long SWD id with the GUID)
+    //inline std::wstring NormalizeEndpointInterfaceIdCopy(_In_ std::wstring endpointInterfaceId)
+    //{
+    //    return ToLowerTrimmedWStringCopy(endpointInterfaceId);
+    //}
+
 
     // This is for the endpoint device interface id (the long SWD id with the GUID)
-    inline std::wstring NormalizeEndpointInterfaceIdCopy(_In_ std::wstring endpointInterfaceId)
+    inline winrt::hstring NormalizeEndpointInterfaceIdHStringCopy(_In_ winrt::hstring endpointInterfaceId)
+    {
+        return ToLowerTrimmedHStringCopy(endpointInterfaceId);
+    }
+
+    // This is for the endpoint device interface id (the long SWD id with the GUID)
+    inline std::wstring NormalizeEndpointInterfaceIdWStringCopy(_In_ std::wstring endpointInterfaceId)
     {
         return ToLowerTrimmedWStringCopy(endpointInterfaceId);
     }
@@ -136,7 +160,7 @@ namespace Windows::Devices::Midi2::Internal
     // what NormalizeEndpointInterfaceIdCopy produces
     inline bool EndpointInterfaceIdContainsString(_In_ std::wstring endpointInterfaceId, _In_ std::wstring searchFor)
     {
-        auto id = NormalizeEndpointInterfaceIdCopy(endpointInterfaceId);
+        auto id = NormalizeEndpointInterfaceIdWStringCopy(endpointInterfaceId);
         auto sub = ToLowerWStringCopy(searchFor);             // match case with NormalizeEndpointInterfaceIdCopy
 
         if (id == L"" || sub == L"")
