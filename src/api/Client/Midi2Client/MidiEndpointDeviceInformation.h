@@ -106,10 +106,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool SupportsMidiPolyphonicExpression() { return GetBoolProperty(STRING_PKEY_MIDI_SupportsMidiPolyphonicExpression, false); }
         uint16_t RecommendedCCAutomationIntervalMS() { return GetUInt16Property(STRING_PKEY_MIDI_RecommendedCCAutomationIntervalMS, 0); }
 
-        winrt::hstring Description() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UserSuppliedDescription, L""); }
-        winrt::hstring LargeImagePath() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UserSuppliedLargeImagePath, L""); }
-        winrt::hstring SmallImagePath() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UserSuppliedSmallImagePath, L""); }
+        winrt::hstring UserSuppliedDescription() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UserSuppliedDescription, L""); }
+        winrt::hstring UserSuppliedLargeImagePath() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UserSuppliedLargeImagePath, L""); }
+        winrt::hstring UserSuppliedSmallImagePath() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UserSuppliedSmallImagePath, L""); }
 
+        winrt::hstring TransportSuppliedDescription() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_TransportSuppliedDescription, L""); }
 
 
         collections::IMapView<winrt::hstring, IInspectable> Properties() { return m_properties.GetView(); }

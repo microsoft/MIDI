@@ -15,14 +15,9 @@ MIDI_IDL_IMPORT
 
 
 import "IMidiMessageReceivedEventSource.idl";
-
-//import "MidiStreamConfigurationRequestedSettings.idl";
-
 import "IMidiEndpointMessageProcessingPlugin.idl";
 import "MidiSendMessageResultEnum.idl";
-
 import "IMidiEndpointConnectionSettings.idl";
-
 import "IMidiEndpointConnectionSource.idl";
 
 namespace Windows.Devices.Midi2

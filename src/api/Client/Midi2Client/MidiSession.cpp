@@ -202,12 +202,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         internal::LogInfo(__FUNCTION__, L"");
 
-
-        //winrt::hstring endpointDeviceId = 
-        //    L"\\\\?\\SWD#MIDISRV#MIDIU_VIRTDEV_" + 
-        //    deviceDefinition.EndpointProductInstanceId() +
-        //    L"#" + midi2::MidiEndpointDeviceInformation::EndpointInterfaceClass();
-
         winrt::hstring endpointDeviceId{};
 
 
@@ -216,7 +210,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         // todo: grab this from a constant
         winrt::hstring virtualDeviceAbstractionId = L"{8FEAAD91-70E1-4A19-997A-377720A719C1}";
-
 
 
         json::JsonObject topLevelTransportPluginSettingsObject;
@@ -250,10 +243,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY,
             deviceDefinition.EndpointName().c_str());
 
-        //internal::JsonSetWStringProperty(
-        //    endpointDefinitionObject,
-        //    MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY,
-        //    deviceDefinition.EndpointDescription().c_str());
+        internal::JsonSetWStringProperty(
+            endpointDefinitionObject,
+            MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY,
+            deviceDefinition.TransportSuppliedDescription().c_str());
         
 
         // TODO: Other props that have to be set at the service level and not in-protocol

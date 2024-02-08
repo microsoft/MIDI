@@ -117,6 +117,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         additionalProperties.Append(STRING_PKEY_MIDI_TransportSuppliedEndpointName);
         additionalProperties.Append(STRING_PKEY_MIDI_GenerateIncomingTimestamp);
 
+        additionalProperties.Append(STRING_PKEY_MIDI_TransportSuppliedDescription);       
+
         // USB / KS Properties ===============================================================
         // TODO: Group Terminal Blocks will likely be a single property
         additionalProperties.Append(STRING_PKEY_MIDI_IN_GroupTerminalBlocks);
