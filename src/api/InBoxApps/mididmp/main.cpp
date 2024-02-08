@@ -36,15 +36,6 @@ void OutputBlankLine()
         << std::endl;
 }
 
-void OutputCurrentTime()
-{
-    auto const time = std::chrono::current_zone()->to_local(std::chrono::system_clock::now());
-
-    std::wcout
-        << std::format(L"{:%Y-%m-%d %X}", time)
-        << std::endl;
-}
-
 void OutputSectionHeader(_In_ std::wstring headerText)
 {
     const std::wstring sectionHeaderSeparator = std::wstring(79, '=');
@@ -84,6 +75,26 @@ void OutputStringField(_In_ std::wstring fieldName, _In_ winrt::hstring value)
         << value.c_str()
         << std::endl;
 }
+
+void OutputStringField(_In_ std::wstring fieldName, _In_ std::wstring value)
+{
+    std::wcout
+        << fieldName
+        << fieldSeparator
+        << value
+        << std::endl;
+}
+
+
+void OutputCurrentTime()
+{
+    auto const time = std::chrono::current_zone()->to_local(std::chrono::system_clock::now());
+
+    OutputStringField(L"current_time", std::format(L"{:%Y-%m-%d %X}", time));
+
+}
+
+
 
 void OutputTimestampField(_In_ std::wstring fieldName, _In_ uint64_t value)
 {
@@ -127,12 +138,15 @@ int main()
     bool midiClock = true;
 
     OutputHeader(L"Microsoft Windows MIDI Services");
+
+    OutputSectionHeader(L"header");
+
     OutputCurrentTime();
     OutputBlankLine();
 
     try
     {
-        OutputSectionHeader(L"Endpoints");
+        OutputSectionHeader(L"enum_endpoints");
 
         // list devices
 
@@ -208,7 +222,7 @@ int main()
         // ping the service
         if (pingTest)
         {
-            OutputSectionHeader(L"Ping Test");
+            OutputSectionHeader(L"ping_test");
 
             OutputTimestampField(L"ping_attempt_count", pingCount);
 
@@ -225,17 +239,16 @@ int main()
             else
             {
                 OutputError(L"Ping test failed");
-                OutputStringField(L"Failure Reason", pingResult.FailureReason());
+                OutputStringField(L"ping_failure_reason", pingResult.FailureReason());
             }
         }
 
         if (midiClock)
         {
-            OutputSectionHeader(L"Clock");
+            OutputSectionHeader(L"midi_clock");
 
             OutputTimestampField(L"clock_frequency", midi2::MidiClock::TimestampFrequency());
             OutputTimestampField(L"clock_now", midi2::MidiClock::Now());
-
         }
 
     }

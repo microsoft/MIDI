@@ -13,11 +13,15 @@ The utility returns information only about MIDI. Here is example output:
 ```
 C:\Users\peteb>mididmp
 Microsoft Windows MIDI Services
-2024-02-08 18:28:52
-
 
 ===============================================================================
-Endpoints
+header
+===============================================================================
+
+current_time : 2024-02-08 18:44:31
+
+===============================================================================
+enum_endpoints
 ===============================================================================
 
 endpoint_device_id : \\?\swd#midisrv#midiu_diag_loopback_a#{e7cce071-3c03-423f-88d3-f1045d02552b}
@@ -65,7 +69,7 @@ parent_id : USB\VID_6666&PID_7777&MI_03\9&1663efa2&0&0003
 parent_name : Foo Synth
 
 ===============================================================================
-Ping Test
+ping_test
 ===============================================================================
 
 ping_attempt_count : 10
@@ -74,9 +78,32 @@ ping_time_round_trip_total_ticks : 7954
 ping_time_round_trip_average_ticks : 795
 
 ===============================================================================
-Clock
+midi_clock
 ===============================================================================
 
 clock_frequency : 10000000
 clock_now : 912988511667
 ```
+
+If the MIDI Service is not running or not installed, you'll get output like this:
+
+```
+C:\Users\peteb>mididmp
+===============================================================================
+header
+===============================================================================
+
+current_time : 2024-02-08 18:47:14
+
+===============================================================================
+enum_endpoints
+===============================================================================
+
+ERROR : Enumerating devices returned no matches. This is not expected and indicates an installation problem or that the service is not running.
+```
+
+We may add more fields or sections in the future. If you are machine parsing this file, do not rely on the order of fields or sections. The actual names of fields shown and the section headers will remain static and can be used in machine parsing, however. The tokens are not localized.
+
+The date at the top of the file is in YYYY-MM-DD format. Time is in 24-hour format.
+
+The executable returns 0 when succeeded, and non-zero when failed.
