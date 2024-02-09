@@ -19,6 +19,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static internal::MidiTimestamp Now();
 
+        static internal::MidiTimestamp TimestampConstantSendImmediately() { return MIDI_TIMESTAMP_SEND_IMMEDIATELY; }
+
         static uint64_t TimestampFrequency();
 
         static internal::MidiTimestamp OffsetTimestampByTicks(

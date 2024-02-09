@@ -19,6 +19,9 @@ namespace Windows.Devices.Midi2
         // gets the current MIDI timestamp
         static MIDI_TIMESTAMP Now{ get; };
 
+        // gets the current MIDI timestamp
+        static MIDI_TIMESTAMP TimestampConstantSendImmediately{ get; };
+
         // returns the units per second for the timestamp
         static UInt64 TimestampFrequency{ get; };
 

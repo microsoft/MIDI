@@ -305,6 +305,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 });
             break;
 
+        case MidiEndpointDeviceInformationSortOrder::EndpointDeviceId:
+            std::sort(begin(midiDevices), end(midiDevices),
+                [](_In_ const auto& device1, _In_ const auto& device2)
+                {
+                    return device1.Id() < device2.Id();
+                });
+            break;
+
         case MidiEndpointDeviceInformationSortOrder::ContainerThenName:
             std::sort(begin(midiDevices), end(midiDevices),
                 [](_In_ const auto& device1, _In_ const auto& device2)
@@ -326,6 +334,51 @@ namespace winrt::Windows::Devices::Midi2::implementation
                     return device1.ContainerId() < device2.ContainerId();
                 });
             break;
+
+        case MidiEndpointDeviceInformationSortOrder::ContainerThenEndpointDeviceId:
+            std::sort(begin(midiDevices), end(midiDevices),
+                [](_In_ const auto& device1, _In_ const auto& device2)
+                {
+                    if (device1.ContainerId() == device2.ContainerId())
+                        return device1.Id() < device2.Id();
+
+                    return device1.ContainerId() < device2.ContainerId();
+                });
+            break;
+
+        case MidiEndpointDeviceInformationSortOrder::TransportMnemonicThenName:
+            std::sort(begin(midiDevices), end(midiDevices),
+                [](_In_ const auto& device1, _In_ const auto& device2)
+                {
+                    if (device1.TransportMnemonic() == device2.TransportMnemonic())
+                        return device1.Name() < device2.Name();
+
+                    return device1.TransportMnemonic() < device2.TransportMnemonic();
+                });
+            break;
+
+        case MidiEndpointDeviceInformationSortOrder::TransportMnemonicThenEndpointDeviceId:
+            std::sort(begin(midiDevices), end(midiDevices),
+                [](_In_ const auto& device1, _In_ const auto& device2)
+                {
+                    if (device1.TransportMnemonic() == device2.TransportMnemonic())
+                        return device1.Id() < device2.Id();
+
+                    return device1.TransportMnemonic() < device2.TransportMnemonic();
+                });
+            break;
+
+        case MidiEndpointDeviceInformationSortOrder::TransportMnemonicThenDeviceInstanceId:
+            std::sort(begin(midiDevices), end(midiDevices),
+                [](_In_ const auto& device1, _In_ const auto& device2)
+                {
+                    if (device1.TransportMnemonic() == device2.TransportMnemonic())
+                        return device1.DeviceInstanceId() < device2.DeviceInstanceId();
+
+                    return device1.TransportMnemonic() < device2.TransportMnemonic();
+                });
+            break;
+
 
         case MidiEndpointDeviceInformationSortOrder::None:
             // do nothing

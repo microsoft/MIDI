@@ -16,6 +16,8 @@
 #define MAXIMUM_LOOPED_DATASIZE 16
 
 
+#define MIDI_TIMESTAMP_SEND_IMMEDIATELY 0
+
 // we can't let the memory usage run away. This many messages is a 
 // lot, and performance will suffer above 5000 or so. This number is
 // used by the scheduler and then also by the client API
