@@ -21,4 +21,4 @@ Indicates the message flow for a function block. Note that this is, per the spec
 
 ## IDL
 
-MidiFunctionBlockDirectionEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiFunctionBlockDirectionEnum.idl)
+[MidiFunctionBlockDirectionEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiFunctionBlockDirectionEnum.idl)

@@ -151,6 +151,7 @@
     <ClCompile Include="MidiClockTests.cpp" />
     <ClCompile Include="MidiEndpointConnectionBufferTests.cpp" />
     <ClCompile Include="MidiEndpointConnectionTests.cpp" />
+    <ClCompile Include="MidiEndpointCreationThreadTests.cpp" />
     <ClCompile Include="MidiEndpointDeviceWatcherTests.cpp" />
     <ClCompile Include="MidiEndpointListenerTests.cpp" />
     <ClCompile Include="MidiFunctionBlockMessageBuilderTests.cpp" />
@@ -165,6 +166,7 @@
     <ClInclude Include="MidiClockTests.h" />
     <ClInclude Include="MidiEndpointConnectionBufferTests.h" />
     <ClInclude Include="MidiEndpointConnectionTests.h" />
+    <ClInclude Include="MidiEndpointCreationThreadTests.h" />
     <ClInclude Include="MidiEndpointDeviceWatcherTests.h" />
     <ClInclude Include="MidiEndpointListenerTests.h" />
     <ClInclude Include="MidiFunctionBlockMessageBuilderTests.h" />

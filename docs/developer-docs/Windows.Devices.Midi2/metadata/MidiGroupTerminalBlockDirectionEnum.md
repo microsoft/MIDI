@@ -20,4 +20,4 @@ Indicates the message flow for a group terminal block. Note that this is, per th
 
 ## IDL
 
-MidiGroupTerminalBlockDirectionEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiGroupTerminalBlockDirectionEnum.idl)
+[MidiGroupTerminalBlockDirectionEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiGroupTerminalBlockDirectionEnum.idl)

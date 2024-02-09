@@ -57,7 +57,7 @@ Currently, in the implementation behind the scenes, the service receives each ti
 | `AddEndpointProcessingPlugin(plugin)` | Add an endpoint processing plugin to this connection |
 | `RemoveEndpointProcessingPlugin(id)` | Remove an endpoint processing plugin from this connection |
 
-> Tip: In all the functions which accept a timestamp to schedule the message, **you can send a timestamp of 0 (zero) to bypass the scheduler and send the message immediately**. Otherwise, the provided timestamp is treated as an absolute time for when the message should be sent from the service. Note that the service-based scheduler (currently based on a `std::priority_queue`) gets less efficient when there are thousands of messages in it, so it's recommended that you not schedule too many messages at a time or too far out into the future. 
+> Tip: In all the functions which accept a timestamp to schedule the message, **you can send a timestamp of 0 (zero) to bypass the scheduler and send the message immediately** or use the `MidiClock::TimestampConstantSendImmediately` static property. Otherwise, the provided timestamp is treated as an absolute time for when the message should be sent from the service. Note that the service-based scheduler (currently based on a `std::priority_queue`) gets less efficient when there are thousands of messages in it, so it's recommended that you not schedule too many messages at a time or too far out into the future. 
 
 ## Events
 
@@ -66,6 +66,8 @@ Currently, in the implementation behind the scenes, the service receives each ti
 | `MessageReceived(source, args)` | From `IMidiMessageReceivedEventSource`. This is the event for receiving MIDI Messages, one at a time. |
 
 When processing the `MessageReceived` event, do so quickly. This event is synchronous. If you need to do long-running processing of incoming messages, add them to your own incoming queue structure and have them processed by another application thread.
+
+> Threading: Note that the thread the `MessageReceived` callback comes in on is not the same thread which created the connection to begin with. Windows MIDI Services uses a high-priority thread in the background, one per connection. For this reason, it's best to use the event only to receive the message and store it, not to do any additional processing on the message. The TAEF test `MidiEndpointCreationThreadTests` in the `Midi2.Client.unittests` project demonstrates how this works.
 
 > Note: Wire up event handlers and add message processing plugins prior to calling `Open()`. 
 
