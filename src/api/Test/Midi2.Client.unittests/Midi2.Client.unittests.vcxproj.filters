@@ -51,6 +51,9 @@
     <ClCompile Include="MidiEndpointConnectionBufferTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MidiEndpointCreationThreadTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -87,6 +90,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MidiEndpointConnectionBufferTests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointCreationThreadTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

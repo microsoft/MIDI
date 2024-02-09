@@ -21,4 +21,4 @@ Indicates the MIDI 1.0 capability restrictions for a function block. Note that W
 
 ## IDL
 
-MidiFunctionBlockMidi10Enum IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiFunctionBlockMidi10Enum.idl)
+[MidiFunctionBlockMidi10Enum IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiFunctionBlockMidi10Enum.idl)
