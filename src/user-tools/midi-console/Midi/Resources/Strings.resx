@@ -506,8 +506,14 @@ Timestamp</value>
   <data name="PropertiesTablePropertyLabelManufacturer" xml:space="preserve">
     <value>Manufacturer</value>
   </data>
+  <data name="PropertiesTablePropertyLabelMultiClient" xml:space="preserve">
+    <value>Multi-client</value>
+  </data>
   <data name="PropertiesTablePropertyLabelName" xml:space="preserve">
     <value>Name</value>
+  </data>
+  <data name="PropertiesTablePropertyLabelNativeDataFormat" xml:space="preserve">
+    <value>Native data format</value>
   </data>
   <data name="PropertiesTablePropertyLabelProductInstanceId" xml:space="preserve">
     <value>Product Instance Id</value>
@@ -526,6 +532,9 @@ Timestamp</value>
   </data>
   <data name="PropertiesTablePropertyLabelSystemExclusiveId" xml:space="preserve">
     <value>System Exclusive Id</value>
+  </data>
+  <data name="PropertiesTablePropertyLabelTransportSuppliedDescription" xml:space="preserve">
+    <value>Description</value>
   </data>
   <data name="PropertiesTablePropertyLabelUserSuppliedName" xml:space="preserve">
     <value>User-Supplied Name</value>
