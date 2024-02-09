@@ -44,9 +44,10 @@ void MidiEndpointDeviceWatcherTests::TestWatcherEnumeration(MidiEndpointDeviceIn
     auto EndpointDeviceAddedHandler = [&](MidiEndpointDeviceWatcher const& /*sender*/, MidiEndpointDeviceInformation const& addedDevice)
         {
             std::cout << "Device Added event raised." << std::endl;
-            std::cout << "Id:   " << winrt::to_string(addedDevice.Id()) << std::endl;
-            std::cout << "Name: " << winrt::to_string(addedDevice.Name()) << std::endl;
-            std::cout << "Desc: " << winrt::to_string(addedDevice.Description()) << std::endl;
+            std::cout << "Id:             " << winrt::to_string(addedDevice.Id()) << std::endl;
+            std::cout << "Name:           " << winrt::to_string(addedDevice.Name()) << std::endl;
+            std::cout << "Transport Desc: " << winrt::to_string(addedDevice.TransportSuppliedDescription()) << std::endl;
+            std::cout << "User Desc:      " << winrt::to_string(addedDevice.UserSuppliedDescription()) << std::endl;
             std::cout << std::endl;
 
             numEndpointsActual++;

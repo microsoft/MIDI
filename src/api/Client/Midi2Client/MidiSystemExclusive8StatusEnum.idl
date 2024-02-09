@@ -14,9 +14,9 @@ namespace Windows.Devices.Midi2
     [MIDI_API_CONTRACT(1)]
     enum MidiSystemExclusive8Status
     {
-        CompleteMessageInSingleUmp = 0x0,
-        StartUmp = 0x1,
-        ContinueUmp = 0x2,
-        EndUmp = 0x3,
+        CompleteMessageInSingleMessagePacket = 0x0,
+        StartMessagePacket = 0x1,
+        ContinueMessagePacket = 0x2,
+        EndMessagePacket = 0x3,
     };
 }

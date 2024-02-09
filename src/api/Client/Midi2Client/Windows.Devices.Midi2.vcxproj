@@ -159,7 +159,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
     <ClCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions);WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP</PreprocessorDefinitions>
-      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp17</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp20</LanguageStandard>
       <GenerateXMLDocumentationFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GenerateXMLDocumentationFiles>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">true</TreatWarningAsError>
@@ -167,6 +167,8 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">stdcpp20</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</Profile>
@@ -211,6 +213,9 @@
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</TreatWarningAsError>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">stdcpp20</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">stdcpp20</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -245,9 +250,6 @@
     <ClInclude Include="memory_buffer.h" />
     <ClInclude Include="MidiEndpointConnection.h">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiEndpointConnectionOptions.h">
-      <DependentUpon>MidiEndpointConnectionOptions.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiEndpointDeviceInformation.h">
       <DependentUpon>MidiEndpointDeviceInformation.idl</DependentUpon>
@@ -364,9 +366,6 @@
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
     <ClCompile Include="MidiEndpointConnection.cpp">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiEndpointConnectionOptions.cpp">
-      <DependentUpon>MidiEndpointConnectionOptions.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiEndpointDeviceInformation.cpp">
       <DependentUpon>MidiEndpointDeviceInformation.idl</DependentUpon>
@@ -486,7 +485,6 @@
     <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl" />
     <Midl Include="MidiEndpointDeviceInformationUpdateEventArgs.idl" />
     <Midl Include="MidiEndpointConnection.idl" />
-    <Midl Include="MidiEndpointConnectionOptions.idl" />
     <Midl Include="MidiChannel.idl" />
     <Midl Include="MidiChannelEndpointListener.idl" />
     <Midl Include="MidiClock.idl" />
@@ -500,8 +498,6 @@
     <Midl Include="MidiFunctionBlockDirectionEnum.idl" />
     <Midl Include="MidiFunctionBlockDiscoveryFilterFlagsEnum.idl" />
     <Midl Include="MidiFunctionBlockMidi10Enum.idl" />
-    <Midl Include="MidiEndpointConnectionSharingEnum.idl" />
-    <Midl Include="MidiEndpointConnectionSharingPreferenceEnum.idl" />
     <Midl Include="MidiFunctionBlock.idl" />
     <Midl Include="MidiGroupTerminalBlockDirectionEnum.idl" />
     <Midl Include="MidiFunctionBlockUIHintEnum.idl" />
@@ -514,7 +510,7 @@
     <Midl Include="MidiMessageStruct.idl" />
     <Midl Include="MidiMessageBuilder.idl" />
     <Midl Include="MidiMessageReceivedEventArgs.idl" />
-    <Midl Include="IMidiEndpointDefinedConnectionSettings.idl" />
+    <Midl Include="IMidiEndpointConnectionSettings.idl" />
     <Midl Include="MidiMessageTranslator.idl" />
     <Midl Include="MidiMessageTypeEndpointListener.idl" />
     <Midl Include="MidiProtocolEnum.idl" />

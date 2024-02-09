@@ -42,7 +42,7 @@ MidiEndpointTable::OnClientConnected(std::wstring clientEndpointInterfaceId, CMi
     {
         OutputDebugString(__FUNCTION__ L"");
 
-        std::wstring cleanId = internal::NormalizeEndpointInterfaceIdCopy(clientEndpointInterfaceId);
+        std::wstring cleanId = internal::NormalizeEndpointInterfaceIdWStringCopy(clientEndpointInterfaceId);
 
         // look up the association ID in SWD properties
 

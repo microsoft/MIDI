@@ -13,9 +13,6 @@
     <Filter Include="API\Endpoints">
       <UniqueIdentifier>{6965e07f-f558-4fdb-821c-dcb0ae49819a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="API\Session">
-      <UniqueIdentifier>{6427be3d-78fd-4fff-9bf4-2353b462bfc3}</UniqueIdentifier>
-    </Filter>
     <Filter Include="API\Transports">
       <UniqueIdentifier>{7a309dc0-af6f-4fa7-8827-649ef97dcc9a}</UniqueIdentifier>
     </Filter>
@@ -40,23 +37,14 @@
     <Filter Include="API\Endpoints\Metadata\Endpoints">
       <UniqueIdentifier>{bce3490a-eb00-4ae7-9e49-6e31e91d70d1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="API\Endpoints\Connections\Options">
-      <UniqueIdentifier>{3c7e0669-3b44-4eb6-803e-308b307a3474}</UniqueIdentifier>
-    </Filter>
     <Filter Include="InstallSupport">
       <UniqueIdentifier>{f99f0bd4-c968-4322-a806-90aca0f9e73e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="API\Endpoints\Connections\Interfaces">
-      <UniqueIdentifier>{b8034624-6df4-444b-8fe4-9bb28fe040c9}</UniqueIdentifier>
     </Filter>
     <Filter Include="API\Service">
       <UniqueIdentifier>{4bae9d9e-c02c-49f6-b4a6-b8d0a1a2551c}</UniqueIdentifier>
     </Filter>
     <Filter Include="API\Endpoints\Message Processing Plugins">
       <UniqueIdentifier>{577d9050-8eb1-416d-9d4f-17cbb58b9b47}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="API\Endpoints\Connections\Connection Types">
-      <UniqueIdentifier>{993227f1-9e5a-45f9-a830-bae5f7259b84}</UniqueIdentifier>
     </Filter>
     <Filter Include="API\Endpoints\Message Processing Plugins\Interfaces">
       <UniqueIdentifier>{abf74add-24a7-428a-b6f0-738ae3fadd6a}</UniqueIdentifier>
@@ -90,6 +78,9 @@
     </Filter>
     <Filter Include="Internal\Resources">
       <UniqueIdentifier>{3360af9e-3363-4faf-861f-7d778c66bf70}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Session">
+      <UniqueIdentifier>{6427be3d-78fd-4fff-9bf4-2353b462bfc3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -276,10 +267,10 @@
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiSession.idl">
-      <Filter>API\Session</Filter>
+      <Filter>API\Endpoints\Session</Filter>
     </Midl>
     <Midl Include="MidiSessionSettings.idl">
-      <Filter>API\Session</Filter>
+      <Filter>API\Endpoints\Session</Filter>
     </Midl>
     <Midl Include="IMidiTransportSettingsData.idl">
       <Filter>API\Transports</Filter>
@@ -302,26 +293,11 @@
     <Midl Include="MidiFunctionBlockUIHintEnum.idl">
       <Filter>API\Endpoints\Metadata\Blocks</Filter>
     </Midl>
-    <Midl Include="MidiEndpointConnectionOptions.idl">
-      <Filter>API\Endpoints\Connections\Options</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointConnectionSharingPreferenceEnum.idl">
-      <Filter>API\Endpoints\Connections\Options</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointConnectionSharingEnum.idl">
-      <Filter>API\Endpoints\Connections</Filter>
-    </Midl>
     <Midl Include="MidiProtocolEnum.idl">
       <Filter>API\Transports</Filter>
     </Midl>
-    <Midl Include="MidiEndpointConnection.idl">
-      <Filter>API\Endpoints\Connections\Connection Types</Filter>
-    </Midl>
     <Midl Include="IMidiMessageReceivedEventSource.idl">
       <Filter>API\Endpoints\Events</Filter>
-    </Midl>
-    <Midl Include="IMidiEndpointDefinedConnectionSettings.idl">
-      <Filter>API\Endpoints\Connections\Interfaces</Filter>
     </Midl>
     <Midl Include="MidiService.idl">
       <Filter>API\Service</Filter>
@@ -446,9 +422,6 @@
     <Midl Include="MidiServiceMessageProcessingPluginInformation.idl">
       <Filter>API\Service</Filter>
     </Midl>
-    <Midl Include="IMidiEndpointConnectionSource.idl">
-      <Filter>API\Endpoints\Connections\Interfaces</Filter>
-    </Midl>
     <Midl Include="MidiEndpointDeviceInformationUpdateEventArgs.idl">
       <Filter>API\Enumeration</Filter>
     </Midl>
@@ -466,6 +439,15 @@
     </Midl>
     <Midl Include="MidiSessionConnectionInformation.idl">
       <Filter>API\Service</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointConnection.idl">
+      <Filter>API\Endpoints\Connections</Filter>
+    </Midl>
+    <Midl Include="IMidiEndpointConnectionSource.idl">
+      <Filter>API\Endpoints\Connections</Filter>
+    </Midl>
+    <Midl Include="IMidiEndpointConnectionSettings.idl">
+      <Filter>API\Endpoints\Connections</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

@@ -47,7 +47,7 @@ std::wstring GetStringSwdProperty(std::wstring deviceInterfaceId, std::wstring p
 _Use_decl_annotations_
 std::wstring GetSwdPropertyVirtualEndpointAssociationId(std::wstring deviceInterfaceId)
 {
-    std::wstring cleanId = internal::NormalizeEndpointInterfaceIdCopy(deviceInterfaceId);
+    std::wstring cleanId = internal::NormalizeEndpointInterfaceIdWStringCopy(deviceInterfaceId);
 
     return internal::ToUpperTrimmedWStringCopy(GetStringSwdProperty(cleanId, STRING_PKEY_MIDI_VirtualMidiEndpointAssociator, L""));
 }
@@ -56,7 +56,7 @@ std::wstring GetSwdPropertyVirtualEndpointAssociationId(std::wstring deviceInter
 _Use_decl_annotations_
 std::wstring GetSwdPropertyInstanceId(std::wstring deviceInterfaceId)
 {
-    std::wstring cleanId = internal::NormalizeEndpointInterfaceIdCopy(deviceInterfaceId);
+    std::wstring cleanId = internal::NormalizeEndpointInterfaceIdWStringCopy(deviceInterfaceId);
 
-    return internal::NormalizeDeviceInstanceIdCopy(GetStringSwdProperty(cleanId, L"System.Devices.DeviceInstanceId", L""));
+    return internal::NormalizeDeviceInstanceIdWStringCopy(GetStringSwdProperty(cleanId, L"System.Devices.DeviceInstanceId", L""));
 }

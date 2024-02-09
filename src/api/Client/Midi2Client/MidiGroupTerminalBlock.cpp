@@ -129,7 +129,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
         else
         {
-            OutputDebugString(L"Header is null");
             return false;
         }
     }

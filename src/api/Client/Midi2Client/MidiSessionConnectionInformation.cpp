@@ -13,7 +13,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         foundation::DateTime const earliestConnectionTime
         )
     {
-        m_endpointDeviceId = endpointDeviceId;
+        m_endpointDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId);
         m_instanceCount = instanceCount;
         m_earliestConnectionTime = earliestConnectionTime;
     }

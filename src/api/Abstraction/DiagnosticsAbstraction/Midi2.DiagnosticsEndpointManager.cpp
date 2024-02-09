@@ -119,7 +119,7 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(
     BYTE nativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
     UINT32 supportedDataFormat = (UINT32)MidiDataFormat::MidiDataFormat_UMP;
 
-    std::wstring description = L"Diagnostics loopback endpoint. For testing purposes.";
+    std::wstring description = L"Diagnostics loopback endpoint. For testing and development purposes.";
 
     auto endpointPurpose = (uint32_t)MidiEndpointDevicePurposePropertyValue::DiagnosticLoopback;
 
@@ -145,7 +145,7 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(
 
         {{PKEY_MIDI_EndpointDevicePurpose, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(endpointPurpose)),(PVOID)&endpointPurpose},
-        {{PKEY_MIDI_UserSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
+        {{PKEY_MIDI_TransportSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_STRING, static_cast<ULONG>((description.length() + 1) * sizeof(WCHAR)), (PVOID)description.c_str() },
         {{PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(BYTE)), (PVOID)&nativeDataFormat},
@@ -259,7 +259,7 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(
             DEVPROP_TYPE_GUID, static_cast<ULONG>(sizeof(GUID)), (PVOID)&AbstractionLayerGUID },        // essential to instantiate the right endpoint types
         {{PKEY_MIDI_EndpointDevicePurpose, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(endpointPurpose)),(PVOID)&endpointPurpose},
-        {{PKEY_MIDI_UserSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
+        {{PKEY_MIDI_TransportSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_STRING, static_cast<ULONG>((description.length() + 1) * sizeof(WCHAR)), (PVOID)description.c_str() },
         {{PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(BYTE)), (PVOID)&nativeDataFormat},

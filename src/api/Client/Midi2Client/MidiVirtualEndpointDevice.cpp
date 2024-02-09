@@ -21,7 +21,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         UNREFERENCED_PARAMETER(block);
 
-        //throw hresult_not_implemented();
+        // TODO
     }
 
     _Use_decl_annotations_
@@ -29,35 +29,29 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         UNREFERENCED_PARAMETER(name);
 
-        //throw hresult_not_implemented();
+        // TODO
     }
 
 
     _Use_decl_annotations_
     void MidiVirtualEndpointDevice::Initialize(midi2::IMidiEndpointConnectionSource const& endpointConnection) noexcept
     {
-        OutputDebugString(__FUNCTION__ L"");
-
         m_endpointConnection = endpointConnection.as<midi2::MidiEndpointConnection>();
     }
 
     void MidiVirtualEndpointDevice::OnEndpointConnectionOpened() noexcept
     {
-        OutputDebugString(__FUNCTION__ L"");
-
-        //throw hresult_not_implemented();
+        // nothing to do here
     }
 
     void MidiVirtualEndpointDevice::Cleanup() noexcept
     {
-        //throw hresult_not_implemented();
+        // nothing to do here
     }
 
     _Use_decl_annotations_
     void MidiVirtualEndpointDevice::SendFunctionBlockInfoNotificationMessage(midi2::MidiFunctionBlock const& fb) noexcept
     {
-        OutputDebugString(__FUNCTION__ L"");
-
         auto functionBlockNotification = midi2::MidiStreamMessageBuilder::BuildFunctionBlockInfoNotificationMessage(
             0,
             true,
@@ -78,8 +72,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     void MidiVirtualEndpointDevice::SendFunctionBlockNameNotificationMessages(midi2::MidiFunctionBlock const& fb) noexcept
     {
-        OutputDebugString(__FUNCTION__ L"");
-
         if (fb.Name() == L"") return;
 
         auto nameMessages = midi2::MidiStreamMessageBuilder::BuildFunctionBlockNameNotificationMessages(
@@ -102,8 +94,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool& skipFurtherListeners,
         bool& skipMainMessageReceivedEvent)  noexcept
     {
-        OutputDebugString(__FUNCTION__ L"");
-
         bool handled = false;
 
         if (args.MessageType() == MidiMessageType::Stream128)
@@ -243,8 +233,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
-            OutputDebugString(__FUNCTION__ L"");
-
             // populate all the views, properties, blocks, etc.
 
             m_areFunctionBlocksStatic = definition.AreFunctionBlocksStatic();

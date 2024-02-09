@@ -55,11 +55,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
             return *responseSummary;
         }
 
-        auto options = winrt::make<MidiEndpointConnectionOptions>();
-        
         // This ID must be consistent with what the service is set up to use.
 
-        auto endpoint = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_PING_BIDI_ID, options);
+        auto endpoint = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_PING_BIDI_ID);
 
         if (endpoint == nullptr)
         {
@@ -251,7 +249,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                     if (sessionListJson != nullptr && sessionListJson.Length() > 0)
                     {
-                        winrt::hstring hstr = sessionListJson;
+                        winrt::hstring hstr(sessionListJson, sessionListJson.Length());
 
                         // Parse the json, create the objects, throw them into the vector and return
 

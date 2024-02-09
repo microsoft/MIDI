@@ -41,8 +41,6 @@ namespace Windows::Devices::Midi2::Internal
     void RegisterTraceLogging()
     {
         // HRESULT hr = S_OK;
-        OutputDebugString(L"" __FUNCTION__);
-
         TraceLoggingRegisterEx(g_hLoggingProvider, LoggingProviderEnabledCallback, nullptr);
 
         ////Generate the ActivityId used to track the session
@@ -65,8 +63,6 @@ namespace Windows::Devices::Midi2::Internal
 
     void UnregisterTraceLogging()
     {
-        OutputDebugString(L"" __FUNCTION__);
-
         TraceLoggingUnregister(g_hLoggingProvider);
 
         g_traceLoggingRegistered = true;

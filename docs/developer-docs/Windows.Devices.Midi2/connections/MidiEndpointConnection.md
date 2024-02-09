@@ -14,6 +14,12 @@ Connections allocate resources including send/receive buffers, and processing th
 
 To ensure an application is able to wire up processing plugins and event handlers before the connection is active, the connection returned by the `MidiSession` is not yet open. Once the connection is acquired, the application should assign event handlers, and optionally assign any message processing plugins. Once complete, the application calls the `Open()` function to connect to the service, create the queues, and begin sending and receiving messages.
 
+## A note on sending messages
+
+All `SendMessageXX` functions send a single Universal MIDI Packet message at a time. The pluralized versions `SendMessagesXX` will send multiple packets, in order, with the same timestamp.
+
+Currently, in the implementation behind the scenes, the service receives each timestamped message one at a time. We have the functions for sending more than one message as a developer convenience for similarity with other platforms, and also to allow for possible future optimization in the service communication code.
+
 ## Properties
 
 | Property | Description |
@@ -22,7 +28,7 @@ To ensure an application is able to wire up processing plugins and event handler
 | `EndpointDeviceId` | The system-wide identifier for the device connection. This is returned through enumeration calls. |
 | `Tag` | You may use this `Tag` property to hold any additional information you wish to have associated with the connection. |
 | `IsOpen` | True if this connection is currently open. When first created, the connection is not open until the consuming code calls the `Open` method |
-| `Settings` | Settings used to create this connection. |
+| `Settings` | Settings used to create this connection. Treat this as read-only. |
 | `MessageProcessingPlugins` | Collection of all message processing plugins which will optionally handle incoming messages. |
 
 ## Static Member Functions
@@ -46,8 +52,10 @@ To ensure an application is able to wire up processing plugins and event handler
 | `SendMessageWords(timestamp, word0, word1, word2)` | Send a single 96-bit Universal MIDI Packet as 32-bit words. This is often the most efficient way to send this type of message |
 | `SendMessageWords(timestamp, word0, word1, word2, word3)` | Send a single 128-bit Universal MIDI Packet as 32-bit words. This is often the most efficient way to send this type of message |
 | `SendMessageBuffer(timestamp, buffer, byteOffset, byteLength)` | Send a single Universal MIDI Packet as bytes from a buffer. The number of bytes sent must match the size read from the first 4 bits of the data starting at the specified offset, and must be laid out correctly with the first byte corresponding to the MSB of the first word of the UMP (the word which contains hte message type). If you want to manage a chunk of buffer memory, the `IMemoryBuffer` type is the acceptable WinRT approach, and is as close as you get to sending a pointer into a buffer. |
+| `SendMessagesWordList(timestamp,words)` | This sends more than one message with the same timestamp. Message words must be ordered contiguously from word-0 to word-n for each message, and the message types must be valid for the number of words for each message. If an error is encountered when sending messages, the function stops processing the list at that point and returns a failure code, even if some messages were sent successfully. |
+| `SendMessagesWordArray(timestamp,words)` | This sends more than one message with the same timestamp. Message words must be ordered contiguously from word-0 to word-n for each message, and the message types must be valid for the number of words for each message. If an error is encountered when sending messages, the function stops processing the list at that point and returns a failure code, even if some messages were sent successfully.|
 | `AddEndpointProcessingPlugin(plugin)` | Add an endpoint processing plugin to this connection |
-| `RemoveEndpointProcessingPlugin(id)` | Remove an endpoint processing plugin |
+| `RemoveEndpointProcessingPlugin(id)` | Remove an endpoint processing plugin from this connection |
 
 > Tip: In all the functions which accept a timestamp to schedule the message, **you can send a timestamp of 0 (zero) to bypass the scheduler and send the message immediately**. Otherwise, the provided timestamp is treated as an absolute time for when the message should be sent from the service. Note that the service-based scheduler (currently based on a `std::priority_queue`) gets less efficient when there are thousands of messages in it, so it's recommended that you not schedule too many messages at a time or too far out into the future. 
 

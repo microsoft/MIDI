@@ -117,6 +117,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         additionalProperties.Append(STRING_PKEY_MIDI_TransportSuppliedEndpointName);
         additionalProperties.Append(STRING_PKEY_MIDI_GenerateIncomingTimestamp);
 
+        additionalProperties.Append(STRING_PKEY_MIDI_TransportSuppliedDescription);       
+
         // USB / KS Properties ===============================================================
         // TODO: Group Terminal Blocks will likely be a single property
         additionalProperties.Append(STRING_PKEY_MIDI_IN_GroupTerminalBlocks);
@@ -303,6 +305,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 });
             break;
 
+        case MidiEndpointDeviceInformationSortOrder::EndpointDeviceId:
+            std::sort(begin(midiDevices), end(midiDevices),
+                [](_In_ const auto& device1, _In_ const auto& device2)
+                {
+                    return device1.Id() < device2.Id();
+                });
+            break;
+
         case MidiEndpointDeviceInformationSortOrder::ContainerThenName:
             std::sort(begin(midiDevices), end(midiDevices),
                 [](_In_ const auto& device1, _In_ const auto& device2)
@@ -324,6 +334,51 @@ namespace winrt::Windows::Devices::Midi2::implementation
                     return device1.ContainerId() < device2.ContainerId();
                 });
             break;
+
+        case MidiEndpointDeviceInformationSortOrder::ContainerThenEndpointDeviceId:
+            std::sort(begin(midiDevices), end(midiDevices),
+                [](_In_ const auto& device1, _In_ const auto& device2)
+                {
+                    if (device1.ContainerId() == device2.ContainerId())
+                        return device1.Id() < device2.Id();
+
+                    return device1.ContainerId() < device2.ContainerId();
+                });
+            break;
+
+        case MidiEndpointDeviceInformationSortOrder::TransportMnemonicThenName:
+            std::sort(begin(midiDevices), end(midiDevices),
+                [](_In_ const auto& device1, _In_ const auto& device2)
+                {
+                    if (device1.TransportMnemonic() == device2.TransportMnemonic())
+                        return device1.Name() < device2.Name();
+
+                    return device1.TransportMnemonic() < device2.TransportMnemonic();
+                });
+            break;
+
+        case MidiEndpointDeviceInformationSortOrder::TransportMnemonicThenEndpointDeviceId:
+            std::sort(begin(midiDevices), end(midiDevices),
+                [](_In_ const auto& device1, _In_ const auto& device2)
+                {
+                    if (device1.TransportMnemonic() == device2.TransportMnemonic())
+                        return device1.Id() < device2.Id();
+
+                    return device1.TransportMnemonic() < device2.TransportMnemonic();
+                });
+            break;
+
+        case MidiEndpointDeviceInformationSortOrder::TransportMnemonicThenDeviceInstanceId:
+            std::sort(begin(midiDevices), end(midiDevices),
+                [](_In_ const auto& device1, _In_ const auto& device2)
+                {
+                    if (device1.TransportMnemonic() == device2.TransportMnemonic())
+                        return device1.DeviceInstanceId() < device2.DeviceInstanceId();
+
+                    return device1.TransportMnemonic() < device2.TransportMnemonic();
+                });
+            break;
+
 
         case MidiEndpointDeviceInformationSortOrder::None:
             // do nothing
@@ -651,15 +706,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
     void MidiEndpointDeviceInformation::InternalUpdateFromDeviceInformation(
         winrt::Windows::Devices::Enumeration::DeviceInformation const& deviceInformation) noexcept
     {
-        OutputDebugString(L"" __FUNCTION__);
-
         if (deviceInformation == nullptr) return;
 
         for (auto&& [key, value] : deviceInformation.Properties())
         {
             // insert does a replace if the key exists in the map
-
-        //    OutputDebugString(key.c_str());
 
             m_properties.Insert(key, value);
 
@@ -677,7 +728,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             //}
         }
 
-        m_id = deviceInformation.Id();
+        m_id = internal::NormalizeEndpointInterfaceIdHStringCopy(deviceInformation.Id().c_str());
         m_transportSuppliedEndpointName = deviceInformation.Name();
 
 
@@ -689,8 +740,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             if (deviceInformation.Properties().HasKey(functionBlockProperty))
             {
-                OutputDebugString(__FUNCTION__ L" Update includes a function block property\n");
-
                 // update the function block
                 auto refArray = GetBinaryProperty(functionBlockProperty);
 
@@ -703,8 +752,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             if (deviceInformation.Properties().HasKey(functionBlockNameProperty))
             {
-                OutputDebugString(__FUNCTION__ L" Update includes a function block Name property\n");
-
                 // update the function block property name
 
                 if (m_functionBlocks.HasKey(fb))
@@ -729,8 +776,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
     bool MidiEndpointDeviceInformation::UpdateFromDeviceInformation(
         winrt::Windows::Devices::Enumeration::DeviceInformation const& deviceInformation) noexcept
     {
-    //    OutputDebugString(L"" __FUNCTION__);
-
         if (deviceInformation == nullptr) return false;
 
         // TODO: If an Id is present, check that the ids (after lowercasing) are the same before allowing this.
@@ -746,8 +791,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
     bool MidiEndpointDeviceInformation::UpdateFromDeviceInformationUpdate(
         winrt::Windows::Devices::Enumeration::DeviceInformationUpdate const& deviceInformationUpdate) noexcept
     {
-        OutputDebugString(__FUNCTION__ L"\n");
-
         if (deviceInformationUpdate == nullptr) return false;
 
         // TODO: Check that the ids (after lowercasing) are the same before allowing this.
@@ -779,8 +822,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             if (deviceInformationUpdate.Properties().HasKey(functionBlockProperty))
             {
-                OutputDebugString(__FUNCTION__ L" Update includes a function block property\n");
-
                 // update the function block
                 auto refArray = GetBinaryProperty(functionBlockProperty);
                 
@@ -792,8 +833,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             if (deviceInformationUpdate.Properties().HasKey(functionBlockNameProperty))
             {
-                OutputDebugString(__FUNCTION__ L" Update includes a function block Name property\n");
-
                 // update the function block property name
 
                 if (m_functionBlocks.HasKey(fb))
@@ -822,8 +861,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     void MidiEndpointDeviceInformation::AddOrUpdateFunctionBlock(foundation::IReferenceArray<uint8_t> refArray)
     {
-        OutputDebugString(__FUNCTION__ L"\n");
-
         if (refArray != nullptr)
         {
             auto data = refArray.Value();
@@ -863,8 +900,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     void MidiEndpointDeviceInformation::ReadDeviceIdentity()
     {
-        OutputDebugString(__FUNCTION__ L"");
-
         auto key = STRING_PKEY_MIDI_DeviceIdentity;
 
         auto refArray = GetBinaryProperty(key);
@@ -877,17 +912,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
             if (arraySize == sizeof(m_deviceIdentity))
             {
                 memcpy(&m_deviceIdentity, data.data(), arraySize);
-
-            //    OutputDebugString(__FUNCTION__ L" Device identity values read");
             }
             else
             {
-                OutputDebugString(__FUNCTION__ L" Unable to read device identity. Size of array is incorrect.");
+                internal::LogGeneralError(__FUNCTION__, L"Unable to read device identity. Size of array is incorrect");
             }
-        }
-        else
-        {
-        //    OutputDebugString(__FUNCTION__ L" Unable to read device identity. Value is null.");
         }
     }
 
@@ -897,33 +926,27 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         if (m_properties.HasKey(key))
         {
-         //   OutputDebugString(__FUNCTION__ L" Key present.");
-
             auto value = m_properties.Lookup(key).as<winrt::Windows::Foundation::IPropertyValue>();
 
             if (value != nullptr)
             {
-           //     OutputDebugString(__FUNCTION__ L" Value != null.");
-
                 auto t = value.Type();
 
                 if (t == foundation::PropertyType::UInt8Array)
                 {
-                 //   OutputDebugString(__FUNCTION__ L" Value type is UInt8Array.");
-
                     auto refArray = winrt::unbox_value<foundation::IReferenceArray<uint8_t>>(m_properties.Lookup(key));
 
                     return refArray;
                 }
                 else
                 {
-                    OutputDebugString(__FUNCTION__ L" Value type is something unexpected.");
+                    internal::LogGeneralError(__FUNCTION__, L"Value type is something unexpected");
                 }
             }
         }
         else
         {
-        //    OutputDebugString(__FUNCTION__ L" Key not present.");
+            internal::LogGeneralError(__FUNCTION__, L"Property key not present");
         }
 
         return nullptr;
@@ -935,8 +958,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
-            //OutputDebugString(L"" __FUNCTION__);
-
             // in groups property
             // STRING_PKEY_MIDI_IN_GroupTerminalBlocks
 
@@ -948,9 +969,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 {
                     auto data = refArray.Value();
                     auto arraySize = data.size();
-
-                    //OutputDebugString(L"Array size is:");
-                    //OutputDebugString(std::to_wstring(data.size()).c_str());
 
                     uint32_t offset = 0;
 
@@ -967,9 +985,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
                         auto pheader = (UMP_GROUP_TERMINAL_BLOCK_HEADER*)(data.data() + offset);
                         auto block = winrt::make_self<MidiGroupTerminalBlock>();
 
-
-                        //OutputDebugString(L"Header reported size is:");
-                        //OutputDebugString(std::to_wstring(pheader->Size).c_str());
 
                         int charOffset = sizeof(UMP_GROUP_TERMINAL_BLOCK_HEADER);
 
@@ -998,8 +1013,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
         catch (...)
         {
-            // can't blow up.
-            OutputDebugString(L"Exception processing endpoint GTB property");
+            internal::LogGeneralError(__FUNCTION__, L"Exception processing endpoint GTB property");
         }
     }
 

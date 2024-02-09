@@ -110,7 +110,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             if (!string.IsNullOrEmpty(endpointId))
             {
-                AnsiConsole.MarkupLine(Strings.SendMessageSendingThroughEndpointLabel + ": " + AnsiMarkupFormatter.FormatDeviceInstanceId(endpointId));
+                AnsiConsole.MarkupLine(Strings.SendMessageSendingThroughEndpointLabel + ": " + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointId));
                 AnsiConsole.WriteLine();
 
                 bool openSuccess = false;
@@ -118,15 +118,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 // when this goes out of scope, it will dispose of the session, which closes the connections
                 using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
 
-                var bidiOpenOptions = new MidiEndpointConnectionOptions();
-
                 if (session == null)
                 {
                     AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToCreateSession));
                     return (int)MidiConsoleReturnCode.ErrorCreatingSession;
                 }
 
-                var connection = session.CreateEndpointConnection(endpointId, bidiOpenOptions);
+                var connection = session.CreateEndpointConnection(endpointId);
                 if (connection != null)
                 {
                     openSuccess = connection.Open();

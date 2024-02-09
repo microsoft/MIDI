@@ -184,7 +184,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             if (!string.IsNullOrEmpty(endpointId))
             {
 
-                AnsiConsole.MarkupLine(Strings.MonitorMonitoringOnEndpointLabel + ": " + AnsiMarkupFormatter.FormatDeviceInstanceId(endpointId));
+                AnsiConsole.MarkupLine(Strings.MonitorMonitoringOnEndpointLabel + ": " + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointId));
 
                 //var table = new Table();
 

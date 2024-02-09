@@ -108,9 +108,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 table.AddEmptyRow();
                 table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Resources.Strings.PropertiesTableSectionHeaderUserData), "");
                 table.AddRow(Resources.Strings.PropertiesTablePropertyLabelUserSuppliedName, AnsiMarkupFormatter.FormatEndpointName(di.UserSuppliedName));
-                table.AddRow(Resources.Strings.PropertiesTablePropertyLabelDescription, AnsiMarkupFormatter.EscapeString(di.Description));
-                table.AddRow(Resources.Strings.PropertiesTablePropertyLabelSmallImagePath, AnsiMarkupFormatter.EscapeString(di.SmallImagePath));
-                table.AddRow(Resources.Strings.PropertiesTablePropertyLabelLargeImagePath, AnsiMarkupFormatter.EscapeString(di.LargeImagePath));
+                table.AddRow(Resources.Strings.PropertiesTablePropertyLabelDescription, AnsiMarkupFormatter.EscapeString(di.UserSuppliedDescription));
+                table.AddRow(Resources.Strings.PropertiesTablePropertyLabelSmallImagePath, AnsiMarkupFormatter.EscapeString(di.UserSuppliedSmallImagePath));
+                table.AddRow(Resources.Strings.PropertiesTablePropertyLabelLargeImagePath, AnsiMarkupFormatter.EscapeString(di.UserSuppliedLargeImagePath));
 
 
 

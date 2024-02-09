@@ -51,7 +51,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint8_t m_firstGroupIndex{ 0 };
         uint8_t m_numberOfGroupsSpanned{ 0 };
 
-        uint32_t MidiGroupTerminalBlock::CalculateBandwidth(_In_ uint16_t gtbBandwidthValue);
+        uint32_t CalculateBandwidth(_In_ uint16_t gtbBandwidthValue);
 
     };
 }

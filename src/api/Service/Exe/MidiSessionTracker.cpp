@@ -90,7 +90,7 @@ CMidiSessionTracker::AddClientEndpointConnection(
 
     MidiSessionConnectionEntry newConnection;
 
-    auto cleanEndpointId = internal::NormalizeEndpointInterfaceIdCopy(ConnectionEndpointInterfaceId);
+    auto cleanEndpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(ConnectionEndpointInterfaceId);
 
     newConnection.ConnectedEndpointInterfaceId = cleanEndpointId;
     newConnection.InstanceCount = 1;
@@ -135,7 +135,7 @@ CMidiSessionTracker::RemoveClientEndpointConnection(
         TraceLoggingWideString(ConnectionEndpointInterfaceId)
     );
 
-    auto cleanEndpointId = internal::NormalizeEndpointInterfaceIdCopy(ConnectionEndpointInterfaceId);
+    auto cleanEndpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(ConnectionEndpointInterfaceId);
 
     if (auto sessionEntry = m_sessions.find(SessionId); sessionEntry != m_sessions.end())
     {

@@ -42,6 +42,11 @@ namespace Windows.Devices.Midi2
         DataIndexOutOfRange =               0x00400000,
         TimestampOutOfRange =               0x00800000,
 
+        // multiple-message failure reasons -------------------------------------
+        MessageListPartiallyProcessed =     0x00A00000,
+
+
+
         Other =                             0x01000000,
     };
 }

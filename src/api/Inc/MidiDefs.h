@@ -16,6 +16,8 @@
 #define MAXIMUM_LOOPED_DATASIZE 16
 
 
+#define MIDI_TIMESTAMP_SEND_IMMEDIATELY 0
+
 // we can't let the memory usage run away. This many messages is a 
 // lot, and performance will suffer above 5000 or so. This number is
 // used by the scheduler and then also by the client API
@@ -527,6 +529,8 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_MidiOutLatencyTicksUserOverride, 802);     // DE
 #define STRING_PKEY_MIDI_VirtualMidiEndpointAssociator MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"900"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_VirtualMidiEndpointAssociator, 900);     // DEVPROP_TYPE_GUID
 
+#define STRING_PKEY_MIDI_TransportSuppliedDescription MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"901"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_TransportSuppliedDescription, 910);     // DEVPROP_TYPE_STRING
 
 
 

@@ -164,7 +164,19 @@
                    >
         </Component>
         
-
+        <!-- Install MIDI Dump Utility -->
+       <Component Id="MidiDumpUtility"
+                   Bitness="always64"
+                   Directory="ROOTINSTALLFOLDER"
+                   Guid="{fa0bd870-3468-4c10-bb2e-6fea6c225d42}"  >
+            <File Source="$(StagingSourceRootFolder)\api\x64\mididmp.exe"          Vital="true" />
+       
+            <!-- Add folder to path -->
+            <Environment Id="AddMidiDumpUtilityToSystemPath"
+                            Name="PATH" Action="set" Part="last" System="yes" 
+                            Value="[ROOTINSTALLFOLDER]" Permanent="no"/>        
+       </Component>            
+            
         
         <CustomAction
             Id="WriteActivatableClassIdKeysAction"
@@ -192,6 +204,7 @@
             <ComponentRef Id="ConfigurationFile"/>
             <ComponentRef Id="ConfigurationRegistryEntries"/>
 
+            <ComponentRef Id="MidiDumpUtility"/>
         </Feature>
 
 

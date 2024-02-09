@@ -24,7 +24,7 @@ public:
     virtual HRESULT Initialize(_In_ LPCWSTR Device,
         _In_ MidiFlow Flow)
     {
-        m_Device = internal::NormalizeEndpointInterfaceIdCopy(Device);
+        m_Device = internal::NormalizeEndpointInterfaceIdWStringCopy(Device);
         m_Flow = Flow;
 
         if (IsFlowSupported(MidiFlowIn))

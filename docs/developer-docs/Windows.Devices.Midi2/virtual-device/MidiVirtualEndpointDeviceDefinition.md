@@ -28,6 +28,7 @@ The `MidiVirtualEndpointDeviceDefinition` class specifies, in an easy to use for
 | `SoftwareRevisionLevel` | MIDI 2.0 UMP Device Identity value |
 | `AreFunctionBlocksStatic` | True if the function blocks will not change in any way |
 | `FunctionBlocks` | list of function blocks for this device |
+| `TransportSuppliedDescription` | The description for the endpoint. Optional. |
 
 ## Functions
 
