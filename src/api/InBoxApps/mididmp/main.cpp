@@ -142,7 +142,6 @@ int main()
     OutputSectionHeader(L"header");
 
     OutputCurrentTime();
-    OutputBlankLine();
 
     try
     {

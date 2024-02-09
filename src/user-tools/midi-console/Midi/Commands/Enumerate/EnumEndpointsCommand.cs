@@ -139,9 +139,14 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             if (settings.Verbose)
             {
-                if (!string.IsNullOrEmpty(endpointInfo.Description))
+                if (!string.IsNullOrEmpty(endpointInfo.TransportSuppliedDescription))
                 {
-                    table.AddRow(new Markup(AnsiMarkupFormatter.EscapeString(endpointInfo.Description)));
+                    table.AddRow(new Markup(AnsiMarkupFormatter.EscapeString(endpointInfo.TransportSuppliedDescription)));
+                }
+
+                if (!string.IsNullOrEmpty(endpointInfo.UserSuppliedDescription))
+                {
+                    table.AddRow(new Markup(AnsiMarkupFormatter.EscapeString(endpointInfo.UserSuppliedDescription)));
                 }
 
             }
