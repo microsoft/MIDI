@@ -1,13 +1,21 @@
 ---
 layout: page
 title: Diagnostics Endpoints
-parent: Windows Midi Services
+parent: Transport Types
+grandparent: Windows Midi Services
 has_children: false
 ---
 
 # MIDI Diagnostic Endpoints
 
-Windows MIDI Services comes with three diagnostic endpoints, two of which are there for application development, testing, and debugging.
+| Property | Value |
+| -------- | ----- |
+| Abstraction Id | `{ac9b5417-3fe0-4e62-960f-034ee4235a1a}` |
+| Mnemonic | `DIAG` |
+
+(Note: This transport cannot be disabled and is not listed in the registry. Its activation is hard-coded into the Windows service. Settings for this transport are not read from the configuration file and cannot be changed.)
+
+Windows MIDI Services comes with three diagnostic endpoints, two of which are there for application development, testing, and debugging. These will not normally be used by musicians or displayed through music-creation applications.
 
 ## Loopbacks A and B
 
