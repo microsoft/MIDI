@@ -37,6 +37,9 @@ public:
 
     HRESULT DeleteClientEndpoint(_In_ std::wstring clientShortInstanceId);
 
+    HRESULT DeleteDeviceEndpoint(_In_ std::wstring deviceShortInstanceId);
+
+
     //HRESULT DeleteEndpointPair(
     //    _In_ GUID const VirtualEndpointAssociationGuid
     //);

@@ -19,6 +19,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     void MidiVirtualEndpointDevice::UpdateFunctionBlock(midi2::MidiFunctionBlock const& block) noexcept
     {
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
         UNREFERENCED_PARAMETER(block);
 
         // TODO
@@ -27,6 +29,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     void MidiVirtualEndpointDevice::UpdateEndpointName(winrt::hstring const& name) noexcept
     {
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
         UNREFERENCED_PARAMETER(name);
 
         // TODO
@@ -36,22 +40,30 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     void MidiVirtualEndpointDevice::Initialize(midi2::IMidiEndpointConnectionSource const& endpointConnection) noexcept
     {
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
         m_endpointConnection = endpointConnection.as<midi2::MidiEndpointConnection>();
     }
 
     void MidiVirtualEndpointDevice::OnEndpointConnectionOpened() noexcept
     {
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
         // nothing to do here
     }
 
     void MidiVirtualEndpointDevice::Cleanup() noexcept
     {
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
         // nothing to do here
     }
 
     _Use_decl_annotations_
     void MidiVirtualEndpointDevice::SendFunctionBlockInfoNotificationMessage(midi2::MidiFunctionBlock const& fb) noexcept
     {
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
         auto functionBlockNotification = midi2::MidiStreamMessageBuilder::BuildFunctionBlockInfoNotificationMessage(
             0,
             true,
@@ -66,12 +78,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
         );
 
         // TODO: Log if failed
-        m_endpointConnection.SendMessagePacket(functionBlockNotification);
+        if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendMessagePacket(functionBlockNotification)))
+        {
+            internal::LogGeneralError(__FUNCTION__, L"SendMessagePacket failed");
+        }
     }
 
     _Use_decl_annotations_
     void MidiVirtualEndpointDevice::SendFunctionBlockNameNotificationMessages(midi2::MidiFunctionBlock const& fb) noexcept
     {
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
         if (fb.Name() == L"") return;
 
         auto nameMessages = midi2::MidiStreamMessageBuilder::BuildFunctionBlockNameNotificationMessages(
@@ -82,8 +99,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         for (uint32_t i = 0; i < nameMessages.Size(); i++)
         {
-            // TODO: Log if failed
-            m_endpointConnection.SendMessagePacket(nameMessages.GetAt(i));
+            if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendMessagePacket(nameMessages.GetAt(i))))
+            {
+                internal::LogGeneralError(__FUNCTION__, L"SendMessagePacket failed");
+            }
         }
 
     }
@@ -94,6 +113,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool& skipFurtherListeners,
         bool& skipMainMessageReceivedEvent)  noexcept
     {
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
         bool handled = false;
 
         if (args.MessageType() == MidiMessageType::Stream128)
@@ -199,6 +220,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             else
             {
                 // something went wrong filling this message type
+                internal::LogGeneralError(__FUNCTION__, L"Error filling message type");
             }
             
 
@@ -231,6 +253,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     void MidiVirtualEndpointDevice::InternalSetDeviceDefinition(
         _In_ midi2::MidiVirtualEndpointDeviceDefinition definition)
     {
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
         try
         {
             // populate all the views, properties, blocks, etc.
@@ -245,7 +269,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 fb.Number(i);
 
                 // TODO: Set the fb as read-only
-
+                
 
                  
                 // add the block
@@ -266,6 +290,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         catch (...)
         {
             // todo log
+            internal::LogGeneralError(__FUNCTION__, L"Exception attempting to set device definition");
+
         }
 
     }

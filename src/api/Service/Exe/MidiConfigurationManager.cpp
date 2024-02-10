@@ -355,8 +355,7 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
         MidiSrvTelemetryProvider::Provider(),
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"), 
-        TraceLoggingWideString(L"Enter")
+        TraceLoggingPointer(this, "this")
     );
 
 
@@ -492,10 +491,8 @@ HRESULT CMidiConfigurationManager::Initialize()
         MidiSrvTelemetryProvider::Provider(),
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter")
+        TraceLoggingPointer(this, "this")
     );
-
 
     // load the current configuration
 
@@ -517,59 +514,70 @@ HRESULT CMidiConfigurationManager::Initialize()
 
         try
         {
-            //OutputDebugString(L"Opening json config file");
-
             // try to open the file
             auto file = winrt::Windows::Storage::StorageFile::GetFileFromPathAsync(fileName).get();
 
             // try to read the text from the file
             fileContents = winrt::Windows::Storage::FileIO::ReadTextAsync(file).get();
-
         }
         catch (...)
         {
-            OutputDebugString(L"Exception opening json config file\n");
-
             // file does not exist or we can't open it
             // we don't fail if no configuration file, we just don't config anything
 
-            // TODO: Need to log this
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Missing or inaccessible MIDI configuration file")
+            );
 
             return S_OK;
         }
         
         if (!fileContents.empty())
         {
-            //OutputDebugString(L"Config file contents are NOT empty");
-
             // parse out the JSON.
             // If the JSON is bad, we still just run. We just don't config.
             // Config is a privilege, not a right, and is certainly not essential :)
 
             try
             {
-                if (json::JsonObject::TryParse(fileContents, m_jsonObject))
+                if (!json::JsonObject::TryParse(fileContents, m_jsonObject))
                 {
-                    // worked
-                    OutputDebugString(L"Parsing json worked\n");
-                }
-                else
-                {
-                    OutputDebugString(L"Parsing json failed\n");
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        __FUNCTION__,
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Configuration file JSON parsing failed")
+                    );
                 }
             }
             CATCH_LOG()
         }
         else
         {
-            OutputDebugString(L"Config file contents are empty\n");
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Configuration file JSON is empty")
+            );
         }
 
     }
     else
     {
-        // config file is missing
-        OutputDebugString(L"Config file is missing, but that's ok.\n");
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Missing MIDI configuration file")
+        );
 
         return S_OK;
     }
@@ -586,10 +594,8 @@ std::wstring CMidiConfigurationManager::GetSavedConfigurationForTransportAbstrac
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter")
+        TraceLoggingGuid(abstractionGuid)
     );
-
-
 
 
     try
@@ -634,19 +640,13 @@ std::wstring CMidiConfigurationManager::GetSavedConfigurationForEndpointProcessi
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter")
+        TraceLoggingGuid(abstractionGuid)
     );
-
-
 
     
     try
     {
-        //   OutputDebugString(L"" __FUNCTION__);
-
         auto key = internal::GuidToString(abstractionGuid);
-
-        //    OutputDebugString(key.c_str());
 
         if (m_jsonObject != nullptr)
         {
@@ -660,8 +660,6 @@ std::wstring CMidiConfigurationManager::GetSavedConfigurationForEndpointProcessi
                     auto thisPlugin = plugins.GetNamedObject(key);
 
                     std::wstring jsonString = (std::wstring)thisPlugin.Stringify();
-
-                    OutputDebugString(jsonString.c_str());
 
                     return jsonString;
                 }
@@ -681,11 +679,8 @@ HRESULT CMidiConfigurationManager::Cleanup() noexcept
         MidiSrvTelemetryProvider::Provider(),
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter")
+        TraceLoggingPointer(this, "this")
     );
-
-
 
 
 

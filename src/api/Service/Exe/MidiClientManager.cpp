@@ -249,11 +249,10 @@ CMidiClientManager::GetMidiClient(
         MidiSrvTelemetryProvider::Provider(),
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(MidiDevice),
+        TraceLoggingGuid(SessionId)
     );
-
-
-    OutputDebugString(__FUNCTION__ L" enter");
 
     wil::com_ptr_nothrow<CMidiClientPipe> clientPipe;
 
@@ -267,8 +266,6 @@ CMidiClientManager::GetMidiClient(
     Client->ClientHandle = (MidiClientHandle)clientPipe.get();
     MidiClientPipe = clientPipe.get();
     m_ClientPipes.emplace(Client->ClientHandle, std::move(clientPipe));
-
-    OutputDebugString(__FUNCTION__ L" exit OK");
 
     return S_OK;
 }
@@ -287,26 +284,19 @@ CMidiClientManager::GetMidiDevice(
         MidiSrvTelemetryProvider::Provider(),
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(MidiDevice)
     );
-
-
-    OutputDebugString(__FUNCTION__ L" enter. Device:");
-    OutputDebugString(MidiDevice);
 
     // Get an existing device pipe if one exists, otherwise create a new pipe
     auto device = m_DevicePipes.find(MidiDevice);
     if (device != m_DevicePipes.end())
     {
-        OutputDebugString(__FUNCTION__ L" Found existing device pipe");
-
         RETURN_HR_IF(E_UNEXPECTED, device->second->Flow() != CreationParams->Flow);
         MidiDevicePipe = device->second;
     }
     else
     {
-        OutputDebugString(__FUNCTION__ L" Creating device pipe");
-
         wil::com_ptr_nothrow<CMidiDevicePipe> devicePipe;
 
         // The devicePipe must be initialized with the flow of the aliased device
@@ -314,27 +304,20 @@ CMidiClientManager::GetMidiDevice(
 
         deviceCreationParams.BufferSize = CreationParams->BufferSize;
 
-        OutputDebugString(__FUNCTION__ L" Getting data format");
         // create the device using the device's preferred format.
         // if that mismatches the client capabilities, a transform will be inserted.
         MidiDataFormat dataFormat = MidiDataFormat::MidiDataFormat_Any;
         LOG_IF_FAILED(GetDeviceSupportedDataFormat(MidiDevice, dataFormat));
 
-        OutputDebugString(__FUNCTION__ L" Setting data format");
         deviceCreationParams.DataFormat = dataFormat;
         deviceCreationParams.Flow = CreationParams->Flow;
-
-        OutputDebugString(__FUNCTION__ L" About to make device pipe object");
 
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiDevicePipe>(&devicePipe));
         RETURN_IF_FAILED(devicePipe->Initialize(BindingHandle, MidiDevice, &deviceCreationParams, &m_MmcssTaskId));
 
-        OutputDebugString(__FUNCTION__ L" Adding device pipe to collection");
         MidiDevicePipe = devicePipe.get();
         m_DevicePipes.emplace(MidiDevice, std::move(devicePipe));
     }
-
-    OutputDebugString(__FUNCTION__ L" exit OK");
 
     return S_OK;
 }
@@ -359,13 +342,10 @@ CMidiClientManager::GetMidiTransform(
     );
 
 
-    OutputDebugString(__FUNCTION__ L" enter");
-
     wil::com_ptr_nothrow<CMidiPipe> transformPipe{ nullptr };
 
     // no transform is required, this shouldn't have been called.
     RETURN_HR_IF(E_UNEXPECTED, DataFormatFrom == DataFormatTo);
-    OutputDebugString(__FUNCTION__ L" Passed check for DataFormatFrom != DataFormatTo\n");
 
     // search existing transforms for this device for an output that supports
     // the requested flow and data format.
@@ -393,20 +373,38 @@ CMidiClientManager::GetMidiTransform(
         if (MidiDataFormat_UMP == DataFormatFrom &&
             MidiDataFormat_ByteStream == DataFormatTo)
         {
-            OutputDebugString(__FUNCTION__ L" Adding Midi2UMP2BSTransform\n");
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Adding Midi2UMP2BSTransform (UMP to Bytestream)")
+            );
 
             creationParams.TransformGuid = __uuidof(Midi2UMP2BSTransform);
         }
         else if (MidiDataFormat_ByteStream == DataFormatFrom &&
             MidiDataFormat_UMP == DataFormatTo)
         {
-            OutputDebugString(__FUNCTION__ L" Adding Midi2BS2UMPTransform\n");
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Adding Midi2BS2UMPTransform (Bytestream to UMP)")
+            );
 
             creationParams.TransformGuid = __uuidof(Midi2BS2UMPTransform);
         }
         else
         {
-            OutputDebugString(__FUNCTION__ L" Unknown transform requested\n");
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Unsupported translation type requested. This is probably an error in specifying data format.")
+            );
 
             // unknown transform
             RETURN_IF_FAILED(ERROR_UNSUPPORTED_TYPE);
@@ -434,9 +432,6 @@ CMidiClientManager::GetMidiTransform(
 
     ClientConnectionPipe = transformPipe;
 
-
-    OutputDebugString(L"" __FUNCTION__ " Complete");
-
     return S_OK;
 }
 
@@ -461,8 +456,6 @@ CMidiClientManager::GetMidiScheduler(
         TraceLoggingPointer(this, "this")
     );
 
-
-    OutputDebugString(L"" __FUNCTION__);
 
     wil::com_ptr_nothrow<CMidiPipe> transformPipe{ nullptr };
 
@@ -548,9 +541,6 @@ CMidiClientManager::GetMidiEndpointMetadataHandler(
         TraceLoggingPointer(this, "this")
     );
 
-
-    OutputDebugString(L"" __FUNCTION__);
-
     wil::com_ptr_nothrow<CMidiPipe> transformPipe{ nullptr };
 
     // we only handle metadata on incoming messages
@@ -572,8 +562,6 @@ CMidiClientManager::GetMidiEndpointMetadataHandler(
     // not found, instantiate the transform that is needed.
     if (!transformPipe)
     {
-        OutputDebugString(L"" __FUNCTION__ " transform pipe not found. Creating one.");
-
         MIDISRV_TRANSFORMCREATION_PARAMS creationParams{ 0 };
 
         creationParams.Flow = Flow;
@@ -627,9 +615,6 @@ CMidiClientManager::GetMidiJRTimestampHandler(
         TraceLoggingPointer(this, "this")
     );
 
-
-    OutputDebugString(L"" __FUNCTION__);
-
     UNREFERENCED_PARAMETER(BindingHandle);
     UNREFERENCED_PARAMETER(Flow);
     UNREFERENCED_PARAMETER(DevicePipe);
@@ -656,12 +641,10 @@ CMidiClientManager::CreateMidiClient(
         MidiSrvTelemetryProvider::Provider(),
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(MidiDevice),
+        TraceLoggingGuid(SessionId)
     );
-
-
-    OutputDebugString(__FUNCTION__ L" enter. Device:");
-    OutputDebugString(MidiDevice);
 
     //switch (CreationParams->DataFormat)
     //{
@@ -945,9 +928,6 @@ CMidiClientManager::DestroyMidiClient(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
-
-
-    OutputDebugString(L"" __FUNCTION__ " enter");
 
     auto lock = m_ClientManagerLock.lock();
 

@@ -23,26 +23,52 @@ public:
 
     HRESULT LinkAssociatedBiDi(_In_ wil::com_ptr_nothrow<CMidi2VirtualMidiBiDi> biDi)
     {
-        m_linkedBiDi = biDi;
+        m_linkedBiDiConnections.push_back(biDi);
 
-        RETURN_IF_FAILED(biDi->QueryInterface(__uuidof(IMidiCallback), (void**)&m_linkedBiDiCallback));
+        //m_linkedBiDi = biDi;
+
+        //RETURN_IF_FAILED(biDi->QueryInterface(__uuidof(IMidiCallback), (void**)&m_linkedBiDiCallback));
 
         return S_OK;
     }
 
-    HRESULT UnlinkAssociatedBiDi()
+    HRESULT UnlinkAllAssociatedBiDi()
     {
-        m_linkedBiDi = nullptr;
-        m_linkedBiDiCallback = nullptr;
+        m_linkedBiDiConnections.clear();
 
         return S_OK;
+    }
+
+    HRESULT UnlinkAssociatedBiDi(CMidi2VirtualMidiBiDi* biDiToUnlink)
+    {
+        auto it = std::find_if(m_linkedBiDiConnections.begin(), m_linkedBiDiConnections.end(),
+                    [&](const wil::com_ptr_nothrow<CMidi2VirtualMidiBiDi> bidi) { return bidi == biDiToUnlink; });
+
+        if (it != m_linkedBiDiConnections.end())
+        {
+            it->reset();
+            m_linkedBiDiConnections.erase(it);
+        }
+
+        //m_linkedBiDiCallback = nullptr;
+
+        return S_OK;
+    }
+
+    IMidiCallback* GetCallback()
+    {
+        return m_callback.get();
     }
 
 private:
-    wil::com_ptr_nothrow<IMidiBiDi> m_linkedBiDi;
+    //wil::com_ptr_nothrow<IMidiBiDi> m_linkedBiDi;
 
-    wil::com_ptr_nothrow<IMidiCallback> m_linkedBiDiCallback;
+    std::vector<wil::com_ptr_nothrow<CMidi2VirtualMidiBiDi>> m_linkedBiDiConnections{};
+
+
+    //wil::com_ptr_nothrow<IMidiCallback> m_linkedBiDiCallback;
     wil::com_ptr_nothrow <IMidiCallback> m_callback;
+
 
     LONGLONG m_callbackContext;
 

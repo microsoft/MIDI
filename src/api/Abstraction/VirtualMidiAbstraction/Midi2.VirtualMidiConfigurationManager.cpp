@@ -16,8 +16,6 @@ CMidi2VirtualMidiConfigurationManager::Initialize(
     IUnknown* MidiDeviceManager
 )
 {
-    OutputDebugString(L"" __FUNCTION__ " Enter");
-
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
@@ -45,7 +43,7 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(ConfigurationJsonSection)
+        TraceLoggingWideString(ConfigurationJsonSection, "json")
     );
 
 
@@ -64,8 +62,8 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
             __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Failed to parse Configuration JSON"),
-            TraceLoggingWideString(ConfigurationJsonSection)
+            TraceLoggingWideString(L"Failed to parse Configuration JSON", "message"),
+            TraceLoggingWideString(ConfigurationJsonSection, "json")
         );
 
         return E_FAIL;
@@ -159,8 +157,6 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
 HRESULT
 CMidi2VirtualMidiConfigurationManager::Cleanup()
 {
-    OutputDebugString(L"" __FUNCTION__ " Enter");
-
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,

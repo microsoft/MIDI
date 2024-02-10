@@ -26,7 +26,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::MidiSessionSettings const& settings
         ) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Session create ");
+        internal::LogInfo(__FUNCTION__, L"Session create");
 
         try
         {
@@ -478,7 +478,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 for (auto connection : m_connections)
                 {
                     // close the one connection
-                    connection.Value().as<foundation::IClosable>().Close();
+                    //connection.Value().as<foundation::IClosable>().Close();
+
+                    auto c = winrt::get_self<implementation::MidiEndpointConnection>(connection.Value());
+                    c->InternalClose();
                 }
 
                 m_serviceAbstraction = nullptr;

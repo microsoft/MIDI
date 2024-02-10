@@ -229,6 +229,12 @@ CMidiSessionTracker::GetSessionListJson(
 HRESULT
 CMidiSessionTracker::Cleanup()
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
 
 
 

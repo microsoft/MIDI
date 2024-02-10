@@ -17,16 +17,21 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     void MidiGroupEndpointListener::Initialize(midi2::IMidiEndpointConnectionSource const& endpointConnection)
     {        
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
         m_endpointConnection = endpointConnection.as<midi2::MidiEndpointConnection>();
     }
 
     void MidiGroupEndpointListener::OnEndpointConnectionOpened()
     {        
+        internal::LogInfo(__FUNCTION__, L"Enter");
     }
 
     void MidiGroupEndpointListener::Cleanup()
     {        
- //       m_endpointConnection = nullptr;
+        internal::LogInfo(__FUNCTION__, L"Enter");
+        
+//       m_endpointConnection = nullptr;
     }
 
     _Use_decl_annotations_
@@ -35,6 +40,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool& skipFurtherListeners, 
         bool& skipMainMessageReceivedEvent)
     {
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
         skipFurtherListeners = m_preventCallingFurtherListeners;
         skipMainMessageReceivedEvent = m_preventFiringMainMessageReceivedEvent;
 

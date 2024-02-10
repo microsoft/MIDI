@@ -66,13 +66,26 @@ CMidiDeviceManager::Initialize(
                     }
                     else
                     {
-                        OutputDebugString(__FUNCTION__ L": Transport Abstraction initialization FAILED.\n");
+                        TraceLoggingWrite(
+                            MidiSrvTelemetryProvider::Provider(),
+                            __FUNCTION__,
+                            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Transport abstraction initialization failed.")
+                        );
                     }
 
                 }
                 else
                 {
-                    OutputDebugString(__FUNCTION__ L": Transport Abstraction Endpoint Manager activation failed (nullptr return).\n");
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        __FUNCTION__,
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Transport abstraction endpoint manager initialization failed.")
+                    );
+
                 }
 
                 // we only log. This interface is optional
@@ -96,7 +109,13 @@ CMidiDeviceManager::Initialize(
             }
             else
             {
-                OutputDebugString(__FUNCTION__ L": Transport Abstraction activation failed (nullptr return).\n");
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    __FUNCTION__,
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Transport Abstraction activation failed (nullptr return).")
+                );
             }
 
 
@@ -106,8 +125,15 @@ CMidiDeviceManager::Initialize(
         }
         catch (...)
         {
-            // TODO: Log
-            OutputDebugString(__FUNCTION__ L": Exception loading transport abstraction.\n");
+            // TODO: Log exception
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Exception loading transport abstraction.")
+            );
+
         }
     }
 
@@ -180,8 +206,6 @@ SwMidiParentDeviceCreateCallback(
     __in_opt PCWSTR pszDeviceInstanceId
 )
 {
-    OutputDebugString(L"" __FUNCTION__);
-
     if (pContext == nullptr)
     {
         // TODO: Should log this.
@@ -199,23 +223,15 @@ SwMidiParentDeviceCreateCallback(
 
     if (SUCCEEDED(CreationResult))
     {
-        OutputDebugString(__FUNCTION__ L" - CreationResult Success\n");
-
         // success, mark the port as created
         creationContext->MidiParentDevice->SwDeviceState = SWDEVICESTATE::Created;
 
         // get the new device instance ID. This is usually modified from what we started with
         creationContext->MidiParentDevice->InstanceId = std::wstring(pszDeviceInstanceId);
     }
-    else
-    {
-        OutputDebugString(__FUNCTION__ L" - CreationResult FAILURE\n");
-    }
 
     // success or failure, signal we have completed.
     creationContext->CreationCompleted.SetEvent();
-
-    OutputDebugString(__FUNCTION__ L" - Complete\n");
 }
 
 _Use_decl_annotations_
@@ -236,8 +252,6 @@ CMidiDeviceManager::ActivateVirtualParentDevice
         TraceLoggingPointer(this, "this")
     );
 
-
-    OutputDebugString(L"" __FUNCTION__);
 
     RETURN_HR_IF_NULL(E_INVALIDARG, CreateInfo);
     RETURN_HR_IF_NULL(E_INVALIDARG, CreatedSwDeviceId);
@@ -260,10 +274,6 @@ CMidiDeviceManager::ActivateVirtualParentDevice
 
     std::vector<DEVPROPERTY> devProperties{};
 
-
-
-    OutputDebugString(__FUNCTION__ L": Setting dev properties\n");
-
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
 
     if (DevPropertyCount > 0 && DevProperties != nullptr)
@@ -281,9 +291,6 @@ CMidiDeviceManager::ActivateVirtualParentDevice
             DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue });
 
 
-
-    OutputDebugString(__FUNCTION__ L": About to SwDeviceCreate\n");
-
     RETURN_IF_FAILED(SwDeviceCreate(
         MIDI_DEVICE_ENUMERATOR,                 
         MIDI_SWD_VIRTUAL_PARENT_ROOT,           // root device
@@ -294,21 +301,13 @@ CMidiDeviceManager::ActivateVirtualParentDevice
         &creationContext,
         wil::out_param(creationContext.MidiParentDevice->SwDevice)));
 
-
-    OutputDebugString(__FUNCTION__ L": About to wait for completion\n");
-
     // wait 5 seconds for creation to complete
     creationContext.CreationCompleted.wait(5000);
-
-
-    OutputDebugString(__FUNCTION__ L": Done waiting. Checking for success or failure\n");
 
     // confirm we were able to register the interface
     RETURN_IF_FAILED(creationContext.MidiParentDevice->hr);
     RETURN_HR_IF(E_FAIL, creationContext.MidiParentDevice->SwDeviceState != SWDEVICESTATE::Created);
 
-
-    OutputDebugString(__FUNCTION__ L": Getting the new CreatedSwDeviceId\n");
 
     // return the created device interface Id. This is needed for anything that will 
     // do a match in the Ids from Windows.Devices.Enumeration
@@ -318,17 +317,20 @@ CMidiDeviceManager::ActivateVirtualParentDevice
 
         CreatedSwDeviceId[CreatedSwDeviceIdCharCount - 1] = (wchar_t)0;
 
-        OutputDebugString(CreatedSwDeviceId);
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(CreatedSwDeviceId)
+        );
+
     }
 
     if (SUCCEEDED(creationContext.MidiParentDevice->hr))
     {
-        OutputDebugString(__FUNCTION__ L": Success\n");
-
         m_MidiParents.push_back(std::move(midiParent));
     }
-
-    OutputDebugString(__FUNCTION__ L": Complete\n");
 
     return S_OK;
 }
@@ -356,14 +358,12 @@ CMidiDeviceManager::ActivateEndpoint
         MidiSrvTelemetryProvider::Provider(),
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(ParentInstanceId),
+        TraceLoggingBool(UMPOnly)
     );
 
-    OutputDebugString(__FUNCTION__ L": Enter\n");
-
     auto lock = m_MidiPortsLock.lock();
-
-    OutputDebugString(__FUNCTION__ L": Checking for an existing port. \n");
 
     const bool alreadyActivated = std::find_if(m_MidiPorts.begin(), m_MidiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
     {
@@ -375,8 +375,6 @@ CMidiDeviceManager::ActivateEndpoint
 
         return false;
     }) != m_MidiPorts.end();
-
-    OutputDebugString(__FUNCTION__ L": About to Null terminate CreatedDeviceInterfaceId\n");
 
     if (CreatedDeviceInterfaceId != nullptr && CreatedDeviceInterfaceIdCharCount > 0)
     {
@@ -398,8 +396,6 @@ CMidiDeviceManager::ActivateEndpoint
             DeactivateEndpoint(((SW_DEVICE_CREATE_INFO*)CreateInfo)->pszInstanceId);
         });
 
-        OutputDebugString(__FUNCTION__ L": About to ActivateEndpointInternal\n");
-
         // Activate the UMP version of this endpoint.
         RETURN_IF_FAILED(ActivateEndpointInternal(ParentInstanceId, nullptr, FALSE, MidiFlow, IntPropertyCount, DevPropertyCount, (DEVPROPERTY*)InterfaceDevProperties, (DEVPROPERTY*)DeviceDevProperties, (SW_DEVICE_CREATE_INFO*)CreateInfo, &deviceInterfaceId));
 
@@ -418,8 +414,6 @@ CMidiDeviceManager::ActivateEndpoint
             }
         }
 
-        OutputDebugString(__FUNCTION__ L": About to get CreatedDeviceInterfaceId\n");
-
         // return the created device interface Id. This is needed for anything that will 
         // do a match in the Ids from Windows.Devices.Enumeration
         if (CreatedDeviceInterfaceId != nullptr && CreatedDeviceInterfaceIdCharCount > 0)
@@ -432,9 +426,6 @@ CMidiDeviceManager::ActivateEndpoint
 
         cleanupOnFailure.release();
     }
-
-
-    OutputDebugString(__FUNCTION__ L": Complete\n");
 
     return S_OK;
 }
@@ -455,8 +446,16 @@ CMidiDeviceManager::ActivateEndpointInternal
     std::wstring *DeviceInterfaceId
 )
 {
-    OutputDebugString(__FUNCTION__ L": Enter\nParentInstanceId: ");
-    OutputDebugString(ParentInstanceId);
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(ParentInstanceId),
+        TraceLoggingWideString(AssociatedInstanceId),
+        TraceLoggingBool(MidiOne)
+    );
 
 
     std::unique_ptr<MIDIPORT> midiPort = std::make_unique<MIDIPORT>();
@@ -530,9 +529,6 @@ CMidiDeviceManager::ActivateEndpointInternal
     creationContext.InterfaceDevProperties = interfaceProperties.data();
     creationContext.IntPropertyCount = (ULONG)interfaceProperties.size();
 
-    OutputDebugString(__FUNCTION__ L": About to SwDeviceCreate\n");
-
-
     // create the devnode for the device
     midiPort->hr = SwDeviceCreate(
         midiPort->Enumerator.c_str(),
@@ -546,14 +542,21 @@ CMidiDeviceManager::ActivateEndpointInternal
 
     if (SUCCEEDED(midiPort->hr))
     {
-        OutputDebugString(__FUNCTION__ L": SwDeviceCreate succeeded\n");
-
         // wait 10 seconds for creation to complete
         creationContext.creationCompleted.wait(10000);
     }
     else if (HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS) == midiPort->hr)
     {
-        OutputDebugString(__FUNCTION__ L": SwDeviceCreate returned that the endpoint device already exists\n");
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Already exists"),
+            TraceLoggingWideString(ParentInstanceId),
+            TraceLoggingWideString(AssociatedInstanceId),
+            TraceLoggingBool(MidiOne)
+        );
 
         // if the devnode already exists, then we likely only need to create/activate the interface, a previous
         // call created the devnode. First, locate the matching SwDevice handle for the existing devnode.
@@ -577,12 +580,7 @@ CMidiDeviceManager::ActivateEndpointInternal
 
     // confirm we were able to register the interface
     RETURN_IF_FAILED(midiPort->hr);
-
-    OutputDebugString(__FUNCTION__ L": Checking midiPort->SwDeviceState\n");
-
     RETURN_HR_IF(E_FAIL, midiPort->SwDeviceState != SWDEVICESTATE::Created);
-
-    OutputDebugString(__FUNCTION__ L": Copying new DeviceInterfaceId\n");
 
     if (DeviceInterfaceId)
     {
@@ -591,8 +589,6 @@ CMidiDeviceManager::ActivateEndpointInternal
 
     // success, transfer the midiPort to the list
     m_MidiPorts.push_back(std::move(midiPort));
-
-    OutputDebugString(__FUNCTION__ L": Complete\n");
 
     return S_OK;
 }
@@ -611,38 +607,40 @@ CMidiDeviceManager::UpdateEndpointProperties
         MidiSrvTelemetryProvider::Provider(),
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(DeviceInterfaceId),
+        TraceLoggingULong(IntPropertyCount)
     );
 
     OutputDebugString(L"\n" __FUNCTION__ " ");
 
     auto requestedInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(DeviceInterfaceId);
 
-    //OutputDebugString(requestedInterfaceId.c_str());
-    //OutputDebugString(L"\n");
-
     // locate the MIDIPORT 
     auto item = std::find_if(m_MidiPorts.begin(), m_MidiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
         {
             auto portInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(Port->DeviceInterfaceId.get());
-
-//            OutputDebugString((L" -- Checking " + portInterfaceId).c_str());
 
             return (portInterfaceId == requestedInterfaceId);
         });
 
     if (item == m_MidiPorts.end())
     {
-        OutputDebugString(__FUNCTION__ L" No matching device found\n");
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Device not found"),
+            TraceLoggingWideString(DeviceInterfaceId),
+            TraceLoggingULong(IntPropertyCount)
+        );
 
         // device not found
         return E_FAIL;
     }
     else
     {
-        OutputDebugString(__FUNCTION__ L" Found matching device in endpoint list\n");
-        OutputDebugString(item->get()->DeviceInterfaceId.get());
-
         // Using the found handle, add/update properties
         auto deviceHandle = item->get()->SwDevice.get();
 
@@ -653,7 +651,6 @@ CMidiDeviceManager::UpdateEndpointProperties
             (const DEVPROPERTY*)InterfaceDevProperties
         ));
 
-        OutputDebugString(__FUNCTION__ L" Property updated successfully\n");
     }
 
     return S_OK;
@@ -672,7 +669,9 @@ CMidiDeviceManager::DeleteEndpointProperties
         MidiSrvTelemetryProvider::Provider(),
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(DeviceInterfaceId),
+        TraceLoggingULong(IntPropertyCount)
     );
 
     OutputDebugString(L"\n" __FUNCTION__ " ");
@@ -706,7 +705,8 @@ CMidiDeviceManager::DeleteAllEndpointInProtocolDiscoveredProperties
         MidiSrvTelemetryProvider::Provider(),
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(DeviceInterfaceId)
     );
 
     // don't delete any keys that are specified by the user, or 
@@ -765,14 +765,11 @@ CMidiDeviceManager::DeactivateEndpoint
         MidiSrvTelemetryProvider::Provider(),
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(InstanceId)
     );
 
-    OutputDebugString(__FUNCTION__ L" - enter. Cleaned instance id is: ");
-
     auto cleanId = internal::NormalizeDeviceInstanceIdWStringCopy(InstanceId);
-
-    OutputDebugString(cleanId.c_str());
 
     // there may be more than one SWD associated with this instance id, as we reuse
     // the instance id for the legacy SWD, it just has a different activator and InterfaceClass.
@@ -800,15 +797,11 @@ CMidiDeviceManager::DeactivateEndpoint
         }
         else
         {
-            OutputDebugString(__FUNCTION__ L" - Id found. Removing SWD\n");
-
             // Erasing this item from the list will free the unique_ptr and also trigger a SwDeviceClose on the item->SwDevice,
             // which will deactivate the device, done.
             m_MidiPorts.erase(item);
         }
     } while (TRUE);
-
-    OutputDebugString(__FUNCTION__ L" - exit\n");
 
     return S_OK;
 }
@@ -824,7 +817,8 @@ CMidiDeviceManager::RemoveEndpoint
         MidiSrvTelemetryProvider::Provider(),
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(InstanceId)
     );
 
     // first deactivate, to ensure it's removed from the tracking list
@@ -846,15 +840,17 @@ CMidiDeviceManager::UpdateAbstractionConfiguration
     BSTR* Response
 )
 {
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
-    );
-
     if (ConfigurationJson != nullptr)
     {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingGuid(AbstractionId),
+            TraceLoggingWideString(ConfigurationJson)
+        );
+
         if (auto search = m_MidiAbstractionConfigurationManagers.find(AbstractionId); search != m_MidiAbstractionConfigurationManagers.end())
         {
             auto configManager = search->second;
@@ -871,6 +867,7 @@ CMidiDeviceManager::UpdateAbstractionConfiguration
                 __FUNCTION__,
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
+                TraceLoggingGuid(AbstractionId),
                 TraceLoggingWideString(L"Failed to find the referenced abstraction by its GUID")
             );
 

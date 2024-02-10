@@ -22,7 +22,8 @@ CMidiTransformPipe::Initialize(
         MidiSrvTelemetryProvider::Provider(),
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(Device)
     );
 
 
@@ -60,9 +61,6 @@ CMidiTransformPipe::Cleanup()
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
-
-
-    OutputDebugString(L"" __FUNCTION__);
 
     if (m_MidiDataTransform)
     {
