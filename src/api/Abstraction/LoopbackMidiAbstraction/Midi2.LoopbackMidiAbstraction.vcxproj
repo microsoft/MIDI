@@ -28,7 +28,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
-    <ProjectGuid>{7427BC7A-4247-42B0-AC9B-7DA10418AA9D}</ProjectGuid>
+    <ProjectGuid>{0F94A751-9159-4A88-8A71-347151124548}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -148,11 +148,11 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
-      <ModuleDefinitionFile>Midi2.VirtualPatchBayAbstraction.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>Midi2.LoopbackMidiAbstraction.def</ModuleDefinitionFile>
     </Link>
     <Midl>
       <AdditionalIncludeDirectories>$(SolutionDir)\idl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.VirtualPatchBayAbstraction\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.LoopbackMidiabstraction\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
     </Midl>
   </ItemDefinitionGroup>
@@ -166,11 +166,11 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
-      <ModuleDefinitionFile>Midi2.VirtualPatchBayAbstraction.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>Midi2.LoopbackMidiAbstraction.def</ModuleDefinitionFile>
     </Link>
     <Midl>
       <AdditionalIncludeDirectories>$(SolutionDir)\idl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.VirtualPatchBayAbstraction\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.LoopbackMidiabstraction\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
     </Midl>
   </ItemDefinitionGroup>
@@ -184,11 +184,11 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
-      <ModuleDefinitionFile>Midi2.VirtualPatchBayAbstraction.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>Midi2.LoopbackMidiAbstraction.def</ModuleDefinitionFile>
     </Link>
     <Midl>
       <AdditionalIncludeDirectories>$(SolutionDir)\idl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.VirtualPatchBayAbstraction\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.LoopbackMidiabstraction\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
     </Midl>
   </ItemDefinitionGroup>
@@ -221,11 +221,11 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
-      <ModuleDefinitionFile>Midi2.VirtualPatchBayAbstraction.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>Midi2.LoopbackMidiAbstraction.def</ModuleDefinitionFile>
     </Link>
     <Midl>
       <AdditionalIncludeDirectories>$(SolutionDir)\idl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.VirtualPatchBayAbstraction\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.LoopbackMidiabstraction\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
     </Midl>
   </ItemDefinitionGroup>
@@ -238,11 +238,11 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
-      <ModuleDefinitionFile>Midi2.VirtualPatchBayAbstraction.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>Midi2.LoopbackMidiAbstraction.def</ModuleDefinitionFile>
     </Link>
     <Midl>
       <AdditionalIncludeDirectories>$(SolutionDir)\idl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.VirtualPatchBayAbstraction\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.LoopbackMidiabstraction\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
     </Midl>
   </ItemDefinitionGroup>
@@ -265,43 +265,44 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
-      <ModuleDefinitionFile>Midi2.VirtualPatchBayAbstraction.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>Midi2.LoopbackMidiAbstraction.def</ModuleDefinitionFile>
     </Link>
     <Midl>
       <AdditionalIncludeDirectories>$(SolutionDir)\idl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.VirtualPatchBayAbstraction\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.LoopbackMidiabstraction\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
     </Midl>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AbstractionState.cpp" />
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="Midi2.VirtualPatchBayAbstraction.cpp" />
-    <ClCompile Include="Midi2.VirtualPatchBayEndpointManager.cpp" />
-    <ClCompile Include="Midi2.VirtualPatchBayBidi.cpp" />
-    <ClCompile Include="MidiEndpointTable.cpp" />
+    <ClCompile Include="Midi2.LoopbackMidiAbstraction.cpp" />
+    <ClCompile Include="Midi2.LoopbackMidiConfigurationManager.cpp" />
+    <ClCompile Include="Midi2.LoopbackMidiEndpointManager.cpp" />
+    <ClCompile Include="Midi2.LoopbackMidiBidi.cpp" />
     <ClCompile Include="pch.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="Midi2VirtualPatchBayAbstraction.idl" />
+    <Midl Include="Midi2LoopbackMidiAbstraction.idl" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Midi2.VirtualPatchBayAbstraction.def" />
-    <None Include="Midi2.VirtualPatchBayAbstraction.rgs" />
+    <None Include="Midi2.LoopbackMidiAbstraction.def" />
+    <None Include="Midi2.LoopbackMidiAbstraction.rgs" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AbstractionState.h" />
     <ClInclude Include="abstraction_defs.h" />
     <ClInclude Include="dllmain.h" />
-    <ClInclude Include="Midi2.VirtualPatchBayAbstraction.h" />
-    <ClInclude Include="Midi2.VirtualPatchBayEndpointManager.h" />
-    <ClInclude Include="Midi2.VirtualPatchBayBidi.h" />
-    <ClInclude Include="MidiEndpointTable.h" />
-    <ClInclude Include="MidiRoute.h" />
+    <ClInclude Include="Midi2.LoopbackMidiAbstraction.h" />
+    <ClInclude Include="Midi2.LoopbackMidiBidi.h" />
+    <ClInclude Include="Midi2.LoopbackMidiConfigurationManager.h" />
+    <ClInclude Include="Midi2.LoopbackMidiEndpointManager.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Midi2.VirtualPatchBayAbstraction.rc" />
+    <ResourceCompile Include="Midi2.LoopbackMidiAbstraction.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

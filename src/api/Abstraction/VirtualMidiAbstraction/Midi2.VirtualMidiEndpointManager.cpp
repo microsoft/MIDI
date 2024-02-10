@@ -463,50 +463,6 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
 
 }
 
-// this will be called from the runtime endpoint creation interface
-
-
-//_Use_decl_annotations_
-//HRESULT
-//CMidi2VirtualMidiEndpointManager::UpdateConfiguration(LPCWSTR configurationJson)
-//{
-//    UNREFERENCED_PARAMETER(configurationJson);
-//
-//
-//
-//    //if (ConfigurationJson != nullptr)
-//    //{
-//    //    try
-//    //    {
-//    //        std::wstring json{ ConfigurationJson };
-//
-//    //        if (!json.empty())
-//    //        {
-//    //            json::JsonObject jsonObject = json::JsonObject::Parse(json);
-//
-//    //            LOG_IF_FAILED(ApplyJson(jsonObject));
-//    //        }
-//    //    }
-//    //    catch (...)
-//    //    {
-//    //        OutputDebugString(L"Exception processing json for virtual MIDI abstraction");
-//    //        
-//    //        // we return S_OK here because otherwise this prevents the service from starting up.
-//    //        return S_OK;
-//    //    }
-//    //}
-//    //else
-//    //{
-//    //    // empty / null is fine. We just continue on.
-//
-//    //    OutputDebugString(L"Configuration json is null for virtual MIDI abstraction");
-//
-//    //    return S_OK;
-//    //}
-//
-//    return S_OK;
-//}
-
 
 HRESULT
 CMidi2VirtualMidiEndpointManager::Cleanup()
