@@ -38,19 +38,19 @@ namespace MidiSample.AppToAppMidi
             
             Notes = notes.Select(n=>new Note() { NoteNumber = n, Connection = _connection, GroupIndex = 0, ChannelIndex = 0 }).ToList();
 
-            //this.Closed += MainWindow_Closed;
+            this.Closed += MainWindow_Closed;
 
             //this.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(100, 100, 600, 600));
 
             this.SetWindowSize(500, 550);
             this.SetIsAlwaysOnTop(true);
 
-            this.Closed += MainWindow_Closed;
-
         }
 
         private void MainWindow_Closed(object sender, WindowEventArgs args)
         {
+            System.Diagnostics.Debug.WriteLine("MainWindow_Closed");
+
             if (_connection != null)
             {
                 _session.DisconnectEndpointConnection(_connection.ConnectionId);

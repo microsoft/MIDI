@@ -19,48 +19,6 @@ using namespace Microsoft::WRL::Wrappers;
 GUID AbstractionLayerGUID = __uuidof(Midi2VirtualMidiAbstraction);
 
 
-
-
-
-
-//json::JsonObject GetJsonCreateNode(json::JsonObject Parent)
-//{
-//    if (Parent.HasKey(MIDI_VIRT_JSON_INSTRUCTION_CREATE_KEY))
-//    {
-//        return Parent.GetNamedObject(MIDI_VIRT_JSON_INSTRUCTION_CREATE_KEY);
-//    }
-//    else
-//    {
-//        return nullptr;
-//    }
-//}
-//
-//winrt::hstring GetJsonStringValue(
-//    json::JsonObject Parent,
-//    winrt::hstring Key,
-//    winrt::hstring Default)
-//{
-//    if (Parent.HasKey(Key))
-//    {
-//        return Parent.GetNamedString(Key);
-//    }
-//    else
-//    {
-//        return Default;
-//    }
-//}
-
-
-
-
-
-
-
-
-
-
-
-
 _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiEndpointManager::Initialize(
@@ -68,8 +26,6 @@ CMidi2VirtualMidiEndpointManager::Initialize(
     IUnknown* MidiEndpointProtocolManager
 )
 {
-    OutputDebugString(L"" __FUNCTION__ " Enter");
-
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
@@ -82,7 +38,6 @@ CMidi2VirtualMidiEndpointManager::Initialize(
 
     RETURN_IF_FAILED(MidiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
     RETURN_IF_FAILED(MidiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManagerInterface), (void**)&m_MidiProtocolManager));
-
 
 
     m_TransportAbstractionId = AbstractionLayerGUID;    // this is needed so MidiSrv can instantiate the correct transport
@@ -99,7 +54,13 @@ _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiEndpointManager::DeleteClientEndpoint(std::wstring clientShortInstanceId)
 {
-    OutputDebugString(__FUNCTION__ L" - enter\n");
+    TraceLoggingWrite(
+        MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(clientShortInstanceId.c_str(), "clientShortInstanceId")
+    );
 
     // get the instance id for the device
 
@@ -114,7 +75,56 @@ CMidi2VirtualMidiEndpointManager::DeleteClientEndpoint(std::wstring clientShortI
         }
         else
         {
-            OutputDebugString(__FUNCTION__ L" - could not find instanceId property for client\n");
+            TraceLoggingWrite(
+                MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+                __func__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"could not find instanceId property for client", "message")
+            );
+
+            return E_FAIL;
+        }
+    }
+    else
+    {
+        // null device manager
+        return E_FAIL;
+    }
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2VirtualMidiEndpointManager::DeleteDeviceEndpoint(std::wstring deviceShortInstanceId)
+{
+    TraceLoggingWrite(
+        MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(deviceShortInstanceId.c_str(), "deviceShortInstanceId")
+    );
+
+    // get the instance id for the device
+
+    if (m_MidiDeviceManager != nullptr)
+    {
+        //auto instanceId = GetSwdPropertyInstanceId(clientEndpointInterfaceId);
+        auto instanceId = internal::NormalizeDeviceInstanceIdWStringCopy(deviceShortInstanceId);
+
+        if (instanceId != L"")
+        {
+            return m_MidiDeviceManager->RemoveEndpoint(instanceId.c_str());
+        }
+        else
+        {
+            TraceLoggingWrite(
+                MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"could not find instanceId property for device", "message")
+            );
 
             return E_FAIL;
         }
@@ -127,10 +137,16 @@ CMidi2VirtualMidiEndpointManager::DeleteClientEndpoint(std::wstring clientShortI
 }
 
 
+
 HRESULT
 CMidi2VirtualMidiEndpointManager::CreateParentDevice()
 {
-    OutputDebugString(L"" __FUNCTION__);
+    TraceLoggingWrite(
+        MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+        __func__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
 
     // the parent device parameters are set by the transport (this)
     std::wstring parentDeviceName{ TRANSPORT_PARENT_DEVICE_NAME };
@@ -156,9 +172,14 @@ CMidi2VirtualMidiEndpointManager::CreateParentDevice()
 
     m_parentDeviceId = internal::NormalizeDeviceInstanceIdWStringCopy(newDeviceId);
 
-    OutputDebugString(__FUNCTION__ L" New parent device instance id: ");
-    OutputDebugString(newDeviceId);
-    OutputDebugString(L"\n");
+
+    TraceLoggingWrite(
+        MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+        __func__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(newDeviceId, "New parent device instance id")
+    );
 
     return S_OK;
 }
@@ -169,6 +190,14 @@ _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiEndpointManager::NegotiateAndRequestMetadata(std::wstring endpointId)
 {
+    TraceLoggingWrite(
+        MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(endpointId.c_str(), "endpoint id")
+    );
+
     bool preferToSendJRToEndpoint{ false };
     bool preferToReceiveJRFromEndpoint{ false };
     BYTE preferredProtocol{ MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2 };
@@ -191,7 +220,12 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
     MidiVirtualDeviceEndpointEntry& entry
 )
 {
-    OutputDebugString(__FUNCTION__ L": Enter\n");
+    TraceLoggingWrite(
+        MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
 
     //put all of the devproperties we want into arrays and pass into ActivateEndpoint:
 
@@ -204,8 +238,6 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
 
     // this purpose is important because it controls how this shows up to clients
     auto endpointPurpose = (uint32_t)MidiEndpointDevicePurposePropertyValue::NormalMessageEndpoint;
-
-    OutputDebugString(__FUNCTION__ L": Building DEVPROPERTY interfaceDevProperties[]\n");
 
     std::wstring endpointName = entry.BaseEndpointName;
     std::wstring endpointDescription = entry.Description;
@@ -257,15 +289,10 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
             DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue}
     };
 
-    OutputDebugString(__FUNCTION__ L": Building SW_DEVICE_CREATE_INFO\n");
-
     SW_DEVICE_CREATE_INFO createInfo = {};
     createInfo.cbSize = sizeof(createInfo);
 
-
     std::wstring instanceId = internal::NormalizeDeviceInstanceIdWStringCopy(MIDI_VIRT_INSTANCE_ID_CLIENT_PREFIX + entry.ShortUniqueId);
-
-
 
     createInfo.pszInstanceId = instanceId.c_str();
     createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
@@ -274,9 +301,6 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
 
     const ULONG deviceInterfaceIdMaxSize = 255;
     wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
-
-
-    OutputDebugString(__FUNCTION__ L": About to ActivateEndpoint\n");
 
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
         (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
@@ -306,8 +330,6 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
     //MidiEndpointTable::Current().AddCreatedEndpointDevice(entry);
     //MidiEndpointTable::Current().AddCreatedClient(entry.VirtualEndpointAssociationId, entry.CreatedClientEndpointId);
 
-    OutputDebugString(__FUNCTION__ L": Complete\n");
-
     return S_OK;
 }
 
@@ -318,7 +340,12 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
     MidiVirtualDeviceEndpointEntry &entry
 )
 {
-    OutputDebugString(__FUNCTION__ L": Enter\n");
+    TraceLoggingWrite(
+        MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
 
     //put all of the devproperties we want into arrays and pass into ActivateEndpoint:
 
@@ -333,7 +360,6 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
     // this purpose is important because it controls how this shows up to clients
     auto endpointPurpose = (uint32_t)MidiEndpointDevicePurposePropertyValue::VirtualDeviceResponder;
 
-    OutputDebugString(__FUNCTION__ L": Building DEVPROPERTY interfaceDevProperties[]\n");
 
     std::wstring endpointName = entry.BaseEndpointName + L" (Virtual MIDI Device)";
     std::wstring endpointDescription = entry.Description + L" (This endpoint for use only by the device host application.)";
@@ -388,7 +414,6 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
             DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue}
     };
 
-    OutputDebugString(__FUNCTION__ L": Building SW_DEVICE_CREATE_INFO\n");
 
     SW_DEVICE_CREATE_INFO createInfo = {};
     createInfo.cbSize = sizeof(createInfo);
@@ -406,7 +431,6 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
     wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
 
 
-    OutputDebugString(__FUNCTION__ L": About to ActivateEndpoint\n");
 
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
         (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
@@ -428,11 +452,12 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
     // loopback transport.
     m_MidiDeviceManager->DeleteAllEndpointInProtocolDiscoveredProperties(newDeviceInterfaceId);
 
+    // we need this for removal later
+    entry.CreatedShortDeviceInstanceId = instanceId;
+
     entry.CreatedDeviceEndpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId);
 
     AbstractionState::Current().GetEndpointTable()->AddCreatedEndpointDevice(entry);
-
-    OutputDebugString(__FUNCTION__ L": Complete\n");
 
     return S_OK;
 
@@ -486,8 +511,6 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
 HRESULT
 CMidi2VirtualMidiEndpointManager::Cleanup()
 {
-    OutputDebugString(L"" __FUNCTION__ " Enter");
-
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,

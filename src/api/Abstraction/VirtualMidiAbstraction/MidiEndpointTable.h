@@ -58,19 +58,26 @@ struct MidiVirtualDeviceEndpointEntry
     std::wstring ShortUniqueId{ L"" };
 
     std::wstring CreatedDeviceEndpointId{ L"" };              // the device interface id
+    std::wstring CreatedShortDeviceInstanceId{ L"" };
+
     std::wstring CreatedClientEndpointId{ L"" };
     std::wstring CreatedShortClientInstanceId{ L"" };
 
 
     wil::com_ptr_nothrow<CMidi2VirtualMidiBiDi> MidiDeviceBiDi{ nullptr };
-    wil::com_ptr_nothrow<CMidi2VirtualMidiBiDi> MidiClientBiDi{ nullptr };
+
+
+ //   std::vector<wil::com_ptr_nothrow<CMidi2VirtualMidiBiDi>> MidiClientConnections{ };
 
     ~MidiVirtualDeviceEndpointEntry()
     {
+        //MidiClientConnections.clear();
+
         if (MidiDeviceBiDi)
         {
             MidiDeviceBiDi.reset();
         }
+
     }
 };
 
@@ -78,28 +85,20 @@ struct MidiVirtualDeviceEndpointEntry
 class MidiEndpointTable
 {
 public:
-
-    //void Initialize(_In_ CMidi2VirtualMidiEndpointManager *endpointManager)
-    //{
-    //    m_endpointManager = endpointManager;
-    //}
-
-
     HRESULT AddCreatedEndpointDevice(_In_ MidiVirtualDeviceEndpointEntry& entry) noexcept;
  
     HRESULT OnDeviceConnected(_In_ std::wstring deviceEndpointInterfaceId, _In_ CMidi2VirtualMidiBiDi* deviceBiDi) noexcept;
     HRESULT OnClientConnected(_In_ std::wstring clientEndpointInterfaceId, _In_ CMidi2VirtualMidiBiDi* clientBiDi) noexcept;
+
     HRESULT OnDeviceDisconnected(_In_ std::wstring deviceEndpointInterfaceId) noexcept;
+    HRESULT OnClientDisconnected(_In_ std::wstring clientEndpointInterfaceId, _In_ CMidi2VirtualMidiBiDi* clientBiDi) noexcept;
 
     HRESULT Cleanup();
 
 private:
-    void RemoveEndpointPair(_In_ GUID VirtualEndpointAssociationId) noexcept;
+    //void RemoveEndpointPair(_In_ GUID VirtualEndpointAssociationId) noexcept;
 
-    // key is EndpointDeviceId (the device interface id)
+    // key is the association id
     std::map<std::wstring, MidiVirtualDeviceEndpointEntry> m_endpoints;
-
-    // maybe this should be a weak_ptr, but those are a pain to work with
-//    wil::com_ptr_nothrow<CMidi2VirtualMidiEndpointManager> m_endpointManager;
 
 };

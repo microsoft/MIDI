@@ -1200,11 +1200,29 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Multi-client.
+        /// </summary>
+        internal static string PropertiesTablePropertyLabelMultiClient {
+            get {
+                return ResourceManager.GetString("PropertiesTablePropertyLabelMultiClient", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Name.
         /// </summary>
         internal static string PropertiesTablePropertyLabelName {
             get {
                 return ResourceManager.GetString("PropertiesTablePropertyLabelName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Native data format.
+        /// </summary>
+        internal static string PropertiesTablePropertyLabelNativeDataFormat {
+            get {
+                return ResourceManager.GetString("PropertiesTablePropertyLabelNativeDataFormat", resourceCulture);
             }
         }
         
@@ -1259,6 +1277,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         internal static string PropertiesTablePropertyLabelSystemExclusiveId {
             get {
                 return ResourceManager.GetString("PropertiesTablePropertyLabelSystemExclusiveId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Description.
+        /// </summary>
+        internal static string PropertiesTablePropertyLabelTransportSuppliedDescription {
+            get {
+                return ResourceManager.GetString("PropertiesTablePropertyLabelTransportSuppliedDescription", resourceCulture);
             }
         }
         

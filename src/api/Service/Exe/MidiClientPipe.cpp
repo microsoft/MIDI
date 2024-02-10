@@ -34,7 +34,9 @@ CMidiClientPipe::Initialize(
         MidiSrvTelemetryProvider::Provider(),
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(Device),
+        TraceLoggingGuid(SessionId)
     );
 
     // for tracking the client connection

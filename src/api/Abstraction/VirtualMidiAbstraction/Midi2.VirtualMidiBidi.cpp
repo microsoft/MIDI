@@ -21,17 +21,14 @@ CMidi2VirtualMidiBiDi::Initialize(
     GUID /* SessionId */
 )
 {
-    OutputDebugString(__FUNCTION__ L" - enter\n");
-
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__, 
+        __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(endpointId, "endpoint id")
         );
 
-    m_callback = Callback;
     m_callbackContext = Context;
     m_endpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointId);
   
@@ -39,22 +36,51 @@ CMidi2VirtualMidiBiDi::Initialize(
     {
         HRESULT hr = S_OK;
 
-        // This should use SWD properties and not a string search
+        // TODO: This should use SWD properties and not a string search
 
         if (internal::EndpointInterfaceIdContainsString(m_endpointId, MIDI_VIRT_INSTANCE_ID_DEVICE_PREFIX))
         {
+            TraceLoggingWrite(
+                MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Initializing device-side BiDi", "message"),
+                TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
+            );
+
+            m_callback = Callback;
             m_isDeviceSide = true;
 
             LOG_IF_FAILED(hr = AbstractionState::Current().GetEndpointTable()->OnDeviceConnected(m_endpointId, this));
         }
         else if (internal::EndpointInterfaceIdContainsString(m_endpointId, MIDI_VIRT_INSTANCE_ID_CLIENT_PREFIX))
         {
+            TraceLoggingWrite(
+                MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Initializing client-side BiDi", "message"),
+                TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
+            );
+
+            m_callback = Callback;
             m_isDeviceSide = false;
 
             LOG_IF_FAILED(hr = AbstractionState::Current().GetEndpointTable()->OnClientConnected(m_endpointId, this));
         }
         else
         {
+            TraceLoggingWrite(
+                MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"We don't understand the endpoint Id", "message"),
+                TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
+                );
+
             // we don't understand this endpoint id
 
             hr = E_FAIL;
@@ -85,12 +111,16 @@ CMidi2VirtualMidiBiDi::Cleanup()
     m_callback = nullptr;
     m_callbackContext = 0;
 
+    UnlinkAllAssociatedBiDi();
+
     if (m_isDeviceSide)
     {
         LOG_IF_FAILED(AbstractionState::Current().GetEndpointTable()->OnDeviceDisconnected(m_endpointId));
     }
-
-    UnlinkAssociatedBiDi();
+    else
+    {
+        LOG_IF_FAILED(AbstractionState::Current().GetEndpointTable()->OnClientDisconnected(m_endpointId, this));
+    }
 
     return S_OK;
 }
@@ -117,12 +147,23 @@ CMidi2VirtualMidiBiDi::SendMidiMessage(
     RETURN_HR_IF_NULL(E_INVALIDARG, Message);
     RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
 
-    // if there's no linked bidi, it's not a failure. We just lose the message
-    if (m_linkedBiDiCallback != nullptr)
+    for (auto connection : m_linkedBiDiConnections)
     {
-        //return m_linkedBiDi->SendMidiMessage(Message, Size, Position);
-        return m_linkedBiDiCallback->Callback(Message, Size, Position, m_callbackContext);
+        auto cb = connection->GetCallback();
+        
+        if (cb != nullptr)
+        {
+            return cb->Callback(Message, Size, Position, m_callbackContext);
+        }
     }
+
+
+    //// if there's no linked bidi, it's not a failure. We just lose the message
+    //if (m_linkedBiDiCallback != nullptr)
+    //{
+    //    //return m_linkedBiDi->SendMidiMessage(Message, Size, Position);
+    //    return m_linkedBiDiCallback->Callback(Message, Size, Position, m_callbackContext);
+    //}
 
     return S_OK;
 
