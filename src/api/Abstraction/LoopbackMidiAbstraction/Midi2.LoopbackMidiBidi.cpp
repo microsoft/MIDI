@@ -31,66 +31,57 @@ CMidi2LoopbackMidiBiDi::Initialize(
     m_callbackContext = Context;
     m_endpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointId);
   
-    //if (Context != MIDI_PROTOCOL_MANAGER_ENDPOINT_CREATION_CONTEXT)
+    HRESULT hr = S_OK;
+
+    // TODO: This should use SWD properties and not a string search
+
+    if (internal::EndpointInterfaceIdContainsString(m_endpointId, MIDI_LOOP_INSTANCE_ID_A_PREFIX))
     {
-        HRESULT hr = S_OK;
+        TraceLoggingWrite(
+            MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Initializing Side-A BiDi", "message"),
+            TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
+        );
 
-        // TODO: This should use SWD properties and not a string search
+        m_callback = Callback;
 
-        if (internal::EndpointInterfaceIdContainsString(m_endpointId, MIDI_VIRT_INSTANCE_ID_DEVICE_PREFIX))
-        {
-            TraceLoggingWrite(
-                MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-                __FUNCTION__,
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Initializing device-side BiDi", "message"),
-                TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
-            );
-
-            m_callback = Callback;
-
- //           LOG_IF_FAILED(hr = AbstractionState::Current().GetEndpointTable()->OnDeviceConnected(m_endpointId, this));
-        }
-        else if (internal::EndpointInterfaceIdContainsString(m_endpointId, MIDI_VIRT_INSTANCE_ID_CLIENT_PREFIX))
-        {
-            TraceLoggingWrite(
-                MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-                __FUNCTION__,
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Initializing client-side BiDi", "message"),
-                TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
-            );
-
-            m_callback = Callback;
-
- //           LOG_IF_FAILED(hr = AbstractionState::Current().GetEndpointTable()->OnClientConnected(m_endpointId, this));
-        }
-        else
-        {
-            TraceLoggingWrite(
-                MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-                __FUNCTION__,
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"We don't understand the endpoint Id", "message"),
-                TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
-                );
-
-            // we don't understand this endpoint id
-
-            hr = E_FAIL;
-        }
-
-        return hr;
+        m_isEndpointA = true;
     }
-    //else
-    //{
-    //    // we're in protocol negotiation
-    //    m_isDeviceSide = false;
-    //    return S_OK;
-    //}
+    else if (internal::EndpointInterfaceIdContainsString(m_endpointId, MIDI_LOOP_INSTANCE_ID_B_PREFIX))
+    {
+        TraceLoggingWrite(
+            MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Initializing Side-B BiDi", "message"),
+            TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
+        );
+
+        m_callback = Callback;
+
+        m_isEndpointA = false;
+    }
+    else
+    {
+        // we don't understand this endpoint id
+
+        TraceLoggingWrite(
+            MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"We don't understand the endpoint Id", "message"),
+            TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
+            );
+
+        hr = E_FAIL;
+    }
+
+    return hr;
 }
 
 HRESULT
@@ -105,7 +96,6 @@ CMidi2LoopbackMidiBiDi::Cleanup()
         );
 
     m_callback = nullptr;
-    m_callbackContext = 0;
 
     return S_OK;
 }
@@ -115,7 +105,7 @@ HRESULT
 CMidi2LoopbackMidiBiDi::SendMidiMessage(
     PVOID Message,
     UINT Size,
-    LONGLONG /*Position*/
+    LONGLONG Position
 )
 {
     TraceLoggingWrite(
@@ -126,31 +116,31 @@ CMidi2LoopbackMidiBiDi::SendMidiMessage(
         TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
     );
 
-    // message received from the device
-
     RETURN_HR_IF_NULL(E_INVALIDARG, Message);
     RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
 
-    //for (auto connection : m_linkedBiDiConnections)
-    //{
-    //    auto cb = connection->GetCallback();
-    //    
-    //    if (cb != nullptr)
-    //    {
-    //        return cb->Callback(Message, Size, Position, m_callbackContext);
-    //    }
-    //}
+    if (m_isEndpointA)
+    {
+        // send endpoint A to B
+        auto device = AbstractionState::Current().GetEndpointTable()->GetDevice(m_associationId);
 
+        if (device)
+        {
+            return device->SendMessageAToB(Message, Size, Position, m_callbackContext);
+        }
+    }
+    else
+    {
+        // send endpoint B to A
+        auto device = AbstractionState::Current().GetEndpointTable()->GetDevice(m_associationId);
 
-    //// if there's no linked bidi, it's not a failure. We just lose the message
-    //if (m_linkedBiDiCallback != nullptr)
-    //{
-    //    //return m_linkedBiDi->SendMidiMessage(Message, Size, Position);
-    //    return m_linkedBiDiCallback->Callback(Message, Size, Position, m_callbackContext);
-    //}
+        if (device)
+        {
+            return device->SendMessageBToA(Message, Size, Position, m_callbackContext);
+        }
+    }
 
     return S_OK;
-
 }
 
 _Use_decl_annotations_

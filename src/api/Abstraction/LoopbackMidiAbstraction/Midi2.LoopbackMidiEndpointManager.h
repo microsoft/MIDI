@@ -25,8 +25,9 @@ public:
     //));
 
 
-    HRESULT CreateEndpointPair(_In_ std::wstring associationId);
-    HRESULT DeleteEndpointPair(_In_ std::wstring associationId);
+    HRESULT CreateEndpointPair(_In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definition);
+
+    HRESULT DeleteEndpointPair(_In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definition);
 
 
     //HRESULT DeleteEndpointPair(

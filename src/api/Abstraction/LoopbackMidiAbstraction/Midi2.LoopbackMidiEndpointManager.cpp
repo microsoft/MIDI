@@ -52,7 +52,7 @@ CMidi2LoopbackMidiEndpointManager::Initialize(
 
 _Use_decl_annotations_
 HRESULT
-CMidi2LoopbackMidiEndpointManager::DeleteEndpointPair(std::wstring associationId)
+CMidi2LoopbackMidiEndpointManager::DeleteEndpointPair(std::shared_ptr<MidiLoopbackDeviceDefinition> definition)
 {
 
     return S_OK;
@@ -111,7 +111,7 @@ CMidi2LoopbackMidiEndpointManager::CreateParentDevice()
 _Use_decl_annotations_
 HRESULT 
 CMidi2LoopbackMidiEndpointManager::CreateEndpointPair(
-    std::wstring associationId
+    std::shared_ptr<MidiLoopbackDeviceDefinition> definition
 )
 {
     TraceLoggingWrite(
@@ -120,6 +120,36 @@ CMidi2LoopbackMidiEndpointManager::CreateEndpointPair(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
+
+
+    // workflow:
+    // Configuration manager adds the entries to the endpoint table
+    // Then calls this function to create the pair of endpoints
+    // 
+    // When endpoints BiDi are instantiated, they look at the endpoint
+    // table to see what they are supposed to connect to.
+    // 
+    // They can be created in any order, so that will need to be
+    // checked for each created endpoint.
+    //
+    // Perhaps the table itself should just contain IMidiBiDi-like
+    // functions that are called by the endpoints? Then the endpoints
+    // don't need to know anything other than where to send the message.
+    // That would also be a pattern we can use for other types of
+    // routing.
+    //
+    // So perhaps a set of definitions associated by association id and
+    // then a related table of routing which has the required functions
+    // and pointers. Or maybe it all stays in the same definition class?
+    // and just rename it to MidiLoopbackEndpointDevice ?
+
+
+
+
+
+
+
+
 
 
     return S_OK;

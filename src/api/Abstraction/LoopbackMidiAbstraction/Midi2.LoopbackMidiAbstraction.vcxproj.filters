@@ -79,6 +79,15 @@
     <ClInclude Include="Midi2.LoopbackMidiEndpointManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MidiLoopbackDevice.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackDeviceTable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackDeviceDefinition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Midi2.LoopbackMidiAbstraction.rc">

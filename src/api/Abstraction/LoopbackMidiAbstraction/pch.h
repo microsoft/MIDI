@@ -91,6 +91,9 @@ class CMidi2LoopbackMidiEndpointManager;
 class CMidi2LoopbackMidiBiDi;
 class AbstractionState;
 
+#include "MidiLoopbackDeviceDefinition.h"
+#include "MidiLoopbackDevice.h"
+#include "MidiLoopbackDeviceTable.h"
 
 #include "Midi2.LoopbackMidiAbstraction.h"
 #include "Midi2.LoopbackMidiBiDi.h"

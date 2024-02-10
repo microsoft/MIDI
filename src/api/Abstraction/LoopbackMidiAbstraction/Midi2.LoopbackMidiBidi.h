@@ -21,15 +21,30 @@ public:
     STDMETHOD(Callback)(_In_ PVOID, _In_ UINT, _In_ LONGLONG, _In_ LONGLONG);
     STDMETHOD(Cleanup)();
 
+    void AssociationId(_In_ std::wstring newId) { m_associationId = newId; }
+
+    //void LinkAssociatedBiDi(_In_ wil::com_ptr_nothrow<CMidi2LoopbackMidiBiDi> associatedBiDi) 
+    //{ 
+    //    m_associatedBiDi = associatedBiDi; 
+
+    //    LOG_IF_FAILED(associatedBiDi->QueryInterface(__uuidof(IMidiCallback), (void**)&m_associatedBiDiCallback));
+    //}
+
+    //void UnlinkAssociatedBiDi()
+    //{
+    //    m_associatedBiDi = nullptr;
+    //    m_associatedBiDiCallback = nullptr;
+    //}
+
 private:
-    //wil::com_ptr_nothrow<IMidiBiDi> m_linkedBiDi;
+    bool m_isEndpointA = false;
 
-//    std::vector<wil::com_ptr_nothrow<CMidi2LoopbackMidiBiDi>> m_linkedBiDiConnections{};
+    std::wstring m_associationId{};
+    //wil::com_ptr_nothrow<CMidi2LoopbackMidiBiDi> m_associatedBiDi;
+    //wil::com_ptr_nothrow<IMidiCallback> m_associatedBiDiCallback;
 
 
-    //wil::com_ptr_nothrow<IMidiCallback> m_linkedBiDiCallback;
     wil::com_ptr_nothrow <IMidiCallback> m_callback;
-
     LONGLONG m_callbackContext;
 
     std::wstring m_endpointId{};
