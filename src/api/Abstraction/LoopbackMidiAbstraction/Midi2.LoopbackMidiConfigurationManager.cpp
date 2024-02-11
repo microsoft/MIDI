@@ -69,7 +69,19 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
         return E_FAIL;
     }
 
-    auto createArray = internal::JsonGetArrayProperty(jsonObject, MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICES_CREATE_ARRAY_KEY);
+
+
+
+
+    // TODO
+
+
+
+
+
+
+
+    auto createArray = internal::JsonGetArrayProperty(jsonObject, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICES_CREATE_ARRAY_KEY);
 
     if (createArray == nullptr || createArray.Size() == 0)
     {
@@ -85,17 +97,28 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
         if (jsonEntry)
         {
-            //MidiVirtualDeviceEndpointEntry deviceEntry;
+            // TODO
 
-            //deviceEntry.VirtualEndpointAssociationId = internal::JsonGetWStringProperty(
-            //    jsonEntry, 
-            //    MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_ASSOCIATION_ID_PROPERTY_KEY, 
-            //    L"");
+            MidiLoopbackDevice device;
 
-            //deviceEntry.ShortUniqueId = internal::JsonGetWStringProperty(
-            //    jsonEntry, 
-            //    MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_UNIQUE_ID_PROPERTY_KEY, 
-            //    L"");
+            device.DefinitionA.AssociationId = internal::JsonGetWStringProperty(
+                jsonEntry, 
+                MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ASSOCIATION_ID_PROPERTY_KEY, 
+                L"");
+
+            device.DefinitionB.AssociationId = device.DefinitionA.AssociationId;
+
+            std::wstring uniqueIdentifier = internal::JsonGetWStringProperty(
+                jsonEntry, 
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY,
+                L"");
+
+            // TODO: May want to rethink the json here. Can user specify two endpoints, with full names etc?
+            // If so, then just need two endpoint buckets and no need for the instance ID prefix.
+
+//            device.DefinitionA.EndpointUniqueIdentifier = MIDI_LOOP_INSTANCE_ID_A_PREFIX + uniqueIdentifier;
+//            device.DefinitionB.EndpointUniqueIdentifier = MIDI_LOOP_INSTANCE_ID_B_PREFIX + uniqueIdentifier;
+
 
             //deviceEntry.BaseEndpointName = internal::JsonGetWStringProperty(
             //    jsonEntry, 
@@ -127,7 +150,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
     }
 
     responseObject.SetNamedValue(
-        MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_CREATED_DEVICES_ARRAY_KEY, 
+        MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_DEVICES_ARRAY_KEY, 
         createdDevicesResponseArray);
 
     // TODO: Process all "update" and "remove" instructions
@@ -136,7 +159,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
     // TODO: Actual Success or fail response
     internal::JsonSetBoolProperty(
         responseObject,
-        MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_SUCCESS_PROPERTY_KEY,
+        MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_SUCCESS_PROPERTY_KEY,
         true);
 
     TraceLoggingWrite(

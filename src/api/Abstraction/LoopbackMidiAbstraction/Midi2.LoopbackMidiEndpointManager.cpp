@@ -111,9 +111,10 @@ CMidi2LoopbackMidiEndpointManager::DeleteEndpointPair(
         TraceLoggingPointer(this, "this")
     );
 
+    // we can't really do much with the return values here other than log them.
 
-    // TODO
-
+    LOG_IF_FAILED(DeleteSingleEndpoint(definitionA));
+    LOG_IF_FAILED(DeleteSingleEndpoint(definitionB));
 
     return S_OK;
 }
@@ -139,11 +140,7 @@ CMidi2LoopbackMidiEndpointManager::DeleteSingleEndpoint(
         TraceLoggingWideString(definition->EndpointDescription.c_str(), "description")
     );
 
-
-    // TODO
-
-
-    return S_OK;
+    return m_MidiDeviceManager->DeactivateEndpoint(definition->CreatedShortClientInstanceId.c_str());
 }
 
 
@@ -307,10 +304,45 @@ CMidi2LoopbackMidiEndpointManager::CreateEndpointPair(
     );
 
 
+    if (SUCCEEDED(CreateSingleEndpoint(definitionA)))
+    {
+        if (SUCCEEDED(CreateSingleEndpoint(definitionB)))
+        {
 
+            // all good now
 
+        }
+        else
+        {
+            // failed to create B. We need to remove A now
 
+            TraceLoggingWrite(
+                MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Failed to create loopback endpoint B. Removing A now.", "message")
+            );
 
+            // we can't do anything with the return value here
+            DeleteSingleEndpoint(definitionA);
+
+            return E_FAIL;
+        }
+    }
+    else
+    {
+        // failed to create A
+        TraceLoggingWrite(
+            MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Failed to create loopback endpoint A", "message")
+        );
+
+        return E_FAIL;
+    }
 
     return S_OK;
 }
