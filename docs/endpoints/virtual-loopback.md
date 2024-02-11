@@ -3,7 +3,7 @@ layout: page
 title: Virtual Loopback
 parent: Transport Types
 grandparent: Windows MIDI Services
-has_children: true
+has_children: false
 ---
 
 # Virtual Loopback
