@@ -43,7 +43,13 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "midi_service_interface.h"
 #include "ump_helpers.h"
 #include "memory_buffer.h"
-#include "string_util.h"
+#include "wstring_util.h"
+#include "hstring_util.h"
+
+// AbstractionUtilities
+#include "endpoint_data_helpers.h"
+#include "swd_property_builders.h"
+#include "swd_property_helpers.h"
 #include "json_helpers.h"
 
 // shared

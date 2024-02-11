@@ -15,10 +15,9 @@
 class MidiLoopbackDevice
 {
 public:
-    MidiLoopbackDeviceDefinition Definition;
+    MidiLoopbackDeviceDefinition DefinitionA;
+    MidiLoopbackDeviceDefinition DefinitionB;
 
-    std::wstring EndpointAInterfaceId{};
-    std::wstring EndpointBInterfaceId{};
 
     void RegisterEndpointA(/*_In_ wil::com_ptr_nothrow<CMidi2LoopbackMidiBiDi> endpoint,*/ _In_ wil::com_ptr_nothrow<IMidiCallback> callback)
     {

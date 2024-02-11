@@ -497,7 +497,7 @@ namespace bt = ::winrt::Windows::Devices::Bluetooth;
 HRESULT
 CMidi2BluetoothMidiEndpointManager::EnumCompatibleBluetoothDevices()
 {
-    winrt::guid midiServiceGuid(MIDI_BLE_GATT_SERVICE);
+//    winrt::guid midiServiceGuid(MIDI_BLE_GATT_SERVICE);
 
 //    bt::BluetoothLEDevice::GetGattServicesForUuidAsync(midiServiceGuid);
 

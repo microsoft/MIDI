@@ -51,7 +51,7 @@
 
 #include "strsafe.h"
 
-#include "string_util.h"
+#include "wstring_util.h"
 #include "plugin_defs.h"
 #include "midi_timestamp.h"
 #include "midi_ump.h"

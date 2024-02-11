@@ -94,43 +94,43 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration)</LibraryPath>
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">
-    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration)</LibraryPath>
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
-    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration)</LibraryPath>
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">
-    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration)</LibraryPath>
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration)</LibraryPath>
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration)</LibraryPath>
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.JitterReductionTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.EndpointMetadataListenerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.BS2UMPTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.UMP2BSTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.JitterReductionTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.EndpointMetadataListenerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.BS2UMPTransform\$(Platform)\$(Configuration);$(SolutionDir)Libs\AbstractionUtilities\inc;$(SolutionDir)VSFiles\intermediate\midi2.UMP2BSTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.JitterReductionTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.EndpointMetadataListenerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.BS2UMPTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.UMP2BSTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.JitterReductionTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.EndpointMetadataListenerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.BS2UMPTransform\$(Platform)\$(Configuration);$(SolutionDir)Libs\AbstractionUtilities\inc;$(SolutionDir)VSFiles\intermediate\midi2.UMP2BSTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -146,7 +146,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)idl</AdditionalIncludeDirectories>
     </Midl>
     <Link>
-      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;midixproc.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;midixproc.lib;AbstractionUtilities.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
@@ -163,18 +163,18 @@
       <AdditionalIncludeDirectories>$(SolutionDir)idl</AdditionalIncludeDirectories>
     </Midl>
     <Link>
-      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;midixproc.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;midixproc.lib;AbstractionUtilities.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.JitterReductionTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.EndpointMetadataListenerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.BS2UMPTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.UMP2BSTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.JitterReductionTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.EndpointMetadataListenerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.BS2UMPTransform\$(Platform)\$(Configuration);$(SolutionDir)Libs\AbstractionUtilities\inc;$(SolutionDir)VSFiles\intermediate\midi2.UMP2BSTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.JitterReductionTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.EndpointMetadataListenerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.BS2UMPTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.UMP2BSTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.JitterReductionTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.EndpointMetadataListenerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.BS2UMPTransform\$(Platform)\$(Configuration);$(SolutionDir)Libs\AbstractionUtilities\inc;$(SolutionDir)VSFiles\intermediate\midi2.UMP2BSTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -190,7 +190,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)idl</AdditionalIncludeDirectories>
     </Midl>
     <Link>
-      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;midixproc.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;midixproc.lib;AbstractionUtilities.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
@@ -207,13 +207,13 @@
       <AdditionalIncludeDirectories>$(SolutionDir)idl</AdditionalIncludeDirectories>
     </Midl>
     <Link>
-      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;midixproc.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;midixproc.lib;AbstractionUtilities.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.JitterReductionTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.EndpointMetadataListenerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.BS2UMPTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.UMP2BSTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.JitterReductionTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.EndpointMetadataListenerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.BS2UMPTransform\$(Platform)\$(Configuration);$(SolutionDir)Libs\AbstractionUtilities\inc;$(SolutionDir)VSFiles\intermediate\midi2.UMP2BSTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -231,13 +231,13 @@
       <AdditionalIncludeDirectories>$(SolutionDir)idl</AdditionalIncludeDirectories>
     </Midl>
     <Link>
-      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;midixproc.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;midixproc.lib;AbstractionUtilities.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.JitterReductionTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.EndpointMetadataListenerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.BS2UMPTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.UMP2BSTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.diagnosticsabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.virtualmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.networkmidiabstraction\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.JitterReductionTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.EndpointMetadataListenerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.BS2UMPTransform\$(Platform)\$(Configuration);$(SolutionDir)Libs\AbstractionUtilities\inc;$(SolutionDir)VSFiles\intermediate\midi2.SchedulerTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.UMP2BSTransform\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -253,7 +253,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)idl</AdditionalIncludeDirectories>
     </Midl>
     <Link>
-      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;midixproc.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;midixproc.lib;AbstractionUtilities.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>

@@ -62,11 +62,23 @@
 #include "SWDevice.h"
 #include <initguid.h>
 #include "setupapi.h"
-#include "Devpkey.h"
+//#include "Devpkey.h"
 
 #include "strsafe.h"
-#include "string_util.h"
+#include "wstring_util.h"
+
+// AbstractionUtilities
+#include "endpoint_data_helpers.h"
+#include "swd_property_builders.h"
+#include "swd_property_helpers.h"
 #include "json_helpers.h"
+
+#include "MidiDefs.h"
+#include "MidiDataFormat.h"
+#include "MidiFlow.h"
+#include "MidiAbstraction.h"
+
+#include "MidiXProc.h"
 
 namespace internal = ::Windows::Devices::Midi2::Internal;
 
@@ -84,8 +96,6 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 
 #include "dllmain.h"
 
-#include "MidiDefs.h"
-#include "MidiXProc.h"
 #include "swd_shared.h"
 
 class CMidi2VirtualMidiEndpointManager;

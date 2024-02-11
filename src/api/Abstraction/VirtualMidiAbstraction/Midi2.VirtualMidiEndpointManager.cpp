@@ -233,54 +233,61 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
 
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
     //   DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
-    BYTE nativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
-    UINT32 supportedDataFormat = (UINT32)MidiDataFormat::MidiDataFormat_UMP;
-
-    // this purpose is important because it controls how this shows up to clients
-    auto endpointPurpose = (uint32_t)MidiEndpointDevicePurposePropertyValue::NormalMessageEndpoint;
 
     std::wstring endpointName = entry.BaseEndpointName;
     std::wstring endpointDescription = entry.Description;
 
-    DEVPROPERTY interfaceDevProperties[] = {
+    std::vector<DEVPROPERTY> interfaceDeviceProperties{};
 
-        {{PKEY_MIDI_AssociatedUMP, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_EMPTY, 0, nullptr},
+    bool requiresMetadataHandler = true;
+    bool multiClient = true;
+    bool generateIncomingTimestamps = true;
 
-        {{PKEY_MIDI_SupportedDataFormats, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), &supportedDataFormat},
+    // no user or in-protocol data in this case
+    std::wstring friendlyName = internal::CalculateEndpointDevicePrimaryName(endpointName, L"", L"");
 
-        {{PKEY_MIDI_SupportsMulticlient, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),& devPropTrue},
-        {{PKEY_MIDI_EndpointRequiresMetadataHandler, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue},
+    // all the standard properties we define for endpoints
+    if (internal::AddStandardEndpointProperties(
+        interfaceDeviceProperties,
+        m_TransportAbstractionId,
+        MidiEndpointDevicePurposePropertyValue::NormalMessageEndpoint,
+        friendlyName,
+        mnemonic,
+        endpointName,
+        endpointDescription,
+        L"",
+        L"",
+        entry.ShortUniqueId,
+        MidiDataFormat::MidiDataFormat_UMP,
+        MIDI_PROP_NATIVEDATAFORMAT_UMP,
+        multiClient,
+        requiresMetadataHandler,
+        generateIncomingTimestamps
+    ))
+    {
+        // all good. Add additional properties
+        // additional properties for this abstraction
 
-            // this is needed for virtual endpoints (client and device) to have a relationship
-        {{PKEY_MIDI_VirtualMidiEndpointAssociator, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((entry.VirtualEndpointAssociationId.length() + 1) * sizeof(WCHAR)), (PVOID)entry.VirtualEndpointAssociationId.c_str()},
+        // we clear this because it's not used for this abstraction. 
+        interfaceDeviceProperties.push_back(internal::BuildEmptyDevProperty(PKEY_MIDI_AssociatedUMP));
 
+        // this is needed for the loopback endpoints to have a relationship with each other
+        interfaceDeviceProperties.push_back(internal::BuildWStringDevProperty(PKEY_MIDI_VirtualMidiEndpointAssociator, entry.VirtualEndpointAssociationId));
+    }
+    else
+    {
+        // unable to build properties
 
-        {{DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((endpointName.length() + 1) * sizeof(WCHAR)), (PVOID)endpointName.c_str()},
-        {{PKEY_MIDI_TransportSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((endpointName.length() + 1) * sizeof(WCHAR)), (PVOID)endpointName.c_str()},
+        TraceLoggingWrite(
+            MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Unable to build standard endpoint properties list", "message")
+        );
 
-        {{PKEY_MIDI_EndpointDevicePurpose, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(endpointPurpose)),(PVOID)&endpointPurpose},
-        {{PKEY_MIDI_UserSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((endpointDescription.length() + 1) * sizeof(WCHAR)), (PVOID)endpointDescription.c_str() },
-        {{PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(BYTE)), (PVOID)&nativeDataFormat},
-
-        {{PKEY_MIDI_GenerateIncomingTimestamp, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), (PVOID)&devPropTrue},
-
-
-        {{PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_GUID, static_cast<ULONG>(sizeof(GUID)), (PVOID)&AbstractionLayerGUID },        // essential to instantiate the right endpoint types
-        {{PKEY_MIDI_TransportMnemonic, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((mnemonic.length() + 1) * sizeof(WCHAR)), (PVOID)mnemonic.c_str()},
-    };
+        return E_FAIL;
+    }
 
     DEVPROPERTY deviceDevProperties[] = {
         {{DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
@@ -306,9 +313,9 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
         (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
         true,                                                   // UMP-only
         MidiFlow::MidiFlowBidirectional,                        // MIDI Flow
-        ARRAYSIZE(interfaceDevProperties),
+        (ULONG)interfaceDeviceProperties.size(),
         ARRAYSIZE(deviceDevProperties),
-        (PVOID)interfaceDevProperties,
+        (PVOID)interfaceDeviceProperties.data(),
         (PVOID)deviceDevProperties,
         (PVOID)&createInfo,
         (LPWSTR)&newDeviceInterfaceId,
@@ -352,60 +359,63 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
     std::wstring mnemonic(TRANSPORT_MNEMONIC);
 
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
-    DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
-    BYTE nativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
-    UINT32 supportedDataFormat = (UINT32)MidiDataFormat::MidiDataFormat_UMP;
-
-
-    // this purpose is important because it controls how this shows up to clients
-    auto endpointPurpose = (uint32_t)MidiEndpointDevicePurposePropertyValue::VirtualDeviceResponder;
+    //DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
 
 
     std::wstring endpointName = entry.BaseEndpointName + L" (Virtual MIDI Device)";
     std::wstring endpointDescription = entry.Description + L" (This endpoint for use only by the device host application.)";
 
-    DEVPROPERTY interfaceDevProperties[] = {
-        {{PKEY_MIDI_AssociatedUMP, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_EMPTY, 0, nullptr},
+    std::vector<DEVPROPERTY> interfaceDeviceProperties{};
 
-        {{PKEY_MIDI_SupportedDataFormats, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), &supportedDataFormat},
-            
-            // the device side connection is NOT multi-client. Keep it just to the device app
-        {{PKEY_MIDI_SupportsMulticlient, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)),& devPropFalse},
- 
-        // device side shouldn't have a metadata handler
-        {{PKEY_MIDI_EndpointRequiresMetadataHandler, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse},
+    bool requiresMetadataHandler = false;
+    bool multiClient = false;
+    bool generateIncomingTimestamps = true;
 
-            // this is needed for virtual endpoints (client and device) to have a relationship
-        {{PKEY_MIDI_VirtualMidiEndpointAssociator, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((entry.VirtualEndpointAssociationId.length() + 1) * sizeof(WCHAR)), (PVOID)entry.VirtualEndpointAssociationId.c_str()},
+    // no user or in-protocol data in this case
+    std::wstring friendlyName = internal::CalculateEndpointDevicePrimaryName(endpointName, L"", L"");
 
+    // all the standard properties we define for endpoints
+    if (internal::AddStandardEndpointProperties(
+        interfaceDeviceProperties,
+        m_TransportAbstractionId,
+        MidiEndpointDevicePurposePropertyValue::VirtualDeviceResponder,
+        friendlyName,
+        mnemonic,
+        endpointName,
+        endpointDescription,
+        L"",
+        L"",
+        entry.ShortUniqueId,
+        MidiDataFormat::MidiDataFormat_UMP,
+        MIDI_PROP_NATIVEDATAFORMAT_UMP,
+        multiClient,
+        requiresMetadataHandler,
+        generateIncomingTimestamps
+    ))
+    {
+        // all good. Add additional properties
+        // additional properties for this abstraction
 
+        // we clear this because it's not used for this abstraction. 
+        interfaceDeviceProperties.push_back(internal::BuildEmptyDevProperty(PKEY_MIDI_AssociatedUMP));
 
-        {{DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((endpointName.length() + 1) * sizeof(WCHAR)), (PVOID)endpointName.c_str()},
-        {{PKEY_MIDI_TransportSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((endpointName.length() + 1) * sizeof(WCHAR)), (PVOID)endpointName.c_str()},
+        // this is needed for the loopback endpoints to have a relationship with each other
+        interfaceDeviceProperties.push_back(internal::BuildWStringDevProperty(PKEY_MIDI_VirtualMidiEndpointAssociator, entry.VirtualEndpointAssociationId));
+    }
+    else
+    {
+        // unable to build properties
 
-        {{PKEY_MIDI_EndpointDevicePurpose, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(endpointPurpose)),(PVOID)&endpointPurpose},
-        {{PKEY_MIDI_UserSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((endpointDescription.length() + 1) * sizeof(WCHAR)), (PVOID)endpointDescription.c_str() },
-        {{PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(BYTE)), (PVOID)&nativeDataFormat},
+        TraceLoggingWrite(
+            MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Unable to build standard endpoint properties list", "message")
+        );
 
-        {{PKEY_MIDI_GenerateIncomingTimestamp, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), (PVOID)&devPropTrue},
-
-
-        {{PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_GUID, static_cast<ULONG>(sizeof(GUID)), (PVOID)&AbstractionLayerGUID },        // essential to instantiate the right endpoint types
-        {{PKEY_MIDI_TransportMnemonic, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((mnemonic.length() + 1) * sizeof(WCHAR)), (PVOID)mnemonic.c_str()},
-    };
+        return E_FAIL;
+    }
 
     DEVPROPERTY deviceDevProperties[] = {
         {{DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
@@ -436,9 +446,9 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
         (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
         true,                                                   // UMP-only
         MidiFlow::MidiFlowBidirectional,                        // MIDI Flow
-        ARRAYSIZE(interfaceDevProperties),
+        (ULONG)interfaceDeviceProperties.size(),
         ARRAYSIZE(deviceDevProperties),
-        (PVOID)interfaceDevProperties,
+        (PVOID)interfaceDeviceProperties.data(),
         (PVOID)deviceDevProperties,
         (PVOID)&createInfo,
         (LPWSTR)&newDeviceInterfaceId,

@@ -24,6 +24,12 @@
     <Midl Include="MidiEndpointProtocolManagerInterface.idl">
       <Filter>Source Files</Filter>
     </Midl>
+    <Midl Include="MidiDataFormat.idl">
+      <Filter>Source Files</Filter>
+    </Midl>
+    <Midl Include="MidiFlow.idl">
+      <Filter>Source Files</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />

@@ -119,31 +119,31 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)VSFiles\intermediate\AM_MIDI2\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)VSFiles\intermediate\AM_MIDI2\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)VSFiles\intermediate\AM_MIDI2\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)VSFiles\intermediate\AM_MIDI2\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)VSFiles\intermediate\AM_MIDI2\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)VSFiles\intermediate\AM_MIDI2\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)VSFiles\intermediate\AM_MIDI2\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)VSFiles\intermediate\AM_MIDI2\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)VSFiles\intermediate\AM_MIDI2\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)VSFiles\intermediate\AM_MIDI2\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)VSFiles\intermediate\AM_MIDI2\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)VSFiles\intermediate\AM_MIDI2\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <ClCompile>

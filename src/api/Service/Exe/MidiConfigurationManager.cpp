@@ -375,7 +375,7 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
                     __FUNCTION__,
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"JSON Object parsing failed"),
+                    TraceLoggingWideString(L"JSON Object parsing failed", "message"),
                     TraceLoggingWideString(jsonStringSource.c_str(), "Source JSON String")
                 );
 
@@ -390,7 +390,7 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
                 __FUNCTION__,
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"JSON Object parsing failed. Exception.")
+                TraceLoggingWideString(L"JSON Object parsing failed. Exception.", "message")
             );
 
             return abstractionSettings;
@@ -404,7 +404,7 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
                 __FUNCTION__,
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"JSON Object null after parsing")
+                TraceLoggingWideString(L"JSON Object null after parsing", "message")
             );
 
             // return the empty map
@@ -412,7 +412,7 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
         }
 
 
-
+        // we treat this as an object where each abstraction id is a property
         auto plugins = internal::JsonGetObjectProperty(jsonObject, MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT, nullptr);
 
         if (plugins == nullptr)
@@ -422,7 +422,7 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
                 __FUNCTION__,
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"No transport plugins node in JSON")
+                TraceLoggingWideString(L"No transport plugins node in JSON", "message")
             );
 
             // return the empty map
@@ -431,19 +431,21 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
 
         // Iterate through nodes and find each transport abstraction entry. Parse the GUID. Add to results.
 
-        for (auto i = plugins.begin(); i != plugins.end(); i++)
+        auto it = plugins.First();
+
+        while (it.HasCurrent())
         {
-            std::wstring key = i.Current().Key().c_str();
+            std::wstring key = it.Current().Key().c_str();
 
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
                 __FUNCTION__,
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(key.c_str(), "AbstractionIdGuidString")
+                TraceLoggingWideString(key.c_str(), "AbstractionIdGuidString", "message")
             );
 
-            std::wstring transportJson = i.Current().Value().GetObject().Stringify().c_str();
+            std::wstring transportJson = it.Current().Value().GetObject().Stringify().c_str();
 
             GUID abstractionId;
 
@@ -461,7 +463,7 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
                     TraceLoggingWideString(key.c_str(), "Invalid GUID Property")
                 );
             }
-                     
+
             // TODO: Should verify the abstractionId is for an enabled abstraction
             // before adding it to the returned map
 
@@ -474,8 +476,11 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(transportJson.c_str()),
                 TraceLoggingGuid(abstractionId)
-                );
+            );
+
+            it.MoveNext();
         }
+
     }
     CATCH_LOG();
 

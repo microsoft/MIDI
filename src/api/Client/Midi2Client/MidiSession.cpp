@@ -12,7 +12,6 @@
 
 #include "MidiEndpointConnection.h"
 
-#include "string_util.h"
 #include <atlcomcli.h>
 
 #include <filesystem>

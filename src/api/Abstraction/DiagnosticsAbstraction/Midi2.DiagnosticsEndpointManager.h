@@ -23,15 +23,17 @@ public:
 
 private:
     GUID m_ContainerId{};
-    GUID m_TransportAbstractionId{};
+    GUID m_TransportAbstractionId{ __uuidof(Midi2DiagnosticsAbstraction) };
 
     HRESULT CreateLoopbackEndpoint(
         _In_ std::wstring const InstanceId,
+        _In_ std::wstring const UniqueId,
         _In_ std::wstring const Name,
         _In_ MidiFlow const Flow);
 
     HRESULT CreatePingEndpoint(
         _In_ std::wstring const InstanceId,
+        _In_ std::wstring const UniqueId,
         _In_ std::wstring const Name,
         _In_ MidiFlow const Flow);
 

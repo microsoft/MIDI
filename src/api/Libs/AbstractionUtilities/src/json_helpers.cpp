@@ -6,79 +6,12 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#pragma once
-
-// this def messes with json so we need to undef it here
-#pragma push_macro("GetObject")
-#undef GetObject
-#include <winrt/Windows.Data.Json.h>
-#pragma pop_macro("GetObject")
-
-#include "atlbase.h"  // for CComBSTR
-
-
-namespace json = ::winrt::Windows::Data::Json;
-
-// structural
-
-#define MIDI_CONFIG_JSON_HEADER_OBJECT L"header"
-#define MIDI_CONFIG_JSON_HEADER_PRODUCT_KEY L"product"
-#define MIDI_CONFIG_JSON_HEADER_FILE_VERSION_KEY L"fileVersion"
-
-
-
-#define MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT L"endpointTransportPluginSettings"
-#define MIDI_CONFIG_JSON_ENDPOINT_PROCESSING_PLUGIN_SETTINGS_OBJECT L"endpointProcessingPluginSettings"
-
-// common properties
-
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY                          L"name"
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY                   L"description"
-
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_NAME_PROPERTY            L"userSuppliedName"
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_DESCRIPTION_PROPERTY     L"userSuppliedDescription"
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_SMALL_IMAGE_PROPERTY     L"userSuppliedSmallImage"
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_LARGE_IMAGE_PROPERTY     L"userSuppliedLargeImage"
-
-
-// Virtual MIDI (here because also needed by the client API)
-
-#define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICES_CREATE_ARRAY_KEY              L"createVirtualDevices"
-#define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICES_UPDATE_ARRAY_KEY              L"updateVirtualDevices"
-#define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICES_REMOVE_ARRAY_KEY              L"removeVirtualDevices"
-
-#define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_ASSOCIATION_ID_PROPERTY_KEY    L"associationIdentifier"
-#define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_UNIQUE_ID_PROPERTY_KEY         L"uniqueIdentifier"
-#define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_UNIQUE_ID_MAX_LEN  32
-
-
-#define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_SUCCESS_PROPERTY_KEY          L"success"
-#define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_CREATED_DEVICES_ARRAY_KEY     L"createdDevices"
-#define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_CREATED_ID_PROPERTY_KEY       L"id"
-
-
-// Session tracker. These are used in the service and in the client API
-
-#define MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_ARRAY_PROPERTY_KEY             L"sessions"
-
-#define MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_ID_PROPERTY_KEY                L"id"
-#define MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_NAME_PROPERTY_KEY              L"name"
-#define MIDI_SESSION_TRACKER_JSON_RESULT_PROCESS_ID_PROPERTY_KEY                L"clientProcessId"
-#define MIDI_SESSION_TRACKER_JSON_RESULT_PROCESS_NAME_PROPERTY_KEY              L"processName"
-#define MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_TIME_PROPERTY_KEY              L"startTime"
-
-
-#define MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ARRAY_PROPERTY_KEY          L"connections"
-
-#define MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_TIME_PROPERTY_KEY           L"earliestStartTime"
-#define MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_COUNT_PROPERTY_KEY          L"instanceCount"
-#define MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ENDPOINT_ID_PROPERTY_KEY    L"endpointId"
-
-
+#include "pch.h"
 
 namespace Windows::Devices::Midi2::Internal
 {
-    inline bool JsonObjectFromBSTR(_In_ BSTR* bstr, _Out_ json::JsonObject &obj)
+    _Use_decl_annotations_
+    bool JsonObjectFromBSTR(BSTR* const bstr, json::JsonObject& obj) noexcept
     {
         if (bstr == nullptr) return false;
 
@@ -104,22 +37,30 @@ namespace Windows::Devices::Midi2::Internal
 
 
 
-    inline bool JsonStringifyObjectToOutParam(_In_ json::JsonObject obj, _Out_ BSTR** outParam)
+    _Use_decl_annotations_
+    bool JsonStringifyObjectToOutParam(json::JsonObject const& obj, BSTR** outParam) noexcept
     {
-        ATL::CComBSTR responseString = obj.Stringify().c_str();
-        
-        auto hr = responseString.CopyTo(*outParam);
-
-        if (SUCCEEDED(hr))
+        try
         {
-            return true;
+            ATL::CComBSTR responseString = obj.Stringify().c_str();
+
+            auto hr = responseString.CopyTo(*outParam);
+
+            if (SUCCEEDED(hr))
+            {
+                return true;
+            }
+        }
+        catch (...)
+        {
+
         }
 
         return false;
     }
 
-
-    inline json::JsonObject JsonCreateSingleWStringPropertyObject(_In_ std::wstring key, _In_ std::wstring value)
+    _Use_decl_annotations_
+    json::JsonObject JsonCreateSingleWStringPropertyObject(std::wstring const& key, std::wstring const& value) noexcept
     {
         json::JsonObject obj;
 
@@ -129,16 +70,18 @@ namespace Windows::Devices::Midi2::Internal
     }
 
 
-
-    inline json::JsonArray JsonGetArrayProperty(_In_ json::JsonObject parent, _In_ std::wstring key) noexcept
+    _Use_decl_annotations_
+    json::JsonArray JsonGetArrayProperty(json::JsonObject const& parent, std::wstring const& key) noexcept
     {
         if (parent != nullptr)
         {
-            if (parent.HasKey(key))
+            auto hkey = winrt::to_hstring(key.c_str());
+
+            if (parent.HasKey(hkey))
             {
                 try
                 {
-                    auto result = parent.GetNamedArray(key);
+                    auto result = parent.GetNamedArray(hkey);
 
                     return result;
                 }
@@ -154,7 +97,8 @@ namespace Windows::Devices::Midi2::Internal
         return json::JsonArray{};
     }
 
-    inline bool JsonSetArrayProperty(_In_ json::JsonObject parent, _In_ std::wstring key, _In_ json::JsonArray value) noexcept
+    _Use_decl_annotations_
+    bool JsonSetArrayProperty(json::JsonObject const& parent, std::wstring const& key, json::JsonArray const& value) noexcept
     {
         try
         {
@@ -173,16 +117,18 @@ namespace Windows::Devices::Midi2::Internal
         return false;
     }
 
-
-    inline std::wstring JsonGetWStringProperty(_In_ json::JsonObject parent, _In_ std::wstring key, std::wstring defaultValue) noexcept
+    _Use_decl_annotations_
+    std::wstring JsonGetWStringProperty(json::JsonObject const& parent, std::wstring const& key, std::wstring const& defaultValue) noexcept
     {
         if (parent != nullptr)
         {
-            if (parent.HasKey(key))
+            auto hkey = winrt::to_hstring(key.c_str());
+
+            if (parent.HasKey(hkey))
             {
                 try
                 {
-                    auto result = parent.GetNamedString(key);
+                    auto result = parent.GetNamedString(hkey);
 
                     return result.c_str();
                 }
@@ -198,7 +144,8 @@ namespace Windows::Devices::Midi2::Internal
         return defaultValue;
     }
 
-    inline bool JsonSetWStringProperty(_In_ json::JsonObject parent, _In_ std::wstring key, _In_ std::wstring value) noexcept
+    _Use_decl_annotations_
+    bool JsonSetWStringProperty(json::JsonObject const& parent, std::wstring const& key, std::wstring const& value) noexcept
     {
         try
         {
@@ -220,15 +167,22 @@ namespace Windows::Devices::Midi2::Internal
     }
 
     // this handles accuracy of seconds and no finer
-    inline std::chrono::time_point<std::chrono::system_clock> JsonGetDateTimeProperty(_In_ json::JsonObject parent, _In_ std::wstring key, _In_ std::chrono::time_point<std::chrono::system_clock> defaultValue) noexcept
+    _Use_decl_annotations_
+    std::chrono::time_point<std::chrono::system_clock> 
+    JsonGetDateTimeProperty(
+        json::JsonObject const& parent, 
+        std::wstring const& key, 
+        std::chrono::time_point<std::chrono::system_clock> const defaultValue) noexcept
     {
         if (parent != nullptr)
         {
-            if (parent.HasKey(key))
+            auto hkey = winrt::to_hstring(key.c_str());
+
+            if (parent.HasKey(hkey))
             {
                 try
                 {
-                    auto result = parent.GetNamedNumber(key);
+                    auto result = parent.GetNamedNumber(hkey);
                     auto seconds = std::chrono::seconds((long)result);
 
                     std::chrono::time_point<std::chrono::system_clock> tp;
@@ -248,7 +202,11 @@ namespace Windows::Devices::Midi2::Internal
     }
 
     // this handles accuracy of seconds and no finer
-    inline bool JsonSetDateTimeProperty(_In_ json::JsonObject parent, _In_ std::wstring key, _In_ std::chrono::time_point<std::chrono::system_clock> value) noexcept
+    _Use_decl_annotations_
+    bool JsonSetDateTimeProperty(
+        json::JsonObject const& parent, 
+        std::wstring const& key, 
+        std::chrono::time_point<std::chrono::system_clock> const value) noexcept
     {
         try
         {
@@ -269,16 +227,18 @@ namespace Windows::Devices::Midi2::Internal
         return false;
     }
 
-
-    inline GUID JsonGetGuidProperty(_In_ json::JsonObject parent, _In_ std::wstring key, _In_ GUID defaultValue) noexcept
+    _Use_decl_annotations_
+    GUID JsonGetGuidProperty(json::JsonObject const& parent, std::wstring const& key, GUID const& defaultValue) noexcept
     {
         if (parent != nullptr)
         {
-            if (parent.HasKey(key))
+            auto hkey = winrt::to_hstring(key.c_str());
+
+            if (parent.HasKey(hkey))
             {
                 try
                 {
-                    auto result = parent.GetNamedString(key);
+                    auto result = parent.GetNamedString(hkey);
 
                     return StringToGuid(result.c_str());
                 }
@@ -293,7 +253,8 @@ namespace Windows::Devices::Midi2::Internal
         return defaultValue;
     }
 
-    inline bool JsonSetGuidProperty(_In_ json::JsonObject parent, _In_ std::wstring key, _In_ GUID value) noexcept
+    _Use_decl_annotations_
+    bool JsonSetGuidProperty(json::JsonObject const& parent, std::wstring const& key, GUID const& value) noexcept
     {
         try
         {
@@ -314,16 +275,18 @@ namespace Windows::Devices::Midi2::Internal
         return false;
     }
 
-
-    inline bool JsonGetBoolProperty(_In_ json::JsonObject parent, _In_ std::wstring key, bool defaultValue) noexcept
+    _Use_decl_annotations_
+    bool JsonGetBoolProperty(json::JsonObject const& parent, std::wstring const& key, bool const defaultValue) noexcept
     {
         if (parent != nullptr)
         {
-            if (parent.HasKey(key))
+            auto hkey = winrt::to_hstring(key.c_str());
+
+            if (parent.HasKey(hkey))
             {
                 try
                 {
-                    auto result = parent.GetNamedBoolean(key);
+                    auto result = parent.GetNamedBoolean(hkey);
 
                     return result;
                 }
@@ -339,7 +302,8 @@ namespace Windows::Devices::Midi2::Internal
         return defaultValue;
     }
 
-    inline bool JsonSetBoolProperty(_In_ json::JsonObject parent, _In_ std::wstring key, _In_ bool value) noexcept
+    _Use_decl_annotations_
+    bool JsonSetBoolProperty(json::JsonObject const& parent, std::wstring const& key, bool const value) noexcept
     {
         try
         {
@@ -358,16 +322,18 @@ namespace Windows::Devices::Midi2::Internal
         return false;
     }
 
-
-    inline double JsonGetDoubleProperty(_In_ json::JsonObject parent, _In_ std::wstring key, double defaultValue) noexcept
+    _Use_decl_annotations_
+    double JsonGetDoubleProperty(json::JsonObject const& parent, std::wstring const& key, double const defaultValue) noexcept
     {
         if (parent != nullptr)
         {
-            if (parent.HasKey(key))
+            auto hkey = winrt::to_hstring(key.c_str());
+
+            if (parent.HasKey(hkey))
             {
                 try
                 {
-                    auto result = parent.GetNamedNumber(key);
+                    auto result = parent.GetNamedNumber(hkey);
 
                     return result;
                 }
@@ -383,7 +349,8 @@ namespace Windows::Devices::Midi2::Internal
         return defaultValue;
     }
 
-    inline bool JsonSetDoubleProperty(_In_ json::JsonObject parent, _In_ std::wstring key, _In_ double value) noexcept
+    _Use_decl_annotations_
+    bool JsonSetDoubleProperty(json::JsonObject const& parent, std::wstring const& key, double const value) noexcept
     {
         try
         {
@@ -402,16 +369,18 @@ namespace Windows::Devices::Midi2::Internal
         return false;
     }
 
-
-    inline long JsonGetLongProperty(_In_ json::JsonObject parent, _In_ std::wstring key, long defaultValue) noexcept
+    _Use_decl_annotations_
+    long JsonGetLongProperty(json::JsonObject const& parent, std::wstring const& key, long const defaultValue) noexcept
     {
         if (parent != nullptr)
         {
-            if (parent.HasKey(key))
+            auto hkey = winrt::to_hstring(key.c_str());
+
+            if (parent.HasKey(hkey))
             {
                 try
                 {
-                    auto result = (long)parent.GetNamedNumber(key);
+                    auto result = (long)parent.GetNamedNumber(hkey);
 
                     return result;
                 }
@@ -427,7 +396,8 @@ namespace Windows::Devices::Midi2::Internal
         return defaultValue;
     }
 
-    inline bool JsonSetLongProperty(_In_ json::JsonObject parent, _In_ std::wstring key, _In_ long value) noexcept
+    _Use_decl_annotations_
+    bool JsonSetLongProperty(json::JsonObject const& parent, std::wstring const& key, long const value) noexcept
     {
         try
         {
@@ -451,16 +421,18 @@ namespace Windows::Devices::Midi2::Internal
 
 
 
-
-    inline json::JsonObject JsonGetObjectProperty(_In_ json::JsonObject parent, _In_ std::wstring key, json::JsonObject defaultValue) noexcept
+    _Use_decl_annotations_
+    json::JsonObject JsonGetObjectProperty(json::JsonObject const& parent, std::wstring const& key, json::JsonObject const& defaultValue) noexcept
     {
         if (parent != nullptr)
         {
-            if (parent.HasKey(key))
+            auto hkey = winrt::to_hstring(key.c_str());
+
+            if (parent.HasKey(hkey))
             {
                 try
                 {
-                    auto result = parent.GetNamedObject(key);
+                    auto result = parent.GetNamedObject(hkey);
 
                     return result;
                 }
@@ -476,7 +448,8 @@ namespace Windows::Devices::Midi2::Internal
         return defaultValue;
     }
 
-    inline bool JsonSetObjectProperty(_In_ json::JsonObject parent, _In_ std::wstring key, _In_ json::JsonObject value) noexcept
+    _Use_decl_annotations_
+    bool JsonSetObjectProperty(json::JsonObject const& parent, std::wstring const& key, json::JsonObject const& value) noexcept
     {
         try
         {
@@ -494,16 +467,6 @@ namespace Windows::Devices::Midi2::Internal
 
         return false;
     }
-
-
-
-
-
-
-
-
-
-
 
 }
 

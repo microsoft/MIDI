@@ -11,16 +11,18 @@
 
 // This information is provided by the configuration manager
 
+
 struct MidiLoopbackDeviceDefinition
 {
     std::wstring AssociationId{};
 
-    std::wstring EndpointAName{};
-    std::wstring EndpointADescription{};
-    std::wstring EndpointAUniqueIdentifier{};
+    std::wstring EndpointName{};
+    std::wstring EndpointDescription{};
 
-    std::wstring EndpointBName{};
-    std::wstring EndpointBDescription{};
-    std::wstring EndpointBUniqueIdentifier{};
+    std::wstring EndpointUniqueIdentifier{};
 
+    std::wstring InstanceIdPrefix{};
+
+    std::wstring CreatedShortClientInstanceId{};
+    std::wstring CreatedEndpointInterfaceId{};
 };
