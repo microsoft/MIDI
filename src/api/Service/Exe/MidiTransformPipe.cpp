@@ -18,8 +18,17 @@ CMidiTransformPipe::Initialize(
     IUnknown* MidiDeviceManager
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(Device)
+    );
+
+
     wil::com_ptr_nothrow<IMidiTransform> midiTransform;
-    TRANSFORMCREATIONPARAMS creationParams {0};
+    TRANSFORMCREATIONPARAMS creationParams {};
 
     m_TransformGuid = CreationParams->TransformGuid;
     m_DataFormatIn = CreationParams->DataFormatIn;
@@ -46,7 +55,12 @@ GUID CMidiTransformPipe::TransformGuid()
 HRESULT
 CMidiTransformPipe::Cleanup()
 {
-    OutputDebugString(L"" __FUNCTION__);
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
 
     if (m_MidiDataTransform)
     {

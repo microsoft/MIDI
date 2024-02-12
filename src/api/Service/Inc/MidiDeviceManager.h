@@ -10,6 +10,10 @@
 
 #define AUDIO_DEVICE_ENUMERATOR L"MMDEVAPI"
 #define MIDI_DEVICE_ENUMERATOR L"MIDISRV"
+#define MIDI_SWD_VIRTUAL_PARENT_ROOT L"HTREE\\ROOT\\0"
+
+
+
 
 // ----------------------------------------------------------------------
 //
@@ -49,6 +53,21 @@ typedef struct _MIDIPORT
     HRESULT hr{ S_OK };
 } MIDIPORT, *PMIDIPORT;
 
+
+
+typedef struct _MIDIPARENTDEVICE
+{
+    SWDEVICESTATE SwDeviceState{ SWDEVICESTATE::NotCreated };   // SWD creation state
+    unique_hswdevice SwDevice{};                                // Handle to the SWD created for the MIDI parent device
+    unique_swd_string DeviceId{};                               // SWD device ID for this MIDI parent device
+    std::wstring InstanceId{};                                  // created instance id
+    //std::wstring Name{};                                        // friendly name for this device
+    HRESULT hr{ S_OK };
+
+} MIDIPARENTDEVICE, * PMIDIPARENTDEVICE;
+
+
+
 class CMidiDeviceManager  : 
     public Microsoft::WRL::RuntimeClass<
         Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
@@ -64,6 +83,17 @@ public:
         _In_ std::shared_ptr<CMidiEndpointProtocolManager>& EndpointProtocolManager,
         _In_ std::shared_ptr<CMidiConfigurationManager>& configurationManager);
 
+
+    STDMETHOD(ActivateVirtualParentDevice)(
+        _In_ ULONG DevPropertyCount,
+        _In_opt_ PVOID DevProperties,
+        _In_ PVOID CreateInfo,
+        _Out_writes_opt_z_(CreatedSwDeviceIdCharCount) PWSTR CreatedSwDeviceId,
+        _In_  ULONG CreatedSwDeviceIdCharCount
+    );
+
+
+
     STDMETHOD(ActivateEndpoint)(
         _In_ PCWSTR,
         _In_ BOOL,
@@ -73,10 +103,12 @@ public:
         _In_ PVOID,
         _In_ PVOID,
         _In_ PVOID,
-        _Out_writes_opt_z_(CreatedDeviceInterfaceIdCharCount) PWSTR CreatedDeviceInterfaceId,
-        _In_ ULONG CreatedDeviceInterfaceIdCharCount
+        _Out_writes_opt_z_(CreatedSwDeviceInterfaceIdCharCount) PWSTR CreatedDeviceInterfaceId,
+        _In_ ULONG CreatedSwDeviceInterfaceIdCharCount
     );
+
     STDMETHOD(DeactivateEndpoint)(_In_ PCWSTR);
+
     STDMETHOD(RemoveEndpoint)(_In_ PCWSTR);
 
     STDMETHOD(UpdateEndpointProperties)(
@@ -94,6 +126,16 @@ public:
     STDMETHOD(DeleteAllEndpointInProtocolDiscoveredProperties)(
         _In_ PCWSTR
         );
+
+
+    // this is for runtime updates only, not for config file updates
+    STDMETHOD(UpdateAbstractionConfiguration)(
+        _In_ GUID AbstractionId,
+        _In_ LPCWSTR ConfigurationJson,
+        _In_ BOOL IsFromConfigurationFile,
+        _Out_ BSTR* Response
+        );
+
 
     STDMETHOD(Cleanup)();
 
@@ -116,9 +158,13 @@ private:
 
     std::shared_ptr<CMidiPerformanceManager> m_PerformanceManager;
     std::shared_ptr<CMidiConfigurationManager> m_ConfigurationManager;
+
     std::map<GUID, wil::com_ptr_nothrow<IMidiEndpointManager>, GUIDCompare> m_MidiEndpointManagers;
- 
+    std::map<GUID, wil::com_ptr_nothrow<IMidiAbstractionConfigurationManager>, GUIDCompare> m_MidiAbstractionConfigurationManagers;
+
     wil::critical_section m_MidiPortsLock;
     std::vector<std::unique_ptr<MIDIPORT>> m_MidiPorts;
+
+    std::vector<std::unique_ptr<MIDIPARENTDEVICE>> m_MidiParents;
 };
 

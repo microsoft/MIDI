@@ -134,7 +134,7 @@
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiVirtualDevice"
+             activatableClassId="Windows.Devices.Midi2.MidiVirtualEndpointDeviceDefinition"
              threading="Both"
              trustLevel="Base"
              />
@@ -154,22 +154,17 @@
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiEndpointConnectionOptions"
-             threading="Both"
-             trustLevel="Base"
-             />
-          <class
-             activatableClassId="Windows.Devices.Midi2.MidiStreamConfigurationSettings"
-             threading="Both"
-             trustLevel="Base"
-             />
-          <class
              activatableClassId="Windows.Devices.Midi2.MidiService"
              threading="Both"
              trustLevel="Base"
              />
           <class
              activatableClassId="Windows.Devices.Midi2.IMidiServiceStatics"
+             threading="Both"
+             trustLevel="Base"
+             />
+          <class
+             activatableClassId="Windows.Devices.Midi2.MidiServiceLoopbackEndpointDefinition"
              threading="Both"
              trustLevel="Base"
              />

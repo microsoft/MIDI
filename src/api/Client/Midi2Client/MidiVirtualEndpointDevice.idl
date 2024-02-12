@@ -25,7 +25,7 @@ namespace Windows.Devices.Midi2
     [default_interface]
     runtimeclass MidiVirtualEndpointDevice : IMidiEndpointMessageProcessingPlugin
     {
-        MidiVirtualEndpointDevice();
+        MidiVirtualEndpointDeviceDefinition DeviceDefinition{ get; };
 
         // This is a view because all modifications require sending notifications
         // out on the endpoint. So the functions do that.
@@ -44,7 +44,6 @@ namespace Windows.Devices.Midi2
         // TODO: MIDI CI / Profiles etc.
         // Add/Update/Remove CI Profiles
         // Add/Update/Remove CI Properties
-
 
         event Windows.Foundation.TypedEventHandler<MidiVirtualEndpointDevice, MidiStreamConfigurationRequestReceivedEventArgs> StreamConfigurationRequestReceived;
 

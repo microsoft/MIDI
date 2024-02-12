@@ -19,6 +19,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static internal::MidiTimestamp Now();
 
+        static internal::MidiTimestamp TimestampConstantSendImmediately() { return MIDI_TIMESTAMP_SEND_IMMEDIATELY; }
+
         static uint64_t TimestampFrequency();
 
         static internal::MidiTimestamp OffsetTimestampByTicks(
@@ -33,8 +35,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ internal::MidiTimestamp const timestampValue, 
             _In_ int64_t const offsetMilliseconds);
 
+        static internal::MidiTimestamp OffsetTimestampBySeconds(
+            _In_ internal::MidiTimestamp const timestampValue,
+            _In_ int64_t const offsetSeconds);
+
         static double ConvertTimestampToMicroseconds(_In_ internal::MidiTimestamp const timestampValue);
         static double ConvertTimestampToMilliseconds(_In_ internal::MidiTimestamp const timestampValue);
+        static double ConvertTimestampToSeconds(_In_ internal::MidiTimestamp const timestampValue);
 
     private:
         static uint64_t m_timestampFrequency;

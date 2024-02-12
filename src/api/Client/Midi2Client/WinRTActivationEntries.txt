@@ -55,7 +55,8 @@ Windows.Devices.Midi2.MidiMessageTypeEndpointListener | 0 | 0 | 0
 
 # Virtual Device Message Processing Plugins
 
-Windows.Devices.Midi2.MidiVirtualDevice | 0 | 0 | 0
+#Windows.Devices.Midi2.MidiVirtualEndpointDevice | 0 | 0 | 0
+Windows.Devices.Midi2.MidiVirtualEndpointDeviceDefinition | 0 | 0 | 0
 
 # Events
 
@@ -68,13 +69,15 @@ Windows.Devices.Midi2.IMidiEndpointConnectionStatics | 0 | 0 | 0
 
 # Endpoint Open Options
 
-Windows.Devices.Midi2.MidiEndpointConnectionOptions | 0 | 0 | 0
-Windows.Devices.Midi2.MidiStreamConfigurationSettings | 0 | 0 | 0
+#Windows.Devices.Midi2.MidiEndpointConnectionOptions | 0 | 0 | 0
+#Windows.Devices.Midi2.MidiStreamConfigurationSettings | 0 | 0 | 0
+
 
 # Service
 
 Windows.Devices.Midi2.MidiService | 0 | 0 | 0
 Windows.Devices.Midi2.IMidiServiceStatics | 0 | 0 | 0
+Windows.Devices.Midi2.MidiServiceLoopbackEndpointDefinition | 0 | 0 | 0
 
 # Clock
 

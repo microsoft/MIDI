@@ -1,4 +1,11 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
 
 #include "pch.h"
 
@@ -53,7 +60,34 @@ CMidi2MidiSrvAbstraction::Activate(
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2MidiSrvBiDi>(&midiBiDi));
         *Interface = midiBiDi.detach();
     }
+    else if (__uuidof(IMidiAbstractionConfigurationManager) == Iid)
+    {
+        TraceLoggingWrite(
+            MidiSrvAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__ "- IMidiAbstractionConfigurationManager",
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingValue(__FUNCTION__),
+            TraceLoggingPointer(this, "this")
+        );
 
+        wil::com_ptr_nothrow<IMidiAbstractionConfigurationManager> config;
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2MidiSrvConfigurationManager>(&config));
+        *Interface = config.detach();
+    }
+    else if (__uuidof(IMidiSessionTracker) == Iid)
+    {
+        TraceLoggingWrite(
+            MidiSrvAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__ "- IMidiSessionTracker",
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingValue(__FUNCTION__),
+            TraceLoggingPointer(this, "this")
+        );
+
+        wil::com_ptr_nothrow<IMidiSessionTracker> config;
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2MidiSrvSessionTracker>(&config));
+        *Interface = config.detach();
+    }
     else
     {
         return E_NOINTERFACE;

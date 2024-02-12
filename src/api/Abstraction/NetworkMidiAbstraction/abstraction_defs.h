@@ -16,7 +16,7 @@
 // TODO: Names should be moved to .rc for localization
 
 #define TRANSPORT_PARENT_ID L"MIDIU_UDP_TRANSPORT"
-#define TRANSPORT_PARENT_DEVICE_NAME L"MIDI 2.0 Network Enumerator"
+#define TRANSPORT_PARENT_DEVICE_NAME L"MIDI 2.0 Network Endpoints"
 
 
 #define LOOPBACK_PARENT_ROOT L"HTREE\\ROOT\\0"

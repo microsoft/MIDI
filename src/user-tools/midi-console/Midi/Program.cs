@@ -40,6 +40,11 @@ app.Configure(config =>
             .WithExample("enumerate", "bytestream-endpoints", "--direction", "all")
             ;
 
+        enumerate.AddCommand<EnumActiveSessionsCommand>("active-sessions")
+            .WithAlias("sessions")
+            .WithDescription(Strings.CommandEnumerateActiveSessionsDescription)
+            .WithExample("enumerate", "active-sessions")
+            ;
 
         // TODO: may want to change this to just "plugins" and offer a switch
         // for the type of plugins to show
@@ -133,6 +138,22 @@ app.Configure(config =>
             .WithDescription(Strings.CommandServicePingDescription)
             .WithExample("service", "ping", "--count", "10", "--timeout", "5000", "--verbose")
             ;
+
+        service.AddCommand<ServiceRestartCommand>("restart")
+            .WithDescription(Strings.CommandServiceRestartDescription)
+            .WithExample("service", "restart")
+            ;
+
+        service.AddCommand<ServiceStartCommand>("start")
+            .WithDescription(Strings.CommandServiceStartDescription)
+            .WithExample("service", "start")
+            ;
+
+        service.AddCommand<ServiceStopCommand>("stop")
+            .WithDescription(Strings.CommandServiceStopDescription)
+            .WithExample("service", "stop")
+            ;
+
     }).WithAlias("svc");
 
 

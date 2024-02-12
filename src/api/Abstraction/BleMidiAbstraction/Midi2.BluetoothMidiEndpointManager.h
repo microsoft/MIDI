@@ -69,13 +69,8 @@ class CMidi2BluetoothMidiEndpointManager :
 
 {
 public:
-    STDMETHOD(Initialize(_In_ IUnknown*, _In_ IUnknown*, _In_ LPCWSTR));
+    STDMETHOD(Initialize(_In_ IUnknown*, _In_ IUnknown*));
     STDMETHOD(Cleanup)();
-
-    //STDMETHOD(ApplyConfiguration(
-    //    _In_ LPCWSTR configurationJson,
-    //    _Out_ LPWSTR resultJson
-    //));
 
 
 private:

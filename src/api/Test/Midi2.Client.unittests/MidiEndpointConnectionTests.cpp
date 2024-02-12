@@ -190,10 +190,8 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmpStruct()
 
     LOG_OUTPUT(L"Connecting to both Loopback A and Loopback B");
 
-    MidiEndpointConnectionOptions options;
-
-    auto connSend = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId(), options);
-    auto connReceive = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId(), options);
+    auto connSend = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
+    auto connReceive = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId());
 
     VERIFY_IS_NOT_NULL(connSend);
     VERIFY_IS_NOT_NULL(connReceive);
@@ -276,10 +274,8 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmp32()
     std::cout << std::endl << "Connecting to both Loopback A and Loopback B" << std::endl;
 
 
-    MidiEndpointConnectionOptions options;
-
-    auto connSend = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId(), options);
-    auto connReceive = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId(), options);
+    auto connSend = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
+    auto connReceive = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId());
 
     VERIFY_IS_NOT_NULL(connSend);
     VERIFY_IS_NOT_NULL(connReceive);
@@ -378,10 +374,8 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWords()
     LOG_OUTPUT(L"Connecting to BiDi loopback Endpoints A and B");
 
 
-    MidiEndpointConnectionOptions options;
-
-    auto connSend = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId(), options);
-    auto connReceive = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId(), options);
+    auto connSend = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
+    auto connReceive = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId());
 
     VERIFY_IS_NOT_NULL(connSend);
     VERIFY_IS_NOT_NULL(connReceive);

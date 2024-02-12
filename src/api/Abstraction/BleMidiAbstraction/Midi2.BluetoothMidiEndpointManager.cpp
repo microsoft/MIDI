@@ -22,8 +22,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2BluetoothMidiEndpointManager::Initialize(
     IUnknown* MidiDeviceManager, 
-    IUnknown* /*midiEndpointProtocolManager*/,
-    LPCWSTR /*ConfigurationJson*/
+    IUnknown* /*midiEndpointProtocolManager*/
 )
 {
     //OutputDebugString(L"" __FUNCTION__ " Enter");
@@ -498,14 +497,13 @@ namespace bt = ::winrt::Windows::Devices::Bluetooth;
 HRESULT
 CMidi2BluetoothMidiEndpointManager::EnumCompatibleBluetoothDevices()
 {
-    winrt::guid midiServiceGuid(MIDI_BLE_GATT_SERVICE);
+//    winrt::guid midiServiceGuid(MIDI_BLE_GATT_SERVICE);
 
 //    bt::BluetoothLEDevice::GetGattServicesForUuidAsync(midiServiceGuid);
 
 
     return S_OK;
 }
-
 
 
 HRESULT

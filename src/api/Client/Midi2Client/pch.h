@@ -27,7 +27,7 @@
 #include <winrt/Windows.Storage.h>
 
 #include <winrt/Windows.Data.Json.h>
-
+namespace json = ::winrt::Windows::Data::Json;
 
 #include <stdint.h>
 #include <sstream>
@@ -43,7 +43,14 @@
 #include "midi_service_interface.h"
 #include "ump_helpers.h"
 #include "memory_buffer.h"
-#include "string_util.h"
+#include "wstring_util.h"
+#include "hstring_util.h"
+
+// AbstractionUtilities
+#include "endpoint_data_helpers.h"
+#include "swd_property_builders.h"
+#include "swd_property_helpers.h"
+#include "json_helpers.h"
 
 // shared
 #include "midi_ump.h"   // general shared
@@ -62,13 +69,12 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 
 #include "MidiGroup.h"
 #include "MidiChannel.h"
-#include "MidiUniqueId.h"
 
 // TODO: Consider changing these to midi2impl and midi2proj
 namespace implementation = winrt::Windows::Devices::Midi2::implementation;
 namespace midi2 = ::winrt::Windows::Devices::Midi2;
 
-
+#include "MidiUniqueId.h"
 
 #include "midi_stream_message_defs.h"
 #include "midi_ump_message_defs.h"
@@ -88,17 +94,23 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 
 #include "MidiEndpointConnection.h"
 
-#include "MidiEndpointConnectionOptions.h"
-
 #include "MidiMessageReceivedEventArgs.h"
 #include "MidiEndpointDeviceInformationUpdateEventArgs.h"
+
+#include "MidiVirtualEndpointDevice.h"
+#include "MidiVirtualEndpointDeviceDefinition.h"
 
 #include "MidiSession.h"
 
 #include "MidiServicePingResponse.h"
 #include "MidiServicePingResponseSummary.h"
-#include "MidiTransportPluginInformation.h"
-#include "MidiMessageProcessingPluginInformation.h"
+#include "MidiServiceTransportPluginInformation.h"
+#include "MidiServiceMessageProcessingPluginInformation.h"
+
+#include "MidiServiceConfigurationResponse.h"
+#include "MidiServiceLoopbackEndpointCreationResult.h"
+#include "MidiServiceSessionConnectionInformation.h"
+#include "MidiServiceSessionInformation.h"
 #include "MidiService.h"
 
 #include "MidiEndpointDeviceInformation.h"

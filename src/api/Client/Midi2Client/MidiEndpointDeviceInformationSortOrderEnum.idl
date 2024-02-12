@@ -15,10 +15,19 @@ namespace Windows.Devices.Midi2
     enum MidiEndpointDeviceInformationSortOrder
     {
         None = 0,
+
         Name = 1,
-        DeviceInstanceId = 2,
+        EndpointDeviceId = 2,
+        DeviceInstanceId = 3,
+
 
         ContainerThenName = 11,
-        ContainerThenDeviceInstanceId = 12
+        ContainerThenEndpointDeviceId = 12,
+        ContainerThenDeviceInstanceId = 13,
+
+        TransportMnemonicThenName = 21,
+        TransportMnemonicThenEndpointDeviceId = 22,
+        TransportMnemonicThenDeviceInstanceId = 23,
+
     };
 }

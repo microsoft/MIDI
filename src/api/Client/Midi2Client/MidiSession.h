@@ -34,6 +34,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         midi2::MidiSessionSettings Settings() const noexcept { return m_settings; }
 
+        bool UpdateName(_In_ winrt::hstring const& newName) noexcept;
 
         foundation::Collections::IMapView<winrt::guid, midi2::MidiEndpointConnection> Connections() { return m_connections.GetView(); }
 
@@ -43,13 +44,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         winrt::Windows::Devices::Midi2::MidiEndpointConnection CreateEndpointConnection(
             _In_ winrt::hstring const& endpointDeviceId,
-            _In_ midi2::MidiEndpointConnectionOptions const& options
-        ) noexcept;
-
-        winrt::Windows::Devices::Midi2::MidiEndpointConnection CreateEndpointConnection(
-            _In_ winrt::hstring const& endpointDeviceId,
-            _In_ midi2::MidiEndpointConnectionOptions const& options,
-            _In_ midi2::IMidiEndpointDefinedConnectionSettings const& settings
+            _In_ midi2::IMidiEndpointConnectionSettings const& settings
         ) noexcept;
 
 
@@ -63,9 +58,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
         midi2::MidiEndpointConnection CreateVirtualDeviceAndConnection(
-            _In_ winrt::hstring endpointName,
-            _In_ winrt::hstring endpointDeviceInstanceId
+            _In_ midi2::MidiVirtualEndpointDeviceDefinition const& deviceDefinition
         ) noexcept;
+
+
+
 
 
         // internal to the API
@@ -85,12 +82,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
         DWORD m_mmcssTaskId{ 0 };
 
         winrt::com_ptr<IMidiAbstraction> m_serviceAbstraction;
+        winrt::com_ptr<IMidiSessionTracker> m_sessionTracker;
 
         collections::IMap<winrt::guid, midi2::MidiEndpointConnection>
             m_connections{ winrt::single_threaded_map<winrt::guid, midi2::MidiEndpointConnection>() };
 
 
-        winrt::hstring NormalizeDeviceId(_In_ const winrt::hstring& endpointDeviceId);
+        //winrt::hstring NormalizeDeviceId(_In_ const winrt::hstring& endpointDeviceId);
 
     };
 }

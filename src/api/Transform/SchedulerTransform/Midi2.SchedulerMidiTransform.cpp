@@ -285,7 +285,7 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
 
         }
 
-        return S_OK;
+ //       return S_OK;
     }
     catch (...)
     {

@@ -27,13 +27,19 @@
     <ClCompile Include="Midi2.VirtualMidiEndpointManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Midi2.VirtualMidiDeviceBidi.cpp">
+    <ClCompile Include="Midi2.VirtualMidiBidi.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MidiEndpointTable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Midi2.VirtualMidiClientBidi.cpp">
+    <ClCompile Include="swd_shared.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi2.VirtualMidiConfigurationManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AbstractionState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -67,19 +73,22 @@
     <ClInclude Include="Midi2.VirtualMidiEndpointManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Midi2.VirtualMidiDeviceBidi.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MidiEndpointTable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="abstraction_defs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MidiRoute.h">
+    <ClInclude Include="Midi2.VirtualMidiBidi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Midi2.VirtualMidiClientBidi.h">
+    <ClInclude Include="swd_shared.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Midi2.VirtualMidiConfigurationManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AbstractionState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

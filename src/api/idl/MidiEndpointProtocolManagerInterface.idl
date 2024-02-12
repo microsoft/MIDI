@@ -11,9 +11,9 @@ import "unknwn.idl";
 
 [
     object,
-        local,
-        uuid(7a3def20-fb76-49b6-a3a0-3dcbcda8f482),
-        pointer_default(unique)
+    local,
+    uuid(7a3def20-fb76-49b6-a3a0-3dcbcda8f482),
+    pointer_default(unique)
 ]
 interface IMidiEndpointProtocolManagerInterface : IUnknown
 {

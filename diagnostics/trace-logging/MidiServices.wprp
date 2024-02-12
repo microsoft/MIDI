@@ -12,11 +12,25 @@
 
     <EventProvider Id="EventProvider_MidiSrv" Name="*Microsoft.Windows.Midi2.MidiSrv"/>
     <EventProvider Id="EventProvider_MidiSrvAbstraction" Name="*Microsoft.Windows.Midi2.MidiSrvAbstraction"/>
+
     <EventProvider Id="EventProvider_KSAbstraction" Name="*Microsoft.Windows.Midi2.KSAbstraction"/>
     <EventProvider Id="EventProvider_DiagnosticsAbstraction" Name="*Microsoft.Windows.Midi2.DiagnosticsAbstraction"/>
     <EventProvider Id="EventProvider_SampleAbstraction" Name="*Microsoft.Windows.Midi2.SampleAbstraction"/>
     <EventProvider Id="EventProvider_VirtualMidiAbstraction" Name="*Microsoft.Windows.Midi2.VirtualMidiAbstraction"/>
+    <EventProvider Id="EventProvider_VirtualPatchBayAbstraction" Name="*Microsoft.Windows.Midi2.VirtualPatchBayAbstraction"/>
+    <EventProvider Id="EventProvider_NetworkMidiAbstraction" Name="*Microsoft.Windows.Midi2.NetworkMidiAbstraction"/>
+    <EventProvider Id="EventProvider_BluetoothMidiAbstraction" Name="*Microsoft.Windows.Midi2.BluetoothMidiAbstraction"/>
+    <EventProvider Id="EventProvider_LoopbackMidiAbstraction" Name="*Microsoft.Windows.Midi2.LoopbackMidiAbstraction"/>
+
     <EventProvider Id="EventProvider_API" Name="*Windows.Devices.Midi2.Api"/>
+
+    <EventProvider Id="EventProvider_BS2UMPTransform" Name="*Microsoft.Windows.Midi2.BS2UMPTransform"/>
+    <EventProvider Id="EventProvider_EndpointMetadataListenerTransform" Name="*Microsoft.Windows.Midi2.EndpointMetadataListenerTransform"/>
+    <EventProvider Id="EventProvider_JitterReductionGeneratorTransform" Name="*Microsoft.Windows.Midi2.JitterReductionGeneratorTransform"/>
+    <EventProvider Id="EventProvider_JitterReductionListenerTransform" Name="*Microsoft.Windows.Midi2.JitterReductionListenerTransform"/>
+    <EventProvider Id="EventProvider_SchedulerTransform" Name="*Microsoft.Windows.Midi2.SchedulerTransform"/>
+    <EventProvider Id="EventProvider_UMP2BSTransform" Name="*Microsoft.Windows.Midi2.UMP2BSTransform"/>
+
 
      <Profile Id="MidiSrv.Verbose.File" Name="MidiSrv" DetailLevel="Verbose" Description="Windows MIDI Services trace profile" LoggingMode="File">
       <Collectors>
@@ -24,11 +38,24 @@
           <EventProviders>
             <EventProviderId Value="EventProvider_MidiSrv"/>
             <EventProviderId Value="EventProvider_MidiSrvAbstraction"/>
+
             <EventProviderId Value="EventProvider_KSAbstraction"/>
             <EventProviderId Value="EventProvider_DiagnosticsAbstraction"/>
             <EventProviderId Value="EventProvider_SampleAbstraction"/>
             <EventProviderId Value="EventProvider_VirtualMidiAbstraction"/>
+            <EventProviderId Value="EventProvider_VirtualPatchBayAbstraction"/>
+            <EventProviderId Value="EventProvider_NetworkMidiAbstraction"/>
+            <EventProviderId Value="EventProvider_BluetoothMidiAbstraction"/>
+            <EventProviderId Value="EventProvider_LoopbackMidiAbstraction"/>
+
             <EventProviderId Value="EventProvider_API"/>
+
+            <EventProviderId Value="EventProvider_BS2UMPTransform"/>
+            <EventProviderId Value="EventProvider_EndpointMetadataListenerTransform"/>
+            <EventProviderId Value="EventProvider_JitterReductionGeneratorTransform"/>
+            <EventProviderId Value="EventProvider_JitterReductionListenerTransform"/>
+            <EventProviderId Value="EventProvider_SchedulerTransform"/>
+            <EventProviderId Value="EventProvider_UMP2BSTransform"/>
           </EventProviders>
         </EventCollectorId>
       </Collectors>

@@ -1,4 +1,11 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
 
 #include "pch.h"
 
@@ -9,7 +16,8 @@ CMidi2MidiSrvBiDi::Initialize(
     PABSTRACTIONCREATIONPARAMS CreationParams,
     DWORD * MmcssTaskId,
     IMidiCallback * Callback,
-    LONGLONG Context
+    LONGLONG Context,
+    GUID SessionId
 )
 {
     RETURN_HR_IF(E_INVALIDARG, nullptr == Callback);
@@ -27,7 +35,7 @@ CMidi2MidiSrvBiDi::Initialize(
     std::unique_ptr<CMidi2MidiSrv> midiSrv(new (std::nothrow) CMidi2MidiSrv());
     RETURN_IF_NULL_ALLOC(midiSrv);
 
-    RETURN_IF_FAILED(midiSrv->Initialize(Device, MidiFlowBidirectional, CreationParams, MmcssTaskId, Callback, Context));
+    RETURN_IF_FAILED(midiSrv->Initialize(Device, MidiFlowBidirectional, CreationParams, MmcssTaskId, Callback, Context, SessionId));
     m_MidiSrv = std::move(midiSrv);
 
     return S_OK;

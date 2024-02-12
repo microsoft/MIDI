@@ -1,4 +1,11 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
 
 #include "pch.h"
 
@@ -68,6 +75,22 @@ CMidi2KSAbstraction::Activate(
         wil::com_ptr_nothrow<IMidiEndpointManager> midiEndpointManager;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSMidiEndpointManager>(&midiEndpointManager));
         *Interface = midiEndpointManager.detach();
+    }
+    else if (__uuidof(IMidiAbstractionConfigurationManager) == Riid)
+    {
+        TraceLoggingWrite(
+            MidiKSAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__ "- IMidiConfigurationManager",
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingValue(__FUNCTION__),
+            TraceLoggingPointer(this, "this")
+        );
+
+        // TODO: Need to use existing endpoint manager
+
+        wil::com_ptr_nothrow<IMidiAbstractionConfigurationManager> midiConfigurationManager;
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSMidiConfigurationManager>(&midiConfigurationManager));
+        *Interface = midiConfigurationManager.detach();
     }
 
     else

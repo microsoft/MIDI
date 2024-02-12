@@ -20,9 +20,9 @@
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
-#include <winrt/Windows.Data.Json.h>
+//#include <winrt/Windows.Data.Json.h>
 
-namespace json = ::winrt::Windows::Data::Json;
+//namespace json = ::winrt::Windows::Data::Json;
 
 
 #include <assert.h>
@@ -62,9 +62,25 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "SWDevice.h"
 #include <initguid.h>
 #include "setupapi.h"
-#include "Devpkey.h"
+//#include "Devpkey.h"
 
 #include "strsafe.h"
+#include "wstring_util.h"
+
+// AbstractionUtilities
+#include "endpoint_data_helpers.h"
+#include "swd_property_builders.h"
+#include "swd_property_helpers.h"
+#include "json_helpers.h"
+
+#include "MidiDefs.h"
+#include "MidiDataFormat.h"
+#include "MidiFlow.h"
+#include "MidiAbstraction.h"
+
+#include "MidiXProc.h"
+
+namespace internal = ::Windows::Devices::Midi2::Internal;
 
 #include "abstraction_defs.h"
 
@@ -74,17 +90,22 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "mididevicemanagerinterface_i.c"
 #include "mididevicemanagerinterface.h"
 
+#include "MidiEndpointProtocolManagerInterface_i.c"
+#include "MidiEndpointProtocolManagerInterface.h"
+
+
 #include "dllmain.h"
 
-#include "MidiDefs.h"
-#include "MidiXProc.h"
+#include "swd_shared.h"
 
+class CMidi2VirtualMidiEndpointManager;
+class CMidi2VirtualMidiBiDi;
+class AbstractionState;
 
-#include "MidiRoute.h"
 #include "MidiEndpointTable.h"
 
 #include "Midi2.VirtualMidiAbstraction.h"
-#include "Midi2.VirtualMidiDeviceBiDi.h"
-#include "Midi2.VirtualMidiClientBiDi.h"
+#include "Midi2.VirtualMidiBiDi.h"
 #include "Midi2.VirtualMidiEndpointManager.h"
-
+#include "Midi2.VirtualMidiConfigurationManager.h"
+#include "AbstractionState.h"

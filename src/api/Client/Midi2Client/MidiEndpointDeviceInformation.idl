@@ -91,6 +91,9 @@ namespace Windows.Devices.Midi2
         // iSerialNumber from USB. This is transport-specific, but super important
         String TransportSuppliedSerialNumber{ get; };
 
+        // endpoint description supplied by the transport. This may contain most anything that is useful to the user.
+        String TransportSuppliedDescription{ get; };
+
         // manufacturer when we can get that. Typically from USB
         String ManufacturerName{ get; };
 
@@ -114,17 +117,17 @@ namespace Windows.Devices.Midi2
         MidiEndpointDevicePurpose EndpointPurpose{ get; };
 
         // The settings app allows the user to add some metadata, like a description
-        String Description{ get; };
+        String UserSuppliedDescription{ get; };
 
         // png icon supplied by the user
-        String LargeImagePath{ get; };
-        String SmallImagePath{ get; };
+        String UserSuppliedLargeImagePath{ get; };
+        String UserSuppliedSmallImagePath{ get; };
 
 
 
         Boolean RequiresNoteOffTranslation{ get; };
         UInt16 RecommendedCCAutomationIntervalMS{ get; };
-        Boolean SupportsMidiPolyphonicExpression{ get; };
+        //Boolean SupportsMidiPolyphonicExpression{ get; }; // removed because the MPE profile is a better way to do this
 
 
         Windows.Foundation.Collections.IMapView<String, IInspectable> Properties{ get; };

@@ -10,7 +10,9 @@ CMidi2SampleMidiBiDi::Initialize(
     PABSTRACTIONCREATIONPARAMS,
     DWORD *,
     IMidiCallback *,
-    LONGLONG
+    LONGLONG,
+    GUID /* SessionId */
+
 )
 {
 

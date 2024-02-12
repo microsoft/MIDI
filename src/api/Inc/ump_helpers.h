@@ -350,6 +350,7 @@ namespace Windows::Devices::Midi2::Internal
     }
 
 
+    // endpoint discovery and function blocks
 
 
     inline bool GetFunctionBlockActiveFlagFromInfoNotificationFirstWord(
@@ -391,6 +392,19 @@ namespace Windows::Devices::Midi2::Internal
 
 
     // Function Block Info Notification
+    inline bool MessageIsFunctionBlockDiscoveryRequest(_In_ uint32_t const firstWord)
+    {
+        if (GetUmpMessageTypeFromFirstWord(firstWord) == 0xF)
+        {
+            if (GetFormFromStreamMessageFirstWord(firstWord) == 0x0 &&
+                GetStatusFromStreamMessageFirstWord(firstWord) == 0x10)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     inline uint32_t BuildFunctionBlockDiscoveryRequestFirstWord(
         _In_ uint8_t functionBlockNumber,
@@ -406,6 +420,31 @@ namespace Windows::Devices::Midi2::Internal
         SetMidiWordMostSignificantByte4(word, filter);
 
         return word;
+    }
+
+    inline std::uint8_t GetFunctionBlockNumberFromFunctionBlockDiscoveryRequestFirstWord(
+        _In_ std::uint32_t const word0
+        ) noexcept
+    {
+        return (std::uint8_t)(MIDIWORDBYTE3(word0));
+    }
+
+
+    inline std::uint8_t GetFunctionBlockDiscoveryMessageFilterFlagsFromFirstWord(
+        _In_ std::uint32_t const word0
+        ) noexcept
+    {
+        return (std::uint8_t)(MIDIWORDBYTE4(word0));
+    }
+
+    inline bool FunctionBlockDiscoveryFilterRequestsInfoNotification(_In_ std::uint8_t const filterBitmap)
+    {
+        return ((filterBitmap & 0x01) > 0);
+    }
+
+    inline bool FunctionBlockDiscoveryFilterRequestsNameNotification(_In_ std::uint8_t const filterBitmap)
+    {
+        return ((filterBitmap & 0x02) > 0);
     }
 
 
@@ -438,7 +477,49 @@ namespace Windows::Devices::Midi2::Internal
     }
 
 
-    // Endpoint Info Notification
+    // Endpoint Info Notification and related
+
+    inline bool MessageIsEndpointDiscoveryRequest(_In_ std::uint32_t const firstWord)
+    {
+        if (GetUmpMessageTypeFromFirstWord(firstWord) == 0xF)
+        {
+            if (GetFormFromStreamMessageFirstWord(firstWord) == 0 &&
+                GetStatusFromStreamMessageFirstWord(firstWord) == 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    inline std::uint8_t GetEndpointDiscoveryMessageFilterFlagsFromSecondWord(_In_ std::uint32_t const secondWord)
+    {
+        return (std::uint8_t)MIDIWORDBYTE4(secondWord);
+    }
+
+    inline bool EndpointDiscoveryFilterRequestsEndpointInfoNotification(_In_ std::uint8_t const filterBitmap)
+    {
+        return ((filterBitmap & 0x01) > 0);
+    }
+
+    inline bool EndpointDiscoveryFilterRequestsDeviceIdentityNotification(_In_ std::uint8_t const filterBitmap)
+    {
+        return ((filterBitmap & 0x02) > 0);
+    }
+
+    inline bool EndpointDiscoveryFilterRequestsEndpointNameNotification(_In_ std::uint8_t const filterBitmap)
+    {
+        return ((filterBitmap & 0x04) > 0);
+    }
+    inline bool EndpointDiscoveryFilterRequestsProductInstanceIdNotification(_In_ std::uint8_t const filterBitmap)
+    {
+        return ((filterBitmap & 0x08) > 0);
+    }
+    inline bool EndpointDiscoveryFilterRequestsStreamConfigurationNotification(_In_ std::uint8_t const filterBitmap)
+    {
+        return ((filterBitmap & 0x10) > 0);
+    }
 
     inline uint32_t BuildEndpointDiscoveryRequestFirstWord(
         _In_ uint8_t umpVersionMajor,
@@ -515,12 +596,29 @@ namespace Windows::Devices::Midi2::Internal
         return (bool)((word1 & 0x00000001) > 0);
     }
 
-    // Stream Configuration Request and Notification Messages
 
-    inline uint32_t BuildStreamConfigurationRequestFirstWord(
-        _In_ uint8_t protocol,
-        _In_ bool endpointShouldExpectToReceiveJR,
-        _In_ bool endpointShouldSendJR
+
+
+
+    // Stream Configuration Request and Notification Messages
+    inline bool MessageIsStreamConfigurationRequest(_In_ std::uint32_t const firstWord)
+    {
+        if (GetUmpMessageTypeFromFirstWord(firstWord) == 0xF)
+        {
+            if (GetFormFromStreamMessageFirstWord(firstWord) == 0 &&
+                GetStatusFromStreamMessageFirstWord(firstWord) == 5)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    inline std::uint32_t BuildStreamConfigurationRequestFirstWord(
+        _In_ std::uint8_t const protocol,
+        _In_ bool const endpointShouldExpectToReceiveJR,
+        _In_ bool const endpointShouldSendJR
     )
     {
         uint32_t word{ 0 };

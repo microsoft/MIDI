@@ -43,7 +43,7 @@ void MidiEndpointListenerTests::TestMessageTypeListener()
     endpointListener.IncludeMessageTypes().Append(MidiMessageType::Midi1ChannelVoice32);
     endpointListener.IncludeMessageTypes().Append(MidiMessageType::Midi2ChannelVoice64);
 
-    connReceive.MessageProcessingPlugins().Append(endpointListener);
+    connReceive.AddMessageProcessingPlugin(endpointListener);
 
     auto MessageReceivedHandler = [&](IMidiMessageReceivedEventSource const& sender, MidiMessageReceivedEventArgs const& args)
         {
@@ -149,7 +149,7 @@ void MidiEndpointListenerTests::TestGroupListener()
     endpointListener.IncludeGroups().Append(MidiGroup{ 0x3 });
     endpointListener.IncludeGroups().Append(MidiGroup{ 0xB });
 
-    connReceive.MessageProcessingPlugins().Append(endpointListener);
+    connReceive.AddMessageProcessingPlugin(endpointListener);
 
     auto MessageReceivedHandler = [&](IMidiMessageReceivedEventSource const& sender, MidiMessageReceivedEventArgs const& args)
         {
@@ -267,7 +267,7 @@ void MidiEndpointListenerTests::TestGroupAndChannelListener()
     endpointListener.IncludeChannels().Append(MidiChannel{ 0x3 });
     endpointListener.IncludeChannels().Append(MidiChannel{ 0xB });
 
-    connReceive.MessageProcessingPlugins().Append(endpointListener);
+    connReceive.AddMessageProcessingPlugin(endpointListener);
 
     auto MessageReceivedHandler = [&](IMidiMessageReceivedEventSource const& sender, MidiMessageReceivedEventArgs const& args)
         {

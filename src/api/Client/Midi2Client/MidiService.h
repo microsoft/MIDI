@@ -24,10 +24,26 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ uint32_t const timeoutMilliseconds
             ) noexcept;
 
-        static foundation::Collections::IVectorView<midi2::MidiTransportPluginInformation> GetInstalledTransportPlugins();
-        static foundation::Collections::IVectorView<midi2::MidiMessageProcessingPluginInformation> GetInstalledMessageProcessingPlugins();
+        static foundation::Collections::IVectorView<midi2::MidiServiceTransportPluginInformation> GetInstalledTransportPlugins();
+        static foundation::Collections::IVectorView<midi2::MidiServiceMessageProcessingPluginInformation> GetInstalledMessageProcessingPlugins();
 
-        static uint32_t GetOutgoingMessageQueueMaxMessageCapacity() { return (uint32_t)MIDI_OUTGOING_MESSAGE_QUEUE_MAX_MESSAGE_COUNT; }
+//        static uint32_t GetOutgoingMessageQueueMaxMessageCapacity() noexcept { return (uint32_t)MIDI_OUTGOING_MESSAGE_QUEUE_MAX_MESSAGE_COUNT; }
+
+        static foundation::Collections::IVectorView<midi2::MidiServiceSessionInformation> GetActiveSessions() noexcept;
+
+        static midi2::MidiServiceLoopbackEndpointCreationResult CreateTemporaryLoopbackEndpoints(
+            _In_ winrt::guid const& associationId,
+            _In_ midi2::MidiServiceLoopbackEndpointDefinition const& endpointDefinitionA,
+            _In_ midi2::MidiServiceLoopbackEndpointDefinition const& endpointDefinitionB) noexcept;
+
+        static bool RemoveTemporaryLoopbackEndpoints(_In_ winrt::guid const& associationId) noexcept;
+
+        static midi2::MidiServiceConfigurationResponse UpdateTransportPluginConfiguration(
+            _In_ midi2::IMidiServiceTransportPluginConfiguration const& configurationUpdate) noexcept;
+
+        static midi2::MidiServiceConfigurationResponse UpdateProcessingPluginConfiguration(
+            _In_ midi2::IMidiServiceMessageProcessingPluginConfiguration const& configurationUpdate) noexcept;
+
 
     private:
 

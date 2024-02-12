@@ -24,10 +24,14 @@ namespace Windows.Devices.Midi2
     {
         // byte 1 is LSB according to spec
         MidiUniqueId();
+        MidiUniqueId(UInt32 integer28bit);
         MidiUniqueId(UInt8 sevenBitByte1, UInt8 sevenBitByte2, UInt8 sevenBitByte3, UInt8 sevenBitByte4);
 
         static String LabelShort{ get; };
         static String LabelFull{ get; };
+
+        static MidiUniqueId CreateBroadcast();
+        static MidiUniqueId CreateRandom();
 
         // TODO: Static method to generate a MUID
 
@@ -39,8 +43,10 @@ namespace Windows.Devices.Midi2
         UInt8 Byte3{ get; set; };
         UInt8 Byte4{ get; set; };
 
-        // TODO: Consider adding an "AsInt32" or similar function to do all the shifting required to 
-        // present this as a 28 bit number
+        UInt32 As28BitInteger{ get; };
+
+        Boolean IsBroadcast{ get; };
+        Boolean IsReserved{ get; };
 
         // TODO: Consider adding a constructor which takes a UInt32 and creates the MUID from it
 

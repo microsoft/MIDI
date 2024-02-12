@@ -15,14 +15,9 @@ MIDI_IDL_IMPORT
 
 
 import "IMidiMessageReceivedEventSource.idl";
-
-import "MidiStreamConfigurationRequestedSettings.idl";
-
 import "IMidiEndpointMessageProcessingPlugin.idl";
 import "MidiSendMessageResultEnum.idl";
-
-import "IMidiEndpointDefinedConnectionSettings.idl";
-
+import "IMidiEndpointConnectionSettings.idl";
 import "IMidiEndpointConnectionSource.idl";
 
 namespace Windows.Devices.Midi2
@@ -30,13 +25,11 @@ namespace Windows.Devices.Midi2
     [MIDI_API_CONTRACT(1)]
     [default_interface]
     runtimeclass MidiEndpointConnection : Windows.Devices.Midi2.IMidiMessageReceivedEventSource,
-                                          Windows.Foundation.IClosable,
                                           IMidiEndpointConnectionSource
 
     {
         // Get the enumeration device selector for all compatible devices
         static String GetDeviceSelector();
-
 
         static Boolean SendMessageSucceeded(MidiSendMessageResult sendResult);
         static Boolean SendMessageFailed(MidiSendMessageResult sendResult);
@@ -55,14 +48,15 @@ namespace Windows.Devices.Midi2
         // here for cases when the app holds on to an instance of this outside of the map
         Boolean IsOpen{ get; };
 
-
-        IMidiEndpointDefinedConnectionSettings Settings{ get; };
+        // read-only copy of the settings used to create this connection
+        IMidiEndpointConnectionSettings Settings{ get; };
 
         Boolean Open();
 
 
-        // Thread-safe
-        IVector<IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins{ get; };
+        IVectorView<IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins{ get; };
+        void AddMessageProcessingPlugin(IMidiEndpointMessageProcessingPlugin plugin);
+        void RemoveMessageProcessingPlugin(Guid id);
 
 
         // send the UMP interface used by strongly-typed Midi Message classes in the SDK
@@ -86,6 +80,10 @@ namespace Windows.Devices.Midi2
         // for sending a section of a pre-existing buffer. Used when a client app is maintaining its own memory       
         MidiSendMessageResult SendMessageBuffer(MIDI_TIMESTAMP timestamp, Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffset, UInt8 byteLength);
 
+        // These methods will send multiple messages. The words must be ordered correctly
+        // so they are in order from word0 to wordn for each message.
+        MidiSendMessageResult SendMessagesWordList(MIDI_TIMESTAMP timestamp, IVectorView<UInt32> words);
+        MidiSendMessageResult SendMessagesWordArray(MIDI_TIMESTAMP timestamp, UInt32[] words);
 
     }
 

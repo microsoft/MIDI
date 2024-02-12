@@ -38,6 +38,8 @@ CMidi2DiagnosticsAbstraction::Activate(
     }
     else if (__uuidof(IMidiEndpointManager) == Riid)
     {
+        OutputDebugString(L"" __FUNCTION__ " Activating IMidiEndpointManager");
+
         TraceLoggingWrite(
             MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
             __FUNCTION__ "- Midi Endpoint Manager",
@@ -52,7 +54,9 @@ CMidi2DiagnosticsAbstraction::Activate(
     }
     else
     {
-       TraceLoggingWrite(
+        OutputDebugString(L"" __FUNCTION__ " Unrecognized interface");
+
+        TraceLoggingWrite(
            MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
            __FUNCTION__ " Returning E_NOINTERFACE. Was an interface added that isn't handled in the Abstraction?",
            TraceLoggingLevel(WINEVENT_LEVEL_INFO),

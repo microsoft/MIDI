@@ -142,6 +142,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to List all currently active Windows MIDI Services sessions on this PC..
+        /// </summary>
+        internal static string CommandEnumerateActiveSessionsDescription {
+            get {
+                return ResourceManager.GetString("CommandEnumerateActiveSessionsDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Enumerate (list) endpoints and transports.
         /// </summary>
         internal static string CommandEnumerateDescription {
@@ -223,11 +232,38 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Restart the MIDI service. This will close all open connections, remove any non-persistent configuration, and otherwise reset the MIDI system. Must be run as Administrator..
+        /// </summary>
+        internal static string CommandServiceRestartDescription {
+            get {
+                return ResourceManager.GetString("CommandServiceRestartDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Start the MIDI Service if it is currently stopped. Must be run as Administrator..
+        /// </summary>
+        internal static string CommandServiceStartDescription {
+            get {
+                return ResourceManager.GetString("CommandServiceStartDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Check to see if the Windows Service is running.
         /// </summary>
         internal static string CommandServiceStatusDescription {
             get {
                 return ResourceManager.GetString("CommandServiceStatusDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stops the MIDI Service, freeing up all resources in use, closing all devices, and clearing any runtime configuration. Must be run as Administrator..
+        /// </summary>
+        internal static string CommandServiceStopDescription {
+            get {
+                return ResourceManager.GetString("CommandServiceStopDescription", resourceCulture);
             }
         }
         
@@ -610,11 +646,29 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to New endpoint name.
+        /// </summary>
+        internal static string ParameterEndpointUpdateName {
+            get {
+                return ResourceManager.GetString("ParameterEndpointUpdateName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The direction of data flow for the endpoints to list.
         /// </summary>
         internal static string ParameterEnumEndpointsDirection {
             get {
                 return ResourceManager.GetString("ParameterEnumEndpointsDirection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List all recognized endpoints, including internal ones and ones an application may be unable to connect to directly..
+        /// </summary>
+        internal static string ParameterEnumEndpointsIncludeAll {
+            get {
+                return ResourceManager.GetString("ParameterEnumEndpointsIncludeAll", resourceCulture);
             }
         }
         
@@ -1146,11 +1200,29 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Multi-client.
+        /// </summary>
+        internal static string PropertiesTablePropertyLabelMultiClient {
+            get {
+                return ResourceManager.GetString("PropertiesTablePropertyLabelMultiClient", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Name.
         /// </summary>
         internal static string PropertiesTablePropertyLabelName {
             get {
                 return ResourceManager.GetString("PropertiesTablePropertyLabelName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Native data format.
+        /// </summary>
+        internal static string PropertiesTablePropertyLabelNativeDataFormat {
+            get {
+                return ResourceManager.GetString("PropertiesTablePropertyLabelNativeDataFormat", resourceCulture);
             }
         }
         
@@ -1205,6 +1277,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         internal static string PropertiesTablePropertyLabelSystemExclusiveId {
             get {
                 return ResourceManager.GetString("PropertiesTablePropertyLabelSystemExclusiveId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Description.
+        /// </summary>
+        internal static string PropertiesTablePropertyLabelTransportSuppliedDescription {
+            get {
+                return ResourceManager.GetString("PropertiesTablePropertyLabelTransportSuppliedDescription", resourceCulture);
             }
         }
         

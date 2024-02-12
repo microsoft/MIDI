@@ -10,9 +10,6 @@
 #pragma once
 #include "MidiVirtualEndpointDevice.g.h"
 
-#include "string_util.h"
-
-
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     struct MidiVirtualEndpointDevice : MidiVirtualEndpointDeviceT<MidiVirtualEndpointDevice>
@@ -20,8 +17,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         MidiVirtualEndpointDevice() = default;
 
         // plugin Id
-        winrt::hstring Id() const noexcept { return m_id; }
-        void Id(_In_ hstring const& value) noexcept { m_id = internal::ToUpperTrimmedHStringCopy(value); }
+        winrt::guid Id() const noexcept { return m_id; }
+
         // plugin name
         winrt::hstring Name() const noexcept { return m_name; }
         void Name(_In_ winrt::hstring const& value) noexcept { m_name = internal::TrimmedHStringCopy(value); }
@@ -58,11 +55,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void UpdateEndpointName(_In_ winrt::hstring const& name) noexcept;
 
 
+        midi2::MidiVirtualEndpointDeviceDefinition DeviceDefinition() { return m_virtualEndpointDeviceDefinition; }
+
 
 
         void Initialize(_In_ midi2::IMidiEndpointConnectionSource const& endpointConnection) noexcept;
         void OnEndpointConnectionOpened()  noexcept;
         void Cleanup()  noexcept;
+
+        void InternalSetDeviceDefinition(_In_ midi2::MidiVirtualEndpointDeviceDefinition definition);
 
         void ProcessIncomingMessage(
             _In_ midi2::MidiMessageReceivedEventArgs const& args,
@@ -71,9 +72,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     private:
-        //midi2::MidiVirtualEndpointDeviceDefinition m_virtualEndpointDeviceDefinition
+        void SendFunctionBlockInfoNotificationMessage(_In_ midi2::MidiFunctionBlock const& fb) noexcept;
+        void SendFunctionBlockNameNotificationMessages(_In_ midi2::MidiFunctionBlock const& fb) noexcept;
+        
 
-        winrt::hstring m_id{};                      // plugin id
+        midi2::MidiVirtualEndpointDeviceDefinition m_virtualEndpointDeviceDefinition{ nullptr };
+
+        winrt::guid m_id{ foundation::GuidHelper::CreateNewGuid() };                         // plugin id
         winrt::hstring m_name{};                    // plugin name, not the endpointdevice name
         bool m_enabled{ true };                     // plugin enabled, not the endpointdevice enabled
         foundation::IInspectable m_tag{ nullptr };  // plugin tag, not the endpointdevice tag
@@ -93,9 +98,4 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::event<foundation::TypedEventHandler<midi2::MidiVirtualEndpointDevice, midi2::MidiStreamConfigurationRequestReceivedEventArgs>> m_streamConfigurationRequestReceivedEvent;
     };
 }
-namespace winrt::Windows::Devices::Midi2::factory_implementation
-{
-    struct MidiVirtualEndpointDevice : MidiVirtualEndpointDeviceT<MidiVirtualEndpointDevice, implementation::MidiVirtualEndpointDevice>
-    {
-    };
-}
+

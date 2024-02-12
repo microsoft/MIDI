@@ -17,7 +17,8 @@ CMidi2NetworkMidiBiDi::Initialize(
     PABSTRACTIONCREATIONPARAMS,
     DWORD *,
     IMidiCallback * Callback,
-    LONGLONG Context
+    LONGLONG Context,
+    GUID /* SessionId */
 )
 {
 

@@ -7,7 +7,7 @@ class CMidi2MidiSrvOut :
         IMidiOut>
 {
 public:
-    STDMETHOD(Initialize(_In_ LPCWSTR, _In_ PABSTRACTIONCREATIONPARAMS, _In_ DWORD *));
+    STDMETHOD(Initialize(_In_ LPCWSTR, _In_ PABSTRACTIONCREATIONPARAMS, _In_ DWORD *, _In_ GUID));
     STDMETHOD(SendMidiMessage(_In_ PVOID message, _In_ UINT size, _In_ LONGLONG));
     STDMETHOD(Cleanup)();
 

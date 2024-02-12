@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "MidiSample.AppToAppMidi (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "MidiSample.AppToAppMidi (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

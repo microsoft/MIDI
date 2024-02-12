@@ -16,10 +16,15 @@
 #define MAXIMUM_LOOPED_DATASIZE 16
 
 
+#define MIDI_TIMESTAMP_SEND_IMMEDIATELY 0
+
 // we can't let the memory usage run away. This many messages is a 
 // lot, and performance will suffer above 5000 or so. This number is
 // used by the scheduler and then also by the client API
 #define MIDI_OUTGOING_MESSAGE_QUEUE_MAX_MESSAGE_COUNT 10000
+
+
+#define MIDI_PROTOCOL_MANAGER_ENDPOINT_CREATION_CONTEXT (LONGLONG)3263827
 
 
 //
@@ -38,11 +43,6 @@
 // give rights to the users in the system so the service *and* the setup applications can 
 // read/write there.
 #define MIDI_CONFIG_FILE_FOLDER L"%ALLUSERSPROFILE%\\Microsoft\\MIDI\\"
-
-#define MIDI_CONFIG_JSON_HEADER_OBJECT L"header"
-#define MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT L"endpointTransportPluginSettings"
-#define MIDI_CONFIG_JSON_ENDPOINT_PROCESSING_PLUGIN_SETTINGS_OBJECT L"endpointProcessingPluginSettings"
-
 
 //
 // SendMidiMessage HRESULT codes (these are not exposed through the API, and are just internal)
@@ -115,8 +115,9 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_SupportsMulticlient, 5);     // DEVPROP_TYPE_BOO
 // A bitmask of the data format(s) the abstraction layer can use to talk to the system
 // For a MIDI 1 device, it can support MIDI_NATIVEDATAFORMAT_UMP or MIDI_NATIVEDATAFORMAT_BYTESTREAM
 // For a MIDI 2 device, it will support MIDI_NATIVEDATAFORMAT_UMP
+// NOTE: These are actually in the MidiDataFormat enum, slightly different than the defines mentioned above.
 #define STRING_PKEY_MIDI_SupportedDataFormats MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"6"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_SupportedDataFormats, 6);     // DEVPROP_TYPE_BYTE uint8_t
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_SupportedDataFormats, 6);     // DEVPROP_TYPE_UINT32
 
 #define STRING_PKEY_MIDI_ManufacturerName MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"7"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_ManufacturerName, 7);     // DEVPROP_TYPE_STRING
@@ -142,9 +143,9 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_IN_GroupTerminalBlocks, 50);     // DEVPROP_TYPE
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_OUT_GroupTerminalBlocks, 51);     // DEVPROP_TYPE_BINARY
 
 #define STRING_PKEY_MIDI_AssociatedUMP MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"52"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_AssociatedUMP, 52);     // DEVPROP_TYPE_UINT64
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_AssociatedUMP, 52);     // DEVPROP_TYPE_STRING
 
-// iSerialNumber for USB
+// iSerialNumber for USB, but can be supplied by other endpoints as a config value or a value read from advertising
 #define STRING_PKEY_MIDI_SerialNumber MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"53"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_SerialNumber, 53);     // DEVPROP_TYPE_STRING
 
@@ -166,6 +167,14 @@ enum MidiEndpointDevicePurposePropertyValue
 // Valid values are in MidiEndpointDevicePurposePropertyValue
 #define STRING_PKEY_MIDI_EndpointDevicePurpose MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"100"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointDevicePurpose, 100);     // DEVPROP_TYPE_ uint32
+
+
+
+// if this is true or missing, we add an endpoint metadata listener
+#define STRING_PKEY_MIDI_EndpointRequiresMetadataHandler MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"120"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointRequiresMetadataHandler, 120);     // DEVPROP_TYPE_BOOLEAN
+
+
 
 // In-protocol Endpoint information ================================================================
 // Starts at 150
@@ -513,6 +522,19 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_MidiOutLatencyTicksUserOverride, 802);     // DE
 
 
 
+
+// Additional Transport-specific properties ==================================================
+// Starts at 900
+
+#define STRING_PKEY_MIDI_VirtualMidiEndpointAssociator MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"900"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_VirtualMidiEndpointAssociator, 900);     // DEVPROP_TYPE_GUID
+
+#define STRING_PKEY_MIDI_TransportSuppliedDescription MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"901"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_TransportSuppliedDescription, 910);     // DEVPROP_TYPE_STRING
+
+
+
+
 // Structures for properties ================================================================
 
 
@@ -621,22 +643,4 @@ struct MidiFunctionBlockProperty
 
 #define SAFE_CLOSEHANDLE(h) if (h) { CloseHandle(h); h = NULL; }
 
-
-// note that this produces a GUID with uppercase letters and enclosing braces
-inline std::wstring GuidToString(_In_ GUID guid)
-{
-    LPOLESTR str;
-    if (SUCCEEDED(StringFromCLSID(guid, &str)))
-    {
-        std::wstring guidString{ str };
-
-        ::CoTaskMemFree(str);
-
-        return guidString;
-    }
-    else
-    {
-        return L"";
-    }
-}
 

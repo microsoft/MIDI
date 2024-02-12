@@ -2,7 +2,7 @@
 //#addin nuget:?package=Cake.Compression&version=0.3.0
 
 // ===========================================================================================
-string setupVersionName = "Developer Preview 4";
+string setupVersionName = "Developer Preview 5";
 // ===========================================================================================
 
 
@@ -187,6 +187,10 @@ Task("SetupEnvironment")
 
     // copy the C++ header for the API
     CopyFiles(System.IO.Path.Combine(generatedFilesDir, "Windows.Devices.Midi2.h"), copyToDir); 
+
+    CopyFiles(System.IO.Path.Combine(outputDir, "mididmp.exe"), copyToDir); 
+
+
 
     // copy the API Header and the .winmd to the "API bare" folder
 

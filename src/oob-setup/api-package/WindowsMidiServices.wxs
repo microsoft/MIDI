@@ -52,6 +52,7 @@
             <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.KSAbstraction.dll"               SelfRegCost="1" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.BluetoothMidiAbstraction.dll"    SelfRegCost="1" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.NetworkMidiAbstraction.dll"      SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.LoopbackMidiAbstraction.dll"     SelfRegCost="1" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.VirtualMidiAbstraction.dll"      SelfRegCost="1" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.VirtualPatchBayAbstraction.dll"  SelfRegCost="1" Vital="true" />
 
@@ -85,7 +86,7 @@
                             Stop="both" 
                             Remove="uninstall" 
                             Name="MidiSrv" 
-                            Wait="yes" />
+                            Wait="no" />
         </Component>     
         
 
@@ -93,7 +94,7 @@
                    Bitness="always64"
                    Directory="SERVICE_INSTALLFOLDER"
                    Guid="25E35CBB-4C66-4BEB-9B03-BC2E2D99317B"
-                   NeverOverwrite="true">
+                   NeverOverwrite="false">
                    
             <!-- Permanent is set to "yes" because this installer is for dev builds -->
             
@@ -120,6 +121,11 @@
                     
                     <RegistryKey Key="Midi2VirtualMidiAbstraction">
                         <RegistryValue Type="string" Name="CLSID" Value="{8FEAAD91-70E1-4A19-997A-377720A719C1}" />
+                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
+                    </RegistryKey>
+
+                    <RegistryKey Key="Midi2LoopbackMidiAbstraction">
+                        <RegistryValue Type="string" Name="CLSID" Value="{942BF02D-93C0-4EA8-B03E-D51156CA75E1}" />
                         <RegistryValue Type="integer" Name="Enabled" Value="1" />
                     </RegistryKey>
 
@@ -164,7 +170,19 @@
                    >
         </Component>
         
-
+        <!-- Install MIDI Dump Utility -->
+       <Component Id="MidiDumpUtility"
+                   Bitness="always64"
+                   Directory="ROOTINSTALLFOLDER"
+                   Guid="{fa0bd870-3468-4c10-bb2e-6fea6c225d42}"  >
+            <File Source="$(StagingSourceRootFolder)\api\x64\mididmp.exe"          Vital="true" />
+       
+            <!-- Add folder to path -->
+            <Environment Id="AddMidiDumpUtilityToSystemPath"
+                            Name="PATH" Action="set" Part="last" System="yes" 
+                            Value="[ROOTINSTALLFOLDER]" Permanent="no"/>        
+       </Component>            
+            
         
         <CustomAction
             Id="WriteActivatableClassIdKeysAction"
@@ -192,6 +210,7 @@
             <ComponentRef Id="ConfigurationFile"/>
             <ComponentRef Id="ConfigurationRegistryEntries"/>
 
+            <ComponentRef Id="MidiDumpUtility"/>
         </Feature>
 
 

@@ -25,6 +25,8 @@ namespace Windows.Devices.Midi2
         String EndpointName{ get; set; };
         String EndpointProductInstanceId{ get; set; };  // we'll also use this when creating the SWD
 
+        String TransportSuppliedDescription{ get; set; };
+
         Boolean SupportsMidi1ProtocolMessages{ get; set; };
         Boolean SupportsMidi2ProtocolMessages{ get; set; };
         Boolean SupportsReceivingJRTimestamps{ get; set; };

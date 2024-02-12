@@ -9,9 +9,18 @@
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-import "MidiTransportPluginInformation.idl";
-import "MidiMessageProcessingPluginInformation.idl";
+import "MidiServiceTransportPluginInformation.idl";
+import "MidiServiceMessageProcessingPluginInformation.idl";
 import "MidiServicePingResponseSummary.idl";
+
+import "MidiServiceSessionInformation.idl";
+
+import "MidiServiceLoopbackEndpointCreationResult.idl";
+import "MidiServiceLoopbackEndpointDefinition.idl";
+
+import "IMidiServiceTransportPluginConfiguration.idl";
+import "IMidiServiceMessageProcessingPluginConfiguration.idl";
+import "MidiServiceConfigurationResponse.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -23,8 +32,8 @@ namespace Windows.Devices.Midi2
         static MidiServicePingResponseSummary PingService(UInt8 pingCount, UInt32 timeoutMilliseconds);
 
         // list all the installed transports like Virtual, USB, BLE1, etc
-        static IVectorView<MidiTransportPluginInformation> GetInstalledTransportPlugins();
-        static IVectorView<MidiMessageProcessingPluginInformation> GetInstalledMessageProcessingPlugins();
+        static IVectorView<MidiServiceTransportPluginInformation> GetInstalledTransportPlugins();
+        static IVectorView<MidiServiceMessageProcessingPluginInformation> GetInstalledMessageProcessingPlugins();
 
 
         // for the first release, this will always return false. But developers want to be able
@@ -32,8 +41,36 @@ namespace Windows.Devices.Midi2
 
   //      static Boolean IsMessageSchedulingEnabled{ get; };
 
-        static UInt32 GetOutgoingMessageQueueMaxMessageCapacity();
+//        static UInt32 GetOutgoingMessageQueueMaxMessageCapacity();
 
+
+        static IVectorView<MidiServiceSessionInformation> GetActiveSessions();
+
+
+        // creates loopback endpoints that live for only as long as the service is running.
+        // Permanent endpoints need to be created by the user through the settings application
+        // so they get written to the configuration file and loaded when the service is loaded
+        // We special-case loopbacks here just like we special-case Virtual Devices in the 
+        // session class, because they are very common to use and have special creation semantics.
+        static MidiServiceLoopbackEndpointCreationResult CreateTemporaryLoopbackEndpoints(
+            Guid associationId, 
+            MidiServiceLoopbackEndpointDefinition endpointDefinitionA, 
+            MidiServiceLoopbackEndpointDefinition endpointDefinitionB);
+
+        static Boolean RemoveTemporaryLoopbackEndpoints(Guid associationId);
+
+        // used for CRUD operations for certain endpoints (Transports). Create a component which calls this and
+        // provides strongly typed parameters specific to your transport. In general, applications should not be
+        // using this function directly. Instead, they should use a configuration component associated with the plugin.
+        static MidiServiceConfigurationResponse UpdateTransportPluginConfiguration(
+            IMidiServiceTransportPluginConfiguration configurationUpdate);
+
+
+        // used for CRUD operations for certain endpoint message processing plugins (Transforms). Create a component which calls this and
+        // provides strongly typed parameters specific to your transport In general, applications should not be
+        // using this function directly. Instead, they should use a configuration component associated with the plugin.
+        static MidiServiceConfigurationResponse UpdateProcessingPluginConfiguration(
+            IMidiServiceMessageProcessingPluginConfiguration configurationUpdate);
 
     }
 }

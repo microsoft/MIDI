@@ -18,16 +18,14 @@ using namespace Microsoft::WRL::Wrappers;
 
 GUID AbstractionLayerGUID = __uuidof(Midi2VirtualMidiAbstraction);
 
+
 _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiEndpointManager::Initialize(
     IUnknown* MidiDeviceManager, 
-    IUnknown* /*midiEndpointProtocolManager*/,
-    LPCWSTR /*ConfigurationJson*/
+    IUnknown* MidiEndpointProtocolManager
 )
 {
-    OutputDebugString(L"" __FUNCTION__ " Enter");
-
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
@@ -36,92 +34,106 @@ CMidi2VirtualMidiEndpointManager::Initialize(
     );
 
     RETURN_HR_IF(E_INVALIDARG, nullptr == MidiDeviceManager);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == MidiEndpointProtocolManager);
 
     RETURN_IF_FAILED(MidiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
+    RETURN_IF_FAILED(MidiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManagerInterface), (void**)&m_MidiProtocolManager));
 
-    m_TransportAbstractionId = AbstractionLayerGUID;   // this is needed so MidiSrv can instantiate the correct transport
-    m_ContainerId = m_TransportAbstractionId;                           // we use the transport ID as the container ID for convenience
+
+    m_TransportAbstractionId = AbstractionLayerGUID;    // this is needed so MidiSrv can instantiate the correct transport
+    m_ContainerId = m_TransportAbstractionId;           // we use the transport ID as the container ID for convenience
 
     RETURN_IF_FAILED(CreateParentDevice());
-
-    // Create all the device-side endpoints first
-    // Do not create the client-side endpoints until 
-
-
-    //if (ConfigurationJson != nullptr)
-    //{
-    //    try
-    //    {
-    //        std::wstring json{ ConfigurationJson };
-
-    //        if (!json.empty())
-    //        {
-    //            m_JsonObject = json::JsonObject::Parse(json);
-
-    //            LOG_IF_FAILED(CreateConfiguredEndpoints(json));
-    //        }
-    //    }
-    //    catch (...)
-    //    {
-    //        OutputDebugString(L"Exception processing json for virtual MIDI abstraction");
-
-    //        // we return S_OK here because otherwise this prevents the service from starting up.
-    //        return S_OK;
-    //    }
-
-    //}
-    //else
-    //{
-    //    // empty / null is fine. We just continue on.
-
-    //    OutputDebugString(L"Configuration json is null for virtual MIDI abstraction");
-
-    //    return S_OK;
-    //}
 
     return S_OK;
 }
 
 
 
-
-void
-SwMidiParentDeviceCreateCallback(
-    __in HSWDEVICE /*hSwDevice*/, 
-    __in HRESULT CreationResult, 
-    __in_opt PVOID pContext, 
-    __in_opt PCWSTR pszDeviceInstanceId)
+_Use_decl_annotations_
+HRESULT
+CMidi2VirtualMidiEndpointManager::DeleteClientEndpoint(std::wstring clientShortInstanceId)
 {
-    if (pContext == nullptr)
+    TraceLoggingWrite(
+        MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(clientShortInstanceId.c_str(), "clientShortInstanceId")
+    );
+
+    // get the instance id for the device
+
+    if (m_MidiDeviceManager != nullptr)
     {
-        // TODO: Should log this.
+        //auto instanceId = GetSwdPropertyInstanceId(clientEndpointInterfaceId);
+        auto instanceId = internal::NormalizeDeviceInstanceIdWStringCopy(clientShortInstanceId);
 
-        return;
-    }
+        if (instanceId != L"")
+        {
+            return m_MidiDeviceManager->RemoveEndpoint(instanceId.c_str());
+        }
+        else
+        {
+            TraceLoggingWrite(
+                MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+                __func__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"could not find instanceId property for client", "message")
+            );
 
-    PPARENTDEVICECREATECONTEXT creationContext = (PPARENTDEVICECREATECONTEXT)pContext;
-
-
-    // interface registration has started, assume failure
-    creationContext->MidiParentDevice->SwDeviceState = SWDEVICESTATE::Failed;
-
-    LOG_IF_FAILED(CreationResult);
-
-    if (SUCCEEDED(CreationResult))
-    {
-        // success, mark the port as created
-        creationContext->MidiParentDevice->SwDeviceState = SWDEVICESTATE::Created;
-
-        // get the new device instance ID. This is usually modified from what we started with
-        creationContext->MidiParentDevice->InstanceId = std::wstring(pszDeviceInstanceId);
+            return E_FAIL;
+        }
     }
     else
     {
-        OutputDebugString(L"" __FUNCTION__ " - CreationResult FAILURE");
+        // null device manager
+        return E_FAIL;
     }
+}
 
-    // success or failure, signal we have completed.
-    creationContext->CreationCompleted.SetEvent();
+_Use_decl_annotations_
+HRESULT
+CMidi2VirtualMidiEndpointManager::DeleteDeviceEndpoint(std::wstring deviceShortInstanceId)
+{
+    TraceLoggingWrite(
+        MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(deviceShortInstanceId.c_str(), "deviceShortInstanceId")
+    );
+
+    // get the instance id for the device
+
+    if (m_MidiDeviceManager != nullptr)
+    {
+        //auto instanceId = GetSwdPropertyInstanceId(clientEndpointInterfaceId);
+        auto instanceId = internal::NormalizeDeviceInstanceIdWStringCopy(deviceShortInstanceId);
+
+        if (instanceId != L"")
+        {
+            return m_MidiDeviceManager->RemoveEndpoint(instanceId.c_str());
+        }
+        else
+        {
+            TraceLoggingWrite(
+                MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"could not find instanceId property for device", "message")
+            );
+
+            return E_FAIL;
+        }
+    }
+    else
+    {
+        // null device manager
+        return E_FAIL;
+    }
 }
 
 
@@ -129,367 +141,153 @@ SwMidiParentDeviceCreateCallback(
 HRESULT
 CMidi2VirtualMidiEndpointManager::CreateParentDevice()
 {
+    TraceLoggingWrite(
+        MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+        __func__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     // the parent device parameters are set by the transport (this)
-
     std::wstring parentDeviceName{ TRANSPORT_PARENT_DEVICE_NAME };
-    std::wstring parentDeviceId{ TRANSPORT_PARENT_ID };
+    std::wstring parentDeviceId{ internal::NormalizeDeviceInstanceIdWStringCopy(TRANSPORT_PARENT_ID) };
 
-    SW_DEVICE_CREATE_INFO CreateInfo = {};
-    CreateInfo.cbSize = sizeof(CreateInfo);
-    CreateInfo.pszInstanceId = parentDeviceId.c_str();
-    CreateInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
-    CreateInfo.pszDeviceDescription = parentDeviceName.c_str();
+    SW_DEVICE_CREATE_INFO createInfo = {};
+    createInfo.cbSize = sizeof(createInfo);
+    createInfo.pszInstanceId = parentDeviceId.c_str();
+    createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
+    createInfo.pszDeviceDescription = parentDeviceName.c_str();
+    createInfo.pContainerId = &m_ContainerId;
 
-    SW_DEVICE_CREATE_INFO* createInfo = (SW_DEVICE_CREATE_INFO*)&CreateInfo;
+    const ULONG deviceIdMaxSize = 255;
+    wchar_t newDeviceId[deviceIdMaxSize]{ 0 };
 
-    if (m_ParentDevice != nullptr)
-    {
-        return S_OK;
-    }
+    RETURN_IF_FAILED(m_MidiDeviceManager->ActivateVirtualParentDevice(
+        0,
+        nullptr,
+        &createInfo,
+        (PWSTR)newDeviceId,
+        deviceIdMaxSize
+    ));
 
-    m_ParentDevice = std::make_unique<MidiEndpointParentDeviceInfo>();
+    m_parentDeviceId = internal::NormalizeDeviceInstanceIdWStringCopy(newDeviceId);
 
-    RETURN_IF_NULL_ALLOC(m_ParentDevice);
 
-    PARENTDEVICECREATECONTEXT creationContext;
+    TraceLoggingWrite(
+        MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+        __func__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(newDeviceId, "New parent device instance id")
+    );
 
-    // lambdas can only be converted to a function pointer if they
-    // don't do capture, so copy everything into the CREATECONTEXT
-    // to share with the SwDeviceCreate callback.
-    creationContext.MidiParentDevice = m_ParentDevice.get();
+    return S_OK;
+}
 
-    //creationContext.InterfaceDevProperties = (DEVPROPERTY*)InterfaceDevProperties;
-    //creationContext.IntPropertyCount = IntPropertyCount;
 
-    m_ParentDevice->SwDeviceState = SWDEVICESTATE::CreatePending;
 
-    //m_ParentDevice->InstanceId = createInfo->pszInstanceId;
+_Use_decl_annotations_
+HRESULT
+CMidi2VirtualMidiEndpointManager::NegotiateAndRequestMetadata(std::wstring endpointId)
+{
+    TraceLoggingWrite(
+        MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(endpointId.c_str(), "endpoint id")
+    );
+
+    bool preferToSendJRToEndpoint{ false };
+    bool preferToReceiveJRFromEndpoint{ false };
+    BYTE preferredProtocol{ MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2 };
+    WORD negotiationTimeoutMS{ 2000 };
+
+    RETURN_IF_FAILED(m_MidiProtocolManager->NegotiateAndRequestMetadata(
+        endpointId.c_str(),
+        preferToSendJRToEndpoint,
+        preferToReceiveJRFromEndpoint,
+        preferredProtocol,
+        negotiationTimeoutMS
+    ));
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT 
+CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
+    MidiVirtualDeviceEndpointEntry& entry
+)
+{
+    TraceLoggingWrite(
+        MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+    //put all of the devproperties we want into arrays and pass into ActivateEndpoint:
+
+    std::wstring mnemonic(TRANSPORT_MNEMONIC);
 
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
+    //   DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
 
-    DEVPROPERTY deviceDevProperties[] = {
-        {{DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue},
-        {{DEVPKEY_Device_NoConnectSound, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue}
-    };
+    std::wstring endpointName = entry.BaseEndpointName;
+    std::wstring endpointDescription = entry.Description;
 
+    std::vector<DEVPROPERTY> interfaceDeviceProperties{};
 
-    std::wstring rootDeviceId = LOOPBACK_PARENT_ROOT;
-    std::wstring enumeratorName = TRANSPORT_ENUMERATOR;
+    bool requiresMetadataHandler = true;
+    bool multiClient = true;
+    bool generateIncomingTimestamps = true;
 
-    createInfo->pContainerId = &m_ContainerId;
+    // no user or in-protocol data in this case
+    std::wstring friendlyName = internal::CalculateEndpointDevicePrimaryName(endpointName, L"", L"");
 
-    RETURN_IF_FAILED(SwDeviceCreate(
-        enumeratorName.c_str(),             // this really should come from the service
-        rootDeviceId.c_str(),               // root device
-        createInfo,
-        ARRAYSIZE(deviceDevProperties),     // count of properties
-        (DEVPROPERTY*)deviceDevProperties,  // pointer to properties
-        SwMidiParentDeviceCreateCallback,   // callback
-        &creationContext,
-        wil::out_param(m_ParentDevice->SwDevice)));
-
-    // wait for creation to complete
-    creationContext.CreationCompleted.wait();
-
-    // confirm we were able to register the interface
-    RETURN_HR_IF(E_FAIL, m_ParentDevice->SwDeviceState != SWDEVICESTATE::Created);
-
-    return S_OK;
-}
-
-
-#define MIDI_VIRTUAL_ENDPOINTS_ARRAY_KEY L"endpoints"
-
-#define MIDI_VIRTUAL_ENDPOINT_PROPERTY_KEY L"key"
-#define MIDI_VIRTUAL_ENDPOINT_PROPERTY_NAME L"name"
-#define MIDI_VIRTUAL_ENDPOINT_PROPERTY_UNIQUEID L"uniqueIdentifier"
-#define MIDI_VIRTUAL_ENDPOINT_PROPERTY_MULTICLIENT L"supportsMulticlient"
-#define MIDI_VIRTUAL_ENDPOINT_PROPERTY_DESCRIPTION L"description"
-#define MIDI_VIRTUAL_ENDPOINT_PROPERTY_SMALLIMAGE L"smallImagePath"
-#define MIDI_VIRTUAL_ENDPOINT_PROPERTY_LARGEIMAGE L"largeImagePath"
-
-
-
-
-#define MIDI_JSON_ADD_NODE L"add"
-#define MIDI_JSON_UPDATE_NODE L"update"
-#define MIDI_JSON_REMOVE_NODE L"remove"
-
-
-json::JsonObject GetAddNode(json::JsonObject Parent)
-{
-    if (Parent.HasKey(MIDI_JSON_ADD_NODE))
+    // all the standard properties we define for endpoints
+    if (internal::AddStandardEndpointProperties(
+        interfaceDeviceProperties,
+        m_TransportAbstractionId,
+        MidiEndpointDevicePurposePropertyValue::NormalMessageEndpoint,
+        friendlyName,
+        mnemonic,
+        endpointName,
+        endpointDescription,
+        L"",
+        L"",
+        entry.ShortUniqueId,
+        MidiDataFormat::MidiDataFormat_UMP,
+        MIDI_PROP_NATIVEDATAFORMAT_UMP,
+        multiClient,
+        requiresMetadataHandler,
+        generateIncomingTimestamps
+    ))
     {
-        return Parent.GetNamedObject(MIDI_JSON_ADD_NODE);
+        // all good. Add additional properties
+        // additional properties for this abstraction
+
+        // we clear this because it's not used for this abstraction. 
+        interfaceDeviceProperties.push_back(internal::BuildEmptyDevProperty(PKEY_MIDI_AssociatedUMP));
+
+        // this is needed for the loopback endpoints to have a relationship with each other
+        interfaceDeviceProperties.push_back(internal::BuildWStringDevProperty(PKEY_MIDI_VirtualMidiEndpointAssociator, entry.VirtualEndpointAssociationId));
     }
     else
     {
-        return nullptr;
-    }
-}
-
-winrt::hstring GetStringValue(
-    json::JsonObject Parent, 
-    winrt::hstring Key, 
-    winrt::hstring Default)
-{
-    if (Parent.HasKey(Key))
-    {
-        return Parent.GetNamedString(Key);
-    }
-    else
-    {
-        return Default;
-    }
-}
-
-_Use_decl_annotations_
-HRESULT
-CMidi2VirtualMidiEndpointManager::CreateClientSideEndpoint(
-    std::wstring
-)
-{
-    // look up the device in the table
-    // get the name
-
-    // discovery etc. will all happen automatically?
-    
-    // update table with correct client <-> device relationship
-
-
-    return S_OK;
-
-}
-
-
-_Use_decl_annotations_
-HRESULT
-CMidi2VirtualMidiEndpointManager::CreateConfiguredDeviceEndpoints(
-    std::wstring ConfigurationJson
-)
-{
-    // Create the device-side endpoint
-    // 
-
-
-    // if nothing to configure, that's ok
-    if (ConfigurationJson.empty()) return S_OK;
-
-    try
-    {
-        auto jsonObject = json::JsonObject::Parse(ConfigurationJson);
-
-
-        // check to see if we have an "add" node. No point in checking for "update" or "remove" for initial configuration
-        auto addNode = GetAddNode(jsonObject);
-
-        if (addNode != nullptr && addNode.HasKey(MIDI_VIRTUAL_ENDPOINTS_ARRAY_KEY))
-        {
-            auto endpoints = addNode.GetNamedArray(MIDI_VIRTUAL_ENDPOINTS_ARRAY_KEY);
-
-            for (auto endpointElement : endpoints)
-            {
-                // GetObjectW here is because wingdi redefines it to GetObject. It's a stupid preprocessor conflict
-                try
-                {
-                    auto endpoint = endpointElement.GetObjectW();
-
-                    //  auto key = endpoint.GetNamedString(MIDI_VIRTUAL_ENDPOINT_PROPERTY_KEY, L"");
-                    auto name = endpoint.GetNamedString(MIDI_VIRTUAL_ENDPOINT_PROPERTY_NAME, L"");
-                    auto uniqueIdentifier = endpoint.GetNamedString(MIDI_VIRTUAL_ENDPOINT_PROPERTY_UNIQUEID, L"");
-                    //   auto supportsMultiClient = endpoint.GetNamedBoolean(MIDI_VIRTUAL_ENDPOINT_PROPERTY_MULTICLIENT, true);
-
-                    auto instanceId = TRANSPORT_MNEMONIC L"_" + uniqueIdentifier;
-
-                    auto description = GetStringValue(endpoint, MIDI_VIRTUAL_ENDPOINT_PROPERTY_DESCRIPTION, L"");
-                    auto smallImage = GetStringValue(endpoint, MIDI_VIRTUAL_ENDPOINT_PROPERTY_SMALLIMAGE, L"");
-                    auto largeImage = GetStringValue(endpoint, MIDI_VIRTUAL_ENDPOINT_PROPERTY_LARGEIMAGE, L"");
-
-                    bool multiclient = true; // TODO
-                    bool virtualResponder = false; // TODO
-
-
-                    // TODO: Need to add this to the table for routing, and also add the other properties to the function
-                    CreateEndpoint(
-                        (std::wstring)instanceId,
-                        (std::wstring)uniqueIdentifier,
-                        multiclient,
-                        virtualResponder,
-                        (std::wstring)name,
-                        (std::wstring)largeImage,
-                        (std::wstring)smallImage,
-                        (std::wstring)description
-                    );
-                }
-                catch (...)
-                {
-                    // couldn't get an object. Garbage data
-                    OutputDebugString(L"" __FUNCTION__ " Exception getting endpoint properties from json");
-
-                    return E_FAIL;
-                }
-            }
-        }
-        else
-        {
-            // nothing to add
-        }
-
-
-    }
-    catch (...)
-    {
-        // exception parsing the json. It's likely empty or malformed
-
-        OutputDebugString(L"" __FUNCTION__ " Exception parsing JSON. Json string follows.");
-        OutputDebugString(ConfigurationJson.c_str());
+        // unable to build properties
 
         TraceLoggingWrite(
             MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
             __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            TraceLoggingPointer(this, "this")
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Unable to build standard endpoint properties list", "message")
         );
 
         return E_FAIL;
     }
-
-    return S_OK;
-}
-
-// this will be called from the runtime endpoint creation interface
-
-_Use_decl_annotations_
-HRESULT 
-CMidi2VirtualMidiEndpointManager::CreateEndpoint(
-    std::wstring const InstanceId,
-    std::wstring const UniqueId,
-    bool const Multiclient,
-    bool const IsVirtualEndpointResponder,
-    std::wstring const Name,
-    std::wstring const LargeImagePath,
-    std::wstring const SmallImagePath,
-    std::wstring const Description
-    )
-{
-    //put all of the devproperties we want into arrays and pass into ActivateEndpoint:
-
-    std::wstring mnemonic(TRANSPORT_MNEMONIC);
-    MidiFlow const flow = MidiFlow::MidiFlowBidirectional;
-
-    DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
-    //DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
-
-    DEVPROP_BOOLEAN devPropMulticlient = Multiclient ? DEVPROP_TRUE : DEVPROP_FALSE;
-    //DEVPROP_BOOLEAN devPropVirtualResponder = IsVirtualEndpointResponder ? DEVPROP_TRUE : DEVPROP_FALSE;
-
-    BYTE nativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
-
-    uint32_t endpointPurpose{};
-
-    if (IsVirtualEndpointResponder)
-    {
-        endpointPurpose = (uint32_t)MidiEndpointDevicePurposePropertyValue::VirtualDeviceResponder;
-    }
-    else
-    {
-        endpointPurpose = (uint32_t)MidiEndpointDevicePurposePropertyValue::NormalMessageEndpoint;
-    }
-
-    DEVPROPERTY interfaceDevProperties[] = {
-        {{DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((Name.length() + 1) * sizeof(WCHAR)), (PVOID)Name.c_str()},
-        
-        // essential to instantiate the right endpoint types
-        {{PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_GUID, static_cast<ULONG>(sizeof(GUID)), (PVOID)&AbstractionLayerGUID },        
-
-        {{PKEY_MIDI_TransportMnemonic, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((mnemonic.length() + 1) * sizeof(WCHAR)), (PVOID)mnemonic.c_str()},
-
-        {{PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(BYTE)), (PVOID)&nativeDataFormat},
-
-        //{{PKEY_MIDI_UniqueIdentifier, DEVPROP_STORE_SYSTEM, nullptr},
-        //    DEVPROP_TYPE_STRING, static_cast<ULONG>((UniqueId.length() + 1) * sizeof(WCHAR)), (PVOID)UniqueId.c_str()},
-
-        {{PKEY_MIDI_SupportsMulticlient, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropMulticlient)), (PVOID)&devPropMulticlient},
-
-        {{PKEY_MIDI_TransportSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((Name.length() + 1) * sizeof(WCHAR)), (PVOID)Name.c_str()},
-
-        {{PKEY_MIDI_EndpointDevicePurpose, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(endpointPurpose)),(PVOID)&endpointPurpose},
-
-
-        {{PKEY_MIDI_UserSuppliedLargeImagePath, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((LargeImagePath.length() + 1) * sizeof(WCHAR)), (PVOID)LargeImagePath.c_str() },
-
-        {{PKEY_MIDI_UserSuppliedSmallImagePath, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((SmallImagePath.length() + 1) * sizeof(WCHAR)), (PVOID)SmallImagePath.c_str() },
-
-        {{PKEY_MIDI_UserSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((Description.length() + 1) * sizeof(WCHAR)), (PVOID)Description.c_str() },
-
-        {{PKEY_MIDI_UserSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((Name.length() + 1) * sizeof(WCHAR)), (PVOID)Name.c_str() }
-    };
-
-
-
-    // Additional metadata properties added here to avoid having to add them in every transport
-// and to ensure they are registered under the same identity that is creating the device
-// Several of these are later updated through discovery, user-supplied json metadata, etc.
-    //DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
-    //uint8_t zeroByte = 0;
-
-    //std::wstring emptyString = L"";
-
-    //interfaceProperties.push_back({ {PKEY_MIDI_SupportsMultiClient, DEVPROP_STORE_SYSTEM, nullptr },
-    //    DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
-
-    //// from endpoint discovery ============
-    //interfaceProperties.push_back({ {PKEY_MIDI_EndpointSupportsMidi2Protocol, DEVPROP_STORE_SYSTEM, nullptr},
-    //    DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse });
-
-    //interfaceProperties.push_back({ {PKEY_MIDI_EndpointSupportsMidi1Protocol, DEVPROP_STORE_SYSTEM, nullptr},
-    //    DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse });
-
-    //interfaceProperties.push_back({ {PKEY_MIDI_EndpointSupportsReceivingJRTimestamps, DEVPROP_STORE_SYSTEM, nullptr},
-    //    DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse });
-
-    //interfaceProperties.push_back({ {PKEY_MIDI_EndpointSupportsSendingJRTimestamps, DEVPROP_STORE_SYSTEM, nullptr},
-    //    DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse });
-
-    //interfaceProperties.push_back({ {PKEY_MIDI_EndpointUmpVersionMajor, DEVPROP_STORE_SYSTEM, nullptr},
-    //    DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(zeroByte)), &zeroByte });
-
-    //interfaceProperties.push_back({ {PKEY_MIDI_EndpointUmpVersionMinor, DEVPROP_STORE_SYSTEM, nullptr},
-    //    DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(zeroByte)), &zeroByte });
-
-    //interfaceProperties.push_back({ {PKEY_MIDI_EndpointProvidedName, DEVPROP_STORE_SYSTEM, nullptr},
-    //    DEVPROP_TYPE_STRING, static_cast<ULONG>((emptyString.length() + 1) * sizeof(WCHAR)), (PVOID)emptyString.c_str() });
-
-    //interfaceProperties.push_back({ {PKEY_MIDI_EndpointProvidedProductInstanceId, DEVPROP_STORE_SYSTEM, nullptr},
-    //    DEVPROP_TYPE_STRING, static_cast<ULONG>((emptyString.length() + 1) * sizeof(WCHAR)), (PVOID)emptyString.c_str() });
-
-    //interfaceProperties.push_back({ {PKEY_MIDI_FunctionBlocksAreStatic, DEVPROP_STORE_SYSTEM, nullptr},
-    //    DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)),&devPropFalse });
-
-    ////interfaceProperties.push_back({ {PKEY_MIDI_DeviceIdentification, DEVPROP_STORE_SYSTEM, nullptr},
-    ////    DEVPROP_TYPE_BINARY, static_cast<ULONG>(0),  });
-
-
-    //// from function block discovery =============================
-
-    ////interfaceProperties.push_back({ {PKEY_MIDI_FunctionBlocks, DEVPROP_STORE_SYSTEM, nullptr},
-    ////    DEVPROP_TYPE_BINARY, static_cast<ULONG>(0), &functionBlockCount });
-
-
-
 
     DEVPROPERTY deviceDevProperties[] = {
         {{DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
@@ -501,43 +299,184 @@ CMidi2VirtualMidiEndpointManager::CreateEndpoint(
     SW_DEVICE_CREATE_INFO createInfo = {};
     createInfo.cbSize = sizeof(createInfo);
 
-    createInfo.pszInstanceId = InstanceId.c_str();
+    std::wstring instanceId = internal::NormalizeDeviceInstanceIdWStringCopy(MIDI_VIRT_INSTANCE_ID_CLIENT_PREFIX + entry.ShortUniqueId);
+
+    createInfo.pszInstanceId = instanceId.c_str();
     createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
-    createInfo.pszDeviceDescription = Name.c_str();
+    createInfo.pszDeviceDescription = endpointName.c_str();
 
 
     const ULONG deviceInterfaceIdMaxSize = 255;
     wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
 
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
-        std::wstring(m_ParentDevice->InstanceId).c_str(),       // parent instance Id
+        (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
         true,                                                   // UMP-only
-        flow,                                                   // MIDI Flow
-        ARRAYSIZE(interfaceDevProperties),
+        MidiFlow::MidiFlowBidirectional,                        // MIDI Flow
+        (ULONG)interfaceDeviceProperties.size(),
         ARRAYSIZE(deviceDevProperties),
-        (PVOID)interfaceDevProperties,
+        (PVOID)interfaceDeviceProperties.data(),
         (PVOID)deviceDevProperties,
         (PVOID)&createInfo,
         (LPWSTR)&newDeviceInterfaceId,
         deviceInterfaceIdMaxSize));
 
-    OutputDebugString(__FUNCTION__ L": Created device interface id:");
-    OutputDebugString(newDeviceInterfaceId);
 
-    // store the created device in the device table, along with the interface id
+    // now delete all the properties that have been discovered in-protocol
+    // we have to do this because they end up cached by PNP and come back
+    // when you recreate a device with the same Id. This is a real problem 
+    // if you are testing function blocks or endpoint properties with this
+    // loopback transport.
+    m_MidiDeviceManager->DeleteAllEndpointInProtocolDiscoveredProperties(newDeviceInterfaceId);
 
+    // we need this for removal later
+    entry.CreatedShortClientInstanceId = instanceId;
 
+    entry.CreatedClientEndpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId);
+
+    //MidiEndpointTable::Current().AddCreatedEndpointDevice(entry);
+    //MidiEndpointTable::Current().AddCreatedClient(entry.VirtualEndpointAssociationId, entry.CreatedClientEndpointId);
 
     return S_OK;
 }
 
 
+_Use_decl_annotations_
+HRESULT
+CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
+    MidiVirtualDeviceEndpointEntry &entry
+)
+{
+    TraceLoggingWrite(
+        MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+    //put all of the devproperties we want into arrays and pass into ActivateEndpoint:
+
+    std::wstring mnemonic(TRANSPORT_MNEMONIC);
+
+    DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
+    //DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
+
+
+    std::wstring endpointName = entry.BaseEndpointName + L" (Virtual MIDI Device)";
+    std::wstring endpointDescription = entry.Description + L" (This endpoint for use only by the device host application.)";
+
+    std::vector<DEVPROPERTY> interfaceDeviceProperties{};
+
+    bool requiresMetadataHandler = false;
+    bool multiClient = false;
+    bool generateIncomingTimestamps = true;
+
+    // no user or in-protocol data in this case
+    std::wstring friendlyName = internal::CalculateEndpointDevicePrimaryName(endpointName, L"", L"");
+
+    // all the standard properties we define for endpoints
+    if (internal::AddStandardEndpointProperties(
+        interfaceDeviceProperties,
+        m_TransportAbstractionId,
+        MidiEndpointDevicePurposePropertyValue::VirtualDeviceResponder,
+        friendlyName,
+        mnemonic,
+        endpointName,
+        endpointDescription,
+        L"",
+        L"",
+        entry.ShortUniqueId,
+        MidiDataFormat::MidiDataFormat_UMP,
+        MIDI_PROP_NATIVEDATAFORMAT_UMP,
+        multiClient,
+        requiresMetadataHandler,
+        generateIncomingTimestamps
+    ))
+    {
+        // all good. Add additional properties
+        // additional properties for this abstraction
+
+        // we clear this because it's not used for this abstraction. 
+        interfaceDeviceProperties.push_back(internal::BuildEmptyDevProperty(PKEY_MIDI_AssociatedUMP));
+
+        // this is needed for the loopback endpoints to have a relationship with each other
+        interfaceDeviceProperties.push_back(internal::BuildWStringDevProperty(PKEY_MIDI_VirtualMidiEndpointAssociator, entry.VirtualEndpointAssociationId));
+    }
+    else
+    {
+        // unable to build properties
+
+        TraceLoggingWrite(
+            MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Unable to build standard endpoint properties list", "message")
+        );
+
+        return E_FAIL;
+    }
+
+    DEVPROPERTY deviceDevProperties[] = {
+        {{DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue},
+        {{DEVPKEY_Device_NoConnectSound, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue}
+    };
+
+
+    SW_DEVICE_CREATE_INFO createInfo = {};
+    createInfo.cbSize = sizeof(createInfo);
+
+
+    std::wstring instanceId = internal::NormalizeDeviceInstanceIdWStringCopy(MIDI_VIRT_INSTANCE_ID_DEVICE_PREFIX + entry.ShortUniqueId);
+
+
+    createInfo.pszInstanceId = instanceId.c_str();
+    createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
+    createInfo.pszDeviceDescription = endpointName.c_str();
+
+
+    const ULONG deviceInterfaceIdMaxSize = 255;
+    wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
+
+
+
+    RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
+        (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
+        true,                                                   // UMP-only
+        MidiFlow::MidiFlowBidirectional,                        // MIDI Flow
+        (ULONG)interfaceDeviceProperties.size(),
+        ARRAYSIZE(deviceDevProperties),
+        (PVOID)interfaceDeviceProperties.data(),
+        (PVOID)deviceDevProperties,
+        (PVOID)&createInfo,
+        (LPWSTR)&newDeviceInterfaceId,
+        deviceInterfaceIdMaxSize));
+
+
+    // now delete all the properties that have been discovered in-protocol
+    // we have to do this because they end up cached by PNP and come back
+    // when you recreate a device with the same Id. This is a real problem 
+    // if you are testing function blocks or endpoint properties with this
+    // loopback transport.
+    m_MidiDeviceManager->DeleteAllEndpointInProtocolDiscoveredProperties(newDeviceInterfaceId);
+
+    // we need this for removal later
+    entry.CreatedShortDeviceInstanceId = instanceId;
+
+    entry.CreatedDeviceEndpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId);
+
+    AbstractionState::Current().GetEndpointTable()->AddCreatedEndpointDevice(entry);
+
+    return S_OK;
+
+}
+
 
 HRESULT
 CMidi2VirtualMidiEndpointManager::Cleanup()
 {
-    OutputDebugString(L"" __FUNCTION__ " Enter");
-
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
@@ -546,19 +485,10 @@ CMidi2VirtualMidiEndpointManager::Cleanup()
     );
 
 
+    // destroy and release all the devices we have created
+
+    LOG_IF_FAILED(AbstractionState::Current().GetEndpointTable()->Cleanup());
+
     return S_OK;
 }
-
-
-//
-//_Use_decl_annotations_
-//HRESULT
-//CMidi2VirtualMidiEndpointManager::ApplyConfiguration(
-//    LPCWSTR /*ConfigurationJson*/,
-//    LPWSTR /*resultJson*/
-//)
-//{
-//    return E_NOTIMPL;
-//}
-
 

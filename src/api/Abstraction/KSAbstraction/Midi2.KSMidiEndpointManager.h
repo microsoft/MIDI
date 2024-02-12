@@ -38,7 +38,7 @@ class CMidi2KSMidiEndpointManager :
 {
 public:
 
-    STDMETHOD(Initialize(_In_ IUnknown*, _In_ IUnknown*, _In_ LPCWSTR));
+    STDMETHOD(Initialize(_In_ IUnknown*, _In_ IUnknown*));
     STDMETHOD(Cleanup)();
 
 private:
@@ -62,8 +62,5 @@ private:
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::EnumerationCompleted_revoker m_DeviceEnumerationCompleted;
     wil::unique_event m_EnumerationCompleted{wil::EventOptions::None};
 
-    // may want to change this to the actual json object.
-    winrt::Windows::Data::Json::JsonObject m_jsonObject{ nullptr };
-    HRESULT ApplyUserConfiguration(_In_ std::wstring deviceInterfaceId);
 
 };

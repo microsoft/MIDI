@@ -30,5 +30,8 @@ namespace Windows.Devices.Midi2
         MidiMessageTypeEndpointListener();
 
         IVector<MidiMessageType> IncludeMessageTypes{ get; };
+
+        Boolean PreventCallingFurtherListeners{ get; set; };
+        Boolean PreventFiringMainMessageReceivedEvent{ get; set; };
     }
 }

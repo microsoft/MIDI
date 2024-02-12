@@ -17,7 +17,7 @@ namespace Windows.Devices.Midi2
     {
         // Normal client devices to connect to to send/receive. 
         // These two are all most apps need
-        IncludeClientUmpNative =        0x00000001,
+        IncludeClientUmpNative = 0x00000001,
         IncludeClientByteStreamNative = 0x00000002,
 
         // this is for the *source* data, not the client connection. 
@@ -27,8 +27,13 @@ namespace Windows.Devices.Midi2
 
         // the diagnostics loopback devices. I've included Ping to be 
         // inclusive, but no app should ever use it
-        IncludeDiagnosticLoopback =     0x00010000,
-        IncludeDiagnosticPing =         0x00020000,
+        IncludeDiagnosticLoopback = 0x00010000,
+        IncludeDiagnosticPing = 0x00020000,
+
+
+
+
+        AllTypicalEndpoints = IncludeClientUmpNative | IncludeClientByteStreamNative,
 
     };
 }

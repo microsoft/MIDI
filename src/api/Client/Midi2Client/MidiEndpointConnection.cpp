@@ -85,7 +85,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     HRESULT MidiEndpointConnection::Callback(PVOID data, UINT size, LONGLONG timestamp, LONGLONG)
     {
-        internal::LogInfo(__FUNCTION__, L"Message Received ");
+        internal::LogInfo(__FUNCTION__, L"Message Received");
 
         try
         {
@@ -141,27 +141,26 @@ namespace winrt::Windows::Devices::Midi2::implementation
     
     _Use_decl_annotations_
     bool MidiEndpointConnection::InternalInitialize(
+        winrt::guid sessionId,
         winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
         winrt::guid const connectionId,
-        winrt::hstring const endpointDeviceId, 
-        midi2::MidiEndpointConnectionOptions options
+        winrt::hstring const endpointDeviceId
     )
     {
         internal::LogInfo(__FUNCTION__, L"Internal Initialize ");
 
         try
         {
+            m_sessionId = sessionId;
             m_connectionId = connectionId;
 
             m_endpointDeviceId = endpointDeviceId;
 
-            WINRT_ASSERT(!m_endpointDeviceId.empty());
-            WINRT_ASSERT(serviceAbstraction != nullptr);
+            //WINRT_ASSERT(!m_endpointDeviceId.empty());
+            //WINRT_ASSERT(serviceAbstraction != nullptr);
 
             m_serviceAbstraction = serviceAbstraction;
             
-            m_options = options;
-
             return true;
         }
         catch (winrt::hresult_error const& ex)
@@ -202,7 +201,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
                         &abstractionCreationParams,
                         &mmcssTaskId,
                         (IMidiCallback*)(this),
-                        0
+                        0,
+                        m_sessionId
                     ));
 
                     // provide a copy to the output logic
@@ -237,7 +237,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
-    void MidiEndpointConnection::Close()
+    void MidiEndpointConnection::InternalClose()
     {
         internal::LogInfo(__FUNCTION__, L"Connection Close");
 
@@ -272,7 +272,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         if (!m_closeHasBeenCalled)
         {
-            Close();
+            InternalClose();
         }
     }
 
@@ -863,6 +863,46 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
+
+
+
+    _Use_decl_annotations_
+    midi2::MidiSendMessageResult MidiEndpointConnection::SendMessagesWordList(
+        internal::MidiTimestamp timestamp,
+        collections::IVectorView<uint32_t> const& words) noexcept
+    {
+        UNREFERENCED_PARAMETER(timestamp);
+        UNREFERENCED_PARAMETER(words);
+
+        // TODO: Implement SendMessagesWordList
+
+        return midi2::MidiSendMessageResult::Succeeded;
+    }
+
+
+
+
+    _Use_decl_annotations_
+    midi2::MidiSendMessageResult MidiEndpointConnection::SendMessagesWordArray(
+        internal::MidiTimestamp timestamp,
+        winrt::array_view<uint32_t const> words) noexcept
+    {
+        UNREFERENCED_PARAMETER(timestamp);
+        UNREFERENCED_PARAMETER(words);
+
+        // TODO: Implement SendMessagesWordArray
+
+        return midi2::MidiSendMessageResult::Succeeded;
+    }
+
+
+
+
+
+
+
+
+
     _Use_decl_annotations_
     bool MidiEndpointConnection::ActivateMidiStream(
         winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
@@ -887,5 +927,40 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
+    _Use_decl_annotations_
+    void MidiEndpointConnection::AddMessageProcessingPlugin(midi2::IMidiEndpointMessageProcessingPlugin const& plugin)
+    {
+        m_messageProcessingPlugins.Append(plugin);
 
+        try
+        {
+            plugin.Initialize(*this);
+
+            // if this is added after we've already been opened, call the
+            // handler anyway to get it ready.
+
+            if (m_isOpen)
+            {
+                plugin.OnEndpointConnectionOpened();
+            }
+        }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Exception initializing or calling OnEndpointConnectionOpened on newly-added plugin");
+        }
+    }
+
+    _Use_decl_annotations_
+    void MidiEndpointConnection::RemoveMessageProcessingPlugin(winrt::guid id)
+    {
+        for (uint32_t i = 0; i < m_messageProcessingPlugins.Size(); i++)
+        {
+            if (m_messageProcessingPlugins.GetAt(i).Id() == id)
+            {
+                m_messageProcessingPlugins.RemoveAt(i);
+                break;
+            }
+        }
+
+    }
 }

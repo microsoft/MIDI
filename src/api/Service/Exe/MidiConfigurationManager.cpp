@@ -6,12 +6,19 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+
+//
+// TODO: Refactor this code to use the json_helpers.h functions and defines
+//
+
+
 #include "stdafx.h"
 
 #include "MidiConfigurationManager.h"
 
 #define MAX_KEY_LENGTH 255
 #define MAX_VALUE_NAME 16383
+
 
 // TODO: Refactor these two methods and abstract out the registry code. Do this once wil adds the enumeration helpers to the NuGet
 std::vector<GUID> CMidiConfigurationManager::GetEnabledTransportAbstractionLayers() const noexcept
@@ -338,10 +345,159 @@ std::wstring CMidiConfigurationManager::GetCurrentConfigurationFileName() noexce
 
 
 
+#pragma push_macro("GetObject")
+#undef GetObject
+
+std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTransportAbstractionSettingsFromJsonString(
+    _In_ std::wstring jsonStringSource) const noexcept
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
+    //std::map<winrt::guid, std::wstring> abstractionSettings{};
+    std::map<GUID, std::wstring, GUIDCompare> abstractionSettings{};
+
+    try
+    {       
+        json::JsonObject jsonObject{ };
+
+        try
+        {
+            if (!json::JsonObject::TryParse(jsonStringSource, jsonObject))
+            {
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    __FUNCTION__,
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"JSON Object parsing failed", "message"),
+                    TraceLoggingWideString(jsonStringSource.c_str(), "Source JSON String")
+                );
+
+                // return the empty map
+                return abstractionSettings;
+            }
+        }
+        catch (...)
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"JSON Object parsing failed. Exception.", "message")
+            );
+
+            return abstractionSettings;
+        }
+
+
+        if (jsonObject == nullptr)
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"JSON Object null after parsing", "message")
+            );
+
+            // return the empty map
+            return abstractionSettings;
+        }
+
+
+        // we treat this as an object where each abstraction id is a property
+        auto plugins = internal::JsonGetObjectProperty(jsonObject, MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT, nullptr);
+
+        if (plugins == nullptr)
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"No transport plugins node in JSON", "message")
+            );
+
+            // return the empty map
+            return abstractionSettings;
+        }
+
+        // Iterate through nodes and find each transport abstraction entry. Parse the GUID. Add to results.
+
+        auto it = plugins.First();
+
+        while (it.HasCurrent())
+        {
+            std::wstring key = it.Current().Key().c_str();
+
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(key.c_str(), "AbstractionIdGuidString", "message")
+            );
+
+            std::wstring transportJson = it.Current().Value().GetObject().Stringify().c_str();
+
+            GUID abstractionId;
+
+            try
+            {
+                abstractionId = internal::StringToGuid(key);
+            }
+            catch (...)
+            {
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    __FUNCTION__,
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(key.c_str(), "Invalid GUID Property")
+                );
+            }
+
+            // TODO: Should verify the abstractionId is for an enabled abstraction
+            // before adding it to the returned map
+
+            abstractionSettings.insert_or_assign(abstractionId, transportJson);
+
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(transportJson.c_str()),
+                TraceLoggingGuid(abstractionId)
+            );
+
+            it.MoveNext();
+        }
+
+    }
+    CATCH_LOG();
+
+    return abstractionSettings;
+}
+#pragma pop_macro("GetObject")
+
+
 
 HRESULT CMidiConfigurationManager::Initialize()
 {
-    OutputDebugString(L"\n" __FUNCTION__);
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
 
     // load the current configuration
 
@@ -363,59 +519,70 @@ HRESULT CMidiConfigurationManager::Initialize()
 
         try
         {
-            //OutputDebugString(L"Opening json config file");
-
             // try to open the file
             auto file = winrt::Windows::Storage::StorageFile::GetFileFromPathAsync(fileName).get();
 
             // try to read the text from the file
             fileContents = winrt::Windows::Storage::FileIO::ReadTextAsync(file).get();
-
         }
         catch (...)
         {
-            OutputDebugString(L"Exception opening json config file\n");
-
             // file does not exist or we can't open it
             // we don't fail if no configuration file, we just don't config anything
 
-            // TODO: Need to log this
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Missing or inaccessible MIDI configuration file")
+            );
 
             return S_OK;
         }
         
         if (!fileContents.empty())
         {
-            //OutputDebugString(L"Config file contents are NOT empty");
-
             // parse out the JSON.
             // If the JSON is bad, we still just run. We just don't config.
             // Config is a privilege, not a right, and is certainly not essential :)
 
             try
             {
-                if (json::JsonObject::TryParse(fileContents, m_jsonObject))
+                if (!json::JsonObject::TryParse(fileContents, m_jsonObject))
                 {
-                    // worked
-                    OutputDebugString(L"Parsing json worked\n");
-                }
-                else
-                {
-                    OutputDebugString(L"Parsing json failed\n");
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        __FUNCTION__,
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Configuration file JSON parsing failed")
+                    );
                 }
             }
             CATCH_LOG()
         }
         else
         {
-            OutputDebugString(L"Config file contents are empty\n");
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Configuration file JSON is empty")
+            );
         }
 
     }
     else
     {
-        // config file is missing
-        OutputDebugString(L"Config file is missing, but that's ok.\n");
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Missing MIDI configuration file")
+        );
 
         return S_OK;
     }
@@ -425,21 +592,27 @@ HRESULT CMidiConfigurationManager::Initialize()
 
 
 _Use_decl_annotations_
-std::wstring CMidiConfigurationManager::GetConfigurationForTransportAbstraction(GUID abstractionGuid) const noexcept
+std::wstring CMidiConfigurationManager::GetSavedConfigurationForTransportAbstraction(GUID abstractionGuid) const noexcept
 {
-    OutputDebugString(L"\n" __FUNCTION__);
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingGuid(abstractionGuid)
+    );
+
 
     try
     {
-        OutputDebugString(L"" __FUNCTION__);
 
-        auto key = GuidToString(abstractionGuid);
+        auto key = internal::GuidToString(abstractionGuid);
 
         //    OutputDebugString(key.c_str());
 
         if (m_jsonObject != nullptr)
         {
-            // probably need to normalize these to ignore case. Not sure if WinRT Json dictionary is case-sensitive
+            // probably need to normalize these to ignore case.
             if (m_jsonObject.HasKey(winrt::to_hstring(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT)))
             {
                 auto plugins = m_jsonObject.GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT);
@@ -465,17 +638,20 @@ std::wstring CMidiConfigurationManager::GetConfigurationForTransportAbstraction(
 
 
 _Use_decl_annotations_
-std::wstring CMidiConfigurationManager::GetConfigurationForEndpointProcessingTransform(GUID abstractionGuid) const noexcept
+std::wstring CMidiConfigurationManager::GetSavedConfigurationForEndpointProcessingTransform(GUID abstractionGuid) const noexcept
 {
-    OutputDebugString(L"\n" __FUNCTION__);
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingGuid(abstractionGuid)
+    );
+
     
     try
     {
-        //   OutputDebugString(L"" __FUNCTION__);
-
-        auto key = GuidToString(abstractionGuid);
-
-        //    OutputDebugString(key.c_str());
+        auto key = internal::GuidToString(abstractionGuid);
 
         if (m_jsonObject != nullptr)
         {
@@ -489,8 +665,6 @@ std::wstring CMidiConfigurationManager::GetConfigurationForEndpointProcessingTra
                     auto thisPlugin = plugins.GetNamedObject(key);
 
                     std::wstring jsonString = (std::wstring)thisPlugin.Stringify();
-
-                    OutputDebugString(jsonString.c_str());
 
                     return jsonString;
                 }
@@ -506,7 +680,13 @@ std::wstring CMidiConfigurationManager::GetConfigurationForEndpointProcessingTra
 
 HRESULT CMidiConfigurationManager::Cleanup() noexcept
 {
-    OutputDebugString(L"\n" __FUNCTION__);
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
 
 
     return S_OK;

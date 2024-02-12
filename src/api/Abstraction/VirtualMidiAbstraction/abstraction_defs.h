@@ -11,14 +11,17 @@
 // the IDs here aren't the full Ids, just the values we start with
 // The full Id comes back from the swdevicecreate callback
 
-#define TRANSPORT_MNEMONIC L"VIRT"
+#define TRANSPORT_MNEMONIC L"APP"
+#define MIDI_VIRT_INSTANCE_ID_DEVICE_PREFIX L"MIDIU_APPDEV_"
+#define MIDI_VIRT_INSTANCE_ID_CLIENT_PREFIX L"MIDIU_APPPUB_"
 
 // TODO: Names should be moved to .rc for localization
 
-#define TRANSPORT_PARENT_ID L"MIDIU_VIRT_TRANSPORT"
-#define TRANSPORT_PARENT_DEVICE_NAME L"MIDI 2.0 Virtual Device Enumerator"
+#define TRANSPORT_PARENT_ID L"MIDIU_APP_TRANSPORT"
+#define TRANSPORT_PARENT_DEVICE_NAME L"MIDI 2.0 App Devices"
 
 
 #define LOOPBACK_PARENT_ROOT L"HTREE\\ROOT\\0"
 
 #define TRANSPORT_ENUMERATOR L"MIDISRV"
+

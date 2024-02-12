@@ -29,6 +29,8 @@ namespace Windows.Devices.Midi2
         MidiGroupEndpointListener();
 
         IVector<MidiGroup> IncludeGroups{ get; };
-
+        
+        Boolean PreventCallingFurtherListeners{ get; set; };
+        Boolean PreventFiringMainMessageReceivedEvent{ get; set; };
     }
 }

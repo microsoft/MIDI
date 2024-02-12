@@ -50,6 +50,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         bool IncludesGroup(_In_ midi2::MidiGroup const& group) { return group.Index() >= FirstGroupIndex() && group.Index() < FirstGroupIndex() + GroupCount(); }
 
+
+
+
         bool UpdateFromJson(_In_ winrt::Windows::Data::Json::JsonObject const json) noexcept;
         bool UpdateFromJsonString(_In_ winrt::hstring const json) noexcept;
         winrt::hstring GetJsonString() noexcept;
@@ -62,7 +65,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void InternalSetisReadOnly(_In_ bool isReadOnly) { m_isReadOnly = isReadOnly; }
 
     private:
-        bool m_isReadOnly{ true };
+        bool m_isReadOnly{ false };
         uint8_t m_number{ 0 };
         winrt::hstring m_name{};
         bool m_isActive{ false };

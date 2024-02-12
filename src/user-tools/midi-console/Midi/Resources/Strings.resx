@@ -144,6 +144,9 @@
   <data name="CommandEndpointRequestFunctionBlocksDescription" xml:space="preserve">
     <value>Send a function block request message to the endpoint. You can monitor incoming messages or the device properties in another window</value>
   </data>
+  <data name="CommandEnumerateActiveSessionsDescription" xml:space="preserve">
+    <value>List all currently active Windows MIDI Services sessions on this PC.</value>
+  </data>
   <data name="CommandEnumerateDescription" xml:space="preserve">
     <value>Enumerate (list) endpoints and transports</value>
   </data>
@@ -171,8 +174,17 @@
   <data name="CommandServicePingDescription" xml:space="preserve">
     <value>Ping the MIDI Windows Service</value>
   </data>
+  <data name="CommandServiceRestartDescription" xml:space="preserve">
+    <value>Restart the MIDI service. This will close all open connections, remove any non-persistent configuration, and otherwise reset the MIDI system. Must be run as Administrator.</value>
+  </data>
+  <data name="CommandServiceStartDescription" xml:space="preserve">
+    <value>Start the MIDI Service if it is currently stopped. Must be run as Administrator.</value>
+  </data>
   <data name="CommandServiceStatusDescription" xml:space="preserve">
     <value>Check to see if the Windows Service is running</value>
+  </data>
+  <data name="CommandServiceStopDescription" xml:space="preserve">
+    <value>Stops the MIDI Service, freeing up all resources in use, closing all devices, and clearing any runtime configuration. Must be run as Administrator.</value>
   </data>
   <data name="CommandTimeDescription" xml:space="preserve">
     <value>Get the current MIDI clock timestamp value</value>
@@ -300,8 +312,14 @@
   <data name="ParameterEndpointPropertiesVerbose" xml:space="preserve">
     <value>Include additional detailed information about the endpoint.</value>
   </data>
+  <data name="ParameterEndpointUpdateName" xml:space="preserve">
+    <value>New endpoint name</value>
+  </data>
   <data name="ParameterEnumEndpointsDirection" xml:space="preserve">
     <value>The direction of data flow for the endpoints to list</value>
+  </data>
+  <data name="ParameterEnumEndpointsIncludeAll" xml:space="preserve">
+    <value>List all recognized endpoints, including internal ones and ones an application may be unable to connect to directly.</value>
   </data>
   <data name="ParameterEnumEndpointsIncludeEndpointId" xml:space="preserve">
     <value>Include the UMP Endpoint Id in the output</value>
@@ -488,8 +506,14 @@ Timestamp</value>
   <data name="PropertiesTablePropertyLabelManufacturer" xml:space="preserve">
     <value>Manufacturer</value>
   </data>
+  <data name="PropertiesTablePropertyLabelMultiClient" xml:space="preserve">
+    <value>Multi-client</value>
+  </data>
   <data name="PropertiesTablePropertyLabelName" xml:space="preserve">
     <value>Name</value>
+  </data>
+  <data name="PropertiesTablePropertyLabelNativeDataFormat" xml:space="preserve">
+    <value>Native data format</value>
   </data>
   <data name="PropertiesTablePropertyLabelProductInstanceId" xml:space="preserve">
     <value>Product Instance Id</value>
@@ -508,6 +532,9 @@ Timestamp</value>
   </data>
   <data name="PropertiesTablePropertyLabelSystemExclusiveId" xml:space="preserve">
     <value>System Exclusive Id</value>
+  </data>
+  <data name="PropertiesTablePropertyLabelTransportSuppliedDescription" xml:space="preserve">
+    <value>Description</value>
   </data>
   <data name="PropertiesTablePropertyLabelUserSuppliedName" xml:space="preserve">
     <value>User-Supplied Name</value>

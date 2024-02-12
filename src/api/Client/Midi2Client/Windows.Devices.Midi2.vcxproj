@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\..\packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.props')" />
+  <Import Project="..\..\packages\Microsoft.Windows.CppWinRT.2.0.240111.5\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.240111.5\build\native\Microsoft.Windows.CppWinRT.props')" />
   <PropertyGroup Label="Globals">
     <ProjectName>Windows.Devices.Midi2</ProjectName>
     <RootNamespace>Windows.Devices.Midi2</RootNamespace>
@@ -100,45 +100,51 @@
     <TargetName>Windows.Devices.Midi2</TargetName>
     <RunCodeAnalysis>true</RunCodeAnalysis>
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
+    <LibraryPath>$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(IncludePath)</IncludePath>
     <TargetName>Windows.Devices.Midi2</TargetName>
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
+    <LibraryPath>$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Arm64'">
     <IncludePath>$(IncludePath)</IncludePath>
     <TargetName>Windows.Devices.Midi2</TargetName>
     <RunCodeAnalysis>true</RunCodeAnalysis>
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
+    <LibraryPath>$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Arm64'">
     <IncludePath>$(IncludePath)</IncludePath>
     <TargetName>Windows.Devices.Midi2</TargetName>
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
+    <LibraryPath>$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Arm64EC'">
     <IncludePath>$(IncludePath)</IncludePath>
     <TargetName>Windows.Devices.Midi2</TargetName>
     <RunCodeAnalysis>true</RunCodeAnalysis>
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
+    <LibraryPath>$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Arm64EC'">
     <IncludePath>$(IncludePath)</IncludePath>
     <TargetName>Windows.Devices.Midi2</TargetName>
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
+    <LibraryPath>$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -164,21 +170,26 @@
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</TreatWarningAsError>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);$(SolutionDir)Libs\AbstractionUtilities\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);$(SolutionDir)Libs\AbstractionUtilities\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);$(SolutionDir)Libs\AbstractionUtilities\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">stdcpp17</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</Profile>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</RegisterOutput>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">AbstractionUtilities.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">false</Profile>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">false</RegisterOutput>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">AbstractionUtilities.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</Profile>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</RegisterOutput>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AbstractionUtilities.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -205,12 +216,15 @@
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
     <ClCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions);WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);$(SolutionDir)Libs\AbstractionUtilities\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);$(SolutionDir)Libs\AbstractionUtilities\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);$(SolutionDir)Libs\AbstractionUtilities\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</TreatWarningAsError>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">stdcpp17</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">stdcpp17</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -218,6 +232,9 @@
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">false</RegisterOutput>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">false</RegisterOutput>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</RegisterOutput>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">AbstractionUtilities.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">AbstractionUtilities.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AbstractionUtilities.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -246,9 +263,6 @@
     <ClInclude Include="MidiEndpointConnection.h">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiEndpointConnectionOptions.h">
-      <DependentUpon>MidiEndpointConnectionOptions.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiEndpointDeviceInformation.h">
       <DependentUpon>MidiEndpointDeviceInformation.idl</DependentUpon>
     </ClInclude>
@@ -267,8 +281,17 @@
     <ClInclude Include="MidiMessageConverter.h">
       <DependentUpon>MidiMessageConverter.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiMessageProcessingPluginInformation.h">
-      <DependentUpon>MidiMessageProcessingPluginInformation.idl</DependentUpon>
+    <ClInclude Include="MidiServiceConfigurationResponse.h">
+      <DependentUpon>MidiServiceConfigurationResponse.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceLoopbackEndpointCreationResult.h">
+      <DependentUpon>MidiServiceLoopbackEndpointCreationResult.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceLoopbackEndpointDefinition.h">
+      <DependentUpon>MidiServiceLoopbackEndpointDefinition.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceMessageProcessingPluginInformation.h">
+      <DependentUpon>MidiServiceMessageProcessingPluginInformation.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiMessageTranslator.h">
       <DependentUpon>MidiMessageTranslator.idl</DependentUpon>
@@ -306,6 +329,12 @@
     <ClInclude Include="MidiMessageTypeEndpointListener.h">
       <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiServiceSessionConnectionInformation.h">
+      <DependentUpon>MidiServiceSessionConnectionInformation.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceSessionInformation.h">
+      <DependentUpon>MidiServiceSessionInformation.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiSessionSettings.h">
       <DependentUpon>MidiSessionSettings.idl</DependentUpon>
     </ClInclude>
@@ -315,8 +344,8 @@
     <ClInclude Include="MidiStreamMessageBuilder.h">
       <DependentUpon>MidiStreamMessageBuilder.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiTransportPluginInformation.h">
-      <DependentUpon>MidiTransportPluginInformation.idl</DependentUpon>
+    <ClInclude Include="MidiServiceTransportPluginInformation.h">
+      <DependentUpon>MidiServiceTransportPluginInformation.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiMessage128.h">
       <DependentUpon>MidiMessage128.idl</DependentUpon>
@@ -339,7 +368,9 @@
     <ClInclude Include="MidiVirtualEndpointDevice.h">
       <DependentUpon>MidiVirtualEndpointDevice.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiVirtualEndpointDeviceDefinition.h" />
+    <ClInclude Include="MidiVirtualEndpointDeviceDefinition.h">
+      <DependentUpon>MidiVirtualEndpointDeviceDefinition.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="midi_function_block_prop_util.h" />
     <ClInclude Include="midi_service_interface.h" />
     <ClInclude Include="midi_stream_message_defs.h" />
@@ -356,9 +387,6 @@
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
     <ClCompile Include="MidiEndpointConnection.cpp">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiEndpointConnectionOptions.cpp">
-      <DependentUpon>MidiEndpointConnectionOptions.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiEndpointDeviceInformation.cpp">
       <DependentUpon>MidiEndpointDeviceInformation.idl</DependentUpon>
@@ -378,8 +406,17 @@
     <ClCompile Include="MidiMessageConverter.cpp">
       <DependentUpon>MidiMessageConverter.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiMessageProcessingPluginInformation.cpp">
-      <DependentUpon>MidiMessageProcessingPluginInformation.idl</DependentUpon>
+    <ClCompile Include="MidiServiceConfigurationResponse.cpp">
+      <DependentUpon>MidiServiceConfigurationResponse.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceLoopbackEndpointCreationResult.cpp">
+      <DependentUpon>MidiServiceLoopbackEndpointCreationResult.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceLoopbackEndpointDefinition.cpp">
+      <DependentUpon>MidiServiceLoopbackEndpointDefinition.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceMessageProcessingPluginInformation.cpp">
+      <DependentUpon>MidiServiceMessageProcessingPluginInformation.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiMessageTranslator.cpp">
       <DependentUpon>MidiMessageTranslator.idl</DependentUpon>
@@ -417,6 +454,12 @@
     <ClCompile Include="MidiMessageTypeEndpointListener.cpp">
       <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiServiceSessionConnectionInformation.cpp">
+      <DependentUpon>MidiServiceSessionConnectionInformation.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceSessionInformation.cpp">
+      <DependentUpon>MidiServiceSessionInformation.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiSessionSettings.cpp">
       <DependentUpon>MidiSessionSettings.idl</DependentUpon>
     </ClCompile>
@@ -429,8 +472,8 @@
     <ClCompile Include="MidiStreamMessageBuilder.cpp">
       <DependentUpon>MidiStreamMessageBuilder.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiTransportPluginInformation.cpp">
-      <DependentUpon>MidiTransportPluginInformation.idl</DependentUpon>
+    <ClCompile Include="MidiServiceTransportPluginInformation.cpp">
+      <DependentUpon>MidiServiceTransportPluginInformation.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiMessage128.cpp">
       <DependentUpon>MidiMessage128.idl</DependentUpon>
@@ -453,7 +496,9 @@
     <ClCompile Include="MidiVirtualEndpointDevice.cpp">
       <DependentUpon>MidiVirtualEndpointDevice.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiVirtualEndpointDeviceDefinition.cpp" />
+    <ClCompile Include="MidiVirtualEndpointDeviceDefinition.cpp">
+      <DependentUpon>MidiVirtualEndpointDeviceDefinition.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="midi_function_block_prop_util.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -464,13 +509,14 @@
   <ItemGroup>
     <Midl Include="IMidiEndpointConnectionSource.idl" />
     <Midl Include="IMidiEndpointMessageProcessingPlugin.idl" />
+    <Midl Include="IMidiServiceMessageProcessingPluginConfiguration.idl" />
     <Midl Include="IMidiMessageReceivedEventSource.idl" />
-    <Midl Include="IMidiTransportSettingsData.idl" />
+    <Midl Include="MidiServiceConfigurationResponse.idl" />
+    <Midl Include="IMidiServiceTransportPluginConfiguration.idl" />
     <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl" />
     <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl" />
     <Midl Include="MidiEndpointDeviceInformationUpdateEventArgs.idl" />
     <Midl Include="MidiEndpointConnection.idl" />
-    <Midl Include="MidiEndpointConnectionOptions.idl" />
     <Midl Include="MidiChannel.idl" />
     <Midl Include="MidiChannelEndpointListener.idl" />
     <Midl Include="MidiClock.idl" />
@@ -484,8 +530,6 @@
     <Midl Include="MidiFunctionBlockDirectionEnum.idl" />
     <Midl Include="MidiFunctionBlockDiscoveryFilterFlagsEnum.idl" />
     <Midl Include="MidiFunctionBlockMidi10Enum.idl" />
-    <Midl Include="MidiEndpointConnectionSharingEnum.idl" />
-    <Midl Include="MidiEndpointConnectionSharingPreferenceEnum.idl" />
     <Midl Include="MidiFunctionBlock.idl" />
     <Midl Include="MidiGroupTerminalBlockDirectionEnum.idl" />
     <Midl Include="MidiFunctionBlockUIHintEnum.idl" />
@@ -494,11 +538,14 @@
     <Midl Include="MidiGroupTerminalBlock.idl" />
     <Midl Include="MidiGroupTerminalBlockProtocolEnum.idl" />
     <Midl Include="MidiMessageConverter.idl" />
-    <Midl Include="MidiMessageProcessingPluginInformation.idl" />
+    <Midl Include="MidiServiceConfigurationResponseStatusEnum.idl" />
+    <Midl Include="MidiServiceLoopbackEndpointDefinition.idl" />
+    <Midl Include="MidiServiceLoopbackEndpointCreationResult.idl" />
+    <Midl Include="MidiServiceMessageProcessingPluginInformation.idl" />
     <Midl Include="MidiMessageStruct.idl" />
     <Midl Include="MidiMessageBuilder.idl" />
     <Midl Include="MidiMessageReceivedEventArgs.idl" />
-    <Midl Include="IMidiEndpointDefinedConnectionSettings.idl" />
+    <Midl Include="IMidiEndpointConnectionSettings.idl" />
     <Midl Include="MidiMessageTranslator.idl" />
     <Midl Include="MidiMessageTypeEndpointListener.idl" />
     <Midl Include="MidiProtocolEnum.idl" />
@@ -507,13 +554,15 @@
     <Midl Include="MidiServicePingResponse.idl" />
     <Midl Include="MidiServicePingResponseSummary.idl" />
     <Midl Include="MidiSession.idl" />
+    <Midl Include="MidiServiceSessionConnectionInformation.idl" />
+    <Midl Include="MidiServiceSessionInformation.idl" />
     <Midl Include="MidiSessionSettings.idl" />
     <Midl Include="IMidiUniversalPacket.idl" />
     <Midl Include="MidiStreamConfigurationRequestedSettings.idl" />
     <Midl Include="MidiStreamConfigurationRequestReceivedEventArgs.idl" />
     <Midl Include="MidiStreamMessageBuilder.idl" />
     <Midl Include="MidiSystemExclusive8StatusEnum.idl" />
-    <Midl Include="MidiTransportPluginInformation.idl" />
+    <Midl Include="MidiServiceTransportPluginInformation.idl" />
     <Midl Include="MidiMessage128.idl" />
     <Midl Include="MidiMessage32.idl" />
     <Midl Include="MidiMessage64.idl" />
@@ -540,15 +589,15 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\..\packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.targets')" />
-    <Import Project="..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.231216.1\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.231216.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
+    <Import Project="..\..\packages\Microsoft.Windows.CppWinRT.2.0.240111.5\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.240111.5\build\native\Microsoft.Windows.CppWinRT.targets')" />
+    <Import Project="..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240122.1\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240122.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.props'))" />
-    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.targets'))" />
-    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.231216.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.231216.1\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
+    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.240111.5\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.CppWinRT.2.0.240111.5\build\native\Microsoft.Windows.CppWinRT.props'))" />
+    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.240111.5\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.CppWinRT.2.0.240111.5\build\native\Microsoft.Windows.CppWinRT.targets'))" />
+    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240122.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240122.1\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
   </Target>
 </Project>

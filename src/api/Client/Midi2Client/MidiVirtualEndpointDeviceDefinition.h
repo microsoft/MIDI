@@ -19,6 +19,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring EndpointName() { return m_endpointName; }
         void EndpointName(_In_ winrt::hstring const& value) { m_endpointName = internal::TrimmedHStringCopy(value); }
 
+        winrt::hstring TransportSuppliedDescription() { return m_description; }
+        void TransportSuppliedDescription(_In_ winrt::hstring const& value) { m_description = internal::TrimmedHStringCopy(value); }
+
         winrt::hstring EndpointProductInstanceId() { return m_endpointProductInstanceId; }
         void EndpointProductInstanceId(_In_ winrt::hstring const& value) { m_endpointProductInstanceId = internal::TrimmedHStringCopy(value); }
 
@@ -59,6 +62,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     private:
         winrt::hstring m_endpointName{};
+        winrt::hstring m_description{};
         winrt::hstring m_endpointProductInstanceId{};
 
         bool m_supportsMidi1ProtocolMessages{ false };
