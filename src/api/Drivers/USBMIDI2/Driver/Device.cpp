@@ -413,23 +413,6 @@ EvtDeviceD0Entry(
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
-    devCtx = GetDeviceContext(Device);
-    ASSERT(devCtx != nullptr);
-
-    if (devCtx->MidiInPipe)
-    {
-        status = WdfIoTargetStart(WdfUsbTargetPipeGetIoTarget(devCtx->MidiInPipe));
-        if (!NT_SUCCESS(status))
-        {
-            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                "%!FUNC! Could not start interrupt pipe failed %!STATUS!", status);
-        }
-    }
-    else
-    {
-        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
-            "%!FUNC! Could not start interrupt pipe as no MidiInPipe");
-    }
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
@@ -488,14 +471,6 @@ EvtDeviceD0Exit(
                 status = STATUS_SUCCESS;
             }
         }
-    }
-
-    if (devCtx->MidiInPipe)
-    {
-        WdfIoTargetStop(
-            WdfUsbTargetPipeGetIoTarget(devCtx->MidiInPipe),
-            WdfIoTargetCancelSentIo
-        );
     }
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");

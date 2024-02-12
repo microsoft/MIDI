@@ -508,6 +508,20 @@ StreamEngine::Pause()
     }
     else
     {
+        // Stop the continuous reader
+        WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin));
+        PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
+
+        if (pDevCtx)
+        {
+            WdfIoTargetStop(WdfUsbTargetPipeGetIoTarget(pDevCtx->MidiInPipe), WdfIoTargetCancelSentIo);
+        }
+        else
+        {
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
+                "%!FUNC! Could not start interrupt pipe as no MidiInPipe");
+        }
+
         // If g_MidiInStreamEngine is available, the midi out worker thread will loopback.
         // If it isn't available, the midi out worker will throw the data away.
         // So when we transition midi in from run to paused, acquire the lock that
@@ -587,6 +601,25 @@ StreamEngine::Run()
         auto lock = g_MidiInLock->acquire();
 //        pDevCtx->pMidiStreamEngine = this;
         g_MidiInStreamEngine = this;
+
+        // Start the Continuous reader
+        WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin));
+        PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
+
+        if (pDevCtx)
+        {
+            status = WdfIoTargetStart(WdfUsbTargetPipeGetIoTarget(pDevCtx->MidiInPipe));
+            if (!NT_SUCCESS(status))
+            {
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                    "%!FUNC! Could not start interrupt pipe failed %!STATUS!", status);
+            }
+        }
+        else
+        {
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
+                "%!FUNC! Could not start interrupt pipe as no MidiInPipe");
+        }
     }
 
     //
