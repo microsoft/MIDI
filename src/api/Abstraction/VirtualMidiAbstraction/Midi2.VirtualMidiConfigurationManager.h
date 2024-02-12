@@ -17,7 +17,7 @@ class CMidi2VirtualMidiConfigurationManager :
 {
 public:
     STDMETHOD(Initialize(_In_ GUID AbstractionId, _In_ IUnknown* MidiDeviceManager));
-    STDMETHOD(UpdateConfiguration(_In_ LPCWSTR ConfigurationJsonSection, _Out_ BSTR* Response));
+    STDMETHOD(UpdateConfiguration(_In_ LPCWSTR ConfigurationJsonSection, _In_ BOOL IsFromConfigurationFile, _Out_ BSTR* Response));
     STDMETHOD(Cleanup)();
 
 private:

@@ -10,7 +10,7 @@ has_children: false
 
 This class represents a summary of the ping attempts against the Windows service.
 
-## Static Functions
+## Properties
 
 | Property | Description |
 |---|---|

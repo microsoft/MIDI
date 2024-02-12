@@ -10,7 +10,7 @@ has_children: false
 
 This class represents an open Windows MIDI Services session. 
 
-## Static Functions
+## Properties
 
 | Property | Description |
 |---|---|

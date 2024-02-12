@@ -144,6 +144,7 @@ HRESULT
 MidiSrvUpdateConfiguration(
     /* [in] */ handle_t BindingHandle,
     /*[in, string]*/ __RPC__in_string LPCWSTR ConfigurationJson,
+    __RPC__in BOOL IsFromConfigurationFile,
     __RPC__out BSTR* Response)
 {
     UNREFERENCED_PARAMETER(BindingHandle);
@@ -197,7 +198,7 @@ MidiSrvUpdateConfiguration(
         CComBSTR response;
         response.Empty();
 
-        deviceManager->UpdateAbstractionConfiguration(i->first, i->second.c_str(), &response);
+        deviceManager->UpdateAbstractionConfiguration(i->first, i->second.c_str(), IsFromConfigurationFile, &response);
 
         // Probably need to do more formatting of this. Should use the json objects instead
 

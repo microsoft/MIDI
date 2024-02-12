@@ -11,6 +11,9 @@
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
+#include <winrt/Windows.Data.Json.h>
+
+using namespace winrt;
 
 #include <wrl\module.h>
 #include <wrl\event.h>
@@ -44,6 +47,10 @@
 
 #include <Devpkey.h>
 #include "MidiDefs.h"
+#include "MidiDataFormat.h"
+#include "MidiFlow.h"
+#include "MidiAbstraction.h"
+
 #include "MidiSrvRpc.h"
 #include "MidiXProc.h"
 #include "Midi2.MidiSrvAbstraction.h"

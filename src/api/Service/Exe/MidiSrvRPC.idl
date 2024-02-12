@@ -8,7 +8,10 @@
 
 import "oaidl.idl";
 import "ocidl.idl";
-import "mididevicemanagerinterface.idl";
+
+import "MidiDataFormat.idl";
+import "MidiFlow.idl";
+//import "mididevicemanagerinterface.idl";
 
 cpp_quote("#define MIDISRV_LRPC_PROTOCOL  L\"ncalrpc\"")
 cpp_quote("#define MIDISRV_ENDPOINT L\"MidiSrvClientRpc\"")
@@ -74,18 +77,49 @@ typedef struct MIDISRV_CLIENT
 interface MidiSrvRPC
 {
     // Temporary test RPC, to be removed
-    HRESULT MidiSrvTestRpc([in] handle_t BindingHandle, [ in, string ] LPCWSTR Identifier, [in] PREQUESTED_SETTINGS RequestedSettings, [out] PALLOCATED_SETTINGS *AllocatedSettings);
+    HRESULT MidiSrvTestRpc(
+        [in] handle_t BindingHandle, 
+        [in, string] LPCWSTR Identifier, 
+        [in] PREQUESTED_SETTINGS RequestedSettings, 
+        [out] PALLOCATED_SETTINGS *AllocatedSettings);
 
 
-    HRESULT MidiSrvCreateClient([in] handle_t BindingHandle, [ in, string ] LPCWSTR MidiDevice, [in] PMIDISRV_CLIENTCREATION_PARAMS CreationParams, [in] GUID SessionId, [out] PMIDISRV_CLIENT *Client);
-    HRESULT MidiSrvDestroyClient([in] handle_t BindingHandle, [in] MidiClientHandle ClientHandle);
+    HRESULT MidiSrvCreateClient(
+        [in] handle_t BindingHandle, 
+        [in, string] LPCWSTR MidiDevice, 
+        [in] PMIDISRV_CLIENTCREATION_PARAMS CreationParams, 
+        [in] GUID SessionId, 
+        [out] PMIDISRV_CLIENT *Client);
 
-    HRESULT MidiSrvUpdateConfiguration([in] handle_t BindingHandle, [in, string] LPCWSTR ConfigurationJson, [out] BSTR* Response);
+    HRESULT MidiSrvDestroyClient(
+        [in] handle_t BindingHandle, 
+        [in] MidiClientHandle ClientHandle);
 
 
-    HRESULT MidiSrvRegisterSession([in] handle_t BindingHandle, [in] GUID SessionId, [in, string] LPCWSTR SessionName, [in] DWORD ProcessId, [in, string] LPCWSTR ProcessName);
-    HRESULT MidiSrvDeregisterSession([in] handle_t BindingHandle, [in] GUID SessionId);
+    // API-driven configuration
 
-    HRESULT MidiSrvGetSessionList([in] handle_t BindingHandle, [out] BSTR* SessionListJson);
+    HRESULT MidiSrvUpdateConfiguration(
+        [in] handle_t BindingHandle, 
+        [in, string] LPCWSTR ConfigurationJson, 
+        [in] BOOL IsFromConfigurationFile,
+        [out] BSTR* Response);
+
+
+    // Session Management
+
+    HRESULT MidiSrvRegisterSession(
+        [in] handle_t BindingHandle, 
+        [in] GUID SessionId, 
+        [in, string] LPCWSTR SessionName, 
+        [in] DWORD ProcessId, 
+        [in, string] LPCWSTR ProcessName);
+
+    HRESULT MidiSrvDeregisterSession(
+        [in] handle_t BindingHandle, 
+        [in] GUID SessionId);
+
+    HRESULT MidiSrvGetSessionList(
+        [in] handle_t BindingHandle, 
+        [out] BSTR* SessionListJson);
 
 }

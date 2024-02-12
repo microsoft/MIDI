@@ -12,7 +12,6 @@
 
 #include "MidiEndpointConnection.h"
 
-#include "string_util.h"
 #include <atlcomcli.h>
 
 #include <filesystem>
@@ -235,7 +234,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         internal::JsonSetWStringProperty(
             endpointDefinitionObject, 
-            MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_UNIQUE_ID_PROPERTY_KEY,
+            MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY,
             deviceDefinition.EndpointProductInstanceId().c_str());
 
         internal::JsonSetWStringProperty(
@@ -328,7 +327,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         internal::LogInfo(__FUNCTION__, L"sending json");
         internal::LogInfo(__FUNCTION__, topLevelTransportPluginSettingsObject.Stringify().c_str());
 
-        auto configUpdateResult = configManager->UpdateConfiguration(topLevelTransportPluginSettingsObject.Stringify().c_str(), &response);
+        auto configUpdateResult = configManager->UpdateConfiguration(topLevelTransportPluginSettingsObject.Stringify().c_str(), false, &response);
 
         internal::LogInfo(__FUNCTION__, L"UpdateConfiguration returned");
 

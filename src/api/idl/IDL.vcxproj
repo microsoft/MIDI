@@ -181,7 +181,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <Midl Include="MidiAbstraction.idl" />
+    <Midl Include="MidiDataFormat.idl" />
     <Midl Include="MidiEndpointProtocolManagerInterface.idl" />
+    <Midl Include="MidiFlow.idl" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiDeviceManagerInterface.idl" />

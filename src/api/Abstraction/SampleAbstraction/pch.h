@@ -38,6 +38,21 @@
 #include <winmeta.h>
 #include <TraceLoggingProvider.h>
 
+// AbstractionUtilities
+#include "endpoint_data_helpers.h"
+#include "swd_property_builders.h"
+#include "swd_property_helpers.h"
+#include "json_helpers.h"
+
+#include "MidiDefs.h"
+#include "MidiDataFormat.h"
+#include "MidiFlow.h"
+#include "MidiAbstraction.h"
+
+#include "MidiXProc.h"
+
+namespace internal = ::Windows::Devices::Midi2::Internal;
+
 #include "Midi2SampleAbstraction_i.c"
 #include "Midi2SampleAbstraction.h"
 

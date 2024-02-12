@@ -30,7 +30,7 @@
     <VCProjectVersion>17.0</VCProjectVersion>
     <ProjectGuid>{0DDD9961-7959-46B1-A11D-05BA8AF65297}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.20348.0</WindowsTargetPlatformVersion>
     <ProjectName>Midi2.EndpointMetadataListenerTransform</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

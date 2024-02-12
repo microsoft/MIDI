@@ -35,6 +35,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
     LPCWSTR ConfigurationJsonSection, 
+    BOOL IsFromConfigurationFile,
     BSTR* Response
 )
 {
@@ -45,6 +46,22 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(ConfigurationJsonSection, "json")
     );
+
+
+    // This abstraction doesn't support creating endpoints from the configuration file.
+    // They are for runtime creation only.
+    if (IsFromConfigurationFile)
+    {
+        TraceLoggingWrite(
+            MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Virtual endpoints can be created only at runtime through the API, not from the configuration file.", "message")
+        );
+
+        return E_FAIL;
+    }
 
 
     if (ConfigurationJsonSection == nullptr) return S_OK;
@@ -74,6 +91,9 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
     if (createArray == nullptr || createArray.Size() == 0)
     {
         // nothing in the array. Maybe we're looking at update or delete 
+
+        // TODO: Set the response to something meaningful here
+
         return S_OK;
     }
 
@@ -94,7 +114,7 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
 
             deviceEntry.ShortUniqueId = internal::JsonGetWStringProperty(
                 jsonEntry, 
-                MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_UNIQUE_ID_PROPERTY_KEY, 
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY, 
                 L"");
 
             deviceEntry.BaseEndpointName = internal::JsonGetWStringProperty(

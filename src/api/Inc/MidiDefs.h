@@ -145,7 +145,7 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_OUT_GroupTerminalBlocks, 51);     // DEVPROP_TYP
 #define STRING_PKEY_MIDI_AssociatedUMP MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"52"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_AssociatedUMP, 52);     // DEVPROP_TYPE_STRING
 
-// iSerialNumber for USB
+// iSerialNumber for USB, but can be supplied by other endpoints as a config value or a value read from advertising
 #define STRING_PKEY_MIDI_SerialNumber MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"53"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_SerialNumber, 53);     // DEVPROP_TYPE_STRING
 

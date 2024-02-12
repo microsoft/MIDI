@@ -63,7 +63,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                 table.AddColumn(column1);
 
-
                 TableColumn column2 = new TableColumn(AnsiMarkupFormatter.FormatTableColumnHeading(Resources.Strings.PropertiesTableColumnHeaderValue));
 
                 //Console.WriteLine("Window width " + Console.WindowWidth);
@@ -453,17 +452,39 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                     table.AddRow(AnsiMarkupFormatter.FormatError("No matching container found"), "");
                 }
 
-                if (settings.IncludeRaw)
-                {
-                    // spit out all properties by key / value in a new table
-
-                    table.AddEmptyRow();
-                    table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("All Raw Properties"), "");
-
-                    DisplayProperties(table, di.Properties);
-                }
+                // write out the properties table
 
                 AnsiConsole.Write(table);
+
+
+                if (settings.IncludeRaw)
+                {
+                    AnsiConsole.WriteLine();
+                    AnsiConsole.WriteLine("Raw properties");
+                    AnsiConsole.WriteLine();
+
+                    // spit out all properties by key / value in a new table
+                    var rawPropertyTable = new Table();
+
+                    AnsiMarkupFormatter.SetTableBorderStyle(rawPropertyTable);
+
+                    TableColumn rawColumn1 = new TableColumn(
+                        AnsiMarkupFormatter.FormatTableColumnHeading(Resources.Strings.PropertiesTableColumnHeaderProperty));
+
+                    rawPropertyTable.AddColumn(rawColumn1);
+
+                    TableColumn rawColumn2 = new TableColumn(
+                        AnsiMarkupFormatter.FormatTableColumnHeading(Resources.Strings.PropertiesTableColumnHeaderValue));
+
+                    rawPropertyTable.AddColumn(rawColumn2);
+
+                    //rawPropertyTable.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading("All Raw Properties"), "");
+
+                    DisplayProperties(rawPropertyTable, di.Properties);
+
+                    AnsiConsole.Write(rawPropertyTable);
+                }
+
 
             }
 

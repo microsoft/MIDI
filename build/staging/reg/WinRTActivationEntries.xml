@@ -164,6 +164,11 @@
              trustLevel="Base"
              />
           <class
+             activatableClassId="Windows.Devices.Midi2.MidiServiceLoopbackEndpointDefinition"
+             threading="Both"
+             trustLevel="Base"
+             />
+          <class
              activatableClassId="Windows.Devices.Midi2.MidiClock"
              threading="Both"
              trustLevel="Base"

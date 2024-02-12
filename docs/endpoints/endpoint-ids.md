@@ -1,7 +1,8 @@
 ---
 layout: page
 title: Endpoint Device Ids
-parent: Windows Midi Services
+parent: Transport Types
+grandparent: Windows Midi Services
 has_children: false
 ---
 

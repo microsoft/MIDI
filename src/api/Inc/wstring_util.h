@@ -9,13 +9,15 @@
 
 #pragma once
 
+#ifndef WSTRING_UTIL_H
+#define WSTRING_UTIL_H
+
 #include <string>
 #include <cwctype>
+#include <algorithm>
 
 namespace Windows::Devices::Midi2::Internal
 {
-    
-
     inline void InPlaceToUpper(_Inout_ std::wstring &s)
     {
         std::transform(s.begin(), s.end(), s.begin(), towupper);
@@ -76,48 +78,6 @@ namespace Windows::Devices::Midi2::Internal
         return ToLowerWStringCopy(TrimmedWStringCopy(s));
     }
 
-    // TODO: this could use substr and take one op instad of two
-    inline winrt::hstring TrimmedHStringCopy(_In_ std::wstring ws)
-    {
-        return winrt::hstring{ TrimmedWStringCopy(ws) };
-    }
-
-    inline winrt::hstring TrimmedHStringCopy(_In_ winrt::hstring s)
-    {
-        std::wstring ws{ s };
-
-        return TrimmedHStringCopy(ws);
-    }
-
-    inline winrt::hstring ToUpperHStringCopy(_In_ winrt::hstring s)
-    {
-        std::wstring ws{ s };
-        std::transform(ws.begin(), ws.end(), ws.begin(), std::towupper); 
-
-        return winrt::hstring{ ws };
-    }
-
-    inline winrt::hstring ToLowerHStringCopy(_In_ winrt::hstring s)
-    {
-        std::wstring ws{ s };
-        std::transform(ws.begin(), ws.end(), ws.begin(), std::towlower);
-
-        return winrt::hstring{ ws };
-    }
-
-    inline winrt::hstring ToUpperTrimmedHStringCopy(_In_ winrt::hstring s)
-    {
-        return ToUpperHStringCopy(TrimmedHStringCopy(s));
-    }
-
-    inline winrt::hstring ToLowerTrimmedHStringCopy(_In_ winrt::hstring s)
-    {
-        return ToLowerHStringCopy(TrimmedHStringCopy(s));
-    }
-
-
-
-
 
     // This is just to convert all GUIDs to the same case. It does
     // not add or remove opening / closing brackets
@@ -125,55 +85,6 @@ namespace Windows::Devices::Midi2::Internal
     {
         return ToUpperTrimmedWStringCopy(guidString);
     }
-
-    // This is for the device instance id. Not to be confused with the interface id
-    inline std::wstring NormalizeDeviceInstanceIdWStringCopy(_In_ std::wstring deviceInstanceId)
-    {
-        return ToUpperTrimmedWStringCopy(deviceInstanceId);
-    }
-    // This is for the device instance id. Not to be confused with the interface id
-    inline winrt::hstring NormalizeDeviceInstanceIdHStringCopy(_In_ winrt::hstring deviceInstanceId)
-    {
-        return ToUpperTrimmedHStringCopy(deviceInstanceId);
-    }
-
-    //// This is for the endpoint device interface id (the long SWD id with the GUID)
-    //inline std::wstring NormalizeEndpointInterfaceIdCopy(_In_ std::wstring endpointInterfaceId)
-    //{
-    //    return ToLowerTrimmedWStringCopy(endpointInterfaceId);
-    //}
-
-
-    // This is for the endpoint device interface id (the long SWD id with the GUID)
-    inline winrt::hstring NormalizeEndpointInterfaceIdHStringCopy(_In_ winrt::hstring endpointInterfaceId)
-    {
-        return ToLowerTrimmedHStringCopy(endpointInterfaceId);
-    }
-
-    // This is for the endpoint device interface id (the long SWD id with the GUID)
-    inline std::wstring NormalizeEndpointInterfaceIdWStringCopy(_In_ std::wstring endpointInterfaceId)
-    {
-        return ToLowerTrimmedWStringCopy(endpointInterfaceId);
-    }
-
-    // used for searching for a substring in an endpoint interface id. Matches case with
-    // what NormalizeEndpointInterfaceIdCopy produces
-    inline bool EndpointInterfaceIdContainsString(_In_ std::wstring endpointInterfaceId, _In_ std::wstring searchFor)
-    {
-        auto id = NormalizeEndpointInterfaceIdWStringCopy(endpointInterfaceId);
-        auto sub = ToLowerWStringCopy(searchFor);             // match case with NormalizeEndpointInterfaceIdCopy
-
-        if (id == L"" || sub == L"")
-        {
-            return false;
-        }
-
-        return id.find(sub) != std::wstring::npos;
-    }
-
-
-
-
 
     // note that this produces a GUID with uppercase letters and enclosing braces
     inline std::wstring GuidToString(_In_ GUID guid)
@@ -249,3 +160,6 @@ namespace Windows::Devices::Midi2::Internal
 
 
 }
+
+
+#endif

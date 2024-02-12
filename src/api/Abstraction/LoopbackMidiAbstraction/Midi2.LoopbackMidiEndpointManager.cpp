@@ -50,16 +50,6 @@ CMidi2LoopbackMidiEndpointManager::Initialize(
 
 
 
-_Use_decl_annotations_
-HRESULT
-CMidi2LoopbackMidiEndpointManager::DeleteEndpointPair(std::shared_ptr<MidiLoopbackDeviceDefinition> definition)
-{
-
-    return S_OK;
-}
-
-
-
 HRESULT
 CMidi2LoopbackMidiEndpointManager::CreateParentDevice()
 {
@@ -109,9 +99,201 @@ CMidi2LoopbackMidiEndpointManager::CreateParentDevice()
 
 
 _Use_decl_annotations_
+HRESULT
+CMidi2LoopbackMidiEndpointManager::DeleteEndpointPair(
+    _In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definitionA,
+    _In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definitionB)
+{
+    TraceLoggingWrite(
+        MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+    // we can't really do much with the return values here other than log them.
+
+    LOG_IF_FAILED(DeleteSingleEndpoint(definitionA));
+    LOG_IF_FAILED(DeleteSingleEndpoint(definitionB));
+
+    return S_OK;
+}
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2LoopbackMidiEndpointManager::DeleteSingleEndpoint(
+    std::shared_ptr<MidiLoopbackDeviceDefinition> definition
+)
+{
+    RETURN_HR_IF_NULL(E_INVALIDARG, definition);
+
+    TraceLoggingWrite(
+        MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
+        TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
+        TraceLoggingWideString(definition->InstanceIdPrefix.c_str(), "prefix"),
+        TraceLoggingWideString(definition->EndpointName.c_str(), "name"),
+        TraceLoggingWideString(definition->EndpointDescription.c_str(), "description")
+    );
+
+    return m_MidiDeviceManager->DeactivateEndpoint(definition->CreatedShortClientInstanceId.c_str());
+}
+
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
+    std::shared_ptr<MidiLoopbackDeviceDefinition> definition
+    )
+{
+    RETURN_HR_IF_NULL(E_INVALIDARG, definition);
+
+    TraceLoggingWrite(
+        MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
+        TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
+        TraceLoggingWideString(definition->InstanceIdPrefix.c_str(), "prefix"),
+        TraceLoggingWideString(definition->EndpointName.c_str(), "name"),
+        TraceLoggingWideString(definition->EndpointDescription.c_str(), "description")
+        );
+
+
+    RETURN_HR_IF_MSG(E_INVALIDARG, definition->EndpointName.empty(), "Empty endpoint name");
+    RETURN_HR_IF_MSG(E_INVALIDARG, definition->InstanceIdPrefix.empty(), "Empty endpoint prefix");
+    RETURN_HR_IF_MSG(E_INVALIDARG, definition->EndpointUniqueIdentifier.empty(), "Empty endpoint unique id");
+
+
+    //put all of the devproperties we want into arrays and pass into ActivateEndpoint:
+
+    std::wstring mnemonic(TRANSPORT_MNEMONIC);
+
+    DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
+    //   DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
+
+    std::wstring endpointName = definition->EndpointName;
+    std::wstring endpointDescription = definition->EndpointDescription;
+
+    std::vector<DEVPROPERTY> interfaceDeviceProperties{};
+
+    bool requiresMetadataHandler = false;
+    bool multiClient = true;
+    bool generateIncomingTimestamps = true;
+
+    // no user or in-protocol data in this case
+    std::wstring friendlyName = internal::CalculateEndpointDevicePrimaryName(endpointName, L"", L"");
+
+    // all the standard properties we define for endpoints
+    if (internal::AddStandardEndpointProperties(
+        interfaceDeviceProperties,
+        m_TransportAbstractionId,
+        MidiEndpointDevicePurposePropertyValue::NormalMessageEndpoint,
+        friendlyName,
+        mnemonic,
+        endpointName,
+        endpointDescription,
+        L"",
+        L"",
+        definition->EndpointUniqueIdentifier,
+        MidiDataFormat::MidiDataFormat_UMP,
+        MIDI_PROP_NATIVEDATAFORMAT_UMP,
+        multiClient,
+        requiresMetadataHandler,
+        generateIncomingTimestamps
+        ))
+    {
+        // additional properties for this abstraction
+
+        // we clear this because it's not used for this abstraction. 
+        interfaceDeviceProperties.push_back(internal::BuildEmptyDevProperty(PKEY_MIDI_AssociatedUMP));
+
+        // this is needed for the loopback endpoints to have a relationship with each other
+        interfaceDeviceProperties.push_back(internal::BuildWStringDevProperty(PKEY_MIDI_VirtualMidiEndpointAssociator, definition->AssociationId));
+    }
+    else
+    {
+        TraceLoggingWrite(
+            MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Unable to build standard endpoint properties list", "message")
+        );
+
+        return E_FAIL;
+    }
+
+    // Device properties
+
+    DEVPROPERTY deviceDevProperties[] = {
+        {{DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue},
+        {{DEVPKEY_Device_NoConnectSound, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue}
+    };
+
+    SW_DEVICE_CREATE_INFO createInfo = {};
+    createInfo.cbSize = sizeof(createInfo);
+
+    // build the instance id, which becomes the middle of the SWD id
+    std::wstring instanceId = internal::NormalizeDeviceInstanceIdWStringCopy(
+        definition->InstanceIdPrefix + definition->EndpointUniqueIdentifier);
+
+    createInfo.pszInstanceId = instanceId.c_str();
+    createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
+    createInfo.pszDeviceDescription = endpointName.c_str();
+
+
+    const ULONG deviceInterfaceIdMaxSize = 255;
+    wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
+
+    RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
+        (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
+        true,                                                   // UMP-only
+        MidiFlow::MidiFlowBidirectional,                        // MIDI Flow
+        (ULONG)interfaceDeviceProperties.size(),
+        ARRAYSIZE(deviceDevProperties),
+        (PVOID)interfaceDeviceProperties.data(),
+        (PVOID)deviceDevProperties,
+        (PVOID)&createInfo,
+        (LPWSTR)&newDeviceInterfaceId,
+        deviceInterfaceIdMaxSize));
+
+
+    // now delete all the properties that have been discovered in-protocol
+    // we have to do this because they end up cached by PNP and come back
+    // when you recreate a device with the same Id. This is a real problem 
+    // if you are testing function blocks or endpoint properties with this
+    // loopback transport.
+    m_MidiDeviceManager->DeleteAllEndpointInProtocolDiscoveredProperties(newDeviceInterfaceId);
+
+    // we need this for removal later
+    definition->CreatedShortClientInstanceId = instanceId;
+
+    definition->CreatedEndpointInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId);
+
+    //MidiEndpointTable::Current().AddCreatedEndpointDevice(entry);
+    //MidiEndpointTable::Current().AddCreatedClient(entry.VirtualEndpointAssociationId, entry.CreatedClientEndpointId);
+
+    return S_OK;
+}
+
+
+
+
+
+_Use_decl_annotations_
 HRESULT 
 CMidi2LoopbackMidiEndpointManager::CreateEndpointPair(
-    std::shared_ptr<MidiLoopbackDeviceDefinition> definition
+    std::shared_ptr<MidiLoopbackDeviceDefinition> definitionA,
+    std::shared_ptr<MidiLoopbackDeviceDefinition> definitionB
 )
 {
     TraceLoggingWrite(
@@ -122,35 +304,45 @@ CMidi2LoopbackMidiEndpointManager::CreateEndpointPair(
     );
 
 
-    // workflow:
-    // Configuration manager adds the entries to the endpoint table
-    // Then calls this function to create the pair of endpoints
-    // 
-    // When endpoints BiDi are instantiated, they look at the endpoint
-    // table to see what they are supposed to connect to.
-    // 
-    // They can be created in any order, so that will need to be
-    // checked for each created endpoint.
-    //
-    // Perhaps the table itself should just contain IMidiBiDi-like
-    // functions that are called by the endpoints? Then the endpoints
-    // don't need to know anything other than where to send the message.
-    // That would also be a pattern we can use for other types of
-    // routing.
-    //
-    // So perhaps a set of definitions associated by association id and
-    // then a related table of routing which has the required functions
-    // and pointers. Or maybe it all stays in the same definition class?
-    // and just rename it to MidiLoopbackEndpointDevice ?
+    if (SUCCEEDED(CreateSingleEndpoint(definitionA)))
+    {
+        if (SUCCEEDED(CreateSingleEndpoint(definitionB)))
+        {
 
+            // all good now
 
+        }
+        else
+        {
+            // failed to create B. We need to remove A now
 
+            TraceLoggingWrite(
+                MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Failed to create loopback endpoint B. Removing A now.", "message")
+            );
 
+            // we can't do anything with the return value here
+            DeleteSingleEndpoint(definitionA);
 
+            return E_FAIL;
+        }
+    }
+    else
+    {
+        // failed to create A
+        TraceLoggingWrite(
+            MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Failed to create loopback endpoint A", "message")
+        );
 
-
-
-
+        return E_FAIL;
+    }
 
     return S_OK;
 }

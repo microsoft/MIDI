@@ -11,14 +11,21 @@ MIDI_IDL_IMPORT
 
 namespace Windows.Devices.Midi2
 {
+    // NOTE: the values are different for function blocks and group terminal
+    // blocks, so we have to different enumerations
+
     [MIDI_API_CONTRACT(1)]
-    [default_interface]
-    runtimeclass MidiSessionConnectionInformation
+    enum MidiServiceConfigurationResponseStatus
     {
-        String EndpointDeviceId{ get; };
+        Success = 0,
 
-        UInt16 InstanceCount{ get; };
+        ErrorTargetNotFound = 404,
 
-        Windows.Foundation.DateTime EarliestConnectionTime{ get; };
-    }
+        ErrorJsonNullOrEmpty = 600,
+        ErrorProcessingJson = 601,
+
+        ErrorNotImplemented = 2600,
+
+        ErrorOther = 9999,
+    };
 }

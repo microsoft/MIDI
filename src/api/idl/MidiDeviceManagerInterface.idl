@@ -9,20 +9,8 @@
 
 import "unknwn.idl";
 
-typedef enum
-{
-    MidiFlowIn = 0,
-    MidiFlowOut,
-    MidiFlowBidirectional
-} MidiFlow;
-
-typedef enum
-{
-	MidiDataFormat_Invalid = 0,
-	MidiDataFormat_ByteStream = 0x1,
-	MidiDataFormat_UMP = 0x2,
-	MidiDataFormat_Any = 0x3
-} MidiDataFormat;
+import "MidiFlow.idl";
+import "MidiDataFormat.idl";
 
 [
     object,
@@ -80,10 +68,11 @@ interface IMidiDeviceManagerInterface : IUnknown
     );
 
 
-    // Update the running configuration for an abstraction or endpoints managed by that abstraction
+    // Update the configuration for an abstraction or endpoints managed by that abstraction
     HRESULT UpdateAbstractionConfiguration(
         [in] GUID AbstractionId,
         [in] LPCWSTR ConfigurationJson,
+        [in] BOOL IsFromConfigurationFile,
         [out] BSTR* Response
     );
 

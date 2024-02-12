@@ -9,23 +9,16 @@
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-import "MidiSessionConnectionInformation.idl";
-
 namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [default_interface]
-    runtimeclass MidiSessionInformation
+    runtimeclass MidiServiceSessionConnectionInformation
     {
-        Guid SessionId{ get; };
+        String EndpointDeviceId{ get; };
 
-        UInt64 ProcessId{ get; };
-        String ProcessName{ get; };
-        String SessionName{ get; };
+        UInt16 InstanceCount{ get; };
 
-        Windows.Foundation.DateTime StartTime{ get; };
-
-
-        IVectorView<MidiSessionConnectionInformation> Connections{ get; };
+        Windows.Foundation.DateTime EarliestConnectionTime{ get; };
     }
 }

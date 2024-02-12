@@ -62,7 +62,22 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "SWDevice.h"
 #include <initguid.h>
 #include "setupapi.h"
-#include "Devpkey.h"
+//#include "Devpkey.h"
+
+// AbstractionUtilities
+#include "endpoint_data_helpers.h"
+#include "swd_property_builders.h"
+#include "swd_property_helpers.h"
+#include "json_helpers.h"
+
+#include "MidiDefs.h"
+#include "MidiDataFormat.h"
+#include "MidiFlow.h"
+#include "MidiAbstraction.h"
+
+#include "MidiXProc.h"
+
+namespace internal = ::Windows::Devices::Midi2::Internal;
 
 #include "strsafe.h"
 
@@ -75,9 +90,6 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "mididevicemanagerinterface.h"
 
 #include "dllmain.h"
-
-#include "MidiDefs.h"
-#include "MidiXProc.h"
 
 
 #include "MidiRoute.h"

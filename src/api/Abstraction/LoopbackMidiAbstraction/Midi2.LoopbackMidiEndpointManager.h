@@ -24,10 +24,17 @@ public:
     //    _Out_ LPWSTR resultJson
     //));
 
+    HRESULT CreateEndpointPair(
+        _In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definitionA,
+        _In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definitionB
+    );
 
-    HRESULT CreateEndpointPair(_In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definition);
+    HRESULT DeleteEndpointPair(
+        _In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definitionA,
+        _In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definitionB
+    );
 
-    HRESULT DeleteEndpointPair(_In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definition);
+
 
 
     //HRESULT DeleteEndpointPair(
@@ -35,6 +42,20 @@ public:
     //);
 
 private:
+
+    void CleanupDeviceDefinition(_In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definition)
+    {
+        definition->AssociationId = internal::ToLowerTrimmedWStringCopy(definition->AssociationId);
+        internal::InPlaceTrim(definition->EndpointUniqueIdentifier);
+        internal::InPlaceTrim(definition->InstanceIdPrefix);
+        internal::InPlaceTrim(definition->EndpointName);
+        internal::InPlaceTrim(definition->EndpointDescription);
+    }
+
+    HRESULT CreateSingleEndpoint(_In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definition);
+    HRESULT DeleteSingleEndpoint(_In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definition);
+
+
     GUID m_ContainerId{};
     GUID m_TransportAbstractionId{};
 

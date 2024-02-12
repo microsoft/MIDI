@@ -123,7 +123,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             m_maxDeviceInputBandwidthIn4KBSecondUnits = header->MaxInputBandwidth;
             m_maxDeviceOutputBandwidthIn4KBSecondUnits = header->MaxOutputBandwidth;
 
-            m_name = internal::TrimmedHStringCopy(name);
+            m_name = winrt::hstring{ internal::TrimmedWStringCopy(name).c_str() };
 
             return true;
         }

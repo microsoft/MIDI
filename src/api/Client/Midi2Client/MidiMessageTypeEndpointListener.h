@@ -9,8 +9,6 @@
 #pragma once
 #include "MidiMessageTypeEndpointListener.g.h"
 
-#include "string_util.h"
-
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     struct MidiMessageTypeEndpointListener : MidiMessageTypeEndpointListenerT<MidiMessageTypeEndpointListener>

@@ -6,8 +6,15 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-import "unknwn.idl";
-import "mididevicemanagerinterface.idl";
+//import "unknwn.idl";
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+
+import "MidiDataFormat.idl";
+import "MidiFlow.idl";
+import "MidiDeviceManagerInterface.idl";
 
 typedef struct
 {
@@ -201,6 +208,7 @@ interface IMidiAbstractionConfigurationManager : IUnknown
 
     HRESULT UpdateConfiguration(
         [in] LPCWSTR configurationJsonSection,
+        [in] BOOL IsFromConfigurationFile,
         [out] BSTR* response
     );
 

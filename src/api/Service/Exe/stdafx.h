@@ -38,32 +38,59 @@
 #include <atlsync.h>
 #include <sddl.h>
 
+#include "SWDevice.h"
+#include <initguid.h>
+#include <MMDeviceAPI.h>
+
+// Shared helpers
 #include "midi_ump.h"
 #include "midi_timestamp.h"
-#include "string_util.h"
+#include "wstring_util.h"
+
+// AbstractionUtilities
+#include "endpoint_data_helpers.h"
+#include "swd_property_builders.h"
+#include "swd_property_helpers.h"
 #include "json_helpers.h"
+
+// Main definitions
+#include "MidiDefs.h"
 
 namespace internal = ::Windows::Devices::Midi2::Internal;
 namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
 
-#include "MidiAbstraction.h"
-
 #include "resource.h"
 #include "propkey.h"
+
+// Abstractions. Only the Diagnostics abstraction is known to the service
+// All the others are discovered through COM
 
 #include "Midi2DiagnosticsAbstraction_i.c"
 #include "Midi2DiagnosticsAbstraction.h"
 
-#include "Midi2NetworkMidiAbstraction.h"
-#include "Midi2VirtualMidiAbstraction.h"
-#include "Midi2KSAbstraction.h"
+//#include "Midi2NetworkMidiAbstraction.h"
+//#include "Midi2VirtualMidiAbstraction.h"
+//#include "Midi2KSAbstraction.h"
 
-#include "mididevicemanagerinterface_i.c"
-#include "mididevicemanagerinterface.h"
+// Base MIDI interfaces
+
+#include "MidiDataFormat.h"
+#include "MidiFlow.h"
+
+#include "MidiAbstraction.h"
+#include "MidiAbstraction_i.c"
+
+#include "MidiDeviceManagerInterface_i.c"
+#include "MidiDeviceManagerInterface.h"
 
 #include "MidiEndpointProtocolManagerInterface_i.c"
 #include "MidiEndpointProtocolManagerInterface.h"
 
+// RPC Calls
+
+#include "MidiSrvRpc.h"
+
+// Transforms
 
 #include "Midi2BS2UMPTransform.h"
 #include "Midi2UMP2BSTransform.h"
@@ -71,19 +98,11 @@ namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
 #include "Midi2EndpointMetadataListenerTransform.h"
 
 
-#include "MidiSrvRpc.h"
+// MidiSrv internal classes
 
-#include "SWDevice.h"
-#include <initguid.h>
-#include <MMDeviceAPI.h>
-#include <Devpkey.h>
-#include "MidiDefs.h"
-
-// need to declare this before the device manager
 class CMidiEndpointProtocolManager;
 struct GUIDCompare;
 class CMidiSessionTracker;
-
 
 #include "MidiTelemetry.h"
 #include "MidiPerformanceManager.h"

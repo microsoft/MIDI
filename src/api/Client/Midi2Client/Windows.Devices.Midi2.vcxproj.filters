@@ -82,6 +82,18 @@
     <Filter Include="API\Endpoints\Session">
       <UniqueIdentifier>{6427be3d-78fd-4fff-9bf4-2353b462bfc3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="API\Service\Reporting">
+      <UniqueIdentifier>{f47089c0-b3df-4af8-93e8-35731024db07}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Service\Health">
+      <UniqueIdentifier>{7610a401-8f83-470c-9ccc-6761e3759eab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Service\Runtime Endpoints">
+      <UniqueIdentifier>{a21f8a09-4e72-422f-9569-e3eeee2ac830}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Service\Configuration">
+      <UniqueIdentifier>{2a7feacb-d6cd-45d7-a7a1-754e28d34e2d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -167,6 +179,15 @@
     </ClCompile>
     <ClCompile Include="MidiSessionInformation.cpp">
       <Filter>API\Service</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiServiceConfigurationResponse.cpp">
+      <Filter>API\Service\Configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiServiceLoopbackEndpointCreationResult.cpp">
+      <Filter>API\Service\Configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiServiceLoopbackEndpointDefinition.cpp">
+      <Filter>API\Service\Configuration</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -264,6 +285,15 @@
     <ClInclude Include="MidiSessionInformation.h">
       <Filter>API\Service</Filter>
     </ClInclude>
+    <ClInclude Include="MidiServiceConfigurationResponse.h">
+      <Filter>API\Service\Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiServiceLoopbackEndpointCreationResult.h">
+      <Filter>API\Service\Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiServiceLoopbackEndpointDefinition.h">
+      <Filter>API\Service\Configuration</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiSession.idl">
@@ -271,9 +301,6 @@
     </Midl>
     <Midl Include="MidiSessionSettings.idl">
       <Filter>API\Endpoints\Session</Filter>
-    </Midl>
-    <Midl Include="IMidiTransportSettingsData.idl">
-      <Filter>API\Transports</Filter>
     </Midl>
     <Midl Include="MidiClock.idl">
       <Filter>API\Clock</Filter>
@@ -300,15 +327,6 @@
       <Filter>API\Endpoints\Events</Filter>
     </Midl>
     <Midl Include="MidiService.idl">
-      <Filter>API\Service</Filter>
-    </Midl>
-    <Midl Include="MidiServicePingResponse.idl">
-      <Filter>API\Service</Filter>
-    </Midl>
-    <Midl Include="MidiServicePingResponseSummary.idl">
-      <Filter>API\Service</Filter>
-    </Midl>
-    <Midl Include="MidiServiceTransportPluginInformation.idl">
       <Filter>API\Service</Filter>
     </Midl>
     <Midl Include="IMidiEndpointMessageProcessingPlugin.idl">
@@ -419,9 +437,6 @@
     <Midl Include="MidiEndpointDeviceWatcher.idl">
       <Filter>API\Enumeration</Filter>
     </Midl>
-    <Midl Include="MidiServiceMessageProcessingPluginInformation.idl">
-      <Filter>API\Service</Filter>
-    </Midl>
     <Midl Include="MidiEndpointDeviceInformationUpdateEventArgs.idl">
       <Filter>API\Enumeration</Filter>
     </Midl>
@@ -434,12 +449,6 @@
     <Midl Include="MidiVirtualEndpointDevice.idl">
       <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
     </Midl>
-    <Midl Include="MidiSessionInformation.idl">
-      <Filter>API\Service</Filter>
-    </Midl>
-    <Midl Include="MidiSessionConnectionInformation.idl">
-      <Filter>API\Service</Filter>
-    </Midl>
     <Midl Include="MidiEndpointConnection.idl">
       <Filter>API\Endpoints\Connections</Filter>
     </Midl>
@@ -448,6 +457,42 @@
     </Midl>
     <Midl Include="IMidiEndpointConnectionSettings.idl">
       <Filter>API\Endpoints\Connections</Filter>
+    </Midl>
+    <Midl Include="MidiSessionInformation.idl">
+      <Filter>API\Service\Reporting</Filter>
+    </Midl>
+    <Midl Include="MidiSessionConnectionInformation.idl">
+      <Filter>API\Service\Reporting</Filter>
+    </Midl>
+    <Midl Include="MidiServicePingResponse.idl">
+      <Filter>API\Service\Health</Filter>
+    </Midl>
+    <Midl Include="MidiServicePingResponseSummary.idl">
+      <Filter>API\Service\Health</Filter>
+    </Midl>
+    <Midl Include="MidiServiceLoopbackEndpointDefinition.idl">
+      <Filter>API\Service\Runtime Endpoints</Filter>
+    </Midl>
+    <Midl Include="MidiServiceLoopbackEndpointCreationResult.idl">
+      <Filter>API\Service\Runtime Endpoints</Filter>
+    </Midl>
+    <Midl Include="MidiServiceMessageProcessingPluginInformation.idl">
+      <Filter>API\Service\Reporting</Filter>
+    </Midl>
+    <Midl Include="MidiServiceTransportPluginInformation.idl">
+      <Filter>API\Service\Reporting</Filter>
+    </Midl>
+    <Midl Include="IMidiServiceMessageProcessingPluginConfiguration.idl">
+      <Filter>API\Service\Configuration</Filter>
+    </Midl>
+    <Midl Include="IMidiServiceTransportPluginConfiguration.idl">
+      <Filter>API\Service\Configuration</Filter>
+    </Midl>
+    <Midl Include="MidiServiceConfigurationResponse.idl">
+      <Filter>API\Service\Configuration</Filter>
+    </Midl>
+    <Midl Include="MidiServiceConfigurationResponseStatusEnum.idl">
+      <Filter>API\Service\Configuration</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

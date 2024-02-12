@@ -17,7 +17,6 @@ using namespace Microsoft::WRL::Wrappers;
 #define MAX_DEVICE_ID_LEN 200 // size in chars
 
 
-GUID AbstractionLayerGUID = __uuidof(Midi2DiagnosticsAbstraction);
 
 _Use_decl_annotations_
 HRESULT
@@ -40,15 +39,14 @@ CMidi2DiagnosticsEndpointManager::Initialize(
 
     RETURN_IF_FAILED(MidiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
 
-    m_TransportAbstractionId = AbstractionLayerGUID;    // this is needed so MidiSrv can instantiate the correct transport
     m_ContainerId = m_TransportAbstractionId;           // we use the transport ID as the container ID for convenience
 
     RETURN_IF_FAILED(CreateParentDevice());
 
-    RETURN_IF_FAILED(CreateLoopbackEndpoint(DEFAULT_LOOPBACK_BIDI_A_ID, DEFAULT_LOOPBACK_BIDI_A_NAME, MidiFlow::MidiFlowBidirectional));
-    RETURN_IF_FAILED(CreateLoopbackEndpoint(DEFAULT_LOOPBACK_BIDI_B_ID, DEFAULT_LOOPBACK_BIDI_B_NAME, MidiFlow::MidiFlowBidirectional));
+    RETURN_IF_FAILED(CreateLoopbackEndpoint(DEFAULT_LOOPBACK_BIDI_A_ID, LOOPBACK_BIDI_A_UNIQUE_ID, DEFAULT_LOOPBACK_BIDI_A_NAME, MidiFlow::MidiFlowBidirectional));
+    RETURN_IF_FAILED(CreateLoopbackEndpoint(DEFAULT_LOOPBACK_BIDI_B_ID, LOOPBACK_BIDI_B_UNIQUE_ID, DEFAULT_LOOPBACK_BIDI_B_NAME, MidiFlow::MidiFlowBidirectional));
 
-    RETURN_IF_FAILED(CreatePingEndpoint(DEFAULT_PING_BIDI_ID, DEFAULT_PING_BIDI_NAME, MidiFlow::MidiFlowBidirectional));
+    RETURN_IF_FAILED(CreatePingEndpoint(DEFAULT_PING_BIDI_ID, PING_BIDI_UNIQUE_ID, DEFAULT_PING_BIDI_NAME, MidiFlow::MidiFlowBidirectional));
 
 
     return S_OK;
@@ -104,63 +102,77 @@ _Use_decl_annotations_
 HRESULT 
 CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(
     std::wstring const InstanceId,
+    std::wstring const UniqueId,
     std::wstring const Name,
     MidiFlow const Flow
 )
 {
-    OutputDebugString(__FUNCTION__ L": Enter\n");
-
-    //put all of the devproperties we want into arrays and pass into ActivateEndpoint:
+    TraceLoggingWrite(
+        MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
 
     std::wstring mnemonic(TRANSPORT_MNEMONIC);
 
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
-    DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
-    BYTE nativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
-    UINT32 supportedDataFormat = (UINT32)MidiDataFormat::MidiDataFormat_UMP;
+    //DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
 
-    std::wstring description = L"Diagnostics loopback endpoint. For testing and development purposes.";
+    std::wstring endpointName = Name;
+    std::wstring endpointDescription = L"Diagnostics loopback endpoint. For testing and development purposes.";
 
-    auto endpointPurpose = (uint32_t)MidiEndpointDevicePurposePropertyValue::DiagnosticLoopback;
+    std::vector<DEVPROPERTY> interfaceDeviceProperties{};
 
-    OutputDebugString(__FUNCTION__ L": Building DEVPROPERTY interfaceDevProperties[]\n");
+    bool requiresMetadataHandler = true;
+    bool multiClient = true;
 
-    DEVPROPERTY interfaceDevProperties[] = {
-        {{PKEY_MIDI_AssociatedUMP, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_EMPTY, 0, nullptr},
+    // do not generate incoming (from device) timestamps automatically.
+    // for the loopback endpoints, we expect a zero timestamp to come back through as zero
+    bool generateIncomingTimestamps = false;
 
-        {{PKEY_MIDI_SupportedDataFormats, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), &supportedDataFormat},
+    // no user or in-protocol data in this case
+    std::wstring friendlyName = internal::CalculateEndpointDevicePrimaryName(endpointName, L"", L"");
 
+    // all the standard properties we define for endpoints
+    if (internal::AddStandardEndpointProperties(
+        interfaceDeviceProperties,
+        m_TransportAbstractionId,
+        MidiEndpointDevicePurposePropertyValue::DiagnosticLoopback,
+        friendlyName,
+        mnemonic,
+        endpointName,
+        endpointDescription,
+        L"",
+        L"",
+        UniqueId,
+        MidiDataFormat::MidiDataFormat_UMP,
+        MIDI_PROP_NATIVEDATAFORMAT_UMP,
+        multiClient,
+        requiresMetadataHandler,
+        generateIncomingTimestamps
+    ))
+    {
+        // all good. Add additional properties
+        // additional properties for this abstraction
 
-        {{DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((Name.length() + 1) * sizeof(WCHAR)), (PVOID)Name.c_str()},
-        {{PKEY_MIDI_TransportSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((Name.length() + 1) * sizeof(WCHAR)), (PVOID)Name.c_str()},
+        // we clear this because it's not used for this abstraction. 
+        interfaceDeviceProperties.push_back(internal::BuildEmptyDevProperty(PKEY_MIDI_AssociatedUMP));
+    }
+    else
+    {
+        // unable to build properties
 
+        TraceLoggingWrite(
+            MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Unable to build standard endpoint properties list", "message")
+        );
 
-        {{PKEY_MIDI_EndpointRequiresMetadataHandler, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue},           
-
-
-        {{PKEY_MIDI_EndpointDevicePurpose, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(endpointPurpose)),(PVOID)&endpointPurpose},
-        {{PKEY_MIDI_TransportSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((description.length() + 1) * sizeof(WCHAR)), (PVOID)description.c_str() },
-        {{PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(BYTE)), (PVOID)&nativeDataFormat},
-
-        // do not generate incoming (from device) timestamps automatically.
-        // for the loopback endpoints, we expect a zero timestamp to come back through as zero
-        {{PKEY_MIDI_GenerateIncomingTimestamp, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), (PVOID)&devPropFalse},
-
-
-        {{PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_GUID, static_cast<ULONG>(sizeof(GUID)), (PVOID)&AbstractionLayerGUID },        // essential to instantiate the right endpoint types
-        {{PKEY_MIDI_TransportMnemonic, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((mnemonic.length() + 1) * sizeof(WCHAR)), (PVOID)mnemonic.c_str()},
-    };
+        return E_FAIL;
+    }
 
     DEVPROPERTY deviceDevProperties[] = {
         {{DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
@@ -168,8 +180,6 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(
         {{DEVPKEY_Device_NoConnectSound, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue}
     };
-
-    OutputDebugString(__FUNCTION__ L": Building SW_DEVICE_CREATE_INFO\n");
 
     SW_DEVICE_CREATE_INFO createInfo = {};
     createInfo.cbSize = sizeof(createInfo);
@@ -183,15 +193,13 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(
     wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
 
 
-    OutputDebugString(__FUNCTION__ L": About to ActivateEndpoint\n");
-
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
         (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
         true,                                                   // UMP-only
         Flow,                                                   // MIDI Flow
-        ARRAYSIZE(interfaceDevProperties),
+        (ULONG)interfaceDeviceProperties.size(),
         ARRAYSIZE(deviceDevProperties),
-        (PVOID)interfaceDevProperties,
+        (PVOID)interfaceDeviceProperties.data(),
         (PVOID)deviceDevProperties,
         (PVOID)&createInfo,
         (LPWSTR)&newDeviceInterfaceId,
@@ -208,12 +216,7 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(
     // TODO: Invoke the protocol negotiator to now capture updated endpoint info.
     
 
-    
-    
-    
     // todo: store the interface id and use it for matches later instead of the current partial string match
-
-    OutputDebugString(__FUNCTION__ L": Complete\n");
 
     return S_OK;
 }
@@ -222,53 +225,77 @@ _Use_decl_annotations_
 HRESULT
 CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(
     std::wstring const InstanceId,
+    std::wstring const UniqueId,
     std::wstring const Name, 
     MidiFlow const Flow
 )
 {
-    OutputDebugString(L"" __FUNCTION__);
+    TraceLoggingWrite(
+        MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
 
     //put all of the devproperties we want into arrays and pass into ActivateEndpoint:
 
     std::wstring mnemonic(TRANSPORT_MNEMONIC);
 
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
-    DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
-    BYTE nativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
-    UINT32 supportedDataFormat = (UINT32)MidiDataFormat::MidiDataFormat_UMP;
+    //DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
 
-    auto endpointPurpose = (uint32_t)MidiEndpointDevicePurposePropertyValue::DiagnosticPing;
+    std::wstring endpointName = Name;
+    std::wstring endpointDescription = L"Internal UMP Ping endpoint. Do not send messages to this endpoint.";
 
-    std::wstring description = L"Internal UMP Ping endpoint. Do not send messages to this endpoint.";
+    std::vector<DEVPROPERTY> interfaceDeviceProperties{};
 
-    DEVPROPERTY interfaceDevProperties[] = {
-        {{DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((Name.length() + 1) * sizeof(WCHAR)), (PVOID)Name.c_str()},
-        {{PKEY_MIDI_TransportSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((Name.length() + 1) * sizeof(WCHAR)), (PVOID)Name.c_str()},
+    bool requiresMetadataHandler = false;
+    bool multiClient = true;
+    bool generateIncomingTimestamps = true;
 
-        {{PKEY_MIDI_EndpointRequiresMetadataHandler, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse},
+    // no user or in-protocol data in this case
+    std::wstring friendlyName = internal::CalculateEndpointDevicePrimaryName(endpointName, L"", L"");
 
-        {{PKEY_MIDI_SupportedDataFormats, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), &supportedDataFormat},
+    // all the standard properties we define for endpoints
+    if (internal::AddStandardEndpointProperties(
+        interfaceDeviceProperties,
+        m_TransportAbstractionId,
+        MidiEndpointDevicePurposePropertyValue::DiagnosticPing,
+        friendlyName,
+        mnemonic,
+        endpointName,
+        endpointDescription,
+        L"",
+        L"",
+        UniqueId,
+        MidiDataFormat::MidiDataFormat_UMP,
+        MIDI_PROP_NATIVEDATAFORMAT_UMP,
+        multiClient,
+        requiresMetadataHandler,
+        generateIncomingTimestamps
+    ))
+    {
+        // all good. Add additional properties
+        // additional properties for this abstraction
 
+        // we clear this because it's not used for this abstraction. 
+        interfaceDeviceProperties.push_back(internal::BuildEmptyDevProperty(PKEY_MIDI_AssociatedUMP));
 
+    }
+    else
+    {
+        // unable to build properties
 
-        {{PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_GUID, static_cast<ULONG>(sizeof(GUID)), (PVOID)&AbstractionLayerGUID },        // essential to instantiate the right endpoint types
-        {{PKEY_MIDI_EndpointDevicePurpose, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(endpointPurpose)),(PVOID)&endpointPurpose},
-        {{PKEY_MIDI_TransportSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((description.length() + 1) * sizeof(WCHAR)), (PVOID)description.c_str() },
-        {{PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(BYTE)), (PVOID)&nativeDataFormat},
-        {{PKEY_MIDI_TransportMnemonic, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((mnemonic.length() + 1) * sizeof(WCHAR)), (PVOID)mnemonic.c_str()}
+        TraceLoggingWrite(
+            MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Unable to build standard endpoint properties list", "message")
+        );
 
-
-    };
-
+        return E_FAIL;
+    }
 
     DEVPROPERTY deviceDevProperties[] = {
         {{DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
@@ -292,17 +319,15 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(
         m_parentDeviceId.c_str(),                               // parent instance Id
         true,                                                   // UMP-only
         Flow,                                                   // MIDI Flow
-        ARRAYSIZE(interfaceDevProperties),
+        (ULONG)interfaceDeviceProperties.size(),
         ARRAYSIZE(deviceDevProperties),
-        (PVOID)interfaceDevProperties,
+        (PVOID)interfaceDeviceProperties.data(),
         (PVOID)deviceDevProperties,
         (PVOID)&createInfo,
         (LPWSTR)&newDeviceInterfaceId,
         deviceInterfaceIdMaxSize));
 
     // TODO: Get the device interface id and store it for comparison later.
-
-    OutputDebugString(__FUNCTION__ L": Complete\n");
 
     return S_OK;
 }
@@ -311,8 +336,6 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(
 HRESULT
 CMidi2DiagnosticsEndpointManager::Cleanup()
 {
-    OutputDebugString(L"" __FUNCTION__ " Enter");
-
     TraceLoggingWrite(
         MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
