@@ -208,6 +208,7 @@ interface IMidiAbstractionConfigurationManager : IUnknown
 
     HRESULT UpdateConfiguration(
         [in] LPCWSTR configurationJsonSection,
+        [in] BOOL IsFromConfigurationFile,
         [out] BSTR* response
     );
 

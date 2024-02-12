@@ -10,7 +10,7 @@ has_children: false
 
 This class represents an open connection in a Windows MIDI Services session. This is an informational class only for reporting system-wide connection usage. 
 
-## Static Functions
+## Properties
 
 | Property | Description |
 |---|---|

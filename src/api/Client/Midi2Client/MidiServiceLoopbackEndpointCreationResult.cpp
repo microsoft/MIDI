@@ -6,19 +6,12 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#pragma once
-
-// the IDs here aren't the full Ids, just the values we start with
-// The full Id comes back from the swdevicecreate callback
-
-#define TRANSPORT_MNEMONIC L"VPB"
-
-// TODO: Names should be moved to .rc for localization
-
-#define TRANSPORT_PARENT_ID L"MIDIU_VPB_TRANSPORT"
-#define TRANSPORT_PARENT_DEVICE_NAME L"MIDI 2.0 Patch Bay"
+#include "pch.h"
+#include "MidiServiceLoopbackEndpointCreationResult.h"
+#include "MidiServiceLoopbackEndpointCreationResult.g.cpp"
 
 
-#define LOOPBACK_PARENT_ROOT L"HTREE\\ROOT\\0"
+namespace winrt::Windows::Devices::Midi2::implementation
+{
 
-#define TRANSPORT_ENUMERATOR L"MIDISRV"
+}

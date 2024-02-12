@@ -94,7 +94,7 @@
                    Bitness="always64"
                    Directory="SERVICE_INSTALLFOLDER"
                    Guid="25E35CBB-4C66-4BEB-9B03-BC2E2D99317B"
-                   NeverOverwrite="true">
+                   NeverOverwrite="false">
                    
             <!-- Permanent is set to "yes" because this installer is for dev builds -->
             

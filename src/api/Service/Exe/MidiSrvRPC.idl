@@ -101,6 +101,7 @@ interface MidiSrvRPC
     HRESULT MidiSrvUpdateConfiguration(
         [in] handle_t BindingHandle, 
         [in, string] LPCWSTR ConfigurationJson, 
+        [in] BOOL IsFromConfigurationFile,
         [out] BSTR* Response);
 
 

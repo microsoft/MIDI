@@ -128,9 +128,11 @@ public:
         );
 
 
+    // this is for runtime updates only, not for config file updates
     STDMETHOD(UpdateAbstractionConfiguration)(
         _In_ GUID AbstractionId,
         _In_ LPCWSTR ConfigurationJson,
+        _In_ BOOL IsFromConfigurationFile,
         _Out_ BSTR* Response
         );
 

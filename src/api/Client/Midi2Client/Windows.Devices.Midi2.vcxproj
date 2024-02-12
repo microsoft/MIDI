@@ -281,6 +281,15 @@
     <ClInclude Include="MidiMessageConverter.h">
       <DependentUpon>MidiMessageConverter.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiServiceConfigurationResponse.h">
+      <DependentUpon>MidiServiceConfigurationResponse.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceLoopbackEndpointCreationResult.h">
+      <DependentUpon>MidiServiceLoopbackEndpointCreationResult.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceLoopbackEndpointDefinition.h">
+      <DependentUpon>MidiServiceLoopbackEndpointDefinition.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiServiceMessageProcessingPluginInformation.h">
       <DependentUpon>MidiServiceMessageProcessingPluginInformation.idl</DependentUpon>
     </ClInclude>
@@ -320,11 +329,11 @@
     <ClInclude Include="MidiMessageTypeEndpointListener.h">
       <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiSessionConnectionInformation.h">
-      <DependentUpon>MidiSessionConnectionInformation.idl</DependentUpon>
+    <ClInclude Include="MidiServiceSessionConnectionInformation.h">
+      <DependentUpon>MidiServiceSessionConnectionInformation.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiSessionInformation.h">
-      <DependentUpon>MidiSessionInformation.idl</DependentUpon>
+    <ClInclude Include="MidiServiceSessionInformation.h">
+      <DependentUpon>MidiServiceSessionInformation.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiSessionSettings.h">
       <DependentUpon>MidiSessionSettings.idl</DependentUpon>
@@ -397,6 +406,15 @@
     <ClCompile Include="MidiMessageConverter.cpp">
       <DependentUpon>MidiMessageConverter.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiServiceConfigurationResponse.cpp">
+      <DependentUpon>MidiServiceConfigurationResponse.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceLoopbackEndpointCreationResult.cpp">
+      <DependentUpon>MidiServiceLoopbackEndpointCreationResult.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceLoopbackEndpointDefinition.cpp">
+      <DependentUpon>MidiServiceLoopbackEndpointDefinition.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiServiceMessageProcessingPluginInformation.cpp">
       <DependentUpon>MidiServiceMessageProcessingPluginInformation.idl</DependentUpon>
     </ClCompile>
@@ -436,11 +454,11 @@
     <ClCompile Include="MidiMessageTypeEndpointListener.cpp">
       <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiSessionConnectionInformation.cpp">
-      <DependentUpon>MidiSessionConnectionInformation.idl</DependentUpon>
+    <ClCompile Include="MidiServiceSessionConnectionInformation.cpp">
+      <DependentUpon>MidiServiceSessionConnectionInformation.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiSessionInformation.cpp">
-      <DependentUpon>MidiSessionInformation.idl</DependentUpon>
+    <ClCompile Include="MidiServiceSessionInformation.cpp">
+      <DependentUpon>MidiServiceSessionInformation.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiSessionSettings.cpp">
       <DependentUpon>MidiSessionSettings.idl</DependentUpon>
@@ -491,8 +509,10 @@
   <ItemGroup>
     <Midl Include="IMidiEndpointConnectionSource.idl" />
     <Midl Include="IMidiEndpointMessageProcessingPlugin.idl" />
+    <Midl Include="IMidiServiceMessageProcessingPluginConfiguration.idl" />
     <Midl Include="IMidiMessageReceivedEventSource.idl" />
-    <Midl Include="IMidiTransportSettingsData.idl" />
+    <Midl Include="MidiServiceConfigurationResponse.idl" />
+    <Midl Include="IMidiServiceTransportPluginConfiguration.idl" />
     <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl" />
     <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl" />
     <Midl Include="MidiEndpointDeviceInformationUpdateEventArgs.idl" />
@@ -518,6 +538,9 @@
     <Midl Include="MidiGroupTerminalBlock.idl" />
     <Midl Include="MidiGroupTerminalBlockProtocolEnum.idl" />
     <Midl Include="MidiMessageConverter.idl" />
+    <Midl Include="MidiServiceConfigurationResponseStatusEnum.idl" />
+    <Midl Include="MidiServiceLoopbackEndpointDefinition.idl" />
+    <Midl Include="MidiServiceLoopbackEndpointCreationResult.idl" />
     <Midl Include="MidiServiceMessageProcessingPluginInformation.idl" />
     <Midl Include="MidiMessageStruct.idl" />
     <Midl Include="MidiMessageBuilder.idl" />
@@ -531,8 +554,8 @@
     <Midl Include="MidiServicePingResponse.idl" />
     <Midl Include="MidiServicePingResponseSummary.idl" />
     <Midl Include="MidiSession.idl" />
-    <Midl Include="MidiSessionConnectionInformation.idl" />
-    <Midl Include="MidiSessionInformation.idl" />
+    <Midl Include="MidiServiceSessionConnectionInformation.idl" />
+    <Midl Include="MidiServiceSessionInformation.idl" />
     <Midl Include="MidiSessionSettings.idl" />
     <Midl Include="IMidiUniversalPacket.idl" />
     <Midl Include="MidiStreamConfigurationRequestedSettings.idl" />

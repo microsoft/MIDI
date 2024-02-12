@@ -6,15 +6,16 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#include "midl_defines.h"
-MIDI_IDL_IMPORT
+#pragma once
+#include "MidiServiceConfigurationResponse.g.h"
 
-namespace Windows.Devices.Midi2
+namespace winrt::Windows::Devices::Midi2::implementation
 {
-    [MIDI_API_CONTRACT(1)]
-    [MIDI_INTERFACE_UUID("b2417dde-ef35-499b-a89b-0a4c32cc699a",1.0)]
-    interface IMidiTransportSettingsData
+    struct MidiServiceConfigurationResponse : MidiServiceConfigurationResponseT<MidiServiceConfigurationResponse>
     {
-        String SettingsJson { get; set; };
-    }
+        MidiServiceConfigurationResponse() = default;
+
+        winrt::Windows::Devices::Midi2::MidiServiceConfigurationResponseStatus Status();
+        hstring ResponseJson();
+    };
 }

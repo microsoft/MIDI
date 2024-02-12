@@ -9,7 +9,7 @@ has_children: false
 
 This class represents a single ping message response. This is used to assess health and performance of the Windows service.
 
-## Static Functions
+## Properties
 
 | Property | Description |
 |---|---|

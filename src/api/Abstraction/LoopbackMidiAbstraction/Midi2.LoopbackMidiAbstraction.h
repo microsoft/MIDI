@@ -15,7 +15,7 @@ class MidiLoopbackMidiAbstractionTelemetryProvider : public wil::TraceLoggingPro
         "Microsoft.Windows.Midi2.LoopbackMidiAbstraction",
         //  5a36c0b3-5d4c-545b-b9e7-461470957699 from hash of name using:
         // PS> [System.Diagnostics.Tracing.EventSource]::new("Microsoft.Windows.Midi2.LoopbackMidiAbstraction").Guid
-        (0x5a36c0b3,0x5d4,0x545b,0xb9,0xe7,0x46,0x14,0x70,0x95,0x76,0x99))
+        (0x5a36c0b3,0x5d4c,0x545b,0xb9,0xe7,0x46,0x14,0x70,0x95,0x76,0x99))
 };
 
 using namespace ATL;

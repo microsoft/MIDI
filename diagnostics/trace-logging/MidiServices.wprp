@@ -20,6 +20,7 @@
     <EventProvider Id="EventProvider_VirtualPatchBayAbstraction" Name="*Microsoft.Windows.Midi2.VirtualPatchBayAbstraction"/>
     <EventProvider Id="EventProvider_NetworkMidiAbstraction" Name="*Microsoft.Windows.Midi2.NetworkMidiAbstraction"/>
     <EventProvider Id="EventProvider_BluetoothMidiAbstraction" Name="*Microsoft.Windows.Midi2.BluetoothMidiAbstraction"/>
+    <EventProvider Id="EventProvider_LoopbackMidiAbstraction" Name="*Microsoft.Windows.Midi2.LoopbackMidiAbstraction"/>
 
     <EventProvider Id="EventProvider_API" Name="*Windows.Devices.Midi2.Api"/>
 
@@ -45,6 +46,7 @@
             <EventProviderId Value="EventProvider_VirtualPatchBayAbstraction"/>
             <EventProviderId Value="EventProvider_NetworkMidiAbstraction"/>
             <EventProviderId Value="EventProvider_BluetoothMidiAbstraction"/>
+            <EventProviderId Value="EventProvider_LoopbackMidiAbstraction"/>
 
             <EventProviderId Value="EventProvider_API"/>
 

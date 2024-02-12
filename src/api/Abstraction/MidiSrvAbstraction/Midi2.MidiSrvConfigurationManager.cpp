@@ -12,7 +12,7 @@
 
 _Use_decl_annotations_
 HRESULT
-CMidi2MidiSrvConfigurationManager::UpdateConfiguration(LPCWSTR configurationJson, BSTR* response)
+CMidi2MidiSrvConfigurationManager::UpdateConfiguration(LPCWSTR configurationJson, BOOL IsFromConfigurationFile, BSTR* response)
 {
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),
@@ -31,7 +31,7 @@ CMidi2MidiSrvConfigurationManager::UpdateConfiguration(LPCWSTR configurationJson
     {
         // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
         // with structured exception handling.
-        RpcTryExcept RETURN_IF_FAILED(MidiSrvUpdateConfiguration(bindingHandle.get(), configurationJson, response));
+        RpcTryExcept RETURN_IF_FAILED(MidiSrvUpdateConfiguration(bindingHandle.get(), configurationJson, IsFromConfigurationFile, response));
         RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
         RpcEndExcept
         return S_OK;

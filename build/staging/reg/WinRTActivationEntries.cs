@@ -38,6 +38,7 @@ class RegistryEntries
         new RegEntry{ ClassName="Windows.Devices.Midi2.IMidiEndpointConnectionStatics", ActivationType=0, Threading=0, TrustLevel=0  },
         new RegEntry{ ClassName="Windows.Devices.Midi2.MidiService", ActivationType=0, Threading=0, TrustLevel=0  },
         new RegEntry{ ClassName="Windows.Devices.Midi2.IMidiServiceStatics", ActivationType=0, Threading=0, TrustLevel=0  },
+        new RegEntry{ ClassName="Windows.Devices.Midi2.MidiServiceLoopbackEndpointDefinition", ActivationType=0, Threading=0, TrustLevel=0  },
         new RegEntry{ ClassName="Windows.Devices.Midi2.MidiClock", ActivationType=0, Threading=0, TrustLevel=0  },
         new RegEntry{ ClassName="Windows.Devices.Midi2.IMidiClockStatics", ActivationType=0, Threading=0, TrustLevel=0  },
         new RegEntry{ ClassName="Windows.Devices.Midi2.MidiChannel", ActivationType=0, Threading=0, TrustLevel=0  },

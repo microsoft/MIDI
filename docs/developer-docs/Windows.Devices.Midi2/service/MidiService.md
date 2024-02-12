@@ -10,18 +10,44 @@ has_children: false
 
 The MidiService class contains a number of static functions which enable working with the service outside of a specific session. 
 
-## Static Functions
+## Static Functions : Reporting
+
+| Static Function | Description |
+|---|---|
+| `GetInstalledTransportPlugins()` | Returns a list of `MidiServiceTransportPluginInformation` representing all service transport plugins (also called Abstractions) |
+| `GetInstalledMessageProcessingPlugins()` | Returns a list of `MidiServiceMessageProcessingPluginInformation` objects representing all service message processing plugins (also called Transforms) |
+| `GetActiveSessions()` | Returns a list of `MidiSessionInformation` detailing all active Windows MIDI Services sessions on this PC. |
+
+## Static Functions : Loopback Endpoints
+
+| Static Function | Description |
+|---|---|
+| `CreateTemporaryLoopbackEndpoints(associationId, endpointA, endpointB)` | Create a pair of loopback endpoints which will live until removed through the API or the service is restarted. |
+| `RemoveTemporaryLoopbackEndpoints(associationId)` | Remove a pair of temporary loopback endpoints. |
+
+Applications creating endpoints for app-to-app MIDI should generally use the Virtual Device support built into the API. However, applications may need to create lightweight loopback endpoints without the protocol negotiation, MIDI 2.0 discovery process, and lifetime management provided by the Virtual Device support. For those scenarios, we have a simple loopback endpoint type.
+
+Loopback endpoints created by the user and stored in the configuration file will persist after the service is restarted or the PC rebooted. Loopback endpoints created through this API call are temporary, and will disappear if the service is restarted. In both cases, this feature requires that the loopback endpoint transport is installed and enabled.
+
+## Static Functions : Runtime Configuration
+
+| Static Function | Description |
+|---|---|
+| `UpdateTransportPluginConfiguration(configurationUpdate)` | Sends an update to the service to be used by a transport plugin ("Abstraction") |
+| `UpdateProcessingPluginConfiguration(configurationUpdate)` | Sends an update to the service to be used by a message processing plugin ("Transform")  |
+
+For plugins which support updates at runtime, developers of those plugins should create configuration WinRT types which implement the required configuration interfaces, and create the JSON that is used in the service. In this way, third-party service transport and message processing plugins can be created and configured without changes to the API.
+
+> Note: In version 1 of the API, only transports can be configured at runtime. We're working on enabling configuration of message processing plugins.
+
+## Static Functions : Service Health
 
 | Static Function | Description |
 |---|---|
 | `PingService(pingCount)` | Send one or more ping messages to the ping endpoint and report on the status and time. Return if the responses are not received in a calculated timeout period. |
 | `PingService(pingCount, timeoutMilliseconds)` | Send one or more ping messages to the ping endpoint and report on the status and time. Return if responses are not received in the specified timeout period. |
-| `GetInstalledTransportPlugins()` | Returns a list of `MidiServiceTransportPluginInformation` representing all service transport plugins (also called Abstractions) |
-| `GetInstalledMessageProcessingPlugins()` | Returns a list of `MidiServiceMessageProcessingPluginInformation` objects representing all service message processing plugins (also called Transforms) |
-| `GetActiveSessions()` | Returns a list of `MidiSessionInformation` detailing all active Windows MIDI Services sessions on this PC. |
-| `UpdateRuntimeConfiguration(configurationUpdate)` | Used by client-side SDK components for some transports and other plugins, and by the MIDI Settings app. The format of the data is dependent upon the target specified in the data. Use with caution. For more information, see the [config JSON documentation](../../../config-json.md) |
 
-## A note on the ping process
+### The ping process
 
 Pinging the Windows service uses the same mechanism as sending any UMP message. The actual message sent is a prioprietary message. (At the time this was created, there was no standard MIDI 2.0 UMP ping message). The message itself is sent to the diagnostics endpoint in the service, which is implemented like any other transport. Therefore, the speed of the pings here and the success of the ping process is a reasonable indicator of service, cross-process queue, and client API health.
 
@@ -32,12 +58,6 @@ The ping does not tell you if a specific transport or device is in a bad state. 
 Here's an example of ping responses through the MIDI console app
 
 ![MIDI Console Ping](./console-ping.png)
-
-## A note on updating runtime configuration
-
-In order to foster an open plugin ecosystem, we need a way to get settings and configuration for those plugins up to them in the Windows service. The way we've chosen to do that is JSON, because that same JSON, when not transient in nature, can also be saved into the permanent configuration file for the active MIDI setup.
-
-The runtime configuration update should only be used by code which understands exactly what will be done with the data, and can handle the response which is returned. It is not a general API endpoint, but is designed for components which will extend Windows MIDI Services.
 
 ## IDL
 

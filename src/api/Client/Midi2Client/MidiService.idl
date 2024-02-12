@@ -13,7 +13,14 @@ import "MidiServiceTransportPluginInformation.idl";
 import "MidiServiceMessageProcessingPluginInformation.idl";
 import "MidiServicePingResponseSummary.idl";
 
-import "MidiSessionInformation.idl";
+import "MidiServiceSessionInformation.idl";
+
+import "MidiServiceLoopbackEndpointCreationResult.idl";
+import "MidiServiceLoopbackEndpointDefinition.idl";
+
+import "IMidiServiceTransportPluginConfiguration.idl";
+import "IMidiServiceMessageProcessingPluginConfiguration.idl";
+import "MidiServiceConfigurationResponse.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -37,10 +44,33 @@ namespace Windows.Devices.Midi2
 //        static UInt32 GetOutgoingMessageQueueMaxMessageCapacity();
 
 
-        static IVectorView<MidiSessionInformation> GetActiveSessions();
+        static IVectorView<MidiServiceSessionInformation> GetActiveSessions();
 
 
-        static Windows.Data.Json.JsonObject UpdateRuntimeConfiguration(Windows.Data.Json.JsonObject configurationUpdate);
+        // creates loopback endpoints that live for only as long as the service is running.
+        // Permanent endpoints need to be created by the user through the settings application
+        // so they get written to the configuration file and loaded when the service is loaded
+        // We special-case loopbacks here just like we special-case Virtual Devices in the 
+        // session class, because they are very common to use and have special creation semantics.
+        static MidiServiceLoopbackEndpointCreationResult CreateTemporaryLoopbackEndpoints(
+            Guid associationId, 
+            MidiServiceLoopbackEndpointDefinition endpointDefinitionA, 
+            MidiServiceLoopbackEndpointDefinition endpointDefinitionB);
+
+        static Boolean RemoveTemporaryLoopbackEndpoints(Guid associationId);
+
+        // used for CRUD operations for certain endpoints (Transports). Create a component which calls this and
+        // provides strongly typed parameters specific to your transport. In general, applications should not be
+        // using this function directly. Instead, they should use a configuration component associated with the plugin.
+        static MidiServiceConfigurationResponse UpdateTransportPluginConfiguration(
+            IMidiServiceTransportPluginConfiguration configurationUpdate);
+
+
+        // used for CRUD operations for certain endpoint message processing plugins (Transforms). Create a component which calls this and
+        // provides strongly typed parameters specific to your transport In general, applications should not be
+        // using this function directly. Instead, they should use a configuration component associated with the plugin.
+        static MidiServiceConfigurationResponse UpdateProcessingPluginConfiguration(
+            IMidiServiceMessageProcessingPluginConfiguration configurationUpdate);
 
     }
 }

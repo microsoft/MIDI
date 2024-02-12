@@ -16,7 +16,12 @@ CMidi2LoopbackMidiAbstraction::Activate(
     void **Interface
 )
 {
-    OutputDebugString(L"" __FUNCTION__ " Enter");
+    TraceLoggingWrite(
+        MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
 
     RETURN_HR_IF(E_INVALIDARG, nullptr == Interface);
 

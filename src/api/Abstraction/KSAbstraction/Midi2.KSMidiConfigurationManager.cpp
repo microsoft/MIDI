@@ -32,11 +32,12 @@ CMidi2KSMidiConfigurationManager::Initialize(
 
 _Use_decl_annotations_
 HRESULT
-CMidi2KSMidiConfigurationManager::UpdateConfiguration(LPCWSTR configurationJson, BSTR* response)
+CMidi2KSMidiConfigurationManager::UpdateConfiguration(LPCWSTR configurationJson, BOOL IsFromConfigurationFile, BSTR* response)
 {
     OutputDebugString(L"\n" __FUNCTION__);
 
     UNREFERENCED_PARAMETER(configurationJson);
+    UNREFERENCED_PARAMETER(IsFromConfigurationFile);
 
 
     // temp. Also, client needs to free this.

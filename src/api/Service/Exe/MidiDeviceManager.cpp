@@ -38,6 +38,16 @@ CMidiDeviceManager::Initialize(
 
         try
         {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Loading abstraction layer", "message"),
+                TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+            );
+
+
             // provide the initial settings for these transports
             auto transportSettingsJson = m_ConfigurationManager->GetSavedConfigurationForTransportAbstraction(AbstractionLayer);
 
@@ -61,7 +71,6 @@ CMidiDeviceManager::Initialize(
 
                     if (SUCCEEDED(initializeResult))
                     {
-                        OutputDebugString(__FUNCTION__ L": Transport Abstraction initialized.\n");
                         m_MidiEndpointManagers.emplace(AbstractionLayer, std::move(endpointManager));
                     }
                     else
@@ -71,7 +80,8 @@ CMidiDeviceManager::Initialize(
                             __FUNCTION__,
                             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                             TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(L"Transport abstraction initialization failed.")
+                            TraceLoggingWideString(L"Transport abstraction initialization failed.", "message"),
+                            TraceLoggingGuid(AbstractionLayer, "abstraction layer")
                         );
                     }
 
@@ -83,7 +93,8 @@ CMidiDeviceManager::Initialize(
                         __FUNCTION__,
                         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Transport abstraction endpoint manager initialization failed.")
+                        TraceLoggingWideString(L"Transport abstraction endpoint manager initialization failed.", "message"),
+                        TraceLoggingGuid(AbstractionLayer, "abstraction layer")
                     );
 
                 }
@@ -93,12 +104,12 @@ CMidiDeviceManager::Initialize(
 
                 if (abstractionConfigurationManager != nullptr)
                 {
-                    if (transportSettingsJson != L"")
+                    if (!transportSettingsJson.empty())
                     {
-                        CComBSTR response;
+                        CComBSTR response{};
                         response.Empty();
 
-                        LOG_IF_FAILED(abstractionConfigurationManager->UpdateConfiguration(transportSettingsJson.c_str(), &response));
+                        LOG_IF_FAILED(abstractionConfigurationManager->UpdateConfiguration(transportSettingsJson.c_str(), true, &response));
 
                         // we don't use the response info here.
                         ::SysFreeString(response);
@@ -114,13 +125,10 @@ CMidiDeviceManager::Initialize(
                     __FUNCTION__,
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Transport Abstraction activation failed (nullptr return).")
+                    TraceLoggingWideString(L"Transport Abstraction activation failed (nullptr return).", "message"),
+                    TraceLoggingGuid(AbstractionLayer, "abstraction layer")
                 );
             }
-
-
-
-
 
         }
         catch (...)
@@ -131,7 +139,8 @@ CMidiDeviceManager::Initialize(
                 __FUNCTION__,
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Exception loading transport abstraction.")
+                TraceLoggingWideString(L"Exception loading transport abstraction.", "message"),
+                TraceLoggingGuid(AbstractionLayer, "abstraction layer")
             );
 
         }
@@ -766,7 +775,7 @@ CMidiDeviceManager::DeactivateEndpoint
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(InstanceId)
+        TraceLoggingWideString(InstanceId, "instance id")
     );
 
     auto cleanId = internal::NormalizeDeviceInstanceIdWStringCopy(InstanceId);
@@ -837,6 +846,7 @@ CMidiDeviceManager::UpdateAbstractionConfiguration
 (
     GUID AbstractionId,
     LPCWSTR ConfigurationJson,
+    BOOL IsFromConfigurationFile,
     BSTR* Response
 )
 {
@@ -847,8 +857,9 @@ CMidiDeviceManager::UpdateAbstractionConfiguration
             __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingGuid(AbstractionId),
-            TraceLoggingWideString(ConfigurationJson)
+            TraceLoggingGuid(AbstractionId, "abstraction id"),
+            TraceLoggingWideString(ConfigurationJson, "config json"),
+            TraceLoggingBool(IsFromConfigurationFile, "from config file")
         );
 
         if (auto search = m_MidiAbstractionConfigurationManagers.find(AbstractionId); search != m_MidiAbstractionConfigurationManagers.end())
@@ -857,7 +868,7 @@ CMidiDeviceManager::UpdateAbstractionConfiguration
 
             if (configManager)
             {
-                return configManager->UpdateConfiguration(ConfigurationJson, Response);
+                return configManager->UpdateConfiguration(ConfigurationJson, IsFromConfigurationFile, Response);
             }
         }
         else
@@ -867,8 +878,8 @@ CMidiDeviceManager::UpdateAbstractionConfiguration
                 __FUNCTION__,
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingGuid(AbstractionId),
-                TraceLoggingWideString(L"Failed to find the referenced abstraction by its GUID")
+                TraceLoggingGuid(AbstractionId, "abstraction id"),
+                TraceLoggingWideString(L"Failed to find the referenced abstraction by its GUID", "message")
             );
 
         }
@@ -880,7 +891,7 @@ CMidiDeviceManager::UpdateAbstractionConfiguration
             __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Json is null")
+            TraceLoggingWideString(L"Json is null", "message")
         );
     }
 
@@ -899,8 +910,6 @@ CMidiDeviceManager::Cleanup()
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
-
-    OutputDebugString(__FUNCTION__ L"\n");
 
     m_MidiEndpointManagers.clear();
     m_MidiAbstractionConfigurationManagers.clear();
