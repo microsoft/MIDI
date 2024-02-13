@@ -172,89 +172,78 @@ StreamEngine::HandleIo()
                     // or the write buffer is full.
 
                     // we have a write event, there should be data available to move.
-                    // (m_IsRunning)
-                    if (1)
+
+                    ULONG bytesAvailableToRead = 0;
+
+                    KeResetEvent(m_WriteEvent);
+
+                    // Retrieve the midi out position for the buffer we are reading from. The data between the read position
+                    // and write position is valid. (read position is our last read position, write position is their last written).
+                    // Retrieve our read position first since we know it won't be changing, get their last write position second,
+                    // so we can get as much data as possible.
+                    ULONG midiOutReadPosition = (ULONG) InterlockedCompareExchange((LONG *)m_ReadRegister, 0, 0);
+                    ULONG midiOutWritePosition = (ULONG) InterlockedCompareExchange((LONG *)m_WriteRegister, 0, 0);
+
+                    // first figure out how much data there is to read, taking
+                    // into account the looping buffer.
+                    if (midiOutReadPosition <= midiOutWritePosition)
                     {
-                        ULONG bytesAvailableToRead = 0;
-
-                        KeResetEvent(m_WriteEvent);
-
-                        // Retrieve the midi out position for the buffer we are reading from. The data between the read position
-                        // and write position is valid. (read position is our last read position, write position is their last written).
-                        // Retrieve our read position first since we know it won't be changing, get their last write position second,
-                        // so we can get as much data as possible.
-                        ULONG midiOutReadPosition = (ULONG) InterlockedCompareExchange((LONG *)m_ReadRegister, 0, 0);
-                        ULONG midiOutWritePosition = (ULONG) InterlockedCompareExchange((LONG *)m_WriteRegister, 0, 0);
-
-                        // first figure out how much data there is to read, taking
-                        // into account the looping buffer.
-                        if (midiOutReadPosition <= midiOutWritePosition)
-                        {
-                            // if the read position is less than the write position, 
-                            // then we haven't looped around so the difference between
-                            // the read and write position is the amount of data to read.
-                            bytesAvailableToRead = midiOutWritePosition - midiOutReadPosition;
-                        }
-                        else
-                        {
-                            // the write position is behind the read position, so
-                            // we looped around. The difference between the read position and 
-                            // the write position is the available space, so the total buffer
-                            // size minus the available space gives us the amount of data to read.
-                            bytesAvailableToRead = m_BufferSize - (midiOutReadPosition - midiOutWritePosition);
-                        }
-
-                        if (bytesAvailableToRead == 0)
-                        {
-                            // nothing to copy, so we are finished with this pass
-                            break;
-                        }
-
-                        PVOID startingReadAddress = (PVOID)(((PBYTE)m_KernelBufferMapping.Buffer1.m_BufferClientAddress) + midiOutReadPosition);
-                        PUMPDATAFORMAT header = (PUMPDATAFORMAT)(startingReadAddress);
-                        UINT32 dataSize = header->ByteCount;
-
-                        if (dataSize < MINIMUM_UMP_DATASIZE || dataSize > MAXIMUM_UMP_DATASIZE)
-                        {
-                            // TBD: need to log an abort
-
-                            // data is malformed, abort.
-                            return;
-                        }
-
-                        ULONG bytesToCopy = dataSize + sizeof(UMPDATAFORMAT);
-                        ULONG finalReadPosition = (midiOutReadPosition + bytesToCopy) % m_BufferSize;
-
-                        if (bytesAvailableToRead < bytesToCopy)
-                        {
-                            // if the full contents of this buffer isn't yet available,
-                            // wait for more data to come in.
-                            // Client will set an event when the write position advances.
-                            break;
-                        }
-
-                        // Send relevant buffer to USB
-                        PUMPDATAFORMAT thisData = (PUMPDATAFORMAT)startingReadAddress;
-                        if (thisData->ByteCount)
-                        {
-                            USBMIDI2DriverIoWrite(
-                                AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)),
-                                (PUCHAR)startingReadAddress + sizeof(UMPDATAFORMAT),
-                                thisData->ByteCount
-                            );
-                        }
-
-                        // advance our read position
-                        InterlockedExchange((LONG *)m_ReadRegister, finalReadPosition);
+                        // if the read position is less than the write position, 
+                        // then we haven't looped around so the difference between
+                        // the read and write position is the amount of data to read.
+                        bytesAvailableToRead = midiOutWritePosition - midiOutReadPosition;
                     }
                     else
                     {
-                        // nothing to do with the data, so just update the read position up to the write position
-                        // to indicate that it was "processed", so that the midi out writer won't fill up
-                        // the buffer
-                        InterlockedExchange((LONG *)(m_ReadRegister), *((ULONG*)(m_WriteRegister)));
+                        // the write position is behind the read position, so
+                        // we looped around. The difference between the read position and 
+                        // the write position is the available space, so the total buffer
+                        // size minus the available space gives us the amount of data to read.
+                        bytesAvailableToRead = m_BufferSize - (midiOutReadPosition - midiOutWritePosition);
+                    }
+
+                    if (bytesAvailableToRead == 0)
+                    {
+                        // nothing to copy, so we are finished with this pass
                         break;
                     }
+
+                    PVOID startingReadAddress = (PVOID)(((PBYTE)m_KernelBufferMapping.Buffer1.m_BufferClientAddress) + midiOutReadPosition);
+                    PUMPDATAFORMAT header = (PUMPDATAFORMAT)(startingReadAddress);
+                    UINT32 dataSize = header->ByteCount;
+
+                    if (dataSize < MINIMUM_UMP_DATASIZE || dataSize > MAXIMUM_UMP_DATASIZE)
+                    {
+                        // TBD: need to log an abort
+
+                        // data is malformed, abort.
+                        return;
+                    }
+
+                    ULONG bytesToCopy = dataSize + sizeof(UMPDATAFORMAT);
+                    ULONG finalReadPosition = (midiOutReadPosition + bytesToCopy) % m_BufferSize;
+
+                    if (bytesAvailableToRead < bytesToCopy)
+                    {
+                        // if the full contents of this buffer isn't yet available,
+                        // wait for more data to come in.
+                        // Client will set an event when the write position advances.
+                        break;
+                    }
+
+                    // Send relevant buffer to USB
+                    PUMPDATAFORMAT thisData = (PUMPDATAFORMAT)startingReadAddress;
+                    if (thisData->ByteCount)
+                    {
+                        USBMIDI2DriverIoWrite(
+                            AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)),
+                            (PUCHAR)startingReadAddress + sizeof(UMPDATAFORMAT),
+                            thisData->ByteCount
+                        );
+                    }
+
+                    // advance our read position
+                    InterlockedExchange((LONG *)m_ReadRegister, finalReadPosition);
                 }while(true);
             }
             else
