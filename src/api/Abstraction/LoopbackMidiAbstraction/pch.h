@@ -20,9 +20,6 @@
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
-//#include <winrt/Windows.Data.Json.h>
-
-//namespace json = ::winrt::Windows::Data::Json;
 
 
 #include <assert.h>
@@ -67,12 +64,19 @@
 #include "strsafe.h"
 #include "wstring_util.h"
 
+//#pragma push_macro("GetObject")
+#undef GetObject
+#include <winrt/Windows.Data.Json.h>
+namespace json = ::winrt::Windows::Data::Json;
+//#pragma pop_macro("GetObject")
+
+
 
 // AbstractionUtilities
 #include "endpoint_data_helpers.h"
 #include "swd_property_builders.h"
-#include "swd_property_helpers.h"
 #include "json_helpers.h"
+#include "swd_shared.h"
 
 #include "MidiDefs.h"
 #include "MidiDataFormat.h"

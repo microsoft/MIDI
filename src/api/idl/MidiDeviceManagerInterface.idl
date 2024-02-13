@@ -12,6 +12,44 @@ import "unknwn.idl";
 import "MidiFlow.idl";
 import "MidiDataFormat.idl";
 
+// If you change these, you should also update
+// the WinRT MidiEndpointDevicePurpose enum, which is projected through the API
+typedef enum
+{
+    NormalMessageEndpoint = 0,
+    VirtualDeviceResponder = 100,
+    InBoxGeneralMidiSynth = 400,
+    DiagnosticLoopback = 500,
+    DiagnosticPing = 510,
+} MidiEndpointDevicePurposePropertyValue;
+
+
+// This is used when creating a device endpoint from an abstraction
+typedef struct
+{
+    GUID AbstractionLayerGuid;
+    MidiEndpointDevicePurposePropertyValue EndpointPurpose;
+
+    LPCWSTR FriendlyName;
+
+    LPCWSTR TransportMnemonic;
+    LPCWSTR TransportSuppliedEndpointName;
+    LPCWSTR TransportSuppliedEndpointDescription;
+
+    LPCWSTR UserSuppliedEndpointName;
+    LPCWSTR UserSuppliedEndpointDescription;
+
+    LPCWSTR UniqueIdentifier;
+
+    MidiDataFormat SupportedDataFormats;
+    BYTE NativeDataFormat;
+
+    BOOL SupportsMultiClient;
+    BOOL RequiresMetadataHandler;
+    BOOL GenerateIncomingTimestamps;
+} MIDIENDPOINTCOMMONPROPERTIES, *PMIDIENDPOINTCOMMONPROPERTIES;
+
+
 [
     object,
     local,
@@ -34,13 +72,14 @@ interface IMidiDeviceManagerInterface : IUnknown
         [in] LPCWSTR ParentInstanceId,
         [in] BOOL UMPOnly,
         [in] MidiFlow MidiFlow,
+        [in] PMIDIENDPOINTCOMMONPROPERTIES CommonProperties,
         [in] ULONG IntPropertyCount,
         [in] ULONG DevPropertyCount,
         [in, annotation("_In_opt_")] PVOID InterfaceDevProperties,
         [in, annotation("_In_opt_")] PVOID DeviceDevProperties,
         [in, annotation("_In_opt_")] PVOID CreateInfo,
-        [out, annotation("_Out_writes_opt_z_(CreatedSwDeviceInterfaceIdCharCount)")] LPWSTR CreatedSwDeviceInterfaceId,
-        [in] ULONG CreatedSwDeviceInterfaceIdCharCount
+        [out, annotation("_Out_writes_opt_z_(CreatedSwDeviceInterfaceIdWCharCount)")] LPWSTR CreatedSwDeviceInterfaceId,
+        [in] ULONG CreatedSwDeviceInterfaceIdWCharCount
     );
 
     HRESULT UpdateEndpointProperties(

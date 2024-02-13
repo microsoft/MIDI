@@ -1,8 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- TODO:
-1. Find and replace "SimpleTraceLoggingProvider" with the name of your provider.
-2. See TODO below to update GUID for your event provider
--->
 <WindowsPerformanceRecorder Version="1.0" Author="Microsoft Corporation" Copyright="Microsoft Corporation" Company="Microsoft Corporation">
   <Profiles>
     <EventCollector Id="EventCollector_MidiSrvSimple" Name="Windows MIDI Services Events">

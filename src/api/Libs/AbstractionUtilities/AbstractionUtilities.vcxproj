@@ -170,9 +170,9 @@
   <ItemGroup>
     <ClInclude Include="inc\endpoint_data_helpers.h" />
     <ClInclude Include="inc\json_helpers.h" />
+    <ClInclude Include="inc\swd_shared.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="inc\swd_property_builders.h" />
-    <ClInclude Include="inc\swd_property_helpers.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\endpoint_data_helpers.cpp" />
@@ -185,6 +185,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\swd_property_helpers.cpp" />
+    <ClCompile Include="src\swd_shared.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
