@@ -44,13 +44,13 @@ That out of the way, here's an example configuration section for the Virtual Loo
                 {
                     "name": "Perm Loopback 1A",
                     "description": "This is a loopback I created in the configuration file",
-                    "uniqueId": "3263827"
+                    "uniqueIdentifier": "3263827"
                 },
                 "endpointB":
                 {
                     "name": "Perm Loopback 1B",
                     "description": "This is the b-side of the loopback I created in the configuration file",
-                    "uniqueId": "3263827"
+                    "uniqueIdentifier": "3263827"
                 }
             },
             "{B21B4973-3F85-48A0-8BA3-B35F44683D36}":
@@ -60,13 +60,13 @@ That out of the way, here's an example configuration section for the Virtual Loo
                 {
                     "name": "Perm Loopback 2A",
                     "description": "This is a loopback I created in the configuration file",
-                    "uniqueId": "5150-1984"
+                    "uniqueIdentifier": "5150-1984"
                 },
                 "endpointB":
                 {
                     "name": "Perm Loopback 2B",
                     "description": "This is the b-side of the loopback I created in the configuration file",
-                    "uniqueId": "OU812"
+                    "uniqueIdentifier": "OU812"
                 }
             }
         }

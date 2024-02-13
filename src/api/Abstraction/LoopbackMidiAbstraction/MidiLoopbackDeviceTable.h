@@ -10,7 +10,7 @@
 #pragma once
 
 
-class MidiEndpointTable
+class MidiLoopbackDeviceTable
 {
 public:
 

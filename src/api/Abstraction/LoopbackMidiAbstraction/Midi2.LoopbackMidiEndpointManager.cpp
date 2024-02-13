@@ -159,8 +159,8 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
-        TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
         TraceLoggingWideString(definition->InstanceIdPrefix.c_str(), "prefix"),
+        TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
         TraceLoggingWideString(definition->EndpointName.c_str(), "name"),
         TraceLoggingWideString(definition->EndpointDescription.c_str(), "description")
         );
@@ -183,52 +183,32 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
 
     std::vector<DEVPROPERTY> interfaceDeviceProperties{};
 
+    // no user or in-protocol data in this case
+    std::wstring friendlyName = internal::CalculateEndpointDevicePrimaryName(endpointName, L"", L"");
+
+
     bool requiresMetadataHandler = false;
     bool multiClient = true;
     bool generateIncomingTimestamps = true;
 
-    // no user or in-protocol data in this case
-    std::wstring friendlyName = internal::CalculateEndpointDevicePrimaryName(endpointName, L"", L"");
 
-    // all the standard properties we define for endpoints
-    if (internal::AddStandardEndpointProperties(
-        interfaceDeviceProperties,
-        m_TransportAbstractionId,
-        MidiEndpointDevicePurposePropertyValue::NormalMessageEndpoint,
-        friendlyName,
-        mnemonic,
-        endpointName,
-        endpointDescription,
-        L"",
-        L"",
-        definition->EndpointUniqueIdentifier,
-        MidiDataFormat::MidiDataFormat_UMP,
-        MIDI_PROP_NATIVEDATAFORMAT_UMP,
-        multiClient,
-        requiresMetadataHandler,
-        generateIncomingTimestamps
-        ))
-    {
-        // additional properties for this abstraction
+    TraceLoggingWrite(
+        MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
+        TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
+        TraceLoggingWideString(L"Adding endpoint properties"),
+        TraceLoggingWideString(friendlyName.c_str(), "friendlyName"),
+        TraceLoggingWideString(mnemonic.c_str(), "mnemonic"),
+        TraceLoggingWideString(endpointName.c_str(), "endpointName"),
+        TraceLoggingWideString(endpointDescription.c_str(), "endpointName")
+    );
 
-        // we clear this because it's not used for this abstraction. 
-        interfaceDeviceProperties.push_back(internal::BuildEmptyDevProperty(PKEY_MIDI_AssociatedUMP));
-
-        // this is needed for the loopback endpoints to have a relationship with each other
-        interfaceDeviceProperties.push_back(internal::BuildWStringDevProperty(PKEY_MIDI_VirtualMidiEndpointAssociator, definition->AssociationId));
-    }
-    else
-    {
-        TraceLoggingWrite(
-            MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
-            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Unable to build standard endpoint properties list", "message")
-        );
-
-        return E_FAIL;
-    }
+    // this is needed for the loopback endpoints to have a relationship with each other
+    interfaceDeviceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_VirtualMidiEndpointAssociator, DEVPROP_STORE_SYSTEM, nullptr},
+        DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (definition->AssociationId.size() + 1)), (PVOID)definition->AssociationId.c_str() });
 
     // Device properties
 
@@ -248,16 +228,45 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
 
     createInfo.pszInstanceId = instanceId.c_str();
     createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
-    createInfo.pszDeviceDescription = endpointName.c_str();
+    createInfo.pszDeviceDescription = friendlyName.c_str();
 
 
     const ULONG deviceInterfaceIdMaxSize = 255;
     wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
 
+    TraceLoggingWrite(
+        MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
+        TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
+        TraceLoggingWideString(instanceId.c_str(), "instance id"),
+        TraceLoggingWideString(L"Activating endpoint")
+    );
+
+    MIDIENDPOINTCOMMONPROPERTIES commonProperties;
+    commonProperties.AbstractionLayerGuid = m_TransportAbstractionId;
+    commonProperties.EndpointPurpose = MidiEndpointDevicePurposePropertyValue::NormalMessageEndpoint;
+    commonProperties.FriendlyName = friendlyName.c_str();
+    commonProperties.TransportMnemonic = mnemonic.c_str();
+    commonProperties.TransportSuppliedEndpointName = endpointName.c_str();
+    commonProperties.TransportSuppliedEndpointDescription = endpointDescription.c_str();
+    commonProperties.UserSuppliedEndpointName = nullptr;
+    commonProperties.UserSuppliedEndpointDescription = nullptr;
+    commonProperties.UniqueIdentifier = definition->EndpointUniqueIdentifier.c_str();
+    commonProperties.SupportedDataFormats = MidiDataFormat::MidiDataFormat_UMP;
+    commonProperties.NativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
+    commonProperties.SupportsMultiClient = multiClient;
+    commonProperties.RequiresMetadataHandler = requiresMetadataHandler;
+    commonProperties.GenerateIncomingTimestamps = generateIncomingTimestamps;
+
+
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
         (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
         true,                                                   // UMP-only
         MidiFlow::MidiFlowBidirectional,                        // MIDI Flow
+        &commonProperties,
         (ULONG)interfaceDeviceProperties.size(),
         ARRAYSIZE(deviceDevProperties),
         (PVOID)interfaceDeviceProperties.data(),
@@ -265,6 +274,18 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
         (PVOID)&createInfo,
         (LPWSTR)&newDeviceInterfaceId,
         deviceInterfaceIdMaxSize));
+
+
+    TraceLoggingWrite(
+        MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
+        TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
+        TraceLoggingWideString(newDeviceInterfaceId, "new device interface id"),
+        TraceLoggingWideString(L"Endpoint activated")
+    );
 
 
     // now delete all the properties that have been discovered in-protocol
@@ -276,11 +297,20 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
 
     // we need this for removal later
     definition->CreatedShortClientInstanceId = instanceId;
-
     definition->CreatedEndpointInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId);
 
     //MidiEndpointTable::Current().AddCreatedEndpointDevice(entry);
     //MidiEndpointTable::Current().AddCreatedClient(entry.VirtualEndpointAssociationId, entry.CreatedClientEndpointId);
+
+    TraceLoggingWrite(
+        MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
+        TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
+        TraceLoggingWideString(L"Done")
+    );
 
     return S_OK;
 }
@@ -308,8 +338,16 @@ CMidi2LoopbackMidiEndpointManager::CreateEndpointPair(
     {
         if (SUCCEEDED(CreateSingleEndpoint(definitionB)))
         {
+            // all good now. Create the device table entry.
 
-            // all good now
+            auto associationId = definitionA->AssociationId;
+
+            auto device = MidiLoopbackDevice{};
+
+            device.DefinitionA = *definitionA;
+            device.DefinitionB = *definitionB;
+
+            AbstractionState::Current().GetEndpointTable()->SetDevice(associationId, device);
 
         }
         else

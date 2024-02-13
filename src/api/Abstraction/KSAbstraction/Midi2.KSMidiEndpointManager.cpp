@@ -398,12 +398,32 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         const ULONG deviceInterfaceIdMaxSize = 255;
         wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
 
+        // TODO: Move to this structure
+        // 
+        PMIDIENDPOINTCOMMONPROPERTIES pCommonProperties = nullptr;
+        //MIDIENDPOINTCOMMONPROPERTIES commonProperties;
+        //commonProperties.AbstractionLayerGuid = m_TransportAbstractionId;
+        //commonProperties.EndpointPurpose = MidiEndpointDevicePurposePropertyValue::DiagnosticPing;
+        //commonProperties.FriendlyName = friendlyName.c_str();
+        //commonProperties.TransportMnemonic = mnemonic.c_str();
+        //commonProperties.TransportSuppliedEndpointName = endpointName.c_str();
+        //commonProperties.TransportSuppliedEndpointDescription = endpointDescription.c_str();
+        //commonProperties.UserSuppliedEndpointName = L"";
+        //commonProperties.UserSuppliedEndpointDescription = L"";
+        //commonProperties.UniqueIdentifier = UniqueId.c_str();
+        //commonProperties.SupportedDataFormats = MidiDataFormat::MidiDataFormat_UMP;
+        //commonProperties.NativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
+        //commonProperties.SupportsMultiClient = multiClient;
+        //commonProperties.RequiresMetadataHandler = requiresMetadataHandler;
+        //commonProperties.GenerateIncomingTimestamps = generateIncomingTimestamps;
+
         // log telemetry in the event activating the SWD for this pin has failed,
         // but push forward with creation for other pins.
         LOG_IF_FAILED(MidiPin->SwdCreation = m_MidiDeviceManager->ActivateEndpoint(
                                                             MidiPin->ParentInstanceId.c_str(),
                                                             MidiPin->CreateUMPOnly,
                                                             MidiPin->Flow,
+                                                            pCommonProperties,
                                                             (ULONG) interfaceDevProperties.size(),
                                                             (ULONG) deviceDevProperties.size(),
                                                             (PVOID)interfaceDevProperties.data(),

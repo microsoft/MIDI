@@ -246,48 +246,10 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
     // no user or in-protocol data in this case
     std::wstring friendlyName = internal::CalculateEndpointDevicePrimaryName(endpointName, L"", L"");
 
-    // all the standard properties we define for endpoints
-    if (internal::AddStandardEndpointProperties(
-        interfaceDeviceProperties,
-        m_TransportAbstractionId,
-        MidiEndpointDevicePurposePropertyValue::NormalMessageEndpoint,
-        friendlyName,
-        mnemonic,
-        endpointName,
-        endpointDescription,
-        L"",
-        L"",
-        entry.ShortUniqueId,
-        MidiDataFormat::MidiDataFormat_UMP,
-        MIDI_PROP_NATIVEDATAFORMAT_UMP,
-        multiClient,
-        requiresMetadataHandler,
-        generateIncomingTimestamps
-    ))
-    {
-        // all good. Add additional properties
-        // additional properties for this abstraction
+    // this is needed for the loopback endpoints to have a relationship with each other
+    interfaceDeviceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_VirtualMidiEndpointAssociator, DEVPROP_STORE_SYSTEM, nullptr},
+        DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (entry.VirtualEndpointAssociationId.size() + 1)), (PVOID)entry.VirtualEndpointAssociationId.c_str() });
 
-        // we clear this because it's not used for this abstraction. 
-        interfaceDeviceProperties.push_back(internal::BuildEmptyDevProperty(PKEY_MIDI_AssociatedUMP));
-
-        // this is needed for the loopback endpoints to have a relationship with each other
-        interfaceDeviceProperties.push_back(internal::BuildWStringDevProperty(PKEY_MIDI_VirtualMidiEndpointAssociator, entry.VirtualEndpointAssociationId));
-    }
-    else
-    {
-        // unable to build properties
-
-        TraceLoggingWrite(
-            MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
-            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Unable to build standard endpoint properties list", "message")
-        );
-
-        return E_FAIL;
-    }
 
     DEVPROPERTY deviceDevProperties[] = {
         {{DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
@@ -309,10 +271,28 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
     const ULONG deviceInterfaceIdMaxSize = 255;
     wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
 
+
+    MIDIENDPOINTCOMMONPROPERTIES commonProperties;
+    commonProperties.AbstractionLayerGuid = m_TransportAbstractionId;
+    commonProperties.EndpointPurpose = MidiEndpointDevicePurposePropertyValue::NormalMessageEndpoint;
+    commonProperties.FriendlyName = friendlyName.c_str();
+    commonProperties.TransportMnemonic = mnemonic.c_str();
+    commonProperties.TransportSuppliedEndpointName = endpointName.c_str();
+    commonProperties.TransportSuppliedEndpointDescription = endpointDescription.c_str();
+    commonProperties.UserSuppliedEndpointName = L"";
+    commonProperties.UserSuppliedEndpointDescription = L"";
+    commonProperties.UniqueIdentifier = entry.ShortUniqueId.c_str();
+    commonProperties.SupportedDataFormats = MidiDataFormat::MidiDataFormat_UMP;
+    commonProperties.NativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
+    commonProperties.SupportsMultiClient = multiClient;
+    commonProperties.RequiresMetadataHandler = requiresMetadataHandler;
+    commonProperties.GenerateIncomingTimestamps = generateIncomingTimestamps;
+
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
         (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
         true,                                                   // UMP-only
         MidiFlow::MidiFlowBidirectional,                        // MIDI Flow
+        &commonProperties,
         (ULONG)interfaceDeviceProperties.size(),
         ARRAYSIZE(deviceDevProperties),
         (PVOID)interfaceDeviceProperties.data(),
@@ -374,48 +354,10 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
     // no user or in-protocol data in this case
     std::wstring friendlyName = internal::CalculateEndpointDevicePrimaryName(endpointName, L"", L"");
 
-    // all the standard properties we define for endpoints
-    if (internal::AddStandardEndpointProperties(
-        interfaceDeviceProperties,
-        m_TransportAbstractionId,
-        MidiEndpointDevicePurposePropertyValue::VirtualDeviceResponder,
-        friendlyName,
-        mnemonic,
-        endpointName,
-        endpointDescription,
-        L"",
-        L"",
-        entry.ShortUniqueId,
-        MidiDataFormat::MidiDataFormat_UMP,
-        MIDI_PROP_NATIVEDATAFORMAT_UMP,
-        multiClient,
-        requiresMetadataHandler,
-        generateIncomingTimestamps
-    ))
-    {
-        // all good. Add additional properties
-        // additional properties for this abstraction
 
-        // we clear this because it's not used for this abstraction. 
-        interfaceDeviceProperties.push_back(internal::BuildEmptyDevProperty(PKEY_MIDI_AssociatedUMP));
+    interfaceDeviceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_VirtualMidiEndpointAssociator, DEVPROP_STORE_SYSTEM, nullptr},
+        DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (entry.VirtualEndpointAssociationId.size() + 1)), (PVOID)entry.VirtualEndpointAssociationId.c_str() });
 
-        // this is needed for the loopback endpoints to have a relationship with each other
-        interfaceDeviceProperties.push_back(internal::BuildWStringDevProperty(PKEY_MIDI_VirtualMidiEndpointAssociator, entry.VirtualEndpointAssociationId));
-    }
-    else
-    {
-        // unable to build properties
-
-        TraceLoggingWrite(
-            MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
-            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Unable to build standard endpoint properties list", "message")
-        );
-
-        return E_FAIL;
-    }
 
     DEVPROPERTY deviceDevProperties[] = {
         {{DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
@@ -442,10 +384,30 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
 
 
 
+
+
+    MIDIENDPOINTCOMMONPROPERTIES commonProperties;
+    commonProperties.AbstractionLayerGuid = m_TransportAbstractionId;
+    commonProperties.EndpointPurpose = MidiEndpointDevicePurposePropertyValue::VirtualDeviceResponder;
+    commonProperties.FriendlyName = friendlyName.c_str();
+    commonProperties.TransportMnemonic = mnemonic.c_str();
+    commonProperties.TransportSuppliedEndpointName = endpointName.c_str();
+    commonProperties.TransportSuppliedEndpointDescription = endpointDescription.c_str();
+    commonProperties.UserSuppliedEndpointName = L"";
+    commonProperties.UserSuppliedEndpointDescription = L"";
+    commonProperties.UniqueIdentifier = entry.ShortUniqueId.c_str();
+    commonProperties.SupportedDataFormats = MidiDataFormat::MidiDataFormat_UMP;
+    commonProperties.NativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
+    commonProperties.SupportsMultiClient = multiClient;
+    commonProperties.RequiresMetadataHandler = requiresMetadataHandler;
+    commonProperties.GenerateIncomingTimestamps = generateIncomingTimestamps;
+
+
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
         (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
         true,                                                   // UMP-only
         MidiFlow::MidiFlowBidirectional,                        // MIDI Flow
+        &commonProperties,
         (ULONG)interfaceDeviceProperties.size(),
         ARRAYSIZE(deviceDevProperties),
         (PVOID)interfaceDeviceProperties.data(),

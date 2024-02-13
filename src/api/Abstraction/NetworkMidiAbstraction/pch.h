@@ -59,7 +59,6 @@ namespace json = ::winrt::Windows::Data::Json;
 // AbstractionUtilities
 #include "endpoint_data_helpers.h"
 #include "swd_property_builders.h"
-#include "swd_property_helpers.h"
 #include "json_helpers.h"
 
 #include "MidiDefs.h"

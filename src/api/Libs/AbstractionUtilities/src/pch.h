@@ -18,7 +18,6 @@
 
 #include <windows.h>
 
-
 #include <assert.h>
 #include <devioctl.h>
 
@@ -53,8 +52,8 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 
 #include "endpoint_data_helpers.h"
 #include "swd_property_builders.h"
-#include "swd_property_helpers.h"
 #include "json_helpers.h"
+#include "swd_shared.h"
 
 
 #endif //PCH_H

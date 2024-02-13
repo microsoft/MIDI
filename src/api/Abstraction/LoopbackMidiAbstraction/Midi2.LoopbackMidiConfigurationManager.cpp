@@ -12,7 +12,7 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2LoopbackMidiConfigurationManager::Initialize(
-    GUID AbstractionId, 
+    GUID AbstractionId,
     IUnknown* MidiDeviceManager
 )
 {
@@ -82,13 +82,11 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
         std::wstring instanceIdPrefixB = IsFromConfigurationFile ? MIDI_PERM_LOOP_INSTANCE_ID_B_PREFIX : MIDI_TEMP_LOOP_INSTANCE_ID_B_PREFIX;
         // we should probably set a property based on this as well.
 
-
-
-        auto createObject = internal::JsonGetObjectProperty(jsonObject, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICES_CREATE_KEY, json::JsonObject{});
+        auto createObject = jsonObject.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICES_CREATE_KEY, nullptr);
 
         // Create ----------------------------------
 
-        if (createObject.Size() > 0)
+        if (createObject != nullptr && createObject.Size() > 0)
         {
             auto o = createObject.First();
 
@@ -97,80 +95,162 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                 std::shared_ptr<MidiLoopbackDeviceDefinition> definitionA = std::make_shared<MidiLoopbackDeviceDefinition>();
                 std::shared_ptr<MidiLoopbackDeviceDefinition> definitionB = std::make_shared<MidiLoopbackDeviceDefinition>();
 
-                auto associationObj = o.Current().Value().as<json::JsonObject>();
+                // get the association string (GUID) name
+                auto associationKey = o.Current().Key();
+                //json::JsonObject associationObj;
 
-                definitionA->AssociationId = o.Current().Key();
+                auto associationObj = o.Current().Value().GetObject();
 
-                auto endpointAObject = internal::JsonGetObjectProperty(associationObj, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_A_KEY, nullptr);
-                auto endpointBObject = internal::JsonGetObjectProperty(associationObj, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_B_KEY, nullptr);
+                //if (!o.Current().Value().try_as<json::JsonObject>(associationObj))
+                //{
+                //    TraceLoggingWrite(
+                //        MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+                //        __FUNCTION__,
+                //        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                //        TraceLoggingPointer(this, "this"),
+                //        TraceLoggingWideString(L"Unable to read the property as a json object", "message"),
+                //        TraceLoggingWideString(associationKey.c_str(), "key")
+                //        TraceLoggingWideString(o.Current().Value().Stringify(), "stringify")
+                //    );
 
-                if (endpointAObject != nullptr && endpointBObject != nullptr)
+                //    internal::JsonStringifyObjectToOutParam(responseObject, &Response);
+
+                //    return E_FAIL;
+                //}              
+
+                
+                if (associationObj)
                 {
-                    definitionA->EndpointName = internal::JsonGetWStringProperty(endpointAObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L"");
-                    definitionA->EndpointName = internal::JsonGetWStringProperty(endpointAObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY, L"");
-                    definitionA->EndpointName = internal::JsonGetWStringProperty(endpointAObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY, L"");
-                    definitionA->InstanceIdPrefix = instanceIdPrefixA;
-
-                    definitionB->EndpointName = internal::JsonGetWStringProperty(endpointBObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L"");
-                    definitionB->EndpointName = internal::JsonGetWStringProperty(endpointBObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY, L"");
-                    definitionB->EndpointName = internal::JsonGetWStringProperty(endpointBObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY, L"");
-                    definitionB->InstanceIdPrefix = instanceIdPrefixB;
+                    definitionA->AssociationId = associationKey;
+                    definitionB->AssociationId = definitionA->AssociationId;
 
 
-                    if (SUCCEEDED(AbstractionState::Current().GetEndpointManager()->CreateEndpointPair(definitionA, definitionB)))
+                    auto endpointAObject = associationObj.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_A_KEY, nullptr);
+                    auto endpointBObject = associationObj.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_B_KEY, nullptr);
+
+                    if (endpointAObject != nullptr && endpointBObject != nullptr)
                     {
-                        TraceLoggingWrite(
-                            MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-                            __FUNCTION__,
-                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                            TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(L"Loopback endpoint pair created", "message")
-                        );
+                        definitionA->EndpointName = endpointAObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L"");
+                        definitionA->EndpointDescription = endpointAObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY, L"");
+                        definitionA->EndpointUniqueIdentifier = endpointAObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY, L"");
+                        definitionA->InstanceIdPrefix = instanceIdPrefixA;
 
-                        // all good
+                        definitionB->EndpointName = endpointBObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L"");
+                        definitionB->EndpointDescription = endpointBObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY, L"");
+                        definitionB->EndpointUniqueIdentifier = endpointBObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY, L"");
+                        definitionB->InstanceIdPrefix = instanceIdPrefixB;
 
-                        internal::JsonSetBoolProperty(
-                            responseObject,
-                            MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_SUCCESS_PROPERTY_KEY,
-                            true);
 
-                        // update the return json with the new Ids
+                        if (definitionA->EndpointName.empty() || definitionB->EndpointName.empty())
+                        {
+                            TraceLoggingWrite(
+                                MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+                                __FUNCTION__,
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Endpoint name missing or empty", "message")
+                            );
 
-                        internal::JsonSetWStringProperty(
-                            responseObject,
-                            MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_A_ID_KEY,
-                            definitionA->CreatedEndpointInterfaceId);
+                            internal::JsonStringifyObjectToOutParam(responseObject, &Response);
 
-                        internal::JsonSetWStringProperty(
-                            responseObject,
-                            MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_B_ID_KEY,
-                            definitionB->CreatedEndpointInterfaceId);
+                            return E_FAIL;
+                        }
+
+
+                        if (definitionA->EndpointUniqueIdentifier.empty() || definitionB->EndpointUniqueIdentifier.empty())
+                        {
+                            TraceLoggingWrite(
+                                MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+                                __FUNCTION__,
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Unique identifier missing or empty", "message")
+                            );
+
+                            internal::JsonStringifyObjectToOutParam(responseObject, &Response);
+
+                            return E_FAIL;
+                        }
+
+
+                        if (SUCCEEDED(AbstractionState::Current().GetEndpointManager()->CreateEndpointPair(definitionA, definitionB)))
+                        {
+                            TraceLoggingWrite(
+                                MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+                                __FUNCTION__,
+                                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Loopback endpoint pair created", "message")
+                            );
+
+                            // all good
+
+                            internal::JsonSetBoolProperty(
+                                responseObject,
+                                MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_SUCCESS_PROPERTY_KEY,
+                                true);
+
+                            // update the return json with the new Ids
+
+                            internal::JsonSetWStringProperty(
+                                responseObject,
+                                MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_A_ID_KEY,
+                                definitionA->CreatedEndpointInterfaceId);
+
+                            internal::JsonSetWStringProperty(
+                                responseObject,
+                                MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_B_ID_KEY,
+                                definitionB->CreatedEndpointInterfaceId);
+                        }
+                        else
+                        {
+                            // we failed to create the endpoints. Exit and return a fail.
+                            TraceLoggingWrite(
+                                MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+                                __FUNCTION__,
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Failed to create endpoints", "message")
+                            );
+
+                            internal::JsonStringifyObjectToOutParam(responseObject, &Response);
+
+                            return E_FAIL;
+                        }
                     }
                     else
                     {
-                        // we failed to create the endpoints. Exit and return a fail.
+                        // couldn't get the endpointA or endpointB objects. Exit and return a fail
+
                         TraceLoggingWrite(
                             MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
                             __FUNCTION__,
                             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                             TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(L"Failed to create endpoints", "message")
+                            TraceLoggingWideString(associationKey.c_str(), "association key"),
+                            TraceLoggingWideString(L"Failed to get one or both endpoints from the JSON", "message")
                         );
+
+                        internal::JsonStringifyObjectToOutParam(responseObject, &Response);
+
+                        return E_FAIL;
 
                     }
                 }
                 else
                 {
-                    // couldn't get the endpointA or endpointB objects. Exit and return a fail
-
                     TraceLoggingWrite(
                         MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
                         __FUNCTION__,
                         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Failed to get one or both endpoints from the JSON", "message")
+                        TraceLoggingWideString(associationKey.c_str(), "association key"),
+                        TraceLoggingWideString(L"Unable to convert association id property to a JsonObject", "message")
                     );
 
+                    internal::JsonStringifyObjectToOutParam(responseObject, &Response);
+
+                    return E_FAIL;
                 }
 
                 o.MoveNext();
@@ -210,6 +290,22 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
         //    // TODO : Update endpoints
         //}
 
+        internal::JsonStringifyObjectToOutParam(responseObject, &Response);
+
+        return S_OK;
+
+    }
+    catch (const std::exception& e)
+    {
+        TraceLoggingWrite(
+            MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"std exception processing json", "message"),
+            TraceLoggingString(e.what(), "exception"),
+            TraceLoggingWideString(ConfigurationJsonSection, "json")
+        );
     }
     catch (...)
     {
@@ -218,13 +314,9 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
             __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Exception processing json", "message"),
+            TraceLoggingWideString(L"Other exception processing json", "message"),
             TraceLoggingWideString(ConfigurationJsonSection, "json")
         );
-
-        internal::JsonStringifyObjectToOutParam(responseObject, &Response);
-
-        return E_FAIL;
     }
 
     // return the json with the information the client will need

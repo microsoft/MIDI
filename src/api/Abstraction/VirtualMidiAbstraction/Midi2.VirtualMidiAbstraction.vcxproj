@@ -282,7 +282,6 @@
     <ClCompile Include="Midi2.VirtualMidiBidi.cpp" />
     <ClCompile Include="MidiEndpointTable.cpp" />
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="swd_shared.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Midi2VirtualMidiAbstraction.idl" />
@@ -303,7 +302,6 @@
     <ClInclude Include="MidiEndpointTable.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
-    <ClInclude Include="swd_shared.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Midi2.VirtualMidiAbstraction.rc" />
