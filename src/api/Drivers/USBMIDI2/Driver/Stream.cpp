@@ -836,7 +836,6 @@ EvtStreamPrepareHardware(
 
     WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxStreamGetCircuit(Stream));
     PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
-    pDevCtx->pStreamEngine = streamEngine;
 
     return streamEngine->PrepareHardware();
 }

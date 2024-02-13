@@ -172,7 +172,8 @@ StreamEngine::HandleIo()
                     // or the write buffer is full.
 
                     // we have a write event, there should be data available to move.
-                    if (m_IsRunning)
+                    // (m_IsRunning)
+                    if (1)
                     {
                         ULONG bytesAvailableToRead = 0;
 
@@ -307,7 +308,7 @@ Return Value:
 
     // Current mechanism to determine if currently processing data is that
     // the StreamEngine is not null. TBD this mechanism needs to be fixed.
-    //auto lock = m_MidiInLock.acquire();
+    auto lock = m_MidiInLock.acquire();
 
     if (m_IsRunning)
     {
@@ -591,17 +592,21 @@ StreamEngine::Run()
         // m_IsRunning is used to indicate running state. If m_IsRunning true, the out worker
         // thread will output data to the connected device, otherwise data will be thrown away.
         auto lock = m_MidiInLock.acquire();
-        m_IsRunning = true;
 
         WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin));
         PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
-        pDevCtx->pStreamEngine = this;
 
         // NOTE: Must not start continuous reader until after setting pMidiStreamEngine as ISR can be called before
         // the acquired lock is cleared.
         // Start the continuous reader
         if (pDevCtx)
         {
+            // Make sure device knows about this stream engine for FillReadStream
+            pDevCtx->pStreamEngine = this;
+
+            // Set that we are running
+            m_IsRunning = true;
+
             TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
                 "%!FUNC! STARTING Continuous Reader.");
             status = WdfIoTargetStart(WdfUsbTargetPipeGetIoTarget(pDevCtx->MidiInPipe));
