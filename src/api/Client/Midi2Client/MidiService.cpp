@@ -357,7 +357,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         //   {
         //     "create"
         //     {
-        //        associationGuid:
+        //        "{associationGuid}":
         //        {
         //            "endpointA":
         //            {
@@ -374,34 +374,38 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         // build Endpoint A
 
-        internal::JsonGetWStringProperty(
+        internal::JsonSetWStringProperty(
             endpointDeviceAObject,
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY,
             endpointDefinitionA.Name().c_str());
 
-        internal::JsonGetWStringProperty(
+        internal::JsonSetWStringProperty(
             endpointDeviceAObject,
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY,
             endpointDefinitionA.Description().c_str());
 
-        internal::JsonGetWStringProperty(
+        internal::JsonSetWStringProperty(
             endpointDeviceAObject,
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY,
             endpointDefinitionA.UniqueId().c_str());
 
+
+        //MIDI_CONFIG_JSON_ENDPOINT_COMMON_MANUFACTURER_PROPERTY
+
+
         // build Endpoint B
 
-        internal::JsonGetWStringProperty(
+        internal::JsonSetWStringProperty(
             endpointDeviceBObject,
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY,
             endpointDefinitionB.Name().c_str());
 
-        internal::JsonGetWStringProperty(
+        internal::JsonSetWStringProperty(
             endpointDeviceBObject,
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY,
             endpointDefinitionB.Description().c_str());
 
-        internal::JsonGetWStringProperty(
+        internal::JsonSetWStringProperty(
             endpointDeviceBObject,
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY,
             endpointDefinitionB.UniqueId().c_str());
@@ -488,6 +492,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             auto jsonPayload = wrapperObject.Stringify();
 
+            // send up the payload
+
             internal::LogInfo(__FUNCTION__, jsonPayload.c_str());
             auto configUpdateResult = configManager->UpdateConfiguration(jsonPayload.c_str(), false, &response);
 
@@ -513,10 +519,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             internal::LogInfo(__FUNCTION__, L"JsonObjectFromBSTR success");
 
+            // parse the results
 
-
-
-            // check for actual success
             auto successResult = internal::JsonGetBoolProperty(responseObject, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_SUCCESS_PROPERTY_KEY, false);
 
             if (successResult)
@@ -555,7 +559,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 internal::LogGeneralError(__FUNCTION__, L"Loopback device creation failed (payload has false success value)");
 
-                return nullptr;
+                return *result;
             }
 
             internal::LogInfo(__FUNCTION__, L"Loopback device creation worked.");

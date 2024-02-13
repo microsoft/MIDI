@@ -88,5 +88,5 @@ Each loopback endpoint pair is identified by a GUID for the association id. The 
 
 # Implementation
 
-Internally, the Virtual Loopback is implemented as two endpoints which are cross-wired, so anything sent to Loopback A arrives on the input of Loopback B, and vice versa. Each declared pair has an exclusive relationship, and there's no practical limit to the number of loopback pairs you can define.
+Internally, the Virtual Loopback is implemented as two endpoints which are cross-wired, so anything sent out to Loopback A arrives on the input of Loopback B, and vice versa. Each declared pair has an exclusive relationship, and there's no practical limit to the number of loopback pairs you can define.
 

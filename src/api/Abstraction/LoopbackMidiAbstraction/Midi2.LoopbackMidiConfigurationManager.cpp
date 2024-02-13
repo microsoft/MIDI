@@ -130,6 +130,8 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                     if (endpointAObject != nullptr && endpointBObject != nullptr)
                     {
+                        // we don't look for user-specified names and descriptions here. There's no need to.
+
                         definitionA->EndpointName = endpointAObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L"");
                         definitionA->EndpointDescription = endpointAObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY, L"");
                         definitionA->EndpointUniqueIdentifier = endpointAObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY, L"");
@@ -262,33 +264,44 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
         }
 
 
-        //auto deleteArray = internal::JsonGetArrayProperty(jsonObject, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICES_REMOVE_KEY);
+        // update and delete are runtime operations, not config file operations
 
-        //// Remove ----------------------------------
+        if (!IsFromConfigurationFile)
+        {
+            auto deleteArray = jsonObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICES_REMOVE_KEY, nullptr);
 
-        //if (deleteArray.Size() > 0)
-        //{
-        //    // TODO : Delete endpoints if they aren't in the config file
+            // Create ----------------------------------
 
-        //}
-        //else
-        //{
-        //    // nothing to remove.
-        //}
+            if (deleteArray != nullptr && createObject.Size() > 0)
+            {
+                auto o = createObject.First();
+
+                while (o.HasCurrent())
+                {
+                    // each entry is an association id
+
+                    // if the entry was runtime-created and not from the config file, we can delete both endpoints 
+
+                    o.MoveNext();
+                }
+            }
 
 
-        //auto updateArray = internal::JsonGetArrayProperty(jsonObject, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICES_UPDATE_KEY);
+            //auto updateArray = internal::JsonGetArrayProperty(jsonObject, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICES_UPDATE_KEY);
 
-        //// Update ----------------------------------
+            //// Update ----------------------------------
 
-        //if (updateArray.Size() > 0)
-        //{
-        //    // TODO
-        //}
-        //else
-        //{
-        //    // TODO : Update endpoints
-        //}
+            //if (updateArray.Size() > 0)
+            //{
+            //    // TODO
+            //}
+            //else
+            //{
+            //    // TODO : Update endpoints
+            //}
+
+        }
+
 
         internal::JsonStringifyObjectToOutParam(responseObject, &Response);
 

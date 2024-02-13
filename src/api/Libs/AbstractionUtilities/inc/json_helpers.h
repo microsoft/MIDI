@@ -41,6 +41,7 @@ namespace json = ::winrt::Windows::Data::Json;
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY                          L"name"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY                   L"description"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY                     L"uniqueIdentifier"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_MANUFACTURER_PROPERTY                  L"manufacturer"
 
 
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_NAME_PROPERTY            L"userSuppliedName"
