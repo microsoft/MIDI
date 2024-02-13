@@ -64,6 +64,7 @@ extern "C" {
 #include <wdmguid.h>
 #include <devguid.h>
 #include <Devpkey.h>
+//#include <midiksdef.h>
 
 #pragma warning(default:4200)
 #pragma warning(default:4201)

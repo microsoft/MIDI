@@ -47,8 +47,6 @@ Environment:
 #include "Trace.h"
 #include "Device.tmh"
 
-extern StreamEngine* g_MidiInStreamEngine;
-
 UNICODE_STRING g_RegistryPath = {0};      // This is used to store the registry settings path for the driver
 
 _Use_decl_annotations_
@@ -405,14 +403,13 @@ EvtDeviceD0Entry(
     )
 {
     NTSTATUS status = STATUS_SUCCESS;
-    PDEVICE_CONTEXT devCtx;
 
+    UNREFERENCED_PARAMETER(Device);
     UNREFERENCED_PARAMETER(PreviousState);
 
     PAGED_CODE();
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
-
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
@@ -1228,7 +1225,6 @@ Return Value:
 {
     NTSTATUS                                    status;
     WDF_USB_CONTROL_SETUP_PACKET                controlSetupPacket;
-    WDF_REQUEST_SEND_OPTIONS                    sendOptions;
     WDFMEMORY                                   gtbMemory = 0;
     WDF_OBJECT_ATTRIBUTES                       gtbMemoryAttributes;
     PVOID                                       gtbMemoryPtr;
@@ -1263,12 +1259,6 @@ Return Value:
     // 
     // Set memory descriptor
     WDF_MEMORY_DESCRIPTOR_INIT_BUFFER(&memoryDescriptor, (PVOID)&gtbHeader, sizeof(gtbHeader));
-
-    // Set timeout
-    WDF_REQUEST_SEND_OPTIONS_SET_TIMEOUT(
-        &sendOptions,
-        WDF_TIMEOUT_TO_SEC
-    );
 
     // Need interface number for setup packet
     USHORT interfaceNumber = (USHORT)WdfUsbInterfaceGetInterfaceNumber(devCtx->UsbMIDIStreamingInterface);
@@ -1340,12 +1330,6 @@ Return Value:
         USB_REQUEST_GET_DESCRIPTOR,  // bRequest
         (USHORT)0x2601,              // Value
         interfaceNumber              // Index 
-    );
-
-    // Set timeout
-    WDF_REQUEST_SEND_OPTIONS_SET_TIMEOUT(
-        &sendOptions,
-        WDF_TIMEOUT_TO_SEC
     );
 
     // Get the Group Terminal Block descriptor for this device
@@ -1963,14 +1947,25 @@ Return Value:
             }
 
             // Send to circuit
-            if (!g_MidiInStreamEngine
-                || !g_MidiInStreamEngine->FillReadStream(
+            if (pDeviceContext->pStreamEngine)
+            {
+                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Calling FillReadStream with Position %d and ByteCount %d",
+                    UMP_Packet_Struct.umpHeader.Position, UMP_Packet_Struct.umpHeader.ByteCount);
+
+                if (!pDeviceContext->pStreamEngine->FillReadStream(
                     (PUINT8)&UMP_Packet_Struct,
                     (size_t)(UMP_Packet_Struct.umpHeader.ByteCount) + sizeof(UMPDATAFORMAT)
                 ))
+                {
+                    TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                        "Error submitting to read queue prep buffer.\n");
+                    goto ReadCompleteExit;
+                }
+            }
+            else
             {
-                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                    "Error submitting to read queue prep buffer.\n");
+                TraceEvents(TRACE_LEVEL_WARNING, TRACE_DEVICE,
+                    "No StreamEngine found in Device Context for filling read stream.\n");
                 goto ReadCompleteExit;
             }
         }

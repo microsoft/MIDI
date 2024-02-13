@@ -43,19 +43,6 @@ Environment:
 #include "Trace.h"
 #include "StreamEngine.tmh"
 
-// The same filter instance may not be used for both midi
-// pin instances, so storing the pins on the filter for the
-// pins to share will not work.
-//
-// To work around this, a global is used for sharing the pin
-// for looping midi out back to midi in
-//
-// Because we are using a global pin instance,
-// InstancesPossible on the in/out pins must not exceed 1 when
-// doing loopback.
-wil::fast_mutex_with_critical_region *g_MidiInLock {nullptr};
-StreamEngine* g_MidiInStreamEngine {nullptr};
-
 // UMP 32 is 4 bytes
 #define MINIMUM_UMP_DATASIZE 4
 
@@ -152,6 +139,8 @@ _Use_decl_annotations_
 void
 StreamEngine::HandleIo()
 {
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
+
     // This function handles both sending and receiving midi messages
     // when cyclic buffering is being used.
     // This implememtation loops the midi out data back to midi in.
@@ -171,6 +160,10 @@ StreamEngine::HandleIo()
             // run until we get a thread exit event.
             // wait for either a write event indicating data is ready to move, or thread exit.
             status = KeWaitForMultipleObjects(2, waitObjects, WaitAny, Executive, KernelMode, FALSE, nullptr, nullptr);
+
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
+                "%!FUNC! thread event with status: %!STATUS!", status);
+
             if (STATUS_WAIT_1 == status)
             {
                 do
@@ -178,17 +171,9 @@ StreamEngine::HandleIo()
                     // process data in the cyclic buffer until either the read buffer is empty
                     // or the write buffer is full.
 
-                    // In order to loopback data, we have to have a midi in pin.
-                    // The job of this lock is to synchronize availability and
-                    // state of pMidiStreamEngine in Device Context (g_MidiInStreamEngine), so it must be held for the duration of
-                    // use of pMidiStreamEngine in Device Context (g_MidiInStreamEngine). There should be very little contention,
-                    // as the only other time this is used is when midi in
-                    // transitions between run and paused.
-                    auto lock = g_MidiInLock->acquire();
-
                     // we have a write event, there should be data available to move.
-//                    if (nullptr != pDevCtx->pMidiStreamEngine)
-                    if (nullptr != g_MidiInStreamEngine)
+                    // (m_IsRunning)
+                    if (1)
                     {
                         ULONG bytesAvailableToRead = 0;
 
@@ -275,8 +260,11 @@ StreamEngine::HandleIo()
             else
             {
                 // exit event or failure, exit the loop to terminate the thread.
+                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! thread terminated with status: %!STATUS!", status);
                 break;
             }
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
+                "%!FUNC! thread event end with status: %!STATUS!", status);
         }while(true);
     }
     // else, this is a midi in pin, nothing to do for this worker thread that is just
@@ -284,9 +272,12 @@ StreamEngine::HandleIo()
 
     m_ThreadExitedEvent.set();
     PsTerminateSystemThread(status);
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 }
 
 _Use_decl_annotations_
+NONPAGED_CODE_SEG
 bool
 StreamEngine::FillReadStream(
     PUINT8  pBuffer,
@@ -309,7 +300,7 @@ Return Value:
 
 --*/
 {
-    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry with m_IsRunning set to %d", (int)m_IsRunning);
 
     // Check parameters passed
     if (!pBuffer)
@@ -317,18 +308,16 @@ Return Value:
 
     // Current mechanism to determine if currently processing data is that
     // the StreamEngine is not null. TBD this mechanism needs to be fixed.
-//    if (pDevCtx->pMidiStreamEngine)
-    if (g_MidiInStreamEngine)
+    auto lock = m_MidiInLock.acquire();
+
+    if (m_IsRunning)
     {
         // Retrieve the midi in position for the buffer that we are writing to. The data between the write position
         // and read position is empty. (read position is their last read position, write position is our last written).
         // retrieve our write position first since we know it won't be changing, and their read position second,
         // so we can have as much free space as possible.
-//        ULONG midiInWritePosition = (ULONG)InterlockedCompareExchange((LONG*)pDevCtx->pMidiStreamEngine->m_WriteRegister, 0, 0);
-//        ULONG midiInReadPosition = (ULONG)InterlockedCompareExchange((LONG*)pDevCtx->pMidiStreamEngine->m_ReadRegister, 0, 0);
-        ULONG midiInWritePosition = (ULONG)InterlockedCompareExchange((LONG*)g_MidiInStreamEngine->m_WriteRegister, 0, 0);
-        ULONG midiInReadPosition = (ULONG)InterlockedCompareExchange((LONG*)g_MidiInStreamEngine->m_ReadRegister, 0, 0);
-
+        ULONG midiInWritePosition = (ULONG)InterlockedCompareExchange((LONG*)m_WriteRegister, 0, 0);
+        ULONG midiInReadPosition = (ULONG)InterlockedCompareExchange((LONG*)m_ReadRegister, 0, 0);
 
         // Check enough space to write into
         ULONG bytesAvailable = 0;
@@ -340,8 +329,7 @@ Return Value:
             // if the read position is less than the write position, then the difference between
             // the read and write position is the buffer in use, same as above. So, the total
             // buffer size minus the used buffer gives us the available space.
-//            bytesAvailable = pDevCtx->pMidiStreamEngine->m_BufferSize - (midiInWritePosition - midiInReadPosition);
-            bytesAvailable = g_MidiInStreamEngine->m_BufferSize - (midiInWritePosition - midiInReadPosition);
+            bytesAvailable = m_BufferSize - (midiInWritePosition - midiInReadPosition);
         }
         else
         {
@@ -366,8 +354,9 @@ Return Value:
         }
 
         // There's enough space available, calculate our write position
-//        PVOID startingWriteAddress = (PVOID)(((PBYTE)pDevCtx->pMidiStreamEngine->m_KernelBufferMapping.Buffer1.m_BufferClientAddress) + midiInWritePosition);
-        PVOID startingWriteAddress = (PVOID)(((PBYTE)g_MidiInStreamEngine->m_KernelBufferMapping.Buffer1.m_BufferClientAddress) + midiInWritePosition);
+        PVOID startingWriteAddress = (PVOID)(((PBYTE)m_KernelBufferMapping.Buffer1.m_BufferClientAddress) + midiInWritePosition);
+
+        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Filling buffer with bytecount %d", bufferSize);
 
         // Copy the data
         RtlCopyMemory(
@@ -379,19 +368,17 @@ Return Value:
         // now calculate the new position that the buffer has been written up to.
         // this will be the original write position, plus the bytes copied, again modululs
         // the buffer size to take into account the loop.
-//        ULONG finalWritePosition = (midiInWritePosition + bytesToCopy) % pDevCtx->pMidiStreamEngine->m_BufferSize;
-        ULONG finalWritePosition = (midiInWritePosition + bufferSize) % g_MidiInStreamEngine->m_BufferSize;
+        ULONG finalWritePosition = (midiInWritePosition + bufferSize) % m_BufferSize;
 
         // finalize by advancing the registers and setting the write event
 
         // advance the write position for the loopback and signal that there's data available
-//        InterlockedExchange((LONG*)pDevCtx->pMidiStreamEngine->m_WriteRegister, finalWritePosition);
-//        KeSetEvent(pDevCtx->pMidiStreamEngine->m_WriteEvent, 0, 0);
-        InterlockedExchange((LONG*)g_MidiInStreamEngine->m_WriteRegister, finalWritePosition);
-        KeSetEvent(g_MidiInStreamEngine->m_WriteEvent, 0, 0);
+        InterlockedExchange((LONG*)m_WriteRegister, finalWritePosition);
+        KeSetEvent(m_WriteEvent, 0, 0);
     }
     else
     {
+        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit with data dropped.");
         return true;    // just drop the data
     }
 
@@ -475,6 +462,8 @@ StreamEngine::Pause()
 
     PAGED_CODE();
 
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
+
     if (m_StreamState == AcxStreamStatePause)
     {
         // Nothing to do.
@@ -506,14 +495,19 @@ StreamEngine::Pause()
             m_WorkerThread = nullptr;
         }
     }
-    else
+    else if (AcxPinGetId(m_Pin) == MidiPinTypeMidiIn)
     {
-        // Stop the continuous reader
+        // Stop Continuous reader
         WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin));
         PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
 
+        // Make sure we are not trying to change state while processing
+        auto lock = m_MidiInLock.acquire();
+
         if (pDevCtx)
         {
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
+                "%!FUNC! STOPPING Continuous Reader.");
             WdfIoTargetStop(WdfUsbTargetPipeGetIoTarget(pDevCtx->MidiInPipe), WdfIoTargetCancelSentIo);
         }
         else
@@ -522,15 +516,15 @@ StreamEngine::Pause()
                 "%!FUNC! Could not start interrupt pipe as no MidiInPipe");
         }
 
-        // If g_MidiInStreamEngine is available, the midi out worker thread will loopback.
-        // If it isn't available, the midi out worker will throw the data away.
-        // So when we transition midi in from run to paused, acquire the lock that
-        // protects g_MidiInStreamEngine and clear g_MidiInStreamEngine to stop the loopback data
-        // flowing.
-        // TBD - this mechanism needs to change in case where device can be destroyed
-        auto lock = g_MidiInLock->acquire();
-//        pDevCtx->pMidiStreamEngine = nullptr;
-        g_MidiInStreamEngine = nullptr;
+        // If m_IsRunning true, the midi out worker thread will loopback.
+        // If it is false, the midi out worker will throw the data away.
+        m_IsRunning = false;
+    }
+    else
+    {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+            "%!FUNC! Invalid device request, Pin type not valid.");
+        status = STATUS_INVALID_DEVICE_REQUEST;
     }
 
     //
@@ -541,6 +535,7 @@ StreamEngine::Pause()
     status = STATUS_SUCCESS;
 
 exit:
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
     return status;
 }
 
@@ -551,6 +546,8 @@ StreamEngine::Run()
     NTSTATUS status = STATUS_UNSUCCESSFUL;
 
     PAGED_CODE();
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
     if (m_StreamState == AcxStreamStateRun)
     {
@@ -590,24 +587,28 @@ StreamEngine::Run()
             KeSetPriorityThread(m_WorkerThread, HIGH_PRIORITY);
         }
     }
-    else
+    else if (AcxPinGetId(m_Pin) == MidiPinTypeMidiIn)
     {
-        // If g_MidiInStreamEngine is available, the midi out worker thread will loopback.
-        // If it isn't available, the midi out worker will throw the data away.
-        // So when we transition midi in from paused to run, acquire the lock that
-        // protects g_MidiInStreamEngine and set g_MidiInStreamEngine to start the loopback data
-        // flowing.
-        // TBD this mechanism must be changed in case where multiple instances
-        auto lock = g_MidiInLock->acquire();
-//        pDevCtx->pMidiStreamEngine = this;
-        g_MidiInStreamEngine = this;
+        // m_IsRunning is used to indicate running state. If m_IsRunning true, the out worker
+        // thread will output data to the connected device, otherwise data will be thrown away.
+        auto lock = m_MidiInLock.acquire();
 
-        // Start the Continuous reader
         WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin));
         PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
 
+        // NOTE: Must not start continuous reader until after setting pMidiStreamEngine as ISR can be called before
+        // the acquired lock is cleared.
+        // Start the continuous reader
         if (pDevCtx)
         {
+            // Make sure device knows about this stream engine for FillReadStream
+            pDevCtx->pStreamEngine = this;
+
+            // Set that we are running
+            m_IsRunning = true;
+
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
+                "%!FUNC! STARTING Continuous Reader.");
             status = WdfIoTargetStart(WdfUsbTargetPipeGetIoTarget(pDevCtx->MidiInPipe));
             if (!NT_SUCCESS(status))
             {
@@ -620,12 +621,22 @@ StreamEngine::Run()
             TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
                 "%!FUNC! Could not start interrupt pipe as no MidiInPipe");
         }
+
+    }
+    else
+    {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+            "%!FUNC! Invalid device request, Pin type not valid.");
+        status = STATUS_INVALID_DEVICE_REQUEST;
     }
 
     //
     // Pause to Run.
     //
     m_StreamState = AcxStreamStateRun;
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
+
     status = STATUS_SUCCESS;
 
 exit:

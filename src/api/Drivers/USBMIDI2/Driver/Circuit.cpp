@@ -432,7 +432,7 @@ Return Value:
     connections[1].ToPin.Id = MidiPinTypeMidiIn;
 
     //
-    // Add the connections linking circuit to elements.
+    // Add the connection
     // For testing add the last connection in a separate step.
     status = AcxCircuitAddConnections(circuit, connections, SIZEOF_ARRAY(connections));
     if (!NT_SUCCESS(status))
