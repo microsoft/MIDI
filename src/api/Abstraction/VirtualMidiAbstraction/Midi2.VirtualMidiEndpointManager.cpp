@@ -306,7 +306,7 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
     // we have to do this because they end up cached by PNP and come back
     // when you recreate a device with the same Id. This is a real problem 
     // if you are testing function blocks or endpoint properties with this
-    // loopback transport.
+    // transport.
     m_MidiDeviceManager->DeleteAllEndpointInProtocolDiscoveredProperties(newDeviceInterfaceId);
 
     // we need this for removal later
@@ -314,8 +314,10 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
 
     entry.CreatedClientEndpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId);
 
-    //MidiEndpointTable::Current().AddCreatedEndpointDevice(entry);
-    //MidiEndpointTable::Current().AddCreatedClient(entry.VirtualEndpointAssociationId, entry.CreatedClientEndpointId);
+    // time to do protocol negotiation, request endpoint metadata, function blocks, etc.
+
+    LOG_IF_FAILED(NegotiateAndRequestMetadata(newDeviceInterfaceId));
+
 
     return S_OK;
 }

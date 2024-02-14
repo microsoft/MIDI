@@ -33,9 +33,6 @@ CMidi2SchedulerMidiTransform::Initialize(
     UNREFERENCED_PARAMETER(creationParams);
     UNREFERENCED_PARAMETER(mmcssTaskId);
     
-
-    OutputDebugString(L"" __FUNCTION__ " Start up");
-
     TraceLoggingWrite(
         MidiSchedulerTransformTelemetryProvider::Provider(),
         __FUNCTION__,
@@ -80,9 +77,6 @@ CMidi2SchedulerMidiTransform::Cleanup()
 
     try
     {
-        OutputDebugString(L"" __FUNCTION__ " Scheduler shut down time");
-        OutputDebugString((std::wstring(L"" __FUNCTION__ " Abandoned queue size is: ") + std::to_wstring(m_messageQueue.size())).c_str());
-
 
         // tell the thread to quit. Call SetEvent in case it is in a wait
         m_continueProcessing = false;
