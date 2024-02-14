@@ -85,6 +85,7 @@ Each loopback endpoint pair is identified by a GUID for the association id. The 
 | (endpoint) description | Optional. This becomes the transport-supplied description for the loopback endpoint. |
 | (endpoint) uniqueId | Required. This is a short (32 characters or fewer) case-insensitive unique Id for the endpoint. When combined with the loopback A/B prefixes in the service, it must be unique across all loopback endpoints in Windows. You can use the same unique id for each endpoint in the same pair, but not the same as other pairs. |
 
+> Note: Loopback endpoints created in the configuration file cannot be removed by the API. Only loopback endpoints created via the API can be removed via the API. This is by design to help avoid applications changing user configuration.
 
 # Implementation
 
