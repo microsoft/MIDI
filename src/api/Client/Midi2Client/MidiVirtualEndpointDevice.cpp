@@ -104,10 +104,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
-    // TODO: Any message sending from inside this function should
-    // be done on another thread via a queue, like we do in the service
-    // That way no long-running or recursive callbacks.
-
     _Use_decl_annotations_
     void MidiVirtualEndpointDevice::ProcessIncomingMessage(
         midi2::MidiMessageReceivedEventArgs const& args,
@@ -130,10 +126,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                     if (internal::EndpointDiscoveryFilterRequestsEndpointInfoNotification(filterFlags))
                     {
+                        internal::LogInfo(__FUNCTION__, L"Sending Endpoint Info Notification");
+
                         // send endpoint info notification
 
                         auto notification = midi2::MidiStreamMessageBuilder::BuildEndpointInformationNotificationMessage(
-                            0, 
+                            MidiClock::TimestampConstantSendImmediately(),
                             MIDI_PREFERRED_UMP_VERSION_MAJOR,
                             MIDI_PREFERRED_UMP_VERSION_MINOR,
                             m_areFunctionBlocksStatic,
@@ -144,7 +142,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
                             false   // todo: pull from jr timestamp handling
                         );
 
-                        m_endpointConnection.SendMessagePacket(notification);
+                        if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendMessagePacket(notification)))
+                        {
+                            internal::LogGeneralError(__FUNCTION__, L"SendMessagePacket failed - sending endpoint info notification");
+                        }
                     }
 
                     if (internal::EndpointDiscoveryFilterRequestsDeviceIdentityNotification(filterFlags))
@@ -154,13 +155,42 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                     if (internal::EndpointDiscoveryFilterRequestsEndpointNameNotification(filterFlags))
                     {
+                        internal::LogInfo(__FUNCTION__, L"Sending Endpoint Name Notification");
+
                         // send endpoint name notification messages
+
+                        if (!m_endpointName.empty())
+                        {
+                            auto nameMessages = midi2::MidiStreamMessageBuilder::BuildEndpointNameNotificationMessages(
+                                MidiClock::TimestampConstantSendImmediately(),
+                                m_endpointName
+                            );
+
+                            if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendMessagePacketList(nameMessages.GetView())))
+                            {
+                                internal::LogGeneralError(__FUNCTION__, L"SendMessagePacketList failed - sending endpoint name notification list");
+                            }
+                        }
                     }
 
                     if (internal::EndpointDiscoveryFilterRequestsProductInstanceIdNotification(filterFlags))
                     {
+                        internal::LogInfo(__FUNCTION__, L"Sending Endpoint Product Instance Id Notification");
+
                         // send product instance id notification messages
-                        
+
+                        if (!m_endpointProductInstanceId.empty())
+                        {
+                            auto instanceIdMessages = midi2::MidiStreamMessageBuilder::BuildProductInstanceIdNotificationMessages(
+                                MidiClock::TimestampConstantSendImmediately(),
+                                m_endpointProductInstanceId
+                            );
+
+                            if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendMessagePacketList(instanceIdMessages.GetView())))
+                            {
+                                internal::LogGeneralError(__FUNCTION__, L"SendMessagePacketList failed - sending product instance id messages");
+                            }
+                        }
                     }
 
                     if (internal::EndpointDiscoveryFilterRequestsStreamConfigurationNotification(filterFlags))
@@ -179,6 +209,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                     if (fbNumber == MIDI_STREAM_MESSAGE_FUNCTION_BLOCK_REQUEST_ALL_FUNCTION_BLOCKS)
                     {
+                        internal::LogInfo(__FUNCTION__, L"Sending All function blocks, as requested");
+
                         // send all function blocks
 
                         for (uint8_t i = 0; i < (uint8_t)m_functionBlocks.Size(); i++)
@@ -193,7 +225,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
                     else
                     {
                         // send single requested function block
-                           
+                        internal::LogInfo(__FUNCTION__, L"Sending only a single function block, as requested");
+
                         if (m_functionBlocks.HasKey(fbNumber))
                         {
                             auto fb = m_functionBlocks.Lookup(fbNumber);
@@ -210,7 +243,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
                             handled = false;
                         }
                     }
-
                 }
 
                 else
