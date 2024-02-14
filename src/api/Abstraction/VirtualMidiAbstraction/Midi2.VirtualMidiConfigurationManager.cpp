@@ -156,7 +156,7 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
     // TODO: Actual Success or fail response
     internal::JsonSetBoolProperty(
         responseObject,
-        MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_SUCCESS_PROPERTY_KEY,
+        MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
         true);
 
     TraceLoggingWrite(

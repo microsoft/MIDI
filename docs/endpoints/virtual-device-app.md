@@ -15,7 +15,7 @@ has_children: false
 
 ## Overview
 
-One way to have app-to-app MIDI on Windows is to use a simple loopback. That is typically created ahead of time, and is available for any applications to use to communicate with each other. The lifetime of these loopback endpoints are not tied to any one application.
+One way to have app-to-app MIDI on Windows is to use a simple loopback. That is typically created ahead of time, and is available for any applications to use to communicate with each other. The lifetime of these loopback endpoints are not tied to any one application. They are simply a pipe between applications.
 
 Another approach is to allow applications to create and publish an endpoint which is declared through settings inside the application itself. When the application closes, the endpoint closes. That is the model the Virtual Device App feature implements. (If you want the simple pre-created loopback, see the Virtual Loopback transport)
 
