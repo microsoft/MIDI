@@ -319,6 +319,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
 
 
+
+        // TODO: Use the service function to send this.
+
+
         internal::LogInfo(__FUNCTION__, L"config manager initialize call SUCCESS");
 
         CComBSTR response;
@@ -328,6 +332,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         internal::LogInfo(__FUNCTION__, topLevelTransportPluginSettingsObject.Stringify().c_str());
 
         auto configUpdateResult = configManager->UpdateConfiguration(topLevelTransportPluginSettingsObject.Stringify().c_str(), false, &response);
+
 
         internal::LogInfo(__FUNCTION__, L"UpdateConfiguration returned");
 
@@ -352,7 +357,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         internal::LogInfo(__FUNCTION__, L"JsonObjectFromBSTR success");
 
         // check for actual success
-        auto successResult = internal::JsonGetBoolProperty(responseObject, MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_SUCCESS_PROPERTY_KEY, false);
+        auto successResult = internal::JsonGetBoolProperty(responseObject, MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY, false);
 
         if (successResult)
         {

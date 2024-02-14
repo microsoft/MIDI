@@ -101,8 +101,8 @@ CMidi2LoopbackMidiEndpointManager::CreateParentDevice()
 _Use_decl_annotations_
 HRESULT
 CMidi2LoopbackMidiEndpointManager::DeleteEndpointPair(
-    _In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definitionA,
-    _In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definitionB)
+    _In_ MidiLoopbackDeviceDefinition const& definitionA,
+    _In_ MidiLoopbackDeviceDefinition const& definitionB)
 {
     TraceLoggingWrite(
         MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
@@ -123,24 +123,23 @@ CMidi2LoopbackMidiEndpointManager::DeleteEndpointPair(
 _Use_decl_annotations_
 HRESULT
 CMidi2LoopbackMidiEndpointManager::DeleteSingleEndpoint(
-    std::shared_ptr<MidiLoopbackDeviceDefinition> definition
+    MidiLoopbackDeviceDefinition const& definition
 )
 {
-    RETURN_HR_IF_NULL(E_INVALIDARG, definition);
 
     TraceLoggingWrite(
         MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
-        TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
-        TraceLoggingWideString(definition->InstanceIdPrefix.c_str(), "prefix"),
-        TraceLoggingWideString(definition->EndpointName.c_str(), "name"),
-        TraceLoggingWideString(definition->EndpointDescription.c_str(), "description")
+        TraceLoggingWideString(definition.AssociationId.c_str(), "association id"),
+        TraceLoggingWideString(definition.EndpointUniqueIdentifier.c_str(), "unique identifier"),
+        TraceLoggingWideString(definition.InstanceIdPrefix.c_str(), "prefix"),
+        TraceLoggingWideString(definition.EndpointName.c_str(), "name"),
+        TraceLoggingWideString(definition.EndpointDescription.c_str(), "description")
     );
 
-    return m_MidiDeviceManager->DeactivateEndpoint(definition->CreatedShortClientInstanceId.c_str());
+    return m_MidiDeviceManager->DeactivateEndpoint(definition.CreatedShortClientInstanceId.c_str());
 }
 
 
@@ -323,7 +322,8 @@ _Use_decl_annotations_
 HRESULT 
 CMidi2LoopbackMidiEndpointManager::CreateEndpointPair(
     std::shared_ptr<MidiLoopbackDeviceDefinition> definitionA,
-    std::shared_ptr<MidiLoopbackDeviceDefinition> definitionB
+    std::shared_ptr<MidiLoopbackDeviceDefinition> definitionB,
+    bool isFromConfigurationFile
 )
 {
     TraceLoggingWrite(
@@ -344,6 +344,7 @@ CMidi2LoopbackMidiEndpointManager::CreateEndpointPair(
 
             auto device = MidiLoopbackDevice{};
 
+            device.IsFromConfigurationFile = isFromConfigurationFile;
             device.DefinitionA = *definitionA;
             device.DefinitionB = *definitionB;
 
@@ -363,7 +364,7 @@ CMidi2LoopbackMidiEndpointManager::CreateEndpointPair(
             );
 
             // we can't do anything with the return value here
-            DeleteSingleEndpoint(definitionA);
+            DeleteSingleEndpoint(*definitionA);
 
             return E_FAIL;
         }

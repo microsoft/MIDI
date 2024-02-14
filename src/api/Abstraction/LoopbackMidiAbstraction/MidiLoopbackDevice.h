@@ -18,6 +18,24 @@ public:
     MidiLoopbackDeviceDefinition DefinitionA;
     MidiLoopbackDeviceDefinition DefinitionB;
 
+    bool IsFromConfigurationFile{ true };
+
+    void Cleanup()
+    {
+        if (m_callbackA != nullptr)
+        {
+            m_callbackA = nullptr;
+        }
+
+        if (m_callbackB != nullptr)
+        {
+            m_callbackB = nullptr;
+        }
+    }
+
+
+
+
 
     void RegisterEndpointA(/*_In_ wil::com_ptr_nothrow<CMidi2LoopbackMidiBiDi> endpoint,*/ _In_ wil::com_ptr_nothrow<IMidiCallback> callback)
     {
@@ -57,8 +75,7 @@ public:
         //m_bidiA = nullptr;
         //m_bidiB = nullptr;
 
-        m_callbackA = nullptr;
-        m_callbackB = nullptr;
+        Cleanup();
     }
 
 private:

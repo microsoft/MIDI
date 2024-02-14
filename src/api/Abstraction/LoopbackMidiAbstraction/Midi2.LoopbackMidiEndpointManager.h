@@ -26,12 +26,13 @@ public:
 
     HRESULT CreateEndpointPair(
         _In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definitionA,
-        _In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definitionB
+        _In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definitionB,
+        _In_ bool isFromConfigurationFile
     );
 
     HRESULT DeleteEndpointPair(
-        _In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definitionA,
-        _In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definitionB
+        _In_ MidiLoopbackDeviceDefinition const& definitionA,
+        _In_ MidiLoopbackDeviceDefinition const& definitionB
     );
 
 
@@ -53,7 +54,7 @@ private:
     }
 
     HRESULT CreateSingleEndpoint(_In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definition);
-    HRESULT DeleteSingleEndpoint(_In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definition);
+    HRESULT DeleteSingleEndpoint(_In_ MidiLoopbackDeviceDefinition const& definition);
 
 
     GUID m_ContainerId{};

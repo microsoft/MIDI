@@ -45,8 +45,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ midi2::IMidiServiceMessageProcessingPluginConfiguration const& configurationUpdate) noexcept;
 
 
-    private:
 
+
+        static json::JsonObject MidiService::InternalSendConfigurationJsonAndGetResponse(_In_ winrt::guid const& abstractionId, _In_ json::JsonObject const& configObject) noexcept;
+
+    private:
 
 
     };

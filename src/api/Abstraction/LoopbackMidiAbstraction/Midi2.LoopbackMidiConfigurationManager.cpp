@@ -52,11 +52,9 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
     //if (ConfigurationJsonSection == L"") return S_OK;
 
     json::JsonObject jsonObject;
-    json::JsonObject responseObject;
 
     // default to failure
-    internal::JsonSetBoolProperty(responseObject, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_SUCCESS_PROPERTY_KEY, false);
-
+    auto responseObject = internal::BuildConfigurationResponseObject(false);
 
     try
     {
@@ -100,25 +98,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                 //json::JsonObject associationObj;
 
                 auto associationObj = o.Current().Value().GetObject();
-
-                //if (!o.Current().Value().try_as<json::JsonObject>(associationObj))
-                //{
-                //    TraceLoggingWrite(
-                //        MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-                //        __FUNCTION__,
-                //        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                //        TraceLoggingPointer(this, "this"),
-                //        TraceLoggingWideString(L"Unable to read the property as a json object", "message"),
-                //        TraceLoggingWideString(associationKey.c_str(), "key")
-                //        TraceLoggingWideString(o.Current().Value().Stringify(), "stringify")
-                //    );
-
-                //    internal::JsonStringifyObjectToOutParam(responseObject, &Response);
-
-                //    return E_FAIL;
-                //}              
-
-                
+               
                 if (associationObj)
                 {
                     definitionA->AssociationId = associationKey;
@@ -175,7 +155,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                         }
 
 
-                        if (SUCCEEDED(AbstractionState::Current().GetEndpointManager()->CreateEndpointPair(definitionA, definitionB)))
+                        if (SUCCEEDED(AbstractionState::Current().GetEndpointManager()->CreateEndpointPair(definitionA, definitionB, IsFromConfigurationFile)))
                         {
                             TraceLoggingWrite(
                                 MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
@@ -189,7 +169,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                             internal::JsonSetBoolProperty(
                                 responseObject,
-                                MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_SUCCESS_PROPERTY_KEY,
+                                MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
                                 true);
 
                             // update the return json with the new Ids
@@ -263,7 +243,6 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
             // nothing to create.
         }
 
-
         // update and delete are runtime operations, not config file operations
 
         if (!IsFromConfigurationFile)
@@ -272,20 +251,56 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
             // Create ----------------------------------
 
-            if (deleteArray != nullptr && createObject.Size() > 0)
+            if (deleteArray != nullptr && deleteArray.Size() > 0)
             {
-                auto o = createObject.First();
+                auto o = deleteArray.First();
 
                 while (o.HasCurrent())
                 {
                     // each entry is an association id
 
+                    auto associationId = o.Current().GetString();
+
                     // if the entry was runtime-created and not from the config file, we can delete both endpoints 
+
+                    auto device = AbstractionState::Current().GetEndpointTable()->GetDevice(associationId.c_str());
+
+                    // we can only delete runtime-created devices here
+
+                    if (!device->IsFromConfigurationFile)
+                    {
+                        auto removalHr = AbstractionState::Current().GetEndpointManager()->DeleteEndpointPair(device->DefinitionA, device->DefinitionB);
+
+                        LOG_IF_FAILED(removalHr);
+
+                        if (SUCCEEDED(removalHr))
+                        {
+                            AbstractionState::Current().GetEndpointTable()->RemoveDevice(associationId.c_str());
+
+                            internal::JsonSetBoolProperty(
+                                responseObject,
+                                MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
+                                true);
+                        }
+                        else
+                        {
+                            // failed to remove device
+
+                            TraceLoggingWrite(
+                                MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+                                __FUNCTION__,
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Failed to remove device", "message"),
+                                TraceLoggingWideString(ConfigurationJsonSection, "json")
+                            );
+                        }
+                    }
+
 
                     o.MoveNext();
                 }
             }
-
 
             //auto updateArray = internal::JsonGetArrayProperty(jsonObject, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICES_UPDATE_KEY);
 
