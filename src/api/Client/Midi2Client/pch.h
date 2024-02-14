@@ -19,6 +19,9 @@
 //#include <wil/cppwinrt.h> // must be before the first C++ WinRT header
 //#include <wil/result.h>
 
+#include <wil\resource.h>
+#include <wil\result_macros.h>
+#include <wil\tracelogging.h>
 
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
@@ -35,7 +38,8 @@ namespace json = ::winrt::Windows::Data::Json;
 #include <algorithm>
 #include <string>
 #include <cwctype>
-
+#include <queue>
+#include <mutex>
 
 // internal
 #include "trace_logging.h"

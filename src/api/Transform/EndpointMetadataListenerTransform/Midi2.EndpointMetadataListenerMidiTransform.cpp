@@ -125,7 +125,7 @@ CMidi2EndpointMetadataListenerMidiTransform::Cleanup()
 }
 
 
-#define MIDI_ENDPOINT_METADATA_LISTENER_THREAD_SLEEP_DURATION_MS 2000
+#define MIDI_ENDPOINT_METADATA_LISTENER_THREAD_SLEEP_DURATION_MS 10000
 
 void CMidi2EndpointMetadataListenerMidiTransform::QueueWorker()
 {
@@ -215,6 +215,8 @@ CMidi2EndpointMetadataListenerMidiTransform::SendMidiMessage(
                 m_queueMutex.lock();
                 m_workQueue.push(ump);
                 m_queueMutex.unlock();
+
+                m_messageProcessorWakeup.SetEvent();
             }
             else
             {

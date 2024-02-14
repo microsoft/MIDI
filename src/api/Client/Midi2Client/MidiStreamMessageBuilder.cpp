@@ -17,7 +17,7 @@
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
-    midi2::MidiMessage128 MidiStreamMessageBuilder::BuildEndpointDiscoveryMessage(
+    midi2::IMidiUniversalPacket MidiStreamMessageBuilder::BuildEndpointDiscoveryMessage(
          internal::MidiTimestamp const timestamp,
          uint8_t const umpVersionMajor,
          uint8_t const umpVersionMinor,
@@ -37,7 +37,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    midi2::MidiMessage128 MidiStreamMessageBuilder::BuildEndpointInformationNotificationMessage(
+    midi2::IMidiUniversalPacket MidiStreamMessageBuilder::BuildEndpointInformationNotificationMessage(
          internal::MidiTimestamp const timestamp,
          uint8_t const umpVersionMajor,
          uint8_t const umpVersionMinor,
@@ -79,7 +79,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    midi2::MidiMessage128 MidiStreamMessageBuilder::BuildDeviceIdentityNotificationMessage(
+    midi2::IMidiUniversalPacket MidiStreamMessageBuilder::BuildDeviceIdentityNotificationMessage(
          internal::MidiTimestamp timestamp,
          uint8_t const deviceManufacturerSysExIdByte1,
          uint8_t const deviceManufacturerSysExIdByte2,
@@ -128,7 +128,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     // TODO: Add ASCII/UTF-8 encoding option
 
     _Use_decl_annotations_
-    collections::IVector<midi2::MidiMessage128> MidiStreamMessageBuilder::BuildSplitTextMessages(
+    collections::IVector<midi2::IMidiUniversalPacket> MidiStreamMessageBuilder::BuildSplitTextMessages(
         internal::MidiTimestamp const timestamp,
         uint8_t const status, 
         uint16_t const word0Remainder, 
@@ -136,7 +136,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint8_t const maxCharactersPerPacket,
         winrt::hstring const& text)
     {
-        auto messages = winrt::single_threaded_vector<midi2::MidiMessage128>();
+        auto messages = winrt::single_threaded_vector<midi2::IMidiUniversalPacket>();
 
         // endpoint name is one or more UMPs, max 98 bytes. Either 1 complete message (form 0x0)
         // or start (form 0x1, continue messages 0x2, and end 0x3)
@@ -266,7 +266,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     // TODO: This is UTF-8
     _Use_decl_annotations_
-    collections::IVector<midi2::MidiMessage128> MidiStreamMessageBuilder::BuildEndpointNameNotificationMessages(
+    collections::IVector<midi2::IMidiUniversalPacket> MidiStreamMessageBuilder::BuildEndpointNameNotificationMessages(
          internal::MidiTimestamp const timestamp,
          winrt::hstring const& name
     ) noexcept
@@ -283,7 +283,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     // TODO: This is ASCII
     _Use_decl_annotations_
-    collections::IVector<midi2::MidiMessage128> MidiStreamMessageBuilder::BuildProductInstanceIdNotificationMessages(
+    collections::IVector<midi2::IMidiUniversalPacket> MidiStreamMessageBuilder::BuildProductInstanceIdNotificationMessages(
         internal::MidiTimestamp const timestamp,
         winrt::hstring const& productInstanceId
     )
@@ -300,7 +300,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    midi2::MidiMessage128 MidiStreamMessageBuilder::BuildStreamConfigurationRequestMessage(
+    midi2::IMidiUniversalPacket MidiStreamMessageBuilder::BuildStreamConfigurationRequestMessage(
         internal::MidiTimestamp const timestamp,
         uint8_t const protocol,
         bool const expectToReceiveJRTimestamps,
@@ -330,7 +330,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    midi2::MidiMessage128 MidiStreamMessageBuilder::BuildStreamConfigurationNotificationMessage(
+    midi2::IMidiUniversalPacket MidiStreamMessageBuilder::BuildStreamConfigurationNotificationMessage(
         internal::MidiTimestamp const timestamp,
         uint8_t const protocol,
         bool const confirmationWillReceiveJRTimestamps,
@@ -359,7 +359,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    midi2::MidiMessage128 MidiStreamMessageBuilder::BuildFunctionBlockDiscoveryMessage(
+    midi2::IMidiUniversalPacket MidiStreamMessageBuilder::BuildFunctionBlockDiscoveryMessage(
         internal::MidiTimestamp const timestamp,
         uint8_t const functionBlockNumber,
         midi2::MidiFunctionBlockDiscoveryFilterFlags const requestFlags
@@ -383,7 +383,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    midi2::MidiMessage128 MidiStreamMessageBuilder::BuildFunctionBlockInfoNotificationMessage(
+    midi2::IMidiUniversalPacket MidiStreamMessageBuilder::BuildFunctionBlockInfoNotificationMessage(
         internal::MidiTimestamp const timestamp,
         bool const active,
         uint8_t const functionBlockNumber,
@@ -431,7 +431,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     // TODO: This is UTF-8
     _Use_decl_annotations_
-    collections::IVector<midi2::MidiMessage128> MidiStreamMessageBuilder::BuildFunctionBlockNameNotificationMessages(
+    collections::IVector<midi2::IMidiUniversalPacket> MidiStreamMessageBuilder::BuildFunctionBlockNameNotificationMessages(
         internal::MidiTimestamp const timestamp,
         uint8_t const functionBlockNumber,
         winrt::hstring const& name
@@ -454,34 +454,42 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     winrt::hstring MidiStreamMessageBuilder::ParseFunctionBlockNameNotificationMessages(
-        collections::IVector<midi2::MidiMessage128> messages
+        collections::IVector<midi2::IMidiUniversalPacket> messages
         )
     {
         std::string s{};
         s.reserve(13);
 
-        for (auto message : messages)
+        for (auto ump : messages)
         {
-            // verify that the message form is correct (begin/[continue]/end or just complete)
+            midi2::MidiMessage128 message{ nullptr };
 
-            // verify the status is correct
+            if (ump.MessageType() == midi2::MidiMessageType::Stream128)
+            {
+                message = ump.as<midi2::MidiMessage128>();
 
-            AppendCharToString(s, MIDIWORDBYTE4(message.Word0()));
+                // verify that the message form is correct (begin/[continue]/end or just complete)
 
-            AppendCharToString(s, MIDIWORDBYTE1(message.Word1()));
-            AppendCharToString(s, MIDIWORDBYTE2(message.Word1()));
-            AppendCharToString(s, MIDIWORDBYTE3(message.Word1()));
-            AppendCharToString(s, MIDIWORDBYTE4(message.Word1()));
+                // verify the status is correct
 
-            AppendCharToString(s, MIDIWORDBYTE1(message.Word2()));
-            AppendCharToString(s, MIDIWORDBYTE2(message.Word2()));
-            AppendCharToString(s, MIDIWORDBYTE3(message.Word2()));
-            AppendCharToString(s, MIDIWORDBYTE4(message.Word2()));
+                AppendCharToString(s, MIDIWORDBYTE4(message.Word0()));
 
-            AppendCharToString(s, MIDIWORDBYTE1(message.Word3()));
-            AppendCharToString(s, MIDIWORDBYTE2(message.Word3()));
-            AppendCharToString(s, MIDIWORDBYTE3(message.Word3()));
-            AppendCharToString(s, MIDIWORDBYTE4(message.Word3()));
+                AppendCharToString(s, MIDIWORDBYTE1(message.Word1()));
+                AppendCharToString(s, MIDIWORDBYTE2(message.Word1()));
+                AppendCharToString(s, MIDIWORDBYTE3(message.Word1()));
+                AppendCharToString(s, MIDIWORDBYTE4(message.Word1()));
+
+                AppendCharToString(s, MIDIWORDBYTE1(message.Word2()));
+                AppendCharToString(s, MIDIWORDBYTE2(message.Word2()));
+                AppendCharToString(s, MIDIWORDBYTE3(message.Word2()));
+                AppendCharToString(s, MIDIWORDBYTE4(message.Word2()));
+
+                AppendCharToString(s, MIDIWORDBYTE1(message.Word3()));
+                AppendCharToString(s, MIDIWORDBYTE2(message.Word3()));
+                AppendCharToString(s, MIDIWORDBYTE3(message.Word3()));
+                AppendCharToString(s, MIDIWORDBYTE4(message.Word3()));
+            }
+
         }
 
         return winrt::to_hstring(s);
@@ -490,35 +498,42 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     winrt::hstring MidiStreamMessageBuilder::ParseEndpointNameNotificationMessages(
-        collections::IVector<midi2::MidiMessage128> messages
+        collections::IVector<midi2::IMidiUniversalPacket> messages
         )
     {
         std::string s{};
         s.reserve(14);
 
-        for (auto message : messages)
+        for (auto ump : messages)
         {
-            // verify that the message form is correct (begin/[continue]/end or just complete)
+            midi2::MidiMessage128 message{ nullptr };
 
-            // verify the status is correct
+            if (ump.MessageType() == midi2::MidiMessageType::Stream128)
+            {
+                message = ump.as<midi2::MidiMessage128>();
 
-            AppendCharToString(s, MIDIWORDBYTE3(message.Word0()));
-            AppendCharToString(s, MIDIWORDBYTE4(message.Word0()));
+                // verify that the message form is correct (begin/[continue]/end or just complete)
 
-            AppendCharToString(s, MIDIWORDBYTE1(message.Word1()));
-            AppendCharToString(s, MIDIWORDBYTE2(message.Word1()));
-            AppendCharToString(s, MIDIWORDBYTE3(message.Word1()));
-            AppendCharToString(s, MIDIWORDBYTE4(message.Word1()));
+                // verify the status is correct
 
-            AppendCharToString(s, MIDIWORDBYTE1(message.Word2()));
-            AppendCharToString(s, MIDIWORDBYTE2(message.Word2()));
-            AppendCharToString(s, MIDIWORDBYTE3(message.Word2()));
-            AppendCharToString(s, MIDIWORDBYTE4(message.Word2()));
+                AppendCharToString(s, MIDIWORDBYTE3(message.Word0()));
+                AppendCharToString(s, MIDIWORDBYTE4(message.Word0()));
 
-            AppendCharToString(s, MIDIWORDBYTE1(message.Word3()));
-            AppendCharToString(s, MIDIWORDBYTE2(message.Word3()));
-            AppendCharToString(s, MIDIWORDBYTE3(message.Word3()));
-            AppendCharToString(s, MIDIWORDBYTE4(message.Word3()));
+                AppendCharToString(s, MIDIWORDBYTE1(message.Word1()));
+                AppendCharToString(s, MIDIWORDBYTE2(message.Word1()));
+                AppendCharToString(s, MIDIWORDBYTE3(message.Word1()));
+                AppendCharToString(s, MIDIWORDBYTE4(message.Word1()));
+
+                AppendCharToString(s, MIDIWORDBYTE1(message.Word2()));
+                AppendCharToString(s, MIDIWORDBYTE2(message.Word2()));
+                AppendCharToString(s, MIDIWORDBYTE3(message.Word2()));
+                AppendCharToString(s, MIDIWORDBYTE4(message.Word2()));
+
+                AppendCharToString(s, MIDIWORDBYTE1(message.Word3()));
+                AppendCharToString(s, MIDIWORDBYTE2(message.Word3()));
+                AppendCharToString(s, MIDIWORDBYTE3(message.Word3()));
+                AppendCharToString(s, MIDIWORDBYTE4(message.Word3()));
+            }
         }
 
         return winrt::to_hstring(s);
@@ -526,35 +541,41 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     winrt::hstring MidiStreamMessageBuilder::ParseProductInstanceIdNotificationMessages(
-        collections::IVector<midi2::MidiMessage128> messages
+        collections::IVector<midi2::IMidiUniversalPacket> messages
         )
     {
         std::string s{};
         s.reserve(14);
 
-        for (auto message : messages)
+        for (auto ump : messages)
         {
-            // verify that the message form is correct (begin/[continue]/end or just complete)
+            midi2::MidiMessage128 message{ nullptr };
+
+            if (ump.MessageType() == midi2::MidiMessageType::Stream128)
+            {
+                message = ump.as<midi2::MidiMessage128>();
+                // verify that the message form is correct (begin/[continue]/end or just complete)
 
             // verify the status is correct
 
-            AppendCharToString(s, MIDIWORDBYTE3(message.Word0()));
-            AppendCharToString(s, MIDIWORDBYTE4(message.Word0()));
+                AppendCharToString(s, MIDIWORDBYTE3(message.Word0()));
+                AppendCharToString(s, MIDIWORDBYTE4(message.Word0()));
 
-            AppendCharToString(s, MIDIWORDBYTE1(message.Word1()));
-            AppendCharToString(s, MIDIWORDBYTE2(message.Word1()));
-            AppendCharToString(s, MIDIWORDBYTE3(message.Word1()));
-            AppendCharToString(s, MIDIWORDBYTE4(message.Word1()));
+                AppendCharToString(s, MIDIWORDBYTE1(message.Word1()));
+                AppendCharToString(s, MIDIWORDBYTE2(message.Word1()));
+                AppendCharToString(s, MIDIWORDBYTE3(message.Word1()));
+                AppendCharToString(s, MIDIWORDBYTE4(message.Word1()));
 
-            AppendCharToString(s, MIDIWORDBYTE1(message.Word2()));
-            AppendCharToString(s, MIDIWORDBYTE2(message.Word2()));
-            AppendCharToString(s, MIDIWORDBYTE3(message.Word2()));
-            AppendCharToString(s, MIDIWORDBYTE4(message.Word2()));
+                AppendCharToString(s, MIDIWORDBYTE1(message.Word2()));
+                AppendCharToString(s, MIDIWORDBYTE2(message.Word2()));
+                AppendCharToString(s, MIDIWORDBYTE3(message.Word2()));
+                AppendCharToString(s, MIDIWORDBYTE4(message.Word2()));
 
-            AppendCharToString(s, MIDIWORDBYTE1(message.Word3()));
-            AppendCharToString(s, MIDIWORDBYTE2(message.Word3()));
-            AppendCharToString(s, MIDIWORDBYTE3(message.Word3()));
-            AppendCharToString(s, MIDIWORDBYTE4(message.Word3()));
+                AppendCharToString(s, MIDIWORDBYTE1(message.Word3()));
+                AppendCharToString(s, MIDIWORDBYTE2(message.Word3()));
+                AppendCharToString(s, MIDIWORDBYTE3(message.Word3()));
+                AppendCharToString(s, MIDIWORDBYTE4(message.Word3()));
+            }
         }
 
         return winrt::to_hstring(s);

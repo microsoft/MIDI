@@ -276,6 +276,7 @@
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Midi2.BluetoothMidiAbstraction.cpp" />
+    <ClCompile Include="Midi2.BluetoothMidiConfigurationManager.cpp" />
     <ClCompile Include="Midi2.BluetoothMidiEndpointManager.cpp" />
     <ClCompile Include="Midi2.BluetoothMidiBidi.cpp" />
     <ClCompile Include="MidiEndpointTable.cpp" />
@@ -293,6 +294,7 @@
     <ClInclude Include="abstraction_defs.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="Midi2.BluetoothMidiAbstraction.h" />
+    <ClInclude Include="Midi2.BluetoothMidiConfigurationManager.h" />
     <ClInclude Include="Midi2.BluetoothMidiEndpointManager.h" />
     <ClInclude Include="Midi2.BluetoothMidiBidi.h" />
     <ClInclude Include="MidiEndpointTable.h" />

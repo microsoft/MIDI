@@ -18,6 +18,8 @@ import "MidiPacketTypeEnum.idl";
 import "MidiGroup.idl";
 import "MidiChannel.idl";
 
+import "IMidiUniversalPacket.idl";
+
 import "Midi1ChannelVoiceMessageStatusEnum.idl";
 import "Midi2ChannelVoiceMessageStatusEnum.idl";
 
@@ -65,5 +67,8 @@ namespace Windows.Devices.Midi2
 
         static String GetMessageFriendlyNameFromFirstWord(UInt32 word0);
 
+
+        static IVector<IMidiUniversalPacket> GetPacketListFromWordList(MIDI_TIMESTAMP timestamp, IVectorView<UInt32> words);
+        static IVector<UInt32> GetWordListFromPacketList(IVectorView<IMidiUniversalPacket> words);
     };
 }
