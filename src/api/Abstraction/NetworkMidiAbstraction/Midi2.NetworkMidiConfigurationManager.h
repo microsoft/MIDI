@@ -8,25 +8,20 @@
 
 #pragma once
 
-class CMidi2NetworkMidiEndpointManager :
+
+class CMidi2NetworkMidiConfigurationManager :
     public Microsoft::WRL::RuntimeClass<
-        Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-        IMidiEndpointManager>
+    Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
+    IMidiAbstractionConfigurationManager>
 
 {
 public:
-    STDMETHOD(Initialize(_In_ IUnknown*, _In_ IUnknown*));
+    STDMETHOD(Initialize(_In_ GUID AbstractionId, _In_ IUnknown* MidiDeviceManager));
+    STDMETHOD(UpdateConfiguration(_In_ LPCWSTR ConfigurationJsonSection, _In_ BOOL IsFromConfigurationFile, _Out_ BSTR* Response));
     STDMETHOD(Cleanup)();
 
 private:
-    GUID m_containerId{};
-    GUID m_transportAbstractionId{};
-    std::wstring m_parentDeviceId{};
-
-    HRESULT CreateParentDevice();
-    HRESULT CreateEndpoint(_In_ MidiNetworkDeviceDefinition& deviceEndpoint);
-
-
     wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
-    wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> m_MidiProtocolManager;
+
+    GUID m_abstractionId;   // kept for convenience
 };

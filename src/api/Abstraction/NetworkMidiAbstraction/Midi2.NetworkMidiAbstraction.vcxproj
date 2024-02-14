@@ -274,8 +274,10 @@
     </Midl>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AbstractionState.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Midi2.NetworkMidiAbstraction.cpp" />
+    <ClCompile Include="Midi2.NetworkMidiConfigurationManager.cpp" />
     <ClCompile Include="Midi2.NetworkMidiEndpointManager.cpp" />
     <ClCompile Include="Midi2.NetworkMidiBidi.cpp" />
     <ClCompile Include="Midi2.NetworkMidiIn.cpp" />
@@ -291,13 +293,18 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AbstractionState.h" />
     <ClInclude Include="abstraction_defs.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="Midi2.NetworkMidiAbstraction.h" />
+    <ClInclude Include="Midi2.NetworkMidiConfigurationManager.h" />
     <ClInclude Include="Midi2.NetworkMidiEndpointManager.h" />
     <ClInclude Include="Midi2.NetworkMidiBidi.h" />
     <ClInclude Include="Midi2.NetworkMidiIn.h" />
     <ClInclude Include="Midi2.NetworkMidiOut.h" />
+    <ClInclude Include="MidiNetworkDevice.h" />
+    <ClInclude Include="MidiNetworkDeviceDefinition.h" />
+    <ClInclude Include="MidiNetworkDeviceTable.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
   </ItemGroup>

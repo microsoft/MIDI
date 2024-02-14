@@ -6,19 +6,27 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+
 #pragma once
 
-// the IDs here aren't the full Ids, just the values we start with
-// The full Id comes back from the swdevicecreate callback
-
-#define TRANSPORT_MNEMONIC L"UDP"
-
-// TODO: Names should be moved to .rc for localization
-
-#define TRANSPORT_PARENT_ID L"MIDIU_UDP_TRANSPORT"
-#define TRANSPORT_PARENT_DEVICE_NAME L"Network MIDI 2.0 (UDP)"
+class MidiNetworkDevice
+{
+public:
 
 
-#define LOOPBACK_PARENT_ROOT L"HTREE\\ROOT\\0"
 
-#define TRANSPORT_ENUMERATOR L"MIDISRV"
+    void Cleanup()
+    {
+        //m_bidiA = nullptr;
+        // m_callback = nullptr;
+    }
+
+    ~MidiNetworkDevice()
+    {
+
+        Cleanup();
+    }
+
+private:
+
+};

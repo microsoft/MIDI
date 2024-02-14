@@ -100,15 +100,10 @@ CMidiEndpointProtocolManager::NegotiateAndRequestMetadata(
         TraceLoggingWideString(DeviceInterfaceId)
     );
 
-
-    OutputDebugString(__FUNCTION__ L"");
-
     ProtocolManagerWork work;
 
     // DEBUG
     //TimeoutMS = 25000;
-
-
 
     work.EndpointInstanceId = DeviceInterfaceId;
     work.PreferToSendJRTimestampsToEndpoint = PreferToSendJRTimestampsToEndpoint;
@@ -116,8 +111,9 @@ CMidiEndpointProtocolManager::NegotiateAndRequestMetadata(
     work.PreferredMidiProtocol = PreferredMidiProtocol;
     work.TimeoutMS = TimeoutMS;
 
+    m_queueMutex.lock();
     m_workQueue.push(std::move(work));
-
+    m_queueMutex.unlock();
 
     // todo: signal event that there's new work
     m_queueWorkerThreadWakeup.SetEvent();
@@ -151,6 +147,9 @@ CMidiEndpointProtocolManager::Cleanup()
 
     m_shutdown = true;
     m_queueWorkerThreadWakeup.SetEvent();
+
+    if (m_queueWorkerThread.joinable())
+        m_queueWorkerThread.join();
 
     return S_OK;
 }
@@ -503,17 +502,10 @@ void CMidiEndpointProtocolManager::ThreadWorker()
     {
         if (m_workQueue.size() > 0)
         {
-            {
-                OutputDebugString(__FUNCTION__ L" - Item in queue. About to lock and pop :)");
-
-                std::lock_guard<std::mutex> lock{ m_queueMutex };
-
-                m_currentWorkItem = std::move(m_workQueue.front());
-                m_workQueue.pop();
-
-                OutputDebugString(__FUNCTION__ L" - Obtained item from queue. About to process");
-
-            }
+            m_queueMutex.lock();
+            m_currentWorkItem = std::move(m_workQueue.front());
+            m_workQueue.pop();
+            m_queueMutex.unlock();
 
             // this will block until completed
             LOG_IF_FAILED(ProcessCurrentWorkEntry());

@@ -38,7 +38,7 @@ Loopback endpoints created by the user and stored in the configuration file will
 
 For plugins which support updates at runtime, developers of those plugins should create configuration WinRT types which implement the required configuration interfaces, and create the JSON that is used in the service. In this way, third-party service transport and message processing plugins can be created and configured without changes to the API.
 
-> Note: In version 1 of the API, only transports can be configured at runtime. We're working on enabling configuration of message processing plugins.
+> Note: In version 1 of the API, only transports can be configured at runtime. We're working on enabling configuration of message processing plugins. The API is a no-op.
 
 ## Static Functions : Service Health
 

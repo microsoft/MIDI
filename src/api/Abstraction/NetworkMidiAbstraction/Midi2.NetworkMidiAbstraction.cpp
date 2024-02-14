@@ -58,9 +58,9 @@ CMidi2NetworkMidiAbstraction::Activate(
 
         TraceLoggingWrite(
             MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- Midi BiDi",
+            __FUNCTION__ "- IMidiBiDi",
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
+            TraceLoggingWideString(L"IMidiBiDi", "requested interface"),
             TraceLoggingPointer(this, "this")
             );
 
@@ -68,23 +68,56 @@ CMidi2NetworkMidiAbstraction::Activate(
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2NetworkMidiBiDi>(&midiBiDi));
         *Interface = midiBiDi.detach();
     }
+
+
     else if (__uuidof(IMidiEndpointManager) == Riid)
     {
         TraceLoggingWrite(
             MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- Midi Endpoint Manager",
+            __FUNCTION__ "- IMidiEndpointManager",
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
+            TraceLoggingWideString(L"IMidiEndpointManager", "requested interface"),
             TraceLoggingPointer(this, "this")
         );
 
-        wil::com_ptr_nothrow<IMidiEndpointManager> midiEndpointManager;
-        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2NetworkMidiEndpointManager>(&midiEndpointManager));
-        *Interface = midiEndpointManager.detach();
+        // check to see if this is the first time we're creating the endpoint manager. If so, create it.
+        if (AbstractionState::Current().GetEndpointManager() == nullptr)
+        {
+            AbstractionState::Current().ConstructEndpointManager();
+        }
+
+        RETURN_IF_FAILED(AbstractionState::Current().GetEndpointManager()->QueryInterface(Riid, Interface));
     }
+
+
+    else if (__uuidof(IMidiAbstractionConfigurationManager) == Riid)
+    {
+        TraceLoggingWrite(
+            MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingWideString(L"IMidiAbstractionConfigurationManager", "requested interface"),
+            TraceLoggingPointer(this, "this")
+        );
+
+        // check to see if this is the first time we're creating the configuration manager. If so, create it.
+        if (AbstractionState::Current().GetConfigurationManager() == nullptr)
+        {
+            AbstractionState::Current().ConstructConfigurationManager();
+        }
+
+        RETURN_IF_FAILED(AbstractionState::Current().GetConfigurationManager()->QueryInterface(Riid, Interface));
+    }
+
     else
     {
-        OutputDebugString(L"" __FUNCTION__ " Returning E_NOINTERFACE. Was an interface added that isn't handled in the Abstraction?");
+        TraceLoggingWrite(
+            MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingWideString(L"Unknown or invalid interface request", "message"),
+            TraceLoggingPointer(this, "this")
+        );
 
         return E_NOINTERFACE;
     }

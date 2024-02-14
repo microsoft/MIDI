@@ -7,6 +7,7 @@
 #endif
 
 #include <windows.h>
+#include <queue>
 
 #include <hstring.h>
 

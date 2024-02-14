@@ -48,43 +48,81 @@ CMidi2NetworkMidiEndpointManager::Initialize(
 }
 
 
-
-
-void SwMidiParentDeviceCreateCallback(__in HSWDEVICE /*hSwDevice*/, __in HRESULT /*CreationResult*/, __in_opt PVOID /*pContext*/, __in_opt PCWSTR /* pszDeviceInstanceId */)
-{
-}
-
-
-
 HRESULT
 CMidi2NetworkMidiEndpointManager::CreateParentDevice()
 {
+    TraceLoggingWrite(
+        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+    // the parent device parameters are set by the transport (this)
+    std::wstring parentDeviceName{ TRANSPORT_PARENT_DEVICE_NAME };
+    std::wstring parentDeviceId{ internal::NormalizeDeviceInstanceIdWStringCopy(TRANSPORT_PARENT_ID) };
+
+    SW_DEVICE_CREATE_INFO createInfo = {};
+    createInfo.cbSize = sizeof(createInfo);
+    createInfo.pszInstanceId = parentDeviceId.c_str();
+    createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
+    createInfo.pszDeviceDescription = parentDeviceName.c_str();
+    createInfo.pContainerId = &m_containerId;
+
+    const ULONG deviceIdMaxSize = 255;
+    wchar_t newDeviceId[deviceIdMaxSize]{ 0 };
+
+    RETURN_IF_FAILED(m_MidiDeviceManager->ActivateVirtualParentDevice(
+        0,
+        nullptr,
+        &createInfo,
+        (PWSTR)newDeviceId,
+        deviceIdMaxSize
+    ));
+
+    m_parentDeviceId = internal::NormalizeDeviceInstanceIdWStringCopy(newDeviceId);
+
+
+    TraceLoggingWrite(
+        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(newDeviceId, "New parent device instance id")
+    );
+
     return S_OK;
 }
+
+
 
 
 _Use_decl_annotations_
-HRESULT CMidi2NetworkMidiEndpointManager::CreateConfiguredEndpoints(std::wstring configurationJson)
+HRESULT
+CMidi2NetworkMidiEndpointManager::CreateEndpoint(MidiNetworkDeviceDefinition& deviceEndpointDefinition)
 {
+    UNREFERENCED_PARAMETER(deviceEndpointDefinition);
+
+    // you'll need one or more functions to create endpoint types used in network MIDI.
+    // At the end of the function, after the interface has been created successfully,
+    // you need to initiate discovery and protocol negotiation. For an example of the
+    // calls to make for that, see
+    // CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint()
+    //
+    // note that this function is just a placeholder. you may need more than one
+    // or it may need any number of other parameters. Same with the 
+    // MidiNetworkDeviceDefinition type which will likely need more info for you
+    // to track endpoints created by this abstraction
+
     return S_OK;
 }
 
-
-// this will be called from the runtime endpoint creation interface
-
-HRESULT 
-CMidi2NetworkMidiEndpointManager::CreateEndpoint()
-{
-    return S_OK;
-}
 
 
 
 HRESULT
 CMidi2NetworkMidiEndpointManager::Cleanup()
 {
-    OutputDebugString(L"" __FUNCTION__ " Enter");
-
     TraceLoggingWrite(
         MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
