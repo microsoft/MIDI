@@ -108,6 +108,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ winrt::array_view<uint32_t const> words) noexcept;
 
 
+        midi2::MidiSendMessageResult SendMessagePacketList(
+            _In_ collections::IVectorView<IMidiUniversalPacket> const& messages) noexcept;
+
+
         _Success_(return == true)
         bool Open();
 

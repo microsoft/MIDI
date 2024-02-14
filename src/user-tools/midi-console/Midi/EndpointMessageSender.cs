@@ -12,32 +12,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 {
     internal class EndpointMessageSender
     {
-        public static MidiConsoleReturnCode OpenTemporaryConnectionAndSendMidiMessage(string? endpointDeviceId, MidiMessage128 message)
+        public static MidiConsoleReturnCode OpenTemporaryConnectionAndSendMidiMessage(string? endpointDeviceId, IMidiUniversalPacket message)
         {
-            UInt32[] words = { message.Word0, message.Word1, message.Word2, message.Word3 };
+            var words = message.GetAllWords();
 
-            return OpenTemporaryConnectionAndSendMidiMessage(endpointDeviceId, message.Timestamp, words);
-        }
-
-        public static MidiConsoleReturnCode OpenTemporaryConnectionAndSendMidiMessage(string? endpointDeviceId, MidiMessage96 message)
-        {
-            UInt32[] words = { message.Word0, message.Word1, message.Word2 };
-
-            return OpenTemporaryConnectionAndSendMidiMessage(endpointDeviceId, message.Timestamp, words);
-        }
-
-        public static MidiConsoleReturnCode OpenTemporaryConnectionAndSendMidiMessage(string? endpointDeviceId, MidiMessage64 message)
-        {
-            UInt32[] words = { message.Word0, message.Word1 };
-
-            return OpenTemporaryConnectionAndSendMidiMessage(endpointDeviceId, message.Timestamp, words);
-        }
-
-        public static MidiConsoleReturnCode OpenTemporaryConnectionAndSendMidiMessage(string? endpointDeviceId, MidiMessage32 message)
-        {
-            UInt32[] words = { message.Word0 };
-
-            return OpenTemporaryConnectionAndSendMidiMessage(endpointDeviceId, message.Timestamp, words);
+            return OpenTemporaryConnectionAndSendMidiMessage(endpointDeviceId, message.Timestamp, words.ToArray<UInt32>());
         }
 
 

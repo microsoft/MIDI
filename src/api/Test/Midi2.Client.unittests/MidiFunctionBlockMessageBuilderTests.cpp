@@ -38,8 +38,10 @@ void MidiFunctionBlockMessageBuilderTests::TestBuildFunctionBlockNameNotificatio
     // count the number of messages we get back
     VERIFY_ARE_EQUAL(messages.Size(), expectedPacketCount);
 
-    for (auto message : messages)
+    for (auto ump : messages)
     {
+        auto message = ump.as<MidiMessage128>();
+
         std::cout << "Stream Message words"
             << " 0x" << std::hex << message.Word0()
             << " 0x" << std::hex << message.Word1()
@@ -51,26 +53,26 @@ void MidiFunctionBlockMessageBuilderTests::TestBuildFunctionBlockNameNotificatio
 
     for (uint32_t i = 0; i < messages.Size(); i++)
     {
-        std::cout << "Stream word0 0x" << std::hex << messages.GetAt(i).Word0() << std::endl;
+        std::cout << "Stream word0 0x" << std::hex << messages.GetAt(i).PeekFirstWord() << std::endl;
 
         // verify status    
-        VERIFY_ARE_EQUAL(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(i).Word0()), MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION);
+        VERIFY_ARE_EQUAL(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(i).PeekFirstWord()), MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION);
 
         // verify form is correct
         if (i == 0)
         {
             // first message
-            VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(i).Word0()), (uint8_t)0x01);
+            VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(i).PeekFirstWord()), (uint8_t)0x01);
         }
         else if (i == messages.Size() - 1)
         {
             // last message
-            VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(i).Word0()), (uint8_t)0x03);
+            VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(i).PeekFirstWord()), (uint8_t)0x03);
         }
         else
         {
             // interim messages
-            VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(i).Word0()), (uint8_t)0x02);
+            VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(i).PeekFirstWord()), (uint8_t)0x02);
         }
 
 
@@ -109,24 +111,25 @@ void MidiFunctionBlockMessageBuilderTests::TestBuildFunctionBlockNameNotificatio
     // count the number of messages we get back
     VERIFY_ARE_EQUAL(messages.Size(), expectedPacketCount);
 
-    for (auto message : messages)
+    for (auto ump : messages)
     {
+        auto message = ump.as<MidiMessage128>();
+
         std::cout << "Stream Message words"
             << " 0x" << std::hex << message.Word0()
             << " 0x" << std::hex << message.Word1()
             << " 0x" << std::hex << message.Word2()
             << " 0x" << std::hex << message.Word3()
             << std::endl;
-
     }
 
 
     // verify status is correct
-    VERIFY_ARE_EQUAL(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(0).Word0()), MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION);
-    VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(0).Word0()), 0x01);
+    VERIFY_ARE_EQUAL(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(0).PeekFirstWord()), MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION);
+    VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(0).PeekFirstWord()), 0x01);
 
-    VERIFY_ARE_EQUAL(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(1).Word0()), MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION);
-    VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(1).Word0()), 0x03);
+    VERIFY_ARE_EQUAL(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(1).PeekFirstWord()), MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION);
+    VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(1).PeekFirstWord()), 0x03);
 
 
     // verify form is correct
@@ -174,9 +177,11 @@ void MidiFunctionBlockMessageBuilderTests::TestBuildFunctionBlockInfoNotificatio
 
     // verify values are in the UMP
 
-    VERIFY_ARE_EQUAL(ump.Word0(), resultingWord0);
-    VERIFY_ARE_EQUAL(ump.Word1(), resultingWord1);
-    VERIFY_ARE_EQUAL(ump.Word2(), (uint32_t)0);
-    VERIFY_ARE_EQUAL(ump.Word3(), (uint32_t)0);
+    auto msg = ump.as<MidiMessage128>();
+
+    VERIFY_ARE_EQUAL(msg.Word0(), resultingWord0);
+    VERIFY_ARE_EQUAL(msg.Word1(), resultingWord1);
+    VERIFY_ARE_EQUAL(msg.Word2(), (uint32_t)0);
+    VERIFY_ARE_EQUAL(msg.Word3(), (uint32_t)0);
 }
 

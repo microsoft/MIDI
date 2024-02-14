@@ -33,6 +33,9 @@
     <ClCompile Include="Midi2.BluetoothMidiBidi.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Midi2.BluetoothMidiConfigurationManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Midi2BluetoothMidiAbstraction.idl">
@@ -71,6 +74,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Midi2.BluetoothMidiBidi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Midi2.BluetoothMidiConfigurationManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

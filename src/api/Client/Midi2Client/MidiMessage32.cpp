@@ -15,6 +15,25 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
+    collections::IVectorView<uint32_t> MidiMessage32::GetAllWords() const noexcept
+    {
+        auto vec = winrt::single_threaded_vector<uint32_t>();
+
+        vec.Append(m_ump.word0);
+
+        return vec.GetView();
+    }
+
+    _Use_decl_annotations_
+    uint8_t MidiMessage32::AppendAllWordsToVector(collections::IVector<uint32_t> targetVector) const noexcept
+    {
+        targetVector.Append(m_ump.word0);
+
+        return 1;
+    }
+
+
+
     _Use_decl_annotations_
     MidiMessage32::MidiMessage32(
         internal::MidiTimestamp const timestamp, 

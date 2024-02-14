@@ -75,6 +75,16 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void SendFunctionBlockInfoNotificationMessage(_In_ midi2::MidiFunctionBlock const& fb) noexcept;
         void SendFunctionBlockNameNotificationMessages(_In_ midi2::MidiFunctionBlock const& fb) noexcept;
         
+        //void MidiVirtualEndpointDevice::QueueWorker();
+
+        //void EnqueueOutgoingMessage(_In_ internal::PackedUmp128 const& message);
+
+        //std::atomic<bool> m_continueProcessing{ true };
+        //wil::slim_event_manual_reset m_messageProcessorWakeup;
+        //std::queue<internal::PackedUmp128> m_outgoingMessageQueue;
+        //std::mutex m_queueMutex;
+        //std::thread m_queueWorkerThread;
+
 
         midi2::MidiVirtualEndpointDeviceDefinition m_virtualEndpointDeviceDefinition{ nullptr };
 

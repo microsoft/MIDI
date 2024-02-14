@@ -22,56 +22,62 @@ using namespace winrt::Windows::Data::Json;
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
-    bool MidiFunctionBlock::UpdateFromMessages(collections::IIterable<midi2::MidiMessage128> messages) noexcept
+    bool MidiFunctionBlock::UpdateFromMessages(collections::IIterable<midi2::IMidiUniversalPacket> messages) noexcept
     {
-        auto nameMessages{ winrt::single_threaded_vector<midi2::MidiMessage128>() };
+        auto nameMessages{ winrt::single_threaded_vector<midi2::IMidiUniversalPacket>() };
 
         //std::cout << __FUNCTION__ << " enter" << std::endl;
 
         for (auto message : messages)
         {
-            if (MidiMessageUtility::GetMessageTypeFromMessageFirstWord(message.Word0()) != MidiMessageType::Stream128)
+            if (MidiMessageUtility::GetMessageTypeFromMessageFirstWord(message.PeekFirstWord()) != MidiMessageType::Stream128)
             {
                 // list contains non-stream messages. Abort.
                 return false;
             }
 
-            switch (MidiMessageUtility::GetStatusFromStreamMessageFirstWord(message.Word0()))
+            switch (MidiMessageUtility::GetStatusFromStreamMessageFirstWord(message.PeekFirstWord()))
             {
             case (MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_INFO_NOTIFICATION):
 
                 //std::cout << __FUNCTION__ << " info block notification" << std::endl;
 
-                if (MidiMessageUtility::GetFormFromStreamMessageFirstWord(message.Word0()) == MIDI_STREAM_MESSAGE_STANDARD_FORM0)
+                if (MidiMessageUtility::GetFormFromStreamMessageFirstWord(message.PeekFirstWord()) == MIDI_STREAM_MESSAGE_STANDARD_FORM0)
                 {
+                    auto ump128 = message.as<midi2::MidiMessage128>();
+
                     //std::cout << __FUNCTION__ << " form is correct. Setting info." << std::endl;
 
                     // word 0: active function block or not
-                    m_isActive = internal::GetFunctionBlockActiveFlagFromInfoNotificationFirstWord(message.Word0());
+                    m_isActive = internal::GetFunctionBlockActiveFlagFromInfoNotificationFirstWord(ump128.Word0());
 
                     // word 0: function block number
-                    m_number = internal::GetFunctionBlockNumberFromInfoNotificationFirstWord(message.Word0());
+                    m_number = internal::GetFunctionBlockNumberFromInfoNotificationFirstWord(ump128.Word0());
 
                     // word 0: ui hint
-                    m_uiHint = (midi2::MidiFunctionBlockUIHint)internal::GetFunctionBlockUIHintFromInfoNotificationFirstWord(message.Word0());
+                    m_uiHint = (midi2::MidiFunctionBlockUIHint)internal::GetFunctionBlockUIHintFromInfoNotificationFirstWord(ump128.Word0());
 
                     // word 0: MIDI 1.0 settings
-                    m_midi10Connection = (midi2::MidiFunctionBlockMidi10)internal::GetFunctionBlockMidi10FromInfoNotificationFirstWord(message.Word0());
+                    m_midi10Connection = (midi2::MidiFunctionBlockMidi10)internal::GetFunctionBlockMidi10FromInfoNotificationFirstWord(ump128.Word0());
 
                     // word 0: direction
-                    m_direction = (midi2::MidiFunctionBlockDirection)internal::GetFunctionBlockDirectionFromInfoNotificationFirstWord(message.Word0());
+                    m_direction = (midi2::MidiFunctionBlockDirection)internal::GetFunctionBlockDirectionFromInfoNotificationFirstWord(ump128.Word0());
+
+
 
                     // word 1: first group
-                    m_firstGroupIndex = internal::GetFunctionBlockFirstGroupFromInfoNotificationSecondWord(message.Word1());
+                    m_firstGroupIndex = internal::GetFunctionBlockFirstGroupFromInfoNotificationSecondWord(ump128.Word1());
 
                     // word 1: number of groups spanned
-                    m_numberOfGroupsSpanned = internal::GetFunctionBlockNumberOfGroupsFromInfoNotificationSecondWord(message.Word1());
+                    m_numberOfGroupsSpanned = internal::GetFunctionBlockNumberOfGroupsFromInfoNotificationSecondWord(ump128.Word1());
+
+
 
                     // word 2: MIDI CI Message Version / Form
-                    m_midiCIMessageVersionFormat = internal::GetFunctionBlockMidiCIVersionFromInfoNotificationSecondWord(message.Word1());
+                    m_midiCIMessageVersionFormat = internal::GetFunctionBlockMidiCIVersionFromInfoNotificationSecondWord(ump128.Word2());
 
                     // word 2: maximum number of SysEx8 streams
-                    m_maxSysEx8Streams = internal::GetFunctionBlockMaxSysex8StreamsFromInfoNotificationSecondWord(message.Word1());
+                    m_maxSysEx8Streams = internal::GetFunctionBlockMaxSysex8StreamsFromInfoNotificationSecondWord(ump128.Word2());
                 }
                 else
                 {

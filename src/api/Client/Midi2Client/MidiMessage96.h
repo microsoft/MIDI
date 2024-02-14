@@ -60,6 +60,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::MidiPacketType PacketType() const noexcept
             { return midi2::MidiPacketType::UniversalMidiPacket96; }
 
+        collections::IVectorView<uint32_t> GetAllWords() const noexcept;
+        uint8_t AppendAllWordsToVector(_Inout_ collections::IVector<uint32_t> targetVector) const noexcept;
+
 
         // IStringable
         winrt::hstring ToString();

@@ -65,7 +65,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         internal::LogInfo(__FUNCTION__, L"Enter");
 
         auto functionBlockNotification = midi2::MidiStreamMessageBuilder::BuildFunctionBlockInfoNotificationMessage(
-            0,
+            MidiClock::TimestampConstantSendImmediately(),
             true,
             fb.Number(),
             fb.UIHint(),
@@ -92,20 +92,21 @@ namespace winrt::Windows::Devices::Midi2::implementation
         if (fb.Name() == L"") return;
 
         auto nameMessages = midi2::MidiStreamMessageBuilder::BuildFunctionBlockNameNotificationMessages(
-            0, 
+            MidiClock::TimestampConstantSendImmediately(),
             fb.Number(),
             fb.Name()
         );
 
-        for (uint32_t i = 0; i < nameMessages.Size(); i++)
+        if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendMessagePacketList(nameMessages.GetView())))
         {
-            if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendMessagePacket(nameMessages.GetAt(i))))
-            {
-                internal::LogGeneralError(__FUNCTION__, L"SendMessagePacket failed");
-            }
+            internal::LogGeneralError(__FUNCTION__, L"SendMessagePacketList failed");
         }
-
     }
+
+
+    // TODO: Any message sending from inside this function should
+    // be done on another thread via a queue, like we do in the service
+    // That way no long-running or recursive callbacks.
 
     _Use_decl_annotations_
     void MidiVirtualEndpointDevice::ProcessIncomingMessage(
@@ -122,7 +123,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
             MidiMessage128 message{};
             if (args.FillMessage128(message))
             {
-
                 // if a endpoint discovery request, handle it with the data we have
                 if (internal::MessageIsEndpointDiscoveryRequest(message.Word0()))
                 {
@@ -183,19 +183,25 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                         for (uint8_t i = 0; i < (uint8_t)m_functionBlocks.Size(); i++)
                         {
+                            internal::LogInfo(__FUNCTION__, L"Sending function block info message");
                             if (requestInfo) SendFunctionBlockInfoNotificationMessage(m_functionBlocks.Lookup(i));
+
+                            internal::LogInfo(__FUNCTION__, L"Sending function block name messages");
                             if (requestName) SendFunctionBlockNameNotificationMessages(m_functionBlocks.Lookup(i));
                         }
                     }
                     else
                     {
-                        // send single function block
+                        // send single requested function block
                            
                         if (m_functionBlocks.HasKey(fbNumber))
                         {
                             auto fb = m_functionBlocks.Lookup(fbNumber);
 
+                            internal::LogInfo(__FUNCTION__, L"Sending function block info message");
                             if (requestInfo) SendFunctionBlockInfoNotificationMessage(fb);
+
+                            internal::LogInfo(__FUNCTION__, L"Sending function block name messages");
                             if (requestName) SendFunctionBlockNameNotificationMessages(fb);
                         }
                         else
@@ -206,9 +212,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                     }
 
                 }
-                else if (internal::MessageIsEndpointDiscoveryRequest(message.Word0()))
-                {
-                }
+
                 else
                 {
                     // something else
