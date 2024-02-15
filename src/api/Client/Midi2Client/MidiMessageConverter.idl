@@ -16,6 +16,7 @@ import "IMidiUniversalPacket.idl";
 import "MidiMessage32.idl";
 import "MidiMessage64.idl";
 
+import "MidiGroup.idl";
 
 import "Midi1ChannelVoiceMessageStatusEnum.idl";
 import "Midi2ChannelVoiceMessageStatusEnum.idl";
@@ -30,20 +31,20 @@ namespace Windows.Devices.Midi2
 
         static MidiMessage32 ConvertMidi1Message(
             MIDI_TIMESTAMP timestamp,
-            UInt8 groupIndex,
+            MidiGroup group,
             UInt8 statusByte
         );
 
         static MidiMessage32 ConvertMidi1Message(
             MIDI_TIMESTAMP timestamp,
-            UInt8 groupIndex,
+            MidiGroup group,
             UInt8 statusByte,
             UInt8 dataByte1
         );
 
         static MidiMessage32 ConvertMidi1Message(
             MIDI_TIMESTAMP timestamp,
-            UInt8 groupIndex,
+            MidiGroup group,
             UInt8 statusByte,
             UInt8 dataByte1,
             UInt8 dataByte2
@@ -52,98 +53,111 @@ namespace Windows.Devices.Midi2
 
         // For migrating from Windows.Devices.Midi API
 
+        // Channel Voice Messages
+
         static MidiMessage32 ConvertMidi1ChannelPressureMessage(
             MIDI_TIMESTAMP timestamp,
-            UInt8 groupIndex,
+            MidiGroup group,
             Windows.Devices.Midi.MidiChannelPressureMessage originalMessage
-        );
-
-        static MidiMessage32 ConvertMidi1ContinueMessage(
-            MIDI_TIMESTAMP timestamp,
-            UInt8 groupIndex,
-            Windows.Devices.Midi.MidiContinueMessage originalMessage
         );
 
         static MidiMessage32 ConvertMidi1NoteOffMessage(
             MIDI_TIMESTAMP timestamp,
-            UInt8 groupIndex,
+            MidiGroup group,
             Windows.Devices.Midi.MidiNoteOffMessage originalMessage
         );
 
         static MidiMessage32 ConvertMidi1NoteOnMessage(
             MIDI_TIMESTAMP timestamp,
-            UInt8 groupIndex,
+            MidiGroup group,
             Windows.Devices.Midi.MidiNoteOnMessage originalMessage);
 
         static MidiMessage32 ConvertMidi1PitchBendChangeMessage(
             MIDI_TIMESTAMP timestamp,
-            UInt8 groupIndex,
+            MidiGroup group,
             Windows.Devices.Midi.MidiPitchBendChangeMessage originalMessage
         );
 
         static MidiMessage32 ConvertMidi1PolyphonicKeyPressureMessage(
             MIDI_TIMESTAMP timestamp,
-            UInt8 groupIndex,
+            MidiGroup group,
             Windows.Devices.Midi.MidiPolyphonicKeyPressureMessage originalMessage
         );
 
         static MidiMessage32 ConvertMidi1ProgramChangeMessage(
             MIDI_TIMESTAMP timestamp,
-            UInt8 groupIndex,
+            MidiGroup group,
             Windows.Devices.Midi.MidiProgramChangeMessage originalMessage
+        );
+
+
+        // System Common and System Real-Time
+
+        static MidiMessage32 ConvertMidi1TimeCodeMessage(
+            MIDI_TIMESTAMP timestamp,
+            MidiGroup group,
+            Windows.Devices.Midi.MidiTimeCodeMessage originalMessage
         );
 
         static MidiMessage32 ConvertMidi1SongPositionPointerMessage(
             MIDI_TIMESTAMP timestamp,
-            UInt8 groupIndex,
+            MidiGroup group,
             Windows.Devices.Midi.MidiSongPositionPointerMessage originalMessage
         );
 
         static MidiMessage32 ConvertMidi1SongSelectMessage(
             MIDI_TIMESTAMP timestamp,
-            UInt8 groupIndex,
+            MidiGroup group,
             Windows.Devices.Midi.MidiSongSelectMessage originalMessage
         );
 
-        static MidiMessage32 ConvertMidi1StartMessage(
-            MIDI_TIMESTAMP timestamp,
-            UInt8 groupIndex,
-            Windows.Devices.Midi.MidiStartMessage originalMessage
-        );
 
-        static MidiMessage32 ConvertMidi1StopMessage(
+        static MidiMessage32 ConvertMidi1TuneRequestMessage(
             MIDI_TIMESTAMP timestamp,
-            UInt8 groupIndex,
-            Windows.Devices.Midi.MidiStopMessage originalMessage
-        );
-
-        static MidiMessage32 ConvertMidi1SystemResetMessage(
-            MIDI_TIMESTAMP timestamp,
-            UInt8 groupIndex,
-            Windows.Devices.Midi.MidiSystemResetMessage originalMessage
-        );
-
-        static MidiMessage32 ConvertMidi1TimeCodeMessage(
-            MIDI_TIMESTAMP timestamp,
-            UInt8 groupIndex,
-            Windows.Devices.Midi.MidiTimeCodeMessage originalMessage
+            MidiGroup group,
+            Windows.Devices.Midi.MidiTuneRequestMessage originalMessage
         );
 
         static MidiMessage32 ConvertMidi1TimingClockMessage(
             MIDI_TIMESTAMP timestamp,
-            UInt8 groupIndex,
+            MidiGroup group,
             Windows.Devices.Midi.MidiTimingClockMessage originalMessage
         );
 
-        static MidiMessage32 ConvertMidi1TuneRequestMessage(
+
+        static MidiMessage32 ConvertMidi1StartMessage(
             MIDI_TIMESTAMP timestamp,
-            UInt8 groupIndex,
-            Windows.Devices.Midi.MidiTuneRequestMessage originalMessage
+            MidiGroup group,
+            Windows.Devices.Midi.MidiStartMessage originalMessage
         );
 
-        // TODO: SysEx
+        static MidiMessage32 ConvertMidi1ContinueMessage(
+            MIDI_TIMESTAMP timestamp,
+            MidiGroup group,
+            Windows.Devices.Midi.MidiContinueMessage originalMessage
+        );
 
-        // Active Sense?
+        static MidiMessage32 ConvertMidi1StopMessage(
+            MIDI_TIMESTAMP timestamp,
+            MidiGroup group,
+            Windows.Devices.Midi.MidiStopMessage originalMessage
+        );
+
+        static MidiMessage32 ConvertMidi1ActiveSensingMessage(
+            MIDI_TIMESTAMP timestamp,
+            MidiGroup group,
+            Windows.Devices.Midi.MidiActiveSensingMessage originalMessage
+        );
+
+        static MidiMessage32 ConvertMidi1SystemResetMessage(
+            MIDI_TIMESTAMP timestamp,
+            MidiGroup group,
+            Windows.Devices.Midi.MidiSystemResetMessage originalMessage
+        );
+
+
+
+        // TODO: SysEx
 
     };
 }

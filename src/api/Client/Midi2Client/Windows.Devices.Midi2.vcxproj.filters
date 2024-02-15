@@ -174,12 +174,6 @@
     <ClCompile Include="MidiVirtualEndpointDeviceDefinition.cpp">
       <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
     </ClCompile>
-    <ClCompile Include="MidiSessionConnectionInformation.cpp">
-      <Filter>API\Service</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiSessionInformation.cpp">
-      <Filter>API\Service</Filter>
-    </ClCompile>
     <ClCompile Include="MidiServiceConfigurationResponse.cpp">
       <Filter>API\Service\Configuration</Filter>
     </ClCompile>
@@ -278,12 +272,6 @@
     </ClInclude>
     <ClInclude Include="MidiVirtualEndpointDeviceDefinition.h">
       <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiSessionConnectionInformation.h">
-      <Filter>API\Service</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiSessionInformation.h">
-      <Filter>API\Service</Filter>
     </ClInclude>
     <ClInclude Include="MidiServiceConfigurationResponse.h">
       <Filter>API\Service\Configuration</Filter>
@@ -428,9 +416,6 @@
     <Midl Include="MidiMessageConverter.idl">
       <Filter>API\Messages\Utility</Filter>
     </Midl>
-    <Midl Include="MidiMessageTranslator.idl">
-      <Filter>API\Messages\Utility</Filter>
-    </Midl>
     <Midl Include="MidiUniqueId.idl">
       <Filter>API\BasicTypes</Filter>
     </Midl>
@@ -457,12 +442,6 @@
     </Midl>
     <Midl Include="IMidiEndpointConnectionSettings.idl">
       <Filter>API\Endpoints\Connections</Filter>
-    </Midl>
-    <Midl Include="MidiSessionInformation.idl">
-      <Filter>API\Service\Reporting</Filter>
-    </Midl>
-    <Midl Include="MidiSessionConnectionInformation.idl">
-      <Filter>API\Service\Reporting</Filter>
     </Midl>
     <Midl Include="MidiServicePingResponse.idl">
       <Filter>API\Service\Health</Filter>
@@ -494,6 +473,8 @@
     <Midl Include="MidiServiceConfigurationResponseStatusEnum.idl">
       <Filter>API\Service\Configuration</Filter>
     </Midl>
+    <Midl Include="MidiServiceSessionConnectionInformation.idl" />
+    <Midl Include="MidiServiceSessionInformation.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />

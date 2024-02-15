@@ -293,9 +293,6 @@
     <ClInclude Include="MidiServiceMessageProcessingPluginInformation.h">
       <DependentUpon>MidiServiceMessageProcessingPluginInformation.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiMessageTranslator.h">
-      <DependentUpon>MidiMessageTranslator.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiService.h">
       <DependentUpon>MidiService.idl</DependentUpon>
     </ClInclude>
@@ -417,9 +414,6 @@
     </ClCompile>
     <ClCompile Include="MidiServiceMessageProcessingPluginInformation.cpp">
       <DependentUpon>MidiServiceMessageProcessingPluginInformation.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiMessageTranslator.cpp">
-      <DependentUpon>MidiMessageTranslator.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiService.cpp">
       <DependentUpon>MidiService.idl</DependentUpon>
@@ -546,7 +540,6 @@
     <Midl Include="MidiMessageBuilder.idl" />
     <Midl Include="MidiMessageReceivedEventArgs.idl" />
     <Midl Include="IMidiEndpointConnectionSettings.idl" />
-    <Midl Include="MidiMessageTranslator.idl" />
     <Midl Include="MidiMessageTypeEndpointListener.idl" />
     <Midl Include="MidiProtocolEnum.idl" />
     <Midl Include="MidiSendMessageResultEnum.idl" />

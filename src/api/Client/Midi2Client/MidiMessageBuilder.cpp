@@ -55,7 +55,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         internal::MidiTimestamp const timestamp,
         uint8_t const groupIndex,
         midi2::Midi1ChannelVoiceMessageStatus const& status,
-        uint8_t const channel,
+        uint8_t const channelIndex,
         uint8_t const byte3,
         uint8_t const byte4) noexcept
     {
@@ -65,7 +65,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 0x2 << 28 |
                 internal::CleanupNibble(groupIndex) << 24 |
                 internal::CleanupNibble((uint8_t)status) << 20 |
-                internal::CleanupNibble(channel) << 16 |
+                internal::CleanupNibble(channelIndex) << 16 |
                 internal::CleanupByte7(byte3) << 8 |
                 internal::CleanupByte7(byte4))
         );
@@ -111,7 +111,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         internal::MidiTimestamp const timestamp,
         uint8_t const groupIndex,
         midi2::Midi2ChannelVoiceMessageStatus const& status,
-        uint8_t const channel,
+        uint8_t const channelIndex,
         uint16_t const index,
         uint32_t const data) noexcept
     {
@@ -121,7 +121,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 0x4 << 28 |
                 internal::CleanupNibble(groupIndex) << 24 |
                 internal::CleanupNibble((uint8_t)status) << 20 |
-                internal::CleanupNibble(channel) << 16 |
+                internal::CleanupNibble(channelIndex) << 16 |
                 index), 
             data);
     }

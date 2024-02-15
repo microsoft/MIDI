@@ -51,7 +51,7 @@ namespace Windows.Devices.Midi2
             MIDI_TIMESTAMP timestamp,
             UInt8 groupIndex,
             Midi1ChannelVoiceMessageStatus status,
-            UInt8 channel, 
+            UInt8 channelIndex, 
             UInt8 byte3, 
             UInt8 byte4);
 
@@ -75,7 +75,7 @@ namespace Windows.Devices.Midi2
             MIDI_TIMESTAMP timestamp,
             UInt8 groupIndex,
             Midi2ChannelVoiceMessageStatus status, 
-            UInt8 channel, 
+            UInt8 channelIndex,
             UInt16 index, 
             UInt32 data);
 
