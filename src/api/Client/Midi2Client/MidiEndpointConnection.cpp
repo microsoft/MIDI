@@ -485,7 +485,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         const internal::MidiTimestamp timestamp,
         winrt::Windows::Foundation::IMemoryBuffer const& buffer,
         const uint32_t byteOffset,
-        const uint8_t byteLength) noexcept
+        const uint8_t byteCount) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Sending message buffer");
 
@@ -500,7 +500,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             }
 
             // make sure we're sending only a single UMP
-            uint32_t sizeInWords = byteLength / sizeof(uint32_t);
+            uint32_t sizeInWords = byteCount / sizeof(uint32_t);
 
 
             if (!internal::IsValidSingleUmpWordCount(sizeInWords))
@@ -517,20 +517,26 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             uint8_t* dataPointer{};
             uint32_t dataSize{};
-            winrt::check_hresult(interop->GetBuffer(&dataPointer, &dataSize));
-
-            // make sure we're not going to spin past the end of the buffer
-            if (byteOffset + byteLength > bufferReference.Capacity())
+            
+            if (SUCCEEDED(interop->GetBuffer(&dataPointer, &dataSize)))
             {
-                internal::LogGeneralError(__FUNCTION__, L"Buffer smaller than provided offset + byteLength");
+                // make sure we're not going to spin past the end of the buffer
+                if (byteOffset + byteCount > bufferReference.Capacity())
+                {
+                    internal::LogGeneralError(__FUNCTION__, L"Buffer smaller than provided offset + byteLength");
 
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange;
+                    return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange;
+                }
+
+                // send the ump
+                return SendMessageRaw(m_endpointAbstraction, (void*)(dataPointer + byteOffset), byteCount, timestamp);
             }
+            else
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Unable to get buffer");
 
-
-            // send the ump
-
-            return SendMessageRaw(m_endpointAbstraction, (void*)(dataPointer + byteOffset), byteLength, timestamp);
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
+            }
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -991,18 +997,100 @@ namespace winrt::Windows::Devices::Midi2::implementation
         internal::MidiTimestamp timestamp,
         foundation::IMemoryBuffer const& buffer,
         uint32_t byteOffset,
-        uint8_t byteCount) noexcept
+        uint32_t byteCount) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Enter");
 
-        UNREFERENCED_PARAMETER(timestamp);
-        UNREFERENCED_PARAMETER(buffer);
-        UNREFERENCED_PARAMETER(byteOffset);
-        UNREFERENCED_PARAMETER(byteCount);
+        try
+        {
+            if (!m_isOpen)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
 
-        // TODO: Implement SendMultipleMessagesBuffer
+                // return failure if we're not open
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
+            }
 
-        return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
+            winrt::Windows::Foundation::IMemoryBufferReference bufferReference = buffer.CreateReference();
+
+            auto interop = bufferReference.as<IMemoryBufferByteAccess>();
+
+            bool continueProcessing = true;
+            uint8_t* dataPointer{};
+            uint32_t dataSize{ };
+
+            if (SUCCEEDED(interop->GetBuffer(&dataPointer, &dataSize)))
+            {
+                // make sure we're not going to spin past the end of the buffer
+                if (byteOffset + byteCount > bufferReference.Capacity())
+                {
+                    internal::LogGeneralError(__FUNCTION__, L"Buffer smaller than provided offset + byteLength");
+
+                    return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange;
+                }
+
+
+                // endianness becomes a concern so we need to make sure we treat this as words
+                //uint32_t* wordDataPointer = (uint32_t*)(dataPointer + byteOffset);
+                uint8_t* byteDataPointer = dataPointer + byteOffset;
+                uint32_t bytesProcessed{ 0 };
+
+                while (continueProcessing)
+                {
+                    if ((byteOffset + bytesProcessed) < dataSize &&
+                        (bytesProcessed + sizeof(uint32_t) <= byteCount))
+                    {
+                        uint8_t bytesInThisMessage = internal::GetUmpLengthInBytesFromFirstWord(*(uint32_t*)byteDataPointer);
+
+                        if (bytesProcessed + bytesInThisMessage <= byteCount)
+                        {
+                            auto result = SendMessageRaw(m_endpointAbstraction, (void*)(byteDataPointer), bytesInThisMessage, timestamp);
+
+                            if (SendMessageFailed(result))
+                            {
+                                internal::LogGeneralError(__FUNCTION__, L"SendMessageRaw failed");
+                                return result;
+                            }
+                        }
+                        else
+                        {
+                            internal::LogGeneralError(__FUNCTION__, L"Ran out of data");
+                            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::MessageListPartiallyProcessed;
+                        }
+
+                        bytesProcessed += bytesInThisMessage;
+
+                        byteDataPointer += bytesInThisMessage;
+                    }
+                    else
+                    {
+                        continueProcessing = false;
+                    }
+                }
+
+                if (bytesProcessed != byteCount)
+                {
+                    internal::LogGeneralError(__FUNCTION__, L"Ran out of data");
+                    return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::MessageListPartiallyProcessed;
+
+                }
+            }
+            else
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Unable to get buffer");
+
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
+            }
+
+            return midi2::MidiSendMessageResult::Succeeded;
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            internal::LogHresultError(__FUNCTION__, L"hresult exception sending message", ex);
+
+            // TODO: handle buffer full and other expected hresults
+            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
+        }
     }
 
 

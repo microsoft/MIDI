@@ -40,6 +40,7 @@ namespace json = ::winrt::Windows::Data::Json;
 #include <cwctype>
 #include <queue>
 #include <mutex>
+#include <format>
 
 // internal
 #include "trace_logging.h"

@@ -111,7 +111,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ internal::MidiTimestamp timestamp,
             _In_ foundation::IMemoryBuffer const& buffer,
             _In_ uint32_t byteOffset,
-            _In_ uint8_t byteCount) noexcept;
+            _In_ uint32_t byteCount) noexcept;
 
 
         _Success_(return == true)
