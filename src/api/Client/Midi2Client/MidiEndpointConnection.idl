@@ -78,16 +78,19 @@ namespace Windows.Devices.Midi2
         MidiSendMessageResult SendMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
 
         // for sending a section of a pre-existing buffer. Used when a client app is maintaining its own memory       
-        MidiSendMessageResult SendMessageBuffer(MIDI_TIMESTAMP timestamp, Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffset, UInt8 byteLength);
+        MidiSendMessageResult SendMessageBuffer(MIDI_TIMESTAMP timestamp, Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffset, UInt8 byteCount);
 
         // These methods will send multiple messages. The words must be ordered correctly
         // so they are in order from word-0 to word-n for each message.
-        MidiSendMessageResult SendMessagesWordList(MIDI_TIMESTAMP timestamp, IVectorView<UInt32> words);
-        MidiSendMessageResult SendMessagesWordArray(MIDI_TIMESTAMP timestamp, UInt32[] words);
+        MidiSendMessageResult SendMultipleMessagesWordList(MIDI_TIMESTAMP timestamp, IIterable<UInt32> words);
+        //MidiSendMessageResult SendMultipleMessagesWordArray(MIDI_TIMESTAMP timestamp, UInt32[] words);
 
         // a convenience for sending multiple packets. We can do this because these are self-describing
-        MidiSendMessageResult SendMessagePacketList(IVectorView<IMidiUniversalPacket> messages);
-    }
+        MidiSendMessageResult SendMultipleMessagesPacketList(IIterable<IMidiUniversalPacket> messages);
+
+        MidiSendMessageResult SendMultipleMessagesBuffer(MIDI_TIMESTAMP timestamp, Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffset, UInt8 byteCount);
+
+}
 
 
 

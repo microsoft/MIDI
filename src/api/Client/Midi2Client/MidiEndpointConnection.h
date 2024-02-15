@@ -96,20 +96,22 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ internal::MidiTimestamp timestamp,
             _In_ foundation::IMemoryBuffer const& buffer,
             _In_ uint32_t byteOffset,
-            _In_ uint8_t byteLength) noexcept;
+            _In_ uint8_t byteCount) noexcept;
 
 
-        midi2::MidiSendMessageResult SendMessagesWordList(
+        midi2::MidiSendMessageResult SendMultipleMessagesWordList(
             _In_ internal::MidiTimestamp timestamp, 
-            _In_ collections::IVectorView<uint32_t> const& words) noexcept;
-
-        midi2::MidiSendMessageResult SendMessagesWordArray(
-            _In_ internal::MidiTimestamp timestamp, 
-            _In_ winrt::array_view<uint32_t const> words) noexcept;
+            _In_ collections::IIterable<uint32_t> const& words) noexcept;
 
 
-        midi2::MidiSendMessageResult SendMessagePacketList(
-            _In_ collections::IVectorView<IMidiUniversalPacket> const& messages) noexcept;
+        midi2::MidiSendMessageResult SendMultipleMessagesPacketList(
+            _In_ collections::IIterable<IMidiUniversalPacket> const& messages) noexcept;
+
+        midi2::MidiSendMessageResult SendMultipleMessagesBuffer(
+            _In_ internal::MidiTimestamp timestamp,
+            _In_ foundation::IMemoryBuffer const& buffer,
+            _In_ uint32_t byteOffset,
+            _In_ uint8_t byteCount) noexcept;
 
 
         _Success_(return == true)

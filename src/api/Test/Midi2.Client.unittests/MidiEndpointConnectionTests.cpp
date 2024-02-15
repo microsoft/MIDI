@@ -481,6 +481,238 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWords()
     session.Close();
 }
 
+void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessageWordsList()
+{
+    LOG_OUTPUT(L"TestSendAndReceiveMultipleMessageWordsList **********************************************************************");
+
+    wil::unique_event_nothrow allMessagesReceived;
+    allMessagesReceived.create();
+
+
+    auto session = MidiSession::CreateSession(L"Test Session Name");
+
+    VERIFY_IS_TRUE(session.IsOpen());
+    VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
+
+
+    LOG_OUTPUT(L"Connecting to BiDi loopback Endpoints A and B");
+
+
+    auto connSend = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
+    auto connReceive = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId());
+
+    VERIFY_IS_NOT_NULL(connSend);
+    VERIFY_IS_NOT_NULL(connReceive);
+
+
+    uint32_t receivedMessageCount{};
+
+    uint32_t numberOfType4MessagesSent = 4;
+    uint32_t numberOfType2MessagesSent = 4;
+
+    uint32_t numberOfType4MessagesReceived = 0;
+    uint32_t numberOfType2MessagesReceived = 0;
+
+    auto MessageReceivedHandler = [&](IMidiMessageReceivedEventSource const& sender, MidiMessageReceivedEventArgs const& args)
+        {
+            VERIFY_IS_NOT_NULL(sender);
+            VERIFY_IS_NOT_NULL(args);
+
+            receivedMessageCount++;
+
+            if (args.MessageType() == MidiMessageType::Midi1ChannelVoice32)
+            {
+                numberOfType2MessagesReceived++;
+            }
+            else if (args.MessageType() == MidiMessageType::Midi2ChannelVoice64)
+            {
+                numberOfType4MessagesReceived++;
+            }
+
+
+            if (receivedMessageCount == numberOfType4MessagesSent + numberOfType2MessagesSent)
+            {
+                allMessagesReceived.SetEvent();
+            }
+
+        };
+
+    auto eventRevokeToken = connReceive.MessageReceived(MessageReceivedHandler);
+
+    // open connection
+    VERIFY_IS_TRUE(connSend.Open());
+    VERIFY_IS_TRUE(connReceive.Open());
+
+    // send messages
+
+    std::cout << "Creating messages" << std::endl;
+
+
+    std::vector<uint32_t> wordList;
+
+    wordList.push_back(0x20000000);
+    wordList.push_back(0x40000000); wordList.push_back(0x00000001);
+    wordList.push_back(0x40000000); wordList.push_back(0x00000002);
+    wordList.push_back(0x40000000); wordList.push_back(0x00000003);
+    wordList.push_back(0x40000000); wordList.push_back(0x00000004);
+    wordList.push_back(0x20000005);
+    wordList.push_back(0x20000006);
+    wordList.push_back(0x20000007);
+
+
+    auto result = connSend.SendMultipleMessagesWordList(MidiClock::TimestampConstantSendImmediately(), wordList);
+    std::cout << "Send result: 0x" << std::hex << (uint32_t)result << std::endl;
+
+
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(result));
+
+
+    std::cout << "Waiting for response" << std::endl;
+
+    // Wait for incoming message
+    if (!allMessagesReceived.wait(10000))
+    {
+        std::cout << "Failure waiting for messages, timed out." << std::endl;
+    }
+
+    std::cout << "Finished waiting. Unwiring event" << std::endl;
+
+    connReceive.MessageReceived(eventRevokeToken);
+
+    VERIFY_ARE_EQUAL(receivedMessageCount, numberOfType4MessagesReceived + numberOfType2MessagesReceived);
+
+    std::cout << "Disconnecting endpoints" << std::endl;
+
+    // cleanup endpoint. Technically not required as session will do it
+    session.DisconnectEndpointConnection(connSend.ConnectionId());
+    session.DisconnectEndpointConnection(connReceive.ConnectionId());
+
+    std::cout << "Endpoints disconnected" << std::endl;
+
+    session.Close();
+}
+
+
+
+void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessagePackets()
+{
+    LOG_OUTPUT(L"TestSendAndReceiveMultipleMessageWordsList **********************************************************************");
+
+    wil::unique_event_nothrow allMessagesReceived;
+    allMessagesReceived.create();
+
+
+    auto session = MidiSession::CreateSession(L"Test Session Name");
+
+    VERIFY_IS_TRUE(session.IsOpen());
+    VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
+
+
+    LOG_OUTPUT(L"Connecting to BiDi loopback Endpoints A and B");
+
+
+    auto connSend = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
+    auto connReceive = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId());
+
+    VERIFY_IS_NOT_NULL(connSend);
+    VERIFY_IS_NOT_NULL(connReceive);
+
+
+    uint32_t receivedMessageCount{};
+
+    uint32_t numberOfType4MessagesSent = 4;
+    uint32_t numberOfType2MessagesSent = 4;
+
+    uint32_t numberOfType4MessagesReceived = 0;
+    uint32_t numberOfType2MessagesReceived = 0;
+
+    auto MessageReceivedHandler = [&](IMidiMessageReceivedEventSource const& sender, MidiMessageReceivedEventArgs const& args)
+        {
+            VERIFY_IS_NOT_NULL(sender);
+            VERIFY_IS_NOT_NULL(args);
+
+            receivedMessageCount++;
+
+            if (args.MessageType() == MidiMessageType::Midi1ChannelVoice32)
+            {
+                numberOfType2MessagesReceived++;
+            }
+            else if (args.MessageType() == MidiMessageType::Midi2ChannelVoice64)
+            {
+                numberOfType4MessagesReceived++;
+            }
+
+
+            if (receivedMessageCount == numberOfType4MessagesSent + numberOfType2MessagesSent)
+            {
+                allMessagesReceived.SetEvent();
+            }
+
+        };
+
+    auto eventRevokeToken = connReceive.MessageReceived(MessageReceivedHandler);
+
+    // open connection
+    VERIFY_IS_TRUE(connSend.Open());
+    VERIFY_IS_TRUE(connReceive.Open());
+
+    // send messages
+
+    std::cout << "Creating messages" << std::endl;
+
+
+    std::vector<IMidiUniversalPacket> packetList;
+
+
+    packetList.push_back(MidiMessage32(MidiClock::TimestampConstantSendImmediately(), 0x20000000));
+
+    packetList.push_back(MidiMessage64(MidiClock::TimestampConstantSendImmediately(), 0x40000000, 0x00000001));
+    packetList.push_back(MidiMessage64(MidiClock::TimestampConstantSendImmediately(), 0x40000000, 0x00000002));
+    packetList.push_back(MidiMessage64(MidiClock::TimestampConstantSendImmediately(), 0x40000000, 0x00000003));
+    packetList.push_back(MidiMessage64(MidiClock::TimestampConstantSendImmediately(), 0x40000000, 0x00000004));
+
+
+    packetList.push_back(MidiMessage32(MidiClock::TimestampConstantSendImmediately(), 0x20000005));
+    packetList.push_back(MidiMessage32(MidiClock::TimestampConstantSendImmediately(), 0x20000006));
+    packetList.push_back(MidiMessage32(MidiClock::TimestampConstantSendImmediately(), 0x20000007));
+
+
+    auto result = connSend.SendMultipleMessagesPacketList(packetList);
+
+    if (!MidiEndpointConnection::SendMessageSucceeded(result))
+        std::cout << "Send result: 0x" << std::hex << (uint32_t)result << std::endl;
+
+
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(result));
+
+
+    std::cout << "Waiting for response" << std::endl;
+
+    // Wait for incoming message
+    if (!allMessagesReceived.wait(10000))
+    {
+        std::cout << "Failure waiting for messages, timed out." << std::endl;
+    }
+
+    std::cout << "Finished waiting. Unwiring event" << std::endl;
+
+    connReceive.MessageReceived(eventRevokeToken);
+
+    VERIFY_ARE_EQUAL(receivedMessageCount, numberOfType4MessagesReceived + numberOfType2MessagesReceived);
+
+    std::cout << "Disconnecting endpoints" << std::endl;
+
+    // cleanup endpoint. Technically not required as session will do it
+    session.DisconnectEndpointConnection(connSend.ConnectionId());
+    session.DisconnectEndpointConnection(connReceive.ConnectionId());
+
+    std::cout << "Endpoints disconnected" << std::endl;
+
+    session.Close();
+}
+
+
+
 
 
 void MidiEndpointConnectionTests::TestSendWordArrayBoundsError()

@@ -39,11 +39,10 @@ Currently, in the implementation behind the scenes, the service receives each ti
 | `SendMessageSucceeded(sendResult)` | Helper function to decipher the return result of a message sending function to tell if it succeeded. |
 | `SendMessageFailed(sendResult)` | Helper function to decipher the return result of a message sending function to tell if it failed. |
 
-## Functions
+## Single-Message Sender Functions
 
 | Function | Description |
 | -------- | ----------- |
-| `Open()` | Open the connection and start receiving messages. Wire up the message event handler before calling this method. |
 | `SendMessagePacket(message)` | Send an `IMidiUniversalPacket`-implementing type such as `MidiMessage64` or a strongly-typed message class. |
 | `SendMessageStruct(timestamp, message, wordCount)` | Send a fixed-sized `MidiMessageStruct` containing `wordCount` valid words. Additional words are ignored. |
 | `SendMessageWordArray(timestamp, words, startIndex, wordCount)` | Note: Some projections will send the entire array as a copy, so this may not be the most effecient way to send messages from your language. |
@@ -51,13 +50,31 @@ Currently, in the implementation behind the scenes, the service receives each ti
 | `SendMessageWords(timestamp, word0, word1)` | Send a single 64-bit Universal MIDI Packet as 32-bit words. This is often the most efficient way to send this type of message |
 | `SendMessageWords(timestamp, word0, word1, word2)` | Send a single 96-bit Universal MIDI Packet as 32-bit words. This is often the most efficient way to send this type of message |
 | `SendMessageWords(timestamp, word0, word1, word2, word3)` | Send a single 128-bit Universal MIDI Packet as 32-bit words. This is often the most efficient way to send this type of message |
-| `SendMessageBuffer(timestamp, buffer, byteOffset, byteLength)` | Send a single Universal MIDI Packet as bytes from a buffer. The number of bytes sent must match the size read from the first 4 bits of the data starting at the specified offset, and must be laid out correctly with the first byte corresponding to the MSB of the first word of the UMP (the word which contains hte message type). If you want to manage a chunk of buffer memory, the `IMemoryBuffer` type is the acceptable WinRT approach, and is as close as you get to sending a pointer into a buffer. |
-| `SendMessagesWordList(timestamp,words)` | This sends more than one message with the same timestamp. Message words must be ordered contiguously from word-0 to word-n for each message, and the message types must be valid for the number of words for each message. If an error is encountered when sending messages, the function stops processing the list at that point and returns a failure code, even if some messages were sent successfully. |
-| `SendMessagesWordArray(timestamp,words)` | This sends more than one message with the same timestamp. Message words must be ordered contiguously from word-0 to word-n for each message, and the message types must be valid for the number of words for each message. If an error is encountered when sending messages, the function stops processing the list at that point and returns a failure code, even if some messages were sent successfully.|
-| `AddEndpointProcessingPlugin(plugin)` | Add an endpoint processing plugin to this connection |
-| `RemoveEndpointProcessingPlugin(id)` | Remove an endpoint processing plugin from this connection |
+| `SendMessageBuffer(timestamp, buffer, byteOffset, byteCount)` | Send a single Universal MIDI Packet as bytes from a buffer. The number of bytes sent must match the size read from the first 4 bits of the data starting at the specified offset, and must be laid out correctly with the first byte corresponding to the MSB of the first word of the UMP (the word which contains hte message type). If you want to manage a chunk of buffer memory, the `IMemoryBuffer` type is the acceptable WinRT approach, and is as close as you get to sending a pointer into a buffer. |
 
 > Tip: In all the functions which accept a timestamp to schedule the message, **you can send a timestamp of 0 (zero) to bypass the scheduler and send the message immediately** or use the `MidiClock::TimestampConstantSendImmediately` static property. Otherwise, the provided timestamp is treated as an absolute time for when the message should be sent from the service. Note that the service-based scheduler (currently based on a `std::priority_queue`) gets less efficient when there are thousands of messages in it, so it's recommended that you not schedule too many messages at a time or too far out into the future. 
+
+## Multiple-Message Sender Functions
+
+Currently, the service accepts a single message at a time, so these iterate over the messages internally, using the UMP type in the case of words, or just the packets themselves in the case of packets. However, these are present to enable us to optimize sending multiple messages to the service in the future, without you needing to change any of your code.
+
+In methods where there's a single timestamp, messages are sent as quickly as possible on that timestamp. If you send many messages, some other MIDI 1.0 devices may have buffer overflows on the devices themselves. This is not a condition we can detect. In those cases, we recommend using the single message sending functions with a delay between each message.
+
+Finally, there's a practical limit to how many messages can be scheduled ahead of time. Performance degrades as the priority queue size increases, so do not send thousands of messages scheduled at a future time. Sending thousands of messages to be sent immediately is perfectly fine.
+
+| Function | Description |
+| -------- | ----------- |
+| `SendMultipleMessagesWordList(timestamp,words)` | When supplied an `IIterable` of 32 bit unsigned integers, this sends more than one message with the same timestamp. Message words must be ordered contiguously from word-0 to word-n for each message, and the message types must be valid for the number of words for each message. If an error is encountered when sending messages, the function stops processing the list at that point and returns a failure code, even if some messages were sent successfully. |
+| `SendMultipleMessagesPacketList(messages)` | Send an `IIterable` of `IMidiUniversalPacket` messages, each with their own timestamp. |
+| `SendMultipleMessagesBuffer(buffer, byteOffset, byteCount)` | Send multiple messages using the `IMemoryBuffer` approach and a single timestamp. |
+
+## Other Functions
+
+| Function | Description |
+| -------- | ----------- |
+| `Open()` | Open the connection and start receiving messages. Wire up the message event handler before calling this method. |
+| `AddEndpointProcessingPlugin(plugin)` | Add an endpoint processing plugin to this connection |
+| `RemoveEndpointProcessingPlugin(id)` | Remove an endpoint processing plugin from this connection |
 
 ## Events
 

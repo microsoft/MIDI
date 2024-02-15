@@ -97,7 +97,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             fb.Name()
         );
 
-        if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendMessagePacketList(nameMessages.GetView())))
+        if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendMultipleMessagesPacketList(nameMessages.GetView())))
         {
             internal::LogGeneralError(__FUNCTION__, L"SendMessagePacketList failed");
         }
@@ -166,7 +166,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                                 m_endpointName
                             );
 
-                            if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendMessagePacketList(nameMessages.GetView())))
+                            if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendMultipleMessagesPacketList(nameMessages.GetView())))
                             {
                                 internal::LogGeneralError(__FUNCTION__, L"SendMessagePacketList failed - sending endpoint name notification list");
                             }
@@ -186,7 +186,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                                 m_endpointProductInstanceId
                             );
 
-                            if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendMessagePacketList(instanceIdMessages.GetView())))
+                            if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendMultipleMessagesPacketList(instanceIdMessages.GetView())))
                             {
                                 internal::LogGeneralError(__FUNCTION__, L"SendMessagePacketList failed - sending product instance id messages");
                             }
