@@ -107,6 +107,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::MidiSendMessageResult SendMultipleMessagesPacketList(
             _In_ collections::IIterable<IMidiUniversalPacket> const& messages) noexcept;
 
+        midi2::MidiSendMessageResult SendMultipleMessagesStructList(
+            _In_ internal::MidiTimestamp timestamp,
+            _In_ collections::IIterable<MidiMessageStruct> const& messages) noexcept;
+
         midi2::MidiSendMessageResult SendMultipleMessagesBuffer(
             _In_ internal::MidiTimestamp timestamp,
             _In_ foundation::IMemoryBuffer const& buffer,

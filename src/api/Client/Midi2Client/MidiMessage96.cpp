@@ -24,7 +24,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    uint8_t MidiMessage96::AppendAllWordsToVector(collections::IVector<uint32_t> targetVector) const noexcept
+    uint8_t MidiMessage96::AppendAllMessageWordsToVector(collections::IVector<uint32_t> targetVector) const noexcept
     {
         targetVector.Append(m_ump.word0);
         targetVector.Append(m_ump.word1);
@@ -32,6 +32,53 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         return 3;
     }
+
+
+    _Use_decl_annotations_
+    uint8_t MidiMessage96::AddAllMessageBytesToBuffer(foundation::IMemoryBuffer const& buffer, uint32_t const byteOffset) const noexcept
+    {
+        const uint8_t numWordsInPacket = 3;
+        const uint8_t numBytesInPacket = numWordsInPacket * sizeof(uint32_t);
+
+        try
+        {
+            auto ref = buffer.CreateReference();
+            auto interop = ref.as<IMemoryBufferByteAccess>();
+
+            uint8_t* value{};
+            uint32_t valueSize{};
+
+            // get a pointer to the buffer
+            if (SUCCEEDED(interop->GetBuffer(&value, &valueSize)))
+            {
+                if (byteOffset + numBytesInPacket > valueSize)
+                {
+                    // no room
+                    return 0;
+                }
+                else
+                {
+                    uint32_t* bufferWordPointer = reinterpret_cast<uint32_t*>(value + byteOffset);
+
+                    // copy the number of valid bytes in our internal UMP structure
+                    memcpy(bufferWordPointer, &m_ump, numBytesInPacket);
+
+                    return numBytesInPacket;
+                }
+            }
+            else
+            {
+                return 0;
+            }
+
+        }
+        catch (...)
+        {
+            return 0;
+        }
+
+    }
+
 
     _Use_decl_annotations_
     MidiMessage96::MidiMessage96(

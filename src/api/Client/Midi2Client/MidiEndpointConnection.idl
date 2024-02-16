@@ -87,6 +87,8 @@ namespace Windows.Devices.Midi2
 
         // a convenience for sending multiple packets. We can do this because these are self-describing
         MidiSendMessageResult SendMultipleMessagesPacketList(IIterable<IMidiUniversalPacket> messages);
+        
+        MidiSendMessageResult SendMultipleMessagesStructList(MIDI_TIMESTAMP timestamp, IIterable<MidiMessageStruct> messages);
 
         MidiSendMessageResult SendMultipleMessagesBuffer(MIDI_TIMESTAMP timestamp, Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffset, UInt32 byteCount);
 

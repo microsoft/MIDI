@@ -28,10 +28,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
             0x00
         );
 
+
+ //       auto statusNibble = (statusByte & 0xF0) >> 4;
+
+
+
+
         // TODO: this is an assumption. We need to check the message type for system etc.
 
 
         internal::SetUmpMessageType(midiWord, (uint8_t)MidiMessageType::Midi1ChannelVoice32);
+
         //if (originalMessage.Type() == Windows::Devices::Midi::MidiMessageType::NoteOff) ...
 
         // set the group
