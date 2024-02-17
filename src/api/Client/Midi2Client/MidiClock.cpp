@@ -10,8 +10,7 @@
 #include "MidiClock.h"
 #include "MidiClock.g.cpp"
 
-#define MICROSECONDS_PER_SECOND 1000000
-#define MILLISECONDS_PER_SECOND 1000
+
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
@@ -86,7 +85,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     double MidiClock::ConvertTimestampToMicroseconds(
         internal::MidiTimestamp const timestampValue)
     {
-        return (double)((timestampValue * (double)MICROSECONDS_PER_SECOND) / TimestampFrequency());
+
+        return internal::Shared::ConvertTimestampToFractionalMicroseconds(timestampValue, TimestampFrequency());
     }
 
 
@@ -94,14 +94,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
     double MidiClock::ConvertTimestampToMilliseconds(
         internal::MidiTimestamp const timestampValue)
     {
-        return (double)((timestampValue * (double)MILLISECONDS_PER_SECOND) / TimestampFrequency());
+        return internal::Shared::ConvertTimestampToFractionalMilliseconds(timestampValue, TimestampFrequency());
     }
 
     _Use_decl_annotations_
     double MidiClock::ConvertTimestampToSeconds(
         internal::MidiTimestamp const timestampValue)
     {
-        return (double)((timestampValue) / TimestampFrequency());
+        return internal::Shared::ConvertTimestampToFractionalSeconds(timestampValue, TimestampFrequency());
     }
 
 }
