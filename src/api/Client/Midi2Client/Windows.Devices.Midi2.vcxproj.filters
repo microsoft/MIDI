@@ -156,9 +156,6 @@
     <ClCompile Include="MidiMessageConverter.cpp">
       <Filter>API\Messages\Utility</Filter>
     </ClCompile>
-    <ClCompile Include="MidiMessageTranslator.cpp">
-      <Filter>API\Messages\Utility</Filter>
-    </ClCompile>
     <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
       <Filter>API\Enumeration</Filter>
     </ClCompile>
@@ -182,6 +179,18 @@
     </ClCompile>
     <ClCompile Include="MidiServiceLoopbackEndpointDefinition.cpp">
       <Filter>API\Service\Configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_SendSingleMessage.cpp">
+      <Filter>API\Endpoints\Connections</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_SendMultipleMessages.cpp">
+      <Filter>API\Endpoints\Connections</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_Plugins.cpp">
+      <Filter>API\Endpoints\Connections</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_SendInfrastructure.cpp">
+      <Filter>API\Endpoints\Connections</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -250,9 +259,6 @@
       <Filter>API\Enumeration</Filter>
     </ClInclude>
     <ClInclude Include="MidiMessageConverter.h">
-      <Filter>API\Messages\Utility</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiMessageTranslator.h">
       <Filter>API\Messages\Utility</Filter>
     </ClInclude>
     <ClInclude Include="MidiEndpointDeviceWatcher.h">
