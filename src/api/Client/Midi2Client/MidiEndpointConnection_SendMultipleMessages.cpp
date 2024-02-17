@@ -15,9 +15,6 @@
 namespace winrt::Windows::Devices::Midi2::implementation
 {
 
-
-
-
     _Use_decl_annotations_
     midi2::MidiSendMessageResult MidiEndpointConnection::SendMultipleMessagesBuffer(
         internal::MidiTimestamp timestamp,
@@ -29,14 +26,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         try
         {
-            if (!m_isOpen)
-            {
-                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
-
-                // return failure if we're not open
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
-            }
-
             winrt::Windows::Foundation::IMemoryBufferReference bufferReference = buffer.CreateReference();
 
             auto interop = bufferReference.as<IMemoryBufferByteAccess>();
@@ -128,124 +117,93 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         internal::LogInfo(__FUNCTION__, L"Enter");
 
-        try
-        {
-            if (!m_isOpen)
-            {
-                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
+        // iterate through words based on the message type in the next word
 
-                // return failure if we're not open
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
+        // we keep reusing this struct
+        internal::PackedUmp128 messageData{};
+
+        //uint32_t index = 0;
+
+        //// TODO: Iteration via index would likely be faster if we just use a array_view, IVector, or IVectorView instead of IIterable.
+
+        //// or maybe we can use a winrt::array_view somehow and get conversion from std?
+        //// https://learn.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/std-cpp-data-types
+        //// https://devblogs.microsoft.com/oldnewthing/20200205-00/?p=103398/
+
+        //while (index < totalWords)
+        //{
+
+        //}
+
+
+        auto iter = words.First();
+
+
+        while (iter.HasCurrent())
+        {
+            auto messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(iter.Current());
+
+            if (messageWordCount >= 1)
+            {
+                messageData.word0 = iter.Current();
             }
 
-
-            if (m_endpointAbstraction)
+            if (messageWordCount >= 2)
             {
-                // iterate through words based on the message type in the next word
-
-                // we keep reusing this struct
-                internal::PackedUmp128 messageData{};
-
-                //uint32_t index = 0;
-
-                //// TODO: Iteration via index would likely be faster if we just use a array_view, IVector, or IVectorView instead of IIterable.
-
-                //// or maybe we can use a winrt::array_view somehow and get conversion from std?
-                //// https://learn.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/std-cpp-data-types
-                //// https://devblogs.microsoft.com/oldnewthing/20200205-00/?p=103398/
-
-                //while (index < totalWords)
-                //{
-
-                //}
-
-
-                auto iter = words.First();
-
-
-                while (iter.HasCurrent())
+                if (iter.MoveNext())
                 {
-                    auto messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(iter.Current());
+                    messageData.word1 = iter.Current();
+                }
+                else
+                {
+                    internal::LogGeneralError(__FUNCTION__, L"Failed to send message. Message type indicates 2+ words, but we ran out of data.");
+                    return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange;
+                }
+            }
 
-                    if (messageWordCount >= 1)
-                    {
-                        messageData.word0 = iter.Current();
-                    }
-
-                    if (messageWordCount >= 2)
-                    {
-                        if (iter.MoveNext())
-                        {
-                            messageData.word1 = iter.Current();
-                        }
-                        else
-                        {
-                            internal::LogGeneralError(__FUNCTION__, L"Failed to send message. Message type indicates 2+ words, but we ran out of data.");
-                            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange;
-                        }
-                    }
-
-                    if (messageWordCount >= 3)
-                    {
-                        if (iter.MoveNext())
-                        {
-                            messageData.word2 = iter.Current();
-                        }
-                        else
-                        {
-                            internal::LogGeneralError(__FUNCTION__, L"Failed to send message. Message type indicates 3+ words, but we ran out of data.");
-                            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange;
-                        }
-
-                    }
-
-                    if (messageWordCount == 4)
-                    {
-                        if (iter.MoveNext())
-                        {
-                            messageData.word3 = iter.Current();
-                        }
-                        else
-                        {
-                            internal::LogGeneralError(__FUNCTION__, L"Failed to send message. Message type indicates 4 words, but we ran out of data.");
-                            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange;
-                        }
-                    }
-
-                    auto sendMessageResult = SendMessageRaw(m_endpointAbstraction, &messageData, messageWordCount * sizeof(uint32_t), timestamp);
-
-                    if (SendMessageFailed(sendMessageResult))
-                    {
-                        // failed. Log and return. We fail on first problem.
-                        internal::LogGeneralError(__FUNCTION__, L"Failed to send message");
-
-                        return sendMessageResult;
-
-                    }
-
-                    iter.MoveNext();
+            if (messageWordCount >= 3)
+            {
+                if (iter.MoveNext())
+                {
+                    messageData.word2 = iter.Current();
+                }
+                else
+                {
+                    internal::LogGeneralError(__FUNCTION__, L"Failed to send message. Message type indicates 3+ words, but we ran out of data.");
+                    return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange;
                 }
 
-                return midi2::MidiSendMessageResult::Succeeded;
-
             }
-            else
+
+            if (messageWordCount == 4)
             {
-                internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
-
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
+                if (iter.MoveNext())
+                {
+                    messageData.word3 = iter.Current();
+                }
+                else
+                {
+                    internal::LogGeneralError(__FUNCTION__, L"Failed to send message. Message type indicates 4 words, but we ran out of data.");
+                    return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange;
+                }
             }
+
+            auto sendMessageResult = SendMessageRaw(m_endpointAbstraction, &messageData, messageWordCount * sizeof(uint32_t), timestamp);
+
+            if (SendMessageFailed(sendMessageResult))
+            {
+                // failed. Log and return. We fail on first problem.
+                internal::LogGeneralError(__FUNCTION__, L"Failed to send message");
+
+                return sendMessageResult;
+
+            }
+
+            iter.MoveNext();
         }
-        catch (winrt::hresult_error const& ex)
-        {
-            internal::LogHresultError(__FUNCTION__, L"hresult exception sending message. Service may be unavailable", ex);
 
+        return midi2::MidiSendMessageResult::Succeeded;
 
-            // todo: handle buffer full and similar messages
-            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
-        }
-
-        return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
     }
 
     _Use_decl_annotations_
@@ -274,61 +232,23 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         internal::LogInfo(__FUNCTION__, L"Enter");
 
-        try
+        for (auto const& message : messages)
         {
-            if (!m_isOpen)
+            auto messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(message.Word0);
+            auto sendMessageResult = SendMessageRaw(m_endpointAbstraction, (VOID*)&message, messageWordCount * sizeof(uint32_t), timestamp);
+
+            if (SendMessageFailed(sendMessageResult))
             {
-                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
+                // failed. Log and return. We fail on first problem.
+                internal::LogGeneralError(__FUNCTION__, L"Failed to send message");
 
-                // return failure if we're not open
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
-            }
-
-
-            if (m_endpointAbstraction)
-            {
-                // iterate through words based on the message type in the next word
-
-        //        auto iter = messages.First();
-
-                for (auto const& message : messages)
-                {
-                    auto messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(message.Word0);
-                    auto sendMessageResult = SendMessageRaw(m_endpointAbstraction, (VOID*)&message, messageWordCount * sizeof(uint32_t), timestamp);
-
-                    if (SendMessageFailed(sendMessageResult))
-                    {
-                        // failed. Log and return. We fail on first problem.
-                        internal::LogGeneralError(__FUNCTION__, L"Failed to send message");
-
-                        return sendMessageResult;
-                    }
-
-
-                }
-
-                return midi2::MidiSendMessageResult::Succeeded;
-
-            }
-            else
-            {
-                internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
-
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
+                return sendMessageResult;
             }
         }
-        catch (winrt::hresult_error const& ex)
-        {
-            internal::LogHresultError(__FUNCTION__, L"hresult exception sending message. Service may be unavailable", ex);
 
-
-            // todo: handle buffer full and similar messages
-            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
-        }
-
-        return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
-
+        return midi2::MidiSendMessageResult::Succeeded;
     }
+
 
 
     _Use_decl_annotations_
@@ -338,15 +258,22 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         internal::LogInfo(__FUNCTION__, L"Enter");
 
+        for (auto const& message : messages)
+        {
+            auto messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(message.Word0);
+            auto sendMessageResult = SendMessageRaw(m_endpointAbstraction, (VOID*)&message, messageWordCount * sizeof(uint32_t), timestamp);
 
-        UNREFERENCED_PARAMETER(timestamp);
-        UNREFERENCED_PARAMETER(messages);
+            if (SendMessageFailed(sendMessageResult))
+            {
+                // failed. Log and return. We fail on first problem.
+                internal::LogGeneralError(__FUNCTION__, L"Failed to send message");
 
-        // TODO: Implement SendMultipleMessagesStructArray
+                return sendMessageResult;
+            }
+        }
 
+        return midi2::MidiSendMessageResult::Succeeded;
 
-
-        return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
     }
 
 
@@ -358,50 +285,20 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         internal::LogInfo(__FUNCTION__, L"Sending multiple message packet list");
 
-        try
+        for (auto const& ump : messages)
         {
-            if (!m_isOpen)
+            auto result = SendUmpInternal(m_endpointAbstraction, ump);
+
+            if (!MidiEndpointConnection::SendMessageSucceeded(result))
             {
-                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
+                // if any fail, we return immediately.
 
-                // return failure if we're not open
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
-            }
-
-            if (m_endpointAbstraction)
-            {
-                // right now, we just loop through and send messages. In the future, 
-                // we may optimize this further without changing the API signature
-
-                for (auto const& ump : messages)
-                {
-                    auto result = SendUmpInternal(m_endpointAbstraction, ump);
-
-                    if (!MidiEndpointConnection::SendMessageSucceeded(result))
-                    {
-                        // if any fail, we return immediately.
-
-                        return result;
-                    }
-                }
-
-                return midi2::MidiSendMessageResult::Succeeded;
-            }
-            else
-            {
-                internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
-
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
+                return result;
             }
         }
-        catch (winrt::hresult_error const& ex)
-        {
-            internal::LogHresultError(__FUNCTION__, L"hresult exception sending messages. Service may be unavailable", ex);
 
+        return midi2::MidiSendMessageResult::Succeeded;
 
-            // todo: handle buffer full and similar messages
-            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
-        }
     }
 
     _Use_decl_annotations_
@@ -411,11 +308,20 @@ namespace winrt::Windows::Devices::Midi2::implementation
         internal::LogInfo(__FUNCTION__, L"Enter");
 
 
-        UNREFERENCED_PARAMETER(messages);
+        for (auto const& ump : messages)
+        {
+            auto result = SendUmpInternal(m_endpointAbstraction, ump);
 
-        // TODO: Implement SendMultipleMessagesPacketArray
+            if (!MidiEndpointConnection::SendMessageSucceeded(result))
+            {
+                // if any fail, we return immediately.
 
-        return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
+                return result;
+            }
+        }
+
+        return midi2::MidiSendMessageResult::Succeeded;
+
     }
 
 

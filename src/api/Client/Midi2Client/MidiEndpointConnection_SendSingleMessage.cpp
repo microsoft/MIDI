@@ -16,10 +16,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
 {
 
     _Use_decl_annotations_
-        midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageStruct(
-            internal::MidiTimestamp timestamp,
-            midi2::MidiMessageStruct const& message,
-            uint8_t wordCount) noexcept
+    midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageStruct(
+        internal::MidiTimestamp timestamp,
+        midi2::MidiMessageStruct const& message,
+        uint8_t wordCount) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Sending message struct");
 
@@ -37,24 +37,16 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     _Use_decl_annotations_
-        midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageBuffer(
-            const internal::MidiTimestamp timestamp,
-            winrt::Windows::Foundation::IMemoryBuffer const& buffer,
-            const uint32_t byteOffset,
-            const uint8_t byteCount) noexcept
+    midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageBuffer(
+        const internal::MidiTimestamp timestamp,
+        winrt::Windows::Foundation::IMemoryBuffer const& buffer,
+        const uint32_t byteOffset,
+        const uint8_t byteCount) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Sending message buffer");
 
         try
         {
-            if (!m_isOpen)
-            {
-                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
-
-                // return failure if we're not open
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
-            }
-
             // make sure we're sending only a single UMP
             uint32_t sizeInWords = byteCount / sizeof(uint32_t);
 
@@ -115,14 +107,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         try
         {
-            if (!m_isOpen)
-            {
-                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
-
-                // return failure if we're not open
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
-            }
-
             // check for out-of-bounds first
             if (startIndex + wordCount > words.size())
             {
@@ -132,27 +116,19 @@ namespace winrt::Windows::Devices::Midi2::implementation
             }
 
             // check if the message type is correct for the word count
-            if (wordCount < 1 || !ValidateUmp(words[startIndex], wordCount))
+            if (!ValidateUmp(words[startIndex], wordCount))
             {
                 internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for this UMP", wordCount, timestamp);
 
                 return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::InvalidMessageTypeForWordCount;
             }
 
-            if (m_endpointAbstraction)
-            {
-                auto umpDataSize = (uint8_t)(sizeof(uint32_t) * wordCount);
+            auto umpDataSize = (uint8_t)(sizeof(uint32_t) * wordCount);
 
-                // if the service goes down, this will fail
+            // if the service goes down, this will fail
 
-                return SendMessageRaw(m_endpointAbstraction, (void*)(words.data() + startIndex), umpDataSize, timestamp);
-            }
-            else
-            {
-                internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
+            return SendMessageRaw(m_endpointAbstraction, (void*)(words.data() + startIndex), umpDataSize, timestamp);
 
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
-            }
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -164,23 +140,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-        midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageWords(
-            internal::MidiTimestamp const timestamp,
-            uint32_t const word0) noexcept
+    midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageWords(
+        internal::MidiTimestamp const timestamp,
+        uint32_t const word0) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Sending message words (1)");
 
         try
         {
-            if (!m_isOpen)
-            {
-                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
-
-                // return failure if we're not open
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
-            }
-
-
             if (internal::GetUmpLengthInMidiWordsFromFirstWord(word0) != UMP32_WORD_COUNT)
             {
                 // mismatch between the message type and the number of words
@@ -189,20 +156,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
             }
 
 
-            if (m_endpointAbstraction)
-            {
-                auto umpByteCount = (uint8_t)(sizeof(internal::PackedUmp32));
+            auto umpByteCount = (uint8_t)(sizeof(internal::PackedUmp32));
 
-                // if the service goes down, this will fail
+            // if the service goes down, this will fail
 
-                return SendMessageRaw(m_endpointAbstraction, (void*)&word0, umpByteCount, timestamp);
-            }
-            else
-            {
-                internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
-
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
-            }
+            return SendMessageRaw(m_endpointAbstraction, (void*)&word0, umpByteCount, timestamp);
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -224,15 +182,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         try
         {
-            if (!m_isOpen)
-            {
-                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
-
-                // return failure if we're not open
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
-            }
-
-
             if (internal::GetUmpLengthInMidiWordsFromFirstWord(word0) != UMP64_WORD_COUNT)
             {
                 // mismatch between the message type and the number of words
@@ -241,24 +190,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
             }
 
 
-            if (m_endpointAbstraction)
-            {
-                auto umpByteCount = (uint8_t)(sizeof(internal::PackedUmp64));
-                internal::PackedUmp64 ump{};
+            auto umpByteCount = (uint8_t)(sizeof(internal::PackedUmp64));
+            internal::PackedUmp64 ump{};
 
-                ump.word0 = word0;
-                ump.word1 = word1;
+            ump.word0 = word0;
+            ump.word1 = word1;
 
-                // if the service goes down, this will fail
+            // if the service goes down, this will fail
 
-                return SendMessageRaw(m_endpointAbstraction, (void*)&ump, umpByteCount, timestamp);
-            }
-            else
-            {
-                internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
-
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
-            }
+            return SendMessageRaw(m_endpointAbstraction, (void*)&ump, umpByteCount, timestamp);
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -280,15 +220,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         try
         {
-            if (!m_isOpen)
-            {
-                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
-
-                // return failure if we're not open
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
-            }
-
-
             if (internal::GetUmpLengthInMidiWordsFromFirstWord(word0) != UMP96_WORD_COUNT)
             {
                 // mismatch between the message type and the number of words
@@ -297,25 +228,16 @@ namespace winrt::Windows::Devices::Midi2::implementation
             }
 
 
-            if (m_endpointAbstraction)
-            {
-                auto umpByteCount = (uint8_t)(sizeof(internal::PackedUmp96));
-                internal::PackedUmp96 ump{};
+            auto umpByteCount = (uint8_t)(sizeof(internal::PackedUmp96));
+            internal::PackedUmp96 ump{};
 
-                ump.word0 = word0;
-                ump.word1 = word1;
-                ump.word2 = word2;
+            ump.word0 = word0;
+            ump.word1 = word1;
+            ump.word2 = word2;
 
-                // if the service goes down, this will fail
+            // if the service goes down, this will fail
 
-                return SendMessageRaw(m_endpointAbstraction, (void*)&ump, umpByteCount, timestamp);
-            }
-            else
-            {
-                internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
-
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
-            }
+            return SendMessageRaw(m_endpointAbstraction, (void*)&ump, umpByteCount, timestamp);
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -339,15 +261,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         try
         {
-            if (!m_isOpen)
-            {
-                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
-
-                // return failure if we're not open
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
-            }
-
-
             if (internal::GetUmpLengthInMidiWordsFromFirstWord(word0) != UMP128_WORD_COUNT)
             {
                 internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for messageType", UMP128_WORD_COUNT, timestamp);
@@ -355,26 +268,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
             }
 
 
-            if (m_endpointAbstraction)
-            {
-                auto umpByteCount = (uint8_t)(sizeof(internal::PackedUmp128));
-                internal::PackedUmp128 ump{};
+            auto umpByteCount = (uint8_t)(sizeof(internal::PackedUmp128));
+            internal::PackedUmp128 ump{};
 
-                ump.word0 = word0;
-                ump.word1 = word1;
-                ump.word2 = word2;
-                ump.word3 = word3;
+            ump.word0 = word0;
+            ump.word1 = word1;
+            ump.word2 = word2;
+            ump.word3 = word3;
 
-                // if the service goes down, this will fail
+            // if the service goes down, this will fail
 
-                return SendMessageRaw(m_endpointAbstraction, (void*)&ump, umpByteCount, timestamp);
-            }
-            else
-            {
-                internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
-
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
-            }
+            return SendMessageRaw(m_endpointAbstraction, (void*)&ump, umpByteCount, timestamp);
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -394,25 +298,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         try
         {
-            if (!m_isOpen)
-            {
-                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
+            return SendUmpInternal(m_endpointAbstraction, message);
 
-                // return failure if we're not open
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
-            }
-
-
-            if (m_endpointAbstraction)
-            {
-                return SendUmpInternal(m_endpointAbstraction, message);
-            }
-            else
-            {
-                internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
-
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
-            }
         }
         catch (winrt::hresult_error const& ex)
         {

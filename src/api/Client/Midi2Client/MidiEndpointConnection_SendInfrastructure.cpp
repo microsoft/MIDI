@@ -15,7 +15,7 @@
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
-        midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageResultFromHRESULT(HRESULT hr)
+    midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageResultFromHRESULT(HRESULT hr)
     {
         midi2::MidiSendMessageResult result{ 0 };
 
@@ -83,11 +83,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     _Use_decl_annotations_
-        midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageRaw(
-            winrt::com_ptr<IMidiBiDi> endpoint,
-            void* data,
-            uint8_t sizeInBytes,
-            internal::MidiTimestamp timestamp)
+    midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageRaw(
+        winrt::com_ptr<IMidiBiDi> endpoint,
+        void* data,
+        uint8_t sizeInBytes,
+        internal::MidiTimestamp timestamp)
     {
         internal::LogInfo(__FUNCTION__, L"Sending message raw");
 
@@ -131,11 +131,41 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
+    _Use_decl_annotations_
+    midi2::MidiSendMessageResult MidiEndpointConnection::SendUmpInternal(
+        winrt::com_ptr<IMidiBiDi> endpoint,
+        midi2::IMidiUniversalPacket const& ump)
+    {
+        internal::LogInfo(__FUNCTION__, L"Sending message internal");
+        try
+        {
+            uint8_t umpDataSize{};
+
+            auto umpDataPointer = GetUmpDataPointer(ump, umpDataSize);
+
+            if (umpDataPointer == nullptr)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"endpoint data pointer is nullptr");
+
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::InvalidMessageOther;
+            }
+
+            return SendMessageRaw(endpoint, umpDataPointer, umpDataSize, ump.Timestamp());
+
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            internal::LogHresultError(__FUNCTION__, L"hresult error sending message. Is the service running?", ex);
+
+            // TODO: handle buffer full and other expected hresults
+            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
+        }
+    }
 
     _Use_decl_annotations_
-        void* MidiEndpointConnection::GetUmpDataPointer(
-            midi2::IMidiUniversalPacket const& ump,
-            uint8_t& dataSizeOut)
+    void* MidiEndpointConnection::GetUmpDataPointer(
+        midi2::IMidiUniversalPacket const& ump,
+        uint8_t& dataSizeOut)
     {
         void* umpDataPointer{};
         dataSizeOut = 0;
@@ -168,44 +198,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
-    _Use_decl_annotations_
-        midi2::MidiSendMessageResult MidiEndpointConnection::SendUmpInternal(
-            winrt::com_ptr<IMidiBiDi> endpoint,
-            midi2::IMidiUniversalPacket const& ump)
-    {
-        internal::LogInfo(__FUNCTION__, L"Sending message internal");
-        try
-        {
-            if (endpoint != nullptr)
-            {
-                uint8_t umpDataSize{};
-
-                auto umpDataPointer = GetUmpDataPointer(ump, umpDataSize);
-
-                if (umpDataPointer == nullptr)
-                {
-                    internal::LogGeneralError(__FUNCTION__, L"endpoint data pointer is nullptr");
-
-                    return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::InvalidMessageOther;
-                }
-
-                return SendMessageRaw(endpoint, umpDataPointer, umpDataSize, ump.Timestamp());
-            }
-            else
-            {
-                internal::LogGeneralError(__FUNCTION__, L"endpoint is nullptr");
-
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
-            }
-        }
-        catch (winrt::hresult_error const& ex)
-        {
-            internal::LogHresultError(__FUNCTION__, L"hresult error sending message. Is the service running?", ex);
-
-            // TODO: handle buffer full and other expected hresults
-            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
-        }
-    }
 
 
 
