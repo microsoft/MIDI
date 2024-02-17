@@ -39,9 +39,27 @@ CMidi2BluetoothMidiEndpointManager::Initialize(
     m_TransportAbstractionId = AbstractionLayerGUID;   // this is needed so MidiSrv can instantiate the correct transport
     m_ContainerId = m_TransportAbstractionId;                           // we use the transport ID as the container ID for convenience
 
-    //RETURN_IF_FAILED(CreateParentDevice());
+    winrt::hstring deviceSelector(
+        L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
+
+    m_Watcher = enumeration::DeviceInformation::CreateWatcher(deviceSelector);
+
+    auto deviceAddedHandler = foundation::TypedEventHandler<enumeration::DeviceWatcher, enumeration::DeviceInformation>(this, &CMidi2BluetoothMidiEndpointManager::OnDeviceAdded);
+    auto deviceRemovedHandler = foundation::TypedEventHandler<enumeration::DeviceWatcher, enumeration::DeviceInformationUpdate>(this, &CMidi2BluetoothMidiEndpointManager::OnDeviceRemoved);
+    auto deviceUpdatedHandler = foundation::TypedEventHandler<enumeration::DeviceWatcher, enumeration::DeviceInformationUpdate>(this, &CMidi2BluetoothMidiEndpointManager::OnDeviceUpdated);
+    auto deviceStoppedHandler = foundation::TypedEventHandler<enumeration::DeviceWatcher, foundation::IInspectable>(this, &CMidi2BluetoothMidiEndpointManager::OnDeviceStopped);
+    auto deviceEnumerationCompletedHandler = foundation::TypedEventHandler<enumeration::DeviceWatcher, foundation::IInspectable>(this, &CMidi2BluetoothMidiEndpointManager::OnEnumerationCompleted);
+
+    m_DeviceAdded = m_Watcher.Added(winrt::auto_revoke, deviceAddedHandler);
+    m_DeviceRemoved = m_Watcher.Removed(winrt::auto_revoke, deviceRemovedHandler);
+    m_DeviceUpdated = m_Watcher.Updated(winrt::auto_revoke, deviceUpdatedHandler);
+    m_DeviceStopped = m_Watcher.Stopped(winrt::auto_revoke, deviceStoppedHandler);
+    m_DeviceEnumerationCompleted = m_Watcher.EnumerationCompleted(winrt::auto_revoke, deviceEnumerationCompletedHandler);
+
+    m_Watcher.Start();
 
     return S_OK;
+    ;
 }
 
 HRESULT
@@ -55,8 +73,12 @@ CMidi2BluetoothMidiEndpointManager::CreateParentDevice()
 _Use_decl_annotations_
 HRESULT 
 CMidi2BluetoothMidiEndpointManager::CreateEndpoint(
+    MidiBluetoothDeviceDefinition& definition
 )
 {
+    UNREFERENCED_PARAMETER(definition);
+
+
 
     return S_OK;
 }
@@ -101,3 +123,43 @@ CMidi2BluetoothMidiEndpointManager::Cleanup()
 }
 
 
+
+
+
+
+_Use_decl_annotations_
+HRESULT 
+CMidi2BluetoothMidiEndpointManager::OnDeviceAdded(enumeration::DeviceWatcher, enumeration::DeviceInformation)
+{
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT 
+CMidi2BluetoothMidiEndpointManager::OnDeviceRemoved(enumeration::DeviceWatcher, enumeration::DeviceInformationUpdate)
+{
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT 
+CMidi2BluetoothMidiEndpointManager::OnDeviceUpdated(enumeration::DeviceWatcher, enumeration::DeviceInformationUpdate)
+{
+    return S_OK;
+}
+
+
+_Use_decl_annotations_
+HRESULT 
+CMidi2BluetoothMidiEndpointManager::OnDeviceStopped(enumeration::DeviceWatcher, foundation::IInspectable)
+{
+    return S_OK;
+}
+
+
+_Use_decl_annotations_
+HRESULT 
+CMidi2BluetoothMidiEndpointManager::OnEnumerationCompleted(enumeration::DeviceWatcher, foundation::IInspectable)
+{
+    return S_OK;
+}
