@@ -892,10 +892,25 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 // iterate through words based on the message type in the next word
 
-                auto iter = words.First();
-
                 // we keep reusing this struct
                 internal::PackedUmp128 messageData{};
+
+                //uint32_t index = 0;
+
+                //// TODO: Iteration via index would likely be faster if we just use a array_view, IVector, or IVectorView instead of IIterable.
+
+                //// or maybe we can use a winrt::array_view somehow and get conversion from std?
+                //// https://learn.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/std-cpp-data-types
+                //// https://devblogs.microsoft.com/oldnewthing/20200205-00/?p=103398/
+
+                //while (index < totalWords)
+                //{
+
+                //}
+
+
+                auto iter = words.First();
+
 
                 while (iter.HasCurrent())
                 {
@@ -1110,10 +1125,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                 auto iter = messages.First();
 
-                while (iter.HasCurrent())
+                for (auto const& message : messages)
                 {
-                    auto messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(iter.Current().Word0);
-                    auto sendMessageResult = SendMessageStruct(timestamp, iter.Current(), messageWordCount);
+                    auto messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(message.Word0);
+                    auto sendMessageResult = SendMessageRaw(m_endpointAbstraction, (VOID*)&message, messageWordCount * sizeof(uint32_t), timestamp);
 
                     if (SendMessageFailed(sendMessageResult))
                     {
@@ -1123,7 +1138,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                         return sendMessageResult;
                     }
 
-                    iter.MoveNext();
+
                 }
 
                 return midi2::MidiSendMessageResult::Succeeded;

@@ -57,6 +57,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         
         uint8_t FillMessageStruct(_Inout_ midi2::MidiMessageStruct& message);
 
+        // these array_view parameters are quite specific. Reference this:
+        // https://devblogs.microsoft.com/oldnewthing/20200205-00/?p=103398/
+        
         uint8_t FillWordArray(
             _In_ array_view<uint32_t> words, 
             _In_ uint32_t const startIndex);
@@ -68,7 +71,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint8_t FillBuffer(
             _In_ foundation::IMemoryBuffer const& buffer, 
             _In_ uint32_t const byteOffset);
-
 
     private:
         uint8_t GetValidMessageWordCount() { return internal::GetUmpLengthInMidiWordsFromFirstWord(m_data.Word0); }
