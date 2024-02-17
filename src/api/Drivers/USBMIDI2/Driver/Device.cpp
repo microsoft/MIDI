@@ -1251,7 +1251,7 @@ Return Value:
     }
     devCtx = GetDeviceContext(Device);
 
-    // If not USB MIDI 2.0 then error, do not proceed
+    // If not USB MIDI 2.0 then try to create from USB MIDI 1.0
     if (devCtx->UsbMIDIbcdMSC != MIDI_CS_BCD_MIDI2)
     {
         status = USBMIDI2DriverCreateGTB(Device);
@@ -1313,8 +1313,7 @@ Return Value:
 
     // Create temporary memory for holding the GTB data from device
     WDF_OBJECT_ATTRIBUTES_INIT(&gtbMemoryAttributes);
-    // Guess at an initial GTB size - if more will have to reallocate
-    gtbMemorySize = sizeof(midi2_desc_group_terminal_block_header_t) + 10 * sizeof(midi2_desc_group_terminal_block_t);
+
     status = WdfMemoryCreate(
         &gtbMemoryAttributes,
         NonPagedPoolNx,
