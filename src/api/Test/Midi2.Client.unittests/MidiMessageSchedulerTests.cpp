@@ -48,9 +48,10 @@ void MidiMessageSchedulerTests::TestScheduledMessagesTiming(uint16_t const messa
 
     
     // calculate an acceptable timestamp offset
-    uint32_t acceptableTimestampDeltaMicroseconds = 200;    // 0.2ms
+    // We'll likely want to do better than this in the future, but 100 microseconds for scheduling isn't bad.
+    uint32_t acceptableTimestampDeltaMicroseconds = 100;    // 0.1ms
 
-    uint64_t acceptableTimestampDeltaTicks = (acceptableTimestampDeltaMicroseconds * MidiClock::TimestampFrequency()) / 1000000;
+    uint64_t acceptableTimestampDeltaTicks = (uint64_t)((acceptableTimestampDeltaMicroseconds * MidiClock::TimestampFrequency()) / 1000000.0);
 
 
     std::cout << "Acceptable timestamp delta is +/- " << std::dec << acceptableTimestampDeltaTicks << " ticks" << std::endl;
@@ -111,6 +112,11 @@ void MidiMessageSchedulerTests::TestScheduledMessagesTiming(uint16_t const messa
         auto sendResult = connSend.SendMessageWords(MidiClock::OffsetTimestampByMilliseconds(MidiClock::Now(), scheduledTimeStampOffsetMS), word);
 
         VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(sendResult));
+
+        // if we don't sleep here, the send and receive, and the TAEF output, get in the 
+        // way of each other and mess up timing. That's entirely a client-side problem
+        // and isn't how "normal" apps would work anyway.
+        Sleep(1);
     }
 
     std::cout << "Waiting for response" << std::endl;

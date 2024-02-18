@@ -31,6 +31,9 @@ CMidi2LoopbackMidiBiDi::Initialize(
     m_callbackContext = Context;
     m_endpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointId);
   
+    m_associationId = internal::GetSwdPropertyVirtualEndpointAssociationId(m_endpointId);
+
+
     HRESULT hr = S_OK;
 
     // TODO: This should use SWD properties and not a string search
@@ -44,12 +47,14 @@ CMidi2LoopbackMidiBiDi::Initialize(
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Initializing Side-A BiDi", "message"),
-            TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
+            TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
+            TraceLoggingWideString(m_associationId.c_str(), "association id")
         );
 
         m_callback = Callback;
 
         m_isEndpointA = true;
+
     }
     else if (internal::EndpointInterfaceIdContainsString(m_endpointId, MIDI_PERM_LOOP_INSTANCE_ID_B_PREFIX) ||
              internal::EndpointInterfaceIdContainsString(m_endpointId, MIDI_TEMP_LOOP_INSTANCE_ID_B_PREFIX))
@@ -60,7 +65,8 @@ CMidi2LoopbackMidiBiDi::Initialize(
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Initializing Side-B BiDi", "message"),
-            TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
+            TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
+            TraceLoggingWideString(m_associationId.c_str(), "association id")
         );
 
         m_callback = Callback;
@@ -77,10 +83,39 @@ CMidi2LoopbackMidiBiDi::Initialize(
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"We don't understand the endpoint Id", "message"),
-            TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
-            );
+            TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
+            TraceLoggingWideString(m_associationId.c_str(), "association id")
+        );
 
-        hr = E_FAIL;
+        return E_FAIL;
+    }
+
+    // register this endpoint as part of a loopback device
+
+    auto device = AbstractionState::Current().GetEndpointTable()->GetDevice(m_associationId);
+
+    if (device)
+    {
+        if (m_isEndpointA)
+        {
+            device->RegisterEndpointA(this);
+        }
+        else
+        {
+            device->RegisterEndpointB(this);
+        }
+    }
+    else
+    {
+        TraceLoggingWrite(
+            MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Unable to find matching device in device table", "message"),
+            TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
+            TraceLoggingWideString(m_associationId.c_str(), "association id")
+        );
     }
 
     return hr;
@@ -115,7 +150,8 @@ CMidi2LoopbackMidiBiDi::SendMidiMessage(
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
+        TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
+        TraceLoggingBool(m_isEndpointA, "is endpoint A")
     );
 
     RETURN_HR_IF_NULL(E_INVALIDARG, Message);
@@ -130,6 +166,19 @@ CMidi2LoopbackMidiBiDi::SendMidiMessage(
         {
             return device->SendMessageAToB(Message, Size, Position, m_callbackContext);
         }
+        else
+        {
+            TraceLoggingWrite(
+                MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
+                TraceLoggingWideString(L"Send A to B : Unable to find endpoint device in table", "message")
+                );
+
+            return E_FAIL;
+        }
     }
     else
     {
@@ -139,6 +188,19 @@ CMidi2LoopbackMidiBiDi::SendMidiMessage(
         if (device)
         {
             return device->SendMessageBToA(Message, Size, Position, m_callbackContext);
+        }
+        else
+        {
+            TraceLoggingWrite(
+                MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
+                TraceLoggingWideString(L"Send B to A : Unable to find endpoint device in table", "message")
+            );
+
+            return E_FAIL;
         }
     }
 

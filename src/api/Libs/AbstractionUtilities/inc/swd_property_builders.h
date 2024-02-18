@@ -17,26 +17,6 @@
 
 namespace Windows::Devices::Midi2::Internal
 {
-    DEVPROPERTY BuildWStringDevProperty(
-        _In_ DEVPROPKEY const key,
-        _In_ std::wstring const& value);
-
-    DEVPROPERTY BuildUInt32DevProperty(
-        _In_ DEVPROPKEY const key,
-        _In_ uint32_t const& value);
-
-    DEVPROPERTY BuildByteDevProperty(
-        _In_ DEVPROPKEY const key,
-        _In_ uint8_t const& value);
-
-    DEVPROPERTY BuildGuidDevProperty(
-        _In_ DEVPROPKEY const key,
-        _In_ GUID const& value);
-
-    DEVPROPERTY BuildBooleanDevProperty(
-        _In_ DEVPROPKEY const key,
-        _In_ bool const& value);
-
     DEVPROPERTY BuildEmptyDevProperty(
         _In_ DEVPROPKEY const key);
 

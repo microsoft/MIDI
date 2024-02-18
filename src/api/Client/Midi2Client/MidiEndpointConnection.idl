@@ -81,11 +81,16 @@ namespace Windows.Devices.Midi2
         MidiSendMessageResult SendMessageBuffer(MIDI_TIMESTAMP timestamp, Windows.Foundation.IMemoryBuffer buffer, UInt32 byteOffset, UInt8 byteLength);
 
         // These methods will send multiple messages. The words must be ordered correctly
-        // so they are in order from word0 to wordn for each message.
+        // so they are in order from word-0 to word-n for each message.
         MidiSendMessageResult SendMessagesWordList(MIDI_TIMESTAMP timestamp, IVectorView<UInt32> words);
         MidiSendMessageResult SendMessagesWordArray(MIDI_TIMESTAMP timestamp, UInt32[] words);
 
+        // a convenience for sending multiple packets. We can do this because these are self-describing
+        MidiSendMessageResult SendMessagePacketList(IVectorView<IMidiUniversalPacket> messages);
     }
+
+
+
 
 
 }

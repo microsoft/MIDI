@@ -19,6 +19,7 @@
 #include <winrt/Windows.Storage.Streams.h>
 
 #include <string>
+#include <iterator>
 #include <strsafe.h>
 #include <wrl\module.h>
 #include <wrl\event.h>
@@ -50,7 +51,6 @@
 // AbstractionUtilities
 #include "endpoint_data_helpers.h"
 #include "swd_property_builders.h"
-#include "swd_property_helpers.h"
 #include "json_helpers.h"
 
 // Main definitions

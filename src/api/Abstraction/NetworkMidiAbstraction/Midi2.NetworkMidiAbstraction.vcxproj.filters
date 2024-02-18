@@ -36,6 +36,12 @@
     <ClCompile Include="Midi2.NetworkMidiOut.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Midi2.NetworkMidiConfigurationManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AbstractionState.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Midi2NetworkMidiAbstraction.idl">
@@ -77,6 +83,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="abstraction_defs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Midi2.NetworkMidiConfigurationManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AbstractionState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkDeviceDefinition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkDeviceTable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkDevice.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

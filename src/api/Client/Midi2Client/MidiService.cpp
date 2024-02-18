@@ -337,7 +337,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         auto result = winrt::make_self<implementation::MidiServiceLoopbackEndpointCreationResult>();
 
         // todo: grab this from a constant
-        winrt::hstring loopbackDeviceAbstractionId = L"{942BF02D-93C0-4EA8-B03E-D51156CA75E1}";
+        winrt::guid loopbackDeviceAbstractionId = internal::StringToGuid(L"{942BF02D-93C0-4EA8-B03E-D51156CA75E1}");
 
 
         json::JsonObject wrapperObject;
@@ -357,7 +357,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         //   {
         //     "create"
         //     {
-        //        associationGuid:
+        //        "{associationGuid}":
         //        {
         //            "endpointA":
         //            {
@@ -374,34 +374,38 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         // build Endpoint A
 
-        internal::JsonGetWStringProperty(
+        internal::JsonSetWStringProperty(
             endpointDeviceAObject,
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY,
             endpointDefinitionA.Name().c_str());
 
-        internal::JsonGetWStringProperty(
+        internal::JsonSetWStringProperty(
             endpointDeviceAObject,
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY,
             endpointDefinitionA.Description().c_str());
 
-        internal::JsonGetWStringProperty(
+        internal::JsonSetWStringProperty(
             endpointDeviceAObject,
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY,
             endpointDefinitionA.UniqueId().c_str());
 
+
+        //MIDI_CONFIG_JSON_ENDPOINT_COMMON_MANUFACTURER_PROPERTY
+
+
         // build Endpoint B
 
-        internal::JsonGetWStringProperty(
+        internal::JsonSetWStringProperty(
             endpointDeviceBObject,
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY,
             endpointDefinitionB.Name().c_str());
 
-        internal::JsonGetWStringProperty(
+        internal::JsonSetWStringProperty(
             endpointDeviceBObject,
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY,
             endpointDefinitionB.Description().c_str());
 
-        internal::JsonGetWStringProperty(
+        internal::JsonSetWStringProperty(
             endpointDeviceBObject,
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY,
             endpointDefinitionB.UniqueId().c_str());
@@ -436,7 +440,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         internal::JsonSetObjectProperty(
             topLevelTransportPluginSettingsObject,
-            loopbackDeviceAbstractionId.c_str(),
+            internal::GuidToString(loopbackDeviceAbstractionId),
             abstractionObject);
 
 
@@ -449,11 +453,59 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         // send it up
 
+        json::JsonObject responseObject = InternalSendConfigurationJsonAndGetResponse(loopbackDeviceAbstractionId, wrapperObject);
 
+        // parse the results
+        auto successResult = internal::JsonGetBoolProperty(responseObject, MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY, false);
+
+        if (successResult)
+        {
+            internal::LogInfo(__FUNCTION__, L"JSON payload indicates success");
+
+            auto deviceIdA = internal::JsonGetWStringProperty(responseObject, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_A_ID_KEY, L"");
+            auto deviceIdB = internal::JsonGetWStringProperty(responseObject, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_B_ID_KEY, L"");
+
+            if (deviceIdA.empty())
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Unexpected empty Device Id A");
+
+                return *result;
+            }
+
+            if (deviceIdB.empty())
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Unexpected empty Device Id B");
+
+                return *result;
+            }
+
+
+            // update the response object with the new ids
+
+            result->SetSuccess(associationId, deviceIdA.c_str(), deviceIdB.c_str());
+
+        }
+        else
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Device creation failed (payload has false success value)");
+        }
+
+        return *result;
+    }
+
+
+    _Use_decl_annotations_
+    json::JsonObject MidiService::InternalSendConfigurationJsonAndGetResponse(
+        winrt::guid const& abstractionId, json::JsonObject const& configObject) noexcept
+    {
         auto iid = __uuidof(IMidiAbstractionConfigurationManager);
         winrt::com_ptr<IMidiAbstractionConfigurationManager> configManager;
 
         auto serviceAbstraction = winrt::create_instance<IMidiAbstraction>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
+
+        // default to failed
+        auto response = internal::BuildConfigurationResponseObject(false);
+
 
         if (serviceAbstraction)
         {
@@ -461,126 +513,153 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             internal::LogInfo(__FUNCTION__, L"config manager activate call completed");
 
-
             if (FAILED(activateConfigManagerResult) || configManager == nullptr)
             {
-                internal::LogGeneralError(__FUNCTION__, L"Failed to create device. Config manager is null or call failed.");
+                internal::LogGeneralError(__FUNCTION__, L"Config manager is null or call failed.");
 
-                // return a fail result
-                return *result;
+                return response;
             }
 
-            internal::LogInfo(__FUNCTION__, L"config manager activate call SUCCESS");
+            internal::LogInfo(__FUNCTION__, L"Config manager activate call SUCCESS");
 
-            auto initializeResult = configManager->Initialize(internal::StringToGuid(loopbackDeviceAbstractionId.c_str()), nullptr);
-
+            auto initializeResult = configManager->Initialize(abstractionId, nullptr);
 
             if (FAILED(initializeResult))
             {
-                internal::LogGeneralError(__FUNCTION__, L"failed to initialize config manager");
+                internal::LogGeneralError(__FUNCTION__, L"Failed to initialize config manager");
 
                 // return a fail result
-                return *result;
+                return response;
             }
 
-            CComBSTR response{};
-            response.Empty();
+            CComBSTR responseString{};
+            responseString.Empty();
 
-            auto jsonPayload = wrapperObject.Stringify();
+            auto jsonPayload = configObject.Stringify();
+
+            // send up the payload
 
             internal::LogInfo(__FUNCTION__, jsonPayload.c_str());
-            auto configUpdateResult = configManager->UpdateConfiguration(jsonPayload.c_str(), false, &response);
+            auto configUpdateResult = configManager->UpdateConfiguration(jsonPayload.c_str(), false, &responseString);
+
+            internal::LogInfo(__FUNCTION__, responseString);
+
 
             if (FAILED(configUpdateResult))
             {
                 internal::LogGeneralError(__FUNCTION__, L"Failed to configure endpoint");
 
                 // return a failed result
-                return *result;
-            }
-
-            internal::LogInfo(__FUNCTION__, L"configManager->UpdateConfiguration success");
-
-            json::JsonObject responseObject;
-
-            if (!internal::JsonObjectFromBSTR(&response, responseObject))
-            {
-                internal::LogGeneralError(__FUNCTION__, L"Failed to read json response object from loopback device creation");
-
-                // return a failed result
-                return *result;
-            }
-
-            internal::LogInfo(__FUNCTION__, L"JsonObjectFromBSTR success");
-
-
-
-
-            // check for actual success
-            auto successResult = internal::JsonGetBoolProperty(responseObject, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_SUCCESS_PROPERTY_KEY, false);
-
-            if (successResult)
-            {
-                internal::LogInfo(__FUNCTION__, L"JSON payload indicates success");
-
-
-                // TODO: A and B are simple properties here. We don't need
-                // an array because we create one at a time through the API. And when
-                // created through the config file, there's no response object to 
-                // worry about.
-
-                auto deviceIdA = internal::JsonGetWStringProperty(responseObject, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_A_ID_KEY, L"");
-                auto deviceIdB = internal::JsonGetWStringProperty(responseObject, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_B_ID_KEY, L"");
-
-                if (deviceIdA.empty())
-                {
-                    internal::LogGeneralError(__FUNCTION__, L"Unexpected empty Device Id A");
-
-                    return *result;
-                }
-
-                if (deviceIdB.empty())
-                {
-                    internal::LogGeneralError(__FUNCTION__, L"Unexpected empty Device Id B");
-
-                    return *result;
-                }
-
-
-                // update the response object with the new ids
-
-                result->SetSuccess(associationId, deviceIdA.c_str(), deviceIdB.c_str());
+                return response;
             }
             else
             {
-                internal::LogGeneralError(__FUNCTION__, L"Loopback device creation failed (payload has false success value)");
+                json::JsonObject responseObject;
 
-                return nullptr;
+                if (internal::JsonObjectFromBSTR(&responseString, responseObject))
+                {
+                    return responseObject;
+                }
+                else
+                {
+                    // failed
+
+                    internal::LogGeneralError(__FUNCTION__, L"Unable to read response object from BSTR");
+
+                    return response;
+                }
             }
-
-            internal::LogInfo(__FUNCTION__, L"Loopback device creation worked.");
-
         }
         else
         {
             // failed
             internal::LogGeneralError(__FUNCTION__, L"Failed to create service abstraction");
 
+            return response;
         }
 
-        return *result;
     }
+
 
     _Use_decl_annotations_
     bool MidiService::RemoveTemporaryLoopbackEndpoints(_In_ winrt::guid const& associationId) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Enter");
 
-        UNREFERENCED_PARAMETER(associationId);
-        // TODO:
+        // todo: grab this from a constant
+        winrt::guid loopbackDeviceAbstractionId = internal::StringToGuid(L"{942BF02D-93C0-4EA8-B03E-D51156CA75E1}");
 
-        return false;
+        json::JsonObject wrapperObject;
+        json::JsonObject topLevelTransportPluginSettingsObject;
+        json::JsonObject abstractionObject;
+        json::JsonArray endpointDeletionArray;
+        
+        internal::LogInfo(__FUNCTION__, L" setting json properties");
+
+        // "endpointTransportPluginSettings":
+        // {
+        //   loopback endpoint abstraction guid :
+        //   {
+        //     "remove"
+        //     {
+        //        "{associationGuid}"
+        //     }
+        //   }
+        // }
+
+
+        // create the deletion node with the association object as the child property
+
+        json::JsonValue endpointDeletionAssociationId = json::JsonValue::CreateStringValue(internal::GuidToString(associationId).c_str());
+
+        endpointDeletionArray.Append(endpointDeletionAssociationId);
+
+        // create the abstraction object with the child creation node
+
+        internal::JsonSetArrayProperty(
+            abstractionObject,
+            MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICES_REMOVE_KEY,
+            endpointDeletionArray);
+
+        // create the main node
+
+        internal::JsonSetObjectProperty(
+            topLevelTransportPluginSettingsObject,
+            internal::GuidToString(loopbackDeviceAbstractionId),
+            abstractionObject);
+
+
+        // wrap it all up so the json is valid
+
+        internal::JsonSetObjectProperty(
+            wrapperObject,
+            MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT,
+            topLevelTransportPluginSettingsObject);
+
+        // send it up
+
+        internal::LogInfo(__FUNCTION__, L"configManager->UpdateConfiguration success");
+
+        json::JsonObject responseObject = InternalSendConfigurationJsonAndGetResponse(loopbackDeviceAbstractionId, wrapperObject);
+
+
+
+        // parse the results
+        auto successResult = internal::JsonGetBoolProperty(responseObject, MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY, false);
+
+        if (successResult)
+        {
+            internal::LogInfo(__FUNCTION__, L"JSON payload indicates success");
+        }
+        else
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Loopback device removal failed (payload has false success value)");
+        }
+
+        return successResult;
     }
+
+
 
     _Use_decl_annotations_
     midi2::MidiServiceConfigurationResponse MidiService::UpdateTransportPluginConfiguration(
@@ -588,10 +667,42 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         internal::LogInfo(__FUNCTION__, L"Enter");
         
-        UNREFERENCED_PARAMETER(configurationUpdate);
-        // TODO:
-
+        // this initializes to a failure state, so we can just return it when we have a fail
         auto response = winrt::make_self<implementation::MidiServiceConfigurationResponse>();
+
+
+        if (configurationUpdate != nullptr)
+        {
+            if (configurationUpdate.SettingsJson() != nullptr)
+            {
+                json::JsonObject responseJsonObject = InternalSendConfigurationJsonAndGetResponse(
+                    configurationUpdate.TransportId(),
+                    configurationUpdate.SettingsJson()
+                );
+
+
+
+
+                // TODO: Process return result
+
+
+
+
+            }
+            else
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Configuration object SettingsJson is null");
+
+            }
+
+            // TODO: Process the return object
+
+        }
+        else
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Configuration object is null");
+
+        }
 
         return *response;
 
@@ -604,9 +715,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
         internal::LogInfo(__FUNCTION__, L"Enter");
         
         UNREFERENCED_PARAMETER(configurationUpdate);
-        // TODO:
-
+        // initializes to a failed value
         auto response = winrt::make_self<implementation::MidiServiceConfigurationResponse>();
+
+
+
+
+        // TODO: Implement this in service and API
+
+
+
+
 
         return *response;
     }

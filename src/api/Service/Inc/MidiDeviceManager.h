@@ -98,13 +98,14 @@ public:
         _In_ PCWSTR,
         _In_ BOOL,
         _In_ MidiFlow,
+        _In_ PMIDIENDPOINTCOMMONPROPERTIES,
         _In_ ULONG,
         _In_ ULONG,
         _In_ PVOID,
         _In_ PVOID,
         _In_ PVOID,
         _Out_writes_opt_z_(CreatedSwDeviceInterfaceIdCharCount) PWSTR CreatedDeviceInterfaceId,
-        _In_ ULONG CreatedSwDeviceInterfaceIdCharCount
+        _In_ ULONG CreatedSwDeviceInterfaceIdWCharCount
     );
 
     STDMETHOD(DeactivateEndpoint)(_In_ PCWSTR);
@@ -142,6 +143,7 @@ public:
     //TODO: Method to update the properties (using SwDevicePropertySet and an array of props) for a device by its Id
 
 private:
+
 
     HRESULT ActivateEndpointInternal(
         _In_ PCWSTR,

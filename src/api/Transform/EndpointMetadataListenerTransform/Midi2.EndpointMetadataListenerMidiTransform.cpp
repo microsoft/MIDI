@@ -6,15 +6,11 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-
 #include "pch.h"
-
 
 
 DEVPROPKEY FunctionBlockPropertyKeyFromNumber(_In_ uint8_t functionBlockNumber)
 {
-    OutputDebugString(L"" __FUNCTION__);
-
     DEVPROPKEY key{};
     GUID propertyId{};
 
@@ -36,8 +32,6 @@ DEVPROPKEY FunctionBlockPropertyKeyFromNumber(_In_ uint8_t functionBlockNumber)
 
 DEVPROPKEY FunctionBlockNamePropertyKeyFromNumber(_In_ uint8_t functionBlockNumber)
 {
-    OutputDebugString(L"" __FUNCTION__);
-
     DEVPROPKEY key{};
     GUID propertyId{};
 
@@ -73,10 +67,6 @@ CMidi2EndpointMetadataListenerMidiTransform::Initialize(
     UNREFERENCED_PARAMETER(creationParams);
     UNREFERENCED_PARAMETER(mmcssTaskId);
 
-
-    OutputDebugString(L"" __FUNCTION__ " Start up, Provided device id:");
-    OutputDebugString(deviceId);
-
     TraceLoggingWrite(
         MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
         __FUNCTION__,
@@ -94,6 +84,20 @@ CMidi2EndpointMetadataListenerMidiTransform::Initialize(
     m_deviceInstanceId = deviceId;
     m_context = context;
 
+
+    std::thread workerThread(
+        &CMidi2EndpointMetadataListenerMidiTransform::QueueWorker,
+        this);
+
+    // TODO: may need to set thread priority
+    //SetThreadPriority(workerThread.native_handle(), ... );
+
+    m_queueWorkerThread = std::move(workerThread);
+
+    // start up the worker thread
+    m_queueWorkerThread.detach();
+
+
     return S_OK;
 }
 
@@ -107,19 +111,69 @@ CMidi2EndpointMetadataListenerMidiTransform::Cleanup()
         TraceLoggingPointer(this, "this")
     );
 
-    try
-    {
-        OutputDebugString(L"" __FUNCTION__ " Shut down time");
+    m_continueProcessing = false;
+    m_messageProcessorWakeup.SetEvent();
 
-        return S_OK;
-    }
-    catch (...)
-    {
-        OutputDebugString(L"" __FUNCTION__ " Exception cleaning up");
+    // join the worker thread and wait for it to end
+    if (m_queueWorkerThread.joinable())
+        m_queueWorkerThread.join();
 
-        // TODO: Log
-        return S_OK;    // we don't care when cleaning up
+
+
+    return S_OK;
+
+}
+
+
+#define MIDI_ENDPOINT_METADATA_LISTENER_THREAD_SLEEP_DURATION_MS 10000
+
+void CMidi2EndpointMetadataListenerMidiTransform::QueueWorker()
+{
+    TraceLoggingWrite(
+        MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Entering Worker", "message")
+    );
+
+    while (m_continueProcessing)
+    {
+        // sleep if the queue is empty
+        if (m_workQueue.size() == 0)
+        {
+            // we're in a loop. Before sleeping, check to 
+            // see if we're signaled from before
+            if (m_messageProcessorWakeup.is_signaled())
+            {
+                m_messageProcessorWakeup.ResetEvent();
+            }
+
+            m_messageProcessorWakeup.wait(MIDI_ENDPOINT_METADATA_LISTENER_THREAD_SLEEP_DURATION_MS);
+        }
+
+        // actually process any data we have
+        while (m_continueProcessing && m_workQueue.size() > 0)
+        {
+            m_queueMutex.lock();
+
+            auto ump = m_workQueue.front();
+            m_workQueue.pop();
+
+            m_queueMutex.unlock();
+
+            ProcessStreamMessage(ump);
+        }
+
     }
+
+    TraceLoggingWrite(
+        MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exiting Worker", "message")
+    );
 }
 
 
@@ -133,8 +187,6 @@ CMidi2EndpointMetadataListenerMidiTransform::SendMidiMessage(
     UINT size,
     LONGLONG timestamp)
 {
- //   OutputDebugString(L"" __FUNCTION__);
-
     // TODO: This really should have a worker thread doing the message processing
     // because we don't want to add any latency or jitter here. This prototype will
     // be all in-line, however.
@@ -147,7 +199,10 @@ CMidi2EndpointMetadataListenerMidiTransform::SendMidiMessage(
         m_callback->Callback(data, size, timestamp, m_context);
     }
 
-    if (data != nullptr && size == UMP128_BYTE_COUNT)
+
+    // now that we're back from the callback, handle the message
+
+    if (size == UMP128_BYTE_COUNT)
     {
         internal::PackedUmp128 ump;
 
@@ -157,11 +212,11 @@ CMidi2EndpointMetadataListenerMidiTransform::SendMidiMessage(
 
             if (internal::GetUmpMessageTypeFromFirstWord(ump.word0) == 0xF)
             {
-                OutputDebugString(__FUNCTION__ L" - Type F message. About to process.");
+                m_queueMutex.lock();
+                m_workQueue.push(ump);
+                m_queueMutex.unlock();
 
-                // TODO: this should get thrown into a work queue and processed out of band
-
-                ProcessStreamMessage(ump, timestamp);
+                m_messageProcessorWakeup.SetEvent();
             }
             else
             {
@@ -170,13 +225,13 @@ CMidi2EndpointMetadataListenerMidiTransform::SendMidiMessage(
         }
         else
         {
-            // couldn't fill the UMP. Shouldn't happen since we pre-validate
-            return E_FAIL;
+            // couldn't fill the UMP. Shouldn't happen since we pre-validate. Just ignore.
+            //return E_FAIL;
         }
     }
     else
     {
-        // Either null (hopefully not) or not a UMP128 so can't be a stream message. Fall out quickly
+        // Not a UMP128 so can't be a stream message. Fall out quickly
     }
 
     return S_OK;
@@ -187,9 +242,16 @@ CMidi2EndpointMetadataListenerMidiTransform::SendMidiMessage(
 HRESULT
 CMidi2EndpointMetadataListenerMidiTransform::UpdateEndpointNameProperty()
 {
-    OutputDebugString(L"\n" __FUNCTION__ " endpoint name is: ");
-    OutputDebugString(m_endpointName.c_str());
-    OutputDebugString(L"\n");
+    TraceLoggingWrite(
+        MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+    //OutputDebugString(L"\n" __FUNCTION__ " endpoint name is: ");
+    //OutputDebugString(m_endpointName.c_str());
+    //OutputDebugString(L"\n");
 
     auto cleanedValue{ internal::TrimmedWStringCopy(m_endpointName) + L"\0" };
 
@@ -210,9 +272,17 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateEndpointNameProperty()
 HRESULT
 CMidi2EndpointMetadataListenerMidiTransform::UpdateEndpointProductInstanceIdProperty()
 {
-    OutputDebugString(L"\n" __FUNCTION__ " product instance id is: '");
-    OutputDebugString(m_productInstanceId.c_str());
-    OutputDebugString(L"'\n");
+    TraceLoggingWrite(
+        MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
+    //OutputDebugString(L"\n" __FUNCTION__ " product instance id is: '");
+    //OutputDebugString(m_productInstanceId.c_str());
+    //OutputDebugString(L"'\n");
 
     std::wstring cleanedValue{ internal::TrimmedWStringCopy(m_productInstanceId) + L"\0" };
 
@@ -234,9 +304,16 @@ _Use_decl_annotations_
 HRESULT
 CMidi2EndpointMetadataListenerMidiTransform::UpdateFunctionBlockNameProperty(uint8_t functionBlockNumber, std::wstring name)
 {
-    OutputDebugString(L"\n" __FUNCTION__ " function block name is: ");
-    OutputDebugString(name.c_str());
-    OutputDebugString(L"\n");
+    TraceLoggingWrite(
+        MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+    //OutputDebugString(L"\n" __FUNCTION__ " function block name is: ");
+    //OutputDebugString(name.c_str());
+    //OutputDebugString(L"\n");
 
     std::wstring cleanedValue{ internal::TrimmedWStringCopy(name) + L"\0" };
 
@@ -258,7 +335,12 @@ _Use_decl_annotations_
 HRESULT 
 CMidi2EndpointMetadataListenerMidiTransform::UpdateStreamConfigurationProperties(internal::PackedUmp128& endpointStreamConfigurationNotificationMessage)
 {
-    OutputDebugString(L"\n" __FUNCTION__);
+    TraceLoggingWrite(
+        MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
 
     BYTE configuredProtocol = MIDIWORDBYTE3(endpointStreamConfigurationNotificationMessage.word0);
 
@@ -293,7 +375,13 @@ _Use_decl_annotations_
 HRESULT
 CMidi2EndpointMetadataListenerMidiTransform::UpdateDeviceIdentityProperty(internal::PackedUmp128& identityMessage)
 {
-    OutputDebugString(L"\n" __FUNCTION__);
+    TraceLoggingWrite(
+        MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
 
     MidiDeviceIdentityProperty prop;
 
@@ -334,7 +422,12 @@ _Use_decl_annotations_
 HRESULT
 CMidi2EndpointMetadataListenerMidiTransform::UpdateEndpointInfoProperties(internal::PackedUmp128& endpointInfoNotificationMessage)
 {
-    OutputDebugString(L"\n" __FUNCTION__);
+    TraceLoggingWrite(
+        MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
 
     BYTE umpVersionMajor = MIDIWORDBYTE3(endpointInfoNotificationMessage.word0);
     BYTE umpVersionMinor = MIDIWORDBYTE4(endpointInfoNotificationMessage.word0);
@@ -389,7 +482,12 @@ _Use_decl_annotations_
 HRESULT
 CMidi2EndpointMetadataListenerMidiTransform::UpdateFunctionBlockProperty(internal::PackedUmp128& functionBlockInfoNotificationMessage)
 {
-    OutputDebugString(L"" __FUNCTION__);
+    TraceLoggingWrite(
+        MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
 
     MidiFunctionBlockProperty prop;
 
@@ -425,11 +523,14 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateFunctionBlockProperty(interna
 
 _Use_decl_annotations_
 HRESULT 
-CMidi2EndpointMetadataListenerMidiTransform::ProcessStreamMessage(internal::PackedUmp128 ump, LONGLONG timestamp)
+CMidi2EndpointMetadataListenerMidiTransform::ProcessStreamMessage(internal::PackedUmp128 ump)
 {
-    OutputDebugString(L"\n" __FUNCTION__);
-
-    UNREFERENCED_PARAMETER(timestamp);
+    TraceLoggingWrite(
+        MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
 
     auto messageStatus = internal::GetStatusFromStreamMessageFirstWord(ump.word0);
     
@@ -473,7 +574,12 @@ CMidi2EndpointMetadataListenerMidiTransform::ProcessStreamMessage(internal::Pack
 
 std::wstring ParseStreamTextMessage(_In_ internal::PackedUmp128& message)
 {
-    OutputDebugString(L"\n" __FUNCTION__);
+    TraceLoggingWrite(
+        MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO)
+    );
+
 
     // check the status to know which byte is first to be grabbed
 
@@ -532,7 +638,13 @@ _Use_decl_annotations_
 HRESULT
 CMidi2EndpointMetadataListenerMidiTransform::HandleFunctionBlockNameMessage(internal::PackedUmp128& functionBlockNameMessage)
 {
-    OutputDebugString(L"\n" __FUNCTION__);
+    TraceLoggingWrite(
+        MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
 
     uint8_t functionBlockNumber = MIDIWORDBYTE3(functionBlockNameMessage.word0);
 
@@ -591,7 +703,12 @@ _Use_decl_annotations_
 HRESULT
 CMidi2EndpointMetadataListenerMidiTransform::HandleEndpointNameMessage(internal::PackedUmp128& endpointNameMessage)
 {
-    OutputDebugString(L"\n" __FUNCTION__);
+    TraceLoggingWrite(
+        MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
 
     switch (internal::GetFormFromStreamMessageFirstWord(endpointNameMessage.word0))
     {
@@ -642,7 +759,12 @@ _Use_decl_annotations_
 HRESULT
 CMidi2EndpointMetadataListenerMidiTransform::HandleProductInstanceIdMessage(internal::PackedUmp128& productInstanceIdMessage)
 {
-    OutputDebugString(L"\n" __FUNCTION__);
+    TraceLoggingWrite(
+        MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
 
     switch (internal::GetFormFromStreamMessageFirstWord(productInstanceIdMessage.word0))
     {

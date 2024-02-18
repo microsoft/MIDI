@@ -16,7 +16,7 @@
 // TODO: Names should be moved to .rc for localization
 
 #define TRANSPORT_PARENT_ID L"MIDIU_BLE1_TRANSPORT"
-#define TRANSPORT_PARENT_DEVICE_NAME L"MIDI 1.0 Bluetooth Endpoints"
+#define TRANSPORT_PARENT_DEVICE_NAME L"MIDI 1.0 Bluetooth Devices"
 
 
 #define LOOPBACK_PARENT_ROOT L"HTREE\\ROOT\\0"

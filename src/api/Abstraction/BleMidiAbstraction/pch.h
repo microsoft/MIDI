@@ -69,7 +69,6 @@ namespace json = ::winrt::Windows::Data::Json;
 // AbstractionUtilities
 #include "endpoint_data_helpers.h"
 #include "swd_property_builders.h"
-#include "swd_property_helpers.h"
 #include "json_helpers.h"
 
 #include "MidiDefs.h"
@@ -81,6 +80,8 @@ namespace json = ::winrt::Windows::Data::Json;
 
 namespace internal = ::Windows::Devices::Midi2::Internal;
 
+class CMidi2BluetoothMidiConfigurationManager;
+class CMidi2BluetoothMidiEndpointManager;
 
 #include "strsafe.h"
 
@@ -99,4 +100,5 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 #include "Midi2.BluetoothMidiAbstraction.h"
 #include "Midi2.BluetoothMidiBiDi.h"
 #include "Midi2.BluetoothMidiEndpointManager.h"
+#include "Midi2.BluetoothMidiConfigurationManager.h"
 

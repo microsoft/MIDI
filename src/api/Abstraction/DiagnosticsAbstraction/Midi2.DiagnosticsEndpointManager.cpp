@@ -135,44 +135,6 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(
     std::wstring friendlyName = internal::CalculateEndpointDevicePrimaryName(endpointName, L"", L"");
 
     // all the standard properties we define for endpoints
-    if (internal::AddStandardEndpointProperties(
-        interfaceDeviceProperties,
-        m_TransportAbstractionId,
-        MidiEndpointDevicePurposePropertyValue::DiagnosticLoopback,
-        friendlyName,
-        mnemonic,
-        endpointName,
-        endpointDescription,
-        L"",
-        L"",
-        UniqueId,
-        MidiDataFormat::MidiDataFormat_UMP,
-        MIDI_PROP_NATIVEDATAFORMAT_UMP,
-        multiClient,
-        requiresMetadataHandler,
-        generateIncomingTimestamps
-    ))
-    {
-        // all good. Add additional properties
-        // additional properties for this abstraction
-
-        // we clear this because it's not used for this abstraction. 
-        interfaceDeviceProperties.push_back(internal::BuildEmptyDevProperty(PKEY_MIDI_AssociatedUMP));
-    }
-    else
-    {
-        // unable to build properties
-
-        TraceLoggingWrite(
-            MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
-            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Unable to build standard endpoint properties list", "message")
-        );
-
-        return E_FAIL;
-    }
 
     DEVPROPERTY deviceDevProperties[] = {
         {{DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
@@ -193,10 +155,28 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(
     wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
 
 
+    MIDIENDPOINTCOMMONPROPERTIES commonProperties;
+    commonProperties.AbstractionLayerGuid = m_TransportAbstractionId;
+    commonProperties.EndpointPurpose = MidiEndpointDevicePurposePropertyValue::DiagnosticLoopback;
+    commonProperties.FriendlyName = friendlyName.c_str();
+    commonProperties.TransportMnemonic = mnemonic.c_str();
+    commonProperties.TransportSuppliedEndpointName = endpointName.c_str();
+    commonProperties.TransportSuppliedEndpointDescription = endpointDescription.c_str();
+    commonProperties.UserSuppliedEndpointName = L"";
+    commonProperties.UserSuppliedEndpointDescription = L"";
+    commonProperties.UniqueIdentifier = UniqueId.c_str();
+    commonProperties.SupportedDataFormats = MidiDataFormat::MidiDataFormat_UMP;
+    commonProperties.NativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
+    commonProperties.SupportsMultiClient = multiClient;
+    commonProperties.RequiresMetadataHandler = requiresMetadataHandler;
+    commonProperties.GenerateIncomingTimestamps = generateIncomingTimestamps;
+
+
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
         (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
         true,                                                   // UMP-only
         Flow,                                                   // MIDI Flow
+        &commonProperties,
         (ULONG)interfaceDeviceProperties.size(),
         ARRAYSIZE(deviceDevProperties),
         (PVOID)interfaceDeviceProperties.data(),
@@ -204,7 +184,6 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(
         (PVOID)&createInfo,
         (LPWSTR)&newDeviceInterfaceId,
         deviceInterfaceIdMaxSize));
-
 
     // now delete all the properties that have been discovered in-protocol
     // we have to do this because they end up cached by PNP and come back
@@ -256,47 +235,6 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(
     // no user or in-protocol data in this case
     std::wstring friendlyName = internal::CalculateEndpointDevicePrimaryName(endpointName, L"", L"");
 
-    // all the standard properties we define for endpoints
-    if (internal::AddStandardEndpointProperties(
-        interfaceDeviceProperties,
-        m_TransportAbstractionId,
-        MidiEndpointDevicePurposePropertyValue::DiagnosticPing,
-        friendlyName,
-        mnemonic,
-        endpointName,
-        endpointDescription,
-        L"",
-        L"",
-        UniqueId,
-        MidiDataFormat::MidiDataFormat_UMP,
-        MIDI_PROP_NATIVEDATAFORMAT_UMP,
-        multiClient,
-        requiresMetadataHandler,
-        generateIncomingTimestamps
-    ))
-    {
-        // all good. Add additional properties
-        // additional properties for this abstraction
-
-        // we clear this because it's not used for this abstraction. 
-        interfaceDeviceProperties.push_back(internal::BuildEmptyDevProperty(PKEY_MIDI_AssociatedUMP));
-
-    }
-    else
-    {
-        // unable to build properties
-
-        TraceLoggingWrite(
-            MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
-            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Unable to build standard endpoint properties list", "message")
-        );
-
-        return E_FAIL;
-    }
-
     DEVPROPERTY deviceDevProperties[] = {
         {{DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue},
@@ -315,10 +253,27 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(
     const ULONG deviceInterfaceIdMaxSize = 255;
     wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
 
+    MIDIENDPOINTCOMMONPROPERTIES commonProperties;
+    commonProperties.AbstractionLayerGuid = m_TransportAbstractionId;
+    commonProperties.EndpointPurpose = MidiEndpointDevicePurposePropertyValue::DiagnosticPing;
+    commonProperties.FriendlyName = friendlyName.c_str();
+    commonProperties.TransportMnemonic = mnemonic.c_str();
+    commonProperties.TransportSuppliedEndpointName = endpointName.c_str();
+    commonProperties.TransportSuppliedEndpointDescription = endpointDescription.c_str();
+    commonProperties.UserSuppliedEndpointName = L"";
+    commonProperties.UserSuppliedEndpointDescription = L"";
+    commonProperties.UniqueIdentifier = UniqueId.c_str();
+    commonProperties.SupportedDataFormats = MidiDataFormat::MidiDataFormat_UMP;
+    commonProperties.NativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
+    commonProperties.SupportsMultiClient = multiClient;
+    commonProperties.RequiresMetadataHandler = requiresMetadataHandler;
+    commonProperties.GenerateIncomingTimestamps = generateIncomingTimestamps;
+
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
         m_parentDeviceId.c_str(),                               // parent instance Id
         true,                                                   // UMP-only
         Flow,                                                   // MIDI Flow
+        &commonProperties,
         (ULONG)interfaceDeviceProperties.size(),
         ARRAYSIZE(deviceDevProperties),
         (PVOID)interfaceDeviceProperties.data(),

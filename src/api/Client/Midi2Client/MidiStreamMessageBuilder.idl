@@ -24,14 +24,14 @@ namespace Windows.Devices.Midi2
     [MIDI_API_CONTRACT(1)]
     static runtimeclass MidiStreamMessageBuilder
     {
-        static MidiMessage128 BuildEndpointDiscoveryMessage(
+        static IMidiUniversalPacket BuildEndpointDiscoveryMessage(
             MIDI_TIMESTAMP timestamp,
             UInt8 umpVersionMajor,
             UInt8 umpVersionMinor,
             MidiEndpointDiscoveryFilterFlags requestFlags
             );
 
-        static MidiMessage128 BuildEndpointInformationNotificationMessage(
+        static IMidiUniversalPacket BuildEndpointInformationNotificationMessage(
             MIDI_TIMESTAMP timestamp,
             UInt8 umpVersionMajor,
             UInt8 umpVersionMinor,
@@ -43,7 +43,7 @@ namespace Windows.Devices.Midi2
             Boolean supportsSendingJitterReductionTimestamps
             );
 
-        static MidiMessage128 BuildDeviceIdentityNotificationMessage(
+        static IMidiUniversalPacket BuildDeviceIdentityNotificationMessage(
             MIDI_TIMESTAMP timestamp,
             UInt8 deviceManufacturerSysExIdByte1,
             UInt8 deviceManufacturerSysExIdByte2,
@@ -58,12 +58,12 @@ namespace Windows.Devices.Midi2
             UInt8 softwareRevisionLevelByte4
             );
 
-        static IVector<MidiMessage128> BuildEndpointNameNotificationMessages(
+        static IVector<IMidiUniversalPacket> BuildEndpointNameNotificationMessages(
             MIDI_TIMESTAMP timestamp,
             String name
             );
 
-        static IVector<MidiMessage128> BuildProductInstanceIdNotificationMessages(
+        static IVector<IMidiUniversalPacket> BuildProductInstanceIdNotificationMessages(
             MIDI_TIMESTAMP timestamp,
             String productInstanceId
             );
@@ -71,24 +71,24 @@ namespace Windows.Devices.Midi2
 
 
         static String ParseEndpointNameNotificationMessages(
-            IVector<MidiMessage128> messages
+            IVector<IMidiUniversalPacket> messages
         );
 
         static String ParseProductInstanceIdNotificationMessages(
-            IVector<MidiMessage128> messages
+            IVector<IMidiUniversalPacket> messages
         );
 
 
 
 
-        static MidiMessage128 BuildStreamConfigurationRequestMessage(
+        static IMidiUniversalPacket BuildStreamConfigurationRequestMessage(
             MIDI_TIMESTAMP timestamp,
             UInt8 protocol,
             Boolean expectToReceiveJRTimestamps,
             Boolean requestToSendJRTimestamps
             );
 
-        static MidiMessage128 BuildStreamConfigurationNotificationMessage(
+        static IMidiUniversalPacket BuildStreamConfigurationNotificationMessage(
             MIDI_TIMESTAMP timestamp,
             UInt8 protocol,
             Boolean confirmationWillReceiveJRTimestamps,
@@ -98,13 +98,13 @@ namespace Windows.Devices.Midi2
 
         // Function blocks
 
-        static MidiMessage128 BuildFunctionBlockDiscoveryMessage(
+        static IMidiUniversalPacket BuildFunctionBlockDiscoveryMessage(
             MIDI_TIMESTAMP timestamp,
             UInt8 functionBlockNumber,
             MidiFunctionBlockDiscoveryFilterFlags requestFlags
             );
 
-        static MidiMessage128 BuildFunctionBlockInfoNotificationMessage(
+        static IMidiUniversalPacket BuildFunctionBlockInfoNotificationMessage(
             MIDI_TIMESTAMP timestamp,
             Boolean active,
             UInt8 functionBlockNumber,
@@ -117,14 +117,14 @@ namespace Windows.Devices.Midi2
             UInt8 maxNumberSysEx8Streams
             );
 
-        static IVector<MidiMessage128> BuildFunctionBlockNameNotificationMessages(
+        static IVector<IMidiUniversalPacket> BuildFunctionBlockNameNotificationMessages(
             MIDI_TIMESTAMP timestamp,
             UInt8 functionBlockNumber,
             String name
             );
 
         static String ParseFunctionBlockNameNotificationMessages(
-            IVector<MidiMessage128> messages
+            IVector<IMidiUniversalPacket> messages
             );
 
     };

@@ -11,6 +11,37 @@
 namespace Windows::Devices::Midi2::Internal
 {
     _Use_decl_annotations_
+    void SetConfigurationResponseObjectFail(
+        json::JsonObject& object,
+        std::wstring message)
+    {
+        auto messageVal = json::JsonValue::CreateStringValue(message.c_str());
+        object.SetNamedValue(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY, messageVal);
+
+        auto successVal = json::JsonValue::CreateBooleanValue(false);
+        object.SetNamedValue(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY, messageVal);
+    }
+
+
+
+    _Use_decl_annotations_
+    json::JsonObject BuildConfigurationResponseObject(_In_ bool const success)
+    {
+        // the root object just has a wrapper with a success or fail property. Additional 
+        // properties depend on the specific use case and so are added in those cases.
+
+        json::JsonObject response;
+
+        json::JsonValue successValue = json::JsonValue::CreateBooleanValue(success);
+
+        response.SetNamedValue(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY, successValue);
+
+        return response;
+    }
+
+
+
+    _Use_decl_annotations_
     bool JsonObjectFromBSTR(BSTR* const bstr, json::JsonObject& obj) noexcept
     {
         if (bstr == nullptr) return false;

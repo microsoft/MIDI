@@ -27,5 +27,7 @@ namespace Windows.Devices.Midi2
 
         UInt32 PeekFirstWord();
 
+        IVectorView<UInt32> GetAllWords();
+        UInt8 AppendAllWordsToVector(IVector<UInt32> targetVector);
     };
 }

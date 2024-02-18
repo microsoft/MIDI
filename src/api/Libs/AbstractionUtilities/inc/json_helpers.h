@@ -41,12 +41,16 @@ namespace json = ::winrt::Windows::Data::Json;
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY                          L"name"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY                   L"description"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY                     L"uniqueIdentifier"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_MANUFACTURER_PROPERTY                  L"manufacturer"
 
 
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_NAME_PROPERTY            L"userSuppliedName"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_DESCRIPTION_PROPERTY     L"userSuppliedDescription"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_SMALL_IMAGE_PROPERTY     L"userSuppliedSmallImage"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_LARGE_IMAGE_PROPERTY     L"userSuppliedLargeImage"
+
+#define MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY            L"success"
+#define MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY            L"message"
 
 
 // Virtual MIDI (here because also needed by the client API)
@@ -59,7 +63,6 @@ namespace json = ::winrt::Windows::Data::Json;
 #define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_UNIQUE_ID_MAX_LEN  32
 
 
-#define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_SUCCESS_PROPERTY_KEY          L"success"
 #define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_CREATED_DEVICES_ARRAY_KEY     L"createdDevices"
 #define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_CREATED_ID_PROPERTY_KEY       L"id"
 
@@ -73,7 +76,6 @@ namespace json = ::winrt::Windows::Data::Json;
 #define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_B_KEY                    L"endpointB"
 
 
-#define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_SUCCESS_PROPERTY_KEY         L"success"
 #define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_A_ID_KEY    L"endpointA"
 #define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_B_ID_KEY    L"endpointB"
 
@@ -100,6 +102,11 @@ namespace json = ::winrt::Windows::Data::Json;
 
 namespace Windows::Devices::Midi2::Internal
 {
+    json::JsonObject BuildConfigurationResponseObject(_In_ bool const success);
+
+    void SetConfigurationResponseObjectFail(_In_ json::JsonObject& object, _In_ std::wstring message);
+
+
     bool JsonObjectFromBSTR(_In_ BSTR* const bstr, _Out_ json::JsonObject& obj) noexcept;
 
     bool JsonStringifyObjectToOutParam(_In_ json::JsonObject const& obj, _Out_ BSTR** outParam) noexcept;

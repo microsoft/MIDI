@@ -27,7 +27,7 @@
     <ClInclude Include="inc\swd_property_builders.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\swd_property_helpers.h">
+    <ClInclude Include="inc\swd_shared.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -45,6 +45,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\swd_property_helpers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\swd_shared.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

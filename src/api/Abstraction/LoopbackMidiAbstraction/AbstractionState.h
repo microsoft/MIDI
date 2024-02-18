@@ -31,7 +31,7 @@ public:
         return m_configurationManager;
     }
 
-    std::shared_ptr<MidiEndpointTable> GetEndpointTable()
+    std::shared_ptr<MidiLoopbackDeviceTable> GetEndpointTable()
     {
         return m_endpointTable;
     }
@@ -58,5 +58,5 @@ private:
     wil::com_ptr<CMidi2LoopbackMidiEndpointManager> m_endpointManager;
     wil::com_ptr<CMidi2LoopbackMidiConfigurationManager> m_configurationManager;
 
-    std::shared_ptr<MidiEndpointTable> m_endpointTable = std::make_shared<MidiEndpointTable>();
+    std::shared_ptr<MidiLoopbackDeviceTable> m_endpointTable = std::make_shared<MidiLoopbackDeviceTable>();
 };

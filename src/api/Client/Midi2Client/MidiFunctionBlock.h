@@ -57,7 +57,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool UpdateFromJsonString(_In_ winrt::hstring const json) noexcept;
         winrt::hstring GetJsonString() noexcept;
 
-        bool UpdateFromMessages(_In_ collections::IIterable<midi2::MidiMessage128> messages) noexcept;
+        bool UpdateFromMessages(_In_ collections::IIterable<midi2::IMidiUniversalPacket> messages) noexcept;
 
         bool UpdateFromDevPropertyStruct(_In_ MidiFunctionBlockProperty prop);
 

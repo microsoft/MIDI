@@ -876,7 +876,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         // TODO: Implement SendMessagesWordList
 
-        return midi2::MidiSendMessageResult::Succeeded;
+        return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
     }
 
 
@@ -892,13 +892,63 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         // TODO: Implement SendMessagesWordArray
 
-        return midi2::MidiSendMessageResult::Succeeded;
+        return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
     }
 
 
 
 
+    _Use_decl_annotations_
+    midi2::MidiSendMessageResult MidiEndpointConnection::SendMessagePacketList(
+        collections::IVectorView<IMidiUniversalPacket> const& messages) noexcept
+    {
+        internal::LogInfo(__FUNCTION__, L"Sending message packet list");
 
+        try
+        {
+            if (!m_isOpen)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
+
+                // return failure if we're not open
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
+            }
+
+            if (m_endpointAbstraction)
+            {
+                // right now, we just loop through and send messages. In the future, 
+                // we may optimize this further without changing the API signature
+
+                for (auto const& ump : messages)
+                {
+                    auto result = SendUmpInternal(m_endpointAbstraction, ump);
+
+                    if (!MidiEndpointConnection::SendMessageSucceeded(result))
+                    {
+                        // if any fail, we return immediately.
+
+                        return result;
+                    }
+                }
+
+                return midi2::MidiSendMessageResult::Succeeded;
+            }
+            else
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint is nullptr");
+
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
+            }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            internal::LogHresultError(__FUNCTION__, L"hresult exception sending messages. Service may be unavailable", ex);
+
+
+            // todo: handle buffer full and similar messages
+            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
+        }
+    }
 
 
 

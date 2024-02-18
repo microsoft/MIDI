@@ -1,4 +1,11 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
 
 #pragma once
 
@@ -152,17 +159,6 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_SerialNumber, 53);     // DEVPROP_TYPE_STRING
 
 // Major Known Endpoint Types =====================================================================
 // Starts at 100
-
-// If you change these, you should also update
-// the WinRT MidiEndpointDevicePurpose enum, which is projected through the API
-enum MidiEndpointDevicePurposePropertyValue
-{
-    NormalMessageEndpoint = 0,
-    VirtualDeviceResponder = 100,
-    InBoxGeneralMidiSynth = 400,
-    DiagnosticLoopback = 500,
-    DiagnosticPing = 510,
-};
 
 // Valid values are in MidiEndpointDevicePurposePropertyValue
 #define STRING_PKEY_MIDI_EndpointDevicePurpose MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"100"

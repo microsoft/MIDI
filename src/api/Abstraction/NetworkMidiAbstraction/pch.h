@@ -56,10 +56,14 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "strsafe.h"
 #include "wstring_util.h"
 
+#undef GetObject
+#include <winrt/Windows.Data.Json.h>
+namespace json = ::winrt::Windows::Data::Json;
+
+
 // AbstractionUtilities
 #include "endpoint_data_helpers.h"
 #include "swd_property_builders.h"
-#include "swd_property_helpers.h"
 #include "json_helpers.h"
 
 #include "MidiDefs.h"
@@ -77,11 +81,27 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 #include "mididevicemanagerinterface_i.c"
 #include "mididevicemanagerinterface.h"
 
+#include "MidiEndpointProtocolManagerInterface_i.c"
+#include "MidiEndpointProtocolManagerInterface.h"
+
+
 #include "dllmain.h"
+
+class CMidi2NetworkMidiEndpointManager;
+class CMidi2NetworkMidiConfigurationManager;
+
+#include "abstraction_defs.h"
+
+#include "MidiNetworkDeviceDefinition.h"
+#include "MidiNetworkDevice.h"
+#include "MidiNetworkDeviceTable.h"
+
+#include "AbstractionState.h"
 
 #include "Midi2.NetworkMidiAbstraction.h"
 #include "Midi2.NetworkMidiIn.h"
 #include "Midi2.NetworkMidiOut.h"
 #include "Midi2.NetworkMidiBiDi.h"
 #include "Midi2.NetworkMidiEndpointManager.h"
+#include "Midi2.NetworkMidiConfigurationManager.h"
 

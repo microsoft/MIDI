@@ -33,9 +33,6 @@ CMidi2SchedulerMidiTransform::Initialize(
     UNREFERENCED_PARAMETER(creationParams);
     UNREFERENCED_PARAMETER(mmcssTaskId);
     
-
-    OutputDebugString(L"" __FUNCTION__ " Start up");
-
     TraceLoggingWrite(
         MidiSchedulerTransformTelemetryProvider::Provider(),
         __FUNCTION__,
@@ -80,9 +77,6 @@ CMidi2SchedulerMidiTransform::Cleanup()
 
     try
     {
-        OutputDebugString(L"" __FUNCTION__ " Scheduler shut down time");
-        OutputDebugString((std::wstring(L"" __FUNCTION__ " Abandoned queue size is: ") + std::to_wstring(m_messageQueue.size())).c_str());
-
 
         // tell the thread to quit. Call SetEvent in case it is in a wait
         m_continueProcessing = false;
@@ -239,11 +233,10 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
         }
         else
         {
-            // bypass scheduling for a stable release
-            auto hr = SendMidiMessageNow(data, size, timestamp);
-            return hr;
+            //// bypass scheduling for a stable release
+            //auto hr = SendMidiMessageNow(data, size, timestamp);
+            //return hr;
 
-#if false
             // otherwise, we schedule the message
 
             if (size >= MINIMUM_UMP_DATASIZE && size <= MAXIMUM_UMP_DATASIZE)
@@ -281,8 +274,6 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
                 // invalid data size
                 return HR_E_MIDI_SENDMSG_INVALID_MESSAGE;
             }
-#endif
-
         }
 
  //       return S_OK;

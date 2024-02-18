@@ -15,7 +15,16 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         MidiServiceConfigurationResponse() = default;
 
-        winrt::Windows::Devices::Midi2::MidiServiceConfigurationResponseStatus Status();
-        hstring ResponseJson();
+        midi2::MidiServiceConfigurationResponseStatus Status() noexcept { return m_status; }
+
+        winrt::hstring ResponseJson() { return m_responseJson; }
+
+        void InternalSetStatus(_In_ midi2::MidiServiceConfigurationResponseStatus const status) noexcept { m_status = status; }
+        void InternalSetResponseJson(_In_ winrt::hstring const& responseJson) noexcept { m_responseJson = responseJson; }
+
+    private:
+        midi2::MidiServiceConfigurationResponseStatus m_status{ midi2::MidiServiceConfigurationResponseStatus::ErrorOther };
+
+        winrt::hstring m_responseJson{};
     };
 }

@@ -10,7 +10,7 @@
 #pragma once
 
 
-class MidiEndpointTable
+class MidiLoopbackDeviceTable
 {
 public:
 
@@ -29,6 +29,16 @@ public:
     void SetDevice(std::wstring associationId, MidiLoopbackDevice device)
     {
         m_devices[associationId] = device;
+    }
+
+    void RemoveDevice(std::wstring associationId)
+    {
+        if (auto device = m_devices.find(associationId); device != m_devices.end())
+        {
+            device->second.Cleanup();
+
+            m_devices.erase(associationId);
+        }
     }
 
 

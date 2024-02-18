@@ -32,8 +32,10 @@ void MidiStreamMessageBuilderTests::TestBuildEndpointNameNotificationLong()
     // count the number of messages we get back
     VERIFY_ARE_EQUAL(messages.Size(), expectedPacketCount);
 
-    for (auto message : messages)
+    for (auto ump : messages)
     {
+        auto message = ump.as<MidiMessage128>();
+
         std::cout << "Stream Message words"
             << " 0x" << std::hex << message.Word0()
             << " 0x" << std::hex << message.Word1()
@@ -45,26 +47,26 @@ void MidiStreamMessageBuilderTests::TestBuildEndpointNameNotificationLong()
 
     for (uint32_t i = 0; i < messages.Size(); i++)
     {
-        std::cout << "Stream word0 0x" << std::hex << messages.GetAt(i).Word0() << std::endl;
+        std::cout << "Stream word0 0x" << std::hex << messages.GetAt(i).PeekFirstWord() << std::endl;
 
         // verify status    
-        VERIFY_ARE_EQUAL(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(i).Word0()), MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION);
+        VERIFY_ARE_EQUAL(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(i).PeekFirstWord()), MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION);
 
         // verify form is correct
         if (i == 0)
         {
             // first message
-            VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(i).Word0()), 0x01);
+            VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(i).PeekFirstWord()), 0x01);
         }
         else if (i == messages.Size() - 1)
         {
             // last message
-            VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(i).Word0()), 0x03);
+            VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(i).PeekFirstWord()), 0x03);
         }
         else
         {
             // interim messages
-            VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(i).Word0()), 0x02);
+            VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(i).PeekFirstWord()), 0x02);
         }
     }
 
@@ -93,24 +95,25 @@ void MidiStreamMessageBuilderTests::TestBuildEndpointNameNotificationMedium()
     // count the number of messages we get back
     VERIFY_ARE_EQUAL(messages.Size(), expectedPacketCount);
 
-    for (auto message : messages)
+    for (auto ump : messages)
     {
+        auto message = ump.as<MidiMessage128>();
+
         std::cout << "Stream Message words"
             << " 0x" << std::hex << message.Word0()
             << " 0x" << std::hex << message.Word1()
             << " 0x" << std::hex << message.Word2()
             << " 0x" << std::hex << message.Word3()
             << std::endl;
-
     }
 
 
     // verify status is correct
-    VERIFY_ARE_EQUAL(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(0).Word0()), MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION);
-    VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(0).Word0()), 0x01);
+    VERIFY_ARE_EQUAL(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(0).PeekFirstWord()), MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION);
+    VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(0).PeekFirstWord()), 0x01);
 
-    VERIFY_ARE_EQUAL(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(1).Word0()), MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION);
-    VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(1).Word0()), 0x03);
+    VERIFY_ARE_EQUAL(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(1).PeekFirstWord()), MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION);
+    VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(1).PeekFirstWord()), 0x03);
 
     // verify form is correct
 
@@ -137,28 +140,29 @@ void MidiStreamMessageBuilderTests::TestBuildEndpointNameNotificationShort()
 
     std::cout << "Expected ump count " << expectedPacketCount << ", received " << messages.Size() << std::endl;
 
-    std::cout << "Stream Message 1 word0 0x" << std::hex << messages.GetAt(0).Word0() << std::endl;
+    std::cout << "Stream Message 1 word0 0x" << std::hex << messages.GetAt(0).PeekFirstWord() << std::endl;
 
     // count the number of messages we get back
     VERIFY_ARE_EQUAL(messages.Size(), expectedPacketCount);
 
-    for (auto message : messages)
+    for (auto ump : messages)
     {
+        auto message = ump.as<MidiMessage128>();
+
         std::cout << "Stream Message words"
             << " 0x" << std::hex << message.Word0()
             << " 0x" << std::hex << message.Word1()
             << " 0x" << std::hex << message.Word2()
             << " 0x" << std::hex << message.Word3()
             << std::endl;
-
     }
 
 
     // verify status is correct
-    VERIFY_ARE_EQUAL(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(0).Word0()), MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION);
+    VERIFY_ARE_EQUAL(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(0).PeekFirstWord()), MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION);
 
     // verify form is correct
-    VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(0).Word0()), 0x00);
+    VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(0).PeekFirstWord()), 0x00);
 
     // reverse it back into a string and verify
     auto s = MidiStreamMessageBuilder::ParseEndpointNameNotificationMessages(messages);
@@ -181,28 +185,29 @@ void MidiStreamMessageBuilderTests::TestBuildProductInstanceIdNotificationShort(
 
     std::cout << "Expected ump count " << expectedPacketCount << ", received " << messages.Size() << std::endl;
 
-    std::cout << "Stream Message 1 word0 0x" << std::hex << messages.GetAt(0).Word0() << std::endl;
+    std::cout << "Stream Message 1 word0 0x" << std::hex << messages.GetAt(0).PeekFirstWord() << std::endl;
 
     // count the number of messages we get back
     VERIFY_ARE_EQUAL(messages.Size(), expectedPacketCount);
 
-    for (auto message : messages)
+    for (auto ump : messages)
     {
+        auto message = ump.as<MidiMessage128>();
+
         std::cout << "Stream Message words"
             << " 0x" << std::hex << message.Word0()
             << " 0x" << std::hex << message.Word1()
             << " 0x" << std::hex << message.Word2()
             << " 0x" << std::hex << message.Word3()
             << std::endl;
-
     }
 
 
     // verify status is correct
-    VERIFY_ARE_EQUAL(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(0).Word0()), MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID_NOTIFICATION);
+    VERIFY_ARE_EQUAL(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(0).PeekFirstWord()), MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID_NOTIFICATION);
 
     // verify form is correct
-    VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(0).Word0()), 0x00);
+    VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(0).PeekFirstWord()), 0x00);
 
     // reverse it back into a string and verify
 

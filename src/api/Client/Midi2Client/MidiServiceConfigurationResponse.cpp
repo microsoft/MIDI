@@ -12,12 +12,5 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    winrt::Windows::Devices::Midi2::MidiServiceConfigurationResponseStatus MidiServiceConfigurationResponse::Status()
-    {
-        throw hresult_not_implemented();
-    }
-    hstring MidiServiceConfigurationResponse::ResponseJson()
-    {
-        throw hresult_not_implemented();
-    }
+
 }

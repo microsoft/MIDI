@@ -72,7 +72,7 @@ MidiEndpointTable::OnClientConnected(
 
         // look up the association ID in SWD properties
 
-        auto associationId = GetSwdPropertyVirtualEndpointAssociationId(clientEndpointInterfaceId);
+        auto associationId = internal::GetSwdPropertyVirtualEndpointAssociationId(clientEndpointInterfaceId);
 
         if (associationId != L"")
         {
@@ -126,7 +126,7 @@ MidiEndpointTable::OnClientDisconnected(
 
     try
     {
-        std::wstring associationId = GetSwdPropertyVirtualEndpointAssociationId(clientEndpointInterfaceId);
+        std::wstring associationId = internal::GetSwdPropertyVirtualEndpointAssociationId(clientEndpointInterfaceId);
 
         if (associationId != L"")
         {
@@ -185,7 +185,7 @@ HRESULT MidiEndpointTable::OnDeviceConnected(std::wstring deviceEndpointInterfac
     try
     {
         // look up the association ID in SWD properties
-        auto associationId = GetSwdPropertyVirtualEndpointAssociationId(deviceEndpointInterfaceId);
+        auto associationId = internal::GetSwdPropertyVirtualEndpointAssociationId(deviceEndpointInterfaceId);
 
         if (associationId != L"")
         {
@@ -290,7 +290,7 @@ HRESULT MidiEndpointTable::OnDeviceDisconnected(std::wstring deviceEndpointInter
     {
         if (AbstractionState::Current().GetEndpointManager() != nullptr)
         {
-            std::wstring associationId = GetSwdPropertyVirtualEndpointAssociationId(deviceEndpointInterfaceId);
+            std::wstring associationId = internal::GetSwdPropertyVirtualEndpointAssociationId(deviceEndpointInterfaceId);
 
             if (associationId != L"")
             {

@@ -34,7 +34,7 @@ private:
     HRESULT HandleEndpointNameMessage(_In_ internal::PackedUmp128& endpointNameMessage);
     HRESULT HandleProductInstanceIdMessage(_In_ internal::PackedUmp128& productInstanceIdMessage);
 
-    HRESULT ProcessStreamMessage(_In_ internal::PackedUmp128 ump, _In_ LONGLONG timestamp);
+    HRESULT ProcessStreamMessage(_In_ internal::PackedUmp128 ump);
 
 
     IMidiCallback* m_callback{ nullptr };
@@ -48,5 +48,19 @@ private:
     std::wstring m_endpointName{};
     std::wstring m_productInstanceId{};
     std::map<uint8_t /* function block number */, std::wstring> m_functionBlockNames;
+
+
+    // Work Queue. We use a queue instead of processing in
+    // the callback because the latter can result in an infinite
+    // loop of message sending and processing.
+
+    std::atomic<bool> m_continueProcessing{ true };
+    wil::slim_event_manual_reset m_messageProcessorWakeup;
+    std::queue<internal::PackedUmp128> m_workQueue;
+    std::mutex m_queueMutex;
+    std::thread m_queueWorkerThread;
+
+    void QueueWorker();
+
 };
 
