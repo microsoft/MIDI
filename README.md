@@ -114,6 +114,7 @@ This project may contain trademarks or logos for projects, products, or services
 This project supports both MIDI 1.0 and MIDI 2.0 through an updated modern API. MIDI 1.0 has been around since 1983, but MIDI 2.0 is new. You can learn more about it through the links below.
 
 [![MIDI 2.0 at the NAMM Show 2024](https://img.youtube.com/vi/1AZmAvaeBjM/mqdefault.jpg)](https://www.youtube.com/watch?v=1AZmAvaeBjM)
+[![Pete's Windows MIDI Services Presentation at NAMM Show 2024](https://img.youtube.com/vi/-pe29zIVUCA/mqdefault.jpg)](https://www.youtube.com/watch?v=-pe29zIVUCA)
 
 Older videos:
 

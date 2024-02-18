@@ -9,6 +9,10 @@ has_children: true
 
 > [Discord Server for discussion about this project](https://aka.ms/mididiscord)
 
+## NAMM Show 2024 Presentation
+
+[![Pete's Windows MIDI Services Presentation at NAMM Show 2024](https://img.youtube.com/vi/-pe29zIVUCA/mqdefault.jpg)](https://www.youtube.com/watch?v=-pe29zIVUCA)
+
 ## Key Features
 
 * **Multi-client by default**. Unless an endpoint is configured to not allow shared connections, or there is some issue around multi-client in a third-party driver, any endpoint (including MIDI 1.0 devices) can be used by multiple applications at the same time. So far, in our testing, we haven't found any USB devices or drivers which cannot be multi-client.
