@@ -185,8 +185,8 @@ int main()
                 if (verbose)
                 {
                     OutputStringField(L"name_user_supplied", device.UserSuppliedName());
-                    OutputStringField(L"name_user_endpoint_supplied", device.EndpointSuppliedName());
-                    OutputStringField(L"name_user_transport_supplied", device.TransportSuppliedName());
+                    OutputStringField(L"name_endpoint_supplied", device.EndpointSuppliedName());
+                    OutputStringField(L"name_transport_supplied", device.TransportSuppliedName());
                     OutputStringField(L"description_transport_supplied", device.TransportSuppliedDescription());
                     OutputStringField(L"description_user_supplied", device.UserSuppliedDescription());
                 }
