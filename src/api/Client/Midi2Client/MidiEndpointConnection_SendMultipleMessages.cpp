@@ -24,88 +24,89 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         internal::LogInfo(__FUNCTION__, L"Enter");
 
-        try
+        winrt::Windows::Foundation::IMemoryBufferReference bufferReference = buffer.CreateReference();
+
+        auto interop = bufferReference.as<IMemoryBufferByteAccess>();
+
+        uint8_t* dataPointer{};
+        uint32_t dataSize{ };
+
+        if (SUCCEEDED(interop->GetBuffer(&dataPointer, &dataSize)))
         {
-            winrt::Windows::Foundation::IMemoryBufferReference bufferReference = buffer.CreateReference();
-
-            auto interop = bufferReference.as<IMemoryBufferByteAccess>();
-
-            bool continueProcessing = true;
-            uint8_t* dataPointer{};
-            uint32_t dataSize{ };
-
-            if (SUCCEEDED(interop->GetBuffer(&dataPointer, &dataSize)))
+            if (byteOffset + byteCount > dataSize)
             {
-                // make sure we're not going to spin past the end of the buffer
-                if (byteOffset + byteCount > bufferReference.Capacity())
+                internal::LogGeneralError(__FUNCTION__, L"Buffer smaller than provided offset + byteLength (first check)");
+
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange;
+            }
+
+
+            // make sure we're not going to spin past the end of the buffer
+            if (byteOffset + byteCount > bufferReference.Capacity())
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Buffer smaller than provided offset + byteLength (second check) ");
+
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange;
+            }
+
+
+            // endianness becomes a concern so we need to make sure we treat this as words
+            //uint32_t* wordDataPointer = (uint32_t*)(dataPointer + byteOffset);
+            uint8_t* byteDataPointer = dataPointer + byteOffset;
+            uint32_t bytesProcessed{ 0 };
+
+            while (true)
+            {
+                uint8_t bytesInThisMessage = internal::GetUmpLengthInBytesFromFirstWord((uint32_t&)byteDataPointer);
+
+                if (bytesProcessed + bytesInThisMessage <= byteCount)
                 {
-                    internal::LogGeneralError(__FUNCTION__, L"Buffer smaller than provided offset + byteLength");
+                    auto result = SendMessageRaw(m_endpointAbstraction, (void*)(byteDataPointer), bytesInThisMessage, timestamp);
 
-                    return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange;
-                }
-
-
-                // endianness becomes a concern so we need to make sure we treat this as words
-                //uint32_t* wordDataPointer = (uint32_t*)(dataPointer + byteOffset);
-                uint8_t* byteDataPointer = dataPointer + byteOffset;
-                uint32_t bytesProcessed{ 0 };
-
-                while (continueProcessing)
-                {
-                    if ((byteOffset + bytesProcessed) < dataSize &&
-                        (bytesProcessed + sizeof(uint32_t) <= byteCount))
+                    if (SendMessageFailed(result))
                     {
-                        uint8_t bytesInThisMessage = internal::GetUmpLengthInBytesFromFirstWord(*(uint32_t*)byteDataPointer);
-
-                        if (bytesProcessed + bytesInThisMessage <= byteCount)
-                        {
-                            auto result = SendMessageRaw(m_endpointAbstraction, (void*)(byteDataPointer), bytesInThisMessage, timestamp);
-
-                            if (SendMessageFailed(result))
-                            {
-                                internal::LogGeneralError(__FUNCTION__, L"SendMessageRaw failed");
-                                return result;
-                            }
-                        }
-                        else
-                        {
-                            internal::LogGeneralError(__FUNCTION__, L"Ran out of data");
-                            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::MessageListPartiallyProcessed;
-                        }
-
-                        bytesProcessed += bytesInThisMessage;
-
-                        byteDataPointer += bytesInThisMessage;
-                    }
-                    else
-                    {
-                        continueProcessing = false;
+                        internal::LogGeneralError(__FUNCTION__, L"SendMessageRaw failed");
+                        return result;
                     }
                 }
-
-                if (bytesProcessed != byteCount)
+                else
                 {
                     internal::LogGeneralError(__FUNCTION__, L"Ran out of data");
-                    return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::MessageListPartiallyProcessed;
+                    auto returnValue = midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange ;
 
+                    if (bytesProcessed > 0)
+                    {
+                        returnValue |= midi2::MidiSendMessageResult::MessageListPartiallyProcessed;
+                    }
+
+                    return returnValue;
+                }
+
+                bytesProcessed += bytesInThisMessage;
+                byteDataPointer += bytesInThisMessage;
+
+                if (bytesProcessed >= byteCount)
+                {
+                    break;
                 }
             }
-            else
+
+            if (bytesProcessed != byteCount)
             {
-                internal::LogGeneralError(__FUNCTION__, L"Unable to get buffer");
+                internal::LogGeneralError(__FUNCTION__, L"Ran out of data");
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::MessageListPartiallyProcessed;
 
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
             }
-
-            return midi2::MidiSendMessageResult::Succeeded;
         }
-        catch (winrt::hresult_error const& ex)
+        else
         {
-            internal::LogHresultError(__FUNCTION__, L"hresult exception sending message", ex);
+            internal::LogGeneralError(__FUNCTION__, L"Unable to get buffer");
 
-            // TODO: handle buffer full and other expected hresults
             return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
         }
+
+        return midi2::MidiSendMessageResult::Succeeded;
+
     }
 
 
@@ -117,89 +118,48 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         internal::LogInfo(__FUNCTION__, L"Enter");
 
-        // iterate through words based on the message type in the next word
+        uint32_t i{ 0 };
 
-        // we keep reusing this struct
-        internal::PackedUmp128 messageData{};
+        uint32_t messageWords[4]{ 0,0,0,0 };   // we reuse this storage
 
-        //uint32_t index = 0;
+        collections::IIterable iterable = words.as<collections::IIterable<uint32_t>>();
 
-        //// TODO: Iteration via index would likely be faster if we just use a array_view, IVector, or IVectorView instead of IIterable.
+        auto iter = iterable.First();
 
-        //// or maybe we can use a winrt::array_view somehow and get conversion from std?
-        //// https://learn.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/std-cpp-data-types
-        //// https://devblogs.microsoft.com/oldnewthing/20200205-00/?p=103398/
-
-        //while (index < totalWords)
-        //{
-
-        //}
-
-
-        auto iter = words.First();
-
+        auto vectorSize = words.Size();
 
         while (iter.HasCurrent())
         {
+            //auto messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(words.GetAt(i));
             auto messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(iter.Current());
 
-            if (messageWordCount >= 1)
+            if (i + messageWordCount <= vectorSize)
             {
-                messageData.word0 = iter.Current();
+                for (uint32_t j = 0; j < messageWordCount; j++)
+                {
+                    //messageWords[j] = words.GetAt(i + j);
+
+                    messageWords[j] = iter.Current();
+                    iter.MoveNext();
+                }
+
+                auto sendMessageResult = SendMessageRaw(m_endpointAbstraction, (VOID*)(messageWords), messageWordCount * sizeof(uint32_t), timestamp);
+
+                if (SendMessageFailed(sendMessageResult))
+                {
+                    // failed. Log and return. We fail on first problem.
+                    internal::LogGeneralError(__FUNCTION__, L"Failed to send message");
+
+                    if (i > 0)
+                    {
+                        sendMessageResult |= midi2::MidiSendMessageResult::MessageListPartiallyProcessed;
+                    }
+
+                    return sendMessageResult;
+                }
+
+                i += messageWordCount;
             }
-
-            if (messageWordCount >= 2)
-            {
-                if (iter.MoveNext())
-                {
-                    messageData.word1 = iter.Current();
-                }
-                else
-                {
-                    internal::LogGeneralError(__FUNCTION__, L"Failed to send message. Message type indicates 2+ words, but we ran out of data.");
-                    return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange;
-                }
-            }
-
-            if (messageWordCount >= 3)
-            {
-                if (iter.MoveNext())
-                {
-                    messageData.word2 = iter.Current();
-                }
-                else
-                {
-                    internal::LogGeneralError(__FUNCTION__, L"Failed to send message. Message type indicates 3+ words, but we ran out of data.");
-                    return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange;
-                }
-
-            }
-
-            if (messageWordCount == 4)
-            {
-                if (iter.MoveNext())
-                {
-                    messageData.word3 = iter.Current();
-                }
-                else
-                {
-                    internal::LogGeneralError(__FUNCTION__, L"Failed to send message. Message type indicates 4 words, but we ran out of data.");
-                    return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange;
-                }
-            }
-
-            auto sendMessageResult = SendMessageRaw(m_endpointAbstraction, &messageData, messageWordCount * sizeof(uint32_t), timestamp);
-
-            if (SendMessageFailed(sendMessageResult))
-            {
-                // failed. Log and return. We fail on first problem.
-                internal::LogGeneralError(__FUNCTION__, L"Failed to send message");
-
-                return sendMessageResult;
-
-            }
-
-            iter.MoveNext();
         }
 
         return midi2::MidiSendMessageResult::Succeeded;
@@ -213,14 +173,42 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         internal::LogInfo(__FUNCTION__, L"Enter");
 
+        uint32_t i{ 0 };
 
-        UNREFERENCED_PARAMETER(timestamp);
-        UNREFERENCED_PARAMETER(words);
+        while (i < words.size())
+        {
+            auto messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(words[i]);
 
-        // TODO: Implement SendMultipleMessagesWordArray
+            if (i + messageWordCount <= words.size())
+            {
+                auto sendMessageResult = SendMessageRaw(m_endpointAbstraction, (VOID*)(words.data() + i), messageWordCount * sizeof(uint32_t), timestamp);
 
+                if (SendMessageFailed(sendMessageResult))
+                {
+                    // failed. Log and return. We fail on first problem.
+                    internal::LogGeneralError(__FUNCTION__, L"Failed to send message");
 
-        return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
+                    if (i > 0)
+                    {
+                        sendMessageResult |= midi2::MidiSendMessageResult::MessageListPartiallyProcessed;
+                    }
+
+                    return sendMessageResult;
+                }
+
+                i += messageWordCount;
+            }
+            else
+            {
+                // failed. Log and return. We fail on first problem.
+                internal::LogGeneralError(__FUNCTION__, L"Failed to send message. Index out of bounds");
+
+                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange;
+
+            }
+        }
+
+        return midi2::MidiSendMessageResult::Succeeded;
     }
 
 
@@ -277,8 +265,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
 
-
-
     _Use_decl_annotations_
     midi2::MidiSendMessageResult MidiEndpointConnection::SendMultipleMessagesPacketList(
         collections::IVectorView<IMidiUniversalPacket> const& messages) noexcept
@@ -301,28 +287,27 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     }
 
-    _Use_decl_annotations_
-    midi2::MidiSendMessageResult MidiEndpointConnection::SendMultipleMessagesPacketArray(
-        winrt::array_view<IMidiUniversalPacket> messages) noexcept
-    {
-        internal::LogInfo(__FUNCTION__, L"Enter");
+    //_Use_decl_annotations_
+    //midi2::MidiSendMessageResult MidiEndpointConnection::SendMultipleMessagesPacketArray(
+    //    winrt::array_view<IMidiUniversalPacket> messages) noexcept
+    //{
+    //    internal::LogInfo(__FUNCTION__, L"Enter");
 
+    //    for (auto const& ump : messages)
+    //    {
+    //        auto result = SendUmpInternal(m_endpointAbstraction, ump);
 
-        for (auto const& ump : messages)
-        {
-            auto result = SendUmpInternal(m_endpointAbstraction, ump);
+    //        if (!MidiEndpointConnection::SendMessageSucceeded(result))
+    //        {
+    //            // if any fail, we return immediately.
 
-            if (!MidiEndpointConnection::SendMessageSucceeded(result))
-            {
-                // if any fail, we return immediately.
+    //            return result;
+    //        }
+    //    }
 
-                return result;
-            }
-        }
+    //    return midi2::MidiSendMessageResult::Succeeded;
 
-        return midi2::MidiSendMessageResult::Succeeded;
-
-    }
+    //}
 
 
 

@@ -158,10 +158,21 @@ namespace winrt::Windows::Devices::Midi2::implementation
         additionalProperties.Append(STRING_PKEY_MIDI_UserSuppliedSmallImagePath);
         additionalProperties.Append(STRING_PKEY_MIDI_UserSuppliedDescription);
        
-        // Additional Capabiltiies ============================================================
+        // Additional Capabilities ============================================================
         additionalProperties.Append(STRING_PKEY_MIDI_RequiresNoteOffTranslation);
         additionalProperties.Append(STRING_PKEY_MIDI_RecommendedCCAutomationIntervalMS);
         additionalProperties.Append(STRING_PKEY_MIDI_SupportsMidiPolyphonicExpression);
+
+        // In-protocol Metadata Timestamps ====================================================
+
+        additionalProperties.Append(STRING_PKEY_MIDI_EndpointProvidedProductInstanceIdLastUpdateTime);
+        additionalProperties.Append(STRING_PKEY_MIDI_EndpointProvidedNameLastUpdateTime);
+        additionalProperties.Append(STRING_PKEY_MIDI_EndpointConfigurationLastUpdateTime);
+        additionalProperties.Append(STRING_PKEY_MIDI_EndpointInformationLastUpdateTime);
+        additionalProperties.Append(STRING_PKEY_MIDI_DeviceIdentityLastUpdateTime);
+        additionalProperties.Append(STRING_PKEY_MIDI_FunctionBlocksLastUpdateTime);
+
+
 
         // Calculated metrics =================================================================
         // we don't load them here because they would spam device information update events
@@ -452,6 +463,40 @@ namespace winrt::Windows::Devices::Midi2::implementation
             return defaultValue;
         }
     }
+
+    _Use_decl_annotations_
+    foundation::DateTime MidiEndpointDeviceInformation::GetDateTimeProperty(
+        winrt::hstring key,
+        foundation::DateTime defaultValue) const noexcept
+    {
+        if (!m_properties.HasKey(key)) return defaultValue;
+
+        try
+        {
+            auto propValue = m_properties.Lookup(key).as<winrt::Windows::Foundation::IPropertyValue>();
+
+            if (propValue != nullptr)
+            {
+                auto ty = propValue.Type();
+
+                if (ty == foundation::PropertyType::DateTime)
+                {
+                    auto val = propValue.GetDateTime();
+
+                    return val;
+                }
+            }
+
+        }
+        catch (...)
+        {
+        }
+
+        return defaultValue;
+
+    }
+
+
 
     _Use_decl_annotations_
     winrt::guid MidiEndpointDeviceInformation::GetGuidProperty(

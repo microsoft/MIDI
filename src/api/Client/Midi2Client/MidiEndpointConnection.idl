@@ -87,7 +87,7 @@ namespace Windows.Devices.Midi2
 
         // a convenience for sending multiple packets. We can do this because these are self-describing
         MidiSendMessageResult SendMultipleMessagesPacketList(IVectorView<IMidiUniversalPacket> messages);
-        MidiSendMessageResult SendMultipleMessagesPacketArray(ref IMidiUniversalPacket[] messages);
+        //MidiSendMessageResult SendMultipleMessagesPacketArray(ref IMidiUniversalPacket[] messages);
 
         MidiSendMessageResult SendMultipleMessagesStructList(MIDI_TIMESTAMP timestamp, IVectorView<MidiMessageStruct> messages);
         MidiSendMessageResult SendMultipleMessagesStructArray(MIDI_TIMESTAMP timestamp, ref MidiMessageStruct[] messages);

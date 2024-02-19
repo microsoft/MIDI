@@ -56,24 +56,40 @@ namespace Windows.Devices.Midi2
 
         String Name{ get; };                        // user supplied name, if provided (defaults to device name otherwise)
         String TransportSuppliedName{ get; };       // device/transport supplied name, from pnp
-        String EndpointSuppliedName{ get; };        // name supplied by the in-protocol endpoint information, if available
-        String UserSuppliedName{ get; };            // name supplied by the user, if available
-
-        String ProductInstanceId{ get; };           // 
 
 
+
+        // from Endpoint info notification / discovery process
         UInt8 SpecificationVersionMajor{ get; };
         UInt8 SpecificationVersionMinor{ get; };
+        Windows.Foundation.DateTime EndpointInformationLastUpdateTime{ get; };
+
+        String ProductInstanceId{ get; };           // 
+        Windows.Foundation.DateTime ProductInstanceIdLastUpdateTime{ get; };
+
+        String EndpointSuppliedName{ get; };        // name supplied by the in-protocol endpoint information, if available
+        Windows.Foundation.DateTime EndpointSuppliedNameLastUpdateTime{ get; };
 
         Boolean SupportsMidi10Protocol{ get; };
         Boolean SupportsMidi20Protocol{ get; };
-        MidiProtocol ConfiguredProtocol{ get; };    // MIDI 1.0 or MIDI 2.0 for this endpoint
-
         Boolean SupportsReceivingJRTimestamps{ get; };
         Boolean SupportsSendingJRTimestamps{ get; };
 
+        Boolean HasStaticFunctionBlocks{ get; };
+        UInt8 FunctionBlockCount{ get; };           // this number is provided by endpoint information
+
+        // function blocks
+        IMapView<UInt8, MidiFunctionBlock> FunctionBlocks{ get; };
+        Windows.Foundation.DateTime FunctionBlocksLastUpdateTime{ get; };
+
+
+        // Endpoint configuration / protocol negotiation results
+
+        MidiProtocol ConfiguredProtocol{ get; };    // MIDI 1.0 or MIDI 2.0 for this endpoint
         Boolean ConfiguredToReceiveJRTimestamps{ get; };
         Boolean ConfiguredToSendJRTimestamps{ get; };
+
+        Windows.Foundation.DateTime EndpointConfigurationLastUpdateTime{ get; };
 
         // MIDI Device Identity (sysex stuff)
         UInt8[] DeviceIdentitySystemExclusiveId{ get; };
@@ -82,6 +98,8 @@ namespace Windows.Devices.Midi2
         UInt8 DeviceIdentityDeviceFamilyModelNumberLsb{ get; };
         UInt8 DeviceIdentityDeviceFamilyModelNumberMsb{ get; };
         UInt8[] DeviceIdentitySoftwareRevisionLevel{ get; };
+
+        Windows.Foundation.DateTime DeviceIdentityLastUpdateTime{ get; };
 
 
         // transport type
@@ -107,23 +125,21 @@ namespace Windows.Devices.Midi2
         // group terminal blocks
         IVectorView<MidiGroupTerminalBlock> GroupTerminalBlocks{ get; };
 
-        // function blocks
-        Boolean HasStaticFunctionBlocks{ get; };
-        UInt8 FunctionBlockCount{ get; };           // this number is provided by a separate message, but should match the vector item count
-
-        IMapView<UInt8, MidiFunctionBlock> FunctionBlocks{ get; };
-
         // If this is a diagnostic endpoint
         MidiEndpointDevicePurpose EndpointPurpose{ get; };
 
+
+
+
+
+
         // The settings app allows the user to add some metadata, like a description
+        String UserSuppliedName{ get; };            // name supplied by the user, if available
         String UserSuppliedDescription{ get; };
 
         // png icon supplied by the user
         String UserSuppliedLargeImagePath{ get; };
         String UserSuppliedSmallImagePath{ get; };
-
-
 
         Boolean RequiresNoteOffTranslation{ get; };
         UInt16 RecommendedCCAutomationIntervalMS{ get; };
@@ -135,8 +151,5 @@ namespace Windows.Devices.Midi2
 
         Boolean UpdateFromDeviceInformation(Windows.Devices.Enumeration.DeviceInformation deviceInformation);
         Boolean UpdateFromDeviceInformationUpdate(Windows.Devices.Enumeration.DeviceInformationUpdate deviceInformationUpdate);
-
-
-
     }
 }

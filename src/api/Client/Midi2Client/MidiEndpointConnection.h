@@ -110,13 +110,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         midi2::MidiSendMessageResult SendMultipleMessagesPacketList(
             _In_ collections::IVectorView<IMidiUniversalPacket> const& messages) noexcept;
-        midi2::MidiSendMessageResult SendMultipleMessagesPacketArray(
-            _In_ winrt::array_view<IMidiUniversalPacket> messages) noexcept;
+
+        //midi2::MidiSendMessageResult SendMultipleMessagesPacketArray(
+        //    _In_ winrt::array_view<IMidiUniversalPacket> messages) noexcept;
 
 
         midi2::MidiSendMessageResult SendMultipleMessagesStructList(
             _In_ internal::MidiTimestamp timestamp,
             _In_ collections::IVectorView<MidiMessageStruct> const& messages) noexcept;
+
         midi2::MidiSendMessageResult SendMultipleMessagesStructArray(
             _In_ internal::MidiTimestamp timestamp,
             _In_ winrt::array_view<MidiMessageStruct> messages) noexcept;
