@@ -28,7 +28,7 @@ namespace json = ::winrt::Windows::Data::Json;
 namespace enumeration = ::winrt::Windows::Devices::Enumeration;
 namespace foundation = ::winrt::Windows::Foundation;
 namespace collections = ::winrt::Windows::Foundation::Collections;
-namespace ble = ::winrt::Windows::Devices::Bluetooth;
+namespace bt = ::winrt::Windows::Devices::Bluetooth;
 
 #include <assert.h>
 #include <devioctl.h>

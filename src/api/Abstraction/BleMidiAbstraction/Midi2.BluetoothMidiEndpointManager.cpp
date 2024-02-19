@@ -18,6 +18,18 @@ using namespace Microsoft::WRL::Wrappers;
 
 GUID AbstractionLayerGUID = __uuidof(Midi2BluetoothMidiAbstraction);
 
+
+
+#define MIDI_BLE_SERVICE_CHARACTERISTIC L"{03B80E5A-EDE8-4B33-A751-6CE34EC4C700}"
+#define MIDI_BLE_DATA_IO_CHARACTERISTIC L"{7772E5DB-3868-4112-A1A9-F2669D106BF3}"
+// Notes:
+//      Write (encryption recommended, write without response is required)
+//      Read (encryption recommended, respond with no payload)
+//      Notify (encryption recommended)
+// Max connection interval is 15ms. Lower is better.
+
+
+
 _Use_decl_annotations_
 HRESULT
 CMidi2BluetoothMidiEndpointManager::Initialize(
@@ -39,10 +51,30 @@ CMidi2BluetoothMidiEndpointManager::Initialize(
     m_TransportAbstractionId = AbstractionLayerGUID;   // this is needed so MidiSrv can instantiate the correct transport
     m_ContainerId = m_TransportAbstractionId;                           // we use the transport ID as the container ID for convenience
 
-    winrt::hstring deviceSelector(
-        L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
 
-    m_Watcher = enumeration::DeviceInformation::CreateWatcher(deviceSelector);
+    winrt::hstring deviceSelector = bt::BluetoothLEDevice::GetDeviceSelector();
+
+
+    auto requestedProperties = winrt::single_threaded_vector<winrt::hstring>(
+        {
+            L"System.DeviceInterface.Bluetooth.DeviceAddress",
+            L"System.DeviceInterface.Bluetooth.Flags",
+            L"System.DeviceInterface.Bluetooth.LastConnectedTime",
+            L"System.DeviceInterface.Bluetooth.Manufacturer",
+            L"System.DeviceInterface.Bluetooth.ModelNumber",
+            L"System.DeviceInterface.Bluetooth.ProductId",
+            L"System.DeviceInterface.Bluetooth.ProductVersion",
+            L"System.DeviceInterface.Bluetooth.ServiceGuid",
+            L"System.DeviceInterface.Bluetooth.VendorId",
+            L"System.DeviceInterface.Bluetooth.VendorIdSource",
+            L"System.Devices.Connected",
+            L"System.Devices.DeviceCapabilities",
+            L"System.Devices.DeviceCharacteristics"
+        }
+    );
+
+
+    m_Watcher = enumeration::DeviceInformation::CreateWatcher(deviceSelector, requestedProperties);
 
     auto deviceAddedHandler = foundation::TypedEventHandler<enumeration::DeviceWatcher, enumeration::DeviceInformation>(this, &CMidi2BluetoothMidiEndpointManager::OnDeviceAdded);
     auto deviceRemovedHandler = foundation::TypedEventHandler<enumeration::DeviceWatcher, enumeration::DeviceInformationUpdate>(this, &CMidi2BluetoothMidiEndpointManager::OnDeviceRemoved);
@@ -59,7 +91,6 @@ CMidi2BluetoothMidiEndpointManager::Initialize(
     m_Watcher.Start();
 
     return S_OK;
-    ;
 }
 
 HRESULT
@@ -85,28 +116,6 @@ CMidi2BluetoothMidiEndpointManager::CreateEndpoint(
 
 
 
-// TODO: This will need to create a device watcher
-//
-// MIDI Service (UUID: 03B80E5A-EDE8-4B33-A751-6CE34EC4C700) 
-// MIDI Data I/O Characteristic(UUID: 7772E5DB-3868-4112-A1A9-F2669D106BF3)
-//
-
-#define MIDI_BLE_DATA_CHARACTERISTIC L"{7772E5DB-3868-4112-A1A9-F2669D106BF3}"
-#define MIDI_BLE_GATT_SERVICE L"{03B80E5A-EDE8-4B33-A751-6CE34EC4C700}"
-
-namespace bt = ::winrt::Windows::Devices::Bluetooth;
-
-HRESULT
-CMidi2BluetoothMidiEndpointManager::EnumCompatibleBluetoothDevices()
-{
-//    winrt::guid midiServiceGuid(MIDI_BLE_GATT_SERVICE);
-
-//    bt::BluetoothLEDevice::GetGattServicesForUuidAsync(midiServiceGuid);
-
-
-    return S_OK;
-}
-
 
 HRESULT
 CMidi2BluetoothMidiEndpointManager::Cleanup()
@@ -131,6 +140,7 @@ _Use_decl_annotations_
 HRESULT 
 CMidi2BluetoothMidiEndpointManager::OnDeviceAdded(enumeration::DeviceWatcher, enumeration::DeviceInformation)
 {
+
     return S_OK;
 }
 
@@ -138,6 +148,7 @@ _Use_decl_annotations_
 HRESULT 
 CMidi2BluetoothMidiEndpointManager::OnDeviceRemoved(enumeration::DeviceWatcher, enumeration::DeviceInformationUpdate)
 {
+
     return S_OK;
 }
 
@@ -145,6 +156,7 @@ _Use_decl_annotations_
 HRESULT 
 CMidi2BluetoothMidiEndpointManager::OnDeviceUpdated(enumeration::DeviceWatcher, enumeration::DeviceInformationUpdate)
 {
+
     return S_OK;
 }
 
@@ -153,6 +165,7 @@ _Use_decl_annotations_
 HRESULT 
 CMidi2BluetoothMidiEndpointManager::OnDeviceStopped(enumeration::DeviceWatcher, foundation::IInspectable)
 {
+
     return S_OK;
 }
 
@@ -161,5 +174,6 @@ _Use_decl_annotations_
 HRESULT 
 CMidi2BluetoothMidiEndpointManager::OnEnumerationCompleted(enumeration::DeviceWatcher, foundation::IInspectable)
 {
+
     return S_OK;
 }
