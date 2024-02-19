@@ -36,33 +36,41 @@ void DisplaySingleResult(std::wstring label, uint64_t totalTime, uint64_t errorC
 
 }
 
+#define MESSAGE_COUNT_PER_ITERATION     100
+#define ITERATION_COUNT                 2000
+
 
 int main()
 {
     winrt::init_apartment();
 
     auto endpointId = MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId();
-    uint32_t messagesPerIteration = 100;
-    uint32_t iterations = 1000;
 
     uint64_t TotalSendTicksIndividualMessagePackets{ 0 };
     uint64_t TotalSendTicksIndividualMessageWords{ 0 };
     uint64_t TotalSendTicksIndividualMessageStructs{ 0 };
 
-    uint64_t TotalSendTicksMultipleMessagePackets{ 0 };
-    uint64_t TotalSendTicksMultipleMessageWords{ 0 };
-    uint64_t TotalSendTicksMultipleMessageStructs{ 0 };
+    uint64_t TotalSendTicksVectorMessagePackets{ 0 };
+    uint64_t TotalSendTicksVectorMessageWords{ 0 };
+    uint64_t TotalSendTicksVectorMessageStructs{ 0 };
+
+    uint64_t TotalSendTicksArrayMessageWords{ 0 };
+    uint64_t TotalSendTicksArrayMessageStructs{ 0 };
+
     uint64_t TotalSendTicksMultipleMessageBuffer{ 0 };
 
     uint64_t TotalSendErrorsIndividualMessagePackets{ 0 };
     uint64_t TotalSendErrorsIndividualMessageWords{ 0 };
     uint64_t TotalSendErrorsIndividualMessageStructs{ 0 };
 
-    uint64_t TotalSendErrorsMultipleMessagePackets{ 0 };
-    uint64_t TotalSendErrorsMultipleMessageWords{ 0 };
-    uint64_t TotalSendErrorsMultipleMessageStructs{ 0 };
+    uint64_t TotalSendErrorsVectorMessagePackets{ 0 };
+    uint64_t TotalSendErrorsVectorMessageWords{ 0 };
+    uint64_t TotalSendErrorsVectorMessageStructs{ 0 };
+    
     uint64_t TotalSendErrorsMultipleMessageBuffer{ 0 };
 
+    uint64_t TotalSendErrorsArrayMessageWords{ 0 };
+    uint64_t TotalSendErrorsArrayMessageStructs{ 0 };
 
 
     // create the MIDI session, giving us access to Windows MIDI Services. An app may open 
@@ -106,18 +114,21 @@ int main()
     auto wordList = winrt::single_threaded_vector<uint32_t>();
     auto structList = winrt::single_threaded_vector<MidiMessageStruct>();
     auto wordListList = std::vector<collections::IVectorView<uint32_t>>();
+    uint32_t wordArray[MESSAGE_COUNT_PER_ITERATION * 3];    // that *3 needs to change if we mix up more than just the ump32 and ump64 per iteration
+    MidiMessageStruct structArray[MESSAGE_COUNT_PER_ITERATION];
+  
 
 
 
 
     // if we change the types of messages we send, we need to change this as well
-    foundation::MemoryBuffer buffer(messagesPerIteration * sizeof(uint32_t) * 3);
+    foundation::MemoryBuffer buffer(MESSAGE_COUNT_PER_ITERATION * sizeof(uint32_t) * 3);
 
   
     uint32_t memoryBufferOffset = 0;
     uint32_t bytesWritten = 0;
 
-    for (uint32_t i = 0; i < messagesPerIteration; i += 2)
+    for (uint32_t i = 0; i < MESSAGE_COUNT_PER_ITERATION; i += 2)
     {
         // message list
         messageList.Append(ump64);
@@ -146,18 +157,17 @@ int main()
         wordListList.push_back(ump64.GetAllWords());
         wordListList.push_back(ump32.GetAllWords());
 
-
-
-
         bytesWritten += sizeof(ump64) + sizeof(ump32);
 
         memoryBufferOffset += bytesWritten;
     }
 
 
+
+
     // Actually send the messages
 
-    for (uint32_t i = 0; i < iterations; i++)
+    for (uint32_t i = 0; i < ITERATION_COUNT; i++)
     {
         uint64_t startTick{};
         uint64_t stopTick{};
@@ -171,8 +181,6 @@ int main()
 
         for (auto const& message : wordListList)
         {
-            MidiSendMessageResult result;
-
             if (message.Size() == 4)
                 result = sendEndpoint.SendMessageWords(MidiClock::TimestampConstantSendImmediately(), message.GetAt(0), message.GetAt(1), message.GetAt(2), message.GetAt(3));
             else if (message.Size() == 3)
@@ -235,37 +243,59 @@ int main()
         // send vector of words
 
         startTick = MidiClock::Now();
-        result = sendEndpoint.SendMultipleMessagesWordList(MidiClock::TimestampConstantSendImmediately(), wordList);
+        result = sendEndpoint.SendMultipleMessagesWordList(MidiClock::TimestampConstantSendImmediately(), wordList.GetView());
         if (MidiEndpointConnection::SendMessageFailed(result))
         {
-            TotalSendErrorsMultipleMessageWords++;
+            TotalSendErrorsVectorMessageWords++;
         }
         stopTick = MidiClock::Now();
-        TotalSendTicksMultipleMessageWords += (stopTick - startTick);
+        TotalSendTicksVectorMessageWords += (stopTick - startTick);
 
+        // send array of words
+        
+        startTick = MidiClock::Now();
+        result = sendEndpoint.SendMultipleMessagesWordArray(MidiClock::TimestampConstantSendImmediately(), wordArray);
+        if (MidiEndpointConnection::SendMessageFailed(result))
+        {
+            TotalSendErrorsArrayMessageWords++;
+        }
+        stopTick = MidiClock::Now();
+        TotalSendTicksArrayMessageWords += (stopTick - startTick);
 
+         
         // send vector of message packets
 
         startTick = MidiClock::Now();
-        result = sendEndpoint.SendMultipleMessagesPacketList(messageList);
+        result = sendEndpoint.SendMultipleMessagesPacketList(messageList.GetView());
         if (MidiEndpointConnection::SendMessageFailed(result))
         {
-            TotalSendErrorsMultipleMessagePackets++;
+            TotalSendErrorsVectorMessagePackets++;
         }
         stopTick = MidiClock::Now();
-        TotalSendTicksMultipleMessagePackets += (stopTick - startTick);
+        TotalSendTicksVectorMessagePackets += (stopTick - startTick);
 
 
         // send vector of message structs
 
         startTick = MidiClock::Now();
-        result = sendEndpoint.SendMultipleMessagesStructList(MidiClock::TimestampConstantSendImmediately(), structList);
+        result = sendEndpoint.SendMultipleMessagesStructList(MidiClock::TimestampConstantSendImmediately(), structList.GetView());
         if (MidiEndpointConnection::SendMessageFailed(result))
         {
-            TotalSendErrorsMultipleMessageStructs++;
+            TotalSendErrorsVectorMessageStructs++;
         }
         stopTick = MidiClock::Now();
-        TotalSendTicksMultipleMessageStructs += (stopTick - startTick);
+        TotalSendTicksVectorMessageStructs += (stopTick - startTick);
+
+        // send array of message structs
+
+        startTick = MidiClock::Now();
+        result = sendEndpoint.SendMultipleMessagesStructArray(MidiClock::TimestampConstantSendImmediately(), structArray);
+        if (MidiEndpointConnection::SendMessageFailed(result))
+        {
+            TotalSendErrorsArrayMessageStructs++;
+        }
+        stopTick = MidiClock::Now();
+        TotalSendTicksArrayMessageStructs += (stopTick - startTick);
 
 
         // send multiple through buffer
@@ -283,18 +313,23 @@ int main()
 
     // let's see how we did
 
-    uint32_t totalMessageCount = iterations * messagesPerIteration;
+    uint32_t totalMessageCount = ITERATION_COUNT * MESSAGE_COUNT_PER_ITERATION;
 
     std::wcout << std::endl;
-    std::wcout << L"Iteration Count:        " << iterations << std::endl;
-    std::wcout << L"Messages per Iteration: " << messagesPerIteration << std::endl;
-    std::wcout << L"Total Message Count:    " << messagesPerIteration * iterations << std::endl;
+    std::wcout << L"Iteration Count:        " << ITERATION_COUNT << std::endl;
+    std::wcout << L"Messages per Iteration: " << MESSAGE_COUNT_PER_ITERATION << std::endl;
+    std::wcout << L"Total Message Count:    " << totalMessageCount << std::endl;
 
     std::wcout << std::endl << L"Multiple messages per call" << std::endl;
     std::wcout << L"----------------------------------------------------------------------------------------" << std::endl;
-    DisplaySingleResult(L"SendMultipleMessagesPacketList", TotalSendTicksMultipleMessagePackets, TotalSendErrorsMultipleMessagePackets, totalMessageCount);
-    DisplaySingleResult(L"SendMultipleMessagesStructList", TotalSendTicksMultipleMessageStructs, TotalSendErrorsMultipleMessageStructs, totalMessageCount);
-    DisplaySingleResult(L"SendMultipleMessagesWordList", TotalSendTicksMultipleMessageWords, TotalSendErrorsMultipleMessageWords, totalMessageCount);
+    DisplaySingleResult(L"SendMultipleMessagesPacketList", TotalSendTicksVectorMessagePackets, TotalSendErrorsVectorMessagePackets, totalMessageCount);
+
+    DisplaySingleResult(L"SendMultipleMessagesStructList", TotalSendTicksVectorMessageStructs, TotalSendErrorsVectorMessageStructs, totalMessageCount);
+    DisplaySingleResult(L"SendMultipleMessagesStructArray", TotalSendTicksArrayMessageStructs, TotalSendErrorsArrayMessageStructs, totalMessageCount);
+
+    DisplaySingleResult(L"SendMultipleMessagesWordList", TotalSendTicksVectorMessageWords, TotalSendErrorsVectorMessageWords, totalMessageCount);
+    DisplaySingleResult(L"SendMultipleMessagesWordArray", TotalSendTicksArrayMessageWords, TotalSendErrorsArrayMessageWords, totalMessageCount);
+
     DisplaySingleResult(L"SendMultipleMessagesBuffer", TotalSendTicksMultipleMessageBuffer, TotalSendErrorsMultipleMessageBuffer, totalMessageCount);
 
     std::wcout << std::endl << L"Single message per call" << std::endl;
