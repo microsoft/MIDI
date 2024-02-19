@@ -11,5 +11,9 @@ Fully-featured app-to-app MIDI in a MIDI 2.0 world involves connections to a vir
 
 During that conversation, the service will also handle discovery and protocol negotiation with the virtual device just like it would any physical device. 
 
-In addition to the service component, it is implemented in the client API as a type of Client-SIde Processing Plugin
+In addition to the service component, it is implemented in the client API as a type of Client-Side Processing Plugin
+
+## Sample
+
+[Full C# Sample](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/app-to-app-midi-cs)
 
