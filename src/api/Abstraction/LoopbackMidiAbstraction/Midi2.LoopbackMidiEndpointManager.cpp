@@ -170,8 +170,6 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
     RETURN_HR_IF_MSG(E_INVALIDARG, definition->EndpointUniqueIdentifier.empty(), "Empty endpoint unique id");
 
 
-    //put all of the devproperties we want into arrays and pass into ActivateEndpoint:
-
     std::wstring mnemonic(TRANSPORT_MNEMONIC);
 
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;

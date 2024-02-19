@@ -25,7 +25,10 @@
 #include <winrt/Windows.Data.Json.h>
 
 namespace json = ::winrt::Windows::Data::Json;
-
+namespace enumeration = ::winrt::Windows::Devices::Enumeration;
+namespace foundation = ::winrt::Windows::Foundation;
+namespace collections = ::winrt::Windows::Foundation::Collections;
+namespace bt = ::winrt::Windows::Devices::Bluetooth;
 
 #include <assert.h>
 #include <devioctl.h>
@@ -86,6 +89,8 @@ class CMidi2BluetoothMidiEndpointManager;
 #include "strsafe.h"
 
 #include "abstraction_defs.h"
+#include "midi_timestamp.h"
+#include "ble_timestamp.h"
 
 #include "Midi2BluetoothMidiAbstraction_i.c"
 #include "Midi2BluetoothMidiAbstraction.h"
@@ -95,6 +100,10 @@ class CMidi2BluetoothMidiEndpointManager;
 
 #include "dllmain.h"
 
+#include "MidiBluetoothPacket.h"
+
+#include "MidiBluetoothDeviceDefinition.h"
+#include "MidiBluetoothDevice.h"
 #include "MidiEndpointTable.h"
 
 #include "Midi2.BluetoothMidiAbstraction.h"

@@ -31,7 +31,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const groupIndex,
             _In_ midi2::Midi1ChannelVoiceMessageStatus const& status,
-            _In_ uint8_t const channel, 
+            _In_ uint8_t const channelIndex,
             _In_ uint8_t const byte3, 
             _In_ uint8_t const byte4) noexcept;
 
@@ -51,7 +51,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const groupIndex,
             _In_ midi2::Midi2ChannelVoiceMessageStatus const& status,
-            _In_ uint8_t const channel,
+            _In_ uint8_t const channelIndex,
             _In_ uint16_t const index,
             _In_ uint32_t const data) noexcept;
 

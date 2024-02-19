@@ -14,9 +14,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
     midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1Message(
-        internal::MidiTimestamp timestamp,
-        uint8_t groupIndex,
-        uint8_t statusByte
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        uint8_t const statusByte
     ) noexcept
     {
         uint32_t midiWord{ 0 };
@@ -28,12 +28,21 @@ namespace winrt::Windows::Devices::Midi2::implementation
             0x00
         );
 
-        // TODO: this is an assumption. We really should check the message type
+
+ //       auto statusNibble = (statusByte & 0xF0) >> 4;
+
+
+
+
+        // TODO: this is an assumption. We need to check the message type for system etc.
+
+
         internal::SetUmpMessageType(midiWord, (uint8_t)MidiMessageType::Midi1ChannelVoice32);
+
         //if (originalMessage.Type() == Windows::Devices::Midi::MidiMessageType::NoteOff) ...
 
         // set the group
-        internal::SetGroupIndexInFirstWord(midiWord, groupIndex);
+        internal::SetGroupIndexInFirstWord(midiWord, group.Index());
 
         auto message = winrt::make<MidiMessage32>();
         message.Timestamp(timestamp);
@@ -45,10 +54,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1Message(
-        internal::MidiTimestamp timestamp,
-        uint8_t groupIndex,
-        uint8_t statusByte,
-        uint8_t dataByte1
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        uint8_t const statusByte,
+        uint8_t const dataByte1
     ) noexcept
     {
         uint32_t midiWord{ 0 };
@@ -60,12 +69,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
             0x00
         );
 
-        // TODO: this is an assumption. We really should check the message type
+        // TODO: this is an assumption. We need to check the message type for system etc.
+
+
         internal::SetUmpMessageType(midiWord, (uint8_t)MidiMessageType::Midi1ChannelVoice32);
         //if (originalMessage.Type() == Windows::Devices::Midi::MidiMessageType::NoteOff) ...
 
         // set the group
-        internal::SetGroupIndexInFirstWord(midiWord, groupIndex);
+        internal::SetGroupIndexInFirstWord(midiWord, group.Index());
 
         auto message = winrt::make<MidiMessage32>();
         message.Timestamp(timestamp);
@@ -76,11 +87,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1Message(
-        internal::MidiTimestamp timestamp,
-        uint8_t groupIndex,
-        uint8_t statusByte,
-        uint8_t dataByte1,
-        uint8_t dataByte2
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        uint8_t const statusByte,
+        uint8_t const dataByte1,
+        uint8_t const dataByte2
     ) noexcept
     {
         uint32_t midiWord{ 0 };
@@ -92,12 +103,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
             internal::CleanupByte7(dataByte2)
         );
 
-        // TODO: this is an assumption. We really should check the message type
+        // TODO: this is an assumption. We need to check the message type for system etc.
+
+
+        //if (originalMessage.Type() == Windows::Devices::Midi::MidiMessageType::NoteOff)
+
         internal::SetUmpMessageType(midiWord, (uint8_t)MidiMessageType::Midi1ChannelVoice32);
-        //if (originalMessage.Type() == Windows::Devices::Midi::MidiMessageType::NoteOff) ...
 
         // set the group
-        internal::SetGroupIndexInFirstWord(midiWord, groupIndex);
+        internal::SetGroupIndexInFirstWord(midiWord, group.Index());
 
         auto message = winrt::make<MidiMessage32>();
         message.Timestamp(timestamp);
@@ -110,8 +124,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     uint32_t MidiMessageConverter::InternalConvertBytes(
-        uint8_t groupIndex, 
-        Windows::Devices::Midi::IMidiMessage originalMessage
+        uint8_t const groupIndex,
+        Windows::Devices::Midi::IMidiMessage const& originalMessage
     ) noexcept
     {
         // get the bytes using IBufferByteAccess and then do the conversion

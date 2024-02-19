@@ -106,7 +106,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         for (auto const& message : messages)
         {
-            message.AppendAllWordsToVector(result);
+            message.AppendAllMessageWordsToVector(result);
         }
 
         return result;

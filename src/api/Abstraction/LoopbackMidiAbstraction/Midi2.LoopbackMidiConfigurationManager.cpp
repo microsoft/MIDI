@@ -47,11 +47,11 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
         TraceLoggingWideString(ConfigurationJsonSection, "json")
     );
 
-
+    // empty config is ok in this case. We just ignore
     if (ConfigurationJsonSection == nullptr) return S_OK;
-    //if (ConfigurationJsonSection == L"") return S_OK;
 
-    json::JsonObject jsonObject;
+
+    json::JsonObject jsonObject{};
 
     // default to failure
     auto responseObject = internal::BuildConfigurationResponseObject(false);

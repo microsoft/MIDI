@@ -192,6 +192,33 @@
   <data name="CommandWatchEndpointsDescription" xml:space="preserve">
     <value>Watch endpoints for add/remove and PnP property change notifications</value>
   </data>
+  <data name="CommonStringDirectionSingular" xml:space="preserve">
+    <value>Direction</value>
+  </data>
+  <data name="CommonStringGroupPlural" xml:space="preserve">
+    <value>Groups</value>
+  </data>
+  <data name="CommonStringGroupSingular" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="CommonStringGroupTerminalBlockSingular" xml:space="preserve">
+    <value>Group Terminal Block</value>
+  </data>
+  <data name="CommonStringIndexPlural" xml:space="preserve">
+    <value>Indexes</value>
+  </data>
+  <data name="CommonStringIndexSingular" xml:space="preserve">
+    <value>Index</value>
+  </data>
+  <data name="CommonStringKBPS" xml:space="preserve">
+    <value>kbps</value>
+  </data>
+  <data name="CommonStringMIDI" xml:space="preserve">
+    <value>MIDI</value>
+  </data>
+  <data name="CommonStringProtocolSingular" xml:space="preserve">
+    <value>Protocol</value>
+  </data>
   <data name="CommonTableHeaderIndex" xml:space="preserve">
     <value>Index</value>
   </data>
@@ -547,6 +574,192 @@ Timestamp</value>
   </data>
   <data name="PropertiesTableSectionHeaderUserData" xml:space="preserve">
     <value>User Data</value>
+  </data>
+  <data name="PropertyTableErrorNoMatchingContainer" xml:space="preserve">
+    <value>No matching container found</value>
+  </data>
+  <data name="PropertyTableErrorNoMatchingParent" xml:space="preserve">
+    <value>No device parent found</value>
+  </data>
+  <data name="PropertyTableHeaderRawProperties" xml:space="preserve">
+    <value>Raw Properties</value>
+  </data>
+  <data name="PropertyTablePropertyLabelCommonLastUpdated" xml:space="preserve">
+    <value>Last Updated</value>
+  </data>
+  <data name="PropertyTablePropertyLabelConfiguredMIDI1Protocol" xml:space="preserve">
+    <value>MIDI 1.0 Protocol</value>
+  </data>
+  <data name="PropertyTablePropertyLabelConfiguredMIDI2Protocol" xml:space="preserve">
+    <value>MIDI 2.0 Protocol</value>
+  </data>
+  <data name="PropertyTablePropertyLabelConfiguredReceiveJR" xml:space="preserve">
+    <value>Receiving JR Timestamps</value>
+  </data>
+  <data name="PropertyTablePropertyLabelConfiguredSendJR" xml:space="preserve">
+    <value>Sending JR Timestamps</value>
+  </data>
+  <data name="PropertyTablePropertyLabelContainerId" xml:space="preserve">
+    <value>Id</value>
+  </data>
+  <data name="PropertyTablePropertyLabelContainerKind" xml:space="preserve">
+    <value>Kind</value>
+  </data>
+  <data name="PropertyTablePropertyLabelContainerName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="PropertyTablePropertyLabelDeviceIdentityLastUpdated" xml:space="preserve">
+    <value>Device Identity Last Updated</value>
+  </data>
+  <data name="PropertyTablePropertyLabelEndpointInfoLastUpdated" xml:space="preserve">
+    <value>Endpoint Information Last Updated</value>
+  </data>
+  <data name="PropertyTablePropertyLabelEndpointSuppliedNameLastUpdated" xml:space="preserve">
+    <value>Endpoint Name Last Updated</value>
+  </data>
+  <data name="PropertyTablePropertyLabelFunctionBlock" xml:space="preserve">
+    <value>Function Block</value>
+  </data>
+  <data name="PropertyTablePropertyLabelFunctionBlockActive" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="PropertyTablePropertyLabelFunctionBlockDirection" xml:space="preserve">
+    <value>Direction</value>
+  </data>
+  <data name="PropertyTablePropertyLabelFunctionBlockFirstGroupIndex" xml:space="preserve">
+    <value>First Group Index</value>
+  </data>
+  <data name="PropertyTablePropertyLabelFunctionBlockGroupCount" xml:space="preserve">
+    <value>Group Count</value>
+  </data>
+  <data name="PropertyTablePropertyLabelFunctionBlockMaxSysEx8Streams" xml:space="preserve">
+    <value>Max SysEx 8 Streams</value>
+  </data>
+  <data name="PropertyTablePropertyLabelFunctionBlockMIDI10Connection" xml:space="preserve">
+    <value>MIDI 1.0</value>
+  </data>
+  <data name="PropertyTablePropertyLabelFunctionBlockMIDICIVersionFormat" xml:space="preserve">
+    <value>MIDI CI Version/Format</value>
+  </data>
+  <data name="PropertyTablePropertyLabelFunctionBlocksDeclaredCount" xml:space="preserve">
+    <value>Declared Function Block Count</value>
+  </data>
+  <data name="PropertyTablePropertyLabelFunctionBlocksStatic" xml:space="preserve">
+    <value>Static Function Blocks</value>
+  </data>
+  <data name="PropertyTablePropertyLabelFunctionBlockUIHint" xml:space="preserve">
+    <value>UI Hint</value>
+  </data>
+  <data name="PropertyTablePropertyLabelGTBGroupCount" xml:space="preserve">
+    <value>Group Count</value>
+  </data>
+  <data name="PropertyTablePropertyLabelGTBMaxInputBandwidth" xml:space="preserve">
+    <value>Max Input Bandwidth</value>
+  </data>
+  <data name="PropertyTablePropertyLabelGTBMaxOutputBandwidth" xml:space="preserve">
+    <value>Max Output Bandwidth</value>
+  </data>
+  <data name="PropertyTablePropertyLabelParentId" xml:space="preserve">
+    <value>Id</value>
+  </data>
+  <data name="PropertyTablePropertyLabelParentKind" xml:space="preserve">
+    <value>Kind</value>
+  </data>
+  <data name="PropertyTablePropertyLabelParentName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="PropertyTablePropertyLabelProductInstanceIdLastUpdated" xml:space="preserve">
+    <value>Product Instance Id Last Updated</value>
+  </data>
+  <data name="PropertyTablePropertyLabelProtocol" xml:space="preserve">
+    <value>Protocol</value>
+  </data>
+  <data name="PropertyTablePropertyLabelSupportsReceivingJR" xml:space="preserve">
+    <value>Supports Receiving JR Time</value>
+  </data>
+  <data name="PropertyTablePropertyLabelSupportsSendingJR" xml:space="preserve">
+    <value>Supports Sending JR Time</value>
+  </data>
+  <data name="PropertyTablePropertyLabelTransportId" xml:space="preserve">
+    <value>Transport Id</value>
+  </data>
+  <data name="PropertyTablePropertyLabelTransportMnemonic" xml:space="preserve">
+    <value>Transport Mnemonic</value>
+  </data>
+  <data name="PropertyTablePropertyLabelTransportSuppliedName" xml:space="preserve">
+    <value>Transport-supplied Name</value>
+  </data>
+  <data name="PropertyTablePropertyLabelUMPVersion" xml:space="preserve">
+    <value>UMP Version</value>
+  </data>
+  <data name="PropertyTablePropertyValueFunctionBlockSysEx8NotSupported" xml:space="preserve">
+    <value>SysEx 8 Not Supported</value>
+  </data>
+  <data name="PropertyTablePropertyValueFunctionBlockSysEx8SingleStreamSupported" xml:space="preserve">
+    <value>Single SysEx Stream</value>
+  </data>
+  <data name="PropertyTablePropertyValueGTBInputBandwidthUnknownOrNotFixed" xml:space="preserve">
+    <value>0 (Unknown or Not Fixed)</value>
+  </data>
+  <data name="PropertyTablePropertyValueSuffixFunctionBlockMultipleSysexStreams" xml:space="preserve">
+    <value>SysEx Streams</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionActiveConfiguration" xml:space="preserve">
+    <value>From endpoint discovery and protocol negotiation and represent the current configuration of the endpoint.</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionContainer" xml:space="preserve">
+    <value>The container is how Windows groups related devices</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionDeclaredCapabilities" xml:space="preserve">
+    <value>From endpoint discovery and protocol negotiation and represent the capabilities of the endpoint.</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionEndpointMetadata" xml:space="preserve">
+    <value>Metadata captured using MIDI 2.0 endpoint discovery</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionFunctionBlocks" xml:space="preserve">
+    <value>Function blocks are discovered through endpoint discovery in-protocol.</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionParentDevice" xml:space="preserve">
+    <value>The device which "owns" this endpoint. In some cases, this is a software device.</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionTransportInformation" xml:space="preserve">
+    <value>From the transport plugin in the service (and from the driver in cases where a driver is used)</value>
+  </data>
+  <data name="PropertyTableSectionHeaderActiveConfiguration" xml:space="preserve">
+    <value>Active Configuration</value>
+  </data>
+  <data name="PropertyTableSectionHeaderAdditionalProperties" xml:space="preserve">
+    <value>Additional Capabilities/Properties</value>
+  </data>
+  <data name="PropertyTableSectionHeaderContainer" xml:space="preserve">
+    <value>Container</value>
+  </data>
+  <data name="PropertyTableSectionHeaderDeclaredCapabilities" xml:space="preserve">
+    <value>Declared Capabilities</value>
+  </data>
+  <data name="PropertyTableSectionHeaderFunctionBlocks" xml:space="preserve">
+    <value>Function Blocks</value>
+  </data>
+  <data name="PropertyTableSectionHeaderGroupTerminalBlocks" xml:space="preserve">
+    <value>Group Terminal Blocks</value>
+  </data>
+  <data name="PropertyTableSectionHeaderParentDevice" xml:space="preserve">
+    <value>Parent Device</value>
+  </data>
+  <data name="PropertyTableSectionHeaderTransportInformation" xml:space="preserve">
+    <value>Transport Information</value>
+  </data>
+  <data name="PropertyTableSectionNoteGTBFunctionBlocksAlsoPresent" xml:space="preserve">
+    <value>Function blocks are also present, and will be more accurate.</value>
+  </data>
+  <data name="PropertyValueNativeDataFormatByteStream" xml:space="preserve">
+    <value>Byte Stream (MIDI 1.0)</value>
+  </data>
+  <data name="PropertyValueNativeDataFormatUmp" xml:space="preserve">
+    <value>Universal MIDI Packet (MIDI 1.0 or MIDI 2.0 protocol)</value>
+  </data>
+  <data name="PropertyValueNativeDataFormatUnknown" xml:space="preserve">
+    <value>Unknown Data Format</value>
   </data>
   <data name="SendMessageEscapePressedMessage" xml:space="preserve">
     <value>Escape key pressed. Message sending terminated.</value>

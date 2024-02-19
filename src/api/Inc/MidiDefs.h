@@ -193,10 +193,18 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointUmpVersionMajor, 154);     // DEVPROP_TY
 #define STRING_PKEY_MIDI_EndpointUmpVersionMinor MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"155"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointUmpVersionMinor, 155);     // DEVPROP_TYPE_BYTE
 
+#define STRING_PKEY_MIDI_EndpointInformationLastUpdateTime MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"156"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointInformationLastUpdateTime, 156);     // DEVPROP_TYPE_FILETIME
+
+
 
 // binary device information structure holding sysex id, device family id, sw revision, etc.
 #define STRING_PKEY_MIDI_DeviceIdentity MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"160"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_DeviceIdentity, 160);     // DEVPROP_TYPE_BINARY
+
+#define STRING_PKEY_MIDI_DeviceIdentityLastUpdateTime MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"161"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_DeviceIdentityLastUpdateTime, 161);     // DEVPROP_TYPE_FILETIME
+
 
 // In-protocol endpoint strings ================================================================
 // Starts at 170
@@ -211,6 +219,14 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointProvidedName, 170);     // DEVPROP_TYPE_
 #define STRING_PKEY_MIDI_EndpointProvidedProductInstanceId MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"171"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointProvidedProductInstanceId, 171);     // DEVPROP_TYPE_STRING
 
+#define STRING_PKEY_MIDI_EndpointProvidedNameLastUpdateTime MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"172"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointProvidedNameLastUpdateTime, 172);     // DEVPROP_TYPE_FILETIME
+
+#define STRING_PKEY_MIDI_EndpointProvidedProductInstanceIdLastUpdateTime MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"173"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointProvidedProductInstanceIdLastUpdateTime, 173);     // DEVPROP_TYPE_FILETIME
+
+
+
 // In-protocol Function Block information ================================================================
 // starts at 180
 
@@ -222,6 +238,10 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_FunctionBlockCount, 180);     // DEVPROP_TYPE_BY
 #define STRING_PKEY_MIDI_FunctionBlocksAreStatic MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"182"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_FunctionBlocksAreStatic, 182);     // DEVPROP_TYPE_BOOLEAN
 
+
+
+#define STRING_PKEY_MIDI_FunctionBlocksLastUpdateTime MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"183"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_FunctionBlocksLastUpdateTime, 183);     // DEVPROP_TYPE_FILETIME
 
 // Actual Function Blocks ================================================================
 // starts at 200
@@ -456,6 +476,11 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointConfiguredToSendJRTimestamps, 405);     
 
 #define STRING_PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"406"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps, 406);     // DEVPROP_TYPE_BOOLEAN
+
+#define STRING_PKEY_MIDI_EndpointConfigurationLastUpdateTime MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"407"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointConfigurationLastUpdateTime, 407);     // DEVPROP_TYPE_FILETIME
+
+
 
 
 // User-supplied metadata ==================================================================

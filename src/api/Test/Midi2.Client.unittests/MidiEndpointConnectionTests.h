@@ -47,6 +47,10 @@ public:
 
     TEST_METHOD(TestSendWordArrayBoundsError);
 
+    TEST_METHOD(TestSendAndReceiveMultipleMessageWordsList);
+    TEST_METHOD(TestSendAndReceiveMultipleMessagePackets);
+    
+    
 
     //TEST_METHOD(TestSendMessageSuccessImmediateReturnCode);
     //TEST_METHOD(TestSendMessageSuccessScheduledReturnCode);

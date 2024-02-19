@@ -286,6 +286,87 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Direction.
+        /// </summary>
+        internal static string CommonStringDirectionSingular {
+            get {
+                return ResourceManager.GetString("CommonStringDirectionSingular", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Groups.
+        /// </summary>
+        internal static string CommonStringGroupPlural {
+            get {
+                return ResourceManager.GetString("CommonStringGroupPlural", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Group.
+        /// </summary>
+        internal static string CommonStringGroupSingular {
+            get {
+                return ResourceManager.GetString("CommonStringGroupSingular", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Group Terminal Block.
+        /// </summary>
+        internal static string CommonStringGroupTerminalBlockSingular {
+            get {
+                return ResourceManager.GetString("CommonStringGroupTerminalBlockSingular", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indexes.
+        /// </summary>
+        internal static string CommonStringIndexPlural {
+            get {
+                return ResourceManager.GetString("CommonStringIndexPlural", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Index.
+        /// </summary>
+        internal static string CommonStringIndexSingular {
+            get {
+                return ResourceManager.GetString("CommonStringIndexSingular", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to kbps.
+        /// </summary>
+        internal static string CommonStringKBPS {
+            get {
+                return ResourceManager.GetString("CommonStringKBPS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MIDI.
+        /// </summary>
+        internal static string CommonStringMIDI {
+            get {
+                return ResourceManager.GetString("CommonStringMIDI", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protocol.
+        /// </summary>
+        internal static string CommonStringProtocolSingular {
+            get {
+                return ResourceManager.GetString("CommonStringProtocolSingular", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Index.
         /// </summary>
         internal static string CommonTableHeaderIndex {
@@ -1322,6 +1403,564 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         internal static string PropertiesTableSectionHeaderUserData {
             get {
                 return ResourceManager.GetString("PropertiesTableSectionHeaderUserData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching container found.
+        /// </summary>
+        internal static string PropertyTableErrorNoMatchingContainer {
+            get {
+                return ResourceManager.GetString("PropertyTableErrorNoMatchingContainer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No device parent found.
+        /// </summary>
+        internal static string PropertyTableErrorNoMatchingParent {
+            get {
+                return ResourceManager.GetString("PropertyTableErrorNoMatchingParent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Raw Properties.
+        /// </summary>
+        internal static string PropertyTableHeaderRawProperties {
+            get {
+                return ResourceManager.GetString("PropertyTableHeaderRawProperties", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Last Updated.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelCommonLastUpdated {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelCommonLastUpdated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MIDI 1.0 Protocol.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelConfiguredMIDI1Protocol {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelConfiguredMIDI1Protocol", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MIDI 2.0 Protocol.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelConfiguredMIDI2Protocol {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelConfiguredMIDI2Protocol", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Receiving JR Timestamps.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelConfiguredReceiveJR {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelConfiguredReceiveJR", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sending JR Timestamps.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelConfiguredSendJR {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelConfiguredSendJR", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Id.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelContainerId {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelContainerId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Kind.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelContainerKind {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelContainerKind", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelContainerName {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelContainerName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Device Identity Last Updated.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelDeviceIdentityLastUpdated {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelDeviceIdentityLastUpdated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Endpoint Information Last Updated.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelEndpointInfoLastUpdated {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelEndpointInfoLastUpdated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Endpoint Name Last Updated.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelEndpointSuppliedNameLastUpdated {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelEndpointSuppliedNameLastUpdated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Function Block.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelFunctionBlock {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelFunctionBlock", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Active.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelFunctionBlockActive {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelFunctionBlockActive", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Direction.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelFunctionBlockDirection {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelFunctionBlockDirection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to First Group Index.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelFunctionBlockFirstGroupIndex {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelFunctionBlockFirstGroupIndex", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Group Count.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelFunctionBlockGroupCount {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelFunctionBlockGroupCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max SysEx 8 Streams.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelFunctionBlockMaxSysEx8Streams {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelFunctionBlockMaxSysEx8Streams", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MIDI 1.0.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelFunctionBlockMIDI10Connection {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelFunctionBlockMIDI10Connection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MIDI CI Version/Format.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelFunctionBlockMIDICIVersionFormat {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelFunctionBlockMIDICIVersionFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Declared Function Block Count.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelFunctionBlocksDeclaredCount {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelFunctionBlocksDeclaredCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Static Function Blocks.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelFunctionBlocksStatic {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelFunctionBlocksStatic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to UI Hint.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelFunctionBlockUIHint {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelFunctionBlockUIHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Group Count.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelGTBGroupCount {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelGTBGroupCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max Input Bandwidth.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelGTBMaxInputBandwidth {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelGTBMaxInputBandwidth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max Output Bandwidth.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelGTBMaxOutputBandwidth {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelGTBMaxOutputBandwidth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Id.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelParentId {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelParentId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Kind.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelParentKind {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelParentKind", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelParentName {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelParentName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Product Instance Id Last Updated.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelProductInstanceIdLastUpdated {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelProductInstanceIdLastUpdated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protocol.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelProtocol {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelProtocol", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Supports Receiving JR Time.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelSupportsReceivingJR {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelSupportsReceivingJR", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Supports Sending JR Time.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelSupportsSendingJR {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelSupportsSendingJR", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transport Id.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelTransportId {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelTransportId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transport Mnemonic.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelTransportMnemonic {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelTransportMnemonic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transport-supplied Name.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelTransportSuppliedName {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelTransportSuppliedName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to UMP Version.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelUMPVersion {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelUMPVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SysEx 8 Not Supported.
+        /// </summary>
+        internal static string PropertyTablePropertyValueFunctionBlockSysEx8NotSupported {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyValueFunctionBlockSysEx8NotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Single SysEx Stream.
+        /// </summary>
+        internal static string PropertyTablePropertyValueFunctionBlockSysEx8SingleStreamSupported {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyValueFunctionBlockSysEx8SingleStreamSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 0 (Unknown or Not Fixed).
+        /// </summary>
+        internal static string PropertyTablePropertyValueGTBInputBandwidthUnknownOrNotFixed {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyValueGTBInputBandwidthUnknownOrNotFixed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SysEx Streams.
+        /// </summary>
+        internal static string PropertyTablePropertyValueSuffixFunctionBlockMultipleSysexStreams {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyValueSuffixFunctionBlockMultipleSysexStreams", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to From endpoint discovery and protocol negotiation and represent the current configuration of the endpoint..
+        /// </summary>
+        internal static string PropertyTableSectionDescriptionActiveConfiguration {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionDescriptionActiveConfiguration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The container is how Windows groups related devices.
+        /// </summary>
+        internal static string PropertyTableSectionDescriptionContainer {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionDescriptionContainer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to From endpoint discovery and protocol negotiation and represent the capabilities of the endpoint..
+        /// </summary>
+        internal static string PropertyTableSectionDescriptionDeclaredCapabilities {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionDescriptionDeclaredCapabilities", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Metadata captured using MIDI 2.0 endpoint discovery.
+        /// </summary>
+        internal static string PropertyTableSectionDescriptionEndpointMetadata {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionDescriptionEndpointMetadata", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Function blocks are discovered through endpoint discovery in-protocol..
+        /// </summary>
+        internal static string PropertyTableSectionDescriptionFunctionBlocks {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionDescriptionFunctionBlocks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The device which &quot;owns&quot; this endpoint. In some cases, this is a software device..
+        /// </summary>
+        internal static string PropertyTableSectionDescriptionParentDevice {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionDescriptionParentDevice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to From the transport plugin in the service (and from the driver in cases where a driver is used).
+        /// </summary>
+        internal static string PropertyTableSectionDescriptionTransportInformation {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionDescriptionTransportInformation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Active Configuration.
+        /// </summary>
+        internal static string PropertyTableSectionHeaderActiveConfiguration {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionHeaderActiveConfiguration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Additional Capabilities/Properties.
+        /// </summary>
+        internal static string PropertyTableSectionHeaderAdditionalProperties {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionHeaderAdditionalProperties", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Container.
+        /// </summary>
+        internal static string PropertyTableSectionHeaderContainer {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionHeaderContainer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Declared Capabilities.
+        /// </summary>
+        internal static string PropertyTableSectionHeaderDeclaredCapabilities {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionHeaderDeclaredCapabilities", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Function Blocks.
+        /// </summary>
+        internal static string PropertyTableSectionHeaderFunctionBlocks {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionHeaderFunctionBlocks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Group Terminal Blocks.
+        /// </summary>
+        internal static string PropertyTableSectionHeaderGroupTerminalBlocks {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionHeaderGroupTerminalBlocks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Parent Device.
+        /// </summary>
+        internal static string PropertyTableSectionHeaderParentDevice {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionHeaderParentDevice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transport Information.
+        /// </summary>
+        internal static string PropertyTableSectionHeaderTransportInformation {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionHeaderTransportInformation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Function blocks are also present, and will be more accurate..
+        /// </summary>
+        internal static string PropertyTableSectionNoteGTBFunctionBlocksAlsoPresent {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionNoteGTBFunctionBlocksAlsoPresent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Byte Stream (MIDI 1.0).
+        /// </summary>
+        internal static string PropertyValueNativeDataFormatByteStream {
+            get {
+                return ResourceManager.GetString("PropertyValueNativeDataFormatByteStream", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Universal MIDI Packet (MIDI 1.0 or MIDI 2.0 protocol).
+        /// </summary>
+        internal static string PropertyValueNativeDataFormatUmp {
+            get {
+                return ResourceManager.GetString("PropertyValueNativeDataFormatUmp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown Data Format.
+        /// </summary>
+        internal static string PropertyValueNativeDataFormatUnknown {
+            get {
+                return ResourceManager.GetString("PropertyValueNativeDataFormatUnknown", resourceCulture);
             }
         }
         

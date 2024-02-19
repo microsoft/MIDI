@@ -156,9 +156,6 @@
     <ClCompile Include="MidiMessageConverter.cpp">
       <Filter>API\Messages\Utility</Filter>
     </ClCompile>
-    <ClCompile Include="MidiMessageTranslator.cpp">
-      <Filter>API\Messages\Utility</Filter>
-    </ClCompile>
     <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
       <Filter>API\Enumeration</Filter>
     </ClCompile>
@@ -174,12 +171,6 @@
     <ClCompile Include="MidiVirtualEndpointDeviceDefinition.cpp">
       <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
     </ClCompile>
-    <ClCompile Include="MidiSessionConnectionInformation.cpp">
-      <Filter>API\Service</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiSessionInformation.cpp">
-      <Filter>API\Service</Filter>
-    </ClCompile>
     <ClCompile Include="MidiServiceConfigurationResponse.cpp">
       <Filter>API\Service\Configuration</Filter>
     </ClCompile>
@@ -188,6 +179,18 @@
     </ClCompile>
     <ClCompile Include="MidiServiceLoopbackEndpointDefinition.cpp">
       <Filter>API\Service\Configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_SendSingleMessage.cpp">
+      <Filter>API\Endpoints\Connections</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_SendMultipleMessages.cpp">
+      <Filter>API\Endpoints\Connections</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_Plugins.cpp">
+      <Filter>API\Endpoints\Connections</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_SendInfrastructure.cpp">
+      <Filter>API\Endpoints\Connections</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -258,9 +261,6 @@
     <ClInclude Include="MidiMessageConverter.h">
       <Filter>API\Messages\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="MidiMessageTranslator.h">
-      <Filter>API\Messages\Utility</Filter>
-    </ClInclude>
     <ClInclude Include="MidiEndpointDeviceWatcher.h">
       <Filter>API\Enumeration</Filter>
     </ClInclude>
@@ -278,12 +278,6 @@
     </ClInclude>
     <ClInclude Include="MidiVirtualEndpointDeviceDefinition.h">
       <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiSessionConnectionInformation.h">
-      <Filter>API\Service</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiSessionInformation.h">
-      <Filter>API\Service</Filter>
     </ClInclude>
     <ClInclude Include="MidiServiceConfigurationResponse.h">
       <Filter>API\Service\Configuration</Filter>
@@ -428,9 +422,6 @@
     <Midl Include="MidiMessageConverter.idl">
       <Filter>API\Messages\Utility</Filter>
     </Midl>
-    <Midl Include="MidiMessageTranslator.idl">
-      <Filter>API\Messages\Utility</Filter>
-    </Midl>
     <Midl Include="MidiUniqueId.idl">
       <Filter>API\BasicTypes</Filter>
     </Midl>
@@ -457,12 +448,6 @@
     </Midl>
     <Midl Include="IMidiEndpointConnectionSettings.idl">
       <Filter>API\Endpoints\Connections</Filter>
-    </Midl>
-    <Midl Include="MidiSessionInformation.idl">
-      <Filter>API\Service\Reporting</Filter>
-    </Midl>
-    <Midl Include="MidiSessionConnectionInformation.idl">
-      <Filter>API\Service\Reporting</Filter>
     </Midl>
     <Midl Include="MidiServicePingResponse.idl">
       <Filter>API\Service\Health</Filter>
@@ -494,6 +479,8 @@
     <Midl Include="MidiServiceConfigurationResponseStatusEnum.idl">
       <Filter>API\Service\Configuration</Filter>
     </Midl>
+    <Midl Include="MidiServiceSessionConnectionInformation.idl" />
+    <Midl Include="MidiServiceSessionInformation.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />

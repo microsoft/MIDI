@@ -53,6 +53,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         //winrt::Windows::Devices::Enumeration::DeviceInformation DeviceInformation() const noexcept { return m_deviceInformation; }
 
+        foundation::DateTime ProductInstanceIdLastUpdateTime() const noexcept { return GetDateTimeProperty(STRING_PKEY_MIDI_EndpointProvidedProductInstanceIdLastUpdateTime, foundation::DateTime{}); }
+        foundation::DateTime EndpointSuppliedNameLastUpdateTime() const noexcept { return GetDateTimeProperty(STRING_PKEY_MIDI_EndpointProvidedNameLastUpdateTime, foundation::DateTime{}); }
+        foundation::DateTime EndpointConfigurationLastUpdateTime() const noexcept { return GetDateTimeProperty(STRING_PKEY_MIDI_EndpointConfigurationLastUpdateTime, foundation::DateTime{}); }
+        foundation::DateTime EndpointInformationLastUpdateTime() const noexcept { return GetDateTimeProperty(STRING_PKEY_MIDI_EndpointInformationLastUpdateTime, foundation::DateTime{}); }
+        foundation::DateTime DeviceIdentityLastUpdateTime() const noexcept { return GetDateTimeProperty(STRING_PKEY_MIDI_DeviceIdentityLastUpdateTime, foundation::DateTime{}); }
+        foundation::DateTime FunctionBlocksLastUpdateTime() const noexcept { return GetDateTimeProperty(STRING_PKEY_MIDI_FunctionBlocksLastUpdateTime, foundation::DateTime{}); }
+
+
+
         winrt::hstring Name() const noexcept;
 
         winrt::hstring TransportSuppliedName() const noexcept { return m_transportSuppliedEndpointName; }  // todo: may need to update this later
@@ -137,6 +146,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring GetGuidPropertyAsString(
             _In_ winrt::hstring key,
             _In_ winrt::hstring defaultValue) const noexcept;
+
+        foundation::DateTime GetDateTimeProperty(
+            _In_ winrt::hstring key,
+            _In_ foundation::DateTime defaultValue) const noexcept;
 
 
         uint8_t GetByteProperty(
