@@ -122,7 +122,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
                     bool updatedUserMetadata{ false };
                     bool updatedAdditionalCapabilities{ false };
 
-                    // TODO: check changed properties and set the flags here
 
                     if (args.Properties().HasKey(STRING_PKEY_MIDI_TransportSuppliedEndpointName) ||
                         args.Properties().HasKey(L"System.ItemNameDisplay") ||
@@ -184,6 +183,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
                     {
                         updatedAdditionalCapabilities = true;
                     }
+
+
+
 
 
                     newArgs->InternalInitialize(
