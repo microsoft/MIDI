@@ -137,7 +137,7 @@
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Midl>
       <OutputDirectory>$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)\</OutputDirectory>
@@ -154,7 +154,7 @@
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Midl>
       <OutputDirectory>$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration)\</OutputDirectory>
@@ -220,7 +220,7 @@
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Midl>
       <GenerateServerFiles>Stub</GenerateServerFiles>
