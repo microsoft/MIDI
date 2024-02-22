@@ -50,37 +50,37 @@ private:
     // discrete methods for each type of transform. But right now, it's about making the
     // transform process work properly
     HRESULT
-    CMidiClientManager::GetMidiTransform(
-                                _In_ handle_t,
-                                _In_ MidiFlow,
-                                _In_ MidiDataFormat,
-                                _In_ MidiDataFormat,
-                                _In_ wil::com_ptr_nothrow<CMidiPipe>&,
-                                _In_ wil::com_ptr_nothrow<CMidiPipe>&);
+    GetMidiTransform(
+                        _In_ handle_t,
+                        _In_ MidiFlow,
+                        _In_ MidiDataFormat,
+                        _In_ MidiDataFormat,
+                        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
+                        _In_ wil::com_ptr_nothrow<CMidiPipe>&);
 
     HRESULT
-    CMidiClientManager::GetMidiScheduler(
-                                _In_ handle_t,
-                                _In_ MidiFlow,
-                                _In_ wil::com_ptr_nothrow<CMidiPipe>&,
-                                _In_ wil::com_ptr_nothrow<CMidiPipe>&,
-                                _In_ wil::com_ptr_nothrow<CMidiPipe>&);
+    GetMidiScheduler(
+                        _In_ handle_t,
+                        _In_ MidiFlow,
+                        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
+                        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
+                        _In_ wil::com_ptr_nothrow<CMidiPipe>&);
 
     HRESULT
-    CMidiClientManager::GetMidiJRTimestampHandler(
-                                _In_ handle_t,
-                                _In_ MidiFlow,
-                                _In_ wil::com_ptr_nothrow<CMidiPipe>&,
-                                _In_ wil::com_ptr_nothrow<CMidiPipe>&,
-                                _In_ wil::com_ptr_nothrow<CMidiPipe>&);
+    GetMidiJRTimestampHandler(
+                        _In_ handle_t,
+                        _In_ MidiFlow,
+                        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
+                        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
+                        _In_ wil::com_ptr_nothrow<CMidiPipe>&);
 
     HRESULT
-    CMidiClientManager::GetMidiEndpointMetadataHandler(
-                                _In_ handle_t,
-                                _In_ MidiFlow,
-                                _In_ wil::com_ptr_nothrow<CMidiPipe>&,
-                                _In_ wil::com_ptr_nothrow<CMidiPipe>&,
-                                _In_ wil::com_ptr_nothrow<CMidiPipe>&);
+    GetMidiEndpointMetadataHandler(
+                        _In_ handle_t,
+                        _In_ MidiFlow,
+                        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
+                        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
+                        _In_ wil::com_ptr_nothrow<CMidiPipe>&);
 
 
     wil::critical_section m_ClientManagerLock;
