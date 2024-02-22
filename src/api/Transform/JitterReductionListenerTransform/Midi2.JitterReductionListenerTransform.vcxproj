@@ -303,7 +303,7 @@
     <ClInclude Include="Resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Midi2.JitterReductionListenerTransform.rc" />
+    <ResourceCompile Include="Midi2.JitterReductionListenerMidiTransform.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

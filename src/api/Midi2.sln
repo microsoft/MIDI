@@ -217,6 +217,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AM_MIDI2", "Libs\AM_MIDI2\src\AM_MIDI2.vcxproj", "{3CC19466-95AA-43CD-B327-4C53C026B965}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.SchedulerTransform", "Transform\SchedulerTransform\Midi2.SchedulerTransform.vcxproj", "{366FA284-D8C0-4CC5-B9A3-917EAB967173}"
+	ProjectSection(ProjectDependencies) = postProject
+		{EFB7CF90-7DEF-44CF-868A-191CA30E0FCF} = {EFB7CF90-7DEF-44CF-868A-191CA30E0FCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.Transform.unittests", "Test\Midi2.Transform.unittests\Midi2.Transform.unittests.vcxproj", "{1425218C-E6E6-40BB-B99B-052156749E2C}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -233,6 +236,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.Transform.unittests",
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.JitterReductionGeneratorTransform", "Transform\JitterReductionGeneratorTransform\Midi2.JitterReductionGeneratorTransform.vcxproj", "{6D151BF5-40A2-4BD7-BB67-07D2741DA01E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{EFB7CF90-7DEF-44CF-868A-191CA30E0FCF} = {EFB7CF90-7DEF-44CF-868A-191CA30E0FCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Windows.Devices.Midi.shim", "Client\MidiRT\Windows.Devices.Midi.Shim\Windows.Devices.Midi.Shim.vcxproj", "{16F34756-0269-4CEB-8F1C-32D9C6441990}"
 	ProjectSection(ProjectDependencies) = postProject
