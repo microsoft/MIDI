@@ -17,7 +17,7 @@ struct ScheduledUmpMessage
     BYTE Data[MAXIMUM_UMP_DATASIZE];        // pre-define this array to avoid another allocation/indirection
 
     
-    ScheduledUmpMessage(_In_ internal::MidiTimestamp timestamp, _In_ uint64_t receivedIndex, _In_ UINT byteCount, _In_ BYTE* data)
+    ScheduledUmpMessage(_In_ internal::MidiTimestamp timestamp, _In_ uint64_t receivedIndex, _In_ UINT byteCount, _In_reads_bytes_(byteCount) BYTE* data)
     {
         if (byteCount <= MAXIMUM_UMP_DATASIZE)
         {

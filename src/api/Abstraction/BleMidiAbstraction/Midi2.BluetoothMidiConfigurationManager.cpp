@@ -52,8 +52,7 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
 
     return E_FAIL;
 }
-
-_Use_decl_annotations_ 
+ 
 HRESULT 
 CMidi2BluetoothMidiConfigurationManager::Cleanup()
 {
