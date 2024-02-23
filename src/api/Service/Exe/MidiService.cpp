@@ -8,8 +8,8 @@
 
 #include "stdafx.h"
 
-#define SVCNAME TEXT("MidiSrv")
-#define SVCDISPLAYNAME TEXT("Microsoft MIDI Service")
+#define SVCNAME L"MidiSrv"
+#define SVCDISPLAYNAME L"Microsoft MIDI Service"
 
 //#ifdef _DEBUG
 //#define SVCDESCRIPTION TEXT("Windows MIDI Services core service (Debug Build)")
@@ -392,7 +392,7 @@ int __cdecl _tmain(_In_ int ArgC, _In_reads_(ArgC) TCHAR *ArgV[])
 
     SERVICE_TABLE_ENTRY DispatchTable[] = 
     { 
-        { SVCNAME, (LPSERVICE_MAIN_FUNCTION) SvcMain }, 
+        { (LPWSTR) SVCNAME, (LPSERVICE_MAIN_FUNCTION) SvcMain }, 
         { NULL, NULL } 
     }; 
  

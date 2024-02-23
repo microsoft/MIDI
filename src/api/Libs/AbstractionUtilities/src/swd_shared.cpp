@@ -14,8 +14,8 @@
 namespace Windows::Devices::Midi2::Internal
 {
 
-    _Use_decl_annotations_
-        std::wstring GetStringSwdProperty(std::wstring deviceInterfaceId, std::wstring propertyName, std::wstring defaultValue)
+    std::wstring
+    GetStringSwdProperty(_In_ std::wstring deviceInterfaceId, _In_ std::wstring propertyName, _In_ std::wstring defaultValue)
     {
         auto propertyKey = winrt::to_hstring(propertyName.c_str());
 
@@ -48,7 +48,8 @@ namespace Windows::Devices::Midi2::Internal
 
 
     _Use_decl_annotations_
-        std::wstring GetSwdPropertyVirtualEndpointAssociationId(std::wstring deviceInterfaceId)
+    std::wstring
+    GetSwdPropertyVirtualEndpointAssociationId(std::wstring deviceInterfaceId)
     {
         std::wstring cleanId = internal::NormalizeEndpointInterfaceIdWStringCopy(deviceInterfaceId);
 
@@ -57,7 +58,8 @@ namespace Windows::Devices::Midi2::Internal
 
 
     _Use_decl_annotations_
-        std::wstring GetSwdPropertyInstanceId(std::wstring deviceInterfaceId)
+    std::wstring
+    GetSwdPropertyInstanceId(std::wstring deviceInterfaceId)
     {
         std::wstring cleanId = internal::NormalizeEndpointInterfaceIdWStringCopy(deviceInterfaceId);
 

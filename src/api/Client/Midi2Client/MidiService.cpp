@@ -253,7 +253,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                     // parse it into json objects
 
-                    if (sessionListJson != nullptr && sessionListJson.Length() > 0)
+                    if (sessionListJson.m_str != nullptr && sessionListJson.Length() > 0)
                     {
                         winrt::hstring hstr(sessionListJson, sessionListJson.Length());
 
