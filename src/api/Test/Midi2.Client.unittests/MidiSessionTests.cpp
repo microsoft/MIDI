@@ -9,8 +9,6 @@
 #include "stdafx.h"
 
 
-#include "MidiSessionTests.h"
-
 using namespace winrt::Windows::Devices::Midi2;
 
 void MidiSessionTests::TestCreateNewSessionWithoutSettings()

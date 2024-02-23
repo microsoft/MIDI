@@ -49,8 +49,7 @@ private:
     // TODO: These should be made more generic and go by a configuration, rather than have
     // discrete methods for each type of transform. But right now, it's about making the
     // transform process work properly
-    HRESULT
-    CMidiClientManager::GetMidiTransform(
+    HRESULT GetMidiTransform(
                                 _In_ handle_t,
                                 _In_ MidiFlow,
                                 _In_ MidiDataFormat,
@@ -58,24 +57,21 @@ private:
                                 _In_ wil::com_ptr_nothrow<CMidiPipe>&,
                                 _In_ wil::com_ptr_nothrow<CMidiPipe>&);
 
-    HRESULT
-    CMidiClientManager::GetMidiScheduler(
+    HRESULT GetMidiScheduler(
                                 _In_ handle_t,
                                 _In_ MidiFlow,
                                 _In_ wil::com_ptr_nothrow<CMidiPipe>&,
                                 _In_ wil::com_ptr_nothrow<CMidiPipe>&,
                                 _In_ wil::com_ptr_nothrow<CMidiPipe>&);
 
-    HRESULT
-    CMidiClientManager::GetMidiJRTimestampHandler(
+    HRESULT GetMidiJRTimestampHandler(
                                 _In_ handle_t,
                                 _In_ MidiFlow,
                                 _In_ wil::com_ptr_nothrow<CMidiPipe>&,
                                 _In_ wil::com_ptr_nothrow<CMidiPipe>&,
                                 _In_ wil::com_ptr_nothrow<CMidiPipe>&);
 
-    HRESULT
-    CMidiClientManager::GetMidiEndpointMetadataHandler(
+    HRESULT GetMidiEndpointMetadataHandler(
                                 _In_ handle_t,
                                 _In_ MidiFlow,
                                 _In_ wil::com_ptr_nothrow<CMidiPipe>&,

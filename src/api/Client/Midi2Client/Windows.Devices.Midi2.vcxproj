@@ -11,7 +11,7 @@
     <CppWinRTModernIDL>true</CppWinRTModernIDL>
     <CppWinRTProjectLanguage>C++/WinRT</CppWinRTProjectLanguage>
     <CppWinRTLibs>true</CppWinRTLibs>
-    <WindowsTargetPlatformVersion Condition=" '$(WindowsTargetPlatformVersion)' == '' ">10.0.20348.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion Condition=" '$(WindowsTargetPlatformVersion)' == '' ">10.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformMinVersion>10.0.20348.0</WindowsTargetPlatformMinVersion>
     <MinimalCoreWin>true</MinimalCoreWin>
     <DefaultLanguage>en-US</DefaultLanguage>
@@ -179,17 +179,17 @@
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</Profile>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">AbstractionUtilities.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">false</Profile>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">AbstractionUtilities.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</Profile>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AbstractionUtilities.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -232,9 +232,9 @@
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">false</RegisterOutput>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">false</RegisterOutput>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">AbstractionUtilities.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">AbstractionUtilities.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AbstractionUtilities.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">

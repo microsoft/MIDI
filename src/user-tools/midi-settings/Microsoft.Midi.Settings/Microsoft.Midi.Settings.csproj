@@ -4,7 +4,7 @@
 	    <TargetFramework>net8.0-windows10.0.20348.0</TargetFramework>
 		<TargetPlatformMinVersion>10.0.20348.0</TargetPlatformMinVersion>
         <Nullable>enable</Nullable>
-        <RootNamespace>Microsoft.Devices.Midi2.Settings</RootNamespace>
+        <RootNamespace>Microsoft.Midi.Settings</RootNamespace>
         
         <ApplicationIcon>Assets/WindowIcon.ico</ApplicationIcon>
         <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -53,6 +53,7 @@
   <ItemGroup>
     <None Remove="Styles\DefaultFont.xaml" />
     <None Remove="Styles\MessageTemplates.xaml" />
+    <None Remove="Views\DeviceDetailPage.xaml" />
     <None Remove="Views\DevicesPage.xaml" />
     <None Remove="Views\ManagementSessionsPage.xaml" />
     <None Remove="Views\PluginsProcessingPage.xaml" />
@@ -70,25 +71,26 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0-rc.2.23479.6" />
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.4" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.4.231008000" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+    <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.0.240109" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0-preview.1.24080.9" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.7" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.5.240205001-preview1" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="2.0.9" />
       
-      <PackageReference Include="System.Management" Version="8.0.0-rc.2.23479.6" />
-      <PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.0-rc.2.23479.6" />
+      <PackageReference Include="System.Management" Version="9.0.0-preview.1.24080.9" />
+      <PackageReference Include="System.ServiceProcess.ServiceController" Version="9.0.0-preview.1.24080.9" />
       <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
-      <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.2-0094" />
+      <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.5-0172" />
 
-      <PackageReference Include="WinUIEx" Version="2.3.2" />
+      <PackageReference Include="WinUIEx" Version="2.3.3" />
 
 	  
-    <PackageReference Include="CommunityToolkit.Common" Version="8.2.1" />
+    <PackageReference Include="CommunityToolkit.Common" Version="8.2.2" />
 	<PackageReference Include="CommunityToolkit.Labs.WinUI.SettingsControls" Version="0.0.18" />
     <PackageReference Include="CommunityToolkit.WinUI.UI.Animations" Version="7.1.2" />
     <PackageReference Include="CommunityToolkit.WinUI.UI.Controls" Version="7.1.2" />
-    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.25936-preview" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26031-preview" />
   </ItemGroup>
 
   <ItemGroup>
@@ -99,6 +101,9 @@
     <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <Page Update="Views\DeviceDetailPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="Styles\DefaultFont.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -180,5 +185,10 @@
             </ResolvedFileToPublish>
         </ItemGroup>
     </Target>
+    <ItemGroup>
+      <PRIResource Update="Strings\en-us\Resources.resw">
+        <Generator>ResXFileCodeGenerator</Generator>
+      </PRIResource>
+    </ItemGroup>
 
 </Project>

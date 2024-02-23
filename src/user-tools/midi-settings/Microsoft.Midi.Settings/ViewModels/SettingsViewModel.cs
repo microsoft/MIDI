@@ -48,7 +48,10 @@ public class SettingsViewModel : ObservableRecipient
     }
 
 
-    public SettingsViewModel(IThemeSelectorService themeSelectorService, ILocalSettingsService localSettingsService, IGeneralSettingsService generalSettingsService)
+    public SettingsViewModel(
+        IThemeSelectorService themeSelectorService, 
+        ILocalSettingsService localSettingsService, 
+        IGeneralSettingsService generalSettingsService)
     {
         _themeSelectorService = themeSelectorService;
         _elementTheme = _themeSelectorService.Theme;

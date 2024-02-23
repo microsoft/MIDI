@@ -17,6 +17,9 @@ public class PageService : IPageService
         Configure<ContentGridDetailViewModel, ContentGridDetailPage>();
 
         Configure<DevicesViewModel, DevicesPage>();
+        Configure<DeviceDetailViewModel, DeviceDetailPage>();
+
+
         Configure<ForDevelopersViewModel, ForDevelopersPage>();
         Configure<MainViewModel, MainPage>();
         Configure<ManagementSessionsViewModel, ManagementSessionsPage>();

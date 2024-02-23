@@ -9,8 +9,6 @@
 
 #include "stdafx.h"
 
-#include "MidiEndpointListenerTests.h"
-
 
 void MidiEndpointListenerTests::TestMessageTypeListener()
 {

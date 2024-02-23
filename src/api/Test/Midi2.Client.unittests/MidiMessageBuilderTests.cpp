@@ -9,10 +9,6 @@
 
 #include "stdafx.h"
 
-
-#include "MidiMessageBuilderTests.h"
-
-
 void MidiMessageBuilderTests::TestBuildType0UtilityMessages()
 {
     uint8_t status = 0x0D;

@@ -10,8 +10,6 @@
 #include "stdafx.h"
 
 
-#include "MidiFunctionBlockMessageBuilderTests.h"
-
 using namespace winrt::Windows::Devices::Midi2;
 
 

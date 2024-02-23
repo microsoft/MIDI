@@ -1,10 +1,7 @@
 
 #include "stdafx.h"
 
-#include "MidiEndpointCreationThreadTests.h"
 
-
-#include <wil\resource.h>
 
 
 #define NUM_MESSAGES_TO_TRANSMIT 10

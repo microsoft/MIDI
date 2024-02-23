@@ -232,21 +232,19 @@ namespace winrt::Windows::Devices::Midi2::implementation
             MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_ASSOCIATION_ID_PROPERTY_KEY, 
             associationGuid);
 
-        internal::JsonSetWStringProperty(
-            endpointDefinitionObject, 
+       
+        endpointDefinitionObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY,
-            deviceDefinition.EndpointProductInstanceId().c_str());
+            json::JsonValue::CreateStringValue(deviceDefinition.EndpointProductInstanceId().c_str()));
 
-        internal::JsonSetWStringProperty(
-            endpointDefinitionObject,
+        endpointDefinitionObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY,
-            deviceDefinition.EndpointName().c_str());
+            json::JsonValue::CreateStringValue(deviceDefinition.EndpointName().c_str()));
 
-        internal::JsonSetWStringProperty(
-            endpointDefinitionObject,
+        endpointDefinitionObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY,
-            deviceDefinition.TransportSuppliedDescription().c_str());
-        
+            json::JsonValue::CreateStringValue(deviceDefinition.TransportSuppliedDescription().c_str()));
+       
 
         // TODO: Other props that have to be set at the service level and not in-protocol
 
@@ -357,15 +355,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
         internal::LogInfo(__FUNCTION__, L"JsonObjectFromBSTR success");
 
         // check for actual success
-        auto successResult = internal::JsonGetBoolProperty(responseObject, MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY, false);
+        auto successResult = responseObject.GetNamedBoolean(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY, false);
 
         if (successResult)
         {
             internal::LogInfo(__FUNCTION__, L"JSON payload indicates success");
 
-            auto responseArray = internal::JsonGetArrayProperty(responseObject, MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_CREATED_DEVICES_ARRAY_KEY);
+            auto responseArray = responseObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_CREATED_DEVICES_ARRAY_KEY, nullptr);
 
-            if (responseArray.Size() == 0)
+            if (responseArray != nullptr && responseArray.Size() == 0)
             {
                 internal::LogGeneralError(__FUNCTION__, L"Unexpected empty response array");
 
@@ -376,8 +374,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             auto firstObject = responseArray.GetObjectAt(0);
 
-            endpointDeviceId = internal::JsonGetWStringProperty(
-                firstObject,
+            firstObject.GetNamedString(
                 MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_CREATED_ID_PROPERTY_KEY,
                 L"");
 

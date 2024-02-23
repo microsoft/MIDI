@@ -10,11 +10,6 @@
 #include "stdafx.h"
 
 
-#include "MidiEndpointConnectionBufferTests.h"
-
-
-#include <wil\resource.h>
-
 using namespace winrt::Windows::Devices::Midi2;
 
 

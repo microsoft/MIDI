@@ -42,21 +42,25 @@
 #include "SWDevice.h"
 #include <initguid.h>
 #include <MMDeviceAPI.h>
+#include "devpkey.h"
 
 // Shared helpers
 #include "midi_ump.h"
 #include "midi_timestamp.h"
-#include "wstring_util.h"
 
 // AbstractionUtilities
-#include "endpoint_data_helpers.h"
-#include "swd_property_builders.h"
-#include "json_helpers.h"
-
-// Main definitions
-#include "MidiDefs.h"
-
+#include "wstring_util.h"
 namespace internal = ::Windows::Devices::Midi2::Internal;
+
+#include "MidiDefs.h"
+#include "MidiDataFormat.h"
+#include "MidiFlow.h"
+#include "MidiAbstraction.h"
+
+#include "json_defs.h"
+#include "json_helpers.h"
+#include "swd_helpers.h"
+
 namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
 
 #include "resource.h"

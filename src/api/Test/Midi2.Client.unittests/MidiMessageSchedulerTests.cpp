@@ -9,8 +9,6 @@
 
 #include "stdafx.h"
 
-#include "MidiMessageSchedulerTests.h"
-
 void MidiMessageSchedulerTests::TestScheduledMessagesTimingSmall()
 {
     LOG_OUTPUT(L"Test timing small **********************************************************************");

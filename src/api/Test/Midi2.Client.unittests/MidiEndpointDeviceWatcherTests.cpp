@@ -9,8 +9,6 @@
 
 #include "stdafx.h"
 
-#include "MidiEndpointDeviceWatcherTests.h"
-
 
 using namespace winrt::Windows::Devices::Midi2;
 

@@ -392,7 +392,7 @@ int __cdecl _tmain(_In_ int ArgC, _In_reads_(ArgC) TCHAR *ArgV[])
 
     SERVICE_TABLE_ENTRY DispatchTable[] = 
     { 
-        { SVCNAME, (LPSERVICE_MAIN_FUNCTION) SvcMain }, 
+        { (LPWSTR)SVCNAME, (LPSERVICE_MAIN_FUNCTION) SvcMain }, 
         { NULL, NULL } 
     }; 
  

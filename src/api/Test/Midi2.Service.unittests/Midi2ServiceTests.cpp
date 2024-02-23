@@ -44,9 +44,9 @@ HRESULT GetMidiSrvBindingHandle(handle_t* BindingHandle)
 
     RETURN_IF_WIN32_ERROR(RpcStringBindingCompose(
         nullptr,
-        reinterpret_cast<RPC_WSTR>(MIDISRV_LRPC_PROTOCOL),
+        (RPC_WSTR)MIDISRV_LRPC_PROTOCOL,
         nullptr,
-        reinterpret_cast<RPC_WSTR>(MIDISRV_ENDPOINT),
+        (RPC_WSTR)MIDISRV_ENDPOINT,
         nullptr,
         &stringBinding));
 
@@ -106,7 +106,7 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
-    MIDISRV_CLIENTCREATION_PARAMS creationParams {0};
+    MIDISRV_CLIENTCREATION_PARAMS creationParams { };
     PMIDISRV_CLIENT client {nullptr};
     wil::unique_rpc_binding bindingHandle;
     MidiClientHandle clientHandle{ 0 };
