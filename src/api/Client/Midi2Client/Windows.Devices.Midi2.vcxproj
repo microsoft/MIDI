@@ -11,7 +11,7 @@
     <CppWinRTModernIDL>true</CppWinRTModernIDL>
     <CppWinRTProjectLanguage>C++/WinRT</CppWinRTProjectLanguage>
     <CppWinRTLibs>true</CppWinRTLibs>
-    <WindowsTargetPlatformVersion Condition=" '$(WindowsTargetPlatformVersion)' == '' ">10.0.20348.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion Condition=" '$(WindowsTargetPlatformVersion)' == '' ">10.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformMinVersion>10.0.20348.0</WindowsTargetPlatformMinVersion>
     <MinimalCoreWin>true</MinimalCoreWin>
     <DefaultLanguage>en-US</DefaultLanguage>
@@ -385,18 +385,18 @@
     <ClCompile Include="MidiEndpointConnection.cpp">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
     </ClCompile>
-      <ClCompile Include="MidiEndpointConnection_Plugins.cpp">
-          <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiEndpointConnection_SendInfrastructure.cpp">
-          <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiEndpointConnection_SendMultipleMessages.cpp">
-          <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiEndpointConnection_SendSingleMessage.cpp">
-          <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
-      </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_Plugins.cpp">
+      <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_SendInfrastructure.cpp">
+      <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_SendMultipleMessages.cpp">
+      <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_SendSingleMessage.cpp">
+      <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiEndpointDeviceInformation.cpp">
       <DependentUpon>MidiEndpointDeviceInformation.idl</DependentUpon>
     </ClCompile>

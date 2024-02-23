@@ -58,9 +58,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Midi2.JitterReductionListenerTransform.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
+    <ResourceCompile Include="Midi2.JitterReductionListenerMidiTransform.rc" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Midi2JitterReductionListenerTransform.idl">
