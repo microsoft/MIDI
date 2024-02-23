@@ -14,10 +14,7 @@ namespace Windows::Devices::Midi2::Internal
 {
     // NOTE: The parameters in here are all passed to the API by ref, so the
     // calling code needs to keep them around until the device creation returns.
-
-    _Use_decl_annotations_
     bool AddStandardEndpointProperties(
-
     )
     {
         try

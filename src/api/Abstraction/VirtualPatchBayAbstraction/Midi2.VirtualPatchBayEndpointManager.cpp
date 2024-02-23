@@ -48,17 +48,10 @@ CMidi2VirtualPatchBayEndpointManager::Initialize(
     return S_OK;
 }
 
-
-
-
-_Use_decl_annotations_
 HRESULT 
 CMidi2VirtualPatchBayEndpointManager::CreateEndpoint(
     )
 {
-
-
-
     return S_OK;
 }
 
@@ -74,7 +67,6 @@ CMidi2VirtualPatchBayEndpointManager::Cleanup()
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
-
 
     return S_OK;
 }

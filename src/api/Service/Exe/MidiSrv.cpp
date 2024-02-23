@@ -92,9 +92,9 @@ CMidiSrv::Initialize()
         NULL));
 
     RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcServerUseProtseqEp(
-        reinterpret_cast<RPC_WSTR>(MIDISRV_LRPC_PROTOCOL),
+        (RPC_WSTR)MIDISRV_LRPC_PROTOCOL,
         RPC_C_PROTSEQ_MAX_REQS_DEFAULT,
-        reinterpret_cast<RPC_WSTR>(MIDISRV_ENDPOINT),
+        (RPC_WSTR)MIDISRV_ENDPOINT,
         rpcSecurityDescriptor.get())));
 
     RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcServerRegisterIf3(

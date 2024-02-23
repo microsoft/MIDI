@@ -63,7 +63,6 @@ CMidi2MidiSrvConfigurationManager::Initialize(GUID abstractionGuid, IUnknown* de
 
 }
 
-_Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvConfigurationManager::Cleanup()
 {
