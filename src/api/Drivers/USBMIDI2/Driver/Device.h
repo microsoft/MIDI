@@ -84,6 +84,7 @@ extern "C" {
 typedef struct _DEVICE_CONTEXT {
     WDFUSBDEVICE    UsbDevice;
     ACXCIRCUIT      Midi;
+
     WDF_TRI_STATE   ExcludeD3Cold;
 
     WDFUSBINTERFACE             UsbControlInterface;
@@ -120,7 +121,8 @@ typedef struct _DEVICE_CONTEXT {
     //
     // Streaming Engine
     //
-    //StreamEngine*               pMidiStreamEngine;
+    //
+    StreamEngine*               pStreamEngine;
 } DEVICE_CONTEXT, *PDEVICE_CONTEXT;
 
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(DEVICE_CONTEXT, GetDeviceContext)

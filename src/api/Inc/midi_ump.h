@@ -75,7 +75,7 @@ namespace Windows::Devices::Midi2::Internal
         return (wordCount >= 1 && wordCount <= 4);
     }
 
-    inline bool FillPackedUmp32FromBytePointer(_In_ uint8_t* data, _In_ uint8_t byteCount, _Inout_ PackedUmp32& ump)
+    inline bool FillPackedUmp32FromBytePointer(_In_reads_bytes_(byteCount) uint8_t* data, _In_ uint8_t byteCount, _Inout_ PackedUmp32& ump)
     {
         if (byteCount == sizeof(ump))
         {
@@ -87,7 +87,7 @@ namespace Windows::Devices::Midi2::Internal
         return false;
     }
 
-    inline bool FillPackedUmp64FromBytePointer(_In_ uint8_t* data, _In_ uint8_t byteCount, _Inout_ PackedUmp64& ump)
+    inline bool FillPackedUmp64FromBytePointer(_In_reads_bytes_(byteCount) uint8_t* data, _In_ uint8_t byteCount, _Inout_ PackedUmp64& ump)
     {
         if (byteCount == sizeof(ump))
         {
@@ -99,7 +99,7 @@ namespace Windows::Devices::Midi2::Internal
         return false;
     }
 
-    inline bool FillPackedUmp96FromBytePointer(_In_ uint8_t* data, _In_ uint8_t byteCount, _Inout_ PackedUmp96& ump)
+    inline bool FillPackedUmp96FromBytePointer(_In_reads_bytes_(byteCount) uint8_t* data, _In_ uint8_t byteCount, _Inout_ PackedUmp96& ump)
     {
         if (byteCount == sizeof(ump))
         {
@@ -111,7 +111,7 @@ namespace Windows::Devices::Midi2::Internal
         return false;
     }
 
-    inline bool FillPackedUmp128FromBytePointer(_In_ uint8_t* data, _In_ uint8_t byteCount, _Inout_ PackedUmp128& ump)
+    inline bool FillPackedUmp128FromBytePointer(_In_reads_bytes_(byteCount) uint8_t* data, _In_ uint8_t byteCount, _Inout_ PackedUmp128& ump)
     {
         if (byteCount == sizeof(ump))
         {
@@ -122,7 +122,4 @@ namespace Windows::Devices::Midi2::Internal
 
         return false;
     }
-
-
-
 }

@@ -13,8 +13,7 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    _Use_decl_annotations_
-    collections::IVector<uint32_t> MidiMessage64::GetAllWords() const noexcept
+    collections::IVectorView<uint32_t> MidiMessage64::GetAllWords() const noexcept
     {
         auto vec = winrt::single_threaded_vector<uint32_t>();
 

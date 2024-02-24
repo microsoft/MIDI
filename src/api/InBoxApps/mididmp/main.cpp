@@ -129,7 +129,7 @@ void OutputError(_In_ std::wstring errorMessage)
 #define RETURN_SUCCESS return 0
 #define RETURN_FAIL return 1
 
-int main()
+int __cdecl main()
 {
     winrt::init_apartment();
 

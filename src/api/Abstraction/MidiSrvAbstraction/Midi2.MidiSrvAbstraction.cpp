@@ -131,9 +131,9 @@ GetMidiSrvBindingHandle(handle_t* BindingHandle
 
     RETURN_IF_WIN32_ERROR(RpcStringBindingCompose(
         nullptr,
-        (RPC_WSTR)MIDISRV_LRPC_PROTOCOL,
+        (RPC_WSTR) MIDISRV_LRPC_PROTOCOL,
         nullptr,
-        (RPC_WSTR)MIDISRV_ENDPOINT,
+        (RPC_WSTR) MIDISRV_ENDPOINT,
         nullptr,
         &stringBinding));
 

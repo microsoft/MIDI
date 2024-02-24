@@ -104,7 +104,7 @@ public:
         _In_ PVOID,
         _In_ PVOID,
         _In_ PVOID,
-        _Out_writes_opt_z_(CreatedSwDeviceInterfaceIdCharCount) PWSTR CreatedDeviceInterfaceId,
+        _Out_writes_opt_z_(CreatedSwDeviceInterfaceIdWCharCount) PWSTR CreatedDeviceInterfaceId,
         _In_ ULONG CreatedSwDeviceInterfaceIdWCharCount
     );
 

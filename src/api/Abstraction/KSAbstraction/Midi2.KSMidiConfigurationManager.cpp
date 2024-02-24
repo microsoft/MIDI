@@ -137,8 +137,6 @@ CMidi2KSMidiConfigurationManager::UpdateConfiguration(LPCWSTR configurationJson,
 }
 
 
-
-_Use_decl_annotations_
 HRESULT
 CMidi2KSMidiConfigurationManager::Cleanup()
 {

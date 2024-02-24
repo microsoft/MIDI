@@ -198,8 +198,9 @@ private:
         _Inout_ PDOUBLE_BUFFER_MAPPING mapping
         );
 
-private:
+private:  
     // Data memebers
+    BOOL            m_IsRunning{ FALSE };
 
     ACXPIN      m_Pin {nullptr};
     ACX_STREAM_STATE m_StreamState {AcxStreamStateStop};
@@ -237,5 +238,6 @@ private:
     // m_StandardStreamingLock m_LoopbackMessageQueue are only used
     // for standard streaming of loopback messages
     wil::fast_mutex_with_critical_region m_StandardStreamingLock;
+    wil::fast_mutex_with_critical_region m_MidiInLock;
     LIST_ENTRY  m_LoopbackMessageQueue {nullptr};
 };
