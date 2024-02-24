@@ -377,7 +377,7 @@
     <Midl Include="MidiStreamMessageBuilder.idl">
       <Filter>API\Messages\Utility</Filter>
     </Midl>
-    <Midl Include="MidiSendMessageResultEnum.idl">
+    <Midl Include="MidiSendMessageResultsEnum.idl">
       <Filter>API\Endpoints\Connections</Filter>
     </Midl>
     <Midl Include="MidiMessageStruct.idl">

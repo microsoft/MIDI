@@ -568,7 +568,7 @@
     <Midl Include="IMidiEndpointConnectionSettings.idl" />
     <Midl Include="MidiMessageTypeEndpointListener.idl" />
     <Midl Include="MidiProtocolEnum.idl" />
-    <Midl Include="MidiSendMessageResultEnum.idl" />
+    <Midl Include="MidiSendMessageResultsEnum.idl" />
     <Midl Include="MidiService.idl" />
     <Midl Include="MidiServicePingResponse.idl" />
     <Midl Include="MidiServicePingResponseSummary.idl" />

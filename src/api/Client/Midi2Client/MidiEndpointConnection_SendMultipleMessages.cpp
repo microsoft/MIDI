@@ -16,7 +16,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 {
 
     _Use_decl_annotations_
-    midi2::MidiSendMessageResult MidiEndpointConnection::SendMultipleMessagesBuffer(
+    midi2::MidiSendMessageResults MidiEndpointConnection::SendMultipleMessagesBuffer(
         internal::MidiTimestamp const timestamp,
         uint32_t const byteOffset,
         uint32_t const byteCount,
@@ -38,7 +38,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 internal::LogGeneralError(__FUNCTION__, L"Buffer smaller than provided offset + byteLength (first check)");
 
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange;
+                return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange;
             }
 
 
@@ -47,7 +47,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 internal::LogGeneralError(__FUNCTION__, L"Buffer smaller than provided offset + byteLength (second check) ");
 
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange;
+                return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange;
             }
 
 
@@ -73,11 +73,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 else
                 {
                     internal::LogGeneralError(__FUNCTION__, L"Ran out of data");
-                    auto returnValue = midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange ;
+                    auto returnValue = midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange ;
 
                     if (bytesProcessed > 0)
                     {
-                        returnValue |= midi2::MidiSendMessageResult::MessageListPartiallyProcessed;
+                        returnValue |= midi2::MidiSendMessageResults::MessageListPartiallyProcessed;
                     }
 
                     return returnValue;
@@ -95,7 +95,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             if (bytesProcessed != byteCount)
             {
                 internal::LogGeneralError(__FUNCTION__, L"Ran out of data");
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::MessageListPartiallyProcessed;
+                return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::MessageListPartiallyProcessed;
 
             }
         }
@@ -103,17 +103,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
             internal::LogGeneralError(__FUNCTION__, L"Unable to get buffer");
 
-            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
+            return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
 
-        return midi2::MidiSendMessageResult::Succeeded;
+        return midi2::MidiSendMessageResults::Succeeded;
 
     }
 
 
 
     _Use_decl_annotations_
-    midi2::MidiSendMessageResult MidiEndpointConnection::SendMultipleMessagesWordList(
+    midi2::MidiSendMessageResults MidiEndpointConnection::SendMultipleMessagesWordList(
         internal::MidiTimestamp const timestamp,
         collections::IIterable<uint32_t> const& words) noexcept
     {
@@ -153,7 +153,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                     if (i > 0)
                     {
-                        sendMessageResult |= midi2::MidiSendMessageResult::MessageListPartiallyProcessed;
+                        sendMessageResult |= midi2::MidiSendMessageResults::MessageListPartiallyProcessed;
                     }
 
                     return sendMessageResult;
@@ -163,12 +163,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
             //}
         }
 
-        return midi2::MidiSendMessageResult::Succeeded;
+        return midi2::MidiSendMessageResults::Succeeded;
 
     }
 
     _Use_decl_annotations_
-    midi2::MidiSendMessageResult MidiEndpointConnection::SendMultipleMessagesWordArray(
+    midi2::MidiSendMessageResults MidiEndpointConnection::SendMultipleMessagesWordArray(
         internal::MidiTimestamp const timestamp,
         uint32_t const startIndex,
         uint32_t const wordCount,
@@ -194,7 +194,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                     if (i > 0)
                     {
-                        sendMessageResult |= midi2::MidiSendMessageResult::MessageListPartiallyProcessed;
+                        sendMessageResult |= midi2::MidiSendMessageResults::MessageListPartiallyProcessed;
                     }
 
                     return sendMessageResult;
@@ -208,18 +208,18 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 // failed. Log and return. We fail on first problem.
                 internal::LogGeneralError(__FUNCTION__, L"Failed to send message. Index out of bounds");
 
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange;
+                return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange;
 
             }
         }
 
-        return midi2::MidiSendMessageResult::Succeeded;
+        return midi2::MidiSendMessageResults::Succeeded;
     }
 
 
 
     _Use_decl_annotations_
-    midi2::MidiSendMessageResult MidiEndpointConnection::SendMultipleMessagesStructList(
+    midi2::MidiSendMessageResults MidiEndpointConnection::SendMultipleMessagesStructList(
         internal::MidiTimestamp const timestamp,
         collections::IIterable<MidiMessageStruct> const& messages) noexcept
     {
@@ -239,13 +239,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
             }
         }
 
-        return midi2::MidiSendMessageResult::Succeeded;
+        return midi2::MidiSendMessageResults::Succeeded;
     }
 
 
 
     _Use_decl_annotations_
-    midi2::MidiSendMessageResult MidiEndpointConnection::SendMultipleMessagesStructArray(
+    midi2::MidiSendMessageResults MidiEndpointConnection::SendMultipleMessagesStructArray(
         internal::MidiTimestamp const timestamp,
         winrt::array_view<MidiMessageStruct const> messages) noexcept
     {
@@ -265,13 +265,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
             }
         }
 
-        return midi2::MidiSendMessageResult::Succeeded;
+        return midi2::MidiSendMessageResults::Succeeded;
 
     }
 
 
     _Use_decl_annotations_
-    midi2::MidiSendMessageResult MidiEndpointConnection::SendMultipleMessagesPacketList(
+    midi2::MidiSendMessageResults MidiEndpointConnection::SendMultipleMessagesPacketList(
         collections::IIterable<IMidiUniversalPacket> const& messages) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Sending multiple message packet list");
@@ -288,12 +288,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
             }
         }
 
-        return midi2::MidiSendMessageResult::Succeeded;
+        return midi2::MidiSendMessageResults::Succeeded;
 
     }
 
     //_Use_decl_annotations_
-    //midi2::MidiSendMessageResult MidiEndpointConnection::SendMultipleMessagesPacketArray(
+    //midi2::MidiSendMessageResults MidiEndpointConnection::SendMultipleMessagesPacketArray(
     //    winrt::array_view<IMidiUniversalPacket> messages) noexcept
     //{
     //    internal::LogInfo(__FUNCTION__, L"Enter");
@@ -310,7 +310,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     //        }
     //    }
 
-    //    return midi2::MidiSendMessageResult::Succeeded;
+    //    return midi2::MidiSendMessageResults::Succeeded;
 
     //}
 
