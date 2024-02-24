@@ -59,10 +59,10 @@
 #include "SWDevice.h"
 #include <initguid.h>
 #include "setupapi.h"
-//#include "Devpkey.h"
+#include "Devpkey.h"
 
 #include "strsafe.h"
-#include "wstring_util.h"
+
 
 //#pragma push_macro("GetObject")
 #undef GetObject
@@ -73,19 +73,19 @@ namespace json = ::winrt::Windows::Data::Json;
 
 
 // AbstractionUtilities
-#include "endpoint_data_helpers.h"
-#include "swd_property_builders.h"
-#include "json_helpers.h"
-#include "swd_shared.h"
+#include "wstring_util.h"
+namespace internal = ::Windows::Devices::Midi2::Internal;
 
 #include "MidiDefs.h"
 #include "MidiDataFormat.h"
 #include "MidiFlow.h"
 #include "MidiAbstraction.h"
 
-#include "MidiXProc.h"
+#include "json_defs.h"
+#include "json_helpers.h"
+#include "swd_helpers.h"
 
-namespace internal = ::Windows::Devices::Midi2::Internal;
+#include "MidiXProc.h"
 
 #include "abstraction_defs.h"
 

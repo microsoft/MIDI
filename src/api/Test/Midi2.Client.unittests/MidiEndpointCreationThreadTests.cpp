@@ -1,10 +1,7 @@
 
 #include "stdafx.h"
 
-#include "MidiEndpointCreationThreadTests.h"
 
-
-#include <wil\resource.h>
 
 
 #define NUM_MESSAGES_TO_TRANSMIT 10
@@ -79,7 +76,7 @@ void MidiEndpointCreationThreadTests::SendThreadWorker(MidiSession session, winr
 
     for (uint32_t i = 0; i < NUM_MESSAGES_TO_TRANSMIT; i++)
     {
-        connection.SendMessageWords(MidiClock::TimestampConstantSendImmediately(), 0x21234567);
+        connection.SendSingleMessageWords(MidiClock::TimestampConstantSendImmediately(), 0x21234567);
         
     }
 

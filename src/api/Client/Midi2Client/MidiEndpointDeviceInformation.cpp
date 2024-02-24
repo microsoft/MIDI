@@ -198,13 +198,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     bool MidiEndpointDeviceInformation::DeviceMatchesFilter(
         midi2::MidiEndpointDeviceInformation const& deviceInformation,
-        midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept
+        midi2::MidiEndpointDeviceInformationFilters const& endpointFilters) noexcept
     {
         // check if diagnostic loopback 
         if (deviceInformation.EndpointPurpose() == MidiEndpointDevicePurpose::DiagnosticLoopback)
         {
-            if ((endpointFilter & midi2::MidiEndpointDeviceInformationFilter::IncludeDiagnosticLoopback) ==
-                midi2::MidiEndpointDeviceInformationFilter::IncludeDiagnosticLoopback)
+            if ((endpointFilters & midi2::MidiEndpointDeviceInformationFilters::IncludeDiagnosticLoopback) ==
+                midi2::MidiEndpointDeviceInformationFilters::IncludeDiagnosticLoopback)
             {
                 return true;
             }
@@ -213,8 +213,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // check if diagnostic ping 
         else if (deviceInformation.EndpointPurpose() == MidiEndpointDevicePurpose::DiagnosticPing)
         {
-            if ((endpointFilter & midi2::MidiEndpointDeviceInformationFilter::IncludeDiagnosticPing) ==
-                midi2::MidiEndpointDeviceInformationFilter::IncludeDiagnosticPing)
+            if ((endpointFilters & midi2::MidiEndpointDeviceInformationFilters::IncludeDiagnosticPing) ==
+                midi2::MidiEndpointDeviceInformationFilters::IncludeDiagnosticPing)
             {
                 return true;
             }
@@ -223,8 +223,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // check if virtual device responder
         else if (deviceInformation.EndpointPurpose() == MidiEndpointDevicePurpose::VirtualDeviceResponder)
         {
-            if ((endpointFilter & midi2::MidiEndpointDeviceInformationFilter::IncludeVirtualDeviceResponder) ==
-                midi2::MidiEndpointDeviceInformationFilter::IncludeVirtualDeviceResponder)
+            if ((endpointFilters & midi2::MidiEndpointDeviceInformationFilters::IncludeVirtualDeviceResponder) ==
+                midi2::MidiEndpointDeviceInformationFilters::IncludeVirtualDeviceResponder)
             {
                 return true;
             }
@@ -234,8 +234,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         else if ((deviceInformation.EndpointPurpose() == MidiEndpointDevicePurpose::NormalMessageEndpoint) &&
             (deviceInformation.NativeDataFormat() == MidiEndpointNativeDataFormat::ByteStream))
         {
-            if ((endpointFilter & midi2::MidiEndpointDeviceInformationFilter::IncludeClientByteStreamNative) ==
-                midi2::MidiEndpointDeviceInformationFilter::IncludeClientByteStreamNative)
+            if ((endpointFilters & midi2::MidiEndpointDeviceInformationFilters::IncludeClientByteStreamNative) ==
+                midi2::MidiEndpointDeviceInformationFilters::IncludeClientByteStreamNative)
             {
                 return true;
             }
@@ -246,7 +246,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             (deviceInformation.NativeDataFormat() == MidiEndpointNativeDataFormat::UniversalMidiPacket ||
                 deviceInformation.NativeDataFormat() == MidiEndpointNativeDataFormat::Unknown))
         {
-            if ((endpointFilter & midi2::MidiEndpointDeviceInformationFilter::IncludeClientUmpNative) == midi2::MidiEndpointDeviceInformationFilter::IncludeClientUmpNative)
+            if ((endpointFilters & midi2::MidiEndpointDeviceInformationFilters::IncludeClientUmpNative) == midi2::MidiEndpointDeviceInformationFilters::IncludeClientUmpNative)
             {
                 return true;
             }
@@ -265,7 +265,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     collections::IVectorView<midi2::MidiEndpointDeviceInformation> MidiEndpointDeviceInformation::FindAll(
         midi2::MidiEndpointDeviceInformationSortOrder const& sortOrder, 
-        midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept
+        midi2::MidiEndpointDeviceInformationFilters const& endpointFilters) noexcept
     {
         std::vector<midi2::MidiEndpointDeviceInformation> midiDevices{};
 
@@ -286,7 +286,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                     midiDevice->UpdateFromDeviceInformation(di);
 
-                    if (DeviceMatchesFilter(*midiDevice, endpointFilter))
+                    if (DeviceMatchesFilter(*midiDevice, endpointFilters))
                     {
                         midiDevices.push_back(*midiDevice);
                     }
@@ -409,8 +409,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         midi2::MidiEndpointDeviceInformationSortOrder const& sortOrder) noexcept
     {
         return FindAll(sortOrder, 
-            midi2::MidiEndpointDeviceInformationFilter::IncludeClientUmpNative | 
-            midi2::MidiEndpointDeviceInformationFilter::IncludeClientByteStreamNative
+            midi2::MidiEndpointDeviceInformationFilters::IncludeClientUmpNative | 
+            midi2::MidiEndpointDeviceInformationFilters::IncludeClientByteStreamNative
         );
     }
 

@@ -69,19 +69,20 @@ namespace bt = ::winrt::Windows::Devices::Bluetooth;
 #include "setupapi.h"
 //#include "Devpkey.h"
 
-// AbstractionUtilities
-#include "endpoint_data_helpers.h"
-#include "swd_property_builders.h"
-#include "json_helpers.h"
+#include "wstring_util.h"
+namespace internal = ::Windows::Devices::Midi2::Internal;
 
 #include "MidiDefs.h"
 #include "MidiDataFormat.h"
 #include "MidiFlow.h"
 #include "MidiAbstraction.h"
 
+#include "json_defs.h"
+#include "json_helpers.h"
+#include "swd_helpers.h"
+
 #include "MidiXProc.h"
 
-namespace internal = ::Windows::Devices::Midi2::Internal;
 
 class CMidi2BluetoothMidiConfigurationManager;
 class CMidi2BluetoothMidiEndpointManager;

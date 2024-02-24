@@ -156,11 +156,11 @@ int __cdecl main()
             // list all devices
             devices = midi2::MidiEndpointDeviceInformation::FindAll(
                 midi2::MidiEndpointDeviceInformationSortOrder::Name,
-                midi2::MidiEndpointDeviceInformationFilter::IncludeClientByteStreamNative |
-                midi2::MidiEndpointDeviceInformationFilter::IncludeClientUmpNative |
-                midi2::MidiEndpointDeviceInformationFilter::IncludeDiagnosticLoopback |
-                midi2::MidiEndpointDeviceInformationFilter::IncludeDiagnosticPing |
-                midi2::MidiEndpointDeviceInformationFilter::IncludeVirtualDeviceResponder
+                midi2::MidiEndpointDeviceInformationFilters::IncludeClientByteStreamNative |
+                midi2::MidiEndpointDeviceInformationFilters::IncludeClientUmpNative |
+                midi2::MidiEndpointDeviceInformationFilters::IncludeDiagnosticLoopback |
+                midi2::MidiEndpointDeviceInformationFilters::IncludeDiagnosticPing |
+                midi2::MidiEndpointDeviceInformationFilters::IncludeVirtualDeviceResponder
             );
         }
         catch (...)

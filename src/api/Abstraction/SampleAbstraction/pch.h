@@ -39,14 +39,17 @@
 #include <TraceLoggingProvider.h>
 
 // AbstractionUtilities
-#include "endpoint_data_helpers.h"
-#include "swd_property_builders.h"
-#include "json_helpers.h"
+#include "wstring_util.h"
+namespace internal = ::Windows::Devices::Midi2::Internal;
 
 #include "MidiDefs.h"
 #include "MidiDataFormat.h"
 #include "MidiFlow.h"
 #include "MidiAbstraction.h"
+
+#include "json_defs.h"
+#include "json_helpers.h"
+#include "swd_helpers.h"
 
 #include "MidiXProc.h"
 

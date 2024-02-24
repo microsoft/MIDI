@@ -413,7 +413,7 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
 
 
         // we treat this as an object where each abstraction id is a property
-        auto plugins = internal::JsonGetObjectProperty(jsonObject, MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT, nullptr);
+        auto plugins = jsonObject.GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT, nullptr);
 
         if (plugins == nullptr)
         {

@@ -20,10 +20,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const umpVersionMajor,
             _In_ uint8_t const umpVersionMinor,
-            _In_ midi2::MidiEndpointDiscoveryFilterFlags const requestFlags
+            _In_ midi2::MidiEndpointDiscoveryRequests const requestFlags
             ) noexcept;
 
-        static midi2::IMidiUniversalPacket BuildEndpointInformationNotificationMessage(
+        static midi2::IMidiUniversalPacket BuildEndpointInfoNotificationMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const umpVersionMajor,
             _In_ uint8_t const umpVersionMinor,
@@ -76,11 +76,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
         static winrt::hstring ParseEndpointNameNotificationMessages(
-            _In_ collections::IVector<midi2::IMidiUniversalPacket> messages
+            _In_ collections::IIterable<midi2::IMidiUniversalPacket> const& messages
         );
 
         static winrt::hstring ParseProductInstanceIdNotificationMessages(
-            _In_ collections::IVector<midi2::IMidiUniversalPacket> messages
+            _In_ collections::IIterable<midi2::IMidiUniversalPacket> const& messages
         );
 
 
@@ -89,7 +89,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         static midi2::IMidiUniversalPacket BuildFunctionBlockDiscoveryMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const functionBlockNumber,
-            _In_ midi2::MidiFunctionBlockDiscoveryFilterFlags requestFlags
+            _In_ midi2::MidiFunctionBlockDiscoveryRequests requestFlags
             );
 
         static midi2::IMidiUniversalPacket BuildFunctionBlockInfoNotificationMessage(
@@ -113,7 +113,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
         static winrt::hstring ParseFunctionBlockNameNotificationMessages(
-            _In_ collections::IVector<midi2::IMidiUniversalPacket> messages
+            _In_ collections::IIterable<midi2::IMidiUniversalPacket> const& messages
             );
 
 

@@ -78,7 +78,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         );
 
         // TODO: Log if failed
-        if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendMessagePacket(functionBlockNotification)))
+        if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendSingleMessagePacket(functionBlockNotification)))
         {
             internal::LogGeneralError(__FUNCTION__, L"SendMessagePacket failed");
         }
@@ -130,7 +130,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                         // send endpoint info notification
 
-                        auto notification = midi2::MidiStreamMessageBuilder::BuildEndpointInformationNotificationMessage(
+                        auto notification = midi2::MidiStreamMessageBuilder::BuildEndpointInfoNotificationMessage(
                             MidiClock::TimestampConstantSendImmediately(),
                             MIDI_PREFERRED_UMP_VERSION_MAJOR,
                             MIDI_PREFERRED_UMP_VERSION_MINOR,
@@ -142,7 +142,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                             false   // todo: pull from jr timestamp handling
                         );
 
-                        if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendMessagePacket(notification)))
+                        if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendSingleMessagePacket(notification)))
                         {
                             internal::LogGeneralError(__FUNCTION__, L"SendMessagePacket failed - sending endpoint info notification");
                         }

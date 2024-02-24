@@ -34,7 +34,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     midi2::MidiMessage32 MidiMessageBuilder::BuildSystemMessage(
         internal::MidiTimestamp const timestamp,
-        uint8_t const groupIndex,
+        midi2::MidiGroup const& group,
         uint8_t const status,
         uint8_t const midi1Byte2,
         uint8_t const midi1Byte3) noexcept
@@ -43,7 +43,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             timestamp,
             (uint32_t)(
                 0x1 << 28 |
-                internal::CleanupNibble(groupIndex) << 24 |
+                group.Index() << 24 |
                 status << 16 |
                 internal::CleanupByte7(midi1Byte2) << 8 |
                 internal::CleanupByte7(midi1Byte3))
@@ -53,9 +53,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     midi2::MidiMessage32 MidiMessageBuilder::BuildMidi1ChannelVoiceMessage(
         internal::MidiTimestamp const timestamp,
-        uint8_t const groupIndex,
+        midi2::MidiGroup const& group,
         midi2::Midi1ChannelVoiceMessageStatus const& status,
-        uint8_t const channelIndex,
+        midi2::MidiChannel const& channel,
         uint8_t const byte3,
         uint8_t const byte4) noexcept
     {
@@ -63,9 +63,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
             timestamp,
             (uint32_t)(
                 0x2 << 28 |
-                internal::CleanupNibble(groupIndex) << 24 |
+                group.Index() << 24 |
                 internal::CleanupNibble((uint8_t)status) << 20 |
-                internal::CleanupNibble(channelIndex) << 16 |
+                channel.Index() << 16 |
                 internal::CleanupByte7(byte3) << 8 |
                 internal::CleanupByte7(byte4))
         );
@@ -74,7 +74,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     midi2::MidiMessage64 MidiMessageBuilder::BuildSystemExclusive7Message(
         internal::MidiTimestamp const timestamp,
-        uint8_t const groupIndex,
+        midi2::MidiGroup const& group,
         uint8_t const status,
         uint8_t const numberOfBytes,
         uint8_t const dataByte0,
@@ -89,7 +89,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             timestamp,
             (uint32_t)(
                 0x3 << 28 |
-                internal::CleanupNibble(groupIndex) << 24 |
+                group.Index() << 24 |
                 internal::CleanupNibble(status) << 20 |
                 internal::CleanupNibble(numberOfBytes) << 16 |
                 internal::CleanupByte7(dataByte0) << 8 |
@@ -109,9 +109,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     midi2::MidiMessage64 MidiMessageBuilder::BuildMidi2ChannelVoiceMessage(
         internal::MidiTimestamp const timestamp,
-        uint8_t const groupIndex,
+        midi2::MidiGroup const& group,
         midi2::Midi2ChannelVoiceMessageStatus const& status,
-        uint8_t const channelIndex,
+        midi2::MidiChannel const& channel,
         uint16_t const index,
         uint32_t const data) noexcept
     {
@@ -119,9 +119,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
             timestamp,
             (uint32_t)(
                 0x4 << 28 |
-                internal::CleanupNibble(groupIndex) << 24 |
+                group.Index() << 24 |
                 internal::CleanupNibble((uint8_t)status) << 20 |
-                internal::CleanupNibble(channelIndex) << 16 |
+                channel.Index() << 16 |
                 index), 
             data);
     }
@@ -129,7 +129,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     midi2::MidiMessage128 MidiMessageBuilder::BuildSystemExclusive8Message(
         internal::MidiTimestamp const timestamp,
-        uint8_t const groupIndex,
+        midi2::MidiGroup const& group,
         midi2::MidiSystemExclusive8Status const& status,
         uint8_t const numberOfValidDataBytesThisMessage,
         uint8_t const streamId,
@@ -151,7 +151,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             timestamp,
             (uint32_t)(
                 0x5 << 28 |
-                internal::CleanupNibble(groupIndex) << 24 |
+                group.Index() << 24 |
                 internal::CleanupNibble((uint8_t)status) << 20 |
                 internal::CleanupNibble(numberOfValidDataBytesThisMessage) << 16 |
                 streamId << 8 |
@@ -166,7 +166,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     midi2::MidiMessage128 MidiMessageBuilder::BuildMixedDataSetChunkHeaderMessage(
         internal::MidiTimestamp const timestamp,
-        uint8_t const groupIndex,
+        midi2::MidiGroup const& group,
         uint8_t const mdsId,
         uint16_t const numberValidDataBytesInThisChunk,
         uint16_t const numberChunksInMixedDataSet,
@@ -184,7 +184,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // message type is 5. status is 8
         word0 = 
             0x5 << 28 |
-            internal::CleanupNibble(groupIndex) << 24 |
+            group.Index() << 24 |
             0x8 << 20 | 
             internal::CleanupNibble(mdsId) << 16 |
             numberValidDataBytesInThisChunk;
@@ -214,7 +214,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     midi2::MidiMessage128 MidiMessageBuilder::BuildMixedDataSetChunkDataMessage(
         internal::MidiTimestamp const timestamp,
-        uint8_t const groupIndex,
+        midi2::MidiGroup const& group,
         uint8_t const mdsId,
         uint8_t const dataByte00,
         uint8_t const dataByte01,
@@ -239,7 +239,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // message type is 5. status is 8
         word0 =
             0x5 << 28 |
-            internal::CleanupNibble(groupIndex) << 24 |
+            group.Index() << 24 |
             0x9 << 20 |
             internal::CleanupNibble(mdsId) << 16 |
             dataByte00 << 8 |
@@ -277,10 +277,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     midi2::MidiMessage128 MidiMessageBuilder::BuildFlexDataMessage(
         internal::MidiTimestamp const timestamp,
-        uint8_t const groupIndex,
+        midi2::MidiGroup const& group,
         uint8_t const form,
         uint8_t const address,
-        uint8_t const channel,
+        midi2::MidiChannel const& channel,
         uint8_t const statusBank,
         uint8_t const status,
         uint32_t const word1Data,
@@ -291,10 +291,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
             timestamp,
             (uint32_t)(
                 0xD << 28 |
-                internal::CleanupNibble(groupIndex) << 24 |
+                group.Index() << 24 |
                 internal::CleanupCrumb(form) << 22 |
                 internal::CleanupCrumb(address) << 20 |
-                internal::CleanupNibble(channel) << 16 |
+                channel.Index() << 16 |
                 statusBank << 8 |
                 status),
             word1Data,

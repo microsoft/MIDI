@@ -26,8 +26,6 @@ CMidi2DiagnosticsEndpointManager::Initialize(
 
 )
 {
-    OutputDebugString(L"" __FUNCTION__ " Enter");
-
     TraceLoggingWrite(
         MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
@@ -56,7 +54,12 @@ CMidi2DiagnosticsEndpointManager::Initialize(
 HRESULT
 CMidi2DiagnosticsEndpointManager::CreateParentDevice()
 {
-    OutputDebugString(L"" __FUNCTION__);
+    TraceLoggingWrite(
+        MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
 
     // the parent device parameters are set by the transport (this)
     std::wstring parentDeviceName{ TRANSPORT_PARENT_DEVICE_NAME };

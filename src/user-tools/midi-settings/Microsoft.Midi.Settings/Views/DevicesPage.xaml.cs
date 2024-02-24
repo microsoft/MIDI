@@ -34,39 +34,13 @@ namespace Microsoft.Midi.Settings.Views
         {
             get;
         }
+
+
         public DevicesPage()
         {
             ViewModel = App.GetService<DevicesViewModel>();
+
             InitializeComponent();
-        }
-
-        // this code needs to be moved to the ViewModel
-        private void TempCreateNetworkEndpoint_Click(object sender, RoutedEventArgs e)
-        {
-            //if (!AppState.Current.HasActiveMidiSession)
-            //{
-            //    AppState.Current.CreateMidiSession();
-            //}
-
-            //if (AppState.Current.MidiSession != null)
-            //{
-            //    var transportClientPlugin = new NetworkMidiServerClientPlugin();
-
-            //    var jsonParameters = transportClientPlugin.GetJsonConfiguration();
-
-            //    var device = await AppState.Current.MidiSession.CreateNewUmpDeviceAsync("some_network2_class_identifier", jsonParameters);
-
-            //    // binding fails with the WinRT PropertySet type, so replicating
-            //    foreach (string key in device.UmpEndpoint.Properties.Keys)
-            //    {
-            //        device.Properties.Add(key, device.UmpEndpoint.Properties[key]);
-            //    }
-
-
-
-            //    System.Diagnostics.Debug.WriteLine("Created UMP Device " + device.Id);
-
-            //}
         }
     }
 }

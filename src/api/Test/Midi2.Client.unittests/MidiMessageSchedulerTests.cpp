@@ -9,8 +9,6 @@
 
 #include "stdafx.h"
 
-#include "MidiMessageSchedulerTests.h"
-
 void MidiMessageSchedulerTests::TestScheduledMessagesTimingSmall()
 {
     LOG_OUTPUT(L"Test timing small **********************************************************************");
@@ -109,7 +107,7 @@ void MidiMessageSchedulerTests::TestScheduledMessagesTiming(uint16_t const messa
 
         // we increment the message value each time so we can keep track of order as well
 
-        auto sendResult = connSend.SendMessageWords(MidiClock::OffsetTimestampByMilliseconds(MidiClock::Now(), scheduledTimeStampOffsetMS), word);
+        auto sendResult = connSend.SendSingleMessageWords(MidiClock::OffsetTimestampByMilliseconds(MidiClock::Now(), scheduledTimeStampOffsetMS), word);
 
         VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(sendResult));
 
@@ -225,7 +223,7 @@ void MidiMessageSchedulerTests::TestScheduledMessagesOrder()
         std::cout << "Sending: 0x" << std::hex << word << std::endl;
 
         // we increment the message value each time so we can keep track of order
-        VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageWords(scheduledTimeStamp, word)));
+        VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendSingleMessageWords(scheduledTimeStamp, word)));
     }
 
     std::cout << "Waiting for response" << std::endl;

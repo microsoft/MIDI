@@ -32,7 +32,7 @@ public:
         TEST_METHOD(TestWatcherEnumerationAllDiagnosticsEndpoints);
 
 
-        void TestWatcherEnumeration(_In_ MidiEndpointDeviceInformationFilter filter, _In_ uint32_t numEndpointsExpected);
+        void TestWatcherEnumeration(_In_ MidiEndpointDeviceInformationFilters filter, _In_ uint32_t numEndpointsExpected);
 
 
 private:

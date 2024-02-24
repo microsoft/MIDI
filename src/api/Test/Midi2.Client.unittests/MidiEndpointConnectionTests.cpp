@@ -10,11 +10,6 @@
 #include "stdafx.h"
 
 
-#include "MidiEndpointConnectionTests.h"
-
-
-#include <wil\resource.h>
-
 using namespace winrt::Windows::Devices::Midi2;
 
 
@@ -33,7 +28,7 @@ void MidiEndpointConnectionTests::TestSendMessageInvalidConnectionFailureReturnC
 
 
     // wrong message type for word count
-    auto connectionClosedResult = connSend.SendMessageWords(0, 0x21111111);
+    auto connectionClosedResult = connSend.SendSingleMessageWords(0, 0x21111111);
 
     VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageFailed(connectionClosedResult));
     VERIFY_IS_TRUE((connectionClosedResult & MidiSendMessageResult::EndpointConnectionClosedOrInvalid) == MidiSendMessageResult::EndpointConnectionClosedOrInvalid);
@@ -61,7 +56,7 @@ void MidiEndpointConnectionTests::TestSendMessageValidationFailureReturnCode()
 
 
     // wrong message type for word count
-    auto badMessageTypeResult = connSend.SendMessageWords(0, 0x41111111);
+    auto badMessageTypeResult = connSend.SendSingleMessageWords(0, 0x41111111);
 
     VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageFailed(badMessageTypeResult));
     VERIFY_IS_TRUE((badMessageTypeResult & MidiSendMessageResult::InvalidMessageTypeForWordCount) == MidiSendMessageResult::InvalidMessageTypeForWordCount);
@@ -236,7 +231,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmpStruct()
     std::cout << " - Timestamp:   0x" << std::hex << (uint64_t)(sentTimestamp) << std::endl;
     std::cout << " - First Word:  0x" << std::hex << (sentUmp.Word0) << std::endl << std::endl;
 
-    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageStruct(sentTimestamp, sentUmp, 2)));
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendSingleMessageStruct(sentTimestamp, 2, sentUmp)));
 
 
     // Wait for incoming message
@@ -331,7 +326,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmp32()
     std::cout << " - MessageType: 0x" << std::hex << (uint8_t)(sentUmp.MessageType()) << std::endl;
     std::cout << " - First Word:  0x" << std::hex << (sentUmp.Word0()) << std::endl << std::endl;
 
-    connSend.SendMessagePacket(sentUmp);
+    connSend.SendSingleMessagePacket(sentUmp);
 
 
     // Wait for incoming message
@@ -449,7 +444,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWords()
 
         std::cout << "Sending UMP Word Array" << std::endl;
 
-        auto result = connSend.SendMessageWordArray(timestamp, words, 0, wordCount);
+        auto result = connSend.SendSingleMessageWordArray(timestamp, 0, wordCount, words);
         std::cout << "Send result: 0x" << std::hex << (uint32_t)result << std::endl;
 
         VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(result));
@@ -739,7 +734,7 @@ void MidiEndpointConnectionTests::TestSendWordArrayBoundsError()
     VERIFY_IS_TRUE(connSend.Open());
 
     // out of bounds
-    auto result = connSend.SendMessageWordArray(0, sendBuffer, 3, 2);
+    auto result = connSend.SendSingleMessageWordArray(MidiClock::TimestampConstantSendImmediately(), 3, 2, sendBuffer);
     VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageFailed(result));
     VERIFY_IS_TRUE((result & MidiSendMessageResult::DataIndexOutOfRange) == MidiSendMessageResult::DataIndexOutOfRange);
 
@@ -785,7 +780,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWordArray()
             VERIFY_IS_NOT_NULL(args);
 
             // testing that we fill at the correct offset
-            auto wordCount = args.FillWordArray(receiveBuffer, receiveIndex);
+            auto wordCount = args.FillWordArray(receiveIndex, receiveBuffer);
 
             VERIFY_ARE_EQUAL(sentWordCount, wordCount);
 
@@ -805,7 +800,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWordArray()
     VERIFY_IS_TRUE(connSend.Open());
     VERIFY_IS_TRUE(connReceive.Open());
 
-    auto result = connSend.SendMessageWordArray(0, sendBuffer, sentIndex, sentWordCount);
+    auto result = connSend.SendSingleMessageWordArray(MidiClock::TimestampConstantSendImmediately(), sentIndex, sentWordCount, sendBuffer);
 
     VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(result));
 

@@ -17,14 +17,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
         MidiEndpointDeviceWatcher() = default;
         ~MidiEndpointDeviceWatcher();
 
-        static midi2::MidiEndpointDeviceWatcher CreateWatcher(_In_ midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept;
+        static midi2::MidiEndpointDeviceWatcher CreateWatcher(_In_ midi2::MidiEndpointDeviceInformationFilters const& endpointFilters) noexcept;
 
         void Start();
         void Stop();
 
         winrt::Windows::Devices::Enumeration::DeviceWatcherStatus Status();
 
-        winrt::event_token Added(_In_ winrt::Windows::Foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, midi2::MidiEndpointDeviceInformation> const& handler)
+        winrt::event_token Added(_In_ winrt::Windows::Foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, midi2::MidiEndpointDeviceInformationAddedEventArgs> const& handler)
         {
             return m_deviceAddedEvent.add(handler);
         }
@@ -33,7 +33,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             if (m_deviceAddedEvent) m_deviceAddedEvent.remove(token);
         }
 
-        winrt::event_token Removed(_In_ winrt::Windows::Foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, winrt::Windows::Devices::Enumeration::DeviceInformationUpdate> const& handler)
+        winrt::event_token Removed(_In_ winrt::Windows::Foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, midi2::MidiEndpointDeviceInformationRemovedEventArgs> const& handler)
         {
             return m_deviceRemovedEvent.add(handler);
         }
@@ -43,7 +43,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             if (m_deviceRemovedEvent) m_deviceRemovedEvent.remove(token);
         }
 
-        winrt::event_token Updated(_In_ winrt::Windows::Foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, midi2::MidiEndpointDeviceInformationUpdateEventArgs> const& handler)
+        winrt::event_token Updated(_In_ winrt::Windows::Foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, midi2::MidiEndpointDeviceInformationUpdatedEventArgs> const& handler)
         {
             return m_deviceUpdatedEvent.add(handler);
         }
@@ -77,7 +77,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     private:
         void InternalInitialize(
-            _In_ midi2::MidiEndpointDeviceInformationFilter const& endpointFilter,
+            _In_ midi2::MidiEndpointDeviceInformationFilters const& endpointFilters,
             _In_ winrt::Windows::Devices::Enumeration::DeviceWatcher const& baseWatcher);
 
 
@@ -103,13 +103,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ winrt::Windows::Foundation::IInspectable args);
 
 
-        midi2::MidiEndpointDeviceInformationFilter m_endpointFilter{ 
-            MidiEndpointDeviceInformationFilter::IncludeClientByteStreamNative | MidiEndpointDeviceInformationFilter::IncludeClientUmpNative };
+        midi2::MidiEndpointDeviceInformationFilters m_endpointFilter{ 
+            MidiEndpointDeviceInformationFilters::IncludeClientByteStreamNative | MidiEndpointDeviceInformationFilters::IncludeClientUmpNative };
 
 
-        winrt::event<foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, midi2::MidiEndpointDeviceInformation>> m_deviceAddedEvent;
-        winrt::event<foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, midi2::MidiEndpointDeviceInformationUpdateEventArgs>> m_deviceUpdatedEvent;
-        winrt::event<foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, winrt::Windows::Devices::Enumeration::DeviceInformationUpdate>> m_deviceRemovedEvent;
+        winrt::event<foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, midi2::MidiEndpointDeviceInformationAddedEventArgs>> m_deviceAddedEvent;
+        winrt::event<foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, midi2::MidiEndpointDeviceInformationUpdatedEventArgs>> m_deviceUpdatedEvent;
+        winrt::event<foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, midi2::MidiEndpointDeviceInformationRemovedEventArgs>> m_deviceRemovedEvent;
 
         winrt::event<foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, winrt::Windows::Foundation::IInspectable>> m_enumerationCompletedEvent;
         winrt::event<foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, winrt::Windows::Foundation::IInspectable>> m_stoppedEvent;

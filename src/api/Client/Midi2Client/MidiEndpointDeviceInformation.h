@@ -28,7 +28,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll(
             _In_ midi2::MidiEndpointDeviceInformationSortOrder const& sortOrder, 
-            _In_ midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept;
+            _In_ midi2::MidiEndpointDeviceInformationFilters const& endpointFilters) noexcept;
 
         static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll(
             _In_ midi2::MidiEndpointDeviceInformationSortOrder const& sortOrder) noexcept;
@@ -38,11 +38,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         static collections::IVectorView<winrt::hstring> GetAdditionalPropertiesList() noexcept;
 
         static winrt::Windows::Devices::Enumeration::DeviceWatcher CreateWatcher(
-            _In_ midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept;
+            _In_ midi2::MidiEndpointDeviceInformationFilters const& endpointFilters) noexcept;
 
         static bool DeviceMatchesFilter(
             _In_ midi2::MidiEndpointDeviceInformation const& deviceInformation,
-            _In_ midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept;
+            _In_ midi2::MidiEndpointDeviceInformationFilters const& endpointFilters) noexcept;
 
         winrt::hstring Id() const noexcept;
         winrt::guid ContainerId() const noexcept { return GetGuidProperty(L"System.Devices.ContainerId", winrt::guid{}); }

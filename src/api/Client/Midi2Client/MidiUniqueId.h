@@ -37,7 +37,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             Byte4(sevenBitByte4);
         }
         
-        MidiUniqueId(_In_ uint32_t const integer28bit) noexcept;
+        MidiUniqueId(_In_ uint32_t const combined28BitValue) noexcept;
 
 
         static midi2::MidiUniqueId CreateBroadcast();
@@ -58,10 +58,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         static winrt::hstring LabelShort() { return internal::ResourceManager::GetHString(IDS_MIDI_COMMON_LABEL_MUID_SHORT); }
         static winrt::hstring LabelFull() { return internal::ResourceManager::GetHString(IDS_MIDI_COMMON_LABEL_MUID_FULL); }
         
-        uint32_t As28BitInteger() const noexcept;
+        uint32_t AsCombined28BitValue () const noexcept;
 
-        bool IsBroadcast() noexcept { return (As28BitInteger() == MIDI_MUID_BROADCAST); }
-        bool IsReserved() noexcept { return As28BitInteger() >= MIDI_MUID_RESERVED_START && As28BitInteger() <= MIDI_MUID_RESERVED_END; }
+        bool IsBroadcast() noexcept { return (AsCombined28BitValue() == MIDI_MUID_BROADCAST); }
+        bool IsReserved() noexcept { return AsCombined28BitValue() >= MIDI_MUID_RESERVED_START && AsCombined28BitValue() <= MIDI_MUID_RESERVED_END; }
 
     private:
         uint8_t m_byte1{};    // byte 1 is LSB

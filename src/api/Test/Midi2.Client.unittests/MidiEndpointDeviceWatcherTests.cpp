@@ -9,15 +9,13 @@
 
 #include "stdafx.h"
 
-#include "MidiEndpointDeviceWatcherTests.h"
-
 
 using namespace winrt::Windows::Devices::Midi2;
 
 
 
 _Use_decl_annotations_
-void MidiEndpointDeviceWatcherTests::TestWatcherEnumeration(MidiEndpointDeviceInformationFilter filter, uint32_t numEndpointsExpected)
+void MidiEndpointDeviceWatcherTests::TestWatcherEnumeration(MidiEndpointDeviceInformationFilters filter, uint32_t numEndpointsExpected)
 {
     wil::unique_event_nothrow enumerationCompleted;
     enumerationCompleted.create();
@@ -41,13 +39,13 @@ void MidiEndpointDeviceWatcherTests::TestWatcherEnumeration(MidiEndpointDeviceIn
     auto enumerationCompletedEventRevokeToken = watcher.EnumerationCompleted(EnumerationCompletedHandler);
 
 
-    auto EndpointDeviceAddedHandler = [&](MidiEndpointDeviceWatcher const& /*sender*/, MidiEndpointDeviceInformation const& addedDevice)
+    auto EndpointDeviceAddedHandler = [&](MidiEndpointDeviceWatcher const& /*sender*/, MidiEndpointDeviceInformationAddedEventArgs const& args)
         {
             std::cout << "Device Added event raised." << std::endl;
-            std::cout << "Id:             " << winrt::to_string(addedDevice.Id()) << std::endl;
-            std::cout << "Name:           " << winrt::to_string(addedDevice.Name()) << std::endl;
-            std::cout << "Transport Desc: " << winrt::to_string(addedDevice.TransportSuppliedDescription()) << std::endl;
-            std::cout << "User Desc:      " << winrt::to_string(addedDevice.UserSuppliedDescription()) << std::endl;
+            std::cout << "Id:             " << winrt::to_string(args.AddedDevice().Id()) << std::endl;
+            std::cout << "Name:           " << winrt::to_string(args.AddedDevice().Name()) << std::endl;
+            std::cout << "Transport Desc: " << winrt::to_string(args.AddedDevice().TransportSuppliedDescription()) << std::endl;
+            std::cout << "User Desc:      " << winrt::to_string(args.AddedDevice().UserSuppliedDescription()) << std::endl;
             std::cout << std::endl;
 
             numEndpointsActual++;
@@ -83,14 +81,14 @@ void MidiEndpointDeviceWatcherTests::TestWatcherEnumeration(MidiEndpointDeviceIn
 void MidiEndpointDeviceWatcherTests::TestWatcherEnumerationAllDiagnosticsEndpoints()
 {
     TestWatcherEnumeration(
-        MidiEndpointDeviceInformationFilter::IncludeDiagnosticLoopback | MidiEndpointDeviceInformationFilter::IncludeDiagnosticPing,
+        MidiEndpointDeviceInformationFilters::IncludeDiagnosticLoopback | MidiEndpointDeviceInformationFilters::IncludeDiagnosticPing,
         3);
 }
 
 void MidiEndpointDeviceWatcherTests::TestWatcherEnumerationPingEndpoint()
 {
     TestWatcherEnumeration(
-        MidiEndpointDeviceInformationFilter::IncludeDiagnosticPing, 
+        MidiEndpointDeviceInformationFilters::IncludeDiagnosticPing, 
         1);
 
 }
@@ -98,9 +96,9 @@ void MidiEndpointDeviceWatcherTests::TestWatcherEnumerationPingEndpoint()
 void MidiEndpointDeviceWatcherTests::TestWatcherEnumerationLoopbackEndpoints()
 {
     TestWatcherEnumeration(
-        MidiEndpointDeviceInformationFilter::IncludeDiagnosticLoopback,
+        MidiEndpointDeviceInformationFilters::IncludeDiagnosticLoopback,
         2);
 }
 
 
-// can't really test device plug/unplug here because it's interactive and this test is run automated
+// can't really test device plug/unplug or update here because it's interactive and this test is run automated

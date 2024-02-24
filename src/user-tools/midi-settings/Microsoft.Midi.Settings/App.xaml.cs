@@ -90,6 +90,10 @@ public partial class App : Application
             services.AddTransient<DevicesPage>();
             services.AddTransient<DevicesViewModel>();
 
+            services.AddTransient<DeviceDetailPage>();
+            services.AddTransient<DeviceDetailViewModel>();
+
+
             services.AddTransient<ToolsMonitorPage>();
             services.AddTransient<ToolsMonitorViewModel>();
 

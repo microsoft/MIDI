@@ -94,6 +94,15 @@
     <Filter Include="API\Service\Configuration">
       <UniqueIdentifier>{2a7feacb-d6cd-45d7-a7a1-754e28d34e2d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="API\Enumeration\Watcher">
+      <UniqueIdentifier>{545b29a1-8b94-401a-9614-8467c4e00f99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Enumeration\Enum">
+      <UniqueIdentifier>{75e414e5-ade8-4844-916c-ca516268a935}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Enumeration\DeviceInformation">
+      <UniqueIdentifier>{d66b1849-1069-4d62-8b59-ab98a3199a90}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -162,12 +171,6 @@
     <ClCompile Include="ResourceManager.cpp">
       <Filter>Internal\Resources</Filter>
     </ClCompile>
-    <ClCompile Include="MidiEndpointDeviceInformationUpdateEventArgs.cpp">
-      <Filter>API\Enumeration</Filter>
-    </ClCompile>
-    <ClCompile Include="midi_function_block_prop_util.cpp">
-      <Filter>API\Enumeration</Filter>
-    </ClCompile>
     <ClCompile Include="MidiVirtualEndpointDeviceDefinition.cpp">
       <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
     </ClCompile>
@@ -191,6 +194,15 @@
     </ClCompile>
     <ClCompile Include="MidiEndpointConnection_SendInfrastructure.cpp">
       <Filter>API\Endpoints\Connections</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceInformationAddedEventArgs.cpp">
+      <Filter>API\Enumeration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceInformationRemovedEventArgs.cpp">
+      <Filter>API\Enumeration</Filter>
+    </ClCompile>
+    <ClCompile Include="midi_function_block_prop_util.cpp">
+      <Filter>API\Enumeration\DeviceInformation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -270,12 +282,6 @@
     <ClInclude Include="ResourceManager.h">
       <Filter>Internal\Resources</Filter>
     </ClInclude>
-    <ClInclude Include="MidiEndpointDeviceInformationUpdateEventArgs.h">
-      <Filter>API\Enumeration</Filter>
-    </ClInclude>
-    <ClInclude Include="midi_function_block_prop_util.h">
-      <Filter>API\Enumeration</Filter>
-    </ClInclude>
     <ClInclude Include="MidiVirtualEndpointDeviceDefinition.h">
       <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
     </ClInclude>
@@ -287,6 +293,15 @@
     </ClInclude>
     <ClInclude Include="MidiServiceLoopbackEndpointDefinition.h">
       <Filter>API\Service\Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceInformationAddedEventArgs.h">
+      <Filter>API\Enumeration</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceInformationRemovedEventArgs.h">
+      <Filter>API\Enumeration</Filter>
+    </ClInclude>
+    <ClInclude Include="midi_function_block_prop_util.h">
+      <Filter>API\Enumeration\DeviceInformation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -374,12 +389,6 @@
     <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl">
       <Filter>API\Messages\Enum</Filter>
     </Midl>
-    <Midl Include="MidiEndpointDiscoveryFilterFlagsEnum.idl">
-      <Filter>API\Messages\Enum</Filter>
-    </Midl>
-    <Midl Include="MidiFunctionBlockDiscoveryFilterFlagsEnum.idl">
-      <Filter>API\Messages\Enum</Filter>
-    </Midl>
     <Midl Include="MidiMessageTypeEnum.idl">
       <Filter>API\Messages\Enum</Filter>
     </Midl>
@@ -395,12 +404,6 @@
     <Midl Include="MidiEndpointNativeDataFormatEnum.idl">
       <Filter>API\Transports</Filter>
     </Midl>
-    <Midl Include="MidiEndpointDeviceInformation.idl">
-      <Filter>API\Enumeration</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointDevicePurposeEnum.idl">
-      <Filter>API\Enumeration</Filter>
-    </Midl>
     <Midl Include="MidiGroupTerminalBlockDirectionEnum.idl">
       <Filter>API\Endpoints\Metadata\Blocks</Filter>
     </Midl>
@@ -413,23 +416,11 @@
     <Midl Include="MidiFunctionBlockDirectionEnum.idl">
       <Filter>API\Endpoints\Metadata\Blocks</Filter>
     </Midl>
-    <Midl Include="MidiEndpointDeviceInformationSortOrderEnum.idl">
-      <Filter>API\Enumeration</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointDeviceInformationFilterEnum.idl">
-      <Filter>API\Enumeration</Filter>
-    </Midl>
     <Midl Include="MidiMessageConverter.idl">
       <Filter>API\Messages\Utility</Filter>
     </Midl>
     <Midl Include="MidiUniqueId.idl">
       <Filter>API\BasicTypes</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointDeviceWatcher.idl">
-      <Filter>API\Enumeration</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointDeviceInformationUpdateEventArgs.idl">
-      <Filter>API\Enumeration</Filter>
     </Midl>
     <Midl Include="MidiStreamConfigurationRequestReceivedEventArgs.idl">
       <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
@@ -461,12 +452,6 @@
     <Midl Include="MidiServiceLoopbackEndpointCreationResult.idl">
       <Filter>API\Service\Runtime Endpoints</Filter>
     </Midl>
-    <Midl Include="MidiServiceMessageProcessingPluginInformation.idl">
-      <Filter>API\Service\Reporting</Filter>
-    </Midl>
-    <Midl Include="MidiServiceTransportPluginInformation.idl">
-      <Filter>API\Service\Reporting</Filter>
-    </Midl>
     <Midl Include="IMidiServiceMessageProcessingPluginConfiguration.idl">
       <Filter>API\Service\Configuration</Filter>
     </Midl>
@@ -479,8 +464,48 @@
     <Midl Include="MidiServiceConfigurationResponseStatusEnum.idl">
       <Filter>API\Service\Configuration</Filter>
     </Midl>
-    <Midl Include="MidiServiceSessionConnectionInformation.idl" />
-    <Midl Include="MidiServiceSessionInformation.idl" />
+    <Midl Include="MidiServiceMessageProcessingPluginInfo.idl">
+      <Filter>API\Service\Reporting</Filter>
+    </Midl>
+    <Midl Include="MidiServiceSessionConnectionInfo.idl">
+      <Filter>API\Service\Reporting</Filter>
+    </Midl>
+    <Midl Include="MidiServiceSessionInfo.idl">
+      <Filter>API\Service\Reporting</Filter>
+    </Midl>
+    <Midl Include="MidiServiceTransportPluginInfo.idl">
+      <Filter>API\Service\Reporting</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDiscoveryRequestsEnum.idl">
+      <Filter>API\Messages\Enum</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlockDiscoveryRequestsEnum.idl">
+      <Filter>API\Messages\Enum</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceWatcher.idl">
+      <Filter>API\Enumeration\Watcher</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationUpdatedEventArgs.idl">
+      <Filter>API\Enumeration\Watcher</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationRemovedEventArgs.idl">
+      <Filter>API\Enumeration\Watcher</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationAddedEventArgs.idl">
+      <Filter>API\Enumeration\Watcher</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationFiltersEnum.idl">
+      <Filter>API\Enumeration\Enum</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationSortOrderEnum.idl">
+      <Filter>API\Enumeration\Enum</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDevicePurposeEnum.idl">
+      <Filter>API\Enumeration\Enum</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformation.idl">
+      <Filter>API\Enumeration\DeviceInformation</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />

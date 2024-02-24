@@ -10,9 +10,6 @@
 #include "stdafx.h"
 
 
-#include "MidiMessagePacketTests.h"
-
-
 using namespace winrt::Windows::Devices::Midi2;
 
 void MidiMessagePacketTests::TestUmp32()

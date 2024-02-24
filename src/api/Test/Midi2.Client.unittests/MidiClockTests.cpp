@@ -9,9 +9,6 @@
 
 #include "stdafx.h"
 
-#include "MidiClockTests.h"
-
-
 using namespace winrt::Windows::Devices::Midi2;
 
 

@@ -91,11 +91,22 @@ CMidiSrv::Initialize()
         &rpcSecurityDescriptor,
         NULL));
 
+    
+    // this is an ugly set of casts, but the reinterpret_cast error only
+    // comes up with C++/20. Risk of a straight c-style cast here going
+    // poorly is low. Error comes from the function taking non-const params
+    // but our arguments here are const.
     RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcServerUseProtseqEp(
         (RPC_WSTR)MIDISRV_LRPC_PROTOCOL,
         RPC_C_PROTSEQ_MAX_REQS_DEFAULT,
         (RPC_WSTR)MIDISRV_ENDPOINT,
         rpcSecurityDescriptor.get())));
+
+    //RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcServerUseProtseqEp(
+    //    reinterpret_cast<RPC_WSTR>(MIDISRV_LRPC_PROTOCOL),
+    //    RPC_C_PROTSEQ_MAX_REQS_DEFAULT,
+    //    reinterpret_cast<RPC_WSTR>(MIDISRV_ENDPOINT),
+    //    rpcSecurityDescriptor.get())));
 
     RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcServerRegisterIf3(
         MidiSrvRPC_v1_0_s_ifspec,

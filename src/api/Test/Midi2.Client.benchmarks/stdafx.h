@@ -1,6 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 #pragma once
 
+
+#ifndef STDAFX_H
+#define STDAFX_H
+
+
 #include <windows.h>
 
 #include <winrt/Windows.Foundation.h>
@@ -37,3 +42,4 @@ using namespace winrt::Windows::Devices::Midi2;
 
 
 
+#endif

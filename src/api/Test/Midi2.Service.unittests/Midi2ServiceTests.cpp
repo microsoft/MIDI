@@ -106,7 +106,7 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
-    MIDISRV_CLIENTCREATION_PARAMS creationParams {0};
+    MIDISRV_CLIENTCREATION_PARAMS creationParams { };
     PMIDISRV_CLIENT client {nullptr};
     wil::unique_rpc_binding bindingHandle;
     MidiClientHandle clientHandle{ 0 };

@@ -20,7 +20,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
 {
 
     _Use_decl_annotations_
-        midi2::MidiServicePingResponseSummary MidiService::PingService(uint8_t const pingCount, uint32_t timeoutMilliseconds) noexcept
+    midi2::MidiServicePingResponseSummary MidiService::PingService(
+        uint8_t const pingCount, 
+        uint32_t timeoutMilliseconds) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Enter");
 
@@ -160,7 +162,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             pings[pingIndex] = response;
 
             // send the ping
-            endpoint.SendMessageWords(timestamp, request.Word0, pingSourceId, pingIndex, request.Padding);
+            endpoint.SendSingleMessageWords(timestamp, request.Word0, pingSourceId, pingIndex, request.Padding);
 
             //Sleep(0);
         }
@@ -211,29 +213,29 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
-    foundation::Collections::IVectorView<midi2::MidiServiceTransportPluginInformation> MidiService::GetInstalledTransportPlugins()
+    foundation::Collections::IVector<midi2::MidiServiceTransportPluginInfo> MidiService::GetInstalledTransportPlugins()
     {
         // TODO: Need to implement GetInstalledTransportPlugins. For now, return an empty collection instead of throwing
 
         // This can be read from the registry, but the additional metadata requires calling into the objects themselves
 
 
-        return winrt::single_threaded_vector<midi2::MidiServiceTransportPluginInformation>().GetView();
+        return winrt::single_threaded_vector<midi2::MidiServiceTransportPluginInfo>();
     }
 
 
-    foundation::Collections::IVectorView<midi2::MidiServiceMessageProcessingPluginInformation> MidiService::GetInstalledMessageProcessingPlugins()
+    foundation::Collections::IVector<midi2::MidiServiceMessageProcessingPluginInfo> MidiService::GetInstalledMessageProcessingPlugins()
     {
         // TODO: Need to implement GetInstalledMessageProcessingPlugins. For now, return an empty collection instead of throwing
 
         // This can be read from the registry, but the additional metadata requires calling into the objects themselves
 
-        return winrt::single_threaded_vector<midi2::MidiServiceMessageProcessingPluginInformation>().GetView();
+        return winrt::single_threaded_vector<midi2::MidiServiceMessageProcessingPluginInfo>();
     }
 
-    foundation::Collections::IVectorView<midi2::MidiServiceSessionInformation> MidiService::GetActiveSessions() noexcept
+    foundation::Collections::IVector<midi2::MidiServiceSessionInfo> MidiService::GetActiveSessions() noexcept
     {
-        auto sessionList = winrt::single_threaded_vector<midi2::MidiServiceSessionInformation>();
+        auto sessionList = winrt::single_threaded_vector<midi2::MidiServiceSessionInfo>();
 
         try
         {
@@ -263,7 +265,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                         if (jsonObject != nullptr)
                         {
-                            auto sessionJsonArray = internal::JsonGetArrayProperty(jsonObject, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_ARRAY_PROPERTY_KEY);
+                            auto sessionJsonArray = jsonObject.GetNamedArray(MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_ARRAY_PROPERTY_KEY);
 
                             GUID defaultGuid{};
                             std::chrono::time_point<std::chrono::system_clock> noTime;
@@ -271,7 +273,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                             for (uint32_t i = 0; i < sessionJsonArray.Size(); i++)
                             {
                                 auto sessionJson = sessionJsonArray.GetObjectAt(i);
-                                auto sessionObject = winrt::make_self<implementation::MidiServiceSessionInformation>();
+                                auto sessionObject = winrt::make_self<implementation::MidiServiceSessionInfo>();
 
                                 //    auto startTimeString = internal::JsonGetWStringProperty(sessionJson, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_TIME_PROPERTY_KEY, L"").c_str();
 
@@ -279,29 +281,29 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                                 sessionObject->InternalInitialize(
                                     internal::JsonGetGuidProperty(sessionJson, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_ID_PROPERTY_KEY, defaultGuid),
-                                    internal::JsonGetWStringProperty(sessionJson, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_NAME_PROPERTY_KEY, L"").c_str(),
-                                    std::stol(internal::JsonGetWStringProperty(sessionJson, MIDI_SESSION_TRACKER_JSON_RESULT_PROCESS_ID_PROPERTY_KEY, L"0")),
-                                    internal::JsonGetWStringProperty(sessionJson, MIDI_SESSION_TRACKER_JSON_RESULT_PROCESS_NAME_PROPERTY_KEY, L"").c_str(),
+                                    sessionJson.GetNamedString(MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_NAME_PROPERTY_KEY, L"").c_str(),
+                                    std::stol(sessionJson.GetNamedString(MIDI_SESSION_TRACKER_JSON_RESULT_PROCESS_ID_PROPERTY_KEY, L"0").c_str()),
+                                    sessionJson.GetNamedString(MIDI_SESSION_TRACKER_JSON_RESULT_PROCESS_NAME_PROPERTY_KEY, L"").c_str(),
                                     winrt::clock::from_sys(startTime)
                                 );
 
 
                                 // Add connections
 
-                                auto connectionsJsonArray = internal::JsonGetArrayProperty(sessionJson, MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ARRAY_PROPERTY_KEY);
+                                auto connectionsJsonArray = sessionJson.GetNamedArray(MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ARRAY_PROPERTY_KEY, nullptr);
 
-                                if (connectionsJsonArray.Size() > 0)
+                                if (connectionsJsonArray != nullptr && connectionsJsonArray.Size() > 0)
                                 {
                                     for (uint32_t j = 0; j < connectionsJsonArray.Size(); j++)
                                     {
                                         auto connectionJson = connectionsJsonArray.GetObjectAt(j);
-                                        auto connectionObject = winrt::make_self<implementation::MidiServiceSessionConnectionInformation>();
+                                        auto connectionObject = winrt::make_self<implementation::MidiServiceSessionConnectionInfo>();
 
                                         auto earliestConnectionTime = internal::JsonGetDateTimeProperty(connectionJson, MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_TIME_PROPERTY_KEY, noTime);
 
                                         connectionObject->InternalInitialize(
-                                            internal::JsonGetWStringProperty(connectionJson, MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ENDPOINT_ID_PROPERTY_KEY, L"").c_str(),
-                                            (uint16_t)(internal::JsonGetDoubleProperty(connectionJson, MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_COUNT_PROPERTY_KEY, 0)),
+                                            connectionJson.GetNamedString(MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ENDPOINT_ID_PROPERTY_KEY, L"").c_str(),
+                                            (uint16_t)(connectionJson.GetNamedNumber(MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_COUNT_PROPERTY_KEY, 0)),
                                             winrt::clock::from_sys(earliestConnectionTime)
                                         );
 
@@ -321,7 +323,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             internal::LogGeneralError(__FUNCTION__, L"Exception processing session tracker result json");
         }
 
-        return sessionList.GetView();
+        return sessionList;
 
     }
 
@@ -374,80 +376,68 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         // build Endpoint A
 
-        internal::JsonSetWStringProperty(
-            endpointDeviceAObject,
+        endpointDeviceAObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY,
-            endpointDefinitionA.Name().c_str());
+            json::JsonValue::CreateStringValue(endpointDefinitionA.Name().c_str()));
 
-        internal::JsonSetWStringProperty(
-            endpointDeviceAObject,
+        endpointDeviceAObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY,
-            endpointDefinitionA.Description().c_str());
+            json::JsonValue::CreateStringValue(endpointDefinitionA.Description().c_str()));
 
-        internal::JsonSetWStringProperty(
-            endpointDeviceAObject,
+        endpointDeviceAObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY,
-            endpointDefinitionA.UniqueId().c_str());
-
+            json::JsonValue::CreateStringValue(endpointDefinitionA.UniqueId().c_str()));
 
         //MIDI_CONFIG_JSON_ENDPOINT_COMMON_MANUFACTURER_PROPERTY
 
 
         // build Endpoint B
 
-        internal::JsonSetWStringProperty(
-            endpointDeviceBObject,
+        endpointDeviceBObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY,
-            endpointDefinitionB.Name().c_str());
+            json::JsonValue::CreateStringValue(endpointDefinitionB.Name().c_str()));
 
-        internal::JsonSetWStringProperty(
-            endpointDeviceBObject,
+        endpointDeviceBObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY,
-            endpointDefinitionB.Description().c_str());
+            json::JsonValue::CreateStringValue(endpointDefinitionB.Description().c_str()));
 
-        internal::JsonSetWStringProperty(
-            endpointDeviceBObject,
+        endpointDeviceBObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY,
-            endpointDefinitionB.UniqueId().c_str());
+            json::JsonValue::CreateStringValue(endpointDefinitionB.UniqueId().c_str()));
+
 
         // create the association object with the two devices as children
 
-        internal::JsonSetObjectProperty(
-            endpointAssociationObject,
+        endpointAssociationObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_A_KEY,
             endpointDeviceAObject);
 
-        internal::JsonSetObjectProperty(
-            endpointAssociationObject,
+        endpointAssociationObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_B_KEY,
             endpointDeviceBObject);
 
         // create the creation node with the association object as the child property
 
-        internal::JsonSetObjectProperty(
-            endpointCreationObject,
+        endpointCreationObject.SetNamedValue(
             internal::GuidToString(associationId),
             endpointAssociationObject);
 
         // create the abstraction object with the child creation node
 
-        internal::JsonSetObjectProperty(
-            abstractionObject,
+        abstractionObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICES_CREATE_KEY,
             endpointCreationObject);
 
         // create the main node
 
-        internal::JsonSetObjectProperty(
-            topLevelTransportPluginSettingsObject,
+        topLevelTransportPluginSettingsObject.SetNamedValue(
             internal::GuidToString(loopbackDeviceAbstractionId),
             abstractionObject);
 
 
         // wrap it all up so the json is valid
 
-        internal::JsonSetObjectProperty(
-            wrapperObject,
+        wrapperObject.SetNamedValue(
             MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT,
             topLevelTransportPluginSettingsObject);
 
@@ -456,14 +446,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
         json::JsonObject responseObject = InternalSendConfigurationJsonAndGetResponse(loopbackDeviceAbstractionId, wrapperObject);
 
         // parse the results
-        auto successResult = internal::JsonGetBoolProperty(responseObject, MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY, false);
+        auto successResult = responseObject.GetNamedBoolean(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY, false);
 
         if (successResult)
         {
             internal::LogInfo(__FUNCTION__, L"JSON payload indicates success");
 
-            auto deviceIdA = internal::JsonGetWStringProperty(responseObject, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_A_ID_KEY, L"");
-            auto deviceIdB = internal::JsonGetWStringProperty(responseObject, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_B_ID_KEY, L"");
+            auto deviceIdA = responseObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_A_ID_KEY, L"");
+            auto deviceIdB = responseObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_B_ID_KEY, L"");
 
             if (deviceIdA.empty())
             {
@@ -616,23 +606,20 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         // create the abstraction object with the child creation node
 
-        internal::JsonSetArrayProperty(
-            abstractionObject,
+        abstractionObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICES_REMOVE_KEY,
             endpointDeletionArray);
 
         // create the main node
 
-        internal::JsonSetObjectProperty(
-            topLevelTransportPluginSettingsObject,
+        topLevelTransportPluginSettingsObject.SetNamedValue(
             internal::GuidToString(loopbackDeviceAbstractionId),
             abstractionObject);
 
 
         // wrap it all up so the json is valid
 
-        internal::JsonSetObjectProperty(
-            wrapperObject,
+        wrapperObject.SetNamedValue(
             MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT,
             topLevelTransportPluginSettingsObject);
 
@@ -645,7 +632,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
         // parse the results
-        auto successResult = internal::JsonGetBoolProperty(responseObject, MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY, false);
+        auto successResult = responseObject.GetNamedBoolean(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY, false);
 
         if (successResult)
         {
