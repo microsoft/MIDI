@@ -58,8 +58,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
         static uint8_t GetStatusBankFromFlexDataMessageFirstWord(_In_ uint32_t const word0) noexcept;
         static uint8_t GetStatusFromFlexDataMessageFirstWord(_In_ uint32_t const word0) noexcept;
 
-        static collections::IVector<midi2::IMidiUniversalPacket> GetPacketListFromWordList(_In_ uint64_t const timestamp, _In_ collections::IVectorView<uint32_t> const& words);
-        static collections::IVector<uint32_t> GetWordListFromPacketList(_In_ collections::IVectorView<midi2::IMidiUniversalPacket> const& messages);
+        static collections::IVector<midi2::IMidiUniversalPacket> GetPacketListFromWordList(
+            _In_ uint64_t const timestamp, 
+            _In_ collections::IIterable<uint32_t> const& words);
+
+        static collections::IVector<uint32_t> GetWordListFromPacketList(
+            _In_ collections::IIterable<midi2::IMidiUniversalPacket> const& messages);
 
 
     };

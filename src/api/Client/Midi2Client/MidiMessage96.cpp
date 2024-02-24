@@ -12,7 +12,7 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    collections::IVectorView<uint32_t> MidiMessage96::GetAllWords() const noexcept
+    collections::IVector<uint32_t> MidiMessage96::GetAllWords() const noexcept
     {
         auto vec = winrt::single_threaded_vector<uint32_t>();
 
@@ -20,7 +20,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         vec.Append(m_ump.word1);
         vec.Append(m_ump.word2);
 
-        return vec.GetView();
+        return vec;
     }
 
     _Use_decl_annotations_
@@ -35,7 +35,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     _Use_decl_annotations_
-    uint8_t MidiMessage96::AddAllMessageBytesToBuffer(foundation::IMemoryBuffer const& buffer, uint32_t const byteOffset) const noexcept
+    uint8_t MidiMessage96::AddAllMessageBytesToBuffer(uint32_t const byteOffset, foundation::IMemoryBuffer const& buffer) const noexcept
     {
         const uint8_t numWordsInPacket = 3;
         const uint8_t numBytesInPacket = numWordsInPacket * sizeof(uint32_t);

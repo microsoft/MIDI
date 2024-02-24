@@ -86,13 +86,13 @@ void MidiEndpointListenerTests::TestMessageTypeListener()
 
     std::cout << "Sending messages" << std::endl;
 
-    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageWords(MidiClock::Now(), 0x1DEDBEEF))); // no match
-    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageWords(MidiClock::Now(), 0x41234567, 0x12345678)));
-    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageWords(MidiClock::Now(), 0x23263827)));
-    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageWords(MidiClock::Now(), 0xF1234567, 0x00000000, 0x11111111, 0x12345678)));  // no match
-    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageWords(MidiClock::Now(), 0x48675309, 0x12345678)));
-    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageWords(MidiClock::Now(), 0x28675309)));
-    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageWords(MidiClock::Now(), 0x0BEEFDED)));  // no match
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendSingleMessageWords(MidiClock::Now(), 0x1DEDBEEF))); // no match
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendSingleMessageWords(MidiClock::Now(), 0x41234567, 0x12345678)));
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendSingleMessageWords(MidiClock::Now(), 0x23263827)));
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendSingleMessageWords(MidiClock::Now(), 0xF1234567, 0x00000000, 0x11111111, 0x12345678)));  // no match
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendSingleMessageWords(MidiClock::Now(), 0x48675309, 0x12345678)));
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendSingleMessageWords(MidiClock::Now(), 0x28675309)));
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendSingleMessageWords(MidiClock::Now(), 0x0BEEFDED)));  // no match
 
     expectedMatchingMessageCount = 4;
 
@@ -204,13 +204,13 @@ void MidiEndpointListenerTests::TestGroupListener()
 
     std::cout << "Sending messages" << std::endl;
 
-    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageWords(MidiClock::Now(), 0x1DEDBEEF))); // no match
-    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageWords(MidiClock::Now(), 0x4B234567, 0x12345678)));  // match, CV message
-    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageWords(MidiClock::Now(), 0x23263827)));              // match, CV message
-    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageWords(MidiClock::Now(), 0xF1234567, 0x00000000, 0x11111111, 0x12345678)));  // no match
-    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageWords(MidiClock::Now(), 0x43675309, 0x12345678)));  // match, CV message
-    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageWords(MidiClock::Now(), 0x23675309)));              // match, CV message
-    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageWords(MidiClock::Now(), 0x03EEFDED)));  // no match because of message type
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendSingleMessageWords(MidiClock::Now(), 0x1DEDBEEF))); // no match
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendSingleMessageWords(MidiClock::Now(), 0x4B234567, 0x12345678)));  // match, CV message
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendSingleMessageWords(MidiClock::Now(), 0x23263827)));              // match, CV message
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendSingleMessageWords(MidiClock::Now(), 0xF1234567, 0x00000000, 0x11111111, 0x12345678)));  // no match
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendSingleMessageWords(MidiClock::Now(), 0x43675309, 0x12345678)));  // match, CV message
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendSingleMessageWords(MidiClock::Now(), 0x23675309)));              // match, CV message
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendSingleMessageWords(MidiClock::Now(), 0x03EEFDED)));  // no match because of message type
 
     expectedMatchingMessageCount = 4;
 
@@ -328,13 +328,13 @@ void MidiEndpointListenerTests::TestGroupAndChannelListener()
 
     std::cout << "Sending messages" << std::endl;
 
-    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageWords(MidiClock::Now(), 0x15EDBEEF)));
-    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageWords(MidiClock::Now(), 0x45234567, 0x12345678)));  // match
-    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageWords(MidiClock::Now(), 0x252B3827)));              // match
-    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageWords(MidiClock::Now(), 0xF5234567, 0x00000000, 0x11111111, 0x12345678))); // not a match, type F
-    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageWords(MidiClock::Now(), 0x44635309, 0x12345678)));  // not a match, wrong group
-    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageWords(MidiClock::Now(), 0x24635309)));              // not a match, wrong group
-    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendMessageWords(MidiClock::Now(), 0x04EBFDED)));              // not a match, due to message type
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendSingleMessageWords(MidiClock::Now(), 0x15EDBEEF)));
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendSingleMessageWords(MidiClock::Now(), 0x45234567, 0x12345678)));  // match
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendSingleMessageWords(MidiClock::Now(), 0x252B3827)));              // match
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendSingleMessageWords(MidiClock::Now(), 0xF5234567, 0x00000000, 0x11111111, 0x12345678))); // not a match, type F
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendSingleMessageWords(MidiClock::Now(), 0x44635309, 0x12345678)));  // not a match, wrong group
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendSingleMessageWords(MidiClock::Now(), 0x24635309)));              // not a match, wrong group
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendSingleMessageWords(MidiClock::Now(), 0x04EBFDED)));              // not a match, due to message type
 
     expectedMatchingMessageCount = 2;
 

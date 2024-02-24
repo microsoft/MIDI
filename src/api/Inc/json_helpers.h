@@ -51,31 +51,36 @@ namespace Windows::Devices::Midi2::Internal
         object.SetNamedValue(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY, messageVal);
     }
 
-
-    inline bool JsonObjectFromBSTR(_In_ BSTR* const bstr, _Out_ json::JsonObject& obj) noexcept
+    _Success_(return == true)
+    inline bool JsonObjectFromBSTR(_In_ BSTR* const jsonBString, _Out_ json::JsonObject &obj) noexcept
     {
-        if (bstr == nullptr) return false;
-
-        try
+        if (jsonBString != nullptr)
         {
-            ATL::CComBSTR ccbstr(*bstr);
-            if (ccbstr.Length() == 0) return false;
-
-            winrt::hstring hstr(ccbstr);
-
-            if (json::JsonObject::TryParse(hstr, obj))
+            try
             {
-                return true;
+                ATL::CComBSTR ccbstr(*jsonBString);
+                if (ccbstr.Length() > 0)
+                {
+                    winrt::hstring jsonHString(ccbstr);
+
+                    // SAL doesn't understand that TryParse returns true on success
+                    // and so it complains with warning C6101 that obj is uninitialized
+                    // on a success path in this function.
+                    if (json::JsonObject::TryParse(jsonHString, obj))
+                    {
+                        return true;
+                    }
+                }
+            }
+            catch (...)
+            {
             }
         }
-        catch (...)
-        {
-        }
 
-        obj = nullptr;
         return false;
     }
 
+    _Success_(return == true)
     inline bool JsonStringifyObjectToOutParam(_In_ json::JsonObject const& obj, _Out_ BSTR** outParam) noexcept
     {
         try
@@ -94,7 +99,7 @@ namespace Windows::Devices::Midi2::Internal
 
         }
 
-        return false;       
+        return false;
     }
 
     inline json::JsonObject JsonCreateSingleWStringPropertyObject(_In_ std::wstring const& key, _In_ std::wstring const& value) noexcept

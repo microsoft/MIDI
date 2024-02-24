@@ -7,14 +7,14 @@
 // ============================================================================
 
 #pragma once
-#include "MidiServiceSessionConnectionInformation.g.h"
+#include "MidiServiceSessionConnectionInfo.g.h"
 
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    struct MidiServiceSessionConnectionInformation : MidiServiceSessionConnectionInformationT<MidiServiceSessionConnectionInformation>
+    struct MidiServiceSessionConnectionInfo : MidiServiceSessionConnectionInfoT<MidiServiceSessionConnectionInfo>
     {
-        MidiServiceSessionConnectionInformation() = default;
+        MidiServiceSessionConnectionInfo() = default;
 
         winrt::hstring EndpointDeviceId() { return m_endpointDeviceId; }
         uint16_t InstanceCount() { return m_instanceCount; }

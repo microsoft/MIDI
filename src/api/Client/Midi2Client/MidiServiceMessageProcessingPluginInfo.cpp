@@ -6,19 +6,9 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#include "midl_defines.h"
-MIDI_IDL_IMPORT
+#include "pch.h"
+#include "MidiServiceMessageProcessingPluginInfo.g.cpp"
 
-namespace Windows.Devices.Midi2
+namespace winrt::Windows::Devices::Midi2::implementation
 {
-    [MIDI_API_CONTRACT(1)]
-    [default_interface]
-    runtimeclass MidiServiceSessionConnectionInformation
-    {
-        String EndpointDeviceId{ get; };
-
-        UInt16 InstanceCount{ get; };
-
-        Windows.Foundation.DateTime EarliestConnectionTime{ get; };
-    }
 }

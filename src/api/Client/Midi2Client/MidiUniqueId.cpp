@@ -29,7 +29,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         return MidiUniqueId(val);
     }
 
-    uint32_t MidiUniqueId::As28BitInteger() const noexcept
+    uint32_t MidiUniqueId::AsCombined28BitValue() const noexcept
     {
         // the MUID is 4 bytes but in LSB->MSB order with Byte1 being the LSB
 
@@ -45,11 +45,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    MidiUniqueId::MidiUniqueId(uint32_t const integer28bit) noexcept
+    MidiUniqueId::MidiUniqueId(uint32_t const combined28BitValue) noexcept
     {
         // the MUID is 4 bytes but in LSB->MSB order with Byte1 being the LSB
 
-        uint32_t val = integer28bit & 0x0FFFFFFF;
+        uint32_t val = combined28BitValue & 0x0FFFFFFF;
 
         Byte1(val & 0x7F);
 

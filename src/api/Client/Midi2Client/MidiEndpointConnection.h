@@ -54,80 +54,86 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ winrt::hstring const endpointDeviceId);
 
 
-        midi2::MidiSendMessageResult SendMessagePacket(
+        midi2::MidiSendMessageResult SendSingleMessagePacket(
             _In_ midi2::IMidiUniversalPacket const& ump) noexcept;
 
 
-        midi2::MidiSendMessageResult SendMessageStruct(
-            _In_ internal::MidiTimestamp timestamp,
-            _In_ midi2::MidiMessageStruct const& message,
-            _In_ uint8_t wordCount) noexcept;
+        midi2::MidiSendMessageResult SendSingleMessageStruct(
+            _In_ internal::MidiTimestamp const timestamp,
+            _In_ uint8_t wordCount,
+            _In_ midi2::MidiMessageStruct const& message
+        ) noexcept;
 
 
-        midi2::MidiSendMessageResult SendMessageWords(
+        midi2::MidiSendMessageResult SendSingleMessageWords(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint32_t const word0) noexcept;
 
-        midi2::MidiSendMessageResult SendMessageWords(
+        midi2::MidiSendMessageResult SendSingleMessageWords(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint32_t const word0,
             _In_ uint32_t const word1) noexcept;
 
-        midi2::MidiSendMessageResult SendMessageWords(
+        midi2::MidiSendMessageResult SendSingleMessageWords(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint32_t const word0,
             _In_ uint32_t const word1,
             _In_ uint32_t const word2) noexcept;
 
-        midi2::MidiSendMessageResult SendMessageWords(
+        midi2::MidiSendMessageResult SendSingleMessageWords(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint32_t const word0,
             _In_ uint32_t const word1,
             _In_ uint32_t const word2,
             _In_ uint32_t const word3) noexcept;
 
-        midi2::MidiSendMessageResult SendMessageWordArray(
+        midi2::MidiSendMessageResult SendSingleMessageWordArray(
             _In_ internal::MidiTimestamp const timestamp,
-            _In_ winrt::array_view<uint32_t> words,
             _In_ uint32_t const startIndex,
-            _In_ uint8_t const wordCount) noexcept;
+            _In_ uint8_t const wordCount,
+            _In_ winrt::array_view<uint32_t const> words
+            ) noexcept;
 
-        midi2::MidiSendMessageResult SendMessageBuffer(
-            _In_ internal::MidiTimestamp timestamp,
-            _In_ foundation::IMemoryBuffer const& buffer,
-            _In_ uint32_t byteOffset,
-            _In_ uint8_t byteCount) noexcept;
+        midi2::MidiSendMessageResult SendSingleMessageBuffer(
+            _In_ internal::MidiTimestamp const timestamp,
+            _In_ uint32_t const byteOffset,
+            _In_ uint8_t const byteCount,
+            _In_ foundation::IMemoryBuffer const& buffer
+            ) noexcept;
 
 
         midi2::MidiSendMessageResult SendMultipleMessagesWordList(
-            _In_ internal::MidiTimestamp timestamp, 
-            _In_ collections::IVectorView<uint32_t> const& words) noexcept;
+            _In_ internal::MidiTimestamp const timestamp,
+            _In_ collections::IIterable<uint32_t> const& words) noexcept;
 
         midi2::MidiSendMessageResult SendMultipleMessagesWordArray(
-            _In_ internal::MidiTimestamp timestamp,
-            _In_ winrt::array_view<uint32_t> words) noexcept;
+            _In_ internal::MidiTimestamp const timestamp,
+            _In_ uint32_t const startIndex,
+            _In_ uint32_t const wordCount,
+            _In_ winrt::array_view<uint32_t const> words) noexcept;
 
 
         midi2::MidiSendMessageResult SendMultipleMessagesPacketList(
-            _In_ collections::IVectorView<IMidiUniversalPacket> const& messages) noexcept;
+            _In_ collections::IIterable<IMidiUniversalPacket> const& messages) noexcept;
 
         //midi2::MidiSendMessageResult SendMultipleMessagesPacketArray(
         //    _In_ winrt::array_view<IMidiUniversalPacket> messages) noexcept;
 
 
         midi2::MidiSendMessageResult SendMultipleMessagesStructList(
-            _In_ internal::MidiTimestamp timestamp,
-            _In_ collections::IVectorView<MidiMessageStruct> const& messages) noexcept;
+            _In_ internal::MidiTimestamp const timestamp,
+            _In_ collections::IIterable<MidiMessageStruct> const& messages) noexcept;
 
         midi2::MidiSendMessageResult SendMultipleMessagesStructArray(
-            _In_ internal::MidiTimestamp timestamp,
-            _In_ winrt::array_view<MidiMessageStruct> messages) noexcept;
+            _In_ internal::MidiTimestamp const timestamp,
+            _In_ winrt::array_view<MidiMessageStruct const> messages) noexcept;
 
         midi2::MidiSendMessageResult SendMultipleMessagesBuffer(
-            _In_ internal::MidiTimestamp timestamp,
-            _In_ foundation::IMemoryBuffer const& buffer,
-            _In_ uint32_t byteOffset,
-            _In_ uint32_t byteCount) noexcept;
+            _In_ internal::MidiTimestamp const timestamp,
+            _In_ uint32_t const byteOffset,
+            _In_ uint32_t const byteCount,
+            _In_ foundation::IMemoryBuffer const& buffer
+            ) noexcept;
 
 
         _Success_(return == true)

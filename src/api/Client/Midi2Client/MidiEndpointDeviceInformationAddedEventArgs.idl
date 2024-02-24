@@ -6,9 +6,18 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#include "pch.h"
-#include "MidiServiceMessageProcessingPluginInformation.g.cpp"
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
 
-namespace winrt::Windows::Devices::Midi2::implementation
+import "MidiEndpointDeviceInformation.idl";
+
+namespace Windows.Devices.Midi2
 {
+    [MIDI_API_CONTRACT(1)]
+    [default_interface]
+    runtimeclass MidiEndpointDeviceInformationAddedEventArgs
+    {
+        MidiEndpointDeviceInformation AddedDevice{ get; };
+    }
 }
+

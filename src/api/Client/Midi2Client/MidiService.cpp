@@ -20,7 +20,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
 {
 
     _Use_decl_annotations_
-        midi2::MidiServicePingResponseSummary MidiService::PingService(uint8_t const pingCount, uint32_t timeoutMilliseconds) noexcept
+    midi2::MidiServicePingResponseSummary MidiService::PingService(
+        uint8_t const pingCount, 
+        uint32_t timeoutMilliseconds) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Enter");
 
@@ -160,7 +162,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             pings[pingIndex] = response;
 
             // send the ping
-            endpoint.SendMessageWords(timestamp, request.Word0, pingSourceId, pingIndex, request.Padding);
+            endpoint.SendSingleMessageWords(timestamp, request.Word0, pingSourceId, pingIndex, request.Padding);
 
             //Sleep(0);
         }
@@ -211,29 +213,29 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
-    foundation::Collections::IVectorView<midi2::MidiServiceTransportPluginInformation> MidiService::GetInstalledTransportPlugins()
+    foundation::Collections::IVector<midi2::MidiServiceTransportPluginInfo> MidiService::GetInstalledTransportPlugins()
     {
         // TODO: Need to implement GetInstalledTransportPlugins. For now, return an empty collection instead of throwing
 
         // This can be read from the registry, but the additional metadata requires calling into the objects themselves
 
 
-        return winrt::single_threaded_vector<midi2::MidiServiceTransportPluginInformation>().GetView();
+        return winrt::single_threaded_vector<midi2::MidiServiceTransportPluginInfo>();
     }
 
 
-    foundation::Collections::IVectorView<midi2::MidiServiceMessageProcessingPluginInformation> MidiService::GetInstalledMessageProcessingPlugins()
+    foundation::Collections::IVector<midi2::MidiServiceMessageProcessingPluginInfo> MidiService::GetInstalledMessageProcessingPlugins()
     {
         // TODO: Need to implement GetInstalledMessageProcessingPlugins. For now, return an empty collection instead of throwing
 
         // This can be read from the registry, but the additional metadata requires calling into the objects themselves
 
-        return winrt::single_threaded_vector<midi2::MidiServiceMessageProcessingPluginInformation>().GetView();
+        return winrt::single_threaded_vector<midi2::MidiServiceMessageProcessingPluginInfo>();
     }
 
-    foundation::Collections::IVectorView<midi2::MidiServiceSessionInformation> MidiService::GetActiveSessions() noexcept
+    foundation::Collections::IVector<midi2::MidiServiceSessionInfo> MidiService::GetActiveSessions() noexcept
     {
-        auto sessionList = winrt::single_threaded_vector<midi2::MidiServiceSessionInformation>();
+        auto sessionList = winrt::single_threaded_vector<midi2::MidiServiceSessionInfo>();
 
         try
         {
@@ -271,7 +273,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                             for (uint32_t i = 0; i < sessionJsonArray.Size(); i++)
                             {
                                 auto sessionJson = sessionJsonArray.GetObjectAt(i);
-                                auto sessionObject = winrt::make_self<implementation::MidiServiceSessionInformation>();
+                                auto sessionObject = winrt::make_self<implementation::MidiServiceSessionInfo>();
 
                                 //    auto startTimeString = internal::JsonGetWStringProperty(sessionJson, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_TIME_PROPERTY_KEY, L"").c_str();
 
@@ -295,7 +297,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                                     for (uint32_t j = 0; j < connectionsJsonArray.Size(); j++)
                                     {
                                         auto connectionJson = connectionsJsonArray.GetObjectAt(j);
-                                        auto connectionObject = winrt::make_self<implementation::MidiServiceSessionConnectionInformation>();
+                                        auto connectionObject = winrt::make_self<implementation::MidiServiceSessionConnectionInfo>();
 
                                         auto earliestConnectionTime = internal::JsonGetDateTimeProperty(connectionJson, MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_TIME_PROPERTY_KEY, noTime);
 
@@ -321,7 +323,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             internal::LogGeneralError(__FUNCTION__, L"Exception processing session tracker result json");
         }
 
-        return sessionList.GetView();
+        return sessionList;
 
     }
 

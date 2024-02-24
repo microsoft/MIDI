@@ -7,14 +7,14 @@
 // ============================================================================
 
 #pragma once
-#include "MidiServiceSessionInformation.g.h"
+#include "MidiServiceSessionInfo.g.h"
 
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    struct MidiServiceSessionInformation : MidiServiceSessionInformationT<MidiServiceSessionInformation>
+    struct MidiServiceSessionInfo : MidiServiceSessionInfoT<MidiServiceSessionInfo>
     {
-        MidiServiceSessionInformation() = default;
+        MidiServiceSessionInfo() = default;
 
         winrt::guid SessionId() { return m_sessionId; }
         uint64_t ProcessId() { return m_processId; }
@@ -22,7 +22,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring SessionName() { return m_sessionName; }
         foundation::DateTime StartTime() { return m_startTime; }
 
-        collections::IVectorView<midi2::MidiServiceSessionConnectionInformation> Connections() { return m_connections.GetView(); }
+        collections::IVector<midi2::MidiServiceSessionConnectionInfo> Connections() { return m_connections; }
 
         void InternalInitialize(
             _In_ winrt::guid sessionId,
@@ -33,7 +33,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         );
 
         void InternalAddConnection(
-            _In_ midi2::MidiServiceSessionConnectionInformation const& info
+            _In_ midi2::MidiServiceSessionConnectionInfo const& info
         );
 
     private:
@@ -43,8 +43,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring m_sessionName{};
         foundation::DateTime m_startTime{};
 
-        foundation::Collections::IVector<midi2::MidiServiceSessionConnectionInformation>
-            m_connections{ winrt::single_threaded_vector<midi2::MidiServiceSessionConnectionInformation>() };
+        foundation::Collections::IVector<midi2::MidiServiceSessionConnectionInfo>
+            m_connections{ winrt::single_threaded_vector<midi2::MidiServiceSessionConnectionInfo>() };
 
 
     };

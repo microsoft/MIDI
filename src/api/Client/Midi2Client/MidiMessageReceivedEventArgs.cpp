@@ -254,8 +254,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     uint8_t MidiMessageReceivedEventArgs::FillWordArray(
-        winrt::array_view<uint32_t> words, 
-        uint32_t const startIndex
+        uint32_t const startIndex,
+        winrt::array_view<uint32_t> words
         )
     {
         uint8_t messageWordCount = GetValidMessageWordCount();
@@ -278,8 +278,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     uint8_t MidiMessageReceivedEventArgs::FillByteArray(
-        winrt::array_view<uint8_t> bytes, 
-        uint32_t const startIndex
+        uint32_t const startIndex,
+        winrt::array_view<uint8_t> bytes
         )
     {
         uint8_t messageByteCount = GetValidMessageWordCount() * sizeof(uint32_t);
@@ -304,8 +304,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     uint8_t MidiMessageReceivedEventArgs::FillBuffer(
-        foundation::IMemoryBuffer const& buffer, 
-        uint32_t const byteOffset
+        uint32_t const byteOffset,
+        foundation::IMemoryBuffer const& buffer
         )
     {
         try

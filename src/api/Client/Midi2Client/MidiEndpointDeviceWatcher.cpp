@@ -14,6 +14,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 {
     void MidiEndpointDeviceWatcher::Start()
     {
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
         m_enumeratedEndpointDevices.Clear();
 
         if (m_watcher)
@@ -24,6 +26,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     void MidiEndpointDeviceWatcher::Stop()
     { 
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
         if (m_watcher)
         {
             m_watcher.Stop();
@@ -32,6 +36,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     MidiEndpointDeviceWatcher::~MidiEndpointDeviceWatcher()
     {
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
         try
         {
             m_enumeratedEndpointDevices.Clear();
@@ -57,9 +63,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         _In_ winrt::Windows::Devices::Enumeration::DeviceWatcher source,
         _In_ winrt::Windows::Devices::Enumeration::DeviceInformation args)
     {
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
         try
         {
-            auto midiEndpointDeviceInformation = winrt::make_self<MidiEndpointDeviceInformation>();
+            auto midiEndpointDeviceInformation = winrt::make_self<midi2::implementation::MidiEndpointDeviceInformation>();
 
             midiEndpointDeviceInformation->UpdateFromDeviceInformation(args);
 
@@ -70,7 +78,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 // add to our map
 
-                auto mapKey = internal::ToLowerHStringCopy(midiEndpointDeviceInformation->Id());
+                auto mapKey = internal::NormalizeEndpointInterfaceIdHStringCopy(midiEndpointDeviceInformation->Id());
 
                 if (!m_enumeratedEndpointDevices.HasKey(mapKey))
                 {
@@ -78,7 +86,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                     if (m_deviceAddedEvent)
                     {
-                        m_deviceAddedEvent(*this, *midiEndpointDeviceInformation);
+                        auto newArgs = winrt::make_self<midi2::implementation::MidiEndpointDeviceInformationAddedEventArgs>();
+                        newArgs->InternalInitialize(*midiEndpointDeviceInformation);
+
+                        m_deviceAddedEvent(*this, *newArgs);
                     }
                 }
                 else
@@ -98,11 +109,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         _In_ winrt::Windows::Devices::Enumeration::DeviceWatcher source,
         _In_ winrt::Windows::Devices::Enumeration::DeviceInformationUpdate args)
     {
-        // TODO: check to see if the device matches one in our list
+        internal::LogInfo(__FUNCTION__, L"Enter");
 
         try
         {
-            auto mapKey = internal::ToLowerHStringCopy(args.Id());
+            auto mapKey = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
 
             if (m_enumeratedEndpointDevices.HasKey(mapKey))
             {
@@ -112,7 +123,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                 if (m_deviceUpdatedEvent)
                 {
-                    auto newArgs = winrt::make_self<midi2::implementation::MidiEndpointDeviceInformationUpdateEventArgs>();
+                    auto newArgs = winrt::make_self<midi2::implementation::MidiEndpointDeviceInformationUpdatedEventArgs>();
 
                     bool updatedName{ false };
                     bool updatedInProtocolEndpointInformation{ false };
@@ -214,11 +225,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
         _In_ winrt::Windows::Devices::Enumeration::DeviceWatcher source,
         _In_ winrt::Windows::Devices::Enumeration::DeviceInformationUpdate args)
     {
-        // TODO: check to see if the device matches one in our list
+        internal::LogInfo(__FUNCTION__, L"Enter");
 
         try
         {
-            auto mapKey = internal::ToLowerHStringCopy(args.Id());
+            auto mapKey = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
+
+            auto newArgs = winrt::make_self<midi2::implementation::MidiEndpointDeviceInformationRemovedEventArgs>();
+
+            newArgs->InternalInitialize(args.Id(), args);
 
             if (m_enumeratedEndpointDevices.HasKey(mapKey))
             {
@@ -226,7 +241,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                 if (m_deviceRemovedEvent)
                 {
-                    m_deviceRemovedEvent(*this, args);
+                    m_deviceRemovedEvent(*this, *newArgs);
                 }
             }
         }
@@ -240,6 +255,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         _In_ winrt::Windows::Devices::Enumeration::DeviceWatcher source,
         _In_ winrt::Windows::Foundation::IInspectable args)
     {
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
         try
         {
             if (m_enumerationCompletedEvent) m_enumerationCompletedEvent(*this, args);
@@ -254,6 +271,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         _In_ winrt::Windows::Devices::Enumeration::DeviceWatcher source,
         _In_ winrt::Windows::Foundation::IInspectable args)
     {
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
         try
         {
             if (m_stoppedEvent) m_stoppedEvent(*this, args);
@@ -267,10 +286,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     void MidiEndpointDeviceWatcher::InternalInitialize(
-        midi2::MidiEndpointDeviceInformationFilter const& endpointFilter, 
+        midi2::MidiEndpointDeviceInformationFilters const& endpointFilters, 
         winrt::Windows::Devices::Enumeration::DeviceWatcher const& baseWatcher)
     {
-        m_endpointFilter = endpointFilter;
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
+        m_endpointFilter = endpointFilters;
         m_watcher = baseWatcher;
 
         if (m_watcher != nullptr)
@@ -287,8 +308,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     midi2::MidiEndpointDeviceWatcher MidiEndpointDeviceWatcher::CreateWatcher(
-        midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept
+        midi2::MidiEndpointDeviceInformationFilters const& endpointFilters) noexcept
     {
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
         try
         {
             // the properties we would filter on are GUID properties, so we can't use
@@ -301,7 +324,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 midi2::MidiEndpointDeviceInformation::GetAdditionalPropertiesList(),
                 winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface);
 
-            watcher->InternalInitialize(endpointFilter, baseWatcher);
+            watcher->InternalInitialize(endpointFilters, baseWatcher);
 
             return *watcher;
         }
@@ -316,6 +339,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     winrt::Windows::Devices::Enumeration::DeviceWatcherStatus MidiEndpointDeviceWatcher::Status()
     {
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
         if (m_watcher)
         {
             return m_watcher.Status();

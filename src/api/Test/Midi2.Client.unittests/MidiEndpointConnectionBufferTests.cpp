@@ -59,7 +59,7 @@ void MidiEndpointConnectionBufferTests::TestSendBuffer()
     *sendBufferWordPointer = 0x41234567;
     *(sendBufferWordPointer + 1) = 0xDEADBEEF;
 
-    auto result = connSend.SendMessageBuffer(0, sendBuffer, byteOffset, numBytes);
+    auto result = connSend.SendSingleMessageBuffer(MidiClock::TimestampConstantSendImmediately(), byteOffset, numBytes, sendBuffer);
 
     VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(result));
     //VERIFY_IS_TRUE((result & MidiSendMessageResult::DataIndexOutOfRange) == MidiSendMessageResult::DataIndexOutOfRange);
@@ -146,7 +146,7 @@ void MidiEndpointConnectionBufferTests::TestSendAndReceiveBuffer()
             VERIFY_IS_NOT_NULL(sender);
             VERIFY_IS_NOT_NULL(args);
 
-            auto receivedByteCount = args.FillBuffer(receiveBuffer, receiveByteOffset);
+            auto receivedByteCount = args.FillBuffer(receiveByteOffset, receiveBuffer);
 
             VERIFY_ARE_EQUAL(sentByteCount, receivedByteCount);
 
@@ -167,7 +167,7 @@ void MidiEndpointConnectionBufferTests::TestSendAndReceiveBuffer()
     VERIFY_IS_TRUE(connReceive.Open());
 
 
-    auto result = connSend.SendMessageBuffer(0, sendBuffer, sentByteOffset, numBytes);
+    auto result = connSend.SendSingleMessageBuffer(MidiClock::TimestampConstantSendImmediately(), sentByteOffset, numBytes, sendBuffer);
 
     VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(result));
 
@@ -231,7 +231,7 @@ void MidiEndpointConnectionBufferTests::TestSendBufferBoundsError()
     *sendBufferWordPointer = 0x41234567;
     //*(sendBufferWordPointer + 1) = 0xDEADBEEF;
 
-    auto result = connSend.SendMessageBuffer(0, sendBuffer, byteOffset, numBytes);
+    auto result = connSend.SendSingleMessageBuffer(MidiClock::TimestampConstantSendImmediately(), byteOffset, numBytes, sendBuffer);
 
     VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageFailed(result));
     VERIFY_IS_TRUE((result & MidiSendMessageResult::DataIndexOutOfRange) == MidiSendMessageResult::DataIndexOutOfRange);
@@ -379,7 +379,7 @@ void MidiEndpointConnectionBufferTests::TestSendAndReceiveMultipleMessagesBuffer
     VERIFY_IS_TRUE(connReceive.Open());
 
 
-    auto result = connSend.SendMultipleMessagesBuffer(MidiClock::TimestampConstantSendImmediately(), sendBuffer, sentByteOffset, numBytesSent);
+    auto result = connSend.SendMultipleMessagesBuffer(MidiClock::TimestampConstantSendImmediately(), sentByteOffset, numBytesSent, sendBuffer);
 
     VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(result));
 

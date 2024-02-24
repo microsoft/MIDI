@@ -22,23 +22,23 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static midi2::MidiMessage32 BuildSystemMessage(
             _In_ internal::MidiTimestamp const timestamp,
-            _In_ uint8_t const groupIndex,
+            _In_ midi2::MidiGroup const& group,
             _In_ uint8_t const status,
             _In_ uint8_t const midi1Byte2, 
             _In_ uint8_t const midi1Byte3) noexcept;
 
         static midi2::MidiMessage32 BuildMidi1ChannelVoiceMessage(
             _In_ internal::MidiTimestamp const timestamp,
-            _In_ uint8_t const groupIndex,
+            _In_ midi2::MidiGroup const& group,
             _In_ midi2::Midi1ChannelVoiceMessageStatus const& status,
-            _In_ uint8_t const channelIndex,
-            _In_ uint8_t const byte3, 
+            _In_ midi2::MidiChannel const& channel,
+            _In_ uint8_t const byte3,
             _In_ uint8_t const byte4) noexcept;
 
         static midi2::MidiMessage64 BuildSystemExclusive7Message(
             _In_ internal::MidiTimestamp const timestamp,
-            _In_ uint8_t const groupIndex,
-            _In_ uint8_t const status, 
+            _In_ midi2::MidiGroup const& group,
+            _In_ uint8_t const status,
             _In_ uint8_t const numberOfBytes, 
             _In_ uint8_t const dataByte0, 
             _In_ uint8_t const dataByte1, 
@@ -49,15 +49,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static midi2::MidiMessage64 BuildMidi2ChannelVoiceMessage(
             _In_ internal::MidiTimestamp const timestamp,
-            _In_ uint8_t const groupIndex,
+            _In_ midi2::MidiGroup const& group,
             _In_ midi2::Midi2ChannelVoiceMessageStatus const& status,
-            _In_ uint8_t const channelIndex,
+            _In_ midi2::MidiChannel const& channel,
             _In_ uint16_t const index,
             _In_ uint32_t const data) noexcept;
 
         static midi2::MidiMessage128 BuildSystemExclusive8Message(
             _In_ internal::MidiTimestamp const timestamp,
-            _In_ uint8_t const groupIndex,
+            _In_ midi2::MidiGroup const& group,
             _In_ midi2::MidiSystemExclusive8Status const& status,
             _In_ uint8_t const numberOfValidDataBytesThisMessage,
             _In_ uint8_t const streamId, 
@@ -77,7 +77,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static midi2::MidiMessage128 BuildMixedDataSetChunkHeaderMessage(
             _In_ internal::MidiTimestamp const timestamp,
-            _In_ uint8_t const groupIndex,
+            _In_ midi2::MidiGroup const& group,
             _In_ uint8_t const mdsId,
             _In_ uint16_t const numberValidDataBytesInThisChunk,
             _In_ uint16_t const numberChunksInMixedDataSet,
@@ -89,8 +89,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static midi2::MidiMessage128 BuildMixedDataSetChunkDataMessage(
             _In_ internal::MidiTimestamp const timestamp,
-            _In_ uint8_t const groupIndex,
-            _In_ uint8_t const mdsId, 
+            _In_ midi2::MidiGroup const& group,
+            _In_ uint8_t const mdsId,
             _In_ uint8_t const dataByte00,
             _In_ uint8_t const dataByte01,
             _In_ uint8_t const dataByte02,
@@ -108,10 +108,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static midi2::MidiMessage128 BuildFlexDataMessage(
             _In_ internal::MidiTimestamp const timestamp,
-            _In_ uint8_t const groupIndex,
+            _In_ midi2::MidiGroup const& group,
             _In_ uint8_t const form,
             _In_ uint8_t const address,
-            _In_ uint8_t const channel,
+            _In_ midi2::MidiChannel const& channel,
             _In_ uint8_t const statusBank,
             _In_ uint8_t const status,
             _In_ uint32_t const word1Data,

@@ -7,13 +7,13 @@
 // ============================================================================
 
 #include "pch.h"
-#include "MidiServiceSessionInformation.h"
-#include "MidiServiceSessionInformation.g.cpp"
+#include "MidiServiceSessionInfo.h"
+#include "MidiServiceSessionInfo.g.cpp"
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
-    void MidiServiceSessionInformation::InternalInitialize(
+    void MidiServiceSessionInfo::InternalInitialize(
         winrt::guid sessionId,
         winrt::hstring sessionName,
         uint64_t processId,
@@ -28,8 +28,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    void MidiServiceSessionInformation::InternalAddConnection(
-        midi2::MidiServiceSessionConnectionInformation const& info
+    void MidiServiceSessionInfo::InternalAddConnection(
+        midi2::MidiServiceSessionConnectionInfo const& info
     )
     {
         m_connections.Append(info);

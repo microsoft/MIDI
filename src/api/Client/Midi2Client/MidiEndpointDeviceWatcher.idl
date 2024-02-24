@@ -9,9 +9,12 @@
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-import "MidiEndpointDeviceInformationFilterEnum.idl";
+import "MidiEndpointDeviceInformationFiltersEnum.idl";
 import "MidiEndpointDeviceInformation.idl";
-import "MidiEndpointDeviceInformationUpdateEventArgs.idl";
+
+import "MidiEndpointDeviceInformationUpdatedEventArgs.idl";
+import "MidiEndpointDeviceInformationRemovedEventArgs.idl";
+import "MidiEndpointDeviceInformationAddedEventArgs.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -19,7 +22,7 @@ namespace Windows.Devices.Midi2
     [default_interface]
     runtimeclass MidiEndpointDeviceWatcher
     {
-        static MidiEndpointDeviceWatcher CreateWatcher(MidiEndpointDeviceInformationFilter endpointFilter);
+        static MidiEndpointDeviceWatcher CreateWatcher(MidiEndpointDeviceInformationFilters endpointFilters);
 
         void Start();
         void Stop();
@@ -28,9 +31,9 @@ namespace Windows.Devices.Midi2
 
         Windows.Devices.Enumeration.DeviceWatcherStatus Status{ get; };
 
-        event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, MidiEndpointDeviceInformation> Added;
-        event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, Windows.Devices.Enumeration.DeviceInformationUpdate> Removed;
-        event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, MidiEndpointDeviceInformationUpdateEventArgs> Updated;
+        event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, MidiEndpointDeviceInformationAddedEventArgs> Added;
+        event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, MidiEndpointDeviceInformationRemovedEventArgs> Removed;
+        event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, MidiEndpointDeviceInformationUpdatedEventArgs> Updated;
 
         event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, IInspectable> EnumerationCompleted;
         event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, IInspectable> Stopped;

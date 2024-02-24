@@ -266,8 +266,14 @@
     <ClInclude Include="MidiEndpointDeviceInformation.h">
       <DependentUpon>MidiEndpointDeviceInformation.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiEndpointDeviceInformationUpdateEventArgs.h">
-      <DependentUpon>MidiEndpointDeviceInformationUpdateEventArgs.idl</DependentUpon>
+    <ClInclude Include="MidiEndpointDeviceInformationAddedEventArgs.h">
+      <DependentUpon>MidiEndpointDeviceInformationAddedEventArgs.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceInformationUpdatedEventArgs.h">
+      <DependentUpon>MidiEndpointDeviceInformationUpdatedEventArgs.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceInformationRemovedEventArgs.h">
+      <DependentUpon>MidiEndpointDeviceInformationRemovedEventArgs.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiEndpointDeviceWatcher.h">
       <DependentUpon>MidiEndpointDeviceWatcher.idl</DependentUpon>
@@ -290,8 +296,8 @@
     <ClInclude Include="MidiServiceLoopbackEndpointDefinition.h">
       <DependentUpon>MidiServiceLoopbackEndpointDefinition.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiServiceMessageProcessingPluginInformation.h">
-      <DependentUpon>MidiServiceMessageProcessingPluginInformation.idl</DependentUpon>
+    <ClInclude Include="MidiServiceMessageProcessingPluginInfo.h">
+      <DependentUpon>MidiServiceMessageProcessingPluginInfo.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiService.h">
       <DependentUpon>MidiService.idl</DependentUpon>
@@ -326,11 +332,11 @@
     <ClInclude Include="MidiMessageTypeEndpointListener.h">
       <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiServiceSessionConnectionInformation.h">
-      <DependentUpon>MidiServiceSessionConnectionInformation.idl</DependentUpon>
+    <ClInclude Include="MidiServiceSessionConnectionInfo.h">
+      <DependentUpon>MidiServiceSessionConnectionInfo.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiServiceSessionInformation.h">
-      <DependentUpon>MidiServiceSessionInformation.idl</DependentUpon>
+    <ClInclude Include="MidiServiceSessionInfo.h">
+      <DependentUpon>MidiServiceSessionInfo.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiSessionSettings.h">
       <DependentUpon>MidiSessionSettings.idl</DependentUpon>
@@ -341,8 +347,8 @@
     <ClInclude Include="MidiStreamMessageBuilder.h">
       <DependentUpon>MidiStreamMessageBuilder.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiServiceTransportPluginInformation.h">
-      <DependentUpon>MidiServiceTransportPluginInformation.idl</DependentUpon>
+    <ClInclude Include="MidiServiceTransportPluginInfo.h">
+      <DependentUpon>MidiServiceTransportPluginInfo.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiMessage128.h">
       <DependentUpon>MidiMessage128.idl</DependentUpon>
@@ -400,8 +406,14 @@
     <ClCompile Include="MidiEndpointDeviceInformation.cpp">
       <DependentUpon>MidiEndpointDeviceInformation.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiEndpointDeviceInformationUpdateEventArgs.cpp">
-      <DependentUpon>MidiEndpointDeviceInformationUpdateEventArgs.idl</DependentUpon>
+    <ClCompile Include="MidiEndpointDeviceInformationAddedEventArgs.cpp">
+      <DependentUpon>MidiEndpointDeviceInformationAddedEventArgs.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceInformationRemovedEventArgs.cpp">
+      <DependentUpon>MidiEndpointDeviceInformationRemovedEventArgs.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceInformationUpdatedEventArgs.cpp">
+      <DependentUpon>MidiEndpointDeviceInformationUpdatedEventArgs.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
       <DependentUpon>MidiEndpointDeviceWatcher.idl</DependentUpon>
@@ -424,8 +436,8 @@
     <ClCompile Include="MidiServiceLoopbackEndpointDefinition.cpp">
       <DependentUpon>MidiServiceLoopbackEndpointDefinition.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiServiceMessageProcessingPluginInformation.cpp">
-      <DependentUpon>MidiServiceMessageProcessingPluginInformation.idl</DependentUpon>
+    <ClCompile Include="MidiServiceMessageProcessingPluginInfo.cpp">
+      <DependentUpon>MidiServiceMessageProcessingPluginInfo.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiService.cpp">
       <DependentUpon>MidiService.idl</DependentUpon>
@@ -460,11 +472,11 @@
     <ClCompile Include="MidiMessageTypeEndpointListener.cpp">
       <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiServiceSessionConnectionInformation.cpp">
-      <DependentUpon>MidiServiceSessionConnectionInformation.idl</DependentUpon>
+    <ClCompile Include="MidiServiceSessionConnectionInfo.cpp">
+      <DependentUpon>MidiServiceSessionConnectionInfo.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiServiceSessionInformation.cpp">
-      <DependentUpon>MidiServiceSessionInformation.idl</DependentUpon>
+    <ClCompile Include="MidiServiceSessionInfo.cpp">
+      <DependentUpon>MidiServiceSessionInfo.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiSessionSettings.cpp">
       <DependentUpon>MidiSessionSettings.idl</DependentUpon>
@@ -478,8 +490,8 @@
     <ClCompile Include="MidiStreamMessageBuilder.cpp">
       <DependentUpon>MidiStreamMessageBuilder.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiServiceTransportPluginInformation.cpp">
-      <DependentUpon>MidiServiceTransportPluginInformation.idl</DependentUpon>
+    <ClCompile Include="MidiServiceTransportPluginInfo.cpp">
+      <DependentUpon>MidiServiceTransportPluginInfo.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiMessage128.cpp">
       <DependentUpon>MidiMessage128.idl</DependentUpon>
@@ -517,24 +529,26 @@
     <Midl Include="IMidiEndpointMessageProcessingPlugin.idl" />
     <Midl Include="IMidiServiceMessageProcessingPluginConfiguration.idl" />
     <Midl Include="IMidiMessageReceivedEventSource.idl" />
+    <Midl Include="MidiEndpointDeviceInformationAddedEventArgs.idl" />
+    <Midl Include="MidiEndpointDeviceInformationRemovedEventArgs.idl" />
     <Midl Include="MidiServiceConfigurationResponse.idl" />
     <Midl Include="IMidiServiceTransportPluginConfiguration.idl" />
     <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl" />
     <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl" />
-    <Midl Include="MidiEndpointDeviceInformationUpdateEventArgs.idl" />
+    <Midl Include="MidiEndpointDeviceInformationUpdatedEventArgs.idl" />
     <Midl Include="MidiEndpointConnection.idl" />
     <Midl Include="MidiChannel.idl" />
     <Midl Include="MidiChannelEndpointListener.idl" />
     <Midl Include="MidiClock.idl" />
     <Midl Include="MidiEndpointDeviceInformation.idl" />
-    <Midl Include="MidiEndpointDeviceInformationFilterEnum.idl" />
+    <Midl Include="MidiEndpointDeviceInformationFiltersEnum.idl" />
     <Midl Include="MidiEndpointDeviceInformationSortOrderEnum.idl" />
     <Midl Include="MidiEndpointDevicePurposeEnum.idl" />
     <Midl Include="MidiEndpointDeviceWatcher.idl" />
-    <Midl Include="MidiEndpointDiscoveryFilterFlagsEnum.idl" />
+    <Midl Include="MidiEndpointDiscoveryRequestsEnum.idl" />
     <Midl Include="MidiEndpointNativeDataFormatEnum.idl" />
     <Midl Include="MidiFunctionBlockDirectionEnum.idl" />
-    <Midl Include="MidiFunctionBlockDiscoveryFilterFlagsEnum.idl" />
+    <Midl Include="MidiFunctionBlockDiscoveryRequestsEnum.idl" />
     <Midl Include="MidiFunctionBlockMidi10Enum.idl" />
     <Midl Include="MidiFunctionBlock.idl" />
     <Midl Include="MidiGroupTerminalBlockDirectionEnum.idl" />
@@ -547,7 +561,7 @@
     <Midl Include="MidiServiceConfigurationResponseStatusEnum.idl" />
     <Midl Include="MidiServiceLoopbackEndpointDefinition.idl" />
     <Midl Include="MidiServiceLoopbackEndpointCreationResult.idl" />
-    <Midl Include="MidiServiceMessageProcessingPluginInformation.idl" />
+    <Midl Include="MidiServiceMessageProcessingPluginInfo.idl" />
     <Midl Include="MidiMessageStruct.idl" />
     <Midl Include="MidiMessageBuilder.idl" />
     <Midl Include="MidiMessageReceivedEventArgs.idl" />
@@ -559,15 +573,15 @@
     <Midl Include="MidiServicePingResponse.idl" />
     <Midl Include="MidiServicePingResponseSummary.idl" />
     <Midl Include="MidiSession.idl" />
-    <Midl Include="MidiServiceSessionConnectionInformation.idl" />
-    <Midl Include="MidiServiceSessionInformation.idl" />
+    <Midl Include="MidiServiceSessionConnectionInfo.idl" />
+    <Midl Include="MidiServiceSessionInfo.idl" />
     <Midl Include="MidiSessionSettings.idl" />
     <Midl Include="IMidiUniversalPacket.idl" />
     <Midl Include="MidiStreamConfigurationRequestedSettings.idl" />
     <Midl Include="MidiStreamConfigurationRequestReceivedEventArgs.idl" />
     <Midl Include="MidiStreamMessageBuilder.idl" />
     <Midl Include="MidiSystemExclusive8StatusEnum.idl" />
-    <Midl Include="MidiServiceTransportPluginInformation.idl" />
+    <Midl Include="MidiServiceTransportPluginInfo.idl" />
     <Midl Include="MidiMessage128.idl" />
     <Midl Include="MidiMessage32.idl" />
     <Midl Include="MidiMessage64.idl" />

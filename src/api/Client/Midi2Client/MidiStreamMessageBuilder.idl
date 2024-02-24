@@ -16,8 +16,8 @@ import "MidiMessage128.idl";
 import "MidiFunctionBlockUIHintEnum.idl";
 import "MidiFunctionBlockMidi10Enum.idl";
 import "MidiFunctionBlockDirectionEnum.idl";
-import "MidiEndpointDiscoveryFilterFlagsEnum.idl";
-import "MidiFunctionBlockDiscoveryFilterFlagsEnum.idl";
+import "MidiEndpointDiscoveryRequestsEnum.idl";
+import "MidiFunctionBlockDiscoveryRequestsEnum.idl";
 
 namespace Windows.Devices.Midi2
 {
@@ -28,10 +28,10 @@ namespace Windows.Devices.Midi2
             MIDI_TIMESTAMP timestamp,
             UInt8 umpVersionMajor,
             UInt8 umpVersionMinor,
-            MidiEndpointDiscoveryFilterFlags requestFlags
+            MidiEndpointDiscoveryRequests requestFlags
             );
 
-        static IMidiUniversalPacket BuildEndpointInformationNotificationMessage(
+        static IMidiUniversalPacket BuildEndpointInfoNotificationMessage(
             MIDI_TIMESTAMP timestamp,
             UInt8 umpVersionMajor,
             UInt8 umpVersionMinor,
@@ -71,11 +71,11 @@ namespace Windows.Devices.Midi2
 
 
         static String ParseEndpointNameNotificationMessages(
-            IVector<IMidiUniversalPacket> messages
+            IIterable<IMidiUniversalPacket> messages
         );
 
         static String ParseProductInstanceIdNotificationMessages(
-            IVector<IMidiUniversalPacket> messages
+            IIterable<IMidiUniversalPacket> messages
         );
 
 
@@ -101,7 +101,7 @@ namespace Windows.Devices.Midi2
         static IMidiUniversalPacket BuildFunctionBlockDiscoveryMessage(
             MIDI_TIMESTAMP timestamp,
             UInt8 functionBlockNumber,
-            MidiFunctionBlockDiscoveryFilterFlags requestFlags
+            MidiFunctionBlockDiscoveryRequests requestFlags
             );
 
         static IMidiUniversalPacket BuildFunctionBlockInfoNotificationMessage(
@@ -124,7 +124,7 @@ namespace Windows.Devices.Midi2
             );
 
         static String ParseFunctionBlockNameNotificationMessages(
-            IVector<IMidiUniversalPacket> messages
+            IIterable<IMidiUniversalPacket> messages
             );
 
     };

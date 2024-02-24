@@ -13,7 +13,7 @@ namespace Windows.Devices.Midi2
 {
     [MIDI_API_CONTRACT(1)]
     [flags]
-    enum MidiEndpointDeviceInformationFilter
+    enum MidiEndpointDeviceInformationFilters
     {
         // Normal client devices to connect to to send/receive. 
         // These two are all most apps need

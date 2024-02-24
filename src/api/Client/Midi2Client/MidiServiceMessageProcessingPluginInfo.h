@@ -8,13 +8,13 @@
 
 
 #pragma once
-#include "MidiServiceMessageProcessingPluginInformation.g.h"
+#include "MidiServiceMessageProcessingPluginInfo.g.h"
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    struct MidiServiceMessageProcessingPluginInformation : MidiServiceMessageProcessingPluginInformationT<MidiServiceMessageProcessingPluginInformation>
+    struct MidiServiceMessageProcessingPluginInfo : MidiServiceMessageProcessingPluginInfoT<MidiServiceMessageProcessingPluginInfo>
     {
-        MidiServiceMessageProcessingPluginInformation() = default;
+        MidiServiceMessageProcessingPluginInfo() = default;
 
         winrt::guid ClassId() const { return m_classId; }
         winrt::hstring RegistryKey() const { return m_registryKey; }

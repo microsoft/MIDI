@@ -7,13 +7,13 @@
 // ============================================================================
 
 #pragma once
-#include "MidiServiceTransportPluginInformation.g.h"
+#include "MidiServiceTransportPluginInfo.g.h"
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    struct MidiServiceTransportPluginInformation : MidiServiceTransportPluginInformationT<MidiServiceTransportPluginInformation>
+    struct MidiServiceTransportPluginInfo : MidiServiceTransportPluginInfoT<MidiServiceTransportPluginInfo>
     {
-        MidiServiceTransportPluginInformation() = default;
+        MidiServiceTransportPluginInfo() = default;
 
         winrt::guid ClassId() const { return m_classId; }
         winrt::hstring RegistryKey() const { return m_registryKey; }

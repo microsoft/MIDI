@@ -16,10 +16,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
 {
 
     _Use_decl_annotations_
-    midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageStruct(
-        internal::MidiTimestamp timestamp,
-        midi2::MidiMessageStruct const& message,
-        uint8_t wordCount) noexcept
+    midi2::MidiSendMessageResult MidiEndpointConnection::SendSingleMessageStruct(
+        internal::MidiTimestamp const timestamp,
+        uint8_t const wordCount,
+        midi2::MidiMessageStruct const& message
+        ) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Sending message struct");
 
@@ -37,11 +38,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     _Use_decl_annotations_
-    midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageBuffer(
-        const internal::MidiTimestamp timestamp,
-        winrt::Windows::Foundation::IMemoryBuffer const& buffer,
-        const uint32_t byteOffset,
-        const uint8_t byteCount) noexcept
+    midi2::MidiSendMessageResult MidiEndpointConnection::SendSingleMessageBuffer(
+        internal::MidiTimestamp const timestamp,
+        uint32_t const byteOffset,
+        uint8_t const byteCount,
+        winrt::Windows::Foundation::IMemoryBuffer const& buffer
+        ) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Sending message buffer");
 
@@ -96,12 +98,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-        midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageWordArray(
+        midi2::MidiSendMessageResult MidiEndpointConnection::SendSingleMessageWordArray(
             internal::MidiTimestamp const timestamp,
-            winrt::array_view<uint32_t> words,
             uint32_t const startIndex,
-            uint8_t const wordCount
-        ) noexcept
+            uint8_t const wordCount,
+            winrt::array_view<uint32_t const> words
+            ) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Sending message word array");
 
@@ -140,7 +142,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageWords(
+    midi2::MidiSendMessageResult MidiEndpointConnection::SendSingleMessageWords(
         internal::MidiTimestamp const timestamp,
         uint32_t const word0) noexcept
     {
@@ -173,7 +175,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     _Use_decl_annotations_
-        midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageWords(
+        midi2::MidiSendMessageResult MidiEndpointConnection::SendSingleMessageWords(
             internal::MidiTimestamp const timestamp,
             uint32_t const word0,
             uint32_t const word1) noexcept
@@ -210,7 +212,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-        midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageWords(
+        midi2::MidiSendMessageResult MidiEndpointConnection::SendSingleMessageWords(
             internal::MidiTimestamp const timestamp,
             uint32_t const word0,
             uint32_t const word1,
@@ -250,7 +252,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     _Use_decl_annotations_
-        midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageWords(
+        midi2::MidiSendMessageResult MidiEndpointConnection::SendSingleMessageWords(
             internal::MidiTimestamp const timestamp,
             uint32_t const word0,
             uint32_t const word1,
@@ -291,7 +293,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     _Use_decl_annotations_
-        midi2::MidiSendMessageResult MidiEndpointConnection::SendMessagePacket(
+        midi2::MidiSendMessageResult MidiEndpointConnection::SendSingleMessagePacket(
             midi2::IMidiUniversalPacket const& message) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Sending message packet");

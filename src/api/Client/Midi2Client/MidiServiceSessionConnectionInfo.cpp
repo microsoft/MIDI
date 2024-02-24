@@ -7,15 +7,15 @@
 // ============================================================================
 
 #include "pch.h"
-#include "MidiServiceSessionConnectionInformation.h"
-#include "MidiServiceSessionConnectionInformation.g.cpp"
+#include "MidiServiceSessionConnectionInfo.h"
+#include "MidiServiceSessionConnectionInfo.g.cpp"
 
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
 
     _Use_decl_annotations_
-    void MidiServiceSessionConnectionInformation::InternalInitialize(
+    void MidiServiceSessionConnectionInfo::InternalInitialize(
         winrt::hstring const endpointDeviceId,
         uint16_t const instanceCount,
         foundation::DateTime const earliestConnectionTime

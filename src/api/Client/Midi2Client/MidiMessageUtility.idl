@@ -68,7 +68,7 @@ namespace Windows.Devices.Midi2
         static String GetMessageFriendlyNameFromFirstWord(UInt32 word0);
 
 
-        static IVector<IMidiUniversalPacket> GetPacketListFromWordList(MIDI_TIMESTAMP timestamp, IVectorView<UInt32> words);
-        static IVector<UInt32> GetWordListFromPacketList(IVectorView<IMidiUniversalPacket> words);
+        static IVector<IMidiUniversalPacket> GetPacketListFromWordList(MIDI_TIMESTAMP timestamp, IIterable<UInt32> words);
+        static IVector<UInt32> GetWordListFromPacketList(IIterable<IMidiUniversalPacket> words);
     };
 }

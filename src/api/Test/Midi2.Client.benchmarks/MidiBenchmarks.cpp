@@ -132,7 +132,7 @@ void MidiBenchmarks::BenchmarkSendReceiveWordArray()
         }
 
         numBytes += sizeof(uint32_t) * wordCount + sizeof(uint64_t);
-        connSend.SendMessageWordArray(MidiClock::Now(), words, 0, (uint8_t)wordCount);
+        connSend.SendSingleMessageWordArray(MidiClock::Now(), 0, (uint8_t)wordCount, words);
     }
 
     uint64_t sendingFinishTimestamp = MidiClock::Now();
@@ -389,7 +389,7 @@ void MidiBenchmarks::BenchmarkSendReceiveUmpRuntimeClass()
         }
 
         ump.Timestamp(MidiClock::Now());
-        connSend.SendMessagePacket(ump);
+        connSend.SendSingleMessagePacket(ump);
 
     }
 

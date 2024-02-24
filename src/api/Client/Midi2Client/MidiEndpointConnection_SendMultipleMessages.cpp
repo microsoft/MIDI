@@ -17,10 +17,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     midi2::MidiSendMessageResult MidiEndpointConnection::SendMultipleMessagesBuffer(
-        internal::MidiTimestamp timestamp,
-        foundation::IMemoryBuffer const& buffer,
-        uint32_t byteOffset,
-        uint32_t byteCount) noexcept
+        internal::MidiTimestamp const timestamp,
+        uint32_t const byteOffset,
+        uint32_t const byteCount,
+        foundation::IMemoryBuffer const& buffer
+        ) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Enter");
 
@@ -113,8 +114,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     midi2::MidiSendMessageResult MidiEndpointConnection::SendMultipleMessagesWordList(
-        internal::MidiTimestamp timestamp,
-        collections::IVectorView<uint32_t> const& words) noexcept
+        internal::MidiTimestamp const timestamp,
+        collections::IIterable<uint32_t> const& words) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Enter");
 
@@ -122,19 +123,19 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         uint32_t messageWords[4]{ 0,0,0,0 };   // we reuse this storage
 
-        collections::IIterable iterable = words.as<collections::IIterable<uint32_t>>();
+        //collections::IIterable iterable = words.as<collections::IIterable<uint32_t>>();
 
-        auto iter = iterable.First();
+        auto iter = words.First();
 
-        auto vectorSize = words.Size();
+        //auto vectorSize = words.Size();
 
         while (iter.HasCurrent())
         {
             //auto messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(words.GetAt(i));
             auto messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(iter.Current());
 
-            if (i + messageWordCount <= vectorSize)
-            {
+            //if (i + messageWordCount <= vectorSize)
+            //{
                 for (uint32_t j = 0; j < messageWordCount; j++)
                 {
                     //messageWords[j] = words.GetAt(i + j);
@@ -159,7 +160,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 }
 
                 i += messageWordCount;
-            }
+            //}
         }
 
         return midi2::MidiSendMessageResult::Succeeded;
@@ -168,14 +169,17 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     midi2::MidiSendMessageResult MidiEndpointConnection::SendMultipleMessagesWordArray(
-        internal::MidiTimestamp timestamp,
-        winrt::array_view<uint32_t> words) noexcept
+        internal::MidiTimestamp const timestamp,
+        uint32_t const startIndex,
+        uint32_t const wordCount,
+        winrt::array_view<uint32_t const> words) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Enter");
 
-        uint32_t i{ 0 };
+        uint32_t i{ startIndex };
+        uint32_t wordsSent{ 0 };
 
-        while (i < words.size())
+        while (i < words.size() && wordsSent < wordCount)
         {
             auto messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(words[i]);
 
@@ -197,6 +201,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 }
 
                 i += messageWordCount;
+                wordsSent += messageWordCount;
             }
             else
             {
@@ -215,8 +220,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     midi2::MidiSendMessageResult MidiEndpointConnection::SendMultipleMessagesStructList(
-        internal::MidiTimestamp timestamp,
-        collections::IVectorView<MidiMessageStruct> const& messages) noexcept
+        internal::MidiTimestamp const timestamp,
+        collections::IIterable<MidiMessageStruct> const& messages) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Enter");
 
@@ -241,8 +246,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     midi2::MidiSendMessageResult MidiEndpointConnection::SendMultipleMessagesStructArray(
-        internal::MidiTimestamp timestamp,
-        winrt::array_view<MidiMessageStruct> messages) noexcept
+        internal::MidiTimestamp const timestamp,
+        winrt::array_view<MidiMessageStruct const> messages) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Enter");
 
@@ -267,7 +272,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     midi2::MidiSendMessageResult MidiEndpointConnection::SendMultipleMessagesPacketList(
-        collections::IVectorView<IMidiUniversalPacket> const& messages) noexcept
+        collections::IIterable<IMidiUniversalPacket> const& messages) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Sending multiple message packet list");
 

@@ -6,20 +6,19 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#include "midl_defines.h"
-MIDI_IDL_IMPORT
+#include "pch.h"
+#include "MidiEndpointDeviceInformationAddedEventArgs.h"
+#include "MidiEndpointDeviceInformationAddedEventArgs.g.cpp"
 
-namespace Windows.Devices.Midi2
+
+namespace winrt::Windows::Devices::Midi2::implementation
 {
-    // can be cast to the size in MIDI Words.
-
-    [MIDI_API_CONTRACT(1)]
-    enum MidiPacketType
+    _Use_decl_annotations_
+    void MidiEndpointDeviceInformationAddedEventArgs::InternalInitialize(
+        midi2::MidiEndpointDeviceInformation const& addedDevice
+    ) noexcept
     {
-        UnknownOrInvalid =          0,
-        UniversalMidiPacket32 =     1,
-        UniversalMidiPacket64 =     2,
-        UniversalMidiPacket96 =     3,
-        UniversalMidiPacket128 =    4,
-    };
+        m_addedDevice = addedDevice;
+    }
+
 }

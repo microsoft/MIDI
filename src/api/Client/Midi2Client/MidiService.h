@@ -24,12 +24,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ uint32_t const timeoutMilliseconds
             ) noexcept;
 
-        static foundation::Collections::IVectorView<midi2::MidiServiceTransportPluginInformation> GetInstalledTransportPlugins();
-        static foundation::Collections::IVectorView<midi2::MidiServiceMessageProcessingPluginInformation> GetInstalledMessageProcessingPlugins();
+        static foundation::Collections::IVector<midi2::MidiServiceTransportPluginInfo> GetInstalledTransportPlugins();
+        static foundation::Collections::IVector<midi2::MidiServiceMessageProcessingPluginInfo> GetInstalledMessageProcessingPlugins();
 
 //        static uint32_t GetOutgoingMessageQueueMaxMessageCapacity() noexcept { return (uint32_t)MIDI_OUTGOING_MESSAGE_QUEUE_MAX_MESSAGE_COUNT; }
 
-        static foundation::Collections::IVectorView<midi2::MidiServiceSessionInformation> GetActiveSessions() noexcept;
+        static foundation::Collections::IVector<midi2::MidiServiceSessionInfo> GetActiveSessions() noexcept;
 
         static midi2::MidiServiceLoopbackEndpointCreationResult CreateTemporaryLoopbackEndpoints(
             _In_ winrt::guid const& associationId,
