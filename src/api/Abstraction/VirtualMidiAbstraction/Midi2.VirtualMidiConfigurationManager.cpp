@@ -13,9 +13,13 @@ _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiConfigurationManager::Initialize(
     GUID AbstractionId, 
-    IUnknown* MidiDeviceManager
+    IUnknown* MidiDeviceManager,
+    IUnknown* MidiServiceConfigurationManagerInterface
 )
 {
+    UNREFERENCED_PARAMETER(MidiServiceConfigurationManagerInterface);
+
+
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,

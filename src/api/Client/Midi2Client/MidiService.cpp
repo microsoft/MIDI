@@ -512,7 +512,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             internal::LogInfo(__FUNCTION__, L"Config manager activate call SUCCESS");
 
-            auto initializeResult = configManager->Initialize(abstractionId, nullptr);
+            auto initializeResult = configManager->Initialize(abstractionId, nullptr, nullptr);
 
             if (FAILED(initializeResult))
             {

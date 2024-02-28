@@ -119,8 +119,14 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         MidiDataFormat dataFormatCapability { MidiDataFormat_Invalid };
         KSPIN_COMMUNICATION communication = (KSPIN_COMMUNICATION)0;
         GUID nativeDataFormat {0};
+
         std::unique_ptr<BYTE> groupTerminalBlockData;
         ULONG groupTerminalBlockDataSize {0};
+
+        std::unique_ptr<WCHAR> serialNumberData;
+        ULONG serialNumberDataSize{ 0 };
+        std::unique_ptr<WCHAR> manufacturerNameData;
+        ULONG manufacturerNameDataSize{ 0 };
 
         RETURN_IF_FAILED(PinPropertySimple(hFilter.get(), i, KSPROPSETID_Pin, KSPROPERTY_PIN_COMMUNICATION, &communication, sizeof(KSPIN_COMMUNICATION)));
 
@@ -165,6 +171,27 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
                                             &groupTerminalBlockDataSize),
                                             HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
+
+
+            // Get the serial number
+            LOG_IF_FAILED_WITH_EXPECTED(PinPropertyAllocate(hPin.get(),
+                                            i,
+                                            KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
+                                            KSPROPERTY_MIDI2_SERIAL_NUMBER,
+                                            (PVOID*)&serialNumberData,
+                                            &serialNumberDataSize),
+                                            HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
+
+            // TODO: Get the manufacturer name
+            //LOG_IF_FAILED_WITH_EXPECTED(PinPropertyAllocate(hPin.get(),
+            //                                i,
+            //                                KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
+            //                                KSPROPERTY_MIDI2_DEVICE_MANUFACTURER,
+            //                                (PVOID*)&manufacturerNameData,
+            //                                &manufacturerNameDataSize),
+            //                                HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
+
+
             hPin.reset();
         }
 
@@ -199,6 +226,8 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         midiPin->Id = deviceId;
         midiPin->ParentInstanceId = deviceInstanceId;
 
+        // Group Terminal Blocks from the driver
+
         if (midiPin->Flow == MidiFlowOut)
         {
            midiPin->GroupTerminalBlockDataOut = std::move(groupTerminalBlockData);
@@ -209,7 +238,24 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
             midiPin->GroupTerminalBlockDataIn = std::move(groupTerminalBlockData);
             midiPin->GroupTerminalBlockDataSizeIn = groupTerminalBlockDataSize;
         }
+
+        // Native Data format (UMP or bytestream) from the driver
+
         midiPin->NativeDataFormat = nativeDataFormat;
+
+        // Serial number from the driver
+
+        if (serialNumberDataSize > 0)
+        {
+            midiPin->SerialNumber = std::wstring(serialNumberData.get(), (size_t)serialNumberDataSize);
+        }
+
+        // Manufacturer from the driver
+
+        if (manufacturerNameDataSize > 0)
+        {
+            midiPin->ManufacturerName = std::wstring(manufacturerNameData.get(), (size_t)manufacturerNameDataSize);
+        }
 
         midiPin->InstanceId = L"MIDIU_KS_";
         midiPin->InstanceId += (midiPin->Flow == MidiFlowOut) ? L"OUT_" : L"IN_";
@@ -222,7 +268,8 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
 
 #ifdef CREATE_KS_BIDI_SWDS
     // TODO: This logic needs to change because we want ALL KS devices to show up
-    // as bidi, even if they have only a single pin
+    // as bidi, even if they have only a single pin. We need to map each to a logical
+    // group instead.
     // https://github.com/microsoft/MIDI/issues/184
      
      
@@ -247,6 +294,10 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         midiPin->Name = deviceName;
         midiPin->Id = deviceId;
         midiPin->ParentInstanceId = deviceInstanceId;
+
+        midiPin->SerialNumber = newMidiPins[midiInPinIndex]->SerialNumber;
+        midiPin->ManufacturerName = newMidiPins[midiInPinIndex]->ManufacturerName;
+
         if (newMidiPins[midiOutPinIndex]->GroupTerminalBlockDataSizeOut > 0)
         {
             std::unique_ptr<BYTE> groupTerminalBlockData(new (std::nothrow) BYTE[newMidiPins[midiOutPinIndex]->GroupTerminalBlockDataSizeOut]);
@@ -267,6 +318,9 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
 
         midiPin->NativeDataFormat = newMidiPins[midiOutPinIndex]->NativeDataFormat;
         midiPin->Flow = MidiFlowBidirectional;
+
+
+        // TODO: If provided, hash using the serial?
 
         midiPin->InstanceId = L"MIDIU_KS_BIDI_";
         midiPin->InstanceId += hash;
@@ -329,12 +383,17 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         interfaceDevProperties.push_back({ {PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse });
 
+        if (!MidiPin->SerialNumber.empty())
+        {
+            interfaceDevProperties.push_back({ {PKEY_MIDI_SerialNumber, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_STRING, static_cast<ULONG>((MidiPin->SerialNumber.length() + 1) * sizeof(WCHAR)), (PVOID)MidiPin->SerialNumber.c_str() });
+        }
 
-
-        // TODO: iSerialNumber from driver KS property PKEY_MIDI_SerialNumber
-
-        // TODO: Manufacturer name from driver KS property PKEY_MIDI_ManufacturerName
-
+        if (!MidiPin->ManufacturerName.empty())
+        {
+            interfaceDevProperties.push_back({ {PKEY_MIDI_ManufacturerName, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_STRING, static_cast<ULONG>((MidiPin->ManufacturerName.length() + 1) * sizeof(WCHAR)), (PVOID)MidiPin->ManufacturerName.c_str() });
+        }
 
 
         if (MidiPin->NativeDataFormat != GUID_NULL)

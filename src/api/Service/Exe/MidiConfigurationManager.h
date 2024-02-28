@@ -8,7 +8,10 @@
 
 #pragma once
 
-class CMidiConfigurationManager
+class CMidiConfigurationManager : 
+    public Microsoft::WRL::RuntimeClass<
+        Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
+        IMidiServiceConfigurationManagerInterface>
 {
 public:
 
@@ -17,7 +20,47 @@ public:
 
     HRESULT Initialize();
 
-//    HRESULT LoadCurrentConfiguration();
+    // given a JSON object with create/update/remove child keys, 
+    // will return the contents of any create key
+    STDMETHOD(GetAbstractionCreateActionJsonObject)(
+        _In_ LPCWSTR sourceAbstractionJson,
+        _Out_ BSTR* responseJson
+        );
+
+    // given a JSON object with create/update/remove child keys, 
+    // will return the contents of any update key
+    STDMETHOD(GetAbstractionUpdateActionJsonObject)(
+        _In_ LPCWSTR sourceAbstractionJson,
+        _Out_ BSTR* responseJson
+        );
+
+    // given a JSON object with create/update/remove child keys, 
+    // will return the contents of any remove key
+    STDMETHOD(GetAbstractionRemoveActionJsonObject)(
+        _In_ LPCWSTR sourceAbstractionJson,
+        _Out_ BSTR* responseJson
+        );
+
+    // given the contents of a create/update/remove object, will return the object which matches the criteria
+    // provided in the searchKeyValuePairsJson json object
+    STDMETHOD(GetAbstractionMatchingEndpointJsonObject)(
+        _In_ LPCWSTR sourceActionObjectJson,
+        _In_ LPCWSTR searchKeyValuePairsJson,
+        _Out_ BSTR* responseJson
+        );
+
+
+
+    // TODO: the endpoint lookup table should be maintained in memory here, and can be updated/reloaded
+    // We don't want to pass a gigantic string back and forth each time, so need to just keep it live
+
+
+
+
+
+    HRESULT Cleanup() noexcept;
+
+
 
     std::vector<GUID> GetEnabledTransportAbstractionLayers() const noexcept;
     std::vector<GUID> GetEnabledEndpointProcessingTransforms() const noexcept;
@@ -32,7 +75,6 @@ public:
     std::map<GUID, std::wstring, GUIDCompare> GetTransportAbstractionSettingsFromJsonString(
         _In_ std::wstring json) const noexcept;
 
-    HRESULT Cleanup() noexcept;
 
 private:
     std::wstring GetCurrentConfigurationFileName() noexcept;

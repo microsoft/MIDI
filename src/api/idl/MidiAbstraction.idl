@@ -203,7 +203,8 @@ interface IMidiAbstractionConfigurationManager : IUnknown
 {
     HRESULT Initialize(
         [in] GUID abstractionId,
-        [in] IUnknown* midiDeviceManager
+        [in] IUnknown* midiDeviceManager,
+        [in] IUnknown* midiServiceConfigurationManager
     );
 
     HRESULT UpdateConfiguration(
@@ -213,9 +214,42 @@ interface IMidiAbstractionConfigurationManager : IUnknown
     );
 
     HRESULT Cleanup();
+};
 
+
+// This is only using strings because COM doesn't understand WinRT JSON types
+
+[
+    object,
+    local,
+    uuid(6c21fcda-051b-4f06-8d40-f5bced5957c0),
+    pointer_default(unique)
+]
+interface IMidiServiceConfigurationManagerInterface : IUnknown
+{
+    HRESULT GetAbstractionCreateActionJsonObject(
+        [in] LPCWSTR sourceAbstractionJson,
+        [out] BSTR* responseJson
+    );
+
+    HRESULT GetAbstractionUpdateActionJsonObject(
+        [in] LPCWSTR sourceAbstractionJson,
+        [out] BSTR* responseJson
+    );
+
+    HRESULT GetAbstractionRemoveActionJsonObject(
+        [in] LPCWSTR sourceAbstractionJson,
+        [out] BSTR* responseJson
+    );
+
+    HRESULT GetAbstractionMatchingEndpointJsonObject(
+        [in] LPCWSTR sourceActionObjectJson,
+        [in] LPCWSTR searchKeyValuePairsJson,
+        [out] BSTR* responseJson
+    );
 
 };
+
 
 
 // this is a bookkeeping class. It tracks only. It does

@@ -14,12 +14,14 @@ _Use_decl_annotations_
 HRESULT
 CMidi2KSMidiConfigurationManager::Initialize(
     GUID abstractionGuid,
-    IUnknown* midiDeviceManager
+    IUnknown* MidiDeviceManager,
+    IUnknown* MidiServiceConfigurationManagerInterface
 )
 {
     UNREFERENCED_PARAMETER(abstractionGuid);
+    UNREFERENCED_PARAMETER(MidiServiceConfigurationManagerInterface);
 
-    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
+    RETURN_IF_FAILED(MidiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
 
     return S_OK;
 }
@@ -34,8 +36,6 @@ _Use_decl_annotations_
 HRESULT
 CMidi2KSMidiConfigurationManager::UpdateConfiguration(LPCWSTR configurationJson, BOOL IsFromConfigurationFile, BSTR* response)
 {
-    OutputDebugString(L"\n" __FUNCTION__);
-
     UNREFERENCED_PARAMETER(configurationJson);
     UNREFERENCED_PARAMETER(IsFromConfigurationFile);
 

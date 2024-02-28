@@ -14,7 +14,7 @@ class CMidi2MidiSrvConfigurationManager :
     IMidiAbstractionConfigurationManager>
 {
 public:
-    STDMETHOD(Initialize(_In_ GUID abstractionGuid, _In_ IUnknown* deviceManagerInterface));
+    STDMETHOD(Initialize(_In_ GUID abstractionGuid, _In_ IUnknown* deviceManagerInterface, _In_ IUnknown* midiServiceConfigurationManagerInterface));
     STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJson, _In_ BOOL IsFromConfigurationFile, _Out_ BSTR* response));
     STDMETHOD(Cleanup)();
 

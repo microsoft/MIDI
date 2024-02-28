@@ -29,6 +29,9 @@ public:
     std::unique_ptr<BYTE> GroupTerminalBlockDataIn;
     ULONG GroupTerminalBlockDataSizeIn {0};
     GUID NativeDataFormat{0};
+
+    std::wstring SerialNumber;
+    std::wstring ManufacturerName;
 } MIDI_PIN_INFO, *PMIDI_PIN_INFO;
 
 class CMidi2KSMidiEndpointManager : 

@@ -591,6 +591,98 @@ HRESULT CMidiConfigurationManager::Initialize()
 }
 
 
+
+
+_Use_decl_annotations_
+HRESULT
+CMidiConfigurationManager::GetAbstractionCreateActionJsonObject(
+    LPCWSTR sourceAbstractionJson,
+    BSTR* responseJson
+)
+{
+    UNREFERENCED_PARAMETER(sourceAbstractionJson);
+    UNREFERENCED_PARAMETER(responseJson);
+
+
+
+
+
+
+
+    return E_NOTIMPL;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidiConfigurationManager::GetAbstractionUpdateActionJsonObject(
+    LPCWSTR sourceAbstractionJson,
+    BSTR* responseJson
+)
+{
+    UNREFERENCED_PARAMETER(sourceAbstractionJson);
+    UNREFERENCED_PARAMETER(responseJson);
+
+
+
+
+
+
+    return E_NOTIMPL;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidiConfigurationManager::GetAbstractionRemoveActionJsonObject(
+    LPCWSTR sourceAbstractionJson,
+    BSTR* responseJson
+    )
+{
+    UNREFERENCED_PARAMETER(sourceAbstractionJson);
+    UNREFERENCED_PARAMETER(responseJson);
+
+
+
+
+
+    return E_NOTIMPL;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidiConfigurationManager::GetAbstractionMatchingEndpointJsonObject(
+    LPCWSTR sourceActionObjectJson,
+    LPCWSTR searchKeyValuePairsJson,
+    BSTR* responseJson
+)
+{
+    UNREFERENCED_PARAMETER(sourceActionObjectJson);
+    UNREFERENCED_PARAMETER(searchKeyValuePairsJson);
+    UNREFERENCED_PARAMETER(responseJson);
+
+
+
+
+
+
+
+    return E_NOTIMPL;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 _Use_decl_annotations_
 std::wstring CMidiConfigurationManager::GetSavedConfigurationForTransportAbstraction(GUID abstractionGuid) const noexcept
 {

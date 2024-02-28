@@ -45,7 +45,10 @@ CMidi2MidiSrvConfigurationManager::UpdateConfiguration(LPCWSTR configurationJson
 
 _Use_decl_annotations_
 HRESULT
-CMidi2MidiSrvConfigurationManager::Initialize(GUID abstractionGuid, IUnknown* deviceManagerInterface)
+CMidi2MidiSrvConfigurationManager::Initialize(
+    GUID abstractionGuid, 
+    IUnknown* deviceManagerInterface, 
+    IUnknown* midiServiceConfigurationManagerInterface)
 {
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),
@@ -55,6 +58,7 @@ CMidi2MidiSrvConfigurationManager::Initialize(GUID abstractionGuid, IUnknown* de
     );
 
     UNREFERENCED_PARAMETER(deviceManagerInterface);
+    UNREFERENCED_PARAMETER(midiServiceConfigurationManagerInterface);
 
 
     m_abstractionGuid = abstractionGuid;

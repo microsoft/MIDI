@@ -13,9 +13,13 @@ _Use_decl_annotations_
 HRESULT
 CMidi2LoopbackMidiConfigurationManager::Initialize(
     GUID AbstractionId,
-    IUnknown* MidiDeviceManager
+    IUnknown* MidiDeviceManager,
+    IUnknown* MidiServiceConfigurationManagerInterface
 )
 {
+    UNREFERENCED_PARAMETER(MidiServiceConfigurationManagerInterface);
+
+
     TraceLoggingWrite(
         MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,

@@ -306,7 +306,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         internal::LogInfo(__FUNCTION__, L"config manager activate call SUCCESS");
 
-        auto initializeResult = configManager->Initialize(internal::StringToGuid(virtualDeviceAbstractionId.c_str()), nullptr);
+        auto initializeResult = configManager->Initialize(internal::StringToGuid(virtualDeviceAbstractionId.c_str()), nullptr, nullptr);
 
 
         if (FAILED(initializeResult))
