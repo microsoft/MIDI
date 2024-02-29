@@ -600,35 +600,6 @@ CMidiClientManager::GetMidiEndpointMetadataHandler(
 
 _Use_decl_annotations_
 HRESULT
-CMidiClientManager::GetMidiJRTimestampHandler(
-    handle_t BindingHandle,
-    MidiFlow Flow,
-    wil::com_ptr_nothrow<CMidiPipe>& DevicePipe,
-    wil::com_ptr_nothrow<CMidiPipe>& NextDeviceSidePipe,
-    wil::com_ptr_nothrow<CMidiPipe>& ClientConnectionPipe
-)
-{
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
-    );
-
-    UNREFERENCED_PARAMETER(BindingHandle);
-    UNREFERENCED_PARAMETER(Flow);
-    UNREFERENCED_PARAMETER(DevicePipe);
-    UNREFERENCED_PARAMETER(NextDeviceSidePipe);
-    UNREFERENCED_PARAMETER(ClientConnectionPipe);
-
-
-
-    return S_OK;
-}
-
-
-_Use_decl_annotations_
-HRESULT
 CMidiClientManager::CreateMidiClient(
     handle_t BindingHandle,
     LPCWSTR MidiDevice,
@@ -645,25 +616,6 @@ CMidiClientManager::CreateMidiClient(
         TraceLoggingWideString(MidiDevice),
         TraceLoggingGuid(SessionId)
     );
-
-    //switch (CreationParams->DataFormat)
-    //{
-    //case MidiDataFormat::MidiDataFormat_Any:
-    //    OutputDebugString(__FUNCTION__ L" CreationParams->DataFormat = MidiDataFormat_Any\n");
-    //    break;
-    //case MidiDataFormat::MidiDataFormat_ByteStream:
-    //    OutputDebugString(__FUNCTION__ L" CreationParams->DataFormat = MidiDataFormat_ByteStream\n");
-    //    break;
-    //case MidiDataFormat::MidiDataFormat_UMP:
-    //    OutputDebugString(__FUNCTION__ L" CreationParams->DataFormat = MidiDataFormat_UMP\n");
-    //    break;
-    //case MidiDataFormat::MidiDataFormat_Invalid:
-    //    OutputDebugString(__FUNCTION__ L" CreationParams->DataFormat = MidiDataFormat_Invalid\n");
-    //    break;
-    //default:
-    //    OutputDebugString(__FUNCTION__ L" CreationParams->DataFormat = some other invalid value\n");
-    //    break;
-    //}
 
     auto lock = m_ClientManagerLock.lock();
 
@@ -734,21 +686,15 @@ CMidiClientManager::CreateMidiClient(
     // so we register the clientPipe to receive the callbacks from the clientConnectionPipe.
     if (clientPipe->IsFlowSupported(MidiFlowIn))
     {
-        OutputDebugString(L"" __FUNCTION__ " Checking for MidiFlowIn transforms required");
-
         // If the client supports the same format that the device pipe supports,
         // or if the client supports any format, then connect directly to
         // the device.
         if (clientPipe->IsFormatSupportedIn(devicePipe->DataFormatIn()))
         {
-            OutputDebugString(L"" __FUNCTION__ " No MidiFlowIn format translation required");
-
             clientConnectionPipe = devicePipe;
         }
         else
         {
-            OutputDebugString(L"" __FUNCTION__ " Adding MidiFlowIn data format translator");
-
             // client requires a specific format, retrieve the transform required for that format.
             RETURN_IF_FAILED(GetMidiTransform(
                 BindingHandle, 
@@ -768,8 +714,6 @@ CMidiClientManager::CreateMidiClient(
         // MIDI 1.0 devices that use the new driver, and there's no reason to do that.
         if (addMetadataListenerToIncomingStream && devicePipe->IsFormatSupportedIn(MidiDataFormat::MidiDataFormat_UMP))
         {
-            OutputDebugString(L"" __FUNCTION__ " Adding MidiFlowIn metadata handler");
-
             // Our clientConnectionPipe is now the Scheduler
             RETURN_IF_FAILED(GetMidiEndpointMetadataHandler(
                 BindingHandle,
@@ -799,65 +743,15 @@ CMidiClientManager::CreateMidiClient(
     // so we register the clientConnectionPipe to receive the callbacks from the clientPipe.
     if (clientPipe->IsFlowSupported(MidiFlowOut))
     {
-        OutputDebugString(L"" __FUNCTION__ " Creating MidiFlowOut transforms");
-
-        // TODO: Need to see if there's a translator or JR Timestamp provider at the end of this
-        // and if so, connect to that, not to the device pipe itself.
-        //
-        // Maybe redo the flow so:
-        //
-        //     Set the device as the current end pipe   
-        // 
-        //     Read the device properties to decide what infrastructure plugins we need (MIDI 1.0
-        //     translators needed for bytestream, JR timestamps and metadata listeners only for
-        //     MIDI 2.0 protocol devices, etc.)
-        // 
-        //     Then:
-        // 
-        //     - Do we need translation from UMP to bytestream? If so, stick that before the device 
-        //       pipe and then use that as our current end pipe
-        //
-        //     - Do we need JR Timestamps? (Yes for anything that is MIDI 2.0, but disabled by 
-        //       default) If so, put that before the end pipe and also add to the input side, 
-        //       linking the two, maybe by providing the same instance GUID so the plugin's manager
-        //       can do the association internally and ensure they have the same clock, device, etc.
-        //
-        //     - Add the message scheduler before the current end pipe. Message scheduler is always
-        //       added regardless of protocol in use.
-        //
-        //     - Add metadata listeners to the input pipes as well for bidirectional MIDI 2.0 
-        //       endpoints
-        //
-        //     - Finally, add any requested input or output processing plugins. These will come
-        //       in the form of two lists of GUIDs with some configuration information, so maybe
-        //       not a list of GUIDs, but a pile of JSON with GUID + properties for each.
-
-
         // our initial state is straight through to the device pipe
         clientConnectionPipe = devicePipe;
         newClientConnectionPipe = devicePipe;
-
-        // JR Timestamps ---------------------------------------------------
-        // TODO: these are only for MIDI 2.0 clients, so need to do additional property checking here
-        // TODO: There should be only one JR Timestamp handler in each direction connected to the device
-        // TODO: The data format is not sufficient to know if it is UMP. We need to check the native format
-        //if (devicePipe->DataFormatOut() == MidiDataFormat_UMP)
-        //{
-        //    // Add JR timestamp 
-        //    RETURN_IF_FAILED(GetMidiJRTimestampHandler(BindingHandle, MidiFlowOut, devicePipe, newClientConnectionPipe, clientConnectionPipe));
-
-        //    // Our clientConnectionPipe is now the JR Timestamp generator
-        //    newClientConnectionPipe = clientConnectionPipe;
-        //}
-
 
         // TODO: This needs to work with both bytestream and UMP clients, so this logic needs to change
 
         // Data Format Translator ---------------------------------------------------
         if (!clientPipe->IsFormatSupportedOut(newClientConnectionPipe->DataFormatOut()))
         {
-            OutputDebugString(L"" __FUNCTION__ " Adding MidiFlowOut format translator");
-
             // Format is not supported, so we need to transform
             // client requires a specific format, retrieve the transform required for that format.
             // Our clientConnectionPipe is now the format translator
@@ -880,8 +774,6 @@ CMidiClientManager::CreateMidiClient(
         // any required translation is done BEFORE we add this.
         if (clientConnectionPipe->IsFormatSupportedOut(MidiDataFormat::MidiDataFormat_UMP))
         {
-            OutputDebugString(L"" __FUNCTION__ " Adding MidiFlowOut scheduler");
-
             // Our clientConnectionPipe is now the Scheduler
             RETURN_IF_FAILED(GetMidiScheduler(
                 BindingHandle, 

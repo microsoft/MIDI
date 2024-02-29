@@ -49,6 +49,7 @@ namespace Windows.Devices.Midi2
             IMidiEndpointConnectionSettings settings
         );
 
+
         // creating it here helps ensure this is the only possible owner
         // This creates the virtual device, and also adds the appropriate listener
         // to the returned endpoint connection

@@ -44,15 +44,16 @@ namespace Windows.Devices.Midi2
         // app-supplied optional tag. Can hold whatever information they may want to show in a list
         IInspectable Tag{ get; set; };
 
+        // read-only copy of the settings used to create this connection
+        IMidiEndpointConnectionSettings Settings{ get; };
+
+
         // true if this endpoint connection is actually connected.
         // here for cases when the app holds on to an instance of this outside of the map
         Boolean IsOpen{ get; };
 
-        // read-only copy of the settings used to create this connection
-        IMidiEndpointConnectionSettings Settings{ get; };
-
+        // this is what allocates the service resources and actually opens the connection
         Boolean Open();
-
 
         IVectorView<IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins{ get; };
         void AddMessageProcessingPlugin(IMidiEndpointMessageProcessingPlugin plugin);
@@ -86,11 +87,11 @@ namespace Windows.Devices.Midi2
         MidiSendMessageResults SendMultipleMessagesWordArray(MIDI_TIMESTAMP timestamp, UInt32 startIndex, UInt32 wordCount, UInt32[] words);
 
         // a convenience for sending multiple packets. We can do this because these are self-describing
-        MidiSendMessageResults SendMultipleMessagesPacketList(IVectorView<IMidiUniversalPacket> messages);
+        MidiSendMessageResults SendMultipleMessagesPacketList(IIterable<IMidiUniversalPacket> messages);
         //MidiSendMessageResult SendMultipleMessagesPacketArray(ref IMidiUniversalPacket[] messages);
 
         MidiSendMessageResults SendMultipleMessagesStructList(MIDI_TIMESTAMP timestamp, IIterable<MidiMessageStruct> messages);
-        MidiSendMessageResults SendMultipleMessagesStructArray(MIDI_TIMESTAMP timestamp, MidiMessageStruct[] messages);
+        MidiSendMessageResults SendMultipleMessagesStructArray(MIDI_TIMESTAMP timestamp, UInt32 startIndex, UInt32 messageCount, MidiMessageStruct[] messages);
 
         MidiSendMessageResults SendMultipleMessagesBuffer(MIDI_TIMESTAMP timestamp, UInt32 byteOffset, UInt32 byteCount, Windows.Foundation.IMemoryBuffer buffer);
 

@@ -247,14 +247,20 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     midi2::MidiSendMessageResults MidiEndpointConnection::SendMultipleMessagesStructArray(
         internal::MidiTimestamp const timestamp,
+        uint32_t const startIndex,
+        uint32_t const messageCount,
         winrt::array_view<MidiMessageStruct const> messages) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Enter");
 
-        for (auto const& message : messages)
+
+        auto iterator = messages.begin() + startIndex;
+        auto endpoint = iterator + messageCount;
+
+        while (iterator < messages.end() && iterator < endpoint)
         {
-            auto messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(message.Word0);
-            auto sendMessageResult = SendMessageRaw(m_endpointAbstraction, (VOID*)&message, messageWordCount * sizeof(uint32_t), timestamp);
+            auto messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(iterator->Word0);
+            auto sendMessageResult = SendMessageRaw(m_endpointAbstraction, (VOID*)iterator, messageWordCount * sizeof(uint32_t), timestamp);
 
             if (SendMessageFailed(sendMessageResult))
             {
@@ -263,6 +269,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                 return sendMessageResult;
             }
+
+            iterator++;
         }
 
         return midi2::MidiSendMessageResults::Succeeded;

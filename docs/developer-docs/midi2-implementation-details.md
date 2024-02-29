@@ -15,7 +15,28 @@ Of course, the full source code for Windows MIDI Services, including the USB MID
 
 Windows MIDI Services supports only the UMP-based Endpoint Discovery and Protocol Negotiation. We do not implement the deprecated MIDI-CI equivalents.
 
-In addition, declaring the use of JR Timestamps in a USB MIDI 2.0 Group Terminal Block does not enable JR Timestamps in Windows MIDI Services. Instead, these must be negotiated using UMP-based Endpoint Discovery end Protocol Negotiation
+## JR Timestamps
+
+The hardware manufacturers, AMEI, and the MIDI Association agreed that JR Timestamp handling in the operating systems is not needed at this time (and may not be needed for many years). As a result, we do not have JR Timestamp handling built in.
+
+When (if) it is needed, we will implement clock generation, incoming timestamp generation, and outgoing timestamp/clock message creation in the service itself. Client applications should not send JR timestamps now or in the future.
+
+## Message Translation
+
+Internally in Windows MIDI Services, all messages are UMP messages, whether they come from a MIDI 1.0 byte stream data format device, a UMP-native device or API, or a MIDI 1.0 classic API. This requires Windows to perform message data format translation in some cases.
+
+Windows MIDI Services performs required message data format translation in these cases:
+
+- When a classic (WinMM or WinRT) MIDI 1.0 API accesses a UMP device. In those cases, the UMP messages need to be translated to MIDI 1.0 protocol and MIDI 1.0 byte stream data format when being sent to the classic API. The reverse is also true here. This is done in the Windows Service.
+- When a MIDI 1.0 byte stream data format device is connected to the new combined MIDI 1.0/MIDI 2.0 class driver, we will translate between MIDI 1.0 protocol UMP data format and MIDI 1.0 protocol byte stream data format as required to communicate with the device. This is done in the new driver.
+- When a MIDI 1.0 driver is used with a MIDI 1.0 device (third-party USB, BLE MIDI 1.0, etc.), we translate data coming from and going to that driver in the Windows service.
+
+Windows MIDI Services does not translate messages in these scenarios:
+
+- When a native UMP device is connected to the new driver, all messages are simply a pass-through to the API. The service does not do any translation between MIDI 1.0 protocol in UMP and MIDI 2.0 protocol in UMP, regardless of the negotiated stream protocol. Applications should instead inspect the properties of the device using our enumeration classes, and constrain sent messages appropriately.
+- When a native UMP endpoint is connected to the service through another transport (like Network MIDI 2.0), we do not translate the protocol of any messages.
+
+> If a UMP-native device does not properly participate in discovery and protocol negotiation, we report it as a MIDI 2.0 protocol device.
 
 ## UMP Endpoint Names for native MIDI 2.0 UMP format devices
 

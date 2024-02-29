@@ -126,6 +126,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         midi2::MidiSendMessageResults SendMultipleMessagesStructArray(
             _In_ internal::MidiTimestamp const timestamp,
+            _In_ uint32_t const startIndex,
+            _In_ uint32_t const messageCount,
             _In_ winrt::array_view<MidiMessageStruct const> messages) noexcept;
 
         midi2::MidiSendMessageResults SendMultipleMessagesBuffer(
@@ -154,7 +156,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
 
 
-        winrt::Windows::Foundation::Collections::IVectorView<midi2::IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins() const noexcept
+        collections::IVectorView<midi2::IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins() const noexcept
         {
             return m_messageProcessingPlugins.GetView();
         }

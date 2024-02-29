@@ -72,7 +72,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     _Use_decl_annotations_
-        void MidiEndpointConnection::AddMessageProcessingPlugin(midi2::IMidiEndpointMessageProcessingPlugin const& plugin)
+    void MidiEndpointConnection::AddMessageProcessingPlugin(midi2::IMidiEndpointMessageProcessingPlugin const& plugin)
     {
         m_messageProcessingPlugins.Append(plugin);
 
@@ -95,7 +95,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-        void MidiEndpointConnection::RemoveMessageProcessingPlugin(winrt::guid id)
+    void MidiEndpointConnection::RemoveMessageProcessingPlugin(winrt::guid id)
     {
         for (uint32_t i = 0; i < m_messageProcessingPlugins.Size(); i++)
         {
