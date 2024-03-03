@@ -42,6 +42,9 @@
     <ClCompile Include="AbstractionState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Midi2.NetworkMidiPluginMetadataProvider.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Midi2NetworkMidiAbstraction.idl">
@@ -98,6 +101,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MidiNetworkDevice.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Midi2.NetworkMidiPluginMetadataProvider.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

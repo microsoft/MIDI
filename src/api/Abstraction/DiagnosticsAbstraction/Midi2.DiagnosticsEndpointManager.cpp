@@ -16,6 +16,7 @@ using namespace Microsoft::WRL::Wrappers;
 
 #define MAX_DEVICE_ID_LEN 200 // size in chars
 
+GUID AbstractionLayerGUID = ABSTRACTION_LAYER_GUID;
 
 
 _Use_decl_annotations_

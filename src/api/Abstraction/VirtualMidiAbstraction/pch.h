@@ -79,8 +79,12 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 #include "json_defs.h"
 #include "json_helpers.h"
 #include "swd_helpers.h"
+#include "resource_util.h"
 
 #include "abstraction_defs.h"
+
+#include "MidiServicePlugin.h"
+#include "MidiServicePlugin_i.c"
 
 #include "Midi2VirtualMidiAbstraction_i.c"
 #include "Midi2VirtualMidiAbstraction.h"
@@ -106,3 +110,4 @@ class AbstractionState;
 #include "Midi2.VirtualMidiEndpointManager.h"
 #include "Midi2.VirtualMidiConfigurationManager.h"
 #include "AbstractionState.h"
+#include "Midi2.VirtualMidiPluginMetadataProvider.h"

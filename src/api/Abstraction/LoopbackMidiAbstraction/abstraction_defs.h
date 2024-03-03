@@ -11,6 +11,9 @@
 // the IDs here aren't the full Ids, just the values we start with
 // The full Id comes back from the swdevicecreate callback
 
+#define ABSTRACTION_LAYER_GUID __uuidof(Midi2LoopbackMidiAbstraction);
+
+
 #define TRANSPORT_MNEMONIC L"LOOP"
 
 #define MIDI_PERM_LOOP_INSTANCE_ID_A_PREFIX L"MIDIU_LOOP_A_"

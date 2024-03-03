@@ -40,8 +40,7 @@ CMidi2VirtualMidiEndpointManager::Initialize(
     RETURN_IF_FAILED(MidiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManagerInterface), (void**)&m_MidiProtocolManager));
 
 
-    m_TransportAbstractionId = AbstractionLayerGUID;    // this is needed so MidiSrv can instantiate the correct transport
-    m_ContainerId = m_TransportAbstractionId;           // we use the transport ID as the container ID for convenience
+    m_ContainerId = ABSTRACTION_LAYER_GUID;           // we use the transport ID as the container ID for convenience
 
     RETURN_IF_FAILED(CreateParentDevice());
 
@@ -273,7 +272,7 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
 
 
     MIDIENDPOINTCOMMONPROPERTIES commonProperties;
-    commonProperties.AbstractionLayerGuid = m_TransportAbstractionId;
+    commonProperties.AbstractionLayerGuid = ABSTRACTION_LAYER_GUID;
     commonProperties.EndpointPurpose = MidiEndpointDevicePurposePropertyValue::NormalMessageEndpoint;
     commonProperties.FriendlyName = friendlyName.c_str();
     commonProperties.TransportMnemonic = mnemonic.c_str();
@@ -389,7 +388,7 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
 
 
     MIDIENDPOINTCOMMONPROPERTIES commonProperties;
-    commonProperties.AbstractionLayerGuid = m_TransportAbstractionId;
+    commonProperties.AbstractionLayerGuid = ABSTRACTION_LAYER_GUID;
     commonProperties.EndpointPurpose = MidiEndpointDevicePurposePropertyValue::VirtualDeviceResponder;
     commonProperties.FriendlyName = friendlyName.c_str();
     commonProperties.TransportMnemonic = mnemonic.c_str();
@@ -425,6 +424,18 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
     // if you are testing function blocks or endpoint properties with this
     // loopback transport.
     m_MidiDeviceManager->DeleteAllEndpointInProtocolDiscoveredProperties(newDeviceInterfaceId);
+
+    // default prototocol properties for cases when discovery is not completed
+    std::vector<DEVPROPERTY> defaultedInterfaceProperties{};
+
+    defaultedInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_EndpointSupportsMidi1Protocol, DEVPROP_STORE_SYSTEM, nullptr},
+        DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(devPropTrue)),&devPropTrue });
+    defaultedInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_EndpointSupportsMidi2Protocol, DEVPROP_STORE_SYSTEM, nullptr},
+        DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(devPropTrue)),&devPropTrue });
+
+    m_MidiDeviceManager->UpdateEndpointProperties(newDeviceInterfaceId, (ULONG)defaultedInterfaceProperties.size(), (PVOID)defaultedInterfaceProperties.data());
+
+
 
     // we need this for removal later
     entry.CreatedShortDeviceInstanceId = instanceId;

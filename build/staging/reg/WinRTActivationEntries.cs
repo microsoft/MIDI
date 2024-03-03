@@ -22,8 +22,6 @@ class RegistryEntries
         new RegEntry{ ClassName="Windows.Devices.Midi2.IMidiStreamMessageBuilderStatics", ActivationType=0, Threading=0, TrustLevel=0  },
         new RegEntry{ ClassName="Windows.Devices.Midi2.MidiMessageConverter", ActivationType=0, Threading=0, TrustLevel=0  },
         new RegEntry{ ClassName="Windows.Devices.Midi2.IMidiMessageConverterStatics", ActivationType=0, Threading=0, TrustLevel=0  },
-        new RegEntry{ ClassName="Windows.Devices.Midi2.MidiMessageTranslator", ActivationType=0, Threading=0, TrustLevel=0  },
-        new RegEntry{ ClassName="Windows.Devices.Midi2.IMidiMessageTranslatorStatics", ActivationType=0, Threading=0, TrustLevel=0  },
         new RegEntry{ ClassName="Windows.Devices.Midi2.MidiMessageUtility", ActivationType=0, Threading=0, TrustLevel=0  },
         new RegEntry{ ClassName="Windows.Devices.Midi2.IMidiMessageUtilityStatics", ActivationType=0, Threading=0, TrustLevel=0  },
         new RegEntry{ ClassName="Windows.Devices.Midi2.MidiFunctionBlock", ActivationType=0, Threading=0, TrustLevel=0  },

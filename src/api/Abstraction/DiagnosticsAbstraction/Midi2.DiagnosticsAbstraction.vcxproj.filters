@@ -31,6 +31,9 @@
     <ClCompile Include="MidiPingBidiDevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Midi2.DiagnosticsPluginMetadataProvider.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Midi2.DiagnosticsAbstraction.h">
@@ -64,6 +67,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dllmain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Midi2.DiagnosticsPluginMetadataProvider.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

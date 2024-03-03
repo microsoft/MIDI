@@ -70,14 +70,15 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 #include "MidiDataFormat.h"
 #include "MidiFlow.h"
 #include "MidiAbstraction.h"
+#include "MidiServicePlugin.h"
 
 #include "json_defs.h"
 #include "json_helpers.h"
 #include "swd_helpers.h"
+#include "resource_util.h"
 
 //#include "MidiXProc.h"
 #include "resource.h"
-#include "ResourceManager.h"
 
 #include "MidiGroup.h"
 #include "MidiChannel.h"

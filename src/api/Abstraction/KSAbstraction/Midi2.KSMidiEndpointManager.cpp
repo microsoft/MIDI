@@ -39,7 +39,12 @@ CMidi2KSMidiEndpointManager::Initialize(
     IUnknown* midiEndpointProtocolManager
 )
 {
-    OutputDebugString(L"\n" __FUNCTION__);
+    TraceLoggingWrite(
+        MidiKSAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
 
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiEndpointProtocolManager);
@@ -72,6 +77,15 @@ CMidi2KSMidiEndpointManager::Initialize(
 _Use_decl_annotations_
 HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, DeviceInformation device)
 {
+    TraceLoggingWrite(
+        MidiKSAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(device.Id().c_str(), "added device")
+    );
+
+
     wil::unique_handle hFilter;
     std::wstring deviceName;
     std::wstring deviceId;
@@ -171,16 +185,15 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
                                             &groupTerminalBlockDataSize),
                                             HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
-
-
             // Get the serial number
-            LOG_IF_FAILED_WITH_EXPECTED(PinPropertyAllocate(hPin.get(),
-                                            i,
-                                            KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
-                                            KSPROPERTY_MIDI2_SERIAL_NUMBER,
-                                            (PVOID*)&serialNumberData,
-                                            &serialNumberDataSize),
-                                            HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
+            //LOG_IF_FAILED_WITH_EXPECTED(PinPropertyAllocate(hPin.get(),
+            //                                i,
+            //                                KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
+            //                                KSPROPERTY_MIDI2_SERIAL_NUMBER,
+            //                                (PVOID*)&serialNumberData,
+            //                                &serialNumberDataSize),
+            //                                HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
+
 
             // TODO: Get the manufacturer name
             //LOG_IF_FAILED_WITH_EXPECTED(PinPropertyAllocate(hPin.get(),
@@ -247,14 +260,56 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
 
         if (serialNumberDataSize > 0)
         {
-            midiPin->SerialNumber = std::wstring(serialNumberData.get(), (size_t)serialNumberDataSize);
+            midiPin->SerialNumber = std::wstring(serialNumberData.get(), (size_t)(serialNumberDataSize / sizeof(WCHAR)));
+
+            TraceLoggingWrite(
+                MidiKSAbstractionTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(device.Id().c_str(), "device id"),
+                TraceLoggingWideString(midiPin->SerialNumber.c_str(), "serial number"),
+                TraceLoggingULong(serialNumberDataSize, "data size")
+            );
+        }
+        else
+        {
+            TraceLoggingWrite(
+                MidiKSAbstractionTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(device.Id().c_str(), "device id"),
+                TraceLoggingWideString(L"No serial number", "serial number")
+            );
         }
 
         // Manufacturer from the driver
 
         if (manufacturerNameDataSize > 0)
         {
-            midiPin->ManufacturerName = std::wstring(manufacturerNameData.get(), (size_t)manufacturerNameDataSize);
+            midiPin->ManufacturerName = std::wstring(manufacturerNameData.get(), (size_t)(manufacturerNameDataSize / sizeof(WCHAR)));
+
+            TraceLoggingWrite(
+                MidiKSAbstractionTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(device.Id().c_str(), "device id"),
+                TraceLoggingWideString(midiPin->ManufacturerName.c_str(), "manufacturer"),
+                TraceLoggingULong(manufacturerNameDataSize, "data size")
+            );
+        }
+        else
+        {
+            TraceLoggingWrite(
+                MidiKSAbstractionTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(device.Id().c_str(), "device id"),
+                TraceLoggingWideString(L"No manufacturer name", "manufacturer")
+            );
         }
 
         midiPin->InstanceId = L"MIDIU_KS_";
@@ -500,8 +555,23 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
             // we saw this device, if we've ever seen it.
             m_MidiDeviceManager->DeleteAllEndpointInProtocolDiscoveredProperties(newDeviceInterfaceId);
 
-            // load settings from the configuration JSON and update properties
+            // TODO: load settings from the configuration JSON and update properties
 //            LOG_IF_FAILED(ApplyUserConfiguration(std::wstring(newDeviceInterfaceId)));
+
+
+            // default prototocol properties for cases when discovery is not completed
+            std::vector<DEVPROPERTY> defaultedInterfaceProperties{};
+
+            defaultedInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_EndpointSupportsMidi1Protocol, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(devPropTrue)),&devPropTrue });
+
+            if (MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET)
+            {
+                defaultedInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_EndpointSupportsMidi2Protocol, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(devPropTrue)),&devPropTrue });
+            }
+
+            m_MidiDeviceManager->UpdateEndpointProperties(newDeviceInterfaceId, (ULONG)defaultedInterfaceProperties.size(), (PVOID)defaultedInterfaceProperties.data());
 
 
             // we only perform protocol negotiation if it's a bidirectional UMP (native) endpoint. We

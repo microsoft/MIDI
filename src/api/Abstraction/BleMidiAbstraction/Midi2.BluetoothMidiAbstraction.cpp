@@ -16,8 +16,6 @@ CMidi2BluetoothMidiAbstraction::Activate(
     void **Interface
 )
 {
-    OutputDebugString(L"" __FUNCTION__ " Enter");
-
     RETURN_HR_IF(E_INVALIDARG, nullptr == Interface);
 
     if (__uuidof(IMidiBiDi) == Riid)
@@ -40,7 +38,7 @@ CMidi2BluetoothMidiAbstraction::Activate(
 
     // IMidiEndpointManager and IMidiApiEndpointManagerExtension are interfaces implemented by the same class
     // We want to make sure we're always returning the same instance for these calls
-    else if (__uuidof(IMidiEndpointManager) == Riid/* || __uuidof(IMidiApiEndpointManagerExtension) == Riid*/)
+    else if (__uuidof(IMidiEndpointManager) == Riid)
     {
         TraceLoggingWrite(
             MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
@@ -59,6 +57,22 @@ CMidi2BluetoothMidiAbstraction::Activate(
         // TODO: Not sure if this is the right pattern for this or not. There's no detach call here, so does this leak?
         RETURN_IF_FAILED(m_EndpointManager->QueryInterface(Riid, Interface));
     }
+
+    else if (__uuidof(IMidiServiceAbstractionPluginMetadataProvider) == Riid)
+    {
+        TraceLoggingWrite(
+            MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__ "- IMidiServiceAbstractionPluginMetadataProvider",
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingValue(__FUNCTION__),
+            TraceLoggingPointer(this, "this")
+        );
+
+        wil::com_ptr_nothrow<IMidiServiceAbstractionPluginMetadataProvider> metadataProvider;
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2BluetoothMidiPluginMetadataProvider>(&metadataProvider));
+        *Interface = metadataProvider.detach();
+    }
+
 
     else
     {

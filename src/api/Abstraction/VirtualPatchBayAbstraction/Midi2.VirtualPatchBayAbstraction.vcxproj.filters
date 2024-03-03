@@ -33,6 +33,9 @@
     <ClCompile Include="Midi2.VirtualPatchBayEndpointManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Midi2.VirtualPatchBayPluginMetadataProvider.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -69,6 +72,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Midi2.VirtualPatchBayEndpointManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Midi2.VirtualPatchBayPluginMetadataProvider.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

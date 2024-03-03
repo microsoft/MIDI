@@ -84,6 +84,9 @@ namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
 #include "MidiAbstraction.h"
 #include "MidiAbstraction_i.c"
 
+#include "MidiServicePlugin.h"
+#include "MidiServicePlugin_i.c"
+
 #include "MidiDeviceManagerInterface_i.c"
 #include "MidiDeviceManagerInterface.h"
 

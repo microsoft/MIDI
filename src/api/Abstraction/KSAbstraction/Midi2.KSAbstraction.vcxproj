@@ -173,7 +173,7 @@
       <TypeLibraryName>$(IntDir)$(ProjectName).tlb</TypeLibraryName>
     </Midl>
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(IntDir);$(SolutionDir)Libs\AbstractionUtilities\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(IntDir);</AdditionalIncludeDirectories>
       <WarningLevel>Level4</WarningLevel>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -193,7 +193,7 @@
       <TypeLibraryName>$(IntDir)$(ProjectName).tlb</TypeLibraryName>
     </Midl>
     <ClCompile>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(IntDir);$(SolutionDir)Libs\AbstractionUtilities\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(IntDir);</AdditionalIncludeDirectories>
       <WarningLevel>Level4</WarningLevel>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -232,7 +232,7 @@
     </Link>
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(IntDir);$(SolutionDir)Libs\AbstractionUtilities\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(IntDir);</AdditionalIncludeDirectories>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -254,6 +254,7 @@
     <ClCompile Include="Midi2.KSMidiConfigurationManager.cpp" />
     <ClCompile Include="Midi2.KSMidiIn.cpp" />
     <ClCompile Include="Midi2.KSMidiOut.cpp" />
+    <ClCompile Include="Midi2.KSMidiPluginMetadataProvider.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="Midi2.KSMidiEndpointManager.cpp" />
   </ItemGroup>
@@ -274,6 +275,7 @@
     <ClInclude Include="Midi2.KSMidiConfigurationManager.h" />
     <ClInclude Include="Midi2.KSMidiIn.h" />
     <ClInclude Include="Midi2.KSMidiOut.h" />
+    <ClInclude Include="Midi2.KSMidiPluginMetadataProvider.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="Midi2.KSMidiEndpointManager.h" />

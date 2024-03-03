@@ -280,6 +280,7 @@
     <ClCompile Include="Midi2.VirtualMidiConfigurationManager.cpp" />
     <ClCompile Include="Midi2.VirtualMidiEndpointManager.cpp" />
     <ClCompile Include="Midi2.VirtualMidiBidi.cpp" />
+    <ClCompile Include="Midi2.VirtualMidiPluginMetadataProvider.cpp" />
     <ClCompile Include="MidiEndpointTable.cpp" />
     <ClCompile Include="pch.cpp" />
   </ItemGroup>
@@ -299,6 +300,7 @@
     <ClInclude Include="Midi2.VirtualMidiBidi.h" />
     <ClInclude Include="Midi2.VirtualMidiConfigurationManager.h" />
     <ClInclude Include="Midi2.VirtualMidiEndpointManager.h" />
+    <ClInclude Include="Midi2.VirtualMidiPluginMetadataProvider.h" />
     <ClInclude Include="MidiEndpointTable.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />

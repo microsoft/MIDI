@@ -279,6 +279,7 @@
     <ClCompile Include="Midi2.SampleMidiBidi.cpp" />
     <ClCompile Include="Midi2.SampleMidiIn.cpp" />
     <ClCompile Include="Midi2.SampleMidiOut.cpp" />
+    <ClCompile Include="Midi2.SampleMidiPluginMetadataProvider.cpp" />
     <ClCompile Include="pch.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -290,11 +291,13 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="abstraction_defs.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="Midi2.SampleAbstraction.h" />
     <ClInclude Include="Midi2.SampleMidiBidi.h" />
     <ClInclude Include="Midi2.SampleMidiIn.h" />
     <ClInclude Include="Midi2.SampleMidiOut.h" />
+    <ClInclude Include="Midi2.SampleMidiPluginMetadataProvider.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
   </ItemGroup>

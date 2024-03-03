@@ -55,8 +55,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint8_t Byte4() const noexcept { return m_byte4; }
         void Byte4(_In_ uint8_t value) noexcept { m_byte4 = value & 0x7F; }
 
-        static winrt::hstring LabelShort() { return internal::ResourceManager::GetHString(IDS_MIDI_COMMON_LABEL_MUID_SHORT); }
-        static winrt::hstring LabelFull() { return internal::ResourceManager::GetHString(IDS_MIDI_COMMON_LABEL_MUID_FULL); }
+        static winrt::hstring LabelShort() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_MUID_SHORT); }
+        static winrt::hstring LabelFull() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_MUID_FULL); }
         
         uint32_t AsCombined28BitValue () const noexcept;
 

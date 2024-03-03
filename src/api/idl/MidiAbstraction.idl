@@ -27,6 +27,7 @@ typedef struct
     MidiDataFormat DataFormatOut;
 } TRANSFORMCREATIONPARAMS, *PTRANSFORMCREATIONPARAMS;
 
+
 [
     object,
     local,
@@ -292,3 +293,5 @@ interface IMidiSessionTracker : IUnknown
     HRESULT Cleanup();
 
 };
+
+

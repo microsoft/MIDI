@@ -105,7 +105,7 @@ interface MidiSrvRPC
         [out] BSTR* Response);
 
 
-    // Session Management
+    // Session Management and reporting
 
     HRESULT MidiSrvRegisterSession(
         [in] handle_t BindingHandle, 
@@ -121,5 +121,16 @@ interface MidiSrvRPC
     HRESULT MidiSrvGetSessionList(
         [in] handle_t BindingHandle, 
         [out] BSTR* SessionListJson);
+
+
+    // Abstractions and Transforms metadata reporting only
+
+    HRESULT MidiSrvGetAbstractionList(
+        [in] handle_t BindingHandle,
+        [out] BSTR* AbstractionListJson);
+
+    HRESULT MidiSrvGetTransformList(
+        [in] handle_t BindingHandle,
+        [out] BSTR* TransformListJson);
 
 }

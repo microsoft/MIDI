@@ -21,8 +21,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint8_t Index() const noexcept { return m_index; }
         void Index(_In_ uint8_t value) noexcept { if (MidiGroup::IsValidGroupIndex(value)) m_index = value; }
 
-        static winrt::hstring LabelShort() { return internal::ResourceManager::GetHString(IDS_MIDI_COMMON_LABEL_GROUP_SHORT); }
-        static winrt::hstring LabelFull() { return internal::ResourceManager::GetHString(IDS_MIDI_COMMON_LABEL_GROUP_FULL); }
+        static winrt::hstring LabelShort() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_GROUP_SHORT); }
+        static winrt::hstring LabelFull() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_GROUP_FULL); }
 
 
         uint8_t NumberForDisplay() const noexcept { return m_index + 1; }

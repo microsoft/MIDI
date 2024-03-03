@@ -93,6 +93,22 @@ CMidi2KSAbstraction::Activate(
         *Interface = midiConfigurationManager.detach();
     }
 
+    else if (__uuidof(IMidiServiceAbstractionPluginMetadataProvider) == Riid)
+    {
+        TraceLoggingWrite(
+            MidiKSAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__ "- IMidiServiceAbstractionPluginMetadataProvider",
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingValue(__FUNCTION__),
+            TraceLoggingPointer(this, "this")
+        );
+
+        wil::com_ptr_nothrow<IMidiServiceAbstractionPluginMetadataProvider> metadataProvider;
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSMidiPluginMetadataProvider>(&metadataProvider));
+        *Interface = metadataProvider.detach();
+    }
+
+
     else
     {
         return E_NOINTERFACE;

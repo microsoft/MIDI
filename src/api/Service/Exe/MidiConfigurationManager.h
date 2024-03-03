@@ -69,6 +69,10 @@ public:
     std::vector<GUID> GetEnabledTransportAbstractionLayers() const noexcept;
     std::vector<GUID> GetEnabledEndpointProcessingTransforms() const noexcept;
 
+    std::vector<ABSTRACTIONMETADATA> GetAllEnabledTransportAbstractionLayerMetadata() const noexcept;
+
+
+
     std::wstring GetSavedConfigurationForTransportAbstraction(
         _In_ GUID abstractionGuid) const noexcept;
 
@@ -78,6 +82,7 @@ public:
 
     std::map<GUID, std::wstring, GUIDCompare> GetTransportAbstractionSettingsFromJsonString(
         _In_ std::wstring json) const noexcept;
+
 
 
 private:

@@ -84,10 +84,14 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 #include "json_defs.h"
 #include "json_helpers.h"
 #include "swd_helpers.h"
+#include "resource_util.h"
 
 #include "MidiXProc.h"
 
 #include "abstraction_defs.h"
+
+#include "MidiServicePlugin.h"
+#include "MidiServicePlugin_i.c"
 
 #include "Midi2LoopbackMidiAbstraction_i.c"
 #include "Midi2LoopbackMidiAbstraction.h"
@@ -117,3 +121,4 @@ class AbstractionState;
 #include "Midi2.LoopbackMidiEndpointManager.h"
 #include "Midi2.LoopbackMidiConfigurationManager.h"
 #include "AbstractionState.h"
+#include "Midi2.LoopbackMidiPluginMetadataProvider.h"

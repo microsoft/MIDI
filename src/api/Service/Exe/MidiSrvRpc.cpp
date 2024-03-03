@@ -329,3 +329,99 @@ MidiSrvGetSessionList(
     return S_OK;
 
 }
+
+
+
+HRESULT 
+MidiSrvGetAbstractionList(
+    /*[in]*/ handle_t BindingHandle,
+    __RPC__out BSTR* AbstractionListJson
+)
+{
+    UNREFERENCED_PARAMETER(BindingHandle);
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingWideString(L"Enter")
+    );
+
+    std::shared_ptr<CMidiConfigurationManager> configManager;
+
+    auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
+
+    RETURN_IF_FAILED(g_MidiService->GetConfigurationManager(configManager));
+
+    auto allMetadata = configManager->GetAllEnabledTransportAbstractionLayerMetadata();
+
+    // TODO: This code should probably live in the configuration manager instead of the RPC layer
+
+    json::JsonObject rootObject{};
+
+    for (auto const& metadata : allMetadata)
+    {
+        // add to result object
+
+        json::JsonObject abstractionObject;
+       
+        if (metadata.Name != NULL) abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_NAME_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.Name));
+        if (metadata.Mnemonic != NULL) abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_MNEMONIC_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.Mnemonic));
+        if (metadata.Description != NULL) abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_DESCRIPTION_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.Description));
+        if (metadata.Author != NULL) abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_AUTHOR_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.Author));
+        if (metadata.SmallImagePath != NULL) abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_SMALL_IMAGE_PATH_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.SmallImagePath));
+        if (metadata.Version != NULL) abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_VERSION_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.Version));
+        abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_RT_CREATABLE_APPS_PROPERTY_KEY, json::JsonValue::CreateBooleanValue(metadata.IsRuntimeCreatableByApps));
+        abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_RT_CREATABLE_SETTINGS_PROPERTY_KEY, json::JsonValue::CreateBooleanValue(metadata.IsRuntimeCreatableBySettings));
+        abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_SYSTEM_MANAGED_PROPERTY_KEY, json::JsonValue::CreateBooleanValue(metadata.IsSystemManaged));
+        abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_CLIENT_CONFIGURABLE_PROPERTY_KEY, json::JsonValue::CreateBooleanValue(metadata.IsClientConfigurable));
+        if (metadata.ClientConfigurationAssemblyName != NULL) abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_CLIENT_CONFIG_ASSEMBLY_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.ClientConfigurationAssemblyName));
+
+        // add the abstraction metadata to the root, using the abstraction id as the key
+        rootObject.SetNamedValue(internal::GuidToString(metadata.Id).c_str(), abstractionObject);
+
+        // We need to free all those bstrs in the struct. I hate this pattern.
+
+        ::SysFreeString(metadata.Name);
+        ::SysFreeString(metadata.Description);
+        ::SysFreeString(metadata.Author);
+        ::SysFreeString(metadata.SmallImagePath);
+        ::SysFreeString(metadata.Version);
+        ::SysFreeString(metadata.ClientConfigurationAssemblyName);
+
+    }
+
+    // stringify json to output parameter
+
+    internal::JsonStringifyObjectToOutParam(rootObject, &AbstractionListJson);
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingWideString(L"Exit success")
+    );
+
+    return S_OK;
+}
+
+HRESULT
+MidiSrvGetTransformList(
+    /*[in]*/ handle_t BindingHandle,
+    __RPC__out BSTR* TransformListJson
+)
+{
+    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(TransformListJson);
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingWideString(L"Enter")
+    );
+
+    // TODO
+
+    return S_OK;
+}

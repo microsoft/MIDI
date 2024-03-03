@@ -168,9 +168,6 @@
     <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
       <Filter>API\Enumeration</Filter>
     </ClCompile>
-    <ClCompile Include="ResourceManager.cpp">
-      <Filter>Internal\Resources</Filter>
-    </ClCompile>
     <ClCompile Include="MidiVirtualEndpointDeviceDefinition.cpp">
       <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
     </ClCompile>
@@ -277,9 +274,6 @@
       <Filter>API\Enumeration</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
-      <Filter>Internal\Resources</Filter>
-    </ClInclude>
-    <ClInclude Include="ResourceManager.h">
       <Filter>Internal\Resources</Filter>
     </ClInclude>
     <ClInclude Include="MidiVirtualEndpointDeviceDefinition.h">

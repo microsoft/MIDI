@@ -52,6 +52,22 @@ CMidi2DiagnosticsAbstraction::Activate(
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2DiagnosticsEndpointManager>(&midiEndpointManager));
         *Interface = midiEndpointManager.detach();
     }
+
+    else if (__uuidof(IMidiServiceAbstractionPluginMetadataProvider) == Riid)
+    {
+        TraceLoggingWrite(
+            MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__ "- IMidiServiceAbstractionPluginMetadataProvider",
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingValue(__FUNCTION__),
+            TraceLoggingPointer(this, "this")
+        );
+
+        wil::com_ptr_nothrow<IMidiServiceAbstractionPluginMetadataProvider> metadataProvider;
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2DiagnosticsPluginMetadataProvider>(&metadataProvider));
+        *Interface = metadataProvider.detach();
+    }
+
     else
     {
         OutputDebugString(L"" __FUNCTION__ " Unrecognized interface");

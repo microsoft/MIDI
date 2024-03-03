@@ -40,6 +40,9 @@
 
 #include "mididefs.h"
 
+#include "MidiServicePlugin.h"
+#include "MidiServicePlugin_i.c"
+
 #include "Midi2BS2UMPTransform_i.c"
 #include "Midi2BS2UMPTransform.h"
 

@@ -278,6 +278,7 @@
     <ClCompile Include="Midi2.VirtualPatchBayAbstraction.cpp" />
     <ClCompile Include="Midi2.VirtualPatchBayEndpointManager.cpp" />
     <ClCompile Include="Midi2.VirtualPatchBayBidi.cpp" />
+    <ClCompile Include="Midi2.VirtualPatchBayPluginMetadataProvider.cpp" />
     <ClCompile Include="MidiEndpointTable.cpp" />
     <ClCompile Include="pch.cpp" />
   </ItemGroup>
@@ -295,6 +296,7 @@
     <ClInclude Include="Midi2.VirtualPatchBayAbstraction.h" />
     <ClInclude Include="Midi2.VirtualPatchBayEndpointManager.h" />
     <ClInclude Include="Midi2.VirtualPatchBayBidi.h" />
+    <ClInclude Include="Midi2.VirtualPatchBayPluginMetadataProvider.h" />
     <ClInclude Include="MidiEndpointTable.h" />
     <ClInclude Include="MidiRoute.h" />
     <ClInclude Include="pch.h" />

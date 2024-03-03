@@ -68,7 +68,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring EndpointSuppliedName() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_EndpointProvidedName, L""); }
         winrt::hstring UserSuppliedName() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UserSuppliedEndpointName, L""); }
 
-        winrt::hstring TransportId() const noexcept { return GetGuidPropertyAsString(STRING_PKEY_MIDI_AbstractionLayer, L""); }
+        winrt::guid TransportId() const noexcept { return GetGuidProperty(STRING_PKEY_MIDI_AbstractionLayer, winrt::guid{}); }
         winrt::hstring TransportMnemonic() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_TransportMnemonic, L""); }
 
         winrt::hstring TransportSuppliedSerialNumber() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_SerialNumber, L"");}

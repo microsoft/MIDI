@@ -306,9 +306,76 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledEndpointProcessingTransfo
     return availableAbstractionLayers;
 }
 
+
+std::vector<ABSTRACTIONMETADATA> CMidiConfigurationManager::GetAllEnabledTransportAbstractionLayerMetadata() const noexcept
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+    std::vector<ABSTRACTIONMETADATA> results{};
+
+    auto abstractionIdList = GetEnabledTransportAbstractionLayers();
+
+    // for each item in the list, activate the MidiServiceAbstractionPlugin and get the metadata
+
+    for (auto const& abstractionId : abstractionIdList)
+    {
+        wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
+        wil::com_ptr_nothrow<IMidiServiceAbstractionPluginMetadataProvider> plugin;
+
+        if (SUCCEEDED(CoCreateInstance(abstractionId, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction))))
+        {
+            if (SUCCEEDED(midiAbstraction->Activate(__uuidof(IMidiServiceAbstractionPluginMetadataProvider), (void**)&plugin)))
+            {
+                plugin->Initialize();
+
+                ABSTRACTIONMETADATA metadata;
+
+                LOG_IF_FAILED(plugin->GetMetadata(&metadata));
+
+                results.push_back(std::move(metadata));
+
+                plugin->Cleanup();
+            }
+            else
+            {
+                // log that the interface isn't there, but don't terminate or anything
+
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    __FUNCTION__,
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingWideString(L"Unable to activate IMidiServiceAbstractionPlugin", "message"),
+                    TraceLoggingGuid(abstractionId, "abstraction id"),
+                    TraceLoggingPointer(this, "this")
+                );
+            }
+        }
+    }
+
+    return results;
+}
+
+
+
+
+
+
+
 // this gets just the file name, not the full path
 std::wstring CMidiConfigurationManager::GetCurrentConfigurationFileName() noexcept
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     std::wstring keyPath = MIDI_ROOT_REG_KEY;
 
     try

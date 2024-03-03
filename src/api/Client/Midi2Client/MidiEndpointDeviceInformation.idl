@@ -103,7 +103,7 @@ namespace Windows.Devices.Midi2
 
 
         // transport type
-        String TransportId{ get; };
+        Guid TransportId{ get; };
         String TransportMnemonic{ get; };
 
         // iSerialNumber from USB. This is transport-specific, but super important

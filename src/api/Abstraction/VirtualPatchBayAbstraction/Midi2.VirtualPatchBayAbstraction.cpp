@@ -78,6 +78,22 @@ CMidi2VirtualPatchBayAbstraction::Activate(
         //RETURN_IF_FAILED(m_EndpointManager->QueryInterface(Riid, Interface));
     }
 
+    else if (__uuidof(IMidiServiceAbstractionPluginMetadataProvider) == Riid)
+    {
+        TraceLoggingWrite(
+            MidiVirtualPatchBayAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__ "- IMidiServiceAbstractionPluginMetadataProvider",
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingValue(__FUNCTION__),
+            TraceLoggingPointer(this, "this")
+        );
+
+        wil::com_ptr_nothrow<IMidiServiceAbstractionPluginMetadataProvider> metadataProvider;
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2VirtualPatchBayPluginMetadataProvider>(&metadataProvider));
+        *Interface = metadataProvider.detach();
+    }
+
+
     else
     {
         OutputDebugString(L"" __FUNCTION__ " Returning E_NOINTERFACE. Was an interface added that isn't handled in the Abstraction?");

@@ -8,7 +8,8 @@
 
 #pragma once
 
+#define ABSTRACTION_LAYER_GUID      __uuidof(Midi2KSAbstraction)
 
-#define TRANSPORT_MNEMONIC L"KS"
+#define TRANSPORT_MNEMONIC          L"KS"
 
-#define TRANSPORT_ENUMERATOR L"MIDISRV"
+#define TRANSPORT_ENUMERATOR        L"MIDISRV"

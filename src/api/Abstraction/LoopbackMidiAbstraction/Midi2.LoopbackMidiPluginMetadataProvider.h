@@ -9,15 +9,19 @@
 #pragma once
 
 
-namespace Windows::Devices::Midi2::Internal
+class CMidi2LoopbackMidiPluginMetadataProvider :
+    public Microsoft::WRL::RuntimeClass<
+    Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
+    IMidiServiceAbstractionPluginMetadataProvider>
+
 {
-    HMODULE GetCurrentModule();
+public:
+    STDMETHOD(Initialize());
+    STDMETHOD(GetMetadata(_Out_ PABSTRACTIONMETADATA metadata));
+    STDMETHOD(Cleanup)();
 
-    class ResourceManager
-    {
-    private:
+private:
 
-    public:
-        static winrt::hstring GetHString(_In_ UINT resourceId);
-    };
-}
+    GUID m_abstractionId;   // kept for convenience
+};
+

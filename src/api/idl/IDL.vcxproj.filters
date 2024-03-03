@@ -30,6 +30,9 @@
     <Midl Include="MidiFlow.idl">
       <Filter>Source Files</Filter>
     </Midl>
+    <Midl Include="MidiServicePlugin.idl">
+      <Filter>Source Files</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />

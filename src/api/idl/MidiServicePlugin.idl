@@ -1,0 +1,120 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+
+typedef struct
+{
+    GUID Id;            // class Id
+    LPCWSTR Mnemonic;   // this comes from a constant, not resources
+
+    BSTR Name;
+    BSTR Description;
+    BSTR Author;
+
+    BSTR SmallImagePath;
+
+    BSTR Version;
+
+    BOOL IsRuntimeCreatableByApps;
+    BOOL IsRuntimeCreatableBySettings;
+
+    BOOL IsSystemManaged;
+    BOOL IsClientConfigurable;
+
+    BSTR ClientConfigurationAssemblyName;
+
+
+} ABSTRACTIONMETADATA, *PABSTRACTIONMETADATA;
+
+
+
+[
+    object,
+    local,
+    uuid(8d542740-83f8-4a9a-8627-cd6324b6c1f4),
+    pointer_default(unique)
+]
+interface IMidiServiceAbstractionPluginMetadataProvider : IUnknown
+{
+    HRESULT Initialize();
+
+    HRESULT GetMetadata(
+        [out] PABSTRACTIONMETADATA metadata
+    );
+
+    HRESULT Cleanup();
+};
+
+
+
+
+typedef struct
+{
+    GUID Id;           // class Id
+
+    BSTR Name;
+    BSTR Description;
+    BSTR Author;
+
+    BSTR SmallImagePath;
+
+    BSTR Version;
+
+
+    BOOL IsRuntimeCreatableByApps;
+    BOOL IsRuntimeCreatableBySettings;
+
+    BOOL IsSystemManaged;
+    BOOL IsClientConfigurable;
+
+    BSTR ClientConfigurationAssemblyName;
+
+
+} TRANSFORMMETADATA, *PTRANSFORMMETADATA;
+
+
+
+
+[
+    object,
+    local,
+    uuid(76c65f88-061f-4e4f-bb9d-3ac1981f12f2),
+    pointer_default(unique)
+]
+interface IMidiServiceTransformPluginMetadataProvider : IUnknown
+{
+    HRESULT Initialize();
+
+    HRESULT GetMetadata(
+        [out] PTRANSFORMMETADATA metadata
+    );
+
+    HRESULT Cleanup();
+};
+
+
+
+
+[
+    object,
+    local,
+    uuid(469c7722-f779-40c3-b648-52620f75dcee),
+    pointer_default(unique)
+]
+interface IMidiServicePluginMetadataReporterInterface : IUnknown
+{
+    HRESULT GetAbstractionList(
+        [out] BSTR* AbstractionListJson);
+
+    HRESULT GetTransformList(
+        [out] BSTR* TransformListJson);
+
+};

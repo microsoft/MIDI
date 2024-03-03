@@ -26,7 +26,7 @@
 #include "pch.h"
 
 using namespace winrt;
-using namespace Windows::Foundation;
+using namespace winrt::Windows::Foundation;
 
 const std::wstring fieldSeparator = L" : ";
 
@@ -84,6 +84,12 @@ void OutputStringField(_In_ std::wstring fieldName, _In_ std::wstring value)
         << value
         << std::endl;
 }
+
+void OutputGuidField(_In_ std::wstring fieldName, _In_ winrt::guid value)
+{
+    OutputStringField(fieldName, internal::GuidToString(value));
+}
+
 
 
 void OutputCurrentTime()
@@ -145,6 +151,27 @@ int __cdecl main()
 
     try
     {
+        OutputSectionHeader(L"enum_transports");
+
+        auto transports = midi2::MidiService::GetInstalledTransportPlugins();
+
+        if (transports != nullptr && transports.Size() > 0)
+        {
+            for (auto const& transport : transports)
+            {
+                OutputGuidField(L"id", transport.Id());
+                OutputStringField(L"name", transport.Name());
+                OutputStringField(L"version", transport.Version());
+                OutputStringField(L"author", transport.Author());
+                OutputStringField(L"description", transport.Description());
+            }
+        }
+        else
+        {
+            OutputError(L"Enumerating transports returned no matches. This is not expected and indicates an installation problem or that the service is not running.");
+            RETURN_FAIL;
+        }
+
         OutputSectionHeader(L"enum_endpoints");
 
         // list devices

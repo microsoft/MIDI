@@ -76,6 +76,7 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 #include "json_defs.h"
 #include "json_helpers.h"
 #include "swd_helpers.h"
+#include "resource_util.h"
 
 #include "MidiXProc.h"
 
@@ -84,6 +85,9 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 #include "strsafe.h"
 
 #include "abstraction_defs.h"
+
+#include "MidiServicePlugin.h"
+#include "MidiServicePlugin_i.c"
 
 #include "Midi2VirtualPatchBayAbstraction_i.c"
 #include "Midi2VirtualPatchBayAbstraction.h"
@@ -100,4 +104,5 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 #include "Midi2.VirtualPatchBayAbstraction.h"
 #include "Midi2.VirtualPatchBayBiDi.h"
 #include "Midi2.VirtualPatchBayEndpointManager.h"
+#include "Midi2.VirtualPatchBayPluginMetadataProvider.h"
 

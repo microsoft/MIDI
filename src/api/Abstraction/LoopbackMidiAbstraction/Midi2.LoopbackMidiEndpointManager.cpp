@@ -16,7 +16,7 @@ using namespace Microsoft::WRL::Wrappers;
 
 #define MAX_DEVICE_ID_LEN 200 // size in chars
 
-GUID AbstractionLayerGUID = __uuidof(Midi2LoopbackMidiAbstraction);
+GUID AbstractionLayerGUID = ABSTRACTION_LAYER_GUID;
 
 
 _Use_decl_annotations_
@@ -298,6 +298,16 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
 
     //MidiEndpointTable::Current().AddCreatedEndpointDevice(entry);
     //MidiEndpointTable::Current().AddCreatedClient(entry.VirtualEndpointAssociationId, entry.CreatedClientEndpointId);
+
+    // default prototocol properties for cases when discovery is not completed
+    std::vector<DEVPROPERTY> defaultedInterfaceProperties{};
+
+    defaultedInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_EndpointSupportsMidi1Protocol, DEVPROP_STORE_SYSTEM, nullptr},
+        DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(devPropTrue)),&devPropTrue });
+    defaultedInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_EndpointSupportsMidi2Protocol, DEVPROP_STORE_SYSTEM, nullptr},
+        DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(devPropTrue)),&devPropTrue });
+
+    m_MidiDeviceManager->UpdateEndpointProperties(newDeviceInterfaceId, (ULONG)defaultedInterfaceProperties.size(), (PVOID)defaultedInterfaceProperties.data());
 
     TraceLoggingWrite(
         MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
