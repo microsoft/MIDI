@@ -68,10 +68,10 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             UInt64 timestamp = 0;   // send immediately
 
-            MidiFunctionBlockDiscoveryFilterFlags flags = MidiFunctionBlockDiscoveryFilterFlags.None;
+            MidiFunctionBlockDiscoveryRequests flags = MidiFunctionBlockDiscoveryRequests.None;
 
-            if (settings.RequestInfoNotification) flags |= MidiFunctionBlockDiscoveryFilterFlags.RequestFunctionBlockInformation;
-            if (settings.RequestNameNotification) flags |= MidiFunctionBlockDiscoveryFilterFlags.RequestFunctionBlockName;
+            if (settings.RequestInfoNotification) flags |= MidiFunctionBlockDiscoveryRequests.RequestFunctionBlockInfo;
+            if (settings.RequestNameNotification) flags |= MidiFunctionBlockDiscoveryRequests.RequestFunctionBlockName;
 
             byte number = 0;
 

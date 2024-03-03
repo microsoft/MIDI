@@ -77,13 +77,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             byte umpVersionMajor = settings.UmpVersionMajor;
             byte umpVersionMinor = settings.UmpVersionMinor;
 
-            MidiEndpointDiscoveryFilterFlags flags = MidiEndpointDiscoveryFilterFlags.None;
+            MidiEndpointDiscoveryRequests flags = MidiEndpointDiscoveryRequests.None;
 
-            if (settings.RequestAll || settings.RequestEndpointInfo) flags |= MidiEndpointDiscoveryFilterFlags.RequestEndpointInformation;
-            if (settings.RequestAll || settings.RequestDeviceIdentity) flags |= MidiEndpointDiscoveryFilterFlags.RequestDeviceIdentity;
-            if (settings.RequestAll || settings.RequestEndpointName) flags |= MidiEndpointDiscoveryFilterFlags.RequestEndpointName;
-            if (settings.RequestAll || settings.RequestProductInstanceId) flags |= MidiEndpointDiscoveryFilterFlags.RequestProductInstanceId;
-            if (settings.RequestAll || settings.RequestStreamConfiguration) flags |= MidiEndpointDiscoveryFilterFlags.RequestStreamConfiguration;
+            if (settings.RequestAll || settings.RequestEndpointInfo) flags |= MidiEndpointDiscoveryRequests.RequestEndpointInfo;
+            if (settings.RequestAll || settings.RequestDeviceIdentity) flags |= MidiEndpointDiscoveryRequests.RequestDeviceIdentity;
+            if (settings.RequestAll || settings.RequestEndpointName) flags |= MidiEndpointDiscoveryRequests.RequestEndpointName;
+            if (settings.RequestAll || settings.RequestProductInstanceId) flags |= MidiEndpointDiscoveryRequests.RequestProductInstanceId;
+            if (settings.RequestAll || settings.RequestStreamConfiguration) flags |= MidiEndpointDiscoveryRequests.RequestStreamConfiguration;
 
             var message = MidiStreamMessageBuilder.BuildEndpointDiscoveryMessage(timestamp, umpVersionMajor, umpVersionMinor, flags);
 

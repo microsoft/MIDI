@@ -27,14 +27,14 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            MidiEndpointDeviceInformationFilter filter = 
-                MidiEndpointDeviceInformationFilter.IncludeClientUmpNative | 
-                MidiEndpointDeviceInformationFilter.IncludeClientByteStreamNative | 
-                MidiEndpointDeviceInformationFilter.IncludeVirtualDeviceResponder;
+            MidiEndpointDeviceInformationFilters filter =
+                MidiEndpointDeviceInformationFilters.IncludeClientUmpNative |
+                MidiEndpointDeviceInformationFilters.IncludeClientByteStreamNative |
+                MidiEndpointDeviceInformationFilters.IncludeVirtualDeviceResponder;
 
             if (settings.IncludeDiagnosticLoopback)
             {
-                filter |= MidiEndpointDeviceInformationFilter.IncludeDiagnosticLoopback;
+                filter |= MidiEndpointDeviceInformationFilters.IncludeDiagnosticLoopback;
             }
 
             _watcher = MidiEndpointDeviceWatcher.CreateWatcher(filter);
@@ -102,7 +102,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         }
 
 
-        private void OnWatcherDeviceRemoved(MidiEndpointDeviceWatcher sender, Windows.Devices.Enumeration.DeviceInformationUpdate args)
+        private void OnWatcherDeviceRemoved(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationRemovedEventArgs args)
         {
             AnsiConsole.MarkupLine("[indianred1]Endpoint Removed:[/]");
             AnsiConsole.MarkupLine(" - " + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(args.Id));
@@ -114,7 +114,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         private const string _bullet = "[grey] ➡️ [/]";
         private const string _emptyBullet = "   ";
 
-        private void OnWatcherDeviceUpdated(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationUpdateEventArgs args)
+        private void OnWatcherDeviceUpdated(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationUpdatedEventArgs args)
         {
             AnsiConsole.MarkupLine("[steelblue1]Endpoint Updated:[/]");
             AnsiConsole.MarkupLine(_deviceBullet + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(args.Id));
@@ -159,12 +159,12 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             AnsiConsole.MarkupLine("");
         }
 
-        private void OnWatcherDeviceAdded(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformation args)
+        private void OnWatcherDeviceAdded(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationAddedEventArgs args)
         {
             AnsiConsole.MarkupLine("Endpoint Added: ");
-            AnsiConsole.MarkupLine(_deviceBullet + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(args.Id));
-            AnsiConsole.MarkupLine(_emptyBullet + AnsiMarkupFormatter.FormatEndpointName(args.Name));
-            AnsiConsole.MarkupLine(_emptyBullet + args.EndpointPurpose.ToString());
+            AnsiConsole.MarkupLine(_deviceBullet + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(args.AddedDevice.Id));
+            AnsiConsole.MarkupLine(_emptyBullet + AnsiMarkupFormatter.FormatEndpointName(args.AddedDevice.Name));
+            AnsiConsole.MarkupLine(_emptyBullet + args.AddedDevice.EndpointPurpose.ToString());
             AnsiConsole.MarkupLine("");
 
         }

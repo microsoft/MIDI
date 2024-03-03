@@ -207,7 +207,35 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
 
 
+        public static string FormatTransportName(string name)
+        {
+            return "[darkgoldenrod]" + EscapeString(name.Trim()) + "[/]";
+        }
 
+        public static string FormatTransportDescription(string description)
+        {
+            return "[grey]" + EscapeString(description.Trim()) + "[/]";
+        }
+
+        public static string FormatTransportId(Guid id)
+        {
+            return "[darkseagreen]" + id.ToString() + "[/]";
+        }
+
+        public static string FormatTransportMnemonic(string mnemonic)
+        {
+            return "[darkgoldenrod]" + EscapeString(mnemonic.Trim()) + "[/]";
+        }
+
+        public static string FormatTransportVersion(string version)
+        {
+            return "[skyblue2]" + EscapeString(version.Trim()) + "[/]";
+        }
+
+        public static string FormatTransportAuthor(string author)
+        {
+            return "[lightslateblue]" + EscapeString(author.Trim()) + "[/]";
+        }
 
 
     }

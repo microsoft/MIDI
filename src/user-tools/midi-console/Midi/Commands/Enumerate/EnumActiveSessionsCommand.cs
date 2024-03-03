@@ -21,7 +21,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         public override int Execute(CommandContext context, Settings settings)
         {
             AnsiConsole.Status()
-            .Start("Enumerating endpoints...", ctx =>
+            .Start("Enumerating transports...", ctx =>
             {
                 ctx.Spinner(Spinner.Known.Star);
 
@@ -103,7 +103,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                             }
                         }
-                        else 
+                        else
                         {
                             table.AddRow("", "No open endpoint connections.");
                         }
@@ -121,5 +121,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             return (int)MidiConsoleReturnCode.Success;
         }
+
     }
 }

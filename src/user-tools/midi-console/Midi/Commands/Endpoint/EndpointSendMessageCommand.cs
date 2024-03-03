@@ -191,7 +191,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
 
                         messagesAttempted++;
-                        var sendResult = connection.SendMessageWordArray(timestamp, settings.Words, 0, (byte)settings.Words!.Count());
+                        var sendResult = connection.SendSingleMessageWordArray(timestamp, 0, (byte)settings.Words!.Count(), settings.Words);
 
                         if (MidiEndpointConnection.SendMessageSucceeded(sendResult))
                         {

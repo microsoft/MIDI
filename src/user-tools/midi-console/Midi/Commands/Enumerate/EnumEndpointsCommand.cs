@@ -73,22 +73,22 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         return;
                     }
 
-                    MidiEndpointDeviceInformationFilter filter = 
-                        MidiEndpointDeviceInformationFilter.IncludeClientByteStreamNative | 
-                        MidiEndpointDeviceInformationFilter.IncludeClientUmpNative;
+                    MidiEndpointDeviceInformationFilters filter =
+                        MidiEndpointDeviceInformationFilters.IncludeClientByteStreamNative |
+                        MidiEndpointDeviceInformationFilters.IncludeClientUmpNative;
 
                     if (settings.IncludeAll)
                     {
                         filter =
-                            MidiEndpointDeviceInformationFilter.IncludeClientByteStreamNative |
-                            MidiEndpointDeviceInformationFilter.IncludeClientUmpNative |
-                            MidiEndpointDeviceInformationFilter.IncludeDiagnosticLoopback |
-                            MidiEndpointDeviceInformationFilter.IncludeDiagnosticPing |
-                            MidiEndpointDeviceInformationFilter.IncludeVirtualDeviceResponder;
+                            MidiEndpointDeviceInformationFilters.IncludeClientByteStreamNative |
+                            MidiEndpointDeviceInformationFilters.IncludeClientUmpNative |
+                            MidiEndpointDeviceInformationFilters.IncludeDiagnosticLoopback |
+                            MidiEndpointDeviceInformationFilters.IncludeDiagnosticPing |
+                            MidiEndpointDeviceInformationFilters.IncludeVirtualDeviceResponder;
                     }
                     else if (settings.IncludeDiagnosticLoopback)
                     {
-                        filter |= MidiEndpointDeviceInformationFilter.IncludeDiagnosticLoopback;
+                        filter |= MidiEndpointDeviceInformationFilters.IncludeDiagnosticLoopback;
                     }
 
 
