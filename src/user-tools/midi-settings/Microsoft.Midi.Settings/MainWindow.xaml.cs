@@ -16,5 +16,10 @@ public sealed partial class MainWindow : Microsoft.UI.Xaml.Window
         //Content = new Microsoft.UI.Xaml.Controls.Grid(); // workaround for WinAppSDK bug http://task.ms/43347736
         //this.SystemBackdrop = new MicaBackdrop();
 
+
+        // todo: save and restore these settings
+        this.SetWindowSize(1500, 1000);
+        this.CenterOnScreen();
+
     }
 }

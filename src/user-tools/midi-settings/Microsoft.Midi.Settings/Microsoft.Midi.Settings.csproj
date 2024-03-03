@@ -81,9 +81,9 @@
       <PackageReference Include="System.Management" Version="9.0.0-preview.1.24080.9" />
       <PackageReference Include="System.ServiceProcess.ServiceController" Version="9.0.0-preview.1.24080.9" />
       <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
-      <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.5-0172" />
+      <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.5-0181" />
 
-      <PackageReference Include="WinUIEx" Version="2.3.3" />
+      <PackageReference Include="WinUIEx" Version="2.3.4" />
 
 	  
     <PackageReference Include="CommunityToolkit.Common" Version="8.2.2" />
@@ -144,10 +144,6 @@
 
   <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <ProjectCapability Include="Msix" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="ViewModels\Data\" />
   </ItemGroup>
 
  

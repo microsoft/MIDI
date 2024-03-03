@@ -36,6 +36,9 @@ namespace Microsoft.Midi.Settings.Views
             ViewModel = App.GetService<ManagementSessionsViewModel>();
             InitializeComponent();
 
+
+            ViewModel.RefreshSessions();
+
         }
     }
 }

@@ -26,6 +26,9 @@
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         <Setter Property="TextWrapping" Value="NoWrap" />
     </Style>
+    
+    
+    
 
     <Style x:Key="SmallPropertyLabel" TargetType="TextBlock">
         <Setter Property="VerticalAlignment" Value="Center" />
@@ -36,6 +39,8 @@
         <Setter Property="TextWrapping" Value="NoWrap" />
     </Style>
 
+    
+    
     <Style x:Key="SmallEmphasizedPropertyValue" TargetType="TextBlock">
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="FontWeight" Value="Bold" />
@@ -45,6 +50,35 @@
         <Setter Property="TextWrapping" Value="NoWrap" />
     </Style>
 
+    <Style x:Key="SmallEmphasizedPropertyValueNoTrim" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="FontSize" Value="{StaticResource SmallFontSize}" />
+        <Setter Property="Margin" Value="3" />
+        <Setter Property="TextTrimming" Value="None" />
+        <Setter Property="TextWrapping" Value="NoWrap" />
+    </Style>
+
+    <Style x:Key="SmallPlainPropertyValue" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="FontSize" Value="{StaticResource SmallFontSize}" />
+        <Setter Property="Margin" Value="3" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="TextWrapping" Value="NoWrap" />
+    </Style>
+
+    <Style x:Key="SmallPlainPropertyValueWithWrap" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="FontSize" Value="{StaticResource SmallFontSize}" />
+        <Setter Property="Margin" Value="3" />
+        <Setter Property="TextTrimming" Value="None" />
+        <Setter Property="TextWrapping" Value="WrapWholeWords" />
+    </Style>
+
+
+    
     <Style x:Key="BodyTextStyle" TargetType="TextBlock">
         <Setter Property="FontWeight" Value="Normal" />
         <Setter Property="FontSize" Value="{StaticResource MediumFontSize}" />
@@ -60,4 +94,13 @@
             <Setter Property="Margin" Value="1,30,0,6" />
         </Style.Setters>
     </Style>
+
+    <Style x:Key="SettingsSectionDescriptionTextBlockStyle"
+               BasedOn="{StaticResource BodyTextBlockStyle}"
+               TargetType="TextBlock">
+        <Style.Setters>
+            <Setter Property="Margin" Value="1,0,0,6" />
+        </Style.Setters>
+    </Style>
+
 </ResourceDictionary>

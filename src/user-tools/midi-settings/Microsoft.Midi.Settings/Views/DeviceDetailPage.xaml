@@ -3,7 +3,7 @@
     x:Class="Microsoft.Midi.Settings.Views.DeviceDetailPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:Microsoft.Devices.Midi2.Settings.Views"
+    xmlns:local="using:Microsoft.Midi.Settings.Views"
     xmlns:midi2="using:Windows.Devices.Midi2"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
@@ -88,7 +88,7 @@
 
                 <TextBlock Text="General" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" />
                 
-                <controls:SettingsExpander Header="Customization" IsExpanded="True">
+                <controls:SettingsExpander Header="Personalization" IsExpanded="True">
                     <controls:SettingsExpander.Items>
                         <controls:SettingsCard>
                             <controls:SettingsCard.Header>
@@ -317,11 +317,21 @@
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
 
-                                    <TextBlock Grid.Column="0" Grid.Row="0" Text="Supports MIDI 1.0 Protocol" />
-                                    <TextBlock Grid.Column="0" Grid.Row="1" Text="Supports MIDI 2.0 Protocol" />
-                                    <TextBlock Grid.Column="0" Grid.Row="2" Text="Configured to send Jitter Reduction Timestamps" />
-                                    <TextBlock Grid.Column="0" Grid.Row="3" Text="Configured to receive Jitter Reduction Timestamps" />
-                                    <TextBlock Grid.Column="0" Grid.Row="4" Text="Configured Protocol" />
+                                    <TextBlock Grid.Column="0" Grid.Row="0" Text="Supports MIDI 1.0 Protocol" Style="{StaticResource SmallPropertyLabel}" />
+                                    <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.DeviceInformation.SupportsMidi10Protocol}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="1" Text="Supports MIDI 2.0 Protocol" Style="{StaticResource SmallPropertyLabel}" />
+                                    <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind ViewModel.DeviceInformation.SupportsMidi20Protocol}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="2" Text="Configured Protocol" Style="{StaticResource SmallPropertyLabel}" />
+                                    <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind ViewModel.DeviceInformation.ConfiguredProtocol}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="3" Text="Configured to send Jitter Reduction Timestamps" Style="{StaticResource SmallPropertyLabel}" />
+                                    <TextBlock Grid.Column="1" Grid.Row="3" Text="{x:Bind ViewModel.DeviceInformation.ConfiguredToSendJRTimestamps}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="4" Text="Configured to receive Jitter Reduction Timestamps" Style="{StaticResource SmallPropertyLabel}" />
+                                    <TextBlock Grid.Column="1" Grid.Row="4" Text="{x:Bind ViewModel.DeviceInformation.ConfiguredToReceiveJRTimestamps}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
                                 </Grid>
                             </controls:SettingsCard.Header>
                         </controls:SettingsCard>

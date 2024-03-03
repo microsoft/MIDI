@@ -148,7 +148,7 @@
     <value>Traffic Monitor</value>
   </data>
   <data name="Shell_ManagementSessions.Content" xml:space="preserve">
-    <value>Session Monitor</value>
+    <value>Active Sessions</value>
   </data>
   <data name="Shell_ToolsNavHeader.Content" xml:space="preserve">
     <value>Tools</value>
@@ -287,5 +287,8 @@
   </data>
   <data name="AppSessionName" xml:space="preserve">
     <value>Settings</value>
+  </data>
+  <data name="PluginsTransportPage_Description.Text" xml:space="preserve">
+    <value>This page lists the full set of transport plugins installed and recognized by Windows MIDI Services on this PC. For information on the endpoint devices enumerated by these transport plugins, see the Devices page.</value>
   </data>
 </root>
