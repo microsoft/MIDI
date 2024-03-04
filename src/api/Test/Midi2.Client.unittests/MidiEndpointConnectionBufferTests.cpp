@@ -10,11 +10,6 @@
 #include "stdafx.h"
 
 
-#include "MidiEndpointConnectionBufferTests.h"
-
-
-#include <wil\resource.h>
-
 using namespace winrt::Windows::Devices::Midi2;
 
 
@@ -64,7 +59,7 @@ void MidiEndpointConnectionBufferTests::TestSendBuffer()
     *sendBufferWordPointer = 0x41234567;
     *(sendBufferWordPointer + 1) = 0xDEADBEEF;
 
-    auto result = connSend.SendMessageBuffer(0, sendBuffer, byteOffset, numBytes);
+    auto result = connSend.SendSingleMessageBuffer(MidiClock::TimestampConstantSendImmediately(), byteOffset, numBytes, sendBuffer);
 
     VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(result));
     //VERIFY_IS_TRUE((result & MidiSendMessageResult::DataIndexOutOfRange) == MidiSendMessageResult::DataIndexOutOfRange);
@@ -151,7 +146,7 @@ void MidiEndpointConnectionBufferTests::TestSendAndReceiveBuffer()
             VERIFY_IS_NOT_NULL(sender);
             VERIFY_IS_NOT_NULL(args);
 
-            auto receivedByteCount = args.FillBuffer(receiveBuffer, receiveByteOffset);
+            auto receivedByteCount = args.FillBuffer(receiveByteOffset, receiveBuffer);
 
             VERIFY_ARE_EQUAL(sentByteCount, receivedByteCount);
 
@@ -172,7 +167,7 @@ void MidiEndpointConnectionBufferTests::TestSendAndReceiveBuffer()
     VERIFY_IS_TRUE(connReceive.Open());
 
 
-    auto result = connSend.SendMessageBuffer(0, sendBuffer, sentByteOffset, numBytes);
+    auto result = connSend.SendSingleMessageBuffer(MidiClock::TimestampConstantSendImmediately(), sentByteOffset, numBytes, sendBuffer);
 
     VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(result));
 
@@ -236,7 +231,7 @@ void MidiEndpointConnectionBufferTests::TestSendBufferBoundsError()
     *sendBufferWordPointer = 0x41234567;
     //*(sendBufferWordPointer + 1) = 0xDEADBEEF;
 
-    auto result = connSend.SendMessageBuffer(0, sendBuffer, byteOffset, numBytes);
+    auto result = connSend.SendSingleMessageBuffer(MidiClock::TimestampConstantSendImmediately(), byteOffset, numBytes, sendBuffer);
 
     VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageFailed(result));
     VERIFY_IS_TRUE((result & MidiSendMessageResult::DataIndexOutOfRange) == MidiSendMessageResult::DataIndexOutOfRange);
@@ -249,4 +244,165 @@ void MidiEndpointConnectionBufferTests::TestSendBufferBoundsError()
 
 
 
+}
+
+
+
+
+
+
+void MidiEndpointConnectionBufferTests::TestSendAndReceiveMultipleMessagesBuffer()
+{
+    LOG_OUTPUT(L"TestSendAndReceiveMultipleMessagesBuffer **********************************************************************");
+
+    wil::unique_event_nothrow allMessagesReceived;
+    allMessagesReceived.create();
+
+    auto session = MidiSession::CreateSession(L"Test Session Name");
+
+    VERIFY_IS_TRUE(session.IsOpen());
+    VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
+
+    auto connSend = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
+    auto connReceive = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId());
+
+    VERIFY_IS_NOT_NULL(connSend);
+    VERIFY_IS_NOT_NULL(connReceive);
+
+    bool messageReceivedFlag = false;
+
+    uint32_t sentByteOffset = 8 * sizeof(uint32_t);
+
+    uint32_t totalSendMessageCount = 50;
+
+
+
+    // allocate over-size buffers
+    const uint32_t sendBufferSizeInBytes = (uint32_t)(sizeof(uint32_t) * 4 * (totalSendMessageCount + 10) + sentByteOffset);
+
+    winrt::Windows::Foundation::MemoryBuffer sendBuffer(sendBufferSizeInBytes);
+
+    // set up the send buffer --------------------------------------------
+
+    auto ref = sendBuffer.CreateReference();
+
+    auto interop = ref.as<IMemoryBufferByteAccess>();
+
+    uint8_t* sendBufferBytePointer{};
+    uint32_t sendBufferSize{};
+
+    // get a pointer to the buffer
+    VERIFY_SUCCEEDED(interop->GetBuffer(&sendBufferBytePointer, &sendBufferSize));
+
+    // you need to do your normal bounds checking here.
+    uint32_t* sendBufferWordPointer = reinterpret_cast<uint32_t*>(sendBufferBytePointer + sentByteOffset);
+    uint32_t numBytesSent = 0;
+
+    for (uint32_t i = 0; i < totalSendMessageCount; i++)
+    {
+        uint8_t wordCount = 0;
+
+        if (i % 2 == 0)
+        {
+            // message 1
+            *sendBufferWordPointer =        (uint32_t)0x41234567;
+            *(sendBufferWordPointer + 1) =  (uint32_t)0xDEADBEEF;
+
+        //    std::wcout << L"Sending MT: " << std::wstring(MidiMessageUtility::GetMessageFriendlyNameFromFirstWord(*sendBufferWordPointer).c_str()) << std::endl;
+
+            // increment by number of words above.
+            wordCount = 2;
+            sendBufferWordPointer += wordCount;
+
+            numBytesSent += sizeof(uint32_t) * wordCount;
+        }
+        else if (i % 3 == 0)
+        {
+            // message 2
+            *sendBufferWordPointer =        (uint32_t)0x28675309;
+
+            //    std::wcout << L"Sending MT: " << std::wstring(MidiMessageUtility::GetMessageFriendlyNameFromFirstWord(*sendBufferWordPointer).c_str()) << std::endl;
+
+            // increment by number of words above.
+            wordCount = 1;
+            sendBufferWordPointer += wordCount;
+            numBytesSent += sizeof(uint32_t) * wordCount;
+        }
+        else
+        {
+            // message 3 is type C: 96
+            *sendBufferWordPointer =        (uint32_t)0xC0FFEE00;
+            *(sendBufferWordPointer + 1) =  (uint32_t)0xF0F0F0F0;
+            *(sendBufferWordPointer + 2) =  (uint32_t)0xBEEFBEEF;
+
+            //    std::wcout << L"Sending MT: " << std::wstring(MidiMessageUtility::GetMessageFriendlyNameFromFirstWord(*sendBufferWordPointer).c_str()) << std::endl;
+
+            // increment by number of words above.
+            wordCount = 3;
+            sendBufferWordPointer += wordCount;
+            numBytesSent += sizeof(uint32_t) * wordCount;
+        }
+
+    }
+
+    std::cout << "Total messages to send: " << totalSendMessageCount << std::endl;
+    std::cout << "Total bytes to send:    " << numBytesSent << std::endl;
+
+
+    uint32_t countMessagesReceived = 0;
+    uint32_t countBytesReceived = 0;
+
+    auto MessageReceivedHandler = [&](IMidiMessageReceivedEventSource const& /*sender*/, MidiMessageReceivedEventArgs const& args)
+        {
+            //VERIFY_IS_NOT_NULL(sender);
+            //VERIFY_IS_NOT_NULL(args);
+
+            //auto receivedByteCount = args.FillBuffer(receiveBuffer, receiveByteOffset);
+
+         //   std::cout << "Received MT: " << (uint32_t)args.MessageType() << std::endl;
+
+            // increment message count
+            countMessagesReceived++;
+
+            countBytesReceived += (uint8_t)MidiMessageUtility::GetPacketTypeFromMessageFirstWord(args.PeekFirstWord()) * sizeof(uint32_t);
+
+            if (countMessagesReceived == totalSendMessageCount)
+            {
+                messageReceivedFlag = true;
+                allMessagesReceived.SetEvent();
+            }
+        };
+
+    auto eventRevokeToken = connReceive.MessageReceived(MessageReceivedHandler);
+
+    VERIFY_IS_TRUE(connSend.Open());
+    VERIFY_IS_TRUE(connReceive.Open());
+
+
+    auto result = connSend.SendMultipleMessagesBuffer(MidiClock::TimestampConstantSendImmediately(), sentByteOffset, numBytesSent, sendBuffer);
+
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(result));
+
+    // Wait for incoming message
+    if (!allMessagesReceived.wait(5000))
+    {
+        std::cout << "Failure waiting for messages. Timed out." << std::endl;
+    }
+
+    VERIFY_IS_TRUE(messageReceivedFlag);
+
+    std::cout << std::endl << "Count messages sent:     [" << totalSendMessageCount << "]" << std::endl;
+    std::cout << std::endl << "Count messages received: [" << countMessagesReceived << "]" << std::endl;
+    std::cout << std::endl << "Count bytes received:    [" << countBytesReceived << "]" << std::endl;
+
+    VERIFY_IS_TRUE(countMessagesReceived == totalSendMessageCount);
+
+    // unwire event
+    connReceive.MessageReceived(eventRevokeToken);
+
+    // cleanup endpoint. Technically not required as session will do it
+    session.DisconnectEndpointConnection(connSend.ConnectionId());
+    session.DisconnectEndpointConnection(connReceive.ConnectionId());
+
+    session.Close();
 }

@@ -9,11 +9,11 @@
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-import "MidiServiceTransportPluginInformation.idl";
-import "MidiServiceMessageProcessingPluginInformation.idl";
+import "MidiServiceTransportPluginInfo.idl";
+import "MidiServiceMessageProcessingPluginInfo.idl";
 import "MidiServicePingResponseSummary.idl";
 
-import "MidiServiceSessionInformation.idl";
+import "MidiServiceSessionInfo.idl";
 
 import "MidiServiceLoopbackEndpointCreationResult.idl";
 import "MidiServiceLoopbackEndpointDefinition.idl";
@@ -32,8 +32,8 @@ namespace Windows.Devices.Midi2
         static MidiServicePingResponseSummary PingService(UInt8 pingCount, UInt32 timeoutMilliseconds);
 
         // list all the installed transports like Virtual, USB, BLE1, etc
-        static IVectorView<MidiServiceTransportPluginInformation> GetInstalledTransportPlugins();
-        static IVectorView<MidiServiceMessageProcessingPluginInformation> GetInstalledMessageProcessingPlugins();
+        static IVector<MidiServiceTransportPluginInfo> GetInstalledTransportPlugins();
+        static IVector<MidiServiceMessageProcessingPluginInfo> GetInstalledMessageProcessingPlugins();
 
 
         // for the first release, this will always return false. But developers want to be able
@@ -44,7 +44,7 @@ namespace Windows.Devices.Midi2
 //        static UInt32 GetOutgoingMessageQueueMaxMessageCapacity();
 
 
-        static IVectorView<MidiServiceSessionInformation> GetActiveSessions();
+        static IVector<MidiServiceSessionInfo> GetActiveSessions();
 
 
         // creates loopback endpoints that live for only as long as the service is running.

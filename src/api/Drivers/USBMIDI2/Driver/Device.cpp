@@ -470,6 +470,14 @@ EvtDeviceD0Exit(
         }
     }
 
+    if (devCtx->MidiInPipe)
+    {
+        WdfIoTargetStop(
+            WdfUsbTargetPipeGetIoTarget(devCtx->MidiInPipe),
+            WdfIoTargetCancelSentIo
+        );
+    }
+
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
     return status;
@@ -1243,7 +1251,7 @@ Return Value:
     }
     devCtx = GetDeviceContext(Device);
 
-    // If not USB MIDI 2.0 then error, do not proceed
+    // If not USB MIDI 2.0 then try to create from USB MIDI 1.0
     if (devCtx->UsbMIDIbcdMSC != MIDI_CS_BCD_MIDI2)
     {
         status = USBMIDI2DriverCreateGTB(Device);
@@ -1305,8 +1313,7 @@ Return Value:
 
     // Create temporary memory for holding the GTB data from device
     WDF_OBJECT_ATTRIBUTES_INIT(&gtbMemoryAttributes);
-    // Guess at an initial GTB size - if more will have to reallocate
-    gtbMemorySize = sizeof(midi2_desc_group_terminal_block_header_t) + 10 * sizeof(midi2_desc_group_terminal_block_t);
+
     status = WdfMemoryCreate(
         &gtbMemoryAttributes,
         NonPagedPoolNx,
@@ -1526,7 +1533,7 @@ Return Value:
     USHORT                          grpTermBlockStringSizes[32];
     UINT8                           grpTermBlockGroupIndex[32];
     UINT8                           numGrpTermBlocks = 0;
-    USHORT                          numChars;
+    USHORT                          numChars = 0;
     WDF_REQUEST_SEND_OPTIONS        reqOptions;
 
     ASSERT(Device);
@@ -1949,9 +1956,6 @@ Return Value:
             // Send to circuit
             if (pDeviceContext->pStreamEngine)
             {
-                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Calling FillReadStream with Position %d and ByteCount %d",
-                    UMP_Packet_Struct.umpHeader.Position, UMP_Packet_Struct.umpHeader.ByteCount);
-
                 if (!pDeviceContext->pStreamEngine->FillReadStream(
                     (PUINT8)&UMP_Packet_Struct,
                     (size_t)(UMP_Packet_Struct.umpHeader.ByteCount) + sizeof(UMPDATAFORMAT)

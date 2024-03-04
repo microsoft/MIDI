@@ -9,9 +9,6 @@
 
 #include "stdafx.h"
 
-
-#include "MidiStreamMessageBuilderTests.h"
-
 using namespace winrt::Windows::Devices::Midi2;
 
 void MidiStreamMessageBuilderTests::TestBuildEndpointNameNotificationLong()

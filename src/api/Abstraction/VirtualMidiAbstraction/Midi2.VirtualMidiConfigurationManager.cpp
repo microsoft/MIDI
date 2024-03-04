@@ -86,7 +86,7 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
         return E_FAIL;
     }
 
-    auto createArray = internal::JsonGetArrayProperty(jsonObject, MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICES_CREATE_ARRAY_KEY);
+    auto createArray = jsonObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICES_CREATE_ARRAY_KEY, nullptr);
 
     if (createArray == nullptr || createArray.Size() == 0)
     {
@@ -107,25 +107,10 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
         {
             MidiVirtualDeviceEndpointEntry deviceEntry;
 
-            deviceEntry.VirtualEndpointAssociationId = internal::JsonGetWStringProperty(
-                jsonEntry, 
-                MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_ASSOCIATION_ID_PROPERTY_KEY, 
-                L"");
-
-            deviceEntry.ShortUniqueId = internal::JsonGetWStringProperty(
-                jsonEntry, 
-                MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY, 
-                L"");
-
-            deviceEntry.BaseEndpointName = internal::JsonGetWStringProperty(
-                jsonEntry, 
-                MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, 
-                L"");
-
-            deviceEntry.Description = internal::JsonGetWStringProperty(
-                jsonEntry, 
-                MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY, 
-                L"");
+            deviceEntry.VirtualEndpointAssociationId = jsonEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_ASSOCIATION_ID_PROPERTY_KEY, L"");
+            deviceEntry.ShortUniqueId = jsonEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY, L"");
+            deviceEntry.BaseEndpointName = jsonEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L"");
+            deviceEntry.Description = jsonEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY, L"");
 
             // TODO: if no association id, or it already exists in the table, bail
 
@@ -154,10 +139,10 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
    
 
     // TODO: Actual Success or fail response
-    internal::JsonSetBoolProperty(
-        responseObject,
+    auto responseVal = json::JsonValue::CreateBooleanValue(true);
+    responseObject.SetNamedValue(
         MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
-        true);
+        responseVal);
 
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),

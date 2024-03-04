@@ -21,7 +21,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
          internal::MidiTimestamp const timestamp,
          uint8_t const umpVersionMajor,
          uint8_t const umpVersionMinor,
-         midi2::MidiEndpointDiscoveryFilterFlags const requestFlags
+         midi2::MidiEndpointDiscoveryRequests const requestFlags
         ) noexcept
     {
         return MidiMessageBuilder::BuildStreamMessage(
@@ -37,7 +37,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    midi2::IMidiUniversalPacket MidiStreamMessageBuilder::BuildEndpointInformationNotificationMessage(
+    midi2::IMidiUniversalPacket MidiStreamMessageBuilder::BuildEndpointInfoNotificationMessage(
          internal::MidiTimestamp const timestamp,
          uint8_t const umpVersionMajor,
          uint8_t const umpVersionMinor,
@@ -362,7 +362,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     midi2::IMidiUniversalPacket MidiStreamMessageBuilder::BuildFunctionBlockDiscoveryMessage(
         internal::MidiTimestamp const timestamp,
         uint8_t const functionBlockNumber,
-        midi2::MidiFunctionBlockDiscoveryFilterFlags const requestFlags
+        midi2::MidiFunctionBlockDiscoveryRequests const requestFlags
         )
     {
         uint16_t word0Remaining{ 0 };
@@ -454,7 +454,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     winrt::hstring MidiStreamMessageBuilder::ParseFunctionBlockNameNotificationMessages(
-        collections::IVector<midi2::IMidiUniversalPacket> messages
+        collections::IIterable<midi2::IMidiUniversalPacket> const& messages
         )
     {
         std::string s{};
@@ -498,7 +498,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     winrt::hstring MidiStreamMessageBuilder::ParseEndpointNameNotificationMessages(
-        collections::IVector<midi2::IMidiUniversalPacket> messages
+        collections::IIterable<midi2::IMidiUniversalPacket> const& messages
         )
     {
         std::string s{};
@@ -541,7 +541,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     winrt::hstring MidiStreamMessageBuilder::ParseProductInstanceIdNotificationMessages(
-        collections::IVector<midi2::IMidiUniversalPacket> messages
+        collections::IIterable<midi2::IMidiUniversalPacket> const& messages
         )
     {
         std::string s{};

@@ -135,7 +135,7 @@ void MidiSchedulerBenchmarks::BenchmarkSendReceiveScheduledMessages(_In_ uint32_
 
         auto timeStamp = MidiClock::OffsetTimestampByMilliseconds(MidiClock::Now(), offsetMilliseconds);
 
-        connSend.SendMessageWordArray(timeStamp, words, 0, (uint8_t)wordCount);
+        connSend.SendSingleMessageWordArray(timeStamp, 0, (uint8_t)wordCount, words);
     }
 
     // Wait for incoming message

@@ -40,6 +40,7 @@ namespace json = ::winrt::Windows::Data::Json;
 #include <cwctype>
 #include <queue>
 #include <mutex>
+#include <format>
 
 // internal
 #include "trace_logging.h"
@@ -48,12 +49,8 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "ump_helpers.h"
 #include "memory_buffer.h"
 #include "wstring_util.h"
-#include "hstring_util.h"
 
 // AbstractionUtilities
-#include "endpoint_data_helpers.h"
-#include "swd_property_builders.h"
-#include "json_helpers.h"
 
 // shared
 #include "midi_ump.h"   // general shared
@@ -65,8 +62,20 @@ namespace json = ::winrt::Windows::Data::Json;
 namespace foundation = ::winrt::Windows::Foundation;
 namespace collections = ::winrt::Windows::Foundation::Collections;
 
+#include "hstring_util.h"
+#include "wstring_util.h"
 namespace internal = ::Windows::Devices::Midi2::Internal;
 
+#include "MidiDefs.h"
+#include "MidiDataFormat.h"
+#include "MidiFlow.h"
+#include "MidiAbstraction.h"
+
+#include "json_defs.h"
+#include "json_helpers.h"
+#include "swd_helpers.h"
+
+//#include "MidiXProc.h"
 #include "resource.h"
 #include "ResourceManager.h"
 
@@ -98,22 +107,28 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 #include "MidiEndpointConnection.h"
 
 #include "MidiMessageReceivedEventArgs.h"
-#include "MidiEndpointDeviceInformationUpdateEventArgs.h"
+
+#include "MidiEndpointDeviceInformation.h"
+#include "MidiEndpointDeviceInformationAddedEventArgs.h"
+#include "MidiEndpointDeviceInformationUpdatedEventArgs.h"
+#include "MidiEndpointDeviceInformationRemovedEventArgs.h"
+#include "MidiEndpointDeviceWatcher.h"
 
 #include "MidiVirtualEndpointDevice.h"
 #include "MidiVirtualEndpointDeviceDefinition.h"
+
 
 #include "MidiSession.h"
 
 #include "MidiServicePingResponse.h"
 #include "MidiServicePingResponseSummary.h"
-#include "MidiServiceTransportPluginInformation.h"
-#include "MidiServiceMessageProcessingPluginInformation.h"
+#include "MidiServiceTransportPluginInfo.h"
+#include "MidiServiceMessageProcessingPluginInfo.h"
 
 #include "MidiServiceConfigurationResponse.h"
 #include "MidiServiceLoopbackEndpointCreationResult.h"
-#include "MidiServiceSessionConnectionInformation.h"
-#include "MidiServiceSessionInformation.h"
+#include "MidiServiceSessionConnectionInfo.h"
+#include "MidiServiceSessionInfo.h"
 #include "MidiService.h"
 
 #include "MidiEndpointDeviceInformation.h"

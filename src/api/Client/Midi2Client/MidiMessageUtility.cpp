@@ -15,81 +15,72 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     collections::IVector<midi2::IMidiUniversalPacket> MidiMessageUtility::GetPacketListFromWordList(
         uint64_t const timestamp, 
-        collections::IVectorView<uint32_t> const& words)
+        collections::IIterable<uint32_t> const& words)
     {
-        uint32_t index{ 0 };
-
         auto result = winrt::single_threaded_vector<midi2::IMidiUniversalPacket>();
 
+        auto iter = words.First();
 
-        while (index < words.Size())
+        while (iter.HasCurrent())
         {
-            auto wordsLeft = words.Size() - index;
+           // auto wordsLeft = words.Size() - index;
 
-            uint8_t numWords = internal::GetUmpLengthInMidiWordsFromFirstWord(words.GetAt(index));
+            uint8_t numWords = internal::GetUmpLengthInMidiWordsFromFirstWord(iter.Current());
 
             if (numWords == 1)
             {
                 MidiMessage32 ump{};
                 ump.Timestamp(timestamp);
-                ump.Word0(index + 0);
+
+                ump.Word0(iter.Current());
+                iter.MoveNext();
+
                 result.Append(ump);
-                index += 1;
             }
 
             else if (numWords == 2)
             {
-                if (wordsLeft >= 2)
-                {
-                    MidiMessage64 ump{};
-                    ump.Timestamp(timestamp);
-                    ump.Word0(index + 0);
-                    ump.Word1(index + 1);
-                    result.Append(ump);
-                    index += 2;
-                }
-                else
-                {
-                    break;
-                }
+                MidiMessage64 ump{};
+                ump.Timestamp(timestamp);
+
+                ump.Word0(iter.Current());
+
+                if (iter.MoveNext()) ump.Word1(iter.Current()); else break;
+                
+                iter.MoveNext();
+
+                result.Append(ump);
             }
 
             else if (numWords == 3)
             {
-                if (wordsLeft >= 3)
-                {
-                    MidiMessage96 ump{};
-                    ump.Timestamp(timestamp);
-                    ump.Word0(index + 0);
-                    ump.Word1(index + 1);
-                    ump.Word2(index + 2);
-                    result.Append(ump);
-                    index += 3;
-                }
-                else
-                {
-                    break;
-                }
+                MidiMessage96 ump{};
+                ump.Timestamp(timestamp);
+
+                ump.Word0(iter.Current());
+                iter.MoveNext();
+
+                if (iter.MoveNext()) ump.Word1(iter.Current()); else break;
+                if (iter.MoveNext()) ump.Word2(iter.Current()); else break;
+
+                iter.MoveNext();
+
+                result.Append(ump);
             }
 
             else if (numWords == 4)
             {
-                if (wordsLeft >= 4)
-                {
+                MidiMessage128 ump{};
+                ump.Timestamp(timestamp);
 
-                    MidiMessage128 ump{};
-                    ump.Timestamp(timestamp);
-                    ump.Word0(index + 0);
-                    ump.Word1(index + 1);
-                    ump.Word2(index + 2);
-                    ump.Word3(index + 3);
-                    result.Append(ump);
-                    index += 4;
-                }
-                else
-                {
-                    break;
-                }
+                ump.Word0(iter.Current());
+                iter.MoveNext();
+
+                if (iter.MoveNext()) ump.Word1(iter.Current()); else break;
+                if (iter.MoveNext()) ump.Word2(iter.Current()); else break;
+                if (iter.MoveNext()) ump.Word3(iter.Current()); else break;
+
+                result.Append(ump);
             }
         }
 
@@ -98,7 +89,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     collections::IVector<uint32_t> MidiMessageUtility::GetWordListFromPacketList(
-        collections::IVectorView<midi2::IMidiUniversalPacket> const& messages)
+        collections::IIterable<midi2::IMidiUniversalPacket> const& messages)
     {
         // we're doing this the safe and easy way, but there's likely a more efficient way to copy the memory over
 
@@ -106,7 +97,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         for (auto const& message : messages)
         {
-            message.AppendAllWordsToVector(result);
+            message.AppendAllMessageWordsToVector(result);
         }
 
         return result;

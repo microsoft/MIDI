@@ -54,10 +54,24 @@ namespace json = winrt::Windows::Data::Json;
 #include "Devpkey.h"
 #include <mmdeviceapi.h>
 
+#include "wstring_util.h"
+namespace internal = ::Windows::Devices::Midi2::Internal;
+
+#include "MidiDefs.h"
+#include "MidiDataFormat.h"
+#include "MidiFlow.h"
+#include "MidiAbstraction.h"
+
+#include "json_defs.h"
+#include "json_helpers.h"
+#include "swd_helpers.h"
+
+#include "MidiXProc.h"
+
+
 #include "strsafe.h"
 
 #include "abstraction_defs.h"
-#include "midi_config_json.h"
 
 #include "midiabstraction_i.c"
 #include "midiabstraction.h"

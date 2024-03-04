@@ -28,7 +28,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll(
             _In_ midi2::MidiEndpointDeviceInformationSortOrder const& sortOrder, 
-            _In_ midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept;
+            _In_ midi2::MidiEndpointDeviceInformationFilters const& endpointFilters) noexcept;
 
         static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll(
             _In_ midi2::MidiEndpointDeviceInformationSortOrder const& sortOrder) noexcept;
@@ -38,11 +38,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         static collections::IVectorView<winrt::hstring> GetAdditionalPropertiesList() noexcept;
 
         static winrt::Windows::Devices::Enumeration::DeviceWatcher CreateWatcher(
-            _In_ midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept;
+            _In_ midi2::MidiEndpointDeviceInformationFilters const& endpointFilters) noexcept;
 
         static bool DeviceMatchesFilter(
             _In_ midi2::MidiEndpointDeviceInformation const& deviceInformation,
-            _In_ midi2::MidiEndpointDeviceInformationFilter const& endpointFilter) noexcept;
+            _In_ midi2::MidiEndpointDeviceInformationFilters const& endpointFilters) noexcept;
 
         winrt::hstring Id() const noexcept;
         winrt::guid ContainerId() const noexcept { return GetGuidProperty(L"System.Devices.ContainerId", winrt::guid{}); }
@@ -52,6 +52,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::Windows::Devices::Enumeration::DeviceInformation GetContainerInformation() const noexcept;
 
         //winrt::Windows::Devices::Enumeration::DeviceInformation DeviceInformation() const noexcept { return m_deviceInformation; }
+
+        foundation::DateTime ProductInstanceIdLastUpdateTime() const noexcept { return GetDateTimeProperty(STRING_PKEY_MIDI_EndpointProvidedProductInstanceIdLastUpdateTime, foundation::DateTime{}); }
+        foundation::DateTime EndpointSuppliedNameLastUpdateTime() const noexcept { return GetDateTimeProperty(STRING_PKEY_MIDI_EndpointProvidedNameLastUpdateTime, foundation::DateTime{}); }
+        foundation::DateTime EndpointConfigurationLastUpdateTime() const noexcept { return GetDateTimeProperty(STRING_PKEY_MIDI_EndpointConfigurationLastUpdateTime, foundation::DateTime{}); }
+        foundation::DateTime EndpointInformationLastUpdateTime() const noexcept { return GetDateTimeProperty(STRING_PKEY_MIDI_EndpointInformationLastUpdateTime, foundation::DateTime{}); }
+        foundation::DateTime DeviceIdentityLastUpdateTime() const noexcept { return GetDateTimeProperty(STRING_PKEY_MIDI_DeviceIdentityLastUpdateTime, foundation::DateTime{}); }
+        foundation::DateTime FunctionBlocksLastUpdateTime() const noexcept { return GetDateTimeProperty(STRING_PKEY_MIDI_FunctionBlocksLastUpdateTime, foundation::DateTime{}); }
+
+
 
         winrt::hstring Name() const noexcept;
 
@@ -137,6 +146,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring GetGuidPropertyAsString(
             _In_ winrt::hstring key,
             _In_ winrt::hstring defaultValue) const noexcept;
+
+        foundation::DateTime GetDateTimeProperty(
+            _In_ winrt::hstring key,
+            _In_ foundation::DateTime defaultValue) const noexcept;
 
 
         uint8_t GetByteProperty(

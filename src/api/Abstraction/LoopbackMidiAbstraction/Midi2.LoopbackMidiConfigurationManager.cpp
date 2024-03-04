@@ -47,11 +47,11 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
         TraceLoggingWideString(ConfigurationJsonSection, "json")
     );
 
-
+    // empty config is ok in this case. We just ignore
     if (ConfigurationJsonSection == nullptr) return S_OK;
-    //if (ConfigurationJsonSection == L"") return S_OK;
 
-    json::JsonObject jsonObject;
+
+    json::JsonObject jsonObject{};
 
     // default to failure
     auto responseObject = internal::BuildConfigurationResponseObject(false);
@@ -167,22 +167,22 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                             // all good
 
-                            internal::JsonSetBoolProperty(
-                                responseObject,
+                            auto successVal = json::JsonValue::CreateBooleanValue(true);
+                            responseObject.SetNamedValue(
                                 MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
-                                true);
+                                successVal);
 
                             // update the return json with the new Ids
-
-                            internal::JsonSetWStringProperty(
-                                responseObject,
+                            auto endpointIdAVal = json::JsonValue::CreateStringValue(definitionA->CreatedEndpointInterfaceId);
+                            responseObject.SetNamedValue(
                                 MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_A_ID_KEY,
-                                definitionA->CreatedEndpointInterfaceId);
+                                endpointIdAVal);
 
-                            internal::JsonSetWStringProperty(
-                                responseObject,
+                            auto endpointIdBVal = json::JsonValue::CreateStringValue(definitionB->CreatedEndpointInterfaceId);
+                            responseObject.SetNamedValue(
                                 MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_B_ID_KEY,
-                                definitionB->CreatedEndpointInterfaceId);
+                                endpointIdAVal);
+
                         }
                         else
                         {
@@ -277,10 +277,10 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                         {
                             AbstractionState::Current().GetEndpointTable()->RemoveDevice(associationId.c_str());
 
-                            internal::JsonSetBoolProperty(
-                                responseObject,
+                            auto removeSuccessVal = json::JsonValue::CreateBooleanValue(true);
+                            responseObject.SetNamedValue(
                                 MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
-                                true);
+                                removeSuccessVal);
                         }
                         else
                         {

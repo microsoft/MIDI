@@ -129,7 +129,7 @@ void OutputError(_In_ std::wstring errorMessage)
 #define RETURN_SUCCESS return 0
 #define RETURN_FAIL return 1
 
-int main()
+int __cdecl main()
 {
     winrt::init_apartment();
 
@@ -156,11 +156,11 @@ int main()
             // list all devices
             devices = midi2::MidiEndpointDeviceInformation::FindAll(
                 midi2::MidiEndpointDeviceInformationSortOrder::Name,
-                midi2::MidiEndpointDeviceInformationFilter::IncludeClientByteStreamNative |
-                midi2::MidiEndpointDeviceInformationFilter::IncludeClientUmpNative |
-                midi2::MidiEndpointDeviceInformationFilter::IncludeDiagnosticLoopback |
-                midi2::MidiEndpointDeviceInformationFilter::IncludeDiagnosticPing |
-                midi2::MidiEndpointDeviceInformationFilter::IncludeVirtualDeviceResponder
+                midi2::MidiEndpointDeviceInformationFilters::IncludeClientByteStreamNative |
+                midi2::MidiEndpointDeviceInformationFilters::IncludeClientUmpNative |
+                midi2::MidiEndpointDeviceInformationFilters::IncludeDiagnosticLoopback |
+                midi2::MidiEndpointDeviceInformationFilters::IncludeDiagnosticPing |
+                midi2::MidiEndpointDeviceInformationFilters::IncludeVirtualDeviceResponder
             );
         }
         catch (...)
@@ -185,8 +185,8 @@ int main()
                 if (verbose)
                 {
                     OutputStringField(L"name_user_supplied", device.UserSuppliedName());
-                    OutputStringField(L"name_user_endpoint_supplied", device.EndpointSuppliedName());
-                    OutputStringField(L"name_user_transport_supplied", device.TransportSuppliedName());
+                    OutputStringField(L"name_endpoint_supplied", device.EndpointSuppliedName());
+                    OutputStringField(L"name_transport_supplied", device.TransportSuppliedName());
                     OutputStringField(L"description_transport_supplied", device.TransportSuppliedDescription());
                     OutputStringField(L"description_user_supplied", device.UserSuppliedDescription());
                 }

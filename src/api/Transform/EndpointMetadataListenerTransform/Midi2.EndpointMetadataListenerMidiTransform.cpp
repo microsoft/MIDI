@@ -249,16 +249,18 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateEndpointNameProperty()
         TraceLoggingPointer(this, "this")
     );
 
-    //OutputDebugString(L"\n" __FUNCTION__ " endpoint name is: ");
-    //OutputDebugString(m_endpointName.c_str());
-    //OutputDebugString(L"\n");
-
     auto cleanedValue{ internal::TrimmedWStringCopy(m_endpointName) + L"\0" };
+
+    FILETIME currentTime;
+    GetSystemTimePreciseAsFileTime(&currentTime);
+
 
     DEVPROPERTY props[] =
     {
         {{ PKEY_MIDI_EndpointProvidedName, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_STRING, static_cast<ULONG>((cleanedValue.length() + 1) * sizeof(WCHAR)), (PVOID)(cleanedValue.c_str()) },
+        {{ PKEY_MIDI_EndpointProvidedNameLastUpdateTime, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_FILETIME, static_cast<ULONG>(sizeof(FILETIME)), (PVOID)(&currentTime) },
     };
 
     RETURN_IF_FAILED(m_MidiDeviceManager->UpdateEndpointProperties(m_deviceInstanceId.c_str(), ARRAYSIZE(props), (PVOID)props));
@@ -280,9 +282,9 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateEndpointProductInstanceIdProp
     );
 
 
-    //OutputDebugString(L"\n" __FUNCTION__ " product instance id is: '");
-    //OutputDebugString(m_productInstanceId.c_str());
-    //OutputDebugString(L"'\n");
+    FILETIME currentTime;
+    GetSystemTimePreciseAsFileTime(&currentTime);
+
 
     std::wstring cleanedValue{ internal::TrimmedWStringCopy(m_productInstanceId) + L"\0" };
 
@@ -290,6 +292,8 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateEndpointProductInstanceIdProp
     {
         {{ PKEY_MIDI_EndpointProvidedProductInstanceId, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_STRING, static_cast<ULONG>((cleanedValue.length() + 1) * sizeof(WCHAR)), (PVOID)(cleanedValue.c_str()) },
+        {{ PKEY_MIDI_EndpointProvidedProductInstanceIdLastUpdateTime, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_FILETIME, static_cast<ULONG>(sizeof(FILETIME)), (PVOID)(&currentTime) },
     };
 
     RETURN_IF_FAILED(m_MidiDeviceManager->UpdateEndpointProperties(m_deviceInstanceId.c_str(), ARRAYSIZE(props), (PVOID)props));
@@ -311,9 +315,9 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateFunctionBlockNameProperty(uin
         TraceLoggingPointer(this, "this")
     );
 
-    //OutputDebugString(L"\n" __FUNCTION__ " function block name is: ");
-    //OutputDebugString(name.c_str());
-    //OutputDebugString(L"\n");
+    FILETIME currentTime;
+    GetSystemTimePreciseAsFileTime(&currentTime);
+
 
     std::wstring cleanedValue{ internal::TrimmedWStringCopy(name) + L"\0" };
 
@@ -321,6 +325,8 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateFunctionBlockNameProperty(uin
     {
         {{ FunctionBlockNamePropertyKeyFromNumber(functionBlockNumber), DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_STRING, static_cast<ULONG>((cleanedValue.length() + 1) * sizeof(WCHAR)), (PVOID)(cleanedValue.c_str()) },
+        {{ PKEY_MIDI_FunctionBlocksLastUpdateTime, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_FILETIME, static_cast<ULONG>(sizeof(FILETIME)), (PVOID)(&currentTime) },
     };
 
     RETURN_IF_FAILED(m_MidiDeviceManager->UpdateEndpointProperties(m_deviceInstanceId.c_str(), ARRAYSIZE(props), (PVOID)props));
@@ -342,6 +348,9 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateStreamConfigurationProperties
         TraceLoggingPointer(this, "this")
     );
 
+    FILETIME currentTime;
+    GetSystemTimePreciseAsFileTime(&currentTime);
+
     BYTE configuredProtocol = MIDIWORDBYTE3(endpointStreamConfigurationNotificationMessage.word0);
 
     DEVPROP_BOOLEAN configuredToSendJR = MIDIWORDBYTE4LOWBIT1(endpointStreamConfigurationNotificationMessage.word0) ? DEVPROP_TRUE : DEVPROP_FALSE;
@@ -357,6 +366,10 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateStreamConfigurationProperties
 
         {{ PKEY_MIDI_EndpointConfiguredProtocol, DEVPROP_STORE_SYSTEM, nullptr },
             DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(configuredProtocol)), &configuredProtocol },
+
+        {{ PKEY_MIDI_EndpointConfigurationLastUpdateTime, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_FILETIME, static_cast<ULONG>(sizeof(FILETIME)), (PVOID)(&currentTime) },
+
     };
 
     RETURN_IF_FAILED(m_MidiDeviceManager->UpdateEndpointProperties(m_deviceInstanceId.c_str(), ARRAYSIZE(props), (PVOID)props));
@@ -402,11 +415,17 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateDeviceIdentityProperty(intern
     prop.SoftwareRevisionLevelByte3 = internal::CleanupByte7(MIDIWORDBYTE3(identityMessage.word3));
     prop.SoftwareRevisionLevelByte4 = internal::CleanupByte7(MIDIWORDBYTE4(identityMessage.word3));
 
+    FILETIME currentTime;
+    GetSystemTimePreciseAsFileTime(&currentTime);
 
     DEVPROPERTY props[] =
     {
         {{ PKEY_MIDI_DeviceIdentity, DEVPROP_STORE_SYSTEM, nullptr },
             DEVPROP_TYPE_BINARY, static_cast<ULONG>(sizeof(prop)), &prop },
+
+        {{ PKEY_MIDI_DeviceIdentityLastUpdateTime, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_FILETIME, static_cast<ULONG>(sizeof(FILETIME)), (PVOID)(&currentTime) },
+
     };
 
     RETURN_IF_FAILED(m_MidiDeviceManager->UpdateEndpointProperties(m_deviceInstanceId.c_str(), ARRAYSIZE(props), (PVOID)props));
@@ -441,6 +460,9 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateEndpointInfoProperties(intern
     DEVPROP_BOOLEAN supportsSendingJR = MIDIWORDBYTE4LOWBIT1(endpointInfoNotificationMessage.word1) ? DEVPROP_TRUE : DEVPROP_FALSE;
     DEVPROP_BOOLEAN supportsReceivingJR = MIDIWORDBYTE4LOWBIT2(endpointInfoNotificationMessage.word1) ? DEVPROP_TRUE : DEVPROP_FALSE;
 
+    FILETIME currentTime;
+    GetSystemTimePreciseAsFileTime(&currentTime);
+
 
     DEVPROPERTY props[] =
     {
@@ -467,6 +489,10 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateEndpointInfoProperties(intern
 
         {{ PKEY_MIDI_FunctionBlocksAreStatic, DEVPROP_STORE_SYSTEM, nullptr },
             DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(functionBlocksAreStatic)), &functionBlocksAreStatic },
+ 
+        {{ PKEY_MIDI_EndpointInformationLastUpdateTime, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_FILETIME, static_cast<ULONG>(sizeof(FILETIME)), (PVOID)(&currentTime) },
+
     };
 
     RETURN_IF_FAILED(m_MidiDeviceManager->UpdateEndpointProperties(m_deviceInstanceId.c_str(), ARRAYSIZE(props), (PVOID)props));
@@ -506,6 +532,8 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateFunctionBlockProperty(interna
     prop.Reserved1 = functionBlockInfoNotificationMessage.word2;
     prop.Reserved2 = functionBlockInfoNotificationMessage.word3;
 
+    FILETIME currentTime;
+    GetSystemTimePreciseAsFileTime(&currentTime);
 
     DEVPROPKEY propKey = FunctionBlockPropertyKeyFromNumber(prop.BlockNumber);
 
@@ -513,6 +541,10 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateFunctionBlockProperty(interna
     {
         {{ propKey, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_BINARY, static_cast<ULONG>(sizeof(prop)), &prop },
+
+        {{ PKEY_MIDI_FunctionBlocksLastUpdateTime, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_FILETIME, static_cast<ULONG>(sizeof(FILETIME)), (PVOID)(&currentTime) },
+
     };
 
 

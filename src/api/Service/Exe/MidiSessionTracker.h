@@ -45,20 +45,20 @@ public:
     CMidiSessionTracker() {}
     ~CMidiSessionTracker() {}
 
-    HRESULT Initialize();
+    STDMETHOD(Initialize)();
 
     // These are called from the API
-    HRESULT AddClientSession(_In_ GUID SessionId, _In_ LPCWSTR SessionName, _In_ DWORD ClientProcessId, _In_ LPCWSTR ClientProcessName);
-    HRESULT RemoveClientSession(_In_ GUID SessionId);
+    STDMETHOD(AddClientSession)(_In_ GUID SessionId, _In_ LPCWSTR SessionName, _In_ DWORD ClientProcessId, _In_ LPCWSTR ClientProcessName);
+    STDMETHOD(RemoveClientSession)(_In_ GUID SessionId);
 
     // These are called from within the service
     HRESULT AddClientEndpointConnection(_In_ GUID SessionId, _In_ LPCWSTR ConnectionEndpointInterfaceId);
     HRESULT RemoveClientEndpointConnection(_In_ GUID SessionId, _In_ LPCWSTR ConnectionEndpointInterfaceId);
 
     // This is called from the API
-    HRESULT GetSessionListJson(_Out_ BSTR* SessionList);
+    STDMETHOD(GetSessionListJson)(_Out_ BSTR* SessionList);
 
-    HRESULT Cleanup();
+    STDMETHOD(Cleanup)();
 
 private:
     std::map<GUID, MidiSessionEntry, GUIDCompare> m_sessions{};

@@ -70,6 +70,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             return "[deepskyblue2]" + EscapeString(description) + "[/]";
         }
 
+        public static string FormatPropertySectionDescription(string description)
+        {
+            return "[grey35]" + EscapeString(description) + "[/]";
+        }
+
 
         public static string FormatError(string error)
         {
@@ -173,7 +178,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public static string FormatLongDateTime(DateTimeOffset time)
         {
-            return "[cadetblue]" + time.DateTime.ToLongDateString() + "[/] [cadetblue]" + time.DateTime.ToLongTimeString() + "[/]";
+            // Sunday, December 31, 1600 7:00:00 PM is the "empty" date value for a foundation::DateTime
+            if (time.Year <= 1600)
+            {
+                return string.Empty;
+            }
+            else
+            {
+                return "[cadetblue]" + time.DateTime.ToLongDateString() + "[/] [cadetblue]" + time.DateTime.ToLongTimeString() + "[/]";
+            }
         }
 
 

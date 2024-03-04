@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 #pragma once
 
+#ifndef MIDITESTCOMMON_H
+#define MIDITESTCOMMON_H
+
 typedef struct
 {
     BYTE status;
@@ -46,5 +49,8 @@ void PrintMidiMessage(_In_ PVOID, _In_ UINT32, _In_ UINT32, _In_ LONGLONG);
 
 #ifndef LOG_OUTPUT
 #define LOG_OUTPUT(fmt, ...)  WEX::Logging::Log::Comment(WEX::Common::String().Format(fmt, __VA_ARGS__))
+#endif
+
+
 #endif
 

@@ -31,6 +31,8 @@ public:
     TEST_METHOD(TestSendBuffer);
     TEST_METHOD(TestSendAndReceiveBuffer);
 
+    TEST_METHOD(TestSendAndReceiveMultipleMessagesBuffer);
+
 private:
 
 

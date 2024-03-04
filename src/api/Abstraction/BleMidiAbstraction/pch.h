@@ -25,7 +25,10 @@
 #include <winrt/Windows.Data.Json.h>
 
 namespace json = ::winrt::Windows::Data::Json;
-
+namespace enumeration = ::winrt::Windows::Devices::Enumeration;
+namespace foundation = ::winrt::Windows::Foundation;
+namespace collections = ::winrt::Windows::Foundation::Collections;
+namespace bt = ::winrt::Windows::Devices::Bluetooth;
 
 #include <assert.h>
 #include <devioctl.h>
@@ -66,19 +69,20 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "setupapi.h"
 //#include "Devpkey.h"
 
-// AbstractionUtilities
-#include "endpoint_data_helpers.h"
-#include "swd_property_builders.h"
-#include "json_helpers.h"
+#include "wstring_util.h"
+namespace internal = ::Windows::Devices::Midi2::Internal;
 
 #include "MidiDefs.h"
 #include "MidiDataFormat.h"
 #include "MidiFlow.h"
 #include "MidiAbstraction.h"
 
+#include "json_defs.h"
+#include "json_helpers.h"
+#include "swd_helpers.h"
+
 #include "MidiXProc.h"
 
-namespace internal = ::Windows::Devices::Midi2::Internal;
 
 class CMidi2BluetoothMidiConfigurationManager;
 class CMidi2BluetoothMidiEndpointManager;
@@ -86,6 +90,8 @@ class CMidi2BluetoothMidiEndpointManager;
 #include "strsafe.h"
 
 #include "abstraction_defs.h"
+#include "midi_timestamp.h"
+#include "ble_timestamp.h"
 
 #include "Midi2BluetoothMidiAbstraction_i.c"
 #include "Midi2BluetoothMidiAbstraction.h"
@@ -95,6 +101,10 @@ class CMidi2BluetoothMidiEndpointManager;
 
 #include "dllmain.h"
 
+#include "MidiBluetoothPacket.h"
+
+#include "MidiBluetoothDeviceDefinition.h"
+#include "MidiBluetoothDevice.h"
 #include "MidiEndpointTable.h"
 
 #include "Midi2.BluetoothMidiAbstraction.h"

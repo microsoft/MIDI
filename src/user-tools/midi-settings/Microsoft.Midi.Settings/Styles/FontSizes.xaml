@@ -4,6 +4,13 @@
 
     <x:Double x:Key="LargeFontSize">24</x:Double>
 
+    <x:Double x:Key="MediumLargeFontSize">20</x:Double>
+
     <x:Double x:Key="MediumFontSize">16</x:Double>
+
+    <x:Double x:Key="MediumSmallFontSize">14</x:Double>
+
+    <x:Double x:Key="SmallFontSize">12</x:Double>
+
 
 </ResourceDictionary>

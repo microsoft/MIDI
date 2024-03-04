@@ -908,22 +908,33 @@ CMidiDeviceManager::DeleteAllEndpointInProtocolDiscoveredProperties
     std::vector<DEVPROPKEY> keys;
 
     keys.push_back(PKEY_MIDI_EndpointProvidedName);
+    keys.push_back(PKEY_MIDI_EndpointProvidedNameLastUpdateTime);
+
     keys.push_back(PKEY_MIDI_EndpointProvidedProductInstanceId);
+    keys.push_back(PKEY_MIDI_EndpointProvidedProductInstanceIdLastUpdateTime);
+
 
     keys.push_back(PKEY_MIDI_EndpointConfiguredProtocol);
     keys.push_back(PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps);
     keys.push_back(PKEY_MIDI_EndpointConfiguredToSendJRTimestamps);
+    keys.push_back(PKEY_MIDI_EndpointConfigurationLastUpdateTime);
+
     keys.push_back(PKEY_MIDI_EndpointSupportsMidi1Protocol);
     keys.push_back(PKEY_MIDI_EndpointSupportsMidi2Protocol);
     keys.push_back(PKEY_MIDI_EndpointSupportsReceivingJRTimestamps);
     keys.push_back(PKEY_MIDI_EndpointSupportsSendingJRTimestamps);
     keys.push_back(PKEY_MIDI_EndpointUmpVersionMajor);
     keys.push_back(PKEY_MIDI_EndpointUmpVersionMinor);
+    keys.push_back(PKEY_MIDI_EndpointInformationLastUpdateTime);
 
     keys.push_back(PKEY_MIDI_DeviceIdentity);
+    keys.push_back(PKEY_MIDI_DeviceIdentityLastUpdateTime);
 
     keys.push_back(PKEY_MIDI_FunctionBlocksAreStatic);
     keys.push_back(PKEY_MIDI_FunctionBlockCount);
+
+    keys.push_back(PKEY_MIDI_FunctionBlocksLastUpdateTime);
+
 
     // remove actual function blocks and their names
 

@@ -37,6 +37,59 @@ The `MidiVirtualEndpointDeviceDefinition` class specifies, in an easy to use for
 | `MidiVirtualEndpointDeviceDefinition()` | Construct a new device definition |
 
 
+## Example
+
+```cs
+var deviceDefinition = new Windows.Devices.Midi2.MidiVirtualEndpointDeviceDefinition();
+
+// Define the first function block
+deviceDefinition.FunctionBlocks.Add(new Windows.Devices.Midi2.MidiFunctionBlock()
+{
+    Number = 0,
+    IsActive = true,
+    Name = "Pads Output",
+    UIHint = midi2.MidiFunctionBlockUIHint.Sender,
+    FirstGroupIndex = 0,
+    GroupCount = 1,
+    Direction = midi2.MidiFunctionBlockDirection.Bidirectional,
+    Midi10Connection = midi2.MidiFunctionBlockMidi10.Not10,
+    MaxSystemExclusive8Streams = 0,
+    MidiCIMessageVersionFormat = 0
+});
+
+// Define the section function block
+deviceDefinition.FunctionBlocks.Add(new Windows.Devices.Midi2.MidiFunctionBlock()
+{
+    Number = 1,
+    IsActive = true,
+    Name = "Controller",
+    UIHint = midi2.MidiFunctionBlockUIHint.Sender,
+    FirstGroupIndex = 1,
+    GroupCount = 1,
+    Direction = midi2.MidiFunctionBlockDirection.Bidirectional,
+    Midi10Connection = midi2.MidiFunctionBlockMidi10.Not10,
+    MaxSystemExclusive8Streams = 0,
+    MidiCIMessageVersionFormat = 0
+});
+
+deviceDefinition.AreFunctionBlocksStatic = true;
+deviceDefinition.EndpointName = "Pad Controller App";
+deviceDefinition.EndpointProductInstanceId = "PMB_APP2_3263827";
+deviceDefinition.SupportsMidi2ProtocolMessages = true;
+deviceDefinition.SupportsMidi1ProtocolMessages = true;
+deviceDefinition.SupportsReceivingJRTimestamps = false;
+deviceDefinition.SupportsSendingJRTimestamps = false;
+
+// ...
+
+// Create the device and return the connection to that device. Once you
+// call Open() on the connection, the client-visible endpoint will be
+// enumerated and available for use.
+_connection = _session.CreateVirtualDeviceAndConnection(deviceDefinition);
+```
+
+[Full Example](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/app-to-app-midi-cs)
+
 ## IDL
 
 [MidiVirtualEndpointDeviceDefinition IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiVirtualEndpointDeviceDefinition.idl)

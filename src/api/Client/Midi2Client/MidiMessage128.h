@@ -65,9 +65,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
             { return midi2::MidiPacketType::UniversalMidiPacket128; }
 
 
-        collections::IVectorView<uint32_t> GetAllWords() const noexcept;
-        uint8_t AppendAllWordsToVector(_Inout_ collections::IVector<uint32_t> targetVector) const noexcept;
+        collections::IVector<uint32_t> GetAllWords() const noexcept;
+        uint8_t AppendAllMessageWordsToVector(
+            _Inout_ collections::IVector<uint32_t> targetVector) const noexcept;
 
+        uint8_t AddAllMessageBytesToBuffer(
+            _In_ uint32_t const byteOffset,
+            _In_ foundation::IMemoryBuffer const& buffer
+        ) const noexcept;
 
         // IStringable
         winrt::hstring ToString();

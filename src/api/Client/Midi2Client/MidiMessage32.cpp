@@ -15,23 +15,66 @@
 
 namespace winrt::Windows::Devices::Midi2::implementation
 {
-    collections::IVectorView<uint32_t> MidiMessage32::GetAllWords() const noexcept
+    collections::IVector<uint32_t> MidiMessage32::GetAllWords() const noexcept
     {
         auto vec = winrt::single_threaded_vector<uint32_t>();
 
         vec.Append(m_ump.word0);
 
-        return vec.GetView();
+        return vec;
     }
 
     _Use_decl_annotations_
-    uint8_t MidiMessage32::AppendAllWordsToVector(collections::IVector<uint32_t> targetVector) const noexcept
+    uint8_t MidiMessage32::AppendAllMessageWordsToVector(collections::IVector<uint32_t> targetVector) const noexcept
     {
         targetVector.Append(m_ump.word0);
 
         return 1;
     }
 
+    _Use_decl_annotations_
+    uint8_t MidiMessage32::AddAllMessageBytesToBuffer(uint32_t const byteOffset, foundation::IMemoryBuffer const& buffer) const noexcept
+    {
+        const uint8_t numWordsInPacket = 2;
+        const uint8_t numBytesInPacket = numWordsInPacket * sizeof(uint32_t);
+
+        try
+        {
+            auto ref = buffer.CreateReference();
+            auto interop = ref.as<IMemoryBufferByteAccess>();
+
+            uint8_t* value{};
+            uint32_t valueSize{};
+
+            // get a pointer to the buffer
+            if (SUCCEEDED(interop->GetBuffer(&value, &valueSize)))
+            {
+                if (byteOffset + numBytesInPacket > valueSize)
+                {
+                    // no room
+                    return 0;
+                }
+                else
+                {
+                    uint32_t* bufferWordPointer = reinterpret_cast<uint32_t*>(value + byteOffset);
+
+                    // copy the number of valid bytes in our internal UMP structure
+                    memcpy(bufferWordPointer, &m_ump, numBytesInPacket);
+
+                    return numBytesInPacket;
+                }
+            }
+            else
+            {
+                return 0;
+            }
+
+        }
+        catch (...)
+        {
+            return 0;
+        }
+    }
 
 
     _Use_decl_annotations_

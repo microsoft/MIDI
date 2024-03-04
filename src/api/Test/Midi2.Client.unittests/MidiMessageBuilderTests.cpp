@@ -9,10 +9,6 @@
 
 #include "stdafx.h"
 
-
-#include "MidiMessageBuilderTests.h"
-
-
 void MidiMessageBuilderTests::TestBuildType0UtilityMessages()
 {
     uint8_t status = 0x0D;
@@ -42,7 +38,7 @@ void MidiMessageBuilderTests::TestBuildType1SystemMessages()
 
     auto message = MidiMessageBuilder::BuildSystemMessage(
         MidiClock::Now(),
-        group,
+        MidiGroup(group),
         status,
         midiByte2,
         midiByte3
@@ -67,9 +63,9 @@ void MidiMessageBuilderTests::TestBuildType2Midi1ChannelVoiceMessages()
 
     auto ump = MidiMessageBuilder::BuildMidi1ChannelVoiceMessage(
         MidiClock::Now(),
-        grp.Index(),
+        grp,
         status,
-        ch.Index(),
+        ch,
         note,
         velocity);
 
@@ -98,9 +94,9 @@ void MidiMessageBuilderTests::TestBuildType4Midi2ChannelVoiceMessages()
 
     auto ump = MidiMessageBuilder::BuildMidi2ChannelVoiceMessage(
         MidiClock::Now(),
-        grp.Index(),
+        grp,
         status,
-        ch.Index(),
+        ch,
         index,
         data
     );
@@ -194,7 +190,7 @@ void MidiMessageBuilderTests::TestBuildMixedDatasetHeaderMessage()
 
     auto ump = MidiMessageBuilder::BuildMixedDataSetChunkHeaderMessage(
         MidiClock::Now(),
-        group,
+        MidiGroup(group),
         mdsId,
         numberOfValidBytesInChunk,
         numberOfChunksInDatSet,
@@ -227,7 +223,7 @@ void MidiMessageBuilderTests::TestBuildMixedDatasetPayloadMessage()
 
     auto ump = MidiMessageBuilder::BuildMixedDataSetChunkDataMessage(
         MidiClock::Now(),
-        group,
+        MidiGroup(group),
         mdsId,
         0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E
     );
