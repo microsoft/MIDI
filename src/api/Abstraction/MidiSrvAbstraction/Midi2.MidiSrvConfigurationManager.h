@@ -20,9 +20,8 @@ public:
     STDMETHOD(Cleanup)();
 
 
-    STDMETHOD(GetAbstractionList(BSTR* AbstractionListJson));
-
-    STDMETHOD(GetTransformList(BSTR* TransformListJson));
+    STDMETHOD(GetAbstractionList(_Out_ BSTR* AbstractionListJson));
+    STDMETHOD(GetTransformList(_Out_ BSTR* TransformListJson));
 
 private:
     std::unique_ptr<CMidi2MidiSrv> m_MidiSrv;

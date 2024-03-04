@@ -45,6 +45,9 @@
     <ClCompile Include="Midi2.KSMidiPluginMetadataProvider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="AbstractionState.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Midi2KSAbstraction.idl">
@@ -95,6 +98,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Midi2.KSMidiPluginMetadataProvider.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AbstractionState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

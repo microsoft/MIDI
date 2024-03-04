@@ -20,7 +20,11 @@ public:
     STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJson, _In_ BOOL IsFromConfigurationFile, _Out_ BSTR* response));
     STDMETHOD(Cleanup)();
 
+    // internal method called after endpoint creation
+    HRESULT ApplyConfigFileUpdatesForEndpoint(_In_ std::wstring endpointSearchKeysJson);
+
 private:
+//    std::vector<std::unique_ptr<ConfigUpdateForEndpoint>> m_CachedConfigurationUpdates{};
 
     wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
 

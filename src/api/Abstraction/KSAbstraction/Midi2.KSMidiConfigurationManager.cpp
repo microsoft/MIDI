@@ -9,7 +9,6 @@
 
 #include "pch.h"
 
-
 _Use_decl_annotations_
 HRESULT
 CMidi2KSMidiConfigurationManager::Initialize(
@@ -27,24 +26,194 @@ CMidi2KSMidiConfigurationManager::Initialize(
 }
 
 
+// internal function called by the endpoint manager
+_Use_decl_annotations_
+HRESULT
+CMidi2KSMidiConfigurationManager::ApplyConfigFileUpdatesForEndpoint(std::wstring endpointSearchKeysJson)
+{
+    UNREFERENCED_PARAMETER(endpointSearchKeysJson);
 
 
+    //auto id = internal::NormalizeEndpointInterfaceIdWStringCopy(deviceInterfaceId);
 
+    //auto match = std::find_if(
+    //    m_CachedConfigurationUpdates.begin(),
+    //    m_CachedConfigurationUpdates.end(),
+    //    [&id](const std::unique_ptr<ConfigUpdateForEndpoint>& x) { return x->DeviceInterfaceId == id; });
+
+    //if (match != m_CachedConfigurationUpdates.end())
+    //{
+    //    return match->get();
+    //}
+    //else
+    //{
+    //    return nullptr;
+    //}
+
+
+    return S_OK;
+
+}
 
 
 _Use_decl_annotations_
 HRESULT
-CMidi2KSMidiConfigurationManager::UpdateConfiguration(LPCWSTR configurationJson, BOOL IsFromConfigurationFile, BSTR* response)
+CMidi2KSMidiConfigurationManager::UpdateConfiguration(
+    LPCWSTR ConfigurationJsonSection, 
+    BOOL IsFromConfigurationFile, 
+    BSTR* Response)
 {
-    UNREFERENCED_PARAMETER(configurationJson);
-    UNREFERENCED_PARAMETER(IsFromConfigurationFile);
+    // default to failure
+    auto responseObject = internal::BuildConfigurationResponseObject(false);
+
+    try
+    {
+        json::JsonObject jsonObject{};
+
+        if (!json::JsonObject::TryParse(winrt::to_hstring(ConfigurationJsonSection), jsonObject))
+        {
+            TraceLoggingWrite(
+                MidiKSAbstractionTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Failed to parse Configuration JSON", "message"),
+                TraceLoggingWideString(ConfigurationJsonSection, "json")
+            );
+
+            internal::JsonStringifyObjectToOutParam(responseObject, &Response);
+
+            return E_FAIL;
+        }
 
 
-    // temp. Also, client needs to free this.
-    *response = SysAllocString(L"OK");
+        // we only do updates if they are from the config file. Nothing temporary
 
-    
+        if (IsFromConfigurationFile)
+        {
+            auto updateArray = jsonObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY, nullptr);
 
+            if (updateArray != nullptr && updateArray.Size() > 0)
+            {
+                std::vector<DEVPROPERTY> endpointProperties;
+
+                auto iter = updateArray.First();
+
+                while (iter.HasCurrent())
+                {
+                    auto o = iter.Current().GetObject();
+
+                    // get the device id, Right now, the SWD is the only way to id the item. We're changing that
+                    auto swdId = o.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_SWD, L"");
+
+                    // TODO: Validate that the device is valid
+
+                    // user-supplied name
+                    if (o.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_NAME_PROPERTY))
+                    {
+                        auto val = o.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_NAME_PROPERTY);
+
+                        endpointProperties.push_back({ {PKEY_MIDI_UserSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
+                                DEVPROP_TYPE_STRING, static_cast<ULONG>((val.size() + 1) * sizeof(WCHAR)), (PVOID)val.c_str() });
+                    }
+                    else
+                    {
+                        // delete any existing property value, because it is no longer in the config
+                        endpointProperties.push_back({ {PKEY_MIDI_UserSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
+                                DEVPROP_TYPE_EMPTY, 0, nullptr });
+
+                    }
+
+                    // user-supplied description
+                    if (o.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_DESCRIPTION_PROPERTY))
+                    {
+                        auto val = o.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_DESCRIPTION_PROPERTY);
+
+                        endpointProperties.push_back({ {PKEY_MIDI_UserSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
+                                DEVPROP_TYPE_STRING, static_cast<ULONG>((val.size() + 1) * sizeof(WCHAR)), (PVOID)val.c_str() });
+                    }
+                    else
+                    {
+                        // delete any existing property value, because it is no longer in the config
+                        endpointProperties.push_back({ {PKEY_MIDI_UserSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
+                                DEVPROP_TYPE_EMPTY, 0, nullptr });
+                    }
+
+                    // user-supplied small image
+                    if (o.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_SMALL_IMAGE_PROPERTY))
+                    {
+                        auto val = o.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_SMALL_IMAGE_PROPERTY);
+
+                        endpointProperties.push_back({ {PKEY_MIDI_UserSuppliedSmallImagePath, DEVPROP_STORE_SYSTEM, nullptr},
+                                DEVPROP_TYPE_STRING, static_cast<ULONG>((val.size() + 1) * sizeof(WCHAR)), (PVOID)val.c_str() });
+                    }
+                    else
+                    {
+                        // delete any existing property value, because it is no longer in the config
+                        endpointProperties.push_back({ {PKEY_MIDI_UserSuppliedSmallImagePath, DEVPROP_STORE_SYSTEM, nullptr},
+                                DEVPROP_TYPE_EMPTY, 0, nullptr });
+                    }
+
+                    // user-supplied large image
+                    if (o.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_LARGE_IMAGE_PROPERTY))
+                    {
+                        auto val = o.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_LARGE_IMAGE_PROPERTY);
+
+                        endpointProperties.push_back({ {PKEY_MIDI_UserSuppliedLargeImagePath, DEVPROP_STORE_SYSTEM, nullptr},
+                                DEVPROP_TYPE_STRING, static_cast<ULONG>((val.size() + 1) * sizeof(WCHAR)), (PVOID)val.c_str() });
+                    }
+                    else
+                    {
+                        // delete any existing property value, because it is no longer in the config
+                        endpointProperties.push_back({ {PKEY_MIDI_UserSuppliedLargeImagePath, DEVPROP_STORE_SYSTEM, nullptr},
+                                DEVPROP_TYPE_EMPTY, 0, nullptr });
+                    }
+
+                    // set all the properties
+                    if (endpointProperties.size() > 0)
+                    {
+                        LOG_IF_FAILED(m_MidiDeviceManager->UpdateEndpointProperties(
+                            swdId.c_str(),
+                            (ULONG)endpointProperties.size(),
+                            (PVOID)endpointProperties.data()
+                        ));
+                    }
+
+                    iter.MoveNext();
+                }
+
+                responseObject.SetNamedValue(
+                    MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
+                    json::JsonValue::CreateBooleanValue(true));
+
+            }
+        }
+    }
+    catch (const std::exception& e)
+    {
+        TraceLoggingWrite(
+            MidiKSAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"std exception processing json", "message"),
+            TraceLoggingString(e.what(), "exception"),
+            TraceLoggingWideString(ConfigurationJsonSection, "json")
+        );
+    }
+    catch (...)
+    {
+        TraceLoggingWrite(
+            MidiKSAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Other exception processing json", "message"),
+            TraceLoggingWideString(ConfigurationJsonSection, "json")
+        );
+    }
+
+    internal::JsonStringifyObjectToOutParam(responseObject, &Response);
 
     return S_OK;
 

@@ -47,7 +47,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
 
-        static json::JsonObject InternalSendConfigurationJsonAndGetResponse(_In_ winrt::guid const& abstractionId, _In_ json::JsonObject const& configObject) noexcept;
+        static json::JsonObject InternalSendConfigurationJsonAndGetResponse(
+            _In_ winrt::guid const& abstractionId, 
+            _In_ json::JsonObject const& configObject,
+            _In_ bool const isFromConfigurationFile) noexcept;
 
     private:
 

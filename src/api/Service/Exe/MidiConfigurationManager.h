@@ -20,8 +20,7 @@ public:
 
     HRESULT Initialize();
 
-
-
+    HRESULT LoadCurrentConfigurationFile();
 
 
     // given a JSON object with create/update/remove child keys, 
@@ -53,14 +52,18 @@ public:
         _Out_ BSTR* responseJson
         );
 
+    // Uses the internal cache of config file entries and returns any matching update json for the 
+    // specified abstraction. This is needed for abstractions that create devices after the initial
+    // configuration has been read.
+    STDMETHOD(GetAndPurgeConfigFileAbstractionEndpointUpdateJsonObject)(
+        _In_ GUID abstractionId,
+        _In_ LPCWSTR searchKeyValuePairsJson,
+        _Out_ BSTR* responseJson
+    );
 
 
     // TODO: the endpoint lookup table should be maintained in memory here, and can be updated/reloaded
     // We don't want to pass a gigantic string back and forth each time, so need to just keep it live
-
-
-
-
 
     HRESULT Cleanup() noexcept;
 

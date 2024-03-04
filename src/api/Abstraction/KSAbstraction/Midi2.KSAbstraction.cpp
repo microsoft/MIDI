@@ -72,9 +72,14 @@ CMidi2KSAbstraction::Activate(
             TraceLoggingPointer(this, "this")
             );
 
-        wil::com_ptr_nothrow<IMidiEndpointManager> midiEndpointManager;
-        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSMidiEndpointManager>(&midiEndpointManager));
-        *Interface = midiEndpointManager.detach();
+
+        // check to see if this is the first time we're creating the endpoint manager. If so, create it.
+        if (AbstractionState::Current().GetEndpointManager() == nullptr)
+        {
+            AbstractionState::Current().ConstructEndpointManager();
+        }
+
+        RETURN_IF_FAILED(AbstractionState::Current().GetEndpointManager()->QueryInterface(Riid, Interface));
     }
     else if (__uuidof(IMidiAbstractionConfigurationManager) == Riid)
     {
@@ -86,11 +91,13 @@ CMidi2KSAbstraction::Activate(
             TraceLoggingPointer(this, "this")
         );
 
-        // TODO: Need to use existing endpoint manager
+        // check to see if this is the first time we're creating the endpoint manager. If so, create it.
+        if (AbstractionState::Current().GetConfigurationManager() == nullptr)
+        {
+            AbstractionState::Current().ConstructConfigurationManager();
+        }
 
-        wil::com_ptr_nothrow<IMidiAbstractionConfigurationManager> midiConfigurationManager;
-        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSMidiConfigurationManager>(&midiConfigurationManager));
-        *Interface = midiConfigurationManager.detach();
+        RETURN_IF_FAILED(AbstractionState::Current().GetConfigurationManager()->QueryInterface(Riid, Interface));
     }
 
     else if (__uuidof(IMidiServiceAbstractionPluginMetadataProvider) == Riid)

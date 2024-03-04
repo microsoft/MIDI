@@ -134,15 +134,6 @@ CMidi2MidiSrvConfigurationManager::GetTransformList(BSTR* TransformListJson)
 
 
 
-
-
-
-
-
-
-
-
-
 HRESULT
 CMidi2MidiSrvConfigurationManager::Cleanup()
 {

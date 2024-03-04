@@ -483,7 +483,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // create the abstraction object with the child creation node
 
         abstractionObject.SetNamedValue(
-            MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICES_CREATE_KEY,
+            MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY,
             endpointCreationObject);
 
         // create the main node
@@ -501,7 +501,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         // send it up
 
-        json::JsonObject responseObject = InternalSendConfigurationJsonAndGetResponse(loopbackDeviceAbstractionId, wrapperObject);
+        json::JsonObject responseObject = InternalSendConfigurationJsonAndGetResponse(loopbackDeviceAbstractionId, wrapperObject, false);
 
         // parse the results
         auto successResult = responseObject.GetNamedBoolean(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY, false);
@@ -544,7 +544,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     json::JsonObject MidiService::InternalSendConfigurationJsonAndGetResponse(
-        winrt::guid const& abstractionId, json::JsonObject const& configObject) noexcept
+        winrt::guid const& abstractionId, 
+        json::JsonObject const& configObject,
+        bool const isFromConfigurationFile
+    ) noexcept
     {
         auto iid = __uuidof(IMidiAbstractionConfigurationManager);
         winrt::com_ptr<IMidiAbstractionConfigurationManager> configManager;
@@ -588,7 +591,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             // send up the payload
 
             internal::LogInfo(__FUNCTION__, jsonPayload.c_str());
-            auto configUpdateResult = configManager->UpdateConfiguration(jsonPayload.c_str(), false, &responseString);
+            auto configUpdateResult = configManager->UpdateConfiguration(jsonPayload.c_str(), isFromConfigurationFile, &responseString);
 
             internal::LogInfo(__FUNCTION__, responseString);
 
@@ -665,7 +668,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // create the abstraction object with the child creation node
 
         abstractionObject.SetNamedValue(
-            MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICES_REMOVE_KEY,
+            MIDI_CONFIG_JSON_ENDPOINT_COMMON_REMOVE_KEY,
             endpointDeletionArray);
 
         // create the main node
@@ -685,7 +688,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         internal::LogInfo(__FUNCTION__, L"configManager->UpdateConfiguration success");
 
-        json::JsonObject responseObject = InternalSendConfigurationJsonAndGetResponse(loopbackDeviceAbstractionId, wrapperObject);
+        json::JsonObject responseObject = InternalSendConfigurationJsonAndGetResponse(loopbackDeviceAbstractionId, wrapperObject, false);
 
 
 
@@ -714,6 +717,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         
         // this initializes to a failure state, so we can just return it when we have a fail
         auto response = winrt::make_self<implementation::MidiServiceConfigurationResponse>();
+        response->InternalSetStatus(midi2::MidiServiceConfigurationResponseStatus::ErrorOther); // default
 
 
         if (configurationUpdate != nullptr)
@@ -722,22 +726,30 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 json::JsonObject responseJsonObject = InternalSendConfigurationJsonAndGetResponse(
                     configurationUpdate.TransportId(),
-                    configurationUpdate.SettingsJson()
+                    configurationUpdate.SettingsJson(),
+                    configurationUpdate.IsFromConfigurationFile()
                 );
 
+                if (responseJsonObject != nullptr)
+                {
+                    auto success = responseJsonObject.GetNamedBoolean(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY, false);
 
-
-
-                // TODO: Process return result
-
-
-
+                    if (success)
+                    {
+                        response->InternalSetStatus(midi2::MidiServiceConfigurationResponseStatus::Success);
+                    }
+                }
+                else
+                {
+                    response->InternalSetStatus(midi2::MidiServiceConfigurationResponseStatus::ErrorOther);
+                }
 
             }
             else
             {
                 internal::LogGeneralError(__FUNCTION__, L"Configuration object SettingsJson is null");
 
+                response->InternalSetStatus(midi2::MidiServiceConfigurationResponseStatus::ErrorJsonNullOrEmpty);
             }
 
             // TODO: Process the return object

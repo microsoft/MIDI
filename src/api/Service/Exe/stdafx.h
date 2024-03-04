@@ -13,8 +13,6 @@
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
-
-
 #include <winrt/Windows.Storage.h>
 #include <winrt/Windows.Storage.Streams.h>
 
@@ -57,9 +55,16 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 #include "MidiFlow.h"
 #include "MidiAbstraction.h"
 
+//#pragma push_macro("GetObject")
+#undef GetObject
+#include <winrt/Windows.Data.Json.h>
+namespace json = ::winrt::Windows::Data::Json;
+//#pragma pop_macro("GetObject")
+
 #include "json_defs.h"
 #include "json_helpers.h"
 #include "swd_helpers.h"
+#include "wstring_util.h"
 
 namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
 

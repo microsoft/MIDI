@@ -218,7 +218,6 @@ interface IMidiAbstractionConfigurationManager : IUnknown
 };
 
 
-// This is only using strings because COM doesn't understand WinRT JSON types
 
 [
     object,
@@ -228,6 +227,8 @@ interface IMidiAbstractionConfigurationManager : IUnknown
 ]
 interface IMidiServiceConfigurationManagerInterface : IUnknown
 {
+    // these parse provided json
+
     HRESULT GetAbstractionCreateActionJsonObject(
         [in] LPCWSTR sourceAbstractionJson,
         [out] BSTR* responseJson
@@ -245,6 +246,17 @@ interface IMidiServiceConfigurationManagerInterface : IUnknown
 
     HRESULT GetAbstractionMatchingEndpointJsonObject(
         [in] LPCWSTR sourceActionObjectJson,
+        [in] LPCWSTR searchKeyValuePairsJson,
+        [out] BSTR* responseJson
+    );
+
+
+    // these get cached entries from the config file. This is
+    // needed for cases when the configuration happens before
+    // the abstraction has actually created the device interface
+
+    HRESULT GetAndPurgeConfigFileAbstractionEndpointUpdateJsonObject(
+        [in] GUID abstractionId,
         [in] LPCWSTR searchKeyValuePairsJson,
         [out] BSTR* responseJson
     );

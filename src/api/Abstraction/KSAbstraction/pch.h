@@ -18,7 +18,7 @@
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
-#include <winrt/Windows.Data.Json.h>
+
 #include <wrl\module.h>
 #include <wrl\event.h>
 #include <ks.h>
@@ -30,8 +30,6 @@
 #include <wil\tracelogging.h>
 
 #include <SDKDDKVer.h>
-
-namespace json = winrt::Windows::Data::Json;
 
 
 #define _ATL_APARTMENT_THREADED
@@ -61,6 +59,11 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 #include "MidiDataFormat.h"
 #include "MidiFlow.h"
 #include "MidiAbstraction.h"
+
+
+#undef GetObject
+#include <winrt/Windows.Data.Json.h>
+namespace json = ::winrt::Windows::Data::Json;
 
 #include "json_defs.h"
 #include "json_helpers.h"
@@ -97,6 +100,10 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 #include "MidiXProc.h"
 #include "MidiKs.h"
 
+class CMidi2KSMidiEndpointManager;
+class CMidi2KSMidiConfigurationManager;
+class CMidi2KSMidiBiDi;
+class AbstractionState;
 
 #include "Midi2.KSAbstraction.h"
 #include "Midi2.KSMidi.h"
@@ -107,4 +114,5 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 #include "Midi2.KSMidiConfigurationManager.h"
 #include "Midi2.KSMidiPluginMetadataProvider.h"
 
+#include "AbstractionState.h"
 

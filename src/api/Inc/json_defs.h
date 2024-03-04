@@ -17,8 +17,6 @@
 //#define MIDI_CONFIG_JSON_ENDPOINT_USER_SUPPLIED_DESCRIPTION_PROPERTY_KEY        L"userSuppliedDescription"
 //#define MIDI_CONFIG_JSON_ENDPOINT_FORCE_SINGLE_CLIENT_PROPERTY_KEY              L"forceSingleClientOnly"
 
-//#define MIDI_CONFIG_JSON_ENDPOINT_IDENTIFIER_SWD                                L"SWD: "
-
 
 // structural
 
@@ -39,10 +37,28 @@
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_MANUFACTURER_PROPERTY                          L"manufacturer"
 
 
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_MATCH_OBJECT_KEY                               L"match"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_SWD                        L"SWD"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_VID                        L"VID"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_PID                        L"PID"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_SERIAL                     L"serial"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_PRODUCT_INSTANCE_ID        L"productInstanceId"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_STATIC_IP_ADDRESS          L"staticIPAddress"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_UDP_PORT                   L"port"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_TRANSPORT_SUPPLIED_NAME    L"transportSuppliedEndpointName"
+
+
+
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_NAME_PROPERTY                    L"userSuppliedName"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_DESCRIPTION_PROPERTY             L"userSuppliedDescription"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_SMALL_IMAGE_PROPERTY             L"userSuppliedSmallImage"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_LARGE_IMAGE_PROPERTY             L"userSuppliedLargeImage"
+
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY                                     L"create"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY                                     L"update"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_REMOVE_KEY                                     L"remove"
+
+
 
 #define MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY                    L"success"
 #define MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY                    L"message"
@@ -56,7 +72,7 @@
 #define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICES_REMOVE_ARRAY_KEY                      L"removeVirtualDevices"
 
 #define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_ASSOCIATION_ID_PROPERTY_KEY            L"associationIdentifier"
-#define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_UNIQUE_ID_MAX_LEN  32
+#define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_UNIQUE_ID_MAX_LEN                      32
 
 
 #define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_CREATED_DEVICES_ARRAY_KEY     L"createdDevices"
@@ -65,10 +81,6 @@
 
 
 // loopback MIDI (here because these can also be created via the client API)
-
-#define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICES_CREATE_KEY                           L"create"
-#define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICES_UPDATE_KEY                           L"update"
-#define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICES_REMOVE_KEY                           L"remove"
 
 #define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_A_KEY                        L"endpointA"
 #define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_B_KEY                        L"endpointB"

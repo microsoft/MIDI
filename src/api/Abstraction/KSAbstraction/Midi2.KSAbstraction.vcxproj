@@ -247,6 +247,7 @@
     </Midl>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AbstractionState.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Midi2.KSAbstraction.cpp" />
     <ClCompile Include="Midi2.KSMidi.cpp" />
@@ -267,6 +268,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AbstractionState.h" />
     <ClInclude Include="abstraction_defs.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="Midi2.KSAbstraction.h" />

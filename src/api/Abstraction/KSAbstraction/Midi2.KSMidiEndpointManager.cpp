@@ -556,10 +556,10 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
             m_MidiDeviceManager->DeleteAllEndpointInProtocolDiscoveredProperties(newDeviceInterfaceId);
 
             // TODO: load settings from the configuration JSON and update properties
-//            LOG_IF_FAILED(ApplyUserConfiguration(std::wstring(newDeviceInterfaceId)));
+ //           LOG_IF_FAILED(ApplyUserConfiguration(std::wstring(newDeviceInterfaceId)));
 
 
-            // default prototocol properties for cases when discovery is not completed
+            // default protocol properties for cases when discovery is not completed
             std::vector<DEVPROPERTY> defaultedInterfaceProperties{};
 
             defaultedInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_EndpointSupportsMidi1Protocol, DEVPROP_STORE_SYSTEM, nullptr},
@@ -571,7 +571,10 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
                     DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(devPropTrue)),&devPropTrue });
             }
 
-            m_MidiDeviceManager->UpdateEndpointProperties(newDeviceInterfaceId, (ULONG)defaultedInterfaceProperties.size(), (PVOID)defaultedInterfaceProperties.data());
+            m_MidiDeviceManager->UpdateEndpointProperties(
+                newDeviceInterfaceId, 
+                (ULONG)defaultedInterfaceProperties.size(), 
+                (PVOID)defaultedInterfaceProperties.data());
 
 
             // we only perform protocol negotiation if it's a bidirectional UMP (native) endpoint. We
