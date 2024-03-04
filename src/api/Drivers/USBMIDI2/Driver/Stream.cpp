@@ -88,7 +88,25 @@ static ACX_PROPERTY_ITEM MidiStreamProperties[] =
         &KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
         KSPROPERTY_MIDI2_SERIAL_NUMBER,
         ACX_PROPERTY_ITEM_FLAG_GET,
-        EvtMidi2SerialNumber,
+        EvtMidi2SerialNumberCallback,
+    },
+    {
+        &KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
+        KSPROPERTY_MIDI2_DEVICE_MANUFACTURER,
+        ACX_PROPERTY_ITEM_FLAG_GET,
+        EvtMidi2ManufacturerCallback,
+    },
+    {
+        &KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
+        KSPROPERTY_MIDI2_DEVICE_VID,
+        ACX_PROPERTY_ITEM_FLAG_GET,
+        EvtMidi2VIDCallback,
+    },
+    {
+        &KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
+        KSPROPERTY_MIDI2_DEVICE_PID,
+        ACX_PROPERTY_ITEM_FLAG_GET,
+        EvtMidi2PIDCallback,
     },
 };
 
@@ -580,7 +598,7 @@ EvtMidi2NativeDataFormatCallback(
     }
 
     // return the amount of buffer actually used.
-    outDataCb = sizeof(GUID);
+    outDataCb = (ULONG_PTR)sizeof(GUID);
     status = STATUS_SUCCESS;
 
     WdfRequestCompleteWithInformation(Request, status, outDataCb);
@@ -668,7 +686,7 @@ EvtMidi2GroupTerminalBlocksCallback(
     }
 
     // return the amount of buffer actually used.
-    outDataCb = minValueSize;
+    outDataCb = (ULONG_PTR)minValueSize;
     status = STATUS_SUCCESS;
 
 exit:
@@ -678,7 +696,7 @@ exit:
 _Use_decl_annotations_
 PAGED_CODE_SEG
 VOID
-EvtMidi2SerialNumber(
+EvtMidi2SerialNumberCallback(
     WDFOBJECT   Object,
     WDFREQUEST  Request
 )
@@ -739,7 +757,182 @@ EvtMidi2SerialNumber(
     );
 
     // return the amount of buffer actually used.
-    outDataCb = sizeof(GUID);
+    outDataCb = (ULONG_PTR)memoryBufferSize;
+    status = STATUS_SUCCESS;
+
+exit:
+    WdfRequestCompleteWithInformation(Request, status, outDataCb);
+}
+
+_Use_decl_annotations_
+PAGED_CODE_SEG
+VOID
+EvtMidi2ManufacturerCallback(
+    WDFOBJECT   Object,
+    WDFREQUEST  Request
+)
+{
+    NTSTATUS                    status = STATUS_NOT_SUPPORTED;
+    ACXSTREAM                   stream = (ACXSTREAM)Object;
+    ACX_REQUEST_PARAMETERS      params;
+    ULONG_PTR                   outDataCb = 0;
+    PVOID                       memoryBuffer;
+    size_t                      memoryBufferSize;
+    WCHAR                       stringNULL = 0;
+
+
+    PAGED_CODE();
+
+    ACX_REQUEST_PARAMETERS_INIT(&params);
+    AcxRequestGetParameters(Request, &params);
+
+    WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxStreamGetCircuit(stream));
+    PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
+
+    // The size of the buffer provided by the caller
+    size_t valueCb = (size_t)params.Parameters.Property.ValueCb;
+
+    if (pDevCtx->DeviceManfMemory)
+    {
+        // Get memory buffer to copy
+        memoryBuffer = WdfMemoryGetBuffer(pDevCtx->DeviceManfMemory, &memoryBufferSize);
+    }
+    else
+    {
+        // Use no string
+        memoryBuffer = (PVOID)&stringNULL;
+        memoryBufferSize = sizeof(WCHAR);
+    }
+
+    // The following is required because the buffer size
+    // is variable. If the size of the data buffer provided is 0, the
+    // required size is returned to the caller.
+    if (valueCb == 0)
+    {
+        outDataCb = (ULONG_PTR)memoryBufferSize;
+        status = STATUS_BUFFER_OVERFLOW;
+        goto exit;
+    }
+    else if (valueCb < memoryBufferSize)
+    {
+        // if a buffer was provided by the caller, but it is
+        // too small, fail.
+        outDataCb = (ULONG_PTR)memoryBufferSize;
+        status = STATUS_BUFFER_TOO_SMALL;
+        goto exit;
+    }
+
+    RtlCopyMemory(params.Parameters.Property.Value,
+        memoryBuffer,
+        memoryBufferSize
+    );
+
+    // return the amount of buffer actually used.
+    outDataCb = (ULONG_PTR)memoryBufferSize;
+    status = STATUS_SUCCESS;
+
+exit:
+    WdfRequestCompleteWithInformation(Request, status, outDataCb);
+}
+
+_Use_decl_annotations_
+PAGED_CODE_SEG
+VOID
+EvtMidi2VIDCallback(
+    WDFOBJECT   Object,
+    WDFREQUEST  Request
+)
+{
+    NTSTATUS                    status = STATUS_NOT_SUPPORTED;
+    ACXSTREAM                   stream = (ACXSTREAM)Object;
+    ACX_REQUEST_PARAMETERS      params;
+    ULONG_PTR                   outDataCb = 0;
+
+    PAGED_CODE();
+
+    ACX_REQUEST_PARAMETERS_INIT(&params);
+    AcxRequestGetParameters(Request, &params);
+
+    WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxStreamGetCircuit(stream));
+    PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
+
+    // The size of the buffer provided by the caller
+    size_t valueCb = (size_t)params.Parameters.Property.ValueCb;
+
+    // The following is required because the buffer size
+    // is variable. If the size of the data buffer provided is 0, the
+    // required size is returned to the caller.
+    if (valueCb == 0)
+    {
+        outDataCb = (ULONG_PTR)sizeof(USHORT);
+        status = STATUS_BUFFER_OVERFLOW;
+        goto exit;
+    }
+    else if (valueCb < (size_t)sizeof(USHORT))
+    {
+        // if a buffer was provided by the caller, but it is
+        // too small, fail.
+        outDataCb = (ULONG_PTR)sizeof(USHORT);
+        status = STATUS_BUFFER_TOO_SMALL;
+        goto exit;
+    }
+
+    RtlCopyMemory(params.Parameters.Property.Value, &pDevCtx->DeviceVID, sizeof(USHORT));
+
+    // return the amount of buffer actually used.
+    outDataCb = (ULONG_PTR)sizeof(USHORT);
+    status = STATUS_SUCCESS;
+
+exit:
+    WdfRequestCompleteWithInformation(Request, status, outDataCb);
+}
+
+_Use_decl_annotations_
+PAGED_CODE_SEG
+VOID
+EvtMidi2PIDCallback(
+    WDFOBJECT   Object,
+    WDFREQUEST  Request
+)
+{
+    NTSTATUS                    status = STATUS_NOT_SUPPORTED;
+    ACXSTREAM                   stream = (ACXSTREAM)Object;
+    ACX_REQUEST_PARAMETERS      params;
+    ULONG_PTR                   outDataCb = 0;
+
+    PAGED_CODE();
+
+    ACX_REQUEST_PARAMETERS_INIT(&params);
+    AcxRequestGetParameters(Request, &params);
+
+    WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxStreamGetCircuit(stream));
+    PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
+
+    // The size of the buffer provided by the caller
+    size_t valueCb = (size_t)params.Parameters.Property.ValueCb;
+
+    // The following is required because the buffer size
+    // is variable. If the size of the data buffer provided is 0, the
+    // required size is returned to the caller.
+    if (valueCb == 0)
+    {
+        outDataCb = (ULONG_PTR)sizeof(USHORT);
+        status = STATUS_BUFFER_OVERFLOW;
+        goto exit;
+    }
+    else if (valueCb < (size_t)sizeof(USHORT))
+    {
+        // if a buffer was provided by the caller, but it is
+        // too small, fail.
+        outDataCb = (ULONG_PTR)sizeof(USHORT);
+        status = STATUS_BUFFER_TOO_SMALL;
+        goto exit;
+    }
+
+    RtlCopyMemory(params.Parameters.Property.Value, &pDevCtx->DevicePID, sizeof(USHORT));
+
+    // return the amount of buffer actually used.
+    outDataCb = (ULONG_PTR)sizeof(USHORT);
     status = STATUS_SUCCESS;
 
 exit:

@@ -111,6 +111,8 @@ typedef struct _DEVICE_CONTEXT {
     // The folloiwng fileds are used to store device configuration information
     // relevant to the connected device.
     // 
+    USHORT                      DeviceVID;
+    USHORT                      DevicePID;
     WDFMEMORY                   DeviceConfigDescriptorMemory;
     WDFMEMORY                   DeviceManfMemory;
     WDFMEMORY                   DeviceProductNameMemory;

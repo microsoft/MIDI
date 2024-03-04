@@ -720,6 +720,7 @@ Return Value:
     //
     // Get other useful Driver descriptor information
     // 
+
     // Get Serial Number string as not a current simple property to get
     if (deviceDescriptor.iSerialNumber)
     {
@@ -772,6 +773,11 @@ Return Value:
             return(status);
         }
     }
+
+
+    // VID / PID
+    pDeviceContext->DeviceVID = deviceDescriptor.idVendor;
+    pDeviceContext->DevicePID = deviceDescriptor.idProduct;
 
     // Device manufacturer (as DevicePropertyManufacturer is driver manufacturer)
     if (deviceDescriptor.iManufacturer)
