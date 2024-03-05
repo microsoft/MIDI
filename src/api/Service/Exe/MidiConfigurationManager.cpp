@@ -857,7 +857,7 @@ CMidiConfigurationManager::GetAndPurgeConfigFileAbstractionEndpointUpdateJsonObj
                                     {
                                         if (updateItemMatchCriteria.HasKey(searchKey.Key()))
                                         {
-                                            if (updateItemMatchCriteria.GetNamedString(searchKey.Key()) != searchKey.Value().GetString())
+                                            if (updateItemMatchCriteria.GetNamedString(searchKey.Key()) == searchKey.Value().GetString())
                                             {
                                                 // if there's more than one key to check, this is only a partial match so far
                                                 match = true;
@@ -888,7 +888,22 @@ CMidiConfigurationManager::GetAndPurgeConfigFileAbstractionEndpointUpdateJsonObj
                                         );
 
 
-                                        internal::JsonStringifyObjectToOutParam(updateItem.GetObject(), &responseJson);
+                                        // wrap this up so it has the correct form. Updates are always an array inside an object
+
+                                        // {
+                                        //   "update":
+                                        //   [
+                                        //     { the object here }
+                                        //   ]
+                                        // }
+                                        
+                                        json::JsonArray updateArray{};
+                                        updateArray.Append(updateItem);
+
+                                        json::JsonObject wrapperObject{};
+                                        wrapperObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY, updateArray);
+
+                                        internal::JsonStringifyObjectToOutParam(wrapperObject.GetObject(), &responseJson);
 
                                         return S_OK;
                                     }

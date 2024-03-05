@@ -1152,7 +1152,15 @@ CMidiDeviceManager::ActivateEndpointInternal
 
     if (DeviceInterfaceId)
     {
-        *DeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(midiPort->DeviceInterfaceId.get()).c_str();
+        *DeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(midiPort->DeviceInterfaceId.get());
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(DeviceInterfaceId->c_str(), "created device interface id")
+        );
     }
 
     // success, transfer the midiPort to the list
@@ -1201,7 +1209,7 @@ CMidiDeviceManager::UpdateEndpointProperties
             __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Device not found"),
+            TraceLoggingWideString(L"Device not found. If the updates are from the config file, the device may not yet have been enumerated.", "message"),
             TraceLoggingWideString(DeviceInterfaceId, "device interface id"),
             TraceLoggingULong(IntPropertyCount, "property count")
         );
@@ -1228,7 +1236,7 @@ CMidiDeviceManager::UpdateEndpointProperties
                 __FUNCTION__,
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Properties set"),
+                TraceLoggingWideString(L"Properties set", "message"),
                 TraceLoggingWideString(DeviceInterfaceId, "device interface id"),
                 TraceLoggingULong(IntPropertyCount, "property count")
             );
@@ -1242,8 +1250,8 @@ CMidiDeviceManager::UpdateEndpointProperties
                 __FUNCTION__,
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingHResult(propSetHR),
-                TraceLoggingWideString(L"Error setting properties"),
+                TraceLoggingHResult(propSetHR, "hresult"),
+                TraceLoggingWideString(L"Error setting properties", "message"),
                 TraceLoggingWideString(DeviceInterfaceId, "device interface id"),
                 TraceLoggingULong(IntPropertyCount, "property count")
             );

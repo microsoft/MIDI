@@ -93,6 +93,15 @@ CMidi2KSMidiConfigurationManager::ApplyConfigFileUpdatesForEndpoint(std::wstring
 
     if (SUCCEEDED(result))
     {
+        TraceLoggingWrite(
+            MidiKSAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Updating configuration", "message"),
+            TraceLoggingWideString(endpointUpdateJsonFragment, "update json")
+        );
+
         CComBSTR updateResponse;
         updateResponse.Empty();
 
@@ -100,10 +109,25 @@ CMidi2KSMidiConfigurationManager::ApplyConfigFileUpdatesForEndpoint(std::wstring
 
         auto updateResult = UpdateConfiguration(endpointUpdateJsonFragment, true, &updateResponse);
 
+        if (FAILED(updateResult))
+        {
+            TraceLoggingWrite(
+                MidiKSAbstractionTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingHResult(updateResult, "hresult"),
+                TraceLoggingWideString(L"Configuration update failed", "message")
+            );
+        }
+
+
         return updateResult;
     }
     else
     {
+        // it's ok for there to be no config update for an endpoint, so this is not a failure
+
         TraceLoggingWrite(
             MidiKSAbstractionTelemetryProvider::Provider(),
             __FUNCTION__,

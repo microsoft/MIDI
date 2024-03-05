@@ -561,10 +561,33 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         {
             // Here we're only building search keys for the SWD id, but we need to broaden this to
             // other relevant search criteria like serial number or the original name, etc.
-            LOG_IF_FAILED(
-                AbstractionState::Current().GetConfigurationManager()->ApplyConfigFileUpdatesForEndpoint(
-                    AbstractionState::Current().GetConfigurationManager()->BuildEndpointJsonSearchKeysForSWD(newDeviceInterfaceId)
-                ));
+
+            auto jsonSearchKeys = AbstractionState::Current().GetConfigurationManager()->BuildEndpointJsonSearchKeysForSWD(newDeviceInterfaceId);
+
+            TraceLoggingWrite(
+                MidiKSAbstractionTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(jsonSearchKeys.c_str(), "jsonSearchKeys")
+            );
+
+            auto applyConfigHR = AbstractionState::Current().GetConfigurationManager()->ApplyConfigFileUpdatesForEndpoint(jsonSearchKeys);
+
+            if (FAILED(applyConfigHR))
+            {
+                TraceLoggingWrite(
+                    MidiKSAbstractionTelemetryProvider::Provider(),
+                    __FUNCTION__,
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(jsonSearchKeys.c_str(), "jsonSearchKeys"),
+                    TraceLoggingHResult(applyConfigHR, "hresult"),
+                    TraceLoggingWideString(L"Unable to apply config file update for endpoint", "message")
+                );
+
+                LOG_IF_FAILED(applyConfigHR);
+            }
 
             // we only perform protocol negotiation if it's a bidirectional UMP (native) endpoint. We
             // don't want to perform this on translated byte stream endpoints
