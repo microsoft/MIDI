@@ -60,63 +60,71 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void RefreshDeviceCollection(bool showDiagnosticsEndpoints = false)
         {
-            ObservableCollection<MidiEndpointDevicesByTransport> tempCollection = [];
-
-            // go through devices in AppState and group by parent
-
-            // pre-populate with transports
-
-            foreach (var transport in MidiService.GetInstalledTransportPlugins())
+            _dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
             {
-                var t = new MidiEndpointDevicesByTransport();
-                t.Transport = transport;
+                System.Diagnostics.Debug.WriteLine("Begin RefreshDeviceCollection");
 
-                tempCollection.Add(t);
-            }
+                ObservableCollection<MidiEndpointDevicesByTransport> tempCollection = [];
 
-            // now get all the endpoint devices and put them in groups by transport
+                // go through devices in AppState and group by parent
 
-            foreach (var endpointDevice in AppState.Current.MidiEndpointDeviceWatcher.EnumeratedEndpointDevices.Values)
-            {
-                // Get the transport
+                // pre-populate with transports
 
-                var transportId = endpointDevice.TransportId;
-
-                var parentTransport = tempCollection.Where(x => x.Transport.Id == transportId).FirstOrDefault();
-
-                // add this device to the transport's collection
-                if (parentTransport != null)
+                foreach (var transport in MidiService.GetInstalledTransportPlugins())
                 {
-                    parentTransport.EndpointDevices.Add(endpointDevice);
+                    var t = new MidiEndpointDevicesByTransport();
+                    t.Transport = transport;
+
+                    tempCollection.Add(t);
                 }
 
-            }
+                // now get all the endpoint devices and put them in groups by transport
 
-
-            // Only show relevant transports. Either they have children, or support
-            // creating a runtime through the settings application
-
-            MidiEndpointDevicesByTransport.Clear();
-
-            foreach (var item in tempCollection.OrderBy(x => x.Transport.Name))
-            {
-                // TODO: this is a hack. Probably shouldn't be using the mnemonic directly
-                // Instead, need a transport properly for purpose like we have with endpoints
-                if (item.Transport.Mnemonic == "DIAG")
+                foreach (var endpointDevice in AppState.Current.MidiEndpointDeviceWatcher.EnumeratedEndpointDevices.Values)
                 {
-                    if (showDiagnosticsEndpoints)
+                    // Get the transport
+
+                    var transportId = endpointDevice.TransportId;
+
+                    var parentTransport = tempCollection.Where(x => x.Transport.Id == transportId).FirstOrDefault();
+
+                    // add this device to the transport's collection
+                    if (parentTransport != null)
+                    {
+                        parentTransport.EndpointDevices.Add(endpointDevice);
+                    }
+
+                }
+
+
+                // Only show relevant transports. Either they have children, or support
+                // creating a runtime through the settings application
+
+                MidiEndpointDevicesByTransport.Clear();
+
+                foreach (var item in tempCollection.OrderBy(x => x.Transport.Name))
+                {
+                    // TODO: this is a hack. Probably shouldn't be using the mnemonic directly
+                    // Instead, need a transport properly for purpose like we have with endpoints
+                    if (item.Transport.Mnemonic == "DIAG")
+                    {
+                        if (showDiagnosticsEndpoints)
+                        {
+                            MidiEndpointDevicesByTransport.Add(item);
+                        }
+                    }
+                    else if (item.EndpointDevices.Count > 0 || item.Transport.IsRuntimeCreatableBySettings)
                     {
                         MidiEndpointDevicesByTransport.Add(item);
                     }
                 }
-                else if (item.EndpointDevices.Count > 0 || item.Transport.IsRuntimeCreatableBySettings)
-                {
-                    MidiEndpointDevicesByTransport.Add(item);
-                }
-            }
+
+
+                System.Diagnostics.Debug.WriteLine("Completed RefreshDeviceCollection");
 
 
 
+            });
 
         }
 
@@ -129,7 +137,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void OnNavigatedTo(object parameter)
         {
-            RefreshDeviceCollection();
+            //RefreshDeviceCollection();
         }
     }
 }

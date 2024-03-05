@@ -291,4 +291,10 @@
   <data name="PluginsTransportPage_Description.Text" xml:space="preserve">
     <value>This page lists the full set of transport plugins installed and recognized by Windows MIDI Services on this PC. For information on the endpoint devices enumerated by these transport plugins, see the Devices page.</value>
   </data>
+  <data name="HomePage_Description.Text" xml:space="preserve">
+    <value>Windows MIDI Services Dashboard</value>
+  </data>
+  <data name="Shell_Home.Content" xml:space="preserve">
+    <value>Home</value>
+  </data>
 </root>

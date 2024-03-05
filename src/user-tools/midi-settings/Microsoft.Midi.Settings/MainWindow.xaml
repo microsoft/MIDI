@@ -9,6 +9,6 @@
     mc:Ignorable="d">
 
     <Window.SystemBackdrop>
-        <MicaBackdrop Kind="BaseAlt" />
+        <MicaBackdrop Kind="Base" />
     </Window.SystemBackdrop>
 </Window>

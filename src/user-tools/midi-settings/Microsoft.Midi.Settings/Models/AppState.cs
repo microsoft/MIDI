@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -33,6 +34,17 @@ public class AppState
         }
     }
 
+
+    public string GetCurrentSetupFileName()
+    {
+        // read from registry
+
+        var val = (string)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows MIDI Services", "CurrentConfig", "")!;
+
+        return val;
+    }
+
+
     public MidiEndpointDeviceWatcher MidiEndpointDeviceWatcher
     {
         get
@@ -41,11 +53,6 @@ public class AppState
         }
     }
 
-
-    public IList<MidiServiceTransportPluginInfo> TransportPlugins
-    {
-        get { return MidiService.GetInstalledTransportPlugins(); }
-    }
 
     private void StartDeviceWatcher(bool includeAll)
     {

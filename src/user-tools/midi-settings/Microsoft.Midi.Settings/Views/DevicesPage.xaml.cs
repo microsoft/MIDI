@@ -19,6 +19,8 @@ using Microsoft.Midi.Settings.ViewModels;
 //using Microsoft.Midi.Settings.SdkMock;
 //using Microsoft.Midi.Settings.SdkMock.TransportClientSdk;
 using Microsoft.Midi.Settings.Models;
+using CommunityToolkit.WinUI.Controls;
+
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -40,7 +42,22 @@ namespace Microsoft.Midi.Settings.Views
         {
             ViewModel = App.GetService<DevicesViewModel>();
 
+            Loaded += DevicesPage_Loaded;
+
             InitializeComponent();
+        }
+
+        private void DevicesPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            ViewModel.RefreshDeviceCollection();
+        }
+
+
+
+        // work around WinUI binding bug
+        private void EndpointSettingsCard_Loaded(object sender, RoutedEventArgs e)
+        {
+            ((SettingsCard)sender).Command = ViewModel.ViewDeviceDetailsCommand;
         }
     }
 }

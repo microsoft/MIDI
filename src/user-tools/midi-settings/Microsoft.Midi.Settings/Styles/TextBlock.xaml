@@ -26,9 +26,26 @@
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         <Setter Property="TextWrapping" Value="NoWrap" />
     </Style>
-    
-    
-    
+
+
+    <Style x:Key="HomeCardHeaderTitleStyle" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontSize" Value="{StaticResource MediumLargeFontSize}" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="TextWrapping" Value="NoWrap" />
+    </Style>
+
+    <Style x:Key="HomeCardHeaderDescriptionStyle" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="FontSize" Value="{StaticResource MediumSmallFontSize}" />
+        <Setter Property="Margin" Value="0,6,0,6" />
+        <Setter Property="TextTrimming" Value="None" />
+        <Setter Property="TextWrapping" Value="WrapWholeWords" />
+    </Style>
+
+
 
     <Style x:Key="SmallPropertyLabel" TargetType="TextBlock">
         <Setter Property="VerticalAlignment" Value="Center" />

@@ -50,23 +50,23 @@
                                                        Margin="3">
                                 <controls:SettingsExpander.Header>
                                     <StackPanel>
-                                        <TextBlock Text="{x:Bind Transport.Name}"/>
-                                        <TextBlock Text="{x:Bind Transport.Description}"/>
+                                        <TextBlock Text="{x:Bind Transport.Name}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                        <TextBlock Text="{x:Bind Transport.Description}" Style="{StaticResource SmallPlainPropertyValue}"/>
                                     </StackPanel>
                                 </controls:SettingsExpander.Header>
 
                                 <controls:SettingsExpander.ItemTemplate>
                                     <DataTemplate x:DataType="midi2:MidiEndpointDeviceInformation">
                                         <controls:SettingsCard IsClickEnabled="True"
-                                                               Command="{Binding Path=ViewModel.ViewDeviceDetailsCommand, ElementName=MidiDevicesPage}" 
-                                                               CommandParameter="{Binding}">
+                                                               CommandParameter="{ x:Bind }"
+                                                               Loaded="EndpointSettingsCard_Loaded">
                                             <controls:SettingsCard.Header>
-                                                <TextBlock Text="{x:Bind Name}" />
+                                                <TextBlock Text="{x:Bind Name}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
                                             </controls:SettingsCard.Header>
                                             <controls:SettingsCard.Description>
                                                 <StackPanel Orientation="Vertical">
-                                                    <TextBlock Text="{x:Bind TransportSuppliedDescription}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
-                                                    <TextBlock Text="{x:Bind UserSuppliedDescription}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                                    <TextBlock Text="{x:Bind TransportSuppliedDescription}" Style="{StaticResource SmallPlainPropertyValue}"/>
+                                                    <TextBlock Text="{x:Bind UserSuppliedDescription}" Style="{StaticResource SmallPlainPropertyValue}"/>
                                                 </StackPanel>
                                             </controls:SettingsCard.Description>
 

@@ -22,7 +22,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         }
 
-        public ObservableCollection<Midi1ParentDeviceInformation> Midi1Devices { get; } = new ObservableCollection<Midi1ParentDeviceInformation>();
+        private List<Midi1ParentDeviceInformation> UnsortedMidi1Devices { get; } = [];
+        public ObservableCollection<Midi1ParentDeviceInformation> Midi1Devices { get; } = [];
 
 
         public void OnNavigatedFrom()
@@ -145,7 +146,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             //    DumpProperties(device);
 
-            string containerId = actualDevice.Properties.GetValueOrDefault("System.Devices.ContainerId", Guid.Empty).ToString();
+            string containerId = actualDevice.Properties.GetValueOrDefault("System.Devices.ContainerId", Guid.Empty).ToString()!;
             string parentId = (string)actualDevice.Properties.GetValueOrDefault("System.Devices.Parent", string.Empty);
 
             Midi1ParentDeviceInformation? parent = null;
@@ -157,7 +158,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                 System.Diagnostics.Debug.WriteLine("ParentId = " + parentId);
 
                 // parent was specified, so use that
-                parent = Midi1Devices.Where(device => device.Id == parentId).FirstOrDefault();
+                parent = UnsortedMidi1Devices.Where(device => device.Id == parentId).FirstOrDefault();
 
                 if (parent == null)
                 {
@@ -185,7 +186,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                         parent.Name = unknownParentName;
                     }
 
-                    Midi1Devices.Add(parent);
+                    UnsortedMidi1Devices.Add(parent);
                 }
             }
             else if (containerId != systemContainerId)
@@ -194,7 +195,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 System.Diagnostics.Debug.WriteLine("ContainerId = " + containerId);
 
-                parent = Midi1Devices.Where(device => device.Id == containerId).FirstOrDefault();
+                parent = UnsortedMidi1Devices.Where(device => device.Id == containerId).FirstOrDefault();
 
                 if (parent == null)
                 {
@@ -211,7 +212,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                         System.Diagnostics.Debug.WriteLine("Couldn't find parent container with id " + containerId);
                     }
 
-                    Midi1Devices.Add(parent);
+                    UnsortedMidi1Devices.Add(parent);
                 }
             }
             else if (containerId == systemContainerId)
@@ -220,14 +221,14 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 System.Diagnostics.Debug.WriteLine("ContainerId = " + containerId);
 
-                parent = Midi1Devices.Where(device => device.Id == containerId).FirstOrDefault();
+                parent = UnsortedMidi1Devices.Where(device => device.Id == containerId).FirstOrDefault();
 
                 if (parent == null)
                 {
                     parent = new Midi1ParentDeviceInformation() { Id = containerId };
                     parent.Name = localSystemName;
 
-                    Midi1Devices.Add(parent);
+                    UnsortedMidi1Devices.Add(parent);
                 }
             }
 
@@ -236,7 +237,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private async void EnumerateDevices()
         {
-            Midi1Devices.Clear();
+            UnsortedMidi1Devices.Clear();
 
             // input devices
 
@@ -246,19 +247,17 @@ namespace Microsoft.Midi.Settings.ViewModels
             {
                 foreach (var device in inputDevices)
                 {
-#pragma warning disable 8602, 8601, 8604
-                    var parent = await GetMidiDeviceParentAsync(device.Properties.GetValueOrDefault("System.Devices.DeviceInstanceId", string.Empty).ToString());
+                    var parent = await GetMidiDeviceParentAsync(device.Properties.GetValueOrDefault("System.Devices.DeviceInstanceId", string.Empty).ToString()!);
 
                     var port = new Midi1PortInformation()
                     {
-                        ContainerId = parent.Id,
+                        ContainerId = parent!.Id,
                         Id = device.Id,
                         Name = device.Name,
                         PortDirection = Midi1PortDirection.Input,
-                        DeviceInstanceId = device.Properties.GetValueOrDefault("System.Devices.DeviceInstanceId", string.Empty).ToString()
+                        DeviceInstanceId = device.Properties.GetValueOrDefault("System.Devices.DeviceInstanceId", string.Empty).ToString()!
 
                     };
-#pragma warning restore 8602, 8601, 8604
 
                     parent.Ports.Add(port);
 
@@ -272,24 +271,30 @@ namespace Microsoft.Midi.Settings.ViewModels
             {
                 foreach (var device in outputDevices)
                 {
-#pragma warning disable 8602, 8601, 8604
-                    var parent = await GetMidiDeviceParentAsync(device.Properties.GetValueOrDefault("System.Devices.DeviceInstanceId", string.Empty).ToString());
+                    var parent = await GetMidiDeviceParentAsync(device.Properties.GetValueOrDefault("System.Devices.DeviceInstanceId", string.Empty).ToString()!);
 
                     var port = new Midi1PortInformation()
                     {
-                        ContainerId = (string.IsNullOrEmpty(parent.Id) ? string.Empty : parent.Id),
+                        ContainerId = (string.IsNullOrEmpty(parent!.Id) ? string.Empty : parent.Id),
                         Id = device.Id,
                         Name = device.Name,
                         PortDirection = Midi1PortDirection.Output,
                         DeviceInstanceId = device.Properties.GetValueOrDefault("System.Devices.DeviceInstanceId", string.Empty).ToString()
                     };
-#pragma warning restore 8602, 8601, 8604
 
                     parent.Ports.Add(port);
                 }
             }
-        }
 
+            // sort the results
+            Midi1Devices.Clear();
+            foreach (var p in UnsortedMidi1Devices.OrderBy(x=>x.Name))
+            {
+                Midi1Devices.Add(p);
+            }
+            UnsortedMidi1Devices.Clear();
+
+        }
     }
 
     public enum Midi1PortDirection

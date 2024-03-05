@@ -55,6 +55,7 @@
     <None Remove="Styles\MessageTemplates.xaml" />
     <None Remove="Views\DeviceDetailPage.xaml" />
     <None Remove="Views\DevicesPage.xaml" />
+    <None Remove="Views\HomePage.xaml" />
     <None Remove="Views\ManagementSessionsPage.xaml" />
     <None Remove="Views\PluginsProcessingPage.xaml" />
     <None Remove="Views\PluginsTransportPage.xaml" />
@@ -81,7 +82,7 @@
       <PackageReference Include="System.Management" Version="9.0.0-preview.1.24080.9" />
       <PackageReference Include="System.ServiceProcess.ServiceController" Version="9.0.0-preview.1.24080.9" />
       <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
-      <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.5-0181" />
+      <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.5-0183" />
 
       <PackageReference Include="WinUIEx" Version="2.3.4" />
 
@@ -101,6 +102,9 @@
     <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <Page Update="Views\HomePage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="Views\DeviceDetailPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>

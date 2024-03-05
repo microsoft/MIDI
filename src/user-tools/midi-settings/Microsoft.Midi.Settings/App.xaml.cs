@@ -79,8 +79,6 @@ public partial class App : Application
             services.AddTransient<ContentGridViewModel>();
             services.AddTransient<ContentGridPage>();
 
-            services.AddTransient<MainViewModel>();
-            services.AddTransient<MainPage>();
             services.AddTransient<ShellPage>();
             services.AddTransient<ShellViewModel>();
 
@@ -121,6 +119,8 @@ public partial class App : Application
             services.AddTransient<TroubleshootingPage>();
             services.AddTransient<TroubleshootingViewModel>();
 
+            services.AddTransient<HomePage>();
+            services.AddTransient<HomeViewModel>();
 
             // Configuration
             services.Configure<LocalSettingsOptions>(context.Configuration.GetSection(nameof(LocalSettingsOptions)));

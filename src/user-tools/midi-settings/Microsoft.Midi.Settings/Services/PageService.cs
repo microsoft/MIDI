@@ -21,20 +21,23 @@ public class PageService : IPageService
 
 
         Configure<ForDevelopersViewModel, ForDevelopersPage>();
-        Configure<MainViewModel, MainPage>();
+        //Configure<MainViewModel, MainPage>();
         Configure<ManagementSessionsViewModel, ManagementSessionsPage>();
         Configure<PluginsProcessingViewModel, PluginsProcessingPage>();
         Configure<PluginsTransportViewModel, PluginsTransportPage>();
         Configure<SettingsViewModel, SettingsPage>();
         Configure<SetupViewModel, SetupPage>();
         //Configure<ShellViewModel, ShellPage>();
-        Configure<ToolsConsoleViewModel, ToolsConsolePage>();
-        Configure<ToolsMonitorViewModel, ToolsMonitorPage>();
+        //Configure<ToolsConsoleViewModel, ToolsConsolePage>();
+        //Configure<ToolsMonitorViewModel, ToolsMonitorPage>();
         Configure<ToolsSysExViewModel, ToolsSysExPage>();
         Configure<ToolsTestViewModel, ToolsTestPage>();
         Configure<TroubleshootingViewModel, TroubleshootingPage>();
 
         Configure<Midi1DevicesViewModel, Midi1DevicesPage>();
+
+        Configure<HomeViewModel, HomePage>();
+
     }
 
     public Type GetPageType(string key)

@@ -87,6 +87,13 @@
 
             <NavigationView.MenuItems>
 
+                <NavigationViewItem x:Uid="Shell_Home" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.HomeViewModel"
+                                    >
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe80f;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
                 <NavigationViewItemHeader x:Uid="Shell_MidiServicesNavHeader"/>
 
                 <NavigationViewItem x:Uid="Shell_Setup" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.SetupViewModel"
