@@ -281,6 +281,7 @@
     </Midl>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Midi2.DiagnosticsMidiConfigurationManager.cpp" />
     <ClCompile Include="Midi2.DiagnosticsPluginMetadataProvider.cpp" />
     <ClCompile Include="Midi2.PingMidiBidi.cpp" />
     <ClCompile Include="MidiDeviceTable.cpp" />
@@ -301,6 +302,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Midi2.DiagnosticsMidiConfigurationManager.h" />
     <ClInclude Include="Midi2.DiagnosticsPluginMetadataProvider.h" />
     <ClInclude Include="Midi2.PingMidiBidi.h" />
     <ClInclude Include="MidiLoopbackBidiDevice.h" />

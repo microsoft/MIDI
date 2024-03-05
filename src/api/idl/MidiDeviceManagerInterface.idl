@@ -40,9 +40,13 @@ typedef struct
     LPCWSTR UserSuppliedEndpointDescription;
 
     LPCWSTR UniqueIdentifier;
+    LPCWSTR ManufacturerName;
 
     MidiDataFormat SupportedDataFormats;
     BYTE NativeDataFormat;
+
+    BOOL SupportsMidi1ProtocolDefaultValue;
+    BOOL SupportsMidi2ProtocolDefaultValue;
 
     BOOL SupportsMultiClient;
     BOOL RequiresMetadataHandler;
@@ -94,9 +98,9 @@ interface IMidiDeviceManagerInterface : IUnknown
         [in, annotation("_In_")] PVOID DevPropKeys
     );
 
-    HRESULT DeleteAllEndpointInProtocolDiscoveredProperties(
-        [in] LPCWSTR DeviceInterfaceId
-    );
+    //HRESULT DeleteAllEndpointInProtocolDiscoveredProperties(
+    //    [in] LPCWSTR DeviceInterfaceId
+    //);
 
     HRESULT DeactivateEndpoint(
         [in] LPCWSTR InstanceId

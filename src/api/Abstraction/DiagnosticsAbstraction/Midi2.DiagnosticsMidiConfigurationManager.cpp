@@ -10,19 +10,20 @@
 
 #include "pch.h"
 
-_Use_decl_annotations_ 
-HRESULT 
-CMidi2BluetoothMidiConfigurationManager::Initialize(
-    GUID AbstractionId, 
+_Use_decl_annotations_
+HRESULT
+CMidi2DiagnosticsMidiConfigurationManager::Initialize(
+    GUID AbstractionId,
     IUnknown* MidiDeviceManager,
     IUnknown* MidiServiceConfigurationManagerInterface
 )
 {
     UNREFERENCED_PARAMETER(MidiServiceConfigurationManagerInterface);
+    UNREFERENCED_PARAMETER(AbstractionId);
 
 
     TraceLoggingWrite(
-        MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+        MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
@@ -31,20 +32,18 @@ CMidi2BluetoothMidiConfigurationManager::Initialize(
     RETURN_HR_IF_NULL(E_INVALIDARG, MidiDeviceManager);
     RETURN_IF_FAILED(MidiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
 
-    m_abstractionId = AbstractionId;
-
     return S_OK;
 }
 
-_Use_decl_annotations_ 
-HRESULT 
-CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
-    LPCWSTR ConfigurationJsonSection, 
-    BOOL IsFromConfigurationFile, 
+_Use_decl_annotations_
+HRESULT
+CMidi2DiagnosticsMidiConfigurationManager::UpdateConfiguration(
+    LPCWSTR ConfigurationJsonSection,
+    BOOL IsFromConfigurationFile,
     BSTR* Response)
 {
     TraceLoggingWrite(
-        MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+        MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
@@ -57,12 +56,12 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
 
     return E_NOTIMPL;
 }
- 
-HRESULT 
-CMidi2BluetoothMidiConfigurationManager::Cleanup()
+
+HRESULT
+CMidi2DiagnosticsMidiConfigurationManager::Cleanup()
 {
     TraceLoggingWrite(
-        MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+        MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")

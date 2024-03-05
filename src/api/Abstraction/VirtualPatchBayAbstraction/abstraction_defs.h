@@ -13,7 +13,7 @@
 
 #define ABSTRACTION_LAYER_GUID __uuidof(Midi2VirtualPatchBayAbstraction);
 
-
+#define TRANSPORT_MANUFACTURER L"Microsoft"
 #define TRANSPORT_MNEMONIC L"VPB"
 
 // TODO: Names should be moved to .rc for localization

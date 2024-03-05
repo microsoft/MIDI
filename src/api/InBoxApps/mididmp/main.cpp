@@ -286,5 +286,8 @@ int __cdecl main()
     }
 
 
+    OutputSectionHeader(L"end_of_file");
+
+
     RETURN_SUCCESS;
 }

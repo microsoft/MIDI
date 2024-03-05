@@ -78,7 +78,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
     // interface id
     internal::JsonStringifyObjectToOutParam(responseObject, &Response);
 
-    return S_OK;
+    return E_NOTIMPL;
 
 }
 

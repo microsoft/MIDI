@@ -361,11 +361,6 @@ std::vector<ABSTRACTIONMETADATA> CMidiConfigurationManager::GetAllEnabledTranspo
 }
 
 
-
-
-
-
-
 // this gets just the file name, not the full path
 std::wstring CMidiConfigurationManager::GetCurrentConfigurationFileName() noexcept
 {
@@ -686,6 +681,13 @@ CMidiConfigurationManager::GetAbstractionCreateActionJsonObject(
     BSTR* responseJson
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     UNREFERENCED_PARAMETER(sourceAbstractionJson);
     UNREFERENCED_PARAMETER(responseJson);
 
@@ -701,6 +703,13 @@ CMidiConfigurationManager::GetAbstractionUpdateActionJsonObject(
     BSTR* responseJson
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     UNREFERENCED_PARAMETER(sourceAbstractionJson);
     UNREFERENCED_PARAMETER(responseJson);
 
@@ -716,6 +725,13 @@ CMidiConfigurationManager::GetAbstractionRemoveActionJsonObject(
     BSTR* responseJson
     )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     UNREFERENCED_PARAMETER(sourceAbstractionJson);
     UNREFERENCED_PARAMETER(responseJson);
 
@@ -732,6 +748,14 @@ CMidiConfigurationManager::GetAbstractionMatchingEndpointJsonObject(
     BSTR* responseJson
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     UNREFERENCED_PARAMETER(sourceActionObjectJson);
     UNREFERENCED_PARAMETER(searchKeyValuePairsJson);
     UNREFERENCED_PARAMETER(responseJson);
@@ -758,18 +782,17 @@ CMidiConfigurationManager::GetAbstractionMatchingEndpointJsonObject(
 // 
 // [
 //   {
-//     "keyname0" : "value0",
+//     "keyname0" : "value0"
 //   },
 //   {
 //     "keyname1" : "value1",
-//     "keyname2" : "value2",
+//     "keyname2" : "value2"
 //   },
 //   {
 //     "keyname1" : "value1",
 //     "keyname3" : "value3",
 //     "keyname4" : "value4"
-//   },
-//   
+//   }
 // ]
 //
 _Use_decl_annotations_
@@ -780,26 +803,28 @@ CMidiConfigurationManager::GetAndPurgeConfigFileAbstractionEndpointUpdateJsonObj
     BSTR* responseJson
     )
 {
-    UNREFERENCED_PARAMETER(responseJson);
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
 
     try
     {
         auto jsonSearchKeySets = json::JsonArray::Parse(searchKeyValuePairsJson);
-
-
         auto abstractionKey = internal::GuidToString(abstractionId);
-
 
         if (m_jsonObject != nullptr)
         {
-            if (m_jsonObject.HasKey(winrt::to_hstring(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT)))
+            if (m_jsonObject.HasKey(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT))
             {
                 auto plugins = m_jsonObject.GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT);
 
                 if (plugins.HasKey(abstractionKey))
                 {
                     auto thisPlugin = plugins.GetNamedObject(abstractionKey);
-
                     auto updateList = thisPlugin.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY, json::JsonArray{});
 
                     // now, search for property matches. The search json is set up so there is an array of objects, each one
@@ -807,6 +832,14 @@ CMidiConfigurationManager::GetAndPurgeConfigFileAbstractionEndpointUpdateJsonObj
 
                     if (updateList.Size() > 0)
                     {
+                        TraceLoggingWrite(
+                            MidiSrvTelemetryProvider::Provider(),
+                            __FUNCTION__,
+                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Processing update list", "message")
+                        );
+
                         for (auto const& searchkeySet : jsonSearchKeySets)
                         {
                             auto searchkeySetObject = searchkeySet.GetObject();
@@ -846,6 +879,15 @@ CMidiConfigurationManager::GetAndPurgeConfigFileAbstractionEndpointUpdateJsonObj
 
                                     if (match)
                                     {
+                                        TraceLoggingWrite(
+                                            MidiSrvTelemetryProvider::Provider(),
+                                            __FUNCTION__,
+                                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                                            TraceLoggingPointer(this, "this"),
+                                            TraceLoggingWideString(L"Found match. Returning it", "message")
+                                        );
+
+
                                         internal::JsonStringifyObjectToOutParam(updateItem.GetObject(), &responseJson);
 
                                         return S_OK;
@@ -857,14 +899,35 @@ CMidiConfigurationManager::GetAndPurgeConfigFileAbstractionEndpointUpdateJsonObj
                     }
                 }
 
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    __FUNCTION__,
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(searchKeyValuePairsJson, "searchKeyValuePairsJson"),
+                    TraceLoggingWideString(L"No match found", "message")
+                );
+
                 // We couldn't find any matches. This is a soft error, but still needs to be reported as an error
                 return E_NOTFOUND;
             }
         }
 
     }
-    CATCH_LOG();
+    catch (...)
+    {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(searchKeyValuePairsJson, "searchKeyValuePairsJson"),
+            TraceLoggingWideString(L"Exception. Returning E_FAIL", "message")
+        );
 
+    }
+
+    
     return E_FAIL;
 
 }

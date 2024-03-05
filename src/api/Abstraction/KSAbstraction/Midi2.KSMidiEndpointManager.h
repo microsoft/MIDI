@@ -13,12 +13,12 @@ using namespace winrt::Windows::Devices::Enumeration;
 typedef class _MIDI_PIN_INFO
 {
 public:
-    std::wstring Id; // the filter InterfaceId
-    std::wstring InstanceId; // the MIDI instance id
-    std::wstring ParentInstanceId; // The instance id of the parent device
-    std::wstring Name; // friendly name for this device
-    INT32 PinId{ 0 }; // contains the pin id, for bidi it is the MidiflowOut pin id
-    INT32 PinIdIn{ 0 }; // only used for bidi, contains the MidiFlowIn pin id
+    std::wstring Id;                // the filter InterfaceId
+    std::wstring InstanceId;        // the MIDI instance id
+    std::wstring ParentInstanceId;  // The instance id of the parent device
+    std::wstring Name;              // friendly name for this device
+    INT32 PinId{ 0 };               // contains the pin id, for bidi it is the MidiflowOut pin id
+    INT32 PinIdIn{ 0 };             // only used for bidi, contains the MidiFlowIn pin id
     MidiTransport TransportCapability {MidiTransport_Invalid};
     MidiDataFormat DataFormatCapability {MidiDataFormat_Invalid};
     MidiFlow Flow{ MidiFlowOut };
@@ -32,6 +32,8 @@ public:
 
     std::wstring SerialNumber;
     std::wstring ManufacturerName;
+    UINT16 VID{ 0 };
+    UINT16 PID{ 0 };
 } MIDI_PIN_INFO, *PMIDI_PIN_INFO;
 
 class CMidi2KSMidiEndpointManager : 
@@ -45,6 +47,7 @@ public:
     STDMETHOD(Cleanup)();
 
 private:
+
     
     HRESULT OnDeviceAdded(_In_ DeviceWatcher, _In_ DeviceInformation);
     HRESULT OnDeviceRemoved(_In_ DeviceWatcher, _In_ DeviceInformationUpdate);

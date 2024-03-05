@@ -88,6 +88,7 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 #include "MidiDefs.h"
 #include "MidiXProc.h"
 
+class CMidi2DiagnosticsMidiConfigurationManager;
 
 //#include "MidiLoopbackDevice.h"
 #include "MidiLoopbackBidiDevice.h"
@@ -101,9 +102,9 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 //#include "Midi2.LoopbackMidiIn.h"
 //#include "Midi2.LoopbackMidiOut.h"
 #include "Midi2.LoopbackMidiBiDi.h"
-
 #include "Midi2.PingMidiBiDi.h"
 
+#include "Midi2.DiagnosticsMidiConfigurationManager.h"
 
 #include "MidiDeviceTable.h"
 

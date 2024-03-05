@@ -15,6 +15,7 @@
 
 
 #define TRANSPORT_MNEMONIC L"DIAG"
+#define TRANSPORT_MANUFACTURER L"Microsoft"
 
 // TODO: Names should be moved to .rc for localization
 

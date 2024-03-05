@@ -72,6 +72,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring TransportMnemonic() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_TransportMnemonic, L""); }
 
         winrt::hstring TransportSuppliedSerialNumber() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_SerialNumber, L"");}
+        uint16_t TransportSuppliedVendorId() const noexcept { return GetUInt16Property(STRING_PKEY_MIDI_UsbVID, 0); }
+        uint16_t TransportSuppliedProductId() const noexcept { return GetUInt16Property(STRING_PKEY_MIDI_UsbPID, 0); }
         winrt::hstring ManufacturerName() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_ManufacturerName, L""); }
 
         bool SupportsMultiClient() const noexcept { return GetBoolProperty(STRING_PKEY_MIDI_SupportsMulticlient, true); }

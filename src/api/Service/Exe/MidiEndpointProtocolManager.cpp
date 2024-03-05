@@ -166,13 +166,6 @@ _Use_decl_annotations_
 HRESULT
 CMidiEndpointProtocolManager::Callback(PVOID Data, UINT Size, LONGLONG Position, LONGLONG Context)
 {
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
-    );
-
     UNREFERENCED_PARAMETER(Position);
     UNREFERENCED_PARAMETER(Context);
 
@@ -191,32 +184,65 @@ CMidiEndpointProtocolManager::Callback(PVOID Data, UINT Size, LONGLONG Position,
                 switch (messageStatus)
                 {
                 case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_INFO_NOTIFICATION:
-                    OutputDebugString(__FUNCTION__ L" - MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_INFO_NOTIFICATION\n");
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        __FUNCTION__,
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Received Endpoint Info Notification", "message")
+                    );
+
                     m_currentWorkItem.TaskEndpointInfoReceived = true;
                     m_currentWorkItem.DeclaredFunctionBlockCount = internal::GetEndpointInfoNotificationNumberOfFunctionBlocksFromSecondWord(ump.word1);
 
                     RequestAllFunctionBlocks();
-
                     break;
 
                 case MIDI_STREAM_MESSAGE_STATUS_DEVICE_IDENTITY_NOTIFICATION:
-                    OutputDebugString(__FUNCTION__ L" - MIDI_STREAM_MESSAGE_STATUS_DEVICE_IDENTITY_NOTIFICATION\n");
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        __FUNCTION__,
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Received Device Identity Notification", "message")
+                    );
+
                     m_currentWorkItem.TaskDeviceIdentityReceived = true;
                     break;
 
                 case MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_NOTIFICATION:
-                    OutputDebugString(__FUNCTION__ L" - MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_NOTIFICATION\n");
-                    ProcessStreamConfigurationRequest(ump);
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        __FUNCTION__,
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Received Stream Configuration Notification", "message")
+                    );
 
+                    ProcessStreamConfigurationRequest(ump);
                     break;
 
                 case MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_INFO_NOTIFICATION:
-                    OutputDebugString(__FUNCTION__ L" - MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_INFO_NOTIFICATION\n");
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        __FUNCTION__,
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Received Function Block Info Notification", "message")
+                    );
+
                     m_currentWorkItem.CountFunctionBlocksReceived += 1;
                     break;
 
                 case MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION:
-                    OutputDebugString(__FUNCTION__ L" - MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION\n");
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        __FUNCTION__,
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Received Function Block Name Notification", "message")
+                    );
+
                     if (internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE ||
                         internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_END)
                     {
@@ -225,7 +251,14 @@ CMidiEndpointProtocolManager::Callback(PVOID Data, UINT Size, LONGLONG Position,
                     break;
 
                 case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID_NOTIFICATION:
-                    OutputDebugString(__FUNCTION__ L" - MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID_NOTIFICATION\n");
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        __FUNCTION__,
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Received Product Instance Id Notification", "message")
+                    );
+
                     if (internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE ||
                         internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_END)
                     {
@@ -234,7 +267,14 @@ CMidiEndpointProtocolManager::Callback(PVOID Data, UINT Size, LONGLONG Position,
                     break;
 
                 case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION:
-                    OutputDebugString(__FUNCTION__ L" - MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION\n");
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        __FUNCTION__,
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Received Endpoint Name Notification", "message")
+                    );
+
                     if (internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE ||
                         internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_END)
                     {

@@ -156,6 +156,15 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_AssociatedUMP, 52);     // DEVPROP_TYPE_STRING
 #define STRING_PKEY_MIDI_SerialNumber MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"53"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_SerialNumber, 53);     // DEVPROP_TYPE_STRING
 
+// idVendor from the USB device. Used in some field-based lookups
+#define STRING_PKEY_MIDI_UsbVID MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"54"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UsbVID, 54);     // DEVPROP_TYPE_UINT16
+
+// idProduct from the USB device. Used in some field-based lookups
+#define STRING_PKEY_MIDI_UsbPID MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"55"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UsbPID, 55);     // DEVPROP_TYPE_UINT16
+
+
 
 // Major Known Endpoint Types =====================================================================
 // Starts at 100

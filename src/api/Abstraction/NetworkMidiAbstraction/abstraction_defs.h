@@ -13,7 +13,7 @@
 
 #define ABSTRACTION_LAYER_GUID __uuidof(Midi2NetworkMidiAbstraction);
 
-
+#define TRANSPORT_MANUFACTURER L"Microsoft"
 #define TRANSPORT_MNEMONIC L"UDP"
 
 // TODO: Names should be moved to .rc for localization

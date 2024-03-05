@@ -85,7 +85,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                 table.AddRow(Strings.PropertiesTablePropertyLabelSerialNumber, AnsiMarkupFormatter.EscapeString(di.TransportSuppliedSerialNumber));
                 table.AddRow(Strings.PropertiesTablePropertyLabelManufacturer, AnsiMarkupFormatter.EscapeString(di.ManufacturerName));
-                
+
+                if (di.TransportSuppliedVendorId > 0 || di.TransportSuppliedProductId > 0)
+                {
+                    table.AddRow(Strings.PropertiesTablePropertyLabelVidPid, 
+                        AnsiMarkupFormatter.EscapeString(di.TransportSuppliedVendorId.ToString("X4")
+                        + " / " + 
+                        AnsiMarkupFormatter.EscapeString(di.TransportSuppliedProductId.ToString("X4"))));
+                }
+
                 if (di.TransportSuppliedDescription != string.Empty)
                 {
                     table.AddRow(Strings.PropertiesTablePropertyLabelTransportSuppliedDescription, AnsiMarkupFormatter.EscapeString(di.TransportSuppliedDescription));

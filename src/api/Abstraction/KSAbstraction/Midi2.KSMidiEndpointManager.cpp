@@ -117,6 +117,7 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         additionalProperties,winrt::Windows::Devices::Enumeration::DeviceInformationKind::Device).get();
     deviceName = parentDeviceInfo.Name();
 
+
     hash = std::to_wstring(hasher(deviceId));
 
     std::vector<std::unique_ptr<MIDI_PIN_INFO>> newMidiPins;
@@ -142,6 +143,9 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         std::unique_ptr<WCHAR> manufacturerNameData;
         ULONG manufacturerNameDataSize{ 0 };
 
+        UINT16 deviceVID{ 0 };
+        UINT16 devicePID{ 0 };
+
         RETURN_IF_FAILED(PinPropertySimple(hFilter.get(), i, KSPROPSETID_Pin, KSPROPERTY_PIN_COMMUNICATION, &communication, sizeof(KSPIN_COMMUNICATION)));
 
         // The external connector pin representing the phsyical connection
@@ -166,6 +170,15 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         // and set that flag if we can.
         if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_CyclicUMP, &hPin)))
         {
+            TraceLoggingWrite(
+                MidiKSAbstractionTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(device.Id().c_str(), "added device"),
+                TraceLoggingWideString(L"Pin is a Cyclic UMP MIDI pin", "message")
+            );
+
             transportCapability = (MidiTransport )((DWORD) transportCapability |  (DWORD) MidiTransport_CyclicUMP);
             dataFormatCapability = ( MidiDataFormat ) ((DWORD) dataFormatCapability | (DWORD) MidiDataFormat_UMP);
 
@@ -185,7 +198,7 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
                                             &groupTerminalBlockDataSize),
                                             HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
-            // Get the serial number
+            //// Get the serial number
             //LOG_IF_FAILED_WITH_EXPECTED(PinPropertyAllocate(hPin.get(),
             //                                i,
             //                                KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
@@ -195,7 +208,7 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
             //                                HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
 
-            // TODO: Get the manufacturer name
+            //// Get the manufacturer name
             //LOG_IF_FAILED_WITH_EXPECTED(PinPropertyAllocate(hPin.get(),
             //                                i,
             //                                KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
@@ -204,6 +217,23 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
             //                                &manufacturerNameDataSize),
             //                                HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
+            //// VID iVendor
+            //LOG_IF_FAILED_WITH_EXPECTED(PinPropertySimple(hPin.get(),
+            //                                i,
+            //                                KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
+            //                                KSPROPERTY_MIDI2_DEVICE_VID,
+            //                                &deviceVID,
+            //                                sizeof(deviceVID)),
+            //                                HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
+
+            //// PID iProduct
+            //LOG_IF_FAILED_WITH_EXPECTED(PinPropertySimple(hPin.get(),
+            //                                i,
+            //                                KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
+            //                                KSPROPERTY_MIDI2_DEVICE_PID,
+            //                                &devicePID,
+            //                                sizeof(devicePID)),
+            //                                HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
             hPin.reset();
         }
@@ -239,6 +269,9 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         midiPin->Id = deviceId;
         midiPin->ParentInstanceId = deviceInstanceId;
 
+        midiPin->VID = deviceVID;
+        midiPin->PID = devicePID;
+
         // Group Terminal Blocks from the driver
 
         if (midiPin->Flow == MidiFlowOut)
@@ -256,9 +289,10 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
 
         midiPin->NativeDataFormat = nativeDataFormat;
 
-        // Serial number from the driver
 
-        if (serialNumberDataSize > 0)
+        // Serial number from the driver. Empty serials are a 1 character nul, so check for size > sizeof(WCHAR)
+
+        if (serialNumberDataSize > sizeof(WCHAR))
         {
             midiPin->SerialNumber = std::wstring(serialNumberData.get(), (size_t)(serialNumberDataSize / sizeof(WCHAR)));
 
@@ -284,9 +318,9 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
             );
         }
 
-        // Manufacturer from the driver
+        // Manufacturer from the driver. Empty manufacturer is a 1 character nul, so check for size > sizeof(WCHAR)
 
-        if (manufacturerNameDataSize > 0)
+        if (manufacturerNameDataSize > sizeof(WCHAR))
         {
             midiPin->ManufacturerName = std::wstring(manufacturerNameData.get(), (size_t)(manufacturerNameDataSize / sizeof(WCHAR)));
 
@@ -401,75 +435,68 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
     for (auto const& MidiPin : newMidiPins)
     {
         GUID KsAbstractionLayerGUID = __uuidof(Midi2KSAbstraction);
-        DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
-        DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
+        //DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
+        //DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
 
         std::vector<DEVPROPERTY> interfaceDevProperties;
-        std::vector<DEVPROPERTY> deviceDevProperties;
+        //std::vector<DEVPROPERTY> deviceDevProperties;
 
-        interfaceDevProperties.push_back({ {DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_STRING, static_cast<ULONG>((MidiPin->Name.length() + 1) * sizeof(WCHAR)), (PVOID)MidiPin->Name.c_str() });
+
+        MIDIENDPOINTCOMMONPROPERTIES commonProperties {};
+        commonProperties.AbstractionLayerGuid = KsAbstractionLayerGUID;
+        commonProperties.EndpointPurpose = MidiEndpointDevicePurposePropertyValue::NormalMessageEndpoint;
+        commonProperties.FriendlyName = MidiPin->Name.c_str();
+        commonProperties.TransportMnemonic = mnemonic.c_str();
+        commonProperties.TransportSuppliedEndpointName = MidiPin->Name.c_str();
+        commonProperties.TransportSuppliedEndpointDescription = nullptr;
+        commonProperties.UserSuppliedEndpointName = nullptr;
+        commonProperties.UserSuppliedEndpointDescription = nullptr;
+        commonProperties.UniqueIdentifier = MidiPin->SerialNumber.c_str();
+        commonProperties.ManufacturerName = MidiPin->ManufacturerName.c_str();
+        commonProperties.SupportedDataFormats = MidiPin->DataFormatCapability;
+        commonProperties.SupportsMultiClient = true;
+        commonProperties.GenerateIncomingTimestamps = true;
+
+
         interfaceDevProperties.push_back({ {DEVPKEY_KsMidiPort_KsFilterInterfaceId, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_STRING, static_cast<ULONG>((MidiPin->Id.length() + 1) * sizeof(WCHAR)), (PVOID)MidiPin->Id.c_str() });
-        interfaceDevProperties.push_back({ {PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_GUID, static_cast<ULONG>(sizeof(GUID)), (PVOID)&KsAbstractionLayerGUID });
-
         interfaceDevProperties.push_back({ {DEVPKEY_KsTransport, DEVPROP_STORE_SYSTEM, nullptr },
                 DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), (PVOID)&MidiPin->TransportCapability });
-        interfaceDevProperties.push_back({ {PKEY_MIDI_SupportedDataFormats, DEVPROP_STORE_SYSTEM, nullptr },
-                DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), (PVOID)&MidiPin->DataFormatCapability });
-        interfaceDevProperties.push_back({ {PKEY_MIDI_TransportMnemonic, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_STRING, static_cast<ULONG>((mnemonic.length() + 1) * sizeof(WCHAR)), (PVOID)mnemonic.c_str() });
 
-        interfaceDevProperties.push_back({ {PKEY_MIDI_SupportsMulticlient, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
+        // VID and PID
 
-        interfaceDevProperties.push_back({ {PKEY_MIDI_GenerateIncomingTimestamp, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
+        interfaceDevProperties.push_back({ { PKEY_MIDI_UsbVID, DEVPROP_STORE_SYSTEM, nullptr },
+                DEVPROP_TYPE_UINT16, static_cast<ULONG>(sizeof(UINT16)), (PVOID)&(MidiPin->VID) });
 
-        // Adding this here so it can later be updated in-protocol.
-        MidiDeviceIdentityProperty dummyDeviceIdentity;
-        interfaceDevProperties.push_back({ {PKEY_MIDI_DeviceIdentity, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_BINARY, static_cast<ULONG>(sizeof(dummyDeviceIdentity)), &dummyDeviceIdentity });
-
-        // default to keep us from spamming JR timestamps until they are configured
-        interfaceDevProperties.push_back({ {PKEY_MIDI_EndpointConfiguredToSendJRTimestamps, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse });
-        interfaceDevProperties.push_back({ {PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), &devPropFalse });
-
-        if (!MidiPin->SerialNumber.empty())
-        {
-            interfaceDevProperties.push_back({ {PKEY_MIDI_SerialNumber, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_STRING, static_cast<ULONG>((MidiPin->SerialNumber.length() + 1) * sizeof(WCHAR)), (PVOID)MidiPin->SerialNumber.c_str() });
-        }
-
-        if (!MidiPin->ManufacturerName.empty())
-        {
-            interfaceDevProperties.push_back({ {PKEY_MIDI_ManufacturerName, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_STRING, static_cast<ULONG>((MidiPin->ManufacturerName.length() + 1) * sizeof(WCHAR)), (PVOID)MidiPin->ManufacturerName.c_str() });
-        }
-
+        interfaceDevProperties.push_back({ { PKEY_MIDI_UsbPID, DEVPROP_STORE_SYSTEM, nullptr },
+                DEVPROP_TYPE_UINT16, static_cast<ULONG>(sizeof(UINT16)), (PVOID)&(MidiPin->PID) });
 
         if (MidiPin->NativeDataFormat != GUID_NULL)
         {
-            BYTE nativeDataFormat {0};
-
             if (MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET)
             {
-                nativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
+                // default native UMP devices to support MIDI 1.0 and MIDI 2.0 until they negotiation otherwise
+                // These properties were originally meant only for the results of protocol negotiation, but they were confusing when not set
+
+                commonProperties.NativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
+                commonProperties.RequiresMetadataHandler = true;
+                commonProperties.SupportsMidi1ProtocolDefaultValue = true;
+                commonProperties.SupportsMidi2ProtocolDefaultValue = true;
             }
             else if (MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_MIDI)
             {
-                nativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_BYTESTREAM;
+                // default bytestream devices to MIDI 1.0 protocol only
+                // These properties were originally meant only for the results of protocol negotiation, but they were confusing when not set
+
+                commonProperties.NativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_BYTESTREAM;
+                commonProperties.RequiresMetadataHandler = false;
+                commonProperties.SupportsMidi1ProtocolDefaultValue = true;
+                commonProperties.SupportsMidi2ProtocolDefaultValue = false;
             }
             else
             {
                 RETURN_IF_FAILED(E_UNEXPECTED);
             }
-
-            interfaceDevProperties.push_back({ { PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr },
-                    DEVPROP_TYPE_BYTE, static_cast<ULONG>(sizeof(BYTE)), (PVOID) &nativeDataFormat });
         }
 
         if (MidiPin->GroupTerminalBlockDataSizeOut > 0)
@@ -499,8 +526,8 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
                 DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), &(MidiPin->PinId) });
         }
 
-        deviceDevProperties.push_back({ { DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr },
-                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
+        //deviceDevProperties.push_back({ { DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr },
+        //        DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
 
         SW_DEVICE_CREATE_INFO createInfo{ 0 };
 
@@ -512,36 +539,17 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         const ULONG deviceInterfaceIdMaxSize = 255;
         wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
 
-        // TODO: Move to this structure
-        // 
-        PMIDIENDPOINTCOMMONPROPERTIES pCommonProperties = nullptr;
-        //MIDIENDPOINTCOMMONPROPERTIES commonProperties;
-        //commonProperties.AbstractionLayerGuid = m_TransportAbstractionId;
-        //commonProperties.EndpointPurpose = MidiEndpointDevicePurposePropertyValue::DiagnosticPing;
-        //commonProperties.FriendlyName = friendlyName.c_str();
-        //commonProperties.TransportMnemonic = mnemonic.c_str();
-        //commonProperties.TransportSuppliedEndpointName = endpointName.c_str();
-        //commonProperties.TransportSuppliedEndpointDescription = endpointDescription.c_str();
-        //commonProperties.UserSuppliedEndpointName = L"";
-        //commonProperties.UserSuppliedEndpointDescription = L"";
-        //commonProperties.UniqueIdentifier = UniqueId.c_str();
-        //commonProperties.SupportedDataFormats = MidiDataFormat::MidiDataFormat_UMP;
-        //commonProperties.NativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
-        //commonProperties.SupportsMultiClient = multiClient;
-        //commonProperties.RequiresMetadataHandler = requiresMetadataHandler;
-        //commonProperties.GenerateIncomingTimestamps = generateIncomingTimestamps;
-
         // log telemetry in the event activating the SWD for this pin has failed,
         // but push forward with creation for other pins.
         LOG_IF_FAILED(MidiPin->SwdCreation = m_MidiDeviceManager->ActivateEndpoint(
                                                             MidiPin->ParentInstanceId.c_str(),
                                                             MidiPin->CreateUMPOnly,
                                                             MidiPin->Flow,
-                                                            pCommonProperties,
+                                                            &commonProperties,
                                                             (ULONG) interfaceDevProperties.size(),
-                                                            (ULONG) deviceDevProperties.size(),
+                                                            (ULONG)0,
                                                             (PVOID)interfaceDevProperties.data(),
-                                                            (PVOID)deviceDevProperties.data(),
+                                                            (PVOID)nullptr,
                                                             (PVOID)&createInfo,
                                                             (LPWSTR)&newDeviceInterfaceId,
                                                             deviceInterfaceIdMaxSize));
@@ -551,31 +559,12 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
 
         if (SUCCEEDED(MidiPin->SwdCreation))
         {
-            // clear any of the endpoint-discovered properties that hung around from the last time
-            // we saw this device, if we've ever seen it.
-            m_MidiDeviceManager->DeleteAllEndpointInProtocolDiscoveredProperties(newDeviceInterfaceId);
-
-            // TODO: load settings from the configuration JSON and update properties
- //           LOG_IF_FAILED(ApplyUserConfiguration(std::wstring(newDeviceInterfaceId)));
-
-
-            // default protocol properties for cases when discovery is not completed
-            std::vector<DEVPROPERTY> defaultedInterfaceProperties{};
-
-            defaultedInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_EndpointSupportsMidi1Protocol, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(devPropTrue)),&devPropTrue });
-
-            if (MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET)
-            {
-                defaultedInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_EndpointSupportsMidi2Protocol, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(devPropTrue)),&devPropTrue });
-            }
-
-            m_MidiDeviceManager->UpdateEndpointProperties(
-                newDeviceInterfaceId, 
-                (ULONG)defaultedInterfaceProperties.size(), 
-                (PVOID)defaultedInterfaceProperties.data());
-
+            // Here we're only building search keys for the SWD id, but we need to broaden this to
+            // other relevant search criteria like serial number or the original name, etc.
+            LOG_IF_FAILED(
+                AbstractionState::Current().GetConfigurationManager()->ApplyConfigFileUpdatesForEndpoint(
+                    AbstractionState::Current().GetConfigurationManager()->BuildEndpointJsonSearchKeysForSWD(newDeviceInterfaceId)
+                ));
 
             // we only perform protocol negotiation if it's a bidirectional UMP (native) endpoint. We
             // don't want to perform this on translated byte stream endpoints
@@ -599,6 +588,17 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
             }
 
         }
+        else
+        {
+            TraceLoggingWrite(
+                MidiKSAbstractionTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingHResult(MidiPin->SwdCreation, "hresult"),
+                TraceLoggingWideString(L"Failed to activate endpoint", "message")
+            );
+        }
 
     }
 
@@ -617,6 +617,13 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
 _Use_decl_annotations_
 HRESULT CMidi2KSMidiEndpointManager::OnDeviceRemoved(DeviceWatcher, DeviceInformationUpdate device)
 {
+    TraceLoggingWrite(
+        MidiKSAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(device.Id().c_str(), "device id")
+    );
 
     // the interface is no longer active, search through our m_AvailableMidiPins to identify
     // every entry with this filter interface id, and remove the SWD and remove the pin(s) from

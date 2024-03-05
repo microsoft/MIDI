@@ -16,14 +16,10 @@ CMidi2DiagnosticsAbstraction::Activate(
     void **Interface
 )
 {
-    OutputDebugString(L"" __FUNCTION__ " Enter");
-
     RETURN_HR_IF(E_INVALIDARG, nullptr == Interface);
 
     if (__uuidof(IMidiBiDi) == Riid)
     {
-       OutputDebugString(L"" __FUNCTION__ " Activating IMidiBiDi");
-
         TraceLoggingWrite(
             MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
             __FUNCTION__ "- Midi BiDi",
@@ -38,8 +34,6 @@ CMidi2DiagnosticsAbstraction::Activate(
     }
     else if (__uuidof(IMidiEndpointManager) == Riid)
     {
-        OutputDebugString(L"" __FUNCTION__ " Activating IMidiEndpointManager");
-
         TraceLoggingWrite(
             MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
             __FUNCTION__ "- Midi Endpoint Manager",
@@ -51,6 +45,20 @@ CMidi2DiagnosticsAbstraction::Activate(
         wil::com_ptr_nothrow<IMidiEndpointManager> midiEndpointManager;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2DiagnosticsEndpointManager>(&midiEndpointManager));
         *Interface = midiEndpointManager.detach();
+    }
+    else if (__uuidof(IMidiAbstractionConfigurationManager) == Riid)
+    {
+        TraceLoggingWrite(
+            MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__ "- Midi Endpoint Manager",
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingValue(__FUNCTION__),
+            TraceLoggingPointer(this, "this")
+        );
+
+        wil::com_ptr_nothrow<IMidiAbstractionConfigurationManager> midiConfigurationManager;
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2DiagnosticsMidiConfigurationManager>(&midiConfigurationManager));
+        *Interface = midiConfigurationManager.detach();
     }
 
     else if (__uuidof(IMidiServiceAbstractionPluginMetadataProvider) == Riid)
