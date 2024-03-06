@@ -22,7 +22,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring SessionName() { return m_sessionName; }
         foundation::DateTime StartTime() { return m_startTime; }
 
-        collections::IVector<midi2::MidiServiceSessionConnectionInfo> Connections() { return m_connections; }
+        collections::IVectorView<midi2::MidiServiceSessionConnectionInfo> Connections() { return m_connections.GetView(); }
 
         void InternalInitialize(
             _In_ winrt::guid sessionId,

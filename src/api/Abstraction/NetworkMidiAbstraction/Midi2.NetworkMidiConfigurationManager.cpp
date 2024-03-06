@@ -13,9 +13,13 @@ _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiConfigurationManager::Initialize(
     GUID AbstractionId,
-    IUnknown* MidiDeviceManager
+    IUnknown* MidiDeviceManager,
+    IUnknown* MidiServiceConfigurationManagerInterface
 )
 {
+    UNREFERENCED_PARAMETER(MidiServiceConfigurationManagerInterface);
+
+
     TraceLoggingWrite(
         MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
@@ -74,7 +78,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
     // interface id
     internal::JsonStringifyObjectToOutParam(responseObject, &Response);
 
-    return S_OK;
+    return E_NOTIMPL;
 
 }
 

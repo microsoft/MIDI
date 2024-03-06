@@ -73,8 +73,12 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 #include "json_defs.h"
 #include "json_helpers.h"
 #include "swd_helpers.h"
+#include "resource_util.h"
 
 #include "MidiXProc.h"
+
+#include "MidiServicePlugin.h"
+#include "MidiServicePlugin_i.c"
 
 #include "Midi2NetworkMidiAbstraction_i.c"
 #include "Midi2NetworkMidiAbstraction.h"
@@ -105,4 +109,5 @@ class CMidi2NetworkMidiConfigurationManager;
 #include "Midi2.NetworkMidiBiDi.h"
 #include "Midi2.NetworkMidiEndpointManager.h"
 #include "Midi2.NetworkMidiConfigurationManager.h"
+#include "Midi2.NetworkMidiPluginMetadataProvider.h"
 

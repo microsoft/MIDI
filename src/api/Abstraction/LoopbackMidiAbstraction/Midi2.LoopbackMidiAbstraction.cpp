@@ -79,6 +79,23 @@ CMidi2LoopbackMidiAbstraction::Activate(
         RETURN_IF_FAILED(AbstractionState::Current().GetConfigurationManager()->QueryInterface(Riid, Interface));
     }
 
+    else if (__uuidof(IMidiServiceAbstractionPluginMetadataProvider) == Riid)
+    {
+        TraceLoggingWrite(
+            MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__ "- IMidiServiceAbstractionPluginMetadataProvider",
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingValue(__FUNCTION__),
+            TraceLoggingPointer(this, "this")
+        );
+
+        wil::com_ptr_nothrow<IMidiServiceAbstractionPluginMetadataProvider> metadataProvider;
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2LoopbackMidiPluginMetadataProvider>(&metadataProvider));
+        *Interface = metadataProvider.detach();
+    }
+
+
+
     else
     {
         return E_NOINTERFACE;

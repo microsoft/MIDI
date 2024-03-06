@@ -5,115 +5,122 @@
     x:Class="Microsoft.Midi.Settings.Views.PluginsTransportPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:Microsoft.Midi.Settings.Views"
+    xmlns:views="using:Microsoft.Midi.Settings.Views"
+    xmlns:local="using:Microsoft.Midi.Settings.ViewModels"
+    xmlns:midi2="using:Windows.Devices.Midi2"
+    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:labs="using:CommunityToolkit.Labs.WinUI"
     mc:Ignorable="d">
 
-    <Grid  x:Name="ContentArea">
-        <ScrollViewer >
-            <StackPanel Orientation="Vertical" Spacing="4">
-                <TextBlock TextWrapping="Wrap" 
-                           Margin="1,0,0,8" 
-                           Text="These are the transport plugins available on the system. Additional transports may be available here TODO LINK TO WHERE USERS CAN GET PLUGINS / STORE ETC."/>
+    <Page.Resources>
+        <ResourceDictionary>
+            <helpers:BooleanToEmojiCheckConverter x:Key="BooleanToEmojiCheckConverter" />
+        </ResourceDictionary>
+    </Page.Resources>
+    
+    
+    <Grid x:Name="ContentArea">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" x:Uid="PluginsTransportPage_Description" Margin="0,0,0,8" />
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <Grid Margin="0,0,8,0">
 
 
-                <TextBlock Text="Loaded and enabled" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
+                <ItemsControl ItemsSource="{x:Bind ViewModel.Plugins}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="midi2:MidiServiceTransportPluginInfo">
+                           
+                            <controls:SettingsCard IsClickEnabled="False" Margin="3">
+                                <controls:SettingsCard.Header>
+                                    <Grid Grid.Column="0" Margin="0,0,21,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
 
-                <labs:SettingsExpander x:Name="UsbTransportPluginSettingsExpander"
-                                   Header="USB MIDI 2.0 and 1.0 Transport"
-                                   Description="This plugin and the related driver provide USB MIDI 2.0 connectivity."
-                                   IsExpanded="True">
-                    <labs:SettingsExpander.HeaderIcon>
-                        <FontIcon Glyph="&#xE91B;" />
-                    </labs:SettingsExpander.HeaderIcon>
-                    <labs:SettingsExpander.Items>
-                        <labs:SettingsCard Header="About" 
-                                           Description="USB Driver Provided by AMEI and authored by AmeNote. Plugin by Microsoft.">
-                            <TextBlock Text="Version 1.2.7.1601, December 27, 2022" />
-                        </labs:SettingsCard>
-                    </labs:SettingsExpander.Items>
-                </labs:SettingsExpander>
+                                        <TextBlock Grid.Column="0" Grid.Row="0" Text="{x:Bind Name}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
+                                        <TextBlock Grid.Column="0" Grid.Row="1" Text="{x:Bind Description}" Style="{StaticResource SmallPlainPropertyValueWithWrap}" />
+                                        <TextBlock Grid.Column="0" Grid.Row="2" Text="{x:Bind Author}"  Style="{StaticResource SmallPlainPropertyValue}" />
 
-                <labs:SettingsExpander x:Name="NetworkTransportPluginSettingsExpander"
-                                   Header="Network MIDI 2.0 Transport"
-                                   Description="Network MIDI 2.0"
-                                   IsExpanded="True">
-                    <labs:SettingsExpander.HeaderIcon>
-                        <FontIcon Glyph="&#xE91B;" />
-                    </labs:SettingsExpander.HeaderIcon>
+                                    </Grid>
+                                </controls:SettingsCard.Header>
 
-                    <labs:SettingsExpander.Items>
-                        <labs:SettingsCard Header="About"
-                                           Description="Microsoft">
-                            <TextBlock Text="Version 1.2.9.1601, December 29, 2022" />
-                        </labs:SettingsCard>
+                                <controls:SettingsCard.Content>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <Grid Grid.Column="0" Margin="0,0,21,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
 
-                        <labs:SettingsCard Header="Options"
-                                       Description="Some description for these related options">
-                            <StackPanel Orientation="Vertical" Spacing="4">
-                                <ToggleSwitch IsOn="True" />
-                                <ToggleSwitch IsOn="False" />
-                            </StackPanel>
-                        </labs:SettingsCard>
+                                            <TextBlock Grid.Column="0" Grid.Row="0" Text="Version" Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind Version}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
-                    </labs:SettingsExpander.Items>
-                </labs:SettingsExpander>
+                                            <TextBlock Grid.Column="0" Grid.Row="1" Text="Mnemonic" Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind Mnemonic}"  Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
-                <labs:SettingsExpander x:Name="NetworkRtpTransportPluginSettingsExpander"
-                                   Header="RTP MIDI 1.0 Transport"
-                                   Description="Network / RTP MIDI 1.0, enabling MIDI 1.0 communication across the local area network."
-                                   IsExpanded="True">
-                    <labs:SettingsExpander.HeaderIcon>
-                        <FontIcon Glyph="&#xE91B;" />
-                    </labs:SettingsExpander.HeaderIcon>
+                                            <TextBlock Grid.Column="0" Grid.Row="2" Text="Id" Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind Id}"  Style="{StaticResource SmallEmphasizedPropertyValueNoTrim}" />
 
-                    <labs:SettingsExpander.Items>
-                        <labs:SettingsCard Header="About" 
-                                           Description="Microsoft">
-                            <TextBlock Text="Version 1.3.0.1601, December 30, 2022" />
-                        </labs:SettingsCard>
+                                        </Grid>
 
-                        <labs:SettingsCard Header="Option 1"
-                                       Description="Some description for this option">
-                            <ToggleSwitch IsOn="True" />
-                        </labs:SettingsCard>
+                                        <Grid Grid.Column="1">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
 
-                        <labs:SettingsCard Header="Option 2"
-                                       Description="Some description for this option">
-                            <ToggleSwitch IsOn="True" />
-                        </labs:SettingsCard>
-                    </labs:SettingsExpander.Items>
-                </labs:SettingsExpander>
+                                            <!-- TODO: The representation of this on the endpoints page needs to match order/layout/labels/etc. -->
 
-                <labs:SettingsExpander x:Name="BluetoothTransportPluginSettingsExpander"
-                                   Header="Bluetooth MIDI 1.0 Transport"
-                                   Description="Bluetooth Low Energy (BLE) MIDI 1.0"
-                                   IsExpanded="False">
-                    <labs:SettingsExpander.HeaderIcon>
-                        <FontIcon Glyph="&#xE91B;" />
-                    </labs:SettingsExpander.HeaderIcon>
+                                            <TextBlock Grid.Column="0" Grid.Row="0" Text="System Managed" Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind IsSystemManaged, Converter={StaticResource BooleanToEmojiCheckConverter}}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
-                    <labs:SettingsExpander.Items>
-                        <labs:SettingsCard Header="About" 
-                                           Description="Microsoft">
-                            <TextBlock Text="Version 1.3.1.1601, December 31, 2022" />
-                        </labs:SettingsCard>
+                                            <TextBlock Grid.Column="0" Grid.Row="1" Text="Configurable" Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind IsClientConfigurable, Converter={StaticResource BooleanToEmojiCheckConverter}}"  Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
-                        <labs:SettingsCard Header="Option 1"
-                                       Description="Some description for this option">
-                            <ToggleSwitch IsOn="True" />
-                        </labs:SettingsCard>
+                                            <TextBlock Grid.Column="0" Grid.Row="2" Text="Creatable by Apps" Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind IsRuntimeCreatableByApps, Converter={StaticResource BooleanToEmojiCheckConverter}}"  Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
-                        <labs:SettingsCard Header="Option 2"
-                                       Description="Some description for this option">
-                            <ToggleSwitch IsOn="True" />
-                        </labs:SettingsCard>
-                    </labs:SettingsExpander.Items>
-                </labs:SettingsExpander>
-                <TextBlock Text="Others available on this system" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
-            </StackPanel>
+                                            <TextBlock Grid.Column="0" Grid.Row="3" Text="Creatable by Settings" Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="1" Grid.Row="3" Text="{x:Bind IsRuntimeCreatableBySettings, Converter={StaticResource BooleanToEmojiCheckConverter}}"  Style="{StaticResource SmallEmphasizedPropertyValue}" />
+                                        </Grid>
+                                    </Grid>
+                                </controls:SettingsCard.Content>
+                            </controls:SettingsCard>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Grid>
+
         </ScrollViewer>
+
     </Grid>
 </Page>
+

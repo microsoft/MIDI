@@ -68,10 +68,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring EndpointSuppliedName() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_EndpointProvidedName, L""); }
         winrt::hstring UserSuppliedName() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_UserSuppliedEndpointName, L""); }
 
-        winrt::hstring TransportId() const noexcept { return GetGuidPropertyAsString(STRING_PKEY_MIDI_AbstractionLayer, L""); }
+        winrt::guid TransportId() const noexcept { return GetGuidProperty(STRING_PKEY_MIDI_AbstractionLayer, winrt::guid{}); }
         winrt::hstring TransportMnemonic() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_TransportMnemonic, L""); }
 
         winrt::hstring TransportSuppliedSerialNumber() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_SerialNumber, L"");}
+        uint16_t TransportSuppliedVendorId() const noexcept { return GetUInt16Property(STRING_PKEY_MIDI_UsbVID, 0); }
+        uint16_t TransportSuppliedProductId() const noexcept { return GetUInt16Property(STRING_PKEY_MIDI_UsbPID, 0); }
         winrt::hstring ManufacturerName() const noexcept { return GetStringProperty(STRING_PKEY_MIDI_ManufacturerName, L""); }
 
         bool SupportsMultiClient() const noexcept { return GetBoolProperty(STRING_PKEY_MIDI_SupportsMulticlient, true); }

@@ -25,7 +25,7 @@ Currently, in the implementation behind the scenes, the service receives each ti
 | Property | Description |
 | -------- | ----------- |
 | `ConnectionId` | The generated GUID which uniquely identifes this connection instance. This is what is provided to the `MidiSession` when disconnecting an endpoint |
-| `EndpointDeviceId` | The system-wide identifier for the device connection. This is returned through enumeration calls. |
+| `EndpointDeviceId` | The system-wide identifier for the endpoint device. This is returned through enumeration calls. |
 | `Tag` | You may use this `Tag` property to hold any additional information you wish to have associated with the connection. |
 | `IsOpen` | True if this connection is currently open. When first created, the connection is not open until the consuming code calls the `Open` method |
 | `Settings` | Settings used to create this connection. Treat this as read-only. |
@@ -43,14 +43,14 @@ Currently, in the implementation behind the scenes, the service receives each ti
 
 | Function | Description |
 | -------- | ----------- |
-| `SendMessagePacket(message)` | Send an `IMidiUniversalPacket`-implementing type such as `MidiMessage64` or a strongly-typed message class. |
-| `SendMessageStruct(timestamp, message, wordCount)` | Send a fixed-sized `MidiMessageStruct` containing `wordCount` valid words. Additional words are ignored. |
-| `SendMessageWordArray(timestamp, words, startIndex, wordCount)` | Note: Some projections will send the entire array as a copy, so this may not be the most effecient way to send messages from your language. |
-| `SendMessageWords(timestamp, word0)` | Send a single 32-bit Universal MIDI Packet as 32-bit words. This is often the most efficient way to send this type of message |
-| `SendMessageWords(timestamp, word0, word1)` | Send a single 64-bit Universal MIDI Packet as 32-bit words. This is often the most efficient way to send this type of message |
-| `SendMessageWords(timestamp, word0, word1, word2)` | Send a single 96-bit Universal MIDI Packet as 32-bit words. This is often the most efficient way to send this type of message |
-| `SendMessageWords(timestamp, word0, word1, word2, word3)` | Send a single 128-bit Universal MIDI Packet as 32-bit words. This is often the most efficient way to send this type of message |
-| `SendMessageBuffer(timestamp, buffer, byteOffset, byteCount)` | Send a single Universal MIDI Packet as bytes from a buffer. The number of bytes sent must match the size read from the first 4 bits of the data starting at the specified offset, and must be laid out correctly with the first byte corresponding to the MSB of the first word of the UMP (the word which contains hte message type). If you want to manage a chunk of buffer memory, the `IMemoryBuffer` type is the acceptable WinRT approach, and is as close as you get to sending a pointer into a buffer. |
+| `SendSingleMessagePacket(message)` | Send an `IMidiUniversalPacket`-implementing type such as `MidiMessage64` or a strongly-typed message class. |
+| `SendSingleMessageStruct(timestamp, message, wordCount)` | Send a fixed-sized `MidiMessageStruct` containing `wordCount` valid words. Additional words are ignored. |
+| `SendSingleMessageWordArray(timestamp, startIndex, wordCount, words)` | Send an array of words for a single message. Note: Some projections will send the entire array as a copy, so this may not be the most effecient way to send messages from your language. |
+| `SendSingleMessageWords(timestamp, word0)` | Send a single 32-bit Universal MIDI Packet as 32-bit words. This is often the most efficient way to send this type of message |
+| `SendSingleMessageWords(timestamp, word0, word1)` | Send a single 64-bit Universal MIDI Packet as 32-bit words. This is often the most efficient way to send this type of message |
+| `SendSingleMessageWords(timestamp, word0, word1, word2)` | Send a single 96-bit Universal MIDI Packet as 32-bit words. This is often the most efficient way to send this type of message |
+| `SendSingleMessageWords(timestamp, word0, word1, word2, word3)` | Send a single 128-bit Universal MIDI Packet as 32-bit words. This is often the most efficient way to send this type of message |
+| `SendSingleMessageBuffer(timestamp, byteOffset, byteCount, buffer)` | Send a single Universal MIDI Packet as bytes from a buffer. The number of bytes sent must match the size read from the first 4 bits of the data starting at the specified offset, and must be laid out correctly with the first byte corresponding to the MSB of the first word of the UMP (the word which contains hte message type). If you want to manage a chunk of buffer memory, the `IMemoryBuffer` type is the acceptable WinRT approach, and is as close as you get to sending a pointer into a buffer. |
 
 > Tip: In all the functions which accept a timestamp to schedule the message, **you can send a timestamp of 0 (zero) to bypass the scheduler and send the message immediately** or use the `MidiClock::TimestampConstantSendImmediately` static property. Otherwise, the provided timestamp is treated as an absolute time for when the message should be sent from the service. Note that the service-based scheduler (currently based on a `std::priority_queue`) gets less efficient when there are thousands of messages in it, so it's recommended that you not schedule too many messages at a time or too far out into the future. 
 
@@ -64,9 +64,16 @@ Finally, there's a practical limit to how many messages can be scheduled ahead o
 
 | Function | Description |
 | -------- | ----------- |
-| `SendMultipleMessagesWordList(timestamp,words)` | When supplied an `IIterable` of 32 bit unsigned integers, this sends more than one message with the same timestamp. Message words must be ordered contiguously from word-0 to word-n for each message, and the message types must be valid for the number of words for each message. If an error is encountered when sending messages, the function stops processing the list at that point and returns a failure code, even if some messages were sent successfully. |
+| `SendMultipleMessagesWordList(timestamp, words)` | When supplied an `IIterable` of 32 bit unsigned integers, this sends more than one message with the same timestamp. Message words must be ordered contiguously from word-0 to word-n for each message, and the message types must be valid for the number of words for each message. All messages are sent with the same timestamp.|
+| `SendMultipleMessagesWordArray(timestamp, startIndex, wordCount, words)` | Similar to the WordList approach, this will send multiple messages from an array, starting at the zero-based `startIndex` and continuing for `wordCount` words. The messages within that range must be valid and complete. All messages are sent with the same timestamp.|
 | `SendMultipleMessagesPacketList(messages)` | Send an `IIterable` of `IMidiUniversalPacket` messages, each with their own timestamp. |
-| `SendMultipleMessagesBuffer(buffer, byteOffset, byteCount)` | Send multiple messages using the `IMemoryBuffer` approach and a single timestamp. |
+| `SendMultipleMessagesStructList(timestamp, messages)` | Send an `IIterable` of `MidiMessageStruct` messages. All messages are sent with the same timestamp|
+| `SendMultipleMessagesStructArray(timestamp, startIndex, messageCount, messages)` | Send an an array of `MidiMessageStruct` messages, starting at `startIndex` and continuing for `messageCount` messages. All messages are sent with the same timestamp|
+| `SendMultipleMessagesBuffer(timestamp, byteOffset, byteCount, buffer)` | Send multiple messages using the `IMemoryBuffer` approach and a single timestamp. |
+
+When sending multiple messages, there is no implied all-or-nothing transaction. If an error is encountered when sending messages, the function stops processing the list at that point and returns a failure code, even if some messages were sent successfully.
+
+> Tip: To learn more about how collections are handled in WinRT, and how they may convert to constructs like `std::vector`, see the [Collections with C++/WinRT](https://learn.microsoft.com/windows/uwp/cpp-and-winrt-apis/collections) page in our documentation.
 
 ## Other Functions
 

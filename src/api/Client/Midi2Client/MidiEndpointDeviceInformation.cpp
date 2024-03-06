@@ -128,6 +128,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
         additionalProperties.Append(STRING_PKEY_MIDI_AssociatedUMP);
         additionalProperties.Append(STRING_PKEY_MIDI_ManufacturerName);
         additionalProperties.Append(STRING_PKEY_MIDI_SerialNumber);
+        additionalProperties.Append(STRING_PKEY_MIDI_UsbVID);
+        additionalProperties.Append(STRING_PKEY_MIDI_UsbPID);
+        
 
         // Major Known Endpoint Types ========================================================
         additionalProperties.Append(STRING_PKEY_MIDI_EndpointDevicePurpose);

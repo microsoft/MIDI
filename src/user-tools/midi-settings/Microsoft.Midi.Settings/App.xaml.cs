@@ -37,15 +37,15 @@ public partial class App : Application
         return service;
     }
 
-    public static Window MainWindow { get; } = new MainWindow();
+    public static WinUIEx.WindowEx MainWindow { get; } = new MainWindow();
 
     public App()
     {
         InitializeComponent();
 
         Host = Microsoft.Extensions.Hosting.Host.
-        CreateDefaultBuilder().
-        UseContentRoot(AppContext.BaseDirectory).
+            CreateDefaultBuilder().
+            UseContentRoot(AppContext.BaseDirectory).
         ConfigureServices((context, services) =>
         {
             // Default Activation Handler
@@ -79,8 +79,6 @@ public partial class App : Application
             services.AddTransient<ContentGridViewModel>();
             services.AddTransient<ContentGridPage>();
 
-            services.AddTransient<MainViewModel>();
-            services.AddTransient<MainPage>();
             services.AddTransient<ShellPage>();
             services.AddTransient<ShellViewModel>();
 
@@ -121,6 +119,8 @@ public partial class App : Application
             services.AddTransient<TroubleshootingPage>();
             services.AddTransient<TroubleshootingViewModel>();
 
+            services.AddTransient<HomePage>();
+            services.AddTransient<HomeViewModel>();
 
             // Configuration
             services.Configure<LocalSettingsOptions>(context.Configuration.GetSection(nameof(LocalSettingsOptions)));
@@ -134,6 +134,12 @@ public partial class App : Application
     {
         // TODO: Log and handle exceptions as appropriate.
         // https://docs.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.application.unhandledexception.
+
+        System.Diagnostics.EventLog.WriteEntry("Windows MIDI Services Settings", e.ToString());
+
+        // TEMP!
+        e.Handled = true;
+
     }
 
     protected async override void OnLaunched(LaunchActivatedEventArgs args)
@@ -141,5 +147,11 @@ public partial class App : Application
         base.OnLaunched(args);
 
         await App.GetService<IActivationService>().ActivateAsync(args);
+
+
+        // force construction
+        var current = AppState.Current;
+
+
     }
 }

@@ -6,7 +6,7 @@
         <Nullable>enable</Nullable>
         <RootNamespace>Microsoft.Midi.Settings</RootNamespace>
         
-        <ApplicationIcon>Assets/WindowIcon.ico</ApplicationIcon>
+        <ApplicationIcon>Assets/AppIcon.ico</ApplicationIcon>
         <ApplicationManifest>app.manifest</ApplicationManifest>
 		<Platforms>x64;arm64</Platforms>
 		<RuntimeIdentifiers>win10-x64;win10-arm64</RuntimeIdentifiers>
@@ -44,6 +44,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Content Remove="Assets\AppIcon.ico" />
+	  <Content Remove="Assets\AppIcon.png" />
 	  <Content Remove="Assets\DIN_Settings.ico" />
 	  <Content Remove="Assets\DIN_Settings.png" />
 	</ItemGroup>
@@ -55,6 +57,7 @@
     <None Remove="Styles\MessageTemplates.xaml" />
     <None Remove="Views\DeviceDetailPage.xaml" />
     <None Remove="Views\DevicesPage.xaml" />
+    <None Remove="Views\HomePage.xaml" />
     <None Remove="Views\ManagementSessionsPage.xaml" />
     <None Remove="Views\PluginsProcessingPage.xaml" />
     <None Remove="Views\PluginsTransportPage.xaml" />
@@ -73,17 +76,17 @@
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
     <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.0.240109" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0-preview.1.24080.9" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.7" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.5.240205001-preview1" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.5.240227000" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="2.0.9" />
       
-      <PackageReference Include="System.Management" Version="9.0.0-preview.1.24080.9" />
-      <PackageReference Include="System.ServiceProcess.ServiceController" Version="9.0.0-preview.1.24080.9" />
+      <PackageReference Include="System.Management" Version="8.0.0" />
+      <PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.0" />
       <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
-      <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.5-0172" />
+      <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.5-0184" />
 
-      <PackageReference Include="WinUIEx" Version="2.3.3" />
+      <PackageReference Include="WinUIEx" Version="2.3.4" />
 
 	  
     <PackageReference Include="CommunityToolkit.Common" Version="8.2.2" />
@@ -96,11 +99,32 @@
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.Midi.Settings.Core\Microsoft.Midi.Settings.Core.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="Assets\WindowIcon.ico">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 	
   <ItemGroup>
     <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Assets\AppIcon.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\AppIcon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\DIN_Settings.ico">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\DIN_Settings.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <Page Update="Views\HomePage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="Views\DeviceDetailPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -144,10 +168,6 @@
 
   <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <ProjectCapability Include="Msix" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="ViewModels\Data\" />
   </ItemGroup>
 
  

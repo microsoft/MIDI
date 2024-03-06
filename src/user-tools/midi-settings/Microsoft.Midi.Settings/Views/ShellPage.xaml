@@ -87,6 +87,13 @@
 
             <NavigationView.MenuItems>
 
+                <NavigationViewItem x:Uid="Shell_Home" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.HomeViewModel"
+                                    >
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe80f;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
                 <NavigationViewItemHeader x:Uid="Shell_MidiServicesNavHeader"/>
 
                 <NavigationViewItem x:Uid="Shell_Setup" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.SetupViewModel"
@@ -110,11 +117,11 @@
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xeda3;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem x:Uid="Shell_ToolsMonitor" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsMonitorViewModel">
+                <!--<NavigationViewItem x:Uid="Shell_ToolsMonitor" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsMonitorViewModel">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe7b3;"/>
                     </NavigationViewItem.Icon>
-                </NavigationViewItem>
+                </NavigationViewItem>-->
 
                 <NavigationViewItemHeader x:Uid="Shell_ToolsNavHeader"/>
 
@@ -128,11 +135,11 @@
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe9d9;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem x:Uid="Shell_ToolsConsole" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsConsoleViewModel">
+                <!--<NavigationViewItem x:Uid="Shell_ToolsConsole" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsConsoleViewModel">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe756;"/>
                     </NavigationViewItem.Icon>
-                </NavigationViewItem>
+                </NavigationViewItem>-->
 
                 <NavigationViewItemHeader x:Uid="Shell_PluginsNavHeader"/>
 

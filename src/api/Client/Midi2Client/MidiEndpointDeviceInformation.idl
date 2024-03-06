@@ -103,11 +103,17 @@ namespace Windows.Devices.Midi2
 
 
         // transport type
-        String TransportId{ get; };
+        Guid TransportId{ get; };
         String TransportMnemonic{ get; };
 
         // iSerialNumber from USB. This is transport-specific, but super important
         String TransportSuppliedSerialNumber{ get; };
+
+        // VID iVendor
+        UInt16 TransportSuppliedVendorId{ get; };
+
+        // PID iProduct
+        UInt16 TransportSuppliedProductId{ get; };
 
         // endpoint description supplied by the transport. This may contain most anything that is useful to the user.
         String TransportSuppliedDescription{ get; };

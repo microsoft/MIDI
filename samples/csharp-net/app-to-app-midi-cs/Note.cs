@@ -29,12 +29,12 @@ namespace MidiSample.AppToAppMidi
 
             UInt32 word1 = (UInt32)velocity << 16;
 
-            if (MidiEndpointConnection.SendMessageSucceeded(Connection.SendMessagePacket(
+            if (MidiEndpointConnection.SendMessageSucceeded(Connection.SendSingleMessagePacket(
                 midi2.MidiMessageBuilder.BuildMidi2ChannelVoiceMessage(
                     0,
-                    GroupIndex,
+                    new MidiGroup(GroupIndex),
                     midi2.Midi2ChannelVoiceMessageStatus.NoteOn,
-                    ChannelIndex,
+                    new MidiChannel(ChannelIndex),
                     index,
                     word1))))
             {
@@ -48,12 +48,12 @@ namespace MidiSample.AppToAppMidi
             UInt16 index = NoteNumber;
             index <<= 8;
 
-            if (MidiEndpointConnection.SendMessageSucceeded(Connection.SendMessagePacket(
+            if (MidiEndpointConnection.SendMessageSucceeded(Connection.SendSingleMessagePacket(
                 midi2.MidiMessageBuilder.BuildMidi2ChannelVoiceMessage(
                     0,
-                    GroupIndex,
+                    new MidiGroup(GroupIndex),
                     midi2.Midi2ChannelVoiceMessageStatus.NoteOff,
-                    ChannelIndex,
+                    new MidiChannel(ChannelIndex),
                     index,
                     0))))
             {

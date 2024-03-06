@@ -282,6 +282,7 @@
     <ClCompile Include="Midi2.NetworkMidiBidi.cpp" />
     <ClCompile Include="Midi2.NetworkMidiIn.cpp" />
     <ClCompile Include="Midi2.NetworkMidiOut.cpp" />
+    <ClCompile Include="Midi2.NetworkMidiPluginMetadataProvider.cpp" />
     <ClCompile Include="pch.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -302,6 +303,7 @@
     <ClInclude Include="Midi2.NetworkMidiBidi.h" />
     <ClInclude Include="Midi2.NetworkMidiIn.h" />
     <ClInclude Include="Midi2.NetworkMidiOut.h" />
+    <ClInclude Include="Midi2.NetworkMidiPluginMetadataProvider.h" />
     <ClInclude Include="MidiNetworkDevice.h" />
     <ClInclude Include="MidiNetworkDeviceDefinition.h" />
     <ClInclude Include="MidiNetworkDeviceTable.h" />

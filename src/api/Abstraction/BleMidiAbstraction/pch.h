@@ -80,18 +80,23 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 #include "json_defs.h"
 #include "json_helpers.h"
 #include "swd_helpers.h"
+#include "resource_util.h"
 
 #include "MidiXProc.h"
 
 
 class CMidi2BluetoothMidiConfigurationManager;
 class CMidi2BluetoothMidiEndpointManager;
+class CMidi2BluetoothMidiPluginMetadataManager;
 
 #include "strsafe.h"
 
 #include "abstraction_defs.h"
 #include "midi_timestamp.h"
 #include "ble_timestamp.h"
+
+#include "MidiServicePlugin.h"
+#include "MidiServicePlugin_i.c"
 
 #include "Midi2BluetoothMidiAbstraction_i.c"
 #include "Midi2BluetoothMidiAbstraction.h"
@@ -111,4 +116,5 @@ class CMidi2BluetoothMidiEndpointManager;
 #include "Midi2.BluetoothMidiBiDi.h"
 #include "Midi2.BluetoothMidiEndpointManager.h"
 #include "Midi2.BluetoothMidiConfigurationManager.h"
+#include "Midi2.BluetoothMidiPluginMetadataProvider.h"
 

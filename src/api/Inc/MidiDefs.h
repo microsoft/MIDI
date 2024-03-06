@@ -139,6 +139,11 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_GenerateIncomingTimestamp, 10);     // DEVPROP_T
 #define STRING_PKEY_MIDI_TransportSuppliedEndpointName MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"14"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_TransportSuppliedEndpointName, 14);     // DEVPROP_TYPE_STRING
 
+#define STRING_PKEY_MIDI_TransportSuppliedDescription MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"15"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_TransportSuppliedDescription, 15);     // DEVPROP_TYPE_STRING
+
+
+
 // USB / KS Properties ============================================================================
 // Starts at 50
 
@@ -155,6 +160,15 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_AssociatedUMP, 52);     // DEVPROP_TYPE_STRING
 // iSerialNumber for USB, but can be supplied by other endpoints as a config value or a value read from advertising
 #define STRING_PKEY_MIDI_SerialNumber MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"53"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_SerialNumber, 53);     // DEVPROP_TYPE_STRING
+
+// idVendor from the USB device. Used in some field-based lookups
+#define STRING_PKEY_MIDI_UsbVID MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"54"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UsbVID, 54);     // DEVPROP_TYPE_UINT16
+
+// idProduct from the USB device. Used in some field-based lookups
+#define STRING_PKEY_MIDI_UsbPID MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"55"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UsbPID, 55);     // DEVPROP_TYPE_UINT16
+
 
 
 // Major Known Endpoint Types =====================================================================
@@ -549,9 +563,6 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_MidiOutLatencyTicksUserOverride, 802);     // DE
 
 #define STRING_PKEY_MIDI_VirtualMidiEndpointAssociator MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"900"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_VirtualMidiEndpointAssociator, 900);     // DEVPROP_TYPE_GUID
-
-#define STRING_PKEY_MIDI_TransportSuppliedDescription MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"901"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_TransportSuppliedDescription, 901);     // DEVPROP_TYPE_STRING
 
 
 

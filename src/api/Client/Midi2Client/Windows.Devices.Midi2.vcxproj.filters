@@ -168,9 +168,6 @@
     <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
       <Filter>API\Enumeration</Filter>
     </ClCompile>
-    <ClCompile Include="ResourceManager.cpp">
-      <Filter>Internal\Resources</Filter>
-    </ClCompile>
     <ClCompile Include="MidiVirtualEndpointDeviceDefinition.cpp">
       <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
     </ClCompile>
@@ -279,9 +276,6 @@
     <ClInclude Include="resource.h">
       <Filter>Internal\Resources</Filter>
     </ClInclude>
-    <ClInclude Include="ResourceManager.h">
-      <Filter>Internal\Resources</Filter>
-    </ClInclude>
     <ClInclude Include="MidiVirtualEndpointDeviceDefinition.h">
       <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
     </ClInclude>
@@ -377,7 +371,7 @@
     <Midl Include="MidiStreamMessageBuilder.idl">
       <Filter>API\Messages\Utility</Filter>
     </Midl>
-    <Midl Include="MidiSendMessageResultEnum.idl">
+    <Midl Include="MidiSendMessageResultsEnum.idl">
       <Filter>API\Endpoints\Connections</Filter>
     </Midl>
     <Midl Include="MidiMessageStruct.idl">

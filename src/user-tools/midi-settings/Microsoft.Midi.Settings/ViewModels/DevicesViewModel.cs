@@ -12,6 +12,8 @@ using Microsoft.Midi.Settings.Contracts.ViewModels;
 using Microsoft.Midi.Settings.Models;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
+using Windows.Devices.Enumeration;
+
 
 
 //using Microsoft.Midi.Settings.SdkMock;
@@ -22,8 +24,9 @@ namespace Microsoft.Midi.Settings.ViewModels
 {
     public class DevicesViewModel : ObservableRecipient, INavigationAware
     {
-        private MidiEndpointDeviceWatcher? _watcher = null;
+
         private DispatcherQueue _dispatcherQueue;
+
 
         private INavigationService _navigationService;
 
@@ -48,129 +51,93 @@ namespace Microsoft.Midi.Settings.ViewModels
                 });
         }
 
-        public ObservableCollection<MidiEndpointDeviceInformation> MidiEndpointDevices { get; private set; } = 
-            new ObservableCollection<MidiEndpointDeviceInformation>();
-
-        public event EventHandler<MidiEndpointDeviceInformationUpdateEventArgs>? EndpointDeviceUpdated;
-
+        public ObservableCollection<MidiEndpointDevicesByTransport> MidiEndpointDevicesByTransport { get; } = [];
 
 
         // CollectionViewSource grouped by transport
 
-        
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-        private void StartDeviceWatcher(bool includeAll)
+        public void RefreshDeviceCollection(bool showDiagnosticsEndpoints = false)
         {
-            if (_watcher != null)
+            _dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
             {
-                ShutDownDeviceWatcher();
-            }
+                System.Diagnostics.Debug.WriteLine("Begin RefreshDeviceCollection");
 
-            var filter = MidiEndpointDeviceInformationFilter.AllTypicalEndpoints;
+                ObservableCollection<MidiEndpointDevicesByTransport> tempCollection = [];
 
-            if (includeAll)
-            {
-                filter |= MidiEndpointDeviceInformationFilter.IncludeDiagnosticLoopback;
-                filter |= MidiEndpointDeviceInformationFilter.IncludeDiagnosticPing;
-                filter |= MidiEndpointDeviceInformationFilter.IncludeVirtualDeviceResponder;
-            }
+                // go through devices in AppState and group by parent
 
-            _watcher = MidiEndpointDeviceWatcher.CreateWatcher(filter);
+                // pre-populate with transports
 
-            _watcher.Stopped += OnDeviceWatcherStopped;
-            _watcher.Updated += OnDeviceWatcherEndpointUpdated;
-            _watcher.Removed += OnDeviceWatcherEndpointRemoved;
-            _watcher.Added += OnDeviceWatcherEndpointAdded;
-            _watcher.EnumerationCompleted += OnDeviceWatcherEnumerationCompleted;
-
-            _watcher.Start();
-        }
-
-        private void OnDeviceWatcherEnumerationCompleted(MidiEndpointDeviceWatcher sender, object args)
-        {
-            // todo
-        }
-
-        private void OnDeviceWatcherEndpointAdded(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformation args)
-        {
-            _dispatcherQueue.TryEnqueue(() =>
-            {
-                MidiEndpointDevices.Add(args);
-            });
-        }
-
-        private void OnDeviceWatcherEndpointRemoved(MidiEndpointDeviceWatcher sender, global::Windows.Devices.Enumeration.DeviceInformationUpdate args)
-        {
-            _dispatcherQueue.TryEnqueue(() =>
-            {
-                foreach (MidiEndpointDeviceInformation info in MidiEndpointDevices)
+                foreach (var transport in MidiService.GetInstalledTransportPlugins())
                 {
-                    if (info.Id == args.Id)
+                    var t = new MidiEndpointDevicesByTransport();
+                    t.Transport = transport;
+
+                    tempCollection.Add(t);
+                }
+
+                // now get all the endpoint devices and put them in groups by transport
+
+                foreach (var endpointDevice in AppState.Current.MidiEndpointDeviceWatcher.EnumeratedEndpointDevices.Values)
+                {
+                    // Get the transport
+
+                    var transportId = endpointDevice.TransportId;
+
+                    var parentTransport = tempCollection.Where(x => x.Transport.Id == transportId).FirstOrDefault();
+
+                    // add this device to the transport's collection
+                    if (parentTransport != null)
                     {
-                        MidiEndpointDevices.Remove(info);
-                        break;
+                        parentTransport.EndpointDevices.Add(endpointDevice);
+                    }
+
+                }
+
+
+                // Only show relevant transports. Either they have children, or support
+                // creating a runtime through the settings application
+
+                MidiEndpointDevicesByTransport.Clear();
+
+                foreach (var item in tempCollection.OrderBy(x => x.Transport.Name))
+                {
+                    // TODO: this is a hack. Probably shouldn't be using the mnemonic directly
+                    // Instead, need a transport properly for purpose like we have with endpoints
+                    if (item.Transport.Mnemonic == "DIAG")
+                    {
+                        if (showDiagnosticsEndpoints)
+                        {
+                            MidiEndpointDevicesByTransport.Add(item);
+                        }
+                    }
+                    else if (item.EndpointDevices.Count > 0 || item.Transport.IsRuntimeCreatableBySettings)
+                    {
+                        MidiEndpointDevicesByTransport.Add(item);
                     }
                 }
+
+
+                System.Diagnostics.Debug.WriteLine("Completed RefreshDeviceCollection");
+
+
+
             });
+
         }
-
-        private void OnDeviceWatcherEndpointUpdated(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationUpdateEventArgs args)
-        {
-            _dispatcherQueue.TryEnqueue(() =>
-            {
-                if (EndpointDeviceUpdated != null)
-                {
-                    EndpointDeviceUpdated(sender, args);
-                }
-            });
-        }
-
-        private void OnDeviceWatcherStopped(MidiEndpointDeviceWatcher sender, object args)
-        {
-            // nothing to do.
-        }
-
-        private void ShutDownDeviceWatcher()
-        {
-            if (_watcher != null)
-            {
-                _watcher.Stop();
-
-                _watcher.Stopped -= OnDeviceWatcherStopped;
-                _watcher.Updated -= OnDeviceWatcherEndpointUpdated;
-                _watcher.Removed -= OnDeviceWatcherEndpointRemoved;
-                _watcher.Added -= OnDeviceWatcherEndpointAdded;
-
-                _watcher = null;
-            }
-        }
-
 
 
 
         public void OnNavigatedFrom()
         {
-            ShutDownDeviceWatcher();
         }
 
 
         public void OnNavigatedTo(object parameter)
         {
-            StartDeviceWatcher(true);
+            //RefreshDeviceCollection();
         }
     }
 }

@@ -74,6 +74,23 @@ CMidi2MidiSrvAbstraction::Activate(
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2MidiSrvConfigurationManager>(&config));
         *Interface = config.detach();
     }
+    
+    else if (__uuidof(IMidiServicePluginMetadataReporterInterface) == Iid)
+    {
+        TraceLoggingWrite(
+            MidiSrvAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__ "- IMidiAbstractionConfigurationManager",
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingValue(__FUNCTION__),
+            TraceLoggingPointer(this, "this")
+        );
+
+        wil::com_ptr_nothrow<IMidiServicePluginMetadataReporterInterface> metadataReporter;
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2MidiSrvConfigurationManager>(&metadataReporter));  // config manager implements this interface
+        *Interface = metadataReporter.detach();
+    }
+
+
     else if (__uuidof(IMidiSessionTracker) == Iid)
     {
         TraceLoggingWrite(

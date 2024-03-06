@@ -31,7 +31,7 @@ void MidiEndpointConnectionTests::TestSendMessageInvalidConnectionFailureReturnC
     auto connectionClosedResult = connSend.SendSingleMessageWords(0, 0x21111111);
 
     VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageFailed(connectionClosedResult));
-    VERIFY_IS_TRUE((connectionClosedResult & MidiSendMessageResult::EndpointConnectionClosedOrInvalid) == MidiSendMessageResult::EndpointConnectionClosedOrInvalid);
+    VERIFY_IS_TRUE((connectionClosedResult & MidiSendMessageResults::EndpointConnectionClosedOrInvalid) == MidiSendMessageResults::EndpointConnectionClosedOrInvalid);
 
 
     // cleanup endpoint. Technically not required as session will do it
@@ -59,7 +59,7 @@ void MidiEndpointConnectionTests::TestSendMessageValidationFailureReturnCode()
     auto badMessageTypeResult = connSend.SendSingleMessageWords(0, 0x41111111);
 
     VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageFailed(badMessageTypeResult));
-    VERIFY_IS_TRUE((badMessageTypeResult & MidiSendMessageResult::InvalidMessageTypeForWordCount) == MidiSendMessageResult::InvalidMessageTypeForWordCount);
+    VERIFY_IS_TRUE((badMessageTypeResult & MidiSendMessageResults::InvalidMessageTypeForWordCount) == MidiSendMessageResults::InvalidMessageTypeForWordCount);
 
 
     // cleanup endpoint. Technically not required as session will do it
@@ -736,7 +736,7 @@ void MidiEndpointConnectionTests::TestSendWordArrayBoundsError()
     // out of bounds
     auto result = connSend.SendSingleMessageWordArray(MidiClock::TimestampConstantSendImmediately(), 3, 2, sendBuffer);
     VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageFailed(result));
-    VERIFY_IS_TRUE((result & MidiSendMessageResult::DataIndexOutOfRange) == MidiSendMessageResult::DataIndexOutOfRange);
+    VERIFY_IS_TRUE((result & MidiSendMessageResults::DataIndexOutOfRange) == MidiSendMessageResults::DataIndexOutOfRange);
 
     session.DisconnectEndpointConnection(connSend.ConnectionId());
 

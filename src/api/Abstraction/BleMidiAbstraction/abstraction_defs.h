@@ -8,6 +8,9 @@
 
 #pragma once
 
+#define ABSTRACTION_LAYER_GUID __uuidof(Midi2BluetoothMidiAbstraction);
+
+
 // the IDs here aren't the full Ids, just the values we start with
 // The full Id comes back from the swdevicecreate callback
 

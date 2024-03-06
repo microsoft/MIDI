@@ -1380,6 +1380,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to USB VID / PID.
+        /// </summary>
+        internal static string PropertiesTablePropertyLabelVidPid {
+            get {
+                return ResourceManager.GetString("PropertiesTablePropertyLabelVidPid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Endpoint Metadata.
         /// </summary>
         internal static string PropertiesTableSectionHeaderEndpointMetadata {

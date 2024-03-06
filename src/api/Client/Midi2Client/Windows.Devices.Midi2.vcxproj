@@ -379,7 +379,6 @@
     <ClInclude Include="midi_stream_message_defs.h" />
     <ClInclude Include="midl_defines.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="trace_logging.h" />
     <ClInclude Include="MidiSession.h">
       <DependentUpon>MidiSession.idl</DependentUpon>
@@ -521,7 +520,6 @@
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="trace_logging.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -568,7 +566,7 @@
     <Midl Include="IMidiEndpointConnectionSettings.idl" />
     <Midl Include="MidiMessageTypeEndpointListener.idl" />
     <Midl Include="MidiProtocolEnum.idl" />
-    <Midl Include="MidiSendMessageResultEnum.idl" />
+    <Midl Include="MidiSendMessageResultsEnum.idl" />
     <Midl Include="MidiService.idl" />
     <Midl Include="MidiServicePingResponse.idl" />
     <Midl Include="MidiServicePingResponseSummary.idl" />

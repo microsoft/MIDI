@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Midi.Settings.Contracts.ViewModels;
 using Microsoft.Midi.Settings.Models;
 using Microsoft.UI.Dispatching;
+using Windows.Devices.Enumeration;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
@@ -19,6 +20,10 @@ namespace Microsoft.Midi.Settings.ViewModels
             get; private set;
         }
 
+        public DeviceInformation? ParentDeviceInformation
+        {
+            get; private set;
+        }
 
 
         public void OnNavigatedFrom()
@@ -29,6 +34,8 @@ namespace Microsoft.Midi.Settings.ViewModels
         public void OnNavigatedTo(object parameter)
         {
             DeviceInformation = (MidiEndpointDeviceInformation)parameter;
+
+            ParentDeviceInformation = DeviceInformation.GetParentDeviceInformation();
         }
     }
 }

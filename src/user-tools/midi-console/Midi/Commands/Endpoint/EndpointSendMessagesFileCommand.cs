@@ -282,7 +282,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                         }
 
                                         // send the message
-                                        if (MidiEndpointConnection.SendMessageSucceeded(connection.SendMessageWordArray(timestamp, words, 0, (byte)words.Count())))
+                                        if (MidiEndpointConnection.SendMessageSucceeded(connection.SendSingleMessageWordArray(timestamp, 0, (byte)words.Count(), words)))
                                         {
                                             countMessagesSent++;
                                         }

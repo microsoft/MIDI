@@ -15,17 +15,17 @@
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
-    midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageResultFromHRESULT(HRESULT hr)
+    midi2::MidiSendMessageResults MidiEndpointConnection::SendMessageResultFromHRESULT(HRESULT hr)
     {
-        midi2::MidiSendMessageResult result{ 0 };
+        midi2::MidiSendMessageResults result{ 0 };
 
         if (SUCCEEDED(hr))
         {
-            result |= midi2::MidiSendMessageResult::Succeeded;
+            result |= midi2::MidiSendMessageResults::Succeeded;
         }
         else
         {
-            result |= midi2::MidiSendMessageResult::Failed;
+            result |= midi2::MidiSendMessageResults::Failed;
         }
 
         switch (hr)
@@ -55,11 +55,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
             //    break;
 
         case HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER):
-            result |= midi2::MidiSendMessageResult::BufferFull;
+            result |= midi2::MidiSendMessageResults::BufferFull;
             break;
 
         default:
-            result |= midi2::MidiSendMessageResult::Other;
+            result |= midi2::MidiSendMessageResults::Other;
             break;
         }
 
@@ -83,7 +83,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     _Use_decl_annotations_
-    midi2::MidiSendMessageResult MidiEndpointConnection::SendMessageRaw(
+    midi2::MidiSendMessageResults MidiEndpointConnection::SendMessageRaw(
         winrt::com_ptr<IMidiBiDi> endpoint,
         void* data,
         uint8_t sizeInBytes,
@@ -98,14 +98,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
 
                 // return failure if we're not open
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
+                return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::EndpointConnectionClosedOrInvalid;
             }
 
             if (timestamp != 0 && timestamp > internal::Shared::GetCurrentMidiTimestamp() + m_maxAllowedTimestampOffset)
             {
                 internal::LogGeneralError(__FUNCTION__, L"Timestamp exceeds maximum future scheduling offset");
 
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::TimestampOutOfRange;
+                return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::TimestampOutOfRange;
             }
 
             if (endpoint != nullptr)
@@ -118,7 +118,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 internal::LogGeneralError(__FUNCTION__, L"endpoint is nullptr");
 
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::EndpointConnectionClosedOrInvalid;
+                return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::EndpointConnectionClosedOrInvalid;
             }
         }
         catch (winrt::hresult_error const& ex)
@@ -126,13 +126,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
             internal::LogHresultError(__FUNCTION__, L"hresult error sending message. Is the service running?", ex);
 
             // TOD: Handle other hresults like buffer full
-            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
+            return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
     }
 
 
     _Use_decl_annotations_
-    midi2::MidiSendMessageResult MidiEndpointConnection::SendUmpInternal(
+    midi2::MidiSendMessageResults MidiEndpointConnection::SendUmpInternal(
         winrt::com_ptr<IMidiBiDi> endpoint,
         midi2::IMidiUniversalPacket const& ump)
     {
@@ -147,7 +147,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 internal::LogGeneralError(__FUNCTION__, L"endpoint data pointer is nullptr");
 
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::InvalidMessageOther;
+                return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::InvalidMessageOther;
             }
 
             return SendMessageRaw(endpoint, umpDataPointer, umpDataSize, ump.Timestamp());
@@ -158,7 +158,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             internal::LogHresultError(__FUNCTION__, L"hresult error sending message. Is the service running?", ex);
 
             // TODO: handle buffer full and other expected hresults
-            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
+            return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
     }
 

@@ -234,7 +234,7 @@ void MidiEndpointConnectionBufferTests::TestSendBufferBoundsError()
     auto result = connSend.SendSingleMessageBuffer(MidiClock::TimestampConstantSendImmediately(), byteOffset, numBytes, sendBuffer);
 
     VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageFailed(result));
-    VERIFY_IS_TRUE((result & MidiSendMessageResult::DataIndexOutOfRange) == MidiSendMessageResult::DataIndexOutOfRange);
+    VERIFY_IS_TRUE((result & MidiSendMessageResults::DataIndexOutOfRange) == MidiSendMessageResults::DataIndexOutOfRange);
 
     session.DisconnectEndpointConnection(connSend.ConnectionId());
 

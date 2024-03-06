@@ -16,12 +16,24 @@ class CMidi2KSMidiConfigurationManager :
 {
 public:
 
-    STDMETHOD(Initialize(_In_ GUID abstractionGuid, _In_ IUnknown* deviceManagerInterface));
+    STDMETHOD(Initialize(_In_ GUID abstractionGuid, _In_ IUnknown* deviceManagerInterface, _In_ IUnknown* MidiServiceConfigurationManagerInterface));
     STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJson, _In_ BOOL IsFromConfigurationFile, _Out_ BSTR* response));
     STDMETHOD(Cleanup)();
 
-private:
+    // internal method called after endpoint creation
+    HRESULT ApplyConfigFileUpdatesForEndpoint(_In_ std::wstring endpointSearchKeysJson);
 
+
+    // internal helper methods specific to this abstraction
+
+    std::wstring BuildEndpointJsonSearchKeysForSWD(_In_ std::wstring endpointDeviceInterfaceId);
+    // TODO: Other helper methods for other types of criterial
+
+
+private:
+//    std::vector<std::unique_ptr<ConfigUpdateForEndpoint>> m_CachedConfigurationUpdates{};
+
+    wil::com_ptr_nothrow<IMidiServiceConfigurationManagerInterface> m_MidiServiceConfigurationManagerInterface;
     wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
 
     //HRESULT ApplyUserConfiguration(_In_ std::wstring deviceInterfaceId);

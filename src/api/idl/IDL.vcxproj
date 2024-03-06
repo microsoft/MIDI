@@ -184,6 +184,7 @@
     <Midl Include="MidiDataFormat.idl" />
     <Midl Include="MidiEndpointProtocolManagerInterface.idl" />
     <Midl Include="MidiFlow.idl" />
+    <Midl Include="MidiServicePlugin.idl" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiDeviceManagerInterface.idl" />

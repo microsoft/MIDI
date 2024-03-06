@@ -1,19 +1,70 @@
-<!-- Copyright (c) Microsoft Corporation. All rights reserved. -->
+﻿<!-- Copyright (c) Microsoft Corporation. All rights reserved. -->
 <!-- Licensed under the MIT License. See LICENSE in the project root for license information. -->
 
 <Page
     x:Class="Microsoft.Midi.Settings.Views.ManagementSessionsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:Microsoft.Midi.Settings.Views"
+    xmlns:views="using:Microsoft.Midi.Settings.Views"
+    xmlns:local="using:Microsoft.Midi.Settings.ViewModels"
+    xmlns:midi2="using:Windows.Devices.Midi2"
+    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-
     mc:Ignorable="d">
 
-    <Grid>
-        <TextBlock Text="After the first release, this page will contain a list of all active MIDI Sessions, so you have visibility into which apps are using which devices." />
+    <Grid x:Name="ContentArea">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
+        <TextBlock Grid.Row="0" x:Uid="ManagementSessionsPage_Description" Margin="0,0,0,8" />
+
+        <ScrollViewer Grid.Row="1">
+            <Grid Margin="0,0,8,0">
+
+                <ItemsControl ItemsSource="{x:Bind ViewModel.Sessions}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="local:MidiServiceSessionInformationWrapper">
+
+                            <controls:SettingsExpander ItemsSource="{x:Bind SessionConnections, Mode=OneTime}"
+                                                       IsExpanded="True"
+                                                       Margin="3">
+                                <controls:SettingsExpander.Header>
+                                    <StackPanel>
+                                        <TextBlock Text="{x:Bind SessionInfo.SessionName}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{x:Bind SessionInfo.ProcessName}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                            <TextBlock Text="process id: " Style="{StaticResource SmallPlainPropertyValue}"/>
+                                            <TextBlock Text="{x:Bind SessionInfo.ProcessId}" Style="{StaticResource SmallPlainPropertyValue}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </controls:SettingsExpander.Header>
+
+                                <controls:SettingsExpander.ItemTemplate>
+                                    <DataTemplate x:DataType="midi2:MidiServiceSessionConnectionInfo">
+                                        <controls:SettingsCard IsClickEnabled="False">
+                                            <controls:SettingsCard.Header>
+                                                <StackPanel>
+                                                    <TextBlock Text="{x:Bind EndpointDeviceId}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                                   <!-- <TextBlock Text="{x:Bind EarliestConnectionTime}" Style="{StaticResource SmallPlainPropertyValue}"/> -->
+                                                    <TextBlock Text="{x:Bind InstanceCount}" Style="{StaticResource SmallPlainPropertyValue}"/>
+                                                </StackPanel>
+                                            </controls:SettingsCard.Header>
+                                        </controls:SettingsCard>
+                                    </DataTemplate>
+                                </controls:SettingsExpander.ItemTemplate>
+
+                            </controls:SettingsExpander>
+
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Grid>
+
+        </ScrollViewer>
 
     </Grid>
 </Page>

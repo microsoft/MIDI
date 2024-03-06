@@ -89,23 +89,22 @@
                 DisplayName="Microsoft .NET 8 Desktop Runtime"
                 SourceFile="$(DependenciesSourceRootFolder)\dotnet8-windowsdesktop-runtime-latest-win-x64.exe"
                 Compressed="yes"
-                DetectCondition="DotNetDesktopRuntimeVersion &gt;= v8.0.0"
+                DetectCondition="DotNetDesktopRuntimeVersion &gt;= v8.0.2"
                 InstallArguments="/install /passive /norestart /log midi_dotnet8_install_log.txt"
                 UninstallArguments="/uninstall /passive /norestart /quiet"
                 />
 
             <!-- WinUI / Windows App SDK. This is required for the settings app, but also has no uninstall option -->
             <!-- NOTE: The Instal Argument needs to be dash dash quiet, but that's illegal inside a comment -->
-<!--            
+            
             <ExePackage
                 DisplayName="Microsoft Windows App Runtime"
-                SourceFile="$(DependenciesSourceRootFolder)\winui\WindowsAppRuntimeInstall-x64.exe"
+                SourceFile="$(DependenciesSourceRootFolder)\wasdk\WindowsAppRuntimeInstall-x64.exe"
                 Compressed="yes"
-                InstallArguments="-quiet"
                 Permanent="true"
+                InstallArguments="--force"
                 >
             </ExePackage>
--->
 
         </PackageGroup>
         
@@ -126,7 +125,6 @@
                 SourceFile="MidiConsoleAppStandAloneSetup.msi">
             </MsiPackage>
 
-<!--           
             <MsiPackage
                 Id="MidiServicesSettingsAppSetup"
                 Vital="yes"
@@ -134,7 +132,6 @@
                 Compressed="yes"
                 SourceFile="MidiSettingsAppStandAloneSetup.msi">
             </MsiPackage>
--->
 
         </PackageGroup>
         

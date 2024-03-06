@@ -100,7 +100,12 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROJNAME                    "Midi2.VirtualPatchBayAbstraction"
+    IDS_PROJNAME                        "Midi2.VirtualPatchBayAbstraction"
+
+    IDS_PLUGIN_METADATA_VERSION         "1.0.0.0"
+    IDS_PLUGIN_METADATA_NAME            "Virtual Patch Bay"
+    IDS_PLUGIN_METADATA_DESCRIPTION     "(Currently in Development) Provides configurable routing between different MIDI endpoints."
+    IDS_PLUGIN_METADATA_AUTHOR          "Microsoft"
 END
 
 IDR_MIDI2VIRTUALPATCHBAYABSTRACTION REGISTRY "Midi2.VirtualPatchBayAbstraction.rgs"

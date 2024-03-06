@@ -16,7 +16,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 {
 
     _Use_decl_annotations_
-    midi2::MidiSendMessageResult MidiEndpointConnection::SendSingleMessageStruct(
+    midi2::MidiSendMessageResults MidiEndpointConnection::SendSingleMessageStruct(
         internal::MidiTimestamp const timestamp,
         uint8_t const wordCount,
         midi2::MidiMessageStruct const& message
@@ -28,7 +28,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
             internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for this UMP", wordCount, timestamp);
 
-            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::InvalidMessageTypeForWordCount;
+            return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::InvalidMessageTypeForWordCount;
         }
 
         auto byteLength = (uint8_t)(wordCount * sizeof(uint32_t));
@@ -38,7 +38,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     _Use_decl_annotations_
-    midi2::MidiSendMessageResult MidiEndpointConnection::SendSingleMessageBuffer(
+    midi2::MidiSendMessageResults MidiEndpointConnection::SendSingleMessageBuffer(
         internal::MidiTimestamp const timestamp,
         uint32_t const byteOffset,
         uint8_t const byteCount,
@@ -58,7 +58,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for a single UMP", sizeInWords, timestamp);
 
                 //throw hresult_invalid_argument();
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::InvalidMessageTypeForWordCount;
+                return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::InvalidMessageTypeForWordCount;
             }
 
             winrt::Windows::Foundation::IMemoryBufferReference bufferReference = buffer.CreateReference();
@@ -75,7 +75,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 {
                     internal::LogGeneralError(__FUNCTION__, L"Buffer smaller than provided offset + byteLength");
 
-                    return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange;
+                    return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange;
                 }
 
                 // send the ump
@@ -85,7 +85,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 internal::LogGeneralError(__FUNCTION__, L"Unable to get buffer");
 
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
+                return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
             }
         }
         catch (winrt::hresult_error const& ex)
@@ -93,12 +93,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
             internal::LogHresultError(__FUNCTION__, L"hresult exception sending message", ex);
 
             // TODO: handle buffer full and other expected hresults
-            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
+            return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
     }
 
     _Use_decl_annotations_
-        midi2::MidiSendMessageResult MidiEndpointConnection::SendSingleMessageWordArray(
+        midi2::MidiSendMessageResults MidiEndpointConnection::SendSingleMessageWordArray(
             internal::MidiTimestamp const timestamp,
             uint32_t const startIndex,
             uint8_t const wordCount,
@@ -114,7 +114,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 internal::LogGeneralError(__FUNCTION__, L"Array start index + word count is >= array size");
 
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::DataIndexOutOfRange;
+                return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange;
             }
 
             // check if the message type is correct for the word count
@@ -122,7 +122,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for this UMP", wordCount, timestamp);
 
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::InvalidMessageTypeForWordCount;
+                return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::InvalidMessageTypeForWordCount;
             }
 
             auto umpDataSize = (uint8_t)(sizeof(uint32_t) * wordCount);
@@ -137,12 +137,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
             internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex);
 
             // TODO: handle buffer full and other expected hresults
-            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
+            return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
     }
 
     _Use_decl_annotations_
-    midi2::MidiSendMessageResult MidiEndpointConnection::SendSingleMessageWords(
+    midi2::MidiSendMessageResults MidiEndpointConnection::SendSingleMessageWords(
         internal::MidiTimestamp const timestamp,
         uint32_t const word0) noexcept
     {
@@ -154,7 +154,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 // mismatch between the message type and the number of words
                 internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for messageType", UMP32_WORD_COUNT, timestamp);
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::InvalidMessageTypeForWordCount;
+                return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::InvalidMessageTypeForWordCount;
             }
 
 
@@ -169,13 +169,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
             internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex);
 
             // TODO: handle buffer full and other expected hresults
-            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
+            return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
     }
 
 
     _Use_decl_annotations_
-        midi2::MidiSendMessageResult MidiEndpointConnection::SendSingleMessageWords(
+        midi2::MidiSendMessageResults MidiEndpointConnection::SendSingleMessageWords(
             internal::MidiTimestamp const timestamp,
             uint32_t const word0,
             uint32_t const word1) noexcept
@@ -188,7 +188,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 // mismatch between the message type and the number of words
                 internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for messageType", UMP64_WORD_COUNT, timestamp);
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::InvalidMessageTypeForWordCount;
+                return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::InvalidMessageTypeForWordCount;
             }
 
 
@@ -207,12 +207,12 @@ namespace winrt::Windows::Devices::Midi2::implementation
             internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex);
 
             // TODO: handle buffer full and other expected hresults
-            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
+            return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
     }
 
     _Use_decl_annotations_
-        midi2::MidiSendMessageResult MidiEndpointConnection::SendSingleMessageWords(
+        midi2::MidiSendMessageResults MidiEndpointConnection::SendSingleMessageWords(
             internal::MidiTimestamp const timestamp,
             uint32_t const word0,
             uint32_t const word1,
@@ -226,7 +226,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 // mismatch between the message type and the number of words
                 internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for messageType", UMP96_WORD_COUNT, timestamp);
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::InvalidMessageTypeForWordCount;
+                return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::InvalidMessageTypeForWordCount;
             }
 
 
@@ -246,13 +246,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
             internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex);
 
             // TODO: handle buffer full and other expected hresults
-            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
+            return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
     }
 
 
     _Use_decl_annotations_
-        midi2::MidiSendMessageResult MidiEndpointConnection::SendSingleMessageWords(
+        midi2::MidiSendMessageResults MidiEndpointConnection::SendSingleMessageWords(
             internal::MidiTimestamp const timestamp,
             uint32_t const word0,
             uint32_t const word1,
@@ -266,7 +266,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             if (internal::GetUmpLengthInMidiWordsFromFirstWord(word0) != UMP128_WORD_COUNT)
             {
                 internal::LogUmpSizeValidationError(__FUNCTION__, L"Word count is incorrect for messageType", UMP128_WORD_COUNT, timestamp);
-                return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::InvalidMessageTypeForWordCount;
+                return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::InvalidMessageTypeForWordCount;
             }
 
 
@@ -287,13 +287,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
             internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex);
 
             // TODO: handle buffer full and other expected hresults
-            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
+            return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
     }
 
 
     _Use_decl_annotations_
-        midi2::MidiSendMessageResult MidiEndpointConnection::SendSingleMessagePacket(
+        midi2::MidiSendMessageResults MidiEndpointConnection::SendSingleMessagePacket(
             midi2::IMidiUniversalPacket const& message) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Sending message packet");
@@ -309,7 +309,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
             // todo: handle buffer full and similar messages
-            return midi2::MidiSendMessageResult::Failed | midi2::MidiSendMessageResult::Other;
+            return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
     }
 

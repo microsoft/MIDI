@@ -39,6 +39,9 @@
     <ClCompile Include="ble_timestamp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Midi2.BluetoothMidiPluginMetadataProvider.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Midi2BluetoothMidiAbstraction.idl">
@@ -92,6 +95,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ble_timestamp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Midi2.BluetoothMidiPluginMetadataProvider.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -65,10 +65,14 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 #include "json_defs.h"
 #include "json_helpers.h"
 #include "swd_helpers.h"
+#include "resource_util.h"
 
 #include "MidiXProc.h"
 
 #include "abstraction_defs.h"
+
+#include "MidiServicePlugin.h"
+#include "MidiServicePlugin_i.c"
 
 #include "Midi2DiagnosticsAbstraction_i.c"
 #include "Midi2DiagnosticsAbstraction.h"
@@ -84,6 +88,7 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 #include "MidiDefs.h"
 #include "MidiXProc.h"
 
+class CMidi2DiagnosticsMidiConfigurationManager;
 
 //#include "MidiLoopbackDevice.h"
 #include "MidiLoopbackBidiDevice.h"
@@ -91,13 +96,15 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 
 #include "Midi2.DiagnosticsAbstraction.h"
 #include "Midi2.DiagnosticsEndpointManager.h"
+#include "Midi2.DiagnosticsPluginMetadataProvider.h"
+#include "Midi2.DiagnosticsEndpointManager.h"
 
 //#include "Midi2.LoopbackMidiIn.h"
 //#include "Midi2.LoopbackMidiOut.h"
 #include "Midi2.LoopbackMidiBiDi.h"
-
 #include "Midi2.PingMidiBiDi.h"
 
+#include "Midi2.DiagnosticsMidiConfigurationManager.h"
 
 #include "MidiDeviceTable.h"
 

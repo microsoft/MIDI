@@ -16,7 +16,7 @@ MIDI_IDL_IMPORT
 
 import "IMidiMessageReceivedEventSource.idl";
 import "IMidiEndpointMessageProcessingPlugin.idl";
-import "MidiSendMessageResultEnum.idl";
+import "MidiSendMessageResultsEnum.idl";
 import "IMidiEndpointConnectionSettings.idl";
 import "IMidiEndpointConnectionSource.idl";
 
@@ -31,8 +31,8 @@ namespace Windows.Devices.Midi2
         // Get the enumeration device selector for all compatible devices
         static String GetDeviceSelector();
 
-        static Boolean SendMessageSucceeded(MidiSendMessageResult sendResult);
-        static Boolean SendMessageFailed(MidiSendMessageResult sendResult);
+        static Boolean SendMessageSucceeded(MidiSendMessageResults sendResult);
+        static Boolean SendMessageFailed(MidiSendMessageResults sendResult);
 
 
         // just a map key for this connection.
@@ -44,15 +44,16 @@ namespace Windows.Devices.Midi2
         // app-supplied optional tag. Can hold whatever information they may want to show in a list
         IInspectable Tag{ get; set; };
 
+        // read-only copy of the settings used to create this connection
+        IMidiEndpointConnectionSettings Settings{ get; };
+
+
         // true if this endpoint connection is actually connected.
         // here for cases when the app holds on to an instance of this outside of the map
         Boolean IsOpen{ get; };
 
-        // read-only copy of the settings used to create this connection
-        IMidiEndpointConnectionSettings Settings{ get; };
-
+        // this is what allocates the service resources and actually opens the connection
         Boolean Open();
-
 
         IVectorView<IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins{ get; };
         void AddMessageProcessingPlugin(IMidiEndpointMessageProcessingPlugin plugin);
@@ -60,39 +61,39 @@ namespace Windows.Devices.Midi2
 
 
         // send the UMP interface used by strongly-typed Midi Message classes in the SDK
-        MidiSendMessageResult SendSingleMessagePacket(IMidiUniversalPacket message);
+        MidiSendMessageResults SendSingleMessagePacket(IMidiUniversalPacket message);
 
-        MidiSendMessageResult SendSingleMessageStruct(MIDI_TIMESTAMP timestamp, UInt8 wordCount, ref const MidiMessageStruct message);
+        MidiSendMessageResults SendSingleMessageStruct(MIDI_TIMESTAMP timestamp, UInt8 wordCount, ref const MidiMessageStruct message);
 
         // Uses projection-specific array conversion operators for sending data. Not all languages support this
         // Also, arrays are often passed by-val in WinRT, so this may involve a lot of data copying, depending
         // upon implementation. For large buffers without copying, use the IMemoryBuffer
-        MidiSendMessageResult SendSingleMessageWordArray(MIDI_TIMESTAMP timestamp, UInt32 startIndex, UInt8 wordCount, UInt32[] words);
+        MidiSendMessageResults SendSingleMessageWordArray(MIDI_TIMESTAMP timestamp, UInt32 startIndex, UInt8 wordCount, UInt32[] words);
 
         // sending words is a very fast approach, but does work with copies of the data. For the most common cases,
         // the amount of data being copied is quite small (32 and 64 bit messages being the most common), and smaller
         // than an equivalent pointer.
-        MidiSendMessageResult SendSingleMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0);
-        MidiSendMessageResult SendSingleMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1);
-        MidiSendMessageResult SendSingleMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1, UInt32 word2);
-        MidiSendMessageResult SendSingleMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
+        MidiSendMessageResults SendSingleMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0);
+        MidiSendMessageResults SendSingleMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1);
+        MidiSendMessageResults SendSingleMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1, UInt32 word2);
+        MidiSendMessageResults SendSingleMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
 
         // for sending a section of a pre-existing buffer. Used when a client app is maintaining its own memory       
-        MidiSendMessageResult SendSingleMessageBuffer(MIDI_TIMESTAMP timestamp, UInt32 byteOffset, UInt8 byteCount, Windows.Foundation.IMemoryBuffer buffer);
+        MidiSendMessageResults SendSingleMessageBuffer(MIDI_TIMESTAMP timestamp, UInt32 byteOffset, UInt8 byteCount, Windows.Foundation.IMemoryBuffer buffer);
 
         // These methods will send multiple messages. The words must be ordered correctly
         // so they are in order from word-0 to word-n for each message.
-        MidiSendMessageResult SendMultipleMessagesWordList(MIDI_TIMESTAMP timestamp, IIterable<UInt32> words);
-        MidiSendMessageResult SendMultipleMessagesWordArray(MIDI_TIMESTAMP timestamp, UInt32 startIndex, UInt32 wordCount, UInt32[] words);
+        MidiSendMessageResults SendMultipleMessagesWordList(MIDI_TIMESTAMP timestamp, IIterable<UInt32> words);
+        MidiSendMessageResults SendMultipleMessagesWordArray(MIDI_TIMESTAMP timestamp, UInt32 startIndex, UInt32 wordCount, UInt32[] words);
 
         // a convenience for sending multiple packets. We can do this because these are self-describing
-        MidiSendMessageResult SendMultipleMessagesPacketList(IVectorView<IMidiUniversalPacket> messages);
+        MidiSendMessageResults SendMultipleMessagesPacketList(IIterable<IMidiUniversalPacket> messages);
         //MidiSendMessageResult SendMultipleMessagesPacketArray(ref IMidiUniversalPacket[] messages);
 
-        MidiSendMessageResult SendMultipleMessagesStructList(MIDI_TIMESTAMP timestamp, IIterable<MidiMessageStruct> messages);
-        MidiSendMessageResult SendMultipleMessagesStructArray(MIDI_TIMESTAMP timestamp, MidiMessageStruct[] messages);
+        MidiSendMessageResults SendMultipleMessagesStructList(MIDI_TIMESTAMP timestamp, IIterable<MidiMessageStruct> messages);
+        MidiSendMessageResults SendMultipleMessagesStructArray(MIDI_TIMESTAMP timestamp, UInt32 startIndex, UInt32 messageCount, MidiMessageStruct[] messages);
 
-        MidiSendMessageResult SendMultipleMessagesBuffer(MIDI_TIMESTAMP timestamp, UInt32 byteOffset, UInt32 byteCount, Windows.Foundation.IMemoryBuffer buffer);
+        MidiSendMessageResults SendMultipleMessagesBuffer(MIDI_TIMESTAMP timestamp, UInt32 byteOffset, UInt32 byteCount, Windows.Foundation.IMemoryBuffer buffer);
 
 }
 

@@ -16,7 +16,7 @@ using namespace Microsoft::WRL::Wrappers;
 
 #define MAX_DEVICE_ID_LEN 200 // size in chars
 
-GUID AbstractionLayerGUID = __uuidof(Midi2LoopbackMidiAbstraction);
+GUID AbstractionLayerGUID = ABSTRACTION_LAYER_GUID;
 
 
 _Use_decl_annotations_
@@ -172,7 +172,7 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
 
     std::wstring mnemonic(TRANSPORT_MNEMONIC);
 
-    DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
+    //DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
     //   DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
 
     std::wstring endpointName = definition->EndpointName;
@@ -205,16 +205,10 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
 
     // this is needed for the loopback endpoints to have a relationship with each other
     interfaceDeviceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_VirtualMidiEndpointAssociator, DEVPROP_STORE_SYSTEM, nullptr},
-        DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (definition->AssociationId.size() + 1)), (PVOID)definition->AssociationId.c_str() });
+        DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (definition->AssociationId.length() + 1)), (PVOID)definition->AssociationId.c_str() });
 
     // Device properties
 
-    DEVPROPERTY deviceDevProperties[] = {
-        {{DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue},
-        {{DEVPKEY_Device_NoConnectSound, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue}
-    };
 
     SW_DEVICE_CREATE_INFO createInfo = {};
     createInfo.cbSize = sizeof(createInfo);
@@ -242,7 +236,7 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
         TraceLoggingWideString(L"Activating endpoint")
     );
 
-    MIDIENDPOINTCOMMONPROPERTIES commonProperties;
+    MIDIENDPOINTCOMMONPROPERTIES commonProperties{};
     commonProperties.AbstractionLayerGuid = m_TransportAbstractionId;
     commonProperties.EndpointPurpose = MidiEndpointDevicePurposePropertyValue::NormalMessageEndpoint;
     commonProperties.FriendlyName = friendlyName.c_str();
@@ -257,7 +251,9 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
     commonProperties.SupportsMultiClient = multiClient;
     commonProperties.RequiresMetadataHandler = requiresMetadataHandler;
     commonProperties.GenerateIncomingTimestamps = generateIncomingTimestamps;
-
+    commonProperties.ManufacturerName = TRANSPORT_MANUFACTURER;
+    commonProperties.SupportsMidi1ProtocolDefaultValue = true;
+    commonProperties.SupportsMidi2ProtocolDefaultValue = true;
 
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
         (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
@@ -265,9 +261,9 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
         MidiFlow::MidiFlowBidirectional,                        // MIDI Flow
         &commonProperties,
         (ULONG)interfaceDeviceProperties.size(),
-        ARRAYSIZE(deviceDevProperties),
+        (ULONG)0,
         (PVOID)interfaceDeviceProperties.data(),
-        (PVOID)deviceDevProperties,
+        (PVOID)nullptr,
         (PVOID)&createInfo,
         (LPWSTR)&newDeviceInterfaceId,
         deviceInterfaceIdMaxSize));
@@ -285,19 +281,13 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
     );
 
 
-    // now delete all the properties that have been discovered in-protocol
-    // we have to do this because they end up cached by PNP and come back
-    // when you recreate a device with the same Id. This is a real problem 
-    // if you are testing function blocks or endpoint properties with this
-    // loopback transport.
-    m_MidiDeviceManager->DeleteAllEndpointInProtocolDiscoveredProperties(newDeviceInterfaceId);
-
     // we need this for removal later
     definition->CreatedShortClientInstanceId = instanceId;
     definition->CreatedEndpointInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId);
 
     //MidiEndpointTable::Current().AddCreatedEndpointDevice(entry);
     //MidiEndpointTable::Current().AddCreatedClient(entry.VirtualEndpointAssociationId, entry.CreatedClientEndpointId);
+
 
     TraceLoggingWrite(
         MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),

@@ -122,10 +122,10 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             var deviceWatcherThread = new Thread(() =>
             {
                 var watcher = MidiEndpointDeviceWatcher.CreateWatcher(
-                    MidiEndpointDeviceInformationFilter.IncludeDiagnosticLoopback |
-                    MidiEndpointDeviceInformationFilter.IncludeClientUmpNative |
-                    MidiEndpointDeviceInformationFilter.IncludeVirtualDeviceResponder |
-                    MidiEndpointDeviceInformationFilter.IncludeClientByteStreamNative
+                    MidiEndpointDeviceInformationFilters.IncludeDiagnosticLoopback |
+                    MidiEndpointDeviceInformationFilters.IncludeClientUmpNative |
+                    MidiEndpointDeviceInformationFilters.IncludeVirtualDeviceResponder |
+                    MidiEndpointDeviceInformationFilters.IncludeClientByteStreamNative
                     );
 
 

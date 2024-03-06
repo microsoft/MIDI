@@ -67,14 +67,6 @@ private:
                         _In_ wil::com_ptr_nothrow<CMidiPipe>&);
 
     HRESULT
-    GetMidiJRTimestampHandler(
-                        _In_ handle_t,
-                        _In_ MidiFlow,
-                        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
-                        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
-                        _In_ wil::com_ptr_nothrow<CMidiPipe>&);
-
-    HRESULT
     GetMidiEndpointMetadataHandler(
                         _In_ handle_t,
                         _In_ MidiFlow,

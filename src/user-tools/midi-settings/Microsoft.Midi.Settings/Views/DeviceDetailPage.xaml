@@ -3,15 +3,14 @@
     x:Class="Microsoft.Midi.Settings.Views.DeviceDetailPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:Microsoft.Devices.Midi2.Settings.Views"
+    xmlns:local="using:Microsoft.Midi.Settings.Views"
     xmlns:midi2="using:Windows.Devices.Midi2"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"    
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    mc:Ignorable="d">
     <Page.Resources>
         <helpers:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
@@ -22,7 +21,7 @@
         <helpers:MidiFunctionBlockMidi10Converter x:Key="MidiFunctionBlockMidi10Converter" />
     </Page.Resources>
     
-    <Grid MaxWidth="1000" HorizontalAlignment="Stretch">
+    <Grid HorizontalAlignment="Stretch">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -88,7 +87,7 @@
 
                 <TextBlock Text="General" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" />
                 
-                <controls:SettingsExpander Header="Customization" IsExpanded="True">
+                <controls:SettingsExpander Header="Personalization" IsExpanded="True">
                     <controls:SettingsExpander.Items>
                         <controls:SettingsCard>
                             <controls:SettingsCard.Header>
@@ -98,7 +97,7 @@
                                 </StackPanel>
                             </controls:SettingsCard.Header>
                             
-                            <Button Content="Rename" />
+                            <Button Content="Rename" Click="Button_Click"/>
                         </controls:SettingsCard>
                         
                         <controls:SettingsCard>
@@ -108,7 +107,7 @@
                                     <TextBlock Text="{x:Bind ViewModel.DeviceInformation.UserSuppliedDescription}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
                                 </StackPanel>
                             </controls:SettingsCard.Header>
-                            <Button Content="Update Description" />
+                            <Button Content="Update Description" Click="Button_Click" />
                         </controls:SettingsCard>
 
                         <controls:SettingsCard>
@@ -119,7 +118,7 @@
                                 </StackPanel>
                             </controls:SettingsCard.Header>
 
-                            <Button Content="Update Large Image" />
+                            <Button Content="Update Large Image" Click="Button_Click" />
                         </controls:SettingsCard>
                         
                         <controls:SettingsCard>
@@ -130,16 +129,104 @@
                                 </StackPanel>
                             </controls:SettingsCard.Header>
 
-                            <Button Content="Update Small Image" />
+                            <Button Content="Update Small Image" Click="Button_Click" />
                         </controls:SettingsCard>
 
                     </controls:SettingsExpander.Items>
                 </controls:SettingsExpander>
 
+                <!-- Information from the transport -->
+
+                <controls:SettingsExpander Header="Transport-Supplied Information" IsExpanded="True">
+                    <controls:SettingsExpander.Items>
+                        <controls:SettingsCard>
+                            <controls:SettingsCard.Header>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="0" Text="Name" Style="{StaticResource SmallPropertyLabel}"/>
+                                    <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.DeviceInformation.TransportSuppliedName}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="1" Text="Description" Style="{StaticResource SmallPropertyLabel}"/>
+                                    <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind ViewModel.DeviceInformation.TransportSuppliedDescription}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="2" Text="Serial Number" Style="{StaticResource SmallPropertyLabel}"/>
+                                    <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind ViewModel.DeviceInformation.TransportSuppliedSerialNumber}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+
+                                    <TextBlock Grid.Column="0" Grid.Row="3" Text="Transport Id" Style="{StaticResource SmallPropertyLabel}" />
+                                    <TextBlock Grid.Column="1" Grid.Row="3" Text="{x:Bind ViewModel.DeviceInformation.TransportId}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="4" Text="Transport Mnemonic" Style="{StaticResource SmallPropertyLabel}" />
+                                    <TextBlock Grid.Column="1" Grid.Row="4" Text="{x:Bind ViewModel.DeviceInformation.TransportMnemonic}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                                </Grid>
+                            </controls:SettingsCard.Header>
+                        </controls:SettingsCard>
+                    </controls:SettingsExpander.Items>
+                </controls:SettingsExpander>
+
+
+                <!-- Only visible if a UMP/MIDI 2.0 device -->
+
+                <controls:SettingsExpander Header="MIDI 2.0 In-protocol-discovered Information" IsExpanded="True">
+                    <controls:SettingsExpander.Items>
+                        <controls:SettingsCard>
+                            <controls:SettingsCard.Header>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="0" Text="Supports MIDI 1.0 Protocol" Style="{StaticResource SmallPropertyLabel}" />
+                                    <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.DeviceInformation.SupportsMidi10Protocol}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="1" Text="Supports MIDI 2.0 Protocol" Style="{StaticResource SmallPropertyLabel}" />
+                                    <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind ViewModel.DeviceInformation.SupportsMidi20Protocol}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="2" Text="Configured Protocol" Style="{StaticResource SmallPropertyLabel}" />
+                                    <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind ViewModel.DeviceInformation.ConfiguredProtocol}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="3" Text="Configured to send Jitter Reduction Timestamps" Style="{StaticResource SmallPropertyLabel}" />
+                                    <TextBlock Grid.Column="1" Grid.Row="3" Text="{x:Bind ViewModel.DeviceInformation.ConfiguredToSendJRTimestamps}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="4" Text="Configured to receive Jitter Reduction Timestamps" Style="{StaticResource SmallPropertyLabel}" />
+                                    <TextBlock Grid.Column="1" Grid.Row="4" Text="{x:Bind ViewModel.DeviceInformation.ConfiguredToReceiveJRTimestamps}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                                </Grid>
+                            </controls:SettingsCard.Header>
+                        </controls:SettingsCard>
+                    </controls:SettingsExpander.Items>
+                </controls:SettingsExpander>
+
+
+
+
+
+
                 <!-- Function Blocks -->
                 
                 <controls:SettingsExpander Header="Function Blocks" 
-                                           ItemsSource="{x:Bind ViewModel.DeviceInformation.FunctionBlocks.Values}">
+                                           ItemsSource="{x:Bind ViewModel.DeviceInformation.FunctionBlocks.Values}"
+                                           IsExpanded="True">
                     <controls:SettingsExpander.ItemTemplate>
                         <DataTemplate x:DataType="midi2:MidiFunctionBlock">
                             <controls:SettingsCard>
@@ -256,83 +343,39 @@
 
                 </controls:SettingsExpander>
 
-                <!-- Information from the transport -->
-                
-                <controls:SettingsExpander Header="Transport-Supplied Information" IsExpanded="True">
+                <controls:SettingsExpander Header="Parent Device" IsExpanded="True" Margin="0,0,0,20">
                     <controls:SettingsExpander.Items>
                         <controls:SettingsCard>
                             <controls:SettingsCard.Header>
                                 <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
 
-                                    <TextBlock Grid.Column="0" Grid.Row="0" Text="Name" Style="{StaticResource SmallPropertyLabel}"/>
-                                    <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.DeviceInformation.TransportSuppliedName}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
-                                    
-                                    <TextBlock Grid.Column="0" Grid.Row="1" Text="Description" Style="{StaticResource SmallPropertyLabel}"/>
-                                    <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind ViewModel.DeviceInformation.TransportSuppliedDescription}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                    <TextBlock Grid.Column="0" Grid.Row="0" Text="Name" Style="{StaticResource SmallPropertyLabel}" />
+                                    <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.ParentDeviceInformation.Name}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
-                                    <TextBlock Grid.Column="0" Grid.Row="2" Text="Serial Number" Style="{StaticResource SmallPropertyLabel}"/>
-                                    <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind ViewModel.DeviceInformation.TransportSuppliedSerialNumber}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                    <TextBlock Grid.Column="0" Grid.Row="1" Text="Id" Style="{StaticResource SmallPropertyLabel}" />
+                                    <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind ViewModel.ParentDeviceInformation.Id}"  Style="{StaticResource SmallPlainPropertyValue}"/>
 
+                                    <TextBlock Grid.Column="0" Grid.Row="2" Text="Kind" Style="{StaticResource SmallPropertyLabel}" />
+                                    <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind ViewModel.ParentDeviceInformation.Kind}" Style="{StaticResource SmallPlainPropertyValue}"/>
 
-                                    <TextBlock Grid.Column="0" Grid.Row="3" Text="Transport Id" Style="{StaticResource SmallPropertyLabel}" />
-                                    <TextBlock Grid.Column="1" Grid.Row="3" Text="{x:Bind ViewModel.DeviceInformation.TransportId}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
-
-                                    <TextBlock Grid.Column="0" Grid.Row="4" Text="Transport Mnemonic" Style="{StaticResource SmallPropertyLabel}" />
-                                    <TextBlock Grid.Column="1" Grid.Row="4" Text="{x:Bind ViewModel.DeviceInformation.TransportMnemonic}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
-                                    
                                 </Grid>
                             </controls:SettingsCard.Header>
+                            
+                            <StackPanel>
+                            </StackPanel>
                         </controls:SettingsCard>
                     </controls:SettingsExpander.Items>
                 </controls:SettingsExpander>
-
-
-                <!-- Only visible if a UMP/MIDI 2.0 device -->
                 
-                <controls:SettingsExpander Header="MIDI 2.0 In-protocol-discovered Information">
-                    <controls:SettingsExpander.Items>
-                        <controls:SettingsCard>
-                            <controls:SettingsCard.Header>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
-
-                                    <TextBlock Grid.Column="0" Grid.Row="0" Text="Supports MIDI 1.0 Protocol" />
-                                    <TextBlock Grid.Column="0" Grid.Row="1" Text="Supports MIDI 2.0 Protocol" />
-                                    <TextBlock Grid.Column="0" Grid.Row="2" Text="Configured to send Jitter Reduction Timestamps" />
-                                    <TextBlock Grid.Column="0" Grid.Row="3" Text="Configured to receive Jitter Reduction Timestamps" />
-                                    <TextBlock Grid.Column="0" Grid.Row="4" Text="Configured Protocol" />
-                                </Grid>
-                            </controls:SettingsCard.Header>
-                        </controls:SettingsCard>
-                    </controls:SettingsExpander.Items>
-                </controls:SettingsExpander>
-
-
-
-                <TextBlock Text="Parent Device" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
-
-
 
             </StackPanel>
             

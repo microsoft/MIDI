@@ -17,6 +17,7 @@ namespace Windows.Devices.Midi2
     {
         // the Id for this transport type
         Guid TransportId { get; };
+        Boolean IsFromConfigurationFile{ get; };   // true if from the config file. Apps shouldn't normally set this to true
 
         // the settings json. This will typically contain operations to create/update/delete
         // individual endpoints. The format of this is specific to each transport in the service

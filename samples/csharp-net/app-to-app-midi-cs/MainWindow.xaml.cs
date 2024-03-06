@@ -117,6 +117,7 @@ namespace MidiSample.AppToAppMidi
 
                     if (_connection != null)
                     {
+                        System.Diagnostics.Debug.WriteLine("Created endpoint id: " + _connection.EndpointDeviceId);
                         System.Diagnostics.Debug.WriteLine("Connection created. Wiring up MessageReceived event");
 
                         _connection.MessageReceived += _connection_MessageReceived;

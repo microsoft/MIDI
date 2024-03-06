@@ -124,9 +124,9 @@ public:
         _In_ PVOID
         );
 
-    STDMETHOD(DeleteAllEndpointInProtocolDiscoveredProperties)(
-        _In_ PCWSTR
-        );
+    //STDMETHOD(DeleteAllEndpointInProtocolDiscoveredProperties)(
+    //    _In_ PCWSTR
+    //    );
 
 
     // this is for runtime updates only, not for config file updates

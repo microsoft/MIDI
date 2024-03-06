@@ -40,8 +40,7 @@ CMidi2VirtualMidiEndpointManager::Initialize(
     RETURN_IF_FAILED(MidiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManagerInterface), (void**)&m_MidiProtocolManager));
 
 
-    m_TransportAbstractionId = AbstractionLayerGUID;    // this is needed so MidiSrv can instantiate the correct transport
-    m_ContainerId = m_TransportAbstractionId;           // we use the transport ID as the container ID for convenience
+    m_ContainerId = ABSTRACTION_LAYER_GUID;           // we use the transport ID as the container ID for convenience
 
     RETURN_IF_FAILED(CreateParentDevice());
 
@@ -231,7 +230,7 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
 
     std::wstring mnemonic(TRANSPORT_MNEMONIC);
 
-    DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
+    //DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
     //   DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
 
     std::wstring endpointName = entry.BaseEndpointName;
@@ -248,15 +247,7 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
 
     // this is needed for the loopback endpoints to have a relationship with each other
     interfaceDeviceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_VirtualMidiEndpointAssociator, DEVPROP_STORE_SYSTEM, nullptr},
-        DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (entry.VirtualEndpointAssociationId.size() + 1)), (PVOID)entry.VirtualEndpointAssociationId.c_str() });
-
-
-    DEVPROPERTY deviceDevProperties[] = {
-        {{DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue},
-        {{DEVPKEY_Device_NoConnectSound, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue}
-    };
+        DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (entry.VirtualEndpointAssociationId.length() + 1)), (PVOID)entry.VirtualEndpointAssociationId.c_str() });
 
     SW_DEVICE_CREATE_INFO createInfo = {};
     createInfo.cbSize = sizeof(createInfo);
@@ -273,7 +264,7 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
 
 
     MIDIENDPOINTCOMMONPROPERTIES commonProperties;
-    commonProperties.AbstractionLayerGuid = m_TransportAbstractionId;
+    commonProperties.AbstractionLayerGuid = ABSTRACTION_LAYER_GUID;
     commonProperties.EndpointPurpose = MidiEndpointDevicePurposePropertyValue::NormalMessageEndpoint;
     commonProperties.FriendlyName = friendlyName.c_str();
     commonProperties.TransportMnemonic = mnemonic.c_str();
@@ -287,6 +278,9 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
     commonProperties.SupportsMultiClient = multiClient;
     commonProperties.RequiresMetadataHandler = requiresMetadataHandler;
     commonProperties.GenerateIncomingTimestamps = generateIncomingTimestamps;
+    commonProperties.ManufacturerName = TRANSPORT_MANUFACTURER;
+    commonProperties.SupportsMidi1ProtocolDefaultValue = true;
+    commonProperties.SupportsMidi2ProtocolDefaultValue = true;
 
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
         (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
@@ -294,22 +288,15 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
         MidiFlow::MidiFlowBidirectional,                        // MIDI Flow
         &commonProperties,
         (ULONG)interfaceDeviceProperties.size(),
-        ARRAYSIZE(deviceDevProperties),
+        (ULONG)0,
         (PVOID)interfaceDeviceProperties.data(),
-        (PVOID)deviceDevProperties,
+        (PVOID)nullptr,
         (PVOID)&createInfo,
         (LPWSTR)&newDeviceInterfaceId,
         deviceInterfaceIdMaxSize));
 
 
-    // now delete all the properties that have been discovered in-protocol
-    // we have to do this because they end up cached by PNP and come back
-    // when you recreate a device with the same Id. This is a real problem 
-    // if you are testing function blocks or endpoint properties with this
-    // transport.
-    m_MidiDeviceManager->DeleteAllEndpointInProtocolDiscoveredProperties(newDeviceInterfaceId);
-
-    // we need this for removal later
+     // we need this for removal later
     entry.CreatedShortClientInstanceId = instanceId;
 
     entry.CreatedClientEndpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId);
@@ -340,12 +327,12 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
 
     std::wstring mnemonic(TRANSPORT_MNEMONIC);
 
-    DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
+    //DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
     //DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
 
-
-    std::wstring endpointName = entry.BaseEndpointName + L" (Virtual MIDI Device)";
-    std::wstring endpointDescription = entry.Description + L" (This endpoint for use only by the device host application.)";
+    // TODO: These should come from localized resources
+    std::wstring endpointName = internal::TrimmedWStringCopy(entry.BaseEndpointName + L" (Virtual MIDI Device)");
+    std::wstring endpointDescription = internal::TrimmedWStringCopy(entry.Description + L" (This endpoint for use only by the device host application.)");
 
     std::vector<DEVPROPERTY> interfaceDeviceProperties{};
 
@@ -357,16 +344,8 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
     std::wstring friendlyName = internal::CalculateEndpointDevicePrimaryName(endpointName, L"", L"");
 
 
-    interfaceDeviceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_VirtualMidiEndpointAssociator, DEVPROP_STORE_SYSTEM, nullptr},
-        DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (entry.VirtualEndpointAssociationId.size() + 1)), (PVOID)entry.VirtualEndpointAssociationId.c_str() });
-
-
-    DEVPROPERTY deviceDevProperties[] = {
-        {{DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue},
-        {{DEVPKEY_Device_NoConnectSound, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)),&devPropTrue}
-    };
+    interfaceDeviceProperties.push_back(DEVPROPERTY{ { PKEY_MIDI_VirtualMidiEndpointAssociator, DEVPROP_STORE_SYSTEM, nullptr},
+        DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (entry.VirtualEndpointAssociationId.length() + 1)), (PVOID)entry.VirtualEndpointAssociationId.c_str() });
 
 
     SW_DEVICE_CREATE_INFO createInfo = {};
@@ -375,35 +354,32 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
 
     std::wstring instanceId = internal::NormalizeDeviceInstanceIdWStringCopy(MIDI_VIRT_INSTANCE_ID_DEVICE_PREFIX + entry.ShortUniqueId);
 
-
     createInfo.pszInstanceId = instanceId.c_str();
     createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
     createInfo.pszDeviceDescription = endpointName.c_str();
-
 
     const ULONG deviceInterfaceIdMaxSize = 255;
     wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
 
 
-
-
-
-    MIDIENDPOINTCOMMONPROPERTIES commonProperties;
-    commonProperties.AbstractionLayerGuid = m_TransportAbstractionId;
+    MIDIENDPOINTCOMMONPROPERTIES commonProperties{};
+    commonProperties.AbstractionLayerGuid = ABSTRACTION_LAYER_GUID;
     commonProperties.EndpointPurpose = MidiEndpointDevicePurposePropertyValue::VirtualDeviceResponder;
     commonProperties.FriendlyName = friendlyName.c_str();
     commonProperties.TransportMnemonic = mnemonic.c_str();
     commonProperties.TransportSuppliedEndpointName = endpointName.c_str();
     commonProperties.TransportSuppliedEndpointDescription = endpointDescription.c_str();
-    commonProperties.UserSuppliedEndpointName = L"";
-    commonProperties.UserSuppliedEndpointDescription = L"";
+    commonProperties.UserSuppliedEndpointName = nullptr;
+    commonProperties.UserSuppliedEndpointDescription = nullptr;
     commonProperties.UniqueIdentifier = entry.ShortUniqueId.c_str();
     commonProperties.SupportedDataFormats = MidiDataFormat::MidiDataFormat_UMP;
     commonProperties.NativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
     commonProperties.SupportsMultiClient = multiClient;
     commonProperties.RequiresMetadataHandler = requiresMetadataHandler;
     commonProperties.GenerateIncomingTimestamps = generateIncomingTimestamps;
-
+    commonProperties.ManufacturerName = TRANSPORT_MANUFACTURER;
+    commonProperties.SupportsMidi1ProtocolDefaultValue = true;
+    commonProperties.SupportsMidi2ProtocolDefaultValue = true;
 
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
         (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
@@ -411,27 +387,27 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
         MidiFlow::MidiFlowBidirectional,                        // MIDI Flow
         &commonProperties,
         (ULONG)interfaceDeviceProperties.size(),
-        ARRAYSIZE(deviceDevProperties),
+        (ULONG)0,
         (PVOID)interfaceDeviceProperties.data(),
-        (PVOID)deviceDevProperties,
+        (PVOID)nullptr,
         (PVOID)&createInfo,
         (LPWSTR)&newDeviceInterfaceId,
         deviceInterfaceIdMaxSize));
 
 
-    // now delete all the properties that have been discovered in-protocol
-    // we have to do this because they end up cached by PNP and come back
-    // when you recreate a device with the same Id. This is a real problem 
-    // if you are testing function blocks or endpoint properties with this
-    // loopback transport.
-    m_MidiDeviceManager->DeleteAllEndpointInProtocolDiscoveredProperties(newDeviceInterfaceId);
-
-    // we need this for removal later
+    // we need this for device removal later
     entry.CreatedShortDeviceInstanceId = instanceId;
-
     entry.CreatedDeviceEndpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId);
 
     AbstractionState::Current().GetEndpointTable()->AddCreatedEndpointDevice(entry);
+
+    TraceLoggingWrite(
+        MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Created device-side endpoint", "message")
+    );
 
     return S_OK;
 

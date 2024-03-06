@@ -24,6 +24,8 @@ namespace Windows.Devices.Midi2
         // The instance Id. A single endpoint may have multiples of the same plugin type (a generic filter, for example)
         Guid PluginInstanceId{ get; };
 
+        Boolean IsFromConfigurationFile{ get; };   // true if from the config file. Apps shouldn't normally set this to true
+
         // the actual changes to be made
         Windows.Data.Json.JsonObject SettingsJson { get; };
     }

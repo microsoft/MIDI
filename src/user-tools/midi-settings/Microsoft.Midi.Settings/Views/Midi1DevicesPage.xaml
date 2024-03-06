@@ -5,7 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="using:Microsoft.Midi.Settings.ViewModels"
-        xmlns:labs="using:CommunityToolkit.Labs.WinUI"
+    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
 
     mc:Ignorable="d">
 
@@ -26,8 +26,8 @@
                                 <Expander.HeaderTemplate>
                                     <DataTemplate x:DataType="local:Midi1ParentDeviceInformation">
                                         <Grid>
-                                            <TextBlock Text="{x:Bind Name}" Margin="3" HorizontalAlignment="Left"/>
-                                            <TextBlock Text="{x:Bind Id}" Margin="3" HorizontalAlignment="Right"/>
+                                            <TextBlock Text="{x:Bind Name}" Margin="3" HorizontalAlignment="Left" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                            <TextBlock Text="{x:Bind Id}" Margin="3" HorizontalAlignment="Right" Style="{StaticResource SmallPlainPropertyValue}"/>
                                         </Grid>
                                     </DataTemplate>
                                 </Expander.HeaderTemplate>
@@ -43,11 +43,11 @@
                                                             <ColumnDefinition Width="100" />
                                                             <ColumnDefinition Width="*" />
                                                             <ColumnDefinition Width="*" />
-                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
                                                         </Grid.ColumnDefinitions>
-                                                        <TextBlock Grid.Column="0" Text="{Binding Path=PortDirection}" Margin="3" />
-                                                        <TextBlock Grid.Column="1" Text="{Binding Path=Name}" Margin="3"/>
-                                                        <TextBlock Grid.Column="2" Text="{Binding Path=DeviceInstanceId}" Margin="3" />
+                                                        <TextBlock Grid.Column="0" Text="{Binding Path=PortDirection}" Margin="3" Style="{StaticResource SmallPlainPropertyValue}" />
+                                                        <TextBlock Grid.Column="1" Text="{Binding Path=Name}" Margin="3"  Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                                        <TextBlock Grid.Column="2" Text="{Binding Path=DeviceInstanceId}" Margin="3" Style="{StaticResource SmallPlainPropertyValue}"/>
                                                     </Grid>
                                                 </DataTemplate>
                                             </ItemsRepeater.ItemTemplate>

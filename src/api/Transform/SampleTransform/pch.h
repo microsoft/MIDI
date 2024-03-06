@@ -38,6 +38,9 @@
 #include <winmeta.h>
 #include <TraceLoggingProvider.h>
 
+#include "MidiServicePlugin.h"
+#include "MidiServicePlugin_i.c"
+
 #include "Midi2SampleTransform_i.c"
 #include "Midi2SampleTransform.h"
 

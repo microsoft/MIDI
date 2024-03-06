@@ -14,8 +14,13 @@ _Use_decl_annotations_
 HRESULT 
 CMidi2BluetoothMidiConfigurationManager::Initialize(
     GUID AbstractionId, 
-    IUnknown* MidiDeviceManager)
+    IUnknown* MidiDeviceManager,
+    IUnknown* MidiServiceConfigurationManagerInterface
+)
 {
+    UNREFERENCED_PARAMETER(MidiServiceConfigurationManagerInterface);
+
+
     TraceLoggingWrite(
         MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
@@ -50,7 +55,7 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
     UNREFERENCED_PARAMETER(IsFromConfigurationFile);
     UNREFERENCED_PARAMETER(Response);
 
-    return E_FAIL;
+    return E_NOTIMPL;
 }
  
 HRESULT 

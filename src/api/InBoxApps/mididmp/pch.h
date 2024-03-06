@@ -21,3 +21,8 @@
 namespace midi2 = winrt::Windows::Devices::Midi2;
 namespace foundation = winrt::Windows::Foundation;
 namespace collections = winrt::Windows::Foundation::Collections;
+
+#include "combaseapi.h"
+#include "wstring_util.h"
+
+namespace internal = ::Windows::Devices::Midi2::Internal;

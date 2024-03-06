@@ -72,6 +72,11 @@ namespace Windows.Devices.Midi2
         static MidiServiceConfigurationResponse UpdateProcessingPluginConfiguration(
             IMidiServiceMessageProcessingPluginConfiguration configurationUpdate);
 
+
+        //static String CurrentSetupFullPath{ get; };
+        //static String CurrentSetupFileName{ get; };
+
+
     }
 }
 

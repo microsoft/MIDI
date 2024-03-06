@@ -46,7 +46,6 @@ public:
 
 private:
     GUID m_ContainerId{};
-    GUID m_TransportAbstractionId{};
 
     std::wstring m_parentDeviceId{};
 

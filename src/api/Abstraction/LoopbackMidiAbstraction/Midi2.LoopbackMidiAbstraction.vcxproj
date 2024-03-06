@@ -280,6 +280,7 @@
     <ClCompile Include="Midi2.LoopbackMidiConfigurationManager.cpp" />
     <ClCompile Include="Midi2.LoopbackMidiEndpointManager.cpp" />
     <ClCompile Include="Midi2.LoopbackMidiBidi.cpp" />
+    <ClCompile Include="Midi2LoopbackMidiPluginMetadataProvider.cpp" />
     <ClCompile Include="pch.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -298,6 +299,7 @@
     <ClInclude Include="Midi2.LoopbackMidiBidi.h" />
     <ClInclude Include="Midi2.LoopbackMidiConfigurationManager.h" />
     <ClInclude Include="Midi2.LoopbackMidiEndpointManager.h" />
+    <ClInclude Include="Midi2.LoopbackMidiPluginMetadataProvider.h" />
     <ClInclude Include="MidiLoopbackDevice.h" />
     <ClInclude Include="MidiLoopbackDeviceDefinition.h" />
     <ClInclude Include="MidiLoopbackDeviceTable.h" />

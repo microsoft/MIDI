@@ -16,7 +16,7 @@ class CMidi2LoopbackMidiConfigurationManager :
 
 {
 public:
-    STDMETHOD(Initialize(_In_ GUID AbstractionId, _In_ IUnknown* MidiDeviceManager));
+    STDMETHOD(Initialize(_In_ GUID AbstractionId, _In_ IUnknown* MidiDeviceManager, _In_ IUnknown* MidiServiceConfigurationManagerInterface));
     STDMETHOD(UpdateConfiguration(_In_ LPCWSTR ConfigurationJsonSection, _In_ BOOL IsFromConfigurationFile, _Out_ BSTR* Response));
     STDMETHOD(Cleanup)();
 

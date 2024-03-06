@@ -13,9 +13,13 @@ _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiConfigurationManager::Initialize(
     GUID AbstractionId, 
-    IUnknown* MidiDeviceManager
+    IUnknown* MidiDeviceManager,
+    IUnknown* MidiServiceConfigurationManagerInterface
 )
 {
+    UNREFERENCED_PARAMETER(MidiServiceConfigurationManagerInterface);
+
+
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
@@ -86,7 +90,7 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
         return E_FAIL;
     }
 
-    auto createArray = jsonObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICES_CREATE_ARRAY_KEY, nullptr);
+    auto createArray = jsonObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY, nullptr);
 
     if (createArray == nullptr || createArray.Size() == 0)
     {

@@ -26,6 +26,6 @@ namespace Windows.Devices.Midi2
         Windows.Foundation.DateTime StartTime{ get; };
 
 
-        IVector<MidiServiceSessionConnectionInfo> Connections{ get; };
+        IVectorView<MidiServiceSessionConnectionInfo> Connections{ get; };
     }
 }

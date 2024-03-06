@@ -1,4 +1,4 @@
-<!-- Copyright (c) Microsoft Corporation. All rights reserved. -->
+﻿<!-- Copyright (c) Microsoft Corporation. All rights reserved. -->
 <!-- Licensed under the MIT License. See LICENSE in the project root for license information. -->
 
 <Page
@@ -10,9 +10,21 @@
     xmlns:local="using:Microsoft.Midi.Settings.ViewModels"
     xmlns:midi2="using:Windows.Devices.Midi2"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    >
+
+    <Page.Resources>
+        <ResourceDictionary>
+            <helpers:HasUniqueIdToVisibilityConverter x:Key="HasUniqueIdToVisibilityConverter" />
+            <helpers:HasUniqueIdToInverseVisibilityConverter x:Key="HasUniqueIdToInverseVisibilityConverter" />
+            <helpers:MidiEndpointNativeDataFormatConverter x:Key="MidiEndpointNativeDataFormatConverter" />
+            <helpers:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+            <helpers:BooleanToEmojiCheckConverter x:Key="BooleanToEmojiCheckConverter" />
+        </ResourceDictionary>
+    </Page.Resources>
 
     <Grid x:Name="ContentArea">
         <Grid.RowDefinitions>
@@ -23,25 +35,106 @@
         <TextBlock Grid.Row="0" x:Uid="DevicesPage_Description" Margin="0,0,0,8" />
 
         <ScrollViewer Grid.Row="1">
-            <Grid Margin="0,0,8,0">
-                <ItemsControl ItemsSource="{x:Bind ViewModel.MidiEndpointDevices}">
+            <Grid Margin="0,0,8,0" HorizontalAlignment="Stretch">
+                
+                <!-- Transport -->
+                
+                <!-- If this transport supports runtime creation, have create button at this level -->
+                
+                <ItemsControl ItemsSource="{x:Bind ViewModel.MidiEndpointDevicesByTransport}">
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="midi2:MidiEndpointDeviceInformation">
-                            <controls:SettingsCard Margin="3" 
-                                                   IsClickEnabled="True"
-                                                   Header="{x:Bind Name}"
-                                                   Command="{Binding Path=ViewModel.ViewDeviceDetailsCommand, ElementName=MidiDevicesPage}" CommandParameter="{x:Bind (midi2:MidiEndpointDeviceInformation)}">
-                                <controls:SettingsCard.Description>
-                                    <StackPanel Orientation="Vertical">
-                                        <TextBlock Text="{x:Bind TransportSuppliedDescription}"/>
-                                        <TextBlock Text="{x:Bind UserSuppliedDescription}" />
+                        <DataTemplate x:DataType="local:MidiEndpointDevicesByTransport">
+                            
+                            <controls:SettingsExpander ItemsSource="{x:Bind EndpointDevices}"
+                                                       IsExpanded="True"
+                                                       Margin="3">
+                                <controls:SettingsExpander.Header>
+                                    <StackPanel>
+                                        <TextBlock Text="{x:Bind Transport.Name}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                        <TextBlock Text="{x:Bind Transport.Description}" Style="{StaticResource SmallPlainPropertyValue}"/>
                                     </StackPanel>
-                                </controls:SettingsCard.Description>
+                                </controls:SettingsExpander.Header>
+
+                                <controls:SettingsExpander.ItemTemplate>
+                                    <DataTemplate x:DataType="midi2:MidiEndpointDeviceInformation">
+                                        <controls:SettingsCard IsClickEnabled="True"
+                                                               CommandParameter="{ x:Bind }"
+                                                               Loaded="EndpointSettingsCard_Loaded">
+                                            <controls:SettingsCard.Header>
+                                                <TextBlock Text="{x:Bind Name}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                            </controls:SettingsCard.Header>
+                                            <controls:SettingsCard.Description>
+                                                <StackPanel Orientation="Vertical">
+                                                    <TextBlock Text="{x:Bind TransportSuppliedDescription}" Style="{StaticResource SmallPlainPropertyValue}"/>
+                                                    <TextBlock Text="{x:Bind UserSuppliedDescription}" Style="{StaticResource SmallPlainPropertyValue}"/>
+                                                </StackPanel>
+                                            </controls:SettingsCard.Description>
+
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="*" />
+                                                    <RowDefinition Height="*" />
+                                                    <RowDefinition Height="*" />
+                                                </Grid.RowDefinitions>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+
+                                                
+                                                <TextBlock Grid.Row="0" Grid.Column="0" 
+                                                           Text="Native Format" Style="{StaticResource SmallPropertyLabel}" Margin="21,3,3,3"/>
+                                                <TextBlock Grid.Row="0" Grid.Column="1" 
+                                                           Text="{x:Bind NativeDataFormat, Converter={StaticResource MidiEndpointNativeDataFormatConverter}}" 
+                                                           Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                                                
+                                                
+                                                
+                                                <TextBlock Grid.Row="0" Grid.Column="2" 
+                                                           Text="MIDI 1.0" Style="{StaticResource SmallPropertyLabel}" Margin="21,3,3,3"/>
+                                                <TextBlock Grid.Row="0" Grid.Column="3"
+                                                           Text="{x:Bind SupportsMidi10Protocol, Converter={StaticResource BooleanToEmojiCheckConverter}}"
+                                                           Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                                                <TextBlock Grid.Row="1" Grid.Column="2" 
+                                                           Text="MIDI 2.0" Style="{StaticResource SmallPropertyLabel}" Margin="21,3,3,3"/>
+                                                <TextBlock Grid.Row="1" Grid.Column="3"
+                                                           Text="{x:Bind SupportsMidi20Protocol, Converter={StaticResource BooleanToEmojiCheckConverter}}"
+                                                           Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                                                
+                                                
+                                                
+                                                <TextBlock Grid.Row="0" Grid.Column="4" 
+                                                           Text="Unique Id?" Style="{StaticResource SmallPropertyLabel}" Margin="21,3,3,3"/>
+                                                <TextBlock Grid.Row="0" Grid.Column="5"
+                                                           Text="☑️"
+                                                           Visibility="{x:Bind TransportSuppliedSerialNumber, Converter={StaticResource HasUniqueIdToVisibilityConverter}}" 
+                                                           Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                                <TextBlock Grid.Row="0" Grid.Column="5"
+                                                           Text="❌"
+                                                           Visibility="{x:Bind TransportSuppliedSerialNumber, Converter={StaticResource HasUniqueIdToInverseVisibilityConverter}}" 
+                                                           Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                                                <TextBlock Grid.Row="1" Grid.Column="4" 
+                                                           Text="Multi-client" Style="{StaticResource SmallPropertyLabel}" Margin="21,3,3,3"/>
+                                                <TextBlock Grid.Row="1" Grid.Column="5"
+                                                           Text="{x:Bind SupportsMultiClient, Converter={StaticResource BooleanToEmojiCheckConverter}}"
+                                                           Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                                            </Grid>
+                                            
+                                        </controls:SettingsCard>
+                                    </DataTemplate>
+                                </controls:SettingsExpander.ItemTemplate>
                                 
-                                <StackPanel Orientation="Vertical">
-                                    <TextBlock Text="{x:Bind NativeDataFormat}" />
-                                </StackPanel>
-                            </controls:SettingsCard>
+                            </controls:SettingsExpander>
+                            
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>

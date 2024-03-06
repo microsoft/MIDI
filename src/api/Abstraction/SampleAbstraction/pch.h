@@ -50,18 +50,24 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 #include "json_defs.h"
 #include "json_helpers.h"
 #include "swd_helpers.h"
+#include "resource_util.h"
 
 #include "MidiXProc.h"
 
 namespace internal = ::Windows::Devices::Midi2::Internal;
+
+#include "MidiServicePlugin.h"
+#include "MidiServicePlugin_i.c"
 
 #include "Midi2SampleAbstraction_i.c"
 #include "Midi2SampleAbstraction.h"
 
 #include "dllmain.h"
 
+#include "abstraction_defs.h"
+
 #include "Midi2.SampleAbstraction.h"
 #include "Midi2.SampleMidiIn.h"
 #include "Midi2.SampleMidiOut.h"
 #include "Midi2.SampleMidiBiDi.h"
-
+#include "Midi2.SampleMidiPluginMetadataProvider.h"

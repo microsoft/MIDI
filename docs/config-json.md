@@ -20,16 +20,16 @@ JSON is typically case-sensitive for all keys. The Windows.Data.Json parser used
 
 ```json
 "{26FA740D-469C-4D33-BEB1-3885DE7D6DF1}":
-        {
-            "_comment": "KS MIDI (USB etc.)"
-        }
+{
+    "_comment": "KS MIDI (USB etc.)"
+}
 ```
 and
 ```json
 "{26fa740d-469c-4d33-beb1-3885de7d6df1}":
-        {
-            "_comment": "KS MIDI (USB etc.)"
-        }
+{
+    "_comment": "KS MIDI (USB etc.)"
+}
 ```
 
 ## Schema
@@ -71,27 +71,31 @@ Here's an example of a bare-bones file, with sections for three different transp
 
 ### Endpoint Properties
 
-The basics of this are identical for each transport. We'll use KS (USB) as an example
+> NOTE: This section is in flux, as we're changing how devices are identified, and how properties are set.
+
+The basics of this are identical for each transport. We'll use KS (USB) as an example as it has the most complex lookup mechanisms to attempt to identify devices, even when they are moved from port to port.
 
 ```json
 "{26FA740D-469C-4D33-BEB1-3885DE7D6DF1}":
 {
-    "_comment": "KS MIDI (USB etc.)"
-    "SWD: \\\\?\\SWD#MIDISRV#MIDIU_KS_BIDI_6799286025327820155_OUTPIN.0_INPIN.2#{e7cce071-3c03-423f-88d3-f1045d02552b}":
-    {
-        "userSuppliedName" : "Pete's Kontrol S61",
-        "userSuppliedDescription" : "This is my most favorite MIDI 2.0 controller in the whole world!"
-    }
-    
+    "_comment": "KS MIDI (USB etc.)",
+    "update":
+    [
+        {
+            "match":
+            {
+                "SWD": "\\\\?\\swd#midisrv#midiu_ks_bidi_6051189816177518400_outpin.0_inpin.2#{e7cce071-3c03-423f-88d3-f1045d02552b}"
+            },
+            "_comment" : "Roland A88 mk2",
+            "userSuppliedName" : "Pete's A88",
+            "userSuppliedDescription" : "The A88 is the giant MIDI 2.0 piano-action keyboard here in my studio."
+        },
+        {
+            ...
+        }
+    ]   
 },
 ```
-
-Of those, the identification method `SWD` is the most important. This controls how we identify a matching device. In cases where the manufacturer doesn't supply a unique iSerialNumber in USB, unplugging your device from one USB port and plugging it into another can result in a new Id. Similarly, if you have two or more of the same device, and they do not have unique serial numbers, it can be impossible for Windows to distinguish between them.
-
-Valid values for the identification method prefix
-
-- `SWD: ` : (The colon and trailing space are required). Use the full Windows Endpoint Device Interface Id. For example `\\\\?\\SWD#MIDISRV#MIDIU_KS_BIDI_16024944077548273316_OUTPIN.0_INPIN.2#{e7cce071-3c03-423f-88d3-f1045d02552b}`. (Note how the backslashes have to be escaped with additional backslashes.) If the device has an `iSerialNumber` or you never move it between USB ports, this tends to work fine.
-- (other methods to be added here when we implement them)
 
 Valid properties you can set across all supported endpoints
 
@@ -99,13 +103,12 @@ Valid properties you can set across all supported endpoints
 | -------- | ---- | ----------- |
 | `userSuppliedName` | Quoted Text | The name you want to use for the endpoint. This will override the name displayed in correctly-coded applications, but won't necessarily change what you see in Device Manager. These names should be relatively short so they display fully in all/most applications, but meaningful to you. |
 | `userSuppliedDescription` | Quoted Text | A text description and/or notes about the endpoint. Applications may or may not use this data |
-| `forceSingleClientOnly` | Boolean true/false (no quotes) | Most endpoints are multi-client (more than one application can use them simultaneously) by default. This setting is for forcing an endpoint to be single-client only (a value of true). It's unusual to need this, but a typical use may be to disable multi-client for a device which has a custom driver which doesn't gracefully handle multiple client applications at the same time. |
 
 ## Plugin-specific settings
 
 This is not an exhaustive list, because the transport and processing plugins may be created by anyone.
 
-### Virtual MIDI 
+### Loopback MIDI 
 
 TODO: Provide examples for this
 

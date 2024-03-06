@@ -58,6 +58,9 @@ namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
 #include "plugin_defs.h"
 #include "ScheduledUmpMessage.h"
 
+#include "MidiServicePlugin.h"
+#include "MidiServicePlugin_i.c"
+
 #include "Midi2SchedulerTransform_i.c"
 #include "Midi2SchedulerTransform.h"
 

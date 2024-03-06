@@ -566,6 +566,9 @@ Timestamp</value>
   <data name="PropertiesTablePropertyLabelUserSuppliedName" xml:space="preserve">
     <value>User-Supplied Name</value>
   </data>
+  <data name="PropertiesTablePropertyLabelVidPid" xml:space="preserve">
+    <value>USB VID / PID</value>
+  </data>
   <data name="PropertiesTableSectionHeaderEndpointMetadata" xml:space="preserve">
     <value>Endpoint Metadata</value>
   </data>

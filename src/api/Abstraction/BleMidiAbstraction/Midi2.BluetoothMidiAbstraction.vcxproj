@@ -280,6 +280,7 @@
     <ClCompile Include="Midi2.BluetoothMidiConfigurationManager.cpp" />
     <ClCompile Include="Midi2.BluetoothMidiEndpointManager.cpp" />
     <ClCompile Include="Midi2.BluetoothMidiBidi.cpp" />
+    <ClCompile Include="Midi2.BluetoothMidiPluginMetadataProvider.cpp" />
     <ClCompile Include="MidiEndpointTable.cpp" />
     <ClCompile Include="pch.cpp" />
   </ItemGroup>
@@ -299,6 +300,7 @@
     <ClInclude Include="Midi2.BluetoothMidiConfigurationManager.h" />
     <ClInclude Include="Midi2.BluetoothMidiEndpointManager.h" />
     <ClInclude Include="Midi2.BluetoothMidiBidi.h" />
+    <ClInclude Include="Midi2.BluetoothMidiPluginMetadataProvider.h" />
     <ClInclude Include="MidiBluetoothDevice.h" />
     <ClInclude Include="MidiBluetoothDeviceDefinition.h" />
     <ClInclude Include="MidiBluetoothPacket.h" />

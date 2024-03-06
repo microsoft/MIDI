@@ -13,9 +13,13 @@ _Use_decl_annotations_
 HRESULT
 CMidi2LoopbackMidiConfigurationManager::Initialize(
     GUID AbstractionId,
-    IUnknown* MidiDeviceManager
+    IUnknown* MidiDeviceManager,
+    IUnknown* MidiServiceConfigurationManagerInterface
 )
 {
+    UNREFERENCED_PARAMETER(MidiServiceConfigurationManagerInterface);
+
+
     TraceLoggingWrite(
         MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
@@ -80,7 +84,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
         std::wstring instanceIdPrefixB = IsFromConfigurationFile ? MIDI_PERM_LOOP_INSTANCE_ID_B_PREFIX : MIDI_TEMP_LOOP_INSTANCE_ID_B_PREFIX;
         // we should probably set a property based on this as well.
 
-        auto createObject = jsonObject.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICES_CREATE_KEY, nullptr);
+        auto createObject = jsonObject.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY, nullptr);
 
         // Create ----------------------------------
 
@@ -247,7 +251,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
         if (!IsFromConfigurationFile)
         {
-            auto deleteArray = jsonObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICES_REMOVE_KEY, nullptr);
+            auto deleteArray = jsonObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_COMMON_REMOVE_KEY, nullptr);
 
             // Create ----------------------------------
 

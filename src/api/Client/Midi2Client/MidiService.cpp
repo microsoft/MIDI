@@ -215,12 +215,70 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     foundation::Collections::IVector<midi2::MidiServiceTransportPluginInfo> MidiService::GetInstalledTransportPlugins()
     {
-        // TODO: Need to implement GetInstalledTransportPlugins. For now, return an empty collection instead of throwing
+        auto transportList = winrt::single_threaded_vector<midi2::MidiServiceTransportPluginInfo>();
 
-        // This can be read from the registry, but the additional metadata requires calling into the objects themselves
+        try
+        {
+            winrt::com_ptr<IMidiAbstraction> serviceAbstraction;
+            winrt::com_ptr<IMidiServicePluginMetadataReporterInterface> metadataReporter;
 
+            serviceAbstraction = winrt::create_instance<IMidiAbstraction>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
 
-        return winrt::single_threaded_vector<midi2::MidiServiceTransportPluginInfo>();
+            if (serviceAbstraction != nullptr)
+            {
+                if (SUCCEEDED(serviceAbstraction->Activate(__uuidof(IMidiServicePluginMetadataReporterInterface), (void**)&metadataReporter)))
+                {
+                    CComBSTR metadataListJson;
+                    metadataListJson.Empty();
+
+                    metadataReporter->GetAbstractionList(&metadataListJson);
+
+                    // parse it into json objects
+
+                    if (metadataListJson.m_str != nullptr && metadataListJson.Length() > 0)
+                    {
+                        winrt::hstring hstr(metadataListJson, metadataListJson.Length());
+
+                        // Parse the json, create the objects, throw them into the vector and return
+
+                        json::JsonObject jsonObject = json::JsonObject::Parse(hstr);
+
+                        if (jsonObject != nullptr)
+                        {
+                            for (auto const& transportKV : jsonObject)
+                            {
+                                auto info = winrt::make_self<implementation::MidiServiceTransportPluginInfo>();
+
+                                auto transport = transportKV.Value().GetObject();
+
+                                info->InternalInitialize(
+                                    internal::StringToGuid(transportKV.Key().c_str()),
+                                    transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_NAME_PROPERTY_KEY, L""),
+                                    transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_MNEMONIC_PROPERTY_KEY, L""),
+                                    transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_DESCRIPTION_PROPERTY_KEY, L""),
+                                    transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_SMALL_IMAGE_PATH_PROPERTY_KEY, L""),
+                                    transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_AUTHOR_PROPERTY_KEY, L""),
+                                    transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_VERSION_PROPERTY_KEY, L""),
+                                    transport.GetNamedBoolean(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_SYSTEM_MANAGED_PROPERTY_KEY, false),
+                                    transport.GetNamedBoolean(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_RT_CREATABLE_APPS_PROPERTY_KEY, false),
+                                    transport.GetNamedBoolean(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_RT_CREATABLE_SETTINGS_PROPERTY_KEY, false),
+                                    transport.GetNamedBoolean(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_CLIENT_CONFIGURABLE_PROPERTY_KEY, false),
+                                    transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_CLIENT_CONFIG_ASSEMBLY_PROPERTY_KEY, L"")
+                                );
+
+                                transportList.Append(*info);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Exception processing session tracker result json");
+        }
+
+        return transportList;
     }
 
 
@@ -425,7 +483,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // create the abstraction object with the child creation node
 
         abstractionObject.SetNamedValue(
-            MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICES_CREATE_KEY,
+            MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY,
             endpointCreationObject);
 
         // create the main node
@@ -443,7 +501,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         // send it up
 
-        json::JsonObject responseObject = InternalSendConfigurationJsonAndGetResponse(loopbackDeviceAbstractionId, wrapperObject);
+        json::JsonObject responseObject = InternalSendConfigurationJsonAndGetResponse(loopbackDeviceAbstractionId, wrapperObject, false);
 
         // parse the results
         auto successResult = responseObject.GetNamedBoolean(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY, false);
@@ -486,7 +544,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     json::JsonObject MidiService::InternalSendConfigurationJsonAndGetResponse(
-        winrt::guid const& abstractionId, json::JsonObject const& configObject) noexcept
+        winrt::guid const& abstractionId, 
+        json::JsonObject const& configObject,
+        bool const isFromConfigurationFile
+    ) noexcept
     {
         auto iid = __uuidof(IMidiAbstractionConfigurationManager);
         winrt::com_ptr<IMidiAbstractionConfigurationManager> configManager;
@@ -512,7 +573,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             internal::LogInfo(__FUNCTION__, L"Config manager activate call SUCCESS");
 
-            auto initializeResult = configManager->Initialize(abstractionId, nullptr);
+            auto initializeResult = configManager->Initialize(abstractionId, nullptr, nullptr);
 
             if (FAILED(initializeResult))
             {
@@ -530,7 +591,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             // send up the payload
 
             internal::LogInfo(__FUNCTION__, jsonPayload.c_str());
-            auto configUpdateResult = configManager->UpdateConfiguration(jsonPayload.c_str(), false, &responseString);
+            auto configUpdateResult = configManager->UpdateConfiguration(jsonPayload.c_str(), isFromConfigurationFile, &responseString);
 
             internal::LogInfo(__FUNCTION__, responseString);
 
@@ -607,7 +668,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // create the abstraction object with the child creation node
 
         abstractionObject.SetNamedValue(
-            MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICES_REMOVE_KEY,
+            MIDI_CONFIG_JSON_ENDPOINT_COMMON_REMOVE_KEY,
             endpointDeletionArray);
 
         // create the main node
@@ -627,7 +688,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         internal::LogInfo(__FUNCTION__, L"configManager->UpdateConfiguration success");
 
-        json::JsonObject responseObject = InternalSendConfigurationJsonAndGetResponse(loopbackDeviceAbstractionId, wrapperObject);
+        json::JsonObject responseObject = InternalSendConfigurationJsonAndGetResponse(loopbackDeviceAbstractionId, wrapperObject, false);
 
 
 
@@ -656,6 +717,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         
         // this initializes to a failure state, so we can just return it when we have a fail
         auto response = winrt::make_self<implementation::MidiServiceConfigurationResponse>();
+        response->InternalSetStatus(midi2::MidiServiceConfigurationResponseStatus::ErrorOther); // default
 
 
         if (configurationUpdate != nullptr)
@@ -664,22 +726,30 @@ namespace winrt::Windows::Devices::Midi2::implementation
             {
                 json::JsonObject responseJsonObject = InternalSendConfigurationJsonAndGetResponse(
                     configurationUpdate.TransportId(),
-                    configurationUpdate.SettingsJson()
+                    configurationUpdate.SettingsJson(),
+                    configurationUpdate.IsFromConfigurationFile()
                 );
 
+                if (responseJsonObject != nullptr)
+                {
+                    auto success = responseJsonObject.GetNamedBoolean(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY, false);
 
-
-
-                // TODO: Process return result
-
-
-
+                    if (success)
+                    {
+                        response->InternalSetStatus(midi2::MidiServiceConfigurationResponseStatus::Success);
+                    }
+                }
+                else
+                {
+                    response->InternalSetStatus(midi2::MidiServiceConfigurationResponseStatus::ErrorOther);
+                }
 
             }
             else
             {
                 internal::LogGeneralError(__FUNCTION__, L"Configuration object SettingsJson is null");
 
+                response->InternalSetStatus(midi2::MidiServiceConfigurationResponseStatus::ErrorJsonNullOrEmpty);
             }
 
             // TODO: Process the return object

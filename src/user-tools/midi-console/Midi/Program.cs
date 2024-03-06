@@ -46,14 +46,13 @@ app.Configure(config =>
             .WithExample("enumerate", "active-sessions")
             ;
 
-        // TODO: may want to change this to just "plugins" and offer a switch
-        // for the type of plugins to show
-        /*
         enumerate.AddCommand<EnumTransportsCommand>("transport-plugins")
             .WithAlias("transports")
             .WithDescription(Strings.CommandEnumerateTransportPluginsDescription)
             .WithExample("enumerate", "transport-plugins")
-            ; */
+            ;
+
+
     }).WithAlias("list")
     .WithAlias("enum");
 
