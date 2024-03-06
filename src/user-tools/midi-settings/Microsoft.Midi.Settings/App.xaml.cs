@@ -134,6 +134,12 @@ public partial class App : Application
     {
         // TODO: Log and handle exceptions as appropriate.
         // https://docs.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.application.unhandledexception.
+
+        System.Diagnostics.EventLog.WriteEntry("Windows MIDI Services Settings", e.ToString());
+
+        // TEMP!
+        e.Handled = true;
+
     }
 
     protected async override void OnLaunched(LaunchActivatedEventArgs args)

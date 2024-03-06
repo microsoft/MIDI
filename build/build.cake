@@ -545,7 +545,7 @@ Task("BuildSettingsApp")
     // TODO: Update nuget ref in console app to the new version
    
 
-    Information("\nBuilding MIDI settings app for " + plat.ToString());
+    Information("\nBuilding MIDI settings app for " + plat.ToString() + " " + configuration);
 
     // update nuget packages for the entire solution. This is important for API/SDK NuGet in particular
 
