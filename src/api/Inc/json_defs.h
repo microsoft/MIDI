@@ -67,9 +67,9 @@
 
 // Virtual MIDI (here because also needed by the client API)
 
-#define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICES_CREATE_ARRAY_KEY                      L"createVirtualDevices"
-#define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICES_UPDATE_ARRAY_KEY                      L"updateVirtualDevices"
-#define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICES_REMOVE_ARRAY_KEY                      L"removeVirtualDevices"
+//#define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICES_CREATE_ARRAY_KEY                      L"createVirtualDevices"
+//#define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICES_UPDATE_ARRAY_KEY                      L"updateVirtualDevices"
+//#define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICES_REMOVE_ARRAY_KEY                      L"removeVirtualDevices"
 
 #define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_ASSOCIATION_ID_PROPERTY_KEY            L"associationIdentifier"
 #define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_UNIQUE_ID_MAX_LEN                      32

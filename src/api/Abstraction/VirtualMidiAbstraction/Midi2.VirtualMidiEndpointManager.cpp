@@ -330,9 +330,9 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
     //DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
     //DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
 
-
-    std::wstring endpointName = entry.BaseEndpointName + L" (Virtual MIDI Device)";
-    std::wstring endpointDescription = entry.Description + L" (This endpoint for use only by the device host application.)";
+    // TODO: These should come from localized resources
+    std::wstring endpointName = internal::TrimmedWStringCopy(entry.BaseEndpointName + L" (Virtual MIDI Device)");
+    std::wstring endpointDescription = internal::TrimmedWStringCopy(entry.Description + L" (This endpoint for use only by the device host application.)");
 
     std::vector<DEVPROPERTY> interfaceDeviceProperties{};
 
@@ -344,7 +344,7 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
     std::wstring friendlyName = internal::CalculateEndpointDevicePrimaryName(endpointName, L"", L"");
 
 
-    interfaceDeviceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_VirtualMidiEndpointAssociator, DEVPROP_STORE_SYSTEM, nullptr},
+    interfaceDeviceProperties.push_back(DEVPROPERTY{ { PKEY_MIDI_VirtualMidiEndpointAssociator, DEVPROP_STORE_SYSTEM, nullptr},
         DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (entry.VirtualEndpointAssociationId.length() + 1)), (PVOID)entry.VirtualEndpointAssociationId.c_str() });
 
 
@@ -354,15 +354,12 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
 
     std::wstring instanceId = internal::NormalizeDeviceInstanceIdWStringCopy(MIDI_VIRT_INSTANCE_ID_DEVICE_PREFIX + entry.ShortUniqueId);
 
-
     createInfo.pszInstanceId = instanceId.c_str();
     createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
     createInfo.pszDeviceDescription = endpointName.c_str();
 
-
     const ULONG deviceInterfaceIdMaxSize = 255;
     wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
-
 
 
     MIDIENDPOINTCOMMONPROPERTIES commonProperties{};
@@ -398,12 +395,19 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
         deviceInterfaceIdMaxSize));
 
 
-    // we need this for removal later
+    // we need this for device removal later
     entry.CreatedShortDeviceInstanceId = instanceId;
-
     entry.CreatedDeviceEndpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId);
 
     AbstractionState::Current().GetEndpointTable()->AddCreatedEndpointDevice(entry);
+
+    TraceLoggingWrite(
+        MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Created device-side endpoint", "message")
+    );
 
     return S_OK;
 

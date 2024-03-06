@@ -256,7 +256,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         internal::LogInfo(__FUNCTION__, L" adding virtual devices array to abstraction object");
 
         abstractionObject.SetNamedValue(
-            MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICES_CREATE_ARRAY_KEY, 
+            MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY,
             createVirtualDevicesArray);
 
         internal::LogInfo(__FUNCTION__, L" setting named value for virtual abstraction id");
@@ -276,7 +276,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         //{
         //    "{8FEAAD91-70E1-4A19-997A-377720A719C1}":
         //    {
-        //       "createVirtualDevices":
+        //       "create":
         //       [
         //           {
         //              ... properties ...
@@ -317,10 +317,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
         }
 
 
-
-        // TODO: Use the service function to send this.
-
-
         internal::LogInfo(__FUNCTION__, L"config manager initialize call SUCCESS");
 
         CComBSTR response;
@@ -331,8 +327,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         auto configUpdateResult = configManager->UpdateConfiguration(topLevelTransportPluginSettingsObject.Stringify().c_str(), false, &response);
 
-
         internal::LogInfo(__FUNCTION__, L"UpdateConfiguration returned");
+        internal::LogInfo(__FUNCTION__, response);
 
         if (FAILED(configUpdateResult))
         {
@@ -374,7 +370,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
             auto firstObject = responseArray.GetObjectAt(0);
 
-            firstObject.GetNamedString(
+            endpointDeviceId = firstObject.GetNamedString(
                 MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_CREATED_ID_PROPERTY_KEY,
                 L"");
 

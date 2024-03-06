@@ -187,7 +187,7 @@ HRESULT MidiEndpointTable::OnDeviceConnected(std::wstring deviceEndpointInterfac
         // look up the association ID in SWD properties
         auto associationId = internal::GetSwdPropertyVirtualEndpointAssociationId(deviceEndpointInterfaceId);
 
-        if (associationId != L"")
+        if (!associationId.empty())
         {
             if (m_endpoints.find(associationId) != m_endpoints.end())
             {

@@ -10,8 +10,7 @@
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"    
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    mc:Ignorable="d">
     <Page.Resources>
         <helpers:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
@@ -22,7 +21,7 @@
         <helpers:MidiFunctionBlockMidi10Converter x:Key="MidiFunctionBlockMidi10Converter" />
     </Page.Resources>
     
-    <Grid MaxWidth="1000" HorizontalAlignment="Stretch">
+    <Grid HorizontalAlignment="Stretch">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -98,7 +97,7 @@
                                 </StackPanel>
                             </controls:SettingsCard.Header>
                             
-                            <Button Content="Rename" />
+                            <Button Content="Rename" Click="Button_Click"/>
                         </controls:SettingsCard>
                         
                         <controls:SettingsCard>
@@ -108,7 +107,7 @@
                                     <TextBlock Text="{x:Bind ViewModel.DeviceInformation.UserSuppliedDescription}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
                                 </StackPanel>
                             </controls:SettingsCard.Header>
-                            <Button Content="Update Description" />
+                            <Button Content="Update Description" Click="Button_Click" />
                         </controls:SettingsCard>
 
                         <controls:SettingsCard>
@@ -119,7 +118,7 @@
                                 </StackPanel>
                             </controls:SettingsCard.Header>
 
-                            <Button Content="Update Large Image" IsEnabled="False" />
+                            <Button Content="Update Large Image" Click="Button_Click" />
                         </controls:SettingsCard>
                         
                         <controls:SettingsCard>
@@ -130,7 +129,7 @@
                                 </StackPanel>
                             </controls:SettingsCard.Header>
 
-                            <Button Content="Update Small Image" IsEnabled="False" />
+                            <Button Content="Update Small Image" Click="Button_Click" />
                         </controls:SettingsCard>
 
                     </controls:SettingsExpander.Items>

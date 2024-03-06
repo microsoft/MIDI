@@ -139,6 +139,11 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_GenerateIncomingTimestamp, 10);     // DEVPROP_T
 #define STRING_PKEY_MIDI_TransportSuppliedEndpointName MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"14"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_TransportSuppliedEndpointName, 14);     // DEVPROP_TYPE_STRING
 
+#define STRING_PKEY_MIDI_TransportSuppliedDescription MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"15"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_TransportSuppliedDescription, 15);     // DEVPROP_TYPE_STRING
+
+
+
 // USB / KS Properties ============================================================================
 // Starts at 50
 
@@ -558,9 +563,6 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_MidiOutLatencyTicksUserOverride, 802);     // DE
 
 #define STRING_PKEY_MIDI_VirtualMidiEndpointAssociator MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"900"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_VirtualMidiEndpointAssociator, 900);     // DEVPROP_TYPE_GUID
-
-#define STRING_PKEY_MIDI_TransportSuppliedDescription MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"901"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_TransportSuppliedDescription, 901);     // DEVPROP_TYPE_STRING
 
 
 

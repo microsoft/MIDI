@@ -14,6 +14,8 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI.Popups;
+using Microsoft.UI.Windowing;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -38,6 +40,12 @@ namespace Microsoft.Midi.Settings.Views
             this.InitializeComponent();
         }
 
+        private async void Button_Click(object sender, RoutedEventArgs e)
+        {
+            var messageDialog = App.MainWindow.CreateMessageDialog("Setting endpoint properties through the UI is not yet implemented.", "Settings Preview");
 
+
+            await messageDialog.ShowAsync();
+        }
     }
 }

@@ -596,7 +596,7 @@ Task("BuildInstaller")
     .IsDependentOn("BuildServiceAndAPI")
     .IsDependentOn("BuildApiActivationRegEntriesCSharp")
 /*    .IsDependentOn("BuildSDK") */
-/*    .IsDependentOn("BuildSettingsApp") */
+    .IsDependentOn("BuildSettingsApp")
     .IsDependentOn("BuildConsoleApp")
     .DoesForEach(platformTargets, plat => 
 {

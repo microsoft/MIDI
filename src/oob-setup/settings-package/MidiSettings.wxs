@@ -102,7 +102,7 @@
             <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Windows.Security.AccessControl.Projection.dll" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Windows.System.Power.Projection.dll" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Windows.System.Projection.dll" />
-            <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Windows.Widgets.Providers.Projection.dll" />
+ <!--           <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.Windows.Widgets.Providers.Projection.dll" /> -->
 
             <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.WindowsAppRuntime.Bootstrap.dll" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\x64\Microsoft.WindowsAppRuntime.Bootstrap.Net.dll" />

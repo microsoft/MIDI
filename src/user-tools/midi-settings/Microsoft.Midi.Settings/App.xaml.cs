@@ -37,15 +37,15 @@ public partial class App : Application
         return service;
     }
 
-    public static Window MainWindow { get; } = new MainWindow();
+    public static WinUIEx.WindowEx MainWindow { get; } = new MainWindow();
 
     public App()
     {
         InitializeComponent();
 
         Host = Microsoft.Extensions.Hosting.Host.
-        CreateDefaultBuilder().
-        UseContentRoot(AppContext.BaseDirectory).
+            CreateDefaultBuilder().
+            UseContentRoot(AppContext.BaseDirectory).
         ConfigureServices((context, services) =>
         {
             // Default Activation Handler

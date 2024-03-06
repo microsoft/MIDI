@@ -34,9 +34,12 @@
                                                        Margin="3">
                                 <controls:SettingsExpander.Header>
                                     <StackPanel>
-                                        <TextBlock Text="{x:Bind SessionInfo.SessionName}"/>
-                                        <TextBlock Text="{x:Bind SessionInfo.ProcessName}"/>
-                                        <TextBlock Text="{x:Bind SessionInfo.ProcessId}"/>
+                                        <TextBlock Text="{x:Bind SessionInfo.SessionName}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{x:Bind SessionInfo.ProcessName}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                            <TextBlock Text="process id: " Style="{StaticResource SmallPlainPropertyValue}"/>
+                                            <TextBlock Text="{x:Bind SessionInfo.ProcessId}" Style="{StaticResource SmallPlainPropertyValue}"/>
+                                        </StackPanel>
                                     </StackPanel>
                                 </controls:SettingsExpander.Header>
 
@@ -45,9 +48,9 @@
                                         <controls:SettingsCard IsClickEnabled="False">
                                             <controls:SettingsCard.Header>
                                                 <StackPanel>
-                                                    <TextBlock Text="{x:Bind EndpointDeviceId}" />
-                                                    <TextBlock Text="{x:Bind EarliestConnectionTime}" />
-                                                    <TextBlock Text="{x:Bind InstanceCount}" />
+                                                    <TextBlock Text="{x:Bind EndpointDeviceId}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                                   <!-- <TextBlock Text="{x:Bind EarliestConnectionTime}" Style="{StaticResource SmallPlainPropertyValue}"/> -->
+                                                    <TextBlock Text="{x:Bind InstanceCount}" Style="{StaticResource SmallPlainPropertyValue}"/>
                                                 </StackPanel>
                                             </controls:SettingsCard.Header>
                                         </controls:SettingsCard>

@@ -64,7 +64,6 @@ CMidiDeviceManager::Initialize(
 
                 if (endpointManager != nullptr)
                 {
-                    // need to do this to avoid an ambiguous IUnknown cast error
                     wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> protocolManager = EndpointProtocolManager.get();
 
                     auto initializeResult = endpointManager->Initialize((IUnknown*)this, (IUnknown*)protocolManager.get());
@@ -125,6 +124,8 @@ CMidiDeviceManager::Initialize(
                         }
                         else
                         {
+                            // don't std::move this because we sill need it
+                            m_MidiAbstractionConfigurationManagers[AbstractionLayer] = abstractionConfigurationManager;
 
                             if (!transportSettingsJson.empty())
                             {
@@ -136,7 +137,6 @@ CMidiDeviceManager::Initialize(
                                 // we don't use the response info here.
                                 ::SysFreeString(response);
 
-                                m_MidiAbstractionConfigurationManagers.emplace(AbstractionLayer, std::move(abstractionConfigurationManager));
 
                                 if (FAILED(updateConfigHR))
                                 {
@@ -468,6 +468,9 @@ CMidiDeviceManager::ActivateEndpoint
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(ParentInstanceId, "parent"),
+        TraceLoggingBool(CommonProperties != nullptr, "Common Properties Provided"),
+        TraceLoggingULong(IntPropertyCount, "Interface Property Count"),
+        TraceLoggingULong(DevPropertyCount, "Device Property Count"),
         TraceLoggingBool(UMPOnly, "UMP Only")
     );
 
@@ -516,6 +519,17 @@ CMidiDeviceManager::ActivateEndpoint
 
             // copy to the main vector that we're going to keep using.
             allInterfaceProperties = suppliedInterfaceProperties;
+
+
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(ParentInstanceId, "parent"),
+                TraceLoggingULong((ULONG)IntPropertyCount, "provided interface props count"),
+                TraceLoggingULong((ULONG)allInterfaceProperties.size(), "copied interface props count")
+            );
         }
 
         DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;

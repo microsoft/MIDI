@@ -16,20 +16,16 @@ CMidi2VirtualMidiAbstraction::Activate(
     void **Interface
 )
 {
-    OutputDebugString(L"" __FUNCTION__ " Enter");
-
     RETURN_HR_IF(E_INVALIDARG, nullptr == Interface);
 
     if (__uuidof(IMidiBiDi) == Riid)
     {
-       OutputDebugString(L"" __FUNCTION__ " Activating IMidiBiDi");
-
         TraceLoggingWrite(
             MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- IMidiBiDi",
+            __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiBiDi", "interface")
             );
 
 
@@ -38,16 +34,14 @@ CMidi2VirtualMidiAbstraction::Activate(
         *Interface = midiBiDi.detach();
     }
 
-
-
     else if (__uuidof(IMidiEndpointManager) == Riid)
     {
         TraceLoggingWrite(
             MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- IMidiEndpointManager",
+            __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiEndpointManager", "interface")
         );
 
         // check to see if this is the first time we're creating the endpoint manager. If so, create it.
@@ -58,14 +52,15 @@ CMidi2VirtualMidiAbstraction::Activate(
 
         RETURN_IF_FAILED(AbstractionState::Current().GetEndpointManager()->QueryInterface(Riid, Interface));
     }
+
     else if (__uuidof(IMidiAbstractionConfigurationManager) == Riid)
     {
         TraceLoggingWrite(
             MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- IMidiAbstractionConfigurationManager",
+            __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiAbstractionConfigurationManager", "interface")
         );
 
         // check to see if this is the first time we're creating the endpoint manager. If so, create it.
@@ -81,10 +76,10 @@ CMidi2VirtualMidiAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- IMidiServiceAbstractionPluginMetadataProvider",
+            __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiServiceAbstractionPluginMetadataProvider", "interface")
         );
 
         wil::com_ptr_nothrow<IMidiServiceAbstractionPluginMetadataProvider> metadataProvider;
@@ -94,7 +89,13 @@ CMidi2VirtualMidiAbstraction::Activate(
 
     else
     {
-        OutputDebugString(L"" __FUNCTION__ " Returning E_NOINTERFACE. Was an interface added that isn't handled in the Abstraction?");
+        TraceLoggingWrite(
+            MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"(Unknown)", "interface")
+        );
 
         return E_NOINTERFACE;
     }

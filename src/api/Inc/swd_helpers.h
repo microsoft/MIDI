@@ -59,9 +59,9 @@ namespace Windows::Devices::Midi2::Internal
     inline bool EndpointInterfaceIdContainsString(_In_ std::wstring const& endpointInterfaceId, _In_ std::wstring const& searchFor)
     {
         auto id = NormalizeEndpointInterfaceIdWStringCopy(endpointInterfaceId);
-        auto sub = ::Windows::Devices::Midi2::Internal::ToLowerWStringCopy(searchFor);             // match case with NormalizeEndpointInterfaceIdCopy
+        auto sub = NormalizeEndpointInterfaceIdWStringCopy(searchFor);             // match case with NormalizeEndpointInterfaceIdCopy
 
-        if (id == L"" || sub == L"")
+        if (id.empty() || sub.empty())
         {
             return false;
         }
