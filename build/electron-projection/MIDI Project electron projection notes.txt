@@ -21,7 +21,9 @@ npm config edit
 	msvs_version=2022
 
 
-nodert\src\NodeRTCmd\bin\Debug\NodeRTCmd.exe --winmd ..\Windows.Devices.Midi2.winmd --outdir .\projection
+nodert\src\NodeRTCmd\bin\Debug\NodeRTCmd.exe --winmd ..\staging\api\x64\Windows.Devices.Midi2.winmd --outdir .\projection
+
+open the build/binding solution
 
 In VS C++ project, for all configurations, update the AdditionalUsingDirectories property to include
 %Program Files (x86)%\Windows Kits\10\UnionMetadata\10.0.20348.0
