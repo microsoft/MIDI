@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="..">
+      <UniqueIdentifier>{739DB09A-CC57-A953-A6CF-F64FA08E4FA7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="..">
+      <UniqueIdentifier>{739DB09A-CC57-A953-A6CF-F64FA08E4FA7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="..">
+      <UniqueIdentifier>{739DB09A-CC57-A953-A6CF-F64FA08E4FA7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="..">
+      <UniqueIdentifier>{739DB09A-CC57-A953-A6CF-F64FA08E4FA7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="D:">
+      <UniqueIdentifier>{E5D29F2B-0177-9942-CA95-0FF700094F89}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="D:\peteb">
+      <UniqueIdentifier>{93C774D4-5E46-33D7-FB89-AC2082D09F63}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="D:\peteb\Documents">
+      <UniqueIdentifier>{87566BA0-CA33-1144-65F5-087C5F9D6C20}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="D:\peteb\Documents\GitHub">
+      <UniqueIdentifier>{84E6FEBA-825D-6EBF-DAAC-F202DA6E3F7D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="D:\peteb\Documents\GitHub\microsoft">
+      <UniqueIdentifier>{3C4FBFE8-47F2-77F9-3EE7-49F8E7608B90}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="D:\peteb\Documents\GitHub\microsoft\midi">
+      <UniqueIdentifier>{E3686288-AF21-E99D-46CF-28A44CD62AB0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="D:\peteb\Documents\GitHub\microsoft\midi\build">
+      <UniqueIdentifier>{D5519164-BF26-36DA-740B-76CEFC1827F4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="D:\peteb\Documents\GitHub\microsoft\midi\build\electron-projection">
+      <UniqueIdentifier>{B08A7188-80A0-87EA-04BB-C44139582C6B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="D:\peteb\Documents\GitHub\microsoft\midi\build\electron-projection\projection3">
+      <UniqueIdentifier>{8B2D918A-C1E7-C36E-BB8A-E40C5D44B587}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="D:\peteb\Documents\GitHub\microsoft\midi\build\electron-projection\projection3\windows.devices.midi2">
+      <UniqueIdentifier>{FE1B0527-2C27-7128-F090-3F947DD4ACA2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="D:\peteb\Documents\GitHub\microsoft\midi\build\electron-projection\projection3\windows.devices.midi2\node_modules">
+      <UniqueIdentifier>{56DF7A98-063D-FB9D-485C-089023B4C16A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="D:\peteb\Documents\GitHub\microsoft\midi\build\electron-projection\projection3\windows.devices.midi2\node_modules\node-gyp">
+      <UniqueIdentifier>{77348C0E-2034-7791-74D5-63C077DF5A3B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="D:\peteb\Documents\GitHub\microsoft\midi\build\electron-projection\projection3\windows.devices.midi2\node_modules\node-gyp\src">
+      <UniqueIdentifier>{8CDEE807-BC53-E450-C8B8-4DEBB66742D4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="..">
+      <UniqueIdentifier>{739DB09A-CC57-A953-A6CF-F64FA08E4FA7}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\_nodert_generated.cpp">
+      <Filter>..</Filter>
+    </ClCompile>
+    <ClCompile Include="..\NodeRtUtils.cpp">
+      <Filter>..</Filter>
+    </ClCompile>
+    <ClCompile Include="..\OpaqueWrapper.cpp">
+      <Filter>..</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CollectionsConverterUtils.cpp">
+      <Filter>..</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\peteb\Documents\GitHub\microsoft\midi\build\electron-projection\projection3\windows.devices.midi2\node_modules\node-gyp\src\win_delay_load_hook.cc">
+      <Filter>D:\peteb\Documents\GitHub\microsoft\midi\build\electron-projection\projection3\windows.devices.midi2\node_modules\node-gyp\src</Filter>
+    </ClCompile>
+    <None Include="..\binding.gyp">
+      <Filter>..</Filter>
+    </None>
+  </ItemGroup>
+</Project>
