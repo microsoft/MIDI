@@ -25,7 +25,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    uint8_t MidiMessage128::AppendAllMessageWordsToVector(collections::IVector<uint32_t> targetVector) const noexcept
+    uint8_t MidiMessage128::AppendAllMessageWordsToList(collections::IVector<uint32_t> targetVector) const noexcept
     {
         targetVector.Append(m_ump.word0);
         targetVector.Append(m_ump.word1);
@@ -36,7 +36,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    uint8_t MidiMessage128::AddAllMessageBytesToBuffer(uint32_t const byteOffset, foundation::IMemoryBuffer const& buffer) const noexcept
+    uint8_t MidiMessage128::FillBuffer(uint32_t const byteOffset, foundation::IMemoryBuffer const& buffer) const noexcept
     {
         const uint8_t numWordsInPacket = 4;
         const uint8_t numBytesInPacket = numWordsInPacket * sizeof(uint32_t);

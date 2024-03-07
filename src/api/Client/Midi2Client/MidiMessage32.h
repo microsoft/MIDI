@@ -47,11 +47,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         uint32_t PeekFirstWord() { return Word0(); }
 
         collections::IVector<uint32_t> GetAllWords() const noexcept;
-        uint8_t AppendAllMessageWordsToVector(
+        uint8_t AppendAllMessageWordsToList(
             _Inout_ collections::IVector<uint32_t> targetVector
         ) const noexcept;
 
-        uint8_t AddAllMessageBytesToBuffer(
+        uint8_t FillBuffer(
             _In_ uint32_t const byteOffset,
             _In_ foundation::IMemoryBuffer const& buffer
             ) const noexcept;

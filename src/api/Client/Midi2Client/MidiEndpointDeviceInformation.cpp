@@ -113,20 +113,22 @@ namespace winrt::Windows::Devices::Midi2::implementation
         additionalProperties.Append(STRING_PKEY_MIDI_TransportMnemonic);
 
         additionalProperties.Append(STRING_PKEY_MIDI_NativeDataFormat);
+        additionalProperties.Append(STRING_PKEY_MIDI_SupportsMulticlient);
         additionalProperties.Append(STRING_PKEY_MIDI_SupportedDataFormats);
+
+        additionalProperties.Append(STRING_PKEY_MIDI_ManufacturerName);
+        additionalProperties.Append(STRING_PKEY_MIDI_GenerateIncomingTimestamp);
 
         additionalProperties.Append(STRING_PKEY_MIDI_TransportSuppliedEndpointName);
         additionalProperties.Append(STRING_PKEY_MIDI_TransportSuppliedDescription);
 
-        additionalProperties.Append(STRING_PKEY_MIDI_SupportsMulticlient);
-        additionalProperties.Append(STRING_PKEY_MIDI_GenerateIncomingTimestamp);
+
 
         // USB / KS Properties ===============================================================
         // TODO: Group Terminal Blocks will likely be a single property
         additionalProperties.Append(STRING_PKEY_MIDI_IN_GroupTerminalBlocks);
         additionalProperties.Append(STRING_PKEY_MIDI_OUT_GroupTerminalBlocks);
         additionalProperties.Append(STRING_PKEY_MIDI_AssociatedUMP);
-        additionalProperties.Append(STRING_PKEY_MIDI_ManufacturerName);
         additionalProperties.Append(STRING_PKEY_MIDI_SerialNumber);
         additionalProperties.Append(STRING_PKEY_MIDI_UsbVID);
         additionalProperties.Append(STRING_PKEY_MIDI_UsbPID);
@@ -135,6 +137,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // Major Known Endpoint Types ========================================================
         additionalProperties.Append(STRING_PKEY_MIDI_EndpointDevicePurpose);
 
+        additionalProperties.Append(STRING_PKEY_MIDI_EndpointRequiresMetadataHandler);
+
         // In-protocol Endpoint information ==================================================
         additionalProperties.Append(STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol);
         additionalProperties.Append(STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol);
@@ -142,6 +146,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         additionalProperties.Append(STRING_PKEY_MIDI_EndpointSupportsSendingJRTimestamps);
         additionalProperties.Append(STRING_PKEY_MIDI_EndpointUmpVersionMajor);
         additionalProperties.Append(STRING_PKEY_MIDI_EndpointUmpVersionMinor);
+
         additionalProperties.Append(STRING_PKEY_MIDI_EndpointProvidedName);
         additionalProperties.Append(STRING_PKEY_MIDI_EndpointProvidedProductInstanceId);
         additionalProperties.Append(STRING_PKEY_MIDI_DeviceIdentity);
@@ -175,6 +180,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
         additionalProperties.Append(STRING_PKEY_MIDI_DeviceIdentityLastUpdateTime);
         additionalProperties.Append(STRING_PKEY_MIDI_FunctionBlocksLastUpdateTime);
 
+
+        additionalProperties.Append(STRING_PKEY_MIDI_MidiOutCalculatedLatencyTicks);
+        additionalProperties.Append(STRING_PKEY_MIDI_MidiOutUserSuppliedLatencyTicks);
+        additionalProperties.Append(STRING_PKEY_MIDI_MidiOutLatencyTicksUserOverride);
+
+
+        additionalProperties.Append(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator);
 
 
         // Calculated metrics =================================================================
