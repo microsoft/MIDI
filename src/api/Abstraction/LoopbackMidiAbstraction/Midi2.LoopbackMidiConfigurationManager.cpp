@@ -185,7 +185,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                             auto endpointIdBVal = json::JsonValue::CreateStringValue(definitionB->CreatedEndpointInterfaceId);
                             responseObject.SetNamedValue(
                                 MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_B_ID_KEY,
-                                endpointIdAVal);
+                                endpointIdBVal);
 
                         }
                         else

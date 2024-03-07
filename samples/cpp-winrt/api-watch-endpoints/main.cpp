@@ -43,25 +43,25 @@ int main()
 
 
 
-    auto OnWatcherStopped = [&](MidiEndpointDeviceWatcher const& sender, foundation::IInspectable const& args)
+    auto OnWatcherStopped = [&](MidiEndpointDeviceWatcher const& /*sender*/, foundation::IInspectable const& /*args*/)
         {
             std::cout << std::endl;
             std::cout << "Watcher stopped." << std::endl;
         };
 
-    auto OnWatcherEnumerationCompleted = [&](MidiEndpointDeviceWatcher const& sender, foundation::IInspectable const& args)
+    auto OnWatcherEnumerationCompleted = [&](MidiEndpointDeviceWatcher const& /*sender*/, foundation::IInspectable const& args)
         {
             std::cout << std::endl;
             std::cout << "Initial enumeration completed." << std::endl;
         };
 
-    auto OnWatcherDeviceRemoved = [&](MidiEndpointDeviceWatcher const& sender, winrt::Windows::Devices::Enumeration::DeviceInformationUpdate const& args)
+    auto OnWatcherDeviceRemoved = [&](MidiEndpointDeviceWatcher const& /*sender*/, winrt::Windows::Devices::Enumeration::DeviceInformationUpdate const& args)
         {
             std::cout << std::endl;
             std::cout << "Removed: " << winrt::to_string(args.Id()) << std::endl;
         };
 
-    auto OnWatcherDeviceUpdated = [&](MidiEndpointDeviceWatcher const& sender, MidiEndpointDeviceInformationUpdateEventArgs const& args)
+    auto OnWatcherDeviceUpdated = [&](MidiEndpointDeviceWatcher const& /*sender*/, MidiEndpointDeviceInformationUpdateEventArgs const& args)
         {
             std::cout << std::endl;
             std::cout << "Updated: " << winrt::to_string(args.Id()) << std::endl;
@@ -69,7 +69,7 @@ int main()
             // TODO: Show how to use the various data update flags here
         };
 
-    auto OnWatcherDeviceAdded = [&](MidiEndpointDeviceWatcher const& sender, MidiEndpointDeviceInformation const& args)
+    auto OnWatcherDeviceAdded = [&](MidiEndpointDeviceWatcher const& /*sender*/, MidiEndpointDeviceInformation const& args)
         {
             std::cout << std::endl;
             std::cout << "Added  : " << winrt::to_string(args.Name()) << std::endl;

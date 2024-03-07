@@ -32,10 +32,10 @@ int main()
 
     auto endpoints = MidiEndpointDeviceInformation::FindAll(
         MidiEndpointDeviceInformationSortOrder::Name,
-        MidiEndpointDeviceInformationFilter::IncludeClientByteStreamNative |
-        MidiEndpointDeviceInformationFilter::IncludeClientUmpNative |
-        MidiEndpointDeviceInformationFilter::IncludeDiagnosticLoopback |
-        MidiEndpointDeviceInformationFilter::IncludeVirtualDeviceResponder
+        MidiEndpointDeviceInformationFilters::IncludeClientByteStreamNative |
+        MidiEndpointDeviceInformationFilters::IncludeClientUmpNative |
+        MidiEndpointDeviceInformationFilters::IncludeDiagnosticLoopback |
+        MidiEndpointDeviceInformationFilters::IncludeVirtualDeviceResponder
     );
 
     std::cout << endpoints.Size() << " endpoints returned" << std::endl << std::endl;
@@ -86,9 +86,10 @@ int main()
 
         std::cout << std::endl << "User-supplied Metadata" << std::endl;
         std::cout << "- User-supplied Name: " << winrt::to_string(endpoint.UserSuppliedName()) << std::endl;
-        std::cout << "- Description:        " << winrt::to_string(endpoint.Description()) << std::endl;
-        std::cout << "- Small Image Path:   " << winrt::to_string(endpoint.SmallImagePath()) << std::endl;
-        std::cout << "- Large Image Path:   " << winrt::to_string(endpoint.LargeImagePath()) << std::endl;
+        std::cout << "- Description:        " << winrt::to_string(endpoint.TransportSuppliedDescription()) << std::endl;
+        std::cout << "- User Description:   " << winrt::to_string(endpoint.UserSuppliedDescription()) << std::endl;
+        std::cout << "- Small Image Path:   " << winrt::to_string(endpoint.UserSuppliedSmallImagePath()) << std::endl;
+        std::cout << "- Large Image Path:   " << winrt::to_string(endpoint.UserSuppliedLargeImagePath()) << std::endl;
 
         std::cout << std::endl << "Endpoint Supported Capabilities" << std::endl;
         std::cout << "- UMP Major.Minor:   " << endpoint.SpecificationVersionMajor() << "." << endpoint.SpecificationVersionMinor() << std::endl;
@@ -102,7 +103,7 @@ int main()
 
         std::cout << std::endl << "Transport Information" << std::endl;
         std::cout << "- Transport-supplied Name: " << winrt::to_string(endpoint.TransportSuppliedName()) << std::endl;
-        std::cout << "- Transport Id:            " << winrt::to_string(endpoint.TransportId()) << std::endl;
+        std::cout << "- Transport Id:            " << winrt::to_string(winrt::to_hstring(endpoint.TransportId())) << std::endl;
         std::cout << "- Transport Mnemonic:      " << winrt::to_string(endpoint.TransportMnemonic()) << std::endl;
 
         if (endpoint.NativeDataFormat() == MidiEndpointNativeDataFormat::ByteStream)

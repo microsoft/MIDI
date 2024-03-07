@@ -152,6 +152,11 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
 {
     RETURN_HR_IF_NULL(E_INVALIDARG, definition);
 
+    RETURN_HR_IF_MSG(E_INVALIDARG, definition->EndpointName.empty(), "Empty endpoint name");
+    RETURN_HR_IF_MSG(E_INVALIDARG, definition->InstanceIdPrefix.empty(), "Empty endpoint prefix");
+    RETURN_HR_IF_MSG(E_INVALIDARG, definition->EndpointUniqueIdentifier.empty(), "Empty endpoint unique id");
+
+
     TraceLoggingWrite(
         MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
@@ -164,10 +169,6 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
         TraceLoggingWideString(definition->EndpointDescription.c_str(), "description")
         );
 
-
-    RETURN_HR_IF_MSG(E_INVALIDARG, definition->EndpointName.empty(), "Empty endpoint name");
-    RETURN_HR_IF_MSG(E_INVALIDARG, definition->InstanceIdPrefix.empty(), "Empty endpoint prefix");
-    RETURN_HR_IF_MSG(E_INVALIDARG, definition->EndpointUniqueIdentifier.empty(), "Empty endpoint unique id");
 
 
     std::wstring mnemonic(TRANSPORT_MNEMONIC);
@@ -192,7 +193,7 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
     TraceLoggingWrite(
         MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
-        TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
         TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
@@ -200,7 +201,7 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
         TraceLoggingWideString(friendlyName.c_str(), "friendlyName"),
         TraceLoggingWideString(mnemonic.c_str(), "mnemonic"),
         TraceLoggingWideString(endpointName.c_str(), "endpointName"),
-        TraceLoggingWideString(endpointDescription.c_str(), "endpointName")
+        TraceLoggingWideString(endpointDescription.c_str(), "endpointDescription")
     );
 
     // this is needed for the loopback endpoints to have a relationship with each other
@@ -228,7 +229,7 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
     TraceLoggingWrite(
         MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
-        TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
         TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
@@ -272,7 +273,7 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
     TraceLoggingWrite(
         MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
-        TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
         TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
@@ -292,7 +293,7 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
     TraceLoggingWrite(
         MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
-        TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
         TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
