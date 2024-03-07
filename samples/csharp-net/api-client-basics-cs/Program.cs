@@ -59,13 +59,13 @@ using (var session = MidiSession.CreateSession("API Sample Session"))
 
     var ump32 = MidiMessageBuilder.BuildMidi1ChannelVoiceMessage(
         MidiClock.Now, // use current timestamp
-        5,      // group 5
+        new MidiGroup(5),      // group 5
         Midi1ChannelVoiceMessageStatus.NoteOn,  // 9
-        3,      // channel 3
+        new MidiChannel(3),      // channel 3
         120,    // note 120 - hex 0x78
         100);   // velocity 100 hex 0x64
 
-    sendEndpoint.SendMessagePacket((IMidiUniversalPacket)ump32);  // could also use the SendWords methods, etc.
+    sendEndpoint.SendSingleMessagePacket((IMidiUniversalPacket)ump32);  // could also use the SendWords methods, etc.
 
     Console.WriteLine(" ** Wait for the message to arrive, and then press enter to cleanup. ** ");
     Console.ReadLine();

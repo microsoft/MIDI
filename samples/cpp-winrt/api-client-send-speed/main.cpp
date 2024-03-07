@@ -39,6 +39,8 @@ void DisplaySingleResult(std::wstring label, uint64_t totalTime, uint64_t errorC
 #define MESSAGE_COUNT_PER_ITERATION     100
 #define ITERATION_COUNT                 2000
 
+#define TOTAL_WORD_COUNT_PER_ITERATION  (MESSAGE_COUNT_PER_ITERATION * 3)
+
 
 int main()
 {
@@ -92,17 +94,17 @@ int main()
 
     auto ump64 = MidiMessageBuilder::BuildMidi2ChannelVoiceMessage(
         MidiClock::TimestampConstantSendImmediately(),
-        5,      // group 5
+        MidiGroup(5),      // group 5
         Midi2ChannelVoiceMessageStatus::NoteOn,    
-        3,      // channel 3
+        MidiChannel(3),      // channel 3
         120,    // note 120 - hex 0x78
         100);   // velocity 100 hex 0x64
 
     auto ump32 = MidiMessageBuilder::BuildMidi1ChannelVoiceMessage(
         MidiClock::TimestampConstantSendImmediately(),
-        5,      // group 5
-        Midi1ChannelVoiceMessageStatus::NoteOn,    
-        2,      // channel 3
+        MidiGroup(5),      // group 5
+        Midi1ChannelVoiceMessageStatus::NoteOn,
+        MidiChannel(2),      // channel 3
         110,    // note 110
         200);   // velocity 200
 
@@ -114,7 +116,7 @@ int main()
     auto wordList = winrt::single_threaded_vector<uint32_t>();
     auto structList = winrt::single_threaded_vector<MidiMessageStruct>();
     auto wordListList = std::vector<collections::IVectorView<uint32_t>>();
-    uint32_t wordArray[MESSAGE_COUNT_PER_ITERATION * 3];    // that *3 needs to change if we mix up more than just the ump32 and ump64 per iteration
+    uint32_t wordArray[TOTAL_WORD_COUNT_PER_ITERATION];    // that *3 needs to change if we mix up more than just the ump32 and ump64 per iteration
     MidiMessageStruct structArray[MESSAGE_COUNT_PER_ITERATION];
   
 
@@ -122,7 +124,7 @@ int main()
 
 
     // if we change the types of messages we send, we need to change this as well
-    foundation::MemoryBuffer buffer(MESSAGE_COUNT_PER_ITERATION * sizeof(uint32_t) * 3);
+    foundation::MemoryBuffer buffer(TOTAL_WORD_COUNT_PER_ITERATION * sizeof(uint32_t));
 
   
     uint32_t memoryBufferOffset = 0;
@@ -135,12 +137,12 @@ int main()
         messageList.Append(ump32);
 
         // word list
-        ump64.AppendAllMessageWordsToVector(wordList);
-        ump32.AppendAllMessageWordsToVector(wordList);
+        ump64.AppendAllMessageWordsToList(wordList);
+        ump32.AppendAllMessageWordsToList(wordList);
 
         // buffer
-        ump64.AddAllMessageBytesToBuffer(buffer, memoryBufferOffset);
-        ump32.AddAllMessageBytesToBuffer(buffer, memoryBufferOffset);
+        ump64.FillBuffer(memoryBufferOffset, buffer);
+        ump32.FillBuffer(memoryBufferOffset, buffer);
 
         // structs
 
@@ -154,8 +156,8 @@ int main()
         structList.Append(str32);
 
         // for sending words one message at a time
-        wordListList.push_back(ump64.GetAllWords());
-        wordListList.push_back(ump32.GetAllWords());
+        wordListList.push_back(ump64.GetAllWords().GetView());
+        wordListList.push_back(ump32.GetAllWords().GetView());
 
         bytesWritten += sizeof(ump64) + sizeof(ump32);
 
@@ -172,7 +174,7 @@ int main()
         uint64_t startTick{};
         uint64_t stopTick{};
 
-        MidiSendMessageResult result;
+        MidiSendMessageResults result;
 
         // individual message tests ---------------------------------------------------------------------
 
@@ -182,13 +184,13 @@ int main()
         for (auto const& message : wordListList)
         {
             if (message.Size() == 4)
-                result = sendEndpoint.SendMessageWords(MidiClock::TimestampConstantSendImmediately(), message.GetAt(0), message.GetAt(1), message.GetAt(2), message.GetAt(3));
+                result = sendEndpoint.SendSingleMessageWords(MidiClock::TimestampConstantSendImmediately(), message.GetAt(0), message.GetAt(1), message.GetAt(2), message.GetAt(3));
             else if (message.Size() == 3)
-                result = sendEndpoint.SendMessageWords(MidiClock::TimestampConstantSendImmediately(), message.GetAt(0), message.GetAt(1), message.GetAt(2));
+                result = sendEndpoint.SendSingleMessageWords(MidiClock::TimestampConstantSendImmediately(), message.GetAt(0), message.GetAt(1), message.GetAt(2));
             else if (message.Size() == 2)
-                result = sendEndpoint.SendMessageWords(MidiClock::TimestampConstantSendImmediately(), message.GetAt(0), message.GetAt(1));
+                result = sendEndpoint.SendSingleMessageWords(MidiClock::TimestampConstantSendImmediately(), message.GetAt(0), message.GetAt(1));
             else if (message.Size() == 1)
-                result = sendEndpoint.SendMessageWords(MidiClock::TimestampConstantSendImmediately(), message.GetAt(0));
+                result = sendEndpoint.SendSingleMessageWords(MidiClock::TimestampConstantSendImmediately(), message.GetAt(0));
 
             if (MidiEndpointConnection::SendMessageFailed(result))
             {
@@ -206,7 +208,7 @@ int main()
         startTick = MidiClock::Now();
         for (auto const& message : structList)
         {
-            result = sendEndpoint.SendMessageStruct(MidiClock::TimestampConstantSendImmediately(), message, (uint8_t)MidiMessageUtility::GetPacketTypeFromMessageFirstWord(message.Word0));
+            result = sendEndpoint.SendSingleMessageStruct(MidiClock::TimestampConstantSendImmediately(), (uint8_t)MidiMessageUtility::GetPacketTypeFromMessageFirstWord(message.Word0), message);
             if (MidiEndpointConnection::SendMessageFailed(result))
             {
                 TotalSendErrorsIndividualMessageStructs++;
@@ -222,7 +224,7 @@ int main()
         startTick = MidiClock::Now();
         for (auto const& message : messageList)
         {
-            result = sendEndpoint.SendMessagePacket(message);
+            result = sendEndpoint.SendSingleMessagePacket(message);
             if (MidiEndpointConnection::SendMessageFailed(result))
             {
                 TotalSendErrorsIndividualMessagePackets++;
@@ -243,7 +245,7 @@ int main()
         // send vector of words
 
         startTick = MidiClock::Now();
-        result = sendEndpoint.SendMultipleMessagesWordList(MidiClock::TimestampConstantSendImmediately(), wordList.GetView());
+        result = sendEndpoint.SendMultipleMessagesWordList(MidiClock::TimestampConstantSendImmediately(), wordList);
         if (MidiEndpointConnection::SendMessageFailed(result))
         {
             TotalSendErrorsVectorMessageWords++;
@@ -254,7 +256,7 @@ int main()
         // send array of words
         
         startTick = MidiClock::Now();
-        result = sendEndpoint.SendMultipleMessagesWordArray(MidiClock::TimestampConstantSendImmediately(), wordArray);
+        result = sendEndpoint.SendMultipleMessagesWordArray(MidiClock::TimestampConstantSendImmediately(), 0, TOTAL_WORD_COUNT_PER_ITERATION, wordArray);
         if (MidiEndpointConnection::SendMessageFailed(result))
         {
             TotalSendErrorsArrayMessageWords++;
@@ -289,7 +291,7 @@ int main()
         // send array of message structs
 
         startTick = MidiClock::Now();
-        result = sendEndpoint.SendMultipleMessagesStructArray(MidiClock::TimestampConstantSendImmediately(), structArray);
+        result = sendEndpoint.SendMultipleMessagesStructArray(MidiClock::TimestampConstantSendImmediately(), 0, MESSAGE_COUNT_PER_ITERATION, structArray);
         if (MidiEndpointConnection::SendMessageFailed(result))
         {
             TotalSendErrorsArrayMessageStructs++;
@@ -301,7 +303,7 @@ int main()
         // send multiple through buffer
 
         startTick = MidiClock::Now();
-        result = sendEndpoint.SendMultipleMessagesBuffer(MidiClock::TimestampConstantSendImmediately(), buffer, 0, bytesWritten);
+        result = sendEndpoint.SendMultipleMessagesBuffer(MidiClock::TimestampConstantSendImmediately(), 0, bytesWritten, buffer);
         if (MidiEndpointConnection::SendMessageFailed(result))
         {
             TotalSendErrorsMultipleMessageBuffer++;

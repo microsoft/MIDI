@@ -75,6 +75,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
             _In_ foundation::IMemoryBuffer const& buffer
         );
 
+        uint8_t AppendWordsToList(
+            _In_ collections::IVector<uint32_t> wordList
+        );
+
     private:
         uint8_t GetValidMessageWordCount() { return internal::GetUmpLengthInMidiWordsFromFirstWord(m_data.Word0); }
 

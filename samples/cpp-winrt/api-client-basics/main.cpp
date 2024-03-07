@@ -93,9 +93,9 @@ int main()
 
     auto ump32 = MidiMessageBuilder::BuildMidi1ChannelVoiceMessage(
         MidiClock::Now(), // use current timestamp
-        5,      // group 5
+        MidiGroup(5),      // group 5
         Midi1ChannelVoiceMessageStatus::NoteOn,     // 9
-        3,      // channel 3
+        MidiChannel(3),      // channel 3
         120,    // note 120 - hex 0x78
         100);   // velocity 100 hex 0x64
 
@@ -104,7 +104,7 @@ int main()
     std::cout << "Sending single UMP..." << std::endl;
 
     auto ump = ump32.as<IMidiUniversalPacket>();
-    auto sendResult = sendEndpoint.SendMessagePacket(ump);          // could also use the SendWords methods, etc.
+    auto sendResult = sendEndpoint.SendSingleMessagePacket(ump);          // could also use the SendWords methods, etc.
 
     std::cout << std::endl << " ** Wait for the sent UMP to arrive, and then press enter to cleanup. **" << std::endl;
 

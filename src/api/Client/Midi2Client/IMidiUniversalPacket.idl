@@ -29,8 +29,8 @@ namespace Windows.Devices.Midi2
 
 
         IVector<UInt32> GetAllWords();
-        UInt8 AppendAllMessageWordsToVector(IVector<UInt32> targetVector);
+        UInt8 AppendAllMessageWordsToList(IVector<UInt32> targetList);
 
-        UInt8 AddAllMessageBytesToBuffer(UInt32 byteOffset, Windows.Foundation.IMemoryBuffer buffer);
+        UInt8 FillBuffer(UInt32 byteOffset, Windows.Foundation.IMemoryBuffer buffer);
     };
 }

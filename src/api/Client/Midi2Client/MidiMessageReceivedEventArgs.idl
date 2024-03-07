@@ -68,5 +68,8 @@ namespace Windows.Devices.Midi2
         // Fill a spot in an existing IMemoryBuffer controlled by the caller. Returns the number of BYTES written
         UInt8 FillBuffer(UInt32 byteOffset, Windows.Foundation.IMemoryBuffer buffer);
 
+        // Adds the message words to the end of the provided list, and returns the number of words added.
+        UInt8 AppendWordsToList(IVector<UInt32> wordList);
+
     }
 }

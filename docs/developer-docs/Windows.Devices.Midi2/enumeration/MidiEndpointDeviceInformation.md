@@ -24,7 +24,7 @@ When a device is first enumerated by the MIDI Service, if it is a UMP-native dev
 
 | Property | Source | Description |
 | --------------- | ------ | ----------- |
-| `Id` | Windows | The endpoint device interface id |
+| `Id` | Windows | The endpoint device interface id. This is sometimes called "the SWD" in short-hand because it's the string that uniquely identifies the software device interface that represents the endpoint. |
 | `ContainerId` | Windows | The device container |
 | `DeviceInstanceId` | Windows | The device instance id without the interface information | 
 | `Name` | Various | This is the name which should be displayed in any application. It calculates the correct name based on the hierarchy of possible names, including a user-specified name. Always respect the user's choice here. |
@@ -34,8 +34,8 @@ When a device is first enumerated by the MIDI Service, if it is a UMP-native dev
 | `ProductInstanceId` | MIDI 2.0 | Property of the same name discovered by MIDI 2.0 in-protocol endpoint information. |
 | `SpecificationVersionMajor` | MIDI 2.0 | Discovered UMP version |
 | `SpecificationVersionMinor` | MIDI 2.0 | Discovered UMP version |
-| `SupportsMidi10Protocol` | MIDI 2.0 | Discovered protocol support |
-| `SupportsMidi20Protocol` | MIDI 2.0 | Discovered protocol support |
+| `SupportsMidi10Protocol` | MIDI 2.0 | Discovered protocol support. For all devices, this defaults to true. |
+| `SupportsMidi20Protocol` | MIDI 2.0 | Discovered protocol support. For UMP-native devices, this defaults to true. |
 | `ConfiguredToReceiveJRTimestamps | MIDI 2.0 | Note that JR timestamps are handled entirely in the service and are not sent back down to the client. |
 | `ConfiguredToSendJRTimestamps | MIDI 2.0 | Note that JR timestamps are handled entirely in the service and are not sent back down to the client. |
 | `DeviceIdentitySystemExclusiveId` | MIDI 2.0 | Device Identity information
@@ -47,6 +47,8 @@ When a device is first enumerated by the MIDI Service, if it is a UMP-native dev
 | `TransportId` | Windows | The Id of the transport abstraction that manages this endpoint |
 | `TransportMnemonic` | Windows | A short abbreviation for the transport. This can be used as a transport identifier. |
 | `TransportSuppliedSerialNumber` | Windows | iSerialNumber, when available in USB, and other ids from other transports. |
+| `TransportSuppliedVendorId` | Windows | For a USB device, this is the VID of the parent device |
+| `TransportSuppliedProductId` | Windows | For a USB device, this is the PID of the parent device |
 | `ManufacturerName` | Windows | The name of the manufacturer of the device, if available |
 | `SupportsMultiClient` | Windows | True if this endpoint supports multi-client use |
 | `NativeDataFormat` | Windows | Because the driver and service handle data format translation, it's not immediately obvious if the device is natively UMP or natively Byte Stream. This property provides that information |

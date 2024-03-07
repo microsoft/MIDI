@@ -16,9 +16,11 @@ public:
 
     MidiLoopbackDevice* GetDevice(std::wstring associationId)
     {
-        if (m_devices.find(associationId) != m_devices.end())
+        auto cleanId = internal::ToLowerTrimmedWStringCopy(associationId);
+
+        if (m_devices.find(cleanId) != m_devices.end())
         {
-            return &m_devices[associationId];
+            return &m_devices[cleanId];
         }
         else
         {
@@ -28,16 +30,20 @@ public:
 
     void SetDevice(std::wstring associationId, MidiLoopbackDevice device)
     {
-        m_devices[associationId] = device;
+        auto cleanId = internal::ToLowerTrimmedWStringCopy(associationId);
+
+        m_devices[cleanId] = device;
     }
 
     void RemoveDevice(std::wstring associationId)
     {
-        if (auto device = m_devices.find(associationId); device != m_devices.end())
+        auto cleanId = internal::ToLowerTrimmedWStringCopy(associationId);
+
+        if (auto device = m_devices.find(cleanId); device != m_devices.end())
         {
             device->second.Cleanup();
 
-            m_devices.erase(associationId);
+            m_devices.erase(cleanId);
         }
     }
 

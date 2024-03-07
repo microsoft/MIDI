@@ -136,9 +136,6 @@ namespace Windows.Devices.Midi2
 
 
 
-
-
-
         // The settings app allows the user to add some metadata, like a description
         String UserSuppliedName{ get; };            // name supplied by the user, if available
         String UserSuppliedDescription{ get; };

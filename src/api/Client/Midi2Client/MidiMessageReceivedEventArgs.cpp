@@ -277,6 +277,26 @@ namespace winrt::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
+    uint8_t MidiMessageReceivedEventArgs::AppendWordsToList(
+        collections::IVector<uint32_t> wordList
+        )
+    {
+        uint8_t messageWordCount = GetValidMessageWordCount();
+
+        // copy over the words
+
+        uint32_t* umpData = (uint32_t*)&m_data;
+
+        for (int i = 0; i < messageWordCount; i++)
+        {
+            wordList.Append(umpData[i]);
+        }
+
+        return messageWordCount;
+    }
+
+
+    _Use_decl_annotations_
     uint8_t MidiMessageReceivedEventArgs::FillByteArray(
         uint32_t const startIndex,
         winrt::array_view<uint8_t> bytes
