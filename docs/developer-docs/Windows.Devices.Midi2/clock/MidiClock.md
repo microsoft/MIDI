@@ -23,7 +23,7 @@ You can learn more about high-resolution timestamps in Windows at [https://aka.m
 | `TimestampFrequency` | Returns the number of timestamp ticks per second. This is calculated the first time it is called, and then cached for future calls. |
 | `TimestampConstantSendImmediately` | Returns the constant to use when you want to send messages immediately and bypass outgoing message scheduling. Developers may use this value or simply provide `0` in place of the timestamp when sending messages.  |
 
-## Static Functions
+## Static Functions for Conversion
 
 The static functions are for convenience in calculating offsets to a timestamp, and for converting between units.
 
@@ -32,6 +32,13 @@ The static functions are for convenience in calculating offsets to a timestamp, 
 | `ConvertTimestampToMicroseconds(timestampValue)` | Converts the provided timestamp to microseconds |
 | `ConvertTimestampToMilliseconds(timestampValue)` | Converts the provided timestamp to milliseconds |
 | `ConvertTimestampToSeconds(timestampValue)` | Converts the provided timestamp to seconds |
+
+## Static Functions for Offset
+
+When scheduling messages, you may want to use a more convenient time units. These functions make that easy.
+
+| Static Function | Description |
+| --------------- | ----------- |
 | `OffsetTimestampByTicks(timestampValue, offsetTicks)` | Offsets a given timestamp by the provided (signed) number of ticks |
 | `OffsetTimestampByMicroseconds(timestampValue, offsetMicroseconds)` | Offsets a given timestamp by the provided (signed) number of microseconds |
 | `OffsetTimestampByMilliseconds(timestampValue, offsetMilliseconds)` | Offsets a given timestamp by the provided (signed) number of milliseconds |

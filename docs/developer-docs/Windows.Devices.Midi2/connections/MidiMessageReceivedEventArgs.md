@@ -32,9 +32,10 @@ This is the main class to use when receving MIDI data from a message source such
 | `FillMessage64(message)` | Adds the data to the provided MidiMessage64 runtimeclass. The reference behavior is projection-dependent. Returns true if the provided type matches the expected packet type and the data has been written. |
 | `FillMessage96(message)` | Adds the data to the provided MidiMessage96 runtimeclass. The reference behavior is projection-dependent. Returns true if the provided type matches the expected packet type and the data has been written. |
 | `FillMessage128(message)` | Adds the data to the provided MidiMessage128 runtimeclass. The reference behavior is projection-dependent. Returns true if the provided type matches the expected packet type and the data has been written. |
-| `FillWordArray(words, startIndex)`| Writes the data starting at the zero-based `startIndex`. Some projections pass a copy of all the data, so this may not always be an efficient approach. Returns the number of words written. |
-| `FillByteArray(bytes, startIndex)`| Writes the data starting at the zero-based `startIndex`. Some projections pass a copy of all the data, so this may not always be an efficient approach. Returns the number of bytes written. |
-| `FillBuffer(buffer, byteOffset)`| Writes the data to the buffer starting at byteOffset. Returns the number of bytes written. |
+| `FillWordArray(startIndex, words)`| Writes the data starting at the zero-based `startIndex`. Some projections pass a copy of all the data, so this may not always be an efficient approach. Returns the number of words written. |
+| `FillByteArray(startIndex, bytes)`| Writes the data starting at the zero-based `startIndex`. Some projections pass a copy of all the data, so this may not always be an efficient approach. Returns the number of bytes written. |
+| `FillBuffer(byteOffset, buffer)`| Writes the data to the buffer starting at byteOffset. Returns the number of bytes written. |
+| `AppendWordsToList(wordList)`| Adds the message words to the end of the provided list, and returns the number of words added. |
 
 ## IDL
 

@@ -5,9 +5,17 @@ has_children: true
 ---
 # Windows MIDI Services
 
+Windows MIDI Services is an open source project, which has been developed with input and feedback from the community. 
+
 > [Source repo and developer releases on GitHub](https://aka.ms/midirepo)
 
 > [Discord Server for discussion about this project](https://aka.ms/mididiscord)
+
+## Get started
+
+While we're in developer preview, get started by downloading and installing the latest release from GitHub here:
+
+- [Latest Developer Releases](https://github.com/microsoft/MIDI/releases)
 
 ## NAMM Show 2024 Presentation
 
@@ -25,7 +33,7 @@ has_children: true
 * **UMP-Centric**. The new API fully embraces MIDI 2.0 and the Universal MIDI Packet format and handles all required translation in the service and driver. This makes the app model simple while ensuring all your existing devices continue to work.
 * **Open Source**. The source code is open and available to everyone under a permissive license. Not sure how something works? Want to create a transport but aren't sure how we did it? Want to investigate a bug or contribute a feature? The code is there for you to explore.
 
-Note: Additionally MIDI CI functionality, which does not technically require OS support, will be coming after version 1.0. We intend to add helpers for profiles, property exchange, MUID tracking, and more. In the meantime, applications can send and receive MIDI CI messages without anything in their way, using custom code or third-party libraries. MIDI CI is just MIDI 1.0-compatible SysEx.
+> Note: Additionally MIDI CI functionality, which does not technically require OS support, will be coming after version 1.0. We intend to add helpers for profiles, property exchange, MUID tracking, and more. In the meantime, applications can send and receive MIDI CI messages without anything in their way, using custom code or third-party libraries. MIDI CI is just MIDI 1.0-compatible SysEx.
 
 ## Developer Samples
 
