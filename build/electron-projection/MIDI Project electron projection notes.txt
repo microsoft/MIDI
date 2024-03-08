@@ -34,7 +34,9 @@ copy Windows.winmd from the unionmetadata to same folder
 copy C:\Program Files\Microsoft Visual Studio\2022\Preview\Common7\IDE\VC\vcpackages platform.winmd to same folder
 
 
-Comment out SendMessageStruct body and reference
+Comment out SendSingleMessageStruct body and reference
+Comment out SendMultipleMessagesStructList
+Comment out SendMultipleMessagesStructArray
 
 Open binding.sln in VS and recompile in BOTH debug and release
 
