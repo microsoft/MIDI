@@ -28,6 +28,31 @@ In addition to the properties and methods in `IMidiEndpointMessageProcessingPlug
 | ---- | ---- |
 | `MidiGroupEndpointListener()` | Construct a new instance of this type |
 
+
+```cpp
+// set up your message receive handler and create your connection
+// before setting up the individual message listeners. The event
+// handler has the same signature as the main message received
+// event on the connection.
+
+midi2::MidiGroupEndpointListener groupsListener;
+groupsListener.IncludeGroups().Append(midi2::MidiGroup(5));
+groupsListener.IncludeGroups().Append(midi2::MidiGroup(6));
+
+// set this if you don't want the main message received event on the
+// connection to fire for any messages this plugin handles.
+groupsListener.PreventFiringMainMessageReceivedEvent(true);
+
+auto groupsMessagesReceivedEventToken = groupsListener.MessageReceived(MyMessageReceivedHandler);
+
+myConnection.AddMessageProcessingPlugin(groupsListener);
+
+// open after setting up the plugin so you don't miss any messages
+myConnection.Open();
+
+// ...
+```
+
 ## IDL
 
 [MidiGroupEndpointListener IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiGroupEndpointListener.idl)
