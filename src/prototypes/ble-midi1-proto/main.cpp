@@ -20,11 +20,11 @@ using namespace Windows::Foundation;
 
 
 
-#define MIDI_BLE_SERVICE_CHARACTERISTIC L"{03B80E5A-EDE8-4B33-A751-6CE34EC4C700}"
+#define MIDI_BLE_SERVICE L"{03B80E5A-EDE8-4B33-A751-6CE34EC4C700}"
 #define MIDI_BLE_DATA_IO_CHARACTERISTIC L"{7772E5DB-3868-4112-A1A9-F2669D106BF3}"
 
-winrt::guid MIDI_BLE_SERVICE_CHARACTERISTIC_GUID(MIDI_BLE_SERVICE_CHARACTERISTIC);
-winrt::guid MIDI_BLE_DATA_IO_CHARACTERISTIC_GUID(MIDI_BLE_DATA_IO_CHARACTERISTIC);
+winrt::guid MIDI_BLE_SERVICE_UUID(MIDI_BLE_SERVICE);
+winrt::guid MIDI_BLE_DATA_IO_CHARACTERISTIC_UUID(MIDI_BLE_DATA_IO_CHARACTERISTIC);
 
 // Notes:
 //      Write (encryption recommended, write without response is required)
@@ -76,7 +76,7 @@ void OnDeviceAdded(enumeration::DeviceWatcher, enumeration::DeviceInformation in
             {
                 auto serviceUuid = service.Uuid();
 
-                if (serviceUuid == MIDI_BLE_SERVICE_CHARACTERISTIC_GUID)
+                if (serviceUuid == MIDI_BLE_SERVICE_UUID)
                 {
                     std::cout << "MIDI Service Found: " << winrt::to_string(winrt::to_hstring(serviceUuid)) << std::endl;
 
@@ -92,7 +92,7 @@ void OnDeviceAdded(enumeration::DeviceWatcher, enumeration::DeviceInformation in
                         //    desc.
                         //}
 
-                        if (uuid == MIDI_BLE_DATA_IO_CHARACTERISTIC_GUID)
+                        if (uuid == MIDI_BLE_DATA_IO_CHARACTERISTIC_UUID)
                         {
                             std::cout << "MIDI Data IO Characteristic Found: " << winrt::to_string(winrt::to_hstring(uuid)) << std::endl;
 
@@ -233,7 +233,7 @@ IAsyncAction TestReceivingData()
     {
         std::cout << "Using device " << winrt::to_string(bleDevice.Name()) << std::endl;
 
-        auto service = bleDevice.GetGattService(MIDI_BLE_SERVICE_CHARACTERISTIC_GUID);
+        auto service = bleDevice.GetGattService(MIDI_BLE_SERVICE_UUID);
 
         
         if (service != nullptr)
@@ -258,7 +258,7 @@ IAsyncAction TestReceivingData()
 
             std::cout << "Getting MIDI Data IO characteristic" << std::endl;
 
-            auto characteristicsResult = service.GetCharacteristicsForUuidAsync(MIDI_BLE_DATA_IO_CHARACTERISTIC_GUID).get();
+            auto characteristicsResult = service.GetCharacteristicsForUuidAsync(MIDI_BLE_DATA_IO_CHARACTERISTIC_UUID).get();
 
             if (characteristicsResult.Status() == gatt::GattCommunicationStatus::Success)
             {
@@ -352,12 +352,181 @@ IAsyncAction TestReceivingData()
 
 }
 
+
+IAsyncAction TestReceivingData2()
+{
+    std::cout << "Test Receiving Data ---------------------------------------------------------" << std::endl;
+
+    winrt::hstring id = L"BluetoothLE#BluetoothLE3c:6a:a7:f0:4e:b0-48:b6:20:1a:71:9d";
+
+    try
+    {
+        gatt::GattSession session{ nullptr };
+
+        std::cout << "Creating session" << std::endl;
+
+        auto bleId = bt::BluetoothDeviceId::FromId(id);
+
+        session = co_await gatt::GattSession::FromDeviceIdAsync(bleId);
+
+        std::cout << "Session created" << std::endl;
+
+        session.MaintainConnection(true);
+
+        auto bleDevice = bt::BluetoothLEDevice::FromIdAsync(id).get();
+
+        if (bleDevice != nullptr)
+        {
+            std::cout << "Using device " << winrt::to_string(bleDevice.Name()) << std::endl;
+
+            auto service = bleDevice.GetGattService(MIDI_BLE_SERVICE_UUID);
+
+            if (service != nullptr)
+            {
+                std::cout << "Found service" << std::endl;;
+
+                auto openStatus = co_await service.OpenAsync(gatt::GattSharingMode::SharedReadAndWrite);
+
+                if (openStatus == gatt::GattOpenStatus::Success)
+                {
+                    std::cout << "Service opened" << std::endl;
+                }
+                else
+                {
+                    std::cout << "Unable to open service" << std::endl;
+                    co_return;
+                }
+
+                std::cout << "Getting MIDI Data IO characteristic" << std::endl;
+
+                auto characteristicsResult = co_await service.GetCharacteristicsForUuidAsync(MIDI_BLE_DATA_IO_CHARACTERISTIC_UUID);
+
+                if (characteristicsResult.Status() == gatt::GattCommunicationStatus::Success)
+                {
+                    if (characteristicsResult.Characteristics().Size() == 0)
+                    {
+                        // this is unexpected
+                        std::cout << "Returned no characteristics for the required UUID" << std::endl;
+                    }
+                    else if (characteristicsResult.Characteristics().Size() > 1)
+                    {
+                        // TODO: Need to find out under which cases this happens
+                        std::cout << "Returned more than one characteristic for the same UUID" << std::endl;
+                    }
+                    else
+                    {
+                        std::cout << "Returned just the one characteristic for the UUID" << std::endl;
+
+                        auto characteristic = characteristicsResult.Characteristics().GetAt(0);
+
+                        co_await characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
+                            gatt::GattClientCharacteristicConfigurationDescriptorValue::Notify);
+
+
+                        auto valueChangedHandler = [&](gatt::GattCharacteristic const& sender, gatt::GattValueChangedEventArgs const& args)
+                            {
+                                std::cout << "Value changed" << std::endl;
+
+                                // we get an IBuffer here
+
+                                std::cout << "Data size is " << args.CharacteristicValue().Length() << " bytes" << std::endl;
+
+                                for (int i = 0; i < args.CharacteristicValue().Length(); i++)
+                                {
+                                    // read next byte
+                                    auto b = *(args.CharacteristicValue().data() + i);
+
+                                    std::cout << "0x" << std::hex << (unsigned)b << " ";
+                                }
+
+                                std::cout << std::endl;
+                            };
+
+                        // wire up ValueChanged so we actually get data
+                        characteristic.ValueChanged(valueChangedHandler);
+
+                        while (true)
+                        {
+                            ::Sleep(100);
+                        }
+
+                        session.Close();
+
+                    }
+                }
+
+
+                service.Close();
+            }
+        }
+
+        std::cout << "Done" << std::endl;
+
+
+        // wait for incoming data indefinitely
+
+        //auto characteristic = characteristicsResult.Characteristics().GetAt(0);
+
+        //auto readResult = characteristic.ReadValueAsync().get();
+
+        //if (readResult.Status() == gatt::GattCommunicationStatus::Success)
+        //{
+        //    // we get an IBuffer here
+
+        //    for (int i = 0; i < readResult.Value().Length(); i++)
+        //    {
+        //        // read next byte
+        //        auto b = *(readResult.Value().data() + i);
+
+        //        std::cout << std::hex << b << " ";
+        //    }
+
+        //    std::cout << std::endl;
+
+        //}
+        //session.Close();
+
+
+
+
+
+
+
+
+    }
+    catch (winrt::hresult_error err)
+    {
+        // Important: using .get() means we don't actually get to handle these exceptions.
+
+        if (err.code() == HRESULT_FROM_WIN32(ERROR_SHARING_VIOLATION))
+        {
+            std::cout << "Cannot access the BLE device because it's being used by another process" << std::endl;
+        }
+        else
+        {
+            std::cout << "HRESULT exception 0x" << std::hex << err.code() << std::endl;
+        }
+
+        co_return;
+    }
+    catch (...)
+    {
+        std::cout << "Exception" << std::endl;
+
+        co_return;
+    }
+
+}
+
+
+
 int main()
 {
     init_apartment();
 
 //    TestEnumeration();
-    TestReceivingData().get();
+//    TestReceivingData().get();
+    TestReceivingData2().get();
 
     //system("pause > nul");
     system("pause");
