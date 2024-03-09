@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
@@ -6,4 +6,26 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+
+
 #include "pch.h"
+
+_Use_decl_annotations_
+HRESULT MidiBleBiDi::Initialize(LPCWSTR /*endpointDeviceInterfaceId*/)
+{
+    return S_OK;
+}
+
+
+
+
+
+
+HRESULT MidiBleBiDi::SendMidiMessage()
+{
+
+
+    return S_OK;
+}
+
+
