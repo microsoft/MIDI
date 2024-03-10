@@ -14,7 +14,7 @@
 
 #define MIDI_BLE_SERVICE L"{03B80E5A-EDE8-4B33-A751-6CE34EC4C700}"
 #define MIDI_BLE_DATA_IO_CHARACTERISTIC L"{7772E5DB-3868-4112-A1A9-F2669D106BF3}"
-
+#define MIDI_BLE_COMPANY_CODE_MICROSOFT 0xFE08
 
 // Notes:
 //      Write (encryption recommended, write without response is required)

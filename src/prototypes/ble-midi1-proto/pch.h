@@ -36,6 +36,7 @@ using namespace winrt::Windows::Devices::Bluetooth::Background;
 using namespace winrt::Windows::Devices::Bluetooth::GenericAttributeProfile;
 
 #include <iostream>
+#include <iomanip>
 
 #include "abstraction_defs.h"
 #include "ble_utilities.h"

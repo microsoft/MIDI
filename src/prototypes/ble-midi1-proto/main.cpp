@@ -109,47 +109,218 @@ void ReportAdapterCapabilities()
     std::cout << "------------------------------------------" << std::endl;
 }
 
-#define BLUETOOTH_COMPANY_CODE_MICROSOFT 0xFE08
 
-void TestAdvertisingAsPeripheral()
+
+
+GattServiceProvider m_provider{ nullptr };
+winrt::event_token Revoke_AdvertisementStatusChanged;
+winrt::event_token Revoke_GattReadRequest;
+winrt::event_token Revoke_GattWriteRequest;
+GattLocalCharacteristic m_dataIOCharacteristic{ nullptr };
+
+void OnDataIOReadRequested(GattLocalCharacteristic const& source, GattReadRequestedEventArgs const& args)
 {
-//    std::cout << "Setting up ad..." << std::endl;
-//
-//    winrt::guid MIDI_BLE_SERVICE_UUID{ MIDI_BLE_SERVICE };
-//
-//    BluetoothLEManufacturerData manufacturer;
-//    manufacturer.CompanyId(BLUETOOTH_COMPANY_CODE_MICROSOFT);
-//
-//    //streams::DataWriter writer;
-//    //writer.WriteString(L"Test");
-//    //manufacturer.Data(writer.DetachBuffer());
-//
-//    BluetoothLEAdvertisement ad;
-//    //ad.ServiceUuids().Append(MIDI_BLE_SERVICE_UUID);
-//    ad.ManufacturerData().Append(manufacturer);
-//
-//    BluetoothLEAdvertisementPublisher publisher(ad);
-////    publisher.IncludeTransmitPowerLevel(true);    // can only do this if we support extended advertising, a BLE 5+ thing
-//
-//    std::cout << "Starting publisher..." << std::endl;
-//
-//    publisher.Start();
+    //std::cout << __FUNCTION__ << std::endl;
 
+    auto request = args.GetRequestAsync().get();
+
+    args.Session().MaintainConnection(true);
+
+    std::cout << "Read Request: " << winrt::to_string(args.Session().DeviceId().Id()) 
+        << ", length=" << request.Length()
+        << std::endl;
+
+    // should respond with zero only the first time
+    streams::DataWriter writer;
+    writer.WriteByte(0);
+
+    request.RespondWithValue(writer.DetachBuffer());
+}
+
+void ProcessIncomingBuffer(streams::IBuffer buffer)
+{
+    auto reader = streams::DataReader::FromBuffer(buffer);
+
+    reader.ByteOrder(streams::ByteOrder::LittleEndian);
+
+    // TODO: Process the data. We'll just display for now
+
+    // Read header bytes
+    auto headerByte = reader.ReadByte();
+
+    if (headerByte & 0x80)
+    {
+        // valid header byte. Get the rest of the info
+        auto timestampByte = reader.ReadByte();
+
+        if (timestampByte & 0x80)
+        {
+            // timestamp high is bits 5-0 of header (6 bits)
+            uint16_t timestampHigh = headerByte & 0x3F;
+
+            // timestamp low is bites 6-0 of timestamp byte (7 bits)
+            uint16_t timestampLow = timestampByte & 0x7F;
+
+            uint16_t fullTimestamp = timestampLow | (timestampHigh << 7);
+
+            std::cout
+                << "TS:"
+                << std::setw(5) << std::setfill('0')
+                << std::dec
+                << fullTimestamp 
+                << std::nouppercase
+                << " Data: ";
+
+            // now read the message data
+            // In the real impl, this needs to account for
+            // timestamp (ts low) embedded in here between
+            // messages, as well as things like running
+            // status messages
+            while (reader.UnconsumedBufferLength() > 0)
+            {
+                std::cout 
+                    << std::hex << std::setw(2) << std::setfill('0') << std::noshowbase 
+                    << std::uppercase
+                    << (unsigned)reader.ReadByte()
+                    << std::nouppercase
+                    << " ";
+            }
+
+            std::cout << std::endl;
+        }
+        else
+        {
+            std::cout << "Invalid timestamp byte" << std::endl;
+        }
+    }
+    else
+    {
+        std::cout << "Invalid data" << std::endl;
+    }
+}
+
+
+void OnDataIOWriteRequested(GattLocalCharacteristic const& source, GattWriteRequestedEventArgs const& args)
+{
+    //std::cout << __FUNCTION__ << std::endl;
+
+    auto request = args.GetRequestAsync().get();
+
+    //std::cout << "Write Request: " << winrt::to_string(args.Session().DeviceId().Id())
+    //    << ", offset=" << request.Offset()
+    //    << std::endl;
+
+    ProcessIncomingBuffer(request.Value());
+
+}
+
+void OnDataIOSubscribedClientsChanged(GattLocalCharacteristic const& source, foundation::IInspectable const& args)
+{
+    std::cout << __FUNCTION__ << std::endl;
+
+}
+
+
+void OnGattServiceProviderAdvertisementStatusChanged(GattServiceProvider const& source, GattServiceProviderAdvertisementStatusChangedEventArgs const& args)
+{
+//    std::cout << __FUNCTION__ << std::endl;
+
+    std::cout << "Provider ad status: ";
+
+    switch (args.Status())
+    {
+    case GattServiceProviderAdvertisementStatus::StartedWithoutAllAdvertisementData:
+        std::cout << "Started without all ad data";
+        break;
+    case GattServiceProviderAdvertisementStatus::Started:
+        std::cout << "Started";
+        break;
+    case GattServiceProviderAdvertisementStatus::Created:
+        std::cout << "Created";
+        break;
+    case GattServiceProviderAdvertisementStatus::Stopped:
+        std::cout << "Stopped";
+        break;
+    }
+
+    std::cout << std::endl;
+
+}
+
+void StartAsPeripheral()
+{
     winrt::guid MIDI_BLE_SERVICE_UUID{ MIDI_BLE_SERVICE };
+    winrt::guid MIDI_BLE_DATA_IO_CHARACTERISTIC_UUID{ MIDI_BLE_DATA_IO_CHARACTERISTIC };
 
     auto result = GattServiceProvider::CreateAsync(MIDI_BLE_SERVICE_UUID).get();
 
     if (result.Error() == BluetoothError::Success)
     {
-        auto provider = result.ServiceProvider();
+        m_provider = result.ServiceProvider();
+
+        Revoke_AdvertisementStatusChanged = m_provider.AdvertisementStatusChanged(OnGattServiceProviderAdvertisementStatusChanged);
 
         GattServiceProviderAdvertisingParameters params;
         params.IsConnectable(true);
         params.IsDiscoverable(true);
 
-        provider.StartAdvertising(params);
+        // BLE MIDI 1.0 requires WriteWithoutResponse
+        GattCharacteristicProperties dataIOProperties = 
+            GattCharacteristicProperties::WriteWithoutResponse | 
+            GattCharacteristicProperties::Read | 
+            GattCharacteristicProperties::Notify;
 
-        system("pause");
+        // BLE MIDI 1.0 supports encryption, and recommends it, but it isn't required. 
+        // We'll have this as a user setting later so the user can decide if, when the
+        // PC is acting as a peripheral, encryption and/or auth is required.
+        GattLocalCharacteristicParameters dataIOParameters;
+        dataIOParameters.ReadProtectionLevel(GattProtectionLevel::Plain);   
+        dataIOParameters.WriteProtectionLevel(GattProtectionLevel::Plain);  // same
+        dataIOParameters.UserDescription(L"MIDI Prototype");
+        dataIOParameters.CharacteristicProperties(dataIOProperties);
+
+        auto characteristicResult = m_provider.Service().CreateCharacteristicAsync(
+            MIDI_BLE_DATA_IO_CHARACTERISTIC_UUID, 
+            dataIOParameters
+        ).get();
+
+        if (characteristicResult.Error() == BluetoothError::Success)
+        {
+            m_dataIOCharacteristic = characteristicResult.Characteristic();
+
+            Revoke_GattReadRequest = m_dataIOCharacteristic.ReadRequested(OnDataIOReadRequested);
+            Revoke_GattWriteRequest = m_dataIOCharacteristic.WriteRequested(OnDataIOWriteRequested);
+
+            m_dataIOCharacteristic.SubscribedClientsChanged(OnDataIOSubscribedClientsChanged);
+
+            m_dataIOCharacteristic.StaticValue();
+
+            std::cout << "Start Advertising..." << std::endl;
+            m_provider.StartAdvertising(params);
+        }
+        else
+        {
+            std::cout << "Failed to create characteristic" << std::endl;
+        }
+    }
+}
+
+void StopPeripheral()
+{
+    std::cout << "Stopping peripheral..." << std::endl;
+
+    if (m_provider != nullptr)
+    {
+        m_provider.StopAdvertising();
+
+        // clean up event handler
+        m_provider.AdvertisementStatusChanged(Revoke_AdvertisementStatusChanged);
+
+        m_dataIOCharacteristic.ReadRequested(Revoke_GattReadRequest);
+        m_dataIOCharacteristic.WriteRequested(Revoke_GattWriteRequest);
+
+
+        m_provider == nullptr;
     }
 }
 
@@ -163,8 +334,12 @@ int main()
 
     ReportAdapterCapabilities();
 
-    TestAdvertisingAsPeripheral();
+    StartAsPeripheral();
 
-    
+    system("pause");
+
+    StopPeripheral();
+
+    system("pause");
 }
 
