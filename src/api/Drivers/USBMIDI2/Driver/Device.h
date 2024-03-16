@@ -133,8 +133,6 @@ WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(DEVICE_CONTEXT, GetDeviceContext)
 EVT_WDF_DRIVER_DEVICE_ADD           EvtBusDeviceAdd;
 EVT_WDF_DEVICE_PREPARE_HARDWARE     EvtDevicePrepareHardware;
 EVT_WDF_DEVICE_RELEASE_HARDWARE     EvtDeviceReleaseHardware;
-EVT_WDF_DEVICE_D0_ENTRY             EvtDeviceD0Entry;
-EVT_WDF_DEVICE_D0_EXIT              EvtDeviceD0Exit;
 EVT_WDF_DEVICE_CONTEXT_CLEANUP      EvtDeviceContextCleanup;
 
 /* make internal prototypes usable from C++ */
