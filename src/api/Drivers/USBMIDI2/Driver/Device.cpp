@@ -157,8 +157,6 @@ Return Value:
     WDF_PNPPOWER_EVENT_CALLBACKS_INIT(&pnpPowerCallbacks);
     pnpPowerCallbacks.EvtDevicePrepareHardware = EvtDevicePrepareHardware;
     pnpPowerCallbacks.EvtDeviceReleaseHardware = EvtDeviceReleaseHardware;
-    pnpPowerCallbacks.EvtDeviceD0Entry = EvtDeviceD0Entry;
-    pnpPowerCallbacks.EvtDeviceD0Exit = EvtDeviceD0Exit;
     WdfDeviceInitSetPnpPowerEventCallbacks(DeviceInit, &pnpPowerCallbacks);
 
     //
@@ -392,95 +390,6 @@ exit:
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
     return STATUS_SUCCESS;
-}
-
-_Use_decl_annotations_
-PAGED_CODE_SEG
-NTSTATUS 
-EvtDeviceD0Entry(
-    WDFDEVICE Device,
-    WDF_POWER_DEVICE_STATE PreviousState
-    )
-{
-    NTSTATUS status = STATUS_SUCCESS;
-
-    UNREFERENCED_PARAMETER(Device);
-    UNREFERENCED_PARAMETER(PreviousState);
-
-    PAGED_CODE();
-
-    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
-
-    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
-
-    return status;
-}
-
-_Use_decl_annotations_
-PAGED_CODE_SEG
-NTSTATUS 
-EvtDeviceD0Exit(
-    WDFDEVICE Device,
-    WDF_POWER_DEVICE_STATE TargetState
-    )
-{
-    NTSTATUS        status = STATUS_SUCCESS;
-    POWER_ACTION    powerAction;
-    PDEVICE_CONTEXT         devCtx;
-
-    PAGED_CODE();
-
-    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
-
-    devCtx = GetDeviceContext(Device);
-    ASSERT(devCtx != nullptr);
-
-    powerAction = WdfDeviceGetSystemPowerAction(Device);
-
-    // 
-    // Update the power policy D3-cold info for Connected Standby.
-    //
-    if (TargetState == WdfPowerDeviceD3 && powerAction == PowerActionNone)
-    {
-        WDF_TRI_STATE           excludeD3Cold = WdfTrue;
-        ACX_DX_EXIT_LATENCY     latency;
-        
-        //
-        // Get the current exit latency.
-        //
-        latency = AcxDeviceGetCurrentDxExitLatency(Device, 
-                                                   WdfDeviceGetSystemPowerAction(Device), 
-                                                   TargetState);
-
-        if (latency == AcxDxExitLatencyResponsive)
-        {
-            excludeD3Cold = WdfFalse;
-        }
-
-        if (devCtx->ExcludeD3Cold != excludeD3Cold)
-        {
-            devCtx->ExcludeD3Cold = excludeD3Cold;
-            
-            status = SetPowerPolicy(Device);
-            if (!NT_SUCCESS(status))
-            {
-                ASSERT(FALSE);
-                status = STATUS_SUCCESS;
-            }
-        }
-    }
-
-    if (devCtx->MidiInPipe)
-    {
-        WdfIoTargetStop(
-            WdfUsbTargetPipeGetIoTarget(devCtx->MidiInPipe),
-            WdfIoTargetCancelSentIo
-        );
-    }
-
-    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
-
-    return status;
 }
 
 _Use_decl_annotations_
@@ -720,6 +629,7 @@ Return Value:
     //
     // Get other useful Driver descriptor information
     // 
+
     // Get Serial Number string as not a current simple property to get
     if (deviceDescriptor.iSerialNumber)
     {
@@ -772,6 +682,11 @@ Return Value:
             return(status);
         }
     }
+
+
+    // VID / PID
+    pDeviceContext->DeviceVID = deviceDescriptor.idVendor;
+    pDeviceContext->DevicePID = deviceDescriptor.idProduct;
 
     // Device manufacturer (as DevicePropertyManufacturer is driver manufacturer)
     if (deviceDescriptor.iManufacturer)

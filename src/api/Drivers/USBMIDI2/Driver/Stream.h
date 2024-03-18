@@ -97,7 +97,10 @@ EVT_ACX_OBJECT_PROCESS_REQUEST      EvtMidiSetLoopedStreamingNotificationEventCa
 
 EVT_ACX_OBJECT_PROCESS_REQUEST      EvtMidi2NativeDataFormatCallback;
 EVT_ACX_OBJECT_PROCESS_REQUEST      EvtMidi2GroupTerminalBlocksCallback;
-EVT_ACX_OBJECT_PROCESS_REQUEST      EvtMidi2SerialNumber;
+EVT_ACX_OBJECT_PROCESS_REQUEST      EvtMidi2SerialNumberCallback;
+EVT_ACX_OBJECT_PROCESS_REQUEST      EvtMidi2ManufacturerCallback;
+EVT_ACX_OBJECT_PROCESS_REQUEST      EvtMidi2VIDCallback;
+EVT_ACX_OBJECT_PROCESS_REQUEST      EvtMidi2PIDCallback;
 
 /* make internal prototypes usable from C++ */
 #ifdef __cplusplus
