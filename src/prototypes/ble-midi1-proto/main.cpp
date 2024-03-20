@@ -118,6 +118,7 @@ winrt::event_token Revoke_GattReadRequest;
 winrt::event_token Revoke_GattWriteRequest;
 GattLocalCharacteristic m_dataIOCharacteristic{ nullptr };
 
+
 void OnDataIOReadRequested(GattLocalCharacteristic const& source, GattReadRequestedEventArgs const& args)
 {
     //std::cout << __FUNCTION__ << std::endl;
@@ -175,7 +176,7 @@ void ProcessIncomingBuffer(streams::IBuffer buffer)
             // In the real impl, this needs to account for
             // timestamp (ts low) embedded in here between
             // messages, as well as things like running
-            // status messages
+            // status messages. This is just quick and dirty.
             while (reader.UnconsumedBufferLength() > 0)
             {
                 std::cout 
