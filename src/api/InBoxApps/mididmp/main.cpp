@@ -135,19 +135,10 @@ void OutputError(_In_ std::wstring errorMessage)
 #define RETURN_SUCCESS return 0
 #define RETURN_FAIL return 1
 
-int __cdecl main()
+
+bool SectionTransports(_In_ bool verbose)
 {
-    winrt::init_apartment();
-
-    bool verbose = true;
-    bool pingTest = true;
-    bool midiClock = true;
-
-    OutputHeader(L"Microsoft Windows MIDI Services");
-
-    OutputSectionHeader(L"header");
-
-    OutputCurrentTime();
+    UNREFERENCED_PARAMETER(verbose);
 
     try
     {
@@ -169,112 +160,239 @@ int __cdecl main()
         else
         {
             OutputError(L"Enumerating transports returned no matches. This is not expected and indicates an installation problem or that the service is not running.");
-            RETURN_FAIL;
+            return false;
         }
+    }
+    catch (...)
+    {
+        OutputError(L"Exception enumerating transports.");
+        return false;
+    }
 
-        OutputSectionHeader(L"enum_endpoints");
+    return true;
+}
 
-        // list devices
+bool SectionMidi2ApiEndpoints(_In_ bool verbose)
+{
+    OutputSectionHeader(L"enum_ump_api_endpoints");
 
-        collections::IVectorView<midi2::MidiEndpointDeviceInformation> devices{ nullptr };
+    // list devices
 
-        try
+    collections::IVectorView<midi2::MidiEndpointDeviceInformation> devices{ nullptr };
+
+    try
+    {
+        // list all devices
+        devices = midi2::MidiEndpointDeviceInformation::FindAll(
+            midi2::MidiEndpointDeviceInformationSortOrder::Name,
+            midi2::MidiEndpointDeviceInformationFilters::IncludeClientByteStreamNative |
+            midi2::MidiEndpointDeviceInformationFilters::IncludeClientUmpNative |
+            midi2::MidiEndpointDeviceInformationFilters::IncludeDiagnosticLoopback |
+            midi2::MidiEndpointDeviceInformationFilters::IncludeDiagnosticPing |
+            midi2::MidiEndpointDeviceInformationFilters::IncludeVirtualDeviceResponder
+        );
+    }
+    catch (...)
+    {
+        OutputError(L"Unable to access Windows MIDI Services and enumerate devices.");
+        return false;
+    }
+
+    if (devices != nullptr && devices.Size() > 0)
+    {
+        for (uint32_t i = 0; i < devices.Size(); i++)
         {
-            // list all devices
-            devices = midi2::MidiEndpointDeviceInformation::FindAll(
-                midi2::MidiEndpointDeviceInformationSortOrder::Name,
-                midi2::MidiEndpointDeviceInformationFilters::IncludeClientByteStreamNative |
-                midi2::MidiEndpointDeviceInformationFilters::IncludeClientUmpNative |
-                midi2::MidiEndpointDeviceInformationFilters::IncludeDiagnosticLoopback |
-                midi2::MidiEndpointDeviceInformationFilters::IncludeDiagnosticPing |
-                midi2::MidiEndpointDeviceInformationFilters::IncludeVirtualDeviceResponder
-            );
-        }
-        catch (...)
-        {
-            OutputError(L"Unable to access Windows MIDI Services and enumerate devices.");
+            auto device = devices.GetAt(i);
 
-            RETURN_FAIL;
-        }
+            // These names should not be localized because customers may parse these output fields
 
-        if (devices != nullptr && devices.Size() > 0)
-        {
-            for (uint32_t i = 0; i < devices.Size(); i++)
+            OutputStringField(L"endpoint_device_id", device.Id());
+            OutputStringField(L"name", device.Name());
+            OutputStringField(L"transport_mnemonic", device.TransportMnemonic());
+
+            if (verbose)
             {
-                auto device = devices.GetAt(i);
-
-                // These names should not be localized because customers may parse these output fields
-
-                OutputStringField(L"endpoint_device_id", device.Id());
-                OutputStringField(L"name", device.Name());
-                OutputStringField(L"transport_mnemonic", device.TransportMnemonic());
-
-                if (verbose)
-                {
-                    OutputStringField(L"name_user_supplied", device.UserSuppliedName());
-                    OutputStringField(L"name_endpoint_supplied", device.EndpointSuppliedName());
-                    OutputStringField(L"name_transport_supplied", device.TransportSuppliedName());
-                    OutputStringField(L"description_transport_supplied", device.TransportSuppliedDescription());
-                    OutputStringField(L"description_user_supplied", device.UserSuppliedDescription());
-                }
-
-                auto parent = device.GetParentDeviceInformation();
-
-                if (parent != nullptr)
-                {
-                    OutputStringField(L"parent_id", parent.Id());
-                    OutputStringField(L"parent_name", parent.Name());
-                }
-                else
-                {
-                    OutputError(L"Unable to find endpoint parent");
-                }
-
-                if (i != devices.Size() - 1)
-                {
-                    OutputItemSeparator();
-                }
+                OutputStringField(L"name_user_supplied", device.UserSuppliedName());
+                OutputStringField(L"name_endpoint_supplied", device.EndpointSuppliedName());
+                OutputStringField(L"name_transport_supplied", device.TransportSuppliedName());
+                OutputStringField(L"description_transport_supplied", device.TransportSuppliedDescription());
+                OutputStringField(L"description_user_supplied", device.UserSuppliedDescription());
             }
+
+            auto parent = device.GetParentDeviceInformation();
+
+            if (parent != nullptr)
+            {
+                OutputStringField(L"parent_id", parent.Id());
+                OutputStringField(L"parent_name", parent.Name());
+            }
+            else
+            {
+                OutputError(L"Unable to find endpoint parent");
+            }
+
+            if (i != devices.Size() - 1)
+            {
+                OutputItemSeparator();
+            }
+        }
+    }
+    else
+    {
+        OutputError(L"Enumerating devices returned no matches. This is not expected and indicates an installation problem or that the service is not running.");
+        return false;
+    }
+
+    return true;
+}
+
+bool SectionMidi1ApiEndpoints(_In_ bool verbose)
+{
+    UNREFERENCED_PARAMETER(verbose);
+
+    OutputSectionHeader(L"enum_midi1_api_input_endpoints");
+
+    try
+    {
+        // inputs
+        auto midi1Inputs = winrt::Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(
+            winrt::Windows::Devices::Midi::MidiInPort::GetDeviceSelector()).get();
+
+        for (uint32_t i = 0; i < midi1Inputs.Size(); i++)
+        {
+            auto device = midi1Inputs.GetAt(i);
+
+            OutputStringField(L"endpoint_device_id", device.Id());
+            OutputStringField(L"name", device.Name());
+
+            if (i != midi1Inputs.Size() - 1)
+            {
+                OutputItemSeparator();
+            }
+        }
+    }
+    catch (...)
+    {
+        OutputError(L"Enumerating MIDI 1.0 devices encountered an exception.");
+
+        return false;
+    }
+
+    OutputSectionHeader(L"enum_midi1_api_output_endpoints");
+
+    try
+    {// outputs
+        auto midi1Outputs = winrt::Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(
+            winrt::Windows::Devices::Midi::MidiOutPort::GetDeviceSelector()).get();
+
+        for (uint32_t i = 0; i < midi1Outputs.Size(); i++)
+        {
+            auto device = midi1Outputs.GetAt(i);
+
+            OutputStringField(L"endpoint_device_id", device.Id());
+            OutputStringField(L"name", device.Name());
+
+            if (i != midi1Outputs.Size() - 1)
+            {
+                OutputItemSeparator();
+            }
+        }
+    }
+    catch (...)
+    {
+        OutputError(L"Enumerating MIDI 1.0 devices encountered an exception.");
+
+        return false;
+    }
+}
+
+
+bool SectionPingTest(_In_ bool verbose, _In_ uint8_t pingCount)
+{
+    try
+    {
+        UNREFERENCED_PARAMETER(verbose);
+
+        OutputSectionHeader(L"ping_test");
+
+        OutputTimestampField(L"ping_attempt_count", pingCount);
+
+        auto pingResult = midi2::MidiService::PingService(pingCount);
+
+        OutputNumericField(L"ping_return_count", pingResult.Responses().Size());
+
+        if (pingResult.Success())
+        {
+            OutputTimestampField(L"ping_time_round_trip_total_ticks", pingResult.TotalPingRoundTripMidiClock());
+            OutputTimestampField(L"ping_time_round_trip_average_ticks", pingResult.AveragePingRoundTripMidiClock());
+
         }
         else
         {
-            OutputError(L"Enumerating devices returned no matches. This is not expected and indicates an installation problem or that the service is not running.");
-            RETURN_FAIL;
+            OutputError(L"Ping test failed");
+            OutputStringField(L"ping_failure_reason", pingResult.FailureReason());
+
+            return false;
+        }
+    }
+    catch (...)
+    {
+        OutputError(L"Ping test failed with exception");
+
+        return false;
+    }
+
+    return true;
+}
+
+
+bool SectionClock(_In_ bool verbose)
+{
+    OutputSectionHeader(L"midi_clock");
+
+    OutputTimestampField(L"clock_frequency", midi2::MidiClock::TimestampFrequency());
+    OutputTimestampField(L"clock_now", midi2::MidiClock::Now());
+
+    return true;
+}
+
+int __cdecl main()
+{
+    winrt::init_apartment();
+
+    bool verbose = true;
+    bool pingTest = true;
+    bool midiClock = true;
+
+    OutputHeader(L"Microsoft Windows MIDI Services");
+
+    OutputSectionHeader(L"header");
+
+    OutputCurrentTime();
+
+    try
+    {
+        auto transportsWorked = SectionTransports(verbose);
+
+        if (transportsWorked)
+        {
+            if (!SectionMidi2ApiEndpoints(verbose)) RETURN_FAIL;
         }
 
+        SectionMidi1ApiEndpoints(verbose);  // we don't bail if this fails
 
         const uint8_t pingCount = 10;
 
         // ping the service
         if (pingTest)
         {
-            OutputSectionHeader(L"ping_test");
-
-            OutputTimestampField(L"ping_attempt_count", pingCount);
-
-            auto pingResult = midi2::MidiService::PingService(pingCount);
-
-            OutputNumericField(L"ping_return_count", pingResult.Responses().Size());
-
-            if (pingResult.Success())
-            {
-                OutputTimestampField(L"ping_time_round_trip_total_ticks", pingResult.TotalPingRoundTripMidiClock());
-                OutputTimestampField(L"ping_time_round_trip_average_ticks", pingResult.AveragePingRoundTripMidiClock());
-
-            }
-            else
-            {
-                OutputError(L"Ping test failed");
-                OutputStringField(L"ping_failure_reason", pingResult.FailureReason());
-            }
+            if (!SectionPingTest(verbose, pingCount)) RETURN_FAIL;
         }
+
 
         if (midiClock)
         {
-            OutputSectionHeader(L"midi_clock");
-
-            OutputTimestampField(L"clock_frequency", midi2::MidiClock::TimestampFrequency());
-            OutputTimestampField(L"clock_now", midi2::MidiClock::Now());
+            if (!SectionClock(verbose)) RETURN_FAIL;
         }
 
     }
@@ -285,9 +403,7 @@ int __cdecl main()
         RETURN_FAIL;
     }
 
-
     OutputSectionHeader(L"end_of_file");
-
 
     RETURN_SUCCESS;
 }
