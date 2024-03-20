@@ -136,7 +136,7 @@ void OutputError(_In_ std::wstring errorMessage)
 #define RETURN_FAIL return 1
 
 
-bool SectionTransports(_In_ bool verbose)
+bool DoSectionTransports(_In_ bool verbose)
 {
     UNREFERENCED_PARAMETER(verbose);
 
@@ -172,7 +172,7 @@ bool SectionTransports(_In_ bool verbose)
     return true;
 }
 
-bool SectionMidi2ApiEndpoints(_In_ bool verbose)
+bool DoSectionMidi2ApiEndpoints(_In_ bool verbose)
 {
     OutputSectionHeader(L"enum_ump_api_endpoints");
 
@@ -246,7 +246,7 @@ bool SectionMidi2ApiEndpoints(_In_ bool verbose)
     return true;
 }
 
-bool SectionMidi1ApiEndpoints(_In_ bool verbose)
+bool DoSectionMidi1ApiEndpoints(_In_ bool verbose)
 {
     UNREFERENCED_PARAMETER(verbose);
 
@@ -306,8 +306,7 @@ bool SectionMidi1ApiEndpoints(_In_ bool verbose)
     }
 }
 
-
-bool SectionPingTest(_In_ bool verbose, _In_ uint8_t pingCount)
+bool DoSectionPingTest(_In_ bool verbose, _In_ uint8_t pingCount)
 {
     try
     {
@@ -345,8 +344,7 @@ bool SectionPingTest(_In_ bool verbose, _In_ uint8_t pingCount)
     return true;
 }
 
-
-bool SectionClock(_In_ bool verbose)
+bool DoSectionClock(_In_ bool verbose)
 {
     OutputSectionHeader(L"midi_clock");
 
@@ -372,27 +370,29 @@ int __cdecl main()
 
     try
     {
-        auto transportsWorked = SectionTransports(verbose);
+        auto transportsWorked = DoSectionTransports(verbose);
 
         if (transportsWorked)
         {
-            if (!SectionMidi2ApiEndpoints(verbose)) RETURN_FAIL;
+            if (!DoSectionMidi2ApiEndpoints(verbose)) RETURN_FAIL;
         }
 
-        SectionMidi1ApiEndpoints(verbose);  // we don't bail if this fails
+        DoSectionMidi1ApiEndpoints(verbose);  // we don't bail if this fails
 
-        const uint8_t pingCount = 10;
-
-        // ping the service
-        if (pingTest)
+        if (transportsWorked)
         {
-            if (!SectionPingTest(verbose, pingCount)) RETURN_FAIL;
-        }
+            // ping the service
+            if (pingTest)
+            {
+                const uint8_t pingCount = 10;
 
+                if (!DoSectionPingTest(verbose, pingCount)) RETURN_FAIL;
+            }
+        }
 
         if (midiClock)
         {
-            if (!SectionClock(verbose)) RETURN_FAIL;
+            if (!DoSectionClock(verbose)) RETURN_FAIL;
         }
 
     }
