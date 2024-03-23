@@ -47,21 +47,23 @@
                    Bitness="always64"
                    Directory="SERVICE_INSTALLFOLDER"
                    Guid="{6a2300f5-ccae-4f61-b849-d41aefb8a999}"  >
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.MidiSrvAbstraction.dll"          SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.DiagnosticsAbstraction.dll"      SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.KSAbstraction.dll"               SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.BluetoothMidiAbstraction.dll"    SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.NetworkMidiAbstraction.dll"      SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.LoopbackMidiAbstraction.dll"     SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.VirtualMidiAbstraction.dll"      SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.VirtualPatchBayAbstraction.dll"  SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.MidiSrvAbstraction.dll"                  SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.DiagnosticsAbstraction.dll"              SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.KSAbstraction.dll"                       SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.BluetoothMidiAbstraction.dll"            SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.NetworkMidiAbstraction.dll"              SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.LoopbackMidiAbstraction.dll"             SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.VirtualMidiAbstraction.dll"              SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.VirtualPatchBayAbstraction.dll"          SelfRegCost="1" Vital="true" />
 
             <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.BS2UMPTransform.dll"                     SelfRegCost="1" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.UMP2BSTransform.dll"                     SelfRegCost="1" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.EndpointMetadataListenerTransform.dll"   SelfRegCost="1" Vital="true" />
-            <!--<File Source="$(StagingSourceRootFolder)\api\x64\Midi2.JitterReductionGeneratorTransform.dll"   SelfRegCost="1" Vital="true" /> -->
-            <!--<File Source="$(StagingSourceRootFolder)\api\x64\Midi2.JitterReductionListenerTransform.dll"    SelfRegCost="1" Vital="true" /> -->
             <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.SchedulerTransform.dll"                  SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.UmpProtocolDownscalerTransform.dll"      SelfRegCost="1" Vital="true" />
+           
+           <!--<File Source="$(StagingSourceRootFolder)\api\x64\Midi2.JitterReductionGeneratorTransform.dll"   SelfRegCost="1" Vital="true" /> -->
+           <!--<File Source="$(StagingSourceRootFolder)\api\x64\Midi2.JitterReductionListenerTransform.dll"    SelfRegCost="1" Vital="true" /> -->
 
        </Component>
 

@@ -1,0 +1,22 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+import "MidiAbstraction.idl";
+
+[
+    uuid(1b2e6e7f-e780-4406-92e0-14f4b8b04552),
+    version(1.0),
+]
+library Midi2UmpProtocolDownscalerTransformLib
+{
+    importlib("stdole2.tlb");
+
+    [uuid(dc638b31-cf31-48ed-9e79-02740bf5d013), version(1.0)]
+    coclass Midi2UmpProtocolDownscalerTransform
+    {
+        [default] interface IMidiDataTransform;
+    }
+};
+

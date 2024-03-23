@@ -322,6 +322,37 @@ CMidiClientManager::GetMidiDevice(
     return S_OK;
 }
 
+
+_Use_decl_annotations_
+HRESULT
+GetMidiProtocolDownscalerTransform(
+    _In_ handle_t BindingHandle,
+    _In_ MidiFlow Flow,
+    _In_ wil::com_ptr_nothrow<CMidiPipe>& DevicePipe,
+    _In_ wil::com_ptr_nothrow<CMidiPipe>& ClientConnectionPipe)
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
+
+
+
+
+
+
+
+
+    return S_OK;
+}
+
+
+
+
 // This function handles data format translation only
 _Use_decl_annotations_
 HRESULT 

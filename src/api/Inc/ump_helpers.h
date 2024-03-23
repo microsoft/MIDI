@@ -49,6 +49,8 @@
 #define MIDIWORDBYTE4LOWCRUMB4(x) (uint8_t)((x & 0x000000C0) >> 6)
 
 
+
+
 #define UMP32_WORD_COUNT 1
 #define UMP64_WORD_COUNT 2
 #define UMP96_WORD_COUNT 3
@@ -69,6 +71,43 @@
 #define MIDI_MESSAGE_CHANNEL_WORD_DATA_MASK 0x000F0000
 #define MIDI_MESSAGE_CHANNEL_BITSHIFT 16
 
+
+#define MIDI_UMP_MESSAGE_TYPE_UTILITY_MESSAGE_32        0x0
+#define MIDI_UMP_MESSAGE_TYPE_SYSTEM_COMMON_32          0x1
+#define MIDI_UMP_MESSAGE_TYPE_MIDI1_CHANNEL_VOICE_32    0x2
+#define MIDI_UMP_MESSAGE_TYPE_DATA_MESSAGE_64           0x3
+#define MIDI_UMP_MESSAGE_TYPE_MIDI2_CHANNEL_VOICE_64    0x4
+#define MIDI_UMP_MESSAGE_TYPE_DATA_MESSAGE_128          0x5
+#define MIDI_UMP_MESSAGE_TYPE_FLEX_DATA_128             0xD
+#define MIDI_UMP_MESSAGE_TYPE_STREAM_128                0xF
+
+#define MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_REG_PER_NOTE_CONTROLLER     0x0
+#define MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_ASSIGN_PER_NOTE_CONTROLLER  0x1
+#define MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_REG_CONTROLLER              0x2
+#define MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_ASSIGN_CONTROLLER           0x3
+#define MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_REL_REG_CONTROLLER          0x4
+#define MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_REL_ASSIGN_CONTROLLER       0x5
+#define MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_PER_NOTE_PITCH_BEND         0x6
+#define MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_NOTE_OFF                    0x8
+#define MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_NOTE_ON                     0x9
+#define MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_POLY_PRESSURE               0xA
+#define MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_CONTROL_CHANGE              0xB
+#define MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_PROGRAM_CHANGE              0xC
+#define MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_CHANNEL_PRESSURE            0xD
+#define MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_PITCH_BEND                  0xE
+#define MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_PER_NOTE_MANAGEMENT         0xF
+
+
+#define MIDI_UMP_MIDI1_CHANNEL_VOICE_STATUS_NOTE_OFF                    0x8
+#define MIDI_UMP_MIDI1_CHANNEL_VOICE_STATUS_NOTE_ON                     0x9
+#define MIDI_UMP_MIDI1_CHANNEL_VOICE_STATUS_POLY_PRESSURE               0xA
+#define MIDI_UMP_MIDI1_CHANNEL_VOICE_STATUS_CONTROL_CHANGE              0xB
+#define MIDI_UMP_MIDI1_CHANNEL_VOICE_STATUS_PROGRAM_CHANGE              0xC
+#define MIDI_UMP_MIDI1_CHANNEL_VOICE_STATUS_CHANNEL_PRESSURE            0xD
+#define MIDI_UMP_MIDI1_CHANNEL_VOICE_STATUS_PITCH_BEND                  0xE
+
+#define MIDI_UMP_MIDI1_BANK_SELECT_MSB_CC_INDEX                         0x00
+#define MIDI_UMP_MIDI1_BANK_SELECT_LSB_CC_INDEX                         0x20
 
 
 namespace Windows::Devices::Midi2::Internal
@@ -310,6 +349,11 @@ namespace Windows::Devices::Midi2::Internal
         ) noexcept
     {
         return (uint32_t)(byte0 << 24 | byte1 << 16 | byte2 << 8 | byte3);
+    }
+
+    inline uint16_t Combine7BitMsbLsbTo14BitValue(_In_ uint8_t msb, _In_ uint8_t lsb)
+    {
+        return ((uint16_t)(CleanupByte7(msb)) << 7) | CleanupByte7(lsb);
     }
 
 
@@ -802,6 +846,8 @@ namespace Windows::Devices::Midi2::Internal
 
         return false;
     }
+
+
 
 
 

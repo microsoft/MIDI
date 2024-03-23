@@ -56,8 +56,6 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
     LONGLONG Position
 )
 {
-    OutputDebugString(L"" __FUNCTION__);
-
     // Send the bytestream byte(s) to the parser
     BYTE *data = (BYTE *)Data;
     for (UINT i = 0; i < Length; i++)
@@ -65,7 +63,7 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
         m_BS2UMP.bytestreamParse(data[i]);
     }
 
-    // retrieve teh UMP(s) from the parser
+    // retrieve the UMP(s) from the parser
     // and sent it on
     while (m_BS2UMP.availableUMP())
     {
@@ -76,6 +74,8 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
             umpMessage[umpCount] = m_BS2UMP.readUMP();
         }
 
+        // Note from PMB for Gary: Pretty sure "ump" in this context is just a single UMP word. Some messages like
+        // SysEx are larger (64 bit) and so would be two words back-to-back, so umpCount would be 2 or greater.
         if (umpCount > 0)
         {
             // there are 4 bytes per each 32 bit UMP returned by the parser.

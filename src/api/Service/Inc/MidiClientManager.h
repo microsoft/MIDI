@@ -59,6 +59,13 @@ private:
                         _In_ wil::com_ptr_nothrow<CMidiPipe>&);
 
     HRESULT
+    GetMidiProtocolDownscalerTransform(
+                        _In_ handle_t,
+                        _In_ MidiFlow,
+                        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
+                        _In_ wil::com_ptr_nothrow<CMidiPipe>&);
+
+    HRESULT
     GetMidiScheduler(
                         _In_ handle_t,
                         _In_ MidiFlow,
