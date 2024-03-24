@@ -275,8 +275,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="Midi2.UmpProtocolDownscalerTransform.cpp" />
     <ClCompile Include="Midi2.UmpProtocolDownscalerMidiTransform.cpp" />
+    <ClCompile Include="Midi2.UmpProtocolDownscalerTransform.cpp" />
     <ClCompile Include="pch.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -289,8 +289,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dllmain.h" />
-    <ClInclude Include="Midi2.UmpProtocolDownscalerTransform.h" />
     <ClInclude Include="Midi2.UmpProtocolDownscalerMidiTransform.h" />
+    <ClInclude Include="Midi2.UmpProtocolDownscalerTransform.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
   </ItemGroup>

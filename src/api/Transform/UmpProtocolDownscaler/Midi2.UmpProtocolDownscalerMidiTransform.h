@@ -1,38 +1,24 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 #pragma once
 
-class MidiUmpProtocolDownscalerTransformTelemetryProvider : public wil::TraceLoggingProvider
-{
-    IMPLEMENT_TRACELOGGING_CLASS_WITH_MICROSOFT_TELEMETRY(
-        MidiUmpProtocolDownscalerTransformTelemetryProvider,
-        "Microsoft.Windows.Midi2.UmpProtocolDownscalerTransform",
-        // {b4d50468-e9d8-5080-5b75-e49eb39fee9c}
-        (0xb4d50468,0xe9d8,0x5080,0x5b,0x75,0xe4,0x9e,0xb3,0x9f,0xee,0x9c))
-};
+#include "bytestreamToUMP.h"
 
-using namespace ATL;
-
-class ATL_NO_VTABLE CMidi2UmpProtocolDownscalerTransform :
-    public CComObjectRootEx<CComMultiThreadModel>,
-    public CComCoClass<CMidi2UmpProtocolDownscalerTransform, &CLSID_Midi2UmpProtocolDownscalerTransform>,
-    public IMidiTransform
+class CMidi2UmpProtocolDownscalerMidiTransform :
+    public Microsoft::WRL::RuntimeClass<
+        Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
+        IMidiDataTransform>
 {
 public:
-    CMidi2UmpProtocolDownscalerTransform()
-    {
-    }
 
-    DECLARE_REGISTRY_RESOURCEID(IDR_MIDI2UMPPROTOCOLDOWNSCALERTRANSFORM)
+    STDMETHOD(Initialize(_In_ LPCWSTR, _In_ PTRANSFORMCREATIONPARAMS, _In_ DWORD *, _In_opt_ IMidiCallback *, _In_ LONGLONG, _In_ IUnknown*));
+    STDMETHOD(SendMidiMessage(_In_ PVOID message, _In_ UINT size, _In_ LONGLONG));
+    STDMETHOD(Cleanup)();
 
-    BEGIN_COM_MAP(CMidi2UmpProtocolDownscalerTransform)
-        COM_INTERFACE_ENTRY(IMidiTransform)
-    END_COM_MAP()
-
-    DECLARE_PROTECT_FINAL_CONSTRUCT()
-
-    STDMETHOD(Activate)(_In_ REFIID, _Out_  void**);
 private:
+
+    std::wstring m_Device;
+    wil::com_ptr_nothrow<IMidiCallback> m_Callback;
+    LONGLONG m_Context;
 };
 
-OBJECT_ENTRY_AUTO(__uuidof(Midi2UmpProtocolDownscalerTransform), CMidi2UmpProtocolDownscalerTransform)
 

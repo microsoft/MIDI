@@ -4,13 +4,13 @@
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Midi2.UmpProtocolDownscalerTransform.cpp">
+    <ClCompile Include="Midi2.UmpProtocolDownscalerMidiTransform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Midi2.UmpProtocolDownscalerMidiTransform.cpp">
+    <ClCompile Include="Midi2.UmpProtocolDownscalerTransform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dllmain.cpp">
@@ -24,10 +24,10 @@
     <ClInclude Include="Resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Midi2.UmpProtocolDownscalerMidiTransform.h">
+    <ClInclude Include="Midi2.UmpProtocolDownscalerTransform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Midi2.UmpProtocolDownscalerTransform.h">
+    <ClInclude Include="Midi2.UmpProtocolDownscalerMidiTransform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dllmain.h">
