@@ -110,6 +110,23 @@
 #define MIDI_UMP_MIDI1_BANK_SELECT_LSB_CC_INDEX                         0x20
 
 
+//#define MIDI_RPN_PITCH_BEND_RANGE                                       0x0000
+//#define MIDI_RPN_COARSE_TUNING                                          0x0002
+//#define MIDI_RPN_TUNING_PROGRAM_CHANGE                                  0x0003
+//#define MIDI_RPN_TUNING_BANK_SELECT                                     0x0004
+//#define MIDI_RPN_MPE_MCM                                                0x0006
+
+#define MIDI_RPN_CC_NUMBER_BANK                                         0x65
+#define MIDI_RPN_CC_NUMBER_INDEX                                        0x64
+#define MIDI_RPN_CC_NUMBER_DATA_COARSE                                  0x06
+#define MIDI_RPN_CC_NUMBER_DATA_FINE                                    0x26
+
+#define MIDI_NRPN_CC_NUMBER_BANK                                        0x63
+#define MIDI_NRPN_CC_NUMBER_INDEX                                       0x62
+#define MIDI_NRPN_CC_NUMBER_DATA_COARSE                                 0x06
+#define MIDI_NRPN_CC_NUMBER_DATA_FINE                                   0x26
+
+
 namespace Windows::Devices::Midi2::Internal
 {
     inline std::uint8_t GetUmpLengthInMidiWordsFromMessageType(_In_ const std::uint8_t messageType) noexcept

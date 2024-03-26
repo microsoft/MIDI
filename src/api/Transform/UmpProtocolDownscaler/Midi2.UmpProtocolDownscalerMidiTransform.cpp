@@ -78,46 +78,84 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
         // converting only to 32 bit messages, but some MIDI 2.0 messages convert into multiple MIDI 1.0 messages
         // a stack reference here is ok because none of these callbacks are async in any way. It's a chain.
 
-        if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_PROGRAM_CHANGE)
+        // first we check for messages that return more than one resulting translated message
+        if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_PROGRAM_CHANGE ||
+            status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_REG_CONTROLLER ||
+            status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_ASSIGN_CONTROLLER)
         {
-            // this one needs to create three separate messages so we special case here
-            uint8_t program = MIDIWORDBYTE1(originalWord1);
+            uint32_t resultingMessages[4];
+            uint32_t resultingMessageCount{ 0 };
 
-            uint32_t programChangeMessage = UMPMessage::mt2ProgramChange(groupIndex, channelIndex, program);
-
-            // the bank is valid if the least significant bit in word 0 is set
-            bool bankValid = (originalWord0 & (uint32_t)0x1) == 0x1;
-
-            if (bankValid)
+            if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_PROGRAM_CHANGE)
             {
-                uint8_t bankMsb = MIDIWORDBYTE3(originalWord1);
-                uint8_t bankLsb = MIDIWORDBYTE4(originalWord1);
+                // this one needs to create three separate messages so we special case here
+                uint8_t program = MIDIWORDBYTE1(originalWord1);
 
-                uint32_t bankSelectMsbMessage = UMPMessage::mt2CC(groupIndex, channelIndex, MIDI_UMP_MIDI1_BANK_SELECT_MSB_CC_INDEX, bankMsb);
-                uint32_t bankSelectLsbMessage = UMPMessage::mt2CC(groupIndex, channelIndex, MIDI_UMP_MIDI1_BANK_SELECT_LSB_CC_INDEX, bankLsb);;
+                // the bank is valid if the least significant bit in word 0 is set
+                bool bankValid = (originalWord0 & (uint32_t)0x1) == 0x1;
 
-                // send bank select MSB
-                if (m_Callback != nullptr)
+                resultingMessageCount = 0;
+
+                if (bankValid)
                 {
-                    m_Callback->Callback(&bankSelectMsbMessage, sizeof(uint32_t), Position, m_Context);
+                    uint8_t bankMsb = MIDIWORDBYTE3(originalWord1);
+                    uint8_t bankLsb = MIDIWORDBYTE4(originalWord1);
+
+                    resultingMessages[resultingMessageCount++] = UMPMessage::mt2CC(groupIndex, channelIndex, MIDI_UMP_MIDI1_BANK_SELECT_MSB_CC_INDEX, bankMsb);
+                    resultingMessages[resultingMessageCount++] = UMPMessage::mt2CC(groupIndex, channelIndex, MIDI_UMP_MIDI1_BANK_SELECT_LSB_CC_INDEX, bankLsb);;
                 }
 
-                // send bank select LSB
-                if (m_Callback != nullptr)
+                resultingMessages[resultingMessageCount++] = UMPMessage::mt2ProgramChange(groupIndex, channelIndex, program);
+            }
+            else if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_REG_CONTROLLER)
+            {
+                // RPN - converts to four MIDI 1.0 messages
+
+                uint8_t bank = internal::CleanupByte7(MIDIWORDBYTE3(originalWord0));
+                uint8_t index = internal::CleanupByte7(MIDIWORDBYTE4(originalWord0));
+
+                uint8_t coarse = internal::CleanupByte7(MIDIWORDBYTE1(originalWord1));
+                uint8_t fine = internal::CleanupByte7(MIDIWORDBYTE2(originalWord1));
+
+                resultingMessageCount = 0;
+
+                resultingMessages[resultingMessageCount++] = UMPMessage::mt2CC(groupIndex, channelIndex, MIDI_RPN_CC_NUMBER_BANK, bank);
+                resultingMessages[resultingMessageCount++] = UMPMessage::mt2CC(groupIndex, channelIndex, MIDI_RPN_CC_NUMBER_INDEX, index);
+                resultingMessages[resultingMessageCount++] = UMPMessage::mt2CC(groupIndex, channelIndex, MIDI_RPN_CC_NUMBER_DATA_COARSE, coarse);
+                resultingMessages[resultingMessageCount++] = UMPMessage::mt2CC(groupIndex, channelIndex, MIDI_RPN_CC_NUMBER_DATA_FINE, fine);
+            }
+            else if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_ASSIGN_CONTROLLER)
+            {
+                // NRPN - converts to four MIDI 1.0 messages
+
+                uint8_t bank = MIDIWORDBYTE3(originalWord0);
+                uint8_t index = MIDIWORDBYTE4(originalWord0);
+
+                uint8_t coarse = internal::CleanupByte7(MIDIWORDBYTE1(originalWord1));
+                uint8_t fine = internal::CleanupByte7(MIDIWORDBYTE2(originalWord1));
+
+                resultingMessageCount = 0;
+
+                resultingMessages[resultingMessageCount++] = UMPMessage::mt2CC(groupIndex, channelIndex, MIDI_NRPN_CC_NUMBER_BANK, bank);
+                resultingMessages[resultingMessageCount++] = UMPMessage::mt2CC(groupIndex, channelIndex, MIDI_NRPN_CC_NUMBER_INDEX, index);
+                resultingMessages[resultingMessageCount++] = UMPMessage::mt2CC(groupIndex, channelIndex, MIDI_NRPN_CC_NUMBER_DATA_COARSE, coarse);
+                resultingMessages[resultingMessageCount++] = UMPMessage::mt2CC(groupIndex, channelIndex, MIDI_NRPN_CC_NUMBER_DATA_FINE, fine);
+            }
+
+            // send all the generated messages in order
+            if (resultingMessageCount > 0 && m_Callback != nullptr)
+            {
+                for (uint32_t i = 0; i < resultingMessageCount; i++)
                 {
-                    m_Callback->Callback(&bankSelectLsbMessage, sizeof(uint32_t), Position + 1, m_Context);
+                    RETURN_IF_FAILED(m_Callback->Callback(&resultingMessages[i], sizeof(uint32_t), Position + i, m_Context));
                 }
             }
-
-            // send program change
-            if (m_Callback != nullptr)
-            {
-                return m_Callback->Callback(&programChangeMessage, sizeof(uint32_t), Position+2, m_Context);
-            }
-
         }
         else
         {
+            // these messages all result in a single new message to send.
+            // the one exception is the fall-through which just passes along the original data. 
+
             uint32_t newWord0;
             PVOID newData;
             UINT newLength;

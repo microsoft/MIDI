@@ -32,49 +32,43 @@ void TestFindingDevices()
 
     watcher.Received([&](BluetoothLEAdvertisementWatcher /*source*/, BluetoothLEAdvertisementReceivedEventArgs const& args)
         {
-            //std::cout
-            //    << "Ad received" << std::endl
-            //    << " - Timestamp:               " << args.Timestamp().time_since_epoch().count() << std::endl
-            //    << " - Address:                 " << args.BluetoothAddress() << std::endl
-            //    << " - IsConnectable:           " << args.IsConnectable() << std::endl
-            //    << " - IsAnonymous:             " << args.IsAnonymous() << std::endl
-            //    << " - IsDirected:              " << args.IsDirected() << std::endl
-            //    << " - IsScannable:             " << args.IsScannable() << std::endl
-            //    << " - RawSignalStrengthInDBm:  " << args.RawSignalStrengthInDBm() << std::endl;
-
             auto device = BluetoothLEDevice::FromBluetoothAddressAsync(args.BluetoothAddress()).get();
 
             if (device != nullptr)
             {
-                if (device.ConnectionStatus() == BluetoothConnectionStatus::Connected)
-                {
-                    //                   std::cout << "Connection status: Connected" << std::endl;
-                }
-                else
-                {
-                    //                    std::cout << "Connection status: Disconnected" << std::endl;
-                }
-
                 auto service = GetBleMidiServiceFromDevice(device);
 
                 if (service != nullptr)
                 {
-                    //std::cout << "Found service" << std::endl;
-
                     if (foundMidiDevices.find(args.BluetoothAddress()) == foundMidiDevices.end())
                     {
                         foundMidiDevices[args.BluetoothAddress()] = device.Name();
 
                         std::cout
-                            << "MIDI Device at Address: " << args.BluetoothAddress()
-                            << ", Name: " << winrt::to_string(device.Name())
-                            << std::endl;
+                            << "MIDI Device Found" << std::endl
+                            << " - Name:                    " << winrt::to_string(device.Name()) << std::endl
+                            << " - Timestamp:               " << args.Timestamp().time_since_epoch().count() << std::endl
+                            << " - Address:                 " << args.BluetoothAddress() << std::endl
+                            << " - IsConnectable:           " << args.IsConnectable() << std::endl
+                            << " - IsAnonymous:             " << args.IsAnonymous() << std::endl
+                            << " - IsDirected:              " << args.IsDirected() << std::endl
+                            << " - IsScannable:             " << args.IsScannable() << std::endl
+                            << " - RawSignalStrengthInDBm:  " << args.RawSignalStrengthInDBm() << std::endl;
+
+                        if (device.ConnectionStatus() == BluetoothConnectionStatus::Connected)
+                        {
+                            std::cout << " - Connection status:       Connected" << std::endl;
+                        }
+                        else
+                        {
+                            std::cout << " - Connection status:       Disconnected" << std::endl;
+                        }
                     }
                 }
-                else
-                {
-                    //std::cout << "Not a BLE MIDI Device" << std::endl;
-                }
+                //else
+                //{
+                //    std::cout << "Not a BLE MIDI Device" << std::endl;
+                //}
             }
         }
     );
@@ -331,15 +325,15 @@ int main()
     init_apartment();
 
 
-    //TestFindingDevices();
+    TestFindingDevices();
 
-    ReportAdapterCapabilities();
+    //ReportAdapterCapabilities();
 
-    StartAsPeripheral();
+    //StartAsPeripheral();
 
-    system("pause");
+    //system("pause");
 
-    StopPeripheral();
+    //StopPeripheral();
 
     system("pause");
 }

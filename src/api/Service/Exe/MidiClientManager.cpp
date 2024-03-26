@@ -444,7 +444,7 @@ CMidiClientManager::GetMidiProtocolDownscalerTransform(
 
     if (!transformPipe)
     {
-        MIDISRV_TRANSFORMCREATION_PARAMS creationParams{ 0 };
+        MIDISRV_TRANSFORMCREATION_PARAMS creationParams{ };
 
         creationParams.Flow = Flow;
         creationParams.DataFormatIn = MidiDataFormat::MidiDataFormat_UMP;
@@ -517,7 +517,7 @@ CMidiClientManager::GetMidiTransform(
     // not found, instantiate the transform that is needed.
     if (!transformPipe)
     {
-        MIDISRV_TRANSFORMCREATION_PARAMS creationParams {0};
+        MIDISRV_TRANSFORMCREATION_PARAMS creationParams { };
 
         creationParams.Flow = Flow;
         creationParams.DataFormatIn = DataFormatFrom;
