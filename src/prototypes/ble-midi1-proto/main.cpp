@@ -19,9 +19,19 @@ using namespace Windows::Foundation;
 // https://learn.microsoft.com/en-us/windows/uwp/devices-sensors/gatt-client
 
 
+struct MidiBleDeviceEntry
+{
+    uint64_t BluetoothAddress{};
+
+    BluetoothLEDevice Device{ nullptr };
+    GattDeviceService Service{ nullptr };
+};
+
 void TestFindingDevices()
 {
-    std::map<uint64_t, winrt::hstring> foundMidiDevices;
+    //std::map<uint64_t, winrt::hstring> foundMidiDevices;
+
+    std::vector<MidiBleDeviceEntry> foundMidiDevices;
 
     GattCharacteristic characteristic{ nullptr };
 
@@ -40,9 +50,20 @@ void TestFindingDevices()
 
                 if (service != nullptr)
                 {
-                    if (foundMidiDevices.find(args.BluetoothAddress()) == foundMidiDevices.end())
+                    // if not found, add it
+                    if (std::find_if(foundMidiDevices.begin(), foundMidiDevices.end(), [&](const MidiBleDeviceEntry& dev) { return device.BluetoothAddress() == dev.BluetoothAddress; }) == foundMidiDevices.end())
                     {
-                        foundMidiDevices[args.BluetoothAddress()] = device.Name();
+                        device.ConnectionStatusChanged([&](BluetoothLEDevice connectionSource, IInspectable /*args*/)
+                            {
+                                if (connectionSource.ConnectionStatus() == BluetoothConnectionStatus::Connected)
+                                {
+                                    std::cout << "Connection status changed for " << winrt::to_string(connectionSource.Name()) << ", new status: Connected" << std::endl;
+                                }
+                                else
+                                {
+                                    std::cout << "Connection status changed for " << winrt::to_string(connectionSource.Name()) << ", new status: Disconnected" << std::endl;
+                                }
+                            });
 
                         std::cout
                             << "MIDI Device Found" << std::endl
@@ -55,14 +76,13 @@ void TestFindingDevices()
                             << " - IsScannable:             " << args.IsScannable() << std::endl
                             << " - RawSignalStrengthInDBm:  " << args.RawSignalStrengthInDBm() << std::endl;
 
-                        if (device.ConnectionStatus() == BluetoothConnectionStatus::Connected)
-                        {
-                            std::cout << " - Connection status:       Connected" << std::endl;
-                        }
-                        else
-                        {
-                            std::cout << " - Connection status:       Disconnected" << std::endl;
-                        }
+
+                        MidiBleDeviceEntry entry;
+                        entry.BluetoothAddress = device.BluetoothAddress();
+                        entry.Device = std::move(device);
+                        entry.Service = std::move(service);
+
+                        foundMidiDevices.push_back(std::move(entry));
                     }
                 }
                 //else
@@ -72,6 +92,7 @@ void TestFindingDevices()
             }
         }
     );
+
 
     watcher.AdvertisementFilter().Advertisement().ServiceUuids().Append(MIDI_BLE_SERVICE_UUID);
 
@@ -113,7 +134,7 @@ winrt::event_token Revoke_GattWriteRequest;
 GattLocalCharacteristic m_dataIOCharacteristic{ nullptr };
 
 
-void OnDataIOReadRequested(GattLocalCharacteristic const& source, GattReadRequestedEventArgs const& args)
+void OnDataIOReadRequested(GattLocalCharacteristic const& /*source*/, GattReadRequestedEventArgs const& args)
 {
     //std::cout << __FUNCTION__ << std::endl;
 
@@ -195,7 +216,7 @@ void ProcessIncomingBuffer(streams::IBuffer buffer)
 }
 
 
-void OnDataIOWriteRequested(GattLocalCharacteristic const& source, GattWriteRequestedEventArgs const& args)
+void OnDataIOWriteRequested(GattLocalCharacteristic const& /*source*/, GattWriteRequestedEventArgs const& args)
 {
     //std::cout << __FUNCTION__ << std::endl;
 
@@ -209,14 +230,14 @@ void OnDataIOWriteRequested(GattLocalCharacteristic const& source, GattWriteRequ
 
 }
 
-void OnDataIOSubscribedClientsChanged(GattLocalCharacteristic const& source, foundation::IInspectable const& args)
+void OnDataIOSubscribedClientsChanged(GattLocalCharacteristic const& /*source*/, foundation::IInspectable const& /*args*/)
 {
     std::cout << __FUNCTION__ << std::endl;
 
 }
 
 
-void OnGattServiceProviderAdvertisementStatusChanged(GattServiceProvider const& source, GattServiceProviderAdvertisementStatusChangedEventArgs const& args)
+void OnGattServiceProviderAdvertisementStatusChanged(GattServiceProvider const& /*source*/, GattServiceProviderAdvertisementStatusChangedEventArgs const& args)
 {
 //    std::cout << __FUNCTION__ << std::endl;
 
@@ -288,7 +309,7 @@ void StartAsPeripheral()
 
             m_dataIOCharacteristic.SubscribedClientsChanged(OnDataIOSubscribedClientsChanged);
 
-            m_dataIOCharacteristic.StaticValue();
+           // m_dataIOCharacteristic.StaticValue();
 
             std::cout << "Start Advertising..." << std::endl;
             m_provider.StartAdvertising(params);
