@@ -27,14 +27,11 @@ struct MidiBleDeviceEntry
     GattDeviceService Service{ nullptr };
 };
 
+std::vector<MidiBleDeviceEntry> m_foundMidiDevices;
+
 void TestFindingDevices()
 {
-    //std::map<uint64_t, winrt::hstring> foundMidiDevices;
-
-    std::vector<MidiBleDeviceEntry> foundMidiDevices;
-
-    GattCharacteristic characteristic{ nullptr };
-
+//    GattCharacteristic characteristic{ nullptr };
 
     winrt::guid MIDI_BLE_SERVICE_UUID{ MIDI_BLE_SERVICE };
 
@@ -51,7 +48,7 @@ void TestFindingDevices()
                 if (service != nullptr)
                 {
                     // if not found, add it
-                    if (std::find_if(foundMidiDevices.begin(), foundMidiDevices.end(), [&](const MidiBleDeviceEntry& dev) { return device.BluetoothAddress() == dev.BluetoothAddress; }) == foundMidiDevices.end())
+                    if (std::find_if(m_foundMidiDevices.begin(), m_foundMidiDevices.end(), [&](const MidiBleDeviceEntry& dev) { return device.BluetoothAddress() == dev.BluetoothAddress; }) == m_foundMidiDevices.end())
                     {
                         device.ConnectionStatusChanged([&](BluetoothLEDevice connectionSource, IInspectable /*args*/)
                             {
@@ -82,7 +79,7 @@ void TestFindingDevices()
                         entry.Device = std::move(device);
                         entry.Service = std::move(service);
 
-                        foundMidiDevices.push_back(std::move(entry));
+                        m_foundMidiDevices.push_back(std::move(entry));
                     }
                 }
                 //else
