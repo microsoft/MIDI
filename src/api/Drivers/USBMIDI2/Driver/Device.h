@@ -61,22 +61,24 @@ extern "C" {
 //
 // Structures to aid in conversion between USB MIDI 1.0 and UMP
 //
-    typedef struct MIDI_STREAM_t
-    {
-        UINT8       buffer[4];
-        UINT8       index;
-        UINT8       total;
-    } MIDI_STREAM_TYPE;
+#define MIDI_STREAM_BUF_SIZE 14 // size of two UMP Sysex 7 plus start and end
+typedef struct MIDI_STREAM_t
+{
+    UINT8       buffer[MIDI_STREAM_BUF_SIZE];
+    UINT8       head;
+    UINT8       tail;
+    bool        inSysex;
+} MIDI_STREAM_TYPE;
 
-    typedef struct
+typedef struct
+{
+    UINT8       wordCount;
+    union ump_device
     {
-        UINT8       wordCount;
-        union ump_device
-        {
-            UINT32  umpWords[4];
-            UINT8   umpBytes[sizeof(UINT32) * 4];
-        } umpData;
-    } UMP_PACKET, *PUMP_PACKET;
+        UINT32  umpWords[4];
+        UINT8   umpBytes[sizeof(UINT32) * 4];
+    } umpData;
+} UMP_PACKET, *PUMP_PACKET;
 
 //
 // Define device context.

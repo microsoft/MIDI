@@ -185,6 +185,14 @@ Return Value:
     devCtx->Midi = nullptr;
     devCtx->ExcludeD3Cold = WdfFalse;
 
+    for (int count = 0; count < MAX_NUM_GROUPS_CABLES; count++)
+    {
+        devCtx->midi1IsInSysex[count] = false;
+        devCtx->midi1OutSysex[count].head = 0;
+        devCtx->midi1OutSysex[count].tail = 0;
+        devCtx->midi1OutSysex[count].inSysex = false;
+    }
+
     // 
     // Allow ACX to add any post-requirement it needs on this device.
     //
@@ -1091,7 +1099,6 @@ Return Value:
     //
     // Configure continuous reader
     //
-#if 1
     if (pDeviceContext->MidiInPipe) // only if there is an In endpoint
     {
         WDF_USB_CONTINUOUS_READER_CONFIG_INIT(
@@ -1114,7 +1121,6 @@ Return Value:
             return status;
         }
     }
-#endif
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
     return STATUS_SUCCESS;
@@ -1539,8 +1545,6 @@ Return Value:
 
         // Check the subtype and process accordingly
         midi_desc_header_common_t* pCommonHdr = (midi_desc_header_common_t*)pNextDescriptor;
-        //PUINT8 pThisIndex = NULL;
-        //PUSHORT pThisGTBStringSize = NULL;
         midi_desc_in_jack_t* pInJack = NULL;
         midi_desc_out_jack_t* pOutJack = NULL;
 
@@ -2111,28 +2115,56 @@ Return Value:Amy
 
             case UMP_MT_DATA_64:
             {
+                bool bEnterSysex = false;
                 bool bEndSysex = false;
 
                 // Determine if sysex will end after this message
                 switch (umpPacket.umpData.umpBytes[1] & UMP_SYSEX7_STATUS_MASK)
                 {
                 case UMP_SYSEX7_COMPLETE:
-                    pDeviceContext->midi1OutSysex[cbl_num].index = 1;
+                    bEnterSysex = true;
                 case UMP_SYSEX7_END:
                     bEndSysex = true;
                     break;
 
                 case UMP_SYSEX7_START:
-                    pDeviceContext->midi1OutSysex[cbl_num].index = 1;
+                    bEnterSysex = true;
+
                 default:
                     bEndSysex = false;
                     break;
                 }
 
-                // determine the size
+                // If starting sysex and not already started
+                if (bEnterSysex && !pDeviceContext->midi1OutSysex[cbl_num].inSysex)
+                {
+                    // We are responsible to start the Sysex flag for USB MIDI 1.0
+                    pDeviceContext->midi1OutSysex[cbl_num].buffer[pDeviceContext->midi1OutSysex[cbl_num].head++] = 0xf0;
+                    pDeviceContext->midi1OutSysex[cbl_num].head %= MIDI_STREAM_BUF_SIZE;
+                    pDeviceContext->midi1OutSysex[cbl_num].inSysex = true;
+                }
+
+                // determine the size and move the data in
                 UINT8 sysexSize = umpPacket.umpData.umpBytes[1] & UMP_SYSEX7_SIZE_MASK;
+                UINT8 umpDataByteCount = 0;
+                while (sysexSize--)
+                {
+                    pDeviceContext->midi1OutSysex[cbl_num].buffer[pDeviceContext->midi1OutSysex[cbl_num].head++]
+                        = umpPacket.umpData.umpBytes[umpDataByteCount++];
+                    pDeviceContext->midi1OutSysex[cbl_num].head %= MIDI_STREAM_BUF_SIZE; // it should not be possible to overflow buffer
+                }
+
+                // If ending
+                if (bEndSysex && pDeviceContext->midi1OutSysex[cbl_num].inSysex)
+                {
+                    // We are responsible to start the Sysex flag for USB MIDI 1.0
+                    pDeviceContext->midi1OutSysex[cbl_num].buffer[pDeviceContext->midi1OutSysex[cbl_num].head++] = 0xf7;
+                    pDeviceContext->midi1OutSysex[cbl_num].head %= MIDI_STREAM_BUF_SIZE;
+                    pDeviceContext->midi1OutSysex[cbl_num].inSysex = false;
+                }
 
                 // determine the number of USB MIDI 1 packets to be created
+                sysexSize = 
                 UINT8 numWordsNeeded = (sysexSize + pDeviceContext->midi1OutSysex[cbl_num].index - 1) / 3;
                 UINT8 numBytesRemain = (sysexSize + pDeviceContext->midi1OutSysex[cbl_num].index - 1) % 3;
                 if (bEndSysex && numBytesRemain)
