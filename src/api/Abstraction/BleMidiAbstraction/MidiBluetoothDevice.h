@@ -11,5 +11,8 @@
 
 struct MidiBluetoothDevice
 {
+    uint64_t BluetoothAddress{};
 
+    bt::BluetoothLEDevice Device{ nullptr };
+    gatt::GattDeviceService Service{ nullptr };
 };

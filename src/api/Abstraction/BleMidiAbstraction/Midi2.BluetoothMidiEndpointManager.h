@@ -8,6 +8,14 @@
 
 #pragma once
 
+#define MIDI_BLE_SERVICE_UUID L"{03B80E5A-EDE8-4B33-A751-6CE34EC4C700}"
+#define MIDI_BLE_DATA_IO_CHARACTERISTIC_UUID L"{7772E5DB-3868-4112-A1A9-F2669D106BF3}"
+// Notes:
+//      Write (encryption recommended, write without response is required)
+//      Read (encryption recommended, respond with no payload)
+//      Notify (encryption recommended)
+// Max connection interval is 15ms. Lower is better.
+
 
 class CMidi2BluetoothMidiEndpointManager :
     public Microsoft::WRL::RuntimeClass<
@@ -21,7 +29,15 @@ public:
 
 
 private:
-    enumeration::DeviceWatcher m_Watcher{ nullptr };
+    winrt::guid m_midiBleServiceUuid{ MIDI_BLE_SERVICE_UUID };
+    wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
+
+    GUID m_ContainerId{};
+    GUID m_TransportAbstractionId{};
+    std::wstring m_parentDeviceId{};
+
+    enumeration::DeviceWatcher m_Watcher{ nullptr };        // for non-advertising but paired devices
+    ad::BluetoothLEAdvertisementWatcher m_bleAdWatcher;     // for advertised devices, which is common for BLE MIDI
 
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<enumeration::IDeviceWatcher>::Added_revoker m_DeviceAdded;
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<enumeration::IDeviceWatcher>::Removed_revoker m_DeviceRemoved;
@@ -29,23 +45,31 @@ private:
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<enumeration::IDeviceWatcher>::Stopped_revoker m_DeviceStopped;
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<enumeration::IDeviceWatcher>::EnumerationCompleted_revoker m_DeviceEnumerationCompleted;
 
+    winrt::impl::consume_Windows_Devices_Bluetooth_Advertisement_IBluetoothLEAdvertisementWatcher<ad::IBluetoothLEAdvertisementWatcher>::Received_revoker m_AdvertisementReceived;
+
+
     HRESULT OnDeviceAdded(_In_ enumeration::DeviceWatcher, _In_ enumeration::DeviceInformation);
     HRESULT OnDeviceRemoved(_In_ enumeration::DeviceWatcher, _In_ enumeration::DeviceInformationUpdate);
     HRESULT OnDeviceUpdated(_In_ enumeration::DeviceWatcher, _In_ enumeration::DeviceInformationUpdate);
     HRESULT OnDeviceStopped(_In_ enumeration::DeviceWatcher, _In_ foundation::IInspectable);
     HRESULT OnEnumerationCompleted(_In_ enumeration::DeviceWatcher, _In_ foundation::IInspectable);
 
+    HRESULT OnBleAdvertisementReceived(_In_ ad::BluetoothLEAdvertisementWatcher, _In_ ad::BluetoothLEAdvertisementReceivedEventArgs);
 
-    GUID m_ContainerId{};
-    GUID m_TransportAbstractionId{};
+    HRESULT OnBleDeviceConnectionStatusChanged(_In_ bt::BluetoothLEDevice /*device*/, _In_ foundation::IInspectable /*args*/);
+    HRESULT OnBleDeviceNameChanged(_In_ bt::BluetoothLEDevice /*device*/, _In_ foundation::IInspectable /*args*/);
 
     HRESULT CreateEndpoint(
         _In_ MidiBluetoothDeviceDefinition& definition
     );
 
-    HRESULT EnumCompatibleBluetoothDevices();
+//    HRESULT EnumCompatibleBluetoothDevices();
+
+    HRESULT StartAdvertisementWatcher();
+    HRESULT StartDeviceWatcher();
+
+    HRESULT CreateSelfPeripheralEndpoint();
 
     HRESULT CreateParentDevice();
 
-    wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
 };

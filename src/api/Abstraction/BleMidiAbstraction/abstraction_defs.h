@@ -15,6 +15,8 @@
 // The full Id comes back from the swdevicecreate callback
 
 #define TRANSPORT_MNEMONIC L"BLE1"
+#define MIDI_BLE_INSTANCE_ID_PREFIX L"MIDIU_BLE1_"
+
 
 // TODO: Names should be moved to .rc for localization
 

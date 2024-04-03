@@ -93,6 +93,8 @@ void TestFindingDevices()
 
     watcher.AdvertisementFilter().Advertisement().ServiceUuids().Append(MIDI_BLE_SERVICE_UUID);
 
+    std::cout << "Starting watcher..." << std::endl;
+
     watcher.Start();
 
     system("pause > nul");
@@ -343,9 +345,9 @@ int main()
     init_apartment();
 
 
-    TestFindingDevices();
+    ReportAdapterCapabilities();
 
-    //ReportAdapterCapabilities();
+    TestFindingDevices();
 
     //StartAsPeripheral();
 
