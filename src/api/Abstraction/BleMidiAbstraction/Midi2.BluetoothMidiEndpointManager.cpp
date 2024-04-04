@@ -597,6 +597,24 @@ CMidi2BluetoothMidiEndpointManager::OnBleAdvertisementReceived(
     return S_OK;
 }
 
+_Use_decl_annotations_
+HRESULT
+CMidi2BluetoothMidiEndpointManager::OnBleAdvertisementWatcherStopped(ad::BluetoothLEAdvertisementWatcher, ad::BluetoothLEAdvertisementWatcherStoppedEventArgs args)
+{
+    // error enum vals: https://learn.microsoft.com/uwp/api/windows.devices.bluetooth.bluetootherror?view=winrt-22621
+
+    TraceLoggingWrite(
+        MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingUInt32((uint32_t)args.Error(), "BluetoothError enum value")
+    );
+
+    // todo: consider if we should restart the watcher or not
+
+    return S_OK;
+}
 
 
 HRESULT 
@@ -612,14 +630,18 @@ CMidi2BluetoothMidiEndpointManager::StartAdvertisementWatcher()
     auto adReceivedHandler = foundation::TypedEventHandler<ad::BluetoothLEAdvertisementWatcher, ad::BluetoothLEAdvertisementReceivedEventArgs>
         (this, &CMidi2BluetoothMidiEndpointManager::OnBleAdvertisementReceived);
 
+    auto adWatcherStoppedHandler = foundation::TypedEventHandler<ad::BluetoothLEAdvertisementWatcher, ad::BluetoothLEAdvertisementWatcherStoppedEventArgs>
+        (this, &CMidi2BluetoothMidiEndpointManager::OnBleAdvertisementWatcherStopped);
+
+
     // wire up the event handler so we're notified when advertising messages are received. 
     // This will fire for every message received, even if we already know about the device.
     m_AdvertisementReceived = m_bleAdWatcher.Received(winrt::auto_revoke, adReceivedHandler);
+    m_AdvertisementWatcherStopped = m_bleAdWatcher.Stopped(winrt::auto_revoke, adWatcherStoppedHandler);
 
     winrt::guid serviceUuid{ MIDI_BLE_SERVICE_UUID };
 
     m_bleAdWatcher.AdvertisementFilter().Advertisement().ServiceUuids().Append(serviceUuid);
-
     m_bleAdWatcher.Start();
 
     if (m_bleAdWatcher.Status() == ad::BluetoothLEAdvertisementWatcherStatus::Aborted)

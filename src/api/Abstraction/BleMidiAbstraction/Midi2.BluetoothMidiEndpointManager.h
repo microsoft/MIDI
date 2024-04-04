@@ -44,7 +44,8 @@ private:
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<enumeration::IDeviceWatcher>::EnumerationCompleted_revoker m_DeviceEnumerationCompleted;
 
     winrt::impl::consume_Windows_Devices_Bluetooth_Advertisement_IBluetoothLEAdvertisementWatcher<ad::IBluetoothLEAdvertisementWatcher>::Received_revoker m_AdvertisementReceived;
-
+    winrt::impl::consume_Windows_Devices_Bluetooth_Advertisement_IBluetoothLEAdvertisementWatcher<ad::IBluetoothLEAdvertisementWatcher>::Stopped_revoker m_AdvertisementWatcherStopped;
+    
 
     HRESULT OnDeviceAdded(_In_ enumeration::DeviceWatcher, _In_ enumeration::DeviceInformation);
     HRESULT OnDeviceRemoved(_In_ enumeration::DeviceWatcher, _In_ enumeration::DeviceInformationUpdate);
@@ -53,6 +54,7 @@ private:
     HRESULT OnEnumerationCompleted(_In_ enumeration::DeviceWatcher, _In_ foundation::IInspectable);
 
     HRESULT OnBleAdvertisementReceived(_In_ ad::BluetoothLEAdvertisementWatcher, _In_ ad::BluetoothLEAdvertisementReceivedEventArgs const&);
+    HRESULT OnBleAdvertisementWatcherStopped(_In_ ad::BluetoothLEAdvertisementWatcher, _In_ ad::BluetoothLEAdvertisementWatcherStoppedEventArgs);
 
     HRESULT OnBleDeviceConnectionStatusChanged(_In_ bt::BluetoothLEDevice /*device*/, _In_ foundation::IInspectable /*args*/);
     HRESULT OnBleDeviceNameChanged(_In_ bt::BluetoothLEDevice /*device*/, _In_ foundation::IInspectable /*args*/);
