@@ -14,7 +14,7 @@ namespace Windows.Devices.Midi2
     // NOTE: the values are different for function blocks and group terminal
     // blocks, so we have to different enumerations
 
-    [MIDI_API_CONTRACT(1)]
+    [MIDI_API_CONTRACT(19)]
     enum MidiGroupTerminalBlockDirection
     {
         Bidirectional = 0x0,

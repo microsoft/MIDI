@@ -25,7 +25,7 @@ import "Midi2ChannelVoiceMessageStatusEnum.idl";
 
 namespace Windows.Devices.Midi2
 {
-    [MIDI_API_CONTRACT(1)]
+    [MIDI_API_CONTRACT(19)]
     static runtimeclass MidiMessageUtility
     {
         static Boolean ValidateMessage32MessageType(UInt32 word0);

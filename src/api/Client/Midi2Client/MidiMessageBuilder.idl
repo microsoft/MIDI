@@ -29,7 +29,7 @@ import "Midi2ChannelVoiceMessageStatusEnum.idl";
 
 namespace Windows.Devices.Midi2
 {
-    [MIDI_API_CONTRACT(1)]
+    [MIDI_API_CONTRACT(19)]
     static runtimeclass MidiMessageBuilder
     {
         // parameters are named, where applicable, for the fields as defined in the spec.

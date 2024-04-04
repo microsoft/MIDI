@@ -14,7 +14,7 @@ namespace Windows.Devices.Midi2
     // Yes, this is effectively recreating the HRESULT, but 
     // our API standards do not allow creating and exposing
     // custom HRESULTs in public APIs
-    [MIDI_API_CONTRACT(1)]
+    [MIDI_API_CONTRACT(19)]
     [flags]
     enum MidiSendMessageResults
     {
