@@ -98,6 +98,9 @@ class CMidi2BluetoothMidiPluginMetadataManager;
 #include "abstraction_defs.h"
 #include "midi_timestamp.h"
 #include "ble_timestamp.h"
+#include "ble_utilities.h"
+
+#include "AbstractionState.h"
 
 #include "MidiServicePlugin.h"
 #include "MidiServicePlugin_i.c"
@@ -113,7 +116,6 @@ class CMidi2BluetoothMidiPluginMetadataManager;
 #include "MidiBluetoothPacket.h"
 
 #include "MidiBluetoothDeviceDefinition.h"
-#include "MidiBluetoothDevice.h"
 #include "MidiEndpointTable.h"
 
 #include "Midi2.BluetoothMidiAbstraction.h"

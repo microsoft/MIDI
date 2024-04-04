@@ -2,7 +2,7 @@
 //#addin nuget:?package=Cake.Compression&version=0.3.0
 
 // ===========================================================================================
-string setupVersionName = "Developer Preview 5";
+string setupVersionName = "Developer Preview 6";
 // ===========================================================================================
 
 

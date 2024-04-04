@@ -27,25 +27,55 @@ CMidi2BluetoothMidiEndpointManager::Initialize(
     IUnknown* /*midiEndpointProtocolManager*/
 )
 {
-    TraceLoggingWrite(
-        MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
-    );
+    try
+    {
+        TraceLoggingWrite(
+            MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this")
+        );
 
-    RETURN_HR_IF(E_INVALIDARG, nullptr == MidiDeviceManager);
+        RETURN_HR_IF(E_INVALIDARG, nullptr == MidiDeviceManager);
 
-    RETURN_IF_FAILED(MidiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
+        RETURN_IF_FAILED(MidiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
 
-    m_TransportAbstractionId = AbstractionLayerGUID;   // this is needed so MidiSrv can instantiate the correct transport
-    m_ContainerId = m_TransportAbstractionId;                           // we use the transport ID as the container ID for convenience
+        m_TransportAbstractionId = AbstractionLayerGUID;    // this is needed so MidiSrv can instantiate the correct transport
+        m_ContainerId = m_TransportAbstractionId;           // we use the transport ID as the container ID for convenience
 
 
-    RETURN_IF_FAILED(StartAdvertisementWatcher());
-    //RETURN_IF_FAILED(StartDeviceWatcher());
+        RETURN_IF_FAILED(CreateParentDevice());
 
-    return S_OK;
+        RETURN_IF_FAILED(StartAdvertisementWatcher());
+        //RETURN_IF_FAILED(StartDeviceWatcher());
+
+        return S_OK;
+    }
+    catch (std::exception ex)
+    {
+        TraceLoggingWrite(
+            MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingString(ex.what(), "exception"),
+            TraceLoggingWideString(L"Exception initializing BLE MIDI Endpoint Manager", "message")
+        );
+
+        return E_FAIL;
+    }
+    catch (...)
+    {
+        TraceLoggingWrite(
+            MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Unknown exception initializing BLE MIDI Endpoint Manager", "message")
+        );
+
+        return E_FAIL;
+    }
 }
 
 HRESULT
@@ -98,9 +128,11 @@ CMidi2BluetoothMidiEndpointManager::CreateParentDevice()
 _Use_decl_annotations_
 HRESULT 
 CMidi2BluetoothMidiEndpointManager::CreateEndpoint(
-    MidiBluetoothDeviceDefinition& definition
+    MidiBluetoothDeviceDefinition* definition
 )
 {
+    RETURN_HR_IF_NULL_MSG(E_INVALIDARG, definition, "Empty endpoint definition");
+
     //RETURN_HR_IF_MSG(E_INVALIDARG, definition->EndpointName.empty(), "Empty endpoint name");
     //RETURN_HR_IF_MSG(E_INVALIDARG, definition->InstanceIdPrefix.empty(), "Empty endpoint prefix");
     //RETURN_HR_IF_MSG(E_INVALIDARG, definition->EndpointUniqueIdentifier.empty(), "Empty endpoint unique id");
@@ -111,15 +143,15 @@ CMidi2BluetoothMidiEndpointManager::CreateEndpoint(
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingUInt64(definition.BluetoothAddress, "bluetooth address")
+        TraceLoggingUInt64(definition->BluetoothAddress, "bluetooth address")
     );
 
     std::wstring mnemonic(TRANSPORT_MNEMONIC);
 
   
     // TODO: Need to fold in user data here
-    std::wstring endpointName = definition.TransportSuppliedName.c_str();
-    std::wstring endpointDescription = definition.TransportSuppliedDescription.c_str();
+    std::wstring endpointName = definition->TransportSuppliedName.c_str();
+    std::wstring endpointDescription = definition->TransportSuppliedDescription.c_str();
 
     std::vector<DEVPROPERTY> interfaceDeviceProperties{};
 
@@ -131,7 +163,7 @@ CMidi2BluetoothMidiEndpointManager::CreateEndpoint(
     bool multiClient = true;
     bool generateIncomingTimestamps = true;
 
-    std::wstring uniqueIdentifier = std::to_wstring(definition.BluetoothAddress);
+    std::wstring uniqueIdentifier = std::to_wstring(definition->BluetoothAddress);
 
     // Device properties
 
@@ -147,7 +179,6 @@ CMidi2BluetoothMidiEndpointManager::CreateEndpoint(
     createInfo.pszInstanceId = instanceId.c_str();
     createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
     createInfo.pszDeviceDescription = friendlyName.c_str();
-
 
     const ULONG deviceInterfaceIdMaxSize = 255;
     wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
@@ -179,13 +210,13 @@ CMidi2BluetoothMidiEndpointManager::CreateEndpoint(
     commonProperties.SupportsMidi1ProtocolDefaultValue = true;
     commonProperties.SupportsMidi2ProtocolDefaultValue = false;
 
-    if (definition.ManufacturerName.empty())
+    if (definition->ManufacturerName.empty())
     {
         commonProperties.ManufacturerName = nullptr;
     }
     else
     {
-        commonProperties.ManufacturerName = definition.ManufacturerName.c_str();
+        commonProperties.ManufacturerName = definition->ManufacturerName.c_str();
     }
 
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
@@ -202,8 +233,8 @@ CMidi2BluetoothMidiEndpointManager::CreateEndpoint(
         deviceInterfaceIdMaxSize));
 
     // we need this for removal later
-    definition.CreatedMidiDeviceInstanceId = instanceId;
-    definition.CreatedEndpointInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId);
+    definition->CreatedMidiDeviceInstanceId = instanceId;
+    definition->CreatedEndpointInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId);
 
     TraceLoggingWrite(
         MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
@@ -232,6 +263,12 @@ CMidi2BluetoothMidiEndpointManager::Cleanup()
         TraceLoggingPointer(this, "this")
     );
 
+
+    if (m_bleAdWatcher != nullptr)
+    {
+        m_bleAdWatcher.Stop();
+        m_bleAdWatcher = nullptr;
+    }
 
     return S_OK;
 }
@@ -353,9 +390,149 @@ CMidi2BluetoothMidiEndpointManager::OnBleDeviceConnectionStatusChanged(bt::Bluet
     // TODO: When the device was first seen by the service, it may have already been connected, so 
     // we need to handle that even though we won't have a connection status changed event
 
+    auto entry = MidiEndpointTable::Current().GetEndpointEntryForBluetoothAddress(device.BluetoothAddress());
+
+    if (entry == nullptr)
+    {
+        // this device is new to us. This should never happen
+        TraceLoggingWrite(
+            MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingUInt64(device.BluetoothAddress(), "address"),
+            TraceLoggingWideString(device.DeviceId().c_str(), "device id"),
+            TraceLoggingWideString(device.Name().c_str(), "name"),
+            TraceLoggingBool(connected, "is connected"),
+            TraceLoggingWideString(L"Received a connection changed notification for a device we didn't have recorded.", "message")
+        );
+
+        return E_FAIL;
+    }
+
     if (connected)
     {
         // Connected. check to see if we've already created the SWD. If not, create it.
+        if (entry->Definition.CreatedEndpointInterfaceId.empty())
+        {
+            TraceLoggingWrite(
+                MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingUInt64(device.BluetoothAddress(), "address"),
+                TraceLoggingWideString(device.DeviceId().c_str(), "device id"),
+                TraceLoggingWideString(device.Name().c_str(), "name"),
+                TraceLoggingBool(connected, "is connected"),
+                TraceLoggingWideString(L"Creating new SWD / endpoint", "message")
+            );
+
+            RETURN_IF_FAILED(CreateEndpoint(&(entry->Definition)));
+
+            TraceLoggingWrite(
+                MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingUInt64(device.BluetoothAddress(), "address"),
+                TraceLoggingWideString(device.DeviceId().c_str(), "device id"),
+                TraceLoggingWideString(device.Name().c_str(), "name"),
+                TraceLoggingBool(connected, "is connected"),
+                TraceLoggingWideString(L"Endpoint created", "message")
+            );
+        }
+        else
+        {
+            // we've already created this device and it is currently connected. This shouldn't happen.
+
+            TraceLoggingWrite(
+                MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingUInt64(device.BluetoothAddress(), "address"),
+                TraceLoggingWideString(device.DeviceId().c_str(), "device id"),
+                TraceLoggingWideString(device.Name().c_str(), "name"),
+                TraceLoggingBool(connected, "is connected"),
+                TraceLoggingWideString(L"The last state we captured was that this device was connected. Shouldn't have received a change notification.", "message")
+            );
+        }
+    }
+    else
+    {
+        TraceLoggingWrite(
+            MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingUInt64(device.BluetoothAddress(), "address"),
+            TraceLoggingWideString(device.DeviceId().c_str(), "device id"),
+            TraceLoggingWideString(device.Name().c_str(), "name"),
+            TraceLoggingBool(connected, "is connected"),
+            TraceLoggingWideString(L"Deactivating SWD", "message")
+        );
+
+        // Disconnected. Remove the SWD.
+
+        std::wstring instanceId = entry->Definition.CreatedMidiDeviceInstanceId;
+
+        if (!instanceId.empty())
+        {
+            RETURN_IF_FAILED(m_MidiDeviceManager->DeactivateEndpoint(instanceId.c_str()));
+
+            entry->Definition.SetDeactivated();
+        }
+        else
+        {
+            // TODO Log
+        }
+    }
+
+    return S_OK;
+}
+
+
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2BluetoothMidiEndpointManager::OnBleAdvertisementReceived(
+    ad::BluetoothLEAdvertisementWatcher /*source*/,
+    ad::BluetoothLEAdvertisementReceivedEventArgs const& args)
+{
+    // Check to see if we already know about this device. If so, ignore
+
+    if (MidiEndpointTable::Current().GetEndpointEntryForBluetoothAddress(args.BluetoothAddress()) != nullptr)
+    {
+        // we already know about this device. Exit
+        return S_OK;
+    }
+
+    TraceLoggingWrite(
+        MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingUInt64(args.BluetoothAddress(), "address"),
+        TraceLoggingWideString(L"New BLE device found via advertisement", "message")
+    );
+
+    // TODO
+    // If we don't know about it, check to see if it's a device on our allowed list
+    // If so, we can create a device entry for it. If not, ignore.
+    // We may want a ble-wide policy option to allow any MIDI devices we see, vs deny by default. Default is deny all.
+
+
+    auto device = bt::BluetoothLEDevice::FromBluetoothAddressAsync(args.BluetoothAddress()).get();
+    RETURN_HR_IF_NULL_MSG(E_UNEXPECTED, device, "Bluetooth device address is invalid.");
+
+    // get the GATT MIDI service
+    auto service = GetBleMidiServiceFromDevice(device);
+   
+    if (service != nullptr)
+    {
+        auto connectionStatusChangedHandler = foundation::TypedEventHandler <bt::BluetoothLEDevice , foundation::IInspectable>
+            (this, &CMidi2BluetoothMidiEndpointManager::OnBleDeviceConnectionStatusChanged);
 
         // create the device definition
         MidiBluetoothDeviceDefinition definition;
@@ -363,42 +540,59 @@ CMidi2BluetoothMidiEndpointManager::OnBleDeviceConnectionStatusChanged(bt::Bluet
         definition.BluetoothAddress = device.BluetoothAddress();
         definition.TransportSuppliedName = device.Name();           // need to ensure we also wire up the name changed event handler for this 
 
-        // create the endpoint
+        MidiBluetoothEndpointEntry* entry{ nullptr };
 
-        CreateEndpoint(definition);
+        // todo: Should lock the entry list during this
 
 
+
+        
+        // add the new endpoint to the device table
+        entry = MidiEndpointTable::Current().CreateAndAddNewEndpointEntry(definition, device, service);
+
+        if (entry != nullptr)
+        {
+            // create the MIDI endpoint if this is connected. 
+            if (entry->Device.ConnectionStatus() == bt::BluetoothConnectionStatus::Connected)
+            {
+                RETURN_IF_FAILED(CreateEndpoint(&(entry->Definition)));
+            }
+
+            // wire up connection status changed event and store the token for revocation
+//            entry->ConnectionStatusChangedToken = device.ConnectionStatusChanged(winrt::auto_revoke, connectionStatusChangedHandler);
+            entry->Device.ConnectionStatusChanged(connectionStatusChangedHandler);
+        }
+        else
+        {
+            // failed to just add a new entry. Log
+
+            TraceLoggingWrite(
+                MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingUInt64(device.BluetoothAddress(), "address"),
+                TraceLoggingWideString(device.DeviceId().c_str(), "device id"),
+                TraceLoggingWideString(device.Name().c_str(), "name"),
+                TraceLoggingWideString(L"Failed to add entry to endpoint table", "message")
+            );
+        }
     }
     else
     {
-        // Disconnected. Remove the SWD.
+        // no BLE MIDI service found. Log this because the filter should have prevented this.
 
-        std::wstring instanceId{};
-
-        // find the instance id we created for this BLE device
-
-
-        RETURN_IF_FAILED(m_MidiDeviceManager->DeactivateEndpoint(instanceId.c_str()));
-
+        TraceLoggingWrite(
+            MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingUInt64(device.BluetoothAddress(), "address"),
+            TraceLoggingWideString(device.DeviceId().c_str(), "device id"),
+            TraceLoggingWideString(device.Name().c_str(), "name"),
+            TraceLoggingWideString(L"BLE device does not have MIDI service", "message")
+        );
     }
-
-    return S_OK;
-}
-
-
-_Use_decl_annotations_
-HRESULT
-CMidi2BluetoothMidiEndpointManager::OnBleAdvertisementReceived(
-    ad::BluetoothLEAdvertisementWatcher /*source*/,
-    ad::BluetoothLEAdvertisementReceivedEventArgs /*args*/)
-{
-    // Check to see if we already know about this device. If so, ignore
-
-
-    // If we don't know about it, check to see if it's a device on our allowed list
-    // If so, we can create a device entry for it. If not, ignore.
-    // We may want a ble-wide policy option to allow any MIDI devices we see, vs deny by default. Default is deny all.
-
 
     return S_OK;
 }
@@ -422,9 +616,38 @@ CMidi2BluetoothMidiEndpointManager::StartAdvertisementWatcher()
     // This will fire for every message received, even if we already know about the device.
     m_AdvertisementReceived = m_bleAdWatcher.Received(winrt::auto_revoke, adReceivedHandler);
 
-    m_bleAdWatcher.AdvertisementFilter().Advertisement().ServiceUuids().Append(m_midiBleServiceUuid);
+    winrt::guid serviceUuid{ MIDI_BLE_SERVICE_UUID };
 
-    return S_OK;
+    m_bleAdWatcher.AdvertisementFilter().Advertisement().ServiceUuids().Append(serviceUuid);
+
+    m_bleAdWatcher.Start();
+
+    if (m_bleAdWatcher.Status() == ad::BluetoothLEAdvertisementWatcherStatus::Aborted)
+    {
+        // if the status is Aborted, it means there was an error
+
+        TraceLoggingWrite(
+            MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Error starting BLE ad watcher", "message")
+        );
+
+        return E_FAIL;
+    }
+    else
+    {
+        TraceLoggingWrite(
+            MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"BLE Ad watcher started", "message")
+        );
+
+        return S_OK;
+    }
 }
 
 HRESULT 

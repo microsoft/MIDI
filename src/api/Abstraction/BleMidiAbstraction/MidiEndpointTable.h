@@ -13,17 +13,19 @@
 // thread-safe meyers singleton for storing the devices we'll use
 
 
-struct MidiVirtualEndpointEntry
+struct MidiBluetoothEndpointEntry
 {
-    GUID JsonKey;                               // this is the key that is used in config before there's any SWD to refer to
+    MidiBluetoothDeviceDefinition Definition{};
 
-    std::wstring InstanceId;                    // the part of the instance ID we (mostly) control
+    bt::BluetoothLEDevice Device{ nullptr };
+    gatt::GattDeviceService Service{ nullptr };
 
-    std::wstring EndpointDeviceId;              // the device interface id
+    wil::com_ptr_nothrow<IMidiBiDi> MidiDeviceBiDi{ nullptr };
 
-    wil::com_ptr_nothrow<IMidiBiDi> MidiDeviceBiDi;
+ //   winrt::impl::consume_Windows_Devices_Bluetooth_IBluetoothLEDevice<bt::IBluetoothLEDevice>::ConnectionStatusChanged_revoker ConnectionStatusChangedToken{};
 
-    ~MidiVirtualEndpointEntry()
+    MidiBluetoothEndpointEntry() = default;
+    ~MidiBluetoothEndpointEntry()
     {
         if (MidiDeviceBiDi)
         {
@@ -36,28 +38,24 @@ struct MidiVirtualEndpointEntry
 class MidiEndpointTable
 {
 public:
-    //std::shared_ptr<LoopbackDevice> GetDevice(std::wstring deviceId);
-    //MidiLoopbackDevice* GetBidiDevice();
-    //MidiLoopbackDevice* GetInOutDevice();
-
     static MidiEndpointTable& Current();
 
     // no copying
     MidiEndpointTable(_In_ const MidiEndpointTable&) = delete;
     MidiEndpointTable& operator=(_In_ const MidiEndpointTable&) = delete;
 
+//    wil::com_ptr_nothrow<IMidiBiDi> GetEndpointInterfaceForId(_In_ std::wstring const EndpointDeviceId) const noexcept;
 
-    wil::com_ptr_nothrow<IMidiBiDi> GetEndpointInterfaceForId(_In_ std::wstring EndpointDeviceId) const noexcept;
-    void RemoveEndpointEntry(_In_ std::wstring EndpointDeviceId) noexcept;
+    MidiBluetoothEndpointEntry* GetEndpointEntryForBluetoothAddress(_In_ uint64_t const bluetoothAddress) const noexcept;
+
+    MidiBluetoothEndpointEntry* CreateAndAddNewEndpointEntry(_In_ MidiBluetoothDeviceDefinition definition, _In_  bt::BluetoothLEDevice device, _In_ gatt::GattDeviceService service) noexcept;
+   
+    void RemoveEndpointEntry(_In_ uint64_t bluetoothAddress) noexcept;
 
 private:
     MidiEndpointTable();
     ~MidiEndpointTable();
 
-    // key is EndpointDeviceId (the device interface id)
-    std::map<std::wstring, MidiVirtualEndpointEntry> m_Endpoints;
-
-
-    //MidiLoopbackDevice m_BidiDevice;
-    //MidiLoopbackDevice m_InOutDevice;
+    std::map<uint64_t, std::shared_ptr<MidiBluetoothEndpointEntry>> m_endpoints;
+    //std::vector<MidiBluetoothEndpointEntry> m_endpoints;
 };

@@ -24,4 +24,11 @@ struct MidiBluetoothDeviceDefinition
     std::wstring CreatedEndpointInterfaceId{};
     std::wstring CreatedMidiDeviceInstanceId{};
 
+
+    void SetDeactivated()
+    {
+        CreatedEndpointInterfaceId = L"";
+        CreatedMidiDeviceInstanceId = L"";
+    }
+
 };

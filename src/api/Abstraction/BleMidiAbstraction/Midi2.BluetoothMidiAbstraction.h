@@ -41,7 +41,6 @@ public:
     STDMETHOD(Activate)(_In_ REFIID, _Out_  void**);
 
 private:
-    wil::com_ptr_nothrow<IMidiEndpointManager> m_EndpointManager;
 
 };
 

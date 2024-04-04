@@ -8,8 +8,6 @@
 
 #pragma once
 
-#define MIDI_BLE_SERVICE_UUID L"{03B80E5A-EDE8-4B33-A751-6CE34EC4C700}"
-#define MIDI_BLE_DATA_IO_CHARACTERISTIC_UUID L"{7772E5DB-3868-4112-A1A9-F2669D106BF3}"
 // Notes:
 //      Write (encryption recommended, write without response is required)
 //      Read (encryption recommended, respond with no payload)
@@ -29,7 +27,7 @@ public:
 
 
 private:
-    winrt::guid m_midiBleServiceUuid{ MIDI_BLE_SERVICE_UUID };
+//    winrt::guid m_midiBleServiceUuid{ MIDI_BLE_SERVICE_UUID };
     wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
 
     GUID m_ContainerId{};
@@ -54,13 +52,13 @@ private:
     HRESULT OnDeviceStopped(_In_ enumeration::DeviceWatcher, _In_ foundation::IInspectable);
     HRESULT OnEnumerationCompleted(_In_ enumeration::DeviceWatcher, _In_ foundation::IInspectable);
 
-    HRESULT OnBleAdvertisementReceived(_In_ ad::BluetoothLEAdvertisementWatcher, _In_ ad::BluetoothLEAdvertisementReceivedEventArgs);
+    HRESULT OnBleAdvertisementReceived(_In_ ad::BluetoothLEAdvertisementWatcher, _In_ ad::BluetoothLEAdvertisementReceivedEventArgs const&);
 
     HRESULT OnBleDeviceConnectionStatusChanged(_In_ bt::BluetoothLEDevice /*device*/, _In_ foundation::IInspectable /*args*/);
     HRESULT OnBleDeviceNameChanged(_In_ bt::BluetoothLEDevice /*device*/, _In_ foundation::IInspectable /*args*/);
 
     HRESULT CreateEndpoint(
-        _In_ MidiBluetoothDeviceDefinition& definition
+        _In_ MidiBluetoothDeviceDefinition* definition
     );
 
 //    HRESULT EnumCompatibleBluetoothDevices();
@@ -71,5 +69,4 @@ private:
     HRESULT CreateSelfPeripheralEndpoint();
 
     HRESULT CreateParentDevice();
-
 };

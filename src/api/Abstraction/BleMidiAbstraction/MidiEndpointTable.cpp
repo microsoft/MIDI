@@ -22,20 +22,22 @@ MidiEndpointTable& MidiEndpointTable::Current()
 }
 
 
+
+
 _Use_decl_annotations_
-wil::com_ptr_nothrow<IMidiBiDi>
-MidiEndpointTable::GetEndpointInterfaceForId(
-    std::wstring const EndpointDeviceId
-) const noexcept
+MidiBluetoothEndpointEntry*
+MidiEndpointTable::GetEndpointEntryForBluetoothAddress(_In_ uint64_t const bluetoothAddress) const noexcept
 {
     try
     {
-        auto result = m_Endpoints.find(EndpointDeviceId);
-
-        if (result != m_Endpoints.end())
-            return result->second.MidiDeviceBiDi;
+        if (auto it = m_endpoints.find(bluetoothAddress); it != m_endpoints.end())
+        {
+            return it->second.get();
+        }
         else
+        {
             return nullptr;
+        }
     }
     catch (...)
     {
@@ -44,19 +46,72 @@ MidiEndpointTable::GetEndpointInterfaceForId(
 }
 
 
+
+//_Use_decl_annotations_
+//wil::com_ptr_nothrow<IMidiBiDi>
+//MidiEndpointTable::GetEndpointInterfaceForId(
+//    std::wstring const EndpointDeviceId
+//) const noexcept
+//{
+//    try
+//    {
+//        auto result = m_endpoints.find(EndpointDeviceId);
+//
+//        if (result != m_endpoints.end())
+//            return result->second.MidiDeviceBiDi;
+//        else
+//            return nullptr;
+//    }
+//    catch (...)
+//    {
+//        return nullptr;
+//    }
+//}
+
+
 _Use_decl_annotations_
-void
-MidiEndpointTable::RemoveEndpointEntry(
-    std::wstring EndpointDeviceId
+MidiBluetoothEndpointEntry*
+MidiEndpointTable::CreateAndAddNewEndpointEntry(
+    MidiBluetoothDeviceDefinition definition,
+    bt::BluetoothLEDevice device,
+    gatt::GattDeviceService service
 ) noexcept
 {
     try
     {
-        auto result = m_Endpoints.find(EndpointDeviceId);
+        MidiBluetoothEndpointEntry entry;
 
-        if (result != m_Endpoints.end())
+        entry.Definition = definition;
+        entry.MidiDeviceBiDi = nullptr;
+        entry.Device = device;
+        entry.Service = service;
+
+        m_endpoints[definition.BluetoothAddress] = std::make_shared<MidiBluetoothEndpointEntry>(entry);
+
+        return m_endpoints[definition.BluetoothAddress].get();
+    }
+    catch (...)
+    {
+        return nullptr;
+    }
+}
+
+
+
+
+_Use_decl_annotations_
+void
+MidiEndpointTable::RemoveEndpointEntry(
+    uint64_t bluetoothAddress
+) noexcept
+{
+    try
+    {
+        auto result = m_endpoints.find(bluetoothAddress);
+
+        if (result != m_endpoints.end())
         {
-            m_Endpoints.erase(result);
+            m_endpoints.erase(result);
         }
     }
     catch (...)

@@ -24,7 +24,6 @@ CMidi2BluetoothMidiAbstraction::Activate(
             MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
             __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"IMidiBiDi", "interface")
             );
@@ -45,13 +44,31 @@ CMidi2BluetoothMidiAbstraction::Activate(
         );
 
         // check to see if this is the first time we're creating the endpoint manager. If so, create it.
-        if (m_EndpointManager == nullptr)
+        if (AbstractionState::Current().GetEndpointManager() == nullptr)
         {
-            RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2BluetoothMidiEndpointManager>(&m_EndpointManager));
+            AbstractionState::Current().ConstructEndpointManager();
         }
 
-        // TODO: Not sure if this is the right pattern for this or not. There's no detach call here, so does this leak?
-        RETURN_IF_FAILED(m_EndpointManager->QueryInterface(Riid, Interface));
+        RETURN_IF_FAILED(AbstractionState::Current().GetEndpointManager()->QueryInterface(Riid, Interface));
+    }
+
+    else if (__uuidof(IMidiAbstractionConfigurationManager) == Riid)
+    {
+        TraceLoggingWrite(
+            MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiAbstractionConfigurationManager", "interface")
+        );
+
+        // check to see if this is the first time we're creating the endpoint manager. If so, create it.
+        if (AbstractionState::Current().GetConfigurationManager() == nullptr)
+        {
+            AbstractionState::Current().ConstructConfigurationManager();
+        }
+
+        RETURN_IF_FAILED(AbstractionState::Current().GetConfigurationManager()->QueryInterface(Riid, Interface));
     }
 
     else if (__uuidof(IMidiServiceAbstractionPluginMetadataProvider) == Riid)
