@@ -207,7 +207,8 @@ CMidi2VirtualMidiEndpointManager::NegotiateAndRequestMetadata(std::wstring endpo
         preferToSendJRToEndpoint,
         preferToReceiveJRFromEndpoint,
         preferredProtocol,
-        negotiationTimeoutMS
+        negotiationTimeoutMS, 
+        true
     ));
 
     return S_OK;

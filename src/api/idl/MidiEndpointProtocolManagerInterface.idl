@@ -22,7 +22,9 @@ interface IMidiEndpointProtocolManagerInterface : IUnknown
         [in] BOOL PreferToSendJRTimestampsToEndpoint,
         [in] BOOL PreferToReceiveJRTimestampsFromEndpoint,
         [in] BYTE PreferredMidiProtocol,
-        [in] WORD TimeoutMS
+        [in] WORD TimeoutMS, 
+        [in] BOOL ContinueCapturingMetadataAsyncAfterNegotiation
     );
+
 
 };

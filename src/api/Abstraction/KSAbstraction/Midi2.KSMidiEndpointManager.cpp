@@ -606,7 +606,8 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
                     preferToSendJRToEndpoint,
                     preferToReceiveJRFromEndpoint,
                     preferredProtocol,
-                    negotiationTimeoutMS
+                    negotiationTimeoutMS,
+                    true
                 ));
             }
 
