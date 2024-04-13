@@ -51,8 +51,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool AreFunctionBlocksStatic() { return m_areFunctionBlocksStatic; }
         collections::IMapView<uint8_t, midi2::MidiFunctionBlock> FunctionBlocks() noexcept { return m_functionBlocks.GetView(); }
 
-        void UpdateFunctionBlock(_In_ midi2::MidiFunctionBlock const& block) noexcept;
-        void UpdateEndpointName(_In_ winrt::hstring const& name) noexcept;
+        bool UpdateFunctionBlock(_In_ midi2::MidiFunctionBlock const& block) noexcept;
+        bool UpdateEndpointName(_In_ winrt::hstring const& name) noexcept;
 
 
         midi2::MidiVirtualEndpointDeviceDefinition DeviceDefinition() { return m_virtualEndpointDeviceDefinition; }
@@ -72,9 +72,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
     private:
-        void SendFunctionBlockInfoNotificationMessage(_In_ midi2::MidiFunctionBlock const& fb) noexcept;
-        void SendFunctionBlockNameNotificationMessages(_In_ midi2::MidiFunctionBlock const& fb) noexcept;
-        
+        bool SendFunctionBlockInfoNotificationMessage(_In_ midi2::MidiFunctionBlock const& fb) noexcept;
+        bool SendFunctionBlockNameNotificationMessages(_In_ midi2::MidiFunctionBlock const& fb) noexcept;
+        bool SendEndpointNameNotificationMessages(_In_ winrt::hstring const& name) noexcept;
+
         //void MidiVirtualEndpointDevice::QueueWorker();
 
         //void EnqueueOutgoingMessage(_In_ internal::PackedUmp128 const& message);
