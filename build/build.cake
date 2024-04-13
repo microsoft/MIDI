@@ -508,6 +508,7 @@ Task("BuildInstaller")
     Information($"\nBuilding Installer for {plat.ToString()} {configuration}");
 
     var mainBundleProjectDir = System.IO.Path.Combine(setupSolutionDir, "main-bundle");
+    var apiSetupProjectDir = System.IO.Path.Combine(setupSolutionDir, "api-package");
     var consoleOnlySetupProjectDir = System.IO.Path.Combine(setupSolutionDir, "console-package");
     var settingsOnlySetupProjectDir = System.IO.Path.Combine(setupSolutionDir, "settings-package");
 
@@ -582,8 +583,7 @@ Task("BuildInstaller")
 
     CopyFiles(System.IO.Path.Combine(consoleOnlySetupProjectDir, "bin", plat.ToString(), "Release", "*.msi"), releaseStandAloneInstallerFolder); 
     CopyFiles(System.IO.Path.Combine(settingsOnlySetupProjectDir, "bin", plat.ToString(), "Release", "*.msi"), releaseStandAloneInstallerFolder); 
-
-
+    CopyFiles(System.IO.Path.Combine(apiSetupProjectDir, "bin", plat.ToString(), "Release", "*.msi"), releaseStandAloneInstallerFolder); 
 
 });
 

@@ -3,7 +3,7 @@
     <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
 
     <Package  
-          Name="Windows MIDI Services"
+          Name="Windows MIDI Services $(var.Platform)"
           Manufacturer="Microsoft Corporation"
           Version="1.0.0.0"
           UpgradeCode="5f3a293b-09fb-4129-99b1-1a4d67cfd57c"
