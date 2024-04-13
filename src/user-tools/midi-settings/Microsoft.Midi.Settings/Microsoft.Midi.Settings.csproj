@@ -2,6 +2,7 @@
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
 	    <TargetFramework>net8.0-windows10.0.20348.0</TargetFramework>
+        <TargetPlatformVersion>10.0.22621.0</TargetPlatformVersion>
 		<TargetPlatformMinVersion>10.0.20348.0</TargetPlatformMinVersion>
         <Nullable>enable</Nullable>
         <RootNamespace>Microsoft.Midi.Settings</RootNamespace>
@@ -10,12 +11,12 @@
         <ApplicationManifest>app.manifest</ApplicationManifest>
 		<Platforms>x64;arm64</Platforms>
 		<RuntimeIdentifiers>win10-x64;win10-arm64</RuntimeIdentifiers>
-        <PublishProfile>Properties\PublishProfiles\win10-$(Platform).pubxml</PublishProfile>
 	    <ImplicitUsings>enable</ImplicitUsings>
 	    
         <UseWinUI>true</UseWinUI>
         <EnableMsixTooling>true</EnableMsixTooling>
-        <WindowsPackageType>None</WindowsPackageType>
+        <PublishProfile>Properties\PublishProfiles\win10-$(Platform).pubxml</PublishProfile>
+        <!--<WindowsPackageType>None</WindowsPackageType>-->
 		
 		<PackageCertificateThumbprint>DAC77297934678914CC6B107CE26743135B68C64</PackageCertificateThumbprint>
 	    <PackageCertificateKeyFile>Microsoft.Midi.Settings_TemporaryKey.pfx</PackageCertificateKeyFile>
@@ -84,7 +85,7 @@
       <PackageReference Include="System.Management" Version="8.0.0" />
       <PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.0" />
       <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
-      <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.5-0185" />
+      <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.5-0187" />
 
       <PackageReference Include="WinUIEx" Version="2.3.4" />
 
@@ -97,6 +98,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\shared\Microsoft.Devices.Midi2.Tools.Shared\Microsoft.Devices.Midi2.Tools.Shared.csproj" />
     <ProjectReference Include="..\Microsoft.Midi.Settings.Core\Microsoft.Midi.Settings.Core.csproj" />
   </ItemGroup>
 

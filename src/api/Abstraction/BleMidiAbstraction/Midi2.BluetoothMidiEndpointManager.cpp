@@ -137,7 +137,6 @@ CMidi2BluetoothMidiEndpointManager::CreateEndpoint(
     //RETURN_HR_IF_MSG(E_INVALIDARG, definition->InstanceIdPrefix.empty(), "Empty endpoint prefix");
     //RETURN_HR_IF_MSG(E_INVALIDARG, definition->EndpointUniqueIdentifier.empty(), "Empty endpoint unique id");
 
-
     TraceLoggingWrite(
         MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
@@ -147,7 +146,6 @@ CMidi2BluetoothMidiEndpointManager::CreateEndpoint(
     );
 
     std::wstring mnemonic(TRANSPORT_MNEMONIC);
-
   
     // TODO: Need to fold in user data here
     std::wstring endpointName = definition->TransportSuppliedName.c_str();
@@ -505,6 +503,7 @@ CMidi2BluetoothMidiEndpointManager::OnBleAdvertisementReceived(
     if (MidiEndpointTable::Current().GetEndpointEntryForBluetoothAddress(args.BluetoothAddress()) != nullptr)
     {
         // we already know about this device. Exit
+
         return S_OK;
     }
 

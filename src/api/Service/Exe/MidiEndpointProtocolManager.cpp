@@ -112,8 +112,8 @@ CMidiEndpointMetadataListener::Initialize(
     m_deviceManager = DeviceManager;
     m_sessionTracker = SessionTracker;
 
-
     // TODO
+
 
 
 
@@ -129,7 +129,6 @@ CMidiEndpointMetadataListener::ListenForMetadata()
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
-
 
     // TODO: Connect to the endpoint and listen
 
@@ -160,7 +159,7 @@ CMidiEndpointMetadataListener::Callback(
             if (internal::GetUmpMessageTypeFromFirstWord(ump.word0) == 0xF)
             {
                 // process the metadata
-                ProcessStreamMessage(ump);
+                LOG_IF_FAILED(ProcessStreamMessage(ump));
             }
             else
             {

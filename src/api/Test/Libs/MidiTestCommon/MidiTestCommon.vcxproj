@@ -73,13 +73,13 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration)\</IntDir>
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_Arm64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(WindowsSDK_LibraryPath_Arm64)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration)\</IntDir>
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_Arm64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(WindowsSDK_LibraryPath_Arm64)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration)\</OutDir>
