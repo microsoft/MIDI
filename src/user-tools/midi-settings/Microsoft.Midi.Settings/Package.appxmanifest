@@ -66,6 +66,7 @@
     <Capability Name="privateNetworkClientServer"/>
     <iot:Capability Name="systemManagement"/>
     <uap:Capability Name="userAccountInformation"/>
+    <uap:Capability Name="picturesLibrary"/>
     <DeviceCapability Name="bluetooth"/>
   </Capabilities>
 
