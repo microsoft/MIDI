@@ -135,6 +135,7 @@ class CMidiDevicePipe;
 #include "MidiTransformPipe.h"
 #include "MidiClientManager.h"
 
+#include "MidiEndpointProtocolWorker.h"
 #include "MidiEndpointProtocolManager.h"
 #include "MidiSessionTracker.h"
 

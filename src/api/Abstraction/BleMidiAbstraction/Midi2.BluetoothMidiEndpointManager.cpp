@@ -27,6 +27,15 @@ CMidi2BluetoothMidiEndpointManager::Initialize(
     IUnknown* /*midiEndpointProtocolManager*/
 )
 {
+
+    // temporary because this may be crashing the service on start
+    return S_OK;
+
+
+
+
+
+
     try
     {
         TraceLoggingWrite(
@@ -36,13 +45,12 @@ CMidi2BluetoothMidiEndpointManager::Initialize(
             TraceLoggingPointer(this, "this")
         );
 
-        RETURN_HR_IF(E_INVALIDARG, nullptr == MidiDeviceManager);
+        RETURN_HR_IF_NULL(E_INVALIDARG, MidiDeviceManager);
 
         RETURN_IF_FAILED(MidiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
 
         m_TransportAbstractionId = AbstractionLayerGUID;    // this is needed so MidiSrv can instantiate the correct transport
         m_ContainerId = m_TransportAbstractionId;           // we use the transport ID as the container ID for convenience
-
 
         RETURN_IF_FAILED(CreateParentDevice());
 
@@ -261,12 +269,22 @@ CMidi2BluetoothMidiEndpointManager::Cleanup()
         TraceLoggingPointer(this, "this")
     );
 
-
     if (m_bleAdWatcher != nullptr)
     {
         m_bleAdWatcher.Stop();
         m_bleAdWatcher = nullptr;
+
+        m_AdvertisementReceived.revoke();
+        m_AdvertisementWatcherStopped.revoke();
     }
+
+    TraceLoggingWrite(
+        MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Cleanup complete", "message")
+    );
 
     return S_OK;
 }
@@ -361,7 +379,12 @@ _Use_decl_annotations_
 HRESULT
 CMidi2BluetoothMidiEndpointManager::OnBleDeviceNameChanged(bt::BluetoothLEDevice device, foundation::IInspectable /*args*/)
 {
-
+    TraceLoggingWrite(
+        MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
 
 
     return S_OK;
@@ -479,6 +502,7 @@ CMidi2BluetoothMidiEndpointManager::OnBleDeviceConnectionStatusChanged(bt::Bluet
             RETURN_IF_FAILED(m_MidiDeviceManager->DeactivateEndpoint(instanceId.c_str()));
 
             entry->Definition.SetDeactivated();
+            entry->MidiDeviceBiDi = nullptr;
         }
         else
         {
@@ -539,7 +563,7 @@ CMidi2BluetoothMidiEndpointManager::OnBleAdvertisementReceived(
         definition.BluetoothAddress = device.BluetoothAddress();
         definition.TransportSuppliedName = device.Name();           // need to ensure we also wire up the name changed event handler for this 
 
-        MidiBluetoothEndpointEntry* entry{ nullptr };
+        std::shared_ptr<MidiBluetoothEndpointEntry> entry{ nullptr };
 
         // todo: Should lock the entry list during this
 
@@ -559,7 +583,8 @@ CMidi2BluetoothMidiEndpointManager::OnBleAdvertisementReceived(
 
             // wire up connection status changed event and store the token for revocation
 //            entry->ConnectionStatusChangedToken = device.ConnectionStatusChanged(winrt::auto_revoke, connectionStatusChangedHandler);
-            entry->Device.ConnectionStatusChanged(connectionStatusChangedHandler);
+            //entry->ConnectionStatusChangedRevoker = entry->Device.ConnectionStatusChanged(winrt::auto_revoke, connectionStatusChangedHandler);
+            entry->ConnectionStatusChangedRevoker = entry->Device.ConnectionStatusChanged(connectionStatusChangedHandler);
         }
         else
         {

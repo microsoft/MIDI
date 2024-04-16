@@ -92,28 +92,53 @@ CMidiSrv::Initialize()
         NULL));
 
     
-    // this is an ugly set of casts, but the reinterpret_cast error only
-    // comes up with C++/20. Risk of a straight c-style cast here going
-    // poorly is low. Error comes from the function taking non-const params
-    // but our arguments here are const.
-    RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcServerUseProtseqEp(
-        (RPC_WSTR)MIDISRV_LRPC_PROTOCOL,
-        RPC_C_PROTSEQ_MAX_REQS_DEFAULT,
-        (RPC_WSTR)MIDISRV_ENDPOINT,
-        rpcSecurityDescriptor.get())));
+    if (rpcSecurityDescriptor.is_valid())
+    {
+        // this is an ugly set of casts, but the reinterpret_cast error only
+        // comes up with C++/20. Risk of a straight c-style cast here going
+        // poorly is low. Error comes from the function taking non-const params
+        // but our arguments here are const.
+        auto rpcStatus = RpcServerUseProtseqEp(
+            (RPC_WSTR)MIDISRV_LRPC_PROTOCOL,
+            RPC_C_PROTSEQ_MAX_REQS_DEFAULT,
+            (RPC_WSTR)MIDISRV_ENDPOINT,
+            rpcSecurityDescriptor.get());
 
-    //RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcServerUseProtseqEp(
-    //    reinterpret_cast<RPC_WSTR>(MIDISRV_LRPC_PROTOCOL),
-    //    RPC_C_PROTSEQ_MAX_REQS_DEFAULT,
-    //    reinterpret_cast<RPC_WSTR>(MIDISRV_ENDPOINT),
-    //    rpcSecurityDescriptor.get())));
+        auto rpcHr = HRESULT_FROM_RPCSTATUS(rpcStatus);
 
-    RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcServerRegisterIf3(
-        MidiSrvRPC_v1_0_s_ifspec,
-        NULL, NULL,
-        RPC_IF_AUTOLISTEN | RPC_IF_ALLOW_LOCAL_ONLY,
-        RPC_C_LISTEN_MAX_CALLS_DEFAULT, 0,
-        MidiSrvRpcIfCallback, rpcSecurityDescriptor.get())));
+        if (FAILED(rpcHr))
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingHResult(rpcHr, "hresult"),
+                TraceLoggingLong(rpcStatus, "rpc_status"),
+                TraceLoggingWideString(L"RpcServerUseProtseqEp failed. It's likely the service is not responding due to a failed startup.", "message")
+            );
+        }
+
+        RETURN_IF_FAILED(rpcHr);
+
+        RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcServerRegisterIf3(
+            MidiSrvRPC_v1_0_s_ifspec,
+            NULL, NULL,
+            RPC_IF_AUTOLISTEN | RPC_IF_ALLOW_LOCAL_ONLY,
+            RPC_C_LISTEN_MAX_CALLS_DEFAULT, 0,
+            MidiSrvRpcIfCallback, 
+            rpcSecurityDescriptor.get())));
+    }
+    else
+    {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Returned RPC Security Descriptor is not valid", "message")
+        );
+    }
 
     cleanupOnError.release();
 

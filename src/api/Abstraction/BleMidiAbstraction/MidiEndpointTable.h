@@ -22,14 +22,26 @@ struct MidiBluetoothEndpointEntry
 
     wil::com_ptr_nothrow<IMidiBiDi> MidiDeviceBiDi{ nullptr };
 
- //   winrt::impl::consume_Windows_Devices_Bluetooth_IBluetoothLEDevice<bt::IBluetoothLEDevice>::ConnectionStatusChanged_revoker ConnectionStatusChangedToken{};
+    //winrt::event_token ConnectionStatusChangedRevoker;
+
+    //bt::BluetoothLEDevice::ConnectionParametersChanged_revoker ConnectionStatusChangedRevoker{ nullptr };
+    //winrt::impl::consume_Windows_Devices_Bluetooth_IBluetoothLEDevice<bt::IBluetoothLEDevice>::ConnectionStatusChanged_revoker ConnectionStatusChangedRevoker{ nullptr };
+//    winrt::impl::consume_Windows_Devices_Bluetooth_IBluetoothLEDevice<bt::IBluetoothLEDevice>::ConnectionStatusChanged_revoker ConnectionStatusChangedRevoker;
+
+    winrt::event_token ConnectionStatusChangedRevoker;
 
     MidiBluetoothEndpointEntry() = default;
     ~MidiBluetoothEndpointEntry()
     {
         if (MidiDeviceBiDi)
         {
+            MidiDeviceBiDi->Cleanup();
             MidiDeviceBiDi.reset();
+        }
+
+        if (Device != nullptr)
+        {
+            Device.ConnectionStatusChanged(ConnectionStatusChangedRevoker);
         }
     }
 };
@@ -46,9 +58,9 @@ public:
 
 //    wil::com_ptr_nothrow<IMidiBiDi> GetEndpointInterfaceForId(_In_ std::wstring const EndpointDeviceId) const noexcept;
 
-    MidiBluetoothEndpointEntry* GetEndpointEntryForBluetoothAddress(_In_ uint64_t const bluetoothAddress) const noexcept;
+    std::shared_ptr<MidiBluetoothEndpointEntry> GetEndpointEntryForBluetoothAddress(_In_ uint64_t const bluetoothAddress) const noexcept;
 
-    MidiBluetoothEndpointEntry* CreateAndAddNewEndpointEntry(_In_ MidiBluetoothDeviceDefinition definition, _In_  bt::BluetoothLEDevice device, _In_ gatt::GattDeviceService service) noexcept;
+    std::shared_ptr<MidiBluetoothEndpointEntry> CreateAndAddNewEndpointEntry(_In_ MidiBluetoothDeviceDefinition definition, _In_  bt::BluetoothLEDevice device, _In_ gatt::GattDeviceService service) noexcept;
    
     void RemoveEndpointEntry(_In_ uint64_t bluetoothAddress) noexcept;
 

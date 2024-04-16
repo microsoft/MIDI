@@ -115,12 +115,7 @@
                         <RegistryValue Type="string" Name="CLSID" Value="{26FA740D-469C-4D33-BEB1-3885DE7D6DF1}" />
                         <RegistryValue Type="integer" Name="Enabled" Value="1" />
                     </RegistryKey>
-                    
-                    <RegistryKey Key="Midi2NetworkMidiAbstraction">
-                        <RegistryValue Type="string" Name="CLSID" Value="{C95DCD1F-CDE3-4C2D-913C-528CB8A4CBE6}" />
-                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
-                    </RegistryKey>
-                    
+
                     <RegistryKey Key="Midi2VirtualMidiAbstraction">
                         <RegistryValue Type="string" Name="CLSID" Value="{8FEAAD91-70E1-4A19-997A-377720A719C1}" />
                         <RegistryValue Type="integer" Name="Enabled" Value="1" />
@@ -131,14 +126,21 @@
                         <RegistryValue Type="integer" Name="Enabled" Value="1" />
                     </RegistryKey>
 
+
+                    
+                    <RegistryKey Key="Midi2NetworkMidiAbstraction">
+                        <RegistryValue Type="string" Name="CLSID" Value="{C95DCD1F-CDE3-4C2D-913C-528CB8A4CBE6}" />
+                        <RegistryValue Type="integer" Name="Enabled" Value="0" />
+                    </RegistryKey>
+                    
                     <RegistryKey Key="Midi2VirtualPatchBayAbstraction">
                         <RegistryValue Type="string" Name="CLSID" Value="{B7C8E2D2-EE3B-4044-B9CF-6F29528AB46D}" />
-                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
+                        <RegistryValue Type="integer" Name="Enabled" Value="0" />
                     </RegistryKey>
 
                     <RegistryKey Key="Midi2BluetoothMidiAbstraction">
                         <RegistryValue Type="string" Name="CLSID" Value="{ABD5E0B9-C38C-48B7-AA56-19D9E26BAF1B}" />
-                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
+                        <RegistryValue Type="integer" Name="Enabled" Value="0" />
                     </RegistryKey>
                 </RegistryKey>
             </RegistryKey>

@@ -25,14 +25,22 @@ MidiEndpointTable& MidiEndpointTable::Current()
 
 
 _Use_decl_annotations_
-MidiBluetoothEndpointEntry*
-MidiEndpointTable::GetEndpointEntryForBluetoothAddress(_In_ uint64_t const bluetoothAddress) const noexcept
+std::shared_ptr<MidiBluetoothEndpointEntry>
+MidiEndpointTable::GetEndpointEntryForBluetoothAddress(uint64_t const bluetoothAddress) const noexcept
 {
+    TraceLoggingWrite(
+        MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingUInt64(bluetoothAddress, "address")
+    );
+
     try
     {
         if (auto it = m_endpoints.find(bluetoothAddress); it != m_endpoints.end())
         {
-            return it->second.get();
+            return it->second;
         }
         else
         {
@@ -46,37 +54,22 @@ MidiEndpointTable::GetEndpointEntryForBluetoothAddress(_In_ uint64_t const bluet
 }
 
 
-
-//_Use_decl_annotations_
-//wil::com_ptr_nothrow<IMidiBiDi>
-//MidiEndpointTable::GetEndpointInterfaceForId(
-//    std::wstring const EndpointDeviceId
-//) const noexcept
-//{
-//    try
-//    {
-//        auto result = m_endpoints.find(EndpointDeviceId);
-//
-//        if (result != m_endpoints.end())
-//            return result->second.MidiDeviceBiDi;
-//        else
-//            return nullptr;
-//    }
-//    catch (...)
-//    {
-//        return nullptr;
-//    }
-//}
-
-
 _Use_decl_annotations_
-MidiBluetoothEndpointEntry*
+std::shared_ptr<MidiBluetoothEndpointEntry>
 MidiEndpointTable::CreateAndAddNewEndpointEntry(
     MidiBluetoothDeviceDefinition definition,
     bt::BluetoothLEDevice device,
     gatt::GattDeviceService service
 ) noexcept
 {
+    TraceLoggingWrite(
+        MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingUInt64(definition.BluetoothAddress, "address")
+    );
+
     try
     {
         MidiBluetoothEndpointEntry entry;
@@ -88,7 +81,7 @@ MidiEndpointTable::CreateAndAddNewEndpointEntry(
 
         m_endpoints[definition.BluetoothAddress] = std::make_shared<MidiBluetoothEndpointEntry>(entry);
 
-        return m_endpoints[definition.BluetoothAddress].get();
+        return m_endpoints[definition.BluetoothAddress];
     }
     catch (...)
     {
@@ -105,6 +98,14 @@ MidiEndpointTable::RemoveEndpointEntry(
     uint64_t bluetoothAddress
 ) noexcept
 {
+    TraceLoggingWrite(
+        MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingUInt64(bluetoothAddress, "address")
+    );
+
     try
     {
         auto result = m_endpoints.find(bluetoothAddress);

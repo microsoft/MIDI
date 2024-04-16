@@ -15,72 +15,80 @@ public:
     CMidiClientManager() {}
     ~CMidiClientManager() {}
     
-    HRESULT Initialize(_In_ std::shared_ptr<CMidiPerformanceManager>& performanceManager,
-                            _In_ std::shared_ptr<CMidiProcessManager>& processManager,
-                            _In_ std::shared_ptr<CMidiDeviceManager>& deviceManager,
-                            _In_ std::shared_ptr<CMidiSessionTracker>& sessionTracker);
+    HRESULT Initialize(
+        _In_ std::shared_ptr<CMidiPerformanceManager>& performanceManager,
+        _In_ std::shared_ptr<CMidiProcessManager>& processManager,
+        _In_ std::shared_ptr<CMidiDeviceManager>& deviceManager,
+        _In_ std::shared_ptr<CMidiSessionTracker>& sessionTracker);
 
-    HRESULT CreateMidiClient(_In_ handle_t,
-                                _In_ LPCWSTR,
-                                _In_ GUID,
-                                _In_ PMIDISRV_CLIENTCREATION_PARAMS,
-                                _In_ PMIDISRV_CLIENT);
+    HRESULT CreateMidiClient(
+        _In_ handle_t,
+        _In_ LPCWSTR,
+        _In_ GUID,
+        _In_ PMIDISRV_CLIENTCREATION_PARAMS,
+        _In_ PMIDISRV_CLIENT,
+        _In_ BOOL);
 
-    HRESULT DestroyMidiClient(_In_ handle_t,
-                                _In_ MidiClientHandle);
+    HRESULT DestroyMidiClient(
+        _In_ handle_t,
+        _In_ MidiClientHandle);
+
+
 
     HRESULT Cleanup();
 
 private:
-    HRESULT GetMidiClient(_In_ handle_t,
-                                _In_ LPCWSTR,
-                                _In_ GUID,
-                                _In_ PMIDISRV_CLIENTCREATION_PARAMS,
-                                _In_ PMIDISRV_CLIENT,
-                                _In_ wil::unique_handle&,
-                                _In_ wil::com_ptr_nothrow<CMidiPipe>&,
-                                _In_ BOOL);
+    HRESULT GetMidiClient(
+        _In_ handle_t,
+        _In_ LPCWSTR,
+        _In_ GUID,
+        _In_ PMIDISRV_CLIENTCREATION_PARAMS,
+        _In_ PMIDISRV_CLIENT,
+        _In_ wil::unique_handle&,
+        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
+        _In_ BOOL);
 
-    HRESULT GetMidiDevice(_In_ handle_t,
-                                _In_ LPCWSTR,
-                                _In_ PMIDISRV_CLIENTCREATION_PARAMS,
-                                _In_ wil::com_ptr_nothrow<CMidiPipe>&);
+    HRESULT GetMidiDevice(
+        _In_ handle_t,
+        _In_ LPCWSTR,
+        _In_ PMIDISRV_CLIENTCREATION_PARAMS,
+        _In_ wil::com_ptr_nothrow<CMidiPipe>&);
 
     // TODO: These should be made more generic and go by a configuration, rather than have
     // discrete methods for each type of transform. But right now, it's about making the
     // transform process work properly
     HRESULT
     GetMidiTransform(
-                        _In_ handle_t,
-                        _In_ MidiFlow,
-                        _In_ MidiDataFormat,
-                        _In_ MidiDataFormat,
-                        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
-                        _In_ wil::com_ptr_nothrow<CMidiPipe>&);
+        _In_ handle_t,
+        _In_ MidiFlow,
+        _In_ MidiDataFormat,
+        _In_ MidiDataFormat,
+        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
+        _In_ wil::com_ptr_nothrow<CMidiPipe>&);
 
     HRESULT
     GetMidiProtocolDownscalerTransform(
-                        _In_ handle_t,
-                        _In_ MidiFlow,
-                        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
-                        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
-                        _In_ wil::com_ptr_nothrow<CMidiPipe>&);
+        _In_ handle_t,
+        _In_ MidiFlow,
+        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
+        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
+        _In_ wil::com_ptr_nothrow<CMidiPipe>&);
 
     HRESULT
     GetMidiScheduler(
-                        _In_ handle_t,
-                        _In_ MidiFlow,
-                        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
-                        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
-                        _In_ wil::com_ptr_nothrow<CMidiPipe>&);
+        _In_ handle_t,
+        _In_ MidiFlow,
+        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
+        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
+        _In_ wil::com_ptr_nothrow<CMidiPipe>&);
 
     HRESULT
     GetMidiEndpointMetadataHandler(
-                        _In_ handle_t,
-                        _In_ MidiFlow,
-                        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
-                        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
-                        _In_ wil::com_ptr_nothrow<CMidiPipe>&);
+        _In_ handle_t,
+        _In_ MidiFlow,
+        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
+        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
+        _In_ wil::com_ptr_nothrow<CMidiPipe>&);
 
 
     wil::critical_section m_ClientManagerLock;

@@ -26,11 +26,7 @@ CMidiDevicePipe::Initialize(
         TraceLoggingPointer(this, "this")
     );
 
-
     auto deviceLock = m_DevicePipeLock.lock();
-
-    OutputDebugString(L"" __FUNCTION__ " Initialize.");
-    OutputDebugString(Device);
 
     ABSTRACTIONCREATIONPARAMS abstractionCreationParams;
 

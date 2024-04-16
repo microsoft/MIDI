@@ -157,6 +157,8 @@ CMidiDeviceManager::Initialize(
 
                         if (FAILED(initializeResult))
                         {
+                            LOG_IF_FAILED(initializeResult);
+
                             TraceLoggingWrite(
                                 MidiSrvTelemetryProvider::Provider(),
                                 __FUNCTION__,
