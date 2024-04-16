@@ -601,13 +601,22 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
                 BYTE preferredProtocol{ MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2 };
                 WORD negotiationTimeoutMS{ 5000 };  // this should be much shorter
 
+                PENDPOINTPROTOCOLNEGOTIATIONRESULTS negotiationResults;
+
                 LOG_IF_FAILED(m_MidiProtocolManager->NegotiateAndRequestMetadata(
                     newDeviceInterfaceId,
                     preferToSendJRToEndpoint,
                     preferToReceiveJRFromEndpoint,
                     preferredProtocol,
-                    negotiationTimeoutMS
+                    negotiationTimeoutMS,
+                    &negotiationResults
                 ));
+
+
+                // TODO: The negotiationResults structure contains the function blocks which 
+                // should be used to create MIDI 1.0 legacy ports for this MIDI 2.0 device.
+
+
             }
 
         }

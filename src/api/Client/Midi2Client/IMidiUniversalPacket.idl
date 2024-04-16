@@ -16,7 +16,7 @@ import "MidiMessageTypeEnum.idl";
 
 namespace Windows.Devices.Midi2
 {
-    [MIDI_API_CONTRACT(1)]
+    [MIDI_API_CONTRACT(19)]
     [MIDI_INTERFACE_UUID("2eb5df8a-d751-4997-bf96-ba9a531fd5ff",1.0)]
     interface IMidiUniversalPacket
     {

@@ -46,12 +46,21 @@ CMidiDeviceManager::Initialize(
                 __FUNCTION__,
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Loading abstraction layer", "message"),
+                TraceLoggingWideString(L"Getting abstraction configuration JSON", "message"),
                 TraceLoggingGuid(AbstractionLayer, "abstraction layer")
             );
 
             // provide the initial settings for these transports
             auto transportSettingsJson = m_ConfigurationManager->GetSavedConfigurationForTransportAbstraction(AbstractionLayer);
+
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"CoCreating abstraction layer", "message"),
+                TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+            );
 
             // changed these from a return-on-fail to just log, so we don't prevent service startup
             // due to one bad abstraction
@@ -60,17 +69,44 @@ CMidiDeviceManager::Initialize(
 
             if (midiAbstraction != nullptr)
             {
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    __FUNCTION__,
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Activating abstraction layer IMidiEndpointManager", "message"),
+                    TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                );
+
                 LOG_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiEndpointManager), (void**)&endpointManager));
 
                 if (endpointManager != nullptr)
                 {
                     wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> protocolManager = EndpointProtocolManager.get();
 
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        __FUNCTION__,
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Initializing abstraction layer Midi Endpoint Manager", "message"),
+                        TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                    );
+
                     auto initializeResult = endpointManager->Initialize((IUnknown*)this, (IUnknown*)protocolManager.get());
 
                     if (SUCCEEDED(initializeResult))
                     {
                         m_MidiEndpointManagers.emplace(AbstractionLayer, std::move(endpointManager));
+
+                        TraceLoggingWrite(
+                            MidiSrvTelemetryProvider::Provider(),
+                            __FUNCTION__,
+                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Midi Endpoint Manager initialized", "message"),
+                            TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                        );
                     }
                     else
                     {
@@ -98,6 +134,15 @@ CMidiDeviceManager::Initialize(
 
                 }
 
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    __FUNCTION__,
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Activating abstraction configuration manager.", "message"),
+                    TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                );
+
                 // we only log. This interface is optional
                 auto configHR = midiAbstraction->Activate(__uuidof(IMidiAbstractionConfigurationManager), (void**)&abstractionConfigurationManager);
                 if (SUCCEEDED(configHR))
@@ -112,6 +157,8 @@ CMidiDeviceManager::Initialize(
 
                         if (FAILED(initializeResult))
                         {
+                            LOG_IF_FAILED(initializeResult);
+
                             TraceLoggingWrite(
                                 MidiSrvTelemetryProvider::Provider(),
                                 __FUNCTION__,
@@ -129,6 +176,15 @@ CMidiDeviceManager::Initialize(
 
                             if (!transportSettingsJson.empty())
                             {
+                                TraceLoggingWrite(
+                                    MidiSrvTelemetryProvider::Provider(),
+                                    __FUNCTION__,
+                                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                    TraceLoggingPointer(this, "this"),
+                                    TraceLoggingWideString(L"Updating abstraction configuration", "message"),
+                                    TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                                );
+
                                 CComBSTR response{};
                                 response.Empty();
 
@@ -136,7 +192,6 @@ CMidiDeviceManager::Initialize(
 
                                 // we don't use the response info here.
                                 ::SysFreeString(response);
-
 
                                 if (FAILED(updateConfigHR))
                                 {
@@ -223,15 +278,53 @@ CMidiDeviceManager::Initialize(
             }
 
         }
-        catch (...)
+
+        catch (wil::ResultException rex)
         {
-            // TODO: Log exception
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Result Exception loading transport abstraction.", "message"),
+                TraceLoggingString(rex.what(), "error"),
+                TraceLoggingHResult(rex.GetErrorCode(), "hresult"),
+                TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+            );
+
+        }
+        catch (std::runtime_error& err)
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Runtime error loading transport abstraction.", "message"),
+                TraceLoggingString(err.what(), "error"),
+                TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+            );
+        }
+        catch (const std::exception& ex)
+        {
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
                 __FUNCTION__,
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Exception loading transport abstraction.", "message"),
+                TraceLoggingString(ex.what(), "exception"),
+                TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+            );
+        }        
+        catch (...)
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Unknown exception loading transport abstraction.", "message"),
                 TraceLoggingGuid(AbstractionLayer, "abstraction layer")
             );
 

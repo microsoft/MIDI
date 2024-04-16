@@ -142,7 +142,7 @@ CMidi2VirtualMidiEndpointManager::CreateParentDevice()
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __func__,
+        __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -202,12 +202,15 @@ CMidi2VirtualMidiEndpointManager::NegotiateAndRequestMetadata(std::wstring endpo
     BYTE preferredProtocol{ MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2 };
     WORD negotiationTimeoutMS{ 2000 };
 
+    PENDPOINTPROTOCOLNEGOTIATIONRESULTS negotiationResults;
+
     RETURN_IF_FAILED(m_MidiProtocolManager->NegotiateAndRequestMetadata(
         endpointId.c_str(),
         preferToSendJRToEndpoint,
         preferToReceiveJRFromEndpoint,
         preferredProtocol,
-        negotiationTimeoutMS
+        negotiationTimeoutMS, 
+        &negotiationResults
     ));
 
     return S_OK;

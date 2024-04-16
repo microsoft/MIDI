@@ -42,6 +42,9 @@
     <ClCompile Include="Midi2.BluetoothMidiPluginMetadataProvider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="AbstractionState.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Midi2BluetoothMidiAbstraction.idl">
@@ -88,9 +91,6 @@
     <ClInclude Include="MidiBluetoothDeviceDefinition.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MidiBluetoothDevice.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MidiBluetoothPacket.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -98,6 +98,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Midi2.BluetoothMidiPluginMetadataProvider.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ble_utilities.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AbstractionState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

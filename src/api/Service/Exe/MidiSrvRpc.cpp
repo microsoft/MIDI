@@ -98,13 +98,7 @@ HRESULT MidiSrvCreateClient(
 
     // Client manager creates the client, fills in the MIDISRV_CLIENT information
     RETURN_IF_FAILED(g_MidiService->GetClientManager(clientManager));
-    RETURN_IF_FAILED(clientManager->CreateMidiClient(BindingHandle, MidiDevice, SessionId, CreationParams, createdClient));
-
-    // Register this client (this code moved to the client manager)
-   // std::shared_ptr<CMidiSessionTracker> sessionTracker;
-   // RETURN_IF_FAILED(g_MidiService->GetSessionTracker(sessionTracker));
-  //  RETURN_IF_FAILED(sessionTracker->AddClientEndpointConnection(SessionId, MidiDevice));
-
+    RETURN_IF_FAILED(clientManager->CreateMidiClient(BindingHandle, MidiDevice, SessionId, CreationParams, createdClient, false));
 
     // Success, transfer the MIDISRV_CLIENT data to the caller.
     *Client = createdClient;

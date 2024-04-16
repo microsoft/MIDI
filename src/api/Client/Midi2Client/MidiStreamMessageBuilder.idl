@@ -21,7 +21,7 @@ import "MidiFunctionBlockDiscoveryRequestsEnum.idl";
 
 namespace Windows.Devices.Midi2
 {
-    [MIDI_API_CONTRACT(1)]
+    [MIDI_API_CONTRACT(19)]
     static runtimeclass MidiStreamMessageBuilder
     {
         static IMidiUniversalPacket BuildEndpointDiscoveryMessage(

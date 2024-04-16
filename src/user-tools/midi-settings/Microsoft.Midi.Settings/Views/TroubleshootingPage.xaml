@@ -9,7 +9,17 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:labs="using:CommunityToolkit.Labs.WinUI"
+    xmlns:midi2="using:Windows.Devices.Midi2"
+    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"    
     mc:Ignorable="d">
+
+    <Page.Resources>
+        <ResourceDictionary>
+            <helpers:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+            <helpers:BooleanToInverseVisibilityConverter x:Key="BooleanToInverseVisibilityConverter" />
+        </ResourceDictionary>
+    </Page.Resources>
 
     <Grid  x:Name="ContentArea">
         <ScrollViewer >
@@ -19,6 +29,7 @@
                            Text="If you are running into problems with MIDI on your PC, the tools below may help you recover without requiring a reboot.">
                 </TextBlock>
 
+                <!--
                 <TextBlock Text="If you have a stuck note somewhere, and you're not sure where" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
 
                 <labs:SettingsCard Header="System-wide MIDI Panic"
@@ -48,6 +59,7 @@
                     </labs:SettingsExpander.Items>
                 </labs:SettingsExpander>
 
+                -->
 
                 <TextBlock Text="If you are not sure that a device is working" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
 
@@ -80,7 +92,13 @@
 
                 <labs:SettingsCard Header="Restart Windows MIDI Services"
                            Description="Hopefully it doesn't come to this, but if something is stuck in the service, you can restart it here.">
-                    <Button Content="Restart Service"/>
+                    <StackPanel>
+                        <Button Content="Restart MIDI Service"
+                                Command="{x:Bind ViewModel.RestartServiceCommand}"
+                                Visibility="{x:Bind ViewModel.IsUserRunningAsAdmin, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                        <TextBlock Text="You must run this application as Administrator to manage the Windows service." 
+                                   Visibility="{x:Bind ViewModel.IsUserRunningAsAdmin, Converter={StaticResource BooleanToInverseVisibilityConverter}}" />
+                    </StackPanel>
                 </labs:SettingsCard>
 
                 <TextBlock Text="If you're working with support" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>

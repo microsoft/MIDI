@@ -91,47 +91,34 @@
                     <controls:SettingsExpander.Items>
                         <controls:SettingsCard>
                             <controls:SettingsCard.Header>
-                                <StackPanel Spacing="4" Orientation="Vertical">
-                                    <TextBlock Text="Name" Style="{StaticResource SmallPropertyLabel}"/>
-                                    <TextBlock Text="{x:Bind ViewModel.DeviceInformation.UserSuppliedName}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
-                                </StackPanel>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Name" Style="{StaticResource SmallPropertyLabel}"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Description" Style="{StaticResource SmallPropertyLabel}"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Large Image" Style="{StaticResource SmallPropertyLabel}"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Small Image" Style="{StaticResource SmallPropertyLabel}"/>
+
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind ViewModel.DeviceInformation.UserSuppliedName}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind ViewModel.DeviceInformation.UserSuppliedDescription}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{x:Bind ViewModel.DeviceInformation.UserSuppliedLargeImagePath}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
+                                    <TextBlock Grid.Row="3" Grid.Column="1" Text="{x:Bind ViewModel.DeviceInformation.UserSuppliedSmallImagePath}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
+
+                                </Grid>
                             </controls:SettingsCard.Header>
+
+                            <Button Content="Update Properties" Click="Button_Click"/>
                             
-                            <Button Content="Rename" Click="Button_Click"/>
                         </controls:SettingsCard>
-                        
-                        <controls:SettingsCard>
-                            <controls:SettingsCard.Header>
-                                <StackPanel Spacing="4" Orientation="Vertical">
-                                    <TextBlock Text="Description" Style="{StaticResource SmallPropertyLabel}"/>
-                                    <TextBlock Text="{x:Bind ViewModel.DeviceInformation.UserSuppliedDescription}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
-                                </StackPanel>
-                            </controls:SettingsCard.Header>
-                            <Button Content="Update Description" Click="Button_Click" />
-                        </controls:SettingsCard>
-
-                        <controls:SettingsCard>
-                            <controls:SettingsCard.Header>
-                                <StackPanel Spacing="4" Orientation="Vertical">
-                                    <TextBlock Text="Large Image" Style="{StaticResource SmallPropertyLabel}"/>
-                                    <TextBlock Text="{x:Bind ViewModel.DeviceInformation.UserSuppliedLargeImagePath}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
-                                </StackPanel>
-                            </controls:SettingsCard.Header>
-
-                            <Button Content="Update Large Image" Click="Button_Click" />
-                        </controls:SettingsCard>
-                        
-                        <controls:SettingsCard>
-                            <controls:SettingsCard.Header>
-                                <StackPanel Spacing="4" Orientation="Vertical">
-                                    <TextBlock Text="Small Image" Style="{StaticResource SmallPropertyLabel}"/>
-                                    <TextBlock Text="{x:Bind ViewModel.DeviceInformation.UserSuppliedSmallImagePath}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
-                                </StackPanel>
-                            </controls:SettingsCard.Header>
-
-                            <Button Content="Update Small Image" Click="Button_Click" />
-                        </controls:SettingsCard>
-
                     </controls:SettingsExpander.Items>
                 </controls:SettingsExpander>
 
@@ -223,7 +210,6 @@
 
 
                 <!-- Function Blocks -->
-                
                 <controls:SettingsExpander Header="Function Blocks" 
                                            ItemsSource="{x:Bind ViewModel.DeviceInformation.FunctionBlocks.Values}"
                                            IsExpanded="True">
@@ -378,13 +364,117 @@
                 
 
             </StackPanel>
-            
-            
-            
-            
-            
-            
+           
         </ScrollViewer>
         
+
+        <ContentDialog x:Name="editUserDefinedPropertiesDialog"
+                       PrimaryButtonText="OK" IsPrimaryButtonEnabled="True"
+                       CloseButtonText="Cancel">
+            <ContentDialog.Resources>
+                <x:Double x:Key="ContentDialogMaxWidth">1200</x:Double>
+                <x:Double x:Key="ContentDialogMaxHeight">800</x:Double>
+            </ContentDialog.Resources>
+            
+            <ContentDialog.TitleTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Text="Personalize MIDI Endpoint" />
+                        <TextBlock Text="NOTE: This dialog is not yet wired up. Changes will not be applied" 
+                                   Style="{StaticResource BodyTextBlockStyle}"
+                                   TextWrapping="WrapWholeWords" />
+                    </StackPanel>
+                </DataTemplate>
+            </ContentDialog.TitleTemplate>
+
+            <StackPanel Orientation="Vertical" Spacing="5" HorizontalAlignment="Stretch">
+
+                <StackPanel Orientation="Vertical" Margin="0,20,0,20">
+                    <TextBlock Text="{x:Bind ViewModel.DeviceInformation.ManufacturerName}" 
+                               Style="{StaticResource SmallEmphasizedPropertyValue}" />
+
+                    <TextBlock Text="{x:Bind ViewModel.DeviceInformation.TransportSuppliedName}" 
+                               Style="{StaticResource SmallEmphasizedPropertyValue}" />
+
+                    <TextBlock Text="{x:Bind ViewModel.DeviceInformation.Id}" 
+                               Style="{StaticResource SmallEmphasizedPropertyValue}" />
+
+                </StackPanel>
+
+
+                <TextBox Header="Name"
+                         Width="300"
+                         HorizontalAlignment="Left"
+                         Text="{x:Bind ViewModel.UserMetadata.Name, Mode=TwoWay}" />
+                    
+                <TextBox Header="Description"
+                         TextWrapping="Wrap"
+                         Height="100"
+                         Text="{x:Bind ViewModel.UserMetadata.Description, Mode=TwoWay}"/>
+
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Grid.Column="0" Margin="5">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Text="Small Image" />
+                        <Button Click="BrowseSmallImage_Click"
+                                Width="275"
+                                Height="275"
+                                Grid.Row="1"
+                                Margin="5">
+                            <Image Grid.Row="1"
+                                   Width="64"
+                                   Height="64"
+                                   x:Name="UserMetadataSmallImagePreview"
+                                   Stretch="Uniform" />
+                        </Button>
+
+                        <TextBlock Grid.Row="2"
+                                   Text="{x:Bind ViewModel.UserMetadata.SmallImagePath, Mode=OneWay}"
+                                   Style="{StaticResource SmallEmphasizedPropertyValue}" />
+
+                    </Grid>
+
+                    <Grid Grid.Column="1" Margin="5">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Text="Large Image" />
+                        <Button Click="BrowseLargeImage_Click"
+                                Width="275"
+                                Height="275"
+                                Grid.Row="1"
+                                Margin="5">
+                            <Image Grid.Row="1"
+                                   Width="256"
+                                   Height="256"
+                                   x:Name="UserMetadataLargeImagePreview"
+                                   Stretch="Uniform" />
+                        </Button>
+
+                        <TextBlock Grid.Row="2"
+                                   Text="{x:Bind ViewModel.UserMetadata.LargeImagePath, Mode=OneWay}"
+                                   Style="{StaticResource SmallEmphasizedPropertyValue}" />
+                    </Grid>
+
+                </Grid>
+                
+            </StackPanel>
+        </ContentDialog>
+
+
     </Grid>
 </Page>

@@ -30,13 +30,13 @@ int main()
 
     std::cout << "Enumerating endpoints..." << std::endl;
 
-    auto filter = MidiEndpointDeviceInformationFilter::IncludeClientByteStreamNative |
-        MidiEndpointDeviceInformationFilter::IncludeClientUmpNative |
-        MidiEndpointDeviceInformationFilter::IncludeVirtualDeviceResponder;
+    auto filter = MidiEndpointDeviceInformationFilters::IncludeClientByteStreamNative |
+        MidiEndpointDeviceInformationFilters::IncludeClientUmpNative |
+        MidiEndpointDeviceInformationFilters::IncludeVirtualDeviceResponder;
 
     if (includeDiagnosticsEndpoints)
     {
-        filter |= MidiEndpointDeviceInformationFilter::IncludeDiagnosticLoopback;
+        filter |= MidiEndpointDeviceInformationFilters::IncludeDiagnosticLoopback;
     }
 
     auto watcher = MidiEndpointDeviceWatcher::CreateWatcher(filter);
@@ -55,25 +55,34 @@ int main()
             std::cout << "Initial enumeration completed." << std::endl;
         };
 
-    auto OnWatcherDeviceRemoved = [&](MidiEndpointDeviceWatcher const& /*sender*/, winrt::Windows::Devices::Enumeration::DeviceInformationUpdate const& args)
+    auto OnWatcherDeviceRemoved = [&](MidiEndpointDeviceWatcher const& /*sender*/, MidiEndpointDeviceInformationRemovedEventArgs const& args)
         {
             std::cout << std::endl;
             std::cout << "Removed: " << winrt::to_string(args.Id()) << std::endl;
         };
 
-    auto OnWatcherDeviceUpdated = [&](MidiEndpointDeviceWatcher const& /*sender*/, MidiEndpointDeviceInformationUpdateEventArgs const& args)
+    auto OnWatcherDeviceUpdated = [&](MidiEndpointDeviceWatcher const& /*sender*/, MidiEndpointDeviceInformationUpdatedEventArgs const& args)
         {
             std::cout << std::endl;
             std::cout << "Updated: " << winrt::to_string(args.Id()) << std::endl;
 
-            // TODO: Show how to use the various data update flags here
+            // Show how to use the various data update flags here
+
+            if (args.UpdatedName())                     std::cout << "- Name" << std::endl;
+            if (args.UpdatedUserMetadata())             std::cout << "- User Metadata" << std::endl;
+            if (args.UpdatedEndpointInformation())      std::cout << "- Endpoint Information" << std::endl;
+            if (args.UpdatedStreamConfiguration())      std::cout << "- Stream Configuration" << std::endl;
+            if (args.UpdatedFunctionBlocks())           std::cout << "- Function Blocks" << std::endl;
+            if (args.UpdatedDeviceIdentity())           std::cout << "- Device Identity" << std::endl;
+            if (args.UpdatedAdditionalCapabilities())   std::cout << "- Additional Capabilities" << std::endl;
+
         };
 
-    auto OnWatcherDeviceAdded = [&](MidiEndpointDeviceWatcher const& /*sender*/, MidiEndpointDeviceInformation const& args)
+    auto OnWatcherDeviceAdded = [&](MidiEndpointDeviceWatcher const& /*sender*/, MidiEndpointDeviceInformationAddedEventArgs const& args)
         {
             std::cout << std::endl;
-            std::cout << "Added  : " << winrt::to_string(args.Name()) << std::endl;
-            std::cout << "         " << winrt::to_string(args.Id()) << std::endl ;
+            std::cout << "Added  : " << winrt::to_string(args.AddedDevice().Name()) << std::endl;
+            std::cout << "         " << winrt::to_string(args.AddedDevice().Id()) << std::endl ;
         };
 
 

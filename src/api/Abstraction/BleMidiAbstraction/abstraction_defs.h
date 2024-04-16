@@ -15,10 +15,11 @@
 // The full Id comes back from the swdevicecreate callback
 
 #define TRANSPORT_MNEMONIC L"BLE1"
-
-// TODO: Names should be moved to .rc for localization
+#define MIDI_BLE_INSTANCE_ID_PREFIX L"MIDIU_BLE1_"
 
 #define TRANSPORT_PARENT_ID L"MIDIU_BLE1_TRANSPORT"
+
+// TODO: Names should be moved to .rc for localization
 #define TRANSPORT_PARENT_DEVICE_NAME L"MIDI 1.0 Bluetooth Devices"
 
 

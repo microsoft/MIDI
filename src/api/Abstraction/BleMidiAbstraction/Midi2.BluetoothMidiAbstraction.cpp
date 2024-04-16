@@ -20,14 +20,12 @@ CMidi2BluetoothMidiAbstraction::Activate(
 
     if (__uuidof(IMidiBiDi) == Riid)
     {
-       OutputDebugString(L"" __FUNCTION__ " Activating IMidiBiDi");
-
         TraceLoggingWrite(
             MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- IMidiBiDi",
+            __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiBiDi", "interface")
             );
 
         wil::com_ptr_nothrow<IMidiBiDi> midiBiDi;
@@ -35,37 +33,52 @@ CMidi2BluetoothMidiAbstraction::Activate(
         *Interface = midiBiDi.detach();
     }
 
-
-    // IMidiEndpointManager and IMidiApiEndpointManagerExtension are interfaces implemented by the same class
-    // We want to make sure we're always returning the same instance for these calls
     else if (__uuidof(IMidiEndpointManager) == Riid)
     {
         TraceLoggingWrite(
             MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- IMidiEndpointManager",
+            __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiEndpointManager", "interface")
         );
 
         // check to see if this is the first time we're creating the endpoint manager. If so, create it.
-        if (m_EndpointManager == nullptr)
+        if (AbstractionState::Current().GetEndpointManager() == nullptr)
         {
-            RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2BluetoothMidiEndpointManager>(&m_EndpointManager));
+            AbstractionState::Current().ConstructEndpointManager();
         }
 
-        // TODO: Not sure if this is the right pattern for this or not. There's no detach call here, so does this leak?
-        RETURN_IF_FAILED(m_EndpointManager->QueryInterface(Riid, Interface));
+        RETURN_IF_FAILED(AbstractionState::Current().GetEndpointManager()->QueryInterface(Riid, Interface));
+    }
+
+    else if (__uuidof(IMidiAbstractionConfigurationManager) == Riid)
+    {
+        TraceLoggingWrite(
+            MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiAbstractionConfigurationManager", "interface")
+        );
+
+        // check to see if this is the first time we're creating the endpoint manager. If so, create it.
+        if (AbstractionState::Current().GetConfigurationManager() == nullptr)
+        {
+            AbstractionState::Current().ConstructConfigurationManager();
+        }
+
+        RETURN_IF_FAILED(AbstractionState::Current().GetConfigurationManager()->QueryInterface(Riid, Interface));
     }
 
     else if (__uuidof(IMidiServiceAbstractionPluginMetadataProvider) == Riid)
     {
         TraceLoggingWrite(
             MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- IMidiServiceAbstractionPluginMetadataProvider",
+            __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiServiceAbstractionPluginMetadataProvider", "interface")
         );
 
         wil::com_ptr_nothrow<IMidiServiceAbstractionPluginMetadataProvider> metadataProvider;
@@ -73,10 +86,15 @@ CMidi2BluetoothMidiAbstraction::Activate(
         *Interface = metadataProvider.detach();
     }
 
-
     else
     {
-        OutputDebugString(L"" __FUNCTION__ " Returning E_NOINTERFACE. Was an interface added that isn't handled in the Abstraction?");
+        TraceLoggingWrite(
+            MidiBluetoothMidiAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Returning E_NOINTERFACE. Was an interface added that isn't handled in the Abstraction?", "message")
+        );
 
         return E_NOINTERFACE;
     }

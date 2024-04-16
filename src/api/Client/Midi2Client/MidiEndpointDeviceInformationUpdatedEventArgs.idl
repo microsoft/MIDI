@@ -11,7 +11,7 @@ MIDI_IDL_IMPORT
 
 namespace Windows.Devices.Midi2
 {
-    [MIDI_API_CONTRACT(1)]
+    [MIDI_API_CONTRACT(19)]
     [default_interface]
     runtimeclass MidiEndpointDeviceInformationUpdatedEventArgs
     {

@@ -108,6 +108,7 @@ namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
 #include "Midi2UMP2BSTransform.h"
 #include "Midi2SchedulerTransform.h"
 #include "Midi2EndpointMetadataListenerTransform.h"
+#include "Midi2UmpProtocolDownscalerTransform.h"
 
 
 // MidiSrv internal classes
@@ -134,6 +135,7 @@ class CMidiDevicePipe;
 #include "MidiTransformPipe.h"
 #include "MidiClientManager.h"
 
+#include "MidiEndpointProtocolWorker.h"
 #include "MidiEndpointProtocolManager.h"
 #include "MidiSessionTracker.h"
 

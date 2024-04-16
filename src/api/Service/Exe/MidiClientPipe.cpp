@@ -20,8 +20,8 @@ CMidiClientPipe::AdjustForBufferingRequirements(PMIDISRV_CLIENTCREATION_PARAMS C
 _Use_decl_annotations_
 HRESULT
 CMidiClientPipe::Initialize(
-    handle_t /* BindingHandle */,
-    HANDLE /* clientProcess */,
+    handle_t /* BindingHandle */,   // this isn't used now, but if used in the future, not this will not be set for internal clients like protocol negotiation
+    HANDLE /* clientProcess */,     // this isn't used now, but if used in the future, not this will not be set for internal clients like protocol negotiation
     LPCWSTR Device,
     GUID SessionId,
     PMIDISRV_CLIENTCREATION_PARAMS CreationParams,

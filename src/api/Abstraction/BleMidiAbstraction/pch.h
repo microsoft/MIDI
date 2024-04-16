@@ -21,14 +21,18 @@
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 #include <winrt/Windows.Devices.Bluetooth.h>
-#include <winrt/windows.devices.bluetooth.genericattributeprofile.h>
+#include <winrt/Windows.Devices.Bluetooth.GenericAttributeProfile.h>
+#include <winrt/Windows.Devices.Bluetooth.Advertisement.h>
 #include <winrt/Windows.Data.Json.h>
 
 namespace json = ::winrt::Windows::Data::Json;
 namespace enumeration = ::winrt::Windows::Devices::Enumeration;
 namespace foundation = ::winrt::Windows::Foundation;
 namespace collections = ::winrt::Windows::Foundation::Collections;
+
 namespace bt = ::winrt::Windows::Devices::Bluetooth;
+namespace gatt = ::winrt::Windows::Devices::Bluetooth::GenericAttributeProfile;
+namespace ad = ::winrt::Windows::Devices::Bluetooth::Advertisement;
 
 #include <assert.h>
 #include <devioctl.h>
@@ -94,6 +98,9 @@ class CMidi2BluetoothMidiPluginMetadataManager;
 #include "abstraction_defs.h"
 #include "midi_timestamp.h"
 #include "ble_timestamp.h"
+#include "ble_utilities.h"
+
+#include "AbstractionState.h"
 
 #include "MidiServicePlugin.h"
 #include "MidiServicePlugin_i.c"
@@ -109,7 +116,6 @@ class CMidi2BluetoothMidiPluginMetadataManager;
 #include "MidiBluetoothPacket.h"
 
 #include "MidiBluetoothDeviceDefinition.h"
-#include "MidiBluetoothDevice.h"
 #include "MidiEndpointTable.h"
 
 #include "Midi2.BluetoothMidiAbstraction.h"

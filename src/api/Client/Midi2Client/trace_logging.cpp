@@ -77,7 +77,7 @@ namespace Windows::Devices::Midi2::Internal
         const wchar_t* message, 
         winrt::hresult_error const& ex) noexcept
     {
-        OutputDebugString(L"" __FUNCTION__ L"API HRESULT Error. Use tracing provider for details.");
+        //OutputDebugString(L"" __FUNCTION__ L"API HRESULT Error. Use tracing provider for details.");
 
         if (!g_traceLoggingRegistered) RegisterTraceLogging();
 
@@ -98,13 +98,14 @@ namespace Windows::Devices::Midi2::Internal
         const char* location, 
         const wchar_t* message) noexcept
     {
-        OutputDebugString(L"" __FUNCTION__ L"API General Error. Use tracing provider for details.");
+        //OutputDebugString(L"" __FUNCTION__ L"API General Error. Use tracing provider for details.");
 
         if (!g_traceLoggingRegistered) RegisterTraceLogging();
 
         TraceLoggingWrite(
             g_hLoggingProvider,
             "MIDI.GeneralError",
+            TraceLoggingOpcode(ERROR),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingKeyword(TRACE_KEYWORD_API_GENERAL),
             TraceLoggingString(location, "Location"),

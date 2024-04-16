@@ -15,7 +15,7 @@ MIDI_IDL_IMPORT
 
 namespace Windows.Devices.Midi2
 {
-    [MIDI_API_CONTRACT(1)]
+    [MIDI_API_CONTRACT(19)]
     struct MidiMessageStruct
     {
         UInt32 Word0;

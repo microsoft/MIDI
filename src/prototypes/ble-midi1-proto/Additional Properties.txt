@@ -1,0 +1,8 @@
+
+
+We're going to need additional properties for BLE specifically
+
+DEVPKEY_AssociatedBluetoothDeviceId
+
+Probably something for the current connection status because we need to manage that better
+

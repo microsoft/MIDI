@@ -37,9 +37,18 @@ CMidiSessionTracker::AddClientSession(
     MidiSessionEntry entry;
 
     entry.SessionId = SessionId;
-    entry.SessionName = internal::TrimmedWStringCopy(SessionName);
+
+    if (SessionName != nullptr)
+    {
+        entry.SessionName = internal::TrimmedWStringCopy(SessionName);
+    }
+
     entry.ClientProcessId = ClientProcessId;
-    entry.ProcessName = ClientProcessName;
+
+    if (ClientProcessName != nullptr)
+    {
+        entry.ProcessName = ClientProcessName;
+    }
 
     entry.StartTime = std::chrono::system_clock::now();
 

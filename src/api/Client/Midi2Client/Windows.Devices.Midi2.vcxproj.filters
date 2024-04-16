@@ -201,6 +201,9 @@
     <ClCompile Include="midi_function_block_prop_util.cpp">
       <Filter>API\Enumeration\DeviceInformation</Filter>
     </ClCompile>
+    <ClCompile Include="MidiStreamConfigurationRequestReceivedEventArgs.cpp">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -296,6 +299,9 @@
     </ClInclude>
     <ClInclude Include="midi_function_block_prop_util.h">
       <Filter>API\Enumeration\DeviceInformation</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiStreamConfigurationRequestReceivedEventArgs.h">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

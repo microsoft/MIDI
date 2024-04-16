@@ -44,38 +44,16 @@ CMidiEndpointProtocolManager::Initialize(
     m_deviceManager = DeviceManager;
     m_sessionTracker = SessionTracker;
 
-    m_allMessagesReceived.create();
-    m_queueWorkerThreadWakeup.create();
-
-    // connect to the service. Needing a reference to this abstraction def 
-    // creates a circular reference to the MidiSrv Abstraction. Not sure of 
-    // a good way around that other than fixing up the ClientManager to make
-    // local connections with local handles reasonable.
-    RETURN_IF_FAILED(CoCreateInstance(__uuidof(Midi2MidiSrvAbstraction), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&m_serviceAbstraction)));
-
+    // log a an active session so a user can figure out which
+    // processes have any given device open.
     auto pid = GetCurrentProcessId();
 
-    m_sessionTracker->AddClientSession(
-        m_sessionId, 
-        MIDI_PROTOCOL_MANAGER_SESSION_NAME, 
-        pid, 
-        MIDI_PROTOCOL_MANAGER_PROCESS_NAME);
-
-    try
-    {
-        // start background processing thread
-
-        std::thread workerThread(
-            &CMidiEndpointProtocolManager::ThreadWorker,
-            this);
-
-        m_queueWorkerThread = std::move(workerThread);
-
-        // start up the worker thread
-        m_queueWorkerThread.detach();
-
-    }
-    CATCH_RETURN();
+    LOG_IF_FAILED(m_sessionTracker->AddClientSession(
+        m_sessionId,
+        MIDI_PROTOCOL_MANAGER_SESSION_NAME,
+        pid,
+        MIDI_PROTOCOL_MANAGER_PROCESS_NAME));
+ 
 
     return S_OK;
 }
@@ -89,7 +67,8 @@ CMidiEndpointProtocolManager::NegotiateAndRequestMetadata(
     BOOL PreferToSendJRTimestampsToEndpoint,
     BOOL PreferToReceiveJRTimestampsFromEndpoint,
     BYTE PreferredMidiProtocol,
-    WORD TimeoutMS
+    WORD TimeoutMS,
+    PENDPOINTPROTOCOLNEGOTIATIONRESULTS* NegotiationResults
 ) noexcept
 {
     TraceLoggingWrite(
@@ -100,10 +79,13 @@ CMidiEndpointProtocolManager::NegotiateAndRequestMetadata(
         TraceLoggingWideString(DeviceInterfaceId)
     );
 
+    // TEMP!
+    NegotiationResults = nullptr;
+
     ProtocolManagerWork work;
 
-    // DEBUG
-    //TimeoutMS = 25000;
+    //// DEBUG
+    ////TimeoutMS = 25000;
 
     work.EndpointInstanceId = DeviceInterfaceId;
     work.PreferToSendJRTimestampsToEndpoint = PreferToSendJRTimestampsToEndpoint;
@@ -111,12 +93,12 @@ CMidiEndpointProtocolManager::NegotiateAndRequestMetadata(
     work.PreferredMidiProtocol = PreferredMidiProtocol;
     work.TimeoutMS = TimeoutMS;
 
-    m_queueMutex.lock();
-    m_workQueue.push(std::move(work));
-    m_queueMutex.unlock();
+    //m_queueMutex.lock();
+    //m_workQueue.push(std::move(work));
+    //m_queueMutex.unlock();
 
-    // todo: signal event that there's new work
-    m_queueWorkerThreadWakeup.SetEvent();
+    //// todo: signal event that there's new work
+    //m_queueWorkerThreadWakeup.SetEvent();
 
 
     return S_OK;
@@ -146,10 +128,10 @@ CMidiEndpointProtocolManager::Cleanup()
     while (m_workQueue.size() > 0) m_workQueue.pop();
 
     m_shutdown = true;
-    m_queueWorkerThreadWakeup.SetEvent();
+//    m_queueWorkerThreadWakeup.SetEvent();
 
-    if (m_queueWorkerThread.joinable())
-        m_queueWorkerThread.join();
+//    if (m_queueWorkerThread.joinable())
+//        m_queueWorkerThread.join();
 
     return S_OK;
 }
@@ -321,7 +303,7 @@ CMidiEndpointProtocolManager::Callback(PVOID Data, UINT Size, LONGLONG Position,
         m_currentWorkItem.CountFunctionBlocksReceived == m_currentWorkItem.DeclaredFunctionBlockCount &&
         m_currentWorkItem.TaskFinalStreamNegotiationResponseReceived)
     {
-        m_allMessagesReceived.SetEvent();
+//        m_allMessagesReceived.SetEvent();
     }
 
     return S_OK;
@@ -491,38 +473,38 @@ CMidiEndpointProtocolManager::ProcessCurrentWorkEntry()
 
     HRESULT hr = S_OK;
 
-    // Send initial discovery request
-    // the rest happens in response to messages in the callback
-    LOG_IF_FAILED(hr = RequestAllEndpointDiscoveryInformation());
+    //// Send initial discovery request
+    //// the rest happens in response to messages in the callback
+    //LOG_IF_FAILED(hr = RequestAllEndpointDiscoveryInformation());
 
-    if (SUCCEEDED(hr))
-    {
-        OutputDebugString(__FUNCTION__ L" - Requested discovery information");
-    }
-    else
-    {
-        TraceLoggingWrite(
-            MidiSrvTelemetryProvider::Provider(),
-            __FUNCTION__,
-            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Failed to request discovery information")
-        );
-    }
+    //if (SUCCEEDED(hr))
+    //{
+    //    OutputDebugString(__FUNCTION__ L" - Requested discovery information");
+    //}
+    //else
+    //{
+    //    TraceLoggingWrite(
+    //        MidiSrvTelemetryProvider::Provider(),
+    //        __FUNCTION__,
+    //        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+    //        TraceLoggingPointer(this, "this"),
+    //        TraceLoggingWideString(L"Failed to request discovery information")
+    //    );
+    //}
 
-    if (SUCCEEDED(hr))
-    {
-        // Wait until all metadata arrives or we timeout
-        if (!m_allMessagesReceived.wait(m_currentWorkItem.TimeoutMS))
-        {
-            // we didn't receive everything, but that's not a failure condition for this.
-        }
-    }
+    //if (SUCCEEDED(hr))
+    //{
+    //    // Wait until all metadata arrives or we timeout
+    //    if (!m_allMessagesReceived.wait(m_currentWorkItem.TimeoutMS))
+    //    {
+    //        // we didn't receive everything, but that's not a failure condition for this.
+    //    }
+    //}
 
-    if (m_allMessagesReceived.is_signaled()) m_allMessagesReceived.ResetEvent();
+    //if (m_allMessagesReceived.is_signaled()) m_allMessagesReceived.ResetEvent();
 
-    m_currentWorkItem.Endpoint->Cleanup();
-    m_currentWorkItem.Endpoint = nullptr;
+    //m_currentWorkItem.Endpoint->Cleanup();
+    //m_currentWorkItem.Endpoint = nullptr;
 
     return hr;
 }

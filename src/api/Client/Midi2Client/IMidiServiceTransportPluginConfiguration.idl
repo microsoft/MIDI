@@ -11,7 +11,7 @@ MIDI_IDL_IMPORT
 
 namespace Windows.Devices.Midi2
 {
-    [MIDI_API_CONTRACT(1)]
+    [MIDI_API_CONTRACT(19)]
     [MIDI_INTERFACE_UUID("b2417dde-ef35-499b-a89b-0a4c32cc699a",1.0)]
     interface IMidiServiceTransportPluginConfiguration
     {

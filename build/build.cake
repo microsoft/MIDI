@@ -2,10 +2,13 @@
 //#addin nuget:?package=Cake.Compression&version=0.3.0
 
 // ===========================================================================================
-string setupVersionName = "Developer Preview 5";
+string setupVersionName = "Developer Preview 6";
+
+// we set these here, especially the time, so it's the same for all platforms in the single build
+string setupBuildMajorMinor = "1.0";
+string setupBuildDateNumber = DateTime.Now.ToString("yy") + DateTime.Now.DayOfYear.ToString("000");       // YYddd where ddd is the day number for the year
+string setupBuildTimeNumber = DateTime.Now.ToString("HHmm");       // HHmm
 // ===========================================================================================
-
-
 
 
 
@@ -18,8 +21,8 @@ var ridArm64 = "win10-arm64";
 var frameworkVersion = "net8.0-windows10.0.20348.0";
 
 
-//var platformTargets = new[]{PlatformTarget.x64, PlatformTarget.ARM64};
-var platformTargets = new[]{PlatformTarget.x64};
+var platformTargets = new[]{PlatformTarget.x64, PlatformTarget.ARM64};
+//var platformTargets = new[]{PlatformTarget.x64};
 
 
 
@@ -180,6 +183,7 @@ Task("SetupEnvironment")
     CopyFiles(System.IO.Path.Combine(outputDir, "*.pdb"), copyToDir); 
 
     CopyFiles(System.IO.Path.Combine(outputDir, "MidiSrv.exe"), copyToDir); 
+    CopyFiles(System.IO.Path.Combine(outputDir, "mididmp.exe"), copyToDir); 
 
     CopyFiles(System.IO.Path.Combine(outputDir, "Windows.Devices.Midi2.winmd"), copyToDir); 
 
@@ -188,7 +192,6 @@ Task("SetupEnvironment")
     // copy the C++ header for the API
     CopyFiles(System.IO.Path.Combine(generatedFilesDir, "Windows.Devices.Midi2.h"), copyToDir); 
 
-    CopyFiles(System.IO.Path.Combine(outputDir, "mididmp.exe"), copyToDir); 
 
 
 
@@ -216,10 +219,6 @@ Task("SetupEnvironment")
     CopyFiles(System.IO.Path.Combine(generatedFilesDir, "impl/Windows.Foundation.Collections.2.h"), System.IO.Path.Combine(apiBareCopyToDir, "winrt/impl/")); 
     CopyFiles(System.IO.Path.Combine(generatedFilesDir, "impl/Windows.Devices.Midi2.2.h"), System.IO.Path.Combine(apiBareCopyToDir, "winrt/impl/")); 
 
-
-
-
-
     CopyFiles(System.IO.Path.Combine(copyToDir, "Windows.Devices.Midi2.dll"), apiBareCopyToDir); 
     CopyFiles(System.IO.Path.Combine(copyToDir, "Windows.Devices.Midi2.winmd"), apiBareCopyToDir); 
     CopyFiles(System.IO.Path.Combine(copyToDir, "Windows.Devices.Midi2.pri"), apiBareCopyToDir); 
@@ -228,81 +227,16 @@ Task("SetupEnvironment")
 });
 
 
-Task("BuildApiActivationRegEntries")
-    .IsDependentOn("BuildServiceAndAPI")
-    .DoesForEach(platformTargets, plat =>
-{
-    Information("\nBuilding WinRT Activation Entries for " + plat.ToString());
 
-    // read the file of dependencies
-    var sourceFileName = System.IO.Path.Combine(apiAndServiceStagingDir, plat.ToString(), "WinRTActivationEntries.txt");
-    var wxiDestinationFileName = System.IO.Path.Combine(apiAndServiceStagingDir, plat.ToString(), "WinRTActivationEntries.wxi");
-
-    const string parentHKLMRegKey = "SOFTWARE\\Microsoft\\WindowsRuntime\\ActivatableClassId\\";
-    const string wixWinrtLibFileName = "[API_INSTALLFOLDER]Windows.Devices.Midi2.dll";
-
-    if (!System.IO.File.Exists(sourceFileName))
-        throw new ArgumentException("Missing WinRT Activation entries file " + sourceFileName);
-
-    using (StreamReader reader = System.IO.File.OpenText(sourceFileName))
-    {
-        using (StreamWriter wxiWriter = System.IO.File.CreateText(wxiDestinationFileName))            
-        {
-            wxiWriter.WriteLine("<Include xmlns=\"http://wixtoolset.org/schemas/v4/wxs\">");
-
-            string line;
-
-            while ((line = reader.ReadLine()) != null)
-            {
-                string trimmedLine = line.Trim();
-
-                if (string.IsNullOrWhiteSpace(trimmedLine) || trimmedLine.StartsWith("#"))
-                {
-                    // comment or empty line
-                    continue;
-                }
-
-                // pipe-delimited lines
-                var elements = trimmedLine.Split('|');
-
-                if (elements.Count() != 4)
-                    throw new ArgumentException("Bad line:  " + trimmedLine); 
-
-                // entries in order are
-                // ClassName | ActivationType | Threading | TrustLevel
-
-                string className = elements[0].Trim();
-                string activationType = elements[1].Trim();
-                string threading = elements[2].Trim();
-                string trustLevel = elements[3].Trim();
-
-                wxiWriter.WriteLine($"<RegistryKey Root=\"HKLM\" Key=\"{parentHKLMRegKey}{className}\">");
-                
-                wxiWriter.WriteLine($"    <RegistryValue Name=\"DllPath\" Type=\"string\" Value=\"{wixWinrtLibFileName}\" />");
-                wxiWriter.WriteLine($"    <RegistryValue Name=\"ActivationType\" Type=\"integer\" Value=\"{activationType}\" />");
-                wxiWriter.WriteLine($"    <RegistryValue Name=\"Threading\" Type=\"integer\" Value=\"{threading}\" />");
-                wxiWriter.WriteLine($"    <RegistryValue Name=\"TrustLevel\" Type=\"integer\" Value=\"{trustLevel}\" />");
-               
-                wxiWriter.WriteLine("</RegistryKey>");
-
-            }
-
-            wxiWriter.WriteLine("</Include>");
-
-        }
-    }
-
-});
 
 
 Task("BuildApiActivationRegEntriesCSharp")
     .IsDependentOn("BuildServiceAndAPI")
-    .DoesForEach(platformTargets, plat =>
+    .Does(() =>
 {
-    Information("\nBuilding WinRT Activation Entries for " + plat.ToString());
+    Information("\nBuilding WinRT Activation Entries ");
 
-    // read the file of dependencies
-    var sourceFileName = System.IO.Path.Combine(apiAndServiceStagingDir, plat.ToString(), "WinRTActivationEntries.txt");
+    var sourceFileName = System.IO.Path.Combine(apiAndServiceStagingDir, "x64", "WinRTActivationEntries.txt");
     var csDestinationFileName = System.IO.Path.Combine(registrySettingsStagingDir, "WinRTActivationEntries.cs");
 
 //    const string parentHKLMRegKey = "SOFTWARE\\Microsoft\\WindowsRuntime\\ActivatableClassId\\";
@@ -370,12 +304,12 @@ Task("BuildApiActivationRegEntriesCSharp")
 
 Task("BuildApiActivationRegEntriesInternal")
     .IsDependentOn("BuildServiceAndAPI")
-    .DoesForEach(platformTargets, plat =>
+    .Does(() =>
 {
-    Information("\nBuilding WinRT Internaml XML Activation Entries for " + plat.ToString());
+    Information("\nBuilding WinRT Internaml XML Activation Entries");
 
     // read the file of dependencies
-    var sourceFileName = System.IO.Path.Combine(apiAndServiceStagingDir, plat.ToString(), "WinRTActivationEntries.txt");
+    var sourceFileName = System.IO.Path.Combine(apiAndServiceStagingDir, "x64", "WinRTActivationEntries.txt");
     var destinationFileName = System.IO.Path.Combine(registrySettingsStagingDir, "WinRTActivationEntries.xml");
 
     if (!System.IO.File.Exists(sourceFileName))
@@ -450,36 +384,8 @@ Task("PackAPIProjection")
 });
 
 
-
-Task("BuildSDK")
-    .IsDependentOn("BuildServiceAndAPI")
-    .IsDependentOn("PackAPIProjection")
-    .DoesForEach(platformTargets, plat => 
-{
-    Information("\nBuilding SDK for " + plat.ToString());
-
-    // TODO
-
-
-});
-
-
-Task("PackSDKProjection")
-    .IsDependentOn("BuildSDK")
-    .Does(() => 
-{
-    Information("\nPacking SDK...");
-
-    // TODO
-
-
-});
-
-
-
 Task("BuildConsoleApp")
     .IsDependentOn("PackAPIProjection")
-/*    .IsDependentOn("PackSDKProjection") */
     .DoesForEach(platformTargets, plat =>
 {
     // TODO: Update nuget ref in console app to the new version
@@ -535,7 +441,6 @@ Task("BuildConsoleApp")
 
 Task("BuildSettingsApp")
     .IsDependentOn("PackAPIProjection")
-    .IsDependentOn("PackSDKProjection")
     .DoesForEach(platformTargets, plat =>
 {
     // TODO: Update nuget ref in settings app to the new version
@@ -589,48 +494,23 @@ Task("BuildSettingsApp")
 
 });
 
- string finalSetupName = string.Empty;
+string finalSetupNamex64 = string.Empty;
+string finalSetupNameArm64 = string.Empty;
 
 Task("BuildInstaller")
     .IsDependentOn("SetupEnvironment")
     .IsDependentOn("BuildServiceAndAPI")
     .IsDependentOn("BuildApiActivationRegEntriesCSharp")
-/*    .IsDependentOn("BuildSDK") */
     .IsDependentOn("BuildSettingsApp")
     .IsDependentOn("BuildConsoleApp")
     .DoesForEach(platformTargets, plat => 
 {
-    /*var buildSettings = new MSBuildSettings
-    {
-        MaxCpuCount = 0,
-        Configuration = configuration,
-        AllowPreviewVersion = allowPreviewVersionOfBuildTools,
-        PlatformTarget = plat,
-        Verbosity = Verbosity.Minimal,       
-    };
-
-    MSBuild(setupSolutionFile, buildSettings); */
-
-    // have to build these projects using dotnet build, or else the nuget references just die if you use MSBuild or VS
-
-    //var apiProjectDir = System.IO.Path.Combine(setupSolutionDir, "api-package");
-    //var apiProjectFile = System.IO.Path.Combine(apiProjectDir, "api-package.wixproj");
+    Information($"\nBuilding Installer for {plat.ToString()} {configuration}");
 
     var mainBundleProjectDir = System.IO.Path.Combine(setupSolutionDir, "main-bundle");
-
+    var apiSetupProjectDir = System.IO.Path.Combine(setupSolutionDir, "api-package");
     var consoleOnlySetupProjectDir = System.IO.Path.Combine(setupSolutionDir, "console-package");
     var settingsOnlySetupProjectDir = System.IO.Path.Combine(setupSolutionDir, "settings-package");
-
-    //var mainBundleProjectFile = System.IO.Path.Combine(mainBundleProjectDir, "main-bundle.wixproj");
-
-    //var regActionsProjectDir = System.IO.Path.Combine(setupSolutionDir, "RegistryCustomActions");
-    //var regActionsProjectFile = System.IO.Path.Combine(regActionsProjectDir, "RegistryCustomActions.csproj");
-
-
-
-            // if we don't set platform here, it always ends up as a 32 bit installer
-            // configuration 
-   // buildSettings.MSBuildSettings.Properties["Platform"] = plat;
 
     string rid = "";
     if (plat == PlatformTarget.x64)
@@ -648,10 +528,7 @@ Task("BuildInstaller")
     //  <?define SetupVersionNumber="1.0.23351.0243" ?>
     //</Include>
 
-    string setupBuildMajorMinor = "1.0";
-    string setupBuildDateNumber = DateTime.Now.ToString("yy") + DateTime.Now.DayOfYear.ToString("000");       // YYddd where ddd is the day number for the year
-    string setupBuildTimeNumber = DateTime.Now.ToString("HHmm");       // HHmm
-    string setupBuildPlatform = plat.ToString();
+    string setupBuildPlatform = plat.ToString().ToLower();
 
     string setupBuildFullVersionString = setupBuildMajorMinor + "." + setupBuildDateNumber + "." + setupBuildTimeNumber;
     //string setupBuildFullVersionStringFile = setupBuildFullVersionString.Replace('.', '-');
@@ -659,27 +536,35 @@ Task("BuildInstaller")
     using (StreamWriter writer = System.IO.File.CreateText(setupBundleInfoIncludeFile))            
     {
         writer.WriteLine("<Include>");
-        writer.WriteLine($"  <?define SetupVersionName=\"{setupVersionName}\" ?>");
+        writer.WriteLine($"  <?define SetupVersionName=\"{setupVersionName} {setupBuildPlatform}\" ?>");
         writer.WriteLine($"  <?define SetupVersionNumber=\"{setupBuildFullVersionString}\" ?>");
         writer.WriteLine("</Include>");
     }
 
-    finalSetupName = $"Windows MIDI Services {setupVersionName} {setupBuildPlatform} {setupBuildFullVersionString}.exe";
+    var setupName = $"Windows MIDI Services {setupVersionName} {setupBuildFullVersionString}-{setupBuildPlatform}.exe";
 
-    var buildSettings = new DotNetBuildSettings
+    if (plat == PlatformTarget.x64)
+        finalSetupNamex64 = setupName;
+    else if (plat == PlatformTarget.ARM64)
+        finalSetupNameArm64 = setupName;
+  
+
+    string workingDirectory = string.Empty;
+
+    var buildSettings = new MSBuildSettings
     {
-        WorkingDirectory = mainBundleProjectDir,
-        Configuration = configuration, 
-       // Runtime = rid,               // rid not supported for solution-level builds 
+        MaxCpuCount = 1,    /* Set to 1 to avoid file locking problems */
+        Configuration = configuration,
+        AllowPreviewVersion = allowPreviewVersionOfBuildTools,
+        PlatformTarget = plat,
+        Verbosity = Verbosity.Minimal,
     };
 
-    DotNetClean(setupSolutionFile);
+    MSBuild(setupSolutionFile, buildSettings);
 
-    // build the custom action first
-    DotNetBuild(setupSolutionFile, buildSettings);
-   
 
-    string releaseStandAloneInstallerFolder = System.IO.Path.Combine(setupReleaseDir, "Component Installs");
+
+    string releaseStandAloneInstallerFolder = System.IO.Path.Combine(setupReleaseDir, "Component Installs", plat.ToString().ToLower());
 
     if (!DirectoryExists(setupReleaseDir))
         CreateDirectory(setupReleaseDir);   
@@ -694,12 +579,11 @@ Task("BuildInstaller")
 
     // rename
     MoveFile(System.IO.Path.Combine(setupReleaseDir, "WindowsMidiServicesCompleteSetup.exe"), 
-            (System.IO.Path.Combine(setupReleaseDir, finalSetupName)));
+            (System.IO.Path.Combine(setupReleaseDir, setupName)));
 
     CopyFiles(System.IO.Path.Combine(consoleOnlySetupProjectDir, "bin", plat.ToString(), "Release", "*.msi"), releaseStandAloneInstallerFolder); 
     CopyFiles(System.IO.Path.Combine(settingsOnlySetupProjectDir, "bin", plat.ToString(), "Release", "*.msi"), releaseStandAloneInstallerFolder); 
-
-
+    CopyFiles(System.IO.Path.Combine(apiSetupProjectDir, "bin", plat.ToString(), "Release", "*.msi"), releaseStandAloneInstallerFolder); 
 
 });
 
@@ -707,22 +591,30 @@ Task("BuildInstaller")
 Task("CopyAPIArtifacts")
     .IsDependentOn("BuildInstaller")
     .IsDependentOn("PackAPIProjection")
-    .IsDependentOn("BuildConsoleApp")
     .DoesForEach(platformTargets, plat => 
 {
-    string apiStagingDir = System.IO.Path.Combine(apiAndServiceStagingDir, "bin", plat.ToString());
+    Information($"\nCopying API artifacts for {plat.ToString()} {configuration}");
 
-    CopyFiles(System.IO.Path.Combine(apiStagingDir, "Windows.Devices.Midi2.winmd"), apiReleaseArtifactsFolder); 
-    CopyFiles(System.IO.Path.Combine(apiStagingDir, "Windows.Devices.Midi2.dll"), apiReleaseArtifactsFolder); 
-    CopyFiles(System.IO.Path.Combine(apiStagingDir, "Windows.Devices.Midi2.pri"), apiReleaseArtifactsFolder); 
-    CopyFiles(System.IO.Path.Combine(apiStagingDir, "Windows.Devices.Midi2.h"), apiReleaseArtifactsFolder); 
-    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/base.h"), System.IO.Path.Combine(apiReleaseArtifactsFolder, "winrt/")); 
-    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/Windows.Devices.h"), System.IO.Path.Combine(apiReleaseArtifactsFolder, "winrt/")); 
-    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/impl/Windows.Devices.Enumeration.2.h"), System.IO.Path.Combine(apiReleaseArtifactsFolder, "winrt/impl/")); 
-    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/impl/Windows.Devices.Midi.2.h"), System.IO.Path.Combine(apiReleaseArtifactsFolder, "winrt/impl/")); 
-    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/impl/Windows.Foundation.2.h"), System.IO.Path.Combine(apiReleaseArtifactsFolder, "winrt/impl/")); 
-    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/impl/Windows.Foundation.Collections.2.h"), System.IO.Path.Combine(apiReleaseArtifactsFolder, "winrt/impl/")); 
-    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/impl/Windows.Devices.Midi2.2.h"), System.IO.Path.Combine(apiReleaseArtifactsFolder, "winrt/impl/")); 
+    string apiStagingDir = System.IO.Path.Combine(apiAndServiceStagingDir, "bin", plat.ToString().ToLower());
+    string platReleaseFolder = System.IO.Path.Combine(apiReleaseArtifactsFolder, plat.ToString().ToLower());
+
+    if (!DirectoryExists(apiStagingDir))
+        CreateDirectory(apiStagingDir);   
+
+    if (!DirectoryExists(platReleaseFolder))
+        CreateDirectory(platReleaseFolder);   
+
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, "Windows.Devices.Midi2.winmd"), platReleaseFolder); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, "Windows.Devices.Midi2.dll"), platReleaseFolder); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, "Windows.Devices.Midi2.pri"), platReleaseFolder); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, "Windows.Devices.Midi2.h"), platReleaseFolder); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/base.h"), System.IO.Path.Combine(platReleaseFolder, "winrt/")); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/Windows.Devices.h"), System.IO.Path.Combine(platReleaseFolder, "winrt/")); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/impl/Windows.Devices.Enumeration.2.h"), System.IO.Path.Combine(platReleaseFolder, "winrt/impl/")); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/impl/Windows.Devices.Midi.2.h"), System.IO.Path.Combine(platReleaseFolder, "winrt/impl/")); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/impl/Windows.Foundation.2.h"), System.IO.Path.Combine(platReleaseFolder, "winrt/impl/")); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/impl/Windows.Foundation.Collections.2.h"), System.IO.Path.Combine(platReleaseFolder, "winrt/impl/")); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/impl/Windows.Devices.Midi2.2.h"), System.IO.Path.Combine(platReleaseFolder, "winrt/impl/")); 
 
 
 });
@@ -739,7 +631,10 @@ Task("Default")
     .Does(() =>
 {
 
-    Information("\n\nInstaller >> \"" + finalSetupName + "\"\n\n");
+    Information("\n\n");
+    Information($"Installer x64   >> \"{finalSetupNamex64}\" \n");
+    Information($"Installer Arm64 >> \"{finalSetupNameArm64}\"\n");
+    Information("\n\n");
 
 });
 

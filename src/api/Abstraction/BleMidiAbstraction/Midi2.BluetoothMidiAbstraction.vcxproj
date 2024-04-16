@@ -274,6 +274,7 @@
     </Midl>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AbstractionState.cpp" />
     <ClCompile Include="ble_timestamp.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Midi2.BluetoothMidiAbstraction.cpp" />
@@ -293,15 +294,16 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AbstractionState.h" />
     <ClInclude Include="abstraction_defs.h" />
     <ClInclude Include="ble_timestamp.h" />
+    <ClInclude Include="ble_utilities.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="Midi2.BluetoothMidiAbstraction.h" />
     <ClInclude Include="Midi2.BluetoothMidiConfigurationManager.h" />
     <ClInclude Include="Midi2.BluetoothMidiEndpointManager.h" />
     <ClInclude Include="Midi2.BluetoothMidiBidi.h" />
     <ClInclude Include="Midi2.BluetoothMidiPluginMetadataProvider.h" />
-    <ClInclude Include="MidiBluetoothDevice.h" />
     <ClInclude Include="MidiBluetoothDeviceDefinition.h" />
     <ClInclude Include="MidiBluetoothPacket.h" />
     <ClInclude Include="MidiEndpointTable.h" />

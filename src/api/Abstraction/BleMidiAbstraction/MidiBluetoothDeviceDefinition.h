@@ -11,11 +11,24 @@
 
 struct MidiBluetoothDeviceDefinition
 {
-    std::wstring HardwareBluetoothDeviceId{};
+    uint64_t BluetoothAddress{};
 
+    winrt::hstring TransportSuppliedName{};
+    winrt::hstring TransportSuppliedDescription{};
 
-    std::wstring TransportSuppliedName{};
-    std::wstring TransportSuppliedDescription{};
+    winrt::hstring ManufacturerName{};
+
+//    winrt::hstring UserSuppliedName{};
+//    winrt::hstring UserSuppliedDescription{};
 
     std::wstring CreatedEndpointInterfaceId{};
+    std::wstring CreatedMidiDeviceInstanceId{};
+
+
+    void SetDeactivated()
+    {
+        CreatedEndpointInterfaceId = L"";
+        CreatedMidiDeviceInstanceId = L"";
+    }
+
 };

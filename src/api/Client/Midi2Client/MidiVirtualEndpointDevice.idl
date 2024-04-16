@@ -21,7 +21,7 @@ import "MidiVirtualEndpointDeviceDefinition.idl";
 
 namespace Windows.Devices.Midi2
 {
-    [MIDI_API_CONTRACT(1)]
+    [MIDI_API_CONTRACT(19)]
     [default_interface]
     runtimeclass MidiVirtualEndpointDevice : IMidiEndpointMessageProcessingPlugin
     {
@@ -32,9 +32,9 @@ namespace Windows.Devices.Midi2
         IMapView<UInt8, MidiFunctionBlock> FunctionBlocks{ get; };
         
         // only available if blocks are not static
-        void UpdateFunctionBlock(MidiFunctionBlock block);
+        Boolean UpdateFunctionBlock(MidiFunctionBlock block);
 
-        void UpdateEndpointName(String name);
+        Boolean UpdateEndpointName(String name);
 
         // true if you want the stream / function block etc. messages automatically handled
         // and then removed from the stream. False if the endpoint should still raise

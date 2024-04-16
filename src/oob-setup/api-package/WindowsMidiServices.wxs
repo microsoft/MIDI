@@ -3,7 +3,7 @@
     <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
 
     <Package  
-          Name="Windows MIDI Services"
+          Name="Windows MIDI Services $(var.Platform)"
           Manufacturer="Microsoft Corporation"
           Version="1.0.0.0"
           UpgradeCode="5f3a293b-09fb-4129-99b1-1a4d67cfd57c"
@@ -37,7 +37,7 @@
 
 
         <Binary Id ="RegistryCustomActionsLib" 
-                SourceFile="$(env.MIDI_REPO_ROOT)src\oob-setup\RegistryCustomActions\bin\x64\Release\net48\win10-x64\RegistryCustomActions.CA.dll" />
+                SourceFile="$(env.MIDI_REPO_ROOT)src\oob-setup\RegistryCustomActions\bin\$(var.Platform)\Release\net48\RegistryCustomActions.CA.dll" />
         <!-- Install Windows Service -->
      
         <!-- Transport and other Service Plugins -->
@@ -47,21 +47,23 @@
                    Bitness="always64"
                    Directory="SERVICE_INSTALLFOLDER"
                    Guid="{6a2300f5-ccae-4f61-b849-d41aefb8a999}"  >
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.MidiSrvAbstraction.dll"          SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.DiagnosticsAbstraction.dll"      SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.KSAbstraction.dll"               SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.BluetoothMidiAbstraction.dll"    SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.NetworkMidiAbstraction.dll"      SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.LoopbackMidiAbstraction.dll"     SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.VirtualMidiAbstraction.dll"      SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.VirtualPatchBayAbstraction.dll"  SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.MidiSrvAbstraction.dll"                  SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.DiagnosticsAbstraction.dll"              SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.KSAbstraction.dll"                       SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.BluetoothMidiAbstraction.dll"            SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.NetworkMidiAbstraction.dll"              SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.LoopbackMidiAbstraction.dll"             SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.VirtualMidiAbstraction.dll"              SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.VirtualPatchBayAbstraction.dll"          SelfRegCost="1" Vital="true" />
 
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.BS2UMPTransform.dll"                     SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.UMP2BSTransform.dll"                     SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.EndpointMetadataListenerTransform.dll"   SelfRegCost="1" Vital="true" />
-            <!--<File Source="$(StagingSourceRootFolder)\api\x64\Midi2.JitterReductionGeneratorTransform.dll"   SelfRegCost="1" Vital="true" /> -->
-            <!--<File Source="$(StagingSourceRootFolder)\api\x64\Midi2.JitterReductionListenerTransform.dll"    SelfRegCost="1" Vital="true" /> -->
-            <File Source="$(StagingSourceRootFolder)\api\x64\Midi2.SchedulerTransform.dll"                  SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.BS2UMPTransform.dll"                     SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.UMP2BSTransform.dll"                     SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.EndpointMetadataListenerTransform.dll"   SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.SchedulerTransform.dll"                  SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.UmpProtocolDownscalerTransform.dll"      SelfRegCost="1" Vital="true" />
+           
+           <!--<File Source="$(StagingSourceRootFolder)\api\x64\Midi2.JitterReductionGeneratorTransform.dll"   SelfRegCost="1" Vital="true" /> -->
+           <!--<File Source="$(StagingSourceRootFolder)\api\x64\Midi2.JitterReductionListenerTransform.dll"    SelfRegCost="1" Vital="true" /> -->
 
        </Component>
 
@@ -69,14 +71,14 @@
                    Bitness="always64"
                    Directory="SERVICE_INSTALLFOLDER"
                    Guid="6a2300f5-ccae-4f61-b849-d41aefb8a2f7" >
-            <File Source="$(StagingSourceRootFolder)\api\x64\MidiSrv.exe" Id="WINDOWS_SERVICE"  Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\MidiSrv.exe" Id="WINDOWS_SERVICE"  Vital="true" />
 
             <ServiceInstall
                 Id="MidiServiceInstaller"
                 Type="ownProcess"
                 Name="MidiSrv"
                 DisplayName="Microsoft MIDI Service"
-                Description="!(bind.Property.ProductName) core service for MIDI 1.0 and MIDI 2.0 message routing, device enumeration, and more."
+                Description="!(bind.Property.ProductName) core service for MIDI 1.0 and MIDI 2.0 message routing and device enumeration."
                 Start="auto"
                 Account="LocalSystem"
                 ErrorControl="normal"
@@ -113,12 +115,7 @@
                         <RegistryValue Type="string" Name="CLSID" Value="{26FA740D-469C-4D33-BEB1-3885DE7D6DF1}" />
                         <RegistryValue Type="integer" Name="Enabled" Value="1" />
                     </RegistryKey>
-                    
-                    <RegistryKey Key="Midi2NetworkMidiAbstraction">
-                        <RegistryValue Type="string" Name="CLSID" Value="{C95DCD1F-CDE3-4C2D-913C-528CB8A4CBE6}" />
-                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
-                    </RegistryKey>
-                    
+
                     <RegistryKey Key="Midi2VirtualMidiAbstraction">
                         <RegistryValue Type="string" Name="CLSID" Value="{8FEAAD91-70E1-4A19-997A-377720A719C1}" />
                         <RegistryValue Type="integer" Name="Enabled" Value="1" />
@@ -129,14 +126,21 @@
                         <RegistryValue Type="integer" Name="Enabled" Value="1" />
                     </RegistryKey>
 
+
+                    
+                    <RegistryKey Key="Midi2NetworkMidiAbstraction">
+                        <RegistryValue Type="string" Name="CLSID" Value="{C95DCD1F-CDE3-4C2D-913C-528CB8A4CBE6}" />
+                        <RegistryValue Type="integer" Name="Enabled" Value="0" />
+                    </RegistryKey>
+                    
                     <RegistryKey Key="Midi2VirtualPatchBayAbstraction">
                         <RegistryValue Type="string" Name="CLSID" Value="{B7C8E2D2-EE3B-4044-B9CF-6F29528AB46D}" />
-                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
+                        <RegistryValue Type="integer" Name="Enabled" Value="0" />
                     </RegistryKey>
 
                     <RegistryKey Key="Midi2BluetoothMidiAbstraction">
                         <RegistryValue Type="string" Name="CLSID" Value="{ABD5E0B9-C38C-48B7-AA56-19D9E26BAF1B}" />
-                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
+                        <RegistryValue Type="integer" Name="Enabled" Value="0" />
                     </RegistryKey>
                 </RegistryKey>
             </RegistryKey>
@@ -157,10 +161,10 @@
                    Bitness="always64"
                    Directory="API_INSTALLFOLDER"
                    Guid="dc48ab14-dd46-4ff2-8d59-10b9a8215c7e">
-            <File Source="$(StagingSourceRootFolder)\api\x64\Windows.Devices.Midi2.dll" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Windows.Devices.Midi2.dll" Vital="true" />
                        
             
-            <File Source="$(StagingSourceRootFolder)\api\x64\Windows.Devices.Midi2.pri" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Windows.Devices.Midi2.pri" />
         </Component>
 
         <Component Id="WindowsAPIRegistration"
@@ -175,7 +179,7 @@
                    Bitness="always64"
                    Directory="ROOTINSTALLFOLDER"
                    Guid="{fa0bd870-3468-4c10-bb2e-6fea6c225d42}"  >
-            <File Source="$(StagingSourceRootFolder)\api\x64\mididmp.exe"          Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\mididmp.exe"          Vital="true" />
        
             <!-- Add folder to path -->
             <Environment Id="AddMidiDumpUtilityToSystemPath"

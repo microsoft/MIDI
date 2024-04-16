@@ -17,7 +17,7 @@ struct ProtocolManagerWork
     bool PreferToSendJRTimestampsToEndpoint{ false };
     bool PreferToReceiveJRTimestampsFromEndpoint{ false };
     uint8_t PreferredMidiProtocol{};
-    uint16_t TimeoutMS{ 2000 };
+    uint16_t TimeoutMS{ 5000 };
 
     wil::com_ptr_nothrow<IMidiBiDi> Endpoint;
 
@@ -36,17 +36,19 @@ struct ProtocolManagerWork
 };
 
 
+
+
+
 class CMidiEndpointProtocolManager : public Microsoft::WRL::RuntimeClass<
     Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
     IMidiEndpointProtocolManagerInterface, 
     IMidiCallback>
 {
 public:
-
     CMidiEndpointProtocolManager() = default;
     ~CMidiEndpointProtocolManager() {}
 
-    HRESULT Initialize(
+    STDMETHOD(Initialize)(
         _In_ std::shared_ptr<CMidiClientManager>& ClientManager,
         _In_ std::shared_ptr<CMidiDeviceManager>& DeviceManager,
         _In_ std::shared_ptr<CMidiSessionTracker>& SessionTracker
@@ -57,9 +59,9 @@ public:
             _In_ BOOL PreferToSendJRTimestampsToEndpoint,
             _In_ BOOL PreferToReceiveJRTimestampsFromEndpoint,
             _In_ BYTE PreferredMidiProtocol,
-            _In_ WORD TimeoutMS
+            _In_ WORD TimeoutMS,
+            _Out_ PENDPOINTPROTOCOLNEGOTIATIONRESULTS* NegotiationResults
         );
-
 
     STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, _In_ LONGLONG Context);
 
@@ -90,8 +92,6 @@ private:
     std::thread m_queueWorkerThread;
 
     ProtocolManagerWork m_currentWorkItem;
-    wil::unique_event_nothrow m_allMessagesReceived;
-    wil::unique_event_nothrow m_queueWorkerThreadWakeup;
 
     // true if we're closing down
     bool m_shutdown{ false };

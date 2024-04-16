@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Windows.Devices.Midi2;
 using Windows.Devices.Enumeration;
 
 namespace Microsoft.Devices.Midi2.Tools.Shared.Endpoints

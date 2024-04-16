@@ -31,11 +31,11 @@ bool CreateLoopbackEndpoints()
     MidiServiceLoopbackEndpointDefinition definitionA;
     MidiServiceLoopbackEndpointDefinition definitionB;
 
-    definitionA.Name(L"My App Loopback A");
+    definitionA.Name(L"Sample App Loopback A");
     definitionA.Description(L"The first description is optional, but is displayed to users. This becomes the transport-defined description.");
     definitionA.UniqueId(L"8675309-OU812-5150");
 
-    definitionB.Name(L"My App Loopback B");
+    definitionB.Name(L"Sample App Loopback B");
     definitionB.Description(L"The second description is optional, but is displayed to users. This becomes the transport-defined description.");
     definitionB.UniqueId(L"3263827-OU812-5150"); // can be the same as the first one, but doesn't need to be.
 
@@ -45,20 +45,31 @@ bool CreateLoopbackEndpoints()
         definitionB
     );
 
-
     if (response.Success())
     {
-        std::wcout << L"Endpoint A: " << response.EndpointDeviceIdA().c_str() << std::endl;
-        std::wcout << L"Endpoint B: " << response.EndpointDeviceIdB().c_str() << std::endl;
+        std::wcout << L"Endpoints created successfully" << std::endl << std::endl;
+
+        std::cout
+            << "Loopback Endpoint A: " << std::endl 
+            << " - " << winrt::to_string(definitionA.Name()) << std::endl
+            << " - " << winrt::to_string(response.EndpointDeviceIdA()) << std::endl << std::endl;
+
+        std::cout 
+            << "Loopback Endpoint B: "  << std::endl
+            << " - " << winrt::to_string(definitionB.Name()) << std::endl
+            << " - " << winrt::to_string(response.EndpointDeviceIdB()) << std::endl << std::endl;
 
         m_endpointAId = response.EndpointDeviceIdA();
         m_endpointBId = response.EndpointDeviceIdB();
     }
     else
     {
-        std::cout << "Failed to create loopback endpoints." << std::endl;
+        std::cout << "Failed to create loopback endpoints." << std::endl; 
+        std::cout << "This can happen if you control-C or crash out of the sample before the loopbacks are removed." << std::endl;
+        std::cout << "If that's the case, restart MidiSrv, or change the unique Ids above." << std::endl;
     }
 
+    // Success here is a boolean for success/fail
     return response.Success();
 }
 
@@ -73,9 +84,7 @@ int main()
 
     std::cout << std::endl << "Creating session..." << std::endl;
 
-    auto session = MidiSession::CreateSession(L"Sample Session");
-
-
+    auto session = MidiSession::CreateSession(L"Loopback Sample Session");
 
     if (CreateLoopbackEndpoints())
     {
@@ -178,14 +187,16 @@ int main()
 
 
         // remove the loopback endpoints
+        // If you don't do this, they will stay active, and the next attempt
+        // to create them will fail because the unique Ids are already in use
 
         if (MidiService::RemoveTemporaryLoopbackEndpoints(m_associationId))
         {
-            std::cout << "Endpoints removed." << std::endl;
+            std::cout << "Loopback endpoints removed." << std::endl;
         }
         else
         {
-            std::cout << "There was a problem removing the endpoints." << std::endl;
+            std::cout << "There was a problem removing the endpoints. You may want to restart the service." << std::endl;
         }
     }
 }
