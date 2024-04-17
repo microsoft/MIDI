@@ -1,7 +1,7 @@
 ---
 layout: page
-title: Troubleshooting
-parent: Windows Midi Services
+title: Type Initialization Error at Runtime
+parent: Troubleshooting
 ---
 
 # Troubleshooting
