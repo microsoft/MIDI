@@ -129,9 +129,14 @@ CMidi2SchedulerMidiTransform::Cleanup()
     }
     catch (...)
     {
-        OutputDebugString(L"" __FUNCTION__ " Exception cleaning up");
+        TraceLoggingWrite(
+            MidiSchedulerTransformTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Exception cleaning up", "message")
+        );
 
-        // TODO: Log
         return S_OK;    // we don't care when cleaning up
     }
 }
@@ -150,20 +155,31 @@ CMidi2SchedulerMidiTransform::SendMidiMessageNow(
     {
         if (m_callback != nullptr)
         {
-            m_callback->Callback(data, size, timestamp, m_context);
-            return S_OK;
+            return m_callback->Callback(data, size, timestamp, m_context);
         }
         else
         {
-            OutputDebugString(L"" __FUNCTION__ " Failure: Callback is nullptr.");
+            TraceLoggingWrite(
+                MidiSchedulerTransformTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Callback is nullptr", "message")
+            );
 
-            // TODO: Log this
             return E_FAIL;
         }
     }
     catch (...)
     {
-        // TODO: Log
+        TraceLoggingWrite(
+            MidiSchedulerTransformTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Exception sending MIDI Message", "message")
+        );
+
         return E_FAIL;
     }
 
@@ -176,8 +192,6 @@ HRESULT
 CMidi2SchedulerMidiTransform::SendMidiMessageNow(
     ScheduledUmpMessage const message)
 {
-//    OutputDebugString((std::wstring(L"" __FUNCTION__ " Sending queued message. Queue size is: ") + std::to_wstring(m_messageQueue.size())).c_str());
-
     if (!m_continueProcessing) return S_OK;
 
     return SendMidiMessageNow(
@@ -197,12 +211,11 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
     UINT size,
     LONGLONG timestamp)
 {
-
     if (!m_continueProcessing) return S_OK;
 
     try
     {
-        // check to see if we're bypassing scheduling
+        // check to see if we're bypassing scheduling by sending a zero timestamp
         if (timestamp == 0)
         {
             // bypass scheduling logic completely
@@ -214,6 +227,15 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
             }
             else
             {
+                TraceLoggingWrite(
+                    MidiSchedulerTransformTelemetryProvider::Provider(),
+                    __FUNCTION__,
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingHResult(hr, "hresult"),
+                    TraceLoggingWideString(L"Error sending MIDI Message now (bypass queue)", "message")
+                );
+
                 return hr;
             }
         }
@@ -228,15 +250,20 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
             }
             else
             {
+                TraceLoggingWrite(
+                    MidiSchedulerTransformTelemetryProvider::Provider(),
+                    __FUNCTION__,
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingHResult(hr, "hresult"),
+                    TraceLoggingWideString(L"Error sending MIDI Message now (message timestamp older than window)", "message")
+                );
+
                 return hr;
             }
         }
         else
         {
-            //// bypass scheduling for a stable release
-            //auto hr = SendMidiMessageNow(data, size, timestamp);
-            //return hr;
-
             // otherwise, we schedule the message
 
             if (size >= MINIMUM_UMP_DATASIZE && size <= MAXIMUM_UMP_DATASIZE)
@@ -266,21 +293,42 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
                     // priority queue doesn't give us any way to pop from the back
                     // so we just have to fail. 
 
+                    TraceLoggingWrite(
+                        MidiSchedulerTransformTelemetryProvider::Provider(),
+                        __FUNCTION__,
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Outbound message queue full", "message")
+                    );
+
                     return HR_E_MIDI_SENDMSG_SCHEDULER_QUEUE_FULL;
                 }
             }
             else
             {
+                TraceLoggingWrite(
+                    MidiSchedulerTransformTelemetryProvider::Provider(),
+                    __FUNCTION__,
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Invalid message data size", "message")
+                );
+
                 // invalid data size
                 return HR_E_MIDI_SENDMSG_INVALID_MESSAGE;
             }
         }
-
- //       return S_OK;
     }
     catch (...)
     {
-        // TODO: Log
+        TraceLoggingWrite(
+            MidiSchedulerTransformTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Exception scheduling message", "message")
+        );
+
         return E_FAIL;
     }
 
@@ -306,8 +354,6 @@ CMidi2SchedulerMidiTransform::GetTopMessageTimestamp(internal::MidiTimestamp &ti
         {
             timestamp = m_messageQueue.top().Timestamp;
             ret = S_OK;
-
-        //    OutputDebugString(L"\n--Retrieved current timestamp\n");
         }
         else
         {
@@ -316,6 +362,14 @@ CMidi2SchedulerMidiTransform::GetTopMessageTimestamp(internal::MidiTimestamp &ti
     }
     catch (...)
     {
+        TraceLoggingWrite(
+            MidiSchedulerTransformTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Exception getting top-message timestamp", "message")
+        );
+
         ret = E_FAIL;
     }
 
@@ -325,7 +379,10 @@ CMidi2SchedulerMidiTransform::GetTopMessageTimestamp(internal::MidiTimestamp &ti
 
 _Use_decl_annotations_
 HRESULT
-CMidi2SchedulerMidiTransform::CalculateSafeSleepTime(internal::MidiTimestamp nextWakeupWindowTimestamp, uint32_t & sleepMS)
+CMidi2SchedulerMidiTransform::CalculateSafeSleepTime(
+    internal::MidiTimestamp nextWakeupWindowTimestamp, 
+    uint32_t& sleepMS
+)
 {
     if (!m_continueProcessing) return E_FAIL;
 
@@ -338,8 +395,10 @@ CMidi2SchedulerMidiTransform::CalculateSafeSleepTime(internal::MidiTimestamp nex
 
         if (nextWakeupWindowTimestamp > now)
         {
+            // calculate diff in seconds
             auto diff = (nextWakeupWindowTimestamp - now) / m_timestampFrequency;
 
+            // convert to milliseconds
             sleepMS = (uint32_t)(diff * 1000);
 
             // if the sleep time is under the limit, we don't sleep at all because the timing is not that accurate
@@ -353,6 +412,14 @@ CMidi2SchedulerMidiTransform::CalculateSafeSleepTime(internal::MidiTimestamp nex
     }
     catch (...)
     {
+        TraceLoggingWrite(
+            MidiSchedulerTransformTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Exception calculating safe sleep time", "message")
+        );
+
         ret = E_FAIL;
     }
 
@@ -363,8 +430,6 @@ CMidi2SchedulerMidiTransform::CalculateSafeSleepTime(internal::MidiTimestamp nex
 
 void CMidi2SchedulerMidiTransform::QueueWorker()
 {
-    OutputDebugString(L"" __FUNCTION__ " Enter");
-
     try
     {
         const uint64_t totalExpectedLatency = m_deviceLatencyTicks + MIDI_SCHEDULER_LOCK_AND_SEND_FUNCTION_LATENCY_TICKS;
@@ -375,13 +440,10 @@ void CMidi2SchedulerMidiTransform::QueueWorker()
             // to wake up due to a new message arriving or due to shut down.
             if (m_continueProcessing && m_messageQueue.empty())
             {
-                OutputDebugString(L"" __FUNCTION__ " queue is empty. About to sleep");
-
                 // queue empty so sleep until we get notified to wake up
-                bool triggered = m_messageProcessorWakeup.wait(MIDI_OUTBOUND_EMPTY_QUEUE_SLEEP_DURATION_MS);
-
-                if (triggered) OutputDebugString(L"" __FUNCTION__ " Wake up from sleep");
-
+                m_messageProcessorWakeup.wait(MIDI_OUTBOUND_EMPTY_QUEUE_SLEEP_DURATION_MS);
+                //bool triggered = m_messageProcessorWakeup.wait(MIDI_OUTBOUND_EMPTY_QUEUE_SLEEP_DURATION_MS);
+                //if (triggered) OutputDebugString(L"" __FUNCTION__ " Wake up from sleep");
             }
             else if (m_continueProcessing && !m_messageQueue.empty())
             {
@@ -420,9 +482,16 @@ void CMidi2SchedulerMidiTransform::QueueWorker()
                             {
                                 LOG_IF_FAILED(hr);
 
+                                TraceLoggingWrite(
+                                    MidiSchedulerTransformTelemetryProvider::Provider(),
+                                    __FUNCTION__,
+                                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                    TraceLoggingPointer(this, "this"),
+                                    TraceLoggingHResult(hr, "hresult")
+                                );
+
                                 // we failed to send for some reason, so break out of the loop. We'll catch 
                                 // these messages the next time around.
-                                OutputDebugString(L"" __FUNCTION__ " Failed to send MIDI message");
                                 break;
                             }
 
@@ -447,7 +516,7 @@ void CMidi2SchedulerMidiTransform::QueueWorker()
                 else
                 {
                     // couldn't get top timestamp for some reason.
-                    OutputDebugString(L"" __FUNCTION__ " Unable to get top timestamp");
+                    //OutputDebugString(L"" __FUNCTION__ " Unable to get top timestamp");
                 }
 
             }
@@ -468,13 +537,14 @@ void CMidi2SchedulerMidiTransform::QueueWorker()
     }
     catch (...)
     {
-        // TODO: Log
-        OutputDebugString(L"" __FUNCTION__ " Exception");
+        TraceLoggingWrite(
+            MidiSchedulerTransformTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Exception processing queue", "message")
+        );
     }
-
-    
-    OutputDebugString((std::wstring(L"" __FUNCTION__ " Exit. Abandoned queue size is: ") + std::to_wstring(m_messageQueue.size())).c_str());
-
 }
 
 
