@@ -1,7 +1,6 @@
 ---
 layout: page
 title: MIDI Console
-parent: Windows MIDI Services
 has_children: true
 ---
 

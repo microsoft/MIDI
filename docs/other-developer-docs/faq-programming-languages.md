@@ -1,7 +1,7 @@
 ---
 layout: page
 title: Programming Languages FAQ
-parent: Windows Midi Services
+parent: For Developers
 has_children: false
 ---
 

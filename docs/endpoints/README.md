@@ -1,7 +1,6 @@
 ---
 layout: page
 title: Transport Types
-parent: Windows MIDI Services
 has_children: true
 ---
 

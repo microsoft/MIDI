@@ -1,7 +1,7 @@
 ---
 layout: page
 title: Best Practices
-parent: Windows Midi Services
+parent: For Developers
 has_children: false
 ---
 

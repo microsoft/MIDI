@@ -1,7 +1,7 @@
 ---
 layout: page
 title: API Backwards Compatibility
-parent: Windows Midi Services
+parent: For Developers
 ---
 
 # API Backwards Compatibility

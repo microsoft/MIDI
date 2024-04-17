@@ -1,7 +1,7 @@
 ---
 layout: page
 title: MIDI Dump Utility
-parent: Windows Midi Services
+parent: 
 ---
 
 # Windows Dump Utility
