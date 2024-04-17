@@ -1,12 +1,17 @@
 ---
 layout: page
 title: MIDI Console
-parent: Windows Midi Services
+parent: Windows MIDI Services
+has_children: true
 ---
 
 # Windows MIDI Services Console
 
 If you have the midi console installed, you can invoke it from any command prompt using `midi`. We recommend using [Windows Terminal](https://aka.ms/terminal) for the best experience.
+
+## Where to Get it
+
+While in developer preview, the Windows MIDI Services console is delivered as part of the developer preview installer. In the future, it will be delivered and serviced through the Microsoft Store on Windows
 
 ## General Information
 
