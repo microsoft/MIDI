@@ -1,7 +1,7 @@
 ---
 layout: page
 title: MIDI 2.0 Implementation Details
-parent: Windows MIDI Services
+parent: For Developers
 has_children: false
 ---
 

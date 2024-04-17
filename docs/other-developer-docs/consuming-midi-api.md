@@ -1,7 +1,7 @@
 ---
 layout: page
 title: Consuming the MIDI API
-parent: Windows Midi Services
+parent: For Developers
 has_children: false
 ---
 
