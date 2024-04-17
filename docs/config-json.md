@@ -1,7 +1,6 @@
 ---
 layout: page
 title: Config JSON
-parent: Windows Midi Services
 ---
 
 # JSON Config File

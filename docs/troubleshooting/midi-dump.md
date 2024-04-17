@@ -1,7 +1,7 @@
 ---
 layout: page
 title: MIDI Dump Utility
-parent: 
+parent: Troubleshooting
 ---
 
 # Windows Dump Utility
