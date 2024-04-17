@@ -1,5 +1,5 @@
 ---
-title: Windows Midi Services
+title: Overview
 layout: home
 has_children: false
 ---
@@ -44,4 +44,3 @@ While we're in developer preview, get started by downloading and installing the 
 These are the updated MIDI 2.0 specifications which apply to this project today.
 
 * [MIDI 2.0 UMP (and other) Specifications](https://midi.org/specs)
-

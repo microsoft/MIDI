@@ -73,7 +73,6 @@ You will follow a similar approach to C++ using windows-rs instead of C++/WinRT.
 * [Getting Started with windows-rs](https://kennykerr.ca/rust-getting-started/)
 * [Rust for Windows and the windows crate](https://learn.microsoft.com/windows/dev-environment/rust/rust-for-windows)
 * [Set up your Rust Development Environment](https://learn.microsoft.com/windows/dev-environment/rust/setup)
-* [Rust Windows MIDI Services Example Code](https://github.com/microsoft/MIDI/tree/main/get-started/midi-developers/app-developers/samples/rust-winrt)
 * [windows-rs on GitHub](https://github.com/microsoft/windows-rs)
 
 ## Consuming from C++ without Visual Studio (using cmake or other tools)
