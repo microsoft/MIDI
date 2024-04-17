@@ -1,7 +1,7 @@
 ---
 title: Windows Midi Services
 layout: home
-has_children: true
+has_children: false
 ---
 # Windows MIDI Services
 
