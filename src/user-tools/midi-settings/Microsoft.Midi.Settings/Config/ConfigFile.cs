@@ -12,7 +12,7 @@ namespace Microsoft.Midi.Settings.Config
 
     internal class ConfigFile
     {
-        private JsonObject _jsonObject;
+      //  private JsonObject _jsonObject;
 
         //public JsonObject GetEndpointTransportPluginSettingsForTransport(Guid transportId)
         //{

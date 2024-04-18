@@ -27,6 +27,7 @@
     <EventProvider Id="EventProvider_SchedulerTransform" Name="*Microsoft.Windows.Midi2.SchedulerTransform"/>
     <EventProvider Id="EventProvider_UMP2BSTransform" Name="*Microsoft.Windows.Midi2.UMP2BSTransform"/>
 
+    <EventProvider Id="EventProvider_SettingsApp" Name="*Microsoft.Midi.Settings"/>
 
      <Profile Id="MidiSrv.Verbose.File" Name="MidiSrv" DetailLevel="Verbose" Description="Windows MIDI Services trace profile" LoggingMode="File">
       <Collectors>
@@ -52,6 +53,9 @@
             <EventProviderId Value="EventProvider_JitterReductionListenerTransform"/>
             <EventProviderId Value="EventProvider_SchedulerTransform"/>
             <EventProviderId Value="EventProvider_UMP2BSTransform"/>
+
+            <EventProviderId Value="EventProvider_SettingsApp"/>
+
           </EventProviders>
         </EventCollectorId>
       </Collectors>

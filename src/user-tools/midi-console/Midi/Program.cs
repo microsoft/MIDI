@@ -12,6 +12,12 @@ using Windows.Devices.Midi2;
 Console.InputEncoding = System.Text.Encoding.UTF8;
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 
+AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+{
+    LoggingService.Current.LogError(e.ToString()!);
+};
+
+
 var app = new CommandApp();
 
 app.Configure(config =>

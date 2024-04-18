@@ -25,10 +25,10 @@ namespace Microsoft.Midi.Settings.ViewModels
     public class DevicesViewModel : ObservableRecipient, INavigationAware
     {
 
-        private DispatcherQueue _dispatcherQueue;
+        private readonly DispatcherQueue _dispatcherQueue;
 
 
-        private INavigationService _navigationService;
+        private readonly INavigationService _navigationService;
 
         public ICommand ViewDeviceDetailsCommand
         {
@@ -42,7 +42,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
 
             ViewDeviceDetailsCommand = new RelayCommand<MidiEndpointDeviceInformation>(
-                async (param) =>
+                (param) =>
                 {
                     System.Diagnostics.Debug.WriteLine("View Device Details Command exec");
 

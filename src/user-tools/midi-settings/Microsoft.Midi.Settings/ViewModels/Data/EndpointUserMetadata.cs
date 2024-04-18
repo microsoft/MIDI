@@ -10,15 +10,15 @@ namespace Microsoft.Midi.Settings.ViewModels.Data
     public partial class EndpointUserMetadata : ObservableObject
     {
         [ObservableProperty]
-        private string name;
+        private string name = string.Empty;
 
         [ObservableProperty]
-        private string description;
+        private string description = string.Empty;
 
         [ObservableProperty]
-        private string smallImagePath;
+        private string smallImagePath = string.Empty;
 
         [ObservableProperty]
-        private string largeImagePath;
+        private string largeImagePath = string.Empty;
     }
 }

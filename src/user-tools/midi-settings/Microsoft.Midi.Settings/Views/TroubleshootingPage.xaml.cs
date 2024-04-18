@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -26,6 +27,8 @@ namespace Microsoft.Midi.Settings.Views;
 /// </summary>
 public sealed partial class TroubleshootingPage : Page
 {
+    private ILoggingService _loggingService;
+
     public TroubleshootingViewModel ViewModel
     {
         get;
@@ -34,6 +37,8 @@ public sealed partial class TroubleshootingPage : Page
 
     public TroubleshootingPage()
     {
+        _loggingService = App.GetService<ILoggingService>();
+
         ViewModel = App.GetService<TroubleshootingViewModel>();
 
         this.InitializeComponent();

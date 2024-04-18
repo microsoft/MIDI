@@ -22,6 +22,7 @@ using Microsoft.Midi.Settings.ViewModels.Data;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Storage.Streams;
 using Windows.Storage;
+using Microsoft.Midi.Settings.Contracts.Services;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -33,6 +34,8 @@ namespace Microsoft.Midi.Settings.Views
     /// </summary>
     public sealed partial class DeviceDetailPage : Page
     {
+        private ILoggingService _loggingService;
+
         public DeviceDetailViewModel ViewModel
         {
             get;
@@ -42,6 +45,7 @@ namespace Microsoft.Midi.Settings.Views
         public DeviceDetailPage()
         {
             ViewModel = App.GetService<DeviceDetailViewModel>();
+            _loggingService = App.GetService<ILoggingService>();
 
             this.InitializeComponent();
         }
@@ -49,7 +53,7 @@ namespace Microsoft.Midi.Settings.Views
  
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
-            ViewModel.UserMetadata.Name = ViewModel.DeviceInformation.UserSuppliedName;
+            ViewModel.UserMetadata.Name = ViewModel.DeviceInformation!.UserSuppliedName;
             ViewModel.UserMetadata.Description = ViewModel.DeviceInformation.UserSuppliedDescription;
             ViewModel.UserMetadata.LargeImagePath = ViewModel.DeviceInformation.UserSuppliedLargeImagePath;
             ViewModel.UserMetadata.SmallImagePath = ViewModel.DeviceInformation.UserSuppliedSmallImagePath;
@@ -69,16 +73,13 @@ namespace Microsoft.Midi.Settings.Views
                     // Open a stream for the selected file.
                     // The 'using' block ensures the stream is disposed
                     // after the image is loaded.
-                    using (IRandomAccessStream fileStream =
-                        await file.OpenAsync(FileAccessMode.Read))
-                    {
-                        // Set the image source to the selected bitmap.
-                        var bitmapImage = new BitmapImage();
+                    using IRandomAccessStream fileStream = await file.OpenAsync(FileAccessMode.Read);
+                    // Set the image source to the selected bitmap.
+                    var bitmapImage = new BitmapImage();
 
-                        bitmapImage.SetSource(fileStream);
+                    bitmapImage.SetSource(fileStream);
 
-                        UserMetadataLargeImagePreview.Source = bitmapImage;
-                    }
+                    UserMetadataLargeImagePreview.Source = bitmapImage;
                 }
             }
 
@@ -91,16 +92,14 @@ namespace Microsoft.Midi.Settings.Views
                     // Open a stream for the selected file.
                     // The 'using' block ensures the stream is disposed
                     // after the image is loaded.
-                    using (IRandomAccessStream fileStream =
-                        await file.OpenAsync(FileAccessMode.Read))
-                    {
-                        // Set the image source to the selected bitmap.
-                        var bitmapImage = new BitmapImage();
+                    using IRandomAccessStream fileStream = await file.OpenAsync(FileAccessMode.Read);
 
-                        bitmapImage.SetSource(fileStream);
+                    // Set the image source to the selected bitmap.
+                    var bitmapImage = new BitmapImage();
 
-                        UserMetadataSmallImagePreview.Source = bitmapImage;
-                    }
+                    bitmapImage.SetSource(fileStream);
+
+                    UserMetadataSmallImagePreview.Source = bitmapImage;
                 }
             }
 
@@ -172,16 +171,14 @@ namespace Microsoft.Midi.Settings.Views
                 // Open a stream for the selected file.
                 // The 'using' block ensures the stream is disposed
                 // after the image is loaded.
-                using (IRandomAccessStream fileStream =
-                    await file.OpenAsync(FileAccessMode.Read))
-                {
-                    // Set the image source to the selected bitmap.
-                    var bitmapImage = new BitmapImage();
+                using IRandomAccessStream fileStream = await file.OpenAsync(FileAccessMode.Read);
 
-                    bitmapImage.SetSource(fileStream);
+                // Set the image source to the selected bitmap.
+                var bitmapImage = new BitmapImage();
 
-                    UserMetadataSmallImagePreview.Source = bitmapImage;
-                }
+                bitmapImage.SetSource(fileStream);
+
+                UserMetadataSmallImagePreview.Source = bitmapImage;
             }
 
         }

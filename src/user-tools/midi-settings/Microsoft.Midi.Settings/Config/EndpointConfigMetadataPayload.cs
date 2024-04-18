@@ -12,14 +12,14 @@ namespace Microsoft.Midi.Settings.Config
     {
         public bool IsFromConfigurationFile => true;
 
-        public JsonObject SettingsJson { get; private set; }
+        public JsonObject? SettingsJson { get; private set; }
 
         public Guid TransportId { get; private set; }
 
-        private string _newName;
-        private string _newDescription;
-        private string _newSmallImagePath;
-        private string _newLargeImagePath;
+        private readonly string _newName;
+        private readonly string _newDescription;
+        private readonly string _newSmallImagePath;
+        private readonly string _newLargeImagePath;
 
         public EndpointConfigMetadataPayload(Guid transportId, string newName, string newDescription, string newSmallImagePath, string newLargeImagePath)
         {

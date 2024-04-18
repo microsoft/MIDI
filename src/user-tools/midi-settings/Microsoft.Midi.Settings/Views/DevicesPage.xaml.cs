@@ -20,6 +20,7 @@ using Microsoft.Midi.Settings.ViewModels;
 //using Microsoft.Midi.Settings.SdkMock.TransportClientSdk;
 using Microsoft.Midi.Settings.Models;
 using CommunityToolkit.WinUI.Controls;
+using Microsoft.Midi.Settings.Contracts.Services;
 
 
 // To learn more about WinUI, the WinUI project structure,
@@ -32,6 +33,9 @@ namespace Microsoft.Midi.Settings.Views
     /// </summary>
     public sealed partial class DevicesPage : Page
     {
+        private ILoggingService _loggingService;
+
+
         public DevicesViewModel ViewModel
         {
             get;
@@ -41,6 +45,7 @@ namespace Microsoft.Midi.Settings.Views
         public DevicesPage()
         {
             ViewModel = App.GetService<DevicesViewModel>();
+            _loggingService = App.GetService<ILoggingService>();
 
             Loaded += DevicesPage_Loaded;
 
