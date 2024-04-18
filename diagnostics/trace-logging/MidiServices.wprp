@@ -28,6 +28,7 @@
     <EventProvider Id="EventProvider_UMP2BSTransform" Name="*Microsoft.Windows.Midi2.UMP2BSTransform"/>
 
     <EventProvider Id="EventProvider_SettingsApp" Name="*Microsoft.Midi.Settings"/>
+    <EventProvider Id="EventProvider_ConsoleApp" Name="*Microsoft.Midi.Console"/>
 
      <Profile Id="MidiSrv.Verbose.File" Name="MidiSrv" DetailLevel="Verbose" Description="Windows MIDI Services trace profile" LoggingMode="File">
       <Collectors>
@@ -55,6 +56,7 @@
             <EventProviderId Value="EventProvider_UMP2BSTransform"/>
 
             <EventProviderId Value="EventProvider_SettingsApp"/>
+            <EventProviderId Value="EventProvider_ConsoleApp"/>
 
           </EventProviders>
         </EventCollectorId>
