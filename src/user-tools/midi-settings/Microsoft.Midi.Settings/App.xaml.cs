@@ -54,6 +54,8 @@ public partial class App : Application
             // Other Activation Handlers
 
             // Services
+            services.AddSingleton<ILoggingService, LoggingService>();
+
             services.AddSingleton<ILocalSettingsService, LocalSettingsService>();
             services.AddSingleton<IGeneralSettingsService, GeneralSettingsService>();
 
@@ -73,11 +75,6 @@ public partial class App : Application
             services.AddTransient<Midi1DevicesPage>();
             services.AddTransient<SettingsViewModel>();
             services.AddTransient<SettingsPage>();
-
-            services.AddTransient<ContentGridDetailViewModel>();
-            services.AddTransient<ContentGridDetailPage>();
-            services.AddTransient<ContentGridViewModel>();
-            services.AddTransient<ContentGridPage>();
 
             services.AddTransient<ShellPage>();
             services.AddTransient<ShellViewModel>();
@@ -128,6 +125,8 @@ public partial class App : Application
         Build();
 
         UnhandledException += App_UnhandledException;
+
+        //App.GetService<ILoggingService>().LogError("This is a test message");
     }
 
     private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
@@ -135,11 +134,7 @@ public partial class App : Application
         // TODO: Log and handle exceptions as appropriate.
         // https://docs.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.application.unhandledexception.
 
-        System.Diagnostics.EventLog.WriteEntry("Windows MIDI Services Settings", e.ToString());
-
-        // TEMP!
-        e.Handled = true;
-
+        App.GetService<ILoggingService>().LogError(e.Message);
     }
 
     protected async override void OnLaunched(LaunchActivatedEventArgs args)
@@ -148,10 +143,7 @@ public partial class App : Application
 
         await App.GetService<IActivationService>().ActivateAsync(args);
 
-
         // force construction
         var current = AppState.Current;
-
-
     }
 }

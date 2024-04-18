@@ -1,10 +1,13 @@
-﻿using Microsoft.Midi.Settings.ViewModels;
+﻿using Microsoft.Midi.Settings.Contracts.Services;
+using Microsoft.Midi.Settings.ViewModels;
 using Microsoft.UI.Xaml.Controls;
 
 namespace Microsoft.Midi.Settings.Views;
 
 public sealed partial class ForDevelopersPage : Page
 {
+    ILoggingService _loggingService;
+
     public ForDevelopersViewModel ViewModel
     {
         get;
@@ -13,6 +16,8 @@ public sealed partial class ForDevelopersPage : Page
     public ForDevelopersPage()
     {
         ViewModel = App.GetService<ForDevelopersViewModel>();
+        _loggingService = App.GetService<ILoggingService>();
+
         InitializeComponent();
     }
 

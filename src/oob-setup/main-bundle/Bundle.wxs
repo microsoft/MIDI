@@ -69,9 +69,8 @@
             <!-- Installer custom action uses .NET 4.8. WiX doesn't support .NET non-fx -->
             <PackageGroupRef Id="NetFx48RedistAsPrereq" />
 
+
             <!-- C++ Runtime. The x64 download contains both Arm64 and X64 versions -->
-            
-            <!-- TODO: Add /quiet to both of these -->
             
             <ExePackage
                 DisplayName="Microsoft Visual C++ Runtime"

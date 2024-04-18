@@ -13,12 +13,8 @@ public class PageService : IPageService
 
     public PageService()
     {
-        Configure<ContentGridViewModel, ContentGridPage>();
-        Configure<ContentGridDetailViewModel, ContentGridDetailPage>();
-
         Configure<DevicesViewModel, DevicesPage>();
         Configure<DeviceDetailViewModel, DeviceDetailPage>();
-
 
         Configure<ForDevelopersViewModel, ForDevelopersPage>();
         //Configure<MainViewModel, MainPage>();
@@ -37,7 +33,6 @@ public class PageService : IPageService
         Configure<Midi1DevicesViewModel, Midi1DevicesPage>();
 
         Configure<HomeViewModel, HomePage>();
-
     }
 
     public Type GetPageType(string key)
