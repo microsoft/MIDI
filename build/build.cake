@@ -507,6 +507,8 @@ Task("BuildInstaller")
 {
     Information($"\nBuilding Installer for {plat.ToString()} {configuration}");
 
+    Thread.Sleep(1000);
+
     var mainBundleProjectDir = System.IO.Path.Combine(setupSolutionDir, "main-bundle");
     var apiSetupProjectDir = System.IO.Path.Combine(setupSolutionDir, "api-package");
     var consoleOnlySetupProjectDir = System.IO.Path.Combine(setupSolutionDir, "console-package");
@@ -562,7 +564,7 @@ Task("BuildInstaller")
 
     MSBuild(setupSolutionFile, buildSettings);
 
-
+    Thread.Sleep(1000);
 
     string releaseStandAloneInstallerFolder = System.IO.Path.Combine(setupReleaseDir, "Component Installs", plat.ToString().ToLower());
 
