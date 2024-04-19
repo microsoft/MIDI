@@ -15,6 +15,7 @@
 	    
         <UseWinUI>true</UseWinUI>
         <EnableMsixTooling>true</EnableMsixTooling>
+        <!--<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>-->
         <PublishProfile>Properties\PublishProfiles\win10-$(Platform).pubxml</PublishProfile>
         <!--<WindowsPackageType>None</WindowsPackageType>-->
 		

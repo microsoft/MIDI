@@ -49,7 +49,7 @@ public class AppState
     {
         get
         {
-            return _watcher;
+            return _watcher!;
         }
     }
 

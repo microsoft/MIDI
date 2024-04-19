@@ -24,7 +24,7 @@ public class BooleanToInverseVisibilityConverter : IValueConverter
         throw new ArgumentException("BooleanToInverseVisibilityConverter object must be a bool");
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, string language)
+    public object? ConvertBack(object value, Type targetType, object parameter, string language)
     {
         return null;
     }
