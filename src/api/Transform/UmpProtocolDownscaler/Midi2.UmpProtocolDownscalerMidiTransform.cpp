@@ -60,12 +60,12 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
     LONGLONG Position
 )
 {
-    TraceLoggingWrite(
-        MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
-        __FUNCTION__,
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
-    );
+    //TraceLoggingWrite(
+    //    MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
+    //    __FUNCTION__,
+    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+    //    TraceLoggingPointer(this, "this")
+    //);
 
 
     if (Length >= sizeof(uint32_t))
@@ -178,13 +178,13 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
 
                 if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_NOTE_OFF)
                 {
-                    TraceLoggingWrite(
-                        MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
-                        __FUNCTION__,
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Downscaling Note Off", "message")
-                    );
+                    //TraceLoggingWrite(
+                    //    MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
+                    //    __FUNCTION__,
+                    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    //    TraceLoggingPointer(this, "this"),
+                    //    TraceLoggingWideString(L"Downscaling Note Off", "message")
+                    //);
 
                     // note number / index is third byte
                     uint8_t noteNumber = MIDIWORDBYTE3(originalWord0);
@@ -195,18 +195,18 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
                 }
                 else if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_NOTE_ON)
                 {
-                    TraceLoggingWrite(
-                        MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
-                        __FUNCTION__,
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Downscaling Note On", "message")
-                    );
+                    //TraceLoggingWrite(
+                    //    MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
+                    //    __FUNCTION__,
+                    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    //    TraceLoggingPointer(this, "this"),
+                    //    TraceLoggingWideString(L"Downscaling Note On", "message")
+                    //);
 
                     uint8_t noteNumber = MIDIWORDBYTE3(originalWord0);
                     uint8_t newVelocity = (uint8_t)(M2Utils::scaleDown(MIDIWORDSHORT1(originalWord1), SCALE_DOWN_FROM_16_BIT_VALUE, SCALE_TO_7_BIT_VALUE));
                     //if (newVelocity == 0) newVelocity = 1;
-                    newWord0 = UMPMessage::mt2NoteOff(groupIndex, channelIndex, noteNumber, newVelocity);
+                    newWord0 = UMPMessage::mt2NoteOn(groupIndex, channelIndex, noteNumber, newVelocity);
                     newData = &newWord0;
                     newLength = sizeof(uint32_t);
                 }
@@ -257,13 +257,13 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
                     newLength = Length;
                 }
 
-                TraceLoggingWrite(
-                    MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
-                    __FUNCTION__,
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Sending single new message", "message")
-                );
+                //TraceLoggingWrite(
+                //    MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
+                //    __FUNCTION__,
+                //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                //    TraceLoggingPointer(this, "this"),
+                //    TraceLoggingWideString(L"Sending single new message", "message")
+                //);
 
                 if (m_Callback != nullptr && newLength > 0 && newData != nullptr)
                 {
@@ -276,14 +276,14 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
         {
             // pass through because it's not a message type we handle
 
-            TraceLoggingWrite(
-                MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
-                __FUNCTION__,
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Not a message type we recognize. No downscaling applied", "message"),
-                TraceLoggingUInt32(originalWord0, "Word 0")
-            );
+            //TraceLoggingWrite(
+            //    MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
+            //    __FUNCTION__,
+            //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            //    TraceLoggingPointer(this, "this"),
+            //    TraceLoggingWideString(L"Not a message type we recognize. No downscaling applied", "message"),
+            //    TraceLoggingUInt32(originalWord0, "Word 0")
+            //);
 
 
             if (m_Callback != nullptr)
@@ -296,6 +296,15 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
     else
     {
         // not a valid UMP
+
+        TraceLoggingWrite(
+                MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"invalid UMP", "message"),
+                TraceLoggingUInt32(Length, "Length in Bytes")
+            );
     }
 
     return S_OK;
