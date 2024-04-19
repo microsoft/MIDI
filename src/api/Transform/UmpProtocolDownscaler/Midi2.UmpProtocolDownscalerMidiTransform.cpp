@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 
 #include "pch.h"
-#include "bytestreamToUMP.h"
+//#include "bytestreamToUMP.h"
 //#include "midi2.BS2UMPtransform.h"
 
 _Use_decl_annotations_
