@@ -20,7 +20,7 @@ void ConvertMidiTimestampToBleTimestamp(uint64_t timestamp, uint8_t bleTimestamp
 
     // Convert timestamp to milliseconds. TODO: May want to cache the frequency
 
-    uint64_t timestampMS = internal::Shared::ConvertTimestampToWholeMilliseconds(timestamp, internal::Shared::GetMidiTimestampFrequency());
+    uint64_t timestampMS = internal::ConvertTimestampToWholeMilliseconds(timestamp, internal::GetMidiTimestampFrequency());
 
     // take the lower 7 bits for timestamp low
 

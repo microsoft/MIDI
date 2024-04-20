@@ -44,7 +44,7 @@
 #include <libmidi2/umpMessageCreate.h>   // AM_MIDI2
 #include "ump_helpers.h"        // internal helpers
 
-namespace internal = ::Windows::Devices::Midi2::Internal;
+namespace internal = ::WindowsMidiServicesInternal;
 
 
 #include "MidiServicePlugin.h"

@@ -9,8 +9,8 @@
 		</Reference>
 			-->	   
 
-		<Reference Include="Windows.Devices.Midi2">
-			<HintPath>$(MSBuildThisFileDirectory)\..\ref\native\Windows.Devices.Midi2.winmd</HintPath>
+		<Reference Include="Microsoft.Devices.Midi2">
+			<HintPath>$(MSBuildThisFileDirectory)\..\ref\native\Microsoft.Devices.Midi2.winmd</HintPath>
 		</Reference>
 	</ItemGroup>
 </Project>

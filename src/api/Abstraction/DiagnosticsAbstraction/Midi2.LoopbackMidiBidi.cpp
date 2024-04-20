@@ -45,20 +45,20 @@ CMidi2LoopbackMidiBiDi::Initialize(
     CreationParams->DataFormat = MidiDataFormat_UMP;
 
     std::wstring id{ EndpointId };
-    Windows::Devices::Midi2::Internal::InPlaceToLower(id);
+    internal::InPlaceToLower(id);
     //OutputDebugString(id.c_str());
 
     std::wstring pingBiDiId{ DEFAULT_PING_BIDI_ID };
-    Windows::Devices::Midi2::Internal::InPlaceToLower(pingBiDiId);
+    internal::InPlaceToLower(pingBiDiId);
     //OutputDebugString(pingBiDiId.c_str());
 
     std::wstring loopBiDiAId{ DEFAULT_LOOPBACK_BIDI_A_ID };
-    Windows::Devices::Midi2::Internal::InPlaceToLower(loopBiDiAId);
+    internal::InPlaceToLower(loopBiDiAId);
     //OutputDebugString(loopBiDiAId.c_str());
 
 
     std::wstring loopBiDiBId{ DEFAULT_LOOPBACK_BIDI_B_ID };
-    Windows::Devices::Midi2::Internal::InPlaceToLower(loopBiDiBId);
+    internal::InPlaceToLower(loopBiDiBId);
     //OutputDebugString(loopBiDiBId.c_str());
 
     

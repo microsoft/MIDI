@@ -12,20 +12,20 @@
 
 
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     uint64_t MidiClock::m_timestampFrequency{ 0 };
 
     internal::MidiTimestamp MidiClock::Now() 
     { 
-        return ::Windows::Devices::Midi2::Internal::Shared::GetCurrentMidiTimestamp(); 
+        return internal::GetCurrentMidiTimestamp(); 
     }
 
     uint64_t MidiClock::TimestampFrequency() 
     { 
         // this is not supposed to change over time, so we cache it
         if (m_timestampFrequency == 0)
-            m_timestampFrequency = ::Windows::Devices::Midi2::Internal::Shared::GetMidiTimestampFrequency();
+            m_timestampFrequency = internal::GetMidiTimestampFrequency();
 
         return m_timestampFrequency;
     }
@@ -86,7 +86,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         internal::MidiTimestamp const timestampValue)
     {
 
-        return internal::Shared::ConvertTimestampToFractionalMicroseconds(timestampValue, TimestampFrequency());
+        return internal::ConvertTimestampToFractionalMicroseconds(timestampValue, TimestampFrequency());
     }
 
 
@@ -94,14 +94,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
     double MidiClock::ConvertTimestampToMilliseconds(
         internal::MidiTimestamp const timestampValue)
     {
-        return internal::Shared::ConvertTimestampToFractionalMilliseconds(timestampValue, TimestampFrequency());
+        return internal::ConvertTimestampToFractionalMilliseconds(timestampValue, TimestampFrequency());
     }
 
     _Use_decl_annotations_
     double MidiClock::ConvertTimestampToSeconds(
         internal::MidiTimestamp const timestampValue)
     {
-        return internal::Shared::ConvertTimestampToFractionalSeconds(timestampValue, TimestampFrequency());
+        return internal::ConvertTimestampToFractionalSeconds(timestampValue, TimestampFrequency());
     }
 
 }

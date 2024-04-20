@@ -6,7 +6,7 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-namespace Windows::Devices::Midi2::Internal
+namespace WindowsMidiServicesInternal
 {
     winrt::hstring BuildFunctionBlockPropertyKey(_In_ uint8_t functionBlockNumber);
     winrt::hstring BuildFunctionBlockNamePropertyKey(_In_ uint8_t functionBlockNumber);

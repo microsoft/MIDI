@@ -127,7 +127,7 @@
 #define MIDI_NRPN_CC_NUMBER_DATA_FINE                                   0x26
 
 
-namespace Windows::Devices::Midi2::Internal
+namespace WindowsMidiServicesInternal
 {
     inline std::uint8_t GetUmpLengthInMidiWordsFromMessageType(_In_ const std::uint8_t messageType) noexcept
     {

@@ -18,8 +18,8 @@
 			BeforeTargets="BeforeBuild;BeforeResolveReferences">
 
 		<ItemGroup Label="CopyMidiServicesAPIReferenceFiles">
-			<Reference Include="$(MSBuildThisFileDirectory)..\..\ref\native\Windows.Devices.Midi2.winmd">
-				<!-- <Implementation>Windows.Devices.Midi2.dll</Implementation> --> <!-- Impl must already be installed on PC -->
+			<Reference Include="$(MSBuildThisFileDirectory)..\..\ref\native\Microsoft.Devices.Midi2.winmd">
+				<!-- <Implementation>Microsoft.Devices.Midi2.dll</Implementation> --> <!-- Impl must already be installed on PC -->
 			</Reference>
 		</ItemGroup>
 

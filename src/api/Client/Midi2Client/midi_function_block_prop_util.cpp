@@ -8,7 +8,7 @@
 
 #include "pch.h"
 
-namespace Windows::Devices::Midi2::Internal
+namespace WindowsMidiServicesInternal
 {
     _Use_decl_annotations_
     winrt::hstring BuildFunctionBlockPropertyKey(uint8_t functionBlockNumber)

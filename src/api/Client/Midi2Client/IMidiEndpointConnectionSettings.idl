@@ -10,12 +10,14 @@
 // Interface for settings classes that transport SDK plugins will implement when 
 // providing custom connection settings for their transports
 
+#include "namespace_defines.h"
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-namespace Windows.Devices.Midi2
+
+namespace MIDI_MIDL_NAMESPACE
 {
-    [MIDI_API_CONTRACT(19)]
+    MIDI_API_CONTRACT_v1
     [MIDI_INTERFACE_UUID("65736736-35f3-421c-a683-3a034ad0dcc2",1.0)]
     interface IMidiEndpointConnectionSettings
     {

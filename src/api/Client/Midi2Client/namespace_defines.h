@@ -6,20 +6,10 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#include "namespace_defines.h"
-#include "midl_defines.h"
-MIDI_IDL_IMPORT
+#pragma once
 
+// Note: These are for convenience. If you change the namespace, you still
+// need to change project settings, projection references, etc.
 
-namespace MIDI_MIDL_NAMESPACE
-{
-    MIDI_API_CONTRACT_v1
-    [default_interface]
-    runtimeclass MidiSessionSettings
-    {
-        MidiSessionSettings();
-
-        Boolean UseMmcssThreads{ get; set; };
-
-    }
-}
+#define MIDI_MIDL_NAMESPACE     Microsoft.Devices.Midi2
+#define MIDI_CPP_NAMESPACE      winrt::Microsoft::Devices::Midi2

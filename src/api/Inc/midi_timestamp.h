@@ -22,7 +22,7 @@
 #define MICROSECONDS_PER_SECOND 1000000
 #define MILLISECONDS_PER_SECOND 1000
 
-namespace Windows::Devices::Midi2::Internal::Shared
+namespace WindowsMidiServicesInternal
 {
 
 #ifdef _KERNEL_MODE

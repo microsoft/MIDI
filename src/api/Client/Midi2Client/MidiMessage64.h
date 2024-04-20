@@ -12,7 +12,7 @@
 #include "MidiMessage64.g.h"
 
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     struct MidiMessage64 : MidiMessage64T<MidiMessage64>
     {
@@ -50,7 +50,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void MessageType(_In_ midi2::MidiMessageType const& value) noexcept 
             { internal::SetUmpMessageType(m_ump.word0, (uint8_t)value); }
 
-        winrt::Windows::Devices::Midi2::MidiPacketType PacketType() const noexcept 
+        MIDI_CPP_NAMESPACE::MidiPacketType PacketType() const noexcept 
             { return midi2::MidiPacketType::UniversalMidiPacket64; }
 
         uint32_t PeekFirstWord() { return Word0(); }
@@ -77,7 +77,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     };
 }
-namespace winrt::Windows::Devices::Midi2::factory_implementation
+namespace MIDI_CPP_NAMESPACE::factory_implementation
 {
     struct MidiMessage64 : MidiMessage64T<MidiMessage64, implementation::MidiMessage64>
     {

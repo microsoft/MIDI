@@ -6,16 +6,17 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+#include "namespace_defines.h"
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-namespace Windows.Devices.Midi2
+namespace MIDI_MIDL_NAMESPACE
 {
     // this is the direction as specified in the spec, so it is 
     // from the POV of the function block, not from the OS. IOW, 
     // Input here means the device FB *receives* messages that
     // are sent through Windows
-    [MIDI_API_CONTRACT(19)]
+    MIDI_API_CONTRACT_v1
     enum MidiFunctionBlockMidi10
     {
         Not10 = 0x0,

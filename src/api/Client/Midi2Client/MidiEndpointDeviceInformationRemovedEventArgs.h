@@ -10,7 +10,7 @@
 #include "MidiEndpointDeviceInformationRemovedEventArgs.g.h"
 
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     struct MidiEndpointDeviceInformationRemovedEventArgs : MidiEndpointDeviceInformationRemovedEventArgsT<MidiEndpointDeviceInformationRemovedEventArgs>
     {

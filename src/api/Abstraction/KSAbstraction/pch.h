@@ -53,7 +53,7 @@
 #include <mmdeviceapi.h>
 
 #include "wstring_util.h"
-namespace internal = ::Windows::Devices::Midi2::Internal;
+namespace internal = ::WindowsMidiServicesInternal;
 
 #include "MidiDefs.h"
 #include "MidiDataFormat.h"

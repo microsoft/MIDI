@@ -57,7 +57,7 @@ HRESULT
 CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
     PVOID Data,
     UINT Length,
-    LONGLONG Position
+    LONGLONG Timestamp
 )
 {
     //TraceLoggingWrite(
@@ -163,7 +163,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
                 {
                     for (uint32_t i = 0; i < resultingMessageCount; i++)
                     {
-                        RETURN_IF_FAILED(m_Callback->Callback(&resultingMessages[i], sizeof(uint32_t), Position + i, m_Context));
+                        RETURN_IF_FAILED(m_Callback->Callback(&resultingMessages[i], sizeof(uint32_t), Timestamp + i, m_Context));
                     }
                 }
             }
@@ -267,7 +267,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
 
                 if (m_Callback != nullptr && newLength > 0 && newData != nullptr)
                 {
-                    return m_Callback->Callback(newData, newLength, Position, m_Context);
+                    return m_Callback->Callback(newData, newLength, Timestamp, m_Context);
                 }
 
             }
@@ -288,7 +288,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
 
             if (m_Callback != nullptr)
             {
-                return m_Callback->Callback(Data, Length, Position, m_Context);
+                return m_Callback->Callback(Data, Length, Timestamp, m_Context);
             }
         }
 

@@ -1,190 +1,190 @@
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiSession"
+             activatableClassId="Microsoft.Devices.Midi2.MidiSession"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.IMidiSessionStatics"
+             activatableClassId="Microsoft.Devices.Midi2.IMidiSessionStatics"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiSessionSettings"
+             activatableClassId="Microsoft.Devices.Midi2.MidiSessionSettings"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiEndpointDeviceInformation"
+             activatableClassId="Microsoft.Devices.Midi2.MidiEndpointDeviceInformation"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.IMidiEndpointDeviceInformationStatics"
+             activatableClassId="Microsoft.Devices.Midi2.IMidiEndpointDeviceInformationStatics"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiEndpointDeviceWatcher"
+             activatableClassId="Microsoft.Devices.Midi2.MidiEndpointDeviceWatcher"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiMessage32"
+             activatableClassId="Microsoft.Devices.Midi2.MidiMessage32"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiMessage64"
+             activatableClassId="Microsoft.Devices.Midi2.MidiMessage64"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiMessage96"
+             activatableClassId="Microsoft.Devices.Midi2.MidiMessage96"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiMessage128"
+             activatableClassId="Microsoft.Devices.Midi2.MidiMessage128"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiMessageStruct"
+             activatableClassId="Microsoft.Devices.Midi2.MidiMessageStruct"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiMessageBuilder"
+             activatableClassId="Microsoft.Devices.Midi2.MidiMessageBuilder"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.IMidiMessageBuilderStatics"
+             activatableClassId="Microsoft.Devices.Midi2.IMidiMessageBuilderStatics"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiStreamMessageBuilder"
+             activatableClassId="Microsoft.Devices.Midi2.MidiStreamMessageBuilder"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.IMidiStreamMessageBuilderStatics"
+             activatableClassId="Microsoft.Devices.Midi2.IMidiStreamMessageBuilderStatics"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiMessageConverter"
+             activatableClassId="Microsoft.Devices.Midi2.MidiMessageConverter"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.IMidiMessageConverterStatics"
+             activatableClassId="Microsoft.Devices.Midi2.IMidiMessageConverterStatics"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiMessageUtility"
+             activatableClassId="Microsoft.Devices.Midi2.MidiMessageUtility"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.IMidiMessageUtilityStatics"
+             activatableClassId="Microsoft.Devices.Midi2.IMidiMessageUtilityStatics"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiFunctionBlock"
+             activatableClassId="Microsoft.Devices.Midi2.MidiFunctionBlock"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiUniqueId"
+             activatableClassId="Microsoft.Devices.Midi2.MidiUniqueId"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiGroupTerminalBlock"
+             activatableClassId="Microsoft.Devices.Midi2.MidiGroupTerminalBlock"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiChannelEndpointListener"
+             activatableClassId="Microsoft.Devices.Midi2.MidiChannelEndpointListener"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiGroupEndpointListener"
+             activatableClassId="Microsoft.Devices.Midi2.MidiGroupEndpointListener"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiMessageTypeEndpointListener"
+             activatableClassId="Microsoft.Devices.Midi2.MidiMessageTypeEndpointListener"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiVirtualEndpointDeviceDefinition"
+             activatableClassId="Microsoft.Devices.Midi2.MidiVirtualEndpointDeviceDefinition"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiMessageReceivedEventArgs"
+             activatableClassId="Microsoft.Devices.Midi2.MidiMessageReceivedEventArgs"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiEndpointConnection"
+             activatableClassId="Microsoft.Devices.Midi2.MidiEndpointConnection"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.IMidiEndpointConnectionStatics"
+             activatableClassId="Microsoft.Devices.Midi2.IMidiEndpointConnectionStatics"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiService"
+             activatableClassId="Microsoft.Devices.Midi2.MidiService"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.IMidiServiceStatics"
+             activatableClassId="Microsoft.Devices.Midi2.IMidiServiceStatics"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiServiceLoopbackEndpointDefinition"
+             activatableClassId="Microsoft.Devices.Midi2.MidiServiceLoopbackEndpointDefinition"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiClock"
+             activatableClassId="Microsoft.Devices.Midi2.MidiClock"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.IMidiClockStatics"
+             activatableClassId="Microsoft.Devices.Midi2.IMidiClockStatics"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiChannel"
+             activatableClassId="Microsoft.Devices.Midi2.MidiChannel"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.IMidiChannelStatics"
+             activatableClassId="Microsoft.Devices.Midi2.IMidiChannelStatics"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.MidiGroup"
+             activatableClassId="Microsoft.Devices.Midi2.MidiGroup"
              threading="Both"
              trustLevel="Base"
              />
           <class
-             activatableClassId="Windows.Devices.Midi2.IMidiGroupStatics"
+             activatableClassId="Microsoft.Devices.Midi2.IMidiGroupStatics"
              threading="Both"
              trustLevel="Base"
              />

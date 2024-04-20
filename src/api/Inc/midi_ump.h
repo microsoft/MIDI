@@ -12,7 +12,7 @@
 
 // NOTE: Timestamp was removed from the UMP Payload because it's a separate parameter to the service calls
 
-namespace Windows::Devices::Midi2::Internal
+namespace WindowsMidiServicesInternal
 {
     // standard timestamp
     using MidiTimestamp = uint64_t;

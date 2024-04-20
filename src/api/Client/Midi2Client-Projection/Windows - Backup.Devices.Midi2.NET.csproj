@@ -10,16 +10,16 @@
 
 	<PropertyGroup>
 		
-		<CsWinRTIncludes>Windows.Devices.Midi2</CsWinRTIncludes>
+		<CsWinRTIncludes>MicrosoftMicrosoft.Devices.Midi2</CsWinRTIncludes>
 		<CsWinRTGeneratedFilesDir>$(OutDir)</CsWinRTGeneratedFilesDir>
 	</PropertyGroup>
 
 	<PropertyGroup>
 		<GeneratedNugetDir>.\nuget\</GeneratedNugetDir>
-		<NuspecFile>$(GeneratedNugetDir)Windows.Devices.Midi2.nuspec</NuspecFile>
+		<NuspecFile>$(GeneratedNugetDir)MicrosoftMicrosoft.Devices.Midi2.nuspec</NuspecFile>
 		<OutputPath>..\..\VSFiles\$(Platform)\$(Configuration)</OutputPath>
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-		<AssemblyName>Windows.Devices.Midi2.NET</AssemblyName>
+		<AssemblyName>MicrosoftMicrosoft.Devices.Midi2.NET</AssemblyName>
 		<PackageOutputPath>..\..\VSFiles\PublishedApiNuGet\</PackageOutputPath>
 		<BaseIntermediateOutputPath>$(SolutionDir)VSFiles\intermediate\</BaseIntermediateOutputPath>
 		<BaseOutputPath>$(SolutionDir)VSFiles\</BaseOutputPath>
@@ -34,7 +34,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Midi2Client\Windows.Devices.Midi2.vcxproj" />
+    <ProjectReference Include="..\Midi2Client\MicrosoftMicrosoft.Devices.Midi2.vcxproj" />
   </ItemGroup>
 
 </Project>

@@ -99,7 +99,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MidiXProc", "Libs\MidiXProc
 		{EFB7CF90-7DEF-44CF-868A-191CA30E0FCF} = {EFB7CF90-7DEF-44CF-868A-191CA30E0FCF}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Windows.Devices.Midi2", "Client\Midi2Client\Windows.Devices.Midi2.vcxproj", "{9EAA3AF3-7328-4F67-A011-E2DD8FBAA4C4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Devices.Midi2", "Client\Midi2Client\Windows.Devices.Midi2.vcxproj", "{9EAA3AF3-7328-4F67-A011-E2DD8FBAA4C4}"
 	ProjectSection(ProjectDependencies) = postProject
 		{4F48735C-9364-462C-B207-2262D4E62589} = {4F48735C-9364-462C-B207-2262D4E62589}
 		{9991FF5B-E0F0-4373-A7C2-20B1EFDE5F70} = {9991FF5B-E0F0-4373-A7C2-20B1EFDE5F70}
@@ -153,7 +153,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.DiagnosticsAbstractio
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MinMidi2", "Drivers\MinMidi2\Driver\MinMidi2.vcxproj", "{2AD0622B-D47A-4CC1-9493-459730F442BE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Windows.Devices.Midi2.NET", "Client\Midi2Client-Projection\Windows.Devices.Midi2.NET.csproj", "{3BFD29F8-004E-4AF3-A135-F96E659BA376}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Devices.Midi2.NET", "Client\Midi2Client-Projection\Microsoft.Devices.Midi2.NET.csproj", "{3BFD29F8-004E-4AF3-A135-F96E659BA376}"
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Midi2", "Midi2Setup\Midi2Setup.vdproj", "{38A9F27A-13E3-49DF-920B-630B09C68105}"
 EndProject

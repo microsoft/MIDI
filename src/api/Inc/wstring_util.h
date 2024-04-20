@@ -16,7 +16,7 @@
 #include <cwctype>
 #include <algorithm>
 
-namespace Windows::Devices::Midi2::Internal
+namespace WindowsMidiServicesInternal
 {
     inline void InPlaceToUpper(_Inout_ std::wstring &s)
     {

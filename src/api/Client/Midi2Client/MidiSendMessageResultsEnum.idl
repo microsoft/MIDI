@@ -6,15 +6,17 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+#include "namespace_defines.h"
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-namespace Windows.Devices.Midi2
+
+namespace MIDI_MIDL_NAMESPACE
 {
     // Yes, this is effectively recreating the HRESULT, but 
     // our API standards do not allow creating and exposing
     // custom HRESULTs in public APIs
-    [MIDI_API_CONTRACT(19)]
+    MIDI_API_CONTRACT_v1
     [flags]
     enum MidiSendMessageResults
     {

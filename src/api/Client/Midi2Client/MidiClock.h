@@ -11,7 +11,7 @@
 
 //#include <midi_timestamp.h>
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     struct MidiClock : MidiClockT<MidiClock>
     {
@@ -47,7 +47,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         static uint64_t m_timestampFrequency;
     };
 }
-namespace winrt::Windows::Devices::Midi2::factory_implementation
+namespace MIDI_CPP_NAMESPACE::factory_implementation
 {
     struct MidiClock : MidiClockT<MidiClock, implementation::MidiClock, winrt::static_lifetime>
     {

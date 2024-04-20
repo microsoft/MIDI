@@ -16,13 +16,13 @@
 #include <TraceLoggingProvider.h>
 
 // qualified with API so as not to intefere with service or SDK tracing
-#define TRACELOGGING_PROVIDER_NAME "Windows.Devices.Midi2.Api"
+#define TRACELOGGING_PROVIDER_NAME          "Microsoft.Devices.Midi2.Api"
 #define TRACE_KEYWORD_API_GENERAL           0x0000000000000001
 #define TRACE_KEYWORD_API_DATA_VALIDATION   0x0000000000000002
 
 using namespace std;
 
-namespace Windows::Devices::Midi2::Internal
+namespace WindowsMidiServicesInternal
 {
     TRACELOGGING_DECLARE_PROVIDER(g_hLoggingProvider);
 

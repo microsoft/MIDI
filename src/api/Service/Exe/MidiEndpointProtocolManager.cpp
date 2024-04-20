@@ -11,8 +11,6 @@
 #include "ump_helpers.h"
 #include "midi_ump_message_defs.h"
 
-namespace internal = ::Windows::Devices::Midi2::Internal;
-
 // Note: This class only works if these type F messages aren't swallowed up
 // by some endpoint transform / processor. We'll need to have code in here
 // later to require the processor be added, and if an option is introduced

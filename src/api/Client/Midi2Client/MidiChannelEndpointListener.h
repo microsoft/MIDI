@@ -10,7 +10,7 @@
 #include "MidiChannelEndpointListener.g.h"
 
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     struct MidiChannelEndpointListener : MidiChannelEndpointListenerT<MidiChannelEndpointListener>
     {
@@ -32,11 +32,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         //void Connection(_In_ midi2::MidiEndpointConnection const& value) noexcept { m_endpointConnection = value; }
 
 
-        winrt::Windows::Devices::Midi2::MidiGroup IncludeGroup() const noexcept { return m_includedGroup; }
+        MIDI_CPP_NAMESPACE::MidiGroup IncludeGroup() const noexcept { return m_includedGroup; }
         void IncludeGroup(
-            _In_ winrt::Windows::Devices::Midi2::MidiGroup const& value) noexcept { m_includedGroup = value; }
+            _In_ MIDI_CPP_NAMESPACE::MidiGroup const& value) noexcept { m_includedGroup = value; }
 
-        winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::MidiChannel> IncludeChannels() { return m_includedChannels; }
+        winrt::Windows::Foundation::Collections::IVector<MIDI_CPP_NAMESPACE::MidiChannel> IncludeChannels() { return m_includedChannels; }
 
 
         void PreventFiringMainMessageReceivedEvent(_In_ bool const value) noexcept { m_preventFiringMainMessageReceivedEvent = value; }
@@ -64,7 +64,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         void Cleanup();
 
         void ProcessIncomingMessage(
-            _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs const& args, 
+            _In_ MIDI_CPP_NAMESPACE::MidiMessageReceivedEventArgs const& args, 
             _Out_ bool& skipFurtherListeners, 
             _Out_ bool& skipMainMessageReceivedEvent);
 
@@ -80,7 +80,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         bool m_preventFiringMainMessageReceivedEvent{ false };
 
 
-        winrt::Windows::Devices::Midi2::MidiGroup m_includedGroup{ nullptr };
+        MIDI_CPP_NAMESPACE::MidiGroup m_includedGroup{ nullptr };
 
         foundation::Collections::IVector<midi2::MidiChannel>
             m_includedChannels{ winrt::multi_threaded_vector<midi2::MidiChannel>() };
@@ -88,7 +88,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::event<foundation::TypedEventHandler<midi2::IMidiMessageReceivedEventSource, midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;
     };
 }
-namespace winrt::Windows::Devices::Midi2::factory_implementation
+namespace MIDI_CPP_NAMESPACE::factory_implementation
 {
     struct MidiChannelEndpointListener : MidiChannelEndpointListenerT<MidiChannelEndpointListener, implementation::MidiChannelEndpointListener>
     {

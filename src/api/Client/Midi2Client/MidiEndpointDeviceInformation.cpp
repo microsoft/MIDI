@@ -10,7 +10,7 @@
 #include "MidiEndpointDeviceInformation.h"
 #include "MidiEndpointDeviceInformation.g.cpp"
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
 
     winrt::Windows::Devices::Enumeration::DeviceInformation MidiEndpointDeviceInformation::GetContainerInformation() const noexcept

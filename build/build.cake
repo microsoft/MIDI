@@ -1,6 +1,9 @@
 #tool nuget:?package=NuGet.CommandLine&version=5.10
 //#addin nuget:?package=Cake.Compression&version=0.3.0
 
+const string MIDI2_NAMESPACE = "Microsoft.Devices.Midi2";
+
+
 // ===========================================================================================
 string setupVersionName = "Developer Preview 6";
 
@@ -165,7 +168,7 @@ Task("SetupEnvironment")
     // Copy key output files from VSFiles to staging to allow building installer
    
     var outputDir = System.IO.Path.Combine(apiAndServiceSolutionDir, "VSFiles", plat.ToString(), configuration);
-    var generatedFilesDir = System.IO.Path.Combine(apiAndServiceSolutionDir, "VSFiles", "intermediate", "Windows.Devices.Midi2", plat.ToString(), configuration, "GeneratedFiles", "winrt");
+    var generatedFilesDir = System.IO.Path.Combine(apiAndServiceSolutionDir, "VSFiles", "intermediate", $"{MIDI2_NAMESPACE}", plat.ToString(), configuration, "GeneratedFiles", "winrt");
     //var apiHeaderDir = System.IO.Path.Combine(apiAndServiceSolutionDir, "VSFiles\\intermediate\\Windows.Devices.Midi2",  plat.ToString(), configuration, "GeneratedFiles\\winrt");
 
     Information("\nCopying service and API for " + plat.ToString());
@@ -185,12 +188,12 @@ Task("SetupEnvironment")
     CopyFiles(System.IO.Path.Combine(outputDir, "MidiSrv.exe"), copyToDir); 
     CopyFiles(System.IO.Path.Combine(outputDir, "mididmp.exe"), copyToDir); 
 
-    CopyFiles(System.IO.Path.Combine(outputDir, "Windows.Devices.Midi2.winmd"), copyToDir); 
+    CopyFiles(System.IO.Path.Combine(outputDir, $"{MIDI2_NAMESPACE}.winmd"), copyToDir); 
 
     CopyFiles(System.IO.Path.Combine(outputDir, "WinRTActivationEntries.txt"), copyToDir); 
 
     // copy the C++ header for the API
-    CopyFiles(System.IO.Path.Combine(generatedFilesDir, "Windows.Devices.Midi2.h"), copyToDir); 
+    CopyFiles(System.IO.Path.Combine(generatedFilesDir, $"{MIDI2_NAMESPACE}.h"), copyToDir); 
 
 
 
@@ -209,7 +212,7 @@ Task("SetupEnvironment")
         CreateDirectory(System.IO.Path.Combine(apiBareCopyToDir, "winrt", "impl"));
 
 
-    CopyFiles(System.IO.Path.Combine(copyToDir, "Windows.Devices.Midi2.h"), apiBareCopyToDir); 
+    CopyFiles(System.IO.Path.Combine(copyToDir, $"{MIDI2_NAMESPACE}.h"), apiBareCopyToDir); 
 
     CopyFiles(System.IO.Path.Combine(generatedFilesDir, "base.h"), System.IO.Path.Combine(apiBareCopyToDir, "winrt/")); 
     CopyFiles(System.IO.Path.Combine(generatedFilesDir, "Windows.Devices.h"), System.IO.Path.Combine(apiBareCopyToDir, "winrt/")); 
@@ -217,11 +220,11 @@ Task("SetupEnvironment")
     CopyFiles(System.IO.Path.Combine(generatedFilesDir, "impl/Windows.Devices.Midi.2.h"), System.IO.Path.Combine(apiBareCopyToDir, "winrt/impl/")); 
     CopyFiles(System.IO.Path.Combine(generatedFilesDir, "impl/Windows.Foundation.2.h"), System.IO.Path.Combine(apiBareCopyToDir, "winrt/impl/")); 
     CopyFiles(System.IO.Path.Combine(generatedFilesDir, "impl/Windows.Foundation.Collections.2.h"), System.IO.Path.Combine(apiBareCopyToDir, "winrt/impl/")); 
-    CopyFiles(System.IO.Path.Combine(generatedFilesDir, "impl/Windows.Devices.Midi2.2.h"), System.IO.Path.Combine(apiBareCopyToDir, "winrt/impl/")); 
+    CopyFiles(System.IO.Path.Combine(generatedFilesDir, $"impl/{MIDI2_NAMESPACE}.2.h"), System.IO.Path.Combine(apiBareCopyToDir, "winrt/impl/")); 
 
-    CopyFiles(System.IO.Path.Combine(copyToDir, "Windows.Devices.Midi2.dll"), apiBareCopyToDir); 
-    CopyFiles(System.IO.Path.Combine(copyToDir, "Windows.Devices.Midi2.winmd"), apiBareCopyToDir); 
-    CopyFiles(System.IO.Path.Combine(copyToDir, "Windows.Devices.Midi2.pri"), apiBareCopyToDir); 
+    CopyFiles(System.IO.Path.Combine(copyToDir, $"{MIDI2_NAMESPACE}.dll"), apiBareCopyToDir); 
+    CopyFiles(System.IO.Path.Combine(copyToDir, $"{MIDI2_NAMESPACE}.winmd"), apiBareCopyToDir); 
+    CopyFiles(System.IO.Path.Combine(copyToDir, $"{MIDI2_NAMESPACE}.pri"), apiBareCopyToDir); 
 
 
 });
@@ -374,7 +377,7 @@ Task("PackAPIProjection")
 
     var workingDirectory = System.IO.Path.Combine(apiAndServiceSolutionDir, "Client", "Midi2Client-Projection");
 
-    NuGetPack(System.IO.Path.Combine(workingDirectory, "nuget", "Windows.Devices.Midi2.nuspec"), new NuGetPackSettings
+    NuGetPack(System.IO.Path.Combine(workingDirectory, "nuget", $"{MIDI2_NAMESPACE}.nuspec"), new NuGetPackSettings
     {
         WorkingDirectory = workingDirectory,
         OutputDirectory = System.IO.Path.Combine(releaseRootDir, "NuGet")  // NuGet packages cover multiple platforms

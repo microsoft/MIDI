@@ -10,9 +10,9 @@
 // almost always bidirectional. This is the main entity that applications will use
 // after creating a session
 
+#include "namespace_defines.h"
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
-
 
 import "IMidiMessageReceivedEventSource.idl";
 import "IMidiEndpointMessageProcessingPlugin.idl";
@@ -20,11 +20,11 @@ import "MidiSendMessageResultsEnum.idl";
 import "IMidiEndpointConnectionSettings.idl";
 import "IMidiEndpointConnectionSource.idl";
 
-namespace Windows.Devices.Midi2
+namespace MIDI_MIDL_NAMESPACE
 {
-    [MIDI_API_CONTRACT(19)]
+    MIDI_API_CONTRACT_v1
     [default_interface]
-    runtimeclass MidiEndpointConnection : Windows.Devices.Midi2.IMidiMessageReceivedEventSource,
+    runtimeclass MidiEndpointConnection : IMidiMessageReceivedEventSource,
                                           IMidiEndpointConnectionSource
 
     {

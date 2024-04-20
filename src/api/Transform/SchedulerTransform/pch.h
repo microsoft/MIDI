@@ -51,8 +51,7 @@
 #include "midi_ump.h"
 #include "midi_timestamp.h"
 
-namespace internal = ::Windows::Devices::Midi2::Internal;
-namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
+namespace internal = ::WindowsMidiServicesInternal;
 
 #include "MidiDefs.h"
 #include "plugin_defs.h"

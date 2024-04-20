@@ -13,7 +13,7 @@
 #include "ump_helpers.h"
 #include "midi_ump.h"
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     _Use_decl_annotations_
     midi2::MidiMessage32 MidiMessageBuilder::BuildUtilityMessage(

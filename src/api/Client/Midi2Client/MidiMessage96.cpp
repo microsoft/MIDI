@@ -10,7 +10,7 @@
 #include "MidiMessage96.h"
 #include "MidiMessage96.g.cpp"
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     collections::IVector<uint32_t> MidiMessage96::GetAllWords() const noexcept
     {

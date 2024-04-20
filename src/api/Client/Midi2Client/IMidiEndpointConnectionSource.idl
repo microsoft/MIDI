@@ -12,12 +12,14 @@
 // named IMidiEndpointConnectionSource instead of IMidiEndpointConnection because 
 // it conflicts with auto-generated interface names otherwise
 
+#include "namespace_defines.h"
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-namespace Windows.Devices.Midi2
+
+namespace MIDI_MIDL_NAMESPACE
 {
-    [MIDI_API_CONTRACT(19)]
+    MIDI_API_CONTRACT_v1
     [MIDI_INTERFACE_UUID("44385cdd-b64c-4195-8faa-8a61fc952a23",1.0)]
     interface IMidiEndpointConnectionSource
     {

@@ -26,7 +26,7 @@
 namespace json = ::winrt::Windows::Data::Json;
 
 
-namespace Windows::Devices::Midi2::Internal
+namespace WindowsMidiServicesInternal
 {
     inline json::JsonObject BuildConfigurationResponseObject(_In_ bool const success)
     {

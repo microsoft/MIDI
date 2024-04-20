@@ -13,7 +13,7 @@
 
 
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     collections::IVector<uint32_t> MidiMessage32::GetAllWords() const noexcept
     {

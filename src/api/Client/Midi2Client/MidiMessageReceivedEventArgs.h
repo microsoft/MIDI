@@ -22,7 +22,7 @@
 // https://learn.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/author-events
 
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     // Getxxx methods return something new
     // Fill methods put data into existing data structures
