@@ -10,6 +10,7 @@ The Windows.Devices.Midi2 types are documented in these pages.
 
 Typical API workflow:
 
+1. **Check for Windows MIDI Services availability**. Windows MIDI Services is not available on older versions of Windows, or on devices like Xbox, Hololens, and others. The first step is to make a call to check for availability of the services on Windows. If Windows MIDI Services is not available, you may want to fall back to an older MIDI API, or simply inform the user and terminate the application.
 1. **Create a new session**, with an appropriate name. The name will be visible to users and so should be meaningful. Each application may open more than one session at a time (for example, different songs in a DAW, or different tabs in a browser). A single session manages the lifetime of the connections opened through it.
 2. **Connect to an endpoint**. Typically, you'll get the endpoint's id through the enumeration functions.
 3. **Wire up a MidiMessageReceived event handler**. This is how you will receive incoming messages from the endpoint. Messages are received individually, with one event per message.
@@ -19,6 +20,10 @@ Typical API workflow:
 ## Endpoint Enumeration
 
 Enumeration is how you discover endpoints and get notified of endpoints when they are added, updated, or removed. For the best user experience, keep a `MidiEndpointDeviceWatcher` running in a background thread so you can monitor device removal, and property updates (name, function blocks, etc.)
+
+## Service
+
+The MidiService class is a utility class which provides access to health and status information related to the MidiSrv Service. This is also where you can check to see if Windows MIDI Services is available on this PC.
 
 ## Session
 
@@ -52,6 +57,3 @@ A virtual device is the mechanism through which app-to-app MIDI works through th
 
 There are several simple or basic types used in Windows MIDI Services. These types provide formatting and validation to help ensure applications display data in similar ways.
 
-## Service
-
-The MidiService class is a utility class which provides access to health and status information related to the MidiSrv Service.

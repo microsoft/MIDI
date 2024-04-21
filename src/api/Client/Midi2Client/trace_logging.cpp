@@ -98,7 +98,7 @@ namespace WindowsMidiServicesInternal
         const char* location, 
         const wchar_t* message) noexcept
     {
-        //OutputDebugString(L"" __FUNCTION__ L"API General Error. Use tracing provider for details.");
+        OutputDebugString(L"" __FUNCTION__ L"API General Error. Use tracing provider for details.");
 
         if (!g_traceLoggingRegistered) RegisterTraceLogging();
 
