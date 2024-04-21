@@ -1,0 +1,57 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+#include "namespace_defines.h"
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+import "IMidiUniversalPacket.idl";
+
+import "MidiMessage32.idl";
+import "MidiMessage64.idl";
+import "MidiMessage96.idl";
+import "MidiMessage128.idl";
+
+import "MidiPacketTypeEnum.idl";
+import "MidiMessageTypeEnum.idl";
+
+import "MidiMessageStruct.idl";
+
+
+namespace MIDI_MIDL_NAMESPACE
+{
+    MIDI_API_CONTRACT_v1
+    [default_interface]
+    runtimeclass MidiMessageReceivedEventArgs
+    {
+        MIDI_TIMESTAMP Timestamp{ get; };
+
+        MidiPacketType PacketType{ get; };
+        MidiMessageType MessageType{ get; };
+
+        UInt32 PeekFirstWord();
+        
+        IMidiUniversalPacket GetMessagePacket();
+
+        UInt8 FillWords(out UInt32 word0, out UInt32 word1, out UInt32 word2, out UInt32 word3);
+
+        UInt8 FillMessageStruct(out MidiMessageStruct message);
+
+        Boolean FillMessage32(MidiMessage32 message);
+        Boolean FillMessage64(MidiMessage64 message);
+        Boolean FillMessage96(MidiMessage96 message);
+        Boolean FillMessage128(MidiMessage128 message);
+
+        UInt8 FillWordArray(UInt32 startIndex, ref UInt32[] words);
+        UInt8 FillByteArray(UInt32 startIndex, ref UInt8[] bytes);
+
+        UInt8 FillBuffer(UInt32 byteOffset, Windows.Foundation.IMemoryBuffer buffer);
+
+        UInt8 AppendWordsToList(IVector<UInt32> wordList);
+    }
+}

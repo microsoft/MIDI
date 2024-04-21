@@ -1,0 +1,146 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+#include "namespace_defines.h"
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+import "IMidiUniversalPacket.idl";
+import "MidiMessage32.idl";
+import "MidiMessage64.idl";
+import "MidiMessage96.idl";
+import "MidiMessage128.idl";
+
+import "MidiGroup.idl";
+import "MidiChannel.idl";
+
+import "MidiSystemExclusive8StatusEnum.idl";
+
+import "Midi1ChannelVoiceMessageStatusEnum.idl";
+import "Midi2ChannelVoiceMessageStatusEnum.idl";
+
+
+namespace MIDI_MIDL_NAMESPACE
+{
+    MIDI_API_CONTRACT_v1
+    static runtimeclass MidiMessageBuilder
+    {
+        static MidiMessage32 BuildUtilityMessage(
+            MIDI_TIMESTAMP timestamp, 
+            UInt8 status, 
+            UInt32 dataOrReserved);
+
+        static MidiMessage32 BuildSystemMessage(
+            MIDI_TIMESTAMP timestamp,
+            MidiGroup group,
+            UInt8 status, 
+            UInt8 midi1Byte2, 
+            UInt8 midi1Byte3);
+
+        static MidiMessage32 BuildMidi1ChannelVoiceMessage(
+            MIDI_TIMESTAMP timestamp,
+            MidiGroup group,
+            Midi1ChannelVoiceMessageStatus status,
+            MidiChannel channel, 
+            UInt8 byte3, 
+            UInt8 byte4);
+
+        [default_overload]
+        static MidiMessage64 BuildSystemExclusive7Message(
+            MIDI_TIMESTAMP timestamp,
+            MidiGroup group,
+            UInt8 status,
+            UInt8 numberOfBytes, 
+            UInt8 dataByte0, 
+            UInt8 dataByte1, 
+            UInt8 dataByte2, 
+            UInt8 dataByte3, 
+            UInt8 dataByte4, 
+            UInt8 dataByte5);
+
+        static MidiMessage64 BuildMidi2ChannelVoiceMessage(
+            MIDI_TIMESTAMP timestamp,
+            MidiGroup group,
+            Midi2ChannelVoiceMessageStatus status,
+            MidiChannel channel,
+            UInt16 index,
+            UInt32 data);
+
+        static MidiMessage128 BuildSystemExclusive8Message(
+            MIDI_TIMESTAMP timestamp,
+            MidiGroup group,
+            MidiSystemExclusive8Status status,
+            UInt8 numberOfValidDataBytesThisMessage, 
+            UInt8 streamId, 
+            UInt8 dataByte00, 
+            UInt8 dataByte01, 
+            UInt8 dataByte02, 
+            UInt8 dataByte03, 
+            UInt8 dataByte04, 
+            UInt8 dataByte05, 
+            UInt8 dataByte06, 
+            UInt8 dataByte07, 
+            UInt8 dataByte08, 
+            UInt8 dataByte09, 
+            UInt8 dataByte10, 
+            UInt8 dataByte11, 
+            UInt8 dataByte12);
+
+        static MidiMessage128 BuildMixedDataSetChunkHeaderMessage(
+            MIDI_TIMESTAMP timestamp,
+            MidiGroup group,
+            UInt8 mdsId,
+            UInt16 numberValidDataBytesInThisChunk, 
+            UInt16 numberChunksInMixedDataSet, 
+            UInt16 numberOfThisChunk, 
+            UInt16 manufacturerId, 
+            UInt16 deviceId, 
+            UInt16 subId1, 
+            UInt16 subId2);
+
+        static MidiMessage128 BuildMixedDataSetChunkDataMessage(
+            MIDI_TIMESTAMP timestamp,
+            MidiGroup group,
+            UInt8 mdsId,
+            UInt8 dataByte00, 
+            UInt8 dataByte01, 
+            UInt8 dataByte02, 
+            UInt8 dataByte03, 
+            UInt8 dataByte04, 
+            UInt8 dataByte05, 
+            UInt8 dataByte06, 
+            UInt8 dataByte07, 
+            UInt8 dataByte08, 
+            UInt8 dataByte09, 
+            UInt8 dataByte10, 
+            UInt8 dataByte11, 
+            UInt8 dataByte12, 
+            UInt8 dataByte13);
+
+        static MidiMessage128 BuildFlexDataMessage(
+            MIDI_TIMESTAMP timestamp,
+            MidiGroup group,
+            UInt8 form,
+            UInt8 address, 
+            MidiChannel channel, 
+            UInt8 statusBank, 
+            UInt8 status, 
+            UInt32 word1Data, 
+            UInt32 word2Data, 
+            UInt32 word3Data);
+
+        static MidiMessage128 BuildStreamMessage(
+            MIDI_TIMESTAMP timestamp,
+            UInt8 form,
+            UInt16 status, 
+            UInt16 word0RemainingData, 
+            UInt32 word1Data, 
+            UInt32 word2Data, 
+            UInt32 word3Data);
+    };
+}

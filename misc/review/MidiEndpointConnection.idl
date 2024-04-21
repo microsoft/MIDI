@@ -1,0 +1,70 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+#include "namespace_defines.h"
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+import "IMidiMessageReceivedEventSource.idl";
+import "IMidiEndpointMessageProcessingPlugin.idl";
+import "MidiSendMessageResultsEnum.idl";
+import "IMidiEndpointConnectionSettings.idl";
+import "IMidiEndpointConnectionSource.idl";
+
+namespace MIDI_MIDL_NAMESPACE
+{
+    MIDI_API_CONTRACT_v1
+    [default_interface]
+    runtimeclass MidiEndpointConnection : IMidiMessageReceivedEventSource,
+                                          IMidiEndpointConnectionSource
+
+    {
+        static String GetDeviceSelector();
+
+        static Boolean SendMessageSucceeded(MidiSendMessageResults sendResult);
+        static Boolean SendMessageFailed(MidiSendMessageResults sendResult);
+
+        Guid ConnectionId{ get; };
+
+        String EndpointDeviceId{ get; };
+
+        IInspectable Tag{ get; set; };
+
+        IMidiEndpointConnectionSettings Settings{ get; };
+
+        Boolean IsOpen{ get; };
+        Boolean Open();
+
+        IVectorView<IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins{ get; };
+        void AddMessageProcessingPlugin(IMidiEndpointMessageProcessingPlugin plugin);
+        void RemoveMessageProcessingPlugin(Guid id);
+
+        MidiSendMessageResults SendSingleMessagePacket(IMidiUniversalPacket message);
+
+        MidiSendMessageResults SendSingleMessageStruct(MIDI_TIMESTAMP timestamp, UInt8 wordCount, ref const MidiMessageStruct message);
+
+        MidiSendMessageResults SendSingleMessageWordArray(MIDI_TIMESTAMP timestamp, UInt32 startIndex, UInt8 wordCount, UInt32[] words);
+
+        MidiSendMessageResults SendSingleMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0);
+        MidiSendMessageResults SendSingleMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1);
+        MidiSendMessageResults SendSingleMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1, UInt32 word2);
+        MidiSendMessageResults SendSingleMessageWords(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1, UInt32 word2, UInt32 word3);
+
+        MidiSendMessageResults SendSingleMessageBuffer(MIDI_TIMESTAMP timestamp, UInt32 byteOffset, UInt8 byteCount, Windows.Foundation.IMemoryBuffer buffer);
+
+        MidiSendMessageResults SendMultipleMessagesWordList(MIDI_TIMESTAMP timestamp, IIterable<UInt32> words);
+        MidiSendMessageResults SendMultipleMessagesWordArray(MIDI_TIMESTAMP timestamp, UInt32 startIndex, UInt32 wordCount, UInt32[] words);
+
+        MidiSendMessageResults SendMultipleMessagesPacketList(IIterable<IMidiUniversalPacket> messages);
+
+        MidiSendMessageResults SendMultipleMessagesStructList(MIDI_TIMESTAMP timestamp, IIterable<MidiMessageStruct> messages);
+        MidiSendMessageResults SendMultipleMessagesStructArray(MIDI_TIMESTAMP timestamp, UInt32 startIndex, UInt32 messageCount, MidiMessageStruct[] messages);
+
+        MidiSendMessageResults SendMultipleMessagesBuffer(MIDI_TIMESTAMP timestamp, UInt32 byteOffset, UInt32 byteCount, Windows.Foundation.IMemoryBuffer buffer);
+    }
+}

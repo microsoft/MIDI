@@ -1,0 +1,23 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+#include "namespace_defines.h"
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+import "MidiMessageReceivedEventArgs.idl";
+
+namespace MIDI_MIDL_NAMESPACE
+{
+    MIDI_API_CONTRACT_v1
+    [MIDI_INTERFACE_UUID("101ceb4b-cca4-48a1-b91e-6002b928613c",1.0)]
+    interface IMidiMessageReceivedEventSource
+    {      
+        event Windows.Foundation.TypedEventHandler<IMidiMessageReceivedEventSource, MidiMessageReceivedEventArgs> MessageReceived;
+    }
+}

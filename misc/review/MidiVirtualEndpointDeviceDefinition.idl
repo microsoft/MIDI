@@ -1,0 +1,46 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+#include "namespace_defines.h"
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
+
+
+import "MidiFunctionBlock.idl";
+
+
+namespace MIDI_MIDL_NAMESPACE
+{
+    MIDI_API_CONTRACT_v1
+    [default_interface]
+    runtimeclass MidiVirtualEndpointDeviceDefinition
+    {
+        MidiVirtualEndpointDeviceDefinition();
+
+        String EndpointName{ get; set; };
+        String EndpointProductInstanceId{ get; set; };
+
+        String TransportSuppliedDescription{ get; set; };
+
+        Boolean SupportsMidi1ProtocolMessages{ get; set; };
+        Boolean SupportsMidi2ProtocolMessages{ get; set; };
+        Boolean SupportsReceivingJRTimestamps{ get; set; };
+        Boolean SupportsSendingJRTimestamps{ get; set; };
+
+        IVector<UInt8> DeviceManufacturerSystemExclusiveId{ get; };
+        UInt8 DeviceFamilyLsb{ get; set; };
+        UInt8 DeviceFamilyMsb{ get; set; };
+        UInt8 DeviceFamilyModelLsb{ get; set; };
+        UInt8 DeviceFamilyModelMsb{ get; set; };
+        IVector<UInt8> SoftwareRevisionLevel{ get; };
+
+        Boolean AreFunctionBlocksStatic{ get; set; };
+
+        IVector<MidiFunctionBlock> FunctionBlocks{ get; };
+    }
+}
