@@ -13,7 +13,7 @@
 #include "MidiMessage32.g.h"
 
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     struct MidiMessage32 : MidiMessage32T<MidiMessage32>
     {
@@ -65,7 +65,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     };
 }
-namespace winrt::Windows::Devices::Midi2::factory_implementation
+namespace MIDI_CPP_NAMESPACE::factory_implementation
 {
     struct MidiMessage32 : MidiMessage32T<MidiMessage32, implementation::MidiMessage32>
     {

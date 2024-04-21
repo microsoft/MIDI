@@ -9,7 +9,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 {
     public class MidiServiceSessionInformationWrapper
     {
-        public MidiServiceSessionInfo SessionInfo { get; set; }
+        public MidiServiceSessionInfo? SessionInfo { get; set; }
 
         public ObservableCollection<MidiServiceSessionConnectionInfo> SessionConnections { get; } = [];
     }

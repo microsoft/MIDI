@@ -6,42 +6,34 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+#include "namespace_defines.h"
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-
-namespace Windows.Devices.Midi2
+namespace MIDI_MIDL_NAMESPACE
 {
-    [MIDI_API_CONTRACT(19)]
+    MIDI_API_CONTRACT_v1
     [default_interface]
     runtimeclass MidiServiceTransportPluginInfo
     {
-        Guid Id{ get; };           // from registry
+        Guid Id{ get; };
 
- //       String RegistryKey{ get; };     // from registry
- //       Boolean IsEnabled{ get; };      // from registry
+        String Name{ get; };
+        String Mnemonic{ get; };
+        String Description{ get; };
 
+        String SmallImagePath{ get; };
 
-        String Name{ get; };            // from component information
-        String Mnemonic{ get; };        // same mnemonic as used in device creation
-        String Description{ get; };     // from component information
-
-        // TBD if we change this to an image type or URI instead
-        String SmallImagePath{ get; };        // from component information
-
-        String Author{ get; };          // from component information
+        String Author{ get; };
 
         String Version{ get; };
 
-        // indicates whether or not endpoints can be created/deleted at runtime by apps or settings
-        Boolean IsRuntimeCreatableByApps{ get; };         // for example, app-to-app MIDI is a yes
-        Boolean IsRuntimeCreatableBySettings{ get; };     // app-to-app virtual device is a no, but loopback is a yes
+        Boolean IsRuntimeCreatableByApps{ get; };
+        Boolean IsRuntimeCreatableBySettings{ get; };
 
-        Boolean IsSystemManaged{ get; };                    // True if it can't be added/removed. may get this from the registry
-        Boolean IsClientConfigurable{ get; };               // true if we should try to instantiate the config assembly
+        Boolean IsSystemManaged{ get; };
+        Boolean IsClientConfigurable{ get; };
 
-        // this is an assembly rather than a COM component because it shows WinUI panels and needs to integrate
-        // with the MIDI Settings applicationMI
-        String ClientConfigurationAssemblyName{ get; };     // this needs to come from the component to prevent registry hacks
+        String ClientConfigurationAssemblyName{ get; };
     }
 }

@@ -21,11 +21,11 @@
 
 #define MIDI_MAX_ALLOWED_SCHEDULER_SECONDS_INTO_FUTURE 20
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     struct MidiEndpointConnection : MidiEndpointConnectionT<MidiEndpointConnection, IMidiCallback> 
     {
-        MidiEndpointConnection() { m_maxAllowedTimestampOffset = ::Windows::Devices::Midi2::Internal::Shared::GetMidiTimestampFrequency() * MIDI_MAX_ALLOWED_SCHEDULER_SECONDS_INTO_FUTURE; }
+        MidiEndpointConnection() { m_maxAllowedTimestampOffset = internal::GetMidiTimestampFrequency() * MIDI_MAX_ALLOWED_SCHEDULER_SECONDS_INTO_FUTURE; }
         ~MidiEndpointConnection();
 
         static hstring GetDeviceSelector() noexcept { return MIDI_ENDPOINT_DEVICE_AQS_FILTER; }
@@ -227,7 +227,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     };
 }
-namespace winrt::Windows::Devices::Midi2::factory_implementation
+namespace MIDI_CPP_NAMESPACE::factory_implementation
 {
     struct MidiEndpointConnection : MidiEndpointConnectionT<MidiEndpointConnection, implementation::MidiEndpointConnection>
     {

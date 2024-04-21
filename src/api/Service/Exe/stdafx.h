@@ -48,7 +48,7 @@
 
 // AbstractionUtilities
 #include "wstring_util.h"
-namespace internal = ::Windows::Devices::Midi2::Internal;
+namespace internal = ::WindowsMidiServicesInternal;
 
 #include "MidiDefs.h"
 #include "MidiDataFormat.h"
@@ -65,8 +65,6 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "json_helpers.h"
 #include "swd_helpers.h"
 #include "wstring_util.h"
-
-namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
 
 #include "resource.h"
 #include "propkey.h"

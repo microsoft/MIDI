@@ -9,7 +9,13 @@ namespace Microsoft.Midi.Settings.ViewModels
 {
     public class MidiEndpointDevicesByTransport
     {
-        public MidiServiceTransportPluginInfo Transport { get; set; }
+        public MidiEndpointDevicesByTransport(MidiServiceTransportPluginInfo transport)
+        {
+            Transport = transport;
+        }
+
+
+        public MidiServiceTransportPluginInfo Transport { get; private set; }
 
         public ObservableCollection<MidiEndpointDeviceInformation> EndpointDevices { get; } = [];
 

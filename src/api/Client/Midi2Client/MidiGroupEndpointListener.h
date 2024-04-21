@@ -10,7 +10,7 @@
 #include "MidiGroupEndpointListener.g.h"
 
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     struct MidiGroupEndpointListener : MidiGroupEndpointListenerT<MidiGroupEndpointListener>
     {
@@ -58,7 +58,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
         void ProcessIncomingMessage(
-            _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs const& args, 
+            _In_ MIDI_CPP_NAMESPACE::MidiMessageReceivedEventArgs const& args, 
             _Out_ bool& skipFurtherListeners, 
             _Out_ bool& skipMainMessageReceivedEvent);
 
@@ -80,7 +80,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     };
 }
-namespace winrt::Windows::Devices::Midi2::factory_implementation
+namespace MIDI_CPP_NAMESPACE::factory_implementation
 {
     struct MidiGroupEndpointListener : MidiGroupEndpointListenerT<MidiGroupEndpointListener, implementation::MidiGroupEndpointListener>
     {

@@ -279,7 +279,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                         Id = device.Id,
                         Name = device.Name,
                         PortDirection = Midi1PortDirection.Output,
-                        DeviceInstanceId = device.Properties.GetValueOrDefault("System.Devices.DeviceInstanceId", string.Empty).ToString()
+                        DeviceInstanceId = device.Properties.GetValueOrDefault("System.Devices.DeviceInstanceId", string.Empty).ToString()!
                     };
 
                     parent.Ports.Add(port);

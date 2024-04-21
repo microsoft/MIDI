@@ -6,11 +6,9 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+#include "namespace_defines.h"
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
-
-// this has the most basic message building as required in the API. For more
-// advanced message building, including specific messages, see the SDK.
 
 import "IMidiUniversalPacket.idl";
 import "MidiMessage32.idl";
@@ -22,13 +20,11 @@ import "Midi1ChannelVoiceMessageStatusEnum.idl";
 import "Midi2ChannelVoiceMessageStatusEnum.idl";
 
 
-namespace Windows.Devices.Midi2
+namespace MIDI_MIDL_NAMESPACE
 {
-    [MIDI_API_CONTRACT(19)]
+    MIDI_API_CONTRACT_v1
     static runtimeclass MidiMessageConverter
     {
-        // for migrating from raw bytes
-
         static MidiMessage32 ConvertMidi1Message(
             MIDI_TIMESTAMP timestamp,
             MidiGroup group,
@@ -50,10 +46,6 @@ namespace Windows.Devices.Midi2
             UInt8 dataByte2
         );
 
-
-        // For migrating from Windows.Devices.Midi API
-
-        // Channel Voice Messages
 
         static MidiMessage32 ConvertMidi1ChannelPressureMessage(
             MIDI_TIMESTAMP timestamp,
@@ -90,8 +82,6 @@ namespace Windows.Devices.Midi2
             Windows.Devices.Midi.MidiProgramChangeMessage originalMessage
         );
 
-
-        // System Common and System Real-Time
 
         static MidiMessage32 ConvertMidi1TimeCodeMessage(
             MIDI_TIMESTAMP timestamp,
@@ -154,10 +144,5 @@ namespace Windows.Devices.Midi2
             MidiGroup group,
             Windows.Devices.Midi.MidiSystemResetMessage originalMessage
         );
-
-
-
-        // TODO: SysEx
-
     };
 }

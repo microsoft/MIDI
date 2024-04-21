@@ -10,7 +10,7 @@
 #include "MidiGroupTerminalBlock.h"
 #include "MidiGroupTerminalBlock.g.cpp"
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     // this conversion will never be 100% because the GTBs just contain slightly
     // different data than Function Blocks. However, it will provide enough information

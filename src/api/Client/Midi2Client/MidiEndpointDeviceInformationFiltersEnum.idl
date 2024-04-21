@@ -6,34 +6,25 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+#include "namespace_defines.h"
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-namespace Windows.Devices.Midi2
+namespace MIDI_MIDL_NAMESPACE
 {
-    [MIDI_API_CONTRACT(19)]
+    MIDI_API_CONTRACT_v1
     [flags]
     enum MidiEndpointDeviceInformationFilters
     {
-        // Normal client devices to connect to to send/receive. 
-        // These two are all most apps need
         IncludeClientUmpNative = 0x00000001,
         IncludeClientByteStreamNative = 0x00000002,
 
-        // this is for the *source* data, not the client connection. 
-        // Normally, clients shouldn't connect to this
         IncludeVirtualDeviceResponder = 0x00000100,
 
-
-        // the diagnostics loopback devices. I've included Ping to be 
-        // inclusive, but no app should ever use it
         IncludeDiagnosticLoopback = 0x00010000,
         IncludeDiagnosticPing = 0x00020000,
 
 
-
-
         AllTypicalEndpoints = IncludeClientUmpNative | IncludeClientByteStreamNative,
-
     };
 }

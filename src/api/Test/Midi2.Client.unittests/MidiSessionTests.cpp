@@ -9,7 +9,7 @@
 #include "stdafx.h"
 
 
-using namespace winrt::Windows::Devices::Midi2;
+using namespace winrt::Microsoft::Devices::Midi2;
 
 void MidiSessionTests::TestCreateNewSessionWithoutSettings()
 {

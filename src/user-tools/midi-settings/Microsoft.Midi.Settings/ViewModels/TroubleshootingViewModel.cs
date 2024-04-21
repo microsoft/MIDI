@@ -38,7 +38,7 @@ public class TroubleshootingViewModel : ObservableRecipient, INavigationAware
 
 
         RestartServiceCommand = new RelayCommand<MidiEndpointDeviceInformation>(
-            async (param) =>
+            (param) =>
             {
                 System.Diagnostics.Debug.WriteLine("RestartServiceCommand exec");
 

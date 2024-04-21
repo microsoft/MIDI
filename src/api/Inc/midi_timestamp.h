@@ -19,10 +19,11 @@
 // https://learn.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps
 
 
-#define MICROSECONDS_PER_SECOND 1000000
-#define MILLISECONDS_PER_SECOND 1000
+#define NANOSECONDS_PER_SECOND      1000000000
+#define MICROSECONDS_PER_SECOND     1000000
+#define MILLISECONDS_PER_SECOND     1000
 
-namespace Windows::Devices::Midi2::Internal::Shared
+namespace WindowsMidiServicesInternal
 {
 
 #ifdef _KERNEL_MODE
@@ -97,7 +98,12 @@ namespace Windows::Devices::Midi2::Internal::Shared
         return (double)((timestampValue * (double)MICROSECONDS_PER_SECOND) / timestampFrequency);
     }
 
+    inline double ConvertTimestampToFractionalNanoseconds(_In_ uint64_t const timestampValue, _In_ uint64_t timestampFrequency)
+    {
+        return (double)((timestampValue * (double)NANOSECONDS_PER_SECOND) / timestampFrequency);
+    }
 
+    
 	// TODO: Consider adding in GetSystemTimePreciseAsFileTime for jitter measurements (KeQuerySystemTimePrecise for driver code)
 	// https://learn.microsoft.com/windows/win32/sysinfo/acquiring-high-resolution-time-stamps
 

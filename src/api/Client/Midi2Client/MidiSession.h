@@ -12,19 +12,19 @@
 
 #include "midi_service_interface.h"
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     struct MidiSession : MidiSessionT<MidiSession>
     {
         MidiSession() = default;
         ~MidiSession();
 
-        static winrt::Windows::Devices::Midi2::MidiSession CreateSession(
+        static MIDI_CPP_NAMESPACE::MidiSession CreateSession(
             _In_ hstring const& sessionName, 
-            _In_ winrt::Windows::Devices::Midi2::MidiSessionSettings const& settings
+            _In_ MIDI_CPP_NAMESPACE::MidiSessionSettings const& settings
         ) noexcept;
 
-        static winrt::Windows::Devices::Midi2::MidiSession CreateSession(
+        static MIDI_CPP_NAMESPACE::MidiSession CreateSession(
             _In_ hstring const& sessionName
         ) noexcept;
 
@@ -38,11 +38,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         foundation::Collections::IMapView<winrt::guid, midi2::MidiEndpointConnection> Connections() { return m_connections.GetView(); }
 
-        winrt::Windows::Devices::Midi2::MidiEndpointConnection CreateEndpointConnection(
+        MIDI_CPP_NAMESPACE::MidiEndpointConnection CreateEndpointConnection(
             _In_ winrt::hstring const& endpointDeviceId
         ) noexcept;
 
-        winrt::Windows::Devices::Midi2::MidiEndpointConnection CreateEndpointConnection(
+        MIDI_CPP_NAMESPACE::MidiEndpointConnection CreateEndpointConnection(
             _In_ winrt::hstring const& endpointDeviceId,
             _In_ midi2::IMidiEndpointConnectionSettings const& settings
         ) noexcept;
@@ -92,7 +92,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     };
 }
-namespace winrt::Windows::Devices::Midi2::factory_implementation
+namespace MIDI_CPP_NAMESPACE::factory_implementation
 {
     struct MidiSession : MidiSessionT<MidiSession, implementation::MidiSession>
     {

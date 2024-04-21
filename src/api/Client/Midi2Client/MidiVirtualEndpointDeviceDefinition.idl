@@ -6,24 +6,24 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-
+#include "namespace_defines.h"
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
+
 
 import "MidiFunctionBlock.idl";
 
 
-namespace Windows.Devices.Midi2
+namespace MIDI_MIDL_NAMESPACE
 {
-    [MIDI_API_CONTRACT(19)]
+    MIDI_API_CONTRACT_v1
     [default_interface]
     runtimeclass MidiVirtualEndpointDeviceDefinition
     {
         MidiVirtualEndpointDeviceDefinition();
 
-        // endpoint info and name
         String EndpointName{ get; set; };
-        String EndpointProductInstanceId{ get; set; };  // we'll also use this when creating the SWD
+        String EndpointProductInstanceId{ get; set; };
 
         String TransportSuppliedDescription{ get; set; };
 
@@ -32,8 +32,6 @@ namespace Windows.Devices.Midi2
         Boolean SupportsReceivingJRTimestamps{ get; set; };
         Boolean SupportsSendingJRTimestamps{ get; set; };
 
-
-        // Device identity
         IVector<UInt8> DeviceManufacturerSystemExclusiveId{ get; };
         UInt8 DeviceFamilyLsb{ get; set; };
         UInt8 DeviceFamilyMsb{ get; set; };
@@ -44,14 +42,5 @@ namespace Windows.Devices.Midi2
         Boolean AreFunctionBlocksStatic{ get; set; };
 
         IVector<MidiFunctionBlock> FunctionBlocks{ get; };
-
-
-
-        //      Boolean IsMidiCIDevice{ get; set; };
-        
-        // TODO: MUID table?
-
-        // TODO: MIDI CI / Profiles etc.
-
     }
 }

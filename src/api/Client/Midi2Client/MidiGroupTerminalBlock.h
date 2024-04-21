@@ -10,7 +10,7 @@
 #include "MidiGroupTerminalBlock.g.h"
 
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     struct MidiGroupTerminalBlock : MidiGroupTerminalBlockT<MidiGroupTerminalBlock>
     {
@@ -55,7 +55,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     };
 }
-//namespace winrt::Windows::Devices::Midi2::factory_implementation
+//namespace MIDI_CPP_NAMESPACE::factory_implementation
 //{
 //    struct MidiGroupTerminalBlock : MidiGroupTerminalBlockT<MidiGroupTerminalBlock, implementation::MidiGroupTerminalBlock>
 //    {

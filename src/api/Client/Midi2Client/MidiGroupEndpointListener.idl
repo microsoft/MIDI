@@ -6,22 +6,19 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-// Convenience listener for code which wants to pay attention only to to
-// certain groups on an endpoint. You may have multiples of these attached 
-// to an endpoint, and use them in different places in your application
-
-
+#include "namespace_defines.h"
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
+
 
 import "MidiGroup.idl";
 
 import "IMidiEndpointMessageProcessingPlugin.idl";
 import "IMidiMessageReceivedEventSource.idl";
 
-namespace Windows.Devices.Midi2
+namespace MIDI_MIDL_NAMESPACE
 {
-    [MIDI_API_CONTRACT(19)]
+    MIDI_API_CONTRACT_v1
     [default_interface]
     runtimeclass MidiGroupEndpointListener : IMidiEndpointMessageProcessingPlugin,
                                              IMidiMessageReceivedEventSource

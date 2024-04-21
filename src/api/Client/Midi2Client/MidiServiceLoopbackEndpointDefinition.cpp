@@ -10,7 +10,7 @@
 #include "MidiServiceLoopbackEndpointDefinition.h"
 #include "MidiServiceLoopbackEndpointDefinition.g.cpp"
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
 
 }

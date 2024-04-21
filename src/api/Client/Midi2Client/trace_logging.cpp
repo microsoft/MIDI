@@ -10,11 +10,11 @@
 
 #include <winmeta.h>
 
-namespace Windows::Devices::Midi2::Internal
+namespace WindowsMidiServicesInternal
 {
     bool g_traceLoggingRegistered = false;
 
-    // Windows.Devices.Midi2.Api hashed tracing guid: 5c055d9e-0ac2-58ee-f647-c1f00339a6ec
+    // Microsoft.Devices.Midi2.Api hashed tracing guid: 5c055d9e-0ac2-58ee-f647-c1f00339a6ec
 
     TRACELOGGING_DEFINE_PROVIDER(
         g_hLoggingProvider,

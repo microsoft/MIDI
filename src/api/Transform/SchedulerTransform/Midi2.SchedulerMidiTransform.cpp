@@ -239,7 +239,7 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
                 return hr;
             }
         }
-        else if (shared::GetCurrentMidiTimestamp() >= timestamp - m_tickWindow - m_deviceLatencyTicks)
+        else if (internal::GetCurrentMidiTimestamp() >= timestamp - m_tickWindow - m_deviceLatencyTicks)
         {
             // timestamp is in the past or within our tick window: so send now
             auto hr = SendMidiMessageNow(data, size, timestamp);
@@ -391,7 +391,7 @@ CMidi2SchedulerMidiTransform::CalculateSafeSleepTime(
 
     try
     {
-        auto now = internal::Shared::GetCurrentMidiTimestamp();
+        auto now = internal::GetCurrentMidiTimestamp();
 
         if (nextWakeupWindowTimestamp > now)
         {
@@ -457,7 +457,7 @@ void CMidi2SchedulerMidiTransform::QueueWorker()
 
                     // check to see if it's time to send the message. If not, we'll just
                     // wrap back around
-                    if (shared::GetCurrentMidiTimestamp() >= nextMessageSendTime)
+                    if (internal::GetCurrentMidiTimestamp() >= nextMessageSendTime)
                     {
                         std::lock_guard<std::mutex> lock{ m_queueMutex };
 

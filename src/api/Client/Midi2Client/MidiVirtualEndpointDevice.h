@@ -10,7 +10,7 @@
 #pragma once
 #include "MidiVirtualEndpointDevice.g.h"
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     struct MidiVirtualEndpointDevice : MidiVirtualEndpointDeviceT<MidiVirtualEndpointDevice>
     {

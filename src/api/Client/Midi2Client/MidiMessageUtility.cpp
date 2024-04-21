@@ -10,7 +10,7 @@
 #include "MidiMessageUtility.h"
 #include "MidiMessageUtility.g.cpp"
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     _Use_decl_annotations_
     collections::IVector<midi2::IMidiUniversalPacket> MidiMessageUtility::GetPacketListFromWordList(

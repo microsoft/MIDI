@@ -7,7 +7,7 @@
 
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by Windows.Devices.Midi2.rc
+// Used by Microsoft.Devices.Midi2.rc
 
 // Next default values for new objects
 // 

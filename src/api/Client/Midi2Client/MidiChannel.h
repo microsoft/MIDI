@@ -9,7 +9,7 @@
 #pragma once
 #include "MidiChannel.g.h"
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     struct MidiChannel : MidiChannelT<MidiChannel>
     {
@@ -32,7 +32,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     };
 }
-namespace winrt::Windows::Devices::Midi2::factory_implementation
+namespace MIDI_CPP_NAMESPACE::factory_implementation
 {
     struct MidiChannel : MidiChannelT<MidiChannel, implementation::MidiChannel>
     {

@@ -6,8 +6,10 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+#include "namespace_defines.h"
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
+
 
 import "MidiFunctionBlockDirectionEnum.idl";
 import "MidiFunctionBlockUIHintEnum.idl";
@@ -15,9 +17,9 @@ import "MidiFunctionBlockMidi10Enum.idl";
 
 import "MidiGroup.idl";
 
-namespace Windows.Devices.Midi2
+namespace MIDI_MIDL_NAMESPACE
 {
-    [MIDI_API_CONTRACT(19)]
+    MIDI_API_CONTRACT_v1
     [default_interface]
     runtimeclass MidiFunctionBlock
     {
@@ -25,7 +27,7 @@ namespace Windows.Devices.Midi2
 
         Boolean IsReadOnly { get; };
 
-        UInt8 Number{ get; set; };               // function block number: 0-31
+        UInt8 Number{ get; set; };
         String Name{ get; set; };
 
         Boolean IsActive{ get; set; };

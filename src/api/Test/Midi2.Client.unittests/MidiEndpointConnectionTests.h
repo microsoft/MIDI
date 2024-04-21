@@ -9,7 +9,7 @@
 
 #pragma once
 
-using namespace winrt::Windows::Devices::Midi2;
+using namespace winrt::Microsoft::Devices::Midi2;
 
 class MidiEndpointConnectionTests
     : public WEX::TestClass<MidiEndpointConnectionTests>
@@ -18,7 +18,7 @@ public:
 
     BEGIN_TEST_CLASS(MidiEndpointConnectionTests)
         TEST_CLASS_PROPERTY(L"TestClassification", L"Integration")
-        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Windows.Devices.Midi2.dll")
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Microsoft.Devices.Midi2.dll")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.BluetoothMidiAbstraction.dll")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.DiagnosticsAbstraction.dll")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.KSAbstraction.dll")

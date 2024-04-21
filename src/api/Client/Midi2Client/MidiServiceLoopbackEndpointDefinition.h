@@ -9,7 +9,7 @@
 #pragma once
 #include "MidiServiceLoopbackEndpointDefinition.g.h"
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     struct MidiServiceLoopbackEndpointDefinition : MidiServiceLoopbackEndpointDefinitionT<MidiServiceLoopbackEndpointDefinition>
     {
@@ -30,7 +30,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         winrt::hstring m_description{};
     };
 }
-namespace winrt::Windows::Devices::Midi2::factory_implementation
+namespace MIDI_CPP_NAMESPACE::factory_implementation
 {
     struct MidiServiceLoopbackEndpointDefinition : MidiServiceLoopbackEndpointDefinitionT<MidiServiceLoopbackEndpointDefinition, implementation::MidiServiceLoopbackEndpointDefinition>
     {

@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
+namespace Microsoft.Midi.ConsoleApp.Resources {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp.Resources {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.Devices.Midi2.ConsoleApp.Resources.Strings", typeof(Strings).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.Midi.ConsoleApp.Resources.Strings", typeof(Strings).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;

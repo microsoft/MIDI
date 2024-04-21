@@ -66,7 +66,7 @@ namespace json = ::winrt::Windows::Data::Json;
 
 // AbstractionUtilities
 #include "wstring_util.h"
-namespace internal = ::Windows::Devices::Midi2::Internal;
+namespace internal = ::WindowsMidiServicesInternal;
 
 #include "MidiDefs.h"
 #include "MidiDataFormat.h"
@@ -80,7 +80,6 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 
 #include "MidiXProc.h"
 
-namespace internal = ::Windows::Devices::Midi2::Internal;
 
 #include "strsafe.h"
 

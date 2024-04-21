@@ -45,7 +45,7 @@ namespace RegistryCustomActions
         {
             session.Log("REGKEYWRITE: WriteTestRegKey");
 
-            string path = System.IO.Path.Combine(session["API_INSTALLFOLDER"], "Windows.Devices.Midi2.dll");
+            string path = System.IO.Path.Combine(session["API_INSTALLFOLDER"], RegistryEntries.ApiImplementationLib);
 
             WriteRegistryKeys(session, path, true);
 

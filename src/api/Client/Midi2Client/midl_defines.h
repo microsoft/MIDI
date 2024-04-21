@@ -11,13 +11,15 @@
 // These are required for internal Microsoft build support and if set incorrectly
 // will break any public compilation.
 
-#ifdef RAZZLE
+#ifdef MICROSOFT_INTERNAL_BUILD
 
-// internal build (using Razzle)
+// internal build
 
-#define MIDI_API_CONTRACT(n) contract(Windows.Foundation.UniversalApiContract, n) 
+#define MIDI_API_CONTRACT_v1     [contract(Microsoft.Devices.Midi2ApiContract, 1)]
 
 #define MIDI_IDL_IMPORT \
+import "Midi2ApiContract.idl";
+
 import "Windows.Foundation.idl"; \
 import "Windows.Devices.Enumeration.idl"; \
 import "Windows.Data.Json.idl"; \
@@ -30,7 +32,7 @@ import "Windows.Devices.Enumeration.idl"; \
 
 // public build (using Visual Studio, msbuild, etc.)
 
-#define MIDI_API_CONTRACT(n)
+#define MIDI_API_CONTRACT_v1
 #define MIDI_IDL_IMPORT
 #define MIDI_INTERFACE_UUID(u,v) uuid(u), version(v)
 

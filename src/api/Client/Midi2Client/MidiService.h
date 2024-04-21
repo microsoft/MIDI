@@ -9,11 +9,13 @@
 #pragma once
 #include "MidiService.g.h"
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     struct MidiService : MidiServiceT<MidiService>
     {
         MidiService() = default;
+
+        static bool IsAvailable();
 
         static midi2::MidiServicePingResponseSummary PingService(
             _In_ uint8_t const pingCount
@@ -57,7 +59,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     };
 }
-namespace winrt::Windows::Devices::Midi2::factory_implementation
+namespace MIDI_CPP_NAMESPACE::factory_implementation
 {
     struct MidiService : MidiServiceT<MidiService, implementation::MidiService, winrt::static_lifetime>
     {

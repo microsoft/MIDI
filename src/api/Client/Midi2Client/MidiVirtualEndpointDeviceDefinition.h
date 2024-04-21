@@ -10,7 +10,7 @@
 #include "MidiVirtualEndpointDeviceDefinition.g.h"
 
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     struct MidiVirtualEndpointDeviceDefinition : MidiVirtualEndpointDeviceDefinitionT<MidiVirtualEndpointDeviceDefinition>
     {
@@ -95,7 +95,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     };
 }
-namespace winrt::Windows::Devices::Midi2::factory_implementation
+namespace MIDI_CPP_NAMESPACE::factory_implementation
 {
     struct MidiVirtualEndpointDeviceDefinition : MidiVirtualEndpointDeviceDefinitionT<MidiVirtualEndpointDeviceDefinition, implementation::MidiVirtualEndpointDeviceDefinition>
     {

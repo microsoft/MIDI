@@ -506,6 +506,7 @@
     <Midl Include="MidiEndpointDeviceInformation.idl">
       <Filter>API\Enumeration\DeviceInformation</Filter>
     </Midl>
+    <Midl Include="Midi2ApiContract.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />

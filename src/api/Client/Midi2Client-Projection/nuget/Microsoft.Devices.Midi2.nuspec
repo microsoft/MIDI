@@ -1,32 +1,32 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
 	<metadata>
-		<id>Windows.Devices.Midi2</id>
-		<version>1.0.0-preview.6-0190</version>
+		<id>Microsoft.Devices.Midi2</id>
+		<version>1.0.0-preview.6-0194</version>
 		<authors>Microsoft Corporation</authors>
-		<description>Windows MIDI Services API. Minimum package necessary to use Windows MIDI Services from an app on a PC that has Windows MIDI Services installed.</description>
+		<description>Windows MIDI Services SDK. Minimum package necessary to use Windows MIDI Services from an app on a PC that has Windows MIDI Services installed.</description>
 		<license type="expression">MIT</license>
 		<projectUrl>https://github.com/microsoft/midi/</projectUrl>
 		<readme>README.md</readme>
 		<repository type="git" url="https://github.com/microsoft/midi/" />
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
-		<tags>midi windows music audio native</tags>
+		<tags>midi midi2 windows music audio native</tags>
 		<dependencies>
-            <group targetFramework="net8.0-windows10.0.20348.0" />
+            <group targetFramework="net6.0-windows10.0.20348.0" />
             <group targetFramework="uap10.0" />
             <group targetFramework="native" />
         </dependencies>
 
         <!-- These are required by the NuGet packager for older packages.config style projects, apparently -->
         <references>
-            <group targetFramework="net8.0-windows10.0.20348.0">
-                <reference file="Windows.Devices.Midi2.NET.dll" />
+            <group targetFramework="net6.0-windows10.0.20348.0">
+                <reference file="Microsoft.Devices.Midi2.NET.dll" />
             </group>
             <group targetFramework="uap10.0">
-                <reference file="Windows.Devices.Midi2.winmd" />
+                <reference file="Microsoft.Devices.Midi2.winmd" />
             </group>
             <group targetFramework="native">
-                <reference file="Windows.Devices.Midi2.winmd" />
+                <reference file="Microsoft.Devices.Midi2.winmd" />
             </group>
         </references>
     </metadata>
@@ -35,24 +35,25 @@
 
         <!-- Compile-time References  ================================================ -->
 		
-        <file src="..\..\..\VSFiles\AnyCPU\Release\net8.0-windows10.0.20348.0\Windows.Devices.Midi2.NET.dll"
-			  target="ref\net8.0-windows10.0.20348.0\Windows.Devices.Midi2.NET.dll" />      
-        
-        <file src="..\..\..\VSFiles\x64\Release\Windows.Devices.Midi2.winmd"
-              target="ref\uap10.0\Windows.Devices.Midi2.winmd" />
-        <file src="..\..\..\VSFiles\x64\Release\Windows.Devices.Midi2.winmd"
-              target="ref\native\Windows.Devices.Midi2.winmd" />
+        <file src="..\..\..\VSFiles\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Devices.Midi2.NET.dll"
+			  target="ref\net6.0-windows10.0.20348.0\Microsoft.Devices.Midi2.NET.dll" />
+
+
+        <file src="..\..\..\VSFiles\x64\Release\Microsoft.Devices.Midi2.winmd"
+              target="ref\uap10.0\Microsoft.Devices.Midi2.winmd" />
+        <file src="..\..\..\VSFiles\x64\Release\Microsoft.Devices.Midi2.winmd"
+              target="ref\native\Microsoft.Devices.Midi2.winmd" />
 
         <!-- Runtime Libs ================================================ -->
 		
-        <file src="..\..\..\VSFiles\AnyCPU\Release\net8.0-windows10.0.20348.0\Windows.Devices.Midi2.NET.dll"
+        <file src="..\..\..\VSFiles\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Devices.Midi2.NET.dll"
               target="lib\net8.0-windows10.0.20348.0\" />
 
         <!-- These are required by the NuGet packager for older packages.config style projects, apparently -->
-        <file src="..\..\..\VSFiles\x64\Release\Windows.Devices.Midi2.winmd"
-              target="lib\uap10.0\Windows.Devices.Midi2.winmd" />
-        <file src="..\..\..\VSFiles\x64\Release\Windows.Devices.Midi2.winmd"
-              target="lib\native\Windows.Devices.Midi2.winmd" />
+        <file src="..\..\..\VSFiles\x64\Release\Microsoft.Devices.Midi2.winmd"
+              target="lib\uap10.0\Microsoft.Devices.Midi2.winmd" />
+        <file src="..\..\..\VSFiles\x64\Release\Microsoft.Devices.Midi2.winmd"
+              target="lib\native\Microsoft.Devices.Midi2.winmd" />
 
 
         <!-- Intel x64 Native Binaries ================================================ -->
@@ -63,8 +64,8 @@
         
         <!-- Build-time files ================================================ -->
 
-		<file src="Windows.Devices.Midi2.targets" target="build\native\" />
-		<file src="Windows.Devices.Midi2.props" target="build\native\" />
+		<file src="Microsoft.Devices.Midi2.targets" target="build\native\" />
+		<file src="Microsoft.Devices.Midi2.props" target="build\native\" />
 
 		<file src="README.md" target="\" />
 	</files>

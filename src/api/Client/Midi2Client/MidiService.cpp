@@ -16,8 +16,17 @@
 #include <Windows.h>
 #include <wil\resource.h>
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
+
+    // returns True if the MIDI Service is available on this PC
+    bool MidiService::IsAvailable()
+    {
+        // TODO: Need to check an install marker. No checks that require elevation.
+
+        return true;
+    }
+
 
     _Use_decl_annotations_
     midi2::MidiServicePingResponseSummary MidiService::PingService(

@@ -10,7 +10,7 @@
 #include "MidiServicePingResponseSummary.h"
 #include "MidiServicePingResponseSummary.g.cpp"
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
 
 }

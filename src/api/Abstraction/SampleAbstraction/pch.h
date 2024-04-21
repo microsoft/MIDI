@@ -40,7 +40,7 @@
 
 // AbstractionUtilities
 #include "wstring_util.h"
-namespace internal = ::Windows::Devices::Midi2::Internal;
+namespace internal = ::WindowsMidiServicesInternal;
 
 #include "MidiDefs.h"
 #include "MidiDataFormat.h"
@@ -54,7 +54,6 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 
 #include "MidiXProc.h"
 
-namespace internal = ::Windows::Devices::Midi2::Internal;
 
 #include "MidiServicePlugin.h"
 #include "MidiServicePlugin_i.c"

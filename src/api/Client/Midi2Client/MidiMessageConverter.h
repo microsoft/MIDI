@@ -9,7 +9,7 @@
 #pragma once
 #include "MidiMessageConverter.g.h"
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     struct MidiMessageConverter
     {
@@ -301,7 +301,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     };
 }
-namespace winrt::Windows::Devices::Midi2::factory_implementation
+namespace MIDI_CPP_NAMESPACE::factory_implementation
 {
     struct MidiMessageConverter : MidiMessageConverterT<MidiMessageConverter, implementation::MidiMessageConverter, winrt::static_lifetime>
     {

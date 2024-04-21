@@ -7,13 +7,13 @@
     <Nullable>enable</Nullable>
     <StartupObject></StartupObject>
     <AssemblyName>midi</AssemblyName>
-    <RootNamespace>Microsoft.Devices.Midi2.ConsoleApp</RootNamespace>
+    <RootNamespace>Microsoft.Midi.ConsoleApp</RootNamespace>
     <!--<PlatformTarget>x64, arm64</PlatformTarget>-->
     <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
 
       <PublishSingleFile>true</PublishSingleFile>
       <SelfContained>true</SelfContained>
-      <PublishTrimmed>true</PublishTrimmed>
+      <PublishTrimmed>True</PublishTrimmed>
       <Platforms>ARM64;x64</Platforms>
       <!--<RuntimeIdentifiers>win10-x64;win10-arm64</RuntimeIdentifiers>-->
 
@@ -23,16 +23,17 @@
       <!-- Without this, the build script gets "NETSDK1083: The specified RuntimeIdentifier 'win10-x64' is not recognized" -->
       <UseRidGraph>true</UseRidGraph>
       <AssemblyVersion></AssemblyVersion>
+      <PublishAot>True</PublishAot>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Devices.Midi2" Version="1.0.0-preview.6-0193" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.7" />
     <PackageReference Include="Spectre.Console" Version="0.48.1-preview.0.38" />
     <PackageReference Include="Spectre.Console.Cli" Version="0.48.1-preview.0.38" />
     <PackageReference Include="System.Management" Version="8.0.0" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.0" />
-    <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.5-0188" />
   </ItemGroup>
 
   <ItemGroup>

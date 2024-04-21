@@ -19,7 +19,7 @@ using namespace winrt::Windows::Data::Json;
 //#include <iostream>
 
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     _Use_decl_annotations_
     bool MidiFunctionBlock::UpdateFromMessages(collections::IIterable<midi2::IMidiUniversalPacket> messages) noexcept

@@ -17,7 +17,7 @@
 //#include <hstring.h>
 #include <winrt\windows.foundation.h>
 
-namespace Windows::Devices::Midi2::Internal
+namespace WindowsMidiServicesInternal
 {
     inline winrt::hstring TrimmedHStringCopy(_In_ winrt::hstring const& s)
     {

@@ -6,23 +6,15 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+#include "namespace_defines.h"
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-// represents a MUID -- a 28 bit random number used for MIDI CI conversations
-// and associated with a Function Block
-// 
-// Spec: (MIDI CI Specification)
-// - The value of the MUID shall be in the range 0x00000000 to 0x0FFFFFFF.
-// - The values 0x0FFFFF00 to 0x0FFFFFFE are reserved.
-// - The value 0x0FFFFFFF is used as a Broadcast MUID(see Section 3.3.3).
-
-namespace Windows.Devices.Midi2
+namespace MIDI_MIDL_NAMESPACE
 {
-    [MIDI_API_CONTRACT(19)]
+    MIDI_API_CONTRACT_v1
     runtimeclass MidiUniqueId
     {
-        // byte 1 is LSB according to spec
         MidiUniqueId();
         MidiUniqueId(UInt32 combined28BitValue);
         MidiUniqueId(UInt8 sevenBitByte1, UInt8 sevenBitByte2, UInt8 sevenBitByte3, UInt8 sevenBitByte4);
@@ -33,11 +25,6 @@ namespace Windows.Devices.Midi2
         static MidiUniqueId CreateBroadcast();
         static MidiUniqueId CreateRandom();
 
-        // TODO: Static method to generate a MUID
-
-
-        // byte 1 is LSB according to spec
-        // these are 7-bit bytes. On Set, the MSB is zeroed.
         UInt8 Byte1{ get; set; };
         UInt8 Byte2{ get; set; };
         UInt8 Byte3{ get; set; };
@@ -47,10 +34,6 @@ namespace Windows.Devices.Midi2
 
         Boolean IsBroadcast{ get; };
         Boolean IsReserved{ get; };
-
-        // TODO: Consider adding a constructor which takes a UInt32 and creates the MUID from it
-
-        // TODO: Consider adding a "CreateNew" or similar static function to generate the random number
     };
 
 

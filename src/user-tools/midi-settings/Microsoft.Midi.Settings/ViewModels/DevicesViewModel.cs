@@ -72,8 +72,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 foreach (var transport in MidiService.GetInstalledTransportPlugins())
                 {
-                    var t = new MidiEndpointDevicesByTransport();
-                    t.Transport = transport;
+                    var t = new MidiEndpointDevicesByTransport(transport);
 
                     tempCollection.Add(t);
                 }

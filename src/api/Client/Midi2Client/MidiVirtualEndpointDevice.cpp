@@ -12,7 +12,7 @@
 #include "MidiVirtualEndpointDevice.g.cpp"
 
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     _Use_decl_annotations_
     bool MidiVirtualEndpointDevice::UpdateFunctionBlock(midi2::MidiFunctionBlock const& block) noexcept

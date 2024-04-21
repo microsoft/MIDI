@@ -1,14 +1,15 @@
-﻿using Spectre.Console;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using Windows.Devices.Enumeration;
-using Windows.Devices.Midi2;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
 
-namespace Microsoft.Devices.Midi2.ConsoleApp
+using Windows.Devices.Enumeration;
+
+
+namespace Microsoft.Midi.ConsoleApp
 {
     // TODO: Add theme support here to allow for no colors, or colors which work on a lighter console.
     // theme should be saved in a prefs file

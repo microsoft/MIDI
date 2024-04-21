@@ -9,7 +9,7 @@
 
 #pragma once
 
-using namespace winrt::Windows::Devices::Midi2;
+using namespace winrt::Microsoft::Devices::Midi2;
 
 
 #define MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_INFO_NOTIFICATION (uint8_t)0x11
@@ -23,7 +23,7 @@ public:
 
     BEGIN_TEST_CLASS(MidiFunctionBlockMessageBuilderTests)
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
-        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Windows.Devices.Midi2.dll")
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Microsoft.Devices.Midi2.dll")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.BluetoothMidiAbstraction.dll")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.DiagnosticsAbstraction.dll")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.KSAbstraction.dll")

@@ -6,9 +6,9 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+#include "namespace_defines.h"
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
-
 
 import "IMidiUniversalPacket.idl";
 import "MidiMessage128.idl";
@@ -19,9 +19,9 @@ import "MidiFunctionBlockDirectionEnum.idl";
 import "MidiEndpointDiscoveryRequestsEnum.idl";
 import "MidiFunctionBlockDiscoveryRequestsEnum.idl";
 
-namespace Windows.Devices.Midi2
+namespace MIDI_MIDL_NAMESPACE
 {
-    [MIDI_API_CONTRACT(19)]
+    MIDI_API_CONTRACT_v1
     static runtimeclass MidiStreamMessageBuilder
     {
         static IMidiUniversalPacket BuildEndpointDiscoveryMessage(
@@ -94,9 +94,6 @@ namespace Windows.Devices.Midi2
             Boolean confirmationWillReceiveJRTimestamps,
             Boolean confirmationSendJRTimestamps
             );
-
-
-        // Function blocks
 
         static IMidiUniversalPacket BuildFunctionBlockDiscoveryMessage(
             MIDI_TIMESTAMP timestamp,

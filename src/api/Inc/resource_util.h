@@ -6,7 +6,7 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-namespace Windows::Devices::Midi2::Internal
+namespace WindowsMidiServicesInternal
 {
     inline HMODULE GetCurrentModule()
     {

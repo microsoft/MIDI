@@ -10,7 +10,7 @@
 #include "MidiUniqueId.h"
 #include "MidiUniqueId.g.cpp"
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     midi2::MidiUniqueId MidiUniqueId::CreateBroadcast()
     {

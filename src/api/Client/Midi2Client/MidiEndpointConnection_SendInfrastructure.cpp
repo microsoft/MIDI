@@ -12,7 +12,7 @@
 
 
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     _Use_decl_annotations_
     midi2::MidiSendMessageResults MidiEndpointConnection::SendMessageResultFromHRESULT(HRESULT hr)
@@ -101,7 +101,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
                 return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::EndpointConnectionClosedOrInvalid;
             }
 
-            if (timestamp != 0 && timestamp > internal::Shared::GetCurrentMidiTimestamp() + m_maxAllowedTimestampOffset)
+            if (timestamp != 0 && timestamp > internal::GetCurrentMidiTimestamp() + m_maxAllowedTimestampOffset)
             {
                 internal::LogGeneralError(__FUNCTION__, L"Timestamp exceeds maximum future scheduling offset");
 

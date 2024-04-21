@@ -6,21 +6,20 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+#include "namespace_defines.h"
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-namespace Windows.Devices.Midi2
+
+namespace MIDI_MIDL_NAMESPACE
 {
-    [MIDI_API_CONTRACT(19)]
+    MIDI_API_CONTRACT_v1
     [MIDI_INTERFACE_UUID("b2417dde-ef35-499b-a89b-0a4c32cc699a",1.0)]
     interface IMidiServiceTransportPluginConfiguration
     {
-        // the Id for this transport type
         Guid TransportId { get; };
-        Boolean IsFromConfigurationFile{ get; };   // true if from the config file. Apps shouldn't normally set this to true
+        Boolean IsFromConfigurationFile{ get; };
 
-        // the settings json. This will typically contain operations to create/update/delete
-        // individual endpoints. The format of this is specific to each transport in the service
         Windows.Data.Json.JsonObject SettingsJson { get; };
     }
 }

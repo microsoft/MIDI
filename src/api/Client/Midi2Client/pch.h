@@ -42,6 +42,9 @@ namespace json = ::winrt::Windows::Data::Json;
 #include <mutex>
 #include <format>
 
+// include this before any project includes
+#include "namespace_defines.h"
+
 // internal
 #include "trace_logging.h"
 
@@ -64,7 +67,7 @@ namespace collections = ::winrt::Windows::Foundation::Collections;
 
 #include "hstring_util.h"
 #include "wstring_util.h"
-namespace internal = ::Windows::Devices::Midi2::Internal;
+namespace internal = ::WindowsMidiServicesInternal;
 
 #include "MidiDefs.h"
 #include "MidiDataFormat.h"
@@ -80,12 +83,12 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 //#include "MidiXProc.h"
 #include "resource.h"
 
+// include these here first to declare the namespaces
 #include "MidiGroup.h"
 #include "MidiChannel.h"
 
-// TODO: Consider changing these to midi2impl and midi2proj
-namespace implementation = winrt::Windows::Devices::Midi2::implementation;
-namespace midi2 = ::winrt::Windows::Devices::Midi2;
+namespace midi2 = ::MIDI_CPP_NAMESPACE;
+namespace implementation = ::MIDI_CPP_NAMESPACE::implementation;
 
 #include "MidiUniqueId.h"
 
@@ -96,6 +99,8 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 #include "MidiDefs.h"
 #include "midi_function_block_prop_util.h"
 
+
+#include "MidiClock.h"
 
 #include "MidiMessage32.h"
 #include "MidiMessage64.h"
@@ -115,11 +120,17 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 #include "MidiEndpointDeviceInformationRemovedEventArgs.h"
 #include "MidiEndpointDeviceWatcher.h"
 
+#include "MidiStreamConfigurationRequestedSettings.h"
 #include "MidiStreamConfigurationRequestReceivedEventArgs.h"
 #include "MidiVirtualEndpointDevice.h"
 #include "MidiVirtualEndpointDeviceDefinition.h"
 
+#include "MidiChannelEndpointListener.h"
+#include "MidiGroupEndpointListener.h"
+#include "MidiMessageTypeEndpointListener.h"
 
+
+#include "MidiSessionSettings.h"
 #include "MidiSession.h"
 
 #include "MidiServicePingResponse.h"
@@ -128,10 +139,20 @@ namespace midi2 = ::winrt::Windows::Devices::Midi2;
 #include "MidiServiceMessageProcessingPluginInfo.h"
 
 #include "MidiServiceConfigurationResponse.h"
+#include "MidiServiceLoopbackEndpointDefinition.h"
 #include "MidiServiceLoopbackEndpointCreationResult.h"
 #include "MidiServiceSessionConnectionInfo.h"
 #include "MidiServiceSessionInfo.h"
 #include "MidiService.h"
 
+#include "MidiEndpointDeviceInformationAddedEventArgs.h"
+#include "MidiEndpointDeviceInformationUpdatedEventArgs.h"
+#include "MidiEndpointDeviceInformationRemovedEventArgs.h"
 #include "MidiEndpointDeviceInformation.h"
 #include "MidiEndpointDeviceWatcher.h"
+
+#include "MidiMessageBuilder.h"
+#include "MidiMessageConverter.h"
+#include "MidiMessageUtility.h"
+#include "MidiStreamMessageBuilder.h"
+

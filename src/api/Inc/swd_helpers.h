@@ -16,7 +16,7 @@
 
 
 
-namespace Windows::Devices::Midi2::Internal
+namespace WindowsMidiServicesInternal
 {
     inline std::wstring CalculateEndpointDevicePrimaryName(
         _In_ std::wstring const& transportSuppliedEndpointName,
@@ -25,33 +25,33 @@ namespace Windows::Devices::Midi2::Internal
     )
     {
         // top priority is any user-supplied name
-        if (!::Windows::Devices::Midi2::Internal::TrimmedWStringCopy(userSuppliedEndpointName).empty())
+        if (!::WindowsMidiServicesInternal::TrimmedWStringCopy(userSuppliedEndpointName).empty())
         {
-            return ::Windows::Devices::Midi2::Internal::TrimmedWStringCopy(userSuppliedEndpointName);
+            return ::WindowsMidiServicesInternal::TrimmedWStringCopy(userSuppliedEndpointName);
         }
 
         // next priority is any in-protocol name
-        if (!internal::TrimmedWStringCopy(inProtocolDiscoveredEndpointName).empty())
+        if (!::WindowsMidiServicesInternal::TrimmedWStringCopy(inProtocolDiscoveredEndpointName).empty())
         {
-            return ::Windows::Devices::Midi2::Internal::TrimmedWStringCopy(inProtocolDiscoveredEndpointName);
+            return ::WindowsMidiServicesInternal::TrimmedWStringCopy(inProtocolDiscoveredEndpointName);
         }
 
         // otherwise, we return the transport-supplied name. For example, this is the name from USB
 
-        return ::Windows::Devices::Midi2::Internal::TrimmedWStringCopy(transportSuppliedEndpointName);
+        return ::WindowsMidiServicesInternal::TrimmedWStringCopy(transportSuppliedEndpointName);
 
     }
 
     // This is for the device instance id. Not to be confused with the interface id
     inline std::wstring NormalizeDeviceInstanceIdWStringCopy(_In_ std::wstring const& deviceInstanceId)
     {
-        return ::Windows::Devices::Midi2::Internal::ToUpperTrimmedWStringCopy(deviceInstanceId);
+        return ::WindowsMidiServicesInternal::ToUpperTrimmedWStringCopy(deviceInstanceId);
     }
 
     // This is for the endpoint device interface id (the long SWD id with the GUID)
     inline std::wstring NormalizeEndpointInterfaceIdWStringCopy(_In_ std::wstring const& endpointInterfaceId)
     {
-         return ::Windows::Devices::Midi2::Internal::ToLowerTrimmedWStringCopy(endpointInterfaceId);
+         return ::WindowsMidiServicesInternal::ToLowerTrimmedWStringCopy(endpointInterfaceId);
     }
 
     // used for searching for a substring in an endpoint interface id. Matches case with
@@ -108,16 +108,16 @@ namespace Windows::Devices::Midi2::Internal
 
     inline std::wstring GetSwdPropertyVirtualEndpointAssociationId(_In_ std::wstring deviceInterfaceId)
     {
-        std::wstring cleanId = ::Windows::Devices::Midi2::Internal::NormalizeEndpointInterfaceIdWStringCopy(deviceInterfaceId);
+        std::wstring cleanId = ::WindowsMidiServicesInternal::NormalizeEndpointInterfaceIdWStringCopy(deviceInterfaceId);
 
-        return internal::ToUpperTrimmedWStringCopy(GetSwdStringProperty(cleanId, STRING_PKEY_MIDI_VirtualMidiEndpointAssociator, L""));
+        return ::WindowsMidiServicesInternal::ToUpperTrimmedWStringCopy(GetSwdStringProperty(cleanId, STRING_PKEY_MIDI_VirtualMidiEndpointAssociator, L""));
     }
 
     inline std::wstring GetSwdPropertyInstanceId(_In_ std::wstring deviceInterfaceId)
     {
-        std::wstring cleanId = ::Windows::Devices::Midi2::Internal::NormalizeEndpointInterfaceIdWStringCopy(deviceInterfaceId);
+        std::wstring cleanId = ::WindowsMidiServicesInternal::NormalizeEndpointInterfaceIdWStringCopy(deviceInterfaceId);
 
-        return internal::NormalizeDeviceInstanceIdWStringCopy(GetSwdStringProperty(cleanId, L"System.Devices.DeviceInstanceId", L""));
+        return ::WindowsMidiServicesInternal::NormalizeDeviceInstanceIdWStringCopy(GetSwdStringProperty(cleanId, L"System.Devices.DeviceInstanceId", L""));
     }
 
 }

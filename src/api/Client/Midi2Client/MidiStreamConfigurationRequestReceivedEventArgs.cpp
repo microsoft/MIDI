@@ -11,7 +11,7 @@
 #include "MidiStreamConfigurationRequestReceivedEventArgs.h"
 #include "MidiStreamConfigurationRequestReceivedEventArgs.g.cpp"
 
-namespace winrt::Windows::Devices::Midi2::implementation
+namespace MIDI_CPP_NAMESPACE::implementation
 {
     _Use_decl_annotations_
     void MidiStreamConfigurationRequestReceivedEventArgs::InternalInitialize(
