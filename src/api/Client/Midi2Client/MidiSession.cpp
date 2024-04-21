@@ -40,12 +40,19 @@ namespace MIDI_CPP_NAMESPACE::implementation
             }
             else
             {
+                // this can happen is service is not available or running
                 return nullptr;
             }
         }
         catch (winrt::hresult_error const& ex)
         {
             internal::LogHresultError(__FUNCTION__, L"hresult exception initializing creating session. Service may be unavailable.", ex);
+
+            return nullptr;
+        }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Exception initializing creating session. Service may be unavailable.");
 
             return nullptr;
         }

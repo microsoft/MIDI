@@ -8,10 +8,7 @@
 #include "pch.h"
 #include <iostream>
 
-using namespace winrt::Windows::Devices::Midi2;        // API
-
-// standard WinRT enumeration support. This is how you find attached devices.
-using namespace winrt::Windows::Devices::Enumeration;
+using namespace winrt::Microsoft::Devices::Midi2;        // API
 
 // where you find types like IAsyncOperation, IInspectable, etc.
 namespace foundation = winrt::Windows::Foundation;
@@ -20,6 +17,16 @@ namespace foundation = winrt::Windows::Foundation;
 int main()
 {
     winrt::init_apartment();
+
+    // Check to see if Windows MIDI Services is installed and running on this PC
+    if (!MidiService::IsAvailable())
+    {
+        // you may wish to fallback to an older MIDI API if it suits your application's workflow
+        std::cout << std::endl << "Windows MIDI Services is not running on this PC" << std::endl;
+
+        return 1;
+    }
+
 
     // create the MIDI session, giving us access to Windows MIDI Services. An app may open 
     // more than one session. If so, the session name should be meaningful to the user, like

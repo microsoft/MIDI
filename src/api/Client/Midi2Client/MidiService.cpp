@@ -8,21 +8,31 @@
 
 #include "pch.h"
 
-#include "MidiService.h"
 #include "MidiService.g.cpp"
-
-#include "ping_ump_types.h"
-
-#include <Windows.h>
-#include <wil\resource.h>
 
 namespace MIDI_CPP_NAMESPACE::implementation
 {
-
     // returns True if the MIDI Service is available on this PC
     bool MidiService::IsAvailable()
     {
-        // TODO: Need to check an install marker. No checks that require elevation.
+        // We may want other ways to check this in the future. Need to find the most robust approaches
+
+        try
+        {
+            //auto serviceAbstraction = winrt::create_instance<IMidiAbstraction>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
+            auto serviceAbstraction = winrt::try_create_instance<IMidiAbstraction>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
+
+            // winrt::try_create_instance indicates failure by returning an empty com ptr
+            if (serviceAbstraction == nullptr)
+            {
+                return false;
+            }
+        }
+        catch (...)
+        {
+            // winrt::create_instance fails by throwing an exception
+            return false;
+        }
 
         return true;
     }

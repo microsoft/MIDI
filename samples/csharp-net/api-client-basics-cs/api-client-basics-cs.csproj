@@ -10,8 +10,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Devices.Midi2" Version="1.0.0-preview.6-0194" />
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.7" />
-    <PackageReference Include="Windows.Devices.Midi2" Version="1.0.0-preview.6-0190" />
   </ItemGroup>
 
 </Project>

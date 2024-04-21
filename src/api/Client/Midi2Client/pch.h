@@ -79,6 +79,7 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "json_helpers.h"
 #include "swd_helpers.h"
 #include "resource_util.h"
+#include "ping_ump_types.h"
 
 //#include "MidiXProc.h"
 #include "resource.h"
