@@ -6,11 +6,6 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-// Convenience listener for code which wants to pay attention only to to
-// certain groups on an endpoint. You may have multiples of these attached 
-// to an endpoint, and use them in different places in your application
-
-
 #include "namespace_defines.h"
 #include "midl_defines.h"
 MIDI_IDL_IMPORT

@@ -12,8 +12,6 @@ MIDI_IDL_IMPORT
 
 namespace MIDI_MIDL_NAMESPACE
 {
-    // can be cast to the size in MIDI Words.
-
     MIDI_API_CONTRACT_v1
     enum MidiPacketType
     {

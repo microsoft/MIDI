@@ -1,14 +1,16 @@
-﻿using Spectre.Console.Rendering;
-using Spectre.Console;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Windows.UI.StartScreen;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
 
-namespace Microsoft.Devices.Midi2.ConsoleApp
+using Spectre.Console.Rendering;
+using System.Globalization;
+
+
+namespace Microsoft.Midi.ConsoleApp
 {
     public sealed class MessageCountColumn : ProgressColumn
     {

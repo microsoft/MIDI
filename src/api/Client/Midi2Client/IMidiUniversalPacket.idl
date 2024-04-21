@@ -10,8 +10,6 @@
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-// wraps the UMP type so we still quickly read/write packed data appropriately
-
 import "MidiPacketTypeEnum.idl";
 import "MidiMessageTypeEnum.idl";
 

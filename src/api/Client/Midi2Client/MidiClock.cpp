@@ -80,9 +80,16 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
 
 
+    _Use_decl_annotations_
+        double MidiClock::ConvertTimestampTicksToNanoseconds(
+            internal::MidiTimestamp const timestampValue)
+    {
+
+        return internal::ConvertTimestampToFractionalNanoseconds(timestampValue, TimestampFrequency());
+    }
 
     _Use_decl_annotations_
-    double MidiClock::ConvertTimestampToMicroseconds(
+    double MidiClock::ConvertTimestampTicksToMicroseconds(
         internal::MidiTimestamp const timestampValue)
     {
 
@@ -91,14 +98,14 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
 
     _Use_decl_annotations_
-    double MidiClock::ConvertTimestampToMilliseconds(
+    double MidiClock::ConvertTimestampTicksToMilliseconds(
         internal::MidiTimestamp const timestampValue)
     {
         return internal::ConvertTimestampToFractionalMilliseconds(timestampValue, TimestampFrequency());
     }
 
     _Use_decl_annotations_
-    double MidiClock::ConvertTimestampToSeconds(
+    double MidiClock::ConvertTimestampTicksToSeconds(
         internal::MidiTimestamp const timestampValue)
     {
         return internal::ConvertTimestampToFractionalSeconds(timestampValue, TimestampFrequency());

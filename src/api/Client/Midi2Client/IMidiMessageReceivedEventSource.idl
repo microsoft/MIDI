@@ -18,7 +18,6 @@ namespace MIDI_MIDL_NAMESPACE
     [MIDI_INTERFACE_UUID("101ceb4b-cca4-48a1-b91e-6002b928613c",1.0)]
     interface IMidiMessageReceivedEventSource
     {      
-        // callback for when a message comes in
         event Windows.Foundation.TypedEventHandler<IMidiMessageReceivedEventSource, MidiMessageReceivedEventArgs> MessageReceived;
     }
 }

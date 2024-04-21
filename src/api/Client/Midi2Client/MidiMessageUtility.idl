@@ -10,10 +10,6 @@
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
 
-// this simply checks that the UMP packet type aligns with the number of words
-// Beyond that, the API generally does not care what's in the UMP. This enables
-// new messages to be defined without breaking the API
-
 import "MidiMessageTypeEnum.idl";
 import "MidiPacketTypeEnum.idl";
 import "MidiGroup.idl";

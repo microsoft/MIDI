@@ -344,7 +344,9 @@
     <ClInclude Include="MidiStreamConfigurationRequestedSettings.h">
       <DependentUpon>MidiStreamConfigurationRequestedSettings.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiStreamConfigurationRequestReceivedEventArgs.h" />
+      <ClInclude Include="MidiStreamConfigurationRequestReceivedEventArgs.h">
+          <DependentUpon>MidiStreamConfigurationRequestReceivedEventArgs.idl</DependentUpon>
+      </ClInclude>
     <ClInclude Include="MidiStreamMessageBuilder.h">
       <DependentUpon>MidiStreamMessageBuilder.idl</DependentUpon>
     </ClInclude>
@@ -488,7 +490,9 @@
     <ClCompile Include="MidiStreamConfigurationRequestedSettings.cpp">
       <DependentUpon>MidiStreamConfigurationRequestedSettings.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiStreamConfigurationRequestReceivedEventArgs.cpp" />
+      <ClCompile Include="MidiStreamConfigurationRequestReceivedEventArgs.cpp">
+          <DependentUpon>MidiStreamConfigurationRequestReceivedEventArgs.idl</DependentUpon>
+      </ClCompile>
     <ClCompile Include="MidiStreamMessageBuilder.cpp">
       <DependentUpon>MidiStreamMessageBuilder.idl</DependentUpon>
     </ClCompile>

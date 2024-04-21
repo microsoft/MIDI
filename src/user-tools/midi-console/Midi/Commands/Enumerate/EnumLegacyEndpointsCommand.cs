@@ -1,18 +1,17 @@
-﻿using Spectre.Console;
-using Spectre.Console.Cli;
-using Spectre.Console.Rendering;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
 
 using Windows.Devices.Enumeration;
 using Windows.Devices.Midi;
 
-namespace Microsoft.Devices.Midi2.ConsoleApp
+namespace Microsoft.Midi.ConsoleApp
 {
     internal sealed class EnumLegacyEndpointsCommand : Command<EnumLegacyEndpointsCommand.Settings>
     {

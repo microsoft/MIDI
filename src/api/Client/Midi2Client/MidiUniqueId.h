@@ -44,16 +44,16 @@ namespace MIDI_CPP_NAMESPACE::implementation
         static midi2::MidiUniqueId CreateRandom();
 
         uint8_t Byte1() const noexcept { return m_byte1; }
-        void Byte1(_In_ uint8_t value) noexcept { m_byte1 = value & 0x7F; }
+        void Byte1(_In_ uint8_t value) noexcept { m_byte1 = internal::CleanupByte7(value); }
 
         uint8_t Byte2() const noexcept { return m_byte2; }
-        void Byte2(_In_ uint8_t value) noexcept { m_byte2 = value & 0x7F; }
+        void Byte2(_In_ uint8_t value) noexcept { m_byte2 = internal::CleanupByte7(value); }
 
         uint8_t Byte3() const noexcept { return m_byte3; }
-        void Byte3(_In_ uint8_t value) noexcept { m_byte3 = value & 0x7F; }
+        void Byte3(_In_ uint8_t value) noexcept { m_byte3 = internal::CleanupByte7(value); }
 
         uint8_t Byte4() const noexcept { return m_byte4; }
-        void Byte4(_In_ uint8_t value) noexcept { m_byte4 = value & 0x7F; }
+        void Byte4(_In_ uint8_t value) noexcept { m_byte4 = internal::CleanupByte7(value); }
 
         static winrt::hstring LabelShort() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_MUID_SHORT); }
         static winrt::hstring LabelFull() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_MUID_FULL); }

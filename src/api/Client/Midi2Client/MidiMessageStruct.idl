@@ -6,10 +6,6 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-// bare-bones maximum size structure for holding MIDI message data. This has some
-// speed advantage in that it can be used as a ref parameter, where as other types
-// cannot. Note that this type does not contain the timestamp field.
-
 #include "namespace_defines.h"
 #include "midl_defines.h"
 MIDI_IDL_IMPORT

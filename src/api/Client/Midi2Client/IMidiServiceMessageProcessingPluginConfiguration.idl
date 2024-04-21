@@ -16,18 +16,14 @@ namespace MIDI_MIDL_NAMESPACE
     [MIDI_INTERFACE_UUID("2ebcfa13-585a-4376-8fe1-635784fa7fd4",1.0)]
     interface IMidiServiceMessageProcessingPluginConfiguration
     {
-        // we configure plugins on a single endpoint
         String EndpointDeviceId { get; };
 
-        // The Id for this plugin type. It is per-type only
         Guid MessageProcessingPluginId { get; };
 
-        // The instance Id. A single endpoint may have multiples of the same plugin type (a generic filter, for example)
         Guid PluginInstanceId{ get; };
 
-        Boolean IsFromConfigurationFile{ get; };   // true if from the config file. Apps shouldn't normally set this to true
+        Boolean IsFromConfigurationFile{ get; };
 
-        // the actual changes to be made
         Windows.Data.Json.JsonObject SettingsJson { get; };
     }
 }

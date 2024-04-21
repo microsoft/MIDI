@@ -6,12 +6,6 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-
-// Marker interface to prevent cyclic references. Not meant to be used directly
-// instead, always cast to MidiEndpointConnection (winrt .as<MidiEndpointConnect>() )
-// named IMidiEndpointConnectionSource instead of IMidiEndpointConnection because 
-// it conflicts with auto-generated interface names otherwise
-
 #include "namespace_defines.h"
 #include "midl_defines.h"
 MIDI_IDL_IMPORT

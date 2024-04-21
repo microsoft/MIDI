@@ -95,9 +95,6 @@ namespace MIDI_MIDL_NAMESPACE
             Boolean confirmationSendJRTimestamps
             );
 
-
-        // Function blocks
-
         static IMidiUniversalPacket BuildFunctionBlockDiscoveryMessage(
             MIDI_TIMESTAMP timestamp,
             UInt8 functionBlockNumber,

@@ -23,29 +23,20 @@ namespace MIDI_MIDL_NAMESPACE
     {
         Guid Id { get; };            
 
-        String Name{ get; set; };           // Optional Name supplied by the consuming application
-        IInspectable Tag{ get; set; };      // Optional Arbitrary data attached by the consuming application
+        String Name{ get; set; };
+        IInspectable Tag{ get; set; };
 
         Boolean IsEnabled{ get; set; };
 
-        // initialize may do things like allocate a shared table which is used to keep metadata
-        // that is being listened to. Called when connection is created
         void Initialize(IMidiEndpointConnectionSource endpointConnection);
 
-        // called when connection is opened.
         void OnEndpointConnectionOpened();
 
-        // TODO: API design recommendation is to avoid "out" parameters and instead have a return object
-
-        // called by the endpoint connection when a message is received
-        // if the listener is also an event source, it may raise the message received event
         void ProcessIncomingMessage(
             MidiMessageReceivedEventArgs args,
             out Boolean skipFurtherListeners,
             out Boolean skipMainMessageReceivedEvent);
 
-        // called when connection is closed
         void Cleanup();
-
     }
 }

@@ -16,37 +16,22 @@ namespace MIDI_MIDL_NAMESPACE
     [default_interface]
     runtimeclass MidiClock
     {
-        // gets the current MIDI timestamp
         static MIDI_TIMESTAMP Now{ get; };
 
-        // gets the current MIDI timestamp
         static MIDI_TIMESTAMP TimestampConstantSendImmediately{ get; };
 
-        // returns the units per second for the timestamp
         static UInt64 TimestampFrequency{ get; };
 
-        // convenience functions
-        //static Double ConvertTimestampToNanoseconds(MIDI_TIMESTAMP timestampValue);   // TODO post-NAMM 2024
-        static Double ConvertTimestampToMicroseconds(MIDI_TIMESTAMP timestampValue);
-        static Double ConvertTimestampToMilliseconds(MIDI_TIMESTAMP timestampValue);
-        static Double ConvertTimestampToSeconds(MIDI_TIMESTAMP timestampValue);   // TODO post-NAMM 2024
+        static Double ConvertTimestampTicksToNanoseconds(MIDI_TIMESTAMP timestampValue);
+        static Double ConvertTimestampTicksToMicroseconds(MIDI_TIMESTAMP timestampValue);
+        static Double ConvertTimestampTicksToMilliseconds(MIDI_TIMESTAMP timestampValue);
+        static Double ConvertTimestampTicksToSeconds(MIDI_TIMESTAMP timestampValue);
 
-        // these can offset to the future or the past, which is why the offset is signed
         static MIDI_TIMESTAMP OffsetTimestampByTicks(MIDI_TIMESTAMP timestampValue, Int64 offsetTicks);
+
         static MIDI_TIMESTAMP OffsetTimestampByMicroseconds(MIDI_TIMESTAMP timestampValue, Int64 offsetMicroseconds);
         static MIDI_TIMESTAMP OffsetTimestampByMilliseconds(MIDI_TIMESTAMP timestampValue, Int64 offsetMilliseconds);
         static MIDI_TIMESTAMP OffsetTimestampBySeconds(MIDI_TIMESTAMP timestampValue, Int64 offsetSeconds);
-
-
-
-        // TODO: Consider adding a wrapper for GetSystemTimePreciseAsFileTime to enable 
-        // synchronizing timestamps to wall clock time, as much as that is possible
-
-
-
-
-
-
     }
 }
 

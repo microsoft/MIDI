@@ -40,35 +40,25 @@ namespace MIDI_MIDL_NAMESPACE
 
         static Boolean DeviceMatchesFilter(MidiEndpointDeviceInformation deviceInformation, MidiEndpointDeviceInformationFilters endpointFilters);
 
-
-
         String Id { get; };
         
-
         Windows.Devices.Enumeration.DeviceInformation GetParentDeviceInformation();
         Windows.Devices.Enumeration.DeviceInformation GetContainerInformation();
-
 
         Guid ContainerId{ get; };
         String DeviceInstanceId{ get; };
 
+        String Name{ get; };
+        String TransportSuppliedName{ get; };
 
-        // We surface all the names here, but use a hierarchy to decide which Name we show as the Name property
-
-        String Name{ get; };                        // user supplied name, if provided (defaults to device name otherwise)
-        String TransportSuppliedName{ get; };       // device/transport supplied name, from pnp
-
-
-
-        // from Endpoint info notification / discovery process
         UInt8 SpecificationVersionMajor{ get; };
         UInt8 SpecificationVersionMinor{ get; };
         Windows.Foundation.DateTime EndpointInformationLastUpdateTime{ get; };
 
-        String ProductInstanceId{ get; };           // 
+        String ProductInstanceId{ get; };
         Windows.Foundation.DateTime ProductInstanceIdLastUpdateTime{ get; };
 
-        String EndpointSuppliedName{ get; };        // name supplied by the in-protocol endpoint information, if available
+        String EndpointSuppliedName{ get; };
         Windows.Foundation.DateTime EndpointSuppliedNameLastUpdateTime{ get; };
 
         Boolean SupportsMidi10Protocol{ get; };
@@ -77,22 +67,17 @@ namespace MIDI_MIDL_NAMESPACE
         Boolean SupportsSendingJRTimestamps{ get; };
 
         Boolean HasStaticFunctionBlocks{ get; };
-        UInt8 FunctionBlockCount{ get; };           // this number is provided by endpoint information
+        UInt8 FunctionBlockCount{ get; };
 
-        // function blocks
         IMapView<UInt8, MidiFunctionBlock> FunctionBlocks{ get; };
         Windows.Foundation.DateTime FunctionBlocksLastUpdateTime{ get; };
 
-
-        // Endpoint configuration / protocol negotiation results
-
-        MidiProtocol ConfiguredProtocol{ get; };    // MIDI 1.0 or MIDI 2.0 for this endpoint
+        MidiProtocol ConfiguredProtocol{ get; };
         Boolean ConfiguredToReceiveJRTimestamps{ get; };
         Boolean ConfiguredToSendJRTimestamps{ get; };
 
         Windows.Foundation.DateTime EndpointConfigurationLastUpdateTime{ get; };
 
-        // MIDI Device Identity (sysex stuff)
         UInt8[] DeviceIdentitySystemExclusiveId{ get; };
         UInt8 DeviceIdentityDeviceFamilyLsb{ get; };
         UInt8 DeviceIdentityDeviceFamilyMsb{ get; };
@@ -103,55 +88,36 @@ namespace MIDI_MIDL_NAMESPACE
         Windows.Foundation.DateTime DeviceIdentityLastUpdateTime{ get; };
 
 
-        // transport type
         Guid TransportId{ get; };
         String TransportMnemonic{ get; };
 
-        // iSerialNumber from USB. This is transport-specific, but super important
         String TransportSuppliedSerialNumber{ get; };
 
-        // VID iVendor
         UInt16 TransportSuppliedVendorId{ get; };
-
-        // PID iProduct
         UInt16 TransportSuppliedProductId{ get; };
 
-        // endpoint description supplied by the transport. This may contain most anything that is useful to the user.
         String TransportSuppliedDescription{ get; };
-
-        // manufacturer when we can get that. Typically from USB
         String ManufacturerName{ get; };
 
-        // whether or not this supports multi-client use
         Boolean SupportsMultiClient{ get; };
 
-
-        // whether or not this is an upgrade MIDI 1.0 device
         MidiEndpointNativeDataFormat NativeDataFormat{ get; };
 
-        // group terminal blocks
         IVectorView<MidiGroupTerminalBlock> GroupTerminalBlocks{ get; };
 
-        // If this is a diagnostic endpoint
         MidiEndpointDevicePurpose EndpointPurpose{ get; };
 
 
-
-        // The settings app allows the user to add some metadata, like a description
-        String UserSuppliedName{ get; };            // name supplied by the user, if available
+        String UserSuppliedName{ get; };
         String UserSuppliedDescription{ get; };
 
-        // png icon supplied by the user
         String UserSuppliedLargeImagePath{ get; };
         String UserSuppliedSmallImagePath{ get; };
 
         Boolean RequiresNoteOffTranslation{ get; };
         UInt16 RecommendedCCAutomationIntervalMS{ get; };
-        //Boolean SupportsMidiPolyphonicExpression{ get; }; // removed because the MPE profile is a better way to do this
-
 
         Windows.Foundation.Collections.IMapView<String, IInspectable> Properties{ get; };
-        
 
         Boolean UpdateFromDeviceInformation(Windows.Devices.Enumeration.DeviceInformation deviceInformation);
         Boolean UpdateFromDeviceInformationUpdate(Windows.Devices.Enumeration.DeviceInformationUpdate deviceInformationUpdate);

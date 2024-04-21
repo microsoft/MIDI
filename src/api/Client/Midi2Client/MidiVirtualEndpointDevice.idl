@@ -12,9 +12,6 @@
 MIDI_IDL_IMPORT
 
 import "IMidiEndpointMessageProcessingPlugin.idl";
-//import "MidiProperty.idl";
-//import "MidiProfile.idl";
-
 import "MidiStreamConfigurationRequestReceivedEventArgs.idl";
 import "MidiFunctionBlock.idl";
 import "MidiVirtualEndpointDeviceDefinition.idl";
@@ -27,25 +24,13 @@ namespace MIDI_MIDL_NAMESPACE
     {
         MidiVirtualEndpointDeviceDefinition DeviceDefinition{ get; };
 
-        // This is a view because all modifications require sending notifications
-        // out on the endpoint. So the functions do that.
         IMapView<UInt8, MidiFunctionBlock> FunctionBlocks{ get; };
         
-        // only available if blocks are not static
         Boolean UpdateFunctionBlock(MidiFunctionBlock block);
-
         Boolean UpdateEndpointName(String name);
 
-        // true if you want the stream / function block etc. messages automatically handled
-        // and then removed from the stream. False if the endpoint should still raise
-        // MessageReceived events for those messages
         Boolean SuppressHandledMessages{ get; set; };
 
-        // TODO: MIDI CI / Profiles etc.
-        // Add/Update/Remove CI Profiles
-        // Add/Update/Remove CI Properties
-
         event Windows.Foundation.TypedEventHandler<MidiVirtualEndpointDevice, MidiStreamConfigurationRequestReceivedEventArgs> StreamConfigurationRequestReceived;
-
     }
 }

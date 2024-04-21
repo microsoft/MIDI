@@ -15,6 +15,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
     {
         MidiService() = default;
 
+        static bool IsAvailable();
+
         static midi2::MidiServicePingResponseSummary PingService(
             _In_ uint8_t const pingCount
             ) noexcept;

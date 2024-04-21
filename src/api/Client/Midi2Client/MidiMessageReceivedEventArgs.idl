@@ -31,46 +31,27 @@ namespace MIDI_MIDL_NAMESPACE
     {
         MIDI_TIMESTAMP Timestamp{ get; };
 
-        // Type of UMP contained in the data. You can cast this to an int to get the number of words
         MidiPacketType PacketType{ get; };
-
-        // The type of message contained. This comes from the first word of the data
         MidiMessageType MessageType{ get; };
 
-        // utility for code that just needs to know about the message before doing any real work
-        // message listeners often make use of this, so it cuts down on ceremony at the expense of
-        // a small amount of stack
         UInt32 PeekFirstWord();
         
-        // Returns a new UMP. Allocation-wise, this is the most expensive, but it is also the friendliest
         IMidiUniversalPacket GetMessagePacket();
 
-        // Fills 1-4 words. Use the return value or PacketType to see how many words are valid 
         UInt8 FillWords(out UInt32 word0, out UInt32 word1, out UInt32 word2, out UInt32 word3);
 
-        // returns the number of valid words written. Use the return value of UmpType to see how many words are valid
         UInt8 FillMessageStruct(out MidiMessageStruct message);
 
-
-        // these are for when you have an existing UMP type and prefer not to allocate a new one
-        // caller is responsible for using UmpType to pick the correct one. Parameters are references
-        // to existing types, but the way WinRT works, it's not as efficient as an & parameters in C++
         Boolean FillMessage32(MidiMessage32 message);
         Boolean FillMessage64(MidiMessage64 message);
         Boolean FillMessage96(MidiMessage96 message);
         Boolean FillMessage128(MidiMessage128 message);
 
-        // Use existing arrays instead of allocating new ones. Array should be at least as large
-        // as the UMP being read. Returns the count of elements written (Words in the case of the
-        // first, and bytes in the case of the second)
         UInt8 FillWordArray(UInt32 startIndex, ref UInt32[] words);
         UInt8 FillByteArray(UInt32 startIndex, ref UInt8[] bytes);
 
-        // Fill a spot in an existing IMemoryBuffer controlled by the caller. Returns the number of BYTES written
         UInt8 FillBuffer(UInt32 byteOffset, Windows.Foundation.IMemoryBuffer buffer);
 
-        // Adds the message words to the end of the provided list, and returns the number of words added.
         UInt8 AppendWordsToList(IVector<UInt32> wordList);
-
     }
 }

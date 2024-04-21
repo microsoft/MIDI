@@ -1,11 +1,15 @@
-﻿using Spectre.Console.Cli;
-using Spectre.Console;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
 using System.Runtime.Versioning;
 
-using Microsoft.Devices.Midi2.ConsoleApp;
-using Microsoft.Devices.Midi2.ConsoleApp.Resources;
-using Windows.Gaming.Input.ForceFeedback;
-using Windows.Devices.Midi2;
+using Microsoft.Midi.ConsoleApp;
+
 
 
 

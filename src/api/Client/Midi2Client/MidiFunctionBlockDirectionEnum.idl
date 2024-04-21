@@ -13,9 +13,6 @@ MIDI_IDL_IMPORT
 
 namespace MIDI_MIDL_NAMESPACE
 {
-    // NOTE: the values are different for function blocks and group terminal
-    // blocks, so we have to different enumerations
-
     MIDI_API_CONTRACT_v1
     enum MidiFunctionBlockDirection
     {

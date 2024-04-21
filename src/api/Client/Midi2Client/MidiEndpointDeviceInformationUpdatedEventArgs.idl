@@ -19,27 +19,13 @@ namespace MIDI_MIDL_NAMESPACE
     {
         String Id {get; };
 
-        // any name changes
         Boolean UpdatedName{ get; };
-
-        // Endpoint identity, endpoint info
         Boolean UpdatedEndpointInformation{ get; };
-
-        // Endpoint identity, endpoint info
         Boolean UpdatedDeviceIdentity{ get; };
-
-        // Endpoint identity, endpoint info
         Boolean UpdatedStreamConfiguration{ get; };
-
-        // Function blocks or function block names
         Boolean UpdatedFunctionBlocks{ get; };
-       
-        // Description, icon etc. Not the name
         Boolean UpdatedUserMetadata{ get; };                
-
-        // User or endpoint-supplied capabilities like MPE, cc automation interval, etc.
         Boolean UpdatedAdditionalCapabilities{ get; };
-
 
         Windows.Devices.Enumeration.DeviceInformationUpdate DeviceInformationUpdate{ get; };
     }

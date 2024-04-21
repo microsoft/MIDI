@@ -39,9 +39,10 @@ namespace MIDI_CPP_NAMESPACE::implementation
             _In_ internal::MidiTimestamp const timestampValue,
             _In_ int64_t const offsetSeconds);
 
-        static double ConvertTimestampToMicroseconds(_In_ internal::MidiTimestamp const timestampValue);
-        static double ConvertTimestampToMilliseconds(_In_ internal::MidiTimestamp const timestampValue);
-        static double ConvertTimestampToSeconds(_In_ internal::MidiTimestamp const timestampValue);
+        static double ConvertTimestampTicksToNanoseconds(_In_ internal::MidiTimestamp const timestampValue);
+        static double ConvertTimestampTicksToMicroseconds(_In_ internal::MidiTimestamp const timestampValue);
+        static double ConvertTimestampTicksToMilliseconds(_In_ internal::MidiTimestamp const timestampValue);
+        static double ConvertTimestampTicksToSeconds(_In_ internal::MidiTimestamp const timestampValue);
 
     private:
         static uint64_t m_timestampFrequency;

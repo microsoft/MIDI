@@ -6,21 +6,16 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-// Group terminal blocks are being phased out in favor of Function Blocks, but
-// will still be found in devices. See MIDI implementation guide and 
-// documentation to better understand the relationship between Group Terminal
-// Blocks and Function Blocks
+
+#include "namespace_defines.h"
+#include "midl_defines.h"
+MIDI_IDL_IMPORT
 
 import "MidiGroupTerminalBlockDirectionEnum.idl";
 import "MidiGroupTerminalBlockProtocolEnum.idl";
 import "MidiGroup.idl";
 
 import "MidiFunctionBlock.idl";
-
-#include "namespace_defines.h"
-#include "midl_defines.h"
-MIDI_IDL_IMPORT
-
 
 namespace MIDI_MIDL_NAMESPACE
 {
@@ -40,16 +35,11 @@ namespace MIDI_MIDL_NAMESPACE
 
         Boolean IncludesGroup(MidiGroup group);
 
-
-        // Note: 0x0000 is unknown or not fixed
-        // 0x0001 is 31.25kb/s
-        // all others are 4kb/second * value
         UInt16 MaxDeviceInputBandwidthIn4KBitsPerSecondUnits{ get; };
         UInt16 MaxDeviceOutputBandwidthIn4KBitsPerSecondUnits{ get; };
 
         UInt32 CalculatedMaxDeviceInputBandwidthBitsPerSecond{ get; };
         UInt32 CalculatedMaxDeviceOutputBandwidthBitsPerSecond{ get; };
-
 
         MidiFunctionBlock AsEquivalentFunctionBlock();
     }

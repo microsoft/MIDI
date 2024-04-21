@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
 	<metadata>
 		<id>Microsoft.Devices.Midi2</id>
-		<version>1.0.0-preview.6-0192</version>
+		<version>1.0.0-preview.6-0194</version>
 		<authors>Microsoft Corporation</authors>
 		<description>Windows MIDI Services SDK. Minimum package necessary to use Windows MIDI Services from an app on a PC that has Windows MIDI Services installed.</description>
 		<license type="expression">MIT</license>
@@ -10,7 +10,7 @@
 		<readme>README.md</readme>
 		<repository type="git" url="https://github.com/microsoft/midi/" />
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
-		<tags>midi windows music audio native</tags>
+		<tags>midi midi2 windows music audio native</tags>
 		<dependencies>
             <group targetFramework="net6.0-windows10.0.20348.0" />
             <group targetFramework="uap10.0" />

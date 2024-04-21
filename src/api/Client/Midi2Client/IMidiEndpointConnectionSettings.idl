@@ -6,14 +6,9 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-
-// Interface for settings classes that transport SDK plugins will implement when 
-// providing custom connection settings for their transports
-
 #include "namespace_defines.h"
 #include "midl_defines.h"
 MIDI_IDL_IMPORT
-
 
 namespace MIDI_MIDL_NAMESPACE
 {

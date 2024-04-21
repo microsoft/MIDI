@@ -27,7 +27,7 @@ namespace MIDI_MIDL_NAMESPACE
 
         Boolean IsReadOnly { get; };
 
-        UInt8 Number{ get; set; };               // function block number: 0-31
+        UInt8 Number{ get; set; };
         String Name{ get; set; };
 
         Boolean IsActive{ get; set; };

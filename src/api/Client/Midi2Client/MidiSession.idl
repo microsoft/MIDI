@@ -15,7 +15,6 @@ import "IMidiEndpointConnectionSettings.idl";
 import "MidiSessionSettings.idl";
 import "MidiVirtualEndpointDeviceDefinition.idl";
 
-
 namespace MIDI_MIDL_NAMESPACE
 {
     MIDI_API_CONTRACT_v1
@@ -26,44 +25,29 @@ namespace MIDI_MIDL_NAMESPACE
         String Name{ get; };
         MidiSessionSettings Settings{ get; };
 
-        // captures the PID, app name, etc.
         static MidiSession CreateSession(String sessionName);
         static MidiSession CreateSession(String sessionName, MidiSessionSettings settings);
 
         Boolean IsOpen { get; };
 
-        // Having this list here allows us to be able to close
-        // all connections with the session. Also convenient for
-        // consuming code to use this table.
         IMapView<Guid, MidiEndpointConnection> Connections{ get; };
 
-        // create an unopened connection to the specified endpoint
         MidiEndpointConnection CreateEndpointConnection(
             String endpointDeviceId
         );
 
-        // create an unopened connection to the specified endpoint,
-        // and supply the provided settings to the endpoint device
-        // manager in the service
         MidiEndpointConnection CreateEndpointConnection(
             String endpointDeviceId,
             IMidiEndpointConnectionSettings settings
         );
 
 
-        // creating it here helps ensure this is the only possible owner
-        // This creates the virtual device, and also adds the appropriate listener
-        // to the returned endpoint connection
         MidiEndpointConnection CreateVirtualDeviceAndConnection(
             MidiVirtualEndpointDeviceDefinition deviceDefinition
         );
 
-        // This will close and remove a single endpoint connection instance.
         void DisconnectEndpointConnection(Guid endpointConnectionId);
 
-        // changes the session name in the service. Needed
-        // for cases where the session name is a project name
-        // or similar
         Boolean UpdateName(String newName);
     }
 }
