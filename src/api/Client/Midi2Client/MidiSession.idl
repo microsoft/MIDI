@@ -38,6 +38,12 @@ namespace MIDI_MIDL_NAMESPACE
 
         MidiEndpointConnection CreateEndpointConnection(
             String endpointDeviceId,
+            Boolean autoReconnect
+        );
+
+        MidiEndpointConnection CreateEndpointConnection(
+            String endpointDeviceId,
+            Boolean autoReconnect,
             IMidiEndpointConnectionSettings settings
         );
 

@@ -71,6 +71,7 @@ app.Configure(config =>
     config.AddBranch<EndpointCommandSettings>("endpoint", endpoint =>
     {
         endpoint.AddExample("endpoint", "properties", "--verbose");
+        //endpoint.AddExample("endpoint", "properties");
         endpoint.AddExample("endpoint", "send-message", "0x21234567");
 
         endpoint.SetDescription(Strings.CommandEndpointDescription);

@@ -15,6 +15,13 @@ CMidiSessionTracker::Initialize()
     return S_OK;
 }
 
+
+HRESULT
+CMidiSessionTracker::VerifyConnectivity()
+{
+    return S_OK;
+}
+
 _Use_decl_annotations_
 HRESULT
 CMidiSessionTracker::AddClientSession(

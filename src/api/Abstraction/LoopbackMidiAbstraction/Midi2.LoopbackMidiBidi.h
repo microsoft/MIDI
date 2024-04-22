@@ -44,8 +44,8 @@ private:
     //wil::com_ptr_nothrow<IMidiCallback> m_associatedBiDiCallback;
 
 
-    wil::com_ptr_nothrow <IMidiCallback> m_callback;
-    LONGLONG m_callbackContext;
+    wil::com_ptr_nothrow <IMidiCallback> m_callback{ nullptr };
+    LONGLONG m_callbackContext{};
 
     std::wstring m_endpointId{};
 };

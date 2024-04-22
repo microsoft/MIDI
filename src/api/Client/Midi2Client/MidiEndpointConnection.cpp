@@ -70,14 +70,15 @@ namespace MIDI_CPP_NAMESPACE::implementation
     }
 
 
-
     
     _Use_decl_annotations_
     bool MidiEndpointConnection::InternalInitialize(
         winrt::guid sessionId,
         winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
         winrt::guid const connectionId,
-        winrt::hstring const endpointDeviceId
+        winrt::hstring const endpointDeviceId,
+        midi2::IMidiEndpointConnectionSettings connectionSettings,
+        bool autoReconnect
     )
     {
         internal::LogInfo(__FUNCTION__, L"Internal Initialize ");
@@ -89,10 +90,11 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
             m_endpointDeviceId = endpointDeviceId;
 
-            //WINRT_ASSERT(!m_endpointDeviceId.empty());
-            //WINRT_ASSERT(serviceAbstraction != nullptr);
-
             m_serviceAbstraction = serviceAbstraction;
+
+            m_connectionSettings = connectionSettings;
+            m_autoReconnect = autoReconnect;
+
             
             return true;
         }
@@ -104,46 +106,102 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
     }
 
+    // this does all the connection except plugin init
+    _Use_decl_annotations_
+    bool MidiEndpointConnection::InternalOpen()
+    {
+        internal::LogInfo(__FUNCTION__, L"Connection Open ");
+
+
+        DWORD mmcssTaskId{};
+
+        LPCWSTR connectionSettingsJsonString = nullptr;
+
+        if (m_connectionSettings != nullptr)
+        {
+            connectionSettingsJsonString = m_connectionSettings.SettingsJson().c_str();
+        }
+
+        ABSTRACTIONCREATIONPARAMS abstractionCreationParams{ MidiDataFormat_UMP, connectionSettingsJsonString };
+
+        auto result = m_endpointAbstraction->Initialize(
+            (LPCWSTR)(EndpointDeviceId().c_str()),
+            &abstractionCreationParams,
+            &mmcssTaskId,
+            (IMidiCallback*)(this),
+            0,
+            m_sessionId
+        );
+
+        if (SUCCEEDED(result))
+        {
+            m_isOpen = true;
+            m_closeHasBeenCalled = false;
+        }
+        else
+        {
+            internal::LogHresultError(__FUNCTION__, L"Failed to open connection", result);
+        }
+
+        return true;
+    }
+
+    // this does all the reconnection except for plugin init
+    _Use_decl_annotations_
+    bool MidiEndpointConnection::InternalReopenAfterDisconnect()
+    {
+        internal::LogInfo(__FUNCTION__, L"Connection Reopen ");
+
+        // Activate the endpoint for this device. Will fail if the device is not a BiDi device
+        if (!ActivateMidiStream())
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Could not activate MIDI Stream");
+
+            return false;
+        }
+
+        return InternalOpen();
+    }
+
 
     _Use_decl_annotations_
     bool MidiEndpointConnection::Open()
     {
         internal::LogInfo(__FUNCTION__, L"Connection Open ");
 
+        // Activate the endpoint for this device. Will fail if the device is not a BiDi device
+        if (!ActivateMidiStream())
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Could not activate MIDI Stream");
+
+            return false;
+        }
+
+
         if (!IsOpen())
         {
-            // Activate the endpoint for this device. Will fail if the device is not a BiDi device
-            if (!ActivateMidiStream(m_serviceAbstraction, __uuidof(IMidiBiDi), (void**)&m_endpointAbstraction))
-            {
-                internal::LogGeneralError(__FUNCTION__, L"Could not activate MIDI Stream");
-
-                return false;
-            }
-
             if (m_endpointAbstraction != nullptr)
             {
                 try
                 {
                     InitializePlugins();
 
-                    DWORD mmcssTaskId{};  
-                    ABSTRACTIONCREATIONPARAMS abstractionCreationParams{ MidiDataFormat_UMP };
+                    if (InternalOpen())
+                    {
+                        // If autoReconnect, set up a watcher
+                        if (m_autoReconnect)
+                        {
+                            StartDeviceWatcher();
+                        }
 
-                    winrt::check_hresult(m_endpointAbstraction->Initialize(
-                        (LPCWSTR)(EndpointDeviceId().c_str()),
-                        &abstractionCreationParams,
-                        &mmcssTaskId,
-                        (IMidiCallback*)(this),
-                        0,
-                        m_sessionId
-                    ));
+                        CallOnConnectionOpenedOnPlugins();
 
-                    // provide a copy to the output logic
-                    m_isOpen = true;
-
-                    CallOnConnectionOpenedOnPlugins();
-
-                    return true;
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
                 catch (winrt::hresult_error const& ex)
                 {
@@ -153,10 +211,18 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
                     return false;
                 }
+                catch (...)
+                {
+                    internal::LogGeneralError(__FUNCTION__, L"Exception initializing endpoint interface. Service may be unavailable.");
+
+                    m_endpointAbstraction = nullptr;
+
+                    return false;
+                }
             }
             else
             {
-                internal::LogGeneralError(__FUNCTION__, L"Endpoint interface is nullptr");
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint abstraction interface is nullptr");
 
                 return false;
             }
@@ -179,15 +245,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         try
         {
             CleanupPlugins();
-
-            if (m_endpointAbstraction != nullptr)
-            {
-                m_endpointAbstraction->Cleanup();
-                m_endpointAbstraction = nullptr;
-            }
-
-            // output is also input, so don't call cleanup
-            m_endpointAbstraction = nullptr;
+            DeactivateMidiStream();
 
             m_isOpen = false;
 
@@ -209,26 +267,43 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
     }
 
-
-
-
     _Use_decl_annotations_
-    bool MidiEndpointConnection::ActivateMidiStream(
-        winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
-        const IID& iid,
-        void** iface) noexcept
+    bool MidiEndpointConnection::DeactivateMidiStream()
+    {
+        internal::LogInfo(__FUNCTION__, L"Deactivating MIDI Stream");
+
+        if (m_endpointAbstraction != nullptr)
+        {
+            // todo: some error / hresult handling here
+
+            m_endpointAbstraction->Cleanup();
+            m_endpointAbstraction == nullptr;
+        }
+
+        return true;
+    }
+
+    
+    _Use_decl_annotations_
+    bool MidiEndpointConnection::ActivateMidiStream() noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Activating MIDI Stream");
 
         try
         {
-            winrt::check_hresult(serviceAbstraction->Activate(iid, iface));
+            winrt::check_hresult(m_serviceAbstraction->Activate(__uuidof(IMidiBiDi), (void**) &m_endpointAbstraction));
 
             return true;
         }
         catch (winrt::hresult_error const& ex)
         {
             internal::LogHresultError(__FUNCTION__, L"hresult exception activating stream. Service may be unavailable", ex);
+
+            return false;
+        }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Exception activating stream. Service may be unavailable");
 
             return false;
         }

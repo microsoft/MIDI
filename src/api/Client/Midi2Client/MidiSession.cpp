@@ -154,7 +154,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
     _Use_decl_annotations_
     midi2::MidiEndpointConnection MidiSession::CreateEndpointConnection(
         winrt::hstring const& endpointDeviceId,
-        midi2::IMidiEndpointConnectionSettings const& /*settings*/
+        bool const autoReconnect,
+        midi2::IMidiEndpointConnectionSettings const& settings
         ) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Creating Endpoint Connection");
@@ -167,7 +168,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             // generate internal endpoint Id
             auto connectionInstanceId = foundation::GuidHelper::CreateNewGuid();
 
-            if (endpointConnection->InternalInitialize(m_id, m_serviceAbstraction, connectionInstanceId, normalizedDeviceId))
+            if (endpointConnection->InternalInitialize(m_id, m_serviceAbstraction, connectionInstanceId, normalizedDeviceId, settings, autoReconnect))
             {
                 m_connections.Insert(connectionInstanceId, *endpointConnection);
 
@@ -191,11 +192,20 @@ namespace MIDI_CPP_NAMESPACE::implementation
     }
 
     _Use_decl_annotations_
+        midi2::MidiEndpointConnection MidiSession::CreateEndpointConnection(
+            winrt::hstring const& endpointDeviceId,
+            bool autoReconnect
+        ) noexcept
+    {
+        return CreateEndpointConnection(endpointDeviceId, autoReconnect, nullptr);
+    }
+
+    _Use_decl_annotations_
     midi2::MidiEndpointConnection MidiSession::CreateEndpointConnection(
         winrt::hstring const& endpointDeviceId
         ) noexcept
     {
-        return CreateEndpointConnection(endpointDeviceId, nullptr);
+        return CreateEndpointConnection(endpointDeviceId, false, nullptr);
     }
 
 
@@ -393,7 +403,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         internal::LogInfo(__FUNCTION__, L"Virtual device creation worked.");
 
         // Creating the device succeeded, so create the connection
-        auto connection = CreateEndpointConnection(endpointDeviceId, nullptr);
+        auto connection = CreateEndpointConnection(endpointDeviceId, false, nullptr);
 
         internal::LogInfo(__FUNCTION__, L"Created endpoint connection");
 

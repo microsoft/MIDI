@@ -366,6 +366,9 @@
   <data name="ParameterListenerMessagesFilter" xml:space="preserve">
     <value>(not yet implemented)</value>
   </data>
+  <data name="ParameterMonitorEndpointAutoReconnect" xml:space="preserve">
+    <value>Continue monitoring and automatically reconnect after device disconnection, if device becomes available (unplug/replug).</value>
+  </data>
   <data name="ParameterMonitorEndpointDirectionDescription" xml:space="preserve">
     <value>The direction of the endpoint referenced by the Id. If this doesn't match the endpoint type, the connection will fail.</value>
   </data>

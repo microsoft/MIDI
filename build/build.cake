@@ -436,8 +436,8 @@ Task("BuildConsoleApp")
         Configuration = configuration,
 
         PublishSingleFile = false,
-        PublishTrimmed = true,
-        //PublishAot = true,            // not currently supported in cake, so make sure this is set in project file
+        PublishTrimmed = false,          // must be true for AOT
+        //PublishAot = false,            // not currently supported in cake, so make sure this is set in project file
         SelfContained = false,
         Framework = frameworkVersion,
         Runtime = rid
@@ -613,17 +613,17 @@ Task("CopyAPIArtifacts")
     if (!DirectoryExists(platReleaseFolder))
         CreateDirectory(platReleaseFolder);   
 
-    CopyFiles(System.IO.Path.Combine(apiStagingDir, "Windows.Devices.Midi2.winmd"), platReleaseFolder); 
-    CopyFiles(System.IO.Path.Combine(apiStagingDir, "Windows.Devices.Midi2.dll"), platReleaseFolder); 
-    CopyFiles(System.IO.Path.Combine(apiStagingDir, "Windows.Devices.Midi2.pri"), platReleaseFolder); 
-    CopyFiles(System.IO.Path.Combine(apiStagingDir, "Windows.Devices.Midi2.h"), platReleaseFolder); 
-    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/base.h"), System.IO.Path.Combine(platReleaseFolder, "winrt/")); 
-    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/Windows.Devices.h"), System.IO.Path.Combine(platReleaseFolder, "winrt/")); 
-    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/impl/Windows.Devices.Enumeration.2.h"), System.IO.Path.Combine(platReleaseFolder, "winrt/impl/")); 
-    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/impl/Windows.Devices.Midi.2.h"), System.IO.Path.Combine(platReleaseFolder, "winrt/impl/")); 
-    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/impl/Windows.Foundation.2.h"), System.IO.Path.Combine(platReleaseFolder, "winrt/impl/")); 
-    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/impl/Windows.Foundation.Collections.2.h"), System.IO.Path.Combine(platReleaseFolder, "winrt/impl/")); 
-    CopyFiles(System.IO.Path.Combine(apiStagingDir, "winrt/impl/Windows.Devices.Midi2.2.h"), System.IO.Path.Combine(platReleaseFolder, "winrt/impl/")); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, $"{MIDI2_NAMESPACE}.winmd"), platReleaseFolder); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, $"{MIDI2_NAMESPACE}.dll"), platReleaseFolder); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, $"{MIDI2_NAMESPACE}.pri"), platReleaseFolder); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, $"{MIDI2_NAMESPACE}.h"), platReleaseFolder); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, $"winrt/base.h"), System.IO.Path.Combine(platReleaseFolder, "winrt/")); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, $"winrt/Windows.Devices.h"), System.IO.Path.Combine(platReleaseFolder, "winrt/")); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, $"winrt/impl/Windows.Devices.Enumeration.2.h"), System.IO.Path.Combine(platReleaseFolder, "winrt/impl/")); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, $"winrt/impl/Windows.Devices.Midi.2.h"), System.IO.Path.Combine(platReleaseFolder, "winrt/impl/")); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, $"winrt/impl/Windows.Foundation.2.h"), System.IO.Path.Combine(platReleaseFolder, "winrt/impl/")); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, $"winrt/impl/Windows.Foundation.Collections.2.h"), System.IO.Path.Combine(platReleaseFolder, "winrt/impl/")); 
+    CopyFiles(System.IO.Path.Combine(apiStagingDir, $"winrt/impl/{MIDI2_NAMESPACE}.2.h"), System.IO.Path.Combine(platReleaseFolder, "winrt/impl/")); 
 
 
 });

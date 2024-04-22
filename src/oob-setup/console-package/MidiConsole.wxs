@@ -31,28 +31,39 @@
                    Guid="ccbe40e9-bc36-4fd3-951f-c131db8b680c">
 
             <!-- Install Tools: Console app -->
+            
+            <!-- Publishing AOT or Trimmed does not work with Spectre.Console as of April 2024 -->
             <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\midi.exe" />
-            <!-- <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\midi.dll" /> -->
-            <!-- <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\midi.deps.json" /> -->
-            <!-- <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\midi.runtimeconfig.json" /> -->
+            
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\midi.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\midi.deps.json" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\midi.runtimeconfig.json" />
 
             <!-- C# / WinRT -->
-            <!-- <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\WinRT.Runtime.dll" /> -->
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\WinRT.Runtime.dll" />
 
             <!-- WinRT Projections -->
-            <!-- <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.SDK.NET.dll" /> -->
-            <!-- <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Devices.Midi2.NET.dll" /> -->
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.SDK.NET.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Devices.Midi2.NET.dll" />
+            <!--<File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Windows.Devices.Midi2.NET.dll" />-->
 
             <!-- Spectre Console -->
-            <!-- <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Spectre.Console.dll" /> -->
-            <!-- <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Spectre.Console.Cli.dll" /> -->
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Spectre.Console.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Spectre.Console.Cli.dll" />
 
             <!-- Other .NET libs -->
-            <!-- <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\System.CodeDom.dll" /> -->
-            <!-- <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\System.Diagnostics.EventLog.dll" /> -->
-            <!-- <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\System.Diagnostics.EventLog.Messages.dll" /> -->
-            <!-- <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\System.Management.dll" /> -->
-            <!-- <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\System.ServiceProcess.ServiceController.dll" /> -->
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\System.CodeDom.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\System.Diagnostics.EventLog.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\System.Diagnostics.EventLog.Messages.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\System.Management.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\System.ServiceProcess.ServiceController.dll" />
+
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Extensions.DependencyInjection.Abstractions.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Extensions.DependencyInjection.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Extensions.Logging.Abstractions.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Extensions.Logging.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Extensions.Options.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Extensions.Primitives.dll" />
 
             <!-- Add folder to path -->
             <Environment Id="AddConsoleAppToSystemPath"

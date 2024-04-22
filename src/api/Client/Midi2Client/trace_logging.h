@@ -43,6 +43,11 @@ namespace WindowsMidiServicesInternal
         _In_z_ const wchar_t* message,
         _In_ winrt::hresult_error const& ex) noexcept;
 
+    void LogHresultError(
+        _In_z_ const char* location,
+        _In_z_ const wchar_t* message,
+        _In_ HRESULT const hr) noexcept;
+
     void LogGeneralError(
         _In_z_ const char* location,
         _In_z_ const wchar_t* message) noexcept;

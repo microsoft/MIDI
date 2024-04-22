@@ -31,6 +31,7 @@
 
 #include <winrt/Windows.Data.Json.h>
 namespace json = ::winrt::Windows::Data::Json;
+namespace enumeration = ::winrt::Windows::Devices::Enumeration;
 
 #include <stdint.h>
 #include <sstream>

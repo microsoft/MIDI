@@ -41,7 +41,6 @@ class CMidiSessionTracker : public Microsoft::WRL::RuntimeClass<
     IMidiSessionTracker>
 {
 public:
-
     CMidiSessionTracker() {}
     ~CMidiSessionTracker() {}
 
@@ -57,6 +56,8 @@ public:
 
     // This is called from the API
     STDMETHOD(GetSessionListJson)(_Out_ BSTR* SessionList);
+
+    STDMETHOD(VerifyConnectivity)();
 
     STDMETHOD(Cleanup)();
 

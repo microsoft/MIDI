@@ -311,7 +311,7 @@ namespace Microsoft.Midi.ConsoleApp
 
                 if (maxTimestampScheduled > MidiClock.Now)
                 {
-                    int sleepMs = (int)Math.Ceiling(MidiClock.ConvertTimestampToMilliseconds(maxTimestampScheduled - MidiClock.Now));
+                    int sleepMs = (int)Math.Ceiling(MidiClock.ConvertTimestampTicksToMilliseconds(maxTimestampScheduled - MidiClock.Now));
 
                     sleepMs += 1000;    // we wait an extra second to avoid any timing issues
 

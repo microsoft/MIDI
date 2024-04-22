@@ -42,6 +42,7 @@
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\MidiSettings.runtimeconfig.json" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\appsettings.json" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\WinRT.Runtime.dll" />
+            <!--<File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Microsoft.Devices.Midi2.NET.dll" />-->
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Windows.Devices.Midi2.NET.dll" />
 
 

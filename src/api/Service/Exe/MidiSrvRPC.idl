@@ -133,4 +133,7 @@ interface MidiSrvRPC
         [in] handle_t BindingHandle,
         [out] BSTR* TransformListJson);
 
+    HRESULT MidiSrvVerifyConnectivity(
+        [in] handle_t BindingHandle);
+
 }

@@ -20,9 +20,9 @@ copy /Y %buildoutput%\Midi2.*Abstraction.dll %servicepath%
 copy /Y %buildoutput%\Midi2.*Transform.dll %servicepath%
 
 echo Windows.Devices.Midi2.dll
-copy /Y %buildoutput%\Windows.Devices.Midi2.dll %apipath%
+copy /Y %buildoutput%\*.Devices.Midi2.dll %apipath%
 echo Windows.Devices.Midi2.pri
-copy /Y %buildoutput%\Windows.Devices.Midi2.pri %apipath%
+copy /Y %buildoutput%\*.Devices.Midi2.pri %apipath%
 
 
 
