@@ -161,10 +161,11 @@
                    Bitness="always64"
                    Directory="API_INSTALLFOLDER"
                    Guid="dc48ab14-dd46-4ff2-8d59-10b9a8215c7e">
-            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Windows.Devices.Midi2.dll" Vital="true" />
-                       
-            
-            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Windows.Devices.Midi2.pri" />
+            <!--<File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Windows.Devices.Midi2.dll" Vital="true" />-->
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Microsoft.Devices.Midi2.dll" Vital="true" />
+
+            <!--<File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Windows.Devices.Midi2.pri" />-->
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Microsoft.Devices.Midi2.pri" />
         </Component>
 
         <Component Id="WindowsAPIRegistration"

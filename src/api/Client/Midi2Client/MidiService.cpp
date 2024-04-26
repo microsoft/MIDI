@@ -15,21 +15,46 @@ namespace MIDI_CPP_NAMESPACE::implementation
     // returns True if the MIDI Service is available on this PC
     bool MidiService::IsAvailable()
     {
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
         // We may want other ways to check this in the future. Need to find the most robust approaches
 
         try
         {
-            //auto serviceAbstraction = winrt::create_instance<IMidiAbstraction>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
-            auto serviceAbstraction = winrt::try_create_instance<IMidiAbstraction>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
+            auto serviceAbstraction = winrt::create_instance<IMidiAbstraction>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
+            //auto serviceAbstraction = winrt::try_create_instance<IMidiAbstraction>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
 
             // winrt::try_create_instance indicates failure by returning an empty com ptr
             if (serviceAbstraction == nullptr)
             {
+                internal::LogGeneralError(__FUNCTION__, L"Error contacting service. Service abstraction is nullptr.");
                 return false;
             }
+
+            winrt::com_ptr<IMidiSessionTracker> tracker;
+
+            auto sessionTrackerResult = serviceAbstraction->Activate(__uuidof(IMidiSessionTracker), (void**)&tracker);
+            if (FAILED(sessionTrackerResult))
+            {
+                internal::LogHresultError(__FUNCTION__, L"Failure hresult received activating interface", sessionTrackerResult);
+                return false;
+            }
+
+            auto verifyConnectivityResult = tracker->VerifyConnectivity();
+            if (FAILED(verifyConnectivityResult))
+            {
+                internal::LogHresultError(__FUNCTION__, L"Failure hresult received verifying connectivity", verifyConnectivityResult);
+                return false;
+            }
+
+            internal::LogInfo(__FUNCTION__, L"Service connectivity verified");
+
+            return true;
         }
         catch (...)
         {
+            internal::LogGeneralError(__FUNCTION__, L"Error contacting service. It may be unavailable.");
+
             // winrt::create_instance fails by throwing an exception
             return false;
         }
@@ -47,185 +72,264 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         auto responseSummary = winrt::make_self<implementation::MidiServicePingResponseSummary>();
 
-        if (responseSummary == nullptr)
+        try
         {
-            // just need to fail
-            return nullptr;
-        }
-
-        if (pingCount == 0)
-        {
-            responseSummary->InternalSetFailed(L"Ping count is zero.");
-            return *responseSummary;
-        }
-
-        std::vector<winrt::com_ptr<implementation::MidiServicePingResponse>> pings{};
-        pings.resize(pingCount);
-
-        if (timeoutMilliseconds == 0)
-        {
-            responseSummary->InternalSetFailed(L"Timeout milliseconds is zero.");
-            return *responseSummary;
-        }
-
-        // we use the full session API from here to get accurate timing
-
-        auto session = midi2::MidiSession::CreateSession(L"Ping Test");
-
-        if (session == nullptr)
-        {
-            responseSummary->InternalSetFailed(L"Unable to create session.");
-            return *responseSummary;
-        }
-
-        // This ID must be consistent with what the service is set up to use.
-
-        auto endpoint = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_PING_BIDI_ID);
-
-        if (endpoint == nullptr)
-        {
-            responseSummary->InternalSetFailed(L"Unable to create ping endpoint.");
-            return *responseSummary;
-        }
-
-
-        // originally I was going to use a random number for this, but using the low bits of
-        // the timestamp makes more sense, and will be unique enough for this.
-
-        uint32_t pingSourceId = (uint32_t)(MidiClock::Now() & 0x00000000FFFFFFFF);
-
-        wil::unique_event_nothrow allMessagesReceived;
-        allMessagesReceived.create();
-
-        uint8_t receivedCount{ 0 };
-
-        // we have the session and the endpoint, so set up the ping handler
-        // changing any of this internal implementation detail requires a coordinated change with the server code
-        // this is not an official UMP ping message. This is just an internal representation that is
-        // recognized only by this endpoint, and should never be used elsewhere.
-
-
-        auto MessageReceivedHandler = [&](foundation::IInspectable const& /*sender*/, midi2::MidiMessageReceivedEventArgs const& args)
+            if (responseSummary == nullptr)
             {
-                internal::MidiTimestamp actualReceiveEventTimestamp = MidiClock::Now();
+                internal::LogGeneralError(__FUNCTION__, L"Could not create response summary.");
 
-                uint32_t word0;
-                uint32_t word1;
-                uint32_t word2;
-                uint32_t word3;
+                // just need to fail
+                return nullptr;
+            }
 
-                args.FillWords(word0, word1, word2, word3);
+            if (pingCount == 0)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Ping count is zero");
 
-                // ensure this is a ping message, just in case
+                responseSummary->InternalSetFailed(L"Ping count is zero.");
+                return *responseSummary;
+            }
 
-                if (word0 == INTERNAL_PING_RESPONSE_UMP_WORD0 && word1 == pingSourceId)
+            std::vector<winrt::com_ptr<implementation::MidiServicePingResponse>> pings{};
+            pings.resize(pingCount);
+
+            if (timeoutMilliseconds == 0)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Timeout milliseconds is zero");
+
+                responseSummary->InternalSetFailed(L"Timeout milliseconds is zero.");
+                return *responseSummary;
+            }
+
+            // we use the full session API from here to get accurate timing
+
+            auto session = midi2::MidiSession::CreateSession(L"Ping Test");
+
+            if (session == nullptr)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Unable to create session");
+
+                responseSummary->InternalSetFailed(L"Unable to create session.");
+                return *responseSummary;
+            }
+
+            // This ID must be consistent with what the service is set up to use.
+
+            auto endpoint = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_PING_BIDI_ID, false);
+
+            if (endpoint == nullptr)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Unable to create ping endpoint");
+
+                responseSummary->InternalSetFailed(L"Unable to create ping endpoint.");
+                return *responseSummary;
+            }
+
+            // originally I was going to use a random number for this, but using the low bits of
+            // the timestamp makes more sense, and will be unique enough for this.
+
+            uint32_t pingSourceId = (uint32_t)(MidiClock::Now() & 0x00000000FFFFFFFF);
+
+            wil::unique_event_nothrow allMessagesReceived;
+            allMessagesReceived.create(wil::EventOptions::ManualReset);
+
+            uint8_t receivedCount{ 0 };
+
+            // we have the session and the endpoint, so set up the ping handler
+            // changing any of this internal implementation detail requires a coordinated change with the server code
+            // this is not an official UMP ping message. This is just an internal representation that is
+            // recognized only by this endpoint, and should never be used elsewhere.
+
+            auto MessageReceivedHandler = [&](foundation::IInspectable const& /*sender*/, midi2::MidiMessageReceivedEventArgs const& args)
                 {
-                    if (word2 < pings.size())
+                    internal::MidiTimestamp actualReceiveEventTimestamp = MidiClock::Now();
+
+                    internal::LogInfo(__FUNCTION__, L"Ping MessageReceivedHandler received message");
+
+                    uint32_t word0;
+                    uint32_t word1;
+                    uint32_t word2;
+                    uint32_t word3;
+
+                    args.FillWords(word0, word1, word2, word3);
+
+                    // ensure this is a ping message, just in case
+
+                    if (word0 == INTERNAL_PING_RESPONSE_UMP_WORD0 && word1 == pingSourceId)
                     {
-                        // word2 is our ping index
-                        pings[word2]->InternalSetReceiveInfo(args.Timestamp(), actualReceiveEventTimestamp);
-
-                        receivedCount++;
-
-                        if (receivedCount == pingCount)
+                        if (word2 < pings.size())
                         {
-                            allMessagesReceived.SetEvent();
+                            // word2 is our ping index
+                            pings[word2]->InternalSetReceiveInfo(args.Timestamp(), actualReceiveEventTimestamp);
+
+                            receivedCount++;
+
+                            if (receivedCount == pingCount)
+                            {
+                                internal::LogInfo(__FUNCTION__, L"Setting 'allMessagesReceived' event.");
+
+                                allMessagesReceived.SetEvent();
+                            }
+                        }
+                        else
+                        {
+                            // something really wrong happened. Our index has been messed up.
+
+                            internal::LogGeneralError(__FUNCTION__, L"Index of ping response is out of bounds");
                         }
                     }
                     else
                     {
-                        // something really wrong happened. Our index has been messed up.
+                        // someone else is sending stuff to this ping service. Naughty if not another ping.
+                        internal::LogGeneralError(__FUNCTION__, L"Another process is sending messages to this endpoint");
                     }
-                }
-                else
+                };
+
+            // any failures after this need to revoke the event handler as well
+            auto eventRevokeToken = endpoint.MessageReceived(winrt::auto_revoke, MessageReceivedHandler);
+
+            // open the endpoint. We've already set options for it not to send out discovery messages
+            if (!endpoint.Open())
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Could not open ping endpoint.");
+
+                responseSummary->InternalSetFailed(L"Endpoint open failed. The service may be unavailable.");
+
+                session.DisconnectEndpointConnection(endpoint.ConnectionId());
+
+                return *responseSummary;
+            }
+
+            // send out the ping messages
+
+            internal::LogInfo(__FUNCTION__, L"Sending ping messages");
+
+            for (uint32_t pingIndex = 0; pingIndex < pingCount; pingIndex++)
+            {
+                internal::PackedPingRequestUmp request;
+
+                auto response = winrt::make_self<implementation::MidiServicePingResponse>();
+
+                internal::MidiTimestamp timestamp = MidiClock::Now();
+
+                // Add this info to the tracking before we send, so no race condition
+                // granted that this adds a few ticks to add this to the collection and build the object
+
+                response->InternalSetSendInfo(pingSourceId, pingIndex, timestamp);
+
+                //
+                // TODO: Should this use copy_from?
+                pings[pingIndex] = response;
+
+                // send the ping
+
+                auto sendMessageResult = endpoint.SendSingleMessageWords(timestamp, request.Word0, pingSourceId, pingIndex, request.Padding);
+
+                if (midi2::MidiEndpointConnection::SendMessageFailed(sendMessageResult))
                 {
-                    // someone else is sending stuff to this ping service. Naughty if not another ping.
+                    internal::LogGeneralError(__FUNCTION__, L"Ping send message failed.");
+
+                    responseSummary->InternalSetFailed(L"Sending message failed");
+
+                    session.DisconnectEndpointConnection(endpoint.ConnectionId());
+
+                    return *responseSummary;
                 }
 
-            };
+                //Sleep(0);
+            }
 
-        // any failures after this need to revoke the event handler as well
-        auto eventRevokeToken = endpoint.MessageReceived(MessageReceivedHandler);
+            bool allReceivedFlag = allMessagesReceived.is_signaled();
 
-        // open the endpoint. We've already set options for it not to send out discovery messages
-        if (!endpoint.Open())
-        {
-            internal::LogGeneralError(__FUNCTION__, L"Could not open ping endpoint.");
+            if (!allReceivedFlag)
+            {
+                internal::LogInfo(__FUNCTION__, L"Waiting for responses to come in");
 
-            responseSummary->InternalSetFailed(L"Endpoint open failed. The service may be unavailable.");
-            endpoint.MessageReceived(eventRevokeToken);
+                // Wait for all responses to come in (receivedCount == pingCount). If not all responses come back, report the failure.
+                allReceivedFlag = allMessagesReceived.wait(timeoutMilliseconds);
+
+                if (!allReceivedFlag)
+                {
+                    responseSummary->InternalSetFailed(L"Not all ping responses received within appropriate time window.");
+                    internal::LogGeneralError(__FUNCTION__, L"Not all ping responses received within appropriate time window.");
+                }
+            }
+
+            allMessagesReceived.reset();
+
+            if (allReceivedFlag)
+            {
+                internal::LogInfo(__FUNCTION__, L"All ping messages received");
+
+                // all received
+                responseSummary->InternalSetSucceeded();
+
+                // copy over the holding array into the response and also calculate the totals
+
+                uint64_t totalPing{ 0 };
+
+                internal::LogInfo(__FUNCTION__, L"Calculating delta timestamps");
+
+                for (const auto& response : pings)
+                {
+                   // internal::LogInfo(__FUNCTION__, L"Calculating total ping");
+
+                    totalPing += response->ClientDeltaTimestamp();
+
+                    responseSummary->InternalAddResponse(*response);
+
+                    // does I need to remove the com_ptr ref or will going out of scope be sufficient?
+                }
+
+                internal::LogInfo(__FUNCTION__, L"Calculating average ping");
+
+                uint64_t averagePing = totalPing / responseSummary->Responses().Size();
+
+                responseSummary->InternalSetTotals(totalPing, averagePing);
+            }
 
             session.DisconnectEndpointConnection(endpoint.ConnectionId());
+            session.Close();
 
+            internal::LogInfo(__FUNCTION__, L"Returning response summary");
 
             return *responseSummary;
         }
-
-        // send out the ping messages
-
-        for (uint32_t pingIndex = 0; pingIndex < pingCount; pingIndex++)
+        catch (std::exception ex)
         {
-            internal::PackedPingRequestUmp request;
+            internal::LogStandardExceptionError(__FUNCTION__, L"Exception pinging service.", ex);
 
-            auto response = winrt::make_self<implementation::MidiServicePingResponse>();
-
-            internal::MidiTimestamp timestamp = MidiClock::Now();
-
-            // Add this info to the tracking before we send, so no race condition
-            // granted that this adds a few ticks to add this to the collection and build the object
-
-            response->InternalSetSendInfo(pingSourceId, pingIndex, timestamp);
-
-            //
-            // TODO: Should this use copy_from?
-            pings[pingIndex] = response;
-
-            // send the ping
-            endpoint.SendSingleMessageWords(timestamp, request.Word0, pingSourceId, pingIndex, request.Padding);
-
-            //Sleep(0);
-        }
-
-        // Wait for all responses to come in (receivedCount == pingCount). If not all responses come back, report the failure.
-        if (!allMessagesReceived.wait(timeoutMilliseconds))
-        {
-            responseSummary->InternalSetFailed(L"Not all ping responses received within appropriate time window.");
-            internal::LogGeneralError(__FUNCTION__, L"Not all ping responses received within appropriate time window.");
-        }
-        else
-        {
-            // all received
-            responseSummary->InternalSetSucceeded();
-
-            // copy over the holding array into the response and also calculate the totals
-
-            uint64_t totalPing{ 0 };
-
-            for (const auto& response : pings)
+            if (responseSummary != nullptr)
             {
-                totalPing += response->ClientDeltaTimestamp();
+                responseSummary->InternalSetFailed(winrt::to_hstring(ex.what()));
 
-                responseSummary->InternalAddResponse(*response);
-
-                // does I need to remove the com_ptr ref or will going out of scope be sufficient?
+                return *responseSummary;
             }
-
-            uint64_t averagePing = totalPing / responseSummary->Responses().Size();
-
-            responseSummary->InternalSetTotals(totalPing, averagePing);
+            else
+            {
+                return nullptr;
+            }
         }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Exception pinging service.");
 
-        // unwire the event and close the session.
-        endpoint.MessageReceived(eventRevokeToken);
+            if (responseSummary != nullptr)
+            {
+                responseSummary->InternalSetFailed(L"Exception pinging service");
 
-        session.DisconnectEndpointConnection(endpoint.ConnectionId());
-        session.Close();
-
-        return *responseSummary;
+                return *responseSummary;
+            }
+            else
+            {
+                return nullptr;
+            }
+        }
     }
 
+
     _Use_decl_annotations_
-        midi2::MidiServicePingResponseSummary MidiService::PingService(uint8_t const pingCount) noexcept
+    midi2::MidiServicePingResponseSummary MidiService::PingService(uint8_t const pingCount) noexcept
     {
         return PingService(pingCount, pingCount * 20 + 1000);
     }
@@ -234,6 +338,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
     foundation::Collections::IVector<midi2::MidiServiceTransportPluginInfo> MidiService::GetInstalledTransportPlugins()
     {
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
         auto transportList = winrt::single_threaded_vector<midi2::MidiServiceTransportPluginInfo>();
 
         try
@@ -303,6 +409,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
     foundation::Collections::IVector<midi2::MidiServiceMessageProcessingPluginInfo> MidiService::GetInstalledMessageProcessingPlugins()
     {
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
         // TODO: Need to implement GetInstalledMessageProcessingPlugins. For now, return an empty collection instead of throwing
 
         // This can be read from the registry, but the additional metadata requires calling into the objects themselves
@@ -312,6 +420,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
     foundation::Collections::IVector<midi2::MidiServiceSessionInfo> MidiService::GetActiveSessions() noexcept
     {
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
         auto sessionList = winrt::single_threaded_vector<midi2::MidiServiceSessionInfo>();
 
         try
@@ -568,6 +678,9 @@ namespace MIDI_CPP_NAMESPACE::implementation
         bool const isFromConfigurationFile
     ) noexcept
     {
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
+
         auto iid = __uuidof(IMidiAbstractionConfigurationManager);
         winrt::com_ptr<IMidiAbstractionConfigurationManager> configManager;
 

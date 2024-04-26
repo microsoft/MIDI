@@ -9,26 +9,12 @@
 
 #pragma once
 
-#include <windows.h>
-
-#include <winrt/Windows.Foundation.h>
-#include <winrt/Windows.Foundation.Collections.h>
-#include <winrt/Windows.Devices.Enumeration.h>
-
-#include <winrt/Microsoft.Devices.Midi2.h>
-
-#include <iostream>
-
-#include <chrono>
-#include <format>
-
-
 #include "pch.h"
 
 using namespace winrt;
 using namespace winrt::Windows::Foundation;
 
-const std::wstring fieldSeparator = L" : ";
+const std::wstring fieldSeparator = MIDIDMP_FIELD_SEPARATOR;
 
 void OutputBlankLine()
 {
@@ -38,7 +24,7 @@ void OutputBlankLine()
 
 void OutputSectionHeader(_In_ std::wstring headerText)
 {
-    const std::wstring sectionHeaderSeparator = std::wstring(79, '=');
+    const std::wstring sectionHeaderSeparator = std::wstring(MIDIDMP_SEPARATOR_REPEATING_CHAR_COUNT_PER_LINE, MIDIDMP_SECTION_HEADER_SEPARATOR_CHAR);
 
     std::wcout
         << std::endl
@@ -53,7 +39,7 @@ void OutputSectionHeader(_In_ std::wstring headerText)
 
 void OutputItemSeparator()
 {
-    const std::wstring itemSeparator = std::wstring(79, '-');
+    const std::wstring itemSeparator = std::wstring(MIDIDMP_SEPARATOR_REPEATING_CHAR_COUNT_PER_LINE, MIDIDMP_ITEM_SEPARATOR_CHAR);
 
     std::wcout
         << itemSeparator
@@ -67,10 +53,19 @@ void OutputHeader(_In_ std::wstring headerText)
         << std::endl;
 }
 
-void OutputStringField(_In_ std::wstring fieldName, _In_ winrt::hstring value)
+void OutputFieldLabel(_In_ std::wstring fieldName)
 {
     std::wcout
-        << fieldName
+        << std::setw(MIDIDMP_MAX_FIELD_LABEL_WIDTH)
+        << std::left
+        << fieldName;
+}
+
+void OutputStringField(_In_ std::wstring fieldName, _In_ winrt::hstring value)
+{
+    OutputFieldLabel(fieldName);
+
+    std::wcout
         << fieldSeparator
         << value.c_str()
         << std::endl;
@@ -78,9 +73,21 @@ void OutputStringField(_In_ std::wstring fieldName, _In_ winrt::hstring value)
 
 void OutputStringField(_In_ std::wstring fieldName, _In_ std::wstring value)
 {
+    OutputFieldLabel(fieldName);
+
     std::wcout
-        << fieldName
         << fieldSeparator
+        << value
+        << std::endl;
+}
+
+void OutputBooleanField(_In_ std::wstring fieldName, _In_ bool value)
+{
+    OutputFieldLabel(fieldName);
+
+    std::wcout
+        << fieldSeparator
+        << std::boolalpha
         << value
         << std::endl;
 }
@@ -96,7 +103,7 @@ void OutputCurrentTime()
 {
     auto const time = std::chrono::current_zone()->to_local(std::chrono::system_clock::now());
 
-    OutputStringField(L"current_time", std::format(L"{:%Y-%m-%d %X}", time));
+    OutputStringField(MIDIDMP_FIELD_LABEL_CURRENT_TIME, std::format(L"{:%Y-%m-%d %X}", time));
 
 }
 
@@ -104,8 +111,9 @@ void OutputCurrentTime()
 
 void OutputTimestampField(_In_ std::wstring fieldName, _In_ uint64_t value)
 {
+    OutputFieldLabel(fieldName);
+
     std::wcout
-        << fieldName
         << fieldSeparator
         << value
         << std::endl;
@@ -113,9 +121,23 @@ void OutputTimestampField(_In_ std::wstring fieldName, _In_ uint64_t value)
 
 void OutputNumericField(_In_ std::wstring fieldName, _In_ uint32_t value)
 {
+    OutputFieldLabel(fieldName);
+
     std::wcout
-        << fieldName
         << fieldSeparator
+        << std::dec
+        << value
+        << std::endl;
+}
+
+void OutputHexNumericField(_In_ std::wstring fieldName, _In_ uint32_t value)
+{
+    OutputFieldLabel(fieldName);
+
+    std::wcout
+        << fieldSeparator
+        << L"0x"
+        << std::hex
         << value
         << std::endl;
 }
@@ -125,8 +147,9 @@ void OutputError(_In_ std::wstring errorMessage)
 {
     const std::wstring errorLabel = L"ERROR";
 
+    OutputFieldLabel(errorLabel);
+
     std::wcout 
-        << errorLabel
         << fieldSeparator
         << errorMessage
         << std::endl;
@@ -142,7 +165,7 @@ bool DoSectionTransports(_In_ bool verbose)
 
     try
     {
-        OutputSectionHeader(L"enum_transports");
+        OutputSectionHeader(MIDIDMP_SECTION_LABEL_ENUM_TRANSPORTS);
 
         auto transports = midi2::MidiService::GetInstalledTransportPlugins();
 
@@ -150,11 +173,13 @@ bool DoSectionTransports(_In_ bool verbose)
         {
             for (auto const& transport : transports)
             {
-                OutputGuidField(L"id", transport.Id());
-                OutputStringField(L"name", transport.Name());
-                OutputStringField(L"version", transport.Version());
-                OutputStringField(L"author", transport.Author());
-                OutputStringField(L"description", transport.Description());
+                OutputGuidField(MIDIDMP_FIELD_LABEL_TRANSPORT_ID, transport.Id());
+                OutputStringField(MIDIDMP_FIELD_LABEL_TRANSPORT_NAME, transport.Name());
+                OutputStringField(MIDIDMP_FIELD_LABEL_TRANSPORT_MNEMONIC, transport.Mnemonic());
+                OutputStringField(MIDIDMP_FIELD_LABEL_TRANSPORT_VERSION, transport.Version());
+                OutputStringField(MIDIDMP_FIELD_LABEL_TRANSPORT_AUTHOR, transport.Author());
+                OutputStringField(MIDIDMP_FIELD_LABEL_TRANSPORT_DESCRIPTION, transport.Description());
+                OutputItemSeparator();
             }
         }
         else
@@ -174,7 +199,7 @@ bool DoSectionTransports(_In_ bool verbose)
 
 bool DoSectionMidi2ApiEndpoints(_In_ bool verbose)
 {
-    OutputSectionHeader(L"enum_ump_api_endpoints");
+    OutputSectionHeader(MIDIDMP_SECTION_LABEL_MIDI2_API_ENDPOINTS);
 
     // list devices
 
@@ -206,25 +231,25 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool verbose)
 
             // These names should not be localized because customers may parse these output fields
 
-            OutputStringField(L"endpoint_device_id", device.Id());
-            OutputStringField(L"name", device.Name());
-            OutputStringField(L"transport_mnemonic", device.TransportMnemonic());
+            OutputStringField(MIDIDMP_FIELD_LABEL_MIDI2_ENDPOINT_ID, device.Id());
+            OutputStringField(MIDIDMP_FIELD_LABEL_MIDI2_ENDPOINT_NAME, device.Name());
+            OutputStringField(MIDIDMP_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_MNEMONIC, device.TransportMnemonic());
 
             if (verbose)
             {
-                OutputStringField(L"name_user_supplied", device.UserSuppliedName());
-                OutputStringField(L"name_endpoint_supplied", device.EndpointSuppliedName());
-                OutputStringField(L"name_transport_supplied", device.TransportSuppliedName());
-                OutputStringField(L"description_transport_supplied", device.TransportSuppliedDescription());
-                OutputStringField(L"description_user_supplied", device.UserSuppliedDescription());
+                OutputStringField(MIDIDMP_FIELD_LABEL_MIDI2_ENDPOINT_USER_SUPPLIED_NAME, device.UserSuppliedName());
+                OutputStringField(MIDIDMP_FIELD_LABEL_MIDI2_ENDPOINT_ENDPOINT_SUPPLIED_NAME, device.EndpointSuppliedName());
+                OutputStringField(MIDIDMP_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_SUPPLIED_NAME, device.TransportSuppliedName());
+                OutputStringField(MIDIDMP_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_SUPPLIED_DESC, device.TransportSuppliedDescription());
+                OutputStringField(MIDIDMP_FIELD_LABEL_MIDI2_ENDPOINT_USER_SUPPLIED_DESC, device.UserSuppliedDescription());
             }
 
             auto parent = device.GetParentDeviceInformation();
 
             if (parent != nullptr)
             {
-                OutputStringField(L"parent_id", parent.Id());
-                OutputStringField(L"parent_name", parent.Name());
+                OutputStringField(MIDIDMP_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_ID, parent.Id());
+                OutputStringField(MIDIDMP_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_NAME, parent.Name());
             }
             else
             {
@@ -250,7 +275,7 @@ bool DoSectionMidi1ApiEndpoints(_In_ bool verbose)
 {
     UNREFERENCED_PARAMETER(verbose);
 
-    OutputSectionHeader(L"enum_midi1_api_input_endpoints");
+    OutputSectionHeader(MIDIDMP_SECTION_LABEL_MIDI1_API_INPUT_ENDPOINTS);
 
     try
     {
@@ -262,8 +287,8 @@ bool DoSectionMidi1ApiEndpoints(_In_ bool verbose)
         {
             auto device = midi1Inputs.GetAt(i);
 
-            OutputStringField(L"endpoint_device_id", device.Id());
-            OutputStringField(L"name", device.Name());
+            OutputStringField(MIDIDMP_FIELD_LABEL_MIDI1_ENDPOINT_ID, device.Id());
+            OutputStringField(MIDIDMP_FIELD_LABEL_MIDI1_ENDPOINT_NAME, device.Name());
 
             if (i != midi1Inputs.Size() - 1)
             {
@@ -278,7 +303,7 @@ bool DoSectionMidi1ApiEndpoints(_In_ bool verbose)
         return false;
     }
 
-    OutputSectionHeader(L"enum_midi1_api_output_endpoints");
+    OutputSectionHeader(MIDIDMP_SECTION_LABEL_MIDI1_API_OUTPUT_ENDPOINTS);
 
     try
     {// outputs
@@ -289,8 +314,8 @@ bool DoSectionMidi1ApiEndpoints(_In_ bool verbose)
         {
             auto device = midi1Outputs.GetAt(i);
 
-            OutputStringField(L"endpoint_device_id", device.Id());
-            OutputStringField(L"name", device.Name());
+            OutputStringField(MIDIDMP_FIELD_LABEL_MIDI1_ENDPOINT_ID, device.Id());
+            OutputStringField(MIDIDMP_FIELD_LABEL_MIDI1_ENDPOINT_NAME, device.Name());
 
             if (i != midi1Outputs.Size() - 1)
             {
@@ -308,29 +333,44 @@ bool DoSectionMidi1ApiEndpoints(_In_ bool verbose)
 
 bool DoSectionPingTest(_In_ bool verbose, _In_ uint8_t pingCount)
 {
+    UNREFERENCED_PARAMETER(verbose);
+
     try
     {
-        UNREFERENCED_PARAMETER(verbose);
+        OutputSectionHeader(MIDIDMP_SECTION_LABEL_PING_TEST);
 
-        OutputSectionHeader(L"ping_test");
-
-        OutputTimestampField(L"ping_attempt_count", pingCount);
+        OutputNumericField(MIDIDMP_FIELD_LABEL_PING_ATTEMPT_COUNT, (uint32_t)pingCount);
 
         auto pingResult = midi2::MidiService::PingService(pingCount);
 
-        OutputNumericField(L"ping_return_count", pingResult.Responses().Size());
+        //std::cout << "DEBUG: PingService returned" << std::endl;
 
-        if (pingResult.Success())
+        if (pingResult != nullptr)
         {
-            OutputTimestampField(L"ping_time_round_trip_total_ticks", pingResult.TotalPingRoundTripMidiClock());
-            OutputTimestampField(L"ping_time_round_trip_average_ticks", pingResult.AveragePingRoundTripMidiClock());
+            //std::cout << "DEBUG: pingresult != nullptr" << std::endl;
 
+            OutputNumericField(MIDIDMP_FIELD_LABEL_PING_RETURN_COUNT, pingResult.Responses().Size());
+
+            if (pingResult.Success())
+            {
+                //std::cout << "DEBUG: pingresult.Success()" << std::endl;
+
+                OutputTimestampField(MIDIDMP_FIELD_LABEL_PING_ROUND_TRIP_TOTAL_TICKS, pingResult.TotalPingRoundTripMidiClock());
+                OutputTimestampField(MIDIDMP_FIELD_LABEL_PING_ROUND_TRIP_AVERAGE_TICKS, pingResult.AveragePingRoundTripMidiClock());
+
+                return true;
+            }
+            else
+            {
+                OutputError(L"Ping test failed");
+                OutputStringField(MIDIDMP_FIELD_LABEL_PING_FAILURE_REASON, pingResult.FailureReason());
+
+                return false;
+            }
         }
         else
         {
-            OutputError(L"Ping test failed");
-            OutputStringField(L"ping_failure_reason", pingResult.FailureReason());
-
+            OutputError(L"Ping test failed. Return was null.");
             return false;
         }
     }
@@ -341,18 +381,136 @@ bool DoSectionPingTest(_In_ bool verbose, _In_ uint8_t pingCount)
         return false;
     }
 
+
     return true;
 }
 
 bool DoSectionClock(_In_ bool verbose)
 {
-    OutputSectionHeader(L"midi_clock");
+    UNREFERENCED_PARAMETER(verbose);
 
-    OutputTimestampField(L"clock_frequency", midi2::MidiClock::TimestampFrequency());
-    OutputTimestampField(L"clock_now", midi2::MidiClock::Now());
+    OutputSectionHeader(MIDIDMP_SECTION_LABEL_MIDI_CLOCK);
+
+    OutputTimestampField(MIDIDMP_FIELD_LABEL_CLOCK_FREQUENCY, midi2::MidiClock::TimestampFrequency());
+    OutputTimestampField(MIDIDMP_FIELD_LABEL_CLOCK_NOW, midi2::MidiClock::Now());
 
     return true;
 }
+
+bool DoSectionServiceStatus(_In_ bool verbose)
+{
+    UNREFERENCED_PARAMETER(verbose);
+
+    OutputSectionHeader(MIDIDMP_SECTION_LABEL_SERVICE_STATUS);
+
+    OutputBooleanField(MIDIDMP_FIELD_LABEL_SERVICE_AVAILABLE, midi2::MidiService::IsAvailable());
+
+    return true;
+}
+
+
+std::wstring GetOSVersion()
+{
+    try
+    {
+        OSVERSIONINFOW versionInfo{};
+
+        NTSTATUS (WINAPI *rtlGetVersion)(PRTL_OSVERSIONINFOW) = nullptr;
+
+        HINSTANCE ntdll = LoadLibrary(L"ntdll.dll");
+
+        if (ntdll != nullptr)
+        {
+            rtlGetVersion = (NTSTATUS(WINAPI*)(PRTL_OSVERSIONINFOW)) GetProcAddress(ntdll, "RtlGetVersion");
+
+            if (rtlGetVersion != nullptr)
+            {
+                rtlGetVersion((PRTL_OSVERSIONINFOW)&versionInfo);
+            }
+
+            // do this before anything else so we ensure if frees
+            FreeLibrary(ntdll);
+
+            if (rtlGetVersion != nullptr)
+            {
+                return std::wstring(
+                    std::to_wstring(versionInfo.dwMajorVersion) +
+                    L"." +
+                    std::to_wstring(versionInfo.dwMinorVersion) +
+                    L"." +
+                    std::to_wstring(versionInfo.dwBuildNumber) +
+                    L" " +
+                    versionInfo.szCSDVersion
+                );
+            }
+
+        }
+
+        return L"unknown";
+
+    }
+    catch (...)
+    {
+        return L"exception";
+    }
+}
+
+
+std::wstring GetProcessorArchitectureString(WORD arch)
+{
+    switch (arch)
+    {
+    case PROCESSOR_ARCHITECTURE_AMD64:
+        return L"64-bit Intel/AMD";
+    case PROCESSOR_ARCHITECTURE_ARM:
+        return L"32-bit Arm";
+    case PROCESSOR_ARCHITECTURE_ARM64:
+        return L"Arm64";
+    case PROCESSOR_ARCHITECTURE_IA64:
+        return L"Itanium";
+    case PROCESSOR_ARCHITECTURE_INTEL:
+        return L"32-bit Intel x86";
+    default:
+        return L"Unknown";
+    }
+
+}
+
+void OutputSystemInfo(_In_ SYSTEM_INFO& sysinfo)
+{
+    // that sysinfo.dwNumberOfProcessors can return some strange results.
+    
+//    OutputNumericField(L"num_processors", sysinfo.dwNumberOfProcessors);
+    std::wstring processorArchitecture = GetProcessorArchitectureString(sysinfo.wProcessorArchitecture);
+
+    OutputStringField(MIDIDMP_FIELD_LABEL_SYSTEM_INFO_PROCESSOR_ARCH, processorArchitecture);
+    OutputNumericField(MIDIDMP_FIELD_LABEL_SYSTEM_INFO_PROCESSOR_LEVEL, sysinfo.wProcessorLevel);
+    OutputHexNumericField(MIDIDMP_FIELD_LABEL_SYSTEM_INFO_PROCESSOR_REVISION, sysinfo.wProcessorRevision);
+}
+
+bool DoSectionSystemInfo(_In_ bool verbose)
+{
+    OutputSectionHeader(MIDIDMP_SECTION_LABEL_OS);
+    OutputStringField(MIDIDMP_FIELD_LABEL_OS_VERSION, GetOSVersion());
+
+
+    // if running under emulation on Arm64, this is going to return the emulated sys info
+    OutputSectionHeader(MIDIDMP_SECTION_LABEL_APPARENT_SYSTEM_INFO);
+
+    SYSTEM_INFO sysinfo;
+    ::GetNativeSystemInfo(&sysinfo);
+    OutputSystemInfo(sysinfo);
+
+    // if running under emulation on Arm64, this is going to return the Arm info
+    OutputSectionHeader(MIDIDMP_SECTION_LABEL_NATIVE_SYSTEM_INFO);
+
+    SYSTEM_INFO sysinfoNative;
+    ::GetNativeSystemInfo(&sysinfoNative);
+    OutputSystemInfo(sysinfoNative);
+
+    return true;
+}
+
 
 int __cdecl main()
 {
@@ -362,14 +520,18 @@ int __cdecl main()
     bool pingTest = true;
     bool midiClock = true;
 
-    OutputHeader(L"Microsoft Windows MIDI Services");
+    OutputHeader(MIDIDMP_PRODUCT_NAME);
 
-    OutputSectionHeader(L"header");
+    OutputSectionHeader(MIDIDMP_SECTION_LABEL_HEADER);
 
     OutputCurrentTime();
 
     try
     {
+        DoSectionSystemInfo(verbose);
+
+        DoSectionServiceStatus(verbose);
+
         auto transportsWorked = DoSectionTransports(verbose);
 
         if (transportsWorked)
@@ -378,6 +540,11 @@ int __cdecl main()
         }
 
         DoSectionMidi1ApiEndpoints(verbose);  // we don't bail if this fails
+
+        if (midiClock)
+        {
+            if (!DoSectionClock(verbose)) RETURN_FAIL;
+        }
 
         if (transportsWorked)
         {
@@ -389,12 +556,6 @@ int __cdecl main()
                 if (!DoSectionPingTest(verbose, pingCount)) RETURN_FAIL;
             }
         }
-
-        if (midiClock)
-        {
-            if (!DoSectionClock(verbose)) RETURN_FAIL;
-        }
-
     }
     catch (...)
     {
@@ -403,7 +564,7 @@ int __cdecl main()
         RETURN_FAIL;
     }
 
-    OutputSectionHeader(L"end_of_file");
+    OutputSectionHeader(MIDIDMP_SECTION_LABEL_END_OF_FILE);
 
     RETURN_SUCCESS;
 }

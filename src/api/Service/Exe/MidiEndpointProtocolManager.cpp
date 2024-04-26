@@ -454,7 +454,7 @@ CMidiEndpointProtocolManager::ProcessCurrentWorkEntry()
     // Create and open a connection to the endpoint, complete with metadata listeners
 
     DWORD mmcssTaskId{};
-    ABSTRACTIONCREATIONPARAMS abstractionCreationParams{ MidiDataFormat_UMP };
+    ABSTRACTIONCREATIONPARAMS abstractionCreationParams{ MidiDataFormat_UMP, nullptr };
 
     RETURN_IF_FAILED(m_currentWorkItem.Endpoint->Initialize(
         m_currentWorkItem.EndpointInstanceId.c_str(),

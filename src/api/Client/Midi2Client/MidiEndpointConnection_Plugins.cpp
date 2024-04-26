@@ -28,9 +28,10 @@ namespace MIDI_CPP_NAMESPACE::implementation
             catch (...)
             {
                 internal::LogGeneralError(__FUNCTION__, L"Exception initializing plugins.");
-
             }
         }
+
+        internal::LogInfo(__FUNCTION__, L"Initializing complete");
     }
 
 
@@ -49,6 +50,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
                 internal::LogGeneralError(__FUNCTION__, L"Exception calling Open on plugins.");
             }
         }
+
+        internal::LogInfo(__FUNCTION__, L"Notifying message processing plugins complete");
     }
 
     void MidiEndpointConnection::CleanupPlugins() noexcept
@@ -66,6 +69,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
                 internal::LogGeneralError(__FUNCTION__, L"Exception cleaning up plugins.");
             }
         }
+
+        internal::LogInfo(__FUNCTION__, L"Cleaning up plugins - complete");
     }
 
 
@@ -74,6 +79,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
     _Use_decl_annotations_
     void MidiEndpointConnection::AddMessageProcessingPlugin(midi2::IMidiEndpointMessageProcessingPlugin const& plugin)
     {
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
         m_messageProcessingPlugins.Append(plugin);
 
         try
@@ -92,11 +99,16 @@ namespace MIDI_CPP_NAMESPACE::implementation
         {
             internal::LogGeneralError(__FUNCTION__, L"Exception initializing or calling OnEndpointConnectionOpened on newly-added plugin");
         }
+
+        internal::LogInfo(__FUNCTION__, L"Complete");
+
     }
 
     _Use_decl_annotations_
     void MidiEndpointConnection::RemoveMessageProcessingPlugin(winrt::guid id)
     {
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
         for (uint32_t i = 0; i < m_messageProcessingPlugins.Size(); i++)
         {
             if (m_messageProcessingPlugins.GetAt(i).Id() == id)
@@ -105,6 +117,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
                 break;
             }
         }
+
+        internal::LogInfo(__FUNCTION__, L"Complete");
 
     }
 

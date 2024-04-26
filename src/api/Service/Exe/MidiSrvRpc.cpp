@@ -64,6 +64,26 @@ HRESULT MidiSrvTestRpc(
     return S_OK;
 }
 
+
+HRESULT MidiSrvVerifyConnectivity(
+    handle_t /*BindingHandle*/)
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO)
+    );
+
+    std::shared_ptr<CMidiSessionTracker> sessionTracker;
+
+    auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
+
+    // Client manager creates the client, fills in the MIDISRV_CLIENT information
+    RETURN_IF_FAILED(g_MidiService->GetSessionTracker(sessionTracker));
+
+    return sessionTracker->VerifyConnectivity();
+}
+
 HRESULT MidiSrvCreateClient(
     /* [in] */ handle_t BindingHandle,
     /* [string][in] */ __RPC__in_string LPCWSTR MidiDevice,

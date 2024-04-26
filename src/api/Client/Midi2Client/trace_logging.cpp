@@ -14,13 +14,14 @@ namespace WindowsMidiServicesInternal
 {
     bool g_traceLoggingRegistered = false;
 
-    // Microsoft.Devices.Midi2.Api hashed tracing guid: 5c055d9e-0ac2-58ee-f647-c1f00339a6ec
+    // Microsoft.Windows.Devices.Midi2.Api hashed tracing guid: 2c7d1437-4f43-5713-170b-adbe4cff4dff
+    // PS> [System.Diagnostics.Tracing.EventSource]::new("Microsoft.Windows.Devices.Midi2.Api").Guid
 
     TRACELOGGING_DEFINE_PROVIDER(
         g_hLoggingProvider,
         TRACELOGGING_PROVIDER_NAME,                         
-        // {5c055d9e-0ac2-58ee-f647-c1f00339a6ec}
-        (0x5c055d9e, 0x0ac2, 0x58ee, 0xf6, 0x47, 0xc1, 0xf0, 0x03, 0x39, 0xa6, 0xec));  
+        // {2c7d1437-4f43-5713-170b-adbe4cff4dff}
+        (0x2c7d1437, 0x4f43, 0x5713, 0x17, 0x0b, 0xad, 0xbe, 0x4c, 0xff, 0x4d, 0xff));
 
     void WINAPI LoggingProviderEnabledCallback(
         _In_      LPCGUID /*sourceId*/,
@@ -86,12 +87,53 @@ namespace WindowsMidiServicesInternal
             "MIDI.HresultError",
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingKeyword(TRACE_KEYWORD_API_GENERAL),
-            TraceLoggingHResult(ex.code(), "HRESULT"),
             TraceLoggingString(location, "Location"),
             TraceLoggingWideString(message, "Message"),
+            TraceLoggingHResult(ex.code(), "HRESULT"),
             TraceLoggingWideString(ex.message().c_str(), "Error")
         );
     }
+
+    _Use_decl_annotations_
+    void LogHresultError(
+        const char* location,
+        const wchar_t* message,
+        HRESULT hr) noexcept
+    {
+        //OutputDebugString(L"" __FUNCTION__ L"API HRESULT Error. Use tracing provider for details.");
+
+        if (!g_traceLoggingRegistered) RegisterTraceLogging();
+
+        TraceLoggingWrite(
+            g_hLoggingProvider,
+            "MIDI.HresultError",
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingKeyword(TRACE_KEYWORD_API_GENERAL),
+            TraceLoggingString(location, "Location"),
+            TraceLoggingWideString(message, "Message"),
+            TraceLoggingHResult(hr, "HRESULT")
+        );
+    }
+
+    _Use_decl_annotations_
+    void LogStandardExceptionError(
+        const char* location,
+        const wchar_t* message,
+        std::exception const& ex) noexcept
+    {
+        if (!g_traceLoggingRegistered) RegisterTraceLogging();
+
+        TraceLoggingWrite(
+            g_hLoggingProvider,
+            "MIDI.StandardExceptionError",
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingKeyword(TRACE_KEYWORD_API_GENERAL),
+            TraceLoggingString(location, "Location"),
+            TraceLoggingWideString(message, "Message"),
+            TraceLoggingString(ex.what(), "What")
+        );
+    }
+
 
     _Use_decl_annotations_
     void LogGeneralError(
@@ -105,7 +147,6 @@ namespace WindowsMidiServicesInternal
         TraceLoggingWrite(
             g_hLoggingProvider,
             "MIDI.GeneralError",
-            TraceLoggingOpcode(ERROR),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingKeyword(TRACE_KEYWORD_API_GENERAL),
             TraceLoggingString(location, "Location"),
@@ -145,10 +186,10 @@ namespace WindowsMidiServicesInternal
             "MIDI.UmpDataValidationError",
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingKeyword(TRACE_KEYWORD_API_DATA_VALIDATION),
-            TraceLoggingHexUInt32(firstWord, "UMPFirstWord"),
-            TraceLoggingUInt64(timestamp, "MIDITimestamp"),
             TraceLoggingString(location, "Location"),
-            TraceLoggingWideString(message, "Message")
+            TraceLoggingWideString(message, "Message"),
+            TraceLoggingHexUInt32(firstWord, "UMPFirstWord"),
+            TraceLoggingUInt64(timestamp, "MIDITimestamp")
         );
     }
 
@@ -168,10 +209,10 @@ namespace WindowsMidiServicesInternal
             "MIDI.UmpSizeValidationError",
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingKeyword(TRACE_KEYWORD_API_DATA_VALIDATION),
-            TraceLoggingHexUInt32(providedSizeInWords, "ProvidedSizeInWords"),
-            TraceLoggingUInt64(timestamp, "MIDITimestamp"),
             TraceLoggingString(location, "Location"),
-            TraceLoggingWideString(message, "Message")
+            TraceLoggingWideString(message, "Message"),
+            TraceLoggingHexUInt32(providedSizeInWords, "ProvidedSizeInWords"),
+            TraceLoggingUInt64(timestamp, "MIDITimestamp")
         );
     }
 

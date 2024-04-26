@@ -15,6 +15,44 @@ CMidi2MidiSrvSessionTracker::Initialize()
     return S_OK;
 }
 
+HRESULT
+CMidi2MidiSrvSessionTracker::VerifyConnectivity()
+{
+    TraceLoggingWrite(
+        MidiSrvAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+    wil::unique_rpc_binding bindingHandle;
+
+    RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
+
+    RETURN_IF_FAILED([&]()
+        {
+            // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
+            // with structured exception handling.
+            RpcTryExcept RETURN_IF_FAILED(MidiSrvVerifyConnectivity(bindingHandle.get()));
+            RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
+            RpcEndExcept
+
+                return S_OK;
+        }());
+
+    return S_OK;
+
+
+
+
+
+
+
+
+}
+
+
+
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvSessionTracker::AddClientSession(

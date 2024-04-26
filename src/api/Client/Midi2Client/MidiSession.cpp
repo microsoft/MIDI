@@ -41,6 +41,9 @@ namespace MIDI_CPP_NAMESPACE::implementation
             else
             {
                 // this can happen is service is not available or running
+
+                internal::LogInfo(__FUNCTION__, L"Session start failed. Returning nullptr");
+
                 return nullptr;
             }
         }
@@ -114,11 +117,15 @@ namespace MIDI_CPP_NAMESPACE::implementation
                     {
                         // couldn't get the process name
                         internal::LogGeneralError(__FUNCTION__, L"Unable to get current process name.");
+
+                        return false;
                     }
                 }
                 else
                 {
                     internal::LogGeneralError(__FUNCTION__, L"Error activating IMidiSessionTracker.");
+
+                    return false;
                 }
 
             }
@@ -133,6 +140,12 @@ namespace MIDI_CPP_NAMESPACE::implementation
         catch (winrt::hresult_error const& ex)
         {
             internal::LogHresultError(__FUNCTION__, L"hresult exception starting session. Service may be unavailable.", ex);
+
+            return false;
+        }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Exception starting session.");
 
             return false;
         }
@@ -154,7 +167,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
     _Use_decl_annotations_
     midi2::MidiEndpointConnection MidiSession::CreateEndpointConnection(
         winrt::hstring const& endpointDeviceId,
-        midi2::IMidiEndpointConnectionSettings const& /*settings*/
+        bool const autoReconnect,
+        midi2::IMidiEndpointConnectionSettings const& settings
         ) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Creating Endpoint Connection");
@@ -167,7 +181,9 @@ namespace MIDI_CPP_NAMESPACE::implementation
             // generate internal endpoint Id
             auto connectionInstanceId = foundation::GuidHelper::CreateNewGuid();
 
-            if (endpointConnection->InternalInitialize(m_id, m_serviceAbstraction, connectionInstanceId, normalizedDeviceId))
+            internal::LogInfo(__FUNCTION__, L"Initializing Endpoint Connection");
+
+            if (endpointConnection->InternalInitialize(m_id, m_serviceAbstraction, connectionInstanceId, normalizedDeviceId, settings, autoReconnect))
             {
                 m_connections.Insert(connectionInstanceId, *endpointConnection);
 
@@ -175,7 +191,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             }
             else
             {
-                internal::LogGeneralError(__FUNCTION__, L"WinRT Endpoint connection wouldn't start");
+                internal::LogGeneralError(__FUNCTION__, L"WinRT Endpoint connection wouldn't initialize");
 
                 // TODO: Cleanup
 
@@ -188,6 +204,21 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
             return nullptr;
         }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Exception creating endpoint connection");
+
+            return nullptr;
+        }
+    }
+
+    _Use_decl_annotations_
+    midi2::MidiEndpointConnection MidiSession::CreateEndpointConnection(
+            winrt::hstring const& endpointDeviceId,
+            bool autoReconnect
+        ) noexcept
+    {
+        return CreateEndpointConnection(endpointDeviceId, autoReconnect, nullptr);
     }
 
     _Use_decl_annotations_
@@ -195,7 +226,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         winrt::hstring const& endpointDeviceId
         ) noexcept
     {
-        return CreateEndpointConnection(endpointDeviceId, nullptr);
+        return CreateEndpointConnection(endpointDeviceId, false, nullptr);
     }
 
 
@@ -206,7 +237,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         midi2::MidiVirtualEndpointDeviceDefinition const& deviceDefinition
     ) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"");
+        internal::LogInfo(__FUNCTION__, L"Enter");
 
         winrt::hstring endpointDeviceId{};
 
@@ -225,14 +256,14 @@ namespace MIDI_CPP_NAMESPACE::implementation
         json::JsonArray createVirtualDevicesArray;
         json::JsonObject endpointDefinitionObject;
 
-        internal::LogInfo(__FUNCTION__, L" creating association GUID");
+        internal::LogInfo(__FUNCTION__, L"Creating association GUID");
 
         // Create association guid
         auto associationGuid = foundation::GuidHelper::CreateNewGuid();
 
         // set all of our properties.
 
-        internal::LogInfo(__FUNCTION__, L" setting json properties");
+        internal::LogInfo(__FUNCTION__, L"Setting json properties");
 
         internal::JsonSetGuidProperty(
             endpointDefinitionObject, 
@@ -255,18 +286,18 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         // TODO: Other props that have to be set at the service level and not in-protocol
 
-        internal::LogInfo(__FUNCTION__, L" appending endpoint definition");
+        internal::LogInfo(__FUNCTION__, L"Appending endpoint definition");
         internal::LogInfo(__FUNCTION__, endpointDefinitionObject.Stringify().c_str());
 
         createVirtualDevicesArray.Append(endpointDefinitionObject);
 
-        internal::LogInfo(__FUNCTION__, L" adding virtual devices array to abstraction object");
+        internal::LogInfo(__FUNCTION__, L"Adding virtual devices array to abstraction object");
 
         abstractionObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY,
             createVirtualDevicesArray);
 
-        internal::LogInfo(__FUNCTION__, L" setting named value for virtual abstraction id");
+        internal::LogInfo(__FUNCTION__, L"Setting named value for virtual abstraction id");
 
         endpointCreationObject.SetNamedValue(virtualDeviceAbstractionId, abstractionObject);
 
@@ -301,35 +332,35 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         auto activateConfigManagerResult = m_serviceAbstraction->Activate(iid, (void**)&configManager);
 
-        internal::LogInfo(__FUNCTION__, L"config manager activate call completed");
+        internal::LogInfo(__FUNCTION__, L"Config manager activate call completed");
 
 
         if (FAILED(activateConfigManagerResult) || configManager == nullptr)
         {
-            internal::LogGeneralError(__FUNCTION__, L" Failed to create device. Config manager is null.");
+            internal::LogGeneralError(__FUNCTION__, L"Failed to create device. Config manager is null.");
 
             return nullptr;
         }
 
-        internal::LogInfo(__FUNCTION__, L"config manager activate call SUCCESS");
+        internal::LogInfo(__FUNCTION__, L"Config manager activate call SUCCESS");
 
         auto initializeResult = configManager->Initialize(internal::StringToGuid(virtualDeviceAbstractionId.c_str()), nullptr, nullptr);
 
 
         if (FAILED(initializeResult))
         {
-            internal::LogGeneralError(__FUNCTION__, L"failed to initialize config manager");
+            internal::LogGeneralError(__FUNCTION__, L"Failed to initialize config manager");
 
             return nullptr;
         }
 
 
-        internal::LogInfo(__FUNCTION__, L"config manager initialize call SUCCESS");
+        internal::LogInfo(__FUNCTION__, L"Config manager initialize call SUCCESS");
 
         CComBSTR response;
         response.Empty();
 
-        internal::LogInfo(__FUNCTION__, L"sending json");
+        internal::LogInfo(__FUNCTION__, L"Sending json to UpdateConfiguration");
         internal::LogInfo(__FUNCTION__, topLevelTransportPluginSettingsObject.Stringify().c_str());
 
         auto configUpdateResult = configManager->UpdateConfiguration(topLevelTransportPluginSettingsObject.Stringify().c_str(), false, &response);
@@ -350,7 +381,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         if (!internal::JsonObjectFromBSTR(&response, responseObject))
         {
-            internal::LogGeneralError(__FUNCTION__, L" Failed to read json response object from virtual device creation");
+            internal::LogGeneralError(__FUNCTION__, L"Failed to read json response object from virtual device creation");
 
             return nullptr;
         }
@@ -385,7 +416,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         else
         {
-            internal::LogGeneralError(__FUNCTION__, L" Virtual device creation failed (payload has false success value)");
+            internal::LogGeneralError(__FUNCTION__, L"Virtual device creation failed (payload has false success value)");
 
             return nullptr;
         }
@@ -393,7 +424,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         internal::LogInfo(__FUNCTION__, L"Virtual device creation worked.");
 
         // Creating the device succeeded, so create the connection
-        auto connection = CreateEndpointConnection(endpointDeviceId, nullptr);
+        auto connection = CreateEndpointConnection(endpointDeviceId, false, nullptr);
 
         internal::LogInfo(__FUNCTION__, L"Created endpoint connection");
 
@@ -409,7 +440,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         else
         {
-            internal::LogGeneralError(__FUNCTION__, L"Could not create connection");
+            internal::LogGeneralError(__FUNCTION__, L"Could not add MidiVirtualEndpointDevice because connection was null");
         }
 
         return connection;
@@ -421,7 +452,9 @@ namespace MIDI_CPP_NAMESPACE::implementation
     {
         UNREFERENCED_PARAMETER(newName);
 
-        // TODO:
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
+        // TODO: Implement UpdateName
 
 
         return false;

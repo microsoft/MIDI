@@ -808,6 +808,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Continue monitoring and automatically reconnect after device disconnection, if device becomes available (unplug/replug)..
+        /// </summary>
+        internal static string ParameterMonitorEndpointAutoReconnect {
+            get {
+                return ResourceManager.GetString("ParameterMonitorEndpointAutoReconnect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The direction of the endpoint referenced by the Id. If this doesn&apos;t match the endpoint type, the connection will fail..
         /// </summary>
         internal static string ParameterMonitorEndpointDirectionDescription {

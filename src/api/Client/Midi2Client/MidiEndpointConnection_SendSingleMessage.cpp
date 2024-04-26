@@ -22,7 +22,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         midi2::MidiMessageStruct const& message
         ) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Sending message struct");
+        //internal::LogInfo(__FUNCTION__, L"Sending message struct");
 
         if (!ValidateUmp(message.Word0, wordCount))
         {
@@ -45,7 +45,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         winrt::Windows::Foundation::IMemoryBuffer const& buffer
         ) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Sending message buffer");
+        //internal::LogInfo(__FUNCTION__, L"Sending message buffer");
 
         try
         {
@@ -95,17 +95,23 @@ namespace MIDI_CPP_NAMESPACE::implementation
             // TODO: handle buffer full and other expected hresults
             return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Exception sending message");
+
+            return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
+        }
     }
 
     _Use_decl_annotations_
-        midi2::MidiSendMessageResults MidiEndpointConnection::SendSingleMessageWordArray(
+    midi2::MidiSendMessageResults MidiEndpointConnection::SendSingleMessageWordArray(
             internal::MidiTimestamp const timestamp,
             uint32_t const startIndex,
             uint8_t const wordCount,
             winrt::array_view<uint32_t const> words
             ) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Sending message word array");
+        //internal::LogInfo(__FUNCTION__, L"Sending message word array");
 
         try
         {
@@ -139,6 +145,12 @@ namespace MIDI_CPP_NAMESPACE::implementation
             // TODO: handle buffer full and other expected hresults
             return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Exception sending message");
+
+            return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
+        }
     }
 
     _Use_decl_annotations_
@@ -146,7 +158,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         internal::MidiTimestamp const timestamp,
         uint32_t const word0) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Sending message words (1)");
+        //internal::LogInfo(__FUNCTION__, L"Sending message words (1)");
 
         try
         {
@@ -171,16 +183,22 @@ namespace MIDI_CPP_NAMESPACE::implementation
             // TODO: handle buffer full and other expected hresults
             return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Exception sending message");
+
+            return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
+        }
     }
 
 
     _Use_decl_annotations_
-        midi2::MidiSendMessageResults MidiEndpointConnection::SendSingleMessageWords(
+    midi2::MidiSendMessageResults MidiEndpointConnection::SendSingleMessageWords(
             internal::MidiTimestamp const timestamp,
             uint32_t const word0,
             uint32_t const word1) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Sending message words (2)");
+        //internal::LogInfo(__FUNCTION__, L"Sending message words (2)");
 
         try
         {
@@ -204,9 +222,15 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
-            internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex);
+            internal::LogHresultError(__FUNCTION__, L"hresult exception sending message", ex);
 
             // TODO: handle buffer full and other expected hresults
+            return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
+        }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Exception sending message");
+
             return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
     }
@@ -243,16 +267,22 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
-            internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex);
+            internal::LogHresultError(__FUNCTION__, L"hresult exception sending message", ex);
 
             // TODO: handle buffer full and other expected hresults
+            return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
+        }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Exception sending message");
+
             return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
     }
 
 
     _Use_decl_annotations_
-        midi2::MidiSendMessageResults MidiEndpointConnection::SendSingleMessageWords(
+    midi2::MidiSendMessageResults MidiEndpointConnection::SendSingleMessageWords(
             internal::MidiTimestamp const timestamp,
             uint32_t const word0,
             uint32_t const word1,
@@ -289,6 +319,12 @@ namespace MIDI_CPP_NAMESPACE::implementation
             // TODO: handle buffer full and other expected hresults
             return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Exception sending message");
+
+            return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
+        }
     }
 
 
@@ -309,6 +345,12 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
 
             // todo: handle buffer full and similar messages
+            return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
+        }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Exception sending message");
+
             return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
     }

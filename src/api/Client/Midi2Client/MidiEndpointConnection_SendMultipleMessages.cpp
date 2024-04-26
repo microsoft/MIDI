@@ -14,7 +14,6 @@
 
 namespace MIDI_CPP_NAMESPACE::implementation
 {
-
     _Use_decl_annotations_
     midi2::MidiSendMessageResults MidiEndpointConnection::SendMultipleMessagesBuffer(
         internal::MidiTimestamp const timestamp,
@@ -107,7 +106,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
 
         return midi2::MidiSendMessageResults::Succeeded;
-
     }
 
 
@@ -290,6 +288,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
             if (!MidiEndpointConnection::SendMessageSucceeded(result))
             {
+                internal::LogGeneralError(__FUNCTION__, L"Failed to send message");
+
                 // if any fail, we return immediately.
 
                 return result;
@@ -299,30 +299,5 @@ namespace MIDI_CPP_NAMESPACE::implementation
         return midi2::MidiSendMessageResults::Succeeded;
 
     }
-
-    //_Use_decl_annotations_
-    //midi2::MidiSendMessageResults MidiEndpointConnection::SendMultipleMessagesPacketArray(
-    //    winrt::array_view<IMidiUniversalPacket> messages) noexcept
-    //{
-    //    internal::LogInfo(__FUNCTION__, L"Enter");
-
-    //    for (auto const& ump : messages)
-    //    {
-    //        auto result = SendUmpInternal(m_endpointAbstraction, ump);
-
-    //        if (!MidiEndpointConnection::SendMessageSucceeded(result))
-    //        {
-    //            // if any fail, we return immediately.
-
-    //            return result;
-    //        }
-    //    }
-
-    //    return midi2::MidiSendMessageResults::Succeeded;
-
-    //}
-
-
-
 
 }

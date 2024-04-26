@@ -81,6 +81,11 @@ namespace Microsoft.Midi.ConsoleApp
             [DefaultValue(false)]
             public bool WarnIfSkippedIncrementMessage { get; set; }
 
+            [LocalizedDescription("ParameterMonitorEndpointAutoReconnect")]
+            [CommandOption("-r|--auto-reconnect")]
+            [DefaultValue(true)]
+            public bool AutoReconnect { get; set; }
+
             //[EnumLocalizedDescription("ParameterMonitorEndpointSkipToKeepUp", typeof(CaptureFieldDelimiter))]
             //[CommandOption("-k|--keep-up-display")]
             //[DefaultValue(false)]
@@ -189,7 +194,8 @@ namespace Microsoft.Midi.ConsoleApp
                     return (int)MidiConsoleReturnCode.ErrorCreatingSession;
                 }
 
-                var connection = session.CreateEndpointConnection(endpointId);
+                var connection = session.CreateEndpointConnection(endpointId, settings.AutoReconnect);
+
                 if (connection == null)
                 {
                     AnsiConsole.WriteLine(Strings.ErrorUnableToCreateEndpointConnection);
@@ -227,8 +233,10 @@ namespace Microsoft.Midi.ConsoleApp
                 UInt64 lastMessageReceivedEventTimestamp = 0;
                 UInt32 countMessagesReceived = 0;
 
-
-                MonitorEndpointConnectionStatusInTheBackground(endpointId);
+                if (!settings.AutoReconnect)
+                {
+                    MonitorEndpointConnectionStatusInTheBackground(endpointId);
+                }
 
                 bool continueWaiting = true;
                 

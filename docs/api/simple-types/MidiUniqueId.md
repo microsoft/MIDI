@@ -32,15 +32,11 @@ In the specification, Byte1 is the LSB and Byte4 is the MSB. We follow that conv
 
 ## Static Properties
 
-| Static Property | Description |
-| --------------- | ----------- |
 | `LabelShort` | Returns the localized abbreviation for use in UI. |
 | `LabelFull` | Returns the localized full name for use in UI. |
 
 ## Static Methods
 
-| Function | Description |
-| --------------- | ----------- |
 | `CreateBroadcast()` | Constructs a broadcast `MidiUniqueId` per the MIDI CI specification |
 | `CreateRandom()` | Constructs a random `MidiUniqueId` per the MIDI CI specification |
 

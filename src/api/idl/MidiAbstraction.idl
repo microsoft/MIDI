@@ -19,12 +19,14 @@ import "MidiDeviceManagerInterface.idl";
 typedef struct
 {
     MidiDataFormat DataFormat;
+    LPCWSTR InstanceConfigurationJsonData;
 } ABSTRACTIONCREATIONPARAMS, *PABSTRACTIONCREATIONPARAMS;
 
 typedef struct
 {
     MidiDataFormat DataFormatIn;
     MidiDataFormat DataFormatOut;
+    LPCWSTR InstanceConfigurationJsonData;
 } TRANSFORMCREATIONPARAMS, *PTRANSFORMCREATIONPARAMS;
 
 
@@ -301,6 +303,10 @@ interface IMidiSessionTracker : IUnknown
     HRESULT GetSessionListJson(
         [out] BSTR* SessionList
     );
+
+    // TODO: May want to move this to an interface that deals with client and service disconnects
+    // and general connection health/tracking
+    HRESULT VerifyConnectivity();
 
     HRESULT Cleanup();
 

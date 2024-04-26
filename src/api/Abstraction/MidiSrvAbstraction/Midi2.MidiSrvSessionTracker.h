@@ -27,6 +27,8 @@ public:
     // This is called from the API
     STDMETHOD(GetSessionListJson(_Out_ BSTR* SessionList));
 
+    STDMETHOD(VerifyConnectivity)();
+
     STDMETHOD(Cleanup());
 
 private:

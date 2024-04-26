@@ -12,6 +12,8 @@ has_children: false
 
 The MidiService class contains a number of static functions which enable working with the service outside of a specific session. 
 
+## Static Methods
+
 ### Service Health
 
 | `IsAvailable()` | Returns true of Windows MIDI Services is available on this PC. Calling this function is typically the first step in using Windows MIDI Services in your application. |

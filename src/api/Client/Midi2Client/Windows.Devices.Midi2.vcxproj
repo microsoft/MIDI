@@ -344,9 +344,9 @@
     <ClInclude Include="MidiStreamConfigurationRequestedSettings.h">
       <DependentUpon>MidiStreamConfigurationRequestedSettings.idl</DependentUpon>
     </ClInclude>
-      <ClInclude Include="MidiStreamConfigurationRequestReceivedEventArgs.h">
-          <DependentUpon>MidiStreamConfigurationRequestReceivedEventArgs.idl</DependentUpon>
-      </ClInclude>
+    <ClInclude Include="MidiStreamConfigurationRequestReceivedEventArgs.h">
+      <DependentUpon>MidiStreamConfigurationRequestReceivedEventArgs.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiStreamMessageBuilder.h">
       <DependentUpon>MidiStreamMessageBuilder.idl</DependentUpon>
     </ClInclude>
@@ -406,9 +406,12 @@
     <ClCompile Include="MidiEndpointConnection_SendSingleMessage.cpp">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiEndpointDeviceInformation.cpp">
-      <DependentUpon>MidiEndpointDeviceInformation.idl</DependentUpon>
-    </ClCompile>
+      <ClCompile Include="MidiEndpointConnection_AutoReconnect.cpp">
+          <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
+      </ClCompile>
+      <ClCompile Include="MidiEndpointDeviceInformation.cpp">          
+          <DependentUpon>MidiEndpointDeviceInformation.idl</DependentUpon>
+      </ClCompile>
     <ClCompile Include="MidiEndpointDeviceInformationAddedEventArgs.cpp">
       <DependentUpon>MidiEndpointDeviceInformationAddedEventArgs.idl</DependentUpon>
     </ClCompile>
@@ -490,9 +493,9 @@
     <ClCompile Include="MidiStreamConfigurationRequestedSettings.cpp">
       <DependentUpon>MidiStreamConfigurationRequestedSettings.idl</DependentUpon>
     </ClCompile>
-      <ClCompile Include="MidiStreamConfigurationRequestReceivedEventArgs.cpp">
-          <DependentUpon>MidiStreamConfigurationRequestReceivedEventArgs.idl</DependentUpon>
-      </ClCompile>
+    <ClCompile Include="MidiStreamConfigurationRequestReceivedEventArgs.cpp">
+      <DependentUpon>MidiStreamConfigurationRequestReceivedEventArgs.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiStreamMessageBuilder.cpp">
       <DependentUpon>MidiStreamMessageBuilder.idl</DependentUpon>
     </ClCompile>

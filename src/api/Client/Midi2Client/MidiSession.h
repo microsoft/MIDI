@@ -19,12 +19,12 @@ namespace MIDI_CPP_NAMESPACE::implementation
         MidiSession() = default;
         ~MidiSession();
 
-        static MIDI_CPP_NAMESPACE::MidiSession CreateSession(
+        static midi2::MidiSession CreateSession(
             _In_ hstring const& sessionName, 
-            _In_ MIDI_CPP_NAMESPACE::MidiSessionSettings const& settings
+            _In_ midi2::MidiSessionSettings const& settings
         ) noexcept;
 
-        static MIDI_CPP_NAMESPACE::MidiSession CreateSession(
+        static midi2::MidiSession CreateSession(
             _In_ hstring const& sessionName
         ) noexcept;
 
@@ -38,12 +38,18 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         foundation::Collections::IMapView<winrt::guid, midi2::MidiEndpointConnection> Connections() { return m_connections.GetView(); }
 
-        MIDI_CPP_NAMESPACE::MidiEndpointConnection CreateEndpointConnection(
+        midi2::MidiEndpointConnection CreateEndpointConnection(
             _In_ winrt::hstring const& endpointDeviceId
         ) noexcept;
 
-        MIDI_CPP_NAMESPACE::MidiEndpointConnection CreateEndpointConnection(
+        midi2::MidiEndpointConnection CreateEndpointConnection(
             _In_ winrt::hstring const& endpointDeviceId,
+            _In_ bool const autoReconnect
+        ) noexcept;
+
+        midi2::MidiEndpointConnection CreateEndpointConnection(
+            _In_ winrt::hstring const& endpointDeviceId,
+            _In_ bool const autoReconnect,
             _In_ midi2::IMidiEndpointConnectionSettings const& settings
         ) noexcept;
 

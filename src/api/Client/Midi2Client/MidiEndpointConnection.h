@@ -47,13 +47,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
         void Tag(_In_ foundation::IInspectable value) noexcept { m_tag = value; }
 
 
-        bool InternalInitialize(
-            _In_ winrt::guid sessionId,
-            _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
-            _In_ winrt::guid const connectionId,
-            _In_ winrt::hstring const endpointDeviceId);
-
-
         midi2::MidiSendMessageResults SendSingleMessagePacket(
             _In_ midi2::IMidiUniversalPacket const& ump) noexcept;
 
@@ -138,11 +131,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
             ) noexcept;
 
 
-        _Success_(return == true)
-        bool Open();
-
-        void InternalClose();
-
         STDMETHOD(Callback)(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG timestamp, _In_ LONGLONG) override;
 
         winrt::event_token MessageReceived(_In_ foundation::TypedEventHandler<midi2::IMidiMessageReceivedEventSource, midi2::MidiMessageReceivedEventArgs> const& handler)
@@ -162,10 +150,32 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
 
         void AddMessageProcessingPlugin(_In_ midi2::IMidiEndpointMessageProcessingPlugin const& plugin);
-
         void RemoveMessageProcessingPlugin(_In_ winrt::guid id);
 
+        // public open method
+        _Success_(return == true)
+        bool Open();
+
+
+
+        _Success_(return == true)
+        bool InternalInitialize(
+            _In_ winrt::guid sessionId,
+            _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
+            _In_ winrt::guid const connectionId,
+            _In_ winrt::hstring const endpointDeviceId,
+            _In_ midi2::IMidiEndpointConnectionSettings connectionSettings,
+            _In_ bool autoReconnect
+        );
+
+
+        void InternalClose();
+
     private:
+        midi2::IMidiEndpointConnectionSettings m_connectionSettings;
+        bool m_autoReconnect{ false };
+
+
         uint64_t m_maxAllowedTimestampOffset{};
 
 
@@ -210,19 +220,42 @@ namespace MIDI_CPP_NAMESPACE::implementation
         void* GetUmpDataPointer(
             _In_ midi2::IMidiUniversalPacket const& ump,
             _Out_ uint8_t & dataSizeOut);
+        
+        midi2::MidiSendMessageResults SendMessageResultFromHRESULT(_In_ HRESULT hr);
 
         _Success_(return == true)
-        bool ActivateMidiStream(
-            _In_ winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
-            _In_ const IID & iid,
-            _Out_ void** iface) noexcept;
+        bool ActivateMidiStream() noexcept;
 
         void InitializePlugins() noexcept;
         void CallOnConnectionOpenedOnPlugins() noexcept;
         void CleanupPlugins() noexcept;
 
+        _Success_(return == true)
+        bool InternalOpen();
+        
+        _Success_(return == true)
+        bool DeactivateMidiStream();
 
-        midi2::MidiSendMessageResults SendMessageResultFromHRESULT(_In_ HRESULT hr);
+        _Success_(return == true)
+        bool InternalReopenAfterDisconnect();
+
+
+        winrt::Windows::Devices::Enumeration::DeviceWatcher m_autoReconnectDeviceWatcher{ nullptr };
+
+        _Success_(return == true)
+        bool StartDeviceWatcher();
+
+        _Success_(return == true)
+        bool StopDeviceWatcher();
+
+        void DeviceAddedHandler(_In_ enumeration::DeviceWatcher source, _In_ enumeration::DeviceInformation args);
+        void DeviceUpdatedHandler(_In_ enumeration::DeviceWatcher source, _In_ enumeration::DeviceInformationUpdate args);
+        void DeviceRemovedHandler(_In_ enumeration::DeviceWatcher source, _In_ enumeration::DeviceInformationUpdate args);
+            
+        enumeration::DeviceWatcher::Added_revoker m_autoReconnectDeviceWatcherAddedRevoker;
+        enumeration::DeviceWatcher::Updated_revoker m_autoReconnectDeviceWatcherUpdatedRevoker;
+        enumeration::DeviceWatcher::Removed_revoker m_autoReconnectDeviceWatcherRemovedRevoker;
+
 
 
     };
