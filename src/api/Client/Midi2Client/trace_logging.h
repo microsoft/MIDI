@@ -38,6 +38,7 @@ namespace WindowsMidiServicesInternal
         _In_z_ const char* location,
         _In_z_ const wchar_t* message) noexcept;
 
+
     void LogHresultError(
         _In_z_ const char* location,
         _In_z_ const wchar_t* message,
@@ -47,6 +48,11 @@ namespace WindowsMidiServicesInternal
         _In_z_ const char* location,
         _In_z_ const wchar_t* message,
         _In_ HRESULT const hr) noexcept;
+
+    void LogStandardExceptionError(
+        _In_z_ const char* location,
+        _In_z_ const wchar_t* message,
+        _In_ std::exception const& ex) noexcept;
 
     void LogGeneralError(
         _In_z_ const char* location,

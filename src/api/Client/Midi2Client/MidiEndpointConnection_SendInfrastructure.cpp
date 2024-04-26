@@ -68,7 +68,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
 
     _Use_decl_annotations_
-        bool MidiEndpointConnection::ValidateUmp(uint32_t word0, uint8_t wordCount) noexcept
+    bool MidiEndpointConnection::ValidateUmp(uint32_t word0, uint8_t wordCount) noexcept
     {
         if (!internal::IsValidSingleUmpWordCount(wordCount))
             return false;
@@ -89,7 +89,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         uint8_t sizeInBytes,
         internal::MidiTimestamp timestamp)
     {
-        internal::LogInfo(__FUNCTION__, L"Sending message raw");
+        //internal::LogInfo(__FUNCTION__, L"Sending message raw");
 
         try
         {
@@ -108,9 +108,15 @@ namespace MIDI_CPP_NAMESPACE::implementation
                 return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::TimestampOutOfRange;
             }
 
+
             if (endpoint != nullptr)
             {
                 auto hr = endpoint->SendMidiMessage(data, sizeInBytes, timestamp);
+
+                if (FAILED(hr))
+                {
+                    internal::LogHresultError(__FUNCTION__, L"SendMidiMessage returned a failure code", hr);
+                }
 
                 return SendMessageResultFromHRESULT(hr);
             }
@@ -136,7 +142,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         winrt::com_ptr<IMidiBiDi> endpoint,
         midi2::IMidiUniversalPacket const& ump)
     {
-        internal::LogInfo(__FUNCTION__, L"Sending message internal");
+        //internal::LogInfo(__FUNCTION__, L"Sending message internal");
         try
         {
             uint8_t umpDataSize{};

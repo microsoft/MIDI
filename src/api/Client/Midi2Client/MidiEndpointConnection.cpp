@@ -18,12 +18,12 @@ namespace MIDI_CPP_NAMESPACE::implementation
     _Use_decl_annotations_
     HRESULT MidiEndpointConnection::Callback(PVOID data, UINT size, LONGLONG timestamp, LONGLONG)
     {
-        internal::LogInfo(__FUNCTION__, L"Message Received");
+  //      internal::LogInfo(__FUNCTION__, L"Message Received in API callback");
 
         try
         {
             // one copy of the event args for this gets sent to all listeners and the main event
-            auto args = winrt::make_self<midi2::implementation::MidiMessageReceivedEventArgs>(data, size, timestamp);
+            auto args = winrt::make_self<implementation::MidiMessageReceivedEventArgs>(data, size, timestamp);
 
             // we failed to create the event args
             if (args == nullptr)
@@ -63,12 +63,23 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
-            internal::LogHresultError(__FUNCTION__, L"hresult exception calling message handlers", ex);
+            internal::LogHresultError(__FUNCTION__, L"hresult exception handling received messages", ex);
+
+            return E_FAIL;
+        }
+        catch (std::exception const& ex)
+        {
+            internal::LogStandardExceptionError(__FUNCTION__, L"hresult exception handling received messages", ex);
+
+            return E_FAIL;
+        }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Exception handling received message");
 
             return E_FAIL;
         }
     }
-
 
     
     _Use_decl_annotations_
@@ -81,7 +92,14 @@ namespace MIDI_CPP_NAMESPACE::implementation
         bool autoReconnect
     )
     {
-        internal::LogInfo(__FUNCTION__, L"Internal Initialize ");
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
+        if (serviceAbstraction == nullptr)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Error initializing endpoint. Service abstraction is null");
+
+            return false;
+        }
 
         try
         {
@@ -94,7 +112,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
             m_connectionSettings = connectionSettings;
             m_autoReconnect = autoReconnect;
-
             
             return true;
         }
@@ -110,8 +127,14 @@ namespace MIDI_CPP_NAMESPACE::implementation
     _Use_decl_annotations_
     bool MidiEndpointConnection::InternalOpen()
     {
-        internal::LogInfo(__FUNCTION__, L"Connection Open ");
+        internal::LogInfo(__FUNCTION__, L"Enter");
 
+        if (m_endpointAbstraction == nullptr)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Failed to open connection. endpoint abstraction is null");
+
+            return false;
+        }
 
         DWORD mmcssTaskId{};
 
@@ -119,10 +142,14 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         if (m_connectionSettings != nullptr)
         {
-            connectionSettingsJsonString = m_connectionSettings.SettingsJson().c_str();
+            internal::LogInfo(__FUNCTION__, L"Connection settings were specified. Including JSON in service call.");
+
+            connectionSettingsJsonString = static_cast<LPCWSTR>(m_connectionSettings.SettingsJson().c_str());
         }
 
-        ABSTRACTIONCREATIONPARAMS abstractionCreationParams{ MidiDataFormat_UMP, connectionSettingsJsonString };
+        ABSTRACTIONCREATIONPARAMS abstractionCreationParams{ };
+        abstractionCreationParams.DataFormat = MidiDataFormat_UMP; 
+        abstractionCreationParams.InstanceConfigurationJsonData = connectionSettingsJsonString;
 
         auto result = m_endpointAbstraction->Initialize(
             (LPCWSTR)(EndpointDeviceId().c_str()),
@@ -135,6 +162,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         if (SUCCEEDED(result))
         {
+            internal::LogInfo(__FUNCTION__, L"Endpoint abstraction successfully initialized");
+
             m_isOpen = true;
             m_closeHasBeenCalled = false;
         }
@@ -143,6 +172,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
             internal::LogHresultError(__FUNCTION__, L"Failed to open connection", result);
         }
 
+        internal::LogInfo(__FUNCTION__, L"Connection Opened");
+
         return true;
     }
 
@@ -150,15 +181,9 @@ namespace MIDI_CPP_NAMESPACE::implementation
     _Use_decl_annotations_
     bool MidiEndpointConnection::InternalReopenAfterDisconnect()
     {
-        internal::LogInfo(__FUNCTION__, L"Connection Reopen ");
+        internal::LogInfo(__FUNCTION__, L"Enter");
 
-        // Activate the endpoint for this device. Will fail if the device is not a BiDi device
-        if (!ActivateMidiStream())
-        {
-            internal::LogGeneralError(__FUNCTION__, L"Could not activate MIDI Stream");
-
-            return false;
-        }
+        if (!ActivateMidiStream()) return false;
 
         return InternalOpen();
     }
@@ -167,19 +192,12 @@ namespace MIDI_CPP_NAMESPACE::implementation
     _Use_decl_annotations_
     bool MidiEndpointConnection::Open()
     {
-        internal::LogInfo(__FUNCTION__, L"Connection Open ");
-
-        // Activate the endpoint for this device. Will fail if the device is not a BiDi device
-        if (!ActivateMidiStream())
-        {
-            internal::LogGeneralError(__FUNCTION__, L"Could not activate MIDI Stream");
-
-            return false;
-        }
-
+        internal::LogInfo(__FUNCTION__, L"Enter");
 
         if (!IsOpen())
         {
+            if (!ActivateMidiStream()) return false;
+
             if (m_endpointAbstraction != nullptr)
             {
                 try
@@ -200,6 +218,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
                     }
                     else
                     {
+                        internal::LogGeneralError(__FUNCTION__, L"InternalOpen() returned false.");
+
                         return false;
                     }
                 }
@@ -229,6 +249,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         else
         {
+            internal::LogInfo(__FUNCTION__, L"Connection already open");
+
             // already open. Just return true here. Not fatal in any way, so no error
             return true;
         }
@@ -238,7 +260,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
     void MidiEndpointConnection::InternalClose()
     {
-        internal::LogInfo(__FUNCTION__, L"Connection Close");
+        internal::LogInfo(__FUNCTION__, L"Enter");
 
         if (m_closeHasBeenCalled) return;
 
@@ -257,6 +279,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
         {
             internal::LogGeneralError(__FUNCTION__, L"Exception on close");
         }
+
+        internal::LogInfo(__FUNCTION__, L"Complete");
     }
 
     MidiEndpointConnection::~MidiEndpointConnection()
@@ -270,15 +294,25 @@ namespace MIDI_CPP_NAMESPACE::implementation
     _Use_decl_annotations_
     bool MidiEndpointConnection::DeactivateMidiStream()
     {
-        internal::LogInfo(__FUNCTION__, L"Deactivating MIDI Stream");
+        internal::LogInfo(__FUNCTION__, L"Enter");
 
         if (m_endpointAbstraction != nullptr)
         {
             // todo: some error / hresult handling here
 
-            m_endpointAbstraction->Cleanup();
+            auto hr = m_endpointAbstraction->Cleanup();
+
+            if (FAILED(hr))
+            {
+                internal::LogHresultError(__FUNCTION__, L"Failed HRESULT cleaning up endpoint abstraction", hr);
+
+                return false;
+            }
+
             m_endpointAbstraction == nullptr;
         }
+
+        internal::LogInfo(__FUNCTION__, L"Stream deactivated");
 
         return true;
     }
@@ -287,11 +321,27 @@ namespace MIDI_CPP_NAMESPACE::implementation
     _Use_decl_annotations_
     bool MidiEndpointConnection::ActivateMidiStream() noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Activating MIDI Stream");
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
+        if (m_serviceAbstraction == nullptr)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Service abstraction is null.");
+
+            return false;
+        }
 
         try
         {
             winrt::check_hresult(m_serviceAbstraction->Activate(__uuidof(IMidiBiDi), (void**) &m_endpointAbstraction));
+
+            if (m_endpointAbstraction == nullptr)
+            {
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint Abstraction failed to Activate and return null.");
+
+                return false;
+            }
+
+            internal::LogInfo(__FUNCTION__, L"Activated IMidiBiDi");
 
             return true;
         }

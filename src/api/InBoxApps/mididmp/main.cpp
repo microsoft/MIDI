@@ -333,25 +333,32 @@ bool DoSectionMidi1ApiEndpoints(_In_ bool verbose)
 
 bool DoSectionPingTest(_In_ bool verbose, _In_ uint8_t pingCount)
 {
+    UNREFERENCED_PARAMETER(verbose);
+
     try
     {
-        UNREFERENCED_PARAMETER(verbose);
-
         OutputSectionHeader(MIDIDMP_SECTION_LABEL_PING_TEST);
 
         OutputNumericField(MIDIDMP_FIELD_LABEL_PING_ATTEMPT_COUNT, (uint32_t)pingCount);
 
         auto pingResult = midi2::MidiService::PingService(pingCount);
 
+        //std::cout << "DEBUG: PingService returned" << std::endl;
+
         if (pingResult != nullptr)
         {
+            //std::cout << "DEBUG: pingresult != nullptr" << std::endl;
+
             OutputNumericField(MIDIDMP_FIELD_LABEL_PING_RETURN_COUNT, pingResult.Responses().Size());
 
             if (pingResult.Success())
             {
+                //std::cout << "DEBUG: pingresult.Success()" << std::endl;
+
                 OutputTimestampField(MIDIDMP_FIELD_LABEL_PING_ROUND_TRIP_TOTAL_TICKS, pingResult.TotalPingRoundTripMidiClock());
                 OutputTimestampField(MIDIDMP_FIELD_LABEL_PING_ROUND_TRIP_AVERAGE_TICKS, pingResult.AveragePingRoundTripMidiClock());
 
+                return true;
             }
             else
             {
@@ -373,6 +380,7 @@ bool DoSectionPingTest(_In_ bool verbose, _In_ uint8_t pingCount)
 
         return false;
     }
+
 
     return true;
 }
@@ -533,6 +541,11 @@ int __cdecl main()
 
         DoSectionMidi1ApiEndpoints(verbose);  // we don't bail if this fails
 
+        if (midiClock)
+        {
+            if (!DoSectionClock(verbose)) RETURN_FAIL;
+        }
+
         if (transportsWorked)
         {
             // ping the service
@@ -543,12 +556,6 @@ int __cdecl main()
                 if (!DoSectionPingTest(verbose, pingCount)) RETURN_FAIL;
             }
         }
-
-        if (midiClock)
-        {
-            if (!DoSectionClock(verbose)) RETURN_FAIL;
-        }
-
     }
     catch (...)
     {

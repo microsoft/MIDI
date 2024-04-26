@@ -87,9 +87,9 @@ namespace WindowsMidiServicesInternal
             "MIDI.HresultError",
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingKeyword(TRACE_KEYWORD_API_GENERAL),
-            TraceLoggingHResult(ex.code(), "HRESULT"),
             TraceLoggingString(location, "Location"),
             TraceLoggingWideString(message, "Message"),
+            TraceLoggingHResult(ex.code(), "HRESULT"),
             TraceLoggingWideString(ex.message().c_str(), "Error")
         );
     }
@@ -109,9 +109,28 @@ namespace WindowsMidiServicesInternal
             "MIDI.HresultError",
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingKeyword(TRACE_KEYWORD_API_GENERAL),
-            TraceLoggingHResult(hr, "HRESULT"),
             TraceLoggingString(location, "Location"),
-            TraceLoggingWideString(message, "Message")
+            TraceLoggingWideString(message, "Message"),
+            TraceLoggingHResult(hr, "HRESULT")
+        );
+    }
+
+    _Use_decl_annotations_
+    void LogStandardExceptionError(
+        const char* location,
+        const wchar_t* message,
+        std::exception const& ex) noexcept
+    {
+        if (!g_traceLoggingRegistered) RegisterTraceLogging();
+
+        TraceLoggingWrite(
+            g_hLoggingProvider,
+            "MIDI.StandardExceptionError",
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingKeyword(TRACE_KEYWORD_API_GENERAL),
+            TraceLoggingString(location, "Location"),
+            TraceLoggingWideString(message, "Message"),
+            TraceLoggingString(ex.what(), "What")
         );
     }
 
@@ -128,7 +147,6 @@ namespace WindowsMidiServicesInternal
         TraceLoggingWrite(
             g_hLoggingProvider,
             "MIDI.GeneralError",
-            TraceLoggingOpcode(ERROR),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingKeyword(TRACE_KEYWORD_API_GENERAL),
             TraceLoggingString(location, "Location"),
@@ -168,10 +186,10 @@ namespace WindowsMidiServicesInternal
             "MIDI.UmpDataValidationError",
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingKeyword(TRACE_KEYWORD_API_DATA_VALIDATION),
-            TraceLoggingHexUInt32(firstWord, "UMPFirstWord"),
-            TraceLoggingUInt64(timestamp, "MIDITimestamp"),
             TraceLoggingString(location, "Location"),
-            TraceLoggingWideString(message, "Message")
+            TraceLoggingWideString(message, "Message"),
+            TraceLoggingHexUInt32(firstWord, "UMPFirstWord"),
+            TraceLoggingUInt64(timestamp, "MIDITimestamp")
         );
     }
 
@@ -191,10 +209,10 @@ namespace WindowsMidiServicesInternal
             "MIDI.UmpSizeValidationError",
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingKeyword(TRACE_KEYWORD_API_DATA_VALIDATION),
-            TraceLoggingHexUInt32(providedSizeInWords, "ProvidedSizeInWords"),
-            TraceLoggingUInt64(timestamp, "MIDITimestamp"),
             TraceLoggingString(location, "Location"),
-            TraceLoggingWideString(message, "Message")
+            TraceLoggingWideString(message, "Message"),
+            TraceLoggingHexUInt32(providedSizeInWords, "ProvidedSizeInWords"),
+            TraceLoggingUInt64(timestamp, "MIDITimestamp")
         );
     }
 

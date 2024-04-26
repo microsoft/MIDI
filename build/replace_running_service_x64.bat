@@ -19,9 +19,9 @@ copy /Y %buildoutput%\MidiSrv.exe %servicepath%
 copy /Y %buildoutput%\Midi2.*Abstraction.dll %servicepath%
 copy /Y %buildoutput%\Midi2.*Transform.dll %servicepath%
 
-echo Windows.Devices.Midi2.dll
+echo API impl
 copy /Y %buildoutput%\*.Devices.Midi2.dll %apipath%
-echo Windows.Devices.Midi2.pri
+echo API pri
 copy /Y %buildoutput%\*.Devices.Midi2.pri %apipath%
 
 

@@ -9,57 +9,75 @@
 #include "pch.h"
 #include "MidiEndpointConnection.h"
 
-
-// auto deviceAddedHandler = TypedEventHandler<DeviceWatcher, DeviceInformation>(this, &CMidi2KSMidiEndpointManager::OnDeviceAdded);
-// auto deviceUpdatedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidi2KSMidiEndpointManager::OnDeviceUpdated);
-// auto deviceRemovedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidi2KSMidiEndpointManager::OnDeviceRemoved);
-// m_DeviceAdded = m_Watcher.Added(winrt::auto_revoke, deviceAddedHandler);
-// m_DeviceUpdated = m_Watcher.Updated(winrt::auto_revoke, deviceUpdatedHandler);
-// m_DeviceRemoved = m_Watcher.Removed(winrt::auto_revoke, deviceRemovedHandler);
-
-
 namespace MIDI_CPP_NAMESPACE::implementation
 {
+    // TODO: An optimization here would be to host the watcher at the session level
+    // and simply have it filter based on the Ids it sees in the update messages. Then
+    // include internal functions in this class that it would call
     _Use_decl_annotations_
     bool MidiEndpointConnection::StartDeviceWatcher()
     {
-        // start the device watcher for the specific Id
-        winrt::hstring deviceSelector(
-            L"Id:=\"" + m_endpointDeviceId + L"\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
+        internal::LogInfo(__FUNCTION__, L"Enter");
 
-        m_autoReconnectDeviceWatcher = enumeration::DeviceInformation::CreateWatcher(deviceSelector);
-
-        if (m_autoReconnectDeviceWatcher != nullptr)
+        try
         {
-            if (m_autoReconnectDeviceWatcher.Status() == enumeration::DeviceWatcherStatus::Stopped)
+            // start the device watcher for the specific Id
+            winrt::hstring deviceSelector(
+                L"System.Devices.DeviceInstanceId:=\"" + m_endpointDeviceId + L"\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
+
+            internal::LogInfo(__FUNCTION__, deviceSelector.c_str());
+
+
+            m_autoReconnectDeviceWatcher = enumeration::DeviceInformation::CreateWatcher(deviceSelector);
+
+            if (m_autoReconnectDeviceWatcher != nullptr)
             {
-                auto deviceAddedHandler   = foundation::TypedEventHandler<enumeration::DeviceWatcher, enumeration::DeviceInformation>(this, &MidiEndpointConnection::DeviceAddedHandler);
-                auto deviceUpdatedHandler = foundation::TypedEventHandler<enumeration::DeviceWatcher, enumeration::DeviceInformationUpdate>(this, &MidiEndpointConnection::DeviceUpdatedHandler);
-                auto deviceRemovedHandler = foundation::TypedEventHandler<enumeration::DeviceWatcher, enumeration::DeviceInformationUpdate>(this, &MidiEndpointConnection::DeviceRemovedHandler);
+                if (m_autoReconnectDeviceWatcher.Status() == enumeration::DeviceWatcherStatus::Stopped)
+                {
+                    auto deviceAddedHandler = foundation::TypedEventHandler<enumeration::DeviceWatcher, enumeration::DeviceInformation>(this, &MidiEndpointConnection::DeviceAddedHandler);
+                    auto deviceUpdatedHandler = foundation::TypedEventHandler<enumeration::DeviceWatcher, enumeration::DeviceInformationUpdate>(this, &MidiEndpointConnection::DeviceUpdatedHandler);
+                    auto deviceRemovedHandler = foundation::TypedEventHandler<enumeration::DeviceWatcher, enumeration::DeviceInformationUpdate>(this, &MidiEndpointConnection::DeviceRemovedHandler);
 
-                m_autoReconnectDeviceWatcherAddedRevoker   = m_autoReconnectDeviceWatcher.Added(winrt::auto_revoke, deviceAddedHandler);
-                m_autoReconnectDeviceWatcherUpdatedRevoker = m_autoReconnectDeviceWatcher.Updated(winrt::auto_revoke, deviceUpdatedHandler);
-                m_autoReconnectDeviceWatcherRemovedRevoker = m_autoReconnectDeviceWatcher.Removed(winrt::auto_revoke, deviceRemovedHandler);
+                    m_autoReconnectDeviceWatcherAddedRevoker = m_autoReconnectDeviceWatcher.Added(winrt::auto_revoke, deviceAddedHandler);
+                    m_autoReconnectDeviceWatcherUpdatedRevoker = m_autoReconnectDeviceWatcher.Updated(winrt::auto_revoke, deviceUpdatedHandler);
+                    m_autoReconnectDeviceWatcherRemovedRevoker = m_autoReconnectDeviceWatcher.Removed(winrt::auto_revoke, deviceRemovedHandler);
 
-                m_autoReconnectDeviceWatcher.Start();
+                    m_autoReconnectDeviceWatcher.Start();
 
-                return true;
+                    return true;
+                }
+                else
+                {
+                    // can only start the watcher when it's in a stopped state
+                    return false;
+                }
             }
             else
             {
-                // can only start the watcher when it's in a stopped state
                 return false;
             }
+
         }
-        else
+        catch (winrt::hresult_error hr)
         {
+            internal::LogHresultError(__FUNCTION__, L"HRESULT Exception starting device watcher", hr);
+
             return false;
         }
+        catch (...)
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Exception starting device watcher");
+
+            return false;
+        }
+
     }
 
     _Use_decl_annotations_
     bool MidiEndpointConnection::StopDeviceWatcher()
     {
+        internal::LogInfo(__FUNCTION__, L"Enter");
+
         if (m_autoReconnectDeviceWatcher != nullptr)
         {
             m_autoReconnectDeviceWatcher.Stop();
@@ -92,6 +110,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
         // if not m_isOpen, then perform all the opening logic again
         if (!m_isOpen)
         {
+            internal::LogInfo(__FUNCTION__, L"Reopening after disconnect (m_isOpen == false)");
+
             InternalReopenAfterDisconnect();
         }
 

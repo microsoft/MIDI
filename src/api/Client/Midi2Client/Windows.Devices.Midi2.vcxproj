@@ -394,7 +394,6 @@
     <ClCompile Include="MidiEndpointConnection.cpp">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiEndpointConnection_AutoReconnect.cpp" />
     <ClCompile Include="MidiEndpointConnection_Plugins.cpp">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
     </ClCompile>
@@ -407,9 +406,12 @@
     <ClCompile Include="MidiEndpointConnection_SendSingleMessage.cpp">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiEndpointDeviceInformation.cpp">
-      <DependentUpon>MidiEndpointDeviceInformation.idl</DependentUpon>
-    </ClCompile>
+      <ClCompile Include="MidiEndpointConnection_AutoReconnect.cpp">
+          <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
+      </ClCompile>
+      <ClCompile Include="MidiEndpointDeviceInformation.cpp">          
+          <DependentUpon>MidiEndpointDeviceInformation.idl</DependentUpon>
+      </ClCompile>
     <ClCompile Include="MidiEndpointDeviceInformationAddedEventArgs.cpp">
       <DependentUpon>MidiEndpointDeviceInformationAddedEventArgs.idl</DependentUpon>
     </ClCompile>
