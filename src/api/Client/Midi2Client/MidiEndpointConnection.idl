@@ -39,6 +39,8 @@ namespace MIDI_MIDL_NAMESPACE
         Boolean IsOpen{ get; };
         Boolean Open();
 
+        Boolean IsAutoReconnectEnabled{ get; };
+
         IVectorView<IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins{ get; };
         void AddMessageProcessingPlugin(IMidiEndpointMessageProcessingPlugin plugin);
         void RemoveMessageProcessingPlugin(Guid id);

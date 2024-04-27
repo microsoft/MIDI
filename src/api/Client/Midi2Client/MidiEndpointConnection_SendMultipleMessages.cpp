@@ -22,7 +22,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         foundation::IMemoryBuffer const& buffer
         ) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
+        internal::LogInfo(__FUNCTION__, L"Enter", m_endpointDeviceId);
 
         winrt::Windows::Foundation::IMemoryBufferReference bufferReference = buffer.CreateReference();
 
@@ -35,7 +35,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         {
             if (byteOffset + byteCount > dataSize)
             {
-                internal::LogGeneralError(__FUNCTION__, L"Buffer smaller than provided offset + byteLength (first check)");
+                internal::LogGeneralError(__FUNCTION__, L"Buffer smaller than provided offset + byteLength (first check)", m_endpointDeviceId);
 
                 return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange;
             }
@@ -44,7 +44,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             // make sure we're not going to spin past the end of the buffer
             if (byteOffset + byteCount > bufferReference.Capacity())
             {
-                internal::LogGeneralError(__FUNCTION__, L"Buffer smaller than provided offset + byteLength (second check) ");
+                internal::LogGeneralError(__FUNCTION__, L"Buffer smaller than provided offset + byteLength (second check)", m_endpointDeviceId);
 
                 return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange;
             }
@@ -65,13 +65,13 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
                     if (SendMessageFailed(result))
                     {
-                        internal::LogGeneralError(__FUNCTION__, L"SendMessageRaw failed");
+                        internal::LogGeneralError(__FUNCTION__, L"SendMessageRaw failed", m_endpointDeviceId);
                         return result;
                     }
                 }
                 else
                 {
-                    internal::LogGeneralError(__FUNCTION__, L"Ran out of data");
+                    internal::LogGeneralError(__FUNCTION__, L"Ran out of data when sending multiple messages", m_endpointDeviceId);
                     auto returnValue = midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange ;
 
                     if (bytesProcessed > 0)
@@ -93,14 +93,14 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
             if (bytesProcessed != byteCount)
             {
-                internal::LogGeneralError(__FUNCTION__, L"Ran out of data");
+                internal::LogGeneralError(__FUNCTION__, L"Finished, but bytes processed != supplied count.", m_endpointDeviceId);
                 return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::MessageListPartiallyProcessed;
 
             }
         }
         else
         {
-            internal::LogGeneralError(__FUNCTION__, L"Unable to get buffer");
+            internal::LogGeneralError(__FUNCTION__, L"Unable to get buffer", m_endpointDeviceId);
 
             return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
@@ -115,7 +115,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         internal::MidiTimestamp const timestamp,
         collections::IIterable<uint32_t> const& words) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
+        internal::LogInfo(__FUNCTION__, L"Enter", m_endpointDeviceId);
 
         uint32_t i{ 0 };
 
@@ -147,7 +147,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
                 if (SendMessageFailed(sendMessageResult))
                 {
                     // failed. Log and return. We fail on first problem.
-                    internal::LogGeneralError(__FUNCTION__, L"Failed to send message");
+                    internal::LogGeneralError(__FUNCTION__, L"Failed to send message", m_endpointDeviceId);
 
                     if (i > 0)
                     {
@@ -172,7 +172,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         uint32_t const wordCount,
         winrt::array_view<uint32_t const> words) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
+        internal::LogInfo(__FUNCTION__, L"Enter", m_endpointDeviceId);
 
         uint32_t i{ startIndex };
         uint32_t wordsSent{ 0 };
@@ -188,7 +188,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
                 if (SendMessageFailed(sendMessageResult))
                 {
                     // failed. Log and return. We fail on first problem.
-                    internal::LogGeneralError(__FUNCTION__, L"Failed to send message");
+                    internal::LogGeneralError(__FUNCTION__, L"Failed to send message", m_endpointDeviceId);
 
                     if (i > 0)
                     {
@@ -204,7 +204,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             else
             {
                 // failed. Log and return. We fail on first problem.
-                internal::LogGeneralError(__FUNCTION__, L"Failed to send message. Index out of bounds");
+                internal::LogGeneralError(__FUNCTION__, L"Failed to send message. Index out of bounds", m_endpointDeviceId);
 
                 return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange;
 
@@ -221,7 +221,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         internal::MidiTimestamp const timestamp,
         collections::IIterable<MidiMessageStruct> const& messages) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
+        internal::LogInfo(__FUNCTION__, L"Enter", m_endpointDeviceId);
 
         for (auto const& message : messages)
         {
@@ -231,7 +231,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             if (SendMessageFailed(sendMessageResult))
             {
                 // failed. Log and return. We fail on first problem.
-                internal::LogGeneralError(__FUNCTION__, L"Failed to send message");
+                internal::LogGeneralError(__FUNCTION__, L"Failed to send message", m_endpointDeviceId);
 
                 return sendMessageResult;
             }
@@ -249,7 +249,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         uint32_t const messageCount,
         winrt::array_view<MidiMessageStruct const> messages) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
+        internal::LogInfo(__FUNCTION__, L"Enter", m_endpointDeviceId);
 
 
         auto iterator = messages.begin() + startIndex;
@@ -263,7 +263,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             if (SendMessageFailed(sendMessageResult))
             {
                 // failed. Log and return. We fail on first problem.
-                internal::LogGeneralError(__FUNCTION__, L"Failed to send message");
+                internal::LogGeneralError(__FUNCTION__, L"Failed to send message", m_endpointDeviceId);
 
                 return sendMessageResult;
             }
@@ -280,7 +280,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
     midi2::MidiSendMessageResults MidiEndpointConnection::SendMultipleMessagesPacketList(
         collections::IIterable<IMidiUniversalPacket> const& messages) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Sending multiple message packet list");
+        internal::LogInfo(__FUNCTION__, L"Sending multiple message packet list", m_endpointDeviceId);
 
         for (auto const& ump : messages)
         {
@@ -288,7 +288,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
             if (!MidiEndpointConnection::SendMessageSucceeded(result))
             {
-                internal::LogGeneralError(__FUNCTION__, L"Failed to send message");
+                internal::LogGeneralError(__FUNCTION__, L"Failed to send message", m_endpointDeviceId);
 
                 // if any fail, we return immediately.
 

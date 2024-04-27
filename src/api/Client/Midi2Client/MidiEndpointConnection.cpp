@@ -16,73 +16,6 @@
 namespace MIDI_CPP_NAMESPACE::implementation
 {
     _Use_decl_annotations_
-    HRESULT MidiEndpointConnection::Callback(PVOID data, UINT size, LONGLONG timestamp, LONGLONG)
-    {
-  //      internal::LogInfo(__FUNCTION__, L"Message Received in API callback");
-
-        try
-        {
-            // one copy of the event args for this gets sent to all listeners and the main event
-            auto args = winrt::make_self<implementation::MidiMessageReceivedEventArgs>(data, size, timestamp);
-
-            // we failed to create the event args
-            if (args == nullptr)
-            {
-                internal::LogGeneralError(__FUNCTION__, L"Unable to create MidiMessageReceivedEventArgs");
-
-                return E_FAIL;
-            }
-
-            bool skipMainMessageReceivedEvent = false;
-            bool skipFurtherListeners = false;
-
-            // If any listeners are hooked up, use them
-
-            if (m_messageProcessingPlugins && m_messageProcessingPlugins.Size() > 0)
-            {
-                // loop through listeners
-                for (const auto& plugin : m_messageProcessingPlugins)
-                {
-                    // This is synchronous by design, but that requires the listener (and the client app which sinks any event) to not block
-
-                    plugin.ProcessIncomingMessage(*args, skipFurtherListeners, skipMainMessageReceivedEvent);
-
-                    // if the listener has told us to skip further listeners, effectively 
-                    // removing this message from the queue, then break out of the loop
-                    if (skipFurtherListeners) break;
-                }
-            }
-
-            // if the main message received event is hooked up, and we're not skipping it, use it
-            if (m_messageReceivedEvent && !skipMainMessageReceivedEvent)
-            {
-                m_messageReceivedEvent(*this, *args);
-            }
-
-            return S_OK;
-        }
-        catch (winrt::hresult_error const& ex)
-        {
-            internal::LogHresultError(__FUNCTION__, L"hresult exception handling received messages", ex);
-
-            return E_FAIL;
-        }
-        catch (std::exception const& ex)
-        {
-            internal::LogStandardExceptionError(__FUNCTION__, L"hresult exception handling received messages", ex);
-
-            return E_FAIL;
-        }
-        catch (...)
-        {
-            internal::LogGeneralError(__FUNCTION__, L"Exception handling received message");
-
-            return E_FAIL;
-        }
-    }
-
-    
-    _Use_decl_annotations_
     bool MidiEndpointConnection::InternalInitialize(
         winrt::guid sessionId,
         winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
@@ -96,7 +29,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         if (serviceAbstraction == nullptr)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Error initializing endpoint. Service abstraction is null");
+            internal::LogGeneralError(__FUNCTION__, L"Error initializing endpoint. Service abstraction is null", endpointDeviceId);
 
             return false;
         }
@@ -105,19 +38,18 @@ namespace MIDI_CPP_NAMESPACE::implementation
         {
             m_sessionId = sessionId;
             m_connectionId = connectionId;
-
             m_endpointDeviceId = endpointDeviceId;
 
             m_serviceAbstraction = serviceAbstraction;
 
             m_connectionSettings = connectionSettings;
             m_autoReconnect = autoReconnect;
-            
+
             return true;
         }
         catch (winrt::hresult_error const& ex)
         {
-            internal::LogHresultError(__FUNCTION__, L"hresult exception initializing endpoint.", ex);
+            internal::LogHresultError(__FUNCTION__, L"hresult exception initializing endpoint.", ex, endpointDeviceId);
 
             return false;
         }
@@ -131,24 +63,23 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         if (m_endpointAbstraction == nullptr)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Failed to open connection. endpoint abstraction is null");
+            internal::LogGeneralError(__FUNCTION__, L"Failed to open connection. endpoint abstraction is null", m_endpointDeviceId);
 
             return false;
         }
 
         DWORD mmcssTaskId{};
-
         LPCWSTR connectionSettingsJsonString = nullptr;
 
         if (m_connectionSettings != nullptr)
         {
-            internal::LogInfo(__FUNCTION__, L"Connection settings were specified. Including JSON in service call.");
+            internal::LogInfo(__FUNCTION__, L"Connection settings were specified. Including JSON in service call.", m_endpointDeviceId);
 
             connectionSettingsJsonString = static_cast<LPCWSTR>(m_connectionSettings.SettingsJson().c_str());
         }
 
         ABSTRACTIONCREATIONPARAMS abstractionCreationParams{ };
-        abstractionCreationParams.DataFormat = MidiDataFormat_UMP; 
+        abstractionCreationParams.DataFormat = MidiDataFormat_UMP;
         abstractionCreationParams.InstanceConfigurationJsonData = connectionSettingsJsonString;
 
         auto result = m_endpointAbstraction->Initialize(
@@ -162,31 +93,21 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         if (SUCCEEDED(result))
         {
-            internal::LogInfo(__FUNCTION__, L"Endpoint abstraction successfully initialized");
+            internal::LogInfo(__FUNCTION__, L"Endpoint abstraction successfully initialized", m_endpointDeviceId);
 
             m_isOpen = true;
             m_closeHasBeenCalled = false;
         }
         else
         {
-            internal::LogHresultError(__FUNCTION__, L"Failed to open connection", result);
+            internal::LogHresultError(__FUNCTION__, L"Failed to initialize endpoint abstraction", result, m_endpointDeviceId);
         }
 
-        internal::LogInfo(__FUNCTION__, L"Connection Opened");
+        internal::LogInfo(__FUNCTION__, L"Connection Opened", m_endpointDeviceId);
 
         return true;
     }
 
-    // this does all the reconnection except for plugin init
-    _Use_decl_annotations_
-    bool MidiEndpointConnection::InternalReopenAfterDisconnect()
-    {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
-        if (!ActivateMidiStream()) return false;
-
-        return InternalOpen();
-    }
 
 
     _Use_decl_annotations_
@@ -206,11 +127,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
                     if (InternalOpen())
                     {
-                        // If autoReconnect, set up a watcher
-                        if (m_autoReconnect)
-                        {
-                            StartDeviceWatcher();
-                        }
+                        m_wasAlreadyOpened = true;
 
                         CallOnConnectionOpenedOnPlugins();
 
@@ -218,14 +135,14 @@ namespace MIDI_CPP_NAMESPACE::implementation
                     }
                     else
                     {
-                        internal::LogGeneralError(__FUNCTION__, L"InternalOpen() returned false.");
+                        internal::LogGeneralError(__FUNCTION__, L"InternalOpen() returned false.", m_endpointDeviceId);
 
                         return false;
                     }
                 }
                 catch (winrt::hresult_error const& ex)
                 {
-                    internal::LogHresultError(__FUNCTION__, L"hresult exception initializing endpoint interface. Service may be unavailable.", ex);
+                    internal::LogHresultError(__FUNCTION__, L"hresult exception initializing endpoint interface. Service may be unavailable.", ex, m_endpointDeviceId);
 
                     m_endpointAbstraction = nullptr;
 
@@ -233,7 +150,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
                 }
                 catch (...)
                 {
-                    internal::LogGeneralError(__FUNCTION__, L"Exception initializing endpoint interface. Service may be unavailable.");
+                    internal::LogGeneralError(__FUNCTION__, L"Exception initializing endpoint interface. Service may be unavailable.", m_endpointDeviceId);
 
                     m_endpointAbstraction = nullptr;
 
@@ -242,14 +159,14 @@ namespace MIDI_CPP_NAMESPACE::implementation
             }
             else
             {
-                internal::LogGeneralError(__FUNCTION__, L"Endpoint abstraction interface is nullptr");
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint abstraction interface is nullptr", m_endpointDeviceId);
 
                 return false;
             }
         }
         else
         {
-            internal::LogInfo(__FUNCTION__, L"Connection already open");
+            internal::LogInfo(__FUNCTION__, L"Connection already open", m_endpointDeviceId);
 
             // already open. Just return true here. Not fatal in any way, so no error
             return true;
@@ -267,7 +184,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         try
         {
             CleanupPlugins();
-            DeactivateMidiStream();
+            DeactivateMidiStream(true);
 
             m_isOpen = false;
 
@@ -277,7 +194,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         catch (...)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Exception on close");
+            internal::LogGeneralError(__FUNCTION__, L"Exception on close", m_endpointDeviceId);
         }
 
         internal::LogInfo(__FUNCTION__, L"Complete");
@@ -292,7 +209,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
     }
 
     _Use_decl_annotations_
-    bool MidiEndpointConnection::DeactivateMidiStream()
+    bool MidiEndpointConnection::DeactivateMidiStream(bool const force)
     {
         internal::LogInfo(__FUNCTION__, L"Enter");
 
@@ -304,9 +221,15 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
             if (FAILED(hr))
             {
-                internal::LogHresultError(__FUNCTION__, L"Failed HRESULT cleaning up endpoint abstraction", hr);
+                internal::LogHresultError(__FUNCTION__, L"Failed HRESULT cleaning up endpoint abstraction", hr, m_endpointDeviceId);
 
-                return false;
+                // if we're just forcing our way through this, we ignore the error
+                // this happens when the device disconnects or another service-side issue
+                // happens.
+                if (!force)
+                {
+                    return false;
+                }
             }
 
             m_endpointAbstraction == nullptr;
@@ -325,7 +248,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         if (m_serviceAbstraction == nullptr)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Service abstraction is null.");
+            internal::LogGeneralError(__FUNCTION__, L"Service abstraction is null.", m_endpointDeviceId);
 
             return false;
         }
@@ -336,24 +259,24 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
             if (m_endpointAbstraction == nullptr)
             {
-                internal::LogGeneralError(__FUNCTION__, L"Endpoint Abstraction failed to Activate and return null.");
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint Abstraction failed to Activate and returned null.", m_endpointDeviceId);
 
                 return false;
             }
 
-            internal::LogInfo(__FUNCTION__, L"Activated IMidiBiDi");
+            internal::LogInfo(__FUNCTION__, L"Activated IMidiBiDi", m_endpointDeviceId);
 
             return true;
         }
         catch (winrt::hresult_error const& ex)
         {
-            internal::LogHresultError(__FUNCTION__, L"hresult exception activating stream. Service may be unavailable", ex);
+            internal::LogHresultError(__FUNCTION__, L"hresult exception activating stream. Service may be unavailable", ex, m_endpointDeviceId);
 
             return false;
         }
         catch (...)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Exception activating stream. Service may be unavailable");
+            internal::LogGeneralError(__FUNCTION__, L"Exception activating stream. Service may be unavailable", m_endpointDeviceId);
 
             return false;
         }

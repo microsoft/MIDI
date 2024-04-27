@@ -34,13 +34,12 @@ namespace MIDI_CPP_NAMESPACE::implementation
         static bool SendMessageSucceeded(_In_ midi2::MidiSendMessageResults const sendResults) { return (sendResults & midi2::MidiSendMessageResults::Succeeded) == midi2::MidiSendMessageResults::Succeeded; }
         static bool SendMessageFailed(_In_ midi2::MidiSendMessageResults const sendResults) { return (sendResults & midi2::MidiSendMessageResults::Failed) == midi2::MidiSendMessageResults::Failed; }
 
-
-
         winrt::guid ConnectionId() const noexcept { return m_connectionId; }
         winrt::hstring EndpointDeviceId() const noexcept { return m_endpointDeviceId; }
 
-
         bool IsOpen() const noexcept { return m_isOpen; }
+        bool IsAutoReconnectEnabled() const noexcept { return m_autoReconnect; }
+
         midi2::IMidiEndpointConnectionSettings Settings() const noexcept { return m_settings; }
 
         foundation::IInspectable Tag() const noexcept { return m_tag; }
@@ -137,11 +136,31 @@ namespace MIDI_CPP_NAMESPACE::implementation
         {
             return m_messageReceivedEvent.add(handler);
         }
-
         void MessageReceived(_In_ winrt::event_token const& token) noexcept
         {
             if (m_messageReceivedEvent) m_messageReceivedEvent.remove(token);
         }
+
+
+        winrt::event_token EndpointDeviceDisconnected(_In_ foundation::TypedEventHandler<midi2::IMidiEndpointConnectionSource, foundation::IInspectable> const& handler)
+        {
+            return m_endpointDeviceDisconnectedEvent.add(handler);
+        }
+        void EndpointDeviceDisconnected(_In_ winrt::event_token const& token) noexcept
+        {
+            if (m_endpointDeviceDisconnectedEvent) m_endpointDeviceDisconnectedEvent.remove(token);
+        }
+
+
+        winrt::event_token EndpointDeviceReconnected(_In_ foundation::TypedEventHandler<midi2::IMidiEndpointConnectionSource, foundation::IInspectable> const& handler)
+        {
+            return m_endpointDeviceReconnectedEvent.add(handler);
+        }
+        void EndpointDeviceReconnected(_In_ winrt::event_token const& token) noexcept
+        {
+            if (m_endpointDeviceReconnectedEvent) m_endpointDeviceReconnectedEvent.remove(token);
+        }
+
 
 
         collections::IVectorView<midi2::IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins() const noexcept
@@ -171,6 +190,11 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         void InternalClose();
 
+        void InternalOnDeviceDisconnect();
+        void InternalOnDeviceReconnect();
+
+        bool InternalWasAlreadyOpened() { return m_wasAlreadyOpened; }
+
     private:
         midi2::IMidiEndpointConnectionSettings m_connectionSettings;
         bool m_autoReconnect{ false };
@@ -185,6 +209,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         winrt::Windows::Foundation::IInspectable m_tag{ nullptr };
 
         bool m_isOpen{ false };
+        bool m_wasAlreadyOpened { false };      // true if this was initially opened. This is to avoid reopen events when first opened
         bool m_closeHasBeenCalled{ false };
 
         winrt::com_ptr<IMidiAbstraction> m_serviceAbstraction{ nullptr };
@@ -192,6 +217,9 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
 
         winrt::event<foundation::TypedEventHandler<midi2::IMidiMessageReceivedEventSource, midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;
+
+        winrt::event<foundation::TypedEventHandler<midi2::IMidiEndpointConnectionSource, foundation::IInspectable>> m_endpointDeviceDisconnectedEvent;
+        winrt::event<foundation::TypedEventHandler<midi2::IMidiEndpointConnectionSource, foundation::IInspectable>> m_endpointDeviceReconnectedEvent;
 
         //midi2::MidiEndpointConnectionOptions m_options;
 
@@ -234,27 +262,9 @@ namespace MIDI_CPP_NAMESPACE::implementation
         bool InternalOpen();
         
         _Success_(return == true)
-        bool DeactivateMidiStream();
-
-        _Success_(return == true)
-        bool InternalReopenAfterDisconnect();
+        bool DeactivateMidiStream(_In_ bool const force);
 
 
-        winrt::Windows::Devices::Enumeration::DeviceWatcher m_autoReconnectDeviceWatcher{ nullptr };
-
-        _Success_(return == true)
-        bool StartDeviceWatcher();
-
-        _Success_(return == true)
-        bool StopDeviceWatcher();
-
-        void DeviceAddedHandler(_In_ enumeration::DeviceWatcher source, _In_ enumeration::DeviceInformation args);
-        void DeviceUpdatedHandler(_In_ enumeration::DeviceWatcher source, _In_ enumeration::DeviceInformationUpdate args);
-        void DeviceRemovedHandler(_In_ enumeration::DeviceWatcher source, _In_ enumeration::DeviceInformationUpdate args);
-            
-        enumeration::DeviceWatcher::Added_revoker m_autoReconnectDeviceWatcherAddedRevoker;
-        enumeration::DeviceWatcher::Updated_revoker m_autoReconnectDeviceWatcherUpdatedRevoker;
-        enumeration::DeviceWatcher::Removed_revoker m_autoReconnectDeviceWatcherRemovedRevoker;
 
 
 
