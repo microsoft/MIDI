@@ -233,8 +233,17 @@ namespace Microsoft.Midi.ConsoleApp
                 UInt64 lastMessageReceivedEventTimestamp = 0;
                 UInt32 countMessagesReceived = 0;
 
-                if (!settings.AutoReconnect)
+                if (settings.AutoReconnect)
                 {
+                    AnsiConsole.MarkupLine("Auto-reconnect is enabled");
+
+                    connection.EndpointDeviceDisconnected += Connection_EndpointDeviceDisconnected;
+                    connection.EndpointDeviceReconnected += Connection_EndpointDeviceReconnected;
+                }
+                else
+                {
+                    AnsiConsole.MarkupLine("Auto-reconnect is not enabled");
+
                     MonitorEndpointConnectionStatusInTheBackground(endpointId);
                 }
 
@@ -628,6 +637,15 @@ namespace Microsoft.Midi.ConsoleApp
             return (int)MidiConsoleReturnCode.Success;
         }
 
+        private void Connection_EndpointDeviceReconnected(IMidiEndpointConnectionSource sender, object args)
+        {
+            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess("Endpoint device reconnected."));
+        }
+
+        private void Connection_EndpointDeviceDisconnected(IMidiEndpointConnectionSource sender, object args)
+        {
+            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("Endpoint device disconnected."));
+        }
 
         private void WriteMessageToFile(Settings settings, StreamWriter writer, ReceivedMidiMessage message)
         {

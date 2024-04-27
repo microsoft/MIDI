@@ -23,6 +23,7 @@ namespace WindowsMidiServicesInternal
         // {2c7d1437-4f43-5713-170b-adbe4cff4dff}
         (0x2c7d1437, 0x4f43, 0x5713, 0x17, 0x0b, 0xad, 0xbe, 0x4c, 0xff, 0x4d, 0xff));
 
+
     void WINAPI LoggingProviderEnabledCallback(
         _In_      LPCGUID /*sourceId*/,
         _In_      ULONG /*isEnabled*/,
@@ -76,7 +77,8 @@ namespace WindowsMidiServicesInternal
     void LogHresultError(
         const char* location, 
         const wchar_t* message, 
-        winrt::hresult_error const& ex) noexcept
+        winrt::hresult_error const& ex
+    ) noexcept
     {
         //OutputDebugString(L"" __FUNCTION__ L"API HRESULT Error. Use tracing provider for details.");
 
@@ -87,10 +89,10 @@ namespace WindowsMidiServicesInternal
             "MIDI.HresultError",
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingKeyword(TRACE_KEYWORD_API_GENERAL),
-            TraceLoggingString(location, "Location"),
-            TraceLoggingWideString(message, "Message"),
-            TraceLoggingHResult(ex.code(), "HRESULT"),
-            TraceLoggingWideString(ex.message().c_str(), "Error")
+            TraceLoggingString(location, MIDI_TRACE_LOGGING_LOCATION_FIELD),
+            TraceLoggingWideString(message, MIDI_TRACE_LOGGING_MESSAGE_FIELD),
+            TraceLoggingHResult(ex.code(), MIDI_TRACE_LOGGING_HRESULT_FIELD),
+            TraceLoggingWideString(ex.message().c_str(), MIDI_TRACE_LOGGING_ERROR_FIELD)
         );
     }
 
@@ -98,7 +100,9 @@ namespace WindowsMidiServicesInternal
     void LogHresultError(
         const char* location,
         const wchar_t* message,
-        HRESULT hr) noexcept
+        winrt::hresult_error const& ex,
+        winrt::hstring endpointDeviceId
+    ) noexcept
     {
         //OutputDebugString(L"" __FUNCTION__ L"API HRESULT Error. Use tracing provider for details.");
 
@@ -109,17 +113,68 @@ namespace WindowsMidiServicesInternal
             "MIDI.HresultError",
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingKeyword(TRACE_KEYWORD_API_GENERAL),
-            TraceLoggingString(location, "Location"),
-            TraceLoggingWideString(message, "Message"),
-            TraceLoggingHResult(hr, "HRESULT")
+            TraceLoggingString(location, MIDI_TRACE_LOGGING_LOCATION_FIELD),
+            TraceLoggingWideString(message, MIDI_TRACE_LOGGING_MESSAGE_FIELD),
+            TraceLoggingHResult(ex.code(), MIDI_TRACE_LOGGING_HRESULT_FIELD),
+            TraceLoggingWideString(ex.message().c_str(), MIDI_TRACE_LOGGING_ERROR_FIELD),
+            TraceLoggingWideString(endpointDeviceId.c_str(), MIDI_TRACE_LOGGING_ENDPOINT_DEVICE_ID_FIELD)
         );
     }
+
+
+    _Use_decl_annotations_
+    void LogHresultError(
+        const char* location,
+        const wchar_t* message,
+        HRESULT hr
+    ) noexcept
+    {
+        //OutputDebugString(L"" __FUNCTION__ L"API HRESULT Error. Use tracing provider for details.");
+
+        if (!g_traceLoggingRegistered) RegisterTraceLogging();
+
+        TraceLoggingWrite(
+            g_hLoggingProvider,
+            "MIDI.HresultError",
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingKeyword(TRACE_KEYWORD_API_GENERAL),
+            TraceLoggingString(location, MIDI_TRACE_LOGGING_LOCATION_FIELD),
+            TraceLoggingWideString(message, MIDI_TRACE_LOGGING_MESSAGE_FIELD),
+            TraceLoggingHResult(hr, MIDI_TRACE_LOGGING_HRESULT_FIELD)
+        );
+    }
+
+    _Use_decl_annotations_
+    void LogHresultError(
+        const char* location,
+        const wchar_t* message,
+        HRESULT hr,
+        winrt::hstring endpointDeviceId
+    ) noexcept
+    {
+        //OutputDebugString(L"" __FUNCTION__ L"API HRESULT Error. Use tracing provider for details.");
+
+        if (!g_traceLoggingRegistered) RegisterTraceLogging();
+
+        TraceLoggingWrite(
+            g_hLoggingProvider,
+            "MIDI.HresultError",
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingKeyword(TRACE_KEYWORD_API_GENERAL),
+            TraceLoggingString(location, MIDI_TRACE_LOGGING_LOCATION_FIELD),
+            TraceLoggingWideString(message, MIDI_TRACE_LOGGING_MESSAGE_FIELD),
+            TraceLoggingHResult(hr, MIDI_TRACE_LOGGING_HRESULT_FIELD),
+            TraceLoggingWideString(endpointDeviceId.c_str(), MIDI_TRACE_LOGGING_ENDPOINT_DEVICE_ID_FIELD)
+        );
+    }
+
 
     _Use_decl_annotations_
     void LogStandardExceptionError(
         const char* location,
         const wchar_t* message,
-        std::exception const& ex) noexcept
+        std::exception const& ex
+    ) noexcept
     {
         if (!g_traceLoggingRegistered) RegisterTraceLogging();
 
@@ -128,9 +183,31 @@ namespace WindowsMidiServicesInternal
             "MIDI.StandardExceptionError",
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingKeyword(TRACE_KEYWORD_API_GENERAL),
-            TraceLoggingString(location, "Location"),
-            TraceLoggingWideString(message, "Message"),
-            TraceLoggingString(ex.what(), "What")
+            TraceLoggingString(location, MIDI_TRACE_LOGGING_LOCATION_FIELD),
+            TraceLoggingWideString(message, MIDI_TRACE_LOGGING_MESSAGE_FIELD),
+            TraceLoggingString(ex.what(), MIDI_TRACE_LOGGING_ERROR_FIELD)
+        );
+    }
+
+    _Use_decl_annotations_
+    void LogStandardExceptionError(
+        const char* location,
+        const wchar_t* message,
+        std::exception const& ex,
+        winrt::hstring endpointDeviceId
+    ) noexcept
+    {
+        if (!g_traceLoggingRegistered) RegisterTraceLogging();
+
+        TraceLoggingWrite(
+            g_hLoggingProvider,
+            "MIDI.StandardExceptionError",
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingKeyword(TRACE_KEYWORD_API_GENERAL),
+            TraceLoggingString(location, MIDI_TRACE_LOGGING_LOCATION_FIELD),
+            TraceLoggingWideString(message, MIDI_TRACE_LOGGING_MESSAGE_FIELD),
+            TraceLoggingString(ex.what(), MIDI_TRACE_LOGGING_ERROR_FIELD),
+            TraceLoggingWideString(endpointDeviceId.c_str(), MIDI_TRACE_LOGGING_ENDPOINT_DEVICE_ID_FIELD)
         );
     }
 
@@ -138,9 +215,10 @@ namespace WindowsMidiServicesInternal
     _Use_decl_annotations_
     void LogGeneralError(
         const char* location, 
-        const wchar_t* message) noexcept
+        const wchar_t* message
+    ) noexcept
     {
-        OutputDebugString(L"" __FUNCTION__ L"API General Error. Use tracing provider for details.");
+        //OutputDebugString(L"" __FUNCTION__ L"API General Error. Use tracing provider for details.");
 
         if (!g_traceLoggingRegistered) RegisterTraceLogging();
 
@@ -149,14 +227,41 @@ namespace WindowsMidiServicesInternal
             "MIDI.GeneralError",
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingKeyword(TRACE_KEYWORD_API_GENERAL),
-            TraceLoggingString(location, "Location"),
-            TraceLoggingWideString(message, "Message")
+            TraceLoggingString(location, MIDI_TRACE_LOGGING_LOCATION_FIELD),
+            TraceLoggingWideString(message, MIDI_TRACE_LOGGING_MESSAGE_FIELD)
+            );
+    }
+
+    _Use_decl_annotations_
+    void LogGeneralError(
+        const char* location,
+        const wchar_t* message,
+        winrt::hstring endpointDeviceId
+    ) noexcept
+    {
+        //OutputDebugString(L"" __FUNCTION__ L"API General Error. Use tracing provider for details.");
+
+        if (!g_traceLoggingRegistered) RegisterTraceLogging();
+
+        TraceLoggingWrite(
+            g_hLoggingProvider,
+            "MIDI.GeneralError",
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingKeyword(TRACE_KEYWORD_API_GENERAL),
+            TraceLoggingString(location, MIDI_TRACE_LOGGING_LOCATION_FIELD),
+            TraceLoggingWideString(message, MIDI_TRACE_LOGGING_MESSAGE_FIELD),
+            TraceLoggingWideString(endpointDeviceId.c_str(), MIDI_TRACE_LOGGING_ENDPOINT_DEVICE_ID_FIELD)
         );
     }
 
+
+    _Use_decl_annotations_
     void LogInfo(
-        _In_z_ const char* location,
-        _In_z_ const wchar_t* message) noexcept
+        const char* location,
+        const wchar_t* message,
+        winrt::hstring endpointDeviceId
+    ) noexcept
+
     {
         if (!g_traceLoggingRegistered) RegisterTraceLogging();
 
@@ -165,9 +270,28 @@ namespace WindowsMidiServicesInternal
             "MIDI.Info",
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingKeyword(TRACE_KEYWORD_API_GENERAL),
-            TraceLoggingString(location, "Location"),
-            TraceLoggingWideString(message, "Message")
+            TraceLoggingString(location, MIDI_TRACE_LOGGING_LOCATION_FIELD),
+            TraceLoggingWideString(message, MIDI_TRACE_LOGGING_MESSAGE_FIELD),
+            TraceLoggingWideString(endpointDeviceId.c_str(), MIDI_TRACE_LOGGING_ENDPOINT_DEVICE_ID_FIELD)
         );
+    }
+
+    _Use_decl_annotations_
+    void LogInfo(
+        const char* location,
+        const wchar_t* message
+    ) noexcept
+    {
+        if (!g_traceLoggingRegistered) RegisterTraceLogging();
+
+        TraceLoggingWrite(
+            g_hLoggingProvider,
+            "MIDI.Info",
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingKeyword(TRACE_KEYWORD_API_GENERAL),
+            TraceLoggingString(location, MIDI_TRACE_LOGGING_LOCATION_FIELD),
+            TraceLoggingWideString(message, MIDI_TRACE_LOGGING_MESSAGE_FIELD)
+            );
     }
 
     _Use_decl_annotations_
@@ -175,9 +299,10 @@ namespace WindowsMidiServicesInternal
         const char* location, 
         const wchar_t* message, 
         const uint32_t firstWord, 
-        const uint64_t timestamp) noexcept
+        const uint64_t timestamp
+    ) noexcept
     {
-        OutputDebugString(L"" __FUNCTION__ L"API UMP Validation Error. Use tracing provider for details.");
+        //OutputDebugString(L"" __FUNCTION__ L"API UMP Validation Error. Use tracing provider for details.");
 
         if (!g_traceLoggingRegistered) RegisterTraceLogging();
 
@@ -186,10 +311,10 @@ namespace WindowsMidiServicesInternal
             "MIDI.UmpDataValidationError",
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingKeyword(TRACE_KEYWORD_API_DATA_VALIDATION),
-            TraceLoggingString(location, "Location"),
-            TraceLoggingWideString(message, "Message"),
-            TraceLoggingHexUInt32(firstWord, "UMPFirstWord"),
-            TraceLoggingUInt64(timestamp, "MIDITimestamp")
+            TraceLoggingString(location, MIDI_TRACE_LOGGING_LOCATION_FIELD),
+            TraceLoggingWideString(message, MIDI_TRACE_LOGGING_MESSAGE_FIELD),
+            TraceLoggingHexUInt32(firstWord, MIDI_TRACE_LOGGING_MESSAGE_WORD0_FIELD),
+            TraceLoggingUInt64(timestamp, MIDI_TRACE_LOGGING_MESSAGE_TIMESTAMP_FIELD)
         );
     }
 
@@ -198,9 +323,10 @@ namespace WindowsMidiServicesInternal
         const char* location, 
         const wchar_t* message, 
         const uint32_t providedSizeInWords, 
-        const uint64_t timestamp) noexcept
+        const uint64_t timestamp
+    ) noexcept
     {
-        OutputDebugString(L"" __FUNCTION__ L"API UMP Size Validation Error. Use tracing provider for details.");
+        //OutputDebugString(L"" __FUNCTION__ L"API UMP Size Validation Error. Use tracing provider for details.");
 
         if (!g_traceLoggingRegistered) RegisterTraceLogging();
 
@@ -209,10 +335,10 @@ namespace WindowsMidiServicesInternal
             "MIDI.UmpSizeValidationError",
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingKeyword(TRACE_KEYWORD_API_DATA_VALIDATION),
-            TraceLoggingString(location, "Location"),
-            TraceLoggingWideString(message, "Message"),
+            TraceLoggingString(location, MIDI_TRACE_LOGGING_LOCATION_FIELD),
+            TraceLoggingWideString(message, MIDI_TRACE_LOGGING_MESSAGE_FIELD),
             TraceLoggingHexUInt32(providedSizeInWords, "ProvidedSizeInWords"),
-            TraceLoggingUInt64(timestamp, "MIDITimestamp")
+            TraceLoggingUInt64(timestamp, MIDI_TRACE_LOGGING_MESSAGE_TIMESTAMP_FIELD)
         );
     }
 

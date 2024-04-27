@@ -73,7 +73,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
                 // make sure we're not going to spin past the end of the buffer
                 if (byteOffset + byteCount > bufferReference.Capacity())
                 {
-                    internal::LogGeneralError(__FUNCTION__, L"Buffer smaller than provided offset + byteLength");
+                    internal::LogGeneralError(__FUNCTION__, L"Buffer smaller than provided offset + byteLength", m_endpointDeviceId);
 
                     return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange;
                 }
@@ -83,21 +83,21 @@ namespace MIDI_CPP_NAMESPACE::implementation
             }
             else
             {
-                internal::LogGeneralError(__FUNCTION__, L"Unable to get buffer");
+                internal::LogGeneralError(__FUNCTION__, L"Unable to get buffer", m_endpointDeviceId);
 
                 return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
             }
         }
         catch (winrt::hresult_error const& ex)
         {
-            internal::LogHresultError(__FUNCTION__, L"hresult exception sending message", ex);
+            internal::LogHresultError(__FUNCTION__, L"hresult exception sending message", ex, m_endpointDeviceId);
 
             // TODO: handle buffer full and other expected hresults
             return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
         catch (...)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Exception sending message");
+            internal::LogGeneralError(__FUNCTION__, L"Exception sending message", m_endpointDeviceId);
 
             return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
@@ -118,7 +118,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             // check for out-of-bounds first
             if (startIndex + wordCount > words.size())
             {
-                internal::LogGeneralError(__FUNCTION__, L"Array start index + word count is >= array size");
+                internal::LogGeneralError(__FUNCTION__, L"Array start index + word count is >= array size", m_endpointDeviceId);
 
                 return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange;
             }
@@ -140,14 +140,14 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
-            internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex);
+            internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex, m_endpointDeviceId);
 
             // TODO: handle buffer full and other expected hresults
             return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
         catch (...)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Exception sending message");
+            internal::LogGeneralError(__FUNCTION__, L"Exception sending message", m_endpointDeviceId);
 
             return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
@@ -178,14 +178,14 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
-            internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex);
+            internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex, m_endpointDeviceId);
 
             // TODO: handle buffer full and other expected hresults
             return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
         catch (...)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Exception sending message");
+            internal::LogGeneralError(__FUNCTION__, L"Exception sending message", m_endpointDeviceId);
 
             return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
@@ -222,14 +222,14 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
-            internal::LogHresultError(__FUNCTION__, L"hresult exception sending message", ex);
+            internal::LogHresultError(__FUNCTION__, L"hresult exception sending message", ex, m_endpointDeviceId);
 
             // TODO: handle buffer full and other expected hresults
             return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
         catch (...)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Exception sending message");
+            internal::LogGeneralError(__FUNCTION__, L"Exception sending message", m_endpointDeviceId);
 
             return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
@@ -242,7 +242,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             uint32_t const word1,
             uint32_t const word2) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Sending message words (3)");
+        //internal::LogInfo(__FUNCTION__, L"Sending message words (3)");
 
         try
         {
@@ -267,14 +267,14 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
-            internal::LogHresultError(__FUNCTION__, L"hresult exception sending message", ex);
+            internal::LogHresultError(__FUNCTION__, L"hresult exception sending message", ex, m_endpointDeviceId);
 
             // TODO: handle buffer full and other expected hresults
             return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
         catch (...)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Exception sending message");
+            internal::LogGeneralError(__FUNCTION__, L"Exception sending message", m_endpointDeviceId);
 
             return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
@@ -289,7 +289,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             uint32_t const word2,
             uint32_t const word3) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Sending message words (4)");
+        //internal::LogInfo(__FUNCTION__, L"Sending message words (4)");
 
         try
         {
@@ -314,14 +314,14 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
-            internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex);
+            internal::LogHresultError(__FUNCTION__, L" hresult exception sending message", ex, m_endpointDeviceId);
 
             // TODO: handle buffer full and other expected hresults
             return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
         catch (...)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Exception sending message");
+            internal::LogGeneralError(__FUNCTION__, L"Exception sending message", m_endpointDeviceId);
 
             return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
         }
@@ -332,7 +332,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         midi2::MidiSendMessageResults MidiEndpointConnection::SendSingleMessagePacket(
             midi2::IMidiUniversalPacket const& message) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Sending message packet");
+        //internal::LogInfo(__FUNCTION__, L"Sending message packet");
 
         try
         {
@@ -341,7 +341,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
-            internal::LogHresultError(__FUNCTION__, L"hresult exception sending message. Service may be unavailable", ex);
+            internal::LogHresultError(__FUNCTION__, L"hresult exception sending message. Service may be unavailable", ex, m_endpointDeviceId);
 
 
             // todo: handle buffer full and similar messages

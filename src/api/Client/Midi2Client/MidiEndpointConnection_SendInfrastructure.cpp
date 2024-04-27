@@ -95,7 +95,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         {
             if (!m_isOpen)
             {
-                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?");
+                internal::LogGeneralError(__FUNCTION__, L"Endpoint is not open. Did you forget to call Open()?", m_endpointDeviceId);
 
                 // return failure if we're not open
                 return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::EndpointConnectionClosedOrInvalid;
@@ -103,7 +103,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
             if (timestamp != 0 && timestamp > internal::GetCurrentMidiTimestamp() + m_maxAllowedTimestampOffset)
             {
-                internal::LogGeneralError(__FUNCTION__, L"Timestamp exceeds maximum future scheduling offset");
+                internal::LogGeneralError(__FUNCTION__, L"Timestamp exceeds maximum future scheduling offset", m_endpointDeviceId);
 
                 return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::TimestampOutOfRange;
             }
@@ -115,7 +115,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
                 if (FAILED(hr))
                 {
-                    internal::LogHresultError(__FUNCTION__, L"SendMidiMessage returned a failure code", hr);
+                    internal::LogHresultError(__FUNCTION__, L"SendMidiMessage returned a failure code", hr, m_endpointDeviceId);
                 }
 
                 return SendMessageResultFromHRESULT(hr);
@@ -129,7 +129,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
-            internal::LogHresultError(__FUNCTION__, L"hresult error sending message. Is the service running?", ex);
+            internal::LogHresultError(__FUNCTION__, L"hresult error sending message. Is the service running?", ex, m_endpointDeviceId);
 
             // TOD: Handle other hresults like buffer full
             return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;
@@ -151,7 +151,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
             if (umpDataPointer == nullptr)
             {
-                internal::LogGeneralError(__FUNCTION__, L"endpoint data pointer is nullptr");
+                internal::LogGeneralError(__FUNCTION__, L"endpoint data pointer is nullptr", m_endpointDeviceId);
 
                 return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::InvalidMessageOther;
             }
@@ -161,7 +161,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
-            internal::LogHresultError(__FUNCTION__, L"hresult error sending message. Is the service running?", ex);
+            internal::LogHresultError(__FUNCTION__, L"hresult error sending message. Is the service running?", ex, m_endpointDeviceId);
 
             // TODO: handle buffer full and other expected hresults
             return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::Other;

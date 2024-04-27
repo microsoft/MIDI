@@ -17,6 +17,7 @@ namespace MIDI_MIDL_NAMESPACE
     [MIDI_INTERFACE_UUID("44385cdd-b64c-4195-8faa-8a61fc952a23",1.0)]
     interface IMidiEndpointConnectionSource
     {
-
+        event Windows.Foundation.TypedEventHandler<IMidiEndpointConnectionSource, IInspectable> EndpointDeviceDisconnected;
+        event Windows.Foundation.TypedEventHandler<IMidiEndpointConnectionSource, IInspectable> EndpointDeviceReconnected;
     }
 }
