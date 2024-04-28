@@ -12,9 +12,7 @@
 
 #include "MidiEndpointConnection.h"
 
-#include <atlcomcli.h>
-
-#include <filesystem>
+//#include <atlcomcli.h>
 
 namespace MIDI_CPP_NAMESPACE::implementation
 {
@@ -59,7 +57,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
             return nullptr;
         }
-       
     }
 
     _Use_decl_annotations_
@@ -72,6 +69,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
     // Internal method called inside the API to connect to the abstraction. Called by the code which creates
     // the session instance
+    _Use_decl_annotations_
     bool MidiSession::InternalStart()
     {
         internal::LogInfo(__FUNCTION__, L"Start Session ");
@@ -152,18 +150,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         return true;
     }
-
-    //_Use_decl_annotations_
-    //winrt::hstring MidiSession::NormalizeDeviceId(const winrt::hstring& endpointDeviceId)
-    //{
-    //    if (endpointDeviceId.empty()) return endpointDeviceId;
-
-    //    return internal::ToUpperTrimmedHStringCopy(endpointDeviceId);
-    //}
-
-
-
-
 
     _Use_decl_annotations_
     bool MidiSession::UpdateName(winrt::hstring const& newName) noexcept

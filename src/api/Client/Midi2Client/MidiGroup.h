@@ -34,6 +34,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         uint8_t m_index{ 0 };
     };
 }
+
 namespace MIDI_CPP_NAMESPACE::factory_implementation
 {
     struct MidiGroup : MidiGroupT<MidiGroup, implementation::MidiGroup>

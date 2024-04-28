@@ -10,9 +10,6 @@
 #include "MidiEndpointConnection.h"
 #include "MidiEndpointConnection.g.cpp"
 
-
-
-
 namespace MIDI_CPP_NAMESPACE::implementation
 {
     _Use_decl_annotations_

@@ -21,7 +21,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
         winrt::hstring EndpointDeviceIdA() const { return m_endpointDeviceIdA; }
         winrt::hstring EndpointDeviceIdB()  const { return m_endpointDeviceIdB; }
 
-
         void SetSuccess(
             _In_ winrt::guid associationId,
             _In_ winrt::hstring endpointDeviceIdA,
@@ -39,8 +38,5 @@ namespace MIDI_CPP_NAMESPACE::implementation
         winrt::guid m_associationId{};
         winrt::hstring m_endpointDeviceIdA{};
         winrt::hstring m_endpointDeviceIdB{};
-
-
-
     };
 }

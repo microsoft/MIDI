@@ -6,17 +6,10 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-
 #pragma once
-
-#include <pch.h>
 
 #include "MidiMessageReceivedEventArgs.g.h"
 
-#include "MidiMessage32.h"
-#include "MidiMessage64.h"
-#include "MidiMessage96.h"
-#include "MidiMessage128.h"
 
 // TODO: Consider making this deferrable
 // https://learn.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/author-events
@@ -35,7 +28,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
         MidiMessageReceivedEventArgs(_In_ PVOID data, _In_ UINT sizeInBytes, _In_ internal::MidiTimestamp);
 
         midi2::MidiPacketType PacketType() const noexcept;
-
         midi2::MidiMessageType MessageType() const noexcept;
 
         uint32_t PeekFirstWord() const noexcept { return m_data.Word0; }
@@ -60,33 +52,37 @@ namespace MIDI_CPP_NAMESPACE::implementation
         // these array_view parameters are quite specific. Reference this:
         // https://devblogs.microsoft.com/oldnewthing/20200205-00/?p=103398/
         
+        _Success_(return > 0)
         uint8_t FillWordArray(
             _In_ uint32_t const startIndex,
             _In_ array_view<uint32_t> words
         );
 
-        uint8_t FillByteArray(
+        _Success_(return > 0)
+            uint8_t FillByteArray(
             _In_ uint32_t const startIndex,
             _In_ array_view<uint8_t> bytes
         );
         
+        _Success_(return > 0)
         uint8_t FillBuffer(
             _In_ uint32_t const byteOffset,
             _In_ foundation::IMemoryBuffer const& buffer
         );
 
+        _Success_(return > 0)
         uint8_t AppendWordsToList(
             _In_ collections::IVector<uint32_t> wordList
         );
 
     private:
+        _Success_(return > 0)
         uint8_t GetValidMessageWordCount() { return internal::GetUmpLengthInMidiWordsFromFirstWord(m_data.Word0); }
 
         internal::MidiTimestamp m_timestamp{ 0 };
 
         // this does mean each event argument is up to 12 bytes larger than it needs to be, but this
         // is more efficient speed-wise, and avoids additional heap allocations.
-
 
         internal::PackedMaxInternalUmpStorage m_data{};
 

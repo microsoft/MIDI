@@ -38,6 +38,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             _In_ midi2::MidiServiceLoopbackEndpointDefinition const& endpointDefinitionA,
             _In_ midi2::MidiServiceLoopbackEndpointDefinition const& endpointDefinitionB) noexcept;
 
+        _Success_(return == true)
         static bool RemoveTemporaryLoopbackEndpoints(_In_ winrt::guid const& associationId) noexcept;
 
         static midi2::MidiServiceConfigurationResponse UpdateTransportPluginConfiguration(
@@ -45,8 +46,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         static midi2::MidiServiceConfigurationResponse UpdateProcessingPluginConfiguration(
             _In_ midi2::IMidiServiceMessageProcessingPluginConfiguration const& configurationUpdate) noexcept;
-
-
 
 
         static json::JsonObject InternalSendConfigurationJsonAndGetResponse(

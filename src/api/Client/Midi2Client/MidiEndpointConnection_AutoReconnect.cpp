@@ -9,8 +9,6 @@
 #include "pch.h"
 #include "MidiEndpointConnection.h"
 
-
-
 namespace MIDI_CPP_NAMESPACE::implementation
 {
     // Called by the Session class when a device disconnect notification comes through

@@ -9,9 +9,6 @@
 #include "pch.h"
 #include "MidiEndpointConnection.h"
 
-
-
-
 namespace MIDI_CPP_NAMESPACE::implementation
 {
     _Use_decl_annotations_

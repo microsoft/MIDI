@@ -24,6 +24,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         collections::IVectorView<midi2::MidiServiceSessionConnectionInfo> Connections() { return m_connections.GetView(); }
 
+
         void InternalInitialize(
             _In_ winrt::guid sessionId,
             _In_ winrt::hstring sessionName,

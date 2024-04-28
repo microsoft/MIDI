@@ -8,8 +8,8 @@
 
 #include "namespace_defines.h"
 #include "midl_defines.h"
-MIDI_IDL_IMPORT
 
+MIDI_IDL_IMPORT
 
 namespace MIDI_MIDL_NAMESPACE
 {

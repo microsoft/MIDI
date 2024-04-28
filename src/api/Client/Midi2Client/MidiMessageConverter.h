@@ -15,12 +15,14 @@ namespace MIDI_CPP_NAMESPACE::implementation
     {
         MidiMessageConverter() = default;
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage32 ConvertMidi1Message(
             _In_ internal::MidiTimestamp timestamp,
             _In_ midi2::MidiGroup const& group,
             _In_ uint8_t const statusByte
         ) noexcept;
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage32 ConvertMidi1Message(
             _In_ internal::MidiTimestamp timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -28,6 +30,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             _In_ uint8_t const dataByte1
         ) noexcept;
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage32 ConvertMidi1Message(
             _In_ internal::MidiTimestamp timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -41,6 +44,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         // System Common and System Real-time
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage32 ConvertMidi1TimeCodeMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -56,6 +60,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             return nullptr;
         }
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage32 ConvertMidi1SongPositionPointerMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -71,6 +76,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             return message;
         }
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage32 ConvertMidi1SongSelectMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -86,6 +92,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             return message;
         }
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage32 ConvertMidi1TuneRequestMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -102,6 +109,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
 
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage32 ConvertMidi1TimingClockMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -118,6 +126,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
 
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage32 ConvertMidi1StartMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -133,6 +142,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             return message;
         }
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage32 ConvertMidi1ContinueMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -149,6 +159,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
 
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage32 ConvertMidi1StopMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -164,6 +175,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             return message;
         }
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage32 ConvertMidi1ActiveSensingMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -179,6 +191,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             return nullptr;
         }
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage32 ConvertMidi1SystemResetMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -197,6 +210,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         // Channel Voice
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage32 ConvertMidi1ChannelPressureMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -213,6 +227,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
 
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage32 ConvertMidi1NoteOffMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -229,6 +244,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
 
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage32 ConvertMidi1NoteOnMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -244,6 +260,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             return message;
         }
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage32 ConvertMidi1PitchBendChangeMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -259,6 +276,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             return message;
         }
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage32 ConvertMidi1PolyphonicKeyPressureMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -274,6 +292,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             return message;
         }
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage32 ConvertMidi1ProgramChangeMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -288,9 +307,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
             return message;
         }
-
-
-
 
 
     private:

@@ -19,6 +19,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         winrt::hstring ResponseJson() { return m_responseJson; }
 
+
         void InternalSetStatus(_In_ midi2::MidiServiceConfigurationResponseStatus const status) noexcept { m_status = status; }
         void InternalSetResponseJson(_In_ winrt::hstring const& responseJson) noexcept { m_responseJson = responseJson; }
 

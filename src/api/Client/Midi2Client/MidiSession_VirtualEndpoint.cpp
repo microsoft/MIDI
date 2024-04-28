@@ -17,9 +17,9 @@ namespace MIDI_CPP_NAMESPACE::implementation
     // TODO: Wrap up all this JSON crud in another function 
 
     _Use_decl_annotations_
-        midi2::MidiEndpointConnection MidiSession::CreateVirtualDeviceAndConnection(
-            midi2::MidiVirtualEndpointDeviceDefinition const& deviceDefinition
-        ) noexcept
+    midi2::MidiEndpointConnection MidiSession::CreateVirtualDeviceAndConnection(
+        midi2::MidiVirtualEndpointDeviceDefinition const& deviceDefinition
+    ) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Enter");
 

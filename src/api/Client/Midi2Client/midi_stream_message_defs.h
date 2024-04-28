@@ -6,8 +6,6 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-
-
 #define MIDI_CACHE_PROPERTY_ENDPOINT_PRODUCT_INSTANCE_ID L"Endpoint.ProductInstanceId"
 #define MIDI_CACHE_PROPERTY_ENDPOINT_NAME L"Endpoint.Name"
 #define MIDI_CACHE_PROPERTY_ENDPOINT_DEVICE_IDENTITY L"Endpoint.DeviceIdentity"

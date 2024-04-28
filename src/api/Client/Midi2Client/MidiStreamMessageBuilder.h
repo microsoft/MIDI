@@ -16,6 +16,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
     {
         MidiStreamMessageBuilder() = default;
 
+        _Success_(return != nullptr)
         static midi2::IMidiUniversalPacket BuildEndpointDiscoveryMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const umpVersionMajor,
@@ -23,6 +24,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             _In_ midi2::MidiEndpointDiscoveryRequests const requestFlags
             ) noexcept;
 
+        _Success_(return != nullptr)
         static midi2::IMidiUniversalPacket BuildEndpointInfoNotificationMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const umpVersionMajor,
@@ -35,6 +37,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             _In_ bool const supportsSendingJitterReductionTimestamps
             ) noexcept;
 
+        _Success_(return != nullptr)
         static midi2::IMidiUniversalPacket BuildDeviceIdentityNotificationMessage(
             _In_ internal::MidiTimestamp timestamp,
             _In_ uint8_t const deviceManufacturerSysExIdByte1,
@@ -60,6 +63,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             _In_ winrt::hstring const& productInstanceId
             );
 
+        _Success_(return != nullptr)
         static midi2::IMidiUniversalPacket BuildStreamConfigurationRequestMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const protocol,
@@ -67,6 +71,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             _In_ bool const requestToSendJRTimestamps
             );
 
+        _Success_(return != nullptr)
         static midi2::IMidiUniversalPacket BuildStreamConfigurationNotificationMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const protocol,
@@ -86,12 +91,14 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         // function blocks
 
+        _Success_(return != nullptr)
         static midi2::IMidiUniversalPacket BuildFunctionBlockDiscoveryMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const functionBlockNumber,
             _In_ midi2::MidiFunctionBlockDiscoveryRequests requestFlags
             );
 
+        _Success_(return != nullptr)
         static midi2::IMidiUniversalPacket BuildFunctionBlockInfoNotificationMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ bool const active,
@@ -120,7 +127,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
 
     private:
-
         static collections::IVector<midi2::IMidiUniversalPacket> BuildSplitTextMessages(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const status,
@@ -128,7 +134,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
             _In_ uint8_t const maxCharacters,
             _In_ uint8_t const maxCharactersPerPacket,
             _In_ winrt::hstring const& text);
-
 
         inline static void AppendCharToString(
             _In_ std::string& s, 
@@ -141,6 +146,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
     };
 }
+
 namespace MIDI_CPP_NAMESPACE::factory_implementation
 {
     struct MidiStreamMessageBuilder : MidiStreamMessageBuilderT<MidiStreamMessageBuilder, implementation::MidiStreamMessageBuilder, winrt::static_lifetime>

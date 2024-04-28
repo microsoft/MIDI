@@ -74,6 +74,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         void SetName(_In_ winrt::hstring value) { m_name = value; }
         void SetSettings(_In_ midi2::MidiSessionSettings value) { m_settings = value; }
 
+        _Success_(return == true)
         bool InternalStart();
 
     private:

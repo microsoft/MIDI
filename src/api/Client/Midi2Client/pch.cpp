@@ -6,5 +6,4 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-
 #include "pch.h"

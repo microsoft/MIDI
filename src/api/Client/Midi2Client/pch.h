@@ -42,6 +42,7 @@ namespace enumeration = ::winrt::Windows::Devices::Enumeration;
 #include <queue>
 #include <mutex>
 #include <format>
+#include <filesystem>
 
 // include this before any project includes
 #include "namespace_defines.h"

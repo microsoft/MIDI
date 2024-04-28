@@ -73,18 +73,18 @@ namespace MIDI_CPP_NAMESPACE::implementation
     }
 
     _Use_decl_annotations_
-        midi2::MidiEndpointConnection MidiSession::CreateEndpointConnection(
-            winrt::hstring const& endpointDeviceId,
-            bool autoReconnect
-        ) noexcept
+    midi2::MidiEndpointConnection MidiSession::CreateEndpointConnection(
+        winrt::hstring const& endpointDeviceId,
+        bool autoReconnect
+    ) noexcept
     {
         return CreateEndpointConnection(endpointDeviceId, autoReconnect, nullptr);
     }
 
     _Use_decl_annotations_
-        midi2::MidiEndpointConnection MidiSession::CreateEndpointConnection(
-            winrt::hstring const& endpointDeviceId
-        ) noexcept
+    midi2::MidiEndpointConnection MidiSession::CreateEndpointConnection(
+        winrt::hstring const& endpointDeviceId
+    ) noexcept
     {
         return CreateEndpointConnection(endpointDeviceId, false, nullptr);
     }
@@ -94,9 +94,9 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
 
     _Use_decl_annotations_
-        void MidiSession::DisconnectEndpointConnection(
-            winrt::guid const& endpointConnectionId
-        ) noexcept
+    void MidiSession::DisconnectEndpointConnection(
+        winrt::guid const& endpointConnectionId
+    ) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Disconnect endpoint connection");
 
@@ -144,8 +144,5 @@ namespace MIDI_CPP_NAMESPACE::implementation
             internal::LogGeneralError(__FUNCTION__, L" Unknown exception disconnecting endpoint connection");
         }
     }
-
-
-
 
 }

@@ -16,13 +16,13 @@ namespace MIDI_CPP_NAMESPACE::implementation
         MidiServiceLoopbackEndpointDefinition() = default;
 
         winrt::hstring Name() const { return m_name; }
-        void Name(winrt::hstring const& value) { m_name = internal::TrimmedHStringCopy(value); }
+        void Name(_In_ winrt::hstring const& value) { m_name = internal::TrimmedHStringCopy(value); }
 
         winrt::hstring UniqueId() const { return m_uniqueId; }
-        void UniqueId(winrt::hstring const& value) { m_uniqueId = internal::TrimmedHStringCopy(value); }
+        void UniqueId(_In_ winrt::hstring const& value) { m_uniqueId = internal::TrimmedHStringCopy(value); }
 
         winrt::hstring Description() const { return m_description; }
-        void Description(winrt::hstring const& value) { m_description = internal::TrimmedHStringCopy(value); }
+        void Description(_In_ winrt::hstring const& value) { m_description = internal::TrimmedHStringCopy(value); }
 
     private:
         winrt::hstring m_name{};
@@ -30,6 +30,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         winrt::hstring m_description{};
     };
 }
+
 namespace MIDI_CPP_NAMESPACE::factory_implementation
 {
     struct MidiServiceLoopbackEndpointDefinition : MidiServiceLoopbackEndpointDefinitionT<MidiServiceLoopbackEndpointDefinition, implementation::MidiServiceLoopbackEndpointDefinition>

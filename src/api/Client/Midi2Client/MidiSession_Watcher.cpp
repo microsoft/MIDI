@@ -119,7 +119,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
     void MidiSession::DeviceUpdatedHandler(
         enumeration::DeviceWatcher source,
         enumeration::DeviceInformationUpdate args
-        )
+    )
     {
         UNREFERENCED_PARAMETER(source);
 
@@ -133,13 +133,13 @@ namespace MIDI_CPP_NAMESPACE::implementation
     void MidiSession::DeviceRemovedHandler(
         enumeration::DeviceWatcher source,
         enumeration::DeviceInformationUpdate args
-        )
+    )
     {
         UNREFERENCED_PARAMETER(source);
 
         internal::LogInfo(__FUNCTION__, args.Id().c_str(), args.Id());
 
-        // TODO: Search all connections to see if we're tracking this one.
+        // Search all connections to see if we're tracking this one.
         // If we are, and it is not in the auto-reconnect map, then
         // close/disconnect the connection completely
         
@@ -147,10 +147,15 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         for (auto const& conn : m_connectionsForAutoReconnect)
         {
+            // there can be more than one match, so we don't
+            // break after the first one is found
             if (id == conn->EndpointDeviceId())
             {
                 conn->InternalOnDeviceDisconnect();
             }
         }
     }
+
+
+
 }

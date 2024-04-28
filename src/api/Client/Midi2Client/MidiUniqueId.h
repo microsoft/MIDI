@@ -70,6 +70,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         uint8_t m_byte4{};
     };
 }
+
 namespace MIDI_CPP_NAMESPACE::factory_implementation
 {
     struct MidiUniqueId : MidiUniqueIdT<MidiUniqueId, implementation::MidiUniqueId>

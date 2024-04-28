@@ -15,11 +15,14 @@ namespace MIDI_CPP_NAMESPACE::implementation
     {
         MidiMessageBuilder() = default;
 
+        
+        _Success_(return != nullptr)
         static midi2::MidiMessage32 BuildUtilityMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const status, 
             _In_ uint32_t const dataOrReserved) noexcept;
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage32 BuildSystemMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -27,6 +30,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             _In_ uint8_t const midi1Byte2, 
             _In_ uint8_t const midi1Byte3) noexcept;
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage32 BuildMidi1ChannelVoiceMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -35,6 +39,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             _In_ uint8_t const byte3,
             _In_ uint8_t const byte4) noexcept;
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage64 BuildSystemExclusive7Message(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -47,6 +52,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             _In_ uint8_t const dataByte4,
             _In_ uint8_t const dataByte5) noexcept;
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage64 BuildMidi2ChannelVoiceMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -55,6 +61,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             _In_ uint16_t const index,
             _In_ uint32_t const data) noexcept;
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage128 BuildSystemExclusive8Message(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -75,6 +82,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             _In_ uint8_t const dataByte11,
             _In_ uint8_t const dataByte12) noexcept;
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage128 BuildMixedDataSetChunkHeaderMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -87,6 +95,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             _In_ uint16_t const subId1,
             _In_ uint16_t const subId2);
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage128 BuildMixedDataSetChunkDataMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -106,6 +115,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             _In_ uint8_t const dataByte12,
             _In_ uint8_t const dataByte13);
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage128 BuildFlexDataMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -118,6 +128,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             _In_ uint32_t const word2Data,
             _In_ uint32_t const word3Data);
 
+        _Success_(return != nullptr)
         static midi2::MidiMessage128 BuildStreamMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const form,

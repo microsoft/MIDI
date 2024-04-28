@@ -24,6 +24,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         foundation::Collections::IVectorView<midi2::MidiServicePingResponse> Responses() const noexcept { return m_responses.GetView(); }
 
+
         void InternalSetFailed(_In_ winrt::hstring failureReason) { m_success = false; m_failureReason = failureReason; }
         void InternalSetSucceeded() { m_success = true; }
 

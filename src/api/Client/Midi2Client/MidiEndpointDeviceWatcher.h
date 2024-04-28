@@ -28,7 +28,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         {
             return m_deviceAddedEvent.add(handler);
         }
-        void Added(winrt::event_token const& token) noexcept
+        void Added(_In_ winrt::event_token const& token) noexcept
         {
             if (m_deviceAddedEvent) m_deviceAddedEvent.remove(token);
         }
@@ -37,7 +37,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
         {
             return m_deviceRemovedEvent.add(handler);
         }
-
         void Removed(_In_ winrt::event_token const& token) noexcept
         {
             if (m_deviceRemovedEvent) m_deviceRemovedEvent.remove(token);
@@ -124,11 +123,11 @@ namespace MIDI_CPP_NAMESPACE::implementation
         collections::IMap<winrt::hstring, midi2::MidiEndpointDeviceInformation> m_enumeratedEndpointDevices = 
             winrt::single_threaded_map<winrt::hstring, midi2::MidiEndpointDeviceInformation>();
 
-
         winrt::Windows::Devices::Enumeration::DeviceWatcher m_watcher{ nullptr };
 
     };
 }
+
 namespace MIDI_CPP_NAMESPACE::factory_implementation
 {
     struct MidiEndpointDeviceWatcher : MidiEndpointDeviceWatcherT<MidiEndpointDeviceWatcher, implementation::MidiEndpointDeviceWatcher>
