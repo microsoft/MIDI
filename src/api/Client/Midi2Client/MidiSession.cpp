@@ -158,11 +158,30 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         internal::LogInfo(__FUNCTION__, L"Enter");
 
-        // TODO: Implement UpdateName
+        // this can be called only if we've already initialized the session tracker
+        if (m_sessionTracker)
+        {
+            DWORD clientProcessId = GetCurrentProcessId();
 
+            auto hr = m_sessionTracker->UpdateClientSessionName(m_id, m_name.c_str(), clientProcessId);
 
-        return false;
+            if (SUCCEEDED(hr))
+            {
+                return true;
+            }
+            else
+            {
+                internal::LogHresultError(__FUNCTION__, L"Unable to update session name", hr);
 
+                return false;
+            }
+        }
+        else
+        {
+            internal::LogGeneralError(__FUNCTION__, L"Session tracker interface wasn't already initialized.");
+
+            return false;
+        }
     }
 
 

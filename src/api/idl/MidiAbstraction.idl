@@ -286,19 +286,15 @@ interface IMidiSessionTracker : IUnknown
         [in] LPCWSTR ClientProcessName 
     );
 
+    HRESULT UpdateClientSessionName(
+        [in] GUID SessionId,
+        [in] LPCWSTR SessionName,
+        [in] DWORD ClientProcessId
+    );
+
     HRESULT RemoveClientSession(
         [in] GUID SessionId
     );
-
-    //HRESULT AddClientEndpointConnection(
-    //    [in] GUID SessionId, 
-    //    [in] LPCWSTR ConnectionEndpointInterfaceId
-    //);
-
-    //HRESULT RemoveClientEndpointConnection(
-    //    [in] GUID SessionId, 
-    //    [in] LPCWSTR ConnectionEndpointInterfaceId
-    //);
 
     HRESULT GetSessionListJson(
         [out] BSTR* SessionList
@@ -309,7 +305,6 @@ interface IMidiSessionTracker : IUnknown
     HRESULT VerifyConnectivity();
 
     HRESULT Cleanup();
-
 };
 
 

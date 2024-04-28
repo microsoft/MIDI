@@ -66,6 +66,89 @@ CMidiSessionTracker::AddClientSession(
     return S_OK;
 }
 
+// TODO: I don't like how this can be called from any process
+// So really should have PID verification, some shared key, or
+// other security to tie these calls and their calling context
+// to the specific app. 
+_Use_decl_annotations_
+HRESULT
+CMidiSessionTracker::UpdateClientSessionName(
+    GUID SessionId,
+    LPCWSTR SessionName,
+    DWORD ClientProcessId
+)
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingGuid(SessionId),
+        TraceLoggingWideString(SessionName)
+    );
+
+    // clean up the session name
+    std::wstring newName{ SessionName };
+    internal::InPlaceTrim(newName);
+
+    if (!newName.empty())
+    {
+        if (auto session = m_sessions.find(SessionId); session != m_sessions.end())
+        {
+            if (session->second.ClientProcessId == ClientProcessId)
+            {
+                m_sessions[SessionId].SessionName = newName;
+
+                return S_OK;
+            }
+            else
+            {
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    __FUNCTION__,
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"E_NOTFOUND. No matching session for this client process.", "message"),
+                    TraceLoggingGuid(SessionId),
+                    TraceLoggingWideString(SessionName)
+                    );
+
+                return E_NOTFOUND;
+            }
+        }
+        else
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"E_NOTFOUND. No matching session", "message"),
+                TraceLoggingGuid(SessionId),
+                TraceLoggingWideString(SessionName)
+            );
+
+            return E_NOTFOUND;
+        }
+    }
+    else
+    {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"E_INVALIDARG. Trimmed session name is empty", "message"),
+            TraceLoggingGuid(SessionId),
+            TraceLoggingWideString(SessionName)
+        );
+
+        return E_INVALIDARG;
+    }
+
+}
+
+
 _Use_decl_annotations_
 HRESULT
 CMidiSessionTracker::RemoveClientSession(

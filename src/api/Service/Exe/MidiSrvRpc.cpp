@@ -273,6 +273,41 @@ MidiSrvRegisterSession(
 }
 
 HRESULT
+MidiSrvUpdateSessionName(
+    /* [in] */ handle_t BindingHandle,
+    __RPC__in GUID SessionId,
+    __RPC__in_string LPCWSTR SessionName,
+    __RPC__in DWORD ProcessId
+)
+{
+    UNREFERENCED_PARAMETER(BindingHandle);
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingWideString(L"Enter")
+    );
+
+    std::shared_ptr<CMidiSessionTracker> sessionTracker;
+
+    auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
+
+    RETURN_IF_FAILED(g_MidiService->GetSessionTracker(sessionTracker));
+
+    RETURN_IF_FAILED(sessionTracker->UpdateClientSessionName(SessionId, SessionName, ProcessId));
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingWideString(L"Exit success")
+    );
+
+    return S_OK;
+}
+
+HRESULT
 MidiSrvDeregisterSession(
     /* [in] */ handle_t BindingHandle,
     __RPC__in GUID SessionId

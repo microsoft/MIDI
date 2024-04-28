@@ -114,6 +114,12 @@ interface MidiSrvRPC
         [in] DWORD ProcessId, 
         [in, string] LPCWSTR ProcessName);
 
+    HRESULT MidiSrvUpdateSessionName(
+        [in] handle_t BindingHandle,
+        [in] GUID SessionId,
+        [in, string] LPCWSTR SessionName,
+        [in] DWORD ProcessId);
+
     HRESULT MidiSrvDeregisterSession(
         [in] handle_t BindingHandle, 
         [in] GUID SessionId);
