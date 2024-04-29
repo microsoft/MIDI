@@ -89,6 +89,7 @@ interface MidiSrvRPC
         [in, string] LPCWSTR MidiDevice, 
         [in] PMIDISRV_CLIENTCREATION_PARAMS CreationParams, 
         [in] GUID SessionId, 
+        [in] DWORD ClientProcessId,
         [out] PMIDISRV_CLIENT *Client);
 
     HRESULT MidiSrvDestroyClient(
@@ -110,9 +111,9 @@ interface MidiSrvRPC
     HRESULT MidiSrvRegisterSession(
         [in] handle_t BindingHandle, 
         [in] GUID SessionId, 
-        [in, string] LPCWSTR SessionName, 
-        [in] DWORD ProcessId, 
-        [in, string] LPCWSTR ProcessName);
+        [in, string] LPCWSTR SessionName,
+        [in] DWORD ProcessId,
+        [in] LPCWSTR ProcessName);
 
     HRESULT MidiSrvUpdateSessionName(
         [in] handle_t BindingHandle,

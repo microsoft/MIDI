@@ -64,13 +64,20 @@ CMidi2MidiSrv::Initialize(
     creationParams.BufferSize = PAGE_SIZE * 2;
 
 
+    // Get process id 
+    DWORD clientProcessId = GetCurrentProcessId();
+
+    // Get process name
+
+
+
     RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
 
     RETURN_IF_FAILED([&]()
     {
         // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
         // with structured exception handling.
-        RpcTryExcept RETURN_IF_FAILED(MidiSrvCreateClient(bindingHandle.get(), Device, &creationParams, SessionId, &client));
+        RpcTryExcept RETURN_IF_FAILED(MidiSrvCreateClient(bindingHandle.get(), Device, &creationParams, SessionId, clientProcessId, &client));
         RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
         RpcEndExcept
         return S_OK;

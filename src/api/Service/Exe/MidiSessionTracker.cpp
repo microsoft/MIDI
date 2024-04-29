@@ -24,7 +24,7 @@ CMidiSessionTracker::VerifyConnectivity()
 
 _Use_decl_annotations_
 HRESULT
-CMidiSessionTracker::AddClientSession(
+CMidiSessionTracker::AddClientSessionInternal(
     GUID SessionId,
     LPCWSTR SessionName,
     DWORD ClientProcessId,
@@ -65,6 +65,22 @@ CMidiSessionTracker::AddClientSession(
 
     return S_OK;
 }
+
+
+_Use_decl_annotations_
+HRESULT
+CMidiSessionTracker::AddClientSession(
+    GUID SessionId,
+    LPCWSTR SessionName
+)
+{
+    UNREFERENCED_PARAMETER(SessionId);
+    UNREFERENCED_PARAMETER(SessionName);
+
+    // we don't implement this here. It's required for the abstraction.
+    return E_NOTIMPL;
+}
+
 
 // TODO: I don't like how this can be called from any process
 // So really should have PID verification, some shared key, or
@@ -171,6 +187,28 @@ CMidiSessionTracker::RemoveClientSession(
     return S_OK;
 }
 
+
+_Use_decl_annotations_
+HRESULT
+CMidiSessionTracker::IsValidSession(
+    GUID SessionId, 
+    DWORD ClientProcessId
+)
+{
+
+    if (auto session = m_sessions.find(SessionId); session != m_sessions.end())
+    {
+        if (session->second.ClientProcessId == ClientProcessId)
+        {
+            return S_OK;
+        }
+    }
+
+    return E_NOTFOUND;
+}
+
+
+
 _Use_decl_annotations_
 HRESULT
 CMidiSessionTracker::AddClientEndpointConnection(
@@ -209,10 +247,19 @@ CMidiSessionTracker::AddClientEndpointConnection(
     }
     else
     {
-        // we have a connection and no session. Create a session to hold it and
-        // then call this again
-        RETURN_IF_FAILED(AddClientSession(SessionId, L"Unknown Session", 0, L"Unknown Process"));
-        RETURN_IF_FAILED(AddClientEndpointConnection(SessionId, ConnectionEndpointInterfaceId));    // interface id will get cleaned up on second pass
+        // we have a connection and no session. Fail
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingGuid(SessionId),
+            TraceLoggingWideString(ConnectionEndpointInterfaceId),
+            TraceLoggingWideString(L"No valid session found. Returning E_NOTFOUND.", "message")
+        );
+
+        return E_NOTFOUND;
     }
 
     return S_OK;

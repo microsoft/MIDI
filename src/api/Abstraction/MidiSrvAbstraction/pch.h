@@ -40,6 +40,8 @@ using namespace winrt;
 #include <winmeta.h>
 #include <TraceLoggingProvider.h>
 
+#include <filesystem>
+
 #include "Midi2MidiSrvAbstraction_i.c"
 #include "Midi2MidiSrvAbstraction.h"
 

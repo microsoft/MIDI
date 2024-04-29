@@ -46,7 +46,7 @@ CMidiEndpointProtocolManager::Initialize(
     // processes have any given device open.
     auto pid = GetCurrentProcessId();
 
-    LOG_IF_FAILED(m_sessionTracker->AddClientSession(
+    LOG_IF_FAILED(m_sessionTracker->AddClientSessionInternal(
         m_sessionId,
         MIDI_PROTOCOL_MANAGER_SESSION_NAME,
         pid,

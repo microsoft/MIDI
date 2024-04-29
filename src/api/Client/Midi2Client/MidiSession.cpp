@@ -93,31 +93,31 @@ namespace MIDI_CPP_NAMESPACE::implementation
                 {
                     m_sessionTracker->Initialize();
 
-                    DWORD clientProcessId = GetCurrentProcessId();
+                    //DWORD clientProcessId = GetCurrentProcessId();
 
-                    //std::wstring modulePath{ _wpgmptr };
+                    ////std::wstring modulePath{ _wpgmptr };
 
-                    std::wstring modulePath{ 0 };
-                    modulePath.resize(2048);   // MAX_PATH is almost never big enough. This is a wild shot. Not going to allocate 32k chars for this but I know this will bite me some day
+                    //std::wstring modulePath{ 0 };
+                    //modulePath.resize(2048);   // MAX_PATH is almost never big enough. This is a wild shot. Not going to allocate 32k chars for this but I know this will bite me some day
 
-                    auto numPathCharacters = GetModuleFileName(NULL, modulePath.data(), (DWORD)modulePath.capacity());
-                    
-                    if (numPathCharacters > 0)
-                    {
-                        internal::LogInfo(__FUNCTION__, (std::wstring(L"Module Path: ") + modulePath).c_str());
+                    //auto numPathCharacters = GetModuleFileName(NULL, modulePath.data(), (DWORD)modulePath.capacity());
+                    //
+                    //if (numPathCharacters > 0)
+                    //{
+                    //    internal::LogInfo(__FUNCTION__, (std::wstring(L"Module Path: ") + modulePath).c_str());
 
-                        std::wstring processName = (std::filesystem::path(modulePath).filename()).c_str();
-                        internal::LogInfo(__FUNCTION__, (std::wstring(L"Process Name: ") + processName).c_str());
+                    //    std::wstring processName = (std::filesystem::path(modulePath).filename()).c_str();
+                    //    internal::LogInfo(__FUNCTION__, (std::wstring(L"Process Name: ") + processName).c_str());
 
-                        m_sessionTracker->AddClientSession(m_id, m_name.c_str(), clientProcessId, processName.c_str());
-                    }
-                    else
-                    {
-                        // couldn't get the process name
-                        internal::LogGeneralError(__FUNCTION__, L"Unable to get current process name.");
+                        m_sessionTracker->AddClientSession(m_id, m_name.c_str());
+                    //}
+                    //else
+                    //{
+                    //    // couldn't get the process name
+                    //    internal::LogGeneralError(__FUNCTION__, L"Unable to get current process name.");
 
-                        return false;
-                    }
+                    //    return false;
+                    //}
                 }
                 else
                 {

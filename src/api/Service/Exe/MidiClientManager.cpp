@@ -771,6 +771,7 @@ CMidiClientManager::CreateMidiClient(
     handle_t BindingHandle,
     LPCWSTR MidiDevice,
     GUID SessionId,
+    DWORD ClientProcessId,
     PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
     PMIDISRV_CLIENT Client,
     BOOL InternalProtocolNegotiationUseOnly
@@ -784,6 +785,10 @@ CMidiClientManager::CreateMidiClient(
         TraceLoggingWideString(MidiDevice),
         TraceLoggingGuid(SessionId)
     );
+
+    // TODO: Need to pass in the client process id
+    RETURN_IF_FAILED(m_SessionTracker->IsValidSession(SessionId, ClientProcessId));
+
 
     if (InternalProtocolNegotiationUseOnly && Client->DataFormat != MidiDataFormat::MidiDataFormat_UMP)
     {
@@ -1057,6 +1062,10 @@ CMidiClientManager::CreateMidiClient(
         clientConnectionPipe.reset();
         newClientConnectionPipe.reset();
     }
+
+    // TODO: We need to verify the valid session before allowing client creation
+    // This will keep apps from bypassing this feature, which is an important
+    // requested feature from users.
 
     m_SessionTracker->AddClientEndpointConnection(SessionId, MidiDevice);
 

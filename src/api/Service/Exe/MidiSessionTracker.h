@@ -46,14 +46,17 @@ public:
 
     STDMETHOD(Initialize)();
 
-    // These are called from the API
-    STDMETHOD(AddClientSession)(_In_ GUID SessionId, _In_ LPCWSTR SessionName, _In_ DWORD ClientProcessId, _In_ LPCWSTR ClientProcessName);
+    
+    // interface method. It's a dummy method because we need to pass up the processid and process name from the abstraction
+    STDMETHOD(AddClientSession)(_In_ GUID SessionId, _In_ LPCWSTR SessionName);
     STDMETHOD(UpdateClientSessionName)(_In_ GUID SessionId, _In_ LPCWSTR SessionName, _In_ DWORD ClientProcessId);
     STDMETHOD(RemoveClientSession)(_In_ GUID SessionId);
 
     // These are called from within the service
-    HRESULT AddClientEndpointConnection(_In_ GUID SessionId, _In_ LPCWSTR ConnectionEndpointInterfaceId);
-    HRESULT RemoveClientEndpointConnection(_In_ GUID SessionId, _In_ LPCWSTR ConnectionEndpointInterfaceId);
+    STDMETHOD(IsValidSession)(_In_ GUID SessionId, _In_ DWORD ClientProcessId);
+    STDMETHOD(AddClientSessionInternal)(_In_ GUID SessionId, _In_ LPCWSTR SessionName, _In_ DWORD ClientProcessId, _In_ LPCWSTR ClientProcessName);
+    STDMETHOD(AddClientEndpointConnection)(_In_ GUID SessionId, _In_ LPCWSTR ConnectionEndpointInterfaceId);
+    STDMETHOD(RemoveClientEndpointConnection)(_In_ GUID SessionId, _In_ LPCWSTR ConnectionEndpointInterfaceId);
 
     // This is called from the API
     STDMETHOD(GetSessionListJson)(_Out_ BSTR* SessionList);

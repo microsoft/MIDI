@@ -89,6 +89,7 @@ HRESULT MidiSrvCreateClient(
     /* [string][in] */ __RPC__in_string LPCWSTR MidiDevice,
     /* [in] */ __RPC__in PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
     /* [in] */ __RPC__in GUID SessionId,
+    /* [in] */ __RPC__in DWORD ClientProcessId,
     /* [out] */ __RPC__deref_out_opt PMIDISRV_CLIENT *Client
     )
 {
@@ -116,9 +117,11 @@ HRESULT MidiSrvCreateClient(
 
     ZeroMemory(createdClient, sizeof(MIDISRV_CLIENT));
 
+    
+
     // Client manager creates the client, fills in the MIDISRV_CLIENT information
     RETURN_IF_FAILED(g_MidiService->GetClientManager(clientManager));
-    RETURN_IF_FAILED(clientManager->CreateMidiClient(BindingHandle, MidiDevice, SessionId, CreationParams, createdClient, false));
+    RETURN_IF_FAILED(clientManager->CreateMidiClient(BindingHandle, MidiDevice, SessionId, ClientProcessId, CreationParams, createdClient, false));
 
     // Success, transfer the MIDISRV_CLIENT data to the caller.
     *Client = createdClient;
@@ -260,7 +263,7 @@ MidiSrvRegisterSession(
 
     RETURN_IF_FAILED(g_MidiService->GetSessionTracker(sessionTracker));
 
-    RETURN_IF_FAILED(sessionTracker->AddClientSession(SessionId, SessionName, ProcessId, ProcessName));
+    RETURN_IF_FAILED(sessionTracker->AddClientSessionInternal(SessionId, SessionName, ProcessId, ProcessName));
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),

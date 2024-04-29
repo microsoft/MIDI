@@ -190,12 +190,9 @@ interface IMidiDataTransform : IUnknown
 };
 
 
-
-// IMidiConfigurationManager for sending config json to 
-// an endpoint, transform, or the service at runtime
-// The json section sent contains only changes, not the 
-// entire configuration for the entity
-
+// we're going to want one of these for transforms, but it needs to have
+// enough context to be able to target a specific instance of a transform
+// for a specific device
 [
     object,
     local,
@@ -218,7 +215,6 @@ interface IMidiAbstractionConfigurationManager : IUnknown
 
     HRESULT Cleanup();
 };
-
 
 
 [
@@ -281,9 +277,7 @@ interface IMidiSessionTracker : IUnknown
 
     HRESULT AddClientSession(
         [in] GUID SessionId,
-        [in] LPCWSTR SessionName,
-        [in] DWORD ClientProcessId,
-        [in] LPCWSTR ClientProcessName 
+        [in] LPCWSTR SessionName
     );
 
     HRESULT UpdateClientSessionName(

@@ -52,14 +52,11 @@ CMidi2MidiSrvSessionTracker::VerifyConnectivity()
 }
 
 
-
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvSessionTracker::AddClientSession(
     GUID SessionId,
-    LPCWSTR SessionName,
-    DWORD ClientProcessId,
-    LPCWSTR ClientProcessName
+    LPCWSTR SessionName
 )
 {
     TraceLoggingWrite(
@@ -71,15 +68,42 @@ CMidi2MidiSrvSessionTracker::AddClientSession(
 
     wil::unique_rpc_binding bindingHandle;
 
+    // get process id and name
+    DWORD clientProcessId = GetCurrentProcessId();
+
+    std::wstring modulePath{ 0 };
+    modulePath.resize(2048);   // MAX_PATH is almost never big enough. This is a wild shot. Not going to allocate 32k chars for this but I know this will bite me some day
+
+    auto numPathCharacters = GetModuleFileName(NULL, modulePath.data(), (DWORD)modulePath.capacity());
+
+    std::wstring clientProcessName{};
+
+    if (numPathCharacters > 0)
+    {
+        clientProcessName = (std::filesystem::path(modulePath).filename()).c_str();
+    }
+    else
+    {
+        // couldn't get the current process name
+        TraceLoggingWrite(
+            MidiSrvAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Unable to get current process name", "message")
+        );
+
+    }
+
+
     RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
-    RETURN_HR_IF_NULL(E_INVALIDARG, ClientProcessName);
     RETURN_HR_IF_NULL(E_INVALIDARG, SessionName);
 
     RETURN_IF_FAILED([&]()
         {
             // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
             // with structured exception handling.
-            RpcTryExcept RETURN_IF_FAILED(MidiSrvRegisterSession(bindingHandle.get(), SessionId, SessionName, ClientProcessId, ClientProcessName));
+            RpcTryExcept RETURN_IF_FAILED(MidiSrvRegisterSession(bindingHandle.get(), SessionId, SessionName, clientProcessId, clientProcessName.c_str()));
             RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
             RpcEndExcept
             

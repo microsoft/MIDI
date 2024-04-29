@@ -32,6 +32,7 @@ CMidi2MidiSrvBiDi::Initialize(
         TraceLoggingPointer(this, "this")
         );
 
+
     std::unique_ptr<CMidi2MidiSrv> midiSrv(new (std::nothrow) CMidi2MidiSrv());
     RETURN_IF_NULL_ALLOC(midiSrv);
 
