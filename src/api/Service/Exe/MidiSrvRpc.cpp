@@ -245,7 +245,8 @@ MidiSrvRegisterSession(
     __RPC__in GUID SessionId,
     __RPC__in_string LPCWSTR SessionName,
     __RPC__in DWORD ProcessId,
-    __RPC__in_string LPCWSTR ProcessName
+    __RPC__in_string LPCWSTR ProcessName,
+    __RPC__deref_out_opt PMIDISRV_CONTEXT_HANDLE* ContextHandle
 )
 {
     UNREFERENCED_PARAMETER(BindingHandle);
@@ -263,7 +264,7 @@ MidiSrvRegisterSession(
 
     RETURN_IF_FAILED(g_MidiService->GetSessionTracker(sessionTracker));
 
-    RETURN_IF_FAILED(sessionTracker->AddClientSessionInternal(SessionId, SessionName, ProcessId, ProcessName));
+    RETURN_IF_FAILED(sessionTracker->AddClientSessionInternal(SessionId, SessionName, ProcessId, ProcessName, ContextHandle));
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -278,12 +279,14 @@ MidiSrvRegisterSession(
 HRESULT
 MidiSrvUpdateSessionName(
     /* [in] */ handle_t BindingHandle,
+    __RPC__in PMIDISRV_CONTEXT_HANDLE ContextHandle,
     __RPC__in GUID SessionId,
     __RPC__in_string LPCWSTR SessionName,
     __RPC__in DWORD ProcessId
 )
 {
     UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(ContextHandle);
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -313,10 +316,12 @@ MidiSrvUpdateSessionName(
 HRESULT
 MidiSrvDeregisterSession(
     /* [in] */ handle_t BindingHandle,
+    __RPC__in PMIDISRV_CONTEXT_HANDLE ContextHandle,
     __RPC__in GUID SessionId
 )
 {
     UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(ContextHandle);
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -342,6 +347,36 @@ MidiSrvDeregisterSession(
 
     return S_OK;
 }
+
+void 
+__RPC_USER PMIDISRV_CONTEXT_HANDLE_rundown(
+    __RPC__in PMIDISRV_CONTEXT_HANDLE phContext
+)
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingWideString(L"Enter context handle rundown")
+    );
+
+    std::shared_ptr<CMidiSessionTracker> sessionTracker;
+
+    auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
+
+    auto trHR = g_MidiService->GetSessionTracker(sessionTracker);
+
+    if (SUCCEEDED(trHR))
+    {
+        LOG_IF_FAILED(sessionTracker->RemoveClientSessionInternal(phContext));
+    }
+
+}
+
+
+
+
+
 
 HRESULT
 MidiSrvGetSessionList(

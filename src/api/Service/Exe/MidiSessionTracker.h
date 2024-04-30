@@ -33,6 +33,8 @@ struct MidiSessionEntry
     std::wstring SessionName;
 
     std::map<std::wstring, MidiSessionConnectionEntry> Connections;
+    std::vector<MidiClientHandle> ClientHandles;
+
 };
 
 
@@ -54,9 +56,12 @@ public:
 
     // These are called from within the service
     STDMETHOD(IsValidSession)(_In_ GUID SessionId, _In_ DWORD ClientProcessId);
-    STDMETHOD(AddClientSessionInternal)(_In_ GUID SessionId, _In_ LPCWSTR SessionName, _In_ DWORD ClientProcessId, _In_ LPCWSTR ClientProcessName);
-    STDMETHOD(AddClientEndpointConnection)(_In_ GUID SessionId, _In_ LPCWSTR ConnectionEndpointInterfaceId);
-    STDMETHOD(RemoveClientEndpointConnection)(_In_ GUID SessionId, _In_ LPCWSTR ConnectionEndpointInterfaceId);
+    STDMETHOD(AddClientSessionInternal)(_In_ GUID SessionId, _In_ LPCWSTR SessionName, _In_ DWORD ClientProcessId, _In_ LPCWSTR ClientProcessName, _Out_ PVOID* ContextHandle);
+    STDMETHOD(AddClientEndpointConnection)(_In_ GUID SessionId, _In_ LPCWSTR ConnectionEndpointInterfaceId, _In_ MidiClientHandle ClientHandle);
+    STDMETHOD(RemoveClientEndpointConnection)(_In_ GUID SessionId, _In_ LPCWSTR ConnectionEndpointInterfaceId, _In_ MidiClientHandle ClientHandle);
+
+    STDMETHOD(RemoveClientSessionInternal)(_In_ PVOID ContextHandle);
+
 
     // This is called from the API
     STDMETHOD(GetSessionListJson)(_Out_ BSTR* SessionList);
@@ -67,6 +72,6 @@ public:
 
 private:
     std::map<GUID, MidiSessionEntry, GUIDCompare> m_sessions{};
-
+    std::map<PVOID, GUID> m_sessionContextHandles{};
 
 };

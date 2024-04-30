@@ -22,9 +22,9 @@ CMidi2MidiSrvAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiSrvAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- Midi in",
+            __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
+            TraceLoggingWideString(L"IMidiIn", "interface"),
             TraceLoggingPointer(this, "this")
             );
 
@@ -36,9 +36,9 @@ CMidi2MidiSrvAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiSrvAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- Midi Out",
+            __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
+            TraceLoggingWideString(L"IMidiOut", "interface"),
             TraceLoggingPointer(this, "this")
             );
 
@@ -50,9 +50,9 @@ CMidi2MidiSrvAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiSrvAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- Midi BiDi",
+            __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
+            TraceLoggingWideString(L"IMidiBiDi", "interface"),
             TraceLoggingPointer(this, "this")
             );
 
@@ -64,9 +64,9 @@ CMidi2MidiSrvAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiSrvAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- IMidiAbstractionConfigurationManager",
+            __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
+            TraceLoggingWideString(L"IMidiAbstractionConfigurationManager", "interface"),
             TraceLoggingPointer(this, "this")
         );
 
@@ -79,9 +79,9 @@ CMidi2MidiSrvAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiSrvAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- IMidiAbstractionConfigurationManager",
+            __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
+            TraceLoggingWideString(L"IMidiServicePluginMetadataReporterInterface", "interface"),
             TraceLoggingPointer(this, "this")
         );
 
@@ -97,7 +97,7 @@ CMidi2MidiSrvAbstraction::Activate(
             MidiSrvAbstractionTelemetryProvider::Provider(),
             __FUNCTION__ "- IMidiSessionTracker",
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
+            TraceLoggingWideString(L"IMidiSessionTracker", "interface"),
             TraceLoggingPointer(this, "this")
         );
 

@@ -91,33 +91,19 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
                 if (SUCCEEDED(m_serviceAbstraction->Activate(__uuidof(IMidiSessionTracker), (void**)&m_sessionTracker)))
                 {
-                    m_sessionTracker->Initialize();
+                    auto initHR = m_sessionTracker->Initialize();
+                    if (FAILED(initHR))
+                    {
+                        internal::LogHresultError(__FUNCTION__, L"Unable to initialize session tracker", initHR);
+                        return false;
+                    }
 
-                    //DWORD clientProcessId = GetCurrentProcessId();
-
-                    ////std::wstring modulePath{ _wpgmptr };
-
-                    //std::wstring modulePath{ 0 };
-                    //modulePath.resize(2048);   // MAX_PATH is almost never big enough. This is a wild shot. Not going to allocate 32k chars for this but I know this will bite me some day
-
-                    //auto numPathCharacters = GetModuleFileName(NULL, modulePath.data(), (DWORD)modulePath.capacity());
-                    //
-                    //if (numPathCharacters > 0)
-                    //{
-                    //    internal::LogInfo(__FUNCTION__, (std::wstring(L"Module Path: ") + modulePath).c_str());
-
-                    //    std::wstring processName = (std::filesystem::path(modulePath).filename()).c_str();
-                    //    internal::LogInfo(__FUNCTION__, (std::wstring(L"Process Name: ") + processName).c_str());
-
-                        m_sessionTracker->AddClientSession(m_id, m_name.c_str());
-                    //}
-                    //else
-                    //{
-                    //    // couldn't get the process name
-                    //    internal::LogGeneralError(__FUNCTION__, L"Unable to get current process name.");
-
-                    //    return false;
-                    //}
+                    auto addHR = m_sessionTracker->AddClientSession(m_id, m_name.c_str());
+                    if (FAILED(addHR))
+                    {
+                        internal::LogHresultError(__FUNCTION__, L"Unable to add client session to session tracker", addHR);
+                        return false;
+                    }
                 }
                 else
                 {
@@ -125,7 +111,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
                     return false;
                 }
-
             }
             else
             {
@@ -154,19 +139,20 @@ namespace MIDI_CPP_NAMESPACE::implementation
     _Use_decl_annotations_
     bool MidiSession::UpdateName(winrt::hstring const& newName) noexcept
     {
-        UNREFERENCED_PARAMETER(newName);
-
         internal::LogInfo(__FUNCTION__, L"Enter");
+
+        auto cleanName = internal::TrimmedHStringCopy(newName);
 
         // this can be called only if we've already initialized the session tracker
         if (m_sessionTracker)
         {
             DWORD clientProcessId = GetCurrentProcessId();
 
-            auto hr = m_sessionTracker->UpdateClientSessionName(m_id, m_name.c_str(), clientProcessId);
+            auto hr = m_sessionTracker->UpdateClientSessionName(m_id, cleanName.c_str(), clientProcessId);
 
             if (SUCCEEDED(hr))
             {
+                m_name = cleanName;
                 return true;
             }
             else

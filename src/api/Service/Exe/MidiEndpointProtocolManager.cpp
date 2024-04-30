@@ -50,7 +50,8 @@ CMidiEndpointProtocolManager::Initialize(
         m_sessionId,
         MIDI_PROTOCOL_MANAGER_SESSION_NAME,
         pid,
-        MIDI_PROTOCOL_MANAGER_PROCESS_NAME));
+        MIDI_PROTOCOL_MANAGER_PROCESS_NAME,
+        nullptr));
  
 
     return S_OK;

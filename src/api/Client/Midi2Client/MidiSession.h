@@ -78,6 +78,10 @@ namespace MIDI_CPP_NAMESPACE::implementation
         bool InternalStart();
 
     private:
+        // this helps us clean up when/if a client crashes or otherwise
+        // doesn't clean up its session before closing
+      //  VOID* m_serviceRpcContextHandle{ nullptr };
+
         bool m_isOpen{ false };
         winrt::guid m_id{};
         winrt::hstring m_name{};
@@ -86,6 +90,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
         bool m_useMmcss{ true };
         DWORD m_mmcssTaskId{ 0 };
 
+        // everything in the session needs to use this service abstraction because the
+        // context handle is tied to it.
         winrt::com_ptr<IMidiAbstraction> m_serviceAbstraction;
         winrt::com_ptr<IMidiSessionTracker> m_sessionTracker;
 

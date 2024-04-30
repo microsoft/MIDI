@@ -35,6 +35,8 @@ public:
 private:
     std::unique_ptr<CMidi2MidiSrv> m_MidiSrv;
 
-    GUID m_abstractionGuid;
+    PVOID m_contextHandle{ nullptr };
+
+    //GUID m_abstractionGuid;
 };
 

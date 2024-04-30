@@ -1,4 +1,4 @@
 <Include>
   <?define SetupVersionName="Developer Preview 6 arm64" ?>
-  <?define SetupVersionNumber="1.0.24120.1712" ?>
+  <?define SetupVersionNumber="1.0.24121.0103" ?>
 </Include>

@@ -41,14 +41,6 @@ CMidi2MidiSrvSessionTracker::VerifyConnectivity()
         }());
 
     return S_OK;
-
-
-
-
-
-
-
-
 }
 
 
@@ -92,7 +84,6 @@ CMidi2MidiSrvSessionTracker::AddClientSession(
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Unable to get current process name", "message")
         );
-
     }
 
 
@@ -103,7 +94,7 @@ CMidi2MidiSrvSessionTracker::AddClientSession(
         {
             // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
             // with structured exception handling.
-            RpcTryExcept RETURN_IF_FAILED(MidiSrvRegisterSession(bindingHandle.get(), SessionId, SessionName, clientProcessId, clientProcessName.c_str()));
+            RpcTryExcept RETURN_IF_FAILED(MidiSrvRegisterSession(bindingHandle.get(), SessionId, SessionName, clientProcessId, clientProcessName.c_str(), &m_contextHandle));
             RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
             RpcEndExcept
             
@@ -137,7 +128,7 @@ CMidi2MidiSrvSessionTracker::UpdateClientSessionName(
         {
             // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
             // with structured exception handling.
-            RpcTryExcept RETURN_IF_FAILED(MidiSrvUpdateSessionName(bindingHandle.get(), SessionId, SessionName, ClientProcessId));
+            RpcTryExcept RETURN_IF_FAILED(MidiSrvUpdateSessionName(bindingHandle.get(), m_contextHandle, SessionId, SessionName, ClientProcessId));
             RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
             RpcEndExcept
 
@@ -169,7 +160,7 @@ CMidi2MidiSrvSessionTracker::RemoveClientSession(
         {
             // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
             // with structured exception handling.
-            RpcTryExcept RETURN_IF_FAILED(MidiSrvDeregisterSession(bindingHandle.get(), SessionId));
+            RpcTryExcept RETURN_IF_FAILED(MidiSrvDeregisterSession(bindingHandle.get(), m_contextHandle, SessionId));
             RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
             RpcEndExcept
 

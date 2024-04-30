@@ -28,7 +28,8 @@ CMidiSessionTracker::AddClientSessionInternal(
     GUID SessionId,
     LPCWSTR SessionName,
     DWORD ClientProcessId,
-    LPCWSTR ClientProcessName 
+    LPCWSTR ClientProcessName,
+    PVOID* ContextHandle
 )
 {
     TraceLoggingWrite(
@@ -62,6 +63,23 @@ CMidiSessionTracker::AddClientSessionInternal(
 //    GetSystemTime(&entry.StartTime);
 
     m_sessions[SessionId] = entry;
+
+    // this can be anything that hangs around.
+    // we should provide something more durable
+    // here in case we ever use the pointer. Map
+    // pointers are not guaranteed to be immutable
+    // as I recall
+
+    // TODO: We could make this number just a hash or something
+
+    if (ContextHandle != nullptr)
+    {
+        auto contextHandleValue = &(m_sessions[SessionId]);
+
+        *ContextHandle = (PVOID)contextHandleValue;
+
+        m_sessionContextHandles[*ContextHandle] = SessionId;
+    }
 
     return S_OK;
 }
@@ -188,6 +206,52 @@ CMidiSessionTracker::RemoveClientSession(
 }
 
 
+// this gets called when the client crashes
+_Use_decl_annotations_
+HRESULT
+CMidiSessionTracker::RemoveClientSessionInternal(
+    PVOID ContextHandle
+)
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingPointer(ContextHandle)
+    );
+
+    RETURN_HR_IF_NULL(E_INVALIDARG, ContextHandle);
+
+    auto sessionIdMapEntry = m_sessionContextHandles.find(ContextHandle);
+
+    if (sessionIdMapEntry != m_sessionContextHandles.end())
+    {
+        auto sessionEntry = m_sessions.find(sessionIdMapEntry->second);
+
+        if (sessionEntry != m_sessions.end())
+        {
+            // TODO: Remove each client connection using the MidiClientManager
+
+
+
+            // TODO: Remove this session entry
+
+
+
+
+
+
+        }
+    }
+
+    return S_OK;
+}
+
+
+
+
+
 _Use_decl_annotations_
 HRESULT
 CMidiSessionTracker::IsValidSession(
@@ -213,8 +277,9 @@ _Use_decl_annotations_
 HRESULT
 CMidiSessionTracker::AddClientEndpointConnection(
     GUID SessionId, 
-    LPCWSTR ConnectionEndpointInterfaceId
-)
+    LPCWSTR ConnectionEndpointInterfaceId,
+    MidiClientHandle ClientHandle
+    )
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -232,7 +297,7 @@ CMidiSessionTracker::AddClientEndpointConnection(
     newConnection.ConnectedEndpointInterfaceId = cleanEndpointId;
     newConnection.InstanceCount = 1;
     newConnection.EarliestStartTime = std::chrono::system_clock::now();
-
+       
     if (auto sessionEntry = m_sessions.find(SessionId); sessionEntry != m_sessions.end())
     {
         if (auto connection = sessionEntry->second.Connections.find(cleanEndpointId); connection != sessionEntry->second.Connections.end())
@@ -244,6 +309,9 @@ CMidiSessionTracker::AddClientEndpointConnection(
         {
             sessionEntry->second.Connections[cleanEndpointId] = newConnection;
         }
+
+        // need to end up removing these laters
+        sessionEntry->second.ClientHandles.push_back(ClientHandle);
     }
     else
     {
@@ -269,7 +337,8 @@ _Use_decl_annotations_
 HRESULT
 CMidiSessionTracker::RemoveClientEndpointConnection(
     GUID SessionId, 
-    LPCWSTR ConnectionEndpointInterfaceId
+    LPCWSTR ConnectionEndpointInterfaceId,
+    MidiClientHandle /*ClientHandle*/
 )
 {
     TraceLoggingWrite(

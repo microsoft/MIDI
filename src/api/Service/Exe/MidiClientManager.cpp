@@ -1067,7 +1067,7 @@ CMidiClientManager::CreateMidiClient(
     // This will keep apps from bypassing this feature, which is an important
     // requested feature from users.
 
-    m_SessionTracker->AddClientEndpointConnection(SessionId, MidiDevice);
+    m_SessionTracker->AddClientEndpointConnection(SessionId, MidiDevice, Client->ClientHandle);
 
     cleanupOnFailure.release();
 
@@ -1102,7 +1102,7 @@ CMidiClientManager::DestroyMidiClient(
 
         midiClientPipe->Cleanup();
 
-        m_SessionTracker->RemoveClientEndpointConnection(midiClientPipe->SessionId(), client->second->MidiDevice().c_str());
+        m_SessionTracker->RemoveClientEndpointConnection(midiClientPipe->SessionId(), client->second->MidiDevice().c_str(), ClientHandle);
 
         for (auto transform = m_TransformPipes.begin(); transform != m_TransformPipes.end();)
         {
