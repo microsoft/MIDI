@@ -9,16 +9,23 @@
 #include "stdafx.h"
 
 
+_Use_decl_annotations_
 HRESULT
-CMidiSessionTracker::Initialize()
+CMidiSessionTracker::Initialize(std::shared_ptr<CMidiClientManager>& clientManager)
 {
+    m_clientManager = clientManager;
+
     return S_OK;
 }
+
+
+
 
 
 HRESULT
 CMidiSessionTracker::VerifyConnectivity()
 {
+    // if this gets called, we have connectivity
     return S_OK;
 }
 
@@ -223,6 +230,8 @@ CMidiSessionTracker::RemoveClientSessionInternal(
 
     RETURN_HR_IF_NULL(E_INVALIDARG, ContextHandle);
 
+    std::shared_ptr<CMidiClientManager> clientManager = m_clientManager.lock();
+
     auto sessionIdMapEntry = m_sessionContextHandles.find(ContextHandle);
 
     if (sessionIdMapEntry != m_sessionContextHandles.end())
@@ -233,15 +242,17 @@ CMidiSessionTracker::RemoveClientSessionInternal(
         {
             // TODO: Remove each client connection using the MidiClientManager
 
+            while (sessionEntry->second.ClientHandles.size() > 0)
+            {
+                auto clientHandle = *(sessionEntry->second.ClientHandles.begin());
 
+                sessionEntry->second.ClientHandles.erase(sessionEntry->second.ClientHandles.begin());
 
-            // TODO: Remove this session entry
+                clientManager->DestroyMidiClient((handle_t)nullptr, clientHandle);
+            }
 
-
-
-
-
-
+            // Remove this session entry
+            m_sessions.erase(sessionEntry);
         }
     }
 
@@ -449,7 +460,7 @@ CMidiSessionTracker::Cleanup()
         TraceLoggingPointer(this, "this")
     );
 
-
+    m_clientManager.reset();
 
     return S_OK;
 }

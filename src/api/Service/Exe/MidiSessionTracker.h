@@ -46,8 +46,11 @@ public:
     CMidiSessionTracker() {}
     ~CMidiSessionTracker() {}
 
-    STDMETHOD(Initialize)();
+    // needed for interface. A bit hacky
+    STDMETHOD(Initialize)() { return S_OK; }
 
+
+    STDMETHOD(Initialize)(_In_ std::shared_ptr<CMidiClientManager>& clientManager);
     
     // interface method. It's a dummy method because we need to pass up the processid and process name from the abstraction
     STDMETHOD(AddClientSession)(_In_ GUID SessionId, _In_ LPCWSTR SessionName);
@@ -71,6 +74,8 @@ public:
     STDMETHOD(Cleanup)();
 
 private:
+    std::weak_ptr<CMidiClientManager> m_clientManager;
+
     std::map<GUID, MidiSessionEntry, GUIDCompare> m_sessions{};
     std::map<PVOID, GUID> m_sessionContextHandles{};
 

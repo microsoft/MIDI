@@ -72,7 +72,8 @@ CMidiSrv::Initialize()
     RETURN_IF_NULL_ALLOC(m_SessionTracker);
 
 
-    RETURN_IF_FAILED(m_SessionTracker->Initialize());
+    // NOTE: client manager is not yet initialized when this is called
+    RETURN_IF_FAILED(m_SessionTracker->Initialize(m_ClientManager));
 
     RETURN_IF_FAILED(m_PerformanceManager->Initialize());
     RETURN_IF_FAILED(m_ProcessManager->Initialize());
