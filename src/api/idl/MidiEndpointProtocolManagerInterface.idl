@@ -61,7 +61,5 @@ interface IMidiEndpointProtocolManagerInterface : IUnknown
         [out, retval] PENDPOINTPROTOCOLNEGOTIATIONRESULTS* NegotiationResults
     );
 
-    // TODO: The above method should have out params for the discovered function blocks
-    // to make it easier for the endpoint to create initial MIDI 1.0 compat devices
 
 };

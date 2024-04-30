@@ -32,6 +32,8 @@ using namespace Microsoft::WRL::Wrappers;
 // never all 3 at the same time.
 //#define BIDI_REPLACES_INOUT_SWDS
 
+
+
 _Use_decl_annotations_
 HRESULT
 CMidi2KSMidiEndpointManager::Initialize(
@@ -74,8 +76,85 @@ CMidi2KSMidiEndpointManager::Initialize(
     return S_OK;
 }
 
+
+
+
+
+//
+// TODO: The OnDeviceAdded handler needs to be broken apart a bit
+// Break up pin iteration from device creation. It needs to have separate
+// branches for
+// - MIDI 2 UMP through a UMP driver
+//    - Also create compatible ports
+// - MIDI 1.0 byte stream through any driver
+//    - Also create the UMP device and fake GTB
+
+
+
+// A MIDI device that uses the new UMP driver
+// whether it is MIDI 1.0 or MIDI 2.0.
+HRESULT
+CreateEndpointsForUmpDataFormatDevice(DeviceInformation device, winrt::hstring deviceInstanceId, DeviceInformation parentDevice)
+{
+    //TraceLoggingWrite(
+    //    MidiKSAbstractionTelemetryProvider::Provider(),
+    //    __FUNCTION__,
+    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+    //    TraceLoggingPointer(this, "this"),
+    //    TraceLoggingWideString(device.Id().c_str(), "added device")
+    //);
+
+    // After creating the UMP endpoint, needs to kick
+    // of protocol negotiation, and then wait to hear
+    // back with the function blocks so the compatible
+    // MIDI 1.0 ports can be created
+
+
+
+    // Create MIDI 1.0 compat ports for a device that uses
+    // the new UMP driver, whether it is MIDI 1.0 or MIDI 2.0
+    // This needs to map these MIDI 1.0 ports to groups in the endpoint
+    // Should ideally work off of function blocks rather than GTBs, if available
+
+
+    return S_OK;
+}
+
+
+// Create a MIDI 1.0 compat port for a device that
+// uses any MIDI 1.0 class compat driver 
+HRESULT
+CreateEndpointsForMidi1DataFormatDevice(DeviceInformation device, winrt::hstring deviceInstanceId, DeviceInformation parentDevice)
+{
+    //TraceLoggingWrite(
+    //    MidiKSAbstractionTelemetryProvider::Provider(),
+    //    __FUNCTION__,
+    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+    //    TraceLoggingPointer(this, "this"),
+    //    TraceLoggingWideString(device.Id().c_str(), "added device")
+    //);
+
+    // First, this is the simplest approach. We have a MIDI 1.0 device, and we need
+    // to create the compatible MIDI 1.0 devices for it. 
+
+    // Create a UMP aggregated endpoint for one or more
+    // ports that are exposed via any MIDI 1.0 class 
+    // compat driver
+    // This needs to create a single aggregated endpoint for the device.
+    // Needs to map groups to the pins on the device.
+    // Needs to pull in the config file overrides for pin/group mapping
+
+    return S_OK;
+}
+
+
+
 _Use_decl_annotations_
-HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, DeviceInformation device)
+HRESULT 
+CMidi2KSMidiEndpointManager::OnDeviceAdded(
+    DeviceWatcher watcher, 
+    DeviceInformation device
+)
 {
     TraceLoggingWrite(
         MidiKSAbstractionTelemetryProvider::Provider(),
@@ -84,7 +163,6 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(device.Id().c_str(), "added device")
     );
-
 
     wil::unique_handle hFilter;
     std::wstring deviceName;
@@ -113,6 +191,20 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
     // second, can we retrieve the localized part name for the interface using KS? That would likely require
     // calling a property to get the name GUID from the filter, and then using that guid to locate the string
     // from the KS friendly name registry path.
+    //
+    // MIDI 1 port Name hierarchy for friendly name (and generated GTB name) from most preferred to least
+    // - User-supplied Name from config
+    // - iJack (some devices use this for the port name)
+    // - iInterface (+ index if more than one pin)
+    // - iProduct from USB (+ index if more than one pin)
+    //
+    // A single device can have multiple filters. Roland / Yamaha would prefer we aggregate those
+    // when creating the bidi interface.
+    //
+    // The SWD id generated for a MIDI 2.0 UMP endpoint should have the iSerialNumber, if provided, as the
+    // primary differentiator in the id. No hashing required unless it is too long.
+    //
+
     auto parentDeviceInfo = DeviceInformation::CreateFromIdAsync(deviceInstanceId,
         additionalProperties,winrt::Windows::Devices::Enumeration::DeviceInformationKind::Device).get();
     deviceName = parentDeviceInfo.Name();
@@ -125,6 +217,9 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
     // instantiate the interface
     RETURN_IF_FAILED(FilterInstantiate(deviceId.c_str(), &hFilter));
     RETURN_IF_FAILED(PinPropertySimple(hFilter.get(), 0, KSPROPSETID_Pin, KSPROPERTY_PIN_CTYPES, &cPins, sizeof(cPins)));
+
+    UINT portNumberDifferentiatorInput{ 0 };
+    UINT portNumberDifferentiatorOutput{ 0 };
 
     for (UINT i = 0; i < cPins; i++)
     {
@@ -140,15 +235,19 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
 
         std::unique_ptr<WCHAR> serialNumberData;
         ULONG serialNumberDataSize{ 0 };
+
         std::unique_ptr<WCHAR> manufacturerNameData;
         ULONG manufacturerNameDataSize{ 0 };
+
+        std::unique_ptr<WCHAR> pinNameData;
+        ULONG pinNameDataSize{ 0 };
 
         UINT16 deviceVID{ 0 };
         UINT16 devicePID{ 0 };
 
         RETURN_IF_FAILED(PinPropertySimple(hFilter.get(), i, KSPROPSETID_Pin, KSPROPERTY_PIN_COMMUNICATION, &communication, sizeof(KSPIN_COMMUNICATION)));
 
-        // The external connector pin representing the phsyical connection
+        // The external connector pin representing the physical connection
         // has KSPIN_COMMUNICATION_NONE. We can only create on software IO pins which
         // have a valid communication. Skip connector pins.
         if (KSPIN_COMMUNICATION_NONE == communication)
@@ -156,16 +255,66 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
             continue;
         }
 
+        // ================== Standard Byte / MIDI 1.0 Interfaces ===============================================
         // attempt to instantiate using standard streaming for UMP buffers
         // and set that flag if we can.
         // NOTE: this has been for bring up performance comparison testing only, and will be removed.
+        // (Note from Pete: the above statement doesn't seem correct. This is the branch all MIDI 1.0 devices with the old USB driver fall into)
         if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_StandardByteStream, &hPin)))
         {
-            transportCapability = ( MidiTransport )((DWORD) transportCapability | (DWORD) MidiTransport_StandardByteStream);
-            dataFormatCapability = ( MidiDataFormat ) ((DWORD) dataFormatCapability | (DWORD) MidiDataFormat_ByteStream);
+            transportCapability = (MidiTransport)((DWORD) transportCapability | (DWORD) MidiTransport_StandardByteStream);
+            dataFormatCapability = (MidiDataFormat) ((DWORD) dataFormatCapability | (DWORD) MidiDataFormat_ByteStream);
+
+            //midiPin->NativeDataFormat = KSDATAFORMAT_SUBTYPE_MIDI;
+
+            // get the name from the Pin. This is how many developers would prefer we name MIDI ports
+
+            LOG_IF_FAILED_WITH_EXPECTED(
+                PinPropertyAllocate(
+                    hFilter.get(), 
+                    i, 
+                    KSPROPSETID_Pin, 
+                    KSPROPERTY_PIN_NAME, 
+                    (PVOID*)&pinNameData,
+                    &pinNameDataSize),
+                HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
+
+            if (pinNameDataSize > 0)
+            {
+                // use the name from the pin. This is the most preferred name for most devices
+                deviceName = std::wstring(pinNameData.get());
+            }
+            else
+            {
+                // no pin name, so fall back to the interface name with a differentiator
+
+                RETURN_IF_FAILED(
+                    PinPropertySimple(
+                        hFilter.get(), 
+                        i, 
+                        KSPROPSETID_Pin, 
+                        KSPROPERTY_PIN_DATAFLOW, 
+                        &dataFlow, 
+                        sizeof(KSPIN_DATAFLOW)));
+
+                if (dataFlow == KSPIN_DATAFLOW_IN)
+                {
+                    // DATAFLOW_IN is an output port (in to the pin)
+                    deviceName = parentDeviceInfo.Name() + L" [Out " + std::to_wstring(portNumberDifferentiatorOutput++) + L"]";
+                }
+                else
+                {
+                    deviceName = parentDeviceInfo.Name() + L" [In " + std::to_wstring(portNumberDifferentiatorInput++) + L"]";
+                }
+            }
+
             hPin.reset();
+
+            // TEMP!
+            //deviceName += L"(MidiSrv)";
         }
 
+        // ================== Cyclic UMP Interfaces ===============================================
         // attempt to instantiate using cyclic streaming for UMP buffers
         // and set that flag if we can.
         if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_CyclicUMP, &hPin)))
@@ -179,73 +328,84 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
                 TraceLoggingWideString(L"Pin is a Cyclic UMP MIDI pin", "message")
             );
 
-            transportCapability = (MidiTransport )((DWORD) transportCapability |  (DWORD) MidiTransport_CyclicUMP);
-            dataFormatCapability = ( MidiDataFormat ) ((DWORD) dataFormatCapability | (DWORD) MidiDataFormat_UMP);
+            transportCapability = (MidiTransport)((DWORD) transportCapability |  (DWORD) MidiTransport_CyclicUMP);
+            dataFormatCapability = (MidiDataFormat) ((DWORD) dataFormatCapability | (DWORD) MidiDataFormat_UMP);
 
-            LOG_IF_FAILED_WITH_EXPECTED(PinPropertySimple(hPin.get(), 
-                                            i, 
-                                            KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
-                                            KSPROPERTY_MIDI2_NATIVEDATAFORMAT, 
-                                            &nativeDataFormat, 
-                                            sizeof(nativeDataFormat)),
-                                            HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
+            LOG_IF_FAILED_WITH_EXPECTED(
+                PinPropertySimple(hPin.get(), 
+                    i, 
+                    KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
+                    KSPROPERTY_MIDI2_NATIVEDATAFORMAT, 
+                    &nativeDataFormat, 
+                    sizeof(nativeDataFormat)),
+                HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
-            LOG_IF_FAILED_WITH_EXPECTED(PinPropertyAllocate(hPin.get(), 
-                                            i, 
-                                            KSPROPSETID_MIDI2_ENDPOINT_INFORMATION, 
-                                            KSPROPERTY_MIDI2_GROUP_TERMINAL_BLOCKS,
-                                            (PVOID *)&groupTerminalBlockData, 
-                                            &groupTerminalBlockDataSize),
-                                            HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
+            LOG_IF_FAILED_WITH_EXPECTED(
+                PinPropertyAllocate(hPin.get(), 
+                    i, 
+                    KSPROPSETID_MIDI2_ENDPOINT_INFORMATION, 
+                    KSPROPERTY_MIDI2_GROUP_TERMINAL_BLOCKS,
+                    (PVOID *)&groupTerminalBlockData, 
+                    &groupTerminalBlockDataSize),
+                HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
             //// Get the serial number
-            //LOG_IF_FAILED_WITH_EXPECTED(PinPropertyAllocate(hPin.get(),
-            //                                i,
-            //                                KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
-            //                                KSPROPERTY_MIDI2_SERIAL_NUMBER,
-            //                                (PVOID*)&serialNumberData,
-            //                                &serialNumberDataSize),
-            //                                HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
+            //LOG_IF_FAILED_WITH_EXPECTED(
+            //    PinPropertyAllocate(hPin.get(),
+            //        i,
+            //        KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
+            //        KSPROPERTY_MIDI2_SERIAL_NUMBER,
+            //        (PVOID*)&serialNumberData,
+            //        &serialNumberDataSize),
+            //    HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
 
             //// Get the manufacturer name
-            //LOG_IF_FAILED_WITH_EXPECTED(PinPropertyAllocate(hPin.get(),
-            //                                i,
-            //                                KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
-            //                                KSPROPERTY_MIDI2_DEVICE_MANUFACTURER,
-            //                                (PVOID*)&manufacturerNameData,
-            //                                &manufacturerNameDataSize),
-            //                                HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
+            //LOG_IF_FAILED_WITH_EXPECTED(
+            //    PinPropertyAllocate(hPin.get(),
+            //        i,
+            //        KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
+            //        KSPROPERTY_MIDI2_DEVICE_MANUFACTURER,
+            //        (PVOID*)&manufacturerNameData,
+            //        &manufacturerNameDataSize),
+            //    HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
             //// VID iVendor
-            //LOG_IF_FAILED_WITH_EXPECTED(PinPropertySimple(hPin.get(),
-            //                                i,
-            //                                KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
-            //                                KSPROPERTY_MIDI2_DEVICE_VID,
-            //                                &deviceVID,
-            //                                sizeof(deviceVID)),
-            //                                HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
+            //LOG_IF_FAILED_WITH_EXPECTED(
+            //    PinPropertySimple(hPin.get(),
+            //        i,
+            //        KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
+            //        KSPROPERTY_MIDI2_DEVICE_VID,
+            //        &deviceVID,
+            //        sizeof(deviceVID)),
+            //    HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
             //// PID iProduct
-            //LOG_IF_FAILED_WITH_EXPECTED(PinPropertySimple(hPin.get(),
-            //                                i,
-            //                                KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
-            //                                KSPROPERTY_MIDI2_DEVICE_PID,
-            //                                &devicePID,
-            //                                sizeof(devicePID)),
-            //                                HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
+            //LOG_IF_FAILED_WITH_EXPECTED(
+            //    PinPropertySimple(hPin.get(),
+            //        i,
+            //        KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
+            //        KSPROPERTY_MIDI2_DEVICE_PID,
+            //        &devicePID,
+            //        sizeof(devicePID)),
+            //    HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
-            hPin.reset();
+            //hPin.reset();
         }
 
+        // ================== Cyclic Byte / MIDI 1.0 Interfaces ===============================================
         // attempt to instantiate using standard streaming for midiOne buffers
         // and set that flag if we can.
         if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_CyclicByteStream, &hPin)))
         {
             transportCapability = (MidiTransport )((DWORD) transportCapability |  (DWORD) MidiTransport_CyclicByteStream);
             dataFormatCapability = ( MidiDataFormat ) ((DWORD) dataFormatCapability | (DWORD) MidiDataFormat_ByteStream);
+
+            //deviceName = L"ZZTestPortName_Cyc";
+
             hPin.reset();
         }
+
 
         // if this pin supports nothing, then it's not a streaming pin,
         // continue on
@@ -348,7 +508,16 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
 
         midiPin->InstanceId = L"MIDIU_KS_";
         midiPin->InstanceId += (midiPin->Flow == MidiFlowOut) ? L"OUT_" : L"IN_";
-        midiPin->InstanceId += hash;
+        
+        if (midiPin->SerialNumber.empty())
+        {
+            midiPin->InstanceId += hash;
+        }
+        else
+        {
+            midiPin->InstanceId += midiPin->SerialNumber;
+        }
+
         midiPin->InstanceId += L"_PIN.";
         midiPin->InstanceId += std::to_wstring(midiPin->PinId);
 
@@ -356,17 +525,11 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
     }
 
 #ifdef CREATE_KS_BIDI_SWDS
-    // TODO: This logic needs to change because we want ALL KS devices to show up
-    // as bidi, even if they have only a single pin. We need to map each to a logical
-    // group instead.
-    // https://github.com/microsoft/MIDI/issues/184
-     
-     
-    // there must be exactly two pins on this filter, midi in, and midi out,
-    // and they must have the exact same capabilities
-    if (newMidiPins.size() == 2 &&
+
+    // UMP devices only. Some redundant checking here, but just in case
+    if (newMidiPins.size() == 2 && 
         newMidiPins[0]->Flow != newMidiPins[1]->Flow &&
-        newMidiPins[0]->TransportCapability == newMidiPins[1]->TransportCapability)
+        (newMidiPins[0]->DataFormatCapability & MidiDataFormat::MidiDataFormat_UMP) == MidiDataFormat::MidiDataFormat_UMP )
     {
         auto midiInPinIndex = newMidiPins[0]->Flow == MidiFlowIn?0:1;
         auto midiOutPinIndex = newMidiPins[0]->Flow == MidiFlowOut?0:1;
@@ -408,11 +571,17 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         midiPin->NativeDataFormat = newMidiPins[midiOutPinIndex]->NativeDataFormat;
         midiPin->Flow = MidiFlowBidirectional;
 
-
-        // TODO: If provided, hash using the serial?
-
         midiPin->InstanceId = L"MIDIU_KS_BIDI_";
-        midiPin->InstanceId += hash;
+
+        if (midiPin->SerialNumber.empty())
+        {
+            midiPin->InstanceId += hash;
+        }
+        else
+        {
+            midiPin->InstanceId += midiPin->SerialNumber;
+        }
+
         midiPin->InstanceId += L"_OUTPIN.";
         midiPin->InstanceId += std::to_wstring(midiPin->PinId);
         midiPin->InstanceId += L"_INPIN.";
@@ -429,7 +598,105 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
 #endif
         newMidiPins.push_back(std::move(midiPin));
     }
+    
+    // TODO! The "false &&" is temporary
+    else if (false && (newMidiPins[0]->DataFormatCapability & MidiDataFormat::MidiDataFormat_ByteStream) == MidiDataFormat::MidiDataFormat_ByteStream)
+    {
+        // https://github.com/microsoft/MIDI/issues/184
+
+
+        // create an aggregated UMP device from existing MIDI 1.0 devices
+
+        // TODO
+        // - Create a map that maps bidi MIDI groups to the pins. 
+        // - This should have a way to override the group to pin maps via configuration
+
+
+
+//        auto midiInPinIndex = newMidiPins[0]->Flow == MidiFlowIn ? 0 : 1;
+//        auto midiOutPinIndex = newMidiPins[0]->Flow == MidiFlowOut ? 0 : 1;
+//
+        // create a new bidi entry
+        std::unique_ptr<MIDI_PIN_INFO> midiPin = std::make_unique<MIDI_PIN_INFO>();
+        RETURN_IF_NULL_ALLOC(midiPin);
+
+        // build out the map
+        // TODO: Check for preferred/remapping in config file
+
+        uint8_t currentInputGroup{ 0 };
+        uint8_t currentOutputGroup{ 0 };
+
+        for (auto &pin : newMidiPins)
+        {
+            MIDI1_GROUP_MAP map;
+            map.PinIndex = pin->PinId;
+
+            if (pin->Flow == MidiFlow::MidiFlowIn)
+            {
+                map.GroupIndex = currentInputGroup++;
+                midiPin->Midi1InputPortGroupMap.push_back(map);
+            }
+            else if(pin->Flow == MidiFlow::MidiFlowOut)
+            {
+                map.GroupIndex = currentOutputGroup++;
+                midiPin->Midi1OutputPortGroupMap.push_back(map);
+            }
+            else
+            {
+                // should be no bidi in here. This is unexpected.
+            }           
+        }
+
+//        midiPin->PinId = newMidiPins[midiOutPinIndex]->PinId;
+//        midiPin->PinIdIn = newMidiPins[midiInPinIndex]->PinId;
+//        midiPin->TransportCapability = newMidiPins[midiInPinIndex]->TransportCapability;
+//        midiPin->DataFormatCapability = newMidiPins[midiInPinIndex]->DataFormatCapability;
+        midiPin->Name = deviceName;
+        midiPin->Id = deviceId;
+        midiPin->ParentInstanceId = deviceInstanceId;
+
+        midiPin->SerialNumber = newMidiPins[0]->SerialNumber;
+        midiPin->ManufacturerName = newMidiPins[0]->ManufacturerName;
+
+        // TODO: Create fake Group Terminal blocks for the map
+        
+        
+         
+        midiPin->NativeDataFormat = KSDATAFORMAT_SUBTYPE_MIDI;
+        midiPin->Flow = MidiFlowBidirectional;
+
+        midiPin->InstanceId = L"MIDIU_KS_BIDI_";
+
+        if (midiPin->SerialNumber.empty())
+        {
+            midiPin->InstanceId += hash;
+        }
+        else
+        {
+            midiPin->InstanceId += midiPin->SerialNumber;
+        }
+
+        midiPin->InstanceId += L"_MULTPINS";
+
+//        midiPin->InstanceId += L"_OUTPIN.";
+//        midiPin->InstanceId += std::to_wstring(midiPin->PinId);
+//        midiPin->InstanceId += L"_INPIN.";
+//        midiPin->InstanceId += std::to_wstring(midiPin->PinIdIn);
+//
+#ifdef BIDI_REPLACES_INOUT_SWDS
+        // replace the existing entries with this one bidi entry
+        newMidiPins.clear();
+#else
+        // don't want to double the legacy SWD's, so if we are
+        // creating both in and out swd's, no need to duplicate
+        // bidirectional as well.
+        midiPin->CreateUMPOnly = TRUE;
 #endif
+//        newMidiPins.push_back(std::move(midiPin));
+
+    }
+#endif
+
 
     //in the added callback we're going to go ahead and create the SWD's:
     for (auto const& MidiPin : newMidiPins)

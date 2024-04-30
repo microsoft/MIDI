@@ -44,6 +44,9 @@
 #include <atlcoll.h>
 #include <atlsync.h>
 
+#include <atlconv.h>
+#include <string>
+
 #include <winmeta.h>
 #include <TraceLoggingProvider.h>
 
