@@ -348,6 +348,10 @@ MidiSrvDeregisterSession(
     return S_OK;
 }
 
+
+// Server context run-down routing. This is responsible for cleaning
+// up connections when the client doesn't close them correctly (like
+// if it crashes out)
 void 
 __RPC_USER PMIDISRV_CONTEXT_HANDLE_rundown(
     __RPC__in PMIDISRV_CONTEXT_HANDLE phContext
@@ -368,6 +372,7 @@ __RPC_USER PMIDISRV_CONTEXT_HANDLE_rundown(
 
     if (SUCCEEDED(trHR))
     {
+        //UNREFERENCED_PARAMETER(phContext);
         LOG_IF_FAILED(sessionTracker->RemoveClientSessionInternal(phContext));
     }
 
