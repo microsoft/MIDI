@@ -11,7 +11,7 @@
 
 #include <windows.h>
 #include <winternl.h>
-#include <ntstatus.h>
+//#include <ntstatus.h>
 
 
 #include <iostream>

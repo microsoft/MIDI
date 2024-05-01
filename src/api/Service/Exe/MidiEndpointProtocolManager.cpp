@@ -7,7 +7,6 @@
 // ============================================================================
 
 #include "stdafx.h"
-#include "Midi2MidiSrvAbstraction.h"
 #include "ump_helpers.h"
 #include "midi_ump_message_defs.h"
 

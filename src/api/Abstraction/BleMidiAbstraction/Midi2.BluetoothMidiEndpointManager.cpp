@@ -23,7 +23,7 @@ GUID AbstractionLayerGUID = ABSTRACTION_LAYER_GUID;
 _Use_decl_annotations_
 HRESULT
 CMidi2BluetoothMidiEndpointManager::Initialize(
-    IUnknown* MidiDeviceManager, 
+    IUnknown* /*MidiDeviceManager*/,
     IUnknown* /*midiEndpointProtocolManager*/
 )
 {
@@ -31,11 +31,7 @@ CMidi2BluetoothMidiEndpointManager::Initialize(
     // temporary because this may be crashing the service on start
     return S_OK;
 
-
-
-
-
-
+#if 0
     try
     {
         TraceLoggingWrite(
@@ -84,6 +80,7 @@ CMidi2BluetoothMidiEndpointManager::Initialize(
 
         return E_FAIL;
     }
+#endif
 }
 
 HRESULT

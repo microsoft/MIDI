@@ -203,8 +203,6 @@ CMidi2LoopbackMidiBiDi::SendMidiMessage(
             return E_FAIL;
         }
     }
-
-    return S_OK;
 }
 
 _Use_decl_annotations_

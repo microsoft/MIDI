@@ -11,6 +11,8 @@
 #ifndef SWD_HELPERS_H
 #define SWD_HELPERS_H
 
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Devices.Enumeration.h>
 
 #include <string>
 

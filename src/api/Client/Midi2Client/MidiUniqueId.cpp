@@ -14,7 +14,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
 {
     midi2::MidiUniqueId MidiUniqueId::CreateBroadcast()
     {
-        return MidiUniqueId(MIDI_MUID_BROADCAST);
+        auto uniqueid = winrt::make<MidiUniqueId>(MIDI_MUID_BROADCAST);
+        return uniqueid;
     }
 
     midi2::MidiUniqueId MidiUniqueId::CreateRandom()
@@ -26,7 +27,9 @@ namespace MIDI_CPP_NAMESPACE::implementation
         // get us out of the reserved area
         val <<= 8;
 
-        return MidiUniqueId(val);
+        auto uniqueid = winrt::make<MidiUniqueId>(val);
+
+        return uniqueid;
     }
 
     uint32_t MidiUniqueId::AsCombined28BitValue() const noexcept

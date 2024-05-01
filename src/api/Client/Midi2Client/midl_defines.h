@@ -18,8 +18,7 @@
 #define MIDI_API_CONTRACT_v1     [contract(Microsoft.Devices.Midi2ApiContract, 1)]
 
 #define MIDI_IDL_IMPORT \
-import "Midi2ApiContract.idl";
-
+import "Midi2ApiContract.idl"; \
 import "Windows.Foundation.idl"; \
 import "Windows.Devices.Enumeration.idl"; \
 import "Windows.Data.Json.idl"; \
