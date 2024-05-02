@@ -199,6 +199,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.SampleTransform", "Tr
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.SchedulerTransform", "Transform\SchedulerTransform\Midi2.SchedulerTransform.vcxproj", "{366FA284-D8C0-4CC5-B9A3-917EAB967173}"
+	ProjectSection(ProjectDependencies) = postProject
+		{EFB7CF90-7DEF-44CF-868A-191CA30E0FCF} = {EFB7CF90-7DEF-44CF-868A-191CA30E0FCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.Transform.unittests", "Test\Midi2.Transform.unittests\Midi2.Transform.unittests.vcxproj", "{1425218C-E6E6-40BB-B99B-052156749E2C}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -228,6 +231,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.LoopbackMidiAbstracti
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.UmpProtocolDownscalerTransform", "Transform\UmpProtocolDownscaler\Midi2.UmpProtocolDownscalerTransform.vcxproj", "{C31CEE7B-8BEC-46A6-A8FD-74BABB01A4FB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{EFB7CF90-7DEF-44CF-868A-191CA30E0FCF} = {EFB7CF90-7DEF-44CF-868A-191CA30E0FCF}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -668,7 +674,6 @@ Global
 		{3BFD29F8-004E-4AF3-A135-F96E659BA376}.Debug|ARM64.ActiveCfg = Debug|ARM64
 		{3BFD29F8-004E-4AF3-A135-F96E659BA376}.Debug|ARM64.Build.0 = Debug|ARM64
 		{3BFD29F8-004E-4AF3-A135-F96E659BA376}.Debug|ARM64EC.ActiveCfg = Debug|Any CPU
-		{3BFD29F8-004E-4AF3-A135-F96E659BA376}.Debug|ARM64EC.Build.0 = Debug|Any CPU
 		{3BFD29F8-004E-4AF3-A135-F96E659BA376}.Debug|x64.ActiveCfg = Debug|x64
 		{3BFD29F8-004E-4AF3-A135-F96E659BA376}.Debug|x64.Build.0 = Debug|x64
 		{3BFD29F8-004E-4AF3-A135-F96E659BA376}.Debug|x86.ActiveCfg = Debug|Any CPU
@@ -678,7 +683,6 @@ Global
 		{3BFD29F8-004E-4AF3-A135-F96E659BA376}.Release|ARM64.ActiveCfg = Release|ARM64
 		{3BFD29F8-004E-4AF3-A135-F96E659BA376}.Release|ARM64.Build.0 = Release|ARM64
 		{3BFD29F8-004E-4AF3-A135-F96E659BA376}.Release|ARM64EC.ActiveCfg = Release|Any CPU
-		{3BFD29F8-004E-4AF3-A135-F96E659BA376}.Release|ARM64EC.Build.0 = Release|Any CPU
 		{3BFD29F8-004E-4AF3-A135-F96E659BA376}.Release|x64.ActiveCfg = Release|Any CPU
 		{3BFD29F8-004E-4AF3-A135-F96E659BA376}.Release|x64.Build.0 = Release|Any CPU
 		{3BFD29F8-004E-4AF3-A135-F96E659BA376}.Release|x86.ActiveCfg = Release|Any CPU

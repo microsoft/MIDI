@@ -58,8 +58,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
             // winrt::create_instance fails by throwing an exception
             return false;
         }
-
-        return true;
     }
 
 

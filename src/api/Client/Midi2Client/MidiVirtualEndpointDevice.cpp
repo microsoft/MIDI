@@ -189,7 +189,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         if (args.MessageType() == MidiMessageType::Stream128)
         {
-            MidiMessage128 message{};
+            auto message = winrt::make<MidiMessage128>();
+
             if (args.FillMessage128(message))
             {
                 // if a endpoint discovery request, handle it with the data we have

@@ -67,7 +67,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         winrt::hstring const& sessionName
         ) noexcept
     {
-        return CreateSession(sessionName, MidiSessionSettings());
+        return CreateSession(sessionName, winrt::make<MidiSessionSettings>());
     }
 
     // Internal method called inside the API to connect to the abstraction. Called by the code which creates

@@ -329,6 +329,8 @@ bool DoSectionMidi1ApiEndpoints(_In_ bool verbose)
 
         return false;
     }
+
+    return true;
 }
 
 bool DoSectionPingTest(_In_ bool verbose, _In_ uint8_t pingCount)
@@ -490,6 +492,8 @@ void OutputSystemInfo(_In_ SYSTEM_INFO& sysinfo)
 
 bool DoSectionSystemInfo(_In_ bool verbose)
 {
+    UNREFERENCED_PARAMETER(verbose);
+
     OutputSectionHeader(MIDIDMP_SECTION_LABEL_OS);
     OutputStringField(MIDIDMP_FIELD_LABEL_OS_VERSION, GetOSVersion());
 

@@ -29,7 +29,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
             if (numWords == 1)
             {
-                MidiMessage32 ump{};
+                auto ump = winrt::make<MidiMessage32>();
+
                 ump.Timestamp(timestamp);
 
                 ump.Word0(iter.Current());
@@ -40,7 +41,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
             else if (numWords == 2)
             {
-                MidiMessage64 ump{};
+                auto ump = winrt::make<MidiMessage64>();
                 ump.Timestamp(timestamp);
 
                 ump.Word0(iter.Current());
@@ -54,7 +55,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
             else if (numWords == 3)
             {
-                MidiMessage96 ump{};
+                auto ump = winrt::make<MidiMessage96>();
                 ump.Timestamp(timestamp);
 
                 ump.Word0(iter.Current());
@@ -70,7 +71,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
             else if (numWords == 4)
             {
-                MidiMessage128 ump{};
+                auto ump = winrt::make<MidiMessage128>();
+
                 ump.Timestamp(timestamp);
 
                 ump.Word0(iter.Current());
