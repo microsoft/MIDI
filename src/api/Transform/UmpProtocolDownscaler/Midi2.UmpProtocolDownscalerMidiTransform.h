@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 #pragma once
 
-//#include <libmidi2/bytestreamToUMP.h>
 
 class CMidi2UmpProtocolDownscalerMidiTransform :
     public Microsoft::WRL::RuntimeClass<

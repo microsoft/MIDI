@@ -70,7 +70,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
 
     if (Length >= sizeof(uint32_t))
     {
-        auto originalWord0 = internal::MidiWordFromVoidPointer(Data);
+        auto originalWord0 = internal::MidiWord0FromVoidMessageDataPointer(Data);
 
         // only translate MT4 to MT2 (MIDI 2.0 protocol to MIDI 1.0 protocol)
         if (internal::GetUmpMessageTypeFromFirstWord(originalWord0) == MIDI_UMP_MESSAGE_TYPE_MIDI2_CHANNEL_VOICE_64)
@@ -83,8 +83,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
 
             //uint8_t* incomingDataPointer = (uint8_t*)Data;
 
-            auto originalWord1 = internal::MidiWordFromVoidPointer(((uint8_t*)Data) + sizeof(uint32_t));
-            //auto originalWord1 = internal::MidiWordFromBytes(bytes[7], bytes[6], bytes[5], bytes[4]);
+            auto originalWord1 = internal::MidiWord1FromVoidMessageDataPointer(((uint8_t*)Data) + sizeof(uint32_t));
 
             uint8_t groupIndex = internal::GetGroupIndexFromFirstWord(originalWord0);
             uint8_t channelIndex = internal::GetChannelIndexFromFirstWord(originalWord0);
@@ -204,7 +203,12 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
 
                     uint8_t noteNumber = MIDIWORDBYTE3(originalWord0);
                     uint8_t newVelocity = (uint8_t)(M2Utils::scaleDown(MIDIWORDSHORT1(originalWord1), SCALE_DOWN_FROM_16_BIT_VALUE, SCALE_TO_7_BIT_VALUE));
-                    //if (newVelocity == 0) newVelocity = 1;
+
+                    if (newVelocity == 0)
+                    {
+                        newVelocity = 1;
+                    }
+
                     newWord0 = UMPMessage::mt2NoteOn(groupIndex, channelIndex, noteNumber, newVelocity);
                     newData = &newWord0;
                     newLength = sizeof(uint32_t);

@@ -25,8 +25,8 @@
 #define MIDIWORDBYTE3(x) ((uint8_t)((x & 0x0000FF00) >> 8))
 #define MIDIWORDBYTE4(x) ((uint8_t)((x & 0x000000FF)))
 
-#define MIDIWORDSHORT1(x) ((uint8_t)((x & 0xFFFF0000) >> 16))
-#define MIDIWORDSHORT2(x) ((uint8_t)((x & 0x0000FFFF)))
+#define MIDIWORDSHORT1(x) ((uint16_t)((x & 0xFFFF0000) >> 16))
+#define MIDIWORDSHORT2(x) ((uint16_t)((x & 0x0000FFFF)))
 
 #define MIDIWORDHIGHBIT(x) (bool)((x & 0x80000000) != 0)
 
@@ -374,13 +374,32 @@ namespace WindowsMidiServicesInternal
 
     // this function assumes you've already done the required range checking
     // use this for any of the callbacks of SendMidMessage functions
-    inline uint32_t MidiWordFromVoidPointer(
+    inline uint32_t MidiWord0FromVoidMessageDataPointer(
         _In_ PVOID data)
     {
-        auto bytes = (uint8_t*)data;
-
-        return MidiWordFromBytes(bytes[3], bytes[2], bytes[1], bytes[0]);        
+        return *(uint32_t*)data;
     }
+
+    inline uint32_t MidiWord1FromVoidMessageDataPointer(
+        _In_ PVOID data)
+    {
+        return *(((uint8_t*)data) + sizeof(uint32_t));
+    }
+
+    inline uint32_t MidiWord2FromVoidMessageDataPointer(
+        _In_ PVOID data)
+    {
+        return *(((uint8_t*)data) + (sizeof(uint32_t) * 2));
+    }
+
+    inline uint32_t MidiWord3FromVoidMessageDataPointer(
+        _In_ PVOID data)
+    {
+        return *(((uint8_t*)data) + (sizeof(uint32_t) * 3));
+    }
+
+    
+
 
     inline uint16_t Combine7BitMsbLsbTo14BitValue(_In_ uint8_t msb, _In_ uint8_t lsb)
     {
