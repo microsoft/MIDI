@@ -29,18 +29,22 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
             if (numWords == 1)
             {
-                MidiMessage32 ump{};
+                midi2::MidiMessage32 ump{};
+                //auto ump = winrt::make<MidiMessage32>();
+
                 ump.Timestamp(timestamp);
 
                 ump.Word0(iter.Current());
                 iter.MoveNext();
 
-                result.Append(ump);
+                result.Append(std::move(ump));
             }
 
             else if (numWords == 2)
             {
-                MidiMessage64 ump{};
+                midi2::MidiMessage64 ump{};
+                //auto ump = winrt::make<MidiMessage64>();
+
                 ump.Timestamp(timestamp);
 
                 ump.Word0(iter.Current());
@@ -49,12 +53,14 @@ namespace MIDI_CPP_NAMESPACE::implementation
                 
                 iter.MoveNext();
 
-                result.Append(ump);
+                result.Append(std::move(ump));
             }
 
             else if (numWords == 3)
             {
-                MidiMessage96 ump{};
+                midi2::MidiMessage96 ump{};
+                //auto ump = winrt::make<MidiMessage96>();
+
                 ump.Timestamp(timestamp);
 
                 ump.Word0(iter.Current());
@@ -65,12 +71,14 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
                 iter.MoveNext();
 
-                result.Append(ump);
+                result.Append(std::move(ump));
             }
 
             else if (numWords == 4)
             {
-                MidiMessage128 ump{};
+                midi2::MidiMessage128 ump{};
+                //auto ump = winrt::make<MidiMessage128>();
+
                 ump.Timestamp(timestamp);
 
                 ump.Word0(iter.Current());
@@ -80,7 +88,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
                 if (iter.MoveNext()) ump.Word2(iter.Current()); else break;
                 if (iter.MoveNext()) ump.Word3(iter.Current()); else break;
 
-                result.Append(ump);
+                result.Append(std::move(ump));
             }
         }
 
@@ -145,8 +153,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
     _Use_decl_annotations_
     midi2::MidiGroup MidiMessageUtility::GetGroupFromMessageFirstWord(_In_ uint32_t const word0)
     {
-        auto group = winrt::make<MidiGroup>(internal::GetGroupIndexFromFirstWord(word0));
-        return group;
+        return midi2::MidiGroup(internal::GetGroupIndexFromFirstWord(word0));
     }
 
 
@@ -167,8 +174,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
     _Use_decl_annotations_
     midi2::MidiChannel MidiMessageUtility::GetChannelFromMessageFirstWord(_In_ uint32_t const word0)
     {
-        auto channel = winrt::make<MidiChannel>(internal::GetChannelIndexFromFirstWord(word0));
-        return channel;
+        return midi2::MidiChannel(internal::GetChannelIndexFromFirstWord(word0));
     }
 
 

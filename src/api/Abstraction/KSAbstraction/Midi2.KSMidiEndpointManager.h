@@ -10,14 +10,6 @@
 
 using namespace winrt::Windows::Devices::Enumeration;
 
-
-typedef struct _MIDI1_GROUP_MAP
-{
-    uint8_t GroupIndex;             // zero-based group index
-    uint32_t PinIndex;              // pin index of the KS Pin
-} MIDI1_GROUP_MAP, *PMIDI1_GROUP_MAP;
-
-
 typedef class _MIDI_PIN_INFO
 {
 public:
@@ -42,9 +34,6 @@ public:
     std::wstring ManufacturerName;
     UINT16 VID{ 0 };
     UINT16 PID{ 0 };
-
-    std::vector<MIDI1_GROUP_MAP> Midi1InputPortGroupMap{};
-    std::vector<MIDI1_GROUP_MAP> Midi1OutputPortGroupMap{};
 
 } MIDI_PIN_INFO, *PMIDI_PIN_INFO;
 

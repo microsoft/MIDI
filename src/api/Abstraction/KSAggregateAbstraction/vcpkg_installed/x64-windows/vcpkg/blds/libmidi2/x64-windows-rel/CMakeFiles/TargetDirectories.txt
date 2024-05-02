@@ -1,0 +1,6 @@
+G:/GitHub/microsoft/midi/src/api/Transform/ByteStreamToUMP/vcpkg_installed/x64-windows/vcpkg/blds/libmidi2/x64-windows-rel/CMakeFiles/libmidi2.dir
+G:/GitHub/microsoft/midi/src/api/Transform/ByteStreamToUMP/vcpkg_installed/x64-windows/vcpkg/blds/libmidi2/x64-windows-rel/CMakeFiles/edit_cache.dir
+G:/GitHub/microsoft/midi/src/api/Transform/ByteStreamToUMP/vcpkg_installed/x64-windows/vcpkg/blds/libmidi2/x64-windows-rel/CMakeFiles/rebuild_cache.dir
+G:/GitHub/microsoft/midi/src/api/Transform/ByteStreamToUMP/vcpkg_installed/x64-windows/vcpkg/blds/libmidi2/x64-windows-rel/CMakeFiles/list_install_components.dir
+G:/GitHub/microsoft/midi/src/api/Transform/ByteStreamToUMP/vcpkg_installed/x64-windows/vcpkg/blds/libmidi2/x64-windows-rel/CMakeFiles/install.dir
+G:/GitHub/microsoft/midi/src/api/Transform/ByteStreamToUMP/vcpkg_installed/x64-windows/vcpkg/blds/libmidi2/x64-windows-rel/CMakeFiles/install/local.dir

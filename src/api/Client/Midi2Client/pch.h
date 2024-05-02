@@ -28,10 +28,13 @@
 #include <winrt/Windows.Devices.Enumeration.h>
 #include <winrt/Windows.Storage.Streams.h>
 #include <winrt/Windows.Storage.h>
+#include <winrt/Windows.Devices.Midi.h>
 
 #include <winrt/Windows.Data.Json.h>
 namespace json = ::winrt::Windows::Data::Json;
 namespace enumeration = ::winrt::Windows::Devices::Enumeration;
+namespace midi1 = ::winrt::Windows::Devices::Midi;
+
 
 #include <stdint.h>
 #include <sstream>

@@ -116,8 +116,8 @@ CMidi2KSMidiConfigurationManager::ApplyConfigFileUpdatesForEndpoint(std::wstring
                 __FUNCTION__,
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingHResult(updateResult, "hresult"),
-                TraceLoggingWideString(L"Configuration update failed", "message")
+                TraceLoggingWideString(L"Configuration update failed", "message"),
+                TraceLoggingHResult(updateResult, "hresult")
             );
         }
 
@@ -160,8 +160,8 @@ CMidi2KSMidiConfigurationManager::UpdateConfiguration(
             __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(ConfigurationJsonSection, "json"),
             TraceLoggingWideString(L"Device Manager is nullptr", "message"),
+            TraceLoggingWideString(ConfigurationJsonSection, "json"),
             TraceLoggingBool(IsFromConfigurationFile, "IsFromConfigurationFile")
         );
 
@@ -409,8 +409,8 @@ CMidi2KSMidiConfigurationManager::UpdateConfiguration(
                                             __FUNCTION__,
                                             TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
                                             TraceLoggingPointer(this, "this"),
-                                            TraceLoggingHResult(updatePropsHR, "hresult"),
                                             TraceLoggingWideString(L"Endpoint device doesn't exist (yet). We'll skip.", "message"),
+                                            TraceLoggingHResult(updatePropsHR, "hresult"),
                                             TraceLoggingWideString(swdId.c_str(), "swd")
                                         );
                                     }
@@ -421,8 +421,8 @@ CMidi2KSMidiConfigurationManager::UpdateConfiguration(
                                             __FUNCTION__,
                                             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                                             TraceLoggingPointer(this, "this"),
-                                            TraceLoggingHResult(updatePropsHR, "hresult"),
                                             TraceLoggingWideString(L"Error updating device properties", "message"),
+                                            TraceLoggingHResult(updatePropsHR, "hresult"),
                                             TraceLoggingWideString(swdId.c_str(), "swd")
                                         );
 

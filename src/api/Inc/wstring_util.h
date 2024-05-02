@@ -79,6 +79,20 @@ namespace WindowsMidiServicesInternal
     }
 
 
+    inline bool WStringEndsWidth(_In_ std::wstring source, _In_ std::wstring ending)
+    {
+        if (ending.size() > source.size())
+        {
+            return false;
+        }
+        else
+        {
+            return std::equal(ending.rbegin(), ending.rend(), source.rbegin());
+        }
+    }
+
+
+
     // This is just to convert all GUIDs to the same case. It does
     // not add or remove opening / closing brackets
     inline std::wstring NormalizeGuidStringCopy(_In_ std::wstring guidString)

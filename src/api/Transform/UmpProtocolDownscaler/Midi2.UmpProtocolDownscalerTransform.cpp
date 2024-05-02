@@ -15,9 +15,9 @@ CMidi2UmpProtocolDownscalerTransform::Activate(
     {
         TraceLoggingWrite(
             MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
-            __FUNCTION__ "- Midi Transform",
+            __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
+            TraceLoggingWideString(L"IMidiDataTransform", "interface"),
             TraceLoggingPointer(this, "this")
             );
 

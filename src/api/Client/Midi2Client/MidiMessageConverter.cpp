@@ -44,7 +44,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         // set the group
         internal::SetGroupIndexInFirstWord(midiWord, group.Index());
 
-        auto message = winrt::make<MidiMessage32>();
+        midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
         message.Word0(midiWord);
 
@@ -78,7 +78,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         // set the group
         internal::SetGroupIndexInFirstWord(midiWord, group.Index());
 
-        auto message = winrt::make<MidiMessage32>();
+        midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
         message.Word0(midiWord);
 
@@ -113,7 +113,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         // set the group
         internal::SetGroupIndexInFirstWord(midiWord, group.Index());
 
-        auto message = winrt::make<MidiMessage32>();
+        midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
         message.Word0(midiWord);
 
@@ -125,7 +125,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
     _Use_decl_annotations_
     uint32_t MidiMessageConverter::InternalConvertBytes(
         uint8_t const groupIndex,
-        Windows::Devices::Midi::IMidiMessage const& originalMessage
+        midi1::IMidiMessage const& originalMessage
     ) noexcept
     {
         // get the bytes using IBufferByteAccess and then do the conversion

@@ -48,26 +48,26 @@ namespace MIDI_CPP_NAMESPACE::implementation
         static midi2::MidiMessage32 ConvertMidi1TimeCodeMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
-            _In_ winrt::Windows::Devices::Midi::MidiTimeCodeMessage const& originalMessage
+            _In_ midi1::MidiTimeCodeMessage const& originalMessage
         ) noexcept
         {
-            auto message = winrt::make<implementation::MidiMessage32>();
+            midi2::MidiMessage32 message;
             message.Timestamp(timestamp);
             message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
 
             message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
-            return nullptr;
+            return message;
         }
 
         _Success_(return != nullptr)
         static midi2::MidiMessage32 ConvertMidi1SongPositionPointerMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
-            _In_ winrt::Windows::Devices::Midi::MidiSongPositionPointerMessage const& originalMessage
+            _In_ midi1::MidiSongPositionPointerMessage const& originalMessage
         ) noexcept
         {
-            auto message = winrt::make<implementation::MidiMessage32>();
+            midi2::MidiMessage32 message;
             message.Timestamp(timestamp);
             message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
 
@@ -80,10 +80,10 @@ namespace MIDI_CPP_NAMESPACE::implementation
         static midi2::MidiMessage32 ConvertMidi1SongSelectMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
-            _In_ winrt::Windows::Devices::Midi::MidiSongSelectMessage const& originalMessage
+            _In_ midi1::MidiSongSelectMessage const& originalMessage
         ) noexcept
         {
-            auto message = winrt::make<implementation::MidiMessage32>();
+            midi2::MidiMessage32 message;
             message.Timestamp(timestamp);
             message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
 
@@ -96,16 +96,16 @@ namespace MIDI_CPP_NAMESPACE::implementation
         static midi2::MidiMessage32 ConvertMidi1TuneRequestMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
-            _In_ winrt::Windows::Devices::Midi::MidiTuneRequestMessage const& originalMessage
+            _In_ midi1::MidiTuneRequestMessage const& originalMessage
         ) noexcept
         {
-            auto message = winrt::make<implementation::MidiMessage32>();
+            midi2::MidiMessage32 message;
             message.Timestamp(timestamp);
             message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
 
             message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
-            return nullptr;
+            return message;
         }
 
 
@@ -113,16 +113,16 @@ namespace MIDI_CPP_NAMESPACE::implementation
         static midi2::MidiMessage32 ConvertMidi1TimingClockMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
-            _In_ winrt::Windows::Devices::Midi::MidiTimingClockMessage const& originalMessage
+            _In_ midi1::MidiTimingClockMessage const& originalMessage
         ) noexcept
         {
-            auto message = winrt::make<implementation::MidiMessage32>();
+            midi2::MidiMessage32 message;
             message.Timestamp(timestamp);
             message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
 
             message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
-            return nullptr;
+            return message;
         }
 
 
@@ -130,10 +130,10 @@ namespace MIDI_CPP_NAMESPACE::implementation
         static midi2::MidiMessage32 ConvertMidi1StartMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
-            _In_ winrt::Windows::Devices::Midi::MidiStartMessage const& originalMessage
+            _In_ midi1::MidiStartMessage const& originalMessage
         ) noexcept
         {
-            auto message = winrt::make<implementation::MidiMessage32>();
+            midi2::MidiMessage32 message;
             message.Timestamp(timestamp);
             message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
 
@@ -146,10 +146,10 @@ namespace MIDI_CPP_NAMESPACE::implementation
         static midi2::MidiMessage32 ConvertMidi1ContinueMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
-            _In_ winrt::Windows::Devices::Midi::MidiContinueMessage const& originalMessage
+            _In_ midi1::MidiContinueMessage const& originalMessage
         ) noexcept
         {
-            auto message = winrt::make<implementation::MidiMessage32>();
+            midi2::MidiMessage32 message;
             message.Timestamp(timestamp);
             message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
 
@@ -163,10 +163,10 @@ namespace MIDI_CPP_NAMESPACE::implementation
         static midi2::MidiMessage32 ConvertMidi1StopMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
-            _In_ winrt::Windows::Devices::Midi::MidiStopMessage const& originalMessage
+            _In_ midi1::MidiStopMessage const& originalMessage
         ) noexcept
         {
-            auto message = winrt::make<implementation::MidiMessage32>();
+            midi2::MidiMessage32 message;
             message.Timestamp(timestamp);
             message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
 
@@ -179,32 +179,32 @@ namespace MIDI_CPP_NAMESPACE::implementation
         static midi2::MidiMessage32 ConvertMidi1ActiveSensingMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
-            _In_ winrt::Windows::Devices::Midi::MidiActiveSensingMessage const& originalMessage
+            _In_ midi1::MidiActiveSensingMessage const& originalMessage
         ) noexcept
         {
-            auto message = winrt::make<implementation::MidiMessage32>();
+            midi2::MidiMessage32 message;
             message.Timestamp(timestamp);
             message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
 
             message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
-            return nullptr;
+            return message;
         }
 
         _Success_(return != nullptr)
         static midi2::MidiMessage32 ConvertMidi1SystemResetMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
-            _In_ winrt::Windows::Devices::Midi::MidiSystemResetMessage const& originalMessage
+            _In_ midi1::MidiSystemResetMessage const& originalMessage
         ) noexcept
         {
-            auto message = winrt::make<implementation::MidiMessage32>();
+            midi2::MidiMessage32 message;
             message.Timestamp(timestamp);
             message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
 
             message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
-            return nullptr;
+            return message;
         }
 
 
@@ -214,10 +214,10 @@ namespace MIDI_CPP_NAMESPACE::implementation
         static midi2::MidiMessage32 ConvertMidi1ChannelPressureMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
-            _In_ winrt::Windows::Devices::Midi::MidiChannelPressureMessage const& originalMessage
+            _In_ midi1::MidiChannelPressureMessage const& originalMessage
         ) noexcept
         {
-            auto message = winrt::make<implementation::MidiMessage32>();
+            midi2::MidiMessage32 message;
             message.Timestamp(timestamp);
             message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
 
@@ -231,10 +231,10 @@ namespace MIDI_CPP_NAMESPACE::implementation
         static midi2::MidiMessage32 ConvertMidi1NoteOffMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
-            _In_ winrt::Windows::Devices::Midi::MidiNoteOffMessage const&  originalMessage
+            _In_ midi1::MidiNoteOffMessage const&  originalMessage
         ) noexcept
         {
-            auto message = winrt::make<implementation::MidiMessage32>();
+            midi2::MidiMessage32 message;
             message.Timestamp(timestamp);
             message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
 
@@ -248,10 +248,10 @@ namespace MIDI_CPP_NAMESPACE::implementation
         static midi2::MidiMessage32 ConvertMidi1NoteOnMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
-            _In_ winrt::Windows::Devices::Midi::MidiNoteOnMessage const&  originalMessage
+            _In_ midi1::MidiNoteOnMessage const&  originalMessage
         ) noexcept
         {
-            auto message = winrt::make<implementation::MidiMessage32>();
+            midi2::MidiMessage32 message;
             message.Timestamp(timestamp);
             message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
 
@@ -264,10 +264,10 @@ namespace MIDI_CPP_NAMESPACE::implementation
         static midi2::MidiMessage32 ConvertMidi1PitchBendChangeMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
-            _In_ winrt::Windows::Devices::Midi::MidiPitchBendChangeMessage const&  originalMessage
+            _In_ midi1::MidiPitchBendChangeMessage const&  originalMessage
         ) noexcept
         {
-            auto message = winrt::make<implementation::MidiMessage32>();
+            midi2::MidiMessage32 message;
             message.Timestamp(timestamp);
             message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
 
@@ -280,10 +280,10 @@ namespace MIDI_CPP_NAMESPACE::implementation
         static midi2::MidiMessage32 ConvertMidi1PolyphonicKeyPressureMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
-            _In_ winrt::Windows::Devices::Midi::MidiPolyphonicKeyPressureMessage const&  originalMessage
+            _In_ midi1::MidiPolyphonicKeyPressureMessage const&  originalMessage
         ) noexcept
         {
-            auto message = winrt::make<implementation::MidiMessage32>();
+            midi2::MidiMessage32 message;
             message.Timestamp(timestamp);
             message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
 
@@ -296,10 +296,10 @@ namespace MIDI_CPP_NAMESPACE::implementation
         static midi2::MidiMessage32 ConvertMidi1ProgramChangeMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
-            _In_ winrt::Windows::Devices::Midi::MidiProgramChangeMessage const&  originalMessage
+            _In_ midi1::MidiProgramChangeMessage const&  originalMessage
         ) noexcept
         {
-            auto message = winrt::make<implementation::MidiMessage32>();
+            midi2::MidiMessage32 message;
             message.Timestamp(timestamp);
             message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
 
@@ -312,7 +312,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
     private:
         static uint32_t InternalConvertBytes(
             _In_ uint8_t const groupIndex,
-            _In_ Windows::Devices::Midi::IMidiMessage const& originalMessage
+            _In_ midi1::IMidiMessage const& originalMessage
         ) noexcept;
 
     };

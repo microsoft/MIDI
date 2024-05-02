@@ -256,12 +256,16 @@ namespace WindowsMidiServicesInternal
         case 0xF: // MidiUmpMessageType::UmpStream128      // type F
             return false;
 
-
             // all other message types are undefined, so return false until those are defined
         default:
             return false;
 
         }
+    }
+
+    inline bool MessageHasGroupField(_In_ uint32_t messageWord0) noexcept
+    {
+        return MessageTypeHasGroupField(GetUmpMessageTypeFromFirstWord(messageWord0));
     }
 
     inline std::uint8_t GetChannelIndexFromFirstWord(_In_ const std::uint32_t firstWord) noexcept
@@ -366,6 +370,16 @@ namespace WindowsMidiServicesInternal
         ) noexcept
     {
         return (uint32_t)(byte0 << 24 | byte1 << 16 | byte2 << 8 | byte3);
+    }
+
+    // this function assumes you've already done the required range checking
+    // use this for any of the callbacks of SendMidMessage functions
+    inline uint32_t MidiWordFromVoidPointer(
+        _In_ PVOID data)
+    {
+        auto bytes = (uint8_t*)data;
+
+        return MidiWordFromBytes(bytes[3], bytes[2], bytes[1], bytes[0]);        
     }
 
     inline uint16_t Combine7BitMsbLsbTo14BitValue(_In_ uint8_t msb, _In_ uint8_t lsb)

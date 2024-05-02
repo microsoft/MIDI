@@ -16,18 +16,16 @@ CMidi2KSAbstraction::Activate(
     void **Interface
 )
 {
-    OutputDebugString(L"" __FUNCTION__ " Enter");
-
     RETURN_HR_IF(E_INVALIDARG, nullptr == Interface);
 
     if (__uuidof(IMidiIn) == Riid)
     {
         TraceLoggingWrite(
             MidiKSAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- Midi in",
+            __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiIn", "interface")
             );
 
         wil::com_ptr_nothrow<IMidiIn> midiIn;
@@ -38,11 +36,11 @@ CMidi2KSAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiKSAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- Midi Out",
+            __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
-            );
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiOut", "interface")
+        );
 
         wil::com_ptr_nothrow<IMidiOut> midiOut;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSMidiOut>(&midiOut));
@@ -52,11 +50,11 @@ CMidi2KSAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiKSAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- Midi BiDi",
+            __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
-            );
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiBiDi", "interface")
+        );
 
         wil::com_ptr_nothrow<IMidiBiDi> midiBiDi;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSMidiBiDi>(&midiBiDi));
@@ -66,11 +64,11 @@ CMidi2KSAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiKSAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- Midi Endpoint Manager",
+            __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
-            );
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiEndpointManager", "interface")
+        );
 
 
         // check to see if this is the first time we're creating the endpoint manager. If so, create it.
@@ -85,10 +83,10 @@ CMidi2KSAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiKSAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- IMidiConfigurationManager",
+            __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiAbstractionConfigurationManager", "interface")
         );
 
         // check to see if this is the first time we're creating the endpoint manager. If so, create it.
@@ -104,17 +102,16 @@ CMidi2KSAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiKSAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- IMidiServiceAbstractionPluginMetadataProvider",
+            __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiServiceAbstractionPluginMetadataProvider", "interface")
         );
 
         wil::com_ptr_nothrow<IMidiServiceAbstractionPluginMetadataProvider> metadataProvider;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSMidiPluginMetadataProvider>(&metadataProvider));
         *Interface = metadataProvider.detach();
     }
-
 
     else
     {

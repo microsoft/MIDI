@@ -40,6 +40,8 @@
 
 #include "mididefs.h"
 
+#include <libmidi2/umpToBytestream.h>
+
 #include "MidiServicePlugin.h"
 #include "MidiServicePlugin_i.c"
 

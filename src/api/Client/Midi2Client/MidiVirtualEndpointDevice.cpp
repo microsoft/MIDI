@@ -189,7 +189,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         if (args.MessageType() == MidiMessageType::Stream128)
         {
-            MidiMessage128 message{};
+            midi2::MidiMessage128 message{};
+
             if (args.FillMessage128(message))
             {
                 // if a endpoint discovery request, handle it with the data we have

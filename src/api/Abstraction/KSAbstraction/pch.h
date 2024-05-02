@@ -72,9 +72,12 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "json_helpers.h"
 #include "swd_helpers.h"
 #include "resource_util.h"
+#include "ump_helpers.h"
 
 #include "MidiXProc.h"
 
+#include <libmidi2/umpToBytestream.h>
+#include <libmidi2/bytestreamToUMP.h>
 
 #include "strsafe.h"
 

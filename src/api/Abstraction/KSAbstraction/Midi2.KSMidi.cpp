@@ -10,6 +10,8 @@
 #include "pch.h"
 #include "midi2.ksabstraction.h"
 
+
+
 _Use_decl_annotations_
 HRESULT
 CMidi2KSMidi::Initialize(
@@ -115,6 +117,12 @@ CMidi2KSMidi::Initialize(
         RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE));
     }
 
+
+    ULONG requestedBufferSize = PAGE_SIZE;
+    RETURN_IF_FAILED(GetRequiredBufferSize(requestedBufferSize));
+    RETURN_IF_FAILED(FilterInstantiate(filterInterfaceId.c_str(), &filter));
+
+
     if (Flow == MidiFlowBidirectional)
     {
         prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_InPinId));
@@ -131,11 +139,6 @@ CMidi2KSMidi::Initialize(
         RETURN_HR_IF_NULL(E_INVALIDARG, prop);
         inPinId = outPinId = winrt::unbox_value<uint32_t>(prop);
     }
-
-    ULONG requestedBufferSize = PAGE_SIZE;
-    RETURN_IF_FAILED(GetRequiredBufferSize(requestedBufferSize));
-
-    RETURN_IF_FAILED(FilterInstantiate(filterInterfaceId.c_str(), &filter));
 
     if (Flow == MidiFlowIn || Flow == MidiFlowBidirectional)
     {

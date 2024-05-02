@@ -14,19 +14,22 @@ namespace MIDI_CPP_NAMESPACE::implementation
 {
     midi2::MidiUniqueId MidiUniqueId::CreateBroadcast()
     {
-        return MidiUniqueId(MIDI_MUID_BROADCAST);
+        //return winrt::make<MidiUniqueId>(MIDI_MUID_BROADCAST);
+        return midi2::MidiUniqueId(MIDI_MUID_BROADCAST);
+
     }
 
     midi2::MidiUniqueId MidiUniqueId::CreateRandom()
     {
-        std::srand((int)(MidiClock::Now() & 0x00000000FFFFFFFF));
+        std::srand((int)(implementation::MidiClock::Now() & 0x00000000FFFFFFFF));
 
         uint32_t val = ((uint32_t)(std::rand()) % 0xFFFFF);
 
         // get us out of the reserved area
         val <<= 8;
 
-        return MidiUniqueId(val);
+        //return winrt::make<MidiUniqueId>(val);
+        return midi2::MidiUniqueId(val);
     }
 
     uint32_t MidiUniqueId::AsCombined28BitValue() const noexcept

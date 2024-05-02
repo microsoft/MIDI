@@ -189,6 +189,18 @@ namespace MIDI_CPP_NAMESPACE::implementation
         additionalProperties.Append(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator);
 
 
+        // these can be useful for debugging, but not much else. They are defined in MidiKSDef.h
+        //additionalProperties.Append(STRING_DEVPKEY_KsMidiPort_KsFilterInterfaceId);
+        //additionalProperties.Append(STRING_DEVPKEY_KsMidiPort_KsPinId);
+        //additionalProperties.Append(STRING_DEVPKEY_KsMidiPort_InPinId);
+        //additionalProperties.Append(STRING_DEVPKEY_KsMidiPort_OutPinId);
+        //additionalProperties.Append(STRING_DEVPKEY_KsTransport);
+        //additionalProperties.Append(STRING_DEVPKEY_KsMidiGroupPinMap);
+
+        
+
+
+
         // Calculated metrics =================================================================
         // we don't load them here because they would spam device information update events
         // and they are (potentially) used only in the service
