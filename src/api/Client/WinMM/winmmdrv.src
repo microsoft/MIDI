@@ -1,0 +1,6 @@
+LIBRARY WDMAUD2
+
+EXPORTS     
+    modMessage
+    midMessage
+    DriverProc
