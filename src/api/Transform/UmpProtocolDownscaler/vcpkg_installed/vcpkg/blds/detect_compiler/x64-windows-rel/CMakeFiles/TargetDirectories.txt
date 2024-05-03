@@ -1,2 +1,0 @@
-G:/GitHub/microsoft/midi/src/api/Transform/UmpProtocolDownscaler/vcpkg_installed/vcpkg/blds/detect_compiler/x64-windows-rel/CMakeFiles/edit_cache.dir
-G:/GitHub/microsoft/midi/src/api/Transform/UmpProtocolDownscaler/vcpkg_installed/vcpkg/blds/detect_compiler/x64-windows-rel/CMakeFiles/rebuild_cache.dir

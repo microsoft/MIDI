@@ -14,7 +14,7 @@
 #define QUOTE(s) #s
 
 
-#ifdef RAZZLE
+#ifdef MICROSOFT_INTERNAL_BUILD
 
 // internal build (using Razzle)
 
@@ -28,9 +28,6 @@
 #define MIDI_IDL_IMPORT \
 import "Windows.Foundation.idl"; \
 import "Windows.Devices.Enumeration.idl"; \
-import "Windows.Data.Json.idl"; \
-import "Windows.Devices.Enumeration.idl"; \
-import "Windows.Storage.Streams.idl"; 
 
 #define MIDI_INTERFACE_UUID(u,v) uuid(u)
 

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
@@ -382,9 +382,6 @@ bool DoSectionPingTest(_In_ bool verbose, _In_ uint8_t pingCount)
 
         return false;
     }
-
-
-    return true;
 }
 
 bool DoSectionClock(_In_ bool verbose)
