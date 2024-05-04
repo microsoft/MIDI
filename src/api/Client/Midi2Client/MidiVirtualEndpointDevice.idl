@@ -30,7 +30,7 @@ namespace MIDI_MIDL_NAMESPACE
         Boolean UpdateFunctionBlock(MidiFunctionBlock block);
         Boolean UpdateEndpointName(String name);
 
-        Boolean SuppressHandledMessages{ get; set; };
+        Boolean SuppressHandledMessages;
 
         event Windows.Foundation.TypedEventHandler<MidiVirtualEndpointDevice, MidiStreamConfigurationRequestReceivedEventArgs> StreamConfigurationRequestReceived;
     }

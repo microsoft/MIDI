@@ -23,8 +23,8 @@ namespace MIDI_MIDL_NAMESPACE
         MidiMessage96(MIDI_TIMESTAMP timestamp, UInt32 word0, UInt32 word1, UInt32 word2);
         MidiMessage96(MIDI_TIMESTAMP timestamp, UInt32[] words);
 
-        UInt32 Word0{ get; set; };
-        UInt32 Word1{ get; set; };
-        UInt32 Word2{ get; set; };
+        UInt32 Word0;
+        UInt32 Word1;
+        UInt32 Word2;
     };
 }

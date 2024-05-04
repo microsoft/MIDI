@@ -20,10 +20,10 @@ namespace MIDI_MIDL_NAMESPACE
     [MIDI_INTERFACE_UUID("2eb5df8a-d751-4997-bf96-ba9a531fd5ff",1.0)]
     interface IMidiUniversalPacket
     {
-        MIDI_TIMESTAMP Timestamp { get; set; };
+        MIDI_TIMESTAMP Timestamp;
 
-        MidiMessageType MessageType{ get; set; };
-        MidiPacketType PacketType{ get; };
+        MidiMessageType MessageType;
+        MidiPacketType PacketType;
 
         UInt32 PeekFirstWord();
 

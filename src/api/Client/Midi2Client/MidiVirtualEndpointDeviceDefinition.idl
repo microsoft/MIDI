@@ -23,24 +23,24 @@ namespace MIDI_MIDL_NAMESPACE
     {
         MidiVirtualEndpointDeviceDefinition();
 
-        String EndpointName{ get; set; };
-        String EndpointProductInstanceId{ get; set; };
+        String EndpointName;
+        String EndpointProductInstanceId;
 
-        String TransportSuppliedDescription{ get; set; };
+        String TransportSuppliedDescription;
 
-        Boolean SupportsMidi1ProtocolMessages{ get; set; };
-        Boolean SupportsMidi2ProtocolMessages{ get; set; };
-        Boolean SupportsReceivingJRTimestamps{ get; set; };
-        Boolean SupportsSendingJRTimestamps{ get; set; };
+        Boolean SupportsMidi1ProtocolMessages;
+        Boolean SupportsMidi2ProtocolMessages;
+        Boolean SupportsReceivingJRTimestamps;
+        Boolean SupportsSendingJRTimestamps;
 
         IVector<UInt8> DeviceManufacturerSystemExclusiveId{ get; };
-        UInt8 DeviceFamilyLsb{ get; set; };
-        UInt8 DeviceFamilyMsb{ get; set; };
-        UInt8 DeviceFamilyModelLsb{ get; set; };
-        UInt8 DeviceFamilyModelMsb{ get; set; };
+        UInt8 DeviceFamilyLsb;
+        UInt8 DeviceFamilyMsb;
+        UInt8 DeviceFamilyModelLsb;
+        UInt8 DeviceFamilyModelMsb;
         IVector<UInt8> SoftwareRevisionLevel{ get; };
 
-        Boolean AreFunctionBlocksStatic{ get; set; };
+        Boolean AreFunctionBlocksStatic;
 
         IVector<MidiFunctionBlock> FunctionBlocks{ get; };
     }

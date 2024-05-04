@@ -19,7 +19,7 @@ namespace MIDI_MIDL_NAMESPACE
     {
         MidiSessionSettings();
 
-        Boolean UseMmcssThreads{ get; set; };
+ //       Boolean UseMmcssThreads;
 
     }
 }

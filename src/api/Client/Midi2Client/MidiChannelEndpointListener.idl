@@ -27,11 +27,11 @@ namespace MIDI_MIDL_NAMESPACE
     {
         MidiChannelEndpointListener();
 
-        MidiGroup IncludeGroup{ get; set; };
+        MidiGroup IncludeGroup;
 
         IVector<MidiChannel> IncludeChannels{ get; };
 
-        Boolean PreventCallingFurtherListeners{ get; set; };
-        Boolean PreventFiringMainMessageReceivedEvent{ get; set; };
+        Boolean PreventCallingFurtherListeners;
+        Boolean PreventFiringMainMessageReceivedEvent;
     }
 }

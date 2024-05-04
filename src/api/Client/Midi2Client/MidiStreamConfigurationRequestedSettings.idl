@@ -21,11 +21,11 @@ namespace MIDI_MIDL_NAMESPACE
     {
         MidiStreamConfigurationRequestedSettings();
 
-        UInt8 SpecificationVersionMajor{ get; set; };
-        UInt8 SpecificationVersionMinor{ get; set; };
+        UInt8 SpecificationVersionMajor;
+        UInt8 SpecificationVersionMinor;
 
-        MidiProtocol PreferredMidiProtocol{ get; set; };
-        Boolean RequestEndpointTransmitJitterReductionTimestamps{ get; set; };
-        Boolean RequestEndpointReceiveJitterReductionTimestamps{ get; set; };
+        MidiProtocol PreferredMidiProtocol;
+        Boolean RequestEndpointTransmitJitterReductionTimestamps;
+        Boolean RequestEndpointReceiveJitterReductionTimestamps;
    }
 }

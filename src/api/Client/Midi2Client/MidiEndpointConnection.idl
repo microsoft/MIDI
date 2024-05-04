@@ -33,7 +33,7 @@ namespace MIDI_MIDL_NAMESPACE
 
         String EndpointDeviceId{ get; };
 
-        IInspectable Tag{ get; set; };
+        IInspectable Tag;
 
         IMidiEndpointConnectionSettings Settings{ get; };
 

@@ -26,10 +26,10 @@ namespace MIDI_MIDL_NAMESPACE
         static MidiUniqueId CreateBroadcast();
         static MidiUniqueId CreateRandom();
 
-        UInt8 Byte1{ get; set; };
-        UInt8 Byte2{ get; set; };
-        UInt8 Byte3{ get; set; };
-        UInt8 Byte4{ get; set; };
+        UInt8 Byte1;
+        UInt8 Byte2;
+        UInt8 Byte3;
+        UInt8 Byte4;
 
         UInt32 AsCombined28BitValue{ get; };
 

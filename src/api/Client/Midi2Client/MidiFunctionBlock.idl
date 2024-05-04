@@ -28,23 +28,23 @@ namespace MIDI_MIDL_NAMESPACE
 
         Boolean IsReadOnly { get; };
 
-        UInt8 Number{ get; set; };
-        String Name{ get; set; };
+        UInt8 Number;
+        String Name;
 
-        Boolean IsActive{ get; set; };
+        Boolean IsActive;
 
-        MidiFunctionBlockDirection Direction{ get; set; };
-        MidiFunctionBlockUIHint UIHint{ get; set; };
+        MidiFunctionBlockDirection Direction;
+        MidiFunctionBlockUIHint UIHint;
 
-        MidiFunctionBlockMidi10 Midi10Connection{ get; set; };
+        MidiFunctionBlockMidi10 Midi10Connection;
 
-        UInt8 FirstGroupIndex{ get; set; };
-        UInt8 GroupCount{ get; set; };
+        UInt8 FirstGroupIndex;
+        UInt8 GroupCount;
 
         Boolean IncludesGroup(MidiGroup group);
 
-        UInt8 MidiCIMessageVersionFormat{ get; set; };
+        UInt8 MidiCIMessageVersionFormat;
 
-        UInt8 MaxSystemExclusive8Streams{ get; set; };
+        UInt8 MaxSystemExclusive8Streams;
     }
 }

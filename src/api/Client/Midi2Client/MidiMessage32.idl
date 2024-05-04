@@ -22,7 +22,7 @@ namespace MIDI_MIDL_NAMESPACE
         MidiMessage32();
         MidiMessage32(MIDI_TIMESTAMP timestamp, UInt32 word0);
 
-        UInt32 Word0{ get; set; };
+        UInt32 Word0;
     };
 }
 

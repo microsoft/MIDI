@@ -31,7 +31,7 @@ namespace MIDI_MIDL_NAMESPACE
 
         IVector<MidiMessageType> IncludeMessageTypes{ get; };
 
-        Boolean PreventCallingFurtherListeners{ get; set; };
-        Boolean PreventFiringMainMessageReceivedEvent{ get; set; };
+        Boolean PreventCallingFurtherListeners;
+        Boolean PreventFiringMainMessageReceivedEvent;
     }
 }

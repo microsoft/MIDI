@@ -19,8 +19,8 @@ namespace MIDI_MIDL_NAMESPACE
     {
         MidiServiceLoopbackEndpointDefinition();
 
-        String Name{ get; set; };
-        String UniqueId{ get; set; };
-        String Description{ get; set; };
+        String Name;
+        String UniqueId;
+        String Description;
     }
 }

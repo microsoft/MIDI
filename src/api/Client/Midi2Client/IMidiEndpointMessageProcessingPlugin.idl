@@ -24,10 +24,10 @@ namespace MIDI_MIDL_NAMESPACE
     {
         Guid Id { get; };            
 
-        String Name{ get; set; };
-        IInspectable Tag{ get; set; };
+        String Name;
+        IInspectable Tag;
 
-        Boolean IsEnabled{ get; set; };
+        Boolean IsEnabled;
 
         void Initialize(IMidiEndpointConnectionSource endpointConnection);
 
