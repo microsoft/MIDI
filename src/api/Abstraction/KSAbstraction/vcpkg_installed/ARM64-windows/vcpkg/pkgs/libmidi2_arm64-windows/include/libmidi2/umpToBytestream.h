@@ -24,6 +24,8 @@
 
 #include <cstdint>
 
+#define UMPTOBS_BUFFER 12
+
 class umpToBytestream{
 
 	private:
@@ -31,8 +33,13 @@ class umpToBytestream{
         uint32_t ump64word1;
 
         uint8_t UMPPos=0;
-        uint8_t bsOutLength=0;
-        uint8_t bsOut[12];
+        uint8_t bsOut[UMPTOBS_BUFFER];
+
+	void increaseWrite();
+
+	int readIndex = 0;
+	int writeIndex = 0;
+	int bufferLength = 0;
 
 	public:
         uint8_t group;

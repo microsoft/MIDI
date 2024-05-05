@@ -32,14 +32,11 @@ public:
     HRESULT Cleanup();
 
 private:
-    // group map. key is the group index. This is only used when we create
-    // an aggregated BiDi from a bunch of MIDI 1.0 pins
+    // group map. key is the group index.
     std::map<uint8_t, std::unique_ptr<KSMidiInDevice>> m_midiInDeviceGroupMap;
     std::map<uint8_t, std::unique_ptr<KSMidiOutDevice>> m_midiOutDeviceGroupMap;
-    bool m_useGroupMap{ false };
 
-
-    // for aggregated UMP endpoints
+    // translation support for aggregated UMP endpoints made up of MIDI 1.0 pins
     umpToBytestream m_UMP2BS;
     bytestreamToUMP m_BS2UMP;
 

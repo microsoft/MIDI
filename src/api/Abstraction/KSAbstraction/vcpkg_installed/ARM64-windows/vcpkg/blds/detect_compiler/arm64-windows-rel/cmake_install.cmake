@@ -2,7 +2,7 @@
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "G:/GitHub/microsoft/midi/src/api/Transform/ByteStreamToUMP/vcpkg_installed/ARM64-windows/vcpkg/pkgs/detect_compiler_arm64-windows")
+  set(CMAKE_INSTALL_PREFIX "G:/GitHub/microsoft/midi/src/api/Abstraction/KSAbstraction/vcpkg_installed/ARM64-windows/vcpkg/pkgs/detect_compiler_arm64-windows")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -40,5 +40,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "G:/GitHub/microsoft/midi/src/api/Transform/ByteStreamToUMP/vcpkg_installed/ARM64-windows/vcpkg/blds/detect_compiler/arm64-windows-rel/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "G:/GitHub/microsoft/midi/src/api/Abstraction/KSAbstraction/vcpkg_installed/ARM64-windows/vcpkg/blds/detect_compiler/arm64-windows-rel/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

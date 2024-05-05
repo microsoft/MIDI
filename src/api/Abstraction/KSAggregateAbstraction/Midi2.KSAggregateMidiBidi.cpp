@@ -37,7 +37,18 @@ CMidi2KSAggregateMidiBiDi::Initialize(
     std::unique_ptr<CMidi2KSAggregateMidi> midiDevice(new (std::nothrow) CMidi2KSAggregateMidi());
     RETURN_IF_NULL_ALLOC(midiDevice);
 
-    RETURN_IF_FAILED(midiDevice->Initialize(Device, MidiFlowBidirectional, CreationParams, MmCssTaskId, Callback, Context));
+    RETURN_IF_FAILED(
+        midiDevice->Initialize(
+            Device, 
+            MidiFlowBidirectional, 
+            CreationParams, 
+            MmCssTaskId, 
+            Callback, 
+            Context
+        )
+    );
+
+
     m_MidiDevice = std::move(midiDevice);
 
     return S_OK;
@@ -53,11 +64,10 @@ CMidi2KSAggregateMidiBiDi::Cleanup()
         TraceLoggingPointer(this, "this")
         );
 
-    if (m_MidiDevice)
-    {
-        m_MidiDevice->Cleanup();
-        m_MidiDevice.reset();
-    }
+
+    // TODO: Not sure yet if I should call cleanup on this
+    // as it is shared with regular input/output devices
+    m_MidiDevice = nullptr;
 
     return S_OK;
 }
@@ -70,11 +80,16 @@ CMidi2KSAggregateMidiBiDi::SendMidiMessage(
     LONGLONG Position
 )
 {
-    if (m_MidiDevice)
+    if (m_MidiDevice != nullptr)
     {
-        return m_MidiDevice->SendMidiMessage(Data, Length, Position);
+        RETURN_IF_FAILED(m_MidiDevice->SendMidiMessage(Data, Length, Position));
+
+        return S_OK;
+    }
+    else
+    {
+        return E_FAIL;
     }
 
-    return E_ABORT;
 }
 

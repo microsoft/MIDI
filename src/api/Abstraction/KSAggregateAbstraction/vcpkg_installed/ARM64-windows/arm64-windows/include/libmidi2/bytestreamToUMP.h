@@ -21,6 +21,8 @@
 #ifndef BSUMP_H
 #define BSUMP_H
 
+#define BSTOUMP_BUFFER 4
+
 
 #include <cstdint>
 
@@ -34,8 +36,7 @@ class bytestreamToUMP{
 		uint8_t sysex7Pos = 0;
 		
 		uint8_t sysex[6] = {0,0,0,0,0,0};
-	    uint8_t messPos=0;
-	    uint32_t umpMess[4] = {0,0,0,0};
+	    uint32_t umpMess[BSTOUMP_BUFFER] = {0,0,0,0};
 	    
 	    //Channel Based Data
 		uint8_t bankMSB[16];
@@ -46,6 +47,11 @@ class bytestreamToUMP{
 		uint8_t rpnLsb[16];
 	    	
 		void bsToUMP(uint8_t b0, uint8_t b1, uint8_t b2);
+		void increaseWrite();
+
+		int readIndex = 0;
+		int writeIndex = 0;
+		int bufferLength = 0;
 
 
 	public:

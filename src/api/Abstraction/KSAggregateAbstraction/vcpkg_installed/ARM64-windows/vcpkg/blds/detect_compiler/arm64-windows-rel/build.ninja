@@ -39,13 +39,13 @@ include CMakeFiles\rules.ninja
 #############################################
 # Logical path to working directory; prefix for absolute paths.
 
-cmake_ninja_workdir = G$:\GitHub\microsoft\midi\src\api\Transform\ByteStreamToUMP\vcpkg_installed\ARM64-windows\vcpkg\blds\detect_compiler\arm64-windows-rel\
+cmake_ninja_workdir = G$:\GitHub\microsoft\midi\src\api\Abstraction\KSAggregateAbstraction\vcpkg_installed\ARM64-windows\vcpkg\blds\detect_compiler\arm64-windows-rel\
 
 #############################################
 # Utility command for edit_cache
 
 build CMakeFiles\edit_cache.util: CUSTOM_COMMAND
-  COMMAND = cmd.exe /C "cd /D G:\GitHub\microsoft\midi\src\api\Transform\ByteStreamToUMP\vcpkg_installed\ARM64-windows\vcpkg\blds\detect_compiler\arm64-windows-rel && C:\Users\peteb\AppData\Local\vcpkg\downloads\tools\cmake-3.27.1-windows\cmake-3.27.1-windows-i386\bin\cmake-gui.exe -S"C:\Program Files\Microsoft Visual Studio\2022\Preview\VC\vcpkg\scripts\detect_compiler" -BG:\GitHub\microsoft\midi\src\api\Transform\ByteStreamToUMP\vcpkg_installed\ARM64-windows\vcpkg\blds\detect_compiler\arm64-windows-rel"
+  COMMAND = cmd.exe /C "cd /D G:\GitHub\microsoft\midi\src\api\Abstraction\KSAggregateAbstraction\vcpkg_installed\ARM64-windows\vcpkg\blds\detect_compiler\arm64-windows-rel && C:\Users\peteb\AppData\Local\vcpkg\downloads\tools\cmake-3.27.1-windows\cmake-3.27.1-windows-i386\bin\cmake-gui.exe -S"C:\Program Files\Microsoft Visual Studio\2022\Preview\VC\vcpkg\scripts\detect_compiler" -BG:\GitHub\microsoft\midi\src\api\Abstraction\KSAggregateAbstraction\vcpkg_installed\ARM64-windows\vcpkg\blds\detect_compiler\arm64-windows-rel"
   DESC = Running CMake cache editor...
   pool = console
   restat = 1
@@ -57,7 +57,7 @@ build edit_cache: phony CMakeFiles\edit_cache.util
 # Utility command for rebuild_cache
 
 build CMakeFiles\rebuild_cache.util: CUSTOM_COMMAND
-  COMMAND = cmd.exe /C "cd /D G:\GitHub\microsoft\midi\src\api\Transform\ByteStreamToUMP\vcpkg_installed\ARM64-windows\vcpkg\blds\detect_compiler\arm64-windows-rel && C:\Users\peteb\AppData\Local\vcpkg\downloads\tools\cmake-3.27.1-windows\cmake-3.27.1-windows-i386\bin\cmake.exe --regenerate-during-build -S"C:\Program Files\Microsoft Visual Studio\2022\Preview\VC\vcpkg\scripts\detect_compiler" -BG:\GitHub\microsoft\midi\src\api\Transform\ByteStreamToUMP\vcpkg_installed\ARM64-windows\vcpkg\blds\detect_compiler\arm64-windows-rel"
+  COMMAND = cmd.exe /C "cd /D G:\GitHub\microsoft\midi\src\api\Abstraction\KSAggregateAbstraction\vcpkg_installed\ARM64-windows\vcpkg\blds\detect_compiler\arm64-windows-rel && C:\Users\peteb\AppData\Local\vcpkg\downloads\tools\cmake-3.27.1-windows\cmake-3.27.1-windows-i386\bin\cmake.exe --regenerate-during-build -S"C:\Program Files\Microsoft Visual Studio\2022\Preview\VC\vcpkg\scripts\detect_compiler" -BG:\GitHub\microsoft\midi\src\api\Abstraction\KSAggregateAbstraction\vcpkg_installed\ARM64-windows\vcpkg\blds\detect_compiler\arm64-windows-rel"
   DESC = Running CMake to regenerate build system...
   pool = console
   restat = 1
@@ -73,7 +73,7 @@ build rebuild_cache: phony CMakeFiles\rebuild_cache.util
 # =============================================================================
 
 #############################################
-# Folder: G:/GitHub/microsoft/midi/src/api/Transform/ByteStreamToUMP/vcpkg_installed/ARM64-windows/vcpkg/blds/detect_compiler/arm64-windows-rel
+# Folder: G:/GitHub/microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/ARM64-windows/vcpkg/blds/detect_compiler/arm64-windows-rel
 
 build all: phony
 

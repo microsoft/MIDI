@@ -1,2 +1,2 @@
-G:/GitHub/microsoft/midi/src/api/Transform/ByteStreamToUMP/vcpkg_installed/ARM64-windows/vcpkg/blds/detect_compiler/x64-windows-rel/CMakeFiles/edit_cache.dir
-G:/GitHub/microsoft/midi/src/api/Transform/ByteStreamToUMP/vcpkg_installed/ARM64-windows/vcpkg/blds/detect_compiler/x64-windows-rel/CMakeFiles/rebuild_cache.dir
+G:/GitHub/microsoft/midi/src/api/Abstraction/KSAbstraction/vcpkg_installed/ARM64-windows/vcpkg/blds/detect_compiler/x64-windows-rel/CMakeFiles/edit_cache.dir
+G:/GitHub/microsoft/midi/src/api/Abstraction/KSAbstraction/vcpkg_installed/ARM64-windows/vcpkg/blds/detect_compiler/x64-windows-rel/CMakeFiles/rebuild_cache.dir

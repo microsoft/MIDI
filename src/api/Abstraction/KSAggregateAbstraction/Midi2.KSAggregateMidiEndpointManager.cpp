@@ -93,6 +93,10 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         TraceLoggingWideString(MasterEndpointDefinition.EndpointName.c_str(), "name")
     );
 
+    // we require at least one valid pin
+    RETURN_HR_IF(E_INVALIDARG, MasterEndpointDefinition.Pins.size() < 1);
+
+
     std::vector<DEVPROPERTY> interfaceDevProperties;
 
     MIDIENDPOINTCOMMONPROPERTIES commonProperties{};
@@ -116,49 +120,58 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     commonProperties.SupportsMidi2ProtocolDefaultValue = false;
 
 
- /*   interfaceDevProperties.push_back({ {DEVPKEY_KsMidiPort_KsFilterInterfaceId, DEVPROP_STORE_SYSTEM, nullptr},
-        DEVPROP_TYPE_STRING, static_cast<ULONG>((MasterEndpointDefinition.FilterDeviceId.length() + 1) * sizeof(WCHAR)), (PVOID)MasterEndpointDefinition.FilterDeviceId.c_str() });*/
+    interfaceDevProperties.push_back({ {DEVPKEY_KsMidiPort_KsFilterInterfaceId, DEVPROP_STORE_SYSTEM, nullptr},
+        DEVPROP_TYPE_STRING, static_cast<ULONG>((MasterEndpointDefinition.FilterDeviceId.length() + 1) * sizeof(WCHAR)), (PVOID)MasterEndpointDefinition.FilterDeviceId.c_str() });
 
-    //interfaceDevProperties.push_back({ {DEVPKEY_KsTransport, DEVPROP_STORE_SYSTEM, nullptr },
-    //    DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), (PVOID)&MasterEndpointDefinition.TransportCapability });
+    interfaceDevProperties.push_back({ {DEVPKEY_KsTransport, DEVPROP_STORE_SYSTEM, nullptr },
+        DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), (PVOID)&MasterEndpointDefinition.TransportCapability });
 
 
 
     // create group terminal blocks and the pin map
 
-    uint8_t currentInputGroup = 0;
-    uint8_t currentOutputGroup = 0;
+    uint8_t currentGtbInputGroupIndex{ 0 };
+    uint8_t currentGtbOutputGroupIndex{ 0 };
+    uint8_t currentBlockNumber{ 0 };
 
-    uint8_t currentBlockNumber = 0;
-
-    std::vector<MIDI_KS_AGGREGATE_PIN_MAP_ENTRY> pinMapEntries;
+    KSMIDI_PIN_MAP pinMap{ };
     std::vector<internal::GroupTerminalBlockInternal> blocks;
 
-    for (auto pin : MasterEndpointDefinition.Pins)
+    for (auto const& pin : MasterEndpointDefinition.Pins)
     {
         internal::GroupTerminalBlockInternal gtb;
-        MIDI_KS_AGGREGATE_PIN_MAP_ENTRY mapEntry;
 
         gtb.Number = ++currentBlockNumber;
-        gtb.GroupCount = 1;
+        gtb.GroupCount = 1; // always a single group for aggregate devices
 
         if (pin.DataFlowFromClientPerspective == MidiFlow::MidiFlowIn)
         {
-            mapEntry.DataFlowFromPinPerspective = MidiFlow::MidiFlowOut;
-            gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_OUTPUT;   // from the pin/gtb's perspective
+            if (currentGtbOutputGroupIndex >= KSMIDI_PIN_MAP_ENTRY_COUNT)
+                continue;
 
-            gtb.FirstGroupIndex = currentOutputGroup++;
+            pinMap.InputEntries[currentGtbOutputGroupIndex].IsValid = true;
+            pinMap.InputEntries[currentGtbOutputGroupIndex].PinId = pin.PinNumber;
+
+            gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_OUTPUT;   // from the pin/gtb's perspective
+            gtb.FirstGroupIndex = currentGtbOutputGroupIndex;
+
+            currentGtbOutputGroupIndex++;
         }
         else
         {
-            mapEntry.DataFlowFromPinPerspective = MidiFlow::MidiFlowIn;
-            gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_INPUT;   // from the pin/gtb's perspective
+            if (currentGtbInputGroupIndex >= KSMIDI_PIN_MAP_ENTRY_COUNT)
+                continue;
 
-            gtb.FirstGroupIndex = currentInputGroup++;
+            pinMap.InputEntries[currentGtbInputGroupIndex].IsValid = true;
+            pinMap.InputEntries[currentGtbInputGroupIndex].PinId = pin.PinNumber;
+
+            gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_INPUT;   // from the pin/gtb's perspective
+            gtb.FirstGroupIndex = currentGtbInputGroupIndex;
+
+            currentGtbInputGroupIndex++;
         }
 
-        mapEntry.GroupIndex = gtb.FirstGroupIndex;
-
+        // sort out the name for this group terminal
         if (pin.Name.empty())
         {
             std::wstring dir = pin.DataFlowFromClientPerspective == MidiFlow::MidiFlowIn ? L"In" : L"Out";
@@ -170,15 +183,12 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
             gtb.Name = pin.Name;
         }
 
-        // todo: need to properly map this later so we 
-        // have gtbs numbered 1 up
-
-        gtb.Protocol = 0x01;    // midi 1.0
-        gtb.MaxInputBandwidth = 0x0001; // 31.25 kbps
-        gtb.MaxOutputBandwidth = 0x0001;
+        // default values as defined in the MIDI 2.0 USB spec
+        gtb.Protocol = 0x01;                // midi 1.0
+        gtb.MaxInputBandwidth = 0x0001;     // 31.25 kbps
+        gtb.MaxOutputBandwidth = 0x0001;    // 31.25 kbps
 
         blocks.push_back(gtb);
-        pinMapEntries.push_back(mapEntry);
     }
 
 
@@ -191,17 +201,15 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
 
         interfaceDevProperties.push_back({ { PKEY_MIDI_IN_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr },
             DEVPROP_TYPE_BINARY, (ULONG)groupTerminalBlockData.size(), (PVOID)groupTerminalBlockData.data() });
-
     }
     else
     {
         // write empty data
     }
 
-    //interfaceDevProperties.push_back({ { DEVPKEY_KsMidiGroupPinMap, DEVPROP_STORE_SYSTEM, nullptr },
-    //    DEVPROP_TYPE_BINARY, sizeof(MidiPin->PinMap), &(MidiPin->PinMap) });
 
-
+    interfaceDevProperties.push_back({ { DEVPKEY_KsMidiGroupPinMap, DEVPROP_STORE_SYSTEM, nullptr },
+        DEVPROP_TYPE_BINARY, sizeof(KSMIDI_PIN_MAP), &(pinMap) });
 
 
     SW_DEVICE_CREATE_INFO createInfo{ };

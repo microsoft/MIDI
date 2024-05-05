@@ -108,9 +108,9 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "MidiXProc.h"
 #include "MidiKs.h"
 
-class CMidi2KSMidiEndpointManager;
-class CMidi2KSMidiConfigurationManager;
-class CMidi2KSMidiBiDi;
+class CMidi2KSAggregateMidiEndpointManager;
+class CMidi2KSAggregateMidiConfigurationManager;
+class CMidi2KSAggregateMidiBiDi;
 class AbstractionState;
 
 #include "Midi2.KSAggregateAbstraction.h"

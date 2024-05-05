@@ -20,7 +20,7 @@ public:
     STDMETHOD(Cleanup)();
 
 private:
-
     std::unique_ptr<CMidi2KSAggregateMidi> m_MidiDevice;
+
 };
 

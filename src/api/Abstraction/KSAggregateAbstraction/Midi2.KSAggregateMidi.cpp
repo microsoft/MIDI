@@ -36,17 +36,16 @@ CMidi2KSAggregateMidi::Initialize(
         TraceLoggingWideString(Device, "Device"),
         TraceLoggingHexUInt32(CreationParams->DataFormat, "MidiDataFormat"),
         TraceLoggingHexUInt32(Flow, "MidiFlow"),
-        TraceLoggingHexUInt32(*MmCssTaskId, "MmCssTaskId"),
         TraceLoggingPointer(Callback, "callback")
         );
 
     wil::unique_handle filter;
-    std::unique_ptr<KSMidiInDevice> midiInDevice;
-    std::unique_ptr<KSMidiOutDevice> midiOutDevice;
+    //std::unique_ptr<KSMidiInDevice> midiInDevice;
+    //std::unique_ptr<KSMidiOutDevice> midiOutDevice;
     winrt::guid interfaceClass;
 
-    ULONG inPinId{ 0 };
-    ULONG outPinId{ 0 };
+    //ULONG inPinId{ 0 };
+    //ULONG outPinId{ 0 };
     MidiTransport transportCapabilities;
     MidiTransport transport;
 
@@ -77,6 +76,10 @@ CMidi2KSAggregateMidi::Initialize(
 
     // if creation params specifies MIDI_DATAFORMAT_ANY, the best available transport
     // will be chosen.
+
+
+    // TODO: This transport format logic is wrong for this type of endpoint.
+    // All aggregated devices are byte stream, but THIS device is UMP
 
     // if creation params specifies that bytestream is requested, then
     // limit the transport to bytestream
@@ -125,103 +128,94 @@ CMidi2KSAggregateMidi::Initialize(
 
     if (Flow == MidiFlowBidirectional)
     {
-        prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_InPinId));
-        RETURN_HR_IF_NULL(E_INVALIDARG, prop);
-        inPinId = outPinId = winrt::unbox_value<uint32_t>(prop);
-
-        prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_OutPinId));
-        RETURN_HR_IF_NULL(E_INVALIDARG, prop);
-        outPinId = outPinId = winrt::unbox_value<uint32_t>(prop);
-
         // Apply pin map here. This will result in multiple KsMidiOutDevice and KsMidiInDevice entries
         // each mapped to a group
 
-        if (deviceInfo.Properties().HasKey(STRING_DEVPKEY_KsMidiGroupPinMap))
+        if (!deviceInfo.Properties().HasKey(STRING_DEVPKEY_KsMidiGroupPinMap))
         {
-            auto value = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiGroupPinMap).as<winrt::Windows::Foundation::IPropertyValue>();
+            TraceLoggingWrite(
+                MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Endpoint device properties are missing the pin map", "message"),
+                TraceLoggingWideString(Device, "device id")
+            );
 
-            if (value != nullptr)
+            return E_FAIL;
+        }
+
+        auto value = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiGroupPinMap).as<winrt::Windows::Foundation::IPropertyValue>();
+
+        if (value != nullptr)
+        {
+            auto t = value.Type();
+
+            if (t == winrt::Windows::Foundation::PropertyType::UInt8Array)
             {
-                auto t = value.Type();
+                auto refArray = winrt::unbox_value<winrt::Windows::Foundation::IReferenceArray<uint8_t>>(deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiGroupPinMap));
 
-                if (t == winrt::Windows::Foundation::PropertyType::UInt8Array)
+                if (refArray != nullptr)
                 {
-                    auto refArray = winrt::unbox_value<winrt::Windows::Foundation::IReferenceArray<uint8_t>>(deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiGroupPinMap));
+                    auto data = refArray.Value();
 
-                    if (refArray != nullptr)
+                    auto pinMap = (KSMIDI_PIN_MAP*)(data.data());
+
+                    // process all input group maps
+                    for (uint8_t inputGroup = 0; inputGroup < KSMIDI_PIN_MAP_ENTRY_COUNT; inputGroup++)
                     {
-                        auto data = refArray.Value();
-
-                        auto pinMap = (KSMIDI_PIN_MAP*)(data.data());
-
-                        // process all input group maps
-                        for (uint8_t inputGroup = 0; inputGroup < KSMIDI_PIN_MAP_ENTRY_COUNT; inputGroup++)
+                        if (pinMap->InputEntries[inputGroup].IsValid)
                         {
-                            if (pinMap->InputEntries[inputGroup].IsValid)
-                            {
-                                // create the KS device and add to our runtime map
-                                std::unique_ptr<KSMidiInDevice> device;                               
-                                device.reset(new (std::nothrow) KSMidiInDevice());
-                                RETURN_IF_NULL_ALLOC(device);
+                            // create the KS device and add to our runtime map
+                            std::unique_ptr<KSMidiInDevice> device;                               
+                            device.reset(new (std::nothrow) KSMidiInDevice());
+                            RETURN_IF_NULL_ALLOC(device);
 
-                                RETURN_IF_FAILED(
-                                    device->Initialize(
-                                        Device, 
-                                        filter.get(), 
-                                        pinMap->InputEntries[inputGroup].PinId, 
-                                        transport, 
-                                        requestedBufferSize, 
-                                        MmCssTaskId, 
-                                        Callback, 
-                                        Context)
-                                );
+                            RETURN_IF_FAILED(
+                                device->Initialize(
+                                    Device, 
+                                    filter.get(), 
+                                    pinMap->InputEntries[inputGroup].PinId, 
+                                    transport, 
+                                    requestedBufferSize, 
+                                    MmCssTaskId, 
+                                    Callback, 
+                                    Context)
+                            );
 
-                                m_midiInDeviceGroupMap[inputGroup] = std::move(device);
-
-                                m_useGroupMap = true;   // set this to true as long as we have at least one that is valid
-                            }
+                            m_midiInDeviceGroupMap[inputGroup] = std::move(device);
                         }
+                    }
 
-                        // process all output group maps
-                        for (uint8_t outputGroup = 0; outputGroup < KSMIDI_PIN_MAP_ENTRY_COUNT; outputGroup++)
+                    // process all output group maps
+                    for (uint8_t outputGroup = 0; outputGroup < KSMIDI_PIN_MAP_ENTRY_COUNT; outputGroup++)
+                    {
+                        if (pinMap->OutputEntries[outputGroup].IsValid)
                         {
-                            if (pinMap->OutputEntries[outputGroup].IsValid)
-                            {
-                                // create the KS device and add to our runtime map
-                                std::unique_ptr<KSMidiOutDevice> device;
-                                device.reset(new (std::nothrow) KSMidiOutDevice());
-                                RETURN_IF_NULL_ALLOC(device);
+                            // create the KS device and add to our runtime map
+                            std::unique_ptr<KSMidiOutDevice> device;
+                            device.reset(new (std::nothrow) KSMidiOutDevice());
+                            RETURN_IF_NULL_ALLOC(device);
 
-                                RETURN_IF_FAILED(
-                                    device->Initialize(
-                                        Device, 
-                                        filter.get(), 
-                                        pinMap->OutputEntries[outputGroup].PinId, 
-                                        transport, 
-                                        requestedBufferSize, 
-                                        MmCssTaskId)
-                                );
+                            RETURN_IF_FAILED(
+                                device->Initialize(
+                                    Device, 
+                                    filter.get(), 
+                                    pinMap->OutputEntries[outputGroup].PinId, 
+                                    transport, 
+                                    requestedBufferSize, 
+                                    MmCssTaskId)
+                            );
 
-                                m_midiOutDeviceGroupMap[outputGroup] = std::move(device);
-
-                                m_useGroupMap = true;   // set this to true as long as we have at least one that is valid
-                            }
+                            m_midiOutDeviceGroupMap[outputGroup] = std::move(device);
                         }
                     }
                 }
             }
         }
-        else
-        {
-            m_useGroupMap = false;
-        }
+
     }
-    else
-    {
-        prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_KsPinId));
-        RETURN_HR_IF_NULL(E_INVALIDARG, prop);
-        inPinId = outPinId = winrt::unbox_value<uint32_t>(prop);
-    }
+
 
     return S_OK;
 }

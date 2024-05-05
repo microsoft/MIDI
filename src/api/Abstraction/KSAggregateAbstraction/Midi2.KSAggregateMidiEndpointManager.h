@@ -11,21 +11,6 @@
 using namespace winrt::Windows::Devices::Enumeration;
 
 
-#pragma pack(push)
-#pragma pack(1)
-
-// this is used in a KS Multiple Items entry in the properties
-typedef struct
-{
-    ULONG PinNumber;
-    BYTE GroupIndex;
-    MidiFlow DataFlowFromPinPerspective;
-} MIDI_KS_AGGREGATE_PIN_MAP_ENTRY, *PMIDI_KS_AGGREGATE_PIN_MAP_ENTRY;
-
-#pragma pack(pop)
-
-
-
 struct KsAggregateEndpointPinDefinition
 {
     ULONG PinNumber;
