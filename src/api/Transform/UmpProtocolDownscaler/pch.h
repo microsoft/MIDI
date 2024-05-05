@@ -40,8 +40,10 @@
 
 #include "mididefs.h"
 
-#include <libmidi2/utils.h>              // AM_MIDI2
-#include <libmidi2/umpMessageCreate.h>   // AM_MIDI2
+//#include <libmidi2/utils.h>              // AM_MIDI2
+//#include <libmidi2/umpMessageCreate.h>   // AM_MIDI2
+#include <libmidi2/umpToMIDI1Protocol.h>
+
 #include "ump_helpers.h"        // internal helpers
 
 namespace internal = ::WindowsMidiServicesInternal;

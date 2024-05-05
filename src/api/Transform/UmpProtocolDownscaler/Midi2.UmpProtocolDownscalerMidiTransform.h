@@ -14,6 +14,7 @@ public:
     STDMETHOD(Cleanup)();
 
 private:
+    umpToMIDI1Protocol m_umpToMidi1{};
 
     std::wstring m_Device;
     wil::com_ptr_nothrow<IMidiCallback> m_Callback;
