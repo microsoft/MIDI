@@ -56,6 +56,8 @@
 #include <mmdeviceapi.h>
 
 #include "wstring_util.h"
+#include "midi_group_terminal_blocks.h"
+
 namespace internal = ::WindowsMidiServicesInternal;
 
 #include "MidiDefs.h"

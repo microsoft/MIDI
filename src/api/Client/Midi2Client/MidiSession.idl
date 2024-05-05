@@ -13,7 +13,6 @@ MIDI_IDL_IMPORT
 
 import "MidiEndpointConnection.idl";
 import "IMidiEndpointConnectionSettings.idl";
-import "MidiSessionSettings.idl";
 import "MidiVirtualEndpointDeviceDefinition.idl";
 
 namespace MIDI_MIDL_NAMESPACE
@@ -24,10 +23,8 @@ namespace MIDI_MIDL_NAMESPACE
     {
         Guid Id { get; };
         String Name{ get; };
-        MidiSessionSettings Settings{ get; };
 
         static MidiSession CreateSession(String sessionName);
-        static MidiSession CreateSession(String sessionName, MidiSessionSettings settings);
 
         Boolean IsOpen { get; };
 

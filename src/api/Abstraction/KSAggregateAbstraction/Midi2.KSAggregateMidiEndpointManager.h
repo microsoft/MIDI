@@ -10,35 +10,45 @@
 
 using namespace winrt::Windows::Devices::Enumeration;
 
-typedef class _MIDI_PIN_INFO
+
+#pragma pack(push)
+#pragma pack(1)
+
+// this is used in a KS Multiple Items entry in the properties
+typedef struct
 {
-public:
-    std::wstring Id;                // the filter InterfaceId
-    std::wstring InstanceId;        // the MIDI instance id
-    std::wstring ParentInstanceId;  // The instance id of the parent device
-    std::wstring Name;              // friendly name for this device
-    INT32 PinId{ 0 };               // contains the pin id, for bidi it is the MidiflowOut pin id
-    INT32 PinIdIn{ 0 };             // only used for bidi, contains the MidiFlowIn pin id
-    MidiTransport TransportCapability {MidiTransport_Invalid};
-    MidiDataFormat DataFormatCapability {MidiDataFormat_Invalid};
-    MidiFlow Flow{ MidiFlowOut };
-    BOOL CreateUMPOnly{ FALSE };
-    HRESULT SwdCreation{ S_OK };
-    std::unique_ptr<BYTE> GroupTerminalBlockDataOut;
-    ULONG GroupTerminalBlockDataSizeOut {0};
-    std::unique_ptr<BYTE> GroupTerminalBlockDataIn;
-    ULONG GroupTerminalBlockDataSizeIn {0};
-    GUID NativeDataFormat{0};
+    ULONG PinNumber;
+    BYTE GroupIndex;
+    MidiFlow DataFlowFromPinPerspective;
+} MIDI_KS_AGGREGATE_PIN_MAP_ENTRY, *PMIDI_KS_AGGREGATE_PIN_MAP_ENTRY;
 
-    std::wstring SerialNumber;
-    std::wstring ManufacturerName;
-    UINT16 VID{ 0 };
-    UINT16 PID{ 0 };
+#pragma pack(pop)
 
-    BOOL UsePinMap{ false };
-    KSMIDI_PIN_MAP PinMap{ };
 
-} MIDI_PIN_INFO, *PMIDI_PIN_INFO;
+
+struct KsAggregateEndpointPinDefinition
+{
+    ULONG PinNumber;
+    std::wstring Name;
+    MidiFlow DataFlowFromClientPerspective;
+};
+
+struct KsAggregateEndpointDefinition
+{
+    std::wstring EndpointName;
+    std::wstring FilterName;
+    std::wstring ParentDeviceName;
+
+    std::wstring FilterDeviceId;
+    std::wstring ParentDeviceInstanceId;
+    std::wstring EndpointDeviceInstanceId;
+
+    MidiTransport TransportCapability;
+
+
+    std::vector<KsAggregateEndpointPinDefinition> Pins;
+};
+
 
 class CMidi2KSAggregateMidiEndpointManager :
     public Microsoft::WRL::RuntimeClass<
@@ -51,6 +61,8 @@ public:
     STDMETHOD(Cleanup)();
 
 private:
+    STDMETHOD(CreateMidiUmpEndpoint)(_In_ KsAggregateEndpointDefinition& MasterEndpointDefinition);
+    STDMETHOD(CreateMidiBytestreamEndpoints)(_In_ KsAggregateEndpointDefinition& MasterEndpointDefinition);
 
     
     HRESULT OnDeviceAdded(_In_ DeviceWatcher, _In_ DeviceInformation);
@@ -62,7 +74,7 @@ private:
     wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
     wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> m_MidiProtocolManager;
 
-    std::vector<std::unique_ptr<MIDI_PIN_INFO>> m_AvailableMidiPins;
+    //std::vector<std::unique_ptr<MIDI_PIN_INFO>> m_AvailableMidiPins;
     
     DeviceWatcher m_Watcher{0};
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::Added_revoker m_DeviceAdded;

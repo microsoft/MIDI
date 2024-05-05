@@ -11,7 +11,7 @@
 
 using namespace winrt::Microsoft::Devices::Midi2;
 
-void MidiSessionTests::TestCreateNewSessionWithoutSettings()
+void MidiSessionTests::TestCreateNewSession()
 {
     winrt::hstring sessionName = L"Test Session Name";
 
@@ -22,27 +22,6 @@ void MidiSessionTests::TestCreateNewSessionWithoutSettings()
     VERIFY_IS_TRUE(session.IsOpen());
 
     VERIFY_ARE_EQUAL(session.Name(),sessionName);
-
-    VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
-
-    session.Close();
-}
-
-
-void MidiSessionTests::TestCreateNewSessionWithSettings()
-{
-    winrt::hstring sessionName = L"Test Session Name";
-    MidiSessionSettings settings;
-    settings.UseMmcssThreads(true);
-
-
-    auto session = MidiSession::CreateSession(sessionName, settings);
-
-    VERIFY_IS_NOT_NULL(session);
-
-    VERIFY_IS_TRUE(session.IsOpen());
-
-    VERIFY_ARE_EQUAL(session.Name(), sessionName);
 
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 

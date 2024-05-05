@@ -23,12 +23,12 @@ namespace MIDI_CPP_NAMESPACE::implementation
         fb->InternalSetisReadOnly(false);
 
         fb->IsActive(true);
-        fb->Number(m_number);
-        fb->Name(m_name);
-        fb->FirstGroupIndex(m_firstGroupIndex);
-        fb->GroupCount(m_numberOfGroupsSpanned);
+        fb->Number(m_block.Number);
+        fb->Name(m_block.Name.c_str());
+        fb->FirstGroupIndex(m_block.FirstGroupIndex);
+        fb->GroupCount(m_block.GroupCount);
 
-        switch (m_direction)
+        switch ((midi2::MidiGroupTerminalBlockDirection)m_block.Direction)
         {
         case midi2::MidiGroupTerminalBlockDirection::Bidirectional:
             fb->Direction(midi2::MidiFunctionBlockDirection::Bidirectional);
@@ -43,14 +43,14 @@ namespace MIDI_CPP_NAMESPACE::implementation
             break;
         }
 
-        switch (m_protocol)
+        switch ((midi2::MidiGroupTerminalBlockProtocol)m_block.Protocol)
         {
         case midi2::MidiGroupTerminalBlockProtocol::Unknown:
             // Unknown is a tough one. We don't do CI negotiation as it is deprecated.
             // We make a guess, but really, the device should present itself properly 
             // through declaring the protocol in the GTB, or even better, giving us 
             // actual function blocks to use. 
-            if (m_numberOfGroupsSpanned == 1)
+            if (m_block.GroupCount == 1)
             {
                 // No SysEx 8 and we treat as MIDI 1.0 bandwidth restricted
                 fb->Midi10Connection(midi2::MidiFunctionBlockMidi10::YesBandwidthUnrestricted);
@@ -109,28 +109,13 @@ namespace MIDI_CPP_NAMESPACE::implementation
     }
 
 
-
+    
     _Use_decl_annotations_
-    bool MidiGroupTerminalBlock::InternalUpdateFromPropertyData(UMP_GROUP_TERMINAL_BLOCK_HEADER* const header, std::wstring& name)
+    bool MidiGroupTerminalBlock::InternalUpdateFromPropertyData(internal::GroupTerminalBlockInternal block)
     {
-        if (header != nullptr)
-        {
-            m_number = header->Number;
-            m_direction = (midi2::MidiGroupTerminalBlockDirection)header->Direction;
-            m_firstGroupIndex = header->FirstGroupIndex;
-            m_numberOfGroupsSpanned = header->GroupCount;
-            m_protocol = (midi2::MidiGroupTerminalBlockProtocol)header->Protocol;
-            m_maxDeviceInputBandwidthIn4KBSecondUnits = header->MaxInputBandwidth;
-            m_maxDeviceOutputBandwidthIn4KBSecondUnits = header->MaxOutputBandwidth;
+        m_block = block;
 
-            m_name = winrt::hstring{ internal::TrimmedWStringCopy(name).c_str() };
-
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return true;
     }
 
 
@@ -158,12 +143,12 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
     uint32_t MidiGroupTerminalBlock::CalculatedMaxDeviceInputBandwidthBitsPerSecond()
     {
-        return CalculateBandwidth(m_maxDeviceInputBandwidthIn4KBSecondUnits);
+        return CalculateBandwidth(m_block.MaxInputBandwidth);
     }
 
     uint32_t MidiGroupTerminalBlock::CalculatedMaxDeviceOutputBandwidthBitsPerSecond()
     {
-        return CalculateBandwidth(m_maxDeviceOutputBandwidthIn4KBSecondUnits);
+        return CalculateBandwidth(m_block.MaxOutputBandwidth);
     }
 
 

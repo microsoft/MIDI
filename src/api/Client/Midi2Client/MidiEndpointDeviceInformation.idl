@@ -68,7 +68,7 @@ namespace MIDI_MIDL_NAMESPACE
         Boolean SupportsSendingJRTimestamps{ get; };
 
         Boolean HasStaticFunctionBlocks{ get; };
-        UInt8 FunctionBlockCount{ get; };
+        UInt8 DeclaredFunctionBlockCount{ get; };
 
         IMapView<UInt8, MidiFunctionBlock> FunctionBlocks{ get; };
         Windows.Foundation.DateTime FunctionBlocksLastUpdateTime{ get; };

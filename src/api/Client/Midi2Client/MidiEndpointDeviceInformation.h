@@ -83,7 +83,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
 
         bool HasStaticFunctionBlocks() const noexcept { return GetBoolProperty(STRING_PKEY_MIDI_FunctionBlocksAreStatic, false); }
-        uint8_t FunctionBlockCount() const noexcept { return GetByteProperty(STRING_PKEY_MIDI_FunctionBlockCount, (uint8_t)0); }
+        uint8_t DeclaredFunctionBlockCount() const noexcept { return GetByteProperty(STRING_PKEY_MIDI_FunctionBlockCount, (uint8_t)0); }
         collections::IMapView<uint8_t, midi2::MidiFunctionBlock> FunctionBlocks() const noexcept;
 
         collections::IVectorView<midi2::MidiGroupTerminalBlock> GroupTerminalBlocks() const noexcept;

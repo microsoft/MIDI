@@ -19,8 +19,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
     _Use_decl_annotations_
     midi2::MidiSession MidiSession::CreateSession(
-        winrt::hstring const& sessionName,
-        midi2::MidiSessionSettings const& settings
+        winrt::hstring const& sessionName
         ) noexcept
     {
         internal::LogInfo(__FUNCTION__, L"Session create");
@@ -30,7 +29,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
             auto session = winrt::make_self<implementation::MidiSession>();
 
             session->SetName(sessionName);
-            session->SetSettings(settings);
 
             if (session->InternalStart())
             {
@@ -57,15 +55,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
             return nullptr;
         }
-    }
-
-    _Use_decl_annotations_
-    midi2::MidiSession MidiSession::CreateSession(
-        winrt::hstring const& sessionName
-        ) noexcept
-    {
-        // use default settings
-        return CreateSession(sessionName, midi2::MidiSessionSettings());
     }
 
     // Internal method called inside the API to connect to the abstraction. Called by the code which creates

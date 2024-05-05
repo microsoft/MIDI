@@ -177,8 +177,8 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         std::unique_ptr<WCHAR> manufacturerNameData;
         ULONG manufacturerNameDataSize{ 0 };
 
-        std::unique_ptr<WCHAR> pinNameData;
-        ULONG pinNameDataSize{ 0 };
+        //std::unique_ptr<WCHAR> pinNameData;
+        //ULONG pinNameDataSize{ 0 };
 
         UINT16 deviceVID{ 0 };
         UINT16 devicePID{ 0 };
@@ -208,92 +208,92 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         // and set that flag if we can.
         // NOTE: this has been for bring up performance comparison testing only, and will be removed.
         // (Note from Pete: the above statement doesn't seem correct. This is the branch all MIDI 1.0 devices with the old USB driver fall into)
-        if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_StandardByteStream, &hPin)))
-        {
-            TraceLoggingWrite(
-                MidiKSAbstractionTelemetryProvider::Provider(),
-                __FUNCTION__,
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Pin is MidiTransport_StandardByteStream", "message"),
-                TraceLoggingWideString(device.Id().c_str(), "device id"),
-                TraceLoggingUInt32(i, "pin id")
-            );
+        //if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_StandardByteStream, &hPin)))
+        //{
+        //    TraceLoggingWrite(
+        //        MidiKSAbstractionTelemetryProvider::Provider(),
+        //        __FUNCTION__,
+        //        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        //        TraceLoggingPointer(this, "this"),
+        //        TraceLoggingWideString(L"Pin is MidiTransport_StandardByteStream", "message"),
+        //        TraceLoggingWideString(device.Id().c_str(), "device id"),
+        //        TraceLoggingUInt32(i, "pin id")
+        //    );
 
-            transportCapability = (MidiTransport)((DWORD) transportCapability | (DWORD) MidiTransport_StandardByteStream);
-            dataFormatCapability = (MidiDataFormat) ((DWORD) dataFormatCapability | (DWORD) MidiDataFormat_ByteStream);
+        //    transportCapability = (MidiTransport)((DWORD) transportCapability | (DWORD) MidiTransport_StandardByteStream);
+        //    dataFormatCapability = (MidiDataFormat) ((DWORD) dataFormatCapability | (DWORD) MidiDataFormat_ByteStream);
 
-            //midiPin->NativeDataFormat = KSDATAFORMAT_SUBTYPE_MIDI;
+        //    //midiPin->NativeDataFormat = KSDATAFORMAT_SUBTYPE_MIDI;
 
-            // get the name from the Pin. This is how many developers would prefer we name MIDI ports
+        //    // get the name from the Pin. This is how many developers would prefer we name MIDI ports
 
-            LOG_IF_FAILED_WITH_EXPECTED(
-                PinPropertyAllocate(
-                    hFilter.get(), 
-                    i, 
-                    KSPROPSETID_Pin, 
-                    KSPROPERTY_PIN_NAME, 
-                    (PVOID*)&pinNameData,
-                    &pinNameDataSize),
-                HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
+        //    LOG_IF_FAILED_WITH_EXPECTED(
+        //        PinPropertyAllocate(
+        //            hFilter.get(), 
+        //            i, 
+        //            KSPROPSETID_Pin, 
+        //            KSPROPERTY_PIN_NAME, 
+        //            (PVOID*)&pinNameData,
+        //            &pinNameDataSize),
+        //        HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
-            if (pinNameDataSize > 0)
-            {
-                TraceLoggingWrite(
-                    MidiKSAbstractionTelemetryProvider::Provider(),
-                    __FUNCTION__,
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Retrieved pin name", "message"),
-                    TraceLoggingWideString(device.Id().c_str(), "device id"),
-                    TraceLoggingUInt32(i, "pin id"),
-                    TraceLoggingWideString(pinNameData.get(), "pin name")
-                );
-
-
-                // TODO: If the pin name contains [pin number] then we shouldn't use it. That's an auto-generated
-                // name Windows creates when there's no iJack value. We only want the value when 
-                // iJack is actually specified. 
-
-                // This is hokey, but going to do a string search to see if the name ends with [n]
+        //    if (pinNameDataSize > 0)
+        //    {
+        //        TraceLoggingWrite(
+        //            MidiKSAbstractionTelemetryProvider::Provider(),
+        //            __FUNCTION__,
+        //            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        //            TraceLoggingPointer(this, "this"),
+        //            TraceLoggingWideString(L"Retrieved pin name", "message"),
+        //            TraceLoggingWideString(device.Id().c_str(), "device id"),
+        //            TraceLoggingUInt32(i, "pin id"),
+        //            TraceLoggingWideString(pinNameData.get(), "pin name")
+        //        );
 
 
-                if (IsAutogeneratedPinName(deviceName.c_str(), i, pinNameData.get()))
-                {
-                    // don't change the device name
-                }
-                else
-                {
-                    // use the name from the pin. This is the most preferred name for most devices
-                    deviceName = std::wstring(pinNameData.get());
-                }
-            }
-            //else
-            //{
-            //    // no pin name, so fall back to the interface name with a differentiator
+        //        // TODO: If the pin name contains [pin number] then we shouldn't use it. That's an auto-generated
+        //        // name Windows creates when there's no iJack value. We only want the value when 
+        //        // iJack is actually specified. 
 
-            //    RETURN_IF_FAILED(
-            //        PinPropertySimple(
-            //            hFilter.get(), 
-            //            i, 
-            //            KSPROPSETID_Pin, 
-            //            KSPROPERTY_PIN_DATAFLOW, 
-            //            &dataFlow, 
-            //            sizeof(KSPIN_DATAFLOW)));
+        //        // This is hokey, but going to do a string search to see if the name ends with [n]
 
-            //    if (dataFlow == KSPIN_DATAFLOW_IN)
-            //    {
-            //        // DATAFLOW_IN is an output port (in to the pin)
-            //        deviceName = parentDeviceInfo.Name() + L" [Out " + std::to_wstring(portNumberDifferentiatorOutput++) + L"]";
-            //    }
-            //    else
-            //    {
-            //        deviceName = parentDeviceInfo.Name() + L" [In " + std::to_wstring(portNumberDifferentiatorInput++) + L"]";
-            //    }
-            //}
 
-            hPin.reset();
-        }
+        //        if (IsAutogeneratedPinName(deviceName.c_str(), i, pinNameData.get()))
+        //        {
+        //            // don't change the device name
+        //        }
+        //        else
+        //        {
+        //            // use the name from the pin. This is the most preferred name for most devices
+        //            deviceName = std::wstring(pinNameData.get());
+        //        }
+        //    }
+        //    //else
+        //    //{
+        //    //    // no pin name, so fall back to the interface name with a differentiator
+
+        //    //    RETURN_IF_FAILED(
+        //    //        PinPropertySimple(
+        //    //            hFilter.get(), 
+        //    //            i, 
+        //    //            KSPROPSETID_Pin, 
+        //    //            KSPROPERTY_PIN_DATAFLOW, 
+        //    //            &dataFlow, 
+        //    //            sizeof(KSPIN_DATAFLOW)));
+
+        //    //    if (dataFlow == KSPIN_DATAFLOW_IN)
+        //    //    {
+        //    //        // DATAFLOW_IN is an output port (in to the pin)
+        //    //        deviceName = parentDeviceInfo.Name() + L" [Out " + std::to_wstring(portNumberDifferentiatorOutput++) + L"]";
+        //    //    }
+        //    //    else
+        //    //    {
+        //    //        deviceName = parentDeviceInfo.Name() + L" [In " + std::to_wstring(portNumberDifferentiatorInput++) + L"]";
+        //    //    }
+        //    //}
+
+        //    hPin.reset();
+        //}
 
         // ================== Cyclic UMP Interfaces ===============================================
         // attempt to instantiate using cyclic streaming for UMP buffers
@@ -378,23 +378,24 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         // ================== Cyclic Byte / MIDI 1.0 Interfaces ===============================================
         // attempt to instantiate using standard streaming for midiOne buffers
         // and set that flag if we can.
-        if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_CyclicByteStream, &hPin)))
-        {
-            TraceLoggingWrite(
-                MidiKSAbstractionTelemetryProvider::Provider(),
-                __FUNCTION__,
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Pin is MidiTransport_CyclicByteStream pin", "message"),
-                TraceLoggingWideString(device.Id().c_str(), "device id"),
-                TraceLoggingUInt32(i, "pin id")
-            );
+        
+ //       if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_CyclicByteStream, &hPin)))
+        //{
+        //    TraceLoggingWrite(
+        //        MidiKSAbstractionTelemetryProvider::Provider(),
+        //        __FUNCTION__,
+        //        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        //        TraceLoggingPointer(this, "this"),
+        //        TraceLoggingWideString(L"Pin is MidiTransport_CyclicByteStream pin", "message"),
+        //        TraceLoggingWideString(device.Id().c_str(), "device id"),
+        //        TraceLoggingUInt32(i, "pin id")
+        //    );
 
-            transportCapability = (MidiTransport )((DWORD) transportCapability |  (DWORD) MidiTransport_CyclicByteStream);
-            dataFormatCapability = ( MidiDataFormat ) ((DWORD) dataFormatCapability | (DWORD) MidiDataFormat_ByteStream);
+        //    transportCapability = (MidiTransport )((DWORD) transportCapability |  (DWORD) MidiTransport_CyclicByteStream);
+        //    dataFormatCapability = ( MidiDataFormat ) ((DWORD) dataFormatCapability | (DWORD) MidiDataFormat_ByteStream);
 
-            hPin.reset();
-        }
+        //    hPin.reset();
+        //}
 
         // if this pin supports nothing, then it's not a streaming pin,
         // continue on

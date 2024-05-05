@@ -39,8 +39,7 @@ public:
         //TEST_METHOD_CLEANUP(TestCleanup);
 
         //Generic Tests
-    TEST_METHOD(TestCreateNewSessionWithSettings);
-    TEST_METHOD(TestCreateNewSessionWithoutSettings);
+    TEST_METHOD(TestCreateNewSession);
     TEST_METHOD(TestSessionList);
     TEST_METHOD(TestUpdateSessionName);
 

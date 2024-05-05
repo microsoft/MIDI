@@ -9,11 +9,6 @@
              trustLevel="Base"
              />
           <class
-             activatableClassId="Microsoft.Devices.Midi2.MidiSessionSettings"
-             threading="Both"
-             trustLevel="Base"
-             />
-          <class
              activatableClassId="Microsoft.Devices.Midi2.MidiEndpointDeviceInformation"
              threading="Both"
              trustLevel="Base"

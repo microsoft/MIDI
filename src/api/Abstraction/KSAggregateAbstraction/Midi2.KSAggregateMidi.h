@@ -8,6 +8,21 @@
 
 #pragma once
 
+
+#define KSMIDI_PIN_MAP_ENTRY_COUNT 16
+
+typedef struct {
+    BOOL IsValid;
+    UINT32 PinId;
+} KSMIDI_PIN_MAP_ENTRY, * PKSMIDI_PIN_MAP_ENTRY;
+
+typedef struct {
+    KSMIDI_PIN_MAP_ENTRY InputEntries[KSMIDI_PIN_MAP_ENTRY_COUNT]; // we use a fixed size array for these
+    KSMIDI_PIN_MAP_ENTRY OutputEntries[KSMIDI_PIN_MAP_ENTRY_COUNT];
+} KSMIDI_PIN_MAP, * PKSMIDI_PIN_MAP;
+
+
+
 class CMidi2KSAggregateMidi
 {
 public:

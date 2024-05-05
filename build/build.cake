@@ -371,6 +371,78 @@ Task("BuildApiActivationRegEntriesInternal")
 
 });
 
+//
+// See https://blogs.windows.com/windowsdeveloper/2019/04/30/enhancing-non-packaged-desktop-apps-using-windows-runtime-components/
+//
+Task("BuildRegistrationFreeWinRTActivationEntries")
+    .IsDependentOn("BuildServiceAndAPI")
+    .Does(() =>
+{
+    Information("\nBuilding Reg Free WinRT Manifest Activation Entries");
+
+    // read the file of dependencies
+    var sourceFileName = System.IO.Path.Combine(apiAndServiceStagingDir, "x64", "WinRTActivationEntries.txt");
+    var destinationFileName = System.IO.Path.Combine(registrySettingsStagingDir, "MyApplicationName.exe.manifest");
+
+    if (!System.IO.File.Exists(sourceFileName))
+        throw new ArgumentException("Missing WinRT Activation entries file " + sourceFileName);
+
+    using (StreamReader reader = System.IO.File.OpenText(sourceFileName))
+    {
+        if (!DirectoryExists(registrySettingsStagingDir))
+            CreateDirectory(registrySettingsStagingDir);
+
+        using (StreamWriter writer = System.IO.File.CreateText(destinationFileName))            
+        {
+            string line;
+
+            writer.WriteLine($"<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+            writer.WriteLine($"<assembly manifestVersion-\"1.0\" xmlns=\"urn:schemas-microsoft-com:asm.v1\">");
+            writer.WriteLine($"  <assemblyIdentity version=\"1.0.0.0\" name=\"MyApplicationName.exe\"/>");
+            writer.WriteLine($"  <file name=\"{MIDI2_NAMESPACE}.dll\" >");
+
+            while ((line = reader.ReadLine()) != null)
+            {
+                string trimmedLine = line.Trim();
+
+                if (string.IsNullOrWhiteSpace(trimmedLine) || trimmedLine.StartsWith("#"))
+                {
+                    // comment or empty line
+                    continue;
+                }
+
+                // pipe-delimited lines
+                var elements = trimmedLine.Split('|');
+
+                if (elements.Count() != 4)
+                    throw new ArgumentException("Bad line:  " + trimmedLine); 
+
+                // entries in order are
+                // ClassName | ActivationType | Threading | TrustLevel
+
+                string className = elements[0].Trim();
+                var activationType = int.Parse(elements[1].Trim());
+                var threading = int.Parse(elements[2].Trim());
+                var trustLevel = int.Parse(elements[3].Trim());
+
+                // TODO: Need to read the values from the file. These are hard-coded right now.
+                string threadingEnum = "both";  // STA / MTA / Both
+                string trustLevelEnum = "Base";     // Base / Partial / Full
+
+                writer.WriteLine($"    <activatableClass");
+                writer.WriteLine($"      name=\"{className}\"");
+                writer.WriteLine($"      threadingModel=\"{threadingEnum}\"");
+                writer.WriteLine($"      xmlns=\"urn:schemas-microsoft-com:winrt.v1\"");
+                writer.WriteLine($"      />");
+            }
+
+            writer.WriteLine("  </file>");
+            writer.WriteLine("</assembly>");
+        }   
+    }
+
+});
+
 
 Task("PackAPIProjection")
     .IsDependentOn("BuildServiceAndAPI")
@@ -635,14 +707,15 @@ Task("CopyAPIArtifacts")
 Task("Default")
     .IsDependentOn("Clean")
     .IsDependentOn("BuildApiActivationRegEntriesInternal")
+    .IsDependentOn("BuildRegistrationFreeWinRTActivationEntries")
     .IsDependentOn("BuildInstaller")
     .IsDependentOn("CopyAPIArtifacts")
     .Does(() =>
 {
 
     Information("\n\n");
-    Information($"Installer x64   >> \"{finalSetupNamex64}\" \n");
-    Information($"Installer Arm64 >> \"{finalSetupNameArm64}\"\n");
+    Information($"Installer x64   >> \"{finalSetupNamex64}\"");
+    Information($"Installer Arm64 >> \"{finalSetupNameArm64}\"");
     Information("\n\n");
 
 });

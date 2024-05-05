@@ -807,7 +807,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
 
         // this is not efficient, but it works. Optimize later.
-        for (uint8_t fb = 0; fb < MIDI_MAX_FUNCTION_BLOCKS && fb < FunctionBlockCount(); fb++)
+        for (uint8_t fb = 0; fb < MIDI_MAX_FUNCTION_BLOCKS && fb < DeclaredFunctionBlockCount(); fb++)
         {
             winrt::hstring functionBlockProperty = winrt::hstring(MIDI_STRING_PKEY_GUID) + winrt::hstring(MIDI_STRING_PKEY_PID_SEPARATOR) + winrt::to_hstring(fb + MIDI_FUNCTION_BLOCK_PROPERTY_INDEX_START);
             winrt::hstring functionBlockNameProperty = winrt::hstring(MIDI_STRING_PKEY_GUID) + winrt::hstring(MIDI_STRING_PKEY_PID_SEPARATOR) + winrt::to_hstring(fb + MIDI_FUNCTION_BLOCK_NAME_PROPERTY_INDEX_START);
@@ -889,7 +889,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
 
         // this is not efficient, but it works. Optimize later.
-        for (uint8_t fb = 0; fb < MIDI_MAX_FUNCTION_BLOCKS && fb < FunctionBlockCount(); fb++)
+        for (uint8_t fb = 0; fb < MIDI_MAX_FUNCTION_BLOCKS && fb < DeclaredFunctionBlockCount(); fb++)
         {
             winrt::hstring functionBlockProperty = internal::BuildFunctionBlockPropertyKey(fb);
             winrt::hstring functionBlockNameProperty = internal::BuildFunctionBlockNamePropertyKey(fb);
@@ -1044,43 +1044,14 @@ namespace MIDI_CPP_NAMESPACE::implementation
                     auto data = refArray.Value();
                     auto arraySize = data.size();
 
-                    uint32_t offset = 0;
+                    auto gtbs = internal::ReadGroupTerminalBlocksFromPropertyData(refArray.Value().data(), arraySize);
 
-                    // get the KS_MULTIPLE_ITEMS info. First is a ULONG of the total size, next is a ULONG of the count of items
-                    // I should use the struct directly, but I don't want to pull in all that KS stuff here.
-                            
-                    // we don't actually need anything from the KS_MULTIPLE_ITEMS header
-                    offset += sizeof(ULONG) * 2;
-
-
-                    // read all entries
-                    while (offset < arraySize)
+                    for (auto gtb : gtbs)
                     {
-                        auto pheader = (UMP_GROUP_TERMINAL_BLOCK_HEADER*)(data.data() + offset);
                         auto block = winrt::make_self<MidiGroupTerminalBlock>();
+                        block->InternalUpdateFromPropertyData(std::move(gtb));
 
-
-                        int charOffset = sizeof(UMP_GROUP_TERMINAL_BLOCK_HEADER);
-
-                        std::wstring name{};
-
-                        // TODO this could be much more efficient just pointing to a string instead of char by char
-                        while (charOffset + 1 < pheader->Size)
-                        {
-                            wchar_t ch = (wchar_t)(*(data.data() + offset + charOffset));
-
-                            name += ch;
-
-                            charOffset += sizeof(wchar_t);
-                        }
-
-                        block->InternalUpdateFromPropertyData(pheader, name);
-
-                        // add to our list
                         m_groupTerminalBlocks.Append(*block);
-
-                        // move to the next struct, if there is one
-                        offset += pheader->Size;
                     }
                 }
             }

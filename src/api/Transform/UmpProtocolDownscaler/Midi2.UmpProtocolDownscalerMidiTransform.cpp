@@ -191,6 +191,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
                     newData = &newWord0;
                     newLength = sizeof(uint32_t);
                 }
+
                 else if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_NOTE_ON)
                 {
                     //TraceLoggingWrite(
@@ -206,6 +207,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
 
                     if (newVelocity == 0)
                     {
+                        // MIDI 2.0 to MIDI 1.0 conversion rules
                         newVelocity = 1;
                     }
 
@@ -213,6 +215,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
                     newData = &newWord0;
                     newLength = sizeof(uint32_t);
                 }
+
                 else if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_POLY_PRESSURE)
                 {
                     uint8_t noteNumber = MIDIWORDBYTE3(originalWord0);
@@ -223,6 +226,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
                     newData = &newWord0;
                     newLength = sizeof(uint32_t);
                 }
+
                 else if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_CONTROL_CHANGE)
                 {
                     uint8_t controlIndex = MIDIWORDBYTE3(originalWord0);
@@ -233,6 +237,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
                     newData = &newWord0;
                     newLength = sizeof(uint32_t);
                 }
+
                 else if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_CHANNEL_PRESSURE)
                 {
                     // the pressure data value is the entire second word
@@ -243,6 +248,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
                     newData = &newWord0;
                     newLength = sizeof(uint32_t);
                 }
+
                 else if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_PITCH_BEND)
                 {
                     // the bend value is the entire second word
@@ -253,6 +259,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
                     newData = &newWord0;
                     newLength = sizeof(uint32_t);
                 }
+
                 else
                 {
                     // just pass it through without any processing. We don't have a specific conversion for this CV message

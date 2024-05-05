@@ -57,6 +57,7 @@ namespace midi1 = ::winrt::Windows::Devices::Midi;
 #include "ump_helpers.h"
 #include "memory_buffer.h"
 #include "wstring_util.h"
+#include "midi_group_terminal_blocks.h"
 
 // AbstractionUtilities
 
@@ -136,7 +137,6 @@ namespace implementation = ::MIDI_CPP_NAMESPACE::implementation;
 #include "MidiMessageTypeEndpointListener.h"
 
 
-#include "MidiSessionSettings.h"
 #include "MidiSession.h"
 
 #include "MidiServicePingResponse.h"

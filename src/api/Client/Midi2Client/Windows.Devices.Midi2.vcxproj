@@ -338,9 +338,6 @@
     <ClInclude Include="MidiServiceSessionInfo.h">
       <DependentUpon>MidiServiceSessionInfo.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiSessionSettings.h">
-      <DependentUpon>MidiSessionSettings.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiStreamConfigurationRequestedSettings.h">
       <DependentUpon>MidiStreamConfigurationRequestedSettings.idl</DependentUpon>
     </ClInclude>
@@ -394,9 +391,9 @@
     <ClCompile Include="MidiEndpointConnection.cpp">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
     </ClCompile>
-      <ClCompile Include="MidiEndpointConnection_AutoReconnect.cpp">
-          <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
-      </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_AutoReconnect.cpp">
+      <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiEndpointConnection_Plugins.cpp">
       <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
     </ClCompile>
@@ -486,9 +483,6 @@
     </ClCompile>
     <ClCompile Include="MidiServiceSessionInfo.cpp">
       <DependentUpon>MidiServiceSessionInfo.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiSessionSettings.cpp">
-      <DependentUpon>MidiSessionSettings.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiSession.cpp">
       <DependentUpon>MidiSession.idl</DependentUpon>
@@ -596,7 +590,6 @@
     <Midl Include="MidiSession.idl" />
     <Midl Include="MidiServiceSessionConnectionInfo.idl" />
     <Midl Include="MidiServiceSessionInfo.idl" />
-    <Midl Include="MidiSessionSettings.idl" />
     <Midl Include="IMidiUniversalPacket.idl" />
     <Midl Include="MidiStreamConfigurationRequestedSettings.idl" />
     <Midl Include="MidiStreamConfigurationRequestReceivedEventArgs.idl" />

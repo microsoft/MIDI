@@ -20,11 +20,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
         ~MidiSession();
 
         static midi2::MidiSession CreateSession(
-            _In_ hstring const& sessionName, 
-            _In_ midi2::MidiSessionSettings const& settings
-        ) noexcept;
-
-        static midi2::MidiSession CreateSession(
             _In_ hstring const& sessionName
         ) noexcept;
 
@@ -32,8 +27,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
         winrt::guid Id() const noexcept { return m_id; }
         winrt::hstring Name() const noexcept { return m_name; }
         bool IsOpen() const noexcept { return m_isOpen; }
-
-        midi2::MidiSessionSettings Settings() const noexcept { return m_settings; }
 
         bool UpdateName(_In_ winrt::hstring const& newName) noexcept;
 
@@ -67,12 +60,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
         ) noexcept;
 
 
-
-
-
         // internal to the API
         void SetName(_In_ winrt::hstring value) { m_name = value; }
-        void SetSettings(_In_ midi2::MidiSessionSettings value) { m_settings = value; }
 
         _Success_(return == true)
         bool InternalStart();
@@ -85,9 +74,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
         bool m_isOpen{ false };
         winrt::guid m_id{};
         winrt::hstring m_name{};
-        midi2::MidiSessionSettings m_settings{ nullptr };
 
-        bool m_useMmcss{ true };
+        bool m_useMmcss{ false };
         DWORD m_mmcssTaskId{ 0 };
 
         // everything in the session needs to use this service abstraction because the

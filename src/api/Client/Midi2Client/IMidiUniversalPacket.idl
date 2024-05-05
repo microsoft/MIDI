@@ -23,7 +23,7 @@ namespace MIDI_MIDL_NAMESPACE
         MIDI_TIMESTAMP Timestamp;
 
         MidiMessageType MessageType;
-        MidiPacketType PacketType;
+        MidiPacketType PacketType{ get; };
 
         UInt32 PeekFirstWord();
 

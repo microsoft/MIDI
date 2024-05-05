@@ -303,12 +303,10 @@
     <ClInclude Include="MidiStreamConfigurationRequestReceivedEventArgs.h">
       <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
     </ClInclude>
+    <ClInclude Include="namespace_defines.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiSession.idl">
-      <Filter>API\Endpoints\Session</Filter>
-    </Midl>
-    <Midl Include="MidiSessionSettings.idl">
       <Filter>API\Endpoints\Session</Filter>
     </Midl>
     <Midl Include="MidiClock.idl">
@@ -534,8 +532,6 @@
     </Text>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Windows.Devices.Midi2.rc">
-      <Filter>Internal\Resources</Filter>
-    </ResourceCompile>
+    <ResourceCompile Include="Microsoft.Devices.Midi2.rc" />
   </ItemGroup>
 </Project>

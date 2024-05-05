@@ -8,6 +8,8 @@
 
 
 
+using Spectre.Console;
+
 namespace Microsoft.Midi.ConsoleApp
 {
     internal sealed class EnumEndpointsCommand : Command<EnumEndpointsCommand.Settings>
@@ -85,9 +87,6 @@ namespace Microsoft.Midi.ConsoleApp
                         filter |= MidiEndpointDeviceInformationFilters.IncludeDiagnosticLoopback;
                     }
 
-
-
-
                     var endpoints = MidiEndpointDeviceInformation.FindAll(
                         MidiEndpointDeviceInformationSortOrder.Name,
                         filter
@@ -142,12 +141,81 @@ namespace Microsoft.Midi.ConsoleApp
                 {
                     table.AddRow(new Markup(AnsiMarkupFormatter.EscapeString(endpointInfo.UserSuppliedDescription)));
                 }
+            }
 
+            // display a summary of blocks. This is especially important for aggregate MIDI 1.0 devices (turned into a UMP endpoint)
+            // so folks can understand what is what. We prioritize function blocks over GTBs
+
+            if (settings.Verbose)
+            {
+                var nameColumn = new TableColumn("Name");
+                nameColumn.Width=30;
+
+                var directionColumn = new TableColumn("Direction");
+                directionColumn.Width = 13;
+
+                var groupsColumn = new TableColumn("Groups");
+                groupsColumn.Width = 12;
+
+                var activeColumn = new TableColumn("Active");
+                activeColumn.Width = 6;
+
+
+                if (endpointInfo.FunctionBlocks.Count > 0)
+                {
+                    var blockTable = new Table();
+
+                    AnsiMarkupFormatter.SetTableBorderStyle(blockTable);
+
+                    blockTable.AddColumn(nameColumn);
+                    blockTable.AddColumn(directionColumn);
+                    blockTable.AddColumn(groupsColumn);
+                    blockTable.AddColumn(activeColumn);
+
+                    foreach (var blockNumber in endpointInfo.FunctionBlocks.Keys)
+                    {
+                        var block = endpointInfo.FunctionBlocks[blockNumber];
+
+                        blockTable.AddRow(
+                            AnsiMarkupFormatter.FormatBlockName(block.Name),
+                            block.Direction.ToString(),
+                            AnsiMarkupFormatter.FormatGroupSpan(block.FirstGroupIndex, block.GroupCount),
+                            block.IsActive.ToString()
+                            );
+                    }
+
+                    table.AddRow(blockTable);
+                }
+                else if (endpointInfo.GroupTerminalBlocks.Count > 0)
+                {
+                    var blockTable = new Table();
+
+                    AnsiMarkupFormatter.SetTableBorderStyle(blockTable);
+
+                    blockTable.AddColumn(nameColumn);
+                    blockTable.AddColumn(directionColumn);
+                    blockTable.AddColumn(groupsColumn);
+
+                    foreach (var block in endpointInfo.GroupTerminalBlocks)
+                    {
+                        blockTable.AddRow(
+                            AnsiMarkupFormatter.FormatBlockName(block.Name),
+                            block.Direction.ToString(),
+                            AnsiMarkupFormatter.FormatGroupSpan(block.FirstGroupIndex, block.GroupCount)
+                            );
+                    }
+
+                    table.AddRow(blockTable);
+                }
+                else
+                {
+                    // no declared blocks
+                //    table.AddRow(AnsiMarkupFormatter.FormatError("No declared blocks"));
+                }
             }
 
             table.AddEmptyRow();
 
         }
-
     }
 }

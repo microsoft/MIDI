@@ -55,11 +55,13 @@ namespace MIDI_CPP_NAMESPACE::implementation
         internal::MidiTimestamp Timestamp() const noexcept { return m_timestamp; }
         void Timestamp(_In_ internal::MidiTimestamp value) noexcept { m_timestamp = value; }
 
+
         midi2::MidiMessageType MessageType() const noexcept 
             { return (midi2::MidiMessageType)(internal::GetUmpMessageTypeFromFirstWord(m_ump.word0)); }
 
         void MessageType(_In_ midi2::MidiMessageType const& value) noexcept
             { internal::SetUmpMessageType(m_ump.word0, (uint8_t)value); }
+
 
         midi2::MidiPacketType PacketType() const noexcept 
             { return midi2::MidiPacketType::UniversalMidiPacket128; }

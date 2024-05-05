@@ -18,6 +18,21 @@ namespace Microsoft.Midi.ConsoleApp
 
     internal class AnsiMarkupFormatter
     {
+        public static string FormatGroupSpan(byte firstGroupIndex, byte groupSpanCount)
+        {
+            var group = new MidiGroup(firstGroupIndex);
+
+            if (groupSpanCount > 1)
+            {
+                return $"{MidiGroup.LabelFull}s {FormatGeneralNumber(group.NumberForDisplay)}-{FormatGeneralNumber(group.NumberForDisplay + groupSpanCount-1)}";
+            }
+            else
+            {
+                return $"{MidiGroup.LabelFull} {FormatGeneralNumber(group.NumberForDisplay)}";
+            }
+        }
+
+
         public static void SetTableBorderStyle(Table table)
         {
             table.Border(TableBorder.Rounded);

@@ -35,19 +35,6 @@ DEFINE_DEVPROPKEY(DEVPKEY_KsTransport, 0x5279cb1, 0x2f, 0x4e6b, 0xa3, 0xa3, 0x29
 #define STRING_DEVPKEY_KsMidiGroupPinMap L"{05279CB1-002F-4E6B-A3A3-29A87D82B4F7},16"
 DEFINE_DEVPROPKEY(DEVPKEY_KsMidiGroupPinMap, 0x5279cb1, 0x2f, 0x4e6b, 0xa3, 0xa3, 0x29, 0xa8, 0x7d, 0x82, 0xb4, 0xf7, 16); // DEVPROP_TYPE_BINARY
 
-#define KSMIDI_PIN_MAP_ENTRY_COUNT 16
-
-typedef struct {
-    BOOL IsValid;
-    UINT32 PinId;
-} KSMIDI_PIN_MAP_ENTRY, *PKSMIDI_PIN_MAP_ENTRY;
-
-typedef struct {
-    KSMIDI_PIN_MAP_ENTRY InputEntries[KSMIDI_PIN_MAP_ENTRY_COUNT]; // we use a fixed size array for these
-    KSMIDI_PIN_MAP_ENTRY OutputEntries[KSMIDI_PIN_MAP_ENTRY_COUNT];
-} KSMIDI_PIN_MAP, *PKSMIDI_PIN_MAP;
-
-
 
 typedef enum _MidiTransport
 {
