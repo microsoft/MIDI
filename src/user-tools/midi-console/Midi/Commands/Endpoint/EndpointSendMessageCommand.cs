@@ -105,7 +105,11 @@ namespace Microsoft.Midi.ConsoleApp
 
             if (!string.IsNullOrEmpty(endpointId))
             {
-                AnsiConsole.MarkupLine(Strings.SendMessageSendingThroughEndpointLabel + ": " + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointId));
+                string endpointName = EndpointUtility.GetEndpointNameFromEndpointInterfaceId(endpointId);
+
+                AnsiConsole.Markup(Strings.SendMessageSendingThroughEndpointLabel);
+                AnsiConsole.MarkupLine(" " + AnsiMarkupFormatter.FormatEndpointName(endpointName));
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointId));
                 AnsiConsole.WriteLine();
 
                 bool openSuccess = false;
