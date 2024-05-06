@@ -67,7 +67,7 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
     // and sent it on
     while (m_BS2UMP.availableUMP())
     {
-        uint32_t umpMessage[MAXIMUM_LOOPED_DATASIZE / 4];
+        uint32_t umpMessage[MAXIMUM_LOOPED_DATASIZE / sizeof(uint32_t)];
         UINT umpCount;
         for(umpCount = 0; umpCount < _countof(umpMessage) && m_BS2UMP.availableUMP(); umpCount++)
         {
@@ -79,7 +79,7 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
         if (umpCount > 0)
         {
             // there are 4 bytes per each 32 bit UMP returned by the parser.
-            RETURN_IF_FAILED(m_Callback->Callback(&(umpMessage[0]), umpCount * 4, Position, m_Context));
+            RETURN_IF_FAILED(m_Callback->Callback(&(umpMessage[0]), umpCount * sizeof(uint32_t), Position, m_Context));
         }
     }
 

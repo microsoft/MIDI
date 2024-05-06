@@ -96,7 +96,6 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     // we require at least one valid pin
     RETURN_HR_IF(E_INVALIDARG, MasterEndpointDefinition.Pins.size() < 1);
 
-
     std::vector<DEVPROPERTY> interfaceDevProperties;
 
     MIDIENDPOINTCOMMONPROPERTIES commonProperties{};
@@ -119,14 +118,11 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     commonProperties.SupportsMidi1ProtocolDefaultValue = true;
     commonProperties.SupportsMidi2ProtocolDefaultValue = false;
 
-
     interfaceDevProperties.push_back({ {DEVPKEY_KsMidiPort_KsFilterInterfaceId, DEVPROP_STORE_SYSTEM, nullptr},
         DEVPROP_TYPE_STRING, static_cast<ULONG>((MasterEndpointDefinition.FilterDeviceId.length() + 1) * sizeof(WCHAR)), (PVOID)MasterEndpointDefinition.FilterDeviceId.c_str() });
 
     interfaceDevProperties.push_back({ {DEVPKEY_KsTransport, DEVPROP_STORE_SYSTEM, nullptr },
         DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), (PVOID)&MasterEndpointDefinition.TransportCapability });
-
-
 
     // create group terminal blocks and the pin map
 
@@ -162,8 +158,8 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
             if (currentGtbInputGroupIndex >= KSMIDI_PIN_MAP_ENTRY_COUNT)
                 continue;
 
-            pinMap.InputEntries[currentGtbInputGroupIndex].IsValid = true;
-            pinMap.InputEntries[currentGtbInputGroupIndex].PinId = pin.PinNumber;
+            pinMap.OutputEntries[currentGtbInputGroupIndex].IsValid = true;
+            pinMap.OutputEntries[currentGtbInputGroupIndex].PinId = pin.PinNumber;
 
             gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_INPUT;   // from the pin/gtb's perspective
             gtb.FirstGroupIndex = currentGtbInputGroupIndex;
@@ -254,10 +250,7 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
             TraceLoggingWideString(newDeviceInterfaceId, "endpoint id")
         );
 
-
-
         // TODO: Add to internal endpoint manager, and also return the device interface id
-
 
         return swdCreationResult;   // TODO change this to account for other steps 
     }
@@ -334,6 +327,7 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
     endpointDefinition.ParentDeviceName = parentDeviceInfo.Name();
     endpointDefinition.FilterName = device.Name();
     endpointDefinition.EndpointName = device.Name();
+    endpointDefinition.TransportCapability = MidiTransport::MidiTransport_CyclicUMP;
 
     // default hash is the device id. We don't have an iSerial here.
     hash = std::to_wstring(hasher(endpointDefinition.FilterDeviceId));
@@ -382,11 +376,19 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
 
         //
         // ================== Standard Byte / MIDI 1.0 Interfaces ===============================================
-        //
+        // The pin is byte stream, but the endpoint definition will be cyclic ump
         if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_StandardByteStream, &hPin)))
         {
-            endpointDefinition.TransportCapability = MidiTransport_StandardByteStream;
-            //midiPin->NativeDataFormat = KSDATAFORMAT_SUBTYPE_MIDI;
+            TraceLoggingWrite(
+                MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+                __FUNCTION__,
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Opened pin", "message"),
+                TraceLoggingWideString(device.Id().c_str(), "device id"),
+                TraceLoggingUInt32(i, "pin id")
+                );
+
 
             // get the name from the Pin. This is how many developers would prefer we name MIDI ports
 
@@ -443,8 +445,49 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
                 )
             );
 
-            // for render (MIDIOut) we need KSPIN_DATAFLOW_IN
-            pinDef.DataFlowFromClientPerspective = (KSPIN_DATAFLOW_IN == dataFlow) ? MidiFlowOut : MidiFlowIn;
+            if (dataFlow == KSPIN_DATAFLOW_IN)
+            {
+                // for render (MIDIOut) we need KSPIN_DATAFLOW_IN
+                pinDef.DataFlowFromClientPerspective = MidiFlowOut;
+
+                TraceLoggingWrite(
+                    MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+                    __FUNCTION__,
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Pin is KSPIN_DATAFLOW_IN (MidiOut pin)", "message"),
+                    TraceLoggingWideString(device.Id().c_str(), "device id"),
+                    TraceLoggingUInt32(i, "pin id")
+                    );
+            }
+            else if (dataFlow == KSPIN_DATAFLOW_OUT)
+            {
+                pinDef.DataFlowFromClientPerspective = MidiFlowIn;
+
+                TraceLoggingWrite(
+                    MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+                    __FUNCTION__,
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Pin is KSPIN_DATAFLOW_OUT (MidiIn pin)", "message"),
+                    TraceLoggingWideString(device.Id().c_str(), "device id"),
+                    TraceLoggingUInt32(i, "pin id")
+                    );
+            }
+            else
+            {
+                TraceLoggingWrite(
+                    MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+                    __FUNCTION__,
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Pin dataflow is unexpected value. Skipping pin.", "message"),
+                    TraceLoggingWideString(device.Id().c_str(), "device id"),
+                    TraceLoggingUInt32(i, "pin id")
+                    );
+
+                continue;
+            }
 
             // add the pin to our endpoint
             endpointDefinition.Pins.push_back(std::move(pinDef));
@@ -452,14 +495,6 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
 
         endpointDefinition.EndpointDeviceInstanceId = TRANSPORT_INSTANCE_ID_PREFIX;
         endpointDefinition.EndpointDeviceInstanceId += hash;
-
-
-        //midiPin->TransportCapability = transportCapability;
-        //midiPin->DataFormatCapability = dataFormatCapability;
-        //midiPin->ParentInstanceId = deviceInstanceId;
-
-        //midiPin->NativeDataFormat = nativeDataFormat;
-
     }
 
 
@@ -470,6 +505,17 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
 
         // create the individual MIDI 1.0 compat endpoints
         RETURN_IF_FAILED(CreateMidiBytestreamEndpoints(endpointDefinition));
+    }
+    else
+    {
+        TraceLoggingWrite(
+            MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Device has no compatible MIDI 1.0 pins. This is normal for many devices.", "message"),
+            TraceLoggingWideString(device.Id().c_str(), "device id")
+            );
     }
 
     return S_OK;

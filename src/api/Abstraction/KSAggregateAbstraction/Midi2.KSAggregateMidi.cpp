@@ -10,22 +10,33 @@
 #include "pch.h"
 
 
+//_Use_decl_annotations_
+//HRESULT
+//CMidi2KSAggregateMidi::Callback(PVOID Data,
+//    UINT Length,
+//    LONGLONG Position)
+//{
+//    // translate from the devices to this
+//}
+
+
+
+
+
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidi::Initialize(
     LPCWSTR Device,
     MidiFlow Flow,
-    PABSTRACTIONCREATIONPARAMS CreationParams,
+    PABSTRACTIONCREATIONPARAMS /*CreationParams*/,
     DWORD * MmCssTaskId,
     IMidiCallback * Callback,
     LONGLONG Context
 )
 {
-    RETURN_HR_IF(E_INVALIDARG, Flow == MidiFlowIn && nullptr == Callback);
-    RETURN_HR_IF(E_INVALIDARG, Flow == MidiFlowBidirectional && nullptr == Callback);
-    RETURN_HR_IF(E_INVALIDARG, nullptr == Device);
-    RETURN_HR_IF(E_INVALIDARG, nullptr == MmCssTaskId);
-    RETURN_HR_IF(E_INVALIDARG, nullptr == CreationParams);
+    RETURN_HR_IF(E_INVALIDARG, Callback == nullptr);
+    RETURN_HR_IF(E_INVALIDARG, Device == nullptr);
+    RETURN_HR_IF(E_INVALIDARG, Flow != MidiFlow::MidiFlowBidirectional);
 
     TraceLoggingWrite(
         MidiKSAggregateAbstractionTelemetryProvider::Provider(),
@@ -33,34 +44,25 @@ CMidi2KSAggregateMidi::Initialize(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Initializing", "message"),
-        TraceLoggingWideString(Device, "Device"),
-        TraceLoggingHexUInt32(CreationParams->DataFormat, "MidiDataFormat"),
-        TraceLoggingHexUInt32(Flow, "MidiFlow"),
-        TraceLoggingPointer(Callback, "callback")
+        TraceLoggingWideString(Device, "Device")
         );
 
-    wil::unique_handle filter;
-    //std::unique_ptr<KSMidiInDevice> midiInDevice;
-    //std::unique_ptr<KSMidiOutDevice> midiOutDevice;
-    winrt::guid interfaceClass;
 
-    //ULONG inPinId{ 0 };
-    //ULONG outPinId{ 0 };
-    MidiTransport transportCapabilities;
-    MidiTransport transport;
+    m_callback = Callback;
+
+    wil::unique_handle filter;
+    winrt::guid interfaceClass;
 
     std::wstring filterInterfaceId;
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
 
     additionalProperties.Append(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_KsFilterInterfaceId));
-    //additionalProperties.Append(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_KsPinId));
-    //additionalProperties.Append(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_InPinId));
-    //additionalProperties.Append(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_OutPinId));
     additionalProperties.Append(winrt::to_hstring(STRING_DEVPKEY_KsTransport));
     additionalProperties.Append(winrt::to_hstring(STRING_DEVPKEY_KsMidiGroupPinMap));
     additionalProperties.Append(winrt::to_hstring(L"System.Devices.InterfaceClassGuid"));
 
-    auto deviceInfo = DeviceInformation::CreateFromIdAsync(Device, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
+    auto deviceInfo = DeviceInformation::CreateFromIdAsync(
+        Device, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
 
     auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_KsFilterInterfaceId));
     RETURN_HR_IF_NULL(E_INVALIDARG, prop);
@@ -70,152 +72,208 @@ CMidi2KSAggregateMidi::Initialize(
     RETURN_HR_IF_NULL(E_INVALIDARG, prop);
     interfaceClass = winrt::unbox_value<winrt::guid>(prop);
 
-    prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsTransport));
-    RETURN_HR_IF_NULL(E_INVALIDARG, prop);
-    transportCapabilities = (MidiTransport) winrt::unbox_value<uint32_t>(prop);
-
-    // if creation params specifies MIDI_DATAFORMAT_ANY, the best available transport
-    // will be chosen.
-
-
-    // TODO: This transport format logic is wrong for this type of endpoint.
-    // All aggregated devices are byte stream, but THIS device is UMP
-
-    // if creation params specifies that bytestream is requested, then
-    // limit the transport to bytestream
-    if (CreationParams->DataFormat == MidiDataFormat_ByteStream)
-    {
-        transportCapabilities = (MidiTransport) ((DWORD) transportCapabilities & (DWORD) MidiTransport_StandardAndCyclicByteStream);
-    }
-    // if creation params specifies that UMP is requested, then
-    // limit the transport to UMP
-    else if (CreationParams->DataFormat == MidiDataFormat_UMP)
-    {
-        transportCapabilities = (MidiTransport) ((DWORD) transportCapabilities & (DWORD) MidiTransport_CyclicUMP);
-    }
-
-    // choose the best available transport among the available transports.
-    // fill in the MidiDataFormat that is going to be used for the caller.
-    if (0 != ((DWORD) transportCapabilities & (DWORD) MidiTransport_CyclicUMP))
-    {
-        // Cyclic UMP is available, that's the most preferred transport.
-        transport = MidiTransport_CyclicUMP;
-        CreationParams->DataFormat = MidiDataFormat_UMP;
-    }
-    else if (0 != ((DWORD) transportCapabilities & (DWORD) MidiTransport_CyclicByteStream))
-    {
-        // Cyclic bytestream is available, that's the next preferred transport.
-        transport = MidiTransport_CyclicByteStream;
-        CreationParams->DataFormat = MidiDataFormat_ByteStream;
-    }
-    else if (0 != ((DWORD) transportCapabilities & (DWORD) MidiTransport_StandardByteStream))
-    {
-        // Standard bytestream is available, that's the least transport.
-        transport = MidiTransport_StandardByteStream;
-        CreationParams->DataFormat = MidiDataFormat_ByteStream;
-    }
-    else
-    {
-        // invalid/no transport available, error.
-        RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE));
-    }
-
-
     ULONG requestedBufferSize = PAGE_SIZE;
     RETURN_IF_FAILED(GetRequiredBufferSize(requestedBufferSize));
     RETURN_IF_FAILED(FilterInstantiate(filterInterfaceId.c_str(), &filter));
 
 
-    if (Flow == MidiFlowBidirectional)
+    TraceLoggingWrite(
+        MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Retrieved properties", "message"),
+        TraceLoggingWideString(filterInterfaceId.c_str(), "filter interface id"),
+        TraceLoggingGuid(interfaceClass, "interfaceClass")
+    );
+
+    // Apply pin map here. This will result in multiple KsMidiOutDevice and KsMidiInDevice entries
+    // each mapped to a group
+
+    if (!deviceInfo.Properties().HasKey(STRING_DEVPKEY_KsMidiGroupPinMap))
     {
-        // Apply pin map here. This will result in multiple KsMidiOutDevice and KsMidiInDevice entries
-        // each mapped to a group
+        TraceLoggingWrite(
+            MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Endpoint device properties are missing the pin map", "message"),
+            TraceLoggingWideString(Device, "device id")
+        );
 
-        if (!deviceInfo.Properties().HasKey(STRING_DEVPKEY_KsMidiGroupPinMap))
+        return E_FAIL;
+    }
+
+    TraceLoggingWrite(
+        MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Grabbing pin map", "message"),
+        TraceLoggingWideString(Device, "device id")
+    );
+
+    auto value = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiGroupPinMap).as<winrt::Windows::Foundation::IPropertyValue>();
+
+    if (value != nullptr)
+    {
+        auto t = value.Type();
+
+        if (t == winrt::Windows::Foundation::PropertyType::UInt8Array)
         {
-            TraceLoggingWrite(
-                MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-                __FUNCTION__,
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Endpoint device properties are missing the pin map", "message"),
-                TraceLoggingWideString(Device, "device id")
-            );
+            auto refArray = winrt::unbox_value<winrt::Windows::Foundation::IReferenceArray<uint8_t>>(deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiGroupPinMap));
 
-            return E_FAIL;
-        }
-
-        auto value = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiGroupPinMap).as<winrt::Windows::Foundation::IPropertyValue>();
-
-        if (value != nullptr)
-        {
-            auto t = value.Type();
-
-            if (t == winrt::Windows::Foundation::PropertyType::UInt8Array)
+            if (refArray != nullptr)
             {
-                auto refArray = winrt::unbox_value<winrt::Windows::Foundation::IReferenceArray<uint8_t>>(deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiGroupPinMap));
+                TraceLoggingWrite(
+                    MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+                    __FUNCTION__,
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Pin map retrieved. Processing input entries.", "message"),
+                    TraceLoggingWideString(Device, "device id")
+                );
 
-                if (refArray != nullptr)
+                auto data = refArray.Value();
+
+                auto pinMap = (KSMIDI_PIN_MAP*)(data.data());
+
+                // process all input group maps
+                for (uint8_t inputGroup = 0; inputGroup < KSMIDI_PIN_MAP_ENTRY_COUNT; inputGroup++)
                 {
-                    auto data = refArray.Value();
+                    auto pinId = pinMap->InputEntries[inputGroup].PinId;
 
-                    auto pinMap = (KSMIDI_PIN_MAP*)(data.data());
-
-                    // process all input group maps
-                    for (uint8_t inputGroup = 0; inputGroup < KSMIDI_PIN_MAP_ENTRY_COUNT; inputGroup++)
+                    if (pinMap->InputEntries[inputGroup].IsValid)
                     {
-                        if (pinMap->InputEntries[inputGroup].IsValid)
-                        {
-                            // create the KS device and add to our runtime map
-                            std::unique_ptr<KSMidiInDevice> device;                               
-                            device.reset(new (std::nothrow) KSMidiInDevice());
-                            RETURN_IF_NULL_ALLOC(device);
+                        wil::com_ptr_nothrow<CMidi2KSAggregateMidiInProxy> proxy;
+                        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSAggregateMidiInProxy>(&proxy));
 
-                            RETURN_IF_FAILED(
-                                device->Initialize(
-                                    Device, 
-                                    filter.get(), 
-                                    pinMap->InputEntries[inputGroup].PinId, 
-                                    transport, 
-                                    requestedBufferSize, 
-                                    MmCssTaskId, 
-                                    Callback, 
-                                    Context)
+                        auto initResult =
+                            proxy->Initialize(
+                                Device,
+                                filter.get(),
+                                pinId,
+                                requestedBufferSize,
+                                MmCssTaskId,
+                                m_callback,
+                                Context,
+                                inputGroup
                             );
 
-                            m_midiInDeviceGroupMap[inputGroup] = std::move(device);
+                        if (FAILED(initResult))
+                        {
+                            TraceLoggingWrite(
+                                MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+                                __FUNCTION__,
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Unable to initialize sub-device proxy for input", "message"),
+                                TraceLoggingHResult(initResult, "hresult"),
+                                TraceLoggingWideString(Device, "device id"),
+                                TraceLoggingUInt32(requestedBufferSize, "buffer size"),
+                                TraceLoggingUInt32(pinId, "pin id"),
+                                TraceLoggingUInt8(inputGroup, "group")
+                            );
+
+                            RETURN_IF_FAILED(initResult);
                         }
+                        else
+                        {
+                            TraceLoggingWrite(
+                                MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+                                __FUNCTION__,
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Created sub-device proxy for input", "message"),
+                                TraceLoggingWideString(Device, "device id"),
+                                TraceLoggingUInt32(requestedBufferSize, "buffer size"),
+                                TraceLoggingUInt32(pinId, "pin id"),
+                                TraceLoggingUInt8(inputGroup, "group")
+                            );
+                        }
+
+                        m_midiInDeviceGroupMap[inputGroup] = std::move(proxy);
                     }
+                }
 
-                    // process all output group maps
-                    for (uint8_t outputGroup = 0; outputGroup < KSMIDI_PIN_MAP_ENTRY_COUNT; outputGroup++)
+                TraceLoggingWrite(
+                    MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+                    __FUNCTION__,
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Processing output entries.", "message"),
+                    TraceLoggingWideString(Device, "device id")
+                );
+
+                // process all output group maps
+                for (uint8_t outputGroup = 0; outputGroup < KSMIDI_PIN_MAP_ENTRY_COUNT; outputGroup++)
+                {
+                    auto pinId = pinMap->OutputEntries[outputGroup].PinId;
+                        
+                    if (pinMap->OutputEntries[outputGroup].IsValid)
                     {
-                        if (pinMap->OutputEntries[outputGroup].IsValid)
-                        {
-                            // create the KS device and add to our runtime map
-                            std::unique_ptr<KSMidiOutDevice> device;
-                            device.reset(new (std::nothrow) KSMidiOutDevice());
-                            RETURN_IF_NULL_ALLOC(device);
+                        // create the KS device and add to our runtime map
+                        auto device = std::make_unique<KSMidiOutDevice>();
+                        RETURN_IF_NULL_ALLOC(device);
 
-                            RETURN_IF_FAILED(
-                                device->Initialize(
-                                    Device, 
-                                    filter.get(), 
-                                    pinMap->OutputEntries[outputGroup].PinId, 
-                                    transport, 
-                                    requestedBufferSize, 
-                                    MmCssTaskId)
+                        auto initResult =
+                            device->Initialize(
+                                Device, 
+                                filter.get(), 
+                                pinId, 
+                                MidiTransport::MidiTransport_StandardByteStream,
+                                requestedBufferSize, 
+                                MmCssTaskId
                             );
 
-                            m_midiOutDeviceGroupMap[outputGroup] = std::move(device);
+                        if (FAILED(initResult))
+                        {
+                            TraceLoggingWrite(
+                                MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+                                __FUNCTION__,
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Unable to initialize sub-device for output", "message"),
+                                TraceLoggingHResult(initResult, "hresult"),
+                                TraceLoggingWideString(Device, "device id"),
+                                TraceLoggingUInt32(requestedBufferSize, "buffer size"),
+                                TraceLoggingUInt32(pinId, "pin id"),
+                                TraceLoggingUInt8(outputGroup, "group")
+                            );
+
+                            RETURN_IF_FAILED(initResult);
                         }
+                        else
+                        {
+                            TraceLoggingWrite(
+                                MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+                                __FUNCTION__,
+                                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Created sub-device for output", "message"),
+                                TraceLoggingWideString(Device, "device id"),
+                                TraceLoggingUInt32(requestedBufferSize, "buffer size"),
+                                TraceLoggingUInt32(pinId, "pin id"),
+                                TraceLoggingUInt8(outputGroup, "group")
+                            );
+                        }
+
+                        m_midiOutDeviceGroupMap[outputGroup] = std::move(device);
                     }
                 }
             }
         }
-
     }
 
+
+    TraceLoggingWrite(
+        MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Completed all initialization", "message"),
+        TraceLoggingWideString(Device, "device id")
+    );
 
     return S_OK;
 }
@@ -230,16 +288,17 @@ CMidi2KSAggregateMidi::Cleanup()
         TraceLoggingPointer(this, "this")
         );
 
-    //if (m_MidiOutDevice)
-    //{
-    //    m_MidiOutDevice->Cleanup();
-    //    m_MidiOutDevice.reset();
-    //}
-    //if (m_MidiInDevice)
-    //{
-    //    m_MidiInDevice->Cleanup();
-    //    m_MidiInDevice.reset();
-    //}
+    for (auto it = m_midiInDeviceGroupMap.begin(); it != m_midiInDeviceGroupMap.end(); it++)
+    {
+        LOG_IF_FAILED(it->second->Cleanup());
+        m_midiInDeviceGroupMap.erase(it);
+    }
+
+    for (auto it = m_midiOutDeviceGroupMap.begin(); it != m_midiOutDeviceGroupMap.end(); it++)
+    {
+        LOG_IF_FAILED(it->second->Cleanup());
+        m_midiOutDeviceGroupMap.erase(it);
+    }
 
     return S_OK;
 }
@@ -252,6 +311,16 @@ CMidi2KSAggregateMidi::SendMidiMessage(
     LONGLONG Position
 )
 {
+    TraceLoggingWrite(
+        MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Received UMP message to translate and send", "message"),
+        TraceLoggingUInt32(Length, "length")
+    );
+
+
     // using the group map, so we're a UMP endpoint that is made up of one or 
     // more bytestream MIDI 1.0 endpoints
 
@@ -291,7 +360,24 @@ CMidi2KSAggregateMidi::SendMidiMessage(
 
                     if (byteCount > 0)
                     {
-                        RETURN_IF_FAILED(mapEntry->second->SendMidiMessage(&(byteStream[0]), byteCount, Position));
+                        auto sendHr = mapEntry->second->SendMidiMessage(&(byteStream[0]), byteCount, Position);
+
+                        if (FAILED(sendHr))
+                        {
+                            // iunable to send message
+                            TraceLoggingWrite(
+                                MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+                                __FUNCTION__,
+                                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Unable to send message to MIDI 1.0 endpoint.", "message"),
+                                TraceLoggingUInt8(groupIndex, "Group Index"),
+                                TraceLoggingHResult(sendHr),
+                                TraceLoggingUInt8Array(&(byteStream[0]), (UINT16)byteCount, "message bytes")
+                            );
+
+                            LOG_IF_FAILED(sendHr);
+                        }
                     }
                 }
 
@@ -305,7 +391,7 @@ CMidi2KSAggregateMidi::SendMidiMessage(
                     __FUNCTION__,
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"group not found in group to pin map", "message"),
+                    TraceLoggingWideString(L"Group not found in group to pin map. Dropping message.", "message"),
                     TraceLoggingUInt8(groupIndex, "Group Index")
                 );
             }
@@ -319,7 +405,7 @@ CMidi2KSAggregateMidi::SendMidiMessage(
                 __FUNCTION__,
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Groupless message sent to aggregated KS endpoint", "message")
+                TraceLoggingWideString(L"Groupless message sent to aggregated KS endpoint. Dropping message.", "message")
             );
 
             return S_OK;

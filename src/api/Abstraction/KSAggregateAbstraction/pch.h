@@ -31,6 +31,8 @@
 
 #include <SDKDDKVer.h>
 
+#include <functional>
+
 
 #define _ATL_APARTMENT_THREADED
 #define _ATL_NO_AUTOMATIC_NAMESPACE
@@ -109,6 +111,7 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "MidiKs.h"
 
 class CMidi2KSAggregateMidiEndpointManager;
+class CMidi2KSAggregateMidiInProxy;
 class CMidi2KSAggregateMidiConfigurationManager;
 class CMidi2KSAggregateMidiBiDi;
 class AbstractionState;
@@ -119,6 +122,7 @@ class AbstractionState;
 #include "Midi2.KSAggregateMidiEndpointManager.h"
 #include "Midi2.KSAggregateMidiConfigurationManager.h"
 #include "Midi2.KSAggregateMidiPluginMetadataProvider.h"
+#include "Midi2.KSAggregateMidiInProxy.h"
 
 #include "AbstractionState.h"
 

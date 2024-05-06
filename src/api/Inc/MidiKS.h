@@ -107,7 +107,7 @@ public:
 
 private:
     wil::com_ptr_nothrow<IMidiCallback> m_MidiInCallback;
-    LONGLONG m_MidiInCallbackContext;
+    LONGLONG m_MidiInCallbackContext{};
 
     static DWORD WINAPI MidiInWorker(
         _In_ LPVOID);

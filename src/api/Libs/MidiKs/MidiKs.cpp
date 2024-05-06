@@ -319,7 +319,7 @@ KSMidiOutDevice::WritePacketMidiData(
 
     kssh.Size = sizeof(KSSTREAM_HEADER);
 
-    // mirroring win32 midi, presenatation time on outgoing messages
+    // mirroring win32 midi, presentation time on outgoing messages
     // is always 1.
     kssh.PresentationTime.Numerator = 1;
     kssh.PresentationTime.Denominator = 1;

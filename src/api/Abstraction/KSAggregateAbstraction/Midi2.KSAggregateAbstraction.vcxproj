@@ -255,6 +255,7 @@
     <ClCompile Include="Midi2.KSAggregateAbstraction.cpp" />
     <ClCompile Include="Midi2.KSAggregateMidi.cpp" />
     <ClCompile Include="Midi2.KSAggregateMidiBidi.cpp" />
+    <ClCompile Include="Midi2.KSAggregateMidiInProxy.cpp" />
     <ClCompile Include="Midi2.KSAggregateMidiConfigurationManager.cpp" />
     <ClCompile Include="Midi2.KSAggregateMidiPluginMetadataProvider.cpp" />
     <ClCompile Include="pch.cpp" />
@@ -275,6 +276,7 @@
     <ClInclude Include="Midi2.KSAggregateAbstraction.h" />
     <ClInclude Include="Midi2.KSAggregateMidi.h" />
     <ClInclude Include="Midi2.KSAggregateMidiBidi.h" />
+    <ClInclude Include="Midi2.KSAggregateMidiInProxy.h" />
     <ClInclude Include="Midi2.KSAggregateMidiConfigurationManager.h" />
     <ClInclude Include="Midi2.KSAggregateMidiPluginMetadataProvider.h" />
     <ClInclude Include="pch.h" />

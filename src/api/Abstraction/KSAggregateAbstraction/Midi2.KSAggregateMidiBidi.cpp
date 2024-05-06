@@ -9,6 +9,10 @@
 
 #include "pch.h"
 
+
+
+
+
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiBiDi::Initialize(
@@ -22,7 +26,6 @@ CMidi2KSAggregateMidiBiDi::Initialize(
 {
     RETURN_HR_IF(E_INVALIDARG, nullptr == Callback);
     RETURN_HR_IF(E_INVALIDARG, nullptr == Device);
-    RETURN_HR_IF(E_INVALIDARG, nullptr == MmCssTaskId);
     RETURN_HR_IF(E_INVALIDARG, nullptr == CreationParams);
 
     TraceLoggingWrite(
@@ -30,11 +33,11 @@ CMidi2KSAggregateMidiBiDi::Initialize(
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(Device, "Device"),
-        TraceLoggingHexUInt32(*MmCssTaskId, "MmCssTaskId")
+        TraceLoggingWideString(Device, "device id")
         );
 
-    std::unique_ptr<CMidi2KSAggregateMidi> midiDevice(new (std::nothrow) CMidi2KSAggregateMidi());
+    //std::unique_ptr<CMidi2KSAggregateMidi> midiDevice(new (std::nothrow) CMidi2KSAggregateMidi());
+    auto midiDevice = std::make_unique<CMidi2KSAggregateMidi>();
     RETURN_IF_NULL_ALLOC(midiDevice);
 
     RETURN_IF_FAILED(
@@ -48,8 +51,15 @@ CMidi2KSAggregateMidiBiDi::Initialize(
         )
     );
 
-
     m_MidiDevice = std::move(midiDevice);
+
+    TraceLoggingWrite(
+        MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+        __FUNCTION__,
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Initialization complete", "message")
+    );
 
     return S_OK;
 }
@@ -64,10 +74,11 @@ CMidi2KSAggregateMidiBiDi::Cleanup()
         TraceLoggingPointer(this, "this")
         );
 
-
-    // TODO: Not sure yet if I should call cleanup on this
-    // as it is shared with regular input/output devices
-    m_MidiDevice = nullptr;
+    if (m_MidiDevice)
+    {
+        m_MidiDevice->Cleanup();
+        m_MidiDevice = nullptr;
+    }
 
     return S_OK;
 }
@@ -77,17 +88,35 @@ HRESULT
 CMidi2KSAggregateMidiBiDi::SendMidiMessage(
     PVOID Data,
     UINT Length,
-    LONGLONG Position
+    LONGLONG Timestamp
 )
 {
     if (m_MidiDevice != nullptr)
     {
-        RETURN_IF_FAILED(m_MidiDevice->SendMidiMessage(Data, Length, Position));
+        TraceLoggingWrite(
+            MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Received MIDI Message. Sending to device.", "message"),
+            TraceLoggingUInt32(Length, "length")
+        );
+
+        RETURN_IF_FAILED(m_MidiDevice->SendMidiMessage(Data, Length, Timestamp));
 
         return S_OK;
     }
     else
     {
+        TraceLoggingWrite(
+            MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"MidiDevice is nullptr. Returning E_FAIL", "message"),
+            TraceLoggingUInt32(Length, "length")
+        );
+
         return E_FAIL;
     }
 
