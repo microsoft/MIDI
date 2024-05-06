@@ -91,7 +91,7 @@ CMidi2KSAggregateMidiInProxy::Callback(
         TraceLoggingWideString(L"Message received from bytestream endpoint", "message")
     );
 
-    // TODO: Translate bytestream to UMP, adding in correct group number, and call m_callback with the result
+    // Translate bytestream to UMP, adding in correct group number, and call m_callback with the result
 
     // Send the bytestream byte(s) to the parser
 
@@ -114,8 +114,6 @@ CMidi2KSAggregateMidiInProxy::Callback(
             umpMessage[umpCount] = m_BS2UMP.readUMP();
         }
 
-        // Note from PMB for Gary: Pretty sure "ump" in this context is just a single UMP word. Some messages like
-        // SysEx are larger (64 bit) and so would be two words back-to-back, so umpCount would be 2 or greater.
         if (umpCount > 0)
         {
             // there are 4 bytes per each 32 bit UMP returned by the parser.

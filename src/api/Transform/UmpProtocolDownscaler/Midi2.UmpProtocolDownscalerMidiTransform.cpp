@@ -46,11 +46,16 @@ CMidi2UmpProtocolDownscalerMidiTransform::Cleanup()
     return S_OK;
 }
 
+// #define USE_LIBMIDI2_FOR_UMP_TO_MIDI1_PROTOCOL
+
+#ifndef USE_LIBMIDI2_FOR_UMP_TO_MIDI1_PROTOCOL
+
 #define SCALE_DOWN_FROM_16_BIT_VALUE    16
 #define SCALE_DOWN_FROM_32_BIT_VALUE    32
 #define SCALE_TO_7_BIT_VALUE            7
 #define SCALE_TO_14_BIT_VALUE           14
 
+#endif
 
 // TEMP due to missing libmidi2 function impl
 void umpToMIDI1Protocol::increaseWrite()
@@ -80,32 +85,34 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
 
     if (Length >= sizeof(uint32_t))
     {
-        //// Send the UMP(s) to the parser
-        //uint32_t* data = (uint32_t*)Data;
-        //for (UINT i = 0; i < (Length / sizeof(uint32_t)); i++)
-        //{
-        //    m_umpToMidi1.UMPStreamParse(data[i]);
-        //}
+#ifdef USE_LIBMIDI2_FOR_UMP_TO_MIDI1_PROTOCOL
+        // using libmidi2. It has a bug it it at the moment.
+        // 
+        // Send the UMP(s) to the parser
+        uint32_t* data = (uint32_t*)Data;
+        for (UINT i = 0; i < (Length / sizeof(uint32_t)); i++)
+        {
+            m_umpToMidi1.UMPStreamParse(data[i]);
+        }
 
-        //// retrieve the message from the parser
-        //// and send it on
-        //while (m_umpToMidi1.availableUMP())
-        //{
-        //    uint32_t words[MAXIMUM_LOOPED_DATASIZE / sizeof(uint32_t)];
-        //    UINT wordCount{ 0 };
+        // retrieve the message from the parser
+        // and send it on
+        while (m_umpToMidi1.availableUMP())
+        {
+            uint32_t words[MAXIMUM_LOOPED_DATASIZE / sizeof(uint32_t)];
+            UINT wordCount{ 0 };
 
-        //    for (wordCount = 0; wordCount < _countof(words) && m_umpToMidi1.availableUMP(); wordCount++)
-        //    {
-        //        words[wordCount] = m_umpToMidi1.readUMP();
-        //    }
+            for (wordCount = 0; wordCount < _countof(words) && m_umpToMidi1.availableUMP(); wordCount++)
+            {
+                words[wordCount] = m_umpToMidi1.readUMP();
+            }
 
-        //    if (wordCount > 0)
-        //    {
-        //        RETURN_IF_FAILED(m_Callback->Callback(&(words[0]), wordCount * sizeof(uint32_t), Timestamp, m_Context));
-        //    }
-        //}
-
-
+            if (wordCount > 0)
+            {
+                RETURN_IF_FAILED(m_Callback->Callback(&(words[0]), wordCount * sizeof(uint32_t), Timestamp, m_Context));
+            }
+        }
+#else
         auto originalWord0 = internal::MidiWord0FromVoidMessageDataPointer(Data);
 
         // only translate MT4 to MT2 (MIDI 2.0 protocol to MIDI 1.0 protocol)
@@ -337,6 +344,9 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
                 return m_Callback->Callback(Data, Length, Timestamp, m_Context);
             }
         }
+
+
+#endif
 
     }
     else
