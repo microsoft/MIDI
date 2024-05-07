@@ -1,0 +1,635 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\packages\Microsoft.Windows.CppWinRT.2.0.240111.5\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.240111.5\build\native\Microsoft.Windows.CppWinRT.props')" />
+  <PropertyGroup Label="Globals">
+    <ProjectName>Microsoft.Devices.Midi2</ProjectName>
+    <RootNamespace>Microsoft.Devices.Midi2</RootNamespace>
+    <ProjectGuid>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</ProjectGuid>
+    <CppWinRTOptimized>true</CppWinRTOptimized>
+    <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
+    <CppWinRTGenerateWindowsMetadata>true</CppWinRTGenerateWindowsMetadata>
+    <CppWinRTModernIDL>true</CppWinRTModernIDL>
+    <CppWinRTProjectLanguage>C++/WinRT</CppWinRTProjectLanguage>
+    <CppWinRTLibs>true</CppWinRTLibs>
+    <WindowsTargetPlatformVersion Condition=" '$(WindowsTargetPlatformVersion)' == '' ">10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformMinVersion>10.0.20348.0</WindowsTargetPlatformMinVersion>
+    <MinimalCoreWin>true</MinimalCoreWin>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
+    <AppContainerApplication>true</AppContainerApplication>
+    <ApplicationType>Windows Store</ApplicationType>
+    <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
+    <CppWinRTNamespaceMergeDepth>
+    </CppWinRTNamespaceMergeDepth>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64EC">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64EC</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64EC">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64EC</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset Condition="'$(VisualStudioVersion)' == '16.0'">v142</PlatformToolset>
+    <PlatformToolset Condition="'$(VisualStudioVersion)' == '15.0'">v141</PlatformToolset>
+    <PlatformToolset Condition="'$(VisualStudioVersion)' == '14.0'">v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <DesktopCompatible>true</DesktopCompatible>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">
+    <DesktopCompatible>true</DesktopCompatible>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <DesktopCompatible>true</DesktopCompatible>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <DesktopCompatible>true</DesktopCompatible>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <DesktopCompatible>true</DesktopCompatible>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">
+    <DesktopCompatible>true</DesktopCompatible>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="PropertySheet.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>$(IncludePath)</IncludePath>
+    <TargetName>Microsoft.Devices.Midi2</TargetName>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>$(IncludePath)</IncludePath>
+    <TargetName>Microsoft.Devices.Midi2</TargetName>
+    <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Arm64'">
+    <IncludePath>$(IncludePath)</IncludePath>
+    <TargetName>Microsoft.Devices.Midi2</TargetName>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Arm64'">
+    <IncludePath>$(IncludePath)</IncludePath>
+    <TargetName>Microsoft.Devices.Midi2</TargetName>
+    <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Arm64EC'">
+    <IncludePath>$(IncludePath)</IncludePath>
+    <TargetName>Microsoft.Devices.Midi2</TargetName>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Arm64EC'">
+    <IncludePath>$(IncludePath)</IncludePath>
+    <TargetName>Microsoft.Devices.Midi2</TargetName>
+    <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>$(IntDir)pch.pch</PrecompiledHeaderOutputFile>
+      <WarningLevel>Level4</WarningLevel>
+      <AdditionalOptions>%(AdditionalOptions) /bigobj</AdditionalOptions>
+      <PreprocessorDefinitions>_WINRT_DLL;WIN32_LEAN_AND_MEAN;WINRT_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalUsingDirectories>$(WindowsSDK_WindowsMetadata);$(AdditionalUsingDirectories)</AdditionalUsingDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
+      <ModuleDefinitionFile>midi-app-api.def</ModuleDefinitionFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+    <ClCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions);WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP</PreprocessorDefinitions>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp20</LanguageStandard>
+      <GenerateXMLDocumentationFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GenerateXMLDocumentationFiles>
+      <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</TreatWarningAsError>
+      <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">true</TreatWarningAsError>
+      <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</TreatWarningAsError>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)..\..\inc;$(SolutionDir)..\..\VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\..\VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)..\..\inc;$(SolutionDir)..\..\VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\..\VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)..\..\inc;$(SolutionDir)..\..\VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\..\VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">stdcpp20</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">stdcpp20</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</Profile>
+      <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</RegisterOutput>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <Link>
+      <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">false</Profile>
+      <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">false</RegisterOutput>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <Link>
+      <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</Profile>
+      <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</RegisterOutput>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+      </Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">
+      </Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </Command>
+    </PostBuildEvent>
+    <ResourceCompile>
+      <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">Yes</ShowProgress>
+    </ResourceCompile>
+    <ResourceCompile>
+      <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">Yes</ShowProgress>
+    </ResourceCompile>
+    <ResourceCompile>
+      <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Yes</ShowProgress>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
+    <ClCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions);WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)..\..\inc;$(SolutionDir)..\..\VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\..\VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)..\..\inc;$(SolutionDir)..\..\VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\..\VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)..\..\inc;$(SolutionDir)..\..\VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\..\VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</TreatWarningAsError>
+      <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">true</TreatWarningAsError>
+      <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</TreatWarningAsError>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">stdcpp20</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">stdcpp20</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdcpp20</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">false</RegisterOutput>
+      <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">false</RegisterOutput>
+      <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</RegisterOutput>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+      </Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">
+      </Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </Command>
+    </PostBuildEvent>
+    <ResourceCompile>
+      <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">Yes</ShowProgress>
+    </ResourceCompile>
+    <ResourceCompile>
+      <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">Yes</ShowProgress>
+    </ResourceCompile>
+    <ResourceCompile>
+      <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Yes</ShowProgress>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="memory_buffer.h" />
+    <ClInclude Include="MidiEndpointConnection.h">
+      <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceInformation.h">
+      <DependentUpon>MidiEndpointDeviceInformation.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceInformationAddedEventArgs.h">
+      <DependentUpon>MidiEndpointDeviceInformationAddedEventArgs.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceInformationUpdatedEventArgs.h">
+      <DependentUpon>MidiEndpointDeviceInformationUpdatedEventArgs.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceInformationRemovedEventArgs.h">
+      <DependentUpon>MidiEndpointDeviceInformationRemovedEventArgs.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceWatcher.h">
+      <DependentUpon>MidiEndpointDeviceWatcher.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiGroupTerminalBlock.h">
+      <DependentUpon>MidiGroupTerminalBlock.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiMessageBuilder.h">
+      <DependentUpon>MidiMessageBuilder.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiMessageConverter.h">
+      <DependentUpon>MidiMessageConverter.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceConfigurationResponse.h">
+      <DependentUpon>MidiServiceConfigurationResponse.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceLoopbackEndpointCreationResult.h">
+      <DependentUpon>MidiServiceLoopbackEndpointCreationResult.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceLoopbackEndpointDefinition.h">
+      <DependentUpon>MidiServiceLoopbackEndpointDefinition.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceMessageProcessingPluginInfo.h">
+      <DependentUpon>MidiServiceMessageProcessingPluginInfo.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiService.h">
+      <DependentUpon>MidiService.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServicePingResponse.h">
+      <DependentUpon>MidiServicePingResponse.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServicePingResponseSummary.h">
+      <DependentUpon>MidiServicePingResponseSummary.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiChannel.h">
+      <DependentUpon>MidiChannel.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiChannelEndpointListener.h">
+      <DependentUpon>MidiChannelEndpointListener.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiClock.h">
+      <DependentUpon>MidiClock.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiFunctionBlock.h">
+      <DependentUpon>MidiFunctionBlock.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiGroup.h">
+      <DependentUpon>MidiGroup.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiGroupEndpointListener.h">
+      <DependentUpon>MidiGroupEndpointListener.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiMessageReceivedEventArgs.h">
+      <DependentUpon>MidiMessageReceivedEventArgs.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiMessageTypeEndpointListener.h">
+      <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceSessionConnectionInfo.h">
+      <DependentUpon>MidiServiceSessionConnectionInfo.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceSessionInfo.h">
+      <DependentUpon>MidiServiceSessionInfo.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiStreamConfigurationRequestedSettings.h">
+      <DependentUpon>MidiStreamConfigurationRequestedSettings.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiStreamConfigurationRequestReceivedEventArgs.h">
+      <DependentUpon>MidiStreamConfigurationRequestReceivedEventArgs.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiStreamMessageBuilder.h">
+      <DependentUpon>MidiStreamMessageBuilder.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceTransportPluginInfo.h">
+      <DependentUpon>MidiServiceTransportPluginInfo.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiMessage128.h">
+      <DependentUpon>MidiMessage128.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiMessage32.h">
+      <DependentUpon>MidiMessage32.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiMessage64.h">
+      <DependentUpon>MidiMessage64.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiMessage96.h">
+      <DependentUpon>MidiMessage96.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiMessageUtility.h">
+      <DependentUpon>MidiMessageUtility.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiUniqueId.h">
+      <DependentUpon>MidiUniqueId.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualEndpointDevice.h">
+      <DependentUpon>MidiVirtualEndpointDevice.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualEndpointDeviceDefinition.h">
+      <DependentUpon>MidiVirtualEndpointDeviceDefinition.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="midi_function_block_prop_util.h" />
+    <ClInclude Include="midi_stream_message_defs.h" />
+    <ClInclude Include="midl_defines.h" />
+    <ClInclude Include="namespace_defines.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="trace_logging.h" />
+    <ClInclude Include="MidiSession.h">
+      <DependentUpon>MidiSession.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="pch.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
+    <ClCompile Include="MidiEndpointConnection.cpp">
+      <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_AutoReconnect.cpp">
+      <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_Plugins.cpp">
+      <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_Receive.cpp">
+      <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_SendInfrastructure.cpp">
+      <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_SendMultipleMessages.cpp">
+      <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_SendSingleMessage.cpp">
+      <DependentUpon>MidiEndpointConnection.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceInformation.cpp">
+      <DependentUpon>MidiEndpointDeviceInformation.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceInformationAddedEventArgs.cpp">
+      <DependentUpon>MidiEndpointDeviceInformationAddedEventArgs.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceInformationRemovedEventArgs.cpp">
+      <DependentUpon>MidiEndpointDeviceInformationRemovedEventArgs.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceInformationUpdatedEventArgs.cpp">
+      <DependentUpon>MidiEndpointDeviceInformationUpdatedEventArgs.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
+      <DependentUpon>MidiEndpointDeviceWatcher.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiGroupTerminalBlock.cpp">
+      <DependentUpon>MidiGroupTerminalBlock.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiMessageBuilder.cpp">
+      <DependentUpon>MidiMessageBuilder.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiMessageConverter.cpp">
+      <DependentUpon>MidiMessageConverter.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceConfigurationResponse.cpp">
+      <DependentUpon>MidiServiceConfigurationResponse.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceLoopbackEndpointCreationResult.cpp">
+      <DependentUpon>MidiServiceLoopbackEndpointCreationResult.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceLoopbackEndpointDefinition.cpp">
+      <DependentUpon>MidiServiceLoopbackEndpointDefinition.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceMessageProcessingPluginInfo.cpp">
+      <DependentUpon>MidiServiceMessageProcessingPluginInfo.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiService.cpp">
+      <DependentUpon>MidiService.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServicePingResponse.cpp">
+      <DependentUpon>MidiServicePingResponse.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServicePingResponseSummary.cpp">
+      <DependentUpon>MidiServicePingResponseSummary.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiChannel.cpp">
+      <DependentUpon>MidiChannel.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiChannelEndpointListener.cpp">
+      <DependentUpon>MidiChannelEndpointListener.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiClock.cpp">
+      <DependentUpon>MidiClock.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiFunctionBlock.cpp">
+      <DependentUpon>MidiFunctionBlock.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiGroup.cpp">
+      <DependentUpon>MidiGroup.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiGroupEndpointListener.cpp">
+      <DependentUpon>MidiGroupEndpointListener.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiMessageReceivedEventArgs.cpp">
+      <DependentUpon>MidiMessageReceivedEventArgs.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiMessageTypeEndpointListener.cpp">
+      <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceSessionConnectionInfo.cpp">
+      <DependentUpon>MidiServiceSessionConnectionInfo.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceSessionInfo.cpp">
+      <DependentUpon>MidiServiceSessionInfo.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiSession.cpp">
+      <DependentUpon>MidiSession.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiSession_EndpointConnection.cpp">
+      <DependentUpon>MidiSession.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiSession_VirtualEndpoint.cpp">
+      <DependentUpon>MidiSession.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiSession_Watcher.cpp">
+      <DependentUpon>MidiSession.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiStreamConfigurationRequestedSettings.cpp">
+      <DependentUpon>MidiStreamConfigurationRequestedSettings.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiStreamConfigurationRequestReceivedEventArgs.cpp">
+      <DependentUpon>MidiStreamConfigurationRequestReceivedEventArgs.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiStreamMessageBuilder.cpp">
+      <DependentUpon>MidiStreamMessageBuilder.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceTransportPluginInfo.cpp">
+      <DependentUpon>MidiServiceTransportPluginInfo.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiMessage128.cpp">
+      <DependentUpon>MidiMessage128.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiMessage32.cpp">
+      <DependentUpon>MidiMessage32.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiMessage64.cpp">
+      <DependentUpon>MidiMessage64.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiMessage96.cpp">
+      <DependentUpon>MidiMessage96.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiMessageUtility.cpp">
+      <DependentUpon>MidiMessageUtility.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiUniqueId.cpp">
+      <DependentUpon>MidiUniqueId.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiVirtualEndpointDevice.cpp">
+      <DependentUpon>MidiVirtualEndpointDevice.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiVirtualEndpointDeviceDefinition.cpp">
+      <DependentUpon>MidiVirtualEndpointDeviceDefinition.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="midi_function_block_prop_util.cpp" />
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="trace_logging.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="IMidiEndpointConnectionSource.idl" />
+    <Midl Include="IMidiEndpointMessageProcessingPlugin.idl" />
+    <Midl Include="IMidiServiceMessageProcessingPluginConfiguration.idl" />
+    <Midl Include="IMidiMessageReceivedEventSource.idl" />
+    <Midl Include="Midi2ApiContract.idl" />
+    <Midl Include="MidiEndpointDeviceInformationAddedEventArgs.idl" />
+    <Midl Include="MidiEndpointDeviceInformationRemovedEventArgs.idl" />
+    <Midl Include="MidiServiceConfigurationResponse.idl" />
+    <Midl Include="IMidiServiceTransportPluginConfiguration.idl" />
+    <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl" />
+    <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl" />
+    <Midl Include="MidiEndpointDeviceInformationUpdatedEventArgs.idl" />
+    <Midl Include="MidiEndpointConnection.idl" />
+    <Midl Include="MidiChannel.idl" />
+    <Midl Include="MidiChannelEndpointListener.idl" />
+    <Midl Include="MidiClock.idl" />
+    <Midl Include="MidiEndpointDeviceInformation.idl" />
+    <Midl Include="MidiEndpointDeviceInformationFiltersEnum.idl" />
+    <Midl Include="MidiEndpointDeviceInformationSortOrderEnum.idl" />
+    <Midl Include="MidiEndpointDevicePurposeEnum.idl" />
+    <Midl Include="MidiEndpointDeviceWatcher.idl" />
+    <Midl Include="MidiEndpointDiscoveryRequestsEnum.idl" />
+    <Midl Include="MidiEndpointNativeDataFormatEnum.idl" />
+    <Midl Include="MidiFunctionBlockDirectionEnum.idl" />
+    <Midl Include="MidiFunctionBlockDiscoveryRequestsEnum.idl" />
+    <Midl Include="MidiFunctionBlockMidi10Enum.idl" />
+    <Midl Include="MidiFunctionBlock.idl" />
+    <Midl Include="MidiGroupTerminalBlockDirectionEnum.idl" />
+    <Midl Include="MidiFunctionBlockUIHintEnum.idl" />
+    <Midl Include="MidiGroup.idl" />
+    <Midl Include="MidiGroupEndpointListener.idl" />
+    <Midl Include="MidiGroupTerminalBlock.idl" />
+    <Midl Include="MidiGroupTerminalBlockProtocolEnum.idl" />
+    <Midl Include="MidiMessageConverter.idl" />
+    <Midl Include="MidiServiceConfigurationResponseStatusEnum.idl" />
+    <Midl Include="MidiServiceLoopbackEndpointDefinition.idl" />
+    <Midl Include="MidiServiceLoopbackEndpointCreationResult.idl" />
+    <Midl Include="MidiServiceMessageProcessingPluginInfo.idl" />
+    <Midl Include="MidiMessageStruct.idl" />
+    <Midl Include="MidiMessageBuilder.idl" />
+    <Midl Include="MidiMessageReceivedEventArgs.idl" />
+    <Midl Include="IMidiEndpointConnectionSettings.idl" />
+    <Midl Include="MidiMessageTypeEndpointListener.idl" />
+    <Midl Include="MidiProtocolEnum.idl" />
+    <Midl Include="MidiSendMessageResultsEnum.idl" />
+    <Midl Include="MidiService.idl" />
+    <Midl Include="MidiServicePingResponse.idl" />
+    <Midl Include="MidiServicePingResponseSummary.idl" />
+    <Midl Include="MidiSession.idl" />
+    <Midl Include="MidiServiceSessionConnectionInfo.idl" />
+    <Midl Include="MidiServiceSessionInfo.idl" />
+    <Midl Include="IMidiUniversalPacket.idl" />
+    <Midl Include="MidiStreamConfigurationRequestedSettings.idl" />
+    <Midl Include="MidiStreamConfigurationRequestReceivedEventArgs.idl" />
+    <Midl Include="MidiStreamMessageBuilder.idl" />
+    <Midl Include="MidiSystemExclusive8StatusEnum.idl" />
+    <Midl Include="MidiServiceTransportPluginInfo.idl" />
+    <Midl Include="MidiMessage128.idl" />
+    <Midl Include="MidiMessage32.idl" />
+    <Midl Include="MidiMessage64.idl" />
+    <Midl Include="MidiMessage96.idl" />
+    <Midl Include="MidiMessageTypeEnum.idl" />
+    <Midl Include="MidiPacketTypeEnum.idl" />
+    <Midl Include="MidiMessageUtility.idl" />
+    <Midl Include="MidiUniqueId.idl" />
+    <Midl Include="MidiVirtualEndpointDevice.idl" />
+    <Midl Include="MidiVirtualEndpointDeviceDefinition.idl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="midi-app-api.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="PropertySheet.props" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="WinRTActivationEntries.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Microsoft.Devices.Midi2.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\..\packages\Microsoft.Windows.CppWinRT.2.0.240111.5\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.240111.5\build\native\Microsoft.Windows.CppWinRT.targets')" />
+    <Import Project="..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240122.1\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240122.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
+  </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.240111.5\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.CppWinRT.2.0.240111.5\build\native\Microsoft.Windows.CppWinRT.props'))" />
+    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.240111.5\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.CppWinRT.2.0.240111.5\build\native\Microsoft.Windows.CppWinRT.targets'))" />
+    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240122.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240122.1\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
+  </Target>
+</Project>

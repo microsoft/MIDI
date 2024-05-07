@@ -9,9 +9,7 @@
 import "oaidl.idl";
 import "ocidl.idl";
 
-import "MidiDataFormat.idl";
-import "MidiFlow.idl";
-//import "mididevicemanagerinterface.idl";
+import "WindowsMidiServices.idl";
 
 cpp_quote("#define MIDISRV_LRPC_PROTOCOL  L\"ncalrpc\"")
 cpp_quote("#define MIDISRV_ENDPOINT L\"MidiSrvClientRpc\"")

@@ -48,9 +48,8 @@
 
 namespace internal = ::WindowsMidiServicesInternal;
 
-
-#include "MidiServicePlugin.h"
-#include "MidiServicePlugin_i.c"
+#include "WindowsMidiServices.h"
+#include "WindowsMidiServices_i.c"
 
 #include "Midi2UmpProtocolDownscalerTransform_i.c"
 #include "Midi2UmpProtocolDownscalerTransform.h"

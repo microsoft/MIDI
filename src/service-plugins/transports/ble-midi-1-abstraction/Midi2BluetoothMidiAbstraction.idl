@@ -1,0 +1,31 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+
+import "oaidl.idl";
+import "ocidl.idl";
+import "unknwn.idl";
+
+import "WindowsMidiServices.idl";
+
+
+[
+    uuid(C6DFEA54-CB7E-43A0-9CC8-D224D839DB1B),
+    version(1.0),
+]
+library Midi2BluetoothMidiAbstractionLib
+{
+    importlib("stdole2.tlb");
+
+    [uuid(ABD5E0B9-C38C-48B7-AA56-19D9E26BAF1B), version(1.0)]
+    coclass Midi2BluetoothMidiAbstraction
+    {
+        [default] interface IMidiAbstraction;
+    }
+};
+

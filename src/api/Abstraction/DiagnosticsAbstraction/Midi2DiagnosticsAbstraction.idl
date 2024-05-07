@@ -10,7 +10,7 @@
 import "oaidl.idl";
 import "ocidl.idl";
 
-import "MidiAbstraction.idl";
+import "WindowsMidiServices.idl";
 
 [
     uuid(578daa61-200b-4622-8cb1-6d8a6fa93c17),

@@ -143,7 +143,7 @@ Task("SetupEnvironment")
 });
 
 
- Task("BuildServiceAndAPI")
+ Task("BuildService")
     .DoesForEach(platformTargets, plat =>
 {
     Information("\nBuilding service and API for " + plat.ToString());
@@ -186,7 +186,7 @@ Task("SetupEnvironment")
     CopyFiles(System.IO.Path.Combine(outputDir, "*.pdb"), copyToDir); 
 
     CopyFiles(System.IO.Path.Combine(outputDir, "MidiSrv.exe"), copyToDir); 
-    CopyFiles(System.IO.Path.Combine(outputDir, "mididmp.exe"), copyToDir); 
+    //CopyFiles(System.IO.Path.Combine(outputDir, "mididmp.exe"), copyToDir); 
 
     CopyFiles(System.IO.Path.Combine(outputDir, $"{MIDI2_NAMESPACE}.winmd"), copyToDir); 
 
@@ -443,7 +443,7 @@ Task("BuildRegistrationFreeWinRTActivationEntries")
 
 });
 
-
+/*
 Task("PackAPIProjection")
     .IsDependentOn("BuildServiceAndAPI")
     .Does(() =>
@@ -457,11 +457,10 @@ Task("PackAPIProjection")
         WorkingDirectory = workingDirectory,
         OutputDirectory = System.IO.Path.Combine(releaseRootDir, "NuGet")  // NuGet packages cover multiple platforms
     });
-
-
 });
+*/
 
-
+/*
 Task("BuildConsoleApp")
     .IsDependentOn("PackAPIProjection")
     .DoesForEach(platformTargets, plat =>
@@ -516,8 +515,9 @@ Task("BuildConsoleApp")
     });
 
 });
+*/
 
-
+/*
 Task("BuildSettingsApp")
     .IsDependentOn("PackAPIProjection")
     .DoesForEach(platformTargets, plat =>
@@ -572,6 +572,7 @@ Task("BuildSettingsApp")
     // WinUI makes me manually copy this over. If not for the hacked-in post-build step, would need all the .xbf files as well
 
 });
+*/
 
 string finalSetupNamex64 = string.Empty;
 string finalSetupNameArm64 = string.Empty;
@@ -601,14 +602,6 @@ Task("BuildInstaller")
     else
         throw new ArgumentException("Invalid platform target " + plat.ToString());
 
-    // create the bundle info include file with the version info in it
-    // this include file is referenced from the WiX Setup project and it
-    // defines compile-time variables used in the project
-    //<Include>
-    //  <?define SetupVersionName="Dev Preview Nightly" ?>
-    //  <?define SetupVersionNumber="1.0.23351.0243" ?>
-    //</Include>
-
     string setupBuildPlatform = plat.ToString().ToLower();
 
     string setupBuildFullVersionString = setupBuildMajorMinor + "." + setupBuildDateNumber + "." + setupBuildTimeNumber;
@@ -634,7 +627,7 @@ Task("BuildInstaller")
 
     var buildSettings = new MSBuildSettings
     {
-        MaxCpuCount = 1,    /* Set to 1 to avoid file locking problems */
+        MaxCpuCount = 1,    // Set to 1 to avoid file locking problems
         Configuration = configuration,
         AllowPreviewVersion = allowPreviewVersionOfBuildTools,
         PlatformTarget = plat,
@@ -668,7 +661,7 @@ Task("BuildInstaller")
 
 });
 
-
+/*
 Task("CopyAPIArtifacts")
     .IsDependentOn("BuildInstaller")
     .IsDependentOn("PackAPIProjection")
@@ -696,9 +689,8 @@ Task("CopyAPIArtifacts")
     CopyFiles(System.IO.Path.Combine(apiStagingDir, $"winrt/impl/Windows.Foundation.2.h"), System.IO.Path.Combine(platReleaseFolder, "winrt/impl/")); 
     CopyFiles(System.IO.Path.Combine(apiStagingDir, $"winrt/impl/Windows.Foundation.Collections.2.h"), System.IO.Path.Combine(platReleaseFolder, "winrt/impl/")); 
     CopyFiles(System.IO.Path.Combine(apiStagingDir, $"winrt/impl/{MIDI2_NAMESPACE}.2.h"), System.IO.Path.Combine(platReleaseFolder, "winrt/impl/")); 
-
-
 });
+*/
 
 //////////////////////////////////////////////////////////////////////
 // TASK TARGETS

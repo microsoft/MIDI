@@ -63,9 +63,8 @@
 namespace internal = ::WindowsMidiServicesInternal;
 
 #include "MidiDefs.h"
-#include "MidiDataFormat.h"
-#include "MidiFlow.h"
-#include "MidiAbstraction.h"
+#include "WindowsMidiServices.h"
+#include "WindowsMidiServices_i.c"
 
 
 #undef GetObject
@@ -87,20 +86,12 @@ namespace json = ::winrt::Windows::Data::Json;
 
 #include "abstraction_defs.h"
 
-#include "midiabstraction_i.c"
-#include "midiabstraction.h"
+
 
 #include "Midi2KSAggregateAbstraction_i.c"
 #include "Midi2KSAggregateAbstraction.h"
 
-#include "mididevicemanagerinterface_i.c"
-#include "mididevicemanagerinterface.h"
 
-#include "midiendpointprotocolmanagerinterface_i.c"
-#include "midiendpointprotocolmanagerinterface.h"
-
-#include "MidiServicePlugin_i.c"
-#include "MidiServicePlugin.h"
 
 #include "dllmain.h"
 

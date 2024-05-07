@@ -6,13 +6,11 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-
 import "oaidl.idl";
 import "ocidl.idl";
 import "unknwn.idl";
 
-import "MidiAbstraction.idl";
-import "MidiDeviceManagerInterface.idl";    // for MidiFlow
+import "WindowsMidiServices.idl";
 
 
 [

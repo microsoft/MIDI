@@ -196,6 +196,21 @@ CMidi2MidiSrvSessionTracker::RemoveClientSession(
 //    return S_OK;
 //}
 
+
+_Use_decl_annotations_
+HRESULT
+CMidi2MidiSrvSessionTracker::GetSessionList(
+    LPSAFEARRAY* SessionDetailsList
+)
+{
+    // TODO
+    SessionDetailsList = nullptr;
+
+    return S_OK;
+
+}
+
+
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvSessionTracker::GetSessionListJson(
@@ -214,15 +229,15 @@ CMidi2MidiSrvSessionTracker::GetSessionListJson(
     RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
     RETURN_HR_IF_NULL(E_INVALIDARG, SessionList);
 
-    RETURN_IF_FAILED([&]()
-        {
-            // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
-            // with structured exception handling.
-            RpcTryExcept RETURN_IF_FAILED(MidiSrvGetSessionList(bindingHandle.get(), SessionList));
-            RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
-            RpcEndExcept
-                return S_OK;
-        }());
+    //RETURN_IF_FAILED([&]()
+    //    {
+    //        // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
+    //        // with structured exception handling.
+    //        RpcTryExcept RETURN_IF_FAILED(MidiSrvGetSessionList(bindingHandle.get(), SessionList));
+    //        RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
+    //        RpcEndExcept
+    //            return S_OK;
+    //    }());
 
     return S_OK;
 }

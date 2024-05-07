@@ -13,8 +13,8 @@
 #include <wil\resource.h>
 #include <wil\result_macros.h>
 
-#include "MidiAbstraction_i.c"
-#include "MidiAbstraction.h"
+#include "WindowsMidiServices.h"
+#include "WindowsMidiServices_i.c"
 
 #include <Devpkey.h>
 #include "MidiDefs.h"

@@ -7,9 +7,8 @@
 // ============================================================================
 
 #include "stdafx.h"
-#include "Midi2MidiSrvAbstraction.h"
-#include "ump_helpers.h"
-#include "midi_ump_message_defs.h"
+//#include "Midi2MidiSrvAbstraction.h"
+
 
 // Note: This class only works if these type F messages aren't swallowed up
 // by some endpoint transform / processor. We'll need to have code in here

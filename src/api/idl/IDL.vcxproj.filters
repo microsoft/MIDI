@@ -15,22 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="MidiAbstraction.idl">
-      <Filter>Source Files</Filter>
-    </Midl>
-    <Midl Include="MidiDeviceManagerInterface.idl">
-      <Filter>Source Files</Filter>
-    </Midl>
-    <Midl Include="MidiEndpointProtocolManagerInterface.idl">
-      <Filter>Source Files</Filter>
-    </Midl>
-    <Midl Include="MidiDataFormat.idl">
-      <Filter>Source Files</Filter>
-    </Midl>
-    <Midl Include="MidiFlow.idl">
-      <Filter>Source Files</Filter>
-    </Midl>
-    <Midl Include="MidiServicePlugin.idl">
+    <Midl Include="WindowsMidiServices.idl">
       <Filter>Source Files</Filter>
     </Midl>
   </ItemGroup>

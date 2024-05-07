@@ -43,9 +43,8 @@
 namespace internal = ::WindowsMidiServicesInternal;
 
 #include "MidiDefs.h"
-#include "MidiDataFormat.h"
-#include "MidiFlow.h"
-#include "MidiAbstraction.h"
+#include "WindowsMidiServices.h"
+#include "WindowsMidiServices_i.c"
 
 #include "json_defs.h"
 #include "json_helpers.h"
@@ -53,10 +52,6 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "resource_util.h"
 
 #include "MidiXProc.h"
-
-
-#include "MidiServicePlugin.h"
-#include "MidiServicePlugin_i.c"
 
 #include "Midi2SampleAbstraction_i.c"
 #include "Midi2SampleAbstraction.h"

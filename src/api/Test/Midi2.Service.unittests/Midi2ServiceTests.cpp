@@ -5,7 +5,7 @@
 #include <initguid.h>
 #include <mmdeviceapi.h>
 #include "MidiTestCommon.h"
-#include "MidiAbstraction.h"
+#include "WindowsMidiServices.h"
 
 #include <initguid.h>
 #include "MidiDefs.h"

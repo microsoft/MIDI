@@ -14,7 +14,7 @@
 
 #include "stdafx.h"
 
-#include "MidiConfigurationManager.h"
+//#include "MidiConfigurationManager.h"
 
 #define MAX_KEY_LENGTH 255
 #define MAX_VALUE_NAME 16383

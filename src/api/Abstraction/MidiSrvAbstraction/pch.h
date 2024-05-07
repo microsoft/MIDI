@@ -42,19 +42,16 @@ using namespace winrt;
 
 #include <filesystem>
 
-#include "Midi2MidiSrvAbstraction_i.c"
-#include "Midi2MidiSrvAbstraction.h"
-
-#include "MidiServicePlugin.h"
-#include "MidiServicePlugin_i.c"
-
-#include "dllmain.h"
 
 #include <Devpkey.h>
 #include "MidiDefs.h"
-#include "MidiDataFormat.h"
-#include "MidiFlow.h"
-#include "MidiAbstraction.h"
+#include "WindowsMidiServices.h"
+#include "WindowsMidiServices_i.c"
+
+#include "Midi2MidiSrvAbstraction.h"
+#include "Midi2MidiSrvAbstraction_i.c"
+
+#include "dllmain.h"
 
 #include "MidiSrvRpc.h"
 #include "MidiXProc.h"
