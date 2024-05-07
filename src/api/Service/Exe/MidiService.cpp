@@ -10,6 +10,7 @@
 
 #define SVCNAME L"MidiSrv"
 #define SVCDISPLAYNAME L"Microsoft MIDI Service"
+#define SVCDESCRIPTION L"Windows MIDI Services core service for MIDI 2.0 and MIDI 1.0 message routing and device enumeration"
 
 //#ifdef _DEBUG
 //#define SVCDESCRIPTION TEXT("Windows MIDI Services core service (Debug Build)")
@@ -117,7 +118,7 @@ VOID SvcInstall()
         SVCDISPLAYNAME,
         SERVICE_ALL_ACCESS,
         SERVICE_WIN32_OWN_PROCESS,
-        SERVICE_AUTO_START,
+        SERVICE_DEMAND_START,           // SERVICE_AUTO_START
         SERVICE_ERROR_NORMAL,
         quotedPath,
         NULL,
@@ -125,6 +126,7 @@ VOID SvcInstall()
         NULL,
         NULL,
         NULL));
+
     if (!service)
     {
         LOG_LAST_ERROR_MSG("Cannot install service, CreateService failed");
@@ -136,18 +138,21 @@ VOID SvcInstall()
         LOG_LAST_ERROR_MSG("Starting the service failed during service install");
         return;
     }
-    //// Set the service description so it's not just blank. This should be localized
-    //// in the future with "@[path]dllname,-strID"
 
-    //SERVICE_DESCRIPTION info;
-    //info.lpDescription = SVCDESCRIPTION;
+    // Set the service description so it's not just blank. This should be localized
+    // with "@[path]dllname,-strID" and a .rc file
 
-    //if (!ChangeServiceConfig2(service.get(), SERVICE_CONFIG_DESCRIPTION, &info))
-    //{
-    //    // non-fatal
-    //    LOG_LAST_ERROR_MSG("Changing service description failed");
-    //    return;
-    //}
+    std::wstring serviceDescription{ SVCDESCRIPTION  };
+     
+    SERVICE_DESCRIPTION info{ };
+    info.lpDescription = (LPWSTR)(serviceDescription.c_str());
+
+    if (!ChangeServiceConfig2(service.get(), SERVICE_CONFIG_DESCRIPTION, &info))
+    {
+        // non-fatal
+        LOG_LAST_ERROR_MSG("Changing service description failed");
+        return;
+    }
 }
 
 //
