@@ -212,19 +212,20 @@ VOID SvcInstall()
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingWideString(L"Changing service description failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
-
-        //return;
     }
 
 
 
 
-    // Set the triggers to wake up this service
-    std::wstring rpcGuidString{ L"64839251-9daf-4e79-aa4e-9771c86ffbc1" }; // RPC Interface. should use __uuidof
-
     SERVICE_TRIGGER_INFO triggerInfo{ 0 };
     SERVICE_TRIGGER trigger{ 0 };
     SERVICE_TRIGGER_SPECIFIC_DATA_ITEM triggerData{ 0 };
+
+
+ // tried the RPC trigger and just couldn't get it to work
+#ifdef USE_RPC_DEMAND_TRIGGER
+    // Set the RPC call to triggers waking up this service
+    std::wstring rpcGuidString{ L"64839251-9daf-4e79-aa4e-9771c86ffbc1" }; // RPC Interface. should use __uuidof
 
     triggerData.dwDataType = SERVICE_TRIGGER_DATA_TYPE_STRING;
     triggerData.pData = (PBYTE)(rpcGuidString.c_str());
@@ -240,6 +241,26 @@ VOID SvcInstall()
 
     triggerInfo.pTriggers = &trigger;
     triggerInfo.cTriggers = 1;
+#else
+    // use ETW trigger. This worked right away
+    // The problem with the ETW trigger is there's a bit of a delay, so need to wait on it
+    // 6e9d2090-31a4-5a2c-da35-fd606d7d6ac3
+    GUID midiSrvAbstractionEtwProvider{ 0x6e9d2090, 0x31a4, 0x5a2c, 0xda, 0x35, 0xfd, 0x60, 0x6d, 0x7d, 0x6a, 0xc3 };
+    
+    //triggerData.dwDataType = SERVICE_TRIGGER_DATA_TYPE_STRING;
+    //triggerData.pData = (PBYTE)(&midiSrvAbstractionEtwProvider);
+    //triggerData.cbData = (DWORD)(sizeof(GUID));
+
+    trigger.dwAction = SERVICE_TRIGGER_ACTION_SERVICE_START;
+    trigger.dwTriggerType = SERVICE_TRIGGER_TYPE_CUSTOM;
+    trigger.pTriggerSubtype = (LPGUID)&midiSrvAbstractionEtwProvider;
+    //trigger.pDataItems = &triggerData;
+    trigger.cDataItems = 0;
+
+    triggerInfo.pTriggers = &trigger;
+    triggerInfo.cTriggers = 1;
+#endif
+
 
     // Should we also trigger on SERVICE_TRIGGER_TYPE_DEVICE_INTERFACE_ARRIVAL? We are the 
     // interface enumerator so I assume it would trigger on *all* audio devices, which would 
