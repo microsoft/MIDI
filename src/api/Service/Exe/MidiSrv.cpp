@@ -116,21 +116,28 @@ CMidiSrv::Initialize()
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"RpcServerUseProtseqEp failed. It's likely the service is not responding due to a failed startup.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingHResult(rpcHr, MIDI_TRACE_EVENT_HRESULT_FIELD),
-                TraceLoggingLong(rpcStatus, "rpc_status"),
-                TraceLoggingWideString(L"RpcServerUseProtseqEp failed. It's likely the service is not responding due to a failed startup.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                TraceLoggingLong(rpcStatus, "rpc_status")
             );
         }
 
         RETURN_IF_FAILED(rpcHr);
 
-        RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcServerRegisterIf3(
-            MidiSrvRPC_v1_0_s_ifspec,
-            NULL, NULL,
-            RPC_IF_AUTOLISTEN | RPC_IF_ALLOW_LOCAL_ONLY,
-            RPC_C_LISTEN_MAX_CALLS_DEFAULT, 0,
-            MidiSrvRpcIfCallback, 
-            rpcSecurityDescriptor.get())));
+        RETURN_IF_FAILED(
+            HRESULT_FROM_RPCSTATUS(
+                RpcServerRegisterIf3(
+                    MidiSrvRPC_v1_0_s_ifspec,                       // IfSpec
+                    NULL,                                           // MgrTypeUuid
+                    NULL,                                           // MgrEpv
+                    RPC_IF_AUTOLISTEN | RPC_IF_ALLOW_LOCAL_ONLY,    // Flags
+                    RPC_C_LISTEN_MAX_CALLS_DEFAULT,                 // MaxCalls
+                    0,                                              // MaxRpcSize (no effect for ncalrpc -- local)
+                    MidiSrvRpcIfCallback,                           // IfCallback
+                    rpcSecurityDescriptor.get()                     // SecurityDescriptor
+                )
+            )
+        );                 
     }
     else
     {

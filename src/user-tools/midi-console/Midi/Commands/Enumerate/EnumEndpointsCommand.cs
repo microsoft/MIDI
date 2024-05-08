@@ -43,6 +43,12 @@ namespace Microsoft.Midi.ConsoleApp
         {
             bool atLeastOneEndpointFound = false;
 
+            if (!MidiService.IsAvailable())
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
+                return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
+            }
+
             AnsiConsole.Status()
                 .Start("Enumerating endpoints...", ctx =>
                 {

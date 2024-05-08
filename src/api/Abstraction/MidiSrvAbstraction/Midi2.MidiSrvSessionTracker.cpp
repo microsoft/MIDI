@@ -12,6 +12,14 @@
 HRESULT
 CMidi2MidiSrvSessionTracker::Initialize()
 {
+    TraceLoggingWrite(
+        MidiSrvAbstractionTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     return S_OK;
 }
 
@@ -208,6 +216,14 @@ CMidi2MidiSrvSessionTracker::GetSessionList(
     LPSAFEARRAY* SessionDetailsList
 )
 {
+    TraceLoggingWrite(
+        MidiSrvAbstractionTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     // TODO
     SessionDetailsList = nullptr;
 
@@ -235,15 +251,15 @@ CMidi2MidiSrvSessionTracker::GetSessionListJson(
     RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
     RETURN_HR_IF_NULL(E_INVALIDARG, SessionList);
 
-    //RETURN_IF_FAILED([&]()
-    //    {
-    //        // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
-    //        // with structured exception handling.
-    //        RpcTryExcept RETURN_IF_FAILED(MidiSrvGetSessionList(bindingHandle.get(), SessionList));
-    //        RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
-    //        RpcEndExcept
-    //            return S_OK;
-    //    }());
+    RETURN_IF_FAILED([&]()
+        {
+            // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
+            // with structured exception handling.
+            RpcTryExcept RETURN_IF_FAILED(MidiSrvGetSessionList(bindingHandle.get(), SessionList));
+            RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
+            RpcEndExcept
+            return S_OK;
+        }());
 
     return S_OK;
 }
@@ -251,5 +267,14 @@ CMidi2MidiSrvSessionTracker::GetSessionListJson(
 HRESULT
 CMidi2MidiSrvSessionTracker::Cleanup()
 {
+    TraceLoggingWrite(
+        MidiSrvAbstractionTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+
     return S_OK;
 }

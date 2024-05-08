@@ -40,7 +40,6 @@ namespace Microsoft.Midi.ConsoleApp
             return serviceController.Status == ServiceControllerStatus.Running;
         }
 
-
         public static bool StopServiceWithConsoleStatusUpdate(ServiceController controller)
         {
             controller.Stop();

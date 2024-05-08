@@ -17,6 +17,7 @@ cpp_quote("#define MIDISRV_ENDPOINT L\"MidiSrvClientRpc\"")
 typedef [system_handle(sh_section)] HANDLE CP_MMAP_HANDLE;
 typedef [system_handle(sh_event, 0x001F0003L)] HANDLE CP_EVENT_HANDLE;
 
+// this is used for auto-cleanup of connections and other resources
 typedef [context_handle] void * PMIDISRV_CONTEXT_HANDLE;
 
 // temporary test RPC data, to be removed
@@ -70,9 +71,10 @@ typedef struct MIDISRV_CLIENT
 } MIDISRV_CLIENT, *PMIDISRV_CLIENT;
 
 [
-    uuid(64839251-9DAF-4E79-AA4E-9771C86FFBC1),
+    uuid(64839251-9daf-4e79-aa4e-9771c86ffbc1),
     version(1.0),
     pointer_default(unique),
+    endpoint("ncalrpc:[MidiSrv]")
 ]
 interface MidiSrvRPC
 {
