@@ -22,7 +22,8 @@ CMidi2LoopbackMidiBiDi::Initialize(
 {
     TraceLoggingWrite(
         MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(endpointId, "endpoint id")
@@ -43,10 +44,11 @@ CMidi2LoopbackMidiBiDi::Initialize(
     {
         TraceLoggingWrite(
             MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Initializing Side-A BiDi", "message"),
+            TraceLoggingWideString(L"Initializing Side-A BiDi", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
             TraceLoggingWideString(m_associationId.c_str(), "association id")
         );
@@ -61,10 +63,11 @@ CMidi2LoopbackMidiBiDi::Initialize(
     {
         TraceLoggingWrite(
             MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Initializing Side-B BiDi", "message"),
+            TraceLoggingWideString(L"Initializing Side-B BiDi", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
             TraceLoggingWideString(m_associationId.c_str(), "association id")
         );
@@ -79,10 +82,11 @@ CMidi2LoopbackMidiBiDi::Initialize(
 
         TraceLoggingWrite(
             MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"We don't understand the endpoint Id", "message"),
+            TraceLoggingWideString(L"We don't understand the endpoint Id", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
             TraceLoggingWideString(m_associationId.c_str(), "association id")
         );
@@ -109,10 +113,11 @@ CMidi2LoopbackMidiBiDi::Initialize(
     {
         TraceLoggingWrite(
             MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Unable to find matching device in device table", "message"),
+            TraceLoggingWideString(L"Unable to find matching device in device table", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
             TraceLoggingWideString(m_associationId.c_str(), "association id")
         );
@@ -126,7 +131,8 @@ CMidi2LoopbackMidiBiDi::Cleanup()
 {
     TraceLoggingWrite(
         MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
@@ -145,14 +151,15 @@ CMidi2LoopbackMidiBiDi::SendMidiMessage(
     LONGLONG Position
 )
 {
-    TraceLoggingWrite(
-        MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
-        TraceLoggingBool(m_isEndpointA, "is endpoint A")
-    );
+    //TraceLoggingWrite(
+    //    MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+    //    MIDI_TRACE_EVENT_INFO,
+    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+    //    TraceLoggingPointer(this, "this"),
+    //    TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
+    //    TraceLoggingBool(m_isEndpointA, "is endpoint A")
+    //);
 
     RETURN_HR_IF_NULL(E_INVALIDARG, Message);
     RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
@@ -170,11 +177,12 @@ CMidi2LoopbackMidiBiDi::SendMidiMessage(
         {
             TraceLoggingWrite(
                 MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
-                TraceLoggingWideString(L"Send A to B : Unable to find endpoint device in table", "message")
+                TraceLoggingWideString(L"Send A to B : Unable to find endpoint device in table", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
 
             return E_FAIL;
@@ -193,11 +201,12 @@ CMidi2LoopbackMidiBiDi::SendMidiMessage(
         {
             TraceLoggingWrite(
                 MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
-                TraceLoggingWideString(L"Send B to A : Unable to find endpoint device in table", "message")
+                TraceLoggingWideString(L"Send B to A : Unable to find endpoint device in table", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
             return E_FAIL;
@@ -214,13 +223,14 @@ CMidi2LoopbackMidiBiDi::Callback(
     LONGLONG Context
 )
 {
-    TraceLoggingWrite(
-        MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
-    );
+    //TraceLoggingWrite(
+    //    MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+    //    MIDI_TRACE_EVENT_INFO,
+    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+    //    TraceLoggingPointer(this, "this"),
+    //    TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
+    //);
 
     // message received from the client
 

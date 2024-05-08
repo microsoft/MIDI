@@ -35,7 +35,8 @@ CMidi2SchedulerMidiTransform::Initialize(
     
     TraceLoggingWrite(
         MidiSchedulerTransformTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
         );
@@ -70,7 +71,8 @@ CMidi2SchedulerMidiTransform::Cleanup()
 {
     TraceLoggingWrite(
         MidiSchedulerTransformTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
         );
@@ -131,10 +133,11 @@ CMidi2SchedulerMidiTransform::Cleanup()
     {
         TraceLoggingWrite(
             MidiSchedulerTransformTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Exception cleaning up", "message")
+            TraceLoggingWideString(L"Exception cleaning up", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
         return S_OK;    // we don't care when cleaning up
@@ -161,10 +164,11 @@ CMidi2SchedulerMidiTransform::SendMidiMessageNow(
         {
             TraceLoggingWrite(
                 MidiSchedulerTransformTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Callback is nullptr", "message")
+                TraceLoggingWideString(L"Callback is nullptr", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
             return E_FAIL;
@@ -174,10 +178,11 @@ CMidi2SchedulerMidiTransform::SendMidiMessageNow(
     {
         TraceLoggingWrite(
             MidiSchedulerTransformTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Exception sending MIDI Message", "message")
+            TraceLoggingWideString(L"Exception sending MIDI Message", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
         return E_FAIL;
@@ -229,11 +234,12 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
             {
                 TraceLoggingWrite(
                     MidiSchedulerTransformTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingHResult(hr, "hresult"),
-                    TraceLoggingWideString(L"Error sending MIDI Message now (bypass queue)", "message")
+                    TraceLoggingWideString(L"Error sending MIDI Message now (bypass queue)", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
                 );
 
                 return hr;
@@ -252,11 +258,12 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
             {
                 TraceLoggingWrite(
                     MidiSchedulerTransformTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingHResult(hr, "hresult"),
-                    TraceLoggingWideString(L"Error sending MIDI Message now (message timestamp older than window)", "message")
+                    TraceLoggingWideString(L"Error sending MIDI Message now (message timestamp older than window)", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
                 );
 
                 return hr;
@@ -298,7 +305,7 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
                         __FUNCTION__,
                         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Outbound message queue full", "message")
+                        TraceLoggingWideString(L"Outbound message queue full", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                     );
 
                     return HR_E_MIDI_SENDMSG_SCHEDULER_QUEUE_FULL;
@@ -308,10 +315,11 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
             {
                 TraceLoggingWrite(
                     MidiSchedulerTransformTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Invalid message data size", "message")
+                    TraceLoggingWideString(L"Invalid message data size", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
 
                 // invalid data size
@@ -323,10 +331,11 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
     {
         TraceLoggingWrite(
             MidiSchedulerTransformTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Exception scheduling message", "message")
+            TraceLoggingWideString(L"Exception scheduling message", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
         return E_FAIL;
@@ -364,10 +373,11 @@ CMidi2SchedulerMidiTransform::GetTopMessageTimestamp(internal::MidiTimestamp &ti
     {
         TraceLoggingWrite(
             MidiSchedulerTransformTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Exception getting top-message timestamp", "message")
+            TraceLoggingWideString(L"Exception getting top-message timestamp", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
         ret = E_FAIL;
@@ -414,10 +424,11 @@ CMidi2SchedulerMidiTransform::CalculateSafeSleepTime(
     {
         TraceLoggingWrite(
             MidiSchedulerTransformTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Exception calculating safe sleep time", "message")
+            TraceLoggingWideString(L"Exception calculating safe sleep time", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
         ret = E_FAIL;
@@ -443,7 +454,6 @@ void CMidi2SchedulerMidiTransform::QueueWorker()
                 // queue empty so sleep until we get notified to wake up
                 m_messageProcessorWakeup.wait(MIDI_OUTBOUND_EMPTY_QUEUE_SLEEP_DURATION_MS);
                 //bool triggered = m_messageProcessorWakeup.wait(MIDI_OUTBOUND_EMPTY_QUEUE_SLEEP_DURATION_MS);
-                //if (triggered) OutputDebugString(L"" __FUNCTION__ " Wake up from sleep");
             }
             else if (m_continueProcessing && !m_messageQueue.empty())
             {
@@ -484,10 +494,12 @@ void CMidi2SchedulerMidiTransform::QueueWorker()
 
                                 TraceLoggingWrite(
                                     MidiSchedulerTransformTelemetryProvider::Provider(),
-                                    __FUNCTION__,
+                                    MIDI_TRACE_EVENT_ERROR,
+                                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                                     TraceLoggingPointer(this, "this"),
-                                    TraceLoggingHResult(hr, "hresult")
+                                    TraceLoggingWideString(L"Unable to send message", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                    TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
                                 );
 
                                 // we failed to send for some reason, so break out of the loop. We'll catch 
@@ -516,7 +528,6 @@ void CMidi2SchedulerMidiTransform::QueueWorker()
                 else
                 {
                     // couldn't get top timestamp for some reason.
-                    //OutputDebugString(L"" __FUNCTION__ " Unable to get top timestamp");
                 }
 
             }
@@ -539,10 +550,11 @@ void CMidi2SchedulerMidiTransform::QueueWorker()
     {
         TraceLoggingWrite(
             MidiSchedulerTransformTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Exception processing queue", "message")
+            TraceLoggingWideString(L"Exception processing queue", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
     }
 }

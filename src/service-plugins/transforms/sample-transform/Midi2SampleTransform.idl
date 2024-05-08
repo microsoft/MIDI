@@ -1,0 +1,22 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+import "WindowsMidiServices.idl";
+
+[
+    uuid(8021FF86-72EC-41C1-A97B-5608AA89006E),
+    version(1.0),
+]
+library Midi2SampleTransformLib
+{
+    importlib("stdole2.tlb");
+
+    [uuid(271CAD7C-3F73-4597-AB6C-CF7277D01F38), version(1.0)]
+    coclass Midi2SampleTransform
+    {
+        [default] interface IMidiDataTransform;
+    }
+};
+

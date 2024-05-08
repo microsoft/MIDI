@@ -25,17 +25,16 @@
 		<BaseOutputPath>$(SolutionDir)VSFiles\</BaseOutputPath>
 	</PropertyGroup>
 
-	<ItemGroup>
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.7" />
-  </ItemGroup>
-
   <ItemGroup>
     <None Include="nuget\README.md" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Midi2Client\Microsoft.Devices.Midi2.vcxproj" />
-    <ProjectReference Include="..\Midi2Client\Windows.Devices.Midi2.vcxproj" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\winrt\Microsoft.Devices.Midi2.vcxproj" />
   </ItemGroup>
 
 </Project>

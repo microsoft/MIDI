@@ -22,10 +22,11 @@ CMidi2KSAggregateAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"IMidiBiDi", "interface")
+            TraceLoggingWideString(L"IMidiBiDi", MIDI_TRACE_EVENT_INTERFACE_FIELD)
         );
 
         wil::com_ptr_nothrow<IMidiBiDi> midiBiDi;
@@ -36,10 +37,11 @@ CMidi2KSAggregateAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"IMidiEndpointManager", "interface")
+            TraceLoggingWideString(L"IMidiEndpointManager", MIDI_TRACE_EVENT_INTERFACE_FIELD)
         );
 
 
@@ -55,10 +57,11 @@ CMidi2KSAggregateAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"IMidiAbstractionConfigurationManager", "interface")
+            TraceLoggingWideString(L"IMidiAbstractionConfigurationManager", MIDI_TRACE_EVENT_INTERFACE_FIELD)
         );
 
         // check to see if this is the first time we're creating the endpoint manager. If so, create it.
@@ -74,10 +77,11 @@ CMidi2KSAggregateAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"IMidiServiceAbstractionPluginMetadataProvider", "interface")
+            TraceLoggingWideString(L"IMidiServiceAbstractionPluginMetadataProvider", MIDI_TRACE_EVENT_INTERFACE_FIELD)
         );
 
         wil::com_ptr_nothrow<IMidiServiceAbstractionPluginMetadataProvider> metadataProvider;

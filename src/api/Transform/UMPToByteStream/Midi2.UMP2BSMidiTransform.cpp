@@ -17,7 +17,8 @@ CMidi2UMP2BSMidiTransform::Initialize(
 {
     TraceLoggingWrite(
         MidiUMP2BSTransformTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
         );
@@ -37,7 +38,8 @@ CMidi2UMP2BSMidiTransform::Cleanup()
 {
     TraceLoggingWrite(
         MidiUMP2BSTransformTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
         );

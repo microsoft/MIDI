@@ -28,7 +28,8 @@ CMidi2VirtualMidiEndpointManager::Initialize(
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -55,7 +56,8 @@ CMidi2VirtualMidiEndpointManager::DeleteClientEndpoint(std::wstring clientShortI
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(clientShortInstanceId.c_str(), "clientShortInstanceId")
@@ -76,10 +78,11 @@ CMidi2VirtualMidiEndpointManager::DeleteClientEndpoint(std::wstring clientShortI
         {
             TraceLoggingWrite(
                 MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-                __func__,
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"could not find instanceId property for client", "message")
+                TraceLoggingWideString(L"could not find instanceId property for client", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
             return E_FAIL;
@@ -98,7 +101,8 @@ CMidi2VirtualMidiEndpointManager::DeleteDeviceEndpoint(std::wstring deviceShortI
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(deviceShortInstanceId.c_str(), "deviceShortInstanceId")
@@ -119,10 +123,11 @@ CMidi2VirtualMidiEndpointManager::DeleteDeviceEndpoint(std::wstring deviceShortI
         {
             TraceLoggingWrite(
                 MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"could not find instanceId property for device", "message")
+                TraceLoggingWideString(L"could not find instanceId property for device", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
             return E_FAIL;
@@ -142,7 +147,8 @@ CMidi2VirtualMidiEndpointManager::CreateParentDevice()
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -174,7 +180,8 @@ CMidi2VirtualMidiEndpointManager::CreateParentDevice()
 
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __func__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(newDeviceId, "New parent device instance id")
@@ -191,7 +198,8 @@ CMidi2VirtualMidiEndpointManager::NegotiateAndRequestMetadata(std::wstring endpo
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(endpointId.c_str(), "endpoint id")
@@ -224,7 +232,8 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -321,7 +330,8 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -406,10 +416,11 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
 
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Created device-side endpoint", "message")
+        TraceLoggingWideString(L"Created device-side endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     return S_OK;
@@ -422,7 +433,8 @@ CMidi2VirtualMidiEndpointManager::Cleanup()
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );

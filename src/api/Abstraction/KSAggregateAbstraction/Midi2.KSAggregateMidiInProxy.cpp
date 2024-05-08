@@ -61,8 +61,8 @@ CMidi2KSAggregateMidiInProxy::Initialize(
             __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Unable to initialize sub-device for input", "message"),
-            TraceLoggingHResult(initResult, "hresult"),
+            TraceLoggingWideString(L"Unable to initialize sub-device for input", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingHResult(initResult, MIDI_TRACE_EVENT_HRESULT_FIELD),
             TraceLoggingWideString(Device, "device id"),
             TraceLoggingUInt32(PinId, "pin id")
         );
@@ -83,13 +83,13 @@ CMidi2KSAggregateMidiInProxy::Callback(
     LONGLONG Context
 )
 {
-    TraceLoggingWrite(
-        MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Message received from bytestream endpoint", "message")
-    );
+    //TraceLoggingWrite(
+    //    MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+    //    __FUNCTION__,
+    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+    //    TraceLoggingPointer(this, "this"),
+    //    TraceLoggingWideString(L"Message received from bytestream endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    //);
 
     // Translate bytestream to UMP, adding in correct group number, and call m_callback with the result
 
@@ -132,7 +132,7 @@ CMidi2KSAggregateMidiInProxy::Cleanup()
         __FUNCTION__,
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Cleanup", "message")
+        TraceLoggingWideString(L"Cleanup", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     m_callback = nullptr;

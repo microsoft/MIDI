@@ -15,10 +15,11 @@ CMidi2UmpProtocolDownscalerTransform::Activate(
     {
         TraceLoggingWrite(
             MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingWideString(L"IMidiDataTransform", "interface"),
-            TraceLoggingPointer(this, "this")
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiDataTransform", MIDI_TRACE_EVENT_INTERFACE_FIELD)
             );
 
         wil::com_ptr_nothrow<IMidiDataTransform> midiTransform;

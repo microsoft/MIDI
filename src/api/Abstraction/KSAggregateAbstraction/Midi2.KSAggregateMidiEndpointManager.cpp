@@ -42,7 +42,8 @@ CMidi2KSAggregateMidiEndpointManager::Initialize(
 {
     TraceLoggingWrite(
         MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -86,10 +87,11 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
 {
     TraceLoggingWrite(
         MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Creating aggregate UMP endpoint", "message"),
+        TraceLoggingWideString(L"Creating aggregate UMP endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(MasterEndpointDefinition.EndpointName.c_str(), "name")
     );
 
@@ -242,10 +244,11 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     {
         TraceLoggingWrite(
             MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Aggregate UMP endpoint created", "message"),
+            TraceLoggingWideString(L"Aggregate UMP endpoint created", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(MasterEndpointDefinition.EndpointName.c_str(), "name"),
             TraceLoggingWideString(newDeviceInterfaceId, "endpoint id")
         );
@@ -258,12 +261,13 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     {
         TraceLoggingWrite(
             MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Aggregate UMP endpoint creation failed", "message"),
+            TraceLoggingWideString(L"Aggregate UMP endpoint creation failed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(MasterEndpointDefinition.EndpointName.c_str(), "name"),
-            TraceLoggingHResult(swdCreationResult, "hresult")
+            TraceLoggingHResult(swdCreationResult, MIDI_TRACE_EVENT_HRESULT_FIELD)
         );
 
         return swdCreationResult;
@@ -277,7 +281,7 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiBytestreamEndpoints(
 )
 {
 
-
+    // TODO
 
     return S_OK;
 }
@@ -293,7 +297,8 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
 {
     TraceLoggingWrite(
         MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(device.Id().c_str(), "added device")
@@ -381,10 +386,11 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
         {
             TraceLoggingWrite(
                 MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Opened pin", "message"),
+                TraceLoggingWideString(L"Opened pin", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingWideString(device.Id().c_str(), "device id"),
                 TraceLoggingUInt32(i, "pin id")
                 );
@@ -407,10 +413,11 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
             {
                 TraceLoggingWrite(
                     MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Retrieved pin name", "message"),
+                    TraceLoggingWideString(L"Retrieved pin name", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                     TraceLoggingWideString(device.Id().c_str(), "device id"),
                     TraceLoggingUInt32(i, "pin id"),
                     TraceLoggingWideString(pinNameData.get(), "pin name")
@@ -452,10 +459,11 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
 
                 TraceLoggingWrite(
                     MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Pin is KSPIN_DATAFLOW_IN (MidiOut pin)", "message"),
+                    TraceLoggingWideString(L"Pin is KSPIN_DATAFLOW_IN (MidiOut pin)", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                     TraceLoggingWideString(device.Id().c_str(), "device id"),
                     TraceLoggingUInt32(i, "pin id")
                     );
@@ -466,10 +474,11 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
 
                 TraceLoggingWrite(
                     MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Pin is KSPIN_DATAFLOW_OUT (MidiIn pin)", "message"),
+                    TraceLoggingWideString(L"Pin is KSPIN_DATAFLOW_OUT (MidiIn pin)", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                     TraceLoggingWideString(device.Id().c_str(), "device id"),
                     TraceLoggingUInt32(i, "pin id")
                     );
@@ -478,10 +487,11 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
             {
                 TraceLoggingWrite(
                     MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Pin dataflow is unexpected value. Skipping pin.", "message"),
+                    TraceLoggingWideString(L"Pin dataflow is unexpected value. Skipping pin.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                     TraceLoggingWideString(device.Id().c_str(), "device id"),
                     TraceLoggingUInt32(i, "pin id")
                     );
@@ -510,10 +520,11 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
     {
         TraceLoggingWrite(
             MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Device has no compatible MIDI 1.0 pins. This is normal for many devices.", "message"),
+            TraceLoggingWideString(L"Device has no compatible MIDI 1.0 pins. This is normal for many devices.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(device.Id().c_str(), "device id")
             );
     }
@@ -530,11 +541,18 @@ HRESULT CMidi2KSAggregateMidiEndpointManager::OnDeviceRemoved(DeviceWatcher, Dev
 {
     TraceLoggingWrite(
         MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(device.Id().c_str(), "device id")
     );
+
+
+    // TODO
+
+
+
 
     // the interface is no longer active, search through our m_AvailableMidiPins to identify
     // every entry with this filter interface id, and remove the SWD and remove the pin(s) from
@@ -596,7 +614,8 @@ CMidi2KSAggregateMidiEndpointManager::Cleanup()
 {
     TraceLoggingWrite(
         MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
         );

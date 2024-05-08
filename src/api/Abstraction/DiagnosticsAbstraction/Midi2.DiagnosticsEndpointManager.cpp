@@ -29,7 +29,8 @@ CMidi2DiagnosticsEndpointManager::Initialize(
 {
     TraceLoggingWrite(
         MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -57,7 +58,8 @@ CMidi2DiagnosticsEndpointManager::CreateParentDevice()
 {
     TraceLoggingWrite(
         MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -89,10 +91,6 @@ CMidi2DiagnosticsEndpointManager::CreateParentDevice()
 
     m_parentDeviceId = std::wstring(newDeviceId);
 
-    OutputDebugString(__FUNCTION__ L" New parent device id: ");
-    OutputDebugString(newDeviceId);
-    OutputDebugString(L"\n");
-
     return S_OK;
 }
 
@@ -113,7 +111,8 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(
 {
     TraceLoggingWrite(
         MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -203,7 +202,8 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(
 {
     TraceLoggingWrite(
         MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -270,8 +270,6 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(
         (LPWSTR)&newDeviceInterfaceId,
         deviceInterfaceIdMaxSize));
 
-    // TODO: Get the device interface id and store it for comparison later.
-
     return S_OK;
 }
 
@@ -281,7 +279,8 @@ CMidi2DiagnosticsEndpointManager::Cleanup()
 {
     TraceLoggingWrite(
         MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );

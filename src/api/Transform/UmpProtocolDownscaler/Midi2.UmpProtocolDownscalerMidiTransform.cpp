@@ -17,7 +17,8 @@ CMidi2UmpProtocolDownscalerMidiTransform::Initialize(
 {
     TraceLoggingWrite(
         MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -38,7 +39,8 @@ CMidi2UmpProtocolDownscalerMidiTransform::Cleanup()
 {
     TraceLoggingWrite(
         MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
         );
@@ -77,7 +79,8 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
 {
     TraceLoggingWrite(
         MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -224,7 +227,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
                     //    __FUNCTION__,
                     //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     //    TraceLoggingPointer(this, "this"),
-                    //    TraceLoggingWideString(L"Downscaling Note Off", "message")
+                    //    TraceLoggingWideString(L"Downscaling Note Off", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                     //);
 
                     // note number / index is third byte
@@ -242,7 +245,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
                     //    __FUNCTION__,
                     //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     //    TraceLoggingPointer(this, "this"),
-                    //    TraceLoggingWideString(L"Downscaling Note On", "message")
+                    //    TraceLoggingWideString(L"Downscaling Note On", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                     //);
 
                     uint8_t noteNumber = MIDIWORDBYTE3(originalWord0);
@@ -315,7 +318,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
                 //    __FUNCTION__,
                 //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 //    TraceLoggingPointer(this, "this"),
-                //    TraceLoggingWideString(L"Sending single new message", "message")
+                //    TraceLoggingWideString(L"Sending single new message", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 //);
 
                 if (m_Callback != nullptr && newLength > 0 && newData != nullptr)
@@ -334,7 +337,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
             //    __FUNCTION__,
             //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             //    TraceLoggingPointer(this, "this"),
-            //    TraceLoggingWideString(L"Not a message type we recognize. No downscaling applied", "message"),
+            //    TraceLoggingWideString(L"Not a message type we recognize. No downscaling applied", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             //    TraceLoggingUInt32(originalWord0, "Word 0")
             //);
 
@@ -354,12 +357,13 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
         // not a valid UMP
 
         TraceLoggingWrite(
-                MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
-                __FUNCTION__,
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"invalid UMP", "message"),
-                TraceLoggingUInt32(Length, "Length in Bytes")
+            MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"invalid UMP", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt32(Length, "Length in Bytes")
             );
     }
 

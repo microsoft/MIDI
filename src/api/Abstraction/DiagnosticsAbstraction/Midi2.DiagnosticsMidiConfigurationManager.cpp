@@ -24,7 +24,8 @@ CMidi2DiagnosticsMidiConfigurationManager::Initialize(
 
     TraceLoggingWrite(
         MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -44,7 +45,8 @@ CMidi2DiagnosticsMidiConfigurationManager::UpdateConfiguration(
 {
     TraceLoggingWrite(
         MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -62,7 +64,8 @@ CMidi2DiagnosticsMidiConfigurationManager::Cleanup()
 {
     TraceLoggingWrite(
         MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );

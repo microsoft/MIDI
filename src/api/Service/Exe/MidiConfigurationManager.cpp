@@ -23,8 +23,6 @@
 // TODO: Refactor these two methods and abstract out the registry code. Do this once wil adds the enumeration helpers to the NuGet
 std::vector<GUID> CMidiConfigurationManager::GetEnabledTransportAbstractionLayers() const noexcept
 {
-    //OutputDebugString(L"GetEnabledAbstractionLayers");
-
     std::vector<GUID> availableAbstractionLayers;
 
     // the diagnostics abstraction is always instantiated. We don't want to take the
@@ -35,8 +33,6 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledTransportAbstractionLayer
     try
     {
         auto rootKey = wil::reg::open_unique_key(HKEY_LOCAL_MACHINE, MIDI_ROOT_TRANSPORT_PLUGINS_REG_KEY, wil::reg::key_access::read);
-
-        //OutputDebugString(L"Root Key Opened");
 
         // current wil NuGet doesn't include the new registry key/value enumeration, so have to do this the hard way
         // https://github.com/microsoft/wil/commit/a6c9f2d8520e830b04c47c3c395bac428696cc0d
@@ -76,15 +72,10 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledTransportAbstractionLayer
 
         // Enumerate the subkeys, until RegEnumKeyEx fails.
 
-        //OutputDebugString(L"Queried Info Key");
-
-
         if (cSubKeys)
         {
             for (i = 0; i < cSubKeys; i++)
             {
-                //OutputDebugString(L"Reading Sub Key");
-
                 cbName = MAX_KEY_LENGTH;
 
                 retCode = RegEnumKeyEx(
@@ -99,8 +90,6 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledTransportAbstractionLayer
 
                 if (retCode == ERROR_SUCCESS)
                 {
-                    //OutputDebugString(L"Sub Key Read");
-
                     DWORD abstractionEnabled = 1;
 
                     // Check to see if that sub key has an Enabled value.
@@ -109,14 +98,10 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledTransportAbstractionLayer
                     keyPath += L"\\";
                     keyPath += achKey;
 
-                    //OutputDebugString(L"Opening Key");
-
                     auto pluginKey = wil::reg::open_unique_key(HKEY_LOCAL_MACHINE, keyPath.c_str(), wil::reg::key_access::read);
 
                     try
                     {
-                        //OutputDebugString(L"Getting Enabled Value");
-
                         // is the abstraction layer enabled? > 0 or missing Enabled value mean it is
                         abstractionEnabled = wil::reg::get_value<DWORD>(pluginKey.get(), MIDI_PLUGIN_ENABLED_REG_VALUE);
                     }
@@ -131,8 +116,6 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledTransportAbstractionLayer
                     {
                         try
                         {
-                            //OutputDebugString(L"Getting CLSID Value");
-
                             GUID abstractionLayerGuid;
 
                             auto clsidString = wil::reg::get_value<std::wstring>(pluginKey.get(), MIDI_PLUGIN_CLSID_REG_VALUE);
@@ -143,8 +126,6 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledTransportAbstractionLayer
 
                             if (result == NOERROR)
                             {
-                                //OutputDebugString(L"Adding CLSID to Vector");
-
                                 // Add to the vector
                                 availableAbstractionLayers.push_back(abstractionLayerGuid);
                             }
@@ -166,8 +147,6 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledTransportAbstractionLayer
 // TODO: Refactor these two methods and abstract out the registry code. Do this once wil adds the enumeration helpers to the NuGet
 std::vector<GUID> CMidiConfigurationManager::GetEnabledEndpointProcessingTransforms() const noexcept
 {
-    //OutputDebugString(L"GetEnabledAbstractionLayers");
-
     std::vector<GUID> availableAbstractionLayers;
 
     // the diagnostics abstraction is always instantiated. We don't want to take the
@@ -178,8 +157,6 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledEndpointProcessingTransfo
     try
     {
         auto rootKey = wil::reg::open_unique_key(HKEY_LOCAL_MACHINE, MIDI_ROOT_ENDPOINT_PROCESSING_PLUGINS_REG_KEY, wil::reg::key_access::read);
-
-        //OutputDebugString(L"Root Key Opened");
 
         // current wil NuGet doesn't include the new registry key/value enumeration, so have to do this the hard way
         // https://github.com/microsoft/wil/commit/a6c9f2d8520e830b04c47c3c395bac428696cc0d
@@ -219,15 +196,10 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledEndpointProcessingTransfo
 
         // Enumerate the subkeys, until RegEnumKeyEx fails.
 
-        //OutputDebugString(L"Queried Info Key");
-
-
         if (cSubKeys)
         {
             for (i = 0; i < cSubKeys; i++)
             {
-                //OutputDebugString(L"Reading Sub Key");
-
                 cbName = MAX_KEY_LENGTH;
 
                 retCode = RegEnumKeyEx(
@@ -242,8 +214,6 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledEndpointProcessingTransfo
 
                 if (retCode == ERROR_SUCCESS)
                 {
-                    //OutputDebugString(L"Sub Key Read");
-
                     DWORD abstractionEnabled = 1;
 
                     // Check to see if that sub key has an Enabled value.
@@ -252,14 +222,10 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledEndpointProcessingTransfo
                     keyPath += L"\\";
                     keyPath += achKey;
 
-                    //OutputDebugString(L"Opening Key");
-
                     auto pluginKey = wil::reg::open_unique_key(HKEY_LOCAL_MACHINE, keyPath.c_str(), wil::reg::key_access::read);
 
                     try
                     {
-                        //OutputDebugString(L"Getting Enabled Value");
-
                         // is the abstraction layer enabled? > 0 or missing Enabled value mean it is
                         abstractionEnabled = wil::reg::get_value<DWORD>(pluginKey.get(), MIDI_PLUGIN_ENABLED_REG_VALUE);
                     }
@@ -274,8 +240,6 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledEndpointProcessingTransfo
                     {
                         try
                         {
-                            //OutputDebugString(L"Getting CLSID Value");
-
                             GUID abstractionLayerGuid;
 
                             auto clsidString = wil::reg::get_value<std::wstring>(pluginKey.get(), MIDI_PLUGIN_CLSID_REG_VALUE);
@@ -286,8 +250,6 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledEndpointProcessingTransfo
 
                             if (result == NOERROR)
                             {
-                                //OutputDebugString(L"Adding CLSID to Vector");
-
                                 // Add to the vector
                                 availableAbstractionLayers.push_back(abstractionLayerGuid);
                             }
@@ -311,7 +273,8 @@ std::vector<ABSTRACTIONMETADATA> CMidiConfigurationManager::GetAllEnabledTranspo
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -347,9 +310,10 @@ std::vector<ABSTRACTIONMETADATA> CMidiConfigurationManager::GetAllEnabledTranspo
 
                 TraceLoggingWrite(
                     MidiSrvTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingWideString(L"Unable to activate IMidiServiceAbstractionPlugin", "message"),
+                    TraceLoggingWideString(L"Unable to activate IMidiServiceAbstractionPlugin", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                     TraceLoggingGuid(abstractionId, "abstraction id"),
                     TraceLoggingPointer(this, "this")
                 );
@@ -366,7 +330,8 @@ std::wstring CMidiConfigurationManager::GetCurrentConfigurationFileName() noexce
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -415,7 +380,8 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -434,10 +400,11 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
             {
                 TraceLoggingWrite(
                     MidiSrvTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"JSON Object parsing failed", "message"),
+                    TraceLoggingWideString(L"JSON Object parsing failed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                     TraceLoggingWideString(jsonStringSource.c_str(), "Source JSON String")
                 );
 
@@ -449,10 +416,11 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
         {
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"JSON Object parsing failed. Exception.", "message")
+                TraceLoggingWideString(L"JSON Object parsing failed. Exception.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
             return abstractionSettings;
@@ -463,10 +431,11 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
         {
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"JSON Object null after parsing", "message")
+                TraceLoggingWideString(L"JSON Object null after parsing", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
             // return the empty map
@@ -481,10 +450,11 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
         {
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"No transport plugins node in JSON", "message")
+                TraceLoggingWideString(L"No transport plugins node in JSON", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
             // return the empty map
@@ -501,10 +471,11 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
 
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(key.c_str(), "AbstractionIdGuidString", "message")
+                TraceLoggingWideString(key.c_str(), "AbstractionIdGuidString", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
             std::wstring transportJson = it.Current().Value().GetObject().Stringify().c_str();
@@ -519,7 +490,8 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
             {
                 TraceLoggingWrite(
                     MidiSrvTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
                     TraceLoggingWideString(key.c_str(), "Invalid GUID Property")
@@ -533,7 +505,8 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
 
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(transportJson.c_str()),
@@ -556,7 +529,8 @@ HRESULT CMidiConfigurationManager::Initialize()
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -596,7 +570,8 @@ CMidiConfigurationManager::LoadCurrentConfigurationFile()
 
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_WARNING,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Missing or inaccessible MIDI configuration file")
@@ -617,7 +592,8 @@ CMidiConfigurationManager::LoadCurrentConfigurationFile()
                 {
                     TraceLoggingWrite(
                         MidiSrvTelemetryProvider::Provider(),
-                        __FUNCTION__,
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingPointer(this, "this"),
                         TraceLoggingWideString(L"Configuration file JSON parsing failed")
@@ -646,7 +622,8 @@ CMidiConfigurationManager::LoadCurrentConfigurationFile()
         {
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_WARNING,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Configuration file JSON is empty")
@@ -660,7 +637,8 @@ CMidiConfigurationManager::LoadCurrentConfigurationFile()
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_WARNING,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Missing MIDI configuration file")
@@ -683,7 +661,8 @@ CMidiConfigurationManager::GetAbstractionCreateActionJsonObject(
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -705,7 +684,8 @@ CMidiConfigurationManager::GetAbstractionUpdateActionJsonObject(
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -727,7 +707,8 @@ CMidiConfigurationManager::GetAbstractionRemoveActionJsonObject(
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -750,7 +731,8 @@ CMidiConfigurationManager::GetAbstractionMatchingEndpointJsonObject(
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -805,7 +787,8 @@ CMidiConfigurationManager::GetAndPurgeConfigFileAbstractionEndpointUpdateJsonObj
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -834,10 +817,11 @@ CMidiConfigurationManager::GetAndPurgeConfigFileAbstractionEndpointUpdateJsonObj
                     {
                         TraceLoggingWrite(
                             MidiSrvTelemetryProvider::Provider(),
-                            __FUNCTION__,
+                            MIDI_TRACE_EVENT_INFO,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                             TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(L"Processing update list", "message")
+                            TraceLoggingWideString(L"Processing update list", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                         );
 
                         for (auto const& searchkeySet : jsonSearchKeySets)
@@ -881,10 +865,11 @@ CMidiConfigurationManager::GetAndPurgeConfigFileAbstractionEndpointUpdateJsonObj
                                     {
                                         TraceLoggingWrite(
                                             MidiSrvTelemetryProvider::Provider(),
-                                            __FUNCTION__,
+                                            MIDI_TRACE_EVENT_INFO,
+                                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                                             TraceLoggingPointer(this, "this"),
-                                            TraceLoggingWideString(L"Found match. Returning it", "message")
+                                            TraceLoggingWideString(L"Found match. Returning it", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                                         );
 
 
@@ -916,11 +901,12 @@ CMidiConfigurationManager::GetAndPurgeConfigFileAbstractionEndpointUpdateJsonObj
 
                 TraceLoggingWrite(
                     MidiSrvTelemetryProvider::Provider(),
-                    __FUNCTION__,
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    MIDI_TRACE_EVENT_WARNING,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
                     TraceLoggingPointer(this, "this"),
                     TraceLoggingWideString(searchKeyValuePairsJson, "searchKeyValuePairsJson"),
-                    TraceLoggingWideString(L"No match found", "message")
+                    TraceLoggingWideString(L"No match found", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
 
                 // We couldn't find any matches. This is a soft error, but still needs to be reported as an error
@@ -933,11 +919,12 @@ CMidiConfigurationManager::GetAndPurgeConfigFileAbstractionEndpointUpdateJsonObj
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(searchKeyValuePairsJson, "searchKeyValuePairsJson"),
-            TraceLoggingWideString(L"Exception. Returning E_FAIL", "message")
+            TraceLoggingWideString(L"Exception. Returning E_FAIL", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
     }
@@ -962,7 +949,8 @@ std::wstring CMidiConfigurationManager::GetSavedConfigurationForTransportAbstrac
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingGuid(abstractionGuid)
@@ -973,8 +961,6 @@ std::wstring CMidiConfigurationManager::GetSavedConfigurationForTransportAbstrac
     {
 
         auto key = internal::GuidToString(abstractionGuid);
-
-        //    OutputDebugString(key.c_str());
 
         if (m_jsonObject != nullptr)
         {
@@ -988,8 +974,6 @@ std::wstring CMidiConfigurationManager::GetSavedConfigurationForTransportAbstrac
                     auto thisPlugin = plugins.GetNamedObject(key);
 
                     std::wstring jsonString = (std::wstring)thisPlugin.Stringify();
-
-                    //OutputDebugString(jsonString.c_str());
 
                     return jsonString;
                 }
@@ -1008,7 +992,8 @@ std::wstring CMidiConfigurationManager::GetSavedConfigurationForEndpointProcessi
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingGuid(abstractionGuid)
@@ -1048,7 +1033,8 @@ HRESULT CMidiConfigurationManager::Cleanup() noexcept
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );

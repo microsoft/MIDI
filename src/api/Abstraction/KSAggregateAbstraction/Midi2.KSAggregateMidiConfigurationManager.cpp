@@ -19,7 +19,8 @@ CMidi2KSAggregateMidiConfigurationManager::Initialize(
 {
     TraceLoggingWrite(
         MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -41,7 +42,8 @@ CMidi2KSAggregateMidiConfigurationManager::BuildEndpointJsonSearchKeysForSWD(_In
 {
     TraceLoggingWrite(
         MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(endpointDeviceInterfaceId.c_str(), "endpointDeviceInterfaceId")
@@ -77,7 +79,8 @@ CMidi2KSAggregateMidiConfigurationManager::ApplyConfigFileUpdatesForEndpoint(std
 {
     TraceLoggingWrite(
         MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(endpointSearchKeysJson.c_str(), "search keys")
@@ -95,10 +98,11 @@ CMidi2KSAggregateMidiConfigurationManager::ApplyConfigFileUpdatesForEndpoint(std
     {
         TraceLoggingWrite(
             MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Updating configuration", "message"),
+            TraceLoggingWideString(L"Updating configuration", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(endpointUpdateJsonFragment, "update json")
         );
 
@@ -113,11 +117,12 @@ CMidi2KSAggregateMidiConfigurationManager::ApplyConfigFileUpdatesForEndpoint(std
         {
             TraceLoggingWrite(
                 MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingHResult(updateResult, "hresult"),
-                TraceLoggingWideString(L"Configuration update failed", "message")
+                TraceLoggingWideString(L"Configuration update failed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingHResult(updateResult, MIDI_TRACE_EVENT_HRESULT_FIELD)
             );
         }
 
@@ -130,10 +135,11 @@ CMidi2KSAggregateMidiConfigurationManager::ApplyConfigFileUpdatesForEndpoint(std
 
         TraceLoggingWrite(
             MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"No config file update for endpoint, or endpoint was not found.", "message")
+            TraceLoggingWideString(L"No config file update for endpoint, or endpoint was not found.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
     }
 
@@ -153,22 +159,6 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
     RETURN_HR_IF_NULL(E_INVALIDARG, Response);
     RETURN_HR_IF(E_INVALIDARG, wcslen(ConfigurationJsonSection) == 0);
 
-    if (m_MidiDeviceManager == nullptr)
-    {
-        TraceLoggingWrite(
-            MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
-            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(ConfigurationJsonSection, "json"),
-            TraceLoggingWideString(L"Device Manager is nullptr", "message"),
-            TraceLoggingBool(IsFromConfigurationFile, "IsFromConfigurationFile")
-        );
-
-        return E_FAIL;
-    }
-
-
     TraceLoggingWrite(
         MidiKSAggregateAbstractionTelemetryProvider::Provider(),
         __FUNCTION__,
@@ -177,6 +167,21 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
         TraceLoggingWideString(ConfigurationJsonSection, "json"),
         TraceLoggingBool(IsFromConfigurationFile, "IsFromConfigurationFile")
     );
+
+    if (m_MidiDeviceManager == nullptr)
+    {
+        TraceLoggingWrite(
+            MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+            __FUNCTION__,
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Device Manager is nullptr", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+        return E_FAIL;
+    }
+
+
 
     // default to failure
     auto responseObject = internal::BuildConfigurationResponseObject(false);
@@ -192,8 +197,7 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
                 __FUNCTION__,
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Failed to parse Configuration JSON", "message"),
-                TraceLoggingWideString(ConfigurationJsonSection, "json")
+                TraceLoggingWideString(L"Failed to parse Configuration JSON", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
             //internal::JsonStringifyObjectToOutParam(responseObject, &Response);
@@ -249,6 +253,7 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
                                         __FUNCTION__,
                                         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                                         TraceLoggingPointer(this, "this"),
+                                        TraceLoggingWideString(L"Found user-supplied endpoint name", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                                         TraceLoggingWideString(swdId.c_str(), "swd"),
                                         TraceLoggingWideString(userSuppliedEndpointName.c_str(), "new name")
                                     );
@@ -283,6 +288,7 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
                                         __FUNCTION__,
                                         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                                         TraceLoggingPointer(this, "this"),
+                                        TraceLoggingWideString(L"Found user-supplied endpoint description", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                                         TraceLoggingWideString(swdId.c_str(), "swd"),
                                         TraceLoggingWideString(userSuppliedEndpointDescription.c_str(), "new description")
                                     );
@@ -316,6 +322,7 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
                                         __FUNCTION__,
                                         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                                         TraceLoggingPointer(this, "this"),
+                                        TraceLoggingWideString(L"Found user-supplied small image path", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                                         TraceLoggingWideString(swdId.c_str(), "swd"),
                                         TraceLoggingWideString(userSuppliedSmallImagePath.c_str(), "new small image path")
                                     );
@@ -349,6 +356,7 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
                                         __FUNCTION__,
                                         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                                         TraceLoggingPointer(this, "this"),
+                                        TraceLoggingWideString(L"Found user-supplied large image path", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                                         TraceLoggingWideString(swdId.c_str(), "swd"),
                                         TraceLoggingWideString(userSuppliedLargeImagePath.c_str(), "new large image path")
                                     );
@@ -375,7 +383,7 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
                                     __FUNCTION__,
                                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                                     TraceLoggingPointer(this, "this"),
-                                    TraceLoggingWideString(L"Updating properties", "message"),
+                                    TraceLoggingWideString(L"Updating properties", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                                     TraceLoggingWideString(swdId.c_str(), "swd")
                                 );
 
@@ -395,7 +403,7 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
                                         __FUNCTION__,
                                         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                                         TraceLoggingPointer(this, "this"),
-                                        TraceLoggingWideString(L"Properties updated", "message"),
+                                        TraceLoggingWideString(L"Properties updated", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                                         TraceLoggingWideString(swdId.c_str(), "swd")
                                     );
                                 }
@@ -409,8 +417,8 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
                                             __FUNCTION__,
                                             TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
                                             TraceLoggingPointer(this, "this"),
-                                            TraceLoggingHResult(updatePropsHR, "hresult"),
-                                            TraceLoggingWideString(L"Endpoint device doesn't exist (yet). We'll skip.", "message"),
+                                            TraceLoggingWideString(L"Endpoint device doesn't exist (yet). We'll skip.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                            TraceLoggingHResult(updatePropsHR, MIDI_TRACE_EVENT_HRESULT_FIELD),
                                             TraceLoggingWideString(swdId.c_str(), "swd")
                                         );
                                     }
@@ -421,8 +429,8 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
                                             __FUNCTION__,
                                             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                                             TraceLoggingPointer(this, "this"),
-                                            TraceLoggingHResult(updatePropsHR, "hresult"),
-                                            TraceLoggingWideString(L"Error updating device properties", "message"),
+                                            TraceLoggingWideString(L"Error updating device properties", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                            TraceLoggingHResult(updatePropsHR, MIDI_TRACE_EVENT_HRESULT_FIELD),
                                             TraceLoggingWideString(swdId.c_str(), "swd")
                                         );
 
@@ -440,7 +448,7 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
                                     __FUNCTION__,
                                     TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
                                     TraceLoggingPointer(this, "this"),
-                                    TraceLoggingWideString(L"Entry did not contain any recognized updates. Skipping.", "message"),
+                                    TraceLoggingWideString(L"Entry did not contain any recognized updates. Skipping.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                                     TraceLoggingWideString(swdId.c_str(), "swd")
                                 );
                             }
@@ -452,7 +460,7 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
                                 __FUNCTION__,
                                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                                 TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"SWD search key was empty.", "message")
+                                TraceLoggingWideString(L"SWD search key was empty.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                             );
 
                             return E_FAIL;
@@ -476,7 +484,7 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
                 __FUNCTION__,
                 TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Attempt to update KS device properties without them being from config file. KS device props are not runtime-temporary.", "message"),
+                TraceLoggingWideString(L"Attempt to update KS device properties without them being from config file. KS device props are not runtime-temporary.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingWideString(ConfigurationJsonSection, "json")
             );
 
@@ -492,7 +500,7 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
             __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"std exception processing json", "message"),
+            TraceLoggingWideString(L"std exception processing json", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingString(e.what(), "exception"),
             TraceLoggingWideString(ConfigurationJsonSection, "json")
         );
@@ -506,7 +514,7 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
             __FUNCTION__,
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Other exception processing json", "message"),
+            TraceLoggingWideString(L"Other exception processing json", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(ConfigurationJsonSection, "json")
         );
 
@@ -524,7 +532,8 @@ CMidi2KSAggregateMidiConfigurationManager::Cleanup()
 {
     TraceLoggingWrite(
         MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );

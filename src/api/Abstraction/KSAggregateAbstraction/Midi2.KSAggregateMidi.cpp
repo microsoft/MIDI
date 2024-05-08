@@ -40,10 +40,11 @@ CMidi2KSAggregateMidi::Initialize(
 
     TraceLoggingWrite(
         MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Initializing", "message"),
+        TraceLoggingWideString(L"Initializing", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(Device, "Device")
         );
 
@@ -79,10 +80,11 @@ CMidi2KSAggregateMidi::Initialize(
 
     TraceLoggingWrite(
         MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Retrieved properties", "message"),
+        TraceLoggingWideString(L"Retrieved properties", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(filterInterfaceId.c_str(), "filter interface id"),
         TraceLoggingGuid(interfaceClass, "interfaceClass")
     );
@@ -94,10 +96,11 @@ CMidi2KSAggregateMidi::Initialize(
     {
         TraceLoggingWrite(
             MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Endpoint device properties are missing the pin map", "message"),
+            TraceLoggingWideString(L"Endpoint device properties are missing the pin map", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(Device, "device id")
         );
 
@@ -106,10 +109,11 @@ CMidi2KSAggregateMidi::Initialize(
 
     TraceLoggingWrite(
         MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Grabbing pin map", "message"),
+        TraceLoggingWideString(L"Grabbing pin map", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(Device, "device id")
     );
 
@@ -127,10 +131,11 @@ CMidi2KSAggregateMidi::Initialize(
             {
                 TraceLoggingWrite(
                     MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Pin map retrieved. Processing input entries.", "message"),
+                    TraceLoggingWideString(L"Pin map retrieved. Processing input entries.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                     TraceLoggingWideString(Device, "device id")
                 );
 
@@ -164,11 +169,12 @@ CMidi2KSAggregateMidi::Initialize(
                         {
                             TraceLoggingWrite(
                                 MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-                                __FUNCTION__,
+                                MIDI_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                                 TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"Unable to initialize sub-device proxy for input", "message"),
-                                TraceLoggingHResult(initResult, "hresult"),
+                                TraceLoggingWideString(L"Unable to initialize sub-device proxy for input", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                TraceLoggingHResult(initResult, MIDI_TRACE_EVENT_HRESULT_FIELD),
                                 TraceLoggingWideString(Device, "device id"),
                                 TraceLoggingUInt32(requestedBufferSize, "buffer size"),
                                 TraceLoggingUInt32(pinId, "pin id"),
@@ -181,10 +187,11 @@ CMidi2KSAggregateMidi::Initialize(
                         {
                             TraceLoggingWrite(
                                 MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-                                __FUNCTION__,
+                                MIDI_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                                 TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"Created sub-device proxy for input", "message"),
+                                TraceLoggingWideString(L"Created sub-device proxy for input", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                                 TraceLoggingWideString(Device, "device id"),
                                 TraceLoggingUInt32(requestedBufferSize, "buffer size"),
                                 TraceLoggingUInt32(pinId, "pin id"),
@@ -198,10 +205,11 @@ CMidi2KSAggregateMidi::Initialize(
 
                 TraceLoggingWrite(
                     MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Processing output entries.", "message"),
+                    TraceLoggingWideString(L"Processing output entries.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                     TraceLoggingWideString(Device, "device id")
                 );
 
@@ -230,11 +238,12 @@ CMidi2KSAggregateMidi::Initialize(
                         {
                             TraceLoggingWrite(
                                 MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-                                __FUNCTION__,
+                                MIDI_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                                 TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"Unable to initialize sub-device for output", "message"),
-                                TraceLoggingHResult(initResult, "hresult"),
+                                TraceLoggingWideString(L"Unable to initialize sub-device for output", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                TraceLoggingHResult(initResult, MIDI_TRACE_EVENT_HRESULT_FIELD),
                                 TraceLoggingWideString(Device, "device id"),
                                 TraceLoggingUInt32(requestedBufferSize, "buffer size"),
                                 TraceLoggingUInt32(pinId, "pin id"),
@@ -247,10 +256,11 @@ CMidi2KSAggregateMidi::Initialize(
                         {
                             TraceLoggingWrite(
                                 MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-                                __FUNCTION__,
+                                MIDI_TRACE_EVENT_INFO,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                                 TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"Created sub-device for output", "message"),
+                                TraceLoggingWideString(L"Created sub-device for output", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                                 TraceLoggingWideString(Device, "device id"),
                                 TraceLoggingUInt32(requestedBufferSize, "buffer size"),
                                 TraceLoggingUInt32(pinId, "pin id"),
@@ -268,10 +278,11 @@ CMidi2KSAggregateMidi::Initialize(
 
     TraceLoggingWrite(
         MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Completed all initialization", "message"),
+        TraceLoggingWideString(L"Completed all initialization", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(Device, "device id")
     );
 
@@ -283,7 +294,8 @@ CMidi2KSAggregateMidi::Cleanup()
 {
     TraceLoggingWrite(
         MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
         );
@@ -313,10 +325,11 @@ CMidi2KSAggregateMidi::SendMidiMessage(
 {
     TraceLoggingWrite(
         MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Received UMP message to translate and send", "message"),
+        TraceLoggingWideString(L"Received UMP message to translate and send", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingUInt32(Length, "length")
     );
 
@@ -367,10 +380,11 @@ CMidi2KSAggregateMidi::SendMidiMessage(
                             // iunable to send message
                             TraceLoggingWrite(
                                 MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-                                __FUNCTION__,
-                                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                                MIDI_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                                 TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"Unable to send message to MIDI 1.0 endpoint.", "message"),
+                                TraceLoggingWideString(L"Unable to send message to MIDI 1.0 endpoint.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                                 TraceLoggingUInt8(groupIndex, "Group Index"),
                                 TraceLoggingHResult(sendHr),
                                 TraceLoggingUInt8Array(&(byteStream[0]), (UINT16)byteCount, "message bytes")
@@ -388,10 +402,11 @@ CMidi2KSAggregateMidi::SendMidiMessage(
                 // invalid group. Dump the message
                 TraceLoggingWrite(
                     MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Group not found in group to pin map. Dropping message.", "message"),
+                    TraceLoggingWideString(L"Group not found in group to pin map. Dropping message.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                     TraceLoggingUInt8(groupIndex, "Group Index")
                 );
             }
@@ -402,10 +417,11 @@ CMidi2KSAggregateMidi::SendMidiMessage(
             // it's a message type with no group field. We just drop it and move ok
             TraceLoggingWrite(
                 MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Groupless message sent to aggregated KS endpoint. Dropping message.", "message")
+                TraceLoggingWideString(L"Groupless message sent to aggregated KS endpoint. Dropping message.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
             return S_OK;
@@ -416,10 +432,11 @@ CMidi2KSAggregateMidi::SendMidiMessage(
         // this is below the size required for UMP. No idea why we have this. Error.
         TraceLoggingWrite(
             MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"invalid data length", "message"),
+            TraceLoggingWideString(L"invalid data length", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingUInt32(Length, "Length")
         );
 

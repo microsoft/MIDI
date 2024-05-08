@@ -16,24 +16,18 @@ CMidi2LoopbackMidiAbstraction::Activate(
     void **Interface
 )
 {
-    TraceLoggingWrite(
-        MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
-    );
-
     RETURN_HR_IF(E_INVALIDARG, nullptr == Interface);
 
     if (__uuidof(IMidiBiDi) == Riid)
     {
-       OutputDebugString(L"" __FUNCTION__ " Activating IMidiBiDi");
-
         TraceLoggingWrite(
             MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- IMidiBiDi",
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this")
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiBiDi", MIDI_TRACE_EVENT_INTERFACE_FIELD)
+
             );
 
 
@@ -41,16 +35,16 @@ CMidi2LoopbackMidiAbstraction::Activate(
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2LoopbackMidiBiDi>(&midiBiDi));
         *Interface = midiBiDi.detach();
     }
-
-
-
     else if (__uuidof(IMidiEndpointManager) == Riid)
     {
         TraceLoggingWrite(
             MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- IMidiEndpointManager",
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this")
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiEndpointManager", MIDI_TRACE_EVENT_INTERFACE_FIELD)
+
         );
 
         // check to see if this is the first time we're creating the endpoint manager. If so, create it.
@@ -65,9 +59,12 @@ CMidi2LoopbackMidiAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- IMidiAbstractionConfigurationManager",
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this")
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiAbstractionConfigurationManager", MIDI_TRACE_EVENT_INTERFACE_FIELD)
+
         );
 
         // check to see if this is the first time we're creating the endpoint manager. If so, create it.
@@ -78,24 +75,22 @@ CMidi2LoopbackMidiAbstraction::Activate(
 
         RETURN_IF_FAILED(AbstractionState::Current().GetConfigurationManager()->QueryInterface(Riid, Interface));
     }
-
     else if (__uuidof(IMidiServiceAbstractionPluginMetadataProvider) == Riid)
     {
         TraceLoggingWrite(
             MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- IMidiServiceAbstractionPluginMetadataProvider",
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiServiceAbstractionPluginMetadataProvider", MIDI_TRACE_EVENT_INTERFACE_FIELD)
+
         );
 
         wil::com_ptr_nothrow<IMidiServiceAbstractionPluginMetadataProvider> metadataProvider;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2LoopbackMidiPluginMetadataProvider>(&metadataProvider));
         *Interface = metadataProvider.detach();
     }
-
-
-
     else
     {
         return E_NOINTERFACE;

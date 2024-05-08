@@ -20,7 +20,8 @@ CMidi2MidiSrvSessionTracker::VerifyConnectivity()
 {
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -53,7 +54,8 @@ CMidi2MidiSrvSessionTracker::AddClientSession(
 {
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -79,10 +81,11 @@ CMidi2MidiSrvSessionTracker::AddClientSession(
         // couldn't get the current process name
         TraceLoggingWrite(
             MidiSrvAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Unable to get current process name", "message")
+            TraceLoggingWideString(L"Unable to get current process name", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
     }
 
@@ -114,7 +117,8 @@ CMidi2MidiSrvSessionTracker::UpdateClientSessionName(
 {
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -147,7 +151,8 @@ CMidi2MidiSrvSessionTracker::RemoveClientSession(
 {
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -219,7 +224,8 @@ CMidi2MidiSrvSessionTracker::GetSessionListJson(
 {
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );

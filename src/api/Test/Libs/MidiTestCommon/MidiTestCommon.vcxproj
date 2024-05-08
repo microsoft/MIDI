@@ -71,24 +71,24 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)VSFiles\intermediate\test\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\test\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <LibraryPath>$(VC_LibraryPath_Arm64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(WindowsSDK_LibraryPath_Arm64)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)VSFiles\intermediate\test\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\test\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <LibraryPath>$(VC_LibraryPath_Arm64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(WindowsSDK_LibraryPath_Arm64)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)VSFiles\intermediate\test\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\test\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)VSFiles\intermediate\test\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\test\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -100,7 +100,7 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)test\inc;</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -115,7 +115,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)test\inc;</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -130,7 +130,7 @@
       <WarningLevel>Level4</WarningLevel>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)test\inc;</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <Optimization>Disabled</Optimization>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -140,7 +140,7 @@
       <WarningLevel>Level4</WarningLevel>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)test\inc;</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -132,7 +132,7 @@
     <Midl>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)idl</AdditionalIncludeDirectories>
       <HeaderFileName>%(Filename).h</HeaderFileName>
-      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.ksabstraction\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
       <TypeLibraryName>$(IntDir)$(ProjectName).tlb</TypeLibraryName>
     </Midl>
     <ClCompile>

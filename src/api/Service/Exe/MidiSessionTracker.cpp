@@ -41,7 +41,8 @@ CMidiSessionTracker::AddClientSessionInternal(
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingGuid(SessionId),
@@ -121,7 +122,8 @@ CMidiSessionTracker::UpdateClientSessionName(
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingGuid(SessionId),
@@ -146,10 +148,11 @@ CMidiSessionTracker::UpdateClientSessionName(
             {
                 TraceLoggingWrite(
                     MidiSrvTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"E_NOTFOUND. No matching session for this client process.", "message"),
+                    TraceLoggingWideString(L"E_NOTFOUND. No matching session for this client process.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                     TraceLoggingGuid(SessionId),
                     TraceLoggingWideString(SessionName)
                     );
@@ -161,10 +164,11 @@ CMidiSessionTracker::UpdateClientSessionName(
         {
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"E_NOTFOUND. No matching session", "message"),
+                TraceLoggingWideString(L"E_NOTFOUND. No matching session", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingGuid(SessionId),
                 TraceLoggingWideString(SessionName)
             );
@@ -176,10 +180,11 @@ CMidiSessionTracker::UpdateClientSessionName(
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"E_INVALIDARG. Trimmed session name is empty", "message"),
+            TraceLoggingWideString(L"E_INVALIDARG. Trimmed session name is empty", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingGuid(SessionId),
             TraceLoggingWideString(SessionName)
         );
@@ -198,7 +203,8 @@ CMidiSessionTracker::RemoveClientSession(
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingGuid(SessionId)
@@ -222,7 +228,8 @@ CMidiSessionTracker::RemoveClientSessionInternal(
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingPointer(ContextHandle)
@@ -294,7 +301,8 @@ CMidiSessionTracker::AddClientEndpointConnection(
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingGuid(SessionId),
@@ -330,12 +338,13 @@ CMidiSessionTracker::AddClientEndpointConnection(
 
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingGuid(SessionId),
             TraceLoggingWideString(ConnectionEndpointInterfaceId),
-            TraceLoggingWideString(L"No valid session found. Returning E_NOTFOUND.", "message")
+            TraceLoggingWideString(L"No valid session found. Returning E_NOTFOUND.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
         return E_NOTFOUND;
@@ -354,7 +363,8 @@ CMidiSessionTracker::RemoveClientEndpointConnection(
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingGuid(SessionId),
@@ -451,7 +461,8 @@ CMidiSessionTracker::GetSessionListJson(
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(wstr.c_str())
@@ -469,7 +480,8 @@ CMidiSessionTracker::Cleanup()
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );

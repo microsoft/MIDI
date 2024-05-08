@@ -99,7 +99,7 @@ MidiEndpointTable::OnClientConnected(
                     __FUNCTION__,
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Unable to find device table entry", "message")
+                    TraceLoggingWideString(L"Unable to find device table entry", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
             }
         }
@@ -146,7 +146,7 @@ MidiEndpointTable::OnClientDisconnected(
                     __FUNCTION__,
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Association id property was not present in device table", "message")
+                    TraceLoggingWideString(L"Association id property was not present in device table", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
             }
         }
@@ -159,7 +159,7 @@ MidiEndpointTable::OnClientDisconnected(
                 __FUNCTION__,
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Association id property was blank", "message")
+                TraceLoggingWideString(L"Association id property was blank", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
         }
     }
@@ -217,7 +217,7 @@ HRESULT MidiEndpointTable::OnDeviceConnected(std::wstring deviceEndpointInterfac
                         __FUNCTION__,
                         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                         TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"After creating client visible endpoint", "message"),
+                        TraceLoggingWideString(L"After creating client visible endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                         TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), "Endpoint interface id"),
                         TraceLoggingWideString(entry.BaseEndpointName.c_str(), "Base endpoint name"),
                         TraceLoggingWideString(entry.CreatedClientEndpointId.c_str(), "Created Client Endpoint Id"),
@@ -238,7 +238,7 @@ HRESULT MidiEndpointTable::OnDeviceConnected(std::wstring deviceEndpointInterfac
                         __FUNCTION__,
                         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Endpoint Manager is null", "message")
+                        TraceLoggingWideString(L"Endpoint Manager is null", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                     );
 
                     return E_FAIL;
@@ -253,7 +253,7 @@ HRESULT MidiEndpointTable::OnDeviceConnected(std::wstring deviceEndpointInterfac
                     __FUNCTION__,
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Association id property was not present in device table", "message")
+                    TraceLoggingWideString(L"Association id property was not present in device table", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
             }
         }
@@ -266,7 +266,7 @@ HRESULT MidiEndpointTable::OnDeviceConnected(std::wstring deviceEndpointInterfac
                 __FUNCTION__,
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Association id property was blank", "message")
+                TraceLoggingWideString(L"Association id property was blank", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
         }
     }
@@ -306,7 +306,7 @@ HRESULT MidiEndpointTable::OnDeviceDisconnected(std::wstring deviceEndpointInter
                             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                             TraceLoggingPointer(this, "this"),
                             TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), "deviceEndpointInterfaceId"),
-                            TraceLoggingWideString(L"Unlinking from MidiDeviceBiDi", "message")
+                            TraceLoggingWideString(L"Unlinking from MidiDeviceBiDi", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                         );
 
                         // unlink the bidi devices
@@ -331,7 +331,7 @@ HRESULT MidiEndpointTable::OnDeviceDisconnected(std::wstring deviceEndpointInter
                         __FUNCTION__,
                         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Unexpected. There's no entry for associationId", "message"),
+                        TraceLoggingWideString(L"Unexpected. There's no entry for associationId", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                         TraceLoggingWideString(associationId.c_str())
                     );
                 }
@@ -343,7 +343,7 @@ HRESULT MidiEndpointTable::OnDeviceDisconnected(std::wstring deviceEndpointInter
                     __FUNCTION__,
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"unable to get association id for this endpoint", "message")
+                    TraceLoggingWideString(L"unable to get association id for this endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
             }
         }
@@ -354,7 +354,7 @@ HRESULT MidiEndpointTable::OnDeviceDisconnected(std::wstring deviceEndpointInter
                 __FUNCTION__,
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"endpoint manager is null", "message")
+                TraceLoggingWideString(L"endpoint manager is null", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
         }
     }

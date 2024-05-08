@@ -16,21 +16,18 @@ CMidi2EndpointMetadataListenerTransform::Activate(
     void **Interface
 )
 {
-    OutputDebugString(L"" __FUNCTION__ " Enter");
-
     RETURN_HR_IF(E_INVALIDARG, nullptr == Interface);
 
     if (__uuidof(IMidiDataTransform) == Iid)
     {
-       OutputDebugString(L"" __FUNCTION__ " Activating IMidiDataTransform");
-
-        TraceLoggingWrite(
-            MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
-            __FUNCTION__ "- IMidiDataTransform",
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
-            );
+       TraceLoggingWrite(
+           MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
+           MIDI_TRACE_EVENT_INFO,
+           TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+           TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+           TraceLoggingPointer(this, "this"),
+           TraceLoggingWideString(L"IMidiDataTransform", MIDI_TRACE_EVENT_INTERFACE_FIELD)
+           );
 
         wil::com_ptr_nothrow<IMidiDataTransform> transform;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2EndpointMetadataListenerMidiTransform>(&transform));
@@ -40,9 +37,9 @@ CMidi2EndpointMetadataListenerTransform::Activate(
     {
        TraceLoggingWrite(
            MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
-           __FUNCTION__ " Returning E_NOINTERFACE. Was an interface added that isn't handled in the Transform?",
+           MIDI_TRACE_EVENT_WARNING,
+           TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-           TraceLoggingValue(__FUNCTION__),
            TraceLoggingPointer(this, "this")
         );
 

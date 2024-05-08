@@ -32,7 +32,8 @@ CMidiSrv::Initialize()
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -111,12 +112,13 @@ CMidiSrv::Initialize()
         {
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingHResult(rpcHr, "hresult"),
+                TraceLoggingHResult(rpcHr, MIDI_TRACE_EVENT_HRESULT_FIELD),
                 TraceLoggingLong(rpcStatus, "rpc_status"),
-                TraceLoggingWideString(L"RpcServerUseProtseqEp failed. It's likely the service is not responding due to a failed startup.", "message")
+                TraceLoggingWideString(L"RpcServerUseProtseqEp failed. It's likely the service is not responding due to a failed startup.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
         }
 
@@ -134,10 +136,11 @@ CMidiSrv::Initialize()
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Returned RPC Security Descriptor is not valid", "message")
+            TraceLoggingWideString(L"Returned RPC Security Descriptor is not valid", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
     }
 
@@ -151,7 +154,8 @@ CMidiSrv::Cleanup()
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );

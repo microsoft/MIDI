@@ -23,7 +23,8 @@ CMidi2VirtualMidiBiDi::Initialize(
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(endpointId, "endpoint id")
@@ -42,10 +43,11 @@ CMidi2VirtualMidiBiDi::Initialize(
         {
             TraceLoggingWrite(
                 MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Initializing device-side BiDi", "message"),
+                TraceLoggingWideString(L"Initializing device-side BiDi", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
             );
 
@@ -58,10 +60,11 @@ CMidi2VirtualMidiBiDi::Initialize(
         {
             TraceLoggingWrite(
                 MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Initializing client-side BiDi", "message"),
+                TraceLoggingWideString(L"Initializing client-side BiDi", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
             );
 
@@ -74,10 +77,11 @@ CMidi2VirtualMidiBiDi::Initialize(
         {
             TraceLoggingWrite(
                 MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"We don't understand the endpoint Id", "message"),
+                TraceLoggingWideString(L"We don't understand the endpoint Id", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
                 );
 
@@ -101,7 +105,8 @@ CMidi2VirtualMidiBiDi::Cleanup()
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
@@ -135,7 +140,8 @@ CMidi2VirtualMidiBiDi::SendMidiMessage(
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
@@ -180,7 +186,8 @@ CMidi2VirtualMidiBiDi::Callback(
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),

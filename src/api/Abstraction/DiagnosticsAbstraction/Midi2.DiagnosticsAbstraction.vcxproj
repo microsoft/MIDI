@@ -245,7 +245,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
-      <ModuleDefinitionFile>Midi2.DiagnosticsAbstractionn.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>Midi2.DiagnosticsAbstraction.def</ModuleDefinitionFile>
     </Link>
     <Midl>
       <AdditionalIncludeDirectories>$(SolutionDir)\idl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

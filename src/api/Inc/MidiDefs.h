@@ -10,6 +10,19 @@
 
 #include <Devpropdef.h>
 
+
+#define MIDI_TRACE_EVENT_ERROR              "Midi.Error"
+#define MIDI_TRACE_EVENT_WARNING            "Midi.Warning"
+#define MIDI_TRACE_EVENT_INFO               "Midi.Info"
+
+
+#define MIDI_TRACE_EVENT_MESSAGE_FIELD      "message"
+#define MIDI_TRACE_EVENT_LOCATION_FIELD     "location"
+#define MIDI_TRACE_EVENT_HRESULT_FIELD      "hresult"
+#define MIDI_TRACE_EVENT_INTERFACE_FIELD    "interface"
+
+
+
 #ifndef PAGE_SIZE
 #define PAGE_SIZE 0x1000
 #endif
