@@ -34,22 +34,38 @@ CMidi2MidiSrvSessionTracker::VerifyConnectivity()
         TraceLoggingPointer(this, "this")
     );
 
-    wil::unique_rpc_binding bindingHandle;
-
-    RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
-
-    RETURN_IF_FAILED([&]()
+    if (MidiSrvManager::IsServiceInstalled())
+    {
+        if (MidiSrvManager::AttemptToStartService())
         {
-            // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
-            // with structured exception handling.
-            RpcTryExcept RETURN_IF_FAILED(MidiSrvVerifyConnectivity(bindingHandle.get()));
-            RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
-            RpcEndExcept
+            wil::unique_rpc_binding bindingHandle;
 
-                return S_OK;
-        }());
+            RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
 
-    return S_OK;
+            RETURN_IF_FAILED([&]()
+                {
+                    // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
+                    // with structured exception handling.
+                    RpcTryExcept RETURN_IF_FAILED(MidiSrvVerifyConnectivity(bindingHandle.get()));
+                    RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
+                    RpcEndExcept
+
+                        return S_OK;
+                }());
+
+            return S_OK;
+        }
+        else
+        {
+            // couldn't start service
+            return E_FAIL;
+        }
+    }
+    else
+    {
+        // service isn't installed
+        return E_FAIL;
+    }
 }
 
 

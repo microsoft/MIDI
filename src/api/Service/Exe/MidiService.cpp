@@ -93,6 +93,155 @@ VOID ReportSvcStatus(
     }
 }
 
+
+BOOL SvcUpdateDescription(
+    _In_ wil::unique_schandle& service
+)
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO)
+    );
+
+    // Set the service description so it's not just blank. This should be localized
+    // with "@[path]dllname,-strID" and a .rc file
+
+    std::wstring serviceDescription{ SVCDESCRIPTION };
+
+    SERVICE_DESCRIPTION info{ };
+    info.lpDescription = (LPWSTR)(serviceDescription.c_str());
+
+    if (!ChangeServiceConfig2(service.get(), SERVICE_CONFIG_DESCRIPTION, &info))
+    {
+        // non-fatal
+        LOG_LAST_ERROR_MSG("Changing service description failed.");
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingWideString(L"Changing service description failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+        return false;
+    }
+
+    return true;
+}
+
+// Should we also trigger on SERVICE_TRIGGER_TYPE_DEVICE_INTERFACE_ARRIVAL? We are the 
+// interface enumerator so I assume it would trigger on *all* audio devices, which would 
+// be pointless?
+// 
+// Also, there are situations when the system may have only network or BLE or something
+// MIDI devices, so then it would make no sense as it would trigger only for USB.
+//
+// So triggering on RPC call. Musicians are likely going to want to change the service
+// to automatic start, so I'll put an option in the settings app to enable that
+// for them. Otherwise, there's a delay between the service spinning up and all
+// devices being enumerated (and protocol negotiation complete)
+
+
+BOOL SvcSetStartTriggerRpc(
+    _In_ wil::unique_schandle& service
+)
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO)
+    );
+
+    SERVICE_TRIGGER_INFO triggerInfo{ 0 };
+    SERVICE_TRIGGER trigger{ 0 };
+    SERVICE_TRIGGER_SPECIFIC_DATA_ITEM triggerData{ 0 };
+
+    // Set the RPC call to triggers waking up this service
+    std::wstring rpcGuidString{ L"64839251-9daf-4e79-aa4e-9771c86ffbc1" }; // RPC Interface. should use __uuidof
+
+    triggerData.dwDataType = SERVICE_TRIGGER_DATA_TYPE_STRING;
+    triggerData.pData = (PBYTE)(rpcGuidString.c_str());
+    triggerData.cbData = (DWORD)(rpcGuidString.length() + 1) * sizeof(wchar_t);
+
+    auto triggerSubType = RPC_INTERFACE_EVENT_GUID;
+
+    trigger.dwAction = SERVICE_TRIGGER_ACTION_SERVICE_START;
+    trigger.dwTriggerType = SERVICE_TRIGGER_TYPE_NETWORK_ENDPOINT;
+    trigger.pTriggerSubtype = (LPGUID)&triggerSubType;
+    trigger.pDataItems = &triggerData;
+    trigger.cDataItems = 1;
+
+    triggerInfo.pTriggers = &trigger;
+    triggerInfo.cTriggers = 1;
+
+    if (!ChangeServiceConfig2(service.get(), SERVICE_CONFIG_TRIGGER_INFO, &triggerInfo))
+    {
+        LOG_LAST_ERROR_MSG("Changing service trigger to RPC call failed.");
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingWideString(L"Changing service trigger to RPC call failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+        return false;
+    }
+
+    return true;
+}
+
+BOOL SvcSetStartTriggerEtw(
+    _In_ wil::unique_schandle& service
+)
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO)
+    );
+
+    SERVICE_TRIGGER_INFO triggerInfo{ 0 };
+    SERVICE_TRIGGER trigger{ 0 };
+    SERVICE_TRIGGER_SPECIFIC_DATA_ITEM triggerData{ 0 };
+
+    // use ETW trigger. This worked right away
+    GUID midiSrvAbstractionEtwProvider{ 0xc3263827, 0x0519, 0x1867, 0x53, 0x09, 0x51, 0x50, 0x19, 0x84, 0xed, 0xed };
+
+    trigger.dwAction = SERVICE_TRIGGER_ACTION_SERVICE_START;
+    trigger.dwTriggerType = SERVICE_TRIGGER_TYPE_CUSTOM;
+    trigger.pTriggerSubtype = (LPGUID)&midiSrvAbstractionEtwProvider;
+    //trigger.pDataItems = &triggerData;
+    trigger.cDataItems = 0;
+
+    triggerInfo.pTriggers = &trigger;
+    triggerInfo.cTriggers = 1;
+
+    if (!ChangeServiceConfig2(service.get(), SERVICE_CONFIG_TRIGGER_INFO, &triggerInfo))
+    {
+        LOG_LAST_ERROR_MSG("Changing service trigger to ETW event failed.");
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingWideString(L"Changing service trigger to ETW event failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+        return false;
+    }
+
+    return true;
+}
+
+
 //
 // Purpose: 
 //   Installs a service in the SCM database
@@ -168,7 +317,7 @@ VOID SvcInstall()
         SVCDISPLAYNAME,
         SERVICE_ALL_ACCESS,
         SERVICE_WIN32_OWN_PROCESS,
-        SERVICE_DEMAND_START,           // SERVICE_AUTO_START
+        SERVICE_DEMAND_START,           // Needs to be demand start to ship in-box in Windows
         SERVICE_ERROR_NORMAL,
         quotedPath,
         NULL,
@@ -192,105 +341,23 @@ VOID SvcInstall()
         return;
     }
 
-    // Set the service description so it's not just blank. This should be localized
-    // with "@[path]dllname,-strID" and a .rc file
+    SvcUpdateDescription(service);
 
-    std::wstring serviceDescription{ SVCDESCRIPTION  };
-     
-    SERVICE_DESCRIPTION info{ };
-    info.lpDescription = (LPWSTR)(serviceDescription.c_str());
-
-    if (!ChangeServiceConfig2(service.get(), SERVICE_CONFIG_DESCRIPTION, &info))
-    {
-        // non-fatal
-        LOG_LAST_ERROR_MSG("Changing service description failed.");
-
-        TraceLoggingWrite(
-            MidiSrvTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_ERROR,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            TraceLoggingWideString(L"Changing service description failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-        );
-    }
-
-
-
-
-    SERVICE_TRIGGER_INFO triggerInfo{ 0 };
-    SERVICE_TRIGGER trigger{ 0 };
-    SERVICE_TRIGGER_SPECIFIC_DATA_ITEM triggerData{ 0 };
-
-
- // tried the RPC trigger and just couldn't get it to work
 #ifdef USE_RPC_DEMAND_TRIGGER
-    // Set the RPC call to triggers waking up this service
-    std::wstring rpcGuidString{ L"64839251-9daf-4e79-aa4e-9771c86ffbc1" }; // RPC Interface. should use __uuidof
-
-    triggerData.dwDataType = SERVICE_TRIGGER_DATA_TYPE_STRING;
-    triggerData.pData = (PBYTE)(rpcGuidString.c_str());
-    triggerData.cbData = (DWORD)(rpcGuidString.length() + 1) * sizeof(wchar_t);
-
-    auto triggerSubType = RPC_INTERFACE_EVENT_GUID;
-
-    trigger.dwAction = SERVICE_TRIGGER_ACTION_SERVICE_START;
-    trigger.dwTriggerType = SERVICE_TRIGGER_TYPE_NETWORK_ENDPOINT;
-    trigger.pTriggerSubtype = (LPGUID)&triggerSubType;
-    trigger.pDataItems = &triggerData;
-    trigger.cDataItems = 1;
-
-    triggerInfo.pTriggers = &trigger;
-    triggerInfo.cTriggers = 1;
-#else
-    // use ETW trigger. This worked right away
-    // The problem with the ETW trigger is there's a bit of a delay, so need to wait on it
-    // 6e9d2090-31a4-5a2c-da35-fd606d7d6ac3
-    GUID midiSrvAbstractionEtwProvider{ 0x6e9d2090, 0x31a4, 0x5a2c, 0xda, 0x35, 0xfd, 0x60, 0x6d, 0x7d, 0x6a, 0xc3 };
-    
-    //triggerData.dwDataType = SERVICE_TRIGGER_DATA_TYPE_STRING;
-    //triggerData.pData = (PBYTE)(&midiSrvAbstractionEtwProvider);
-    //triggerData.cbData = (DWORD)(sizeof(GUID));
-
-    trigger.dwAction = SERVICE_TRIGGER_ACTION_SERVICE_START;
-    trigger.dwTriggerType = SERVICE_TRIGGER_TYPE_CUSTOM;
-    trigger.pTriggerSubtype = (LPGUID)&midiSrvAbstractionEtwProvider;
-    //trigger.pDataItems = &triggerData;
-    trigger.cDataItems = 0;
-
-    triggerInfo.pTriggers = &trigger;
-    triggerInfo.cTriggers = 1;
+    // tried the RPC trigger and just couldn't get it to work
+    if (!SvcSetStartTriggerRpc(service))
+    {
+        return;
+    }
 #endif
 
-
-    // Should we also trigger on SERVICE_TRIGGER_TYPE_DEVICE_INTERFACE_ARRIVAL? We are the 
-    // interface enumerator so I assume it would trigger on *all* audio devices, which would 
-    // be pointless?
-    // 
-    // Also, there are situations when the system may have only network or BLE or something
-    // MIDI devices, so then it would make no sense as it would trigger only for USB.
-    //
-    // So triggering on RPC call. Musicians are likely going to want to change the service
-    // to automatic start, so I'll put an option in the settings app to enable that
-    // for them. Otherwise, there's a delay between the service spinning up and all
-    // devices being enumerated (and protocol negotiation complete)
-
-    if (!ChangeServiceConfig2(service.get(), SERVICE_CONFIG_TRIGGER_INFO, &triggerInfo))
+    // ETW-based trigger which starts the service when any ETW event
+    // from MidiSrvAbstraction is sent
+    if (!SvcSetStartTriggerEtw(service))
     {
-        // non-fatal
-        LOG_LAST_ERROR_MSG("Changing service trigger failed.");
-
-        TraceLoggingWrite(
-            MidiSrvTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_ERROR,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            TraceLoggingWideString(L"Changing service trigger failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-        );
-
         return;
     }
 
-    // TODO: Have this called only if a reg key is present. The settings app will write that key
     //if (!StartService(service.get(), 0, nullptr))
     //{
     //    LOG_LAST_ERROR_MSG("Starting the service failed during service install.");

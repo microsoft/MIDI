@@ -53,6 +53,8 @@ using namespace winrt;
 
 #include "dllmain.h"
 
+class MidiSrvManager;
+
 #include "MidiSrvRpc.h"
 #include "MidiXProc.h"
 #include "Midi2.MidiSrvAbstraction.h"
@@ -62,4 +64,6 @@ using namespace winrt;
 #include "Midi2.MidiSrvBiDi.h"
 #include "Midi2.MidiSrvConfigurationManager.h"
 #include "Midi2.MidiSrvSessionTracker.h"
+
+#include "MidiSrvManager.h"
 

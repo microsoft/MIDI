@@ -270,6 +270,7 @@
     <ClCompile Include="Midi2.MidiSrvIn.cpp" />
     <ClCompile Include="Midi2.MidiSrvOut.cpp" />
     <ClCompile Include="Midi2.MidiSrvSessionTracker.cpp" />
+    <ClCompile Include="MidiSrvManager.cpp" />
     <ClCompile Include="MidiSrv_Rpc.cpp" />
     <ClCompile Include="pch.cpp" />
   </ItemGroup>
@@ -290,6 +291,7 @@
     <ClInclude Include="Midi2.MidiSrvIn.h" />
     <ClInclude Include="Midi2.MidiSrvOut.h" />
     <ClInclude Include="Midi2.MidiSrvSessionTracker.h" />
+    <ClInclude Include="MidiSrvManager.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
   </ItemGroup>
